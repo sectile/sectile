@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "parallelStages": [
+    {
+      "stage": "P0-4",
+      "workItems": ["WI-025", "WI-026", "WI-030"]
+    },
+    {
+      "stage": "P0-8",
+      "workItems": ["WI-013", "WI-035", "WI-038", "WI-039"]
+    },
+    {
+      "stage": "A-3",
+      "workItems": ["WI-003", "WI-004", "WI-005", "WI-006", "WI-022"]
+    },
+    {
+      "stage": "A-4",
+      "workItems": ["WI-007", "WI-008"]
+    },
+    {
+      "stage": "A-5",
+      "workItems": ["WI-009", "WI-028"]
+    },
+    {
+      "stage": "A-6",
+      "workItems": ["WI-029", "WI-040"]
+    }
+  ],
+  "workItems": {
+    "WI-025": [
+      "packages/dom/src/", "packages/dom/package.json", "packages/vue/src/", "packages/vue/package.json",
+      "verification/consumer-bundles/dom/", "verification/consumer-bundles/vue/",
+      "verification/breaking-changes/fragments/dom.json", "verification/breaking-changes/fragments/vue.json"
+    ],
+    "WI-026": [
+      "packages/core/scripts/build.mjs", "packages/dom/scripts/build.mjs", "packages/form/scripts/build.mjs",
+      "packages/tabular/scripts/build.mjs", "packages/temporal/scripts/build.mjs", "packages/terminal/scripts/build.mjs",
+      "packages/virtual/scripts/build.mjs", "packages/vue/scripts/build.mjs", "verification/source-maps/"
+    ],
+    "WI-030": [
+      "packages/core/src/", "packages/core/package.json", "verification/core-layers/",
+      "verification/consumer-bundles/core/", "verification/breaking-changes/fragments/core.json"
+    ],
+    "WI-013": [
+      "packages/core/src/internal/composites/", "packages/core/src/adapter-runtime.ts",
+      "verification/complexity-contracts/core/hot.json"
+    ],
+    "WI-035": [
+      "packages/dom/src/internal/floating-position.ts", "packages/dom/src/internal/positioning/",
+      "verification/complexity-contracts/dom/hot.json"
+    ],
+    "WI-038": [
+      "packages/tabular/src/", "verification/complexity-contracts/tabular/hot.json"
+    ],
+    "WI-039": [
+      "packages/virtual/src/", "verification/complexity-contracts/virtual/hot.json"
+    ],
+    "WI-003": [
+      "packages/core/src/internal/components/", "verification/authority/core-controllers.json"
+    ],
+    "WI-004": [
+      "packages/form/src/", "verification/authority/form.json"
+    ],
+    "WI-005": [
+      "packages/temporal/src/", "verification/authority/temporal.json"
+    ],
+    "WI-006": [
+      "packages/tabular/src/internal/grid-profile.ts", "verification/authority/tabular.json"
+    ],
+    "WI-022": [
+      "packages/virtual/src/internal/", "verification/authority/virtual.json"
+    ],
+    "WI-007": [
+      "packages/dom/src/", "verification/authority/dom.json"
+    ],
+    "WI-008": [
+      "packages/terminal/src/", "verification/authority/terminal.json"
+    ],
+    "WI-009": [
+      "packages/vue/src/internal/semantic/", "verification/authority/vue.json"
+    ],
+    "WI-028": [
+      "packages/dom/src/form.ts", "packages/dom/tests/form.test.mjs"
+    ],
+    "WI-029": [
+      "packages/vue/src/form.ts", "packages/vue/tests/form.test.mjs"
+    ],
+    "WI-040": [
+      "packages/vue/src/virtual.ts", "packages/vue/src/internal/collection.ts",
+      "verification/complexity-contracts/vue/hot.json"
+    ]
+  }
+}

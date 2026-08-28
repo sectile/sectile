@@ -26,6 +26,24 @@ export async function collectPublicSignatures(packageRoot = process.cwd()) {
   });
 }
 
+export async function collectPublicSignatureSurfaces(packageRoot = process.cwd()) {
+  const manifest = JSON.parse(await readFile(resolve(packageRoot, 'package.json'), 'utf8'));
+  const exports = publicDeclarationExports(manifest.exports);
+  const surfaces = [];
+  for (const entry of exports) {
+    const paths = await collectDeclarationClosure(packageRoot, [entry.types]);
+    const files = [];
+    for (const path of paths) {
+      const content = (await readFile(resolve(packageRoot, path), 'utf8'))
+        .replace(/^\/\/# sourceMappingURL=.*$/gmu, '')
+        .trim();
+      files.push(Object.freeze({ path, sha256: hash(content) }));
+    }
+    surfaces.push(Object.freeze({ ...entry, files: Object.freeze(files) }));
+  }
+  return Object.freeze({ package: manifest.name, surfaces: Object.freeze(surfaces) });
+}
+
 function publicDeclarationExports(exportsMap) {
   if (exportsMap === null || typeof exportsMap !== 'object') throw new Error('Package exports map is required.');
   const entries = [];

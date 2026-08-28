@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "exports": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts"
+    },
+    {
+      "subpath": "./data-grid",
+      "types": "dist/data-grid.d.ts"
+    },
+    {
+      "subpath": "./data-table",
+      "types": "dist/data-table.d.ts"
+    },
+    {
+      "subpath": "./data-tree-grid",
+      "types": "dist/data-tree-grid.d.ts"
+    },
+    {
+      "subpath": "./model",
+      "types": "dist/model.d.ts"
+    },
+    {
+      "subpath": "./query",
+      "types": "dist/query.d.ts"
+    },
+    {
+      "subpath": "./source",
+      "types": "dist/source.d.ts"
+    },
+    {
+      "subpath": "./virtual",
+      "types": "dist/virtual.d.ts"
+    }
+  ],
+  "fingerprint": "b50b16287ea6c56e6b4d0dc4f27cab543f0aa66fc01d2b5674f17195d4b84160",
+  "files": [
+    {
+      "path": "dist/contracts.d.ts",
+      "sha256": "319e01dba639327ef224096a52b02c10c7c0a332d800293af024ae5bb97f903a"
+    },
+    {
+      "path": "dist/data-grid.d.ts",
+      "sha256": "3fdab77e8438a54744d6641cac9bc02a0f7ff60672c25c24b65e0cf0705b8075"
+    },
+    {
+      "path": "dist/data-table.d.ts",
+      "sha256": "49c485342d782e6e93b7a277cd680cf84b47db81aa99a96aca0472eba2f50e04"
+    },
+    {
+      "path": "dist/data-tree-grid.d.ts",
+      "sha256": "0d0e7fe6fc309b02609c438f130dd9656d5a2b4eb2b28b0d5f149d9fa6dd259a"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "4bf95f155da6b67bae2fff0f239f4da56d6af969fd3e8dcaacf064b3e34527be"
+    },
+    {
+      "path": "dist/internal/grid-profile.d.ts",
+      "sha256": "7ffd7f7ef2f02d27552bf04089b4c7a648551df3d562f9f2883e0fbe10a827d0"
+    },
+    {
+      "path": "dist/model.d.ts",
+      "sha256": "1c173e2fed5515118f6aed5b2c4d10e94b947071c891b3f6e2f2a9bffc25b278"
+    },
+    {
+      "path": "dist/query.d.ts",
+      "sha256": "6d320aedbb1a6eaae9a8dfe99cdf74713252b05dbc2e2302196c5e2b2d3812d3"
+    },
+    {
+      "path": "dist/source.d.ts",
+      "sha256": "05dfe9fc5389ae3890b0e940b0aa97133038c7078f44a1974b1494f2641890f2"
+    },
+    {
+      "path": "dist/virtual.d.ts",
+      "sha256": "15b5dc589a94180c9fe92445fbb8035bf90c3b16dad0559306a4fe88562ee2c2"
+    }
+  ],
+  "surfaces": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts",
+      "files": [
+        {
+          "path": "dist/contracts.d.ts",
+          "sha256": "319e01dba639327ef224096a52b02c10c7c0a332d800293af024ae5bb97f903a"
+        },
+        {
+          "path": "dist/data-grid.d.ts",
+          "sha256": "3fdab77e8438a54744d6641cac9bc02a0f7ff60672c25c24b65e0cf0705b8075"
+        },
+        {
+          "path": "dist/data-table.d.ts",
+          "sha256": "49c485342d782e6e93b7a277cd680cf84b47db81aa99a96aca0472eba2f50e04"
+        },
+        {
+          "path": "dist/data-tree-grid.d.ts",
+          "sha256": "0d0e7fe6fc309b02609c438f130dd9656d5a2b4eb2b28b0d5f149d9fa6dd259a"
+        },
+        {
+          "path": "dist/index.d.ts",
+          "sha256": "4bf95f155da6b67bae2fff0f239f4da56d6af969fd3e8dcaacf064b3e34527be"
+        },
+        {
+          "path": "dist/internal/grid-profile.d.ts",
+          "sha256": "7ffd7f7ef2f02d27552bf04089b4c7a648551df3d562f9f2883e0fbe10a827d0"
+        },
+        {
+          "path": "dist/model.d.ts",
+          "sha256": "1c173e2fed5515118f6aed5b2c4d10e94b947071c891b3f6e2f2a9bffc25b278"
+        },
+        {
+          "path": "dist/query.d.ts",
+          "sha256": "6d320aedbb1a6eaae9a8dfe99cdf74713252b05dbc2e2302196c5e2b2d3812d3"
+        },
+        {
+          "path": "dist/source.d.ts",
+          "sha256": "05dfe9fc5389ae3890b0e940b0aa97133038c7078f44a1974b1494f2641890f2"
+        }
+      ]
+    },
+    {
+      "subpath": "./data-grid",
+      "types": "dist/data-grid.d.ts",
+      "files": [
+        {
+          "path": "dist/contracts.d.ts",
+          "sha256": "319e01dba639327ef224096a52b02c10c7c0a332d800293af024ae5bb97f903a"
+        },
+        {
+          "path": "dist/data-grid.d.ts",
+          "sha256": "3fdab77e8438a54744d6641cac9bc02a0f7ff60672c25c24b65e0cf0705b8075"
+        },
+        {
+          "path": "dist/data-table.d.ts",
+          "sha256": "49c485342d782e6e93b7a277cd680cf84b47db81aa99a96aca0472eba2f50e04"
+        },
+        {
+          "path": "dist/internal/grid-profile.d.ts",
+          "sha256": "7ffd7f7ef2f02d27552bf04089b4c7a648551df3d562f9f2883e0fbe10a827d0"
+        }
+      ]
+    },
+    {
+      "subpath": "./data-table",
+      "types": "dist/data-table.d.ts",
+      "files": [
+        {
+          "path": "dist/contracts.d.ts",
+          "sha256": "319e01dba639327ef224096a52b02c10c7c0a332d800293af024ae5bb97f903a"
+        },
+        {
+          "path": "dist/data-table.d.ts",
+          "sha256": "49c485342d782e6e93b7a277cd680cf84b47db81aa99a96aca0472eba2f50e04"
+        }
+      ]
+    },
+    {
+      "subpath": "./data-tree-grid",
+      "types": "dist/data-tree-grid.d.ts",
+      "files": [
+        {
+          "path": "dist/contracts.d.ts",
+          "sha256": "319e01dba639327ef224096a52b02c10c7c0a332d800293af024ae5bb97f903a"
+        },
+        {
+          "path": "dist/data-table.d.ts",
+          "sha256": "49c485342d782e6e93b7a277cd680cf84b47db81aa99a96aca0472eba2f50e04"
+        },
+        {
+          "path": "dist/data-tree-grid.d.ts",
+          "sha256": "0d0e7fe6fc309b02609c438f130dd9656d5a2b4eb2b28b0d5f149d9fa6dd259a"
+        },
+        {
+          "path": "dist/internal/grid-profile.d.ts",
+          "sha256": "7ffd7f7ef2f02d27552bf04089b4c7a648551df3d562f9f2883e0fbe10a827d0"
+        }
+      ]
+    },
+    {
+      "subpath": "./model",
+      "types": "dist/model.d.ts",
+      "files": [
+        {
+          "path": "dist/contracts.d.ts",
+          "sha256": "319e01dba639327ef224096a52b02c10c7c0a332d800293af024ae5bb97f903a"
+        },
+        {
+          "path": "dist/model.d.ts",
+          "sha256": "1c173e2fed5515118f6aed5b2c4d10e94b947071c891b3f6e2f2a9bffc25b278"
+        }
+      ]
+    },
+    {
+      "subpath": "./query",
+      "types": "dist/query.d.ts",
+      "files": [
+        {
+          "path": "dist/contracts.d.ts",
+          "sha256": "319e01dba639327ef224096a52b02c10c7c0a332d800293af024ae5bb97f903a"
+        },
+        {
+          "path": "dist/query.d.ts",
+          "sha256": "6d320aedbb1a6eaae9a8dfe99cdf74713252b05dbc2e2302196c5e2b2d3812d3"
+        }
+      ]
+    },
+    {
+      "subpath": "./source",
+      "types": "dist/source.d.ts",
+      "files": [
+        {
+          "path": "dist/contracts.d.ts",
+          "sha256": "319e01dba639327ef224096a52b02c10c7c0a332d800293af024ae5bb97f903a"
+        },
+        {
+          "path": "dist/source.d.ts",
+          "sha256": "05dfe9fc5389ae3890b0e940b0aa97133038c7078f44a1974b1494f2641890f2"
+        }
+      ]
+    },
+    {
+      "subpath": "./virtual",
+      "types": "dist/virtual.d.ts",
+      "files": [
+        {
+          "path": "dist/contracts.d.ts",
+          "sha256": "319e01dba639327ef224096a52b02c10c7c0a332d800293af024ae5bb97f903a"
+        },
+        {
+          "path": "dist/data-grid.d.ts",
+          "sha256": "3fdab77e8438a54744d6641cac9bc02a0f7ff60672c25c24b65e0cf0705b8075"
+        },
+        {
+          "path": "dist/data-table.d.ts",
+          "sha256": "49c485342d782e6e93b7a277cd680cf84b47db81aa99a96aca0472eba2f50e04"
+        },
+        {
+          "path": "dist/data-tree-grid.d.ts",
+          "sha256": "0d0e7fe6fc309b02609c438f130dd9656d5a2b4eb2b28b0d5f149d9fa6dd259a"
+        },
+        {
+          "path": "dist/internal/grid-profile.d.ts",
+          "sha256": "7ffd7f7ef2f02d27552bf04089b4c7a648551df3d562f9f2883e0fbe10a827d0"
+        },
+        {
+          "path": "dist/virtual.d.ts",
+          "sha256": "15b5dc589a94180c9fe92445fbb8035bf90c3b16dad0559306a4fe88562ee2c2"
+        }
+      ]
+    }
+  ]
+}

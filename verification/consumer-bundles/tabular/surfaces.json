@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "package": "tabular",
+  "surfaces": [
+    {
+      "subpath": ".",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "namespace"
+      ]
+    },
+    {
+      "subpath": "./data-grid",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDataGridEvent",
+        "createDataGrid",
+        "tryCreateDataGrid"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./data-table",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDataTableEvent",
+        "createDataTable",
+        "tryCreateDataTable"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./data-tree-grid",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDataTreeGridEvent",
+        "createDataTreeGrid",
+        "tryCreateDataTreeGrid"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./model",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTabularEvent",
+        "createTabularModel",
+        "encodeTabularCellID",
+        "reconcileTabularState",
+        "tryCreateTabularModel",
+        "tryCreateTabularState",
+        "tryDecodeTabularCellID"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./package.json",
+      "classification": "metadata",
+      "platform": "universal",
+      "runtimeExports": [],
+      "typeBearing": false,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./query",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTabularQueryEvent",
+        "createTabularQuery",
+        "tryCreateTabularQuery"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./source",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createClientTabularSource",
+        "resolveClientTabularRequest",
+        "synchronizeTabularView"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./virtual",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDataGridVirtualAdapter",
+        "createDataTableVirtualAdapter",
+        "createDataTreeGridVirtualAdapter",
+        "reconcileDataGridVirtualAdapter",
+        "reconcileDataTableVirtualAdapter",
+        "reconcileDataTreeGridVirtualAdapter",
+        "tryCreateDataGridVirtualAdapter",
+        "tryCreateDataTableVirtualAdapter",
+        "tryCreateDataTreeGridVirtualAdapter"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/virtual",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "package": "temporal",
+  "surfaces": [
+    {
+      "subpath": ".",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "namespace"
+      ]
+    },
+    {
+      "subpath": "./calendar",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyCalendarEvent",
+        "calendarID",
+        "createCalendarMonth",
+        "createCalendarState",
+        "createCalendarWeek",
+        "createCalendarYear",
+        "isCalendarValueAvailable",
+        "tryCreateCalendarMonth",
+        "tryCreateCalendarState",
+        "tryCreateCalendarWeek",
+        "tryCreateCalendarYear"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./date-field",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "addDateDays",
+        "addDateMonths",
+        "addDateYears",
+        "applyDateFieldEvent",
+        "compareDateValues",
+        "createDateFieldState",
+        "createDateRange",
+        "createDateValue",
+        "dateDayOfWeek",
+        "dateRangeContains",
+        "dateSegmentAt",
+        "daysInMonth",
+        "differenceInDateDays",
+        "formatDateValue",
+        "isLeapYear",
+        "parseDateValue",
+        "tryCreateDateFieldState",
+        "tryCreateDateRange",
+        "tryCreateDateValue"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./date-picker",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDatePickerEvent",
+        "createDatePickerState",
+        "tryCreateDatePickerState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./date-range-field",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDateRangeFieldEvent",
+        "createDateRangeFieldState",
+        "tryCreateDateRangeFieldState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./date-range-picker",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDateRangePickerEvent",
+        "createDateRangePickerState",
+        "tryCreateDateRangePickerState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./date-time-field",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "addDateTimeMilliseconds",
+        "applyDateTimeFieldEvent",
+        "compareDateTimeValues",
+        "createDateTimeFieldState",
+        "createDateTimeRange",
+        "createDateTimeValue",
+        "dateTimeSegmentAt",
+        "formatDateTimeRange",
+        "formatDateTimeValue",
+        "parseDateTimeValue",
+        "tryCreateDateTimeFieldState",
+        "tryCreateDateTimeRange",
+        "tryCreateDateTimeValue"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./date-time-picker",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDateTimePickerEvent",
+        "createDateTimePickerState",
+        "tryCreateDateTimePickerState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./date-time-range-picker",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDateTimeRangePickerEvent",
+        "createDateTimeRangePickerState",
+        "tryCreateDateTimeRangePickerState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./month-picker",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyMonthPickerEvent",
+        "createMonthPickerState",
+        "createMonthPickerYear",
+        "isMonthPickerValueAvailable",
+        "tryCreateMonthPickerState",
+        "tryCreateMonthPickerYear"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./month-range-picker",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyMonthRangePickerEvent",
+        "createMonthRangePickerState",
+        "createMonthRangePickerYear",
+        "tryCreateMonthRangePickerState",
+        "tryCreateMonthRangePickerYear"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./package.json",
+      "classification": "metadata",
+      "platform": "universal",
+      "runtimeExports": [],
+      "typeBearing": false,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./range-calendar",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyRangeCalendarEvent",
+        "createRangeCalendarMonth",
+        "createRangeCalendarState",
+        "tryCreateRangeCalendarMonth",
+        "tryCreateRangeCalendarState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./time-field",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "addTimeMilliseconds",
+        "applyTimeFieldEvent",
+        "compareTimeValues",
+        "createTimeFieldState",
+        "createTimeValue",
+        "formatTimeValue",
+        "parseTimeValue",
+        "timeSegmentAt",
+        "tryCreateTimeFieldState",
+        "tryCreateTimeValue"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./time-range-field",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTimeRangeFieldEvent",
+        "createTimeRange",
+        "createTimeRangeFieldState",
+        "tryCreateTimeRange",
+        "tryCreateTimeRangeFieldState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./year-picker",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyYearPickerEvent",
+        "createYearPickerPage",
+        "createYearPickerState",
+        "tryCreateYearPickerPage",
+        "tryCreateYearPickerState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./year-range-picker",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyYearRangePickerEvent",
+        "createYearRangePickerPage",
+        "createYearRangePickerState",
+        "tryCreateYearRangePickerPage",
+        "tryCreateYearRangePickerState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    }
+  ]
+}

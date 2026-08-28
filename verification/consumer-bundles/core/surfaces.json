@@ -1,0 +1,1062 @@
+{
+  "schemaVersion": 1,
+  "package": "core",
+  "surfaces": [
+    {
+      "subpath": ".",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "namespace"
+      ]
+    },
+    {
+      "subpath": "./accordion",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyAccordionEvent",
+        "createAccordionState",
+        "tryCreateAccordionState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./adapter-runtime",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyControllerEvent",
+        "controlledFieldError",
+        "createFacadeConnection",
+        "createHostAdapter",
+        "createSemanticController",
+        "synchronizeControllerState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./alert-dialog",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyAlertDialogEvent",
+        "createAlertDialogState",
+        "tryCreateAlertDialogState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./carousel",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyCarouselEvent",
+        "createCarouselState",
+        "getCarouselPosition",
+        "isCarouselRotationPaused",
+        "tryCreateCarouselState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./cascade-list",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyCascadeListEvent",
+        "createCascadeListState",
+        "getCascadeListColumns",
+        "getCascadeListValuePath",
+        "tryCreateCascadeListState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./cascade-select",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyCascadeSelectEvent",
+        "createCascadeSelectState",
+        "getCascadeSelectColumns",
+        "getCascadeSelectValuePath",
+        "tryCreateCascadeSelectState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./checkbox",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyCheckboxEvent",
+        "createCheckboxState",
+        "tryCreateCheckboxState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./checkbox-group",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyCheckboxGroupEvent",
+        "createCheckboxGroupState",
+        "tryCreateCheckboxGroupState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./collection-window",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyCollectionWindowEvent",
+        "canRequestCollectionWindow",
+        "createCollectionWindowState",
+        "synchronizeCollectionWindow",
+        "tryCreateCollectionWindowState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./color-picker",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyColorPickerEvent",
+        "createColorPickerState",
+        "createColorValue",
+        "formatColorValue",
+        "getColorAreaValue",
+        "getColorCoordinates",
+        "parseColorValue",
+        "setColorCoordinate",
+        "tryCreateColorPickerState",
+        "tryCreateColorValue"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./combobox",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyComboboxEvent",
+        "createComboboxState",
+        "tryCreateComboboxState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./dialog",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDialogEvent",
+        "createDialogState",
+        "tryCreateDialogState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./disclosure",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDisclosureEvent",
+        "createDisclosureState",
+        "tryCreateDisclosureState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./drawer",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDrawerEvent",
+        "createDrawerState",
+        "tryCreateDrawerState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./editable",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyEditableEvent",
+        "createEditableState",
+        "tryCreateEditableState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./feed",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyFeedEvent",
+        "createFeedState",
+        "synchronizeFeedWindow",
+        "tryCreateFeedState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./grid",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyGridEvent",
+        "createGrid",
+        "createGridState",
+        "tryCreateGrid",
+        "tryCreateGridState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./interaction",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createInteractionState",
+        "permitsInteraction",
+        "requireInteraction",
+        "tryCreateInteractionState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./layer-stack",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyLayerStackEvent",
+        "createLayerStackState",
+        "getInteractiveLayerIDs",
+        "getTopLayer",
+        "tryCreateLayerStackState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./listbox",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_LISTBOX_SELECTION_MODE",
+        "applyListboxEvent",
+        "createListboxState",
+        "findListboxTypeaheadMatch",
+        "tryCreateListboxState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./menu",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyMenuEvent",
+        "createMenuModel",
+        "createMenuState",
+        "tryCreateMenuModel",
+        "tryCreateMenuState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./menu-button",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyMenuButtonEvent",
+        "createMenuButtonModel",
+        "createMenuButtonState",
+        "tryCreateMenuButtonModel",
+        "tryCreateMenuButtonState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./menubar",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyMenubarEvent",
+        "createMenubarModel",
+        "createMenubarState",
+        "tryCreateMenubarModel",
+        "tryCreateMenubarState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./meter",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createMeterState",
+        "tryCreateMeterState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./meter-group",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createMeterGroupState",
+        "tryCreateMeterGroupState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./multi-thumb-slider",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyMultiThumbSliderEvent",
+        "createMultiThumbSliderState",
+        "tryCreateMultiThumbSliderState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./navigation-menu",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyNavigationMenuEvent",
+        "createNavigationMenuModel",
+        "createNavigationMenuState",
+        "tryCreateNavigationMenuModel",
+        "tryCreateNavigationMenuState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./number-field",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyNumberFieldEvent",
+        "createCalculatorExpression",
+        "createNumberFieldState",
+        "tryCreateCalculatorExpression",
+        "tryCreateNumberFieldState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./package.json",
+      "classification": "metadata",
+      "platform": "universal",
+      "runtimeExports": [],
+      "typeBearing": false,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./pagination",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyPaginationEvent",
+        "createPaginationModel",
+        "createPaginationState",
+        "getPaginationItemRange",
+        "getPaginationItems",
+        "getPaginationPageCount",
+        "tryCreatePaginationModel",
+        "tryCreatePaginationState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./pin-input",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyPinInputEvent",
+        "createPinInputState",
+        "tryCreatePinInputState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./popover",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyPopoverEvent",
+        "createPopoverState",
+        "tryCreatePopoverState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./progress",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createProgressState",
+        "tryCreateProgressState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./quantity-field",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyQuantityFieldEvent",
+        "createQuantityFieldState",
+        "parseQuantityInput",
+        "tryCreateQuantityFieldState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./radio-group",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyRadioGroupEvent",
+        "createRadioGroupState",
+        "tryCreateRadioGroupState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./range",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createBoundedRange",
+        "createRange",
+        "tryCreateBoundedRange",
+        "tryCreateRange"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./rating",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyRatingEvent",
+        "createRatingState",
+        "tryCreateRatingState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./reorder",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applySequenceReorderEvent",
+        "applyTreeReorderEvent",
+        "createSequenceReorderState",
+        "createTreeReorderState",
+        "tryCreateSequenceReorderState",
+        "tryCreateTreeReorderState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./result",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "SectileResultError",
+        "unwrap"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./revision",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyRevisionedEvent",
+        "createRevisionSnapshot",
+        "mapRevisionCommands",
+        "rejectRevisionInput",
+        "tryCreateRevisionSnapshot"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./select",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applySelectEvent",
+        "createSelectState",
+        "tryCreateSelectState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./selection",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "clearSelection",
+        "createSelectionState",
+        "reconcileSelection",
+        "selectInterval",
+        "selectOne",
+        "toggleMultipleSelection"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./sequence",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applySequencePatch",
+        "createSequence",
+        "tryApplySequencePatch",
+        "tryCreateSequence"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./slider",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applySliderEvent",
+        "createSliderState",
+        "tryCreateSliderState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./spin-button",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applySpinButtonEvent",
+        "createSpinButtonState",
+        "tryCreateSpinButtonState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./stepper",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyStepperEvent",
+        "createStepperState",
+        "tryCreateStepperState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./switch",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applySwitchEvent",
+        "createSwitchState",
+        "tryCreateSwitchState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tabs",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTabsEvent",
+        "createTabsState",
+        "tryCreateTabsState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tags-input",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTagsInputEvent",
+        "createTagsInputState",
+        "tryCreateTagsInputState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./text",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTextEvent",
+        "cancelTextComposition",
+        "commitTextComposition",
+        "createTextEditingState",
+        "createTextSnapshot",
+        "isTextCodeUnitBoundary",
+        "isWellFormedPlainText",
+        "normalizeTextEditingState",
+        "replacePlainText",
+        "replaceTextState",
+        "sameTextEditingState",
+        "slicePlainText",
+        "startTextComposition",
+        "tryCreateTextEditingState",
+        "tryCreateTextSnapshot",
+        "updateTextComposition"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./timer",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTimerEvent",
+        "createTimerState",
+        "getTimerParts",
+        "getTimerProgress",
+        "tryCreateTimerState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./toast",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyToastEvent",
+        "createToastState",
+        "tryCreateToastState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./toggle-button",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyToggleButtonEvent",
+        "createToggleButtonState",
+        "tryCreateToggleButtonState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./toggle-group",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyToggleGroupEvent",
+        "createToggleGroupState",
+        "tryCreateToggleGroupState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./toolbar",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyToolbarEvent",
+        "createToolbarState",
+        "tryCreateToolbarState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tooltip",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTooltipEvent",
+        "createTooltipState",
+        "tryCreateTooltipState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tree",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createTree",
+        "tryCreateTree"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tree-grid",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTreeGridEvent",
+        "createTreeGridModel",
+        "createTreeGridModelFromRows",
+        "createTreeGridState",
+        "tryCreateTreeGridModel",
+        "tryCreateTreeGridModelFromRows",
+        "tryCreateTreeGridState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tree-view",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTreeViewEvent",
+        "createTreeViewState",
+        "tryCreateTreeViewState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./units",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createImperialUnitSystem",
+        "createMetricUnitSystem",
+        "createStandardUnitRegistry",
+        "createUnitRegistry",
+        "createUnitSystemProfile",
+        "standardUnitDefinitions",
+        "tryCreateImperialUnitSystem",
+        "tryCreateMetricUnitSystem",
+        "tryCreateStandardUnitRegistry",
+        "tryCreateUnitRegistry",
+        "tryCreateUnitSystemProfile"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./window-splitter",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyWindowSplitterEvent",
+        "createWindowSplitterState",
+        "tryCreateWindowSplitterState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    }
+  ]
+}

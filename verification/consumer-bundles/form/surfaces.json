@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "package": "form",
+  "surfaces": [
+    {
+      "subpath": ".",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "namespace"
+      ]
+    },
+    {
+      "subpath": "./error",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "FormResultError"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./package.json",
+      "classification": "metadata",
+      "platform": "universal",
+      "runtimeExports": [],
+      "typeBearing": false,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./path",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "appendFormFieldPath",
+        "createFormFieldPath",
+        "createFormRelativePath",
+        "encodeFormFieldPath",
+        "tryCreateFormFieldPath",
+        "tryCreateFormRelativePath"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./schema",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./state",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyFormEvent",
+        "createFormState",
+        "tryCreateFormState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./values",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createFormValues",
+        "tryCreateFormValues"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    }
+  ]
+}

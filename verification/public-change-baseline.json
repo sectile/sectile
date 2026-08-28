@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "protectedCommit": "950f143145d087b71994386d79bf5938f773339e",
+  "acceptedDirtyPaths": [],
+  "packages": {
+    "core": "f852c3d1759f1edf64a8a3d81a0d0a79edc552136e03a657479fd4f52eef42ed",
+    "dom": "0f56084e00615ed34105d92cce170360b62f1ccc5ddea540f66720af7acb4b6c",
+    "form": "8389ea9d97e5e754f1ed2daa7dbbb37714cf6cf4181ed55a5f5079281ae81f4c",
+    "tabular": "b50b16287ea6c56e6b4d0dc4f27cab543f0aa66fc01d2b5674f17195d4b84160",
+    "temporal": "758d59ddc88fabcb04148b89edaef89a6a04e27cbd0c0f3221b04f54496c6e33",
+    "terminal": "8f7cbd91cb5474a14f1e903e7250c978661ce8c2292e50976fd853a1e72d3b01",
+    "virtual": "ebce6bc8c7cb578794ec4fb2a146d13e22eabafdc3d144ce70cbf1ea9133e251",
+    "vue": "ce7bf20da01cc6d7bc3b86ae0b5fef715f42ac766c53ad0b2ef5e68dc812b113"
+  }
+}

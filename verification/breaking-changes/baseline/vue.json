@@ -1,0 +1,1699 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/vue",
+  "exports": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts"
+    },
+    {
+      "subpath": "./accordion",
+      "types": "dist/accordion.d.ts"
+    },
+    {
+      "subpath": "./alert-dialog",
+      "types": "dist/alert-dialog.d.ts"
+    },
+    {
+      "subpath": "./carousel",
+      "types": "dist/carousel.d.ts"
+    },
+    {
+      "subpath": "./cascade-list",
+      "types": "dist/cascade-list.d.ts"
+    },
+    {
+      "subpath": "./cascade-select",
+      "types": "dist/cascade-select.d.ts"
+    },
+    {
+      "subpath": "./checkbox",
+      "types": "dist/checkbox.d.ts"
+    },
+    {
+      "subpath": "./checkbox-group",
+      "types": "dist/checkbox-group.d.ts"
+    },
+    {
+      "subpath": "./color-picker",
+      "types": "dist/color-picker.d.ts"
+    },
+    {
+      "subpath": "./combobox",
+      "types": "dist/combobox.d.ts"
+    },
+    {
+      "subpath": "./dialog",
+      "types": "dist/dialog.d.ts"
+    },
+    {
+      "subpath": "./disclosure",
+      "types": "dist/disclosure.d.ts"
+    },
+    {
+      "subpath": "./drawer",
+      "types": "dist/drawer.d.ts"
+    },
+    {
+      "subpath": "./editable",
+      "types": "dist/editable.d.ts"
+    },
+    {
+      "subpath": "./feed",
+      "types": "dist/feed.d.ts"
+    },
+    {
+      "subpath": "./form",
+      "types": "dist/form.d.ts"
+    },
+    {
+      "subpath": "./grid",
+      "types": "dist/grid.d.ts"
+    },
+    {
+      "subpath": "./host-provider",
+      "types": "dist/host-provider.d.ts"
+    },
+    {
+      "subpath": "./listbox",
+      "types": "dist/listbox.d.ts"
+    },
+    {
+      "subpath": "./menu",
+      "types": "dist/menu.d.ts"
+    },
+    {
+      "subpath": "./menu-button",
+      "types": "dist/menu-button.d.ts"
+    },
+    {
+      "subpath": "./menubar",
+      "types": "dist/menubar.d.ts"
+    },
+    {
+      "subpath": "./meter",
+      "types": "dist/meter.d.ts"
+    },
+    {
+      "subpath": "./meter-group",
+      "types": "dist/meter-group.d.ts"
+    },
+    {
+      "subpath": "./multi-thumb-slider",
+      "types": "dist/multi-thumb-slider.d.ts"
+    },
+    {
+      "subpath": "./navigation-menu",
+      "types": "dist/navigation-menu.d.ts"
+    },
+    {
+      "subpath": "./number-field",
+      "types": "dist/number-field.d.ts"
+    },
+    {
+      "subpath": "./pagination",
+      "types": "dist/pagination.d.ts"
+    },
+    {
+      "subpath": "./pin-input",
+      "types": "dist/pin-input.d.ts"
+    },
+    {
+      "subpath": "./popover",
+      "types": "dist/popover.d.ts"
+    },
+    {
+      "subpath": "./primitive",
+      "types": "dist/primitive.d.ts"
+    },
+    {
+      "subpath": "./progress",
+      "types": "dist/progress.d.ts"
+    },
+    {
+      "subpath": "./quantity-field",
+      "types": "dist/quantity-field.d.ts"
+    },
+    {
+      "subpath": "./radio-group",
+      "types": "dist/radio-group.d.ts"
+    },
+    {
+      "subpath": "./rating",
+      "types": "dist/rating.d.ts"
+    },
+    {
+      "subpath": "./reorder",
+      "types": "dist/reorder.d.ts"
+    },
+    {
+      "subpath": "./select",
+      "types": "dist/select.d.ts"
+    },
+    {
+      "subpath": "./slider",
+      "types": "dist/slider.d.ts"
+    },
+    {
+      "subpath": "./spin-button",
+      "types": "dist/spin-button.d.ts"
+    },
+    {
+      "subpath": "./stepper",
+      "types": "dist/stepper.d.ts"
+    },
+    {
+      "subpath": "./switch",
+      "types": "dist/switch.d.ts"
+    },
+    {
+      "subpath": "./tabs",
+      "types": "dist/tabs.d.ts"
+    },
+    {
+      "subpath": "./tabular",
+      "types": "dist/tabular.d.ts"
+    },
+    {
+      "subpath": "./tags-input",
+      "types": "dist/tags-input.d.ts"
+    },
+    {
+      "subpath": "./temporal",
+      "types": "dist/temporal.d.ts"
+    },
+    {
+      "subpath": "./text",
+      "types": "dist/text.d.ts"
+    },
+    {
+      "subpath": "./timer",
+      "types": "dist/timer.d.ts"
+    },
+    {
+      "subpath": "./toast",
+      "types": "dist/toast.d.ts"
+    },
+    {
+      "subpath": "./toggle-button",
+      "types": "dist/toggle-button.d.ts"
+    },
+    {
+      "subpath": "./toggle-group",
+      "types": "dist/toggle-group.d.ts"
+    },
+    {
+      "subpath": "./toolbar",
+      "types": "dist/toolbar.d.ts"
+    },
+    {
+      "subpath": "./tooltip",
+      "types": "dist/tooltip.d.ts"
+    },
+    {
+      "subpath": "./tree-grid",
+      "types": "dist/tree-grid.d.ts"
+    },
+    {
+      "subpath": "./tree-view",
+      "types": "dist/tree-view.d.ts"
+    },
+    {
+      "subpath": "./virtual",
+      "types": "dist/virtual.d.ts"
+    },
+    {
+      "subpath": "./window-splitter",
+      "types": "dist/window-splitter.d.ts"
+    }
+  ],
+  "fingerprint": "ce7bf20da01cc6d7bc3b86ae0b5fef715f42ac766c53ad0b2ef5e68dc812b113",
+  "files": [
+    {
+      "path": "dist/accordion.d.ts",
+      "sha256": "97861078aa1bad50b668d01d5f3ca09da5d7c49ceed8dde9d60ee92939ad0e96"
+    },
+    {
+      "path": "dist/alert-dialog.d.ts",
+      "sha256": "711d74c2918a856907c21165e3956da8f14eb39aa15bcb82c445429497dcd347"
+    },
+    {
+      "path": "dist/calendar.d.ts",
+      "sha256": "47f2805790ce5febc34ed6e6364561e0330317553dd9f98b57aaf94903347500"
+    },
+    {
+      "path": "dist/carousel.d.ts",
+      "sha256": "883edba50e4205be2d3e4274d04228a66127c4a605bcd268113ea18ef6afcdda"
+    },
+    {
+      "path": "dist/cascade-list.d.ts",
+      "sha256": "a08547b62af6c12be48beb851d43087ea53af0357be696fbd7ca720def1ff405"
+    },
+    {
+      "path": "dist/cascade-select.d.ts",
+      "sha256": "5faf18e6098d0d7714031be9c514dd8742aa6643be292a79821d2936ca4f21c5"
+    },
+    {
+      "path": "dist/checkbox-group.d.ts",
+      "sha256": "5a035ca47642e1d930e9dc2fa54a272c4bae9099e4e1a418b526ae5ff3101e9b"
+    },
+    {
+      "path": "dist/checkbox.d.ts",
+      "sha256": "d8d8ce67821725b8a5b000a0de2adc437ef5425dc60eba06dd48ac34873f13ec"
+    },
+    {
+      "path": "dist/color-picker.d.ts",
+      "sha256": "a04d77aa665ce335af1db1169c2d170ae9dc7771ff16b46b659b3a82981516ea"
+    },
+    {
+      "path": "dist/combobox.d.ts",
+      "sha256": "6db3c2d258abc9ac3642752d48d03438f8e5f97bd622ab17aeca38d01a50a19f"
+    },
+    {
+      "path": "dist/data-grid.d.ts",
+      "sha256": "91afeb18c329277be6f7778d2adba8a04c24cff82408058c8708430a5d50b947"
+    },
+    {
+      "path": "dist/data-table.d.ts",
+      "sha256": "4549f1c91f211c2ff39c8f06fa8844c302c6588a8fa592964f8b042b7f708f94"
+    },
+    {
+      "path": "dist/data-tree-grid.d.ts",
+      "sha256": "fc04549a7ac1c2acccd470c3c363922cfb06f4eb4479113d3c10ce16a494bd54"
+    },
+    {
+      "path": "dist/date-field.d.ts",
+      "sha256": "f205df19537ed5ba9eab0ec4b7a73cbc2f19c2909a7023f67d80672002c6b7da"
+    },
+    {
+      "path": "dist/date-picker.d.ts",
+      "sha256": "bd896a3cab2a3b16d3abe769003f95422db855b9f5f15e27360d07d0c942c87b"
+    },
+    {
+      "path": "dist/date-range-field.d.ts",
+      "sha256": "4a40d7c1a603887fddd8f4a3cbde9a411864b602d7bc9c395b61201aaeda2ff1"
+    },
+    {
+      "path": "dist/date-range-picker.d.ts",
+      "sha256": "ec9e95300d1238d8871d96333ca120b865f4e626de8ca0bcd3ac5223a989b734"
+    },
+    {
+      "path": "dist/date-time-field.d.ts",
+      "sha256": "ef2a911c0c4922d83216b8e275a7257a26ad9e323f5f241e4b522e8a83c1edae"
+    },
+    {
+      "path": "dist/date-time-picker.d.ts",
+      "sha256": "67486dd8380b489af8d1f064f84b0f6532a8ca5b6cdea181061ffce0578e09c3"
+    },
+    {
+      "path": "dist/date-time-range-picker.d.ts",
+      "sha256": "c4774f4370299db2a1f6fc5d6ef78640d4cbe57b90232ac4547ded6338ea5586"
+    },
+    {
+      "path": "dist/dialog.d.ts",
+      "sha256": "4293ad402d20b44a94994e9e4afe9beaff60066223e5acfbc35c85d50412d517"
+    },
+    {
+      "path": "dist/disclosure.d.ts",
+      "sha256": "9499085a04d98fe4bbd0004cb59c701c92d8e0f23fca584eafe96b7c64f79de3"
+    },
+    {
+      "path": "dist/drawer.d.ts",
+      "sha256": "dfa054d28cbfaa22c59e7689e08b2457190d871ca5eb6c0ddf862435b0b69eeb"
+    },
+    {
+      "path": "dist/editable.d.ts",
+      "sha256": "8a6997c13b7bff5f02fae51f8bcea4a2fb0d22bc541652ed607fd4e2d1f4f838"
+    },
+    {
+      "path": "dist/feed.d.ts",
+      "sha256": "a758c0cb211cf1d14e975ca0e4606fa7e8ca00360525a2668d382370447fe4b8"
+    },
+    {
+      "path": "dist/form.d.ts",
+      "sha256": "d74aa628155b3cbc491df58005a722b6eff65ab5b1aac5ef34dd6dff45aadc38"
+    },
+    {
+      "path": "dist/grid.d.ts",
+      "sha256": "5ca9ef731b1743a16ea2c9d431421a7318b9ffc371c87069f4427392899a75de"
+    },
+    {
+      "path": "dist/host-provider.d.ts",
+      "sha256": "f17614a5b58f79d989e0ea03133218d3359071a6c6a2fefe17d8f3629a578b4b"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "901e412a83916baad1c63f3547410f1a4b43f14e2bb25d77f74431a6dfefd944"
+    },
+    {
+      "path": "dist/internal/cascade-choice.d.ts",
+      "sha256": "83ecb1c7c3c1fea7e20b06f5d37e471c8ac40612e202e66303260925b640bf83"
+    },
+    {
+      "path": "dist/internal/date-picker.d.ts",
+      "sha256": "047967f0aaaeb3830a883b213b0aa7b8b277d1bff212b4baa0b991f9c6fdc861"
+    },
+    {
+      "path": "dist/internal/form-control.d.ts",
+      "sha256": "d32781c2df833310dce1485481680bccc7e25255f5288fea1e3d8498b53d692c"
+    },
+    {
+      "path": "dist/internal/native-field.d.ts",
+      "sha256": "41155d817552cc7de7a3063a91df5c10bb25f4dffe4c1d40678ee0e639a81d73"
+    },
+    {
+      "path": "dist/internal/popup.d.ts",
+      "sha256": "d3023900e6bfa2a35e255f2eb4685d923ecf9673391ace2d6f047508042659e2"
+    },
+    {
+      "path": "dist/internal/tabular-components.d.ts",
+      "sha256": "341bfba78ac42dc1fa8f9ced66307e8e861f7565448876c901f4c2c6d68ea6a7"
+    },
+    {
+      "path": "dist/internal/tabular-parts.d.ts",
+      "sha256": "f9d2d2ab37b311d4693d3316118352d8202ab18eb9e074e2f692dc3ec500016e"
+    },
+    {
+      "path": "dist/internal/tabular-profile.d.ts",
+      "sha256": "e6d4802695d73fc94e74bfb14d26322703c4cb234f3bfb70e7395097305e4081"
+    },
+    {
+      "path": "dist/listbox.d.ts",
+      "sha256": "ab32be0d39971fd37c65390644d772aad6b345d3a2f0d56d5ee27290a15209ac"
+    },
+    {
+      "path": "dist/menu-button.d.ts",
+      "sha256": "4aa2426c0a46b6b1849cb07932515a0a24763ab04d6dd9b4a03ff1c8222918c3"
+    },
+    {
+      "path": "dist/menu.d.ts",
+      "sha256": "9ad063df6c572f5e5072509259f5286741bb741425ea613bf1ad2349dd237780"
+    },
+    {
+      "path": "dist/menubar.d.ts",
+      "sha256": "edb65c6ff2c35ec4300aafe692316dd609ccc827e416f7a90e43f176f6cbcd43"
+    },
+    {
+      "path": "dist/meter-group.d.ts",
+      "sha256": "5b8842c92b42683645e70fcb2124c18a779a3d839c9949217a258414adf87353"
+    },
+    {
+      "path": "dist/meter.d.ts",
+      "sha256": "e45b0c21d32b9f0d3b3910916b5eade630358d78d7ed496b4da1af0d937c455d"
+    },
+    {
+      "path": "dist/month-picker.d.ts",
+      "sha256": "f3b26dc109f993a2ce8f61d30a0836b8cc0495fa79abeba5131d78403a140a66"
+    },
+    {
+      "path": "dist/month-range-picker.d.ts",
+      "sha256": "322b652f36d2ddce2b3c26e7b3ea9f8b053394b542532ed5f0add883e76b3b3e"
+    },
+    {
+      "path": "dist/multi-thumb-slider.d.ts",
+      "sha256": "1e277dd27ce7b8e99d3cd2c71bdcde52e60175212079025889dd8dd18ebc1c46"
+    },
+    {
+      "path": "dist/navigation-menu.d.ts",
+      "sha256": "8fc7fd362d42b8e486bd1d0b6e58d6a38304d503c4fe334f552d4da356297c8d"
+    },
+    {
+      "path": "dist/number-field.d.ts",
+      "sha256": "a6284c1e41022dfd606a12ad76e7befc270218908b4d007c51c291a531db1927"
+    },
+    {
+      "path": "dist/pagination.d.ts",
+      "sha256": "375c46971924e8bd29995cd77b7796b53edae1841b9e84c22487b655b589458a"
+    },
+    {
+      "path": "dist/pin-input.d.ts",
+      "sha256": "d11a65c36b066d469fe501464b8e661366c1b5c800c1d62a2e62855fd213c416"
+    },
+    {
+      "path": "dist/popover.d.ts",
+      "sha256": "c7b6815fa66031518aafeb346043a42a5064064f55db1fbd776f6c50f53514d5"
+    },
+    {
+      "path": "dist/primitive.d.ts",
+      "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+    },
+    {
+      "path": "dist/progress.d.ts",
+      "sha256": "831144c17cdd01d47c337d1829c9364f52b4a49115c94bcaca5d33a02fdba728"
+    },
+    {
+      "path": "dist/quantity-field.d.ts",
+      "sha256": "cb798f25fd3bec00cb27591a87d746205997ec301ea52b1e72e2fe03c74c54e9"
+    },
+    {
+      "path": "dist/radio-group.d.ts",
+      "sha256": "abcb1338ab1534cc50e4a12b9c9040f1ba0f72cea3059eb770e94a3f6d71cc35"
+    },
+    {
+      "path": "dist/range-calendar.d.ts",
+      "sha256": "4e072d03a0af3a613794de514765c046617790ff2931b7b4a05edd831dd9680e"
+    },
+    {
+      "path": "dist/rating.d.ts",
+      "sha256": "1e0a689473bf60f9ae85893a438b90451ff346c419b09cb94ca604a9d2fe918a"
+    },
+    {
+      "path": "dist/reorder.d.ts",
+      "sha256": "61b7c00c1fa1c8739204b35689c6b44a60b3d5241d674a0dd737d23e509f42ec"
+    },
+    {
+      "path": "dist/select.d.ts",
+      "sha256": "ab334452383eca7c160857d4fd045a48cfbc437a886367dc8ef63ab3e05c867d"
+    },
+    {
+      "path": "dist/slider.d.ts",
+      "sha256": "f2589ff54adcf6fac874f76017091516bca8fa34cc0c5cf697246cfaa7d3982d"
+    },
+    {
+      "path": "dist/spin-button.d.ts",
+      "sha256": "922697c2d86a627ea2f7213348f81e62c2b3fe6d2a89cf5bc34ac13f74e43ac7"
+    },
+    {
+      "path": "dist/stepper.d.ts",
+      "sha256": "37cf834a1b990d4959441633440c670b464c7b04dc08061bf0058a3c6d89efac"
+    },
+    {
+      "path": "dist/switch.d.ts",
+      "sha256": "583522cb694cbb41ed4c5d0d5ef71388e1d69093c437ac4808bb829ada470d0f"
+    },
+    {
+      "path": "dist/tabs.d.ts",
+      "sha256": "cad43b76723a88b2d67e4ecac18cd7193c4caafbb4f6e91eb63c2664209a3474"
+    },
+    {
+      "path": "dist/tabular.d.ts",
+      "sha256": "7b05acd8f1376a56d5d7af855c85db2667442965a9e93eb7888f02d2d62cf391"
+    },
+    {
+      "path": "dist/tags-input.d.ts",
+      "sha256": "cc7053632cb40649b490ddbb9ea25ea3d61537047d7ad474ae169b5dde476e11"
+    },
+    {
+      "path": "dist/temporal-provider.d.ts",
+      "sha256": "51846fdc04b08b3421f0c0f2c21fd59d88d43ef0e1737d605c15bf9fed01f879"
+    },
+    {
+      "path": "dist/temporal.d.ts",
+      "sha256": "d73d040d746b136d75f87b82c2b8698b9fbba4a0730c922769c9dd934676a67a"
+    },
+    {
+      "path": "dist/text.d.ts",
+      "sha256": "fd275e5fd0fc8434e5e81e5621e9c0ba71b9bd817314e75b87df5210530ad1e3"
+    },
+    {
+      "path": "dist/time-field.d.ts",
+      "sha256": "a6286df86d02a17bba9258323be06ac085db05a20cabced6d3be7b3ba9623989"
+    },
+    {
+      "path": "dist/time-range-field.d.ts",
+      "sha256": "507e480d24ebf4a679a05a9597d75a1af477765541eb637b1c7aca400bf76c08"
+    },
+    {
+      "path": "dist/timer.d.ts",
+      "sha256": "70a8842b3d04630db2aebfd40ceb66a3599aef37fa1e05aae372394770a8ca1c"
+    },
+    {
+      "path": "dist/toast.d.ts",
+      "sha256": "ecc3aa08d3a4322b5bff86c3851508510a016771f16ff8e0b29e2114e91d41e1"
+    },
+    {
+      "path": "dist/toggle-button.d.ts",
+      "sha256": "8d4b4c119ea6a95467aaafe6699881ef3f17c866c22ececb9ab241bdd816cb9e"
+    },
+    {
+      "path": "dist/toggle-group.d.ts",
+      "sha256": "3cdd5990a109bbfb41cc2630d41b532c8deca4e3ebeeda36e46a7c7a220a8606"
+    },
+    {
+      "path": "dist/toolbar.d.ts",
+      "sha256": "17dc8c3dc0a1c49d1ea4356d439205f81f8336f57d1eff3f4c86d81af1716d3d"
+    },
+    {
+      "path": "dist/tooltip.d.ts",
+      "sha256": "69cb4490e6494aa61094aaf92f5ff737bd3fc66924de5f1a9cb221edd22b440e"
+    },
+    {
+      "path": "dist/tree-grid.d.ts",
+      "sha256": "8f614b704c389fb64d029b7e94bc7e4581750f4e06b861378b05217b5942c04e"
+    },
+    {
+      "path": "dist/tree-view.d.ts",
+      "sha256": "d02bc5e0edbff2453892c0deeb12fc52941a2cd166b6959d8c2bcdc6fe49c4f7"
+    },
+    {
+      "path": "dist/virtual.d.ts",
+      "sha256": "54a1d74eed48bd3d6f2abb7c8ae5f1207f0d52d9aa13b75bd7cfd6c4ea9251da"
+    },
+    {
+      "path": "dist/window-splitter.d.ts",
+      "sha256": "a8b1d01d75b8c56365a2f87296d4e92f1a7db0293b14bdaffd9942fb2b9a720f"
+    },
+    {
+      "path": "dist/year-picker.d.ts",
+      "sha256": "0a7d2a1deed943e077f17e3bfbf2456dfb0b2ff8c1ff0cd86763a721650b67da"
+    },
+    {
+      "path": "dist/year-range-picker.d.ts",
+      "sha256": "1304924e711895cc132ec85896af94e7101db953118758f51c228524ae8a784a"
+    }
+  ],
+  "surfaces": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts",
+      "files": [
+        {
+          "path": "dist/accordion.d.ts",
+          "sha256": "97861078aa1bad50b668d01d5f3ca09da5d7c49ceed8dde9d60ee92939ad0e96"
+        },
+        {
+          "path": "dist/alert-dialog.d.ts",
+          "sha256": "711d74c2918a856907c21165e3956da8f14eb39aa15bcb82c445429497dcd347"
+        },
+        {
+          "path": "dist/carousel.d.ts",
+          "sha256": "883edba50e4205be2d3e4274d04228a66127c4a605bcd268113ea18ef6afcdda"
+        },
+        {
+          "path": "dist/cascade-list.d.ts",
+          "sha256": "a08547b62af6c12be48beb851d43087ea53af0357be696fbd7ca720def1ff405"
+        },
+        {
+          "path": "dist/cascade-select.d.ts",
+          "sha256": "5faf18e6098d0d7714031be9c514dd8742aa6643be292a79821d2936ca4f21c5"
+        },
+        {
+          "path": "dist/checkbox-group.d.ts",
+          "sha256": "5a035ca47642e1d930e9dc2fa54a272c4bae9099e4e1a418b526ae5ff3101e9b"
+        },
+        {
+          "path": "dist/checkbox.d.ts",
+          "sha256": "d8d8ce67821725b8a5b000a0de2adc437ef5425dc60eba06dd48ac34873f13ec"
+        },
+        {
+          "path": "dist/color-picker.d.ts",
+          "sha256": "a04d77aa665ce335af1db1169c2d170ae9dc7771ff16b46b659b3a82981516ea"
+        },
+        {
+          "path": "dist/combobox.d.ts",
+          "sha256": "6db3c2d258abc9ac3642752d48d03438f8e5f97bd622ab17aeca38d01a50a19f"
+        },
+        {
+          "path": "dist/dialog.d.ts",
+          "sha256": "4293ad402d20b44a94994e9e4afe9beaff60066223e5acfbc35c85d50412d517"
+        },
+        {
+          "path": "dist/disclosure.d.ts",
+          "sha256": "9499085a04d98fe4bbd0004cb59c701c92d8e0f23fca584eafe96b7c64f79de3"
+        },
+        {
+          "path": "dist/drawer.d.ts",
+          "sha256": "dfa054d28cbfaa22c59e7689e08b2457190d871ca5eb6c0ddf862435b0b69eeb"
+        },
+        {
+          "path": "dist/editable.d.ts",
+          "sha256": "8a6997c13b7bff5f02fae51f8bcea4a2fb0d22bc541652ed607fd4e2d1f4f838"
+        },
+        {
+          "path": "dist/feed.d.ts",
+          "sha256": "a758c0cb211cf1d14e975ca0e4606fa7e8ca00360525a2668d382370447fe4b8"
+        },
+        {
+          "path": "dist/grid.d.ts",
+          "sha256": "5ca9ef731b1743a16ea2c9d431421a7318b9ffc371c87069f4427392899a75de"
+        },
+        {
+          "path": "dist/host-provider.d.ts",
+          "sha256": "f17614a5b58f79d989e0ea03133218d3359071a6c6a2fefe17d8f3629a578b4b"
+        },
+        {
+          "path": "dist/index.d.ts",
+          "sha256": "901e412a83916baad1c63f3547410f1a4b43f14e2bb25d77f74431a6dfefd944"
+        },
+        {
+          "path": "dist/internal/cascade-choice.d.ts",
+          "sha256": "83ecb1c7c3c1fea7e20b06f5d37e471c8ac40612e202e66303260925b640bf83"
+        },
+        {
+          "path": "dist/internal/native-field.d.ts",
+          "sha256": "41155d817552cc7de7a3063a91df5c10bb25f4dffe4c1d40678ee0e639a81d73"
+        },
+        {
+          "path": "dist/internal/popup.d.ts",
+          "sha256": "d3023900e6bfa2a35e255f2eb4685d923ecf9673391ace2d6f047508042659e2"
+        },
+        {
+          "path": "dist/listbox.d.ts",
+          "sha256": "ab32be0d39971fd37c65390644d772aad6b345d3a2f0d56d5ee27290a15209ac"
+        },
+        {
+          "path": "dist/menu.d.ts",
+          "sha256": "9ad063df6c572f5e5072509259f5286741bb741425ea613bf1ad2349dd237780"
+        },
+        {
+          "path": "dist/meter-group.d.ts",
+          "sha256": "5b8842c92b42683645e70fcb2124c18a779a3d839c9949217a258414adf87353"
+        },
+        {
+          "path": "dist/meter.d.ts",
+          "sha256": "e45b0c21d32b9f0d3b3910916b5eade630358d78d7ed496b4da1af0d937c455d"
+        },
+        {
+          "path": "dist/multi-thumb-slider.d.ts",
+          "sha256": "1e277dd27ce7b8e99d3cd2c71bdcde52e60175212079025889dd8dd18ebc1c46"
+        },
+        {
+          "path": "dist/navigation-menu.d.ts",
+          "sha256": "8fc7fd362d42b8e486bd1d0b6e58d6a38304d503c4fe334f552d4da356297c8d"
+        },
+        {
+          "path": "dist/number-field.d.ts",
+          "sha256": "a6284c1e41022dfd606a12ad76e7befc270218908b4d007c51c291a531db1927"
+        },
+        {
+          "path": "dist/pagination.d.ts",
+          "sha256": "375c46971924e8bd29995cd77b7796b53edae1841b9e84c22487b655b589458a"
+        },
+        {
+          "path": "dist/pin-input.d.ts",
+          "sha256": "d11a65c36b066d469fe501464b8e661366c1b5c800c1d62a2e62855fd213c416"
+        },
+        {
+          "path": "dist/popover.d.ts",
+          "sha256": "c7b6815fa66031518aafeb346043a42a5064064f55db1fbd776f6c50f53514d5"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/progress.d.ts",
+          "sha256": "831144c17cdd01d47c337d1829c9364f52b4a49115c94bcaca5d33a02fdba728"
+        },
+        {
+          "path": "dist/quantity-field.d.ts",
+          "sha256": "cb798f25fd3bec00cb27591a87d746205997ec301ea52b1e72e2fe03c74c54e9"
+        },
+        {
+          "path": "dist/radio-group.d.ts",
+          "sha256": "abcb1338ab1534cc50e4a12b9c9040f1ba0f72cea3059eb770e94a3f6d71cc35"
+        },
+        {
+          "path": "dist/rating.d.ts",
+          "sha256": "1e0a689473bf60f9ae85893a438b90451ff346c419b09cb94ca604a9d2fe918a"
+        },
+        {
+          "path": "dist/reorder.d.ts",
+          "sha256": "61b7c00c1fa1c8739204b35689c6b44a60b3d5241d674a0dd737d23e509f42ec"
+        },
+        {
+          "path": "dist/select.d.ts",
+          "sha256": "ab334452383eca7c160857d4fd045a48cfbc437a886367dc8ef63ab3e05c867d"
+        },
+        {
+          "path": "dist/slider.d.ts",
+          "sha256": "f2589ff54adcf6fac874f76017091516bca8fa34cc0c5cf697246cfaa7d3982d"
+        },
+        {
+          "path": "dist/spin-button.d.ts",
+          "sha256": "922697c2d86a627ea2f7213348f81e62c2b3fe6d2a89cf5bc34ac13f74e43ac7"
+        },
+        {
+          "path": "dist/stepper.d.ts",
+          "sha256": "37cf834a1b990d4959441633440c670b464c7b04dc08061bf0058a3c6d89efac"
+        },
+        {
+          "path": "dist/switch.d.ts",
+          "sha256": "583522cb694cbb41ed4c5d0d5ef71388e1d69093c437ac4808bb829ada470d0f"
+        },
+        {
+          "path": "dist/tabs.d.ts",
+          "sha256": "cad43b76723a88b2d67e4ecac18cd7193c4caafbb4f6e91eb63c2664209a3474"
+        },
+        {
+          "path": "dist/tags-input.d.ts",
+          "sha256": "cc7053632cb40649b490ddbb9ea25ea3d61537047d7ad474ae169b5dde476e11"
+        },
+        {
+          "path": "dist/text.d.ts",
+          "sha256": "fd275e5fd0fc8434e5e81e5621e9c0ba71b9bd817314e75b87df5210530ad1e3"
+        },
+        {
+          "path": "dist/timer.d.ts",
+          "sha256": "70a8842b3d04630db2aebfd40ceb66a3599aef37fa1e05aae372394770a8ca1c"
+        },
+        {
+          "path": "dist/toast.d.ts",
+          "sha256": "ecc3aa08d3a4322b5bff86c3851508510a016771f16ff8e0b29e2114e91d41e1"
+        },
+        {
+          "path": "dist/toggle-button.d.ts",
+          "sha256": "8d4b4c119ea6a95467aaafe6699881ef3f17c866c22ececb9ab241bdd816cb9e"
+        },
+        {
+          "path": "dist/toggle-group.d.ts",
+          "sha256": "3cdd5990a109bbfb41cc2630d41b532c8deca4e3ebeeda36e46a7c7a220a8606"
+        },
+        {
+          "path": "dist/toolbar.d.ts",
+          "sha256": "17dc8c3dc0a1c49d1ea4356d439205f81f8336f57d1eff3f4c86d81af1716d3d"
+        },
+        {
+          "path": "dist/tooltip.d.ts",
+          "sha256": "69cb4490e6494aa61094aaf92f5ff737bd3fc66924de5f1a9cb221edd22b440e"
+        },
+        {
+          "path": "dist/tree-grid.d.ts",
+          "sha256": "8f614b704c389fb64d029b7e94bc7e4581750f4e06b861378b05217b5942c04e"
+        },
+        {
+          "path": "dist/tree-view.d.ts",
+          "sha256": "d02bc5e0edbff2453892c0deeb12fc52941a2cd166b6959d8c2bcdc6fe49c4f7"
+        },
+        {
+          "path": "dist/window-splitter.d.ts",
+          "sha256": "a8b1d01d75b8c56365a2f87296d4e92f1a7db0293b14bdaffd9942fb2b9a720f"
+        }
+      ]
+    },
+    {
+      "subpath": "./accordion",
+      "types": "dist/accordion.d.ts",
+      "files": [
+        {
+          "path": "dist/accordion.d.ts",
+          "sha256": "97861078aa1bad50b668d01d5f3ca09da5d7c49ceed8dde9d60ee92939ad0e96"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./alert-dialog",
+      "types": "dist/alert-dialog.d.ts",
+      "files": [
+        {
+          "path": "dist/alert-dialog.d.ts",
+          "sha256": "711d74c2918a856907c21165e3956da8f14eb39aa15bcb82c445429497dcd347"
+        },
+        {
+          "path": "dist/internal/popup.d.ts",
+          "sha256": "d3023900e6bfa2a35e255f2eb4685d923ecf9673391ace2d6f047508042659e2"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./carousel",
+      "types": "dist/carousel.d.ts",
+      "files": [
+        {
+          "path": "dist/carousel.d.ts",
+          "sha256": "883edba50e4205be2d3e4274d04228a66127c4a605bcd268113ea18ef6afcdda"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./cascade-list",
+      "types": "dist/cascade-list.d.ts",
+      "files": [
+        {
+          "path": "dist/cascade-list.d.ts",
+          "sha256": "a08547b62af6c12be48beb851d43087ea53af0357be696fbd7ca720def1ff405"
+        },
+        {
+          "path": "dist/internal/cascade-choice.d.ts",
+          "sha256": "83ecb1c7c3c1fea7e20b06f5d37e471c8ac40612e202e66303260925b640bf83"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./cascade-select",
+      "types": "dist/cascade-select.d.ts",
+      "files": [
+        {
+          "path": "dist/cascade-select.d.ts",
+          "sha256": "5faf18e6098d0d7714031be9c514dd8742aa6643be292a79821d2936ca4f21c5"
+        },
+        {
+          "path": "dist/internal/cascade-choice.d.ts",
+          "sha256": "83ecb1c7c3c1fea7e20b06f5d37e471c8ac40612e202e66303260925b640bf83"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./checkbox",
+      "types": "dist/checkbox.d.ts",
+      "files": [
+        {
+          "path": "dist/checkbox.d.ts",
+          "sha256": "d8d8ce67821725b8a5b000a0de2adc437ef5425dc60eba06dd48ac34873f13ec"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./checkbox-group",
+      "types": "dist/checkbox-group.d.ts",
+      "files": [
+        {
+          "path": "dist/checkbox-group.d.ts",
+          "sha256": "5a035ca47642e1d930e9dc2fa54a272c4bae9099e4e1a418b526ae5ff3101e9b"
+        },
+        {
+          "path": "dist/checkbox.d.ts",
+          "sha256": "d8d8ce67821725b8a5b000a0de2adc437ef5425dc60eba06dd48ac34873f13ec"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./color-picker",
+      "types": "dist/color-picker.d.ts",
+      "files": [
+        {
+          "path": "dist/color-picker.d.ts",
+          "sha256": "a04d77aa665ce335af1db1169c2d170ae9dc7771ff16b46b659b3a82981516ea"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./combobox",
+      "types": "dist/combobox.d.ts",
+      "files": [
+        {
+          "path": "dist/combobox.d.ts",
+          "sha256": "6db3c2d258abc9ac3642752d48d03438f8e5f97bd622ab17aeca38d01a50a19f"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./dialog",
+      "types": "dist/dialog.d.ts",
+      "files": [
+        {
+          "path": "dist/dialog.d.ts",
+          "sha256": "4293ad402d20b44a94994e9e4afe9beaff60066223e5acfbc35c85d50412d517"
+        },
+        {
+          "path": "dist/internal/popup.d.ts",
+          "sha256": "d3023900e6bfa2a35e255f2eb4685d923ecf9673391ace2d6f047508042659e2"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./disclosure",
+      "types": "dist/disclosure.d.ts",
+      "files": [
+        {
+          "path": "dist/disclosure.d.ts",
+          "sha256": "9499085a04d98fe4bbd0004cb59c701c92d8e0f23fca584eafe96b7c64f79de3"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./drawer",
+      "types": "dist/drawer.d.ts",
+      "files": [
+        {
+          "path": "dist/drawer.d.ts",
+          "sha256": "dfa054d28cbfaa22c59e7689e08b2457190d871ca5eb6c0ddf862435b0b69eeb"
+        },
+        {
+          "path": "dist/internal/popup.d.ts",
+          "sha256": "d3023900e6bfa2a35e255f2eb4685d923ecf9673391ace2d6f047508042659e2"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./editable",
+      "types": "dist/editable.d.ts",
+      "files": [
+        {
+          "path": "dist/editable.d.ts",
+          "sha256": "8a6997c13b7bff5f02fae51f8bcea4a2fb0d22bc541652ed607fd4e2d1f4f838"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./feed",
+      "types": "dist/feed.d.ts",
+      "files": [
+        {
+          "path": "dist/feed.d.ts",
+          "sha256": "a758c0cb211cf1d14e975ca0e4606fa7e8ca00360525a2668d382370447fe4b8"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./form",
+      "types": "dist/form.d.ts",
+      "files": [
+        {
+          "path": "dist/form.d.ts",
+          "sha256": "d74aa628155b3cbc491df58005a722b6eff65ab5b1aac5ef34dd6dff45aadc38"
+        },
+        {
+          "path": "dist/internal/form-control.d.ts",
+          "sha256": "d32781c2df833310dce1485481680bccc7e25255f5288fea1e3d8498b53d692c"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./grid",
+      "types": "dist/grid.d.ts",
+      "files": [
+        {
+          "path": "dist/grid.d.ts",
+          "sha256": "5ca9ef731b1743a16ea2c9d431421a7318b9ffc371c87069f4427392899a75de"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./host-provider",
+      "types": "dist/host-provider.d.ts",
+      "files": [
+        {
+          "path": "dist/host-provider.d.ts",
+          "sha256": "f17614a5b58f79d989e0ea03133218d3359071a6c6a2fefe17d8f3629a578b4b"
+        }
+      ]
+    },
+    {
+      "subpath": "./listbox",
+      "types": "dist/listbox.d.ts",
+      "files": [
+        {
+          "path": "dist/listbox.d.ts",
+          "sha256": "ab32be0d39971fd37c65390644d772aad6b345d3a2f0d56d5ee27290a15209ac"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./menu",
+      "types": "dist/menu.d.ts",
+      "files": [
+        {
+          "path": "dist/menu.d.ts",
+          "sha256": "9ad063df6c572f5e5072509259f5286741bb741425ea613bf1ad2349dd237780"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./menu-button",
+      "types": "dist/menu-button.d.ts",
+      "files": [
+        {
+          "path": "dist/menu-button.d.ts",
+          "sha256": "4aa2426c0a46b6b1849cb07932515a0a24763ab04d6dd9b4a03ff1c8222918c3"
+        },
+        {
+          "path": "dist/menu.d.ts",
+          "sha256": "9ad063df6c572f5e5072509259f5286741bb741425ea613bf1ad2349dd237780"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./menubar",
+      "types": "dist/menubar.d.ts",
+      "files": [
+        {
+          "path": "dist/menu.d.ts",
+          "sha256": "9ad063df6c572f5e5072509259f5286741bb741425ea613bf1ad2349dd237780"
+        },
+        {
+          "path": "dist/menubar.d.ts",
+          "sha256": "edb65c6ff2c35ec4300aafe692316dd609ccc827e416f7a90e43f176f6cbcd43"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./meter",
+      "types": "dist/meter.d.ts",
+      "files": [
+        {
+          "path": "dist/meter.d.ts",
+          "sha256": "e45b0c21d32b9f0d3b3910916b5eade630358d78d7ed496b4da1af0d937c455d"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./meter-group",
+      "types": "dist/meter-group.d.ts",
+      "files": [
+        {
+          "path": "dist/meter-group.d.ts",
+          "sha256": "5b8842c92b42683645e70fcb2124c18a779a3d839c9949217a258414adf87353"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./multi-thumb-slider",
+      "types": "dist/multi-thumb-slider.d.ts",
+      "files": [
+        {
+          "path": "dist/multi-thumb-slider.d.ts",
+          "sha256": "1e277dd27ce7b8e99d3cd2c71bdcde52e60175212079025889dd8dd18ebc1c46"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./navigation-menu",
+      "types": "dist/navigation-menu.d.ts",
+      "files": [
+        {
+          "path": "dist/menu.d.ts",
+          "sha256": "9ad063df6c572f5e5072509259f5286741bb741425ea613bf1ad2349dd237780"
+        },
+        {
+          "path": "dist/navigation-menu.d.ts",
+          "sha256": "8fc7fd362d42b8e486bd1d0b6e58d6a38304d503c4fe334f552d4da356297c8d"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./number-field",
+      "types": "dist/number-field.d.ts",
+      "files": [
+        {
+          "path": "dist/internal/native-field.d.ts",
+          "sha256": "41155d817552cc7de7a3063a91df5c10bb25f4dffe4c1d40678ee0e639a81d73"
+        },
+        {
+          "path": "dist/number-field.d.ts",
+          "sha256": "a6284c1e41022dfd606a12ad76e7befc270218908b4d007c51c291a531db1927"
+        }
+      ]
+    },
+    {
+      "subpath": "./pagination",
+      "types": "dist/pagination.d.ts",
+      "files": [
+        {
+          "path": "dist/pagination.d.ts",
+          "sha256": "375c46971924e8bd29995cd77b7796b53edae1841b9e84c22487b655b589458a"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./pin-input",
+      "types": "dist/pin-input.d.ts",
+      "files": [
+        {
+          "path": "dist/pin-input.d.ts",
+          "sha256": "d11a65c36b066d469fe501464b8e661366c1b5c800c1d62a2e62855fd213c416"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./popover",
+      "types": "dist/popover.d.ts",
+      "files": [
+        {
+          "path": "dist/internal/popup.d.ts",
+          "sha256": "d3023900e6bfa2a35e255f2eb4685d923ecf9673391ace2d6f047508042659e2"
+        },
+        {
+          "path": "dist/popover.d.ts",
+          "sha256": "c7b6815fa66031518aafeb346043a42a5064064f55db1fbd776f6c50f53514d5"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./primitive",
+      "types": "dist/primitive.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        }
+      ]
+    },
+    {
+      "subpath": "./progress",
+      "types": "dist/progress.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/progress.d.ts",
+          "sha256": "831144c17cdd01d47c337d1829c9364f52b4a49115c94bcaca5d33a02fdba728"
+        }
+      ]
+    },
+    {
+      "subpath": "./quantity-field",
+      "types": "dist/quantity-field.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/quantity-field.d.ts",
+          "sha256": "cb798f25fd3bec00cb27591a87d746205997ec301ea52b1e72e2fe03c74c54e9"
+        }
+      ]
+    },
+    {
+      "subpath": "./radio-group",
+      "types": "dist/radio-group.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/radio-group.d.ts",
+          "sha256": "abcb1338ab1534cc50e4a12b9c9040f1ba0f72cea3059eb770e94a3f6d71cc35"
+        }
+      ]
+    },
+    {
+      "subpath": "./rating",
+      "types": "dist/rating.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/radio-group.d.ts",
+          "sha256": "abcb1338ab1534cc50e4a12b9c9040f1ba0f72cea3059eb770e94a3f6d71cc35"
+        },
+        {
+          "path": "dist/rating.d.ts",
+          "sha256": "1e0a689473bf60f9ae85893a438b90451ff346c419b09cb94ca604a9d2fe918a"
+        }
+      ]
+    },
+    {
+      "subpath": "./reorder",
+      "types": "dist/reorder.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/reorder.d.ts",
+          "sha256": "61b7c00c1fa1c8739204b35689c6b44a60b3d5241d674a0dd737d23e509f42ec"
+        }
+      ]
+    },
+    {
+      "subpath": "./select",
+      "types": "dist/select.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/select.d.ts",
+          "sha256": "ab334452383eca7c160857d4fd045a48cfbc437a886367dc8ef63ab3e05c867d"
+        }
+      ]
+    },
+    {
+      "subpath": "./slider",
+      "types": "dist/slider.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/slider.d.ts",
+          "sha256": "f2589ff54adcf6fac874f76017091516bca8fa34cc0c5cf697246cfaa7d3982d"
+        }
+      ]
+    },
+    {
+      "subpath": "./spin-button",
+      "types": "dist/spin-button.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/spin-button.d.ts",
+          "sha256": "922697c2d86a627ea2f7213348f81e62c2b3fe6d2a89cf5bc34ac13f74e43ac7"
+        }
+      ]
+    },
+    {
+      "subpath": "./stepper",
+      "types": "dist/stepper.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/stepper.d.ts",
+          "sha256": "37cf834a1b990d4959441633440c670b464c7b04dc08061bf0058a3c6d89efac"
+        },
+        {
+          "path": "dist/tabs.d.ts",
+          "sha256": "cad43b76723a88b2d67e4ecac18cd7193c4caafbb4f6e91eb63c2664209a3474"
+        }
+      ]
+    },
+    {
+      "subpath": "./switch",
+      "types": "dist/switch.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/switch.d.ts",
+          "sha256": "583522cb694cbb41ed4c5d0d5ef71388e1d69093c437ac4808bb829ada470d0f"
+        }
+      ]
+    },
+    {
+      "subpath": "./tabs",
+      "types": "dist/tabs.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/tabs.d.ts",
+          "sha256": "cad43b76723a88b2d67e4ecac18cd7193c4caafbb4f6e91eb63c2664209a3474"
+        }
+      ]
+    },
+    {
+      "subpath": "./tabular",
+      "types": "dist/tabular.d.ts",
+      "files": [
+        {
+          "path": "dist/data-grid.d.ts",
+          "sha256": "91afeb18c329277be6f7778d2adba8a04c24cff82408058c8708430a5d50b947"
+        },
+        {
+          "path": "dist/data-table.d.ts",
+          "sha256": "4549f1c91f211c2ff39c8f06fa8844c302c6588a8fa592964f8b042b7f708f94"
+        },
+        {
+          "path": "dist/data-tree-grid.d.ts",
+          "sha256": "fc04549a7ac1c2acccd470c3c363922cfb06f4eb4479113d3c10ce16a494bd54"
+        },
+        {
+          "path": "dist/internal/tabular-components.d.ts",
+          "sha256": "341bfba78ac42dc1fa8f9ced66307e8e861f7565448876c901f4c2c6d68ea6a7"
+        },
+        {
+          "path": "dist/internal/tabular-parts.d.ts",
+          "sha256": "f9d2d2ab37b311d4693d3316118352d8202ab18eb9e074e2f692dc3ec500016e"
+        },
+        {
+          "path": "dist/internal/tabular-profile.d.ts",
+          "sha256": "e6d4802695d73fc94e74bfb14d26322703c4cb234f3bfb70e7395097305e4081"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/tabular.d.ts",
+          "sha256": "7b05acd8f1376a56d5d7af855c85db2667442965a9e93eb7888f02d2d62cf391"
+        }
+      ]
+    },
+    {
+      "subpath": "./tags-input",
+      "types": "dist/tags-input.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/tags-input.d.ts",
+          "sha256": "cc7053632cb40649b490ddbb9ea25ea3d61537047d7ad474ae169b5dde476e11"
+        }
+      ]
+    },
+    {
+      "subpath": "./temporal",
+      "types": "dist/temporal.d.ts",
+      "files": [
+        {
+          "path": "dist/calendar.d.ts",
+          "sha256": "47f2805790ce5febc34ed6e6364561e0330317553dd9f98b57aaf94903347500"
+        },
+        {
+          "path": "dist/date-field.d.ts",
+          "sha256": "f205df19537ed5ba9eab0ec4b7a73cbc2f19c2909a7023f67d80672002c6b7da"
+        },
+        {
+          "path": "dist/date-picker.d.ts",
+          "sha256": "bd896a3cab2a3b16d3abe769003f95422db855b9f5f15e27360d07d0c942c87b"
+        },
+        {
+          "path": "dist/date-range-field.d.ts",
+          "sha256": "4a40d7c1a603887fddd8f4a3cbde9a411864b602d7bc9c395b61201aaeda2ff1"
+        },
+        {
+          "path": "dist/date-range-picker.d.ts",
+          "sha256": "ec9e95300d1238d8871d96333ca120b865f4e626de8ca0bcd3ac5223a989b734"
+        },
+        {
+          "path": "dist/date-time-field.d.ts",
+          "sha256": "ef2a911c0c4922d83216b8e275a7257a26ad9e323f5f241e4b522e8a83c1edae"
+        },
+        {
+          "path": "dist/date-time-picker.d.ts",
+          "sha256": "67486dd8380b489af8d1f064f84b0f6532a8ca5b6cdea181061ffce0578e09c3"
+        },
+        {
+          "path": "dist/date-time-range-picker.d.ts",
+          "sha256": "c4774f4370299db2a1f6fc5d6ef78640d4cbe57b90232ac4547ded6338ea5586"
+        },
+        {
+          "path": "dist/internal/date-picker.d.ts",
+          "sha256": "047967f0aaaeb3830a883b213b0aa7b8b277d1bff212b4baa0b991f9c6fdc861"
+        },
+        {
+          "path": "dist/internal/native-field.d.ts",
+          "sha256": "41155d817552cc7de7a3063a91df5c10bb25f4dffe4c1d40678ee0e639a81d73"
+        },
+        {
+          "path": "dist/month-picker.d.ts",
+          "sha256": "f3b26dc109f993a2ce8f61d30a0836b8cc0495fa79abeba5131d78403a140a66"
+        },
+        {
+          "path": "dist/month-range-picker.d.ts",
+          "sha256": "322b652f36d2ddce2b3c26e7b3ea9f8b053394b542532ed5f0add883e76b3b3e"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/range-calendar.d.ts",
+          "sha256": "4e072d03a0af3a613794de514765c046617790ff2931b7b4a05edd831dd9680e"
+        },
+        {
+          "path": "dist/temporal-provider.d.ts",
+          "sha256": "51846fdc04b08b3421f0c0f2c21fd59d88d43ef0e1737d605c15bf9fed01f879"
+        },
+        {
+          "path": "dist/temporal.d.ts",
+          "sha256": "d73d040d746b136d75f87b82c2b8698b9fbba4a0730c922769c9dd934676a67a"
+        },
+        {
+          "path": "dist/time-field.d.ts",
+          "sha256": "a6286df86d02a17bba9258323be06ac085db05a20cabced6d3be7b3ba9623989"
+        },
+        {
+          "path": "dist/time-range-field.d.ts",
+          "sha256": "507e480d24ebf4a679a05a9597d75a1af477765541eb637b1c7aca400bf76c08"
+        },
+        {
+          "path": "dist/year-picker.d.ts",
+          "sha256": "0a7d2a1deed943e077f17e3bfbf2456dfb0b2ff8c1ff0cd86763a721650b67da"
+        },
+        {
+          "path": "dist/year-range-picker.d.ts",
+          "sha256": "1304924e711895cc132ec85896af94e7101db953118758f51c228524ae8a784a"
+        }
+      ]
+    },
+    {
+      "subpath": "./text",
+      "types": "dist/text.d.ts",
+      "files": [
+        {
+          "path": "dist/text.d.ts",
+          "sha256": "fd275e5fd0fc8434e5e81e5621e9c0ba71b9bd817314e75b87df5210530ad1e3"
+        }
+      ]
+    },
+    {
+      "subpath": "./timer",
+      "types": "dist/timer.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/timer.d.ts",
+          "sha256": "70a8842b3d04630db2aebfd40ceb66a3599aef37fa1e05aae372394770a8ca1c"
+        }
+      ]
+    },
+    {
+      "subpath": "./toast",
+      "types": "dist/toast.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/toast.d.ts",
+          "sha256": "ecc3aa08d3a4322b5bff86c3851508510a016771f16ff8e0b29e2114e91d41e1"
+        }
+      ]
+    },
+    {
+      "subpath": "./toggle-button",
+      "types": "dist/toggle-button.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/toggle-button.d.ts",
+          "sha256": "8d4b4c119ea6a95467aaafe6699881ef3f17c866c22ececb9ab241bdd816cb9e"
+        }
+      ]
+    },
+    {
+      "subpath": "./toggle-group",
+      "types": "dist/toggle-group.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/toggle-group.d.ts",
+          "sha256": "3cdd5990a109bbfb41cc2630d41b532c8deca4e3ebeeda36e46a7c7a220a8606"
+        }
+      ]
+    },
+    {
+      "subpath": "./toolbar",
+      "types": "dist/toolbar.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/toolbar.d.ts",
+          "sha256": "17dc8c3dc0a1c49d1ea4356d439205f81f8336f57d1eff3f4c86d81af1716d3d"
+        }
+      ]
+    },
+    {
+      "subpath": "./tooltip",
+      "types": "dist/tooltip.d.ts",
+      "files": [
+        {
+          "path": "dist/internal/popup.d.ts",
+          "sha256": "d3023900e6bfa2a35e255f2eb4685d923ecf9673391ace2d6f047508042659e2"
+        },
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/tooltip.d.ts",
+          "sha256": "69cb4490e6494aa61094aaf92f5ff737bd3fc66924de5f1a9cb221edd22b440e"
+        }
+      ]
+    },
+    {
+      "subpath": "./tree-grid",
+      "types": "dist/tree-grid.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/tree-grid.d.ts",
+          "sha256": "8f614b704c389fb64d029b7e94bc7e4581750f4e06b861378b05217b5942c04e"
+        }
+      ]
+    },
+    {
+      "subpath": "./tree-view",
+      "types": "dist/tree-view.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/tree-view.d.ts",
+          "sha256": "d02bc5e0edbff2453892c0deeb12fc52941a2cd166b6959d8c2bcdc6fe49c4f7"
+        }
+      ]
+    },
+    {
+      "subpath": "./virtual",
+      "types": "dist/virtual.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/virtual.d.ts",
+          "sha256": "54a1d74eed48bd3d6f2abb7c8ae5f1207f0d52d9aa13b75bd7cfd6c4ea9251da"
+        }
+      ]
+    },
+    {
+      "subpath": "./window-splitter",
+      "types": "dist/window-splitter.d.ts",
+      "files": [
+        {
+          "path": "dist/primitive.d.ts",
+          "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+        },
+        {
+          "path": "dist/slider.d.ts",
+          "sha256": "f2589ff54adcf6fac874f76017091516bca8fa34cc0c5cf697246cfaa7d3982d"
+        },
+        {
+          "path": "dist/window-splitter.d.ts",
+          "sha256": "a8b1d01d75b8c56365a2f87296d4e92f1a7db0293b14bdaffd9942fb2b9a720f"
+        }
+      ]
+    }
+  ]
+}

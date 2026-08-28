@@ -1,0 +1,921 @@
+{
+  "schemaVersion": 1,
+  "packages": {
+    "core": {
+      "tarballBytes": 186788,
+      "unpackedBytes": 1054235,
+      "unpackedFiles": 347,
+      "categories": {
+        "runtimeJS": {
+          "files": 86,
+          "bytes": 367037
+        },
+        "declarations": {
+          "files": 86,
+          "bytes": 144969
+        },
+        "sourceMaps": {
+          "files": 172,
+          "bytes": 529036
+        },
+        "other": {
+          "files": 3,
+          "bytes": 13193
+        }
+      }
+    },
+    "dom": {
+      "tarballBytes": 292849,
+      "unpackedBytes": 1829494,
+      "unpackedFiles": 379,
+      "categories": {
+        "runtimeJS": {
+          "files": 94,
+          "bytes": 648601
+        },
+        "declarations": {
+          "files": 94,
+          "bytes": 258901
+        },
+        "sourceMaps": {
+          "files": 188,
+          "bytes": 909573
+        },
+        "other": {
+          "files": 3,
+          "bytes": 12419
+        }
+      }
+    },
+    "form": {
+      "tarballBytes": 17262,
+      "unpackedBytes": 83852,
+      "unpackedFiles": 35,
+      "categories": {
+        "runtimeJS": {
+          "files": 8,
+          "bytes": 29832
+        },
+        "declarations": {
+          "files": 8,
+          "bytes": 10053
+        },
+        "sourceMaps": {
+          "files": 16,
+          "bytes": 40211
+        },
+        "other": {
+          "files": 3,
+          "bytes": 3756
+        }
+      }
+    },
+    "tabular": {
+      "tarballBytes": 61082,
+      "unpackedBytes": 348545,
+      "unpackedFiles": 55,
+      "categories": {
+        "runtimeJS": {
+          "files": 13,
+          "bytes": 131430
+        },
+        "declarations": {
+          "files": 13,
+          "bytes": 39500
+        },
+        "sourceMaps": {
+          "files": 26,
+          "bytes": 172871
+        },
+        "other": {
+          "files": 3,
+          "bytes": 4744
+        }
+      }
+    },
+    "temporal": {
+      "tarballBytes": 41089,
+      "unpackedBytes": 259599,
+      "unpackedFiles": 79,
+      "categories": {
+        "runtimeJS": {
+          "files": 19,
+          "bytes": 90867
+        },
+        "declarations": {
+          "files": 19,
+          "bytes": 34847
+        },
+        "sourceMaps": {
+          "files": 38,
+          "bytes": 128450
+        },
+        "other": {
+          "files": 3,
+          "bytes": 5435
+        }
+      }
+    },
+    "terminal": {
+      "tarballBytes": 153178,
+      "unpackedBytes": 978686,
+      "unpackedFiles": 323,
+      "categories": {
+        "runtimeJS": {
+          "files": 80,
+          "bytes": 313797
+        },
+        "declarations": {
+          "files": 80,
+          "bytes": 167680
+        },
+        "sourceMaps": {
+          "files": 160,
+          "bytes": 482939
+        },
+        "other": {
+          "files": 3,
+          "bytes": 14270
+        }
+      }
+    },
+    "virtual": {
+      "tarballBytes": 54249,
+      "unpackedBytes": 332213,
+      "unpackedFiles": 51,
+      "categories": {
+        "runtimeJS": {
+          "files": 12,
+          "bytes": 119913
+        },
+        "declarations": {
+          "files": 12,
+          "bytes": 37680
+        },
+        "sourceMaps": {
+          "files": 24,
+          "bytes": 169973
+        },
+        "other": {
+          "files": 3,
+          "bytes": 4647
+        }
+      }
+    },
+    "vue": {
+      "tarballBytes": 309625,
+      "unpackedBytes": 2327057,
+      "unpackedFiles": 367,
+      "categories": {
+        "runtimeJS": {
+          "files": 91,
+          "bytes": 689423
+        },
+        "declarations": {
+          "files": 91,
+          "bytes": 625668
+        },
+        "sourceMaps": {
+          "files": 182,
+          "bytes": 999369
+        },
+        "other": {
+          "files": 3,
+          "bytes": 12597
+        }
+      }
+    }
+  },
+  "installs": [
+    {
+      "packageManager": "npm",
+      "installedBytes": 22745737,
+      "installedFiles": 1799,
+      "dependencyNames": [
+        "@babel/helper-string-parser",
+        "@babel/helper-validator-identifier",
+        "@babel/parser",
+        "@babel/types",
+        "@floating-ui/core",
+        "@floating-ui/dom",
+        "@floating-ui/utils",
+        "@jridgewell/sourcemap-codec",
+        "@sectile/core",
+        "@sectile/dom",
+        "@sectile/form",
+        "@sectile/tabular",
+        "@sectile/temporal",
+        "@sectile/virtual",
+        "@sectile/vue",
+        "@vue/compiler-core",
+        "@vue/compiler-dom",
+        "@vue/compiler-sfc",
+        "@vue/compiler-ssr",
+        "@vue/reactivity",
+        "@vue/runtime-core",
+        "@vue/runtime-dom",
+        "@vue/server-renderer",
+        "@vue/shared",
+        "colord",
+        "csstype",
+        "entities",
+        "estree-walker",
+        "magic-string",
+        "nanoid",
+        "picocolors",
+        "postcss",
+        "source-map-js",
+        "typescript",
+        "vue"
+      ],
+      "dependencyTree": [
+        {
+          "name": "@sectile/core",
+          "version": "0.7.0",
+          "dependencies": [
+            {
+              "name": "colord",
+              "version": "2.10.0",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "name": "@sectile/dom",
+          "version": "0.7.0",
+          "dependencies": [
+            {
+              "name": "@floating-ui/dom",
+              "version": "1.8.0",
+              "dependencies": [
+                {
+                  "name": "@floating-ui/core",
+                  "version": "1.8.0",
+                  "dependencies": [
+                    {
+                      "name": "@floating-ui/utils",
+                      "version": "0.2.12",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "@floating-ui/utils",
+                  "version": "0.2.12",
+                  "dependencies": []
+                }
+              ]
+            },
+            {
+              "name": "@sectile/core",
+              "version": "0.7.0",
+              "dependencies": []
+            },
+            {
+              "name": "@sectile/form",
+              "version": null,
+              "dependencies": []
+            },
+            {
+              "name": "@sectile/tabular",
+              "version": null,
+              "dependencies": []
+            },
+            {
+              "name": "@sectile/temporal",
+              "version": null,
+              "dependencies": []
+            },
+            {
+              "name": "@sectile/virtual",
+              "version": null,
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "name": "@sectile/vue",
+          "version": "0.7.0",
+          "dependencies": [
+            {
+              "name": "@sectile/core",
+              "version": "0.7.0",
+              "dependencies": []
+            },
+            {
+              "name": "@sectile/dom",
+              "version": "0.7.0",
+              "dependencies": []
+            },
+            {
+              "name": "@sectile/form",
+              "version": null,
+              "dependencies": []
+            },
+            {
+              "name": "@sectile/tabular",
+              "version": null,
+              "dependencies": []
+            },
+            {
+              "name": "@sectile/temporal",
+              "version": null,
+              "dependencies": []
+            },
+            {
+              "name": "@sectile/virtual",
+              "version": null,
+              "dependencies": []
+            },
+            {
+              "name": "vue",
+              "version": "3.5.41",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "name": "vue",
+          "version": "3.5.41",
+          "dependencies": [
+            {
+              "name": "@vue/compiler-dom",
+              "version": "3.5.41",
+              "dependencies": [
+                {
+                  "name": "@vue/compiler-core",
+                  "version": "3.5.41",
+                  "dependencies": [
+                    {
+                      "name": "@babel/parser",
+                      "version": "7.29.8",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "@vue/shared",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "entities",
+                      "version": "7.0.1",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "estree-walker",
+                      "version": "2.0.2",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "source-map-js",
+                      "version": "1.2.1",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "@vue/shared",
+                  "version": "3.5.41",
+                  "dependencies": []
+                }
+              ]
+            },
+            {
+              "name": "@vue/compiler-sfc",
+              "version": "3.5.41",
+              "dependencies": [
+                {
+                  "name": "@babel/parser",
+                  "version": "7.29.8",
+                  "dependencies": [
+                    {
+                      "name": "@babel/types",
+                      "version": "7.29.8",
+                      "dependencies": [
+                        {
+                          "name": "@babel/helper-string-parser",
+                          "version": "7.29.7",
+                          "dependencies": []
+                        },
+                        {
+                          "name": "@babel/helper-validator-identifier",
+                          "version": "7.29.7",
+                          "dependencies": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "@vue/compiler-core",
+                  "version": "3.5.41",
+                  "dependencies": []
+                },
+                {
+                  "name": "@vue/compiler-dom",
+                  "version": "3.5.41",
+                  "dependencies": []
+                },
+                {
+                  "name": "@vue/compiler-ssr",
+                  "version": "3.5.41",
+                  "dependencies": [
+                    {
+                      "name": "@vue/compiler-dom",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "@vue/shared",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "@vue/shared",
+                  "version": "3.5.41",
+                  "dependencies": []
+                },
+                {
+                  "name": "estree-walker",
+                  "version": "2.0.2",
+                  "dependencies": []
+                },
+                {
+                  "name": "magic-string",
+                  "version": "0.30.21",
+                  "dependencies": [
+                    {
+                      "name": "@jridgewell/sourcemap-codec",
+                      "version": "1.6.0",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "postcss",
+                  "version": "8.5.26",
+                  "dependencies": [
+                    {
+                      "name": "nanoid",
+                      "version": "3.3.18",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "picocolors",
+                      "version": "1.1.1",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "source-map-js",
+                      "version": "1.2.1",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "source-map-js",
+                  "version": "1.2.1",
+                  "dependencies": []
+                }
+              ]
+            },
+            {
+              "name": "@vue/runtime-dom",
+              "version": "3.5.41",
+              "dependencies": [
+                {
+                  "name": "@vue/reactivity",
+                  "version": "3.5.41",
+                  "dependencies": [
+                    {
+                      "name": "@vue/shared",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "@vue/runtime-core",
+                  "version": "3.5.41",
+                  "dependencies": [
+                    {
+                      "name": "@vue/reactivity",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "@vue/shared",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "@vue/shared",
+                  "version": "3.5.41",
+                  "dependencies": []
+                },
+                {
+                  "name": "csstype",
+                  "version": "3.2.3",
+                  "dependencies": []
+                }
+              ]
+            },
+            {
+              "name": "@vue/server-renderer",
+              "version": "3.5.41",
+              "dependencies": [
+                {
+                  "name": "@vue/compiler-ssr",
+                  "version": "3.5.41",
+                  "dependencies": []
+                },
+                {
+                  "name": "@vue/runtime-dom",
+                  "version": "3.5.41",
+                  "dependencies": []
+                },
+                {
+                  "name": "@vue/shared",
+                  "version": "3.5.41",
+                  "dependencies": []
+                }
+              ]
+            },
+            {
+              "name": "@vue/shared",
+              "version": "3.5.41",
+              "dependencies": []
+            },
+            {
+              "name": "typescript",
+              "version": null,
+              "dependencies": []
+            }
+          ]
+        }
+      ],
+      "optionalPeersPresent": [],
+      "incumbents": {
+        "colord": {
+          "files": 67,
+          "bytes": 126597
+        },
+        "@floating-ui/dom": {
+          "files": 11,
+          "bytes": 174208
+        }
+      }
+    },
+    {
+      "packageManager": "pnpm",
+      "installedBytes": 22765198,
+      "installedFiles": 1804,
+      "dependencyNames": [
+        "@babel/helper-string-parser",
+        "@babel/helper-validator-identifier",
+        "@babel/parser",
+        "@babel/types",
+        "@floating-ui/core",
+        "@floating-ui/dom",
+        "@floating-ui/utils",
+        "@jridgewell/sourcemap-codec",
+        "@sectile/core",
+        "@sectile/dom",
+        "@sectile/vue",
+        "@vue/compiler-core",
+        "@vue/compiler-dom",
+        "@vue/compiler-sfc",
+        "@vue/compiler-ssr",
+        "@vue/reactivity",
+        "@vue/runtime-core",
+        "@vue/runtime-dom",
+        "@vue/server-renderer",
+        "@vue/shared",
+        "colord",
+        "csstype",
+        "entities",
+        "estree-walker",
+        "magic-string",
+        "nanoid",
+        "picocolors",
+        "postcss",
+        "source-map-js",
+        "vue"
+      ],
+      "dependencyTree": [
+        {
+          "name": "@sectile/core",
+          "version": "0.7.0",
+          "dependencies": [
+            {
+              "name": "colord",
+              "version": "2.10.0",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "name": "@sectile/dom",
+          "version": "0.7.0",
+          "dependencies": [
+            {
+              "name": "@floating-ui/dom",
+              "version": "1.8.0",
+              "dependencies": [
+                {
+                  "name": "@floating-ui/core",
+                  "version": "1.8.0",
+                  "dependencies": [
+                    {
+                      "name": "@floating-ui/utils",
+                      "version": "0.2.12",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "@floating-ui/utils",
+                  "version": "0.2.12",
+                  "dependencies": []
+                }
+              ]
+            },
+            {
+              "name": "@sectile/core",
+              "version": "0.7.0",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "name": "@sectile/vue",
+          "version": "0.7.0",
+          "dependencies": [
+            {
+              "name": "@sectile/core",
+              "version": "0.7.0",
+              "dependencies": []
+            },
+            {
+              "name": "@sectile/dom",
+              "version": "0.7.0",
+              "dependencies": []
+            },
+            {
+              "name": "vue",
+              "version": "3.5.41",
+              "dependencies": [
+                {
+                  "name": "@vue/compiler-dom",
+                  "version": "3.5.41",
+                  "dependencies": [
+                    {
+                      "name": "@vue/compiler-core",
+                      "version": "3.5.41",
+                      "dependencies": [
+                        {
+                          "name": "@babel/parser",
+                          "version": "7.29.8",
+                          "dependencies": [
+                            {
+                              "name": "@babel/types",
+                              "version": "7.29.8",
+                              "dependencies": [
+                                {
+                                  "name": "@babel/helper-string-parser",
+                                  "version": "7.29.7",
+                                  "dependencies": []
+                                },
+                                {
+                                  "name": "@babel/helper-validator-identifier",
+                                  "version": "7.29.7",
+                                  "dependencies": []
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "name": "@vue/shared",
+                          "version": "3.5.41",
+                          "dependencies": []
+                        },
+                        {
+                          "name": "entities",
+                          "version": "7.0.1",
+                          "dependencies": []
+                        },
+                        {
+                          "name": "estree-walker",
+                          "version": "2.0.2",
+                          "dependencies": []
+                        },
+                        {
+                          "name": "source-map-js",
+                          "version": "1.2.1",
+                          "dependencies": []
+                        }
+                      ]
+                    },
+                    {
+                      "name": "@vue/shared",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "@vue/compiler-sfc",
+                  "version": "3.5.41",
+                  "dependencies": [
+                    {
+                      "name": "@babel/parser",
+                      "version": "7.29.8",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "@vue/compiler-core",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "@vue/compiler-dom",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "@vue/compiler-ssr",
+                      "version": "3.5.41",
+                      "dependencies": [
+                        {
+                          "name": "@vue/compiler-dom",
+                          "version": "3.5.41",
+                          "dependencies": []
+                        },
+                        {
+                          "name": "@vue/shared",
+                          "version": "3.5.41",
+                          "dependencies": []
+                        }
+                      ]
+                    },
+                    {
+                      "name": "@vue/shared",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "estree-walker",
+                      "version": "2.0.2",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "magic-string",
+                      "version": "0.30.21",
+                      "dependencies": [
+                        {
+                          "name": "@jridgewell/sourcemap-codec",
+                          "version": "1.5.5",
+                          "dependencies": []
+                        }
+                      ]
+                    },
+                    {
+                      "name": "postcss",
+                      "version": "8.5.26",
+                      "dependencies": [
+                        {
+                          "name": "nanoid",
+                          "version": "3.3.18",
+                          "dependencies": []
+                        },
+                        {
+                          "name": "picocolors",
+                          "version": "1.1.1",
+                          "dependencies": []
+                        },
+                        {
+                          "name": "source-map-js",
+                          "version": "1.2.1",
+                          "dependencies": []
+                        }
+                      ]
+                    },
+                    {
+                      "name": "source-map-js",
+                      "version": "1.2.1",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "@vue/runtime-dom",
+                  "version": "3.5.41",
+                  "dependencies": [
+                    {
+                      "name": "@vue/reactivity",
+                      "version": "3.5.41",
+                      "dependencies": [
+                        {
+                          "name": "@vue/shared",
+                          "version": "3.5.41",
+                          "dependencies": []
+                        }
+                      ]
+                    },
+                    {
+                      "name": "@vue/runtime-core",
+                      "version": "3.5.41",
+                      "dependencies": [
+                        {
+                          "name": "@vue/reactivity",
+                          "version": "3.5.41",
+                          "dependencies": []
+                        },
+                        {
+                          "name": "@vue/shared",
+                          "version": "3.5.41",
+                          "dependencies": []
+                        }
+                      ]
+                    },
+                    {
+                      "name": "@vue/shared",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "csstype",
+                      "version": "3.2.3",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "@vue/server-renderer",
+                  "version": "3.5.41",
+                  "dependencies": [
+                    {
+                      "name": "@vue/compiler-ssr",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "@vue/runtime-dom",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    },
+                    {
+                      "name": "@vue/shared",
+                      "version": "3.5.41",
+                      "dependencies": []
+                    }
+                  ]
+                },
+                {
+                  "name": "@vue/shared",
+                  "version": "3.5.41",
+                  "dependencies": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "vue",
+          "version": "3.5.41",
+          "dependencies": []
+        }
+      ],
+      "optionalPeersPresent": [],
+      "incumbents": {
+        "colord": {
+          "files": 67,
+          "bytes": 126597
+        },
+        "@floating-ui/dom": {
+          "files": 11,
+          "bytes": 174208
+        }
+      }
+    }
+  ],
+  "incumbentPerformanceEvidence": {
+    "colord": {
+      "iterations": 20000,
+      "medianNanoseconds": 2151.820849999999,
+      "medianAllocationBytes": 887152,
+      "medianRetainedBytes": 56792
+    },
+    "@floating-ui/dom": {
+      "iterations": 50000,
+      "medianNanoseconds": 30.49415999999951,
+      "medianAllocationBytes": 1993776,
+      "medianRetainedBytes": 64
+    }
+  }
+}

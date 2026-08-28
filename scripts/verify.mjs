@@ -138,6 +138,9 @@ function workspaceContractSteps() {
     commandStep('component public API', process.execPath, [
       join(root, 'scripts', 'check-component-public-api.mjs'),
     ]),
+    commandStep('public change gates', process.execPath, [
+      join(root, 'scripts', 'check-public-change-gates.mjs'), '--full',
+    ]),
   ];
 }
 

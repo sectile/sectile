@@ -1,0 +1,2341 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/core",
+  "exports": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts"
+    },
+    {
+      "subpath": "./accordion",
+      "types": "dist/accordion.d.ts"
+    },
+    {
+      "subpath": "./adapter-runtime",
+      "types": "dist/adapter-runtime.d.ts"
+    },
+    {
+      "subpath": "./alert-dialog",
+      "types": "dist/alert-dialog.d.ts"
+    },
+    {
+      "subpath": "./carousel",
+      "types": "dist/carousel.d.ts"
+    },
+    {
+      "subpath": "./cascade-list",
+      "types": "dist/cascade-list.d.ts"
+    },
+    {
+      "subpath": "./cascade-select",
+      "types": "dist/cascade-select.d.ts"
+    },
+    {
+      "subpath": "./checkbox",
+      "types": "dist/checkbox.d.ts"
+    },
+    {
+      "subpath": "./checkbox-group",
+      "types": "dist/checkbox-group.d.ts"
+    },
+    {
+      "subpath": "./collection-window",
+      "types": "dist/collection-window.d.ts"
+    },
+    {
+      "subpath": "./color-picker",
+      "types": "dist/color-picker.d.ts"
+    },
+    {
+      "subpath": "./combobox",
+      "types": "dist/combobox.d.ts"
+    },
+    {
+      "subpath": "./dialog",
+      "types": "dist/dialog.d.ts"
+    },
+    {
+      "subpath": "./disclosure",
+      "types": "dist/disclosure.d.ts"
+    },
+    {
+      "subpath": "./drawer",
+      "types": "dist/drawer.d.ts"
+    },
+    {
+      "subpath": "./editable",
+      "types": "dist/editable.d.ts"
+    },
+    {
+      "subpath": "./feed",
+      "types": "dist/feed.d.ts"
+    },
+    {
+      "subpath": "./grid",
+      "types": "dist/structures/grid.d.ts"
+    },
+    {
+      "subpath": "./interaction",
+      "types": "dist/interaction.d.ts"
+    },
+    {
+      "subpath": "./layer-stack",
+      "types": "dist/layer-stack.d.ts"
+    },
+    {
+      "subpath": "./listbox",
+      "types": "dist/listbox.d.ts"
+    },
+    {
+      "subpath": "./menu",
+      "types": "dist/menu.d.ts"
+    },
+    {
+      "subpath": "./menu-button",
+      "types": "dist/menu-button.d.ts"
+    },
+    {
+      "subpath": "./menubar",
+      "types": "dist/menubar.d.ts"
+    },
+    {
+      "subpath": "./meter",
+      "types": "dist/meter.d.ts"
+    },
+    {
+      "subpath": "./meter-group",
+      "types": "dist/meter-group.d.ts"
+    },
+    {
+      "subpath": "./multi-thumb-slider",
+      "types": "dist/multi-thumb-slider.d.ts"
+    },
+    {
+      "subpath": "./navigation-menu",
+      "types": "dist/navigation-menu.d.ts"
+    },
+    {
+      "subpath": "./number-field",
+      "types": "dist/number-field.d.ts"
+    },
+    {
+      "subpath": "./pagination",
+      "types": "dist/pagination.d.ts"
+    },
+    {
+      "subpath": "./pin-input",
+      "types": "dist/pin-input.d.ts"
+    },
+    {
+      "subpath": "./popover",
+      "types": "dist/popover.d.ts"
+    },
+    {
+      "subpath": "./progress",
+      "types": "dist/progress.d.ts"
+    },
+    {
+      "subpath": "./quantity-field",
+      "types": "dist/quantity-field.d.ts"
+    },
+    {
+      "subpath": "./radio-group",
+      "types": "dist/radio-group.d.ts"
+    },
+    {
+      "subpath": "./range",
+      "types": "dist/structures/range.d.ts"
+    },
+    {
+      "subpath": "./rating",
+      "types": "dist/rating.d.ts"
+    },
+    {
+      "subpath": "./reorder",
+      "types": "dist/reorder.d.ts"
+    },
+    {
+      "subpath": "./result",
+      "types": "dist/result.d.ts"
+    },
+    {
+      "subpath": "./revision",
+      "types": "dist/revision.d.ts"
+    },
+    {
+      "subpath": "./select",
+      "types": "dist/select.d.ts"
+    },
+    {
+      "subpath": "./selection",
+      "types": "dist/selection.d.ts"
+    },
+    {
+      "subpath": "./sequence",
+      "types": "dist/structures/sequence.d.ts"
+    },
+    {
+      "subpath": "./slider",
+      "types": "dist/slider.d.ts"
+    },
+    {
+      "subpath": "./spin-button",
+      "types": "dist/spin-button.d.ts"
+    },
+    {
+      "subpath": "./stepper",
+      "types": "dist/stepper.d.ts"
+    },
+    {
+      "subpath": "./switch",
+      "types": "dist/switch.d.ts"
+    },
+    {
+      "subpath": "./tabs",
+      "types": "dist/tabs.d.ts"
+    },
+    {
+      "subpath": "./tags-input",
+      "types": "dist/tags-input.d.ts"
+    },
+    {
+      "subpath": "./text",
+      "types": "dist/text.d.ts"
+    },
+    {
+      "subpath": "./timer",
+      "types": "dist/timer.d.ts"
+    },
+    {
+      "subpath": "./toast",
+      "types": "dist/toast.d.ts"
+    },
+    {
+      "subpath": "./toggle-button",
+      "types": "dist/toggle-button.d.ts"
+    },
+    {
+      "subpath": "./toggle-group",
+      "types": "dist/toggle-group.d.ts"
+    },
+    {
+      "subpath": "./toolbar",
+      "types": "dist/toolbar.d.ts"
+    },
+    {
+      "subpath": "./tooltip",
+      "types": "dist/tooltip.d.ts"
+    },
+    {
+      "subpath": "./tree",
+      "types": "dist/structures/tree.d.ts"
+    },
+    {
+      "subpath": "./tree-grid",
+      "types": "dist/tree-grid.d.ts"
+    },
+    {
+      "subpath": "./tree-view",
+      "types": "dist/tree-view.d.ts"
+    },
+    {
+      "subpath": "./units",
+      "types": "dist/units.d.ts"
+    },
+    {
+      "subpath": "./window-splitter",
+      "types": "dist/window-splitter.d.ts"
+    }
+  ],
+  "fingerprint": "f852c3d1759f1edf64a8a3d81a0d0a79edc552136e03a657479fd4f52eef42ed",
+  "files": [
+    {
+      "path": "dist/accordion.d.ts",
+      "sha256": "2d5dcedede21cd503867da0266cff1130b34e8999f0a16627fccdb87c82b39ee"
+    },
+    {
+      "path": "dist/adapter-runtime.d.ts",
+      "sha256": "060121d1da14dc8de116aba9648553a877b000e48cbbdb0ddcba02f99bd1142b"
+    },
+    {
+      "path": "dist/alert-dialog.d.ts",
+      "sha256": "034399d0dfc160e5531ccedbad6b9e96114dbc70a4aa2f4eed4192d55e2141a3"
+    },
+    {
+      "path": "dist/carousel.d.ts",
+      "sha256": "542a7863c611200225615aa59cf1df782b3e716fd48468a9da3018fd8cee7e85"
+    },
+    {
+      "path": "dist/cascade-list.d.ts",
+      "sha256": "bae1bc824825154bd53029e37f7e79a0ff576d7093c9b86e11fd8dcd67fe2982"
+    },
+    {
+      "path": "dist/cascade-select.d.ts",
+      "sha256": "43ad562cc77eac46dabf3e723cd5d9e1cf0ab519a1cf88c072a6fadb4ebf863f"
+    },
+    {
+      "path": "dist/checkbox-group.d.ts",
+      "sha256": "242e1d64a1471b6e1ff886916bb028fd33d35f605b447fa1e362f82f064c82bb"
+    },
+    {
+      "path": "dist/checkbox.d.ts",
+      "sha256": "6197421ceaf1be2c61dc93f3e0181e1db8fe8ccab502ee7f140df792eb17d515"
+    },
+    {
+      "path": "dist/collection-window.d.ts",
+      "sha256": "b5b79e49786074322585e68c9fecf80add4d10e6fe3646cf9e006932ef56ad20"
+    },
+    {
+      "path": "dist/color-picker.d.ts",
+      "sha256": "2dc3c135cb620e556562573cc6cd78e3c40d7e06d5aa447e227d8df9d3872d7c"
+    },
+    {
+      "path": "dist/combobox.d.ts",
+      "sha256": "711a9a2c39262d02983d26edebe2ee03a18af5c2e98c7383177d9edfbee6e8b8"
+    },
+    {
+      "path": "dist/dialog.d.ts",
+      "sha256": "412b4d5bb8fc107784e1ad6bd8d10a1df0c4a51e1bfc50b683c48cfc58bf6ab3"
+    },
+    {
+      "path": "dist/disclosure.d.ts",
+      "sha256": "7490d2eb115b5a187d0e2f49efa9798a3a1f549ac688db8355bf888e45f7d6f1"
+    },
+    {
+      "path": "dist/drawer.d.ts",
+      "sha256": "20ca9e2b9b02b6271dfe1ce7810edc262e9274dcef55d983ac1805288dd8ea25"
+    },
+    {
+      "path": "dist/editable.d.ts",
+      "sha256": "99371a1d211e702be6f7ab231a3ec27302743da77a9716c8e1e47741c7eeb96e"
+    },
+    {
+      "path": "dist/error-code.d.ts",
+      "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+    },
+    {
+      "path": "dist/feed.d.ts",
+      "sha256": "7969eba3905b29ef9c9cdae470c60cc7d5fae864ccaf9f63daaa1922ff764dc4"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "6345254858c1d5cb0eae75aaa34eddffe6c56e1924b366f84c53b8f2ab027ed2"
+    },
+    {
+      "path": "dist/interaction.d.ts",
+      "sha256": "712472b49dbc3076f12d068bd800ce2251b7ac6f019fb809b82275c21dbbd400"
+    },
+    {
+      "path": "dist/internal/composites/cascade-choice.d.ts",
+      "sha256": "1b94aa76398d126313275da5b068b237ef37f1a4c015d8523f53387d637f2fd6"
+    },
+    {
+      "path": "dist/internal/composites/combobox.d.ts",
+      "sha256": "0c34f44e8632ecfc5f87ae490be9c1833831b5dbfe7da029d8599e9fbda170df"
+    },
+    {
+      "path": "dist/internal/composites/grid-control.d.ts",
+      "sha256": "9e938545cc0a8050b08ba6770696d2bf2fb7e1044f634a86fb200cf9d4e6afca"
+    },
+    {
+      "path": "dist/internal/composites/linear-action.d.ts",
+      "sha256": "499b30b4b793da744eff5e95475805c5771a0e3e37e909a0a4eebb694a2ba928"
+    },
+    {
+      "path": "dist/internal/composites/linear-choice.d.ts",
+      "sha256": "10ae084d311838c47f0bff1bda2b398d7d2f137b6563cadc97f79fbec8fcea77"
+    },
+    {
+      "path": "dist/internal/composites/listbox.d.ts",
+      "sha256": "f1cf2566aa46a3961cddfae58649cd1663e5de4e3d3a83e5d9223017ba369af2"
+    },
+    {
+      "path": "dist/internal/composites/menu.d.ts",
+      "sha256": "dfd78aae18b383d4591417f500bb27777fc12aeb937667766192bc6b83bf1eb3"
+    },
+    {
+      "path": "dist/internal/composites/popup.d.ts",
+      "sha256": "fcf33d0d5a55a39a6c83c3ea6fc7e422eafd326e9c95a150f0d7daa8eee1c79e"
+    },
+    {
+      "path": "dist/internal/composites/slider.d.ts",
+      "sha256": "fcdb6b772e88e61d5bf1044378ed5bd55302d26832abc03e26771ba29f6ffec0"
+    },
+    {
+      "path": "dist/internal/composites/tree-grid.d.ts",
+      "sha256": "35a68497ee11d298bf1e143b9f838402eb8b9a69a366207cdf7bfba531745c2e"
+    },
+    {
+      "path": "dist/internal/composites/tree-view.d.ts",
+      "sha256": "1b5146fcbc1317e512ff0038f75c2562cef7e5ae072d332ea8d1a9134cd097de"
+    },
+    {
+      "path": "dist/internal/editing/text.d.ts",
+      "sha256": "c0797dd970231c37f54a464078ed29689821e2da733f2b0613c6cdb4b42ae70b"
+    },
+    {
+      "path": "dist/internal/kernel/decimal.d.ts",
+      "sha256": "2a53b6a11e3238dbae6d1d3f899f25713632c5165c8b125eadd5f501f131c325"
+    },
+    {
+      "path": "dist/internal/kernel/machine.d.ts",
+      "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+    },
+    {
+      "path": "dist/internal/runtime/revision.d.ts",
+      "sha256": "96ec67aecb63d2ece915e1aec84361f148434c2381d412a8e0e281c99f6305e0"
+    },
+    {
+      "path": "dist/internal/state/checked.d.ts",
+      "sha256": "0c8cf0710e0bd2ce5e7a0303294d4a1bfe188017502bfb742d7fbfc860ca625d"
+    },
+    {
+      "path": "dist/internal/state/cursor.d.ts",
+      "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+    },
+    {
+      "path": "dist/internal/state/expansion.d.ts",
+      "sha256": "88bef741a782c8a4233f07f5f1717efb5631fa07e2b0a2a7397f735cb307417b"
+    },
+    {
+      "path": "dist/internal/state/open-state.d.ts",
+      "sha256": "e9aa010d5095a922cf41777767470ef30ac2a7190a6eed0453cfa670a1f105a1"
+    },
+    {
+      "path": "dist/internal/state/selection.d.ts",
+      "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+    },
+    {
+      "path": "dist/layer-stack.d.ts",
+      "sha256": "cb9f8d90d911da535f0e9c6f86df02b49e66ddfc877c34c58bfd05e791c7e336"
+    },
+    {
+      "path": "dist/listbox.d.ts",
+      "sha256": "1f25cca622f7d24c60fd3bad9aaa6028de8b2e46db8a33c1e672e76269c99531"
+    },
+    {
+      "path": "dist/menu-button.d.ts",
+      "sha256": "36b2e27a8938abc9082c17df49759d87dd3865fef95c30961cca21693c02bf53"
+    },
+    {
+      "path": "dist/menu.d.ts",
+      "sha256": "dfbd7168954daf47037389c874bec91f80bff0b8ae6f84c90b001b76e8afe430"
+    },
+    {
+      "path": "dist/menubar.d.ts",
+      "sha256": "50a1c2af32b2a24ec3abe51588090d7b4b458e08da414ce802e4c37f382491d3"
+    },
+    {
+      "path": "dist/meter-group.d.ts",
+      "sha256": "4d309e510ff818218bc0e801339ef61b7637ab914622f73b93ad0f10bf20395d"
+    },
+    {
+      "path": "dist/meter.d.ts",
+      "sha256": "017a0e6574cae3b070e1f712e93530e190314896333e49472cc4fd1e75f6eb64"
+    },
+    {
+      "path": "dist/multi-thumb-slider.d.ts",
+      "sha256": "8e409a327eafb6f3b3effee385283737a982675a1628ddbbe59b17705b1ec037"
+    },
+    {
+      "path": "dist/navigation-menu.d.ts",
+      "sha256": "11647389856ff5109bf61846a5bcafa5684daef053599f3c36af3ed77c3b5390"
+    },
+    {
+      "path": "dist/number-field.d.ts",
+      "sha256": "42cd1c447ac1c415e00878fc2ccf7e3b1bb9c0db070fd2f25f0732d2f2b1336c"
+    },
+    {
+      "path": "dist/pagination.d.ts",
+      "sha256": "abe13b1f18a119bcd2c90b28cdbeee9e4904bcbfb47c3016b5f0f3c90d262d11"
+    },
+    {
+      "path": "dist/pin-input.d.ts",
+      "sha256": "1d853e0fbb40dc043cbcba1a128360105a15136835c31ebda72c93288ce164f7"
+    },
+    {
+      "path": "dist/popover.d.ts",
+      "sha256": "f90a66480685b1156941c38d442af7832d5f6cd7932fa0c771837510726a664b"
+    },
+    {
+      "path": "dist/progress.d.ts",
+      "sha256": "2fdea45711b27c710a68dfa818cb474cc0ac1a43b5c9ff7ea30265c2444062ee"
+    },
+    {
+      "path": "dist/quantity-field.d.ts",
+      "sha256": "1efcb600839356180582c0018aed6614298ef59c69dc40666b64b7e5335cd0df"
+    },
+    {
+      "path": "dist/radio-group.d.ts",
+      "sha256": "100d28b24793e3f329b3efe51a2274762eca13f5d4bb21852927d3bf802b2d98"
+    },
+    {
+      "path": "dist/rating.d.ts",
+      "sha256": "588bc2a3f29a5d5db62e89efccf44579aa77d95515d05bed2f16c96fae390c76"
+    },
+    {
+      "path": "dist/reorder.d.ts",
+      "sha256": "5d810b4515672113348d6850cbfea059a9dab1cbf39a10b328c3f2aa22c04b18"
+    },
+    {
+      "path": "dist/result.d.ts",
+      "sha256": "88bed4cb00cc90a98d7fa68f09b7a2c53c28dd225ca7e42e499ee7a2158d2743"
+    },
+    {
+      "path": "dist/revision.d.ts",
+      "sha256": "ed9c17e44b0f8e001283b255666ac88dc907a01d1442a28aff2509fe70d21411"
+    },
+    {
+      "path": "dist/select.d.ts",
+      "sha256": "e2730237c0df75d3eccd9625a346fd72bc2a80d10fbe017686a6d4abd7f2069c"
+    },
+    {
+      "path": "dist/selection.d.ts",
+      "sha256": "6742ca262a742079585442f48f7cb2722aa2dee39fcacd25f8cab977479e883e"
+    },
+    {
+      "path": "dist/shared.d.ts",
+      "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+    },
+    {
+      "path": "dist/slider.d.ts",
+      "sha256": "df12b5f513d920162f8a23d1eab778a7886b4d8d3b1cecacf5e7d09d15d775bb"
+    },
+    {
+      "path": "dist/spin-button.d.ts",
+      "sha256": "063a54e47fd4c1b322f54f23328db8a372347e906ac379df35b557638ba9178e"
+    },
+    {
+      "path": "dist/stepper.d.ts",
+      "sha256": "dc192cccf0d7d709c117266d3ac1d1db63ef1369299a02a23ce835faf7f346af"
+    },
+    {
+      "path": "dist/structures/grid.d.ts",
+      "sha256": "3e9fdd75823107b774639a5cded3a2ed5957d153c8b734ba40ced33613a67db3"
+    },
+    {
+      "path": "dist/structures/range.d.ts",
+      "sha256": "606ca380fa09a281a31f0618cb7eb254ce69fc6f797cf6619af3c4300f6c710e"
+    },
+    {
+      "path": "dist/structures/sequence.d.ts",
+      "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+    },
+    {
+      "path": "dist/structures/tree.d.ts",
+      "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+    },
+    {
+      "path": "dist/switch.d.ts",
+      "sha256": "4d24b14e657e2ab9626b4cd19fbc0118d22bf83cb949d1982821c5dbc99a95ae"
+    },
+    {
+      "path": "dist/tabs.d.ts",
+      "sha256": "eb4675ebb6fa3c614d2de0ea4ef854712ab80d57cdcdee43079558f303b428e6"
+    },
+    {
+      "path": "dist/tags-input.d.ts",
+      "sha256": "50ed49f7f1a5f9393ed8e918de1533e062eb779e1ed0fce8467d8a8bfdde7832"
+    },
+    {
+      "path": "dist/text.d.ts",
+      "sha256": "48e25d257b5e64755d699584b27ebdb5651ce1ba259e9dadb30379db1b9bf629"
+    },
+    {
+      "path": "dist/timer.d.ts",
+      "sha256": "791e05254b192a4bb5ce9c41656c455d1259fb0e6a587d1daa7f75fbd6bf0114"
+    },
+    {
+      "path": "dist/toast.d.ts",
+      "sha256": "c114c202085ccad28cdb678150916892e4dc5f6bccf8de71f4d769066fafa340"
+    },
+    {
+      "path": "dist/toggle-button.d.ts",
+      "sha256": "9358fbd5613a76ef566d0d2a8cf90a227545533e00dacf6b2da437ff8fedc85c"
+    },
+    {
+      "path": "dist/toggle-group.d.ts",
+      "sha256": "2136ee26f1d173d8fc7f821357047f42803694485ac8eb11acdc1d5592119a47"
+    },
+    {
+      "path": "dist/toolbar.d.ts",
+      "sha256": "a04b689af56e879137d93f91b299a4b82461f08322fb9f40fdfa84d53edf61d2"
+    },
+    {
+      "path": "dist/tooltip.d.ts",
+      "sha256": "11dc54e46cb798c08539600222d3da65188fd21a6524102ba4b71d6ad027d5c0"
+    },
+    {
+      "path": "dist/tree-grid.d.ts",
+      "sha256": "71727d5660d1c842e9976c499c7596aa5f77d832beb3ecce25562507e6c9e644"
+    },
+    {
+      "path": "dist/tree-view.d.ts",
+      "sha256": "4c48857dad91222562124cd93430fe4767e48806c97f601f40fec5b77d895859"
+    },
+    {
+      "path": "dist/units.d.ts",
+      "sha256": "5373966eca43a488d75709e525518d1e73c9622713ccd1e95b62b0f98b24c452"
+    },
+    {
+      "path": "dist/window-splitter.d.ts",
+      "sha256": "5b31841592196a03029983f4a61c91dcd87ecbca560b1586c9b4798f3d35e8f1"
+    }
+  ],
+  "surfaces": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts",
+      "files": [
+        {
+          "path": "dist/cascade-list.d.ts",
+          "sha256": "bae1bc824825154bd53029e37f7e79a0ff576d7093c9b86e11fd8dcd67fe2982"
+        },
+        {
+          "path": "dist/cascade-select.d.ts",
+          "sha256": "43ad562cc77eac46dabf3e723cd5d9e1cf0ab519a1cf88c072a6fadb4ebf863f"
+        },
+        {
+          "path": "dist/collection-window.d.ts",
+          "sha256": "b5b79e49786074322585e68c9fecf80add4d10e6fe3646cf9e006932ef56ad20"
+        },
+        {
+          "path": "dist/editable.d.ts",
+          "sha256": "99371a1d211e702be6f7ab231a3ec27302743da77a9716c8e1e47741c7eeb96e"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/index.d.ts",
+          "sha256": "6345254858c1d5cb0eae75aaa34eddffe6c56e1924b366f84c53b8f2ab027ed2"
+        },
+        {
+          "path": "dist/interaction.d.ts",
+          "sha256": "712472b49dbc3076f12d068bd800ce2251b7ac6f019fb809b82275c21dbbd400"
+        },
+        {
+          "path": "dist/internal/composites/cascade-choice.d.ts",
+          "sha256": "1b94aa76398d126313275da5b068b237ef37f1a4c015d8523f53387d637f2fd6"
+        },
+        {
+          "path": "dist/internal/composites/slider.d.ts",
+          "sha256": "fcdb6b772e88e61d5bf1044378ed5bd55302d26832abc03e26771ba29f6ffec0"
+        },
+        {
+          "path": "dist/internal/editing/text.d.ts",
+          "sha256": "c0797dd970231c37f54a464078ed29689821e2da733f2b0613c6cdb4b42ae70b"
+        },
+        {
+          "path": "dist/internal/kernel/decimal.d.ts",
+          "sha256": "2a53b6a11e3238dbae6d1d3f899f25713632c5165c8b125eadd5f501f131c325"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/layer-stack.d.ts",
+          "sha256": "cb9f8d90d911da535f0e9c6f86df02b49e66ddfc877c34c58bfd05e791c7e336"
+        },
+        {
+          "path": "dist/number-field.d.ts",
+          "sha256": "42cd1c447ac1c415e00878fc2ccf7e3b1bb9c0db070fd2f25f0732d2f2b1336c"
+        },
+        {
+          "path": "dist/pin-input.d.ts",
+          "sha256": "1d853e0fbb40dc043cbcba1a128360105a15136835c31ebda72c93288ce164f7"
+        },
+        {
+          "path": "dist/quantity-field.d.ts",
+          "sha256": "1efcb600839356180582c0018aed6614298ef59c69dc40666b64b7e5335cd0df"
+        },
+        {
+          "path": "dist/reorder.d.ts",
+          "sha256": "5d810b4515672113348d6850cbfea059a9dab1cbf39a10b328c3f2aa22c04b18"
+        },
+        {
+          "path": "dist/selection.d.ts",
+          "sha256": "6742ca262a742079585442f48f7cb2722aa2dee39fcacd25f8cab977479e883e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/spin-button.d.ts",
+          "sha256": "063a54e47fd4c1b322f54f23328db8a372347e906ac379df35b557638ba9178e"
+        },
+        {
+          "path": "dist/structures/range.d.ts",
+          "sha256": "606ca380fa09a281a31f0618cb7eb254ce69fc6f797cf6619af3c4300f6c710e"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/structures/tree.d.ts",
+          "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+        },
+        {
+          "path": "dist/tags-input.d.ts",
+          "sha256": "50ed49f7f1a5f9393ed8e918de1533e062eb779e1ed0fce8467d8a8bfdde7832"
+        },
+        {
+          "path": "dist/text.d.ts",
+          "sha256": "48e25d257b5e64755d699584b27ebdb5651ce1ba259e9dadb30379db1b9bf629"
+        },
+        {
+          "path": "dist/units.d.ts",
+          "sha256": "5373966eca43a488d75709e525518d1e73c9622713ccd1e95b62b0f98b24c452"
+        }
+      ]
+    },
+    {
+      "subpath": "./accordion",
+      "types": "dist/accordion.d.ts",
+      "files": [
+        {
+          "path": "dist/accordion.d.ts",
+          "sha256": "2d5dcedede21cd503867da0266cff1130b34e8999f0a16627fccdb87c82b39ee"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/linear-action.d.ts",
+          "sha256": "499b30b4b793da744eff5e95475805c5771a0e3e37e909a0a4eebb694a2ba928"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./adapter-runtime",
+      "types": "dist/adapter-runtime.d.ts",
+      "files": [
+        {
+          "path": "dist/adapter-runtime.d.ts",
+          "sha256": "060121d1da14dc8de116aba9648553a877b000e48cbbdb0ddcba02f99bd1142b"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/interaction.d.ts",
+          "sha256": "712472b49dbc3076f12d068bd800ce2251b7ac6f019fb809b82275c21dbbd400"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/internal/runtime/revision.d.ts",
+          "sha256": "96ec67aecb63d2ece915e1aec84361f148434c2381d412a8e0e281c99f6305e0"
+        },
+        {
+          "path": "dist/revision.d.ts",
+          "sha256": "ed9c17e44b0f8e001283b255666ac88dc907a01d1442a28aff2509fe70d21411"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./alert-dialog",
+      "types": "dist/alert-dialog.d.ts",
+      "files": [
+        {
+          "path": "dist/alert-dialog.d.ts",
+          "sha256": "034399d0dfc160e5531ccedbad6b9e96114dbc70a4aa2f4eed4192d55e2141a3"
+        },
+        {
+          "path": "dist/dialog.d.ts",
+          "sha256": "412b4d5bb8fc107784e1ad6bd8d10a1df0c4a51e1bfc50b683c48cfc58bf6ab3"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/popup.d.ts",
+          "sha256": "fcf33d0d5a55a39a6c83c3ea6fc7e422eafd326e9c95a150f0d7daa8eee1c79e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./carousel",
+      "types": "dist/carousel.d.ts",
+      "files": [
+        {
+          "path": "dist/carousel.d.ts",
+          "sha256": "542a7863c611200225615aa59cf1df782b3e716fd48468a9da3018fd8cee7e85"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./cascade-list",
+      "types": "dist/cascade-list.d.ts",
+      "files": [
+        {
+          "path": "dist/cascade-list.d.ts",
+          "sha256": "bae1bc824825154bd53029e37f7e79a0ff576d7093c9b86e11fd8dcd67fe2982"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/cascade-choice.d.ts",
+          "sha256": "1b94aa76398d126313275da5b068b237ef37f1a4c015d8523f53387d637f2fd6"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/structures/tree.d.ts",
+          "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+        }
+      ]
+    },
+    {
+      "subpath": "./cascade-select",
+      "types": "dist/cascade-select.d.ts",
+      "files": [
+        {
+          "path": "dist/cascade-select.d.ts",
+          "sha256": "43ad562cc77eac46dabf3e723cd5d9e1cf0ab519a1cf88c072a6fadb4ebf863f"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/structures/tree.d.ts",
+          "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+        }
+      ]
+    },
+    {
+      "subpath": "./checkbox",
+      "types": "dist/checkbox.d.ts",
+      "files": [
+        {
+          "path": "dist/checkbox.d.ts",
+          "sha256": "6197421ceaf1be2c61dc93f3e0181e1db8fe8ccab502ee7f140df792eb17d515"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/internal/state/checked.d.ts",
+          "sha256": "0c8cf0710e0bd2ce5e7a0303294d4a1bfe188017502bfb742d7fbfc860ca625d"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./checkbox-group",
+      "types": "dist/checkbox-group.d.ts",
+      "files": [
+        {
+          "path": "dist/checkbox-group.d.ts",
+          "sha256": "242e1d64a1471b6e1ff886916bb028fd33d35f605b447fa1e362f82f064c82bb"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/listbox.d.ts",
+          "sha256": "f1cf2566aa46a3961cddfae58649cd1663e5de4e3d3a83e5d9223017ba369af2"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./collection-window",
+      "types": "dist/collection-window.d.ts",
+      "files": [
+        {
+          "path": "dist/collection-window.d.ts",
+          "sha256": "b5b79e49786074322585e68c9fecf80add4d10e6fe3646cf9e006932ef56ad20"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./color-picker",
+      "types": "dist/color-picker.d.ts",
+      "files": [
+        {
+          "path": "dist/color-picker.d.ts",
+          "sha256": "2dc3c135cb620e556562573cc6cd78e3c40d7e06d5aa447e227d8df9d3872d7c"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./combobox",
+      "types": "dist/combobox.d.ts",
+      "files": [
+        {
+          "path": "dist/combobox.d.ts",
+          "sha256": "711a9a2c39262d02983d26edebe2ee03a18af5c2e98c7383177d9edfbee6e8b8"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/combobox.d.ts",
+          "sha256": "0c34f44e8632ecfc5f87ae490be9c1833831b5dbfe7da029d8599e9fbda170df"
+        },
+        {
+          "path": "dist/internal/editing/text.d.ts",
+          "sha256": "c0797dd970231c37f54a464078ed29689821e2da733f2b0613c6cdb4b42ae70b"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./dialog",
+      "types": "dist/dialog.d.ts",
+      "files": [
+        {
+          "path": "dist/dialog.d.ts",
+          "sha256": "412b4d5bb8fc107784e1ad6bd8d10a1df0c4a51e1bfc50b683c48cfc58bf6ab3"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/popup.d.ts",
+          "sha256": "fcf33d0d5a55a39a6c83c3ea6fc7e422eafd326e9c95a150f0d7daa8eee1c79e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./disclosure",
+      "types": "dist/disclosure.d.ts",
+      "files": [
+        {
+          "path": "dist/disclosure.d.ts",
+          "sha256": "7490d2eb115b5a187d0e2f49efa9798a3a1f549ac688db8355bf888e45f7d6f1"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/internal/state/open-state.d.ts",
+          "sha256": "e9aa010d5095a922cf41777767470ef30ac2a7190a6eed0453cfa670a1f105a1"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./drawer",
+      "types": "dist/drawer.d.ts",
+      "files": [
+        {
+          "path": "dist/drawer.d.ts",
+          "sha256": "20ca9e2b9b02b6271dfe1ce7810edc262e9274dcef55d983ac1805288dd8ea25"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/popup.d.ts",
+          "sha256": "fcf33d0d5a55a39a6c83c3ea6fc7e422eafd326e9c95a150f0d7daa8eee1c79e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./editable",
+      "types": "dist/editable.d.ts",
+      "files": [
+        {
+          "path": "dist/editable.d.ts",
+          "sha256": "99371a1d211e702be6f7ab231a3ec27302743da77a9716c8e1e47741c7eeb96e"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./feed",
+      "types": "dist/feed.d.ts",
+      "files": [
+        {
+          "path": "dist/collection-window.d.ts",
+          "sha256": "b5b79e49786074322585e68c9fecf80add4d10e6fe3646cf9e006932ef56ad20"
+        },
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/feed.d.ts",
+          "sha256": "7969eba3905b29ef9c9cdae470c60cc7d5fae864ccaf9f63daaa1922ff764dc4"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./grid",
+      "types": "dist/structures/grid.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/grid-control.d.ts",
+          "sha256": "9e938545cc0a8050b08ba6770696d2bf2fb7e1044f634a86fb200cf9d4e6afca"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/grid.d.ts",
+          "sha256": "3e9fdd75823107b774639a5cded3a2ed5957d153c8b734ba40ced33613a67db3"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./interaction",
+      "types": "dist/interaction.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/interaction.d.ts",
+          "sha256": "712472b49dbc3076f12d068bd800ce2251b7ac6f019fb809b82275c21dbbd400"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./layer-stack",
+      "types": "dist/layer-stack.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/layer-stack.d.ts",
+          "sha256": "cb9f8d90d911da535f0e9c6f86df02b49e66ddfc877c34c58bfd05e791c7e336"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./listbox",
+      "types": "dist/listbox.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/listbox.d.ts",
+          "sha256": "f1cf2566aa46a3961cddfae58649cd1663e5de4e3d3a83e5d9223017ba369af2"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/listbox.d.ts",
+          "sha256": "1f25cca622f7d24c60fd3bad9aaa6028de8b2e46db8a33c1e672e76269c99531"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./menu",
+      "types": "dist/menu.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/menu.d.ts",
+          "sha256": "dfd78aae18b383d4591417f500bb27777fc12aeb937667766192bc6b83bf1eb3"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/menu.d.ts",
+          "sha256": "dfbd7168954daf47037389c874bec91f80bff0b8ae6f84c90b001b76e8afe430"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/structures/tree.d.ts",
+          "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+        }
+      ]
+    },
+    {
+      "subpath": "./menu-button",
+      "types": "dist/menu-button.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/menu.d.ts",
+          "sha256": "dfd78aae18b383d4591417f500bb27777fc12aeb937667766192bc6b83bf1eb3"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/menu-button.d.ts",
+          "sha256": "36b2e27a8938abc9082c17df49759d87dd3865fef95c30961cca21693c02bf53"
+        },
+        {
+          "path": "dist/menu.d.ts",
+          "sha256": "dfbd7168954daf47037389c874bec91f80bff0b8ae6f84c90b001b76e8afe430"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/structures/tree.d.ts",
+          "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+        }
+      ]
+    },
+    {
+      "subpath": "./menubar",
+      "types": "dist/menubar.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/menu.d.ts",
+          "sha256": "dfd78aae18b383d4591417f500bb27777fc12aeb937667766192bc6b83bf1eb3"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/menu.d.ts",
+          "sha256": "dfbd7168954daf47037389c874bec91f80bff0b8ae6f84c90b001b76e8afe430"
+        },
+        {
+          "path": "dist/menubar.d.ts",
+          "sha256": "50a1c2af32b2a24ec3abe51588090d7b4b458e08da414ce802e4c37f382491d3"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/structures/tree.d.ts",
+          "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+        }
+      ]
+    },
+    {
+      "subpath": "./meter",
+      "types": "dist/meter.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/meter.d.ts",
+          "sha256": "017a0e6574cae3b070e1f712e93530e190314896333e49472cc4fd1e75f6eb64"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/range.d.ts",
+          "sha256": "606ca380fa09a281a31f0618cb7eb254ce69fc6f797cf6619af3c4300f6c710e"
+        }
+      ]
+    },
+    {
+      "subpath": "./meter-group",
+      "types": "dist/meter-group.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/meter-group.d.ts",
+          "sha256": "4d309e510ff818218bc0e801339ef61b7637ab914622f73b93ad0f10bf20395d"
+        },
+        {
+          "path": "dist/meter.d.ts",
+          "sha256": "017a0e6574cae3b070e1f712e93530e190314896333e49472cc4fd1e75f6eb64"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/range.d.ts",
+          "sha256": "606ca380fa09a281a31f0618cb7eb254ce69fc6f797cf6619af3c4300f6c710e"
+        }
+      ]
+    },
+    {
+      "subpath": "./multi-thumb-slider",
+      "types": "dist/multi-thumb-slider.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/multi-thumb-slider.d.ts",
+          "sha256": "8e409a327eafb6f3b3effee385283737a982675a1628ddbbe59b17705b1ec037"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/range.d.ts",
+          "sha256": "606ca380fa09a281a31f0618cb7eb254ce69fc6f797cf6619af3c4300f6c710e"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./navigation-menu",
+      "types": "dist/navigation-menu.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/menu.d.ts",
+          "sha256": "dfd78aae18b383d4591417f500bb27777fc12aeb937667766192bc6b83bf1eb3"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/menu.d.ts",
+          "sha256": "dfbd7168954daf47037389c874bec91f80bff0b8ae6f84c90b001b76e8afe430"
+        },
+        {
+          "path": "dist/navigation-menu.d.ts",
+          "sha256": "11647389856ff5109bf61846a5bcafa5684daef053599f3c36af3ed77c3b5390"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/structures/tree.d.ts",
+          "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+        }
+      ]
+    },
+    {
+      "subpath": "./number-field",
+      "types": "dist/number-field.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/editing/text.d.ts",
+          "sha256": "c0797dd970231c37f54a464078ed29689821e2da733f2b0613c6cdb4b42ae70b"
+        },
+        {
+          "path": "dist/internal/kernel/decimal.d.ts",
+          "sha256": "2a53b6a11e3238dbae6d1d3f899f25713632c5165c8b125eadd5f501f131c325"
+        },
+        {
+          "path": "dist/number-field.d.ts",
+          "sha256": "42cd1c447ac1c415e00878fc2ccf7e3b1bb9c0db070fd2f25f0732d2f2b1336c"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/text.d.ts",
+          "sha256": "48e25d257b5e64755d699584b27ebdb5651ce1ba259e9dadb30379db1b9bf629"
+        }
+      ]
+    },
+    {
+      "subpath": "./pagination",
+      "types": "dist/pagination.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/pagination.d.ts",
+          "sha256": "abe13b1f18a119bcd2c90b28cdbeee9e4904bcbfb47c3016b5f0f3c90d262d11"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./pin-input",
+      "types": "dist/pin-input.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/pin-input.d.ts",
+          "sha256": "1d853e0fbb40dc043cbcba1a128360105a15136835c31ebda72c93288ce164f7"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./popover",
+      "types": "dist/popover.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/popup.d.ts",
+          "sha256": "fcf33d0d5a55a39a6c83c3ea6fc7e422eafd326e9c95a150f0d7daa8eee1c79e"
+        },
+        {
+          "path": "dist/popover.d.ts",
+          "sha256": "f90a66480685b1156941c38d442af7832d5f6cd7932fa0c771837510726a664b"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./progress",
+      "types": "dist/progress.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/progress.d.ts",
+          "sha256": "2fdea45711b27c710a68dfa818cb474cc0ac1a43b5c9ff7ea30265c2444062ee"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/range.d.ts",
+          "sha256": "606ca380fa09a281a31f0618cb7eb254ce69fc6f797cf6619af3c4300f6c710e"
+        }
+      ]
+    },
+    {
+      "subpath": "./quantity-field",
+      "types": "dist/quantity-field.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/editing/text.d.ts",
+          "sha256": "c0797dd970231c37f54a464078ed29689821e2da733f2b0613c6cdb4b42ae70b"
+        },
+        {
+          "path": "dist/internal/kernel/decimal.d.ts",
+          "sha256": "2a53b6a11e3238dbae6d1d3f899f25713632c5165c8b125eadd5f501f131c325"
+        },
+        {
+          "path": "dist/number-field.d.ts",
+          "sha256": "42cd1c447ac1c415e00878fc2ccf7e3b1bb9c0db070fd2f25f0732d2f2b1336c"
+        },
+        {
+          "path": "dist/quantity-field.d.ts",
+          "sha256": "1efcb600839356180582c0018aed6614298ef59c69dc40666b64b7e5335cd0df"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/text.d.ts",
+          "sha256": "48e25d257b5e64755d699584b27ebdb5651ce1ba259e9dadb30379db1b9bf629"
+        },
+        {
+          "path": "dist/units.d.ts",
+          "sha256": "5373966eca43a488d75709e525518d1e73c9622713ccd1e95b62b0f98b24c452"
+        }
+      ]
+    },
+    {
+      "subpath": "./radio-group",
+      "types": "dist/radio-group.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/linear-choice.d.ts",
+          "sha256": "10ae084d311838c47f0bff1bda2b398d7d2f137b6563cadc97f79fbec8fcea77"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/radio-group.d.ts",
+          "sha256": "100d28b24793e3f329b3efe51a2274762eca13f5d4bb21852927d3bf802b2d98"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./range",
+      "types": "dist/structures/range.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/range.d.ts",
+          "sha256": "606ca380fa09a281a31f0618cb7eb254ce69fc6f797cf6619af3c4300f6c710e"
+        }
+      ]
+    },
+    {
+      "subpath": "./rating",
+      "types": "dist/rating.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/linear-choice.d.ts",
+          "sha256": "10ae084d311838c47f0bff1bda2b398d7d2f137b6563cadc97f79fbec8fcea77"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/radio-group.d.ts",
+          "sha256": "100d28b24793e3f329b3efe51a2274762eca13f5d4bb21852927d3bf802b2d98"
+        },
+        {
+          "path": "dist/rating.d.ts",
+          "sha256": "588bc2a3f29a5d5db62e89efccf44579aa77d95515d05bed2f16c96fae390c76"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./reorder",
+      "types": "dist/reorder.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/reorder.d.ts",
+          "sha256": "5d810b4515672113348d6850cbfea059a9dab1cbf39a10b328c3f2aa22c04b18"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/structures/tree.d.ts",
+          "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+        }
+      ]
+    },
+    {
+      "subpath": "./result",
+      "types": "dist/result.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/result.d.ts",
+          "sha256": "88bed4cb00cc90a98d7fa68f09b7a2c53c28dd225ca7e42e499ee7a2158d2743"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./revision",
+      "types": "dist/revision.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/internal/runtime/revision.d.ts",
+          "sha256": "96ec67aecb63d2ece915e1aec84361f148434c2381d412a8e0e281c99f6305e0"
+        },
+        {
+          "path": "dist/revision.d.ts",
+          "sha256": "ed9c17e44b0f8e001283b255666ac88dc907a01d1442a28aff2509fe70d21411"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./select",
+      "types": "dist/select.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/linear-choice.d.ts",
+          "sha256": "10ae084d311838c47f0bff1bda2b398d7d2f137b6563cadc97f79fbec8fcea77"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/select.d.ts",
+          "sha256": "e2730237c0df75d3eccd9625a346fd72bc2a80d10fbe017686a6d4abd7f2069c"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./selection",
+      "types": "dist/selection.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/selection.d.ts",
+          "sha256": "6742ca262a742079585442f48f7cb2722aa2dee39fcacd25f8cab977479e883e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        }
+      ]
+    },
+    {
+      "subpath": "./sequence",
+      "types": "dist/structures/sequence.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./slider",
+      "types": "dist/slider.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/slider.d.ts",
+          "sha256": "fcdb6b772e88e61d5bf1044378ed5bd55302d26832abc03e26771ba29f6ffec0"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/slider.d.ts",
+          "sha256": "df12b5f513d920162f8a23d1eab778a7886b4d8d3b1cecacf5e7d09d15d775bb"
+        },
+        {
+          "path": "dist/structures/range.d.ts",
+          "sha256": "606ca380fa09a281a31f0618cb7eb254ce69fc6f797cf6619af3c4300f6c710e"
+        }
+      ]
+    },
+    {
+      "subpath": "./spin-button",
+      "types": "dist/spin-button.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/slider.d.ts",
+          "sha256": "fcdb6b772e88e61d5bf1044378ed5bd55302d26832abc03e26771ba29f6ffec0"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/spin-button.d.ts",
+          "sha256": "063a54e47fd4c1b322f54f23328db8a372347e906ac379df35b557638ba9178e"
+        },
+        {
+          "path": "dist/structures/range.d.ts",
+          "sha256": "606ca380fa09a281a31f0618cb7eb254ce69fc6f797cf6619af3c4300f6c710e"
+        }
+      ]
+    },
+    {
+      "subpath": "./stepper",
+      "types": "dist/stepper.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/linear-choice.d.ts",
+          "sha256": "10ae084d311838c47f0bff1bda2b398d7d2f137b6563cadc97f79fbec8fcea77"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/stepper.d.ts",
+          "sha256": "dc192cccf0d7d709c117266d3ac1d1db63ef1369299a02a23ce835faf7f346af"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        }
+      ]
+    },
+    {
+      "subpath": "./switch",
+      "types": "dist/switch.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/internal/state/checked.d.ts",
+          "sha256": "0c8cf0710e0bd2ce5e7a0303294d4a1bfe188017502bfb742d7fbfc860ca625d"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/switch.d.ts",
+          "sha256": "4d24b14e657e2ab9626b4cd19fbc0118d22bf83cb949d1982821c5dbc99a95ae"
+        }
+      ]
+    },
+    {
+      "subpath": "./tabs",
+      "types": "dist/tabs.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/linear-choice.d.ts",
+          "sha256": "10ae084d311838c47f0bff1bda2b398d7d2f137b6563cadc97f79fbec8fcea77"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/tabs.d.ts",
+          "sha256": "eb4675ebb6fa3c614d2de0ea4ef854712ab80d57cdcdee43079558f303b428e6"
+        }
+      ]
+    },
+    {
+      "subpath": "./tags-input",
+      "types": "dist/tags-input.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/tags-input.d.ts",
+          "sha256": "50ed49f7f1a5f9393ed8e918de1533e062eb779e1ed0fce8467d8a8bfdde7832"
+        }
+      ]
+    },
+    {
+      "subpath": "./text",
+      "types": "dist/text.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/editing/text.d.ts",
+          "sha256": "c0797dd970231c37f54a464078ed29689821e2da733f2b0613c6cdb4b42ae70b"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/text.d.ts",
+          "sha256": "48e25d257b5e64755d699584b27ebdb5651ce1ba259e9dadb30379db1b9bf629"
+        }
+      ]
+    },
+    {
+      "subpath": "./timer",
+      "types": "dist/timer.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/timer.d.ts",
+          "sha256": "791e05254b192a4bb5ce9c41656c455d1259fb0e6a587d1daa7f75fbd6bf0114"
+        }
+      ]
+    },
+    {
+      "subpath": "./toast",
+      "types": "dist/toast.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/toast.d.ts",
+          "sha256": "c114c202085ccad28cdb678150916892e4dc5f6bccf8de71f4d769066fafa340"
+        }
+      ]
+    },
+    {
+      "subpath": "./toggle-button",
+      "types": "dist/toggle-button.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/toggle-button.d.ts",
+          "sha256": "9358fbd5613a76ef566d0d2a8cf90a227545533e00dacf6b2da437ff8fedc85c"
+        }
+      ]
+    },
+    {
+      "subpath": "./toggle-group",
+      "types": "dist/toggle-group.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/listbox.d.ts",
+          "sha256": "f1cf2566aa46a3961cddfae58649cd1663e5de4e3d3a83e5d9223017ba369af2"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/toggle-group.d.ts",
+          "sha256": "2136ee26f1d173d8fc7f821357047f42803694485ac8eb11acdc1d5592119a47"
+        }
+      ]
+    },
+    {
+      "subpath": "./toolbar",
+      "types": "dist/toolbar.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/linear-action.d.ts",
+          "sha256": "499b30b4b793da744eff5e95475805c5771a0e3e37e909a0a4eebb694a2ba928"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/toolbar.d.ts",
+          "sha256": "a04b689af56e879137d93f91b299a4b82461f08322fb9f40fdfa84d53edf61d2"
+        }
+      ]
+    },
+    {
+      "subpath": "./tooltip",
+      "types": "dist/tooltip.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/kernel/machine.d.ts",
+          "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+        },
+        {
+          "path": "dist/internal/state/open-state.d.ts",
+          "sha256": "e9aa010d5095a922cf41777767470ef30ac2a7190a6eed0453cfa670a1f105a1"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/tooltip.d.ts",
+          "sha256": "11dc54e46cb798c08539600222d3da65188fd21a6524102ba4b71d6ad027d5c0"
+        }
+      ]
+    },
+    {
+      "subpath": "./tree",
+      "types": "dist/structures/tree.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/structures/tree.d.ts",
+          "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+        }
+      ]
+    },
+    {
+      "subpath": "./tree-grid",
+      "types": "dist/tree-grid.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/grid-control.d.ts",
+          "sha256": "9e938545cc0a8050b08ba6770696d2bf2fb7e1044f634a86fb200cf9d4e6afca"
+        },
+        {
+          "path": "dist/internal/composites/tree-grid.d.ts",
+          "sha256": "35a68497ee11d298bf1e143b9f838402eb8b9a69a366207cdf7bfba531745c2e"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/expansion.d.ts",
+          "sha256": "88bef741a782c8a4233f07f5f1717efb5631fa07e2b0a2a7397f735cb307417b"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/grid.d.ts",
+          "sha256": "3e9fdd75823107b774639a5cded3a2ed5957d153c8b734ba40ced33613a67db3"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/structures/tree.d.ts",
+          "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+        },
+        {
+          "path": "dist/tree-grid.d.ts",
+          "sha256": "71727d5660d1c842e9976c499c7596aa5f77d832beb3ecce25562507e6c9e644"
+        }
+      ]
+    },
+    {
+      "subpath": "./tree-view",
+      "types": "dist/tree-view.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/tree-view.d.ts",
+          "sha256": "1b5146fcbc1317e512ff0038f75c2562cef7e5ae072d332ea8d1a9134cd097de"
+        },
+        {
+          "path": "dist/internal/state/cursor.d.ts",
+          "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+        },
+        {
+          "path": "dist/internal/state/expansion.d.ts",
+          "sha256": "88bef741a782c8a4233f07f5f1717efb5631fa07e2b0a2a7397f735cb307417b"
+        },
+        {
+          "path": "dist/internal/state/selection.d.ts",
+          "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/sequence.d.ts",
+          "sha256": "53cfdfb7c34ccaef9bcc4bd9c2db03ea8641a81e0c6a712adc1e96ffa233900c"
+        },
+        {
+          "path": "dist/structures/tree.d.ts",
+          "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+        },
+        {
+          "path": "dist/tree-view.d.ts",
+          "sha256": "4c48857dad91222562124cd93430fe4767e48806c97f601f40fec5b77d895859"
+        }
+      ]
+    },
+    {
+      "subpath": "./units",
+      "types": "dist/units.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/kernel/decimal.d.ts",
+          "sha256": "2a53b6a11e3238dbae6d1d3f899f25713632c5165c8b125eadd5f501f131c325"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/units.d.ts",
+          "sha256": "5373966eca43a488d75709e525518d1e73c9622713ccd1e95b62b0f98b24c452"
+        }
+      ]
+    },
+    {
+      "subpath": "./window-splitter",
+      "types": "dist/window-splitter.d.ts",
+      "files": [
+        {
+          "path": "dist/error-code.d.ts",
+          "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+        },
+        {
+          "path": "dist/internal/composites/slider.d.ts",
+          "sha256": "fcdb6b772e88e61d5bf1044378ed5bd55302d26832abc03e26771ba29f6ffec0"
+        },
+        {
+          "path": "dist/shared.d.ts",
+          "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+        },
+        {
+          "path": "dist/structures/range.d.ts",
+          "sha256": "606ca380fa09a281a31f0618cb7eb254ce69fc6f797cf6619af3c4300f6c710e"
+        },
+        {
+          "path": "dist/window-splitter.d.ts",
+          "sha256": "5b31841592196a03029983f4a61c91dcd87ecbca560b1586c9b4798f3d35e8f1"
+        }
+      ]
+    }
+  ]
+}

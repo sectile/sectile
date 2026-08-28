@@ -1,0 +1,1157 @@
+{
+  "schemaVersion": 1,
+  "package": "dom",
+  "surfaces": [
+    {
+      "subpath": ".",
+      "classification": "root",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectAccordion",
+        "connectCombobox",
+        "connectListbox",
+        "connectSlider",
+        "connectText",
+        "connectTreeGrid",
+        "connectTreeView",
+        "createAccordion",
+        "createAccordionController",
+        "createAlertDialog",
+        "createCarousel",
+        "createCascadeList",
+        "createCascadeSelect",
+        "createCheckbox",
+        "createCheckboxController",
+        "createCheckboxGroup",
+        "createColorPicker",
+        "createCombobox",
+        "createComboboxController",
+        "createDialog",
+        "createDisclosure",
+        "createDisclosureController",
+        "createDrawer",
+        "createEditable",
+        "createFeed",
+        "createGridControl",
+        "createListbox",
+        "createListboxController",
+        "createListboxControllerFromItems",
+        "createMenu",
+        "createMenuButton",
+        "createMenubar",
+        "createMeter",
+        "createMeterGroup",
+        "createMultiThumbSlider",
+        "createNavigationMenu",
+        "createNumberField",
+        "createPagination",
+        "createPinInput",
+        "createPopover",
+        "createProgress",
+        "createQuantityField",
+        "createRadioGroup",
+        "createRating",
+        "createReorder",
+        "createSelect",
+        "createSlider",
+        "createSliderController",
+        "createSliderControllerFromRange",
+        "createSpinButton",
+        "createStepper",
+        "createSwitch",
+        "createSwitchController",
+        "createTabs",
+        "createTagsInput",
+        "createText",
+        "createTextController",
+        "createTextState",
+        "createTimer",
+        "createToast",
+        "createToggleButton",
+        "createToggleButtonController",
+        "createToggleGroup",
+        "createToolbar",
+        "createTooltip",
+        "createTreeGrid",
+        "createTreeGridController",
+        "createTreeView",
+        "createTreeViewController",
+        "createWindowSplitter",
+        "getAccordionPanelAttributes",
+        "getAccordionRootAttributes",
+        "getAccordionTriggerAttributes",
+        "getCheckboxAttributes",
+        "getCheckboxInputAttributes",
+        "getDisclosureContentAttributes",
+        "getDisclosureTriggerAttributes",
+        "getListboxItemAttributes",
+        "getListboxRootAttributes",
+        "getMeterGroupRootAttributes",
+        "getMeterGroupSegmentAttributes",
+        "getMeterGroupTrackAttributes",
+        "getMeterIndicatorAttributes",
+        "getMeterNativeAttributes",
+        "getMeterRootAttributes",
+        "getProgressIndicatorAttributes",
+        "getProgressNativeAttributes",
+        "getProgressRootAttributes",
+        "getRadioGroupInputAttributes",
+        "getRadioGroupItemAttributes",
+        "getRadioGroupRootAttributes",
+        "getSliderAttributes",
+        "getSliderInputAttributes",
+        "getSwitchAttributes",
+        "getSwitchInputAttributes",
+        "getTabsContentAttributes",
+        "getTabsListAttributes",
+        "getTabsRootAttributes",
+        "getTabsTriggerAttributes",
+        "getToggleButtonAttributes",
+        "toAccordionEvent",
+        "toCascadeListEvent",
+        "toCascadeSelectEvent",
+        "toComboboxEffect",
+        "toComboboxEvent",
+        "toComboboxTextEvent",
+        "toListboxEffect",
+        "toListboxEvent",
+        "toRadioGroupEvent",
+        "toSliderEffect",
+        "toSliderEvent",
+        "toSpinButtonEvent",
+        "toTabsEffect",
+        "toTabsEvent",
+        "toTextEvent",
+        "toToolbarEvent",
+        "toTreeGridEffect",
+        "toTreeGridEvent",
+        "toTreeViewEffect",
+        "toTreeViewEvent",
+        "tryCreateAccordion",
+        "tryCreateAlertDialog",
+        "tryCreateCarousel",
+        "tryCreateCascadeList",
+        "tryCreateCascadeSelect",
+        "tryCreateCheckbox",
+        "tryCreateCheckboxGroup",
+        "tryCreateColorPicker",
+        "tryCreateCombobox",
+        "tryCreateDialog",
+        "tryCreateDisclosure",
+        "tryCreateDrawer",
+        "tryCreateEditable",
+        "tryCreateFeed",
+        "tryCreateGridControl",
+        "tryCreateListbox",
+        "tryCreateMenu",
+        "tryCreateMenuButton",
+        "tryCreateMenubar",
+        "tryCreateMeter",
+        "tryCreateMeterGroup",
+        "tryCreateMultiThumbSlider",
+        "tryCreateNavigationMenu",
+        "tryCreateNumberField",
+        "tryCreatePagination",
+        "tryCreatePinInput",
+        "tryCreatePopover",
+        "tryCreateProgress",
+        "tryCreateQuantityField",
+        "tryCreateRadioGroup",
+        "tryCreateRating",
+        "tryCreateReorder",
+        "tryCreateSelect",
+        "tryCreateSlider",
+        "tryCreateSpinButton",
+        "tryCreateStepper",
+        "tryCreateSwitch",
+        "tryCreateTabs",
+        "tryCreateTagsInput",
+        "tryCreateText",
+        "tryCreateTimer",
+        "tryCreateToast",
+        "tryCreateToggleButton",
+        "tryCreateToggleGroup",
+        "tryCreateToolbar",
+        "tryCreateTooltip",
+        "tryCreateTreeGrid",
+        "tryCreateTreeView",
+        "tryCreateWindowSplitter"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "namespace"
+      ]
+    },
+    {
+      "subpath": "./accordion",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectAccordion",
+        "createAccordion",
+        "createAccordionController",
+        "getAccordionPanelAttributes",
+        "getAccordionRootAttributes",
+        "getAccordionTriggerAttributes",
+        "toAccordionEvent",
+        "tryCreateAccordion"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "connectAccordion",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./alert-dialog",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createAlertDialog",
+        "tryCreateAlertDialog"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createAlertDialog",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./carousel",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createCarousel",
+        "tryCreateCarousel"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createCarousel",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./cascade-list",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createCascadeList",
+        "toCascadeListEvent",
+        "tryCreateCascadeList"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createCascadeList",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./cascade-select",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createCascadeSelect",
+        "toCascadeSelectEvent",
+        "tryCreateCascadeSelect"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createCascadeSelect",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./checkbox",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createCheckbox",
+        "createCheckboxController",
+        "getCheckboxAttributes",
+        "getCheckboxInputAttributes",
+        "tryCreateCheckbox"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createCheckbox",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./checkbox-group",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createCheckboxGroup",
+        "tryCreateCheckboxGroup"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createCheckboxGroup",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./color-picker",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createColorPicker",
+        "formatColorValue",
+        "getColorAreaValue",
+        "getColorCoordinates",
+        "parseColorValue",
+        "setColorCoordinate",
+        "tryCreateColorPicker"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createColorPicker",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./combobox",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectCombobox",
+        "createCombobox",
+        "createComboboxController",
+        "toComboboxEffect",
+        "toComboboxEvent",
+        "toComboboxTextEvent",
+        "tryCreateCombobox"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "connectCombobox",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./dialog",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDialog",
+        "tryCreateDialog"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createDialog",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./disclosure",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDisclosure",
+        "createDisclosureController",
+        "getDisclosureContentAttributes",
+        "getDisclosureTriggerAttributes",
+        "tryCreateDisclosure"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createDisclosure",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./drawer",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDrawer",
+        "tryCreateDrawer"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createDrawer",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./editable",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createEditable",
+        "tryCreateEditable"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createEditable",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./feed",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createFeed",
+        "tryCreateFeed"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createFeed",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./form",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "appendFormFieldPath",
+        "createForm",
+        "createFormFieldPath",
+        "createFormRelativePath",
+        "defineFormSubmission",
+        "encodeFormFieldPath",
+        "tryCreateForm"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/form",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./grid",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createGridControl",
+        "tryCreateGridControl"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createGridControl",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./listbox",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_LISTBOX_SELECTION_MODE",
+        "connectListbox",
+        "createListbox",
+        "createListboxController",
+        "createListboxControllerFromItems",
+        "getListboxItemAttributes",
+        "getListboxRootAttributes",
+        "toListboxEffect",
+        "toListboxEvent",
+        "tryCreateListbox"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "connectListbox",
+      "fixtureModes": [
+        "side-effect",
+        "named",
+        "root-named"
+      ]
+    },
+    {
+      "subpath": "./menu",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createMenu",
+        "tryCreateMenu"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createMenu",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./menu-button",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createMenuButton",
+        "tryCreateMenuButton"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createMenuButton",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./menubar",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createMenubar",
+        "tryCreateMenubar"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createMenubar",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./meter",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createMeter",
+        "getMeterIndicatorAttributes",
+        "getMeterNativeAttributes",
+        "getMeterRootAttributes",
+        "tryCreateMeter"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createMeter",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./meter-group",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createMeterGroup",
+        "getMeterGroupRootAttributes",
+        "getMeterGroupSegmentAttributes",
+        "getMeterGroupTrackAttributes",
+        "tryCreateMeterGroup"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createMeterGroup",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./multi-thumb-slider",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createMultiThumbSlider",
+        "tryCreateMultiThumbSlider"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createMultiThumbSlider",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./navigation-menu",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createNavigationMenu",
+        "tryCreateNavigationMenu"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createNavigationMenu",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./number-field",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createNumberField",
+        "tryCreateNumberField"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createNumberField",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./package.json",
+      "classification": "metadata",
+      "platform": "universal",
+      "runtimeExports": [],
+      "typeBearing": false,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./pagination",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createPagination",
+        "getPaginationView",
+        "tryCreatePagination"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createPagination",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./pin-input",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createPinInput",
+        "tryCreatePinInput"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createPinInput",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./popover",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "arrow",
+        "autoPlacement",
+        "createPopover",
+        "flip",
+        "hide",
+        "inline",
+        "limitShift",
+        "offset",
+        "shift",
+        "size",
+        "tryCreatePopover"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createPopover",
+      "fixtureModes": [
+        "side-effect",
+        "named",
+        "root-named"
+      ]
+    },
+    {
+      "subpath": "./progress",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createProgress",
+        "getProgressIndicatorAttributes",
+        "getProgressNativeAttributes",
+        "getProgressRootAttributes",
+        "tryCreateProgress"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createProgress",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./quantity-field",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createQuantityField",
+        "createStandardQuantityPolicies",
+        "tryCreateQuantityField"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createQuantityField",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./radio-group",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createRadioGroup",
+        "getRadioGroupInputAttributes",
+        "getRadioGroupItemAttributes",
+        "getRadioGroupRootAttributes",
+        "toRadioGroupEvent",
+        "tryCreateRadioGroup"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createRadioGroup",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./rating",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createRating",
+        "tryCreateRating"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createRating",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./reorder",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createReorder",
+        "tryCreateReorder"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createReorder",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./select",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createSelect",
+        "tryCreateSelect"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createSelect",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./slider",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectSlider",
+        "createSlider",
+        "createSliderController",
+        "createSliderControllerFromRange",
+        "getSliderAttributes",
+        "getSliderInputAttributes",
+        "toSliderEffect",
+        "toSliderEvent",
+        "tryCreateSlider"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "connectSlider",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./spin-button",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createSpinButton",
+        "toSpinButtonEvent",
+        "tryCreateSpinButton"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createSpinButton",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./stepper",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createStepper",
+        "tryCreateStepper"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createStepper",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./switch",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createSwitch",
+        "createSwitchController",
+        "getSwitchAttributes",
+        "getSwitchInputAttributes",
+        "tryCreateSwitch"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createSwitch",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tabs",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createTabs",
+        "getTabsContentAttributes",
+        "getTabsListAttributes",
+        "getTabsRootAttributes",
+        "getTabsTriggerAttributes",
+        "toTabsEffect",
+        "toTabsEvent",
+        "tryCreateTabs"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createTabs",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tabular",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectDataGrid",
+        "connectDataTable",
+        "connectDataTreeGrid",
+        "createDataGrid",
+        "createDataTable",
+        "createDataTreeGrid",
+        "tryCreateDataGrid",
+        "tryCreateDataTable",
+        "tryCreateDataTreeGrid"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/tabular",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./tags-input",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createTagsInput",
+        "tryCreateTagsInput"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createTagsInput",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./temporal",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "calendarID",
+        "createCalendar",
+        "createCalendarMonth",
+        "createCalendarWeek",
+        "createCalendarYear",
+        "createDateField",
+        "createDatePicker",
+        "createDateRangeField",
+        "createDateRangePicker",
+        "createDateTimeField",
+        "createDateTimePicker",
+        "createDateTimeRangePicker",
+        "createMonthPicker",
+        "createMonthPickerYear",
+        "createMonthRangePicker",
+        "createMonthRangePickerYear",
+        "createRangeCalendar",
+        "createTimeField",
+        "createTimeRangeField",
+        "createYearPicker",
+        "createYearRangePicker",
+        "formatDateTimeRange",
+        "formatDateTimeValue",
+        "formatDateValue",
+        "formatTimeValue",
+        "isCalendarValueAvailable",
+        "parseDateValue",
+        "toCalendarEvent",
+        "tryCreateCalendar",
+        "tryCreateDateField",
+        "tryCreateDatePicker",
+        "tryCreateDateRangeField",
+        "tryCreateDateRangeFieldState",
+        "tryCreateDateRangePicker",
+        "tryCreateDateTimeField",
+        "tryCreateDateTimePicker",
+        "tryCreateDateTimeRangePicker",
+        "tryCreateMonthPicker",
+        "tryCreateMonthRangePicker",
+        "tryCreateRangeCalendar",
+        "tryCreateTimeField",
+        "tryCreateTimeRangeField",
+        "tryCreateTimeRangeFieldState",
+        "tryCreateYearPicker",
+        "tryCreateYearRangePicker"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./text",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectText",
+        "createText",
+        "createTextController",
+        "createTextState",
+        "toTextEvent",
+        "tryCreateText"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "connectText",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./timer",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createTimer",
+        "tryCreateTimer"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createTimer",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./toast",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createToast",
+        "createToastState",
+        "tryCreateToast"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createToast",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./toggle-button",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createToggleButton",
+        "createToggleButtonController",
+        "getToggleButtonAttributes",
+        "tryCreateToggleButton"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createToggleButton",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./toggle-group",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createToggleGroup",
+        "getToggleGroupItemAttributes",
+        "getToggleGroupRootAttributes",
+        "tryCreateToggleGroup"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createToggleGroup",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./toolbar",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createToolbar",
+        "toToolbarEvent",
+        "tryCreateToolbar"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createToolbar",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tooltip",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "arrow",
+        "autoPlacement",
+        "createTooltip",
+        "flip",
+        "hide",
+        "inline",
+        "limitShift",
+        "offset",
+        "shift",
+        "size",
+        "tryCreateTooltip"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createTooltip",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tree-grid",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectTreeGrid",
+        "createTreeGrid",
+        "createTreeGridController",
+        "toTreeGridEffect",
+        "toTreeGridEvent",
+        "tryCreateTreeGrid"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "connectTreeGrid",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tree-view",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectTreeView",
+        "createTreeView",
+        "createTreeViewController",
+        "toTreeViewEffect",
+        "toTreeViewEvent",
+        "tryCreateTreeView"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "connectTreeView",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./virtual",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createAxisMeasurementResolver",
+        "createVirtualizer",
+        "virtualContentStyle",
+        "virtualItemStyle"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/virtual",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./window-splitter",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createWindowSplitter",
+        "tryCreateWindowSplitter"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createWindowSplitter",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    }
+  ]
+}
