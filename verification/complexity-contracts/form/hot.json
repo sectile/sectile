@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "package": "form",
+  "surface": "hot",
+  "kind": "internal-operations",
+  "operations": [
+    {
+      "id": "field.update",
+      "inherits": "linear-v1",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": ["VAL-030:form-field-update-work"],
+      "specificationCeiling": "O(fField + iIssue)",
+      "contract": {
+        "variables": [
+          { "name": "fField", "meaning": "registered field count", "ceiling": "maxFields" },
+          { "name": "iIssue", "meaning": "incoming and removed issue count", "ceiling": "maxIssues" }
+        ],
+        "time": { "bound": "O(fField + iIssue)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(fField + iIssue)", "output": "O(fField + iIssue)", "retained": "O(fField + iIssue)" },
+        "resources": { "allocations": "O(fField + iIssue)", "cacheEntries": "O(fField + iIssue)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The incumbent normalizes the complete field object and redistributes issues across field snapshots.",
+        "adversarialWitness": "One field change in a 10k-field form with source-wide issues.",
+        "fullScan": { "allowed": true, "rationale": "Recorded incumbent weakness owned by WI-027; no new caller may assume it is bounded." }
+      }
+    },
+    {
+      "id": "state.construct",
+      "inherits": "linear-v1",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": ["VAL-030:form-construct-work"],
+      "specificationCeiling": "O(fField + uID)",
+      "contract": {
+        "variables": [
+          { "name": "fField", "meaning": "field input count", "ceiling": "maxFields" },
+          { "name": "uID", "meaning": "unique field identity count", "ceiling": "uID <= fField" }
+        ],
+        "time": { "bound": "O(fField * uID)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(fField)", "output": "O(fField)", "retained": "O(fField)" },
+        "resources": { "allocations": "O(fField)", "cacheEntries": "O(fField)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The incumbent duplicate check performs repeated prefix lookups while constructing normalized fields.",
+        "adversarialWitness": "A maximum-size unique field list forces every prefix lookup to miss.",
+        "fullScan": { "allowed": true, "rationale": "Construction must visit all fields, while the quadratic incumbent is frozen for WI-027." }
+      },
+      "reviewedWeakening": "WI-027 owns replacement with the required one-pass indexed construction."
+    }
+  ]
+}

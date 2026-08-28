@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "package": "temporal",
+  "surface": "hot",
+  "kind": "internal-operations",
+  "operations": [
+    {
+      "id": "calendar.transition",
+      "inherits": "linear-v1",
+      "source": "packages/temporal/src/calendar.ts",
+      "benchmarkIDs": ["VAL-005:calendar-transition-work"],
+      "specificationCeiling": "O(cCalendar)",
+      "contract": {
+        "variables": [{ "name": "cCalendar", "meaning": "rendered calendar cells", "ceiling": "calendar visible-cell ceiling" }],
+        "time": { "bound": "O(cCalendar)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(cCalendar)", "output": "O(cCalendar)", "retained": "O(cCalendar)" },
+        "resources": { "allocations": "O(cCalendar)", "cacheEntries": "O(cCalendar)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "A calendar transition derives at most one bounded visible calendar projection.",
+        "adversarialWitness": "All visible cells require disabled/range metadata projection.",
+        "fullScan": { "allowed": true, "rationale": "The bounded visible output itself contains cCalendar cells." }
+      }
+    },
+    {
+      "id": "field.transition",
+      "inherits": "linear-v1",
+      "source": "packages/temporal/src/date-field.ts",
+      "benchmarkIDs": ["VAL-005:temporal-field-work"],
+      "specificationCeiling": "O(sSegment)",
+      "contract": {
+        "variables": [{ "name": "sSegment", "meaning": "bounded editable date/time segments", "ceiling": "component segment ceiling" }],
+        "time": { "bound": "O(sSegment)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(sSegment)", "output": "O(sSegment)", "retained": "O(sSegment)" },
+        "resources": { "allocations": "O(sSegment)", "cacheEntries": "O(sSegment)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "External field state is normalized and each bounded semantic segment is visited at most once.",
+        "adversarialWitness": "Every segment is incomplete or constrained at a calendar boundary.",
+        "fullScan": { "allowed": true, "rationale": "Segment count is explicitly small and bounded by the component model." }
+      }
+    }
+  ]
+}

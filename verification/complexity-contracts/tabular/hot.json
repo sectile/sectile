@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "package": "tabular",
+  "surface": "hot",
+  "kind": "internal-operations",
+  "operations": [
+    {
+      "id": "grid-profile.move",
+      "inherits": "linear-v1",
+      "source": "packages/tabular/src/internal/grid-profile.ts",
+      "benchmarkIDs": ["tabular:grid-profile:move:1000", "tabular:grid-profile:move:10000", "tabular:grid-profile:move:100000"],
+      "specificationCeiling": "O(sAxis)",
+      "contract": {
+        "variables": [
+          { "name": "nCell", "meaning": "projected cell count", "ceiling": "grid cell ceiling" },
+          { "name": "sAxis", "meaning": "movement candidates on one axis", "ceiling": "row or column length" }
+        ],
+        "time": { "bound": "O(nCell + sAxis)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(nCell)", "output": "O(1)", "retained": "O(nCell)" },
+        "resources": { "allocations": "O(nCell)", "cacheEntries": "O(nCell)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The incumbent reconstructs flattened cell/index views before applying bounded axis movement.",
+        "adversarialWitness": "One adjacent move in a 100k-cell projection recreates every cell record.",
+        "fullScan": { "allowed": true, "rationale": "Recorded incumbent weakness owned by WI-038/WI-006." }
+      },
+      "reviewedWeakening": "WI-038 retains the projection index; WI-006 alone replaces movement semantics with Core Grid."
+    },
+    {
+      "id": "source.resolve-cold",
+      "inherits": "linear-v1",
+      "source": "packages/tabular/src/source.ts",
+      "benchmarkIDs": ["tabular:resolve:cold:100000"],
+      "specificationCeiling": "O(nRecord log nRecord)",
+      "contract": {
+        "variables": [
+          { "name": "nRecord", "meaning": "source record count", "ceiling": "source record ceiling" },
+          { "name": "kRow", "meaning": "returned page or window rows", "ceiling": "kRow <= nRecord" }
+        ],
+        "time": { "bound": "O(nRecord log nRecord + kRow)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(nRecord)", "output": "O(kRow)", "retained": "O(nRecord)" },
+        "resources": { "allocations": "O(nRecord + kRow)", "cacheEntries": "O(nRecord)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Cold normalization/filter/group/projection are linear and comparator sorting dominates at n log n before access slicing.",
+        "adversarialWitness": "Every record passes filters and reverse-order sort requires comparison work before a one-row window.",
+        "fullScan": { "allowed": true, "rationale": "Cold resolution must inspect the external snapshot before producing the first query index." }
+      }
+    },
+    {
+      "id": "source.resolve-invalidation",
+      "inherits": "linear-v1",
+      "source": "packages/tabular/src/source.ts",
+      "benchmarkIDs": ["tabular:resolve:invalidate:100000"],
+      "specificationCeiling": "O(nRecord log nRecord)",
+      "contract": {
+        "variables": [
+          { "name": "nRecord", "meaning": "source record count", "ceiling": "source record ceiling" },
+          { "name": "kRow", "meaning": "returned page or window rows", "ceiling": "kRow <= nRecord" }
+        ],
+        "time": { "bound": "O(nRecord log nRecord + kRow)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(nRecord)", "output": "O(kRow)", "retained": "O(nRecord)" },
+        "resources": { "allocations": "O(nRecord + kRow)", "cacheEntries": "O(nRecord)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Invalidation discards the incumbent derived snapshot, then repeats normalization, filtering, grouping, and sorting before slicing.",
+        "adversarialWitness": "A revision change followed by a one-row access rebuilds and sorts a reverse-ordered 100k-record source.",
+        "fullScan": { "allowed": true, "rationale": "An external source revision invalidates every retained derived index in the incumbent implementation." }
+      }
+    },
+    {
+      "id": "source.resolve-warm",
+      "inherits": "linear-v1",
+      "source": "packages/tabular/src/source.ts",
+      "benchmarkIDs": ["tabular:resolve:warm:100000"],
+      "specificationCeiling": "O(kRow)",
+      "contract": {
+        "variables": [
+          { "name": "nRecord", "meaning": "source record count", "ceiling": "source record ceiling" },
+          { "name": "kRow", "meaning": "returned page or window rows", "ceiling": "kRow <= nRecord" }
+        ],
+        "time": { "bound": "O(nRecord log nRecord + kRow)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(nRecord)", "output": "O(kRow)", "retained": "O(nRecord)" },
+        "resources": { "allocations": "O(nRecord + kRow)", "cacheEntries": "O(nRecord)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The incumbent recomputes normalization, filtering, grouping, and sorting even when the source revision and query are unchanged.",
+        "adversarialWitness": "Two identical one-row accesses over a reverse-ordered 100k-record source repeat the full sort on the second access.",
+        "fullScan": { "allowed": true, "rationale": "Recorded incumbent weakness; WI-038 replaces this path with retained revision-keyed indexes." }
+      },
+      "reviewedWeakening": "WI-038 owns the retained warm-path index required to reduce repeated access to output-sensitive work."
+    }
+  ]
+}

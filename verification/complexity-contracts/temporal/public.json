@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "package": "temporal",
+  "surface": "public",
+  "kind": "public-runtime",
+  "aliases": "identical-binding",
+  "families": { "function": "public-callable-v1", "object": "public-callable-v1", "primitive": "public-value-v1" }
+}

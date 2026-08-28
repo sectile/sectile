@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "package": "virtual",
+  "surface": "hot",
+  "kind": "internal-operations",
+  "operations": [
+    {
+      "id": "extent.lookup",
+      "inherits": "constant-v1",
+      "source": "packages/virtual/src/extent-index.ts",
+      "benchmarkIDs": ["VAL-017:extent-index-work"],
+      "specificationCeiling": "O(log n)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "extent count", "ceiling": "maxItems" }],
+        "time": { "bound": "O(log n)", "kind": "worst-case", "runtimeState": "trusted" },
+        "proof": "Prefix-sum lookup descends the balanced extent index by one branch per level.",
+        "adversarialWitness": "Lookup at the final offset of a maximum-size non-uniform extent index.",
+        "fullScan": { "allowed": false, "rationale": "Indexed offset lookup must not visit every extent." }
+      }
+    },
+    {
+      "id": "linear.measure",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/linear-layout.ts",
+      "benchmarkIDs": ["virtual:linear:measure:100000:1", "virtual:linear:measure:100000:32", "virtual:linear:measure:100000:100000"],
+      "specificationCeiling": "O(jChanged log nItem)",
+      "contract": {
+        "variables": [
+          { "name": "nItem", "meaning": "linear extent count", "ceiling": "maxItems" },
+          { "name": "jChanged", "meaning": "changed extent count", "ceiling": "jChanged <= nItem" }
+        ],
+        "time": { "bound": "O(jChanged log nItem)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(jChanged log nItem)", "output": "O(1)", "retained": "O(jChanged log nItem)" },
+        "resources": { "allocations": "O(jChanged log nItem)", "cacheEntries": "O(jChanged log nItem)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Each changed extent path-copies one balanced prefix-index path; anchor reads are logarithmic.",
+        "adversarialWitness": "Changed extents occupy disjoint leaves so no copied index path is shared.",
+        "fullScan": { "allowed": false, "rationale": "Sparse measurements may not visit unchanged extents." }
+      }
+    },
+    {
+      "id": "linear.query",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/linear-layout.ts",
+      "benchmarkIDs": ["virtual:linear:query:1000", "virtual:linear:query:10000", "virtual:linear:query:100000"],
+      "specificationCeiling": "O((log nItem)^2 + kPlacement)",
+      "contract": {
+        "variables": [
+          { "name": "nItem", "meaning": "linear extent count", "ceiling": "maxItems" },
+          { "name": "kPlacement", "meaning": "render-window placement count", "ceiling": "kPlacement <= nItem" }
+        ],
+        "time": { "bound": "O((log nItem)^2 + kPlacement)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(kPlacement)", "output": "O(kPlacement)", "retained": "O(1)" },
+        "resources": { "allocations": "O(kPlacement)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Gap-aware range search performs bounded logarithmic prefix lookups, then emits each render-window placement once.",
+        "adversarialWitness": "Non-zero gaps force the nested range search and the viewport emits kPlacement items.",
+        "fullScan": { "allowed": false, "rationale": "A full visit is permitted only when output kPlacement equals nItem." }
+      }
+    },
+    {
+      "id": "masonry.measure",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/masonry-layout.ts",
+      "benchmarkIDs": ["VAL-017:masonry-measure-work"],
+      "specificationCeiling": "O(nItem log lLane + jChanged log nItem)",
+      "contract": {
+        "variables": [
+          { "name": "nItem", "meaning": "masonry item count", "ceiling": "maxItems" },
+          { "name": "lLane", "meaning": "masonry lane count", "ceiling": "maxLanes" },
+          { "name": "jChanged", "meaning": "changed extent count", "ceiling": "jChanged <= nItem" }
+        ],
+        "time": { "bound": "O(nItem log lLane + jChanged log nItem)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(nItem + jChanged log nItem)", "output": "O(nItem)", "retained": "O(nItem)" },
+        "resources": { "allocations": "O(nItem + jChanged log nItem)", "cacheEntries": "O(nItem)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Extent updates path-copy index paths and cascading lane placement recomputes from the first changed item.",
+        "adversarialWitness": "Changing the first item under balanced shortest-lane placement reflows every later item.",
+        "fullScan": { "allowed": true, "rationale": "Cascading shortest-lane ownership can make every later placement observably change." }
+      }
+    },
+    {
+      "id": "masonry.query",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/masonry-layout.ts",
+      "benchmarkIDs": ["VAL-017:masonry-query-work"],
+      "specificationCeiling": "O(vLane log nItem + kPlacement log kPlacement)",
+      "contract": {
+        "variables": [
+          { "name": "nItem", "meaning": "masonry item count", "ceiling": "maxItems" },
+          { "name": "vLane", "meaning": "lanes intersecting render bounds", "ceiling": "vLane <= maxLanes" },
+          { "name": "kPlacement", "meaning": "emitted placements", "ceiling": "kPlacement <= nItem" }
+        ],
+        "time": { "bound": "O(vLane log nItem + kPlacement log kPlacement)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(kPlacement)", "output": "O(kPlacement)", "retained": "O(1)" },
+        "resources": { "allocations": "O(kPlacement)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Each visible lane binary-searches its first overlap, emits candidates, then restores domain order by sorting the output.",
+        "adversarialWitness": "Every visible lane contributes interleaved placements requiring the output sort.",
+        "fullScan": { "allowed": false, "rationale": "Unrelated offscreen lane entries must be skipped by binary search." }
+      }
+    },
+    {
+      "id": "partitioned.measure",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "benchmarkIDs": ["VAL-017:partitioned-measure-work"],
+      "specificationCeiling": "O(nTrack + nRegion log nRegion + jChanged)",
+      "contract": {
+        "variables": [
+          { "name": "nTrack", "meaning": "partitioned row and column track count", "ceiling": "maxTracks" },
+          { "name": "nRegion", "meaning": "partitioned region count", "ceiling": "maxRegions" },
+          { "name": "jChanged", "meaning": "changed track measurements", "ceiling": "jChanged <= nTrack" }
+        ],
+        "time": { "bound": "O(nTrack + nRegion log nRegion + jChanged)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(nTrack + nRegion)", "output": "O(nTrack + nRegion)", "retained": "O(nTrack + nRegion)" },
+        "resources": { "allocations": "O(nTrack + nRegion)", "cacheEntries": "O(nTrack + nRegion)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The incumbent copies measured tracks then reconstructs partition ranges, track indexes, and the nested grid state.",
+        "adversarialWitness": "One changed pinned track with maximum regions rebuilds every derived partition/index.",
+        "fullScan": { "allowed": true, "rationale": "Recorded incumbent rebuild is owned by WI-039 and may not worsen before repair selection." }
+      }
+    },
+    {
+      "id": "partitioned.query",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "benchmarkIDs": ["VAL-017:partitioned-query-work"],
+      "specificationCeiling": "O(log nRegion + cCandidate + kPlacement log kPlacement)",
+      "contract": {
+        "variables": [
+          { "name": "nRegion", "meaning": "indexed region count", "ceiling": "maxRegions" },
+          { "name": "cCandidate", "meaning": "candidates across bounded partition intersections", "ceiling": "cCandidate <= nRegion" },
+          { "name": "kPlacement", "meaning": "deduplicated placements", "ceiling": "kPlacement <= cCandidate" }
+        ],
+        "time": { "bound": "O(log nRegion + cCandidate + kPlacement log kPlacement)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(cCandidate + kPlacement)", "output": "O(kPlacement)", "retained": "O(1)" },
+        "resources": { "allocations": "O(cCandidate + kPlacement)", "cacheEntries": "O(kPlacement)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "A bounded 3x3 partition set queries nested indexes, deduplicates candidates by ID, projects them, and sorts emitted placements.",
+        "adversarialWitness": "Regions span pinned and center partitions so every partition query returns duplicate/interleaved candidates.",
+        "fullScan": { "allowed": false, "rationale": "Only index candidates and emitted placements may be visited." }
+      }
+    },
+    {
+      "id": "spatial.measure",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/spatial-layout.ts",
+      "benchmarkIDs": ["virtual:spatial:measure:100000:1", "virtual:spatial:measure:100000:32", "virtual:spatial:measure:100000:100000"],
+      "specificationCeiling": "O(nItem log nItem)",
+      "contract": {
+        "variables": [
+          { "name": "nItem", "meaning": "spatial item count", "ceiling": "maxItems" },
+          { "name": "jChanged", "meaning": "changed measurement count", "ceiling": "jChanged <= nItem" }
+        ],
+        "time": { "bound": "O(nItem log nItem + jChanged)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(nItem)", "output": "O(nItem)", "retained": "O(nItem)" },
+        "resources": { "allocations": "O(nItem + jChanged)", "cacheEntries": "O(nItem)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The incumbent applies changed rectangles then bulk-rebuilds the packed spatial index.",
+        "adversarialWitness": "One changed rectangle in a 100k-item layout still rebuilds the packed index.",
+        "fullScan": { "allowed": true, "rationale": "Recorded incumbent rebuild owned by WI-039; sparse repair may not regress beyond it." }
+      }
+    },
+    {
+      "id": "spatial.query",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/spatial-layout.ts",
+      "benchmarkIDs": ["virtual:spatial:query:1000", "virtual:spatial:query:10000", "virtual:spatial:query:100000"],
+      "specificationCeiling": "O(log nItem + kPlacement)",
+      "contract": {
+        "variables": [
+          { "name": "nItem", "meaning": "indexed spatial item count", "ceiling": "maxItems" },
+          { "name": "kPlacement", "meaning": "viewport result count", "ceiling": "kPlacement <= nItem" }
+        ],
+        "time": { "bound": "O(log nItem + kPlacement)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(log nItem + kPlacement)", "output": "O(kPlacement)", "retained": "O(1)" },
+        "resources": { "allocations": "O(log nItem + kPlacement)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Packed-tree intersection prunes non-overlapping branches and emits each matching placement once.",
+        "adversarialWitness": "A viewport intersecting every overlapping rectangle degrades to result-proportional nItem output.",
+        "fullScan": { "allowed": false, "rationale": "A full visit is permitted only when kPlacement itself equals nItem." }
+      }
+    },
+    {
+      "id": "track.measure",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/track-grid-layout.ts",
+      "benchmarkIDs": ["VAL-017:track-measure-work"],
+      "specificationCeiling": "O(jChanged log nTrack)",
+      "contract": {
+        "variables": [
+          { "name": "nTrack", "meaning": "row and column extent count", "ceiling": "maxTracks" },
+          { "name": "jChanged", "meaning": "changed track measurements", "ceiling": "jChanged <= nTrack" }
+        ],
+        "time": { "bound": "O(jChanged log nTrack)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(jChanged log nTrack)", "output": "O(1)", "retained": "O(jChanged log nTrack)" },
+        "resources": { "allocations": "O(jChanged log nTrack)", "cacheEntries": "O(jChanged log nTrack)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Measurements partition by axis and path-copy only changed row/column extent-index paths while retaining the region index.",
+        "adversarialWitness": "Changed tracks occupy disjoint leaves across both axes.",
+        "fullScan": { "allowed": false, "rationale": "Track measurement must retain and reuse the region interval index." }
+      }
+    },
+    {
+      "id": "track.query",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/track-grid-layout.ts",
+      "benchmarkIDs": ["VAL-017:track-query-work"],
+      "specificationCeiling": "O(log nRegion + cCandidate + kPlacement log kPlacement)",
+      "contract": {
+        "variables": [
+          { "name": "nRegion", "meaning": "indexed sparse region count", "ceiling": "maxRegions" },
+          { "name": "cCandidate", "meaning": "row-overlap candidates", "ceiling": "cCandidate <= nRegion" },
+          { "name": "kPlacement", "meaning": "emitted placements", "ceiling": "kPlacement <= cCandidate" }
+        ],
+        "time": { "bound": "O(log nRegion + cCandidate + kPlacement log kPlacement)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(cCandidate + kPlacement)", "output": "O(kPlacement)", "retained": "O(1)" },
+        "resources": { "allocations": "O(cCandidate + kPlacement)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Range lookup prunes non-overlapping rows, filters candidates by columns, emits intersections, and restores domain order.",
+        "adversarialWitness": "Many row-spanning regions become candidates but only interleaved column intersections are emitted.",
+        "fullScan": { "allowed": false, "rationale": "Full work is allowed only when candidate/output cardinality itself reaches nRegion." }
+      }
+    }
+  ]
+}

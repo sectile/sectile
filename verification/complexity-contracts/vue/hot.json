@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "package": "vue",
+  "surface": "hot",
+  "kind": "internal-operations",
+  "operations": [
+    {
+      "id": "projection.reconfigure",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/virtual.ts",
+      "benchmarkIDs": ["vue:mounted-virtual-projection"],
+      "specificationCeiling": "O(nOption + uOption)",
+      "contract": {
+        "variables": [
+          { "name": "nOption", "meaning": "external option count", "ceiling": "component maxItems" },
+          { "name": "uOption", "meaning": "unique normalized option count", "ceiling": "uOption <= nOption" }
+        ],
+        "time": { "bound": "O(nOption + uOption)", "kind": "worst-case", "runtimeState": "mounted" },
+        "space": { "auxiliary": "O(nOption + uOption)", "output": "O(uOption)", "retained": "O(uOption)" },
+        "resources": { "allocations": "O(nOption + uOption)", "cacheEntries": "O(uOption)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "External replacement normalization and identity comparison visit each option/index once.",
+        "adversarialWitness": "Equal-value replacement with new array/object identities at the maxItems ceiling.",
+        "fullScan": { "allowed": true, "rationale": "External replacement requires one normalization pass; canonical same-generation updates must be O(1)." }
+      }
+    },
+    {
+      "id": "virtual.measurement-update",
+      "inherits": "lifecycle-v1",
+      "source": "packages/vue/src/virtual.ts",
+      "benchmarkIDs": ["vue:mounted-virtual-projection"],
+      "specificationCeiling": "O(jChanged + kPlacement)",
+      "contract": {
+        "variables": [
+          { "name": "nMounted", "meaning": "currently mounted rendered elements", "ceiling": "virtual rendered-entry ceiling" },
+          { "name": "jChanged", "meaning": "ResizeObserver changed entries", "ceiling": "mounted rendered entry count" },
+          { "name": "kPlacement", "meaning": "final projected placements", "ceiling": "virtual query result ceiling" }
+        ],
+        "time": { "bound": "O(nMounted + jChanged + kPlacement)", "kind": "worst-case", "runtimeState": "mounted" },
+        "space": { "auxiliary": "O(nMounted + jChanged + kPlacement)", "output": "O(kPlacement)", "retained": "O(nMounted)" },
+        "resources": { "allocations": "O(nMounted + jChanged + kPlacement)", "cacheEntries": "O(nMounted)", "listeners": "0", "observers": "O(1)", "timers": "O(1)", "subscriptions": "O(nMounted)" },
+        "proof": "The incumbent onUpdated path may rescan mounted elements before measurement/query publication.",
+        "adversarialWitness": "One changed element after a render with every mounted placement measurable.",
+        "fullScan": { "allowed": true, "rationale": "Recorded incumbent mounted sweep owned by WI-040; later updates must become changed-entry proportional." }
+      },
+      "reviewedWeakening": "WI-040 removes the recurring mounted sweep after canonical Virtual batching is available."
+    }
+  ]
+}

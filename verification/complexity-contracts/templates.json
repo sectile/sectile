@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "templates": {
+    "public-value-v1": {
+      "variables": [],
+      "time": { "bound": "O(1)", "kind": "worst-case", "runtimeState": "all" },
+      "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+      "resources": { "allocations": "0", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+      "assumptions": ["ESM namespace is already evaluated"],
+      "ceilings": ["module namespace export count"],
+      "benchmarkIDs": ["VAL-016:runtime-export-coverage"],
+      "deterministicWork": ["one namespace property read", "zero registered host resources"],
+      "resourceRationale": "Namespace access owns no per-read resource.",
+      "proof": "A namespace value read is one property lookup.",
+      "adversarialWitness": "Repeated reads do not traverse retained domain state.",
+      "evidence": ["VAL-016"],
+      "fullScan": { "allowed": false, "rationale": "Value access has no collection input." }
+    },
+    "public-callable-v1": {
+      "variables": [
+        { "name": "nInput", "meaning": "externally supplied input cardinality", "ceiling": "declared package resource ceilings" },
+        { "name": "nState", "meaning": "retained canonical state cardinality", "ceiling": "declared package resource ceilings" },
+        { "name": "nOutput", "meaning": "materialized result cardinality", "ceiling": "declared package resource ceilings" }
+      ],
+      "time": { "bound": "O(nInput + nState + nOutput)", "kind": "worst-case", "runtimeState": "external" },
+      "space": { "auxiliary": "O(nInput + nState)", "output": "O(nOutput)", "retained": "O(nState + nOutput)" },
+      "resources": { "allocations": "O(nInput + nOutput)", "cacheEntries": "O(nState)", "listeners": "0 unless a connection contract overrides", "observers": "0 unless a host contract overrides", "timers": "0 unless a host contract overrides", "subscriptions": "0 unless a connection contract overrides" },
+      "assumptions": ["external values require validation", "surface-specific hot operations override this conservative ceiling"],
+      "ceilings": ["package item/depth/dimension/text/resource ceilings"],
+      "benchmarkIDs": ["VAL-016:runtime-export-coverage", "VAL-017:public-conservative-bound"],
+      "deterministicWork": ["work does not exceed one input/state/output traversal", "resource counts do not exceed declared bounds"],
+      "resourceRationale": "The conservative fallback includes validation/output allocation and requires surface overrides for host resources.",
+      "proof": "The conservative public ceiling permits one pass over input, retained state, and produced output; registered hot operations provide tighter source proof.",
+      "adversarialWitness": "Maximum-size external input with maximum-size retained state and full snapshot output.",
+      "evidence": ["VAL-016", "VAL-017"],
+      "fullScan": { "allowed": true, "rationale": "The public fallback admits external validation and explicit full-output materialization; hot canonical paths require a tighter operation contract." }
+    },
+    "constant-v1": {
+      "variables": [],
+      "time": { "bound": "O(1)", "kind": "worst-case", "runtimeState": "trusted" },
+      "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+      "resources": { "allocations": "0", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+      "assumptions": ["canonical owner identity and generation are current"],
+      "ceilings": ["safe-integer and package resource ceilings"],
+      "benchmarkIDs": ["VAL-017:constant-work"],
+      "deterministicWork": ["bounded indexed/scalar steps", "zero domain traversal"],
+      "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+      "proof": "The operation performs a bounded number of indexed reads or scalar steps.",
+      "adversarialWitness": "Maximum-size retained state does not increase deterministic work.",
+      "evidence": ["VAL-016", "VAL-017"],
+      "fullScan": { "allowed": false, "rationale": "Indexed or scalar work must not traverse the domain." }
+    },
+    "linear-v1": {
+      "variables": [
+        { "name": "n", "meaning": "visited input or state cardinality", "ceiling": "operation resource ceiling" },
+        { "name": "k", "meaning": "produced result cardinality", "ceiling": "k <= n" }
+      ],
+      "time": { "bound": "O(n + k)", "kind": "worst-case", "runtimeState": "external" },
+      "space": { "auxiliary": "O(n)", "output": "O(k)", "retained": "O(k)" },
+      "resources": { "allocations": "O(n + k)", "cacheEntries": "O(k)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+      "assumptions": ["hash lookup is expected O(1)", "external input is validated exactly once at its boundary"],
+      "ceilings": ["operation item and output ceilings"],
+      "benchmarkIDs": ["VAL-017:linear-work"],
+      "deterministicWork": ["visited entries do not exceed the declared input/state cardinality", "emitted and retained entries do not exceed the declared output cardinality"],
+      "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+      "proof": "One bounded traversal visits each relevant input/state entry and emits at most k entries.",
+      "adversarialWitness": "Every input entry is visited and every eligible entry is emitted.",
+      "evidence": ["VAL-016", "VAL-017"],
+      "fullScan": { "allowed": true, "rationale": "Construction, external validation, or explicit full projection has a linear lower bound." }
+    },
+    "lifecycle-v1": {
+      "variables": [
+        { "name": "a", "meaning": "owned ancestors or registered host resources", "ceiling": "document and package resource ceilings" },
+        { "name": "p", "meaning": "affected subscribers or projected targets", "ceiling": "connection-owned registration count" }
+      ],
+      "time": { "bound": "O(a + p)", "kind": "worst-case", "runtimeState": "mounted-or-connected" },
+      "space": { "auxiliary": "O(a + p)", "output": "O(p)", "retained": "O(a + p)" },
+      "resources": { "allocations": "O(a + p)", "cacheEntries": "O(a + p)", "listeners": "O(a)", "observers": "O(1)", "timers": "O(1)", "subscriptions": "O(p)" },
+      "assumptions": ["resources are connection-owned", "disconnect is idempotent"],
+      "ceilings": ["ancestor, observer, timer, listener, and subscription ceilings"],
+      "benchmarkIDs": ["VAL-017:lifecycle-work"],
+      "deterministicWork": ["registrations do not exceed declared owned-resource and affected-target cardinalities", "disconnect leaves every resource counter at zero"],
+      "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
+      "proof": "Connection work visits owned resources and only affected projection targets.",
+      "adversarialWitness": "Deep ancestor chain with every registered target affected, followed by repeated disconnect.",
+      "evidence": ["VAL-016", "VAL-017"],
+      "fullScan": { "allowed": false, "rationale": "Mounted updates may scan owned resources or affected targets, never unrelated global connections." }
+    }
+  }
+}

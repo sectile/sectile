@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "package": "core",
+  "surface": "hot",
+  "kind": "internal-operations",
+  "operations": [
+    {
+      "id": "adapter.controller-handle",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": ["core:controller:handle"],
+      "contract": {
+        "variables": [
+          { "name": "cCommand", "meaning": "commands emitted by the reducer", "ceiling": "command ceiling" },
+          { "name": "pAffected", "meaning": "affected controller subscribers", "ceiling": "controller-owned subscription count" }
+        ],
+        "time": { "bound": "O(cCommand)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(cCommand)", "output": "O(cCommand)", "retained": "O(cCommand)" },
+        "resources": { "allocations": "O(cCommand)", "cacheEntries": "O(1)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "O(pAffected)" },
+        "proof": "One reducer call freezes one command vector and notifies only controller subscribers.",
+        "adversarialWitness": "Reducer emits the command ceiling with every subscriber affected.",
+        "fullScan": { "allowed": false, "rationale": "Unrelated controllers and subscribers are outside the owner." }
+      }
+    },
+    {
+      "id": "adapter.facade-destroy",
+      "inherits": "lifecycle-v1",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": ["VAL-017:host-resource-work"],
+      "specificationCeiling": "O(pSubscriber + rResource)",
+      "contract": {
+        "variables": [
+          { "name": "pSubscriber", "meaning": "facade-owned subscriber count", "ceiling": "subscription ceiling" },
+          { "name": "rResource", "meaning": "connection-owned disconnect resources", "ceiling": "connection resource ceiling" }
+        ],
+        "time": { "bound": "O(pSubscriber + rResource)", "kind": "worst-case", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "0", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "O(pSubscriber)" },
+        "proof": "Destroy invokes the connection disposer once and clears the owner-local subscriber set; repeated destroy is constant and inert.",
+        "adversarialWitness": "Maximum subscribers and connection resources followed by two destroy calls.",
+        "fullScan": { "allowed": false, "rationale": "Only facade-owned subscribers and connection resources may be visited." }
+      }
+    },
+    {
+      "id": "adapter.facade-subscribe",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": ["VAL-017:host-resource-work"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "O(1)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "O(1)" },
+        "proof": "Set insertion/removal changes one facade-owned subscription entry.",
+        "adversarialWitness": "Subscribe, reentrant unsubscribe, and unsubscribe after destroy keep one-entry work.",
+        "fullScan": { "allowed": false, "rationale": "Adding or removing one subscriber cannot scan existing subscribers." }
+      }
+    },
+    {
+      "id": "grid.move",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/grid.ts",
+      "benchmarkIDs": ["VAL-017:grid-move-work"],
+      "specificationCeiling": "O(sAxis)",
+      "contract": {
+        "variables": [{ "name": "sAxis", "meaning": "visited cells on the selected axis", "ceiling": "maxScan and axis length" }],
+        "time": { "bound": "O(sAxis)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The axis loop advances once per scanned cell and stops at maxScan, a found candidate, or the boundary.",
+        "adversarialWitness": "A sparse axis with no eligible cell forces exactly min(axis length, maxScan) visits.",
+        "fullScan": { "allowed": true, "rationale": "Only the explicitly selected bounded axis may be scanned." }
+      }
+    },
+    {
+      "id": "grid.position",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/grid.ts",
+      "benchmarkIDs": ["core:grid:position:1000", "core:grid:position:10000", "core:grid:position:100000"],
+      "specificationCeiling": "O(1)",
+      "contract": { "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "trusted" } }
+    },
+    {
+      "id": "grid.view",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/grid.ts",
+      "benchmarkIDs": ["core:grid:views:1000", "core:grid:views:10000", "core:grid:views:100000"],
+      "specificationCeiling": "O(sAxis)",
+      "contract": {
+        "variables": [
+          { "name": "sAxis", "meaning": "requested row or column cell count", "ceiling": "axis length" },
+          { "name": "k", "meaning": "occupied identities emitted", "ceiling": "k <= sAxis" }
+        ],
+        "time": { "bound": "O(sAxis + k)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(sAxis)", "output": "O(k)", "retained": "O(k)" },
+        "resources": { "allocations": "O(sAxis + k)", "cacheEntries": "O(k)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The incumbent row/column view visits the selected axis and constructs a fresh indexed sequence for occupied identities.",
+        "adversarialWitness": "A fully occupied maximum-length axis emits and indexes every cell.",
+        "fullScan": { "allowed": true, "rationale": "The requested output contains every occupied identity on that one axis; cached reuse is owned by WI-014." }
+      }
+    },
+    {
+      "id": "range.arithmetic",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/range.ts",
+      "benchmarkIDs": ["core:range:arithmetic"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "assumptions": ["decimal digit widths and ratio numerators/denominators remain within declared ceilings"],
+        "ceilings": ["range count, decimal scale, numerator, and denominator width ceilings"],
+        "proof": "Each tick/value/ratio mapping performs a bounded number of exact integer operations under fixed width ceilings.",
+        "adversarialWitness": "Maximum range count and decimal scale remain within the same bounded operation count.",
+        "fullScan": { "allowed": false, "rationale": "Scalar range arithmetic cannot traverse range count." }
+      }
+    },
+    {
+      "id": "selection.toggle",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/state/selection.ts",
+      "benchmarkIDs": ["core:selection:toggle:1000", "core:selection:toggle:10000", "core:selection:toggle:100000"],
+      "specificationCeiling": "O(nDomain)",
+      "contract": {
+        "variables": [
+          { "name": "nDomain", "meaning": "selection domain cardinality", "ceiling": "maxItems" },
+          { "name": "sSelected", "meaning": "selected identity cardinality", "ceiling": "sSelected <= nDomain" }
+        ],
+        "time": { "bound": "O(nDomain + sSelected)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(sSelected)", "output": "O(sSelected)", "retained": "O(sSelected)" },
+        "resources": { "allocations": "O(nDomain + sSelected)", "cacheEntries": "O(sSelected)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The current implementation copies selected IDs then restores canonical order by visiting every domain position.",
+        "adversarialWitness": "A 100k domain with one selected ID still performs nDomain at-calls.",
+        "fullScan": { "allowed": true, "rationale": "Recorded incumbent weakness owned by WI-014/WI-020; it may not worsen before migration." }
+      }
+    },
+    {
+      "id": "sequence.at",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/internal/kernel/indexed-sequence.ts",
+      "benchmarkIDs": ["VAL-017:sequence-indexed-work"],
+      "specificationCeiling": "O(1)"
+    },
+    {
+      "id": "sequence.construct",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/sequence.ts",
+      "benchmarkIDs": ["core:sequence:construct:1000", "core:sequence:construct:10000", "core:sequence:construct:100000"],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "time": { "bound": "O(n + k)", "kind": "expected", "runtimeState": "external" },
+        "proof": "Validation and stable-ID indexing visit each input identity a bounded number of times.",
+        "adversarialWitness": "A maximum-size unique identity vector reaches the final validation/index entry.",
+        "fullScan": { "allowed": true, "rationale": "Unique validation and index construction have a linear lower bound." }
+      }
+    },
+    {
+      "id": "sequence.index-of",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/internal/kernel/indexed-sequence.ts",
+      "benchmarkIDs": ["core:sequence:index-of:1000", "core:sequence:index-of:10000", "core:sequence:index-of:100000"],
+      "specificationCeiling": "O(1)",
+      "contract": { "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "trusted" } }
+    },
+    {
+      "id": "sequence.materialize",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/kernel/indexed-sequence.ts",
+      "benchmarkIDs": ["core:sequence:materialize:100000:1", "core:sequence:materialize:100000:64"],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "time": { "bound": "O(n + k)", "kind": "worst-case", "runtimeState": "external" },
+        "proof": "Materialization copies the parent vector once and applies the retained patch.",
+        "adversarialWitness": "A depth-64 patched 100k sequence requests the full ids projection.",
+        "fullScan": { "allowed": true, "rationale": "Explicit full ordered output requires n entries." }
+      }
+    },
+    {
+      "id": "sequence.patch-lookup",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/kernel/indexed-sequence.ts",
+      "benchmarkIDs": ["core:sequence:patch-lookup:100000:1", "core:sequence:patch-lookup:100000:64"],
+      "specificationCeiling": "O(dPatch)",
+      "contract": {
+        "variables": [{ "name": "dPatch", "meaning": "retained patch overlay depth", "ceiling": "dPatch <= 64" }],
+        "time": { "bound": "O(dPatch)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(dPatch)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(dPatch)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Lookup translates through at most one retained patch per overlay depth before the indexed base lookup.",
+        "adversarialWitness": "A missing ID traverses every depth-64 overlay before the base map miss.",
+        "fullScan": { "allowed": false, "rationale": "Patch lookup may traverse bounded overlay depth, never domain cardinality." }
+      }
+    },
+    {
+      "id": "text.replace",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/editing/text.ts",
+      "benchmarkIDs": ["VAL-017:text-boundary-work"],
+      "specificationCeiling": "O(nText + nInsert)",
+      "contract": {
+        "variables": [
+          { "name": "nText", "meaning": "source text UTF-16 code units", "ceiling": "maxCodeUnits" },
+          { "name": "nInsert", "meaning": "replacement UTF-16 code units", "ceiling": "maxCodeUnits" }
+        ],
+        "time": { "bound": "O(nText + nInsert)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(nText + nInsert)", "output": "O(nText + nInsert)", "retained": "O(nText + nInsert)" },
+        "resources": { "allocations": "O(nText + nInsert)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "External text validation and immutable replacement inspect/copy bounded UTF-16 input and output.",
+        "adversarialWitness": "Maximum valid text replaced at the final surrogate boundary.",
+        "fullScan": { "allowed": true, "rationale": "External full-string validation is recorded until WI-021 proves local validation." }
+      }
+    },
+    {
+      "id": "tree.construct",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/tree.ts",
+      "benchmarkIDs": ["VAL-017:tree-adversarial-work"],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "time": { "bound": "O(n + k)", "kind": "expected", "runtimeState": "external" },
+        "proof": "Parent, child, depth, preorder, and postorder indexes each visit nodes/edges a bounded number of times.",
+        "adversarialWitness": "A maximum-depth chain reaches every node and depth check.",
+        "fullScan": { "allowed": true, "rationale": "Tree construction must validate every node and edge." }
+      }
+    },
+    {
+      "id": "tree.views",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/tree.ts",
+      "benchmarkIDs": ["core:tree:views:1000", "core:tree:views:10000", "core:tree:views:100000"],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "proof": "The incumbent preorder/postorder observation constructs a fresh indexed sequence from the retained traversal vector.",
+        "adversarialWitness": "Repeated preorder reads on a maximum-size tree reindex every retained node.",
+        "fullScan": { "allowed": true, "rationale": "Recorded incumbent repeated-view construction is owned by WI-014 and may not worsen." }
+      }
+    },
+    {
+      "id": "tree.visible",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/tree.ts",
+      "benchmarkIDs": ["core:tree:visible:1000", "core:tree:visible:10000", "core:tree:visible:100000"],
+      "specificationCeiling": "O(n + k)",
+      "contract": {
+        "time": { "bound": "O(n + k)", "kind": "expected", "runtimeState": "external" },
+        "proof": "The stack traversal visits each visible node once and emits one ordered identity per visit.",
+        "adversarialWitness": "Every branch expanded makes the visible result equal the full preorder.",
+        "fullScan": { "allowed": true, "rationale": "Full expansion makes output cardinality equal n." }
+      }
+    }
+  ]
+}
