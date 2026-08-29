@@ -1,5 +1,5 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, nextTick, provide, ref, shallowRef, watch,
+  computed, defineComponent, h, inject, mergeProps, nextTick, provide, shallowRef, watch,
   type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import {
@@ -72,7 +72,7 @@ export const RadioGroupRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: RadioGroupRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const direction = useHostDirection();
-    const rootElement = ref<HTMLElement | null>(null);
+    const rootElement = shallowRef<HTMLElement | null>(null);
     const inputElements: Array<HTMLInputElement | null> = [];
     const participation = useCompositeFormControl({
       root: rootElement,

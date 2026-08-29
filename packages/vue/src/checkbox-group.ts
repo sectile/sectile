@@ -1,5 +1,5 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, provide, ref, shallowRef, watch,
+  computed, defineComponent, h, inject, mergeProps, provide, shallowRef, watch,
   type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { applyCheckboxGroupEvent, tryCreateCheckboxGroupState } from '@sectile/core/checkbox-group';
@@ -63,7 +63,7 @@ export const CheckboxGroupRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: CheckboxGroupRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     providePartContract('checkbox-group', { root: 'item' });
-    const rootElement = ref<HTMLElement | null>(null);
+    const rootElement = shallowRef<HTMLElement | null>(null);
     const submissionElements: Array<HTMLInputElement | null> = [];
     const controlled = useControlledStateInvariant(
       'CheckboxGroupRoot',

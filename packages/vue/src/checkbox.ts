@@ -5,7 +5,6 @@ import {
   inject,
   mergeProps,
   provide,
-  ref,
   shallowRef,
   watch,
   type ComputedRef,
@@ -91,8 +90,8 @@ export const CheckboxRoot = defineComponent({
     default: (props: CheckboxSlotProps) => VNodeChild;
   }>,
   setup(props, { attrs, emit, slots }) {
-    const rootElement = ref<HTMLElement | null>(null);
-    const inputElement = ref<HTMLInputElement | null>(null);
+    const rootElement = shallowRef<HTMLElement | null>(null);
+    const inputElement = shallowRef<HTMLInputElement | null>(null);
     const controlled = useControlledStateInvariant('CheckboxRoot', 'modelValue', () => props.modelValue);
     const initialValue = controlled ? props.modelValue as CheckboxValue : props.defaultValue;
     const controller = shallowRef(createController(

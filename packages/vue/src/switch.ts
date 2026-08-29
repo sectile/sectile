@@ -5,7 +5,6 @@ import {
   inject,
   mergeProps,
   provide,
-  ref,
   shallowRef,
   watch,
   type ComputedRef,
@@ -89,8 +88,8 @@ export const SwitchRoot = defineComponent({
     default: (props: SwitchSlotProps) => VNodeChild;
   }>,
   setup(props, { attrs, emit, slots }) {
-    const rootElement = ref<HTMLElement | null>(null);
-    const inputElement = ref<HTMLInputElement | null>(null);
+    const rootElement = shallowRef<HTMLElement | null>(null);
+    const inputElement = shallowRef<HTMLInputElement | null>(null);
     const participation = useCompositeFormControl({
       root: rootElement,
       focusTarget: rootElement,

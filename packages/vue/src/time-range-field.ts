@@ -1,4 +1,4 @@
-import { computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild } from 'vue';
+import { computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide, shallowRef, watch, type ComputedRef, type PropType, type ShallowRef, type SlotsType, type VNodeChild } from 'vue';
 import { createTimeRangeField, tryCreateTimeRangeFieldState, type TimeRangeFieldConnection, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/dom/temporal/time-range-field';
 import type { TimeRange } from '@sectile/temporal/time-range-field';
 import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
@@ -8,7 +8,7 @@ import { useNextTickTask } from './internal/scheduled-task.js';
 
 export interface TimeRangeFieldRootProps { readonly modelValue?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly policies?: TimeRangeFieldPolicies; readonly disabled?: boolean; readonly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TimeRangeFieldRootSlotProps { readonly value: TimeRange | null; readonly startText: string; readonly endText: string; readonly active: 'start' | 'end'; readonly disabled: boolean; readonly: boolean }
-interface Context { readonly slotProps: ComputedRef<TimeRangeFieldRootSlotProps>; readonly startInput: ReturnType<typeof ref<HTMLInputElement | null>>; readonly endInput: ReturnType<typeof ref<HTMLInputElement | null>> }
+interface Context { readonly slotProps: ComputedRef<TimeRangeFieldRootSlotProps>; readonly startInput: ShallowRef<HTMLInputElement | null>; readonly endInput: ShallowRef<HTMLInputElement | null> }
 const contextKey = Symbol('SectileTimeRangeField');
 
 export const TimeRangeFieldRoot = defineComponent({
@@ -17,7 +17,7 @@ export const TimeRangeFieldRoot = defineComponent({
   emits: { 'update:modelValue': (_value: TimeRange | null): boolean => true }, slots: Object as SlotsType<{ default: (props: TimeRangeFieldRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const controlled = useControlledStateInvariant('TimeRangeFieldRoot', 'modelValue', () => props.modelValue); const initial = tryCreateTimeRangeFieldState({ value: controlled ? props.modelValue as TimeRange | null : props.defaultValue }); if (!initial.ok) throw new TypeError(initial.error.message);
-    const snapshot = shallowRef<TimeRangeFieldState>(initial.value); const startInput = ref<HTMLInputElement | null>(null); const endInput = ref<HTMLInputElement | null>(null); const root = ref<HTMLElement | null>(null); let connection: TimeRangeFieldConnection | null = null;
+    const snapshot = shallowRef<TimeRangeFieldState>(initial.value); const startInput = shallowRef<HTMLInputElement | null>(null); const endInput = shallowRef<HTMLInputElement | null>(null); const root = shallowRef<HTMLElement | null>(null); let connection: TimeRangeFieldConnection | null = null;
     const participation = useCompositeFormControl({ root, focusTarget: startInput, submissions: () => [
       { element: startInput, relativeName: 'start', capabilities: hiddenInputSubmissionCapabilities },
       { element: endInput, relativeName: 'end', capabilities: hiddenInputSubmissionCapabilities },

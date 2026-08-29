@@ -6,7 +6,6 @@ import {
   mergeProps,
   nextTick,
   provide,
-  ref,
   shallowRef,
   watch,
   type ComputedRef,
@@ -145,8 +144,8 @@ export const ListboxRoot = defineComponent({
     const direction = useHostDirection();
     const instanceID = useHostId();
     const itemID = (id: string): string => `sectile-listbox-${instanceID}-option-${encodeURIComponent(id).replaceAll('%', '-')}`;
-    const rootElement = ref<HTMLElement | null>(null);
-    const submissionElement = ref<HTMLSelectElement | null>(null);
+    const rootElement = shallowRef<HTMLElement | null>(null);
+    const submissionElement = shallowRef<HTMLSelectElement | null>(null);
     let controllerProps = snapshotListboxControllerProps({
       ...props,
       direction: direction.value,

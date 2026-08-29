@@ -5,7 +5,7 @@ import {
   nextTick,
   onBeforeUnmount,
   onMounted,
-  ref,
+  shallowRef,
   watch,
   type PropType,
   type VNodeChild,
@@ -66,7 +66,7 @@ export const TextField = defineComponent({
     'update:modelValue': (_value: string | number): boolean => true,
   },
   setup(props, { attrs, emit }) {
-    const element = ref<HTMLInputElement | HTMLTextAreaElement | null>(null);
+    const element = shallowRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
     const controlled = useControlledStateInvariant('TextField', 'modelValue', () => props.modelValue);
     const initialValue = String(controlled ? props.modelValue : props.defaultValue);
     const renderServerValue = typeof window === 'undefined';

@@ -12,6 +12,7 @@ import {
   watch,
   type ComputedRef,
   type PropType,
+  type ShallowRef,
   type SlotsType,
   type VNodeChild,
 } from 'vue';
@@ -54,12 +55,12 @@ export interface EditablePartProps {
 
 interface EditableContext {
   readonly slotProps: ComputedRef<EditableRootSlotProps>;
-  readonly root: ReturnType<typeof ref<HTMLElement | null>>;
-  readonly preview: ReturnType<typeof ref<HTMLElement | null>>;
-  readonly input: ReturnType<typeof ref<HTMLInputElement | HTMLTextAreaElement | null>>;
-  readonly editTrigger: ReturnType<typeof ref<HTMLElement | null>>;
-  readonly submitTrigger: ReturnType<typeof ref<HTMLElement | null>>;
-  readonly cancelTrigger: ReturnType<typeof ref<HTMLElement | null>>;
+  readonly root: ShallowRef<HTMLElement | null>;
+  readonly preview: ShallowRef<HTMLElement | null>;
+  readonly input: ShallowRef<HTMLInputElement | HTMLTextAreaElement | null>;
+  readonly editTrigger: ShallowRef<HTMLElement | null>;
+  readonly submitTrigger: ShallowRef<HTMLElement | null>;
+  readonly cancelTrigger: ShallowRef<HTMLElement | null>;
   readonly multiline: ReturnType<typeof ref<boolean>>;
   reset(): void;
 }
@@ -93,12 +94,12 @@ export const EditableRoot = defineComponent({
     const controlled = useControlledStateInvariant('EditableRoot', 'modelValue', () => props.modelValue);
     const initial = controlled ? props.modelValue as string : props.defaultValue;
     const snapshot = shallowRef<EditableState>({ value: initial, draft: initial, editing: false });
-    const root = ref<HTMLElement | null>(null);
-    const preview = ref<HTMLElement | null>(null);
-    const input = ref<HTMLInputElement | HTMLTextAreaElement | null>(null);
-    const editTrigger = ref<HTMLElement | null>(null);
-    const submitTrigger = ref<HTMLElement | null>(null);
-    const cancelTrigger = ref<HTMLElement | null>(null);
+    const root = shallowRef<HTMLElement | null>(null);
+    const preview = shallowRef<HTMLElement | null>(null);
+    const input = shallowRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+    const editTrigger = shallowRef<HTMLElement | null>(null);
+    const submitTrigger = shallowRef<HTMLElement | null>(null);
+    const cancelTrigger = shallowRef<HTMLElement | null>(null);
     const multiline = ref(false);
     let connection: EditableConnection | null = null;
     let mounted = false;

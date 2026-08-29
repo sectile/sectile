@@ -7,11 +7,11 @@ import {
   onBeforeUnmount,
   onMounted,
   provide,
-  ref,
   shallowRef,
   watch,
   type ComputedRef,
   type PropType,
+  type ShallowRef,
   type SlotsType,
   type VNodeChild,
 } from 'vue';
@@ -49,8 +49,8 @@ export interface DateRangeFieldRootSlotProps {
 
 interface DateRangeFieldContext {
   readonly slotProps: ComputedRef<DateRangeFieldRootSlotProps>;
-  readonly startInput: ReturnType<typeof ref<HTMLInputElement | null>>;
-  readonly endInput: ReturnType<typeof ref<HTMLInputElement | null>>;
+  readonly startInput: ShallowRef<HTMLInputElement | null>;
+  readonly endInput: ShallowRef<HTMLInputElement | null>;
 }
 
 const contextKey = Symbol('SectileDateRangeField');
@@ -77,9 +77,9 @@ export const DateRangeFieldRoot = defineComponent({
     const initial = tryCreateDateRangeFieldState({ value: controlled ? props.modelValue as DateRange | null : props.defaultValue });
     if (!initial.ok) throw new TypeError(initial.error.message);
     const snapshot = shallowRef<DateRangeFieldState>(initial.value);
-    const startInput = ref<HTMLInputElement | null>(null);
-    const endInput = ref<HTMLInputElement | null>(null);
-    const root = ref<HTMLElement | null>(null);
+    const startInput = shallowRef<HTMLInputElement | null>(null);
+    const endInput = shallowRef<HTMLInputElement | null>(null);
+    const root = shallowRef<HTMLElement | null>(null);
     let mounted = false;
     const participation = useCompositeFormControl({
       root,

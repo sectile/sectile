@@ -1,5 +1,5 @@
 import {
-  Teleport, computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide, ref,
+  Teleport, computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
   shallowRef, watch, type Component, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createSelect, type SelectConnection, type SelectPolicies } from '@sectile/dom/select';
@@ -98,7 +98,7 @@ export const SelectRoot = defineComponent({
     const root = shallowRef<HTMLElement>();
     const trigger = shallowRef<HTMLButtonElement>();
     const popup = shallowRef<HTMLElement>();
-    const submissionElement = ref<HTMLSelectElement | null>(null);
+    const submissionElement = shallowRef<HTMLSelectElement | null>(null);
     const participation = useCompositeFormControl({
       root: () => root.value ?? null,
       focusTarget: () => trigger.value ?? root.value ?? null,
