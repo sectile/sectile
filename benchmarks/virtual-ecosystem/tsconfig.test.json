@@ -14,7 +14,9 @@
     "src/interactive-budget.ts",
     "src/interactive-budget.test.ts",
     "src/react-virtualized-measurement.ts",
-    "src/react-virtualized-measurement.test.ts"
+    "src/react-virtualized-measurement.test.ts",
+    "src/target-position.ts",
+    "src/target-position.test.ts"
   ],
   "exclude": []
 }

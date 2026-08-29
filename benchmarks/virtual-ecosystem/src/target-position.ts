@@ -9,6 +9,13 @@ interface TargetScrollGeometry {
   readonly viewportHeight: number;
 }
 
+export interface TargetPositionGeometry {
+  readonly scrollTop: number;
+  readonly scrollHeight: number;
+  readonly targetViewportTop: number;
+  readonly targetHeight: number;
+}
+
 export function initialTargetScroll(geometry: TargetScrollGeometry): number {
   return Math.max(0, estimatedAbsoluteTop(geometry, geometry.targetIndex) - targetViewportOffset(
     geometry.targetHeight,
@@ -52,6 +59,17 @@ export function intersectsViewportGeometry(
 ): boolean {
   return rowBottom > viewportTop + tolerance
     && rowTop < viewportBottom - tolerance;
+}
+
+export function sameTargetPositionGeometry(
+  previous: TargetPositionGeometry,
+  current: TargetPositionGeometry,
+  tolerance: number,
+): boolean {
+  return Math.abs(previous.scrollTop - current.scrollTop) <= tolerance
+    && Math.abs(previous.scrollHeight - current.scrollHeight) <= tolerance
+    && Math.abs(previous.targetViewportTop - current.targetViewportTop) <= tolerance
+    && Math.abs(previous.targetHeight - current.targetHeight) <= tolerance;
 }
 
 function estimatedAbsoluteTop(geometry: TargetScrollGeometry, index: number): number {

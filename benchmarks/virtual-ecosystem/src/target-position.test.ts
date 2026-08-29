@@ -4,6 +4,7 @@ import {
   correctedTargetScroll,
   initialTargetScroll,
   intersectsViewportGeometry,
+  sameTargetPositionGeometry,
 } from './target-position.ts';
 
 test('places start, middle, and end targets in the library coordinate space', () => {
@@ -31,4 +32,26 @@ test('rejects retained rows outside the current viewport', () => {
   assert.equal(intersectsViewportGeometry(120, 192, 100, 580, 2), true);
   assert.equal(intersectsViewportGeometry(20, 92, 100, 580, 2), false);
   assert.equal(intersectsViewportGeometry(588, 660, 100, 580, 2), false);
+});
+
+test('requires scroll and target geometry to settle together', () => {
+  const settled = {
+    scrollTop: 12_477_020,
+    scrollHeight: 12_477_500,
+    targetViewportTop: 389,
+    targetHeight: 91,
+  } as const;
+  assert.equal(sameTargetPositionGeometry(settled, {
+    ...settled,
+    scrollTop: settled.scrollTop + 1,
+    targetViewportTop: settled.targetViewportTop - 1,
+  }, 2), true);
+  assert.equal(sameTargetPositionGeometry(settled, {
+    ...settled,
+    scrollHeight: settled.scrollHeight - 34,
+  }, 2), false);
+  assert.equal(sameTargetPositionGeometry(settled, {
+    ...settled,
+    targetHeight: settled.targetHeight + 34,
+  }, 2), false);
 });
