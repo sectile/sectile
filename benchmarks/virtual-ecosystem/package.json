@@ -7,7 +7,7 @@
     "build": "vite build",
     "build:docs": "vite build --base ./ --outDir ../../docs/public/benchmark-runner --emptyOutDir",
     "merge-shards": "node scripts/merge-shards.mjs",
-    "test": "node --test src/adaptive-sampling.test.ts src/baseline-policy.test.ts src/failure-reproduction.test.ts src/interactive-budget.test.ts src/react-virtualized-measurement.test.ts src/target-position.test.ts scripts/merge-shards.test.mjs scripts/result-normalization.test.mjs scripts/source-metadata.test.mjs",
+    "test": "node --test src/adaptive-sampling.test.ts src/baseline-policy.test.ts src/constants.test.ts src/failure-reproduction.test.ts src/interactive-budget.test.ts src/react-virtualized-measurement.test.ts src/target-position.test.ts scripts/merge-shards.test.mjs scripts/result-normalization.test.mjs scripts/source-metadata.test.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {

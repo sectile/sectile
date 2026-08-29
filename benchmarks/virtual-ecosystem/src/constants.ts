@@ -1,6 +1,9 @@
 export const DEFAULT_ITEM_COUNT = 100_000;
 export const ITEM_COUNT = benchmarkItemCount();
-export const ROW_HEIGHT = 72;
+export const DEFAULT_ROW_HEIGHT = 72;
+export const MINIMUM_ROW_HEIGHT = 16;
+export const MAXIMUM_SCROLL_HEIGHT = 16_000_000;
+export const ROW_HEIGHT = benchmarkRowHeight(ITEM_COUNT);
 export const CONTENT_VARIANT_COUNT = 256;
 export const CONTENT_CORPUS_VERSION = 1;
 export const VIEWPORT_HEIGHT = 480;
@@ -70,6 +73,14 @@ export function stableVariant(index: number): number {
   value = ((value >>> 16) ^ value) * 0x45d9f3b;
   value = (value >>> 16) ^ value;
   return Math.abs(value) % CONTENT_VARIANT_COUNT;
+}
+
+export function benchmarkRowHeight(itemCount: number): number {
+  const boundedCount = Math.max(1, itemCount);
+  return Math.max(
+    MINIMUM_ROW_HEIGHT,
+    Math.min(DEFAULT_ROW_HEIGHT, Math.floor(MAXIMUM_SCROLL_HEIGHT / boundedCount)),
+  );
 }
 
 function benchmarkItemCount(): number {

@@ -236,13 +236,14 @@ const heightModeSupport: readonly HeightModeSupport[] = Object.freeze(fixedAdapt
 
 const root = document.querySelector<HTMLElement>('#app');
 if (root === null) throw new Error('Missing benchmark root.');
+document.documentElement.style.setProperty('--benchmark-row-height', `${ROW_HEIGHT}px`);
 
 root.innerHTML = EMBEDDED ? `
   <div id="mount" aria-hidden="true"></div>
 ` : `
   <header>
     <h1>Virtualization ecosystem benchmark</h1>
-    <p>${ITEM_COUNT.toLocaleString()} rows · ${rowProfile} DOM-height profile · fixed, estimated, and no-height-input conditions · 720 × 480 viewport</p>
+    <p>${ITEM_COUNT.toLocaleString()} rows · ${ROW_HEIGHT}px common estimate · ${rowProfile} DOM-height profile · fixed, estimated, and no-height-input conditions · 720 × 480 viewport</p>
     <button type="button" id="run">Run benchmark</button>
   </header>
   <section aria-live="polite">
