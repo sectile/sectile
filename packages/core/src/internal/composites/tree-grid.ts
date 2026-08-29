@@ -9,7 +9,7 @@ import type {
 import type { Grid } from '../../structures/grid.js';
 import type { Sequence } from '../../structures/sequence.js';
 import type { Tree } from '../../structures/tree.js';
-import { bindCanonicalState, fail, freezeArray, hasCanonicalState, memoizeWeak, memoizeWeakPair, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, freezeArray, hasCanonicalState, memoizeWeakPair, ok } from '../kernel/foundation.js';
 import { findEligibleFromEdge, IndexedSequence } from '../kernel/indexed-sequence.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
@@ -93,8 +93,8 @@ export interface TreeGridUpdate<
   readonly commands: readonly TreeGridCommand<CellID>[];
 }
 
-const allCellViews = new WeakMap<object, Sequence<StableID>>();
 const visibleCellViews = new WeakMap<object, WeakMap<object, Sequence<StableID>>>();
+const visibleRowSequences = new WeakMap<object, WeakMap<object, Sequence<StableID>>>();
 const visibleRowViews = new WeakMap<object, WeakMap<object, ReadonlySet<StableID>>>();
 
 class IndexedTreeGridModel<RowID extends StableID, CellID extends StableID>
@@ -108,11 +108,12 @@ class IndexedTreeGridModel<RowID extends StableID, CellID extends StableID>
     tree: Tree<RowID>,
     grid: Grid<CellID>,
     rowIDs: readonly RowID[],
+    rowIndices: ReadonlyMap<RowID, number>,
   ) {
     this.tree = tree;
     this.grid = grid;
     this.rowIDs = freezeArray(rowIDs);
-    this.#rowIndices = new Map(this.rowIDs.map((id, index) => [id, index]));
+    this.#rowIndices = rowIndices;
     Object.freeze(this);
   }
 
@@ -147,7 +148,7 @@ export function tryCreateTreeGridModel<RowID extends StableID, CellID extends St
       { mappedRows: rowIDs.length, gridRows: grid.rowCount, treeRows: tree.size },
     );
   }
-  const seen = new Set<RowID>();
+  const rowIndices = new Map<RowID, number>();
   for (let index = 0; index < rowIDs.length; index += 1) {
     const id = rowIDs[index];
     if (id === undefined || !tree.has(id)) {
@@ -158,7 +159,7 @@ export function tryCreateTreeGridModel<RowID extends StableID, CellID extends St
         { index, id },
       );
     }
-    if (seen.has(id)) {
+    if (rowIndices.has(id)) {
       return fail(
         'construction',
         'duplicate-tree-grid-row',
@@ -166,9 +167,9 @@ export function tryCreateTreeGridModel<RowID extends StableID, CellID extends St
         { index, id },
       );
     }
-    seen.add(id);
+    rowIndices.set(id, index);
   }
-  return ok(new IndexedTreeGridModel(tree, grid, rowIDs));
+  return ok(new IndexedTreeGridModel(tree, grid, rowIDs, rowIndices));
 }
 
 export function createTreeGridState<RowID extends StableID, CellID extends StableID>(
@@ -404,10 +405,8 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
 function allCells<RowID extends StableID, CellID extends StableID>(
   model: TreeGridModel<RowID, CellID>,
 ): Sequence<CellID> {
-  return memoizeWeak(allCellViews, model, createAllCells) as Sequence<CellID>;
+  return model.grid.domain();
 }
-
-function createAllCells(owner: object): Sequence<StableID> { return cellsWhere(owner as TreeGridModel<StableID, StableID>, () => true); }
 
 function visibleCells<RowID extends StableID, CellID extends StableID>(
   model: TreeGridModel<RowID, CellID>,
@@ -416,28 +415,47 @@ function visibleCells<RowID extends StableID, CellID extends StableID>(
   return memoizeWeakPair(visibleCellViews, model, expansion, createVisibleCells) as Sequence<CellID>;
 }
 
-function createVisibleCells(owner: object, expansion: object): Sequence<StableID> { const model = owner as TreeGridModel<StableID, StableID>; const rows = visibleRowsFor(model, expansion as ExpansionState<StableID>); return cellsWhere(model, (row) => rows.has(row)); }
+function createVisibleCells(owner: object, expansion: object): Sequence<StableID> {
+  const model = owner as TreeGridModel<StableID, StableID>;
+  const rows = visibleRows(model, expansion as ExpansionState<StableID>);
+  const ids: StableID[] = [];
+  for (let index = 0; index < rows.size; index += 1) {
+    const row = rows.at(index);
+    if (row === null) continue;
+    const rowIndex = model.rowIndexOf(row);
+    if (rowIndex === null) continue;
+    const cells = model.grid.row(rowIndex);
+    if (cells === null) continue;
+    for (let cellIndex = 0; cellIndex < cells.size; cellIndex += 1) {
+      const cell = cells.at(cellIndex);
+      if (cell !== null) ids.push(cell);
+    }
+  }
+  return new IndexedSequence(Object.freeze(ids)) as Sequence<StableID>;
+}
+
+function visibleRows<RowID extends StableID, CellID extends StableID>(
+  model: TreeGridModel<RowID, CellID>,
+  expansion: ExpansionState<RowID>,
+): Sequence<RowID> {
+  return memoizeWeakPair(visibleRowSequences, model, expansion, createVisibleRowSequence) as Sequence<RowID>;
+}
+
+function createVisibleRowSequence(owner: object, expansion: object): Sequence<StableID> {
+  return (owner as TreeGridModel<StableID, StableID>).tree.visible(
+    expansion as ExpansionState<StableID>,
+  );
+}
 
 function visibleRowsFor<RowID extends StableID, CellID extends StableID>(model: TreeGridModel<RowID, CellID>, expansion: ExpansionState<RowID>): ReadonlySet<RowID> {
   return memoizeWeakPair(visibleRowViews, model, expansion, createVisibleRows) as ReadonlySet<RowID>;
 }
 
-function createVisibleRows(owner: object, expansion: object): ReadonlySet<StableID> { return new Set((owner as TreeGridModel<StableID, StableID>).tree.visible(expansion as ExpansionState<StableID>).ids); }
-
-function cellsWhere<RowID extends StableID, CellID extends StableID>(
-  model: TreeGridModel<RowID, CellID>,
-  includeRow: (row: RowID) => boolean,
-): Sequence<CellID> {
-  const ids: CellID[] = [];
-  for (let rowIndex = 0; rowIndex < model.grid.rowCount; rowIndex += 1) {
-    const row = model.rowIDs[rowIndex];
-    if (row === undefined || !includeRow(row)) continue;
-    for (let column = 0; column < model.grid.columnCount; column += 1) {
-      const id = model.grid.cellAt(rowIndex, column);
-      if (id !== null) ids.push(id);
-    }
-  }
-  return new IndexedSequence(ids) as Sequence<CellID>;
+function createVisibleRows(owner: object, expansion: object): ReadonlySet<StableID> {
+  return new Set(visibleRows(
+    owner as TreeGridModel<StableID, StableID>,
+    expansion as ExpansionState<StableID>,
+  ).ids);
 }
 
 function validateTreeGridState<CellID extends StableID>(
@@ -519,18 +537,18 @@ function isTreeGridEditMode(value: string): value is TreeGridEditMode {
 function isTreeGridEvent<RowID extends StableID, CellID extends StableID>(
   value: unknown,
 ): value is TreeGridEvent<RowID, CellID> {
-  if (typeof value === 'string') return [
-    'left',
-    'right',
-    'up',
-    'down',
-    'expand',
-    'collapse',
-    'select',
-    'start-edit',
-    'commit-edit',
-    'cancel-edit',
-  ].includes(value);
+  if (typeof value === 'string') {
+    return value === 'left'
+      || value === 'right'
+      || value === 'up'
+      || value === 'down'
+      || value === 'expand'
+      || value === 'collapse'
+      || value === 'select'
+      || value === 'start-edit'
+      || value === 'commit-edit'
+      || value === 'cancel-edit';
+  }
   return typeof value === 'object' && value !== null
     && 'type' in value && 'id' in value && typeof value.id === 'string'
     && (value.type === 'focus' || value.type === 'select' || value.type === 'start-edit'

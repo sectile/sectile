@@ -2,8 +2,8 @@ import { unwrap } from '../../result.js';
 import type { AxisBoundaryPolicy, GridDirection, Result, StableID } from '../../shared.js';
 import type { Grid } from '../../structures/grid.js';
 import type { Sequence } from '../../structures/sequence.js';
-import { bindCanonicalState, fail, hasCanonicalState, memoizeWeak, ok } from '../kernel/foundation.js';
-import { findEligibleFromEdge, IndexedSequence } from '../kernel/indexed-sequence.js';
+import { bindCanonicalState, fail, hasCanonicalState, ok } from '../kernel/foundation.js';
+import { findEligibleFromEdge } from '../kernel/indexed-sequence.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
 import { createSelectionState, selectOne, type SelectionState } from '../state/selection.js';
@@ -15,8 +15,6 @@ export interface GridState<ID extends StableID = StableID> { readonly cursor: Cu
 export interface GridStateInput<ID extends StableID = StableID> { readonly current?: ID | null; readonly selected?: readonly ID[]; readonly anchor?: ID | null; readonly editMode?: GridEditMode }
 export interface GridPolicies<ID extends StableID = StableID> { readonly eligible?: (id: ID) => boolean; readonly boundary?: AxisBoundaryPolicy; readonly maxScan?: number }
 export interface GridUpdate<ID extends StableID = StableID> { readonly state: GridState<ID>; readonly commands: readonly GridCommand<ID>[] }
-
-const gridDomains = new WeakMap<object, Sequence<StableID>>();
 
 export function createGridState<ID extends StableID>(grid: Grid<ID>, input: GridStateInput<ID> = {}): GridState<ID> {
   return unwrap(tryCreateGridState(grid, input));
@@ -78,14 +76,7 @@ export function applyGridEvent<ID extends StableID>(grid: Grid<ID>, state: GridS
 }
 
 function gridCells<ID extends StableID>(grid: Grid<ID>): Sequence<ID> {
-  return memoizeWeak(gridDomains, grid, createGridCells) as Sequence<ID>;
-}
-
-function createGridCells(owner: object): Sequence<StableID> {
-  const grid = owner as Grid<StableID>;
-  const ids: StableID[] = [];
-  for (let row = 0; row < grid.rowCount; row += 1) for (let column = 0; column < grid.columnCount; column += 1) { const id = grid.cellAt(row, column); if (id !== null) ids.push(id); }
-  return new IndexedSequence(ids) as Sequence<StableID>;
+  return grid.domain();
 }
 
 function gridState<ID extends StableID>(grid: Grid<ID>, current: ID | null, selection: SelectionState<ID>, editMode: GridEditMode): GridState<ID> {

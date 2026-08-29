@@ -169,7 +169,11 @@ function validateState<ID extends StableID>(
 
 function isLinearActionEvent(value: unknown): value is LinearActionEvent {
   if (typeof value === 'string') {
-    return ['next', 'previous', 'first', 'last', 'invoke'].includes(value);
+    return value === 'next'
+      || value === 'previous'
+      || value === 'first'
+      || value === 'last'
+      || value === 'invoke';
   }
   return typeof value === 'object' && value !== null
     && 'type' in value && 'id' in value && typeof value.id === 'string'

@@ -255,7 +255,12 @@ function unavailable<ID extends StableID>(id: ID): Result<never> {
 
 function isLinearChoiceEvent(value: unknown): value is LinearChoiceEvent {
   if (typeof value === 'string') {
-    return ['next', 'previous', 'first', 'last', 'select', 'activate'].includes(value);
+    return value === 'next'
+      || value === 'previous'
+      || value === 'first'
+      || value === 'last'
+      || value === 'select'
+      || value === 'activate';
   }
   return typeof value === 'object' && value !== null
     && 'type' in value && 'id' in value && typeof value.id === 'string'

@@ -334,7 +334,11 @@ function createTreeVisible(owner: object, expansion: object): ReturnType<Tree<St
 
 function isTreeViewEvent<ID extends StableID>(value: unknown): value is TreeViewEvent<ID> {
   if (typeof value === 'string') {
-    return ['next', 'previous', 'right', 'left', 'toggle-select'].includes(value);
+    return value === 'next'
+      || value === 'previous'
+      || value === 'right'
+      || value === 'left'
+      || value === 'toggle-select';
   }
   return typeof value === 'object' && value !== null && 'type' in value && 'id' in value
     && typeof value.id === 'string'

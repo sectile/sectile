@@ -131,18 +131,19 @@
       "inherits": "linear-v1",
       "source": "packages/core/src/internal/composites/tree-grid.ts",
       "benchmarkIDs": ["core:grid-control:right:100000", "core:tree-view:next:100000", "core:tree-grid:right:100000", "core:menu:next:100000"],
-      "specificationCeiling": "O(n + v)",
+      "specificationCeiling": "O(vRow * cColumn + vCell)",
       "contract": {
         "variables": [
-          { "name": "n", "meaning": "immutable owner domain cardinality", "ceiling": "domain maxItems" },
-          { "name": "v", "meaning": "visible identities emitted for one expansion/path owner", "ceiling": "v <= n" }
+          { "name": "vRow", "meaning": "visible rows emitted for one immutable expansion owner", "ceiling": "vRow <= grid.rowCount" },
+          { "name": "cColumn", "meaning": "coordinates in a cold visible row view", "ceiling": "grid.columnCount" },
+          { "name": "vCell", "meaning": "visible occupied cells emitted for one expansion owner", "ceiling": "vCell <= grid.size" }
         ],
-        "time": { "bound": "O(n + v)", "kind": "amortized", "runtimeState": "trusted" },
-        "space": { "auxiliary": "O(n + v)", "output": "O(n + v)", "retained": "O(n + v)" },
-        "resources": { "allocations": "O(n + v)", "cacheEntries": "O(n + v)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "proof": "Weak owner maps retain one flattened grid/tree-grid domain and one visible derivation per live immutable expansion/path identity; repeated reads return the indexed view in O(1).",
-        "adversarialWitness": "The first fully visible maximum-size owner materializes every identity; repeated canonical transitions perform zero cell or visible-tree reconstruction.",
-        "fullScan": { "allowed": true, "rationale": "Only first construction of an output-sized immutable derived view scans its owner; repeated canonical access does not." }
+        "time": { "bound": "O(vRow * cColumn + vCell)", "kind": "amortized", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(vRow + vCell)", "output": "O(vCell)", "retained": "O(vRow + vCell)" },
+        "resources": { "allocations": "O(vRow + vCell)", "cacheEntries": "O(vRow + vCell)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Grid-control and tree-grid consume the Grid owner's O(1) retained domain view. A tree-grid expansion traverses only visible rows, reuses owner-cached row views, and materializes one indexed visible-cell output; repeated reads of that expansion return the cached view in O(1).",
+        "adversarialWitness": "A sparse grid with one visible row visits only that row's coordinates and emitted cells instead of the full rectangle; repeated canonical transitions perform zero domain, row, or visible-tree reconstruction.",
+        "fullScan": { "allowed": true, "rationale": "Cold row views may scan coordinates only in visible rows, and the derived visible-cell index must visit its complete output once." }
       }
     },
     {

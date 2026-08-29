@@ -43,7 +43,29 @@ export function applyMenuEvent<ID extends StableID>(tree: Tree<ID>, state: MenuS
   return createMachineUpdate(menuState(tree, false, null, []), [{ type: 'invoke', id: current }, { type: 'restore-focus' }]);
 }
 
-function closeLevel<ID extends StableID>(tree: Tree<ID>, state: MenuState<ID>): Result<MenuUpdate<ID>> { const current = state.cursor.current; const parent = current === null ? null : tree.parentOf(current); if (parent === null) return createMachineUpdate(menuState(tree, false, null, []), [{ type: 'restore-focus' }]); const path = state.openPath.filter((id) => id !== parent && !(tree.ancestorsOf(id) ?? []).includes(parent)); return createMachineUpdate(menuState(tree, true, parent, path), [{ type: 'focus', id: parent }]); }
+function closeLevel<ID extends StableID>(tree: Tree<ID>, state: MenuState<ID>): Result<MenuUpdate<ID>> {
+  const current = state.cursor.current;
+  const parent = current === null ? null : tree.parentOf(current);
+  if (parent === null) {
+    return createMachineUpdate(
+      menuState(tree, false, null, []),
+      [{ type: 'restore-focus' }],
+    );
+  }
+  const parentInterval = tree.subtreeIntervalOf(parent);
+  const path = parentInterval === null
+    ? state.openPath.filter((id) => id !== parent)
+    : state.openPath.filter((id) => {
+        const interval = tree.subtreeIntervalOf(id);
+        return interval === null
+          || interval.start < parentInterval.start
+          || interval.start >= parentInterval.endExclusive;
+      });
+  return createMachineUpdate(
+    menuState(tree, true, parent, path),
+    [{ type: 'focus', id: parent }],
+  );
+}
 function pathFor<ID extends StableID>(tree: Tree<ID>, id: ID, currentPath: readonly ID[]): readonly ID[] { const ancestors = new Set(tree.ancestorsOf(id) ?? []); return currentPath.filter((branch) => ancestors.has(branch)); }
 function menuState<ID extends StableID>(tree: Tree<ID>, open: boolean, current: ID | null, openPath: readonly ID[]): MenuState<ID> { return bindCanonicalState(tree, Object.freeze({ open, cursor: createCursorState(current), openPath: Object.freeze([...openPath]) })); }
 function menuVisible<ID extends StableID>(tree: Tree<ID>, openPath: readonly ID[]): ReturnType<Tree<ID>['visible']> { return memoizeWeakPair(menuVisibleViews, tree, openPath, createMenuVisible) as ReturnType<Tree<ID>['visible']>; }
