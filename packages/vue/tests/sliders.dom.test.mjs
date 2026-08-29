@@ -18,7 +18,7 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, h, nextTick } = await import('vue');
+const { createApp, h, nextTick, ref } = await import('vue');
 const {
   SliderRange,
   SliderRoot,
@@ -88,6 +88,60 @@ test('Vue slider responds to keyboard and track pointer input', async () => {
   await settle();
   assert.equal(thumb.getAttribute('aria-valuenow'), '75');
   assert.deepEqual(updates, ['41', '75']);
+
+  app.unmount();
+  host.remove();
+});
+
+test('Vue slider reconfigures interaction when readonly and disabled change', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const readonly = ref(true);
+  const disabled = ref(false);
+  const updates = [];
+  const app = createApp({
+    render: () => h(SliderRoot, {
+      defaultValue: 40,
+      readonly: readonly.value,
+      disabled: disabled.value,
+      'onUpdate:modelValue': (value) => updates.push(value),
+    }, {
+      default: () => h(SliderTrack, null, {
+        default: () => [h(SliderRange), h(SliderThumb)],
+      }),
+    }),
+  });
+
+  app.mount(host);
+  await settle();
+  const thumb = host.querySelector('[data-part="thumb"]');
+  assert.ok(thumb instanceof HTMLElement);
+
+  thumb.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  await settle();
+  assert.equal(thumb.getAttribute('aria-valuenow'), '40');
+  assert.deepEqual(updates, []);
+
+  readonly.value = false;
+  await settle();
+  thumb.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  await settle();
+  assert.equal(thumb.getAttribute('aria-valuenow'), '41');
+  assert.deepEqual(updates, ['41']);
+
+  disabled.value = true;
+  await settle();
+  thumb.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  await settle();
+  assert.equal(thumb.getAttribute('aria-valuenow'), '41');
+  assert.deepEqual(updates, ['41']);
+
+  disabled.value = false;
+  await settle();
+  thumb.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  await settle();
+  assert.equal(thumb.getAttribute('aria-valuenow'), '42');
+  assert.deepEqual(updates, ['41', '42']);
 
   app.unmount();
   host.remove();

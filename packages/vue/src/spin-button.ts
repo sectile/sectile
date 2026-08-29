@@ -167,6 +167,9 @@ export const SpinButtonRoot = defineComponent({
       update();
     };
     watch([() => props.modelValue, () => props.draft], sync);
+    watch([() => props.disabled, () => props.readonly], () => {
+      if (inputElement.value !== undefined) connect(inputElement.value);
+    });
     provide<SpinButtonContext>(spinButtonKey, {
       state, min, max, label, connection, connect, disconnect, reset,
       step: (event) => {

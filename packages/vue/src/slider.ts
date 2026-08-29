@@ -44,7 +44,7 @@ export interface SliderSlotProps { readonly value: string; readonly percentage: 
 export interface SliderPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
 interface SliderContext {
-  readonly controller: SliderController;
+  readonly controller: ShallowRef<SliderController>;
   readonly state: ComputedRef<SliderSlotProps>;
   readonly orientation: ComputedRef<'horizontal' | 'vertical'>;
   readonly role: ComputedRef<'slider' | 'separator'>;
@@ -89,38 +89,48 @@ export const SliderRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: SliderSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const controlled = useControlledStateInvariant('SliderRoot', 'modelValue', () => props.modelValue);
-    const result = createSliderControllerFromRange({
-      min: String(props.min),
-      max: String(props.max),
-      step: String(props.step),
-      page: props.pageStep,
-      ...(controlled ? { value: String(props.modelValue) } : { defaultValue: String(props.defaultValue) }),
-      disabled: props.disabled,
-      readOnly: props.readonly,
-      onValueChange: ({ value }) => emit('update:modelValue', String(value)),
-    });
-    if (!result.ok) throw new TypeError(result.error.message);
-    const controller = result.value;
-    const snapshot = shallowRef(controller.getSnapshot());
+    const createController = (value: string): SliderController => {
+      const result = createSliderControllerFromRange({
+        min: String(props.min),
+        max: String(props.max),
+        step: String(props.step),
+        page: props.pageStep,
+        ...(controlled ? { value } : { defaultValue: value }),
+        disabled: props.disabled,
+        readOnly: props.readonly,
+        onValueChange: ({ value: next }) => emit('update:modelValue', String(next)),
+      });
+      if (!result.ok) throw new TypeError(result.error.message);
+      return result.value;
+    };
+    const controller = shallowRef(createController(String(
+      controlled ? props.modelValue : props.defaultValue,
+    )));
+    const snapshot = shallowRef(controller.value.getSnapshot());
     const rootElement = shallowRef<HTMLElement>();
     const track = shallowRef<HTMLElement>();
     const thumb = shallowRef<HTMLElement>();
     const submission = shallowRef<HTMLInputElement>();
     const connection = shallowRef<SliderConnection>();
-    const refresh = (): void => { snapshot.value = controller.getSnapshot(); };
+    const refresh = (): void => { snapshot.value = controller.value.getSnapshot(); };
     watch(() => props.modelValue, (value) => {
       if (!controlled || value === undefined) return;
-      const tick = controller.range.tickOf(String(value));
+      const tick = controller.value.range.tickOf(String(value));
       if (tick === null) throw new TypeError('Slider modelValue must be an exact value in the configured range.');
-      const synced = controller.syncControlledValues({ value: tick });
+      const synced = controller.value.syncControlledValues({ value: tick });
       if (!synced.ok) throw new TypeError(synced.error.message);
       snapshot.value = synced.value;
       connection.value?.refreshAttributes();
     });
-    const value = computed(() => controller.range.valueAt(snapshot.value.state.tick) as string);
+    watch([() => props.disabled, () => props.readonly], () => {
+      const current = controller.value.range.valueAt(snapshot.value.state.tick) as string;
+      controller.value = createController(current);
+      snapshot.value = controller.value.getSnapshot();
+    });
+    const value = computed(() => controller.value.range.valueAt(snapshot.value.state.tick) as string);
     const state = computed<SliderSlotProps>(() => ({
       value: value.value,
-      percentage: controller.range.count === 0 ? 0 : snapshot.value.state.tick / controller.range.count * 100,
+      percentage: controller.value.range.count === 0 ? 0 : snapshot.value.state.tick / controller.value.range.count * 100,
       disabled: props.disabled,
       readonly: props.readonly,
     }));
@@ -149,7 +159,7 @@ export const SliderRoot = defineComponent({
         style: { '--sectile-slider-percentage': `${state.value.percentage}%` },
       }), { default: () => slots['default']?.(state.value) });
       if (props.name === undefined && props.form === undefined && !props.required && !participation.participating) return root;
-      return [root, h('input', mergeProps(getSliderInputAttributes(controller, {
+      return [root, h('input', mergeProps(getSliderInputAttributes(controller.value, {
         ...(props.name === undefined ? {} : { name: props.name }),
         ...(props.form === undefined ? {} : { form: props.form }),
         disabled: props.disabled,
@@ -200,10 +210,11 @@ export const SliderThumb = defineComponent({
     const root = useSlider('SliderThumb');
     const part = { scope: root.partContract.scope, part: root.partContract.parts['thumb'] ?? 'thumb' };
     const element = shallowRef<HTMLElement>();
-    onMounted(() => {
+    const connect = (): void => {
       if (element.value === undefined) throw new TypeError('SliderThumb did not render an HTMLElement.');
+      root.connection.value?.disconnect();
       root.connection.value = connectSlider({
-        controller: root.controller,
+        controller: root.controller.value,
         root: element.value,
         track: root.track.value ?? root.root.value ?? element.value,
         scope: part.scope,
@@ -216,9 +227,14 @@ export const SliderThumb = defineComponent({
         ...(root.formatValue.value === undefined ? {} : { formatValue: root.formatValue.value }),
         onUpdate: root.refresh,
       });
+    };
+    onMounted(connect);
+    onBeforeUnmount(() => {
+      root.connection.value?.disconnect();
+      root.connection.value = undefined;
     });
-    onBeforeUnmount(() => root.connection.value?.disconnect());
-    const attributes = computed(() => getSliderAttributes(root.controller, {
+    watch(root.controller, connect);
+    const attributes = computed(() => getSliderAttributes(root.controller.value, {
       scope: part.scope,
       part: part.part,
       orientation: root.orientation.value,

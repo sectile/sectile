@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
-import { createSSRApp, h } from 'vue';
+import { createSSRApp, h, nextTick, ref } from 'vue';
 import {
   SpinButtonDecrement,
   SpinButtonIncrement,
@@ -77,6 +77,63 @@ test('Vue spin button forwards its host input before connecting the DOM adapter'
     assert.equal(input.props['aria-valuenow'], '3');
     assert.equal(input.props['aria-label'], 'Quantity');
     assert.deepEqual([...input.listeners.keys()].sort(), ['blur', 'input', 'keydown']);
+  } finally {
+    if (previousHTMLInputElement === undefined) delete globalThis.HTMLInputElement;
+    else globalThis.HTMLInputElement = previousHTMLInputElement;
+  }
+});
+
+test('Vue spin button reconfigures interaction when readonly changes', async () => {
+  const previousHTMLInputElement = globalThis.HTMLInputElement;
+  globalThis.HTMLInputElement = TestHTMLInputElement;
+
+  try {
+    const readonly = ref(true);
+    const updates = [];
+    const renderer = createTestRenderer({
+      createElement: (type) => type === 'input' ? new TestHTMLInputElement() : createHostNode(type),
+    });
+    const app = renderer.createApp({
+      render: () => h(SpinButtonRoot, {
+        min: 0,
+        max: 10,
+        modelValue: 3,
+        readonly: readonly.value,
+        'onUpdate:modelValue': (value) => updates.push(value),
+      }, {
+        default: () => [
+          h(SpinButtonDecrement),
+          h(SpinButtonInput),
+          h(SpinButtonIncrement),
+        ],
+      }),
+    });
+    const container = createHostNode('root');
+
+    app.mount(container);
+    const root = container.children[0];
+    const input = root.children[1];
+    const increment = root.children[2];
+
+    input.value = '4';
+    input.listeners.get('input')();
+    input.listeners.get('blur')();
+    assert.deepEqual(updates, []);
+
+    readonly.value = false;
+    await nextTick();
+
+    input.value = '4';
+    input.listeners.get('input')();
+    input.listeners.get('blur')();
+    assert.deepEqual(updates, ['4']);
+
+    increment.props.onClick({ defaultPrevented: false });
+    assert.deepEqual(updates, ['4', '4']);
+
+    await nextTick();
+    app.unmount();
+    await nextTick();
   } finally {
     if (previousHTMLInputElement === undefined) delete globalThis.HTMLInputElement;
     else globalThis.HTMLInputElement = previousHTMLInputElement;
