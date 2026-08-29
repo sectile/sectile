@@ -70,7 +70,7 @@ import {
 } from '../../packages/virtual/dist/spatial-layout.js';
 
 export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 13,
+  version: 14,
   scales: Object.freeze([1_000, 10_000, 100_000]),
   patchDepths: Object.freeze([1, 8, 32, 64]),
   changedDensities: Object.freeze([1, 32, 'full']),
@@ -387,10 +387,15 @@ function createTabularWorkloads(size, quick) {
   });
   const source = createSource();
   const request = tabularRequest(1, 'descending');
-  const invalidated = tabularRequest(2, 'ascending');
+  const invalidated = Object.freeze([tabularRequest(2, 'ascending'), tabularRequest(3, 'descending')]);
   const repetitions = iterations(size, quick);
 
-  const grid = createDataGrid({ columns: [{ id: 'score' }, { id: 'active' }] });
+  const grid = createDataGrid({
+    columns: [{ id: 'score' }, { id: 'active' }],
+    initialValues: {
+      accessState: { kind: 'page', page: 1, itemsPerPage: size, visibleRowCount: null, pagination: null },
+    },
+  });
   const pending = grid.getSnapshot().tabular.state.requestState.pendingRequest;
   if (pending === null) throw new Error('Tabular grid benchmark requires an initial request.');
   const response = unwrap(resolveClientTabularRequest(source, pending));
@@ -398,14 +403,15 @@ function createTabularWorkloads(size, quick) {
   const firstCell = grid.getProjection().rows[0]?.cells[0];
   if (firstCell === undefined) throw new Error('Tabular grid benchmark requires one projected cell.');
   unwrap(grid.dispatch({ type: 'focus-cell', cell: firstCell }));
+  unwrap(resolveClientTabularRequest(source, request));
 
   return [
     timed(`tabular:resolve:cold:${size}`, 'tabular-resolution', { size, stage: 'cold' }, repetitions, () =>
       unwrap(resolveClientTabularRequest(createSource(), request)).rows.length),
     timed(`tabular:resolve:warm:${size}`, 'tabular-resolution', { size, stage: 'warm' }, repetitions, () =>
       unwrap(resolveClientTabularRequest(source, request)).rows.length),
-    timed(`tabular:resolve:invalidate:${size}`, 'tabular-resolution', { size, stage: 'invalidation' }, repetitions, () =>
-      unwrap(resolveClientTabularRequest(source, invalidated)).rows.length),
+    timed(`tabular:resolve:invalidate:${size}`, 'tabular-resolution', { size, stage: 'invalidation' }, repetitions, (iteration) =>
+      unwrap(resolveClientTabularRequest(source, invalidated[iteration & 1])).rows.length),
     timed(`tabular:grid-profile:move:${size}`, 'tabular-profile', { size, operation: 'move-cell' }, quick ? 10 : 100, () =>
       unwrap(grid.dispatch({ type: 'move-cell', direction: 'right', boundary: 'wrap-axis' })).snapshot.revision),
   ];

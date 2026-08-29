@@ -15,14 +15,13 @@
           { "name": "nCell", "meaning": "projected cell count", "ceiling": "grid cell ceiling" },
           { "name": "sAxis", "meaning": "movement candidates on one axis", "ceiling": "row or column length" }
         ],
-        "time": { "bound": "O(nCell + sAxis)", "kind": "worst-case", "runtimeState": "trusted" },
-        "space": { "auxiliary": "O(nCell)", "output": "O(1)", "retained": "O(nCell)" },
-        "resources": { "allocations": "O(nCell)", "cacheEntries": "O(nCell)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "proof": "The incumbent reconstructs flattened cell/index views before applying bounded axis movement.",
-        "adversarialWitness": "One adjacent move in a 100k-cell projection recreates every cell record.",
-        "fullScan": { "allowed": true, "rationale": "Recorded incumbent weakness owned by WI-038/WI-006." }
-      },
-      "reviewedWeakening": "WI-038 retains the projection index; WI-006 alone replaces movement semantics with Core Grid."
+        "time": { "bound": "O(sAxis)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(nCell)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "O(nCell)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The current projection generation retains row, column, and cell indexes; a valid adjacent move performs O(1) coordinate lookup and scans only candidates on its movement axis.",
+        "adversarialWitness": "Every candidate on a 100k-row axis is disabled, forcing one bounded axis scan without rebuilding cell records or indexes.",
+        "fullScan": { "allowed": false, "rationale": "Canonical movement is bounded to one axis; whole-domain recovery is a separate reconciliation fallback." }
+      }
     },
     {
       "id": "source.resolve-cold",
@@ -57,9 +56,9 @@
         "time": { "bound": "O(nRecord log nRecord + kRow)", "kind": "worst-case", "runtimeState": "external" },
         "space": { "auxiliary": "O(nRecord)", "output": "O(kRow)", "retained": "O(nRecord)" },
         "resources": { "allocations": "O(nRecord + kRow)", "cacheEntries": "O(nRecord)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "proof": "Invalidation discards the incumbent derived snapshot, then repeats normalization, filtering, grouping, and sorting before slicing.",
-        "adversarialWitness": "A revision change followed by a one-row access rebuilds and sorts a reverse-ordered 100k-record source.",
-        "fullScan": { "allowed": true, "rationale": "An external source revision invalidates every retained derived index in the incumbent implementation." }
+        "proof": "A source generation rebuilds normalization plus query stages; a query revision reuses normalized identities but rebuilds filtering, grouping, pivot discovery, and sorting before slicing.",
+        "adversarialWitness": "Alternating query revisions over a reverse-ordered 100k-record source rebuild and sort the current query stage on every resolve.",
+        "fullScan": { "allowed": true, "rationale": "Changed source or query semantics require inspecting the affected current-stage input." }
       }
     },
     {
@@ -73,14 +72,13 @@
           { "name": "nRecord", "meaning": "source record count", "ceiling": "source record ceiling" },
           { "name": "kRow", "meaning": "returned page or window rows", "ceiling": "kRow <= nRecord" }
         ],
-        "time": { "bound": "O(nRecord log nRecord + kRow)", "kind": "worst-case", "runtimeState": "trusted" },
-        "space": { "auxiliary": "O(nRecord)", "output": "O(kRow)", "retained": "O(nRecord)" },
-        "resources": { "allocations": "O(nRecord + kRow)", "cacheEntries": "O(nRecord)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "proof": "The incumbent recomputes normalization, filtering, grouping, and sorting even when the source revision and query are unchanged.",
-        "adversarialWitness": "Two identical one-row accesses over a reverse-ordered 100k-record source repeat the full sort on the second access.",
-        "fullScan": { "allowed": true, "rationale": "Recorded incumbent weakness; WI-038 replaces this path with retained revision-keyed indexes." }
-      },
-      "reviewedWeakening": "WI-038 owns the retained warm-path index required to reduce repeated access to output-sensitive work."
+        "time": { "bound": "O(kRow)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(kRow)", "output": "O(kRow)", "retained": "O(nRecord)" },
+        "resources": { "allocations": "O(kRow)", "cacheEntries": "O(nRecord)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Equal source, query, and expansion revisions reuse the single retained projection; resolve validates the envelope and slices only the requested output window.",
+        "adversarialWitness": "A 100k-record retained projection returns a 100-row window without invoking identity, filter, sort, group, pivot, aggregate, or full-projection work.",
+        "fullScan": { "allowed": false, "rationale": "Warm resolution is output-sensitive and cannot rescan the retained source or projection." }
+      }
     }
   ]
 }

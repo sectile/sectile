@@ -74,10 +74,10 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:position.update | connected | `O(aDom + cAnchor)` worst-case | `O(aDom + cAnchor)` | `O(1)` | `O(aDom)` | forbidden | VAL-016, VAL-017 |
 | form:field.update | trusted | `O(fField + iIssue)` worst-case | `O(fField + iIssue)` | `O(fField + iIssue)` | `O(fField + iIssue)` | allowed | VAL-016, VAL-017 |
 | form:state.construct | external | `O(fField * uID)` worst-case | `O(fField)` | `O(fField)` | `O(fField)` | allowed | VAL-016, VAL-017 |
-| tabular:grid-profile.move | trusted | `O(nCell + sAxis)` worst-case | `O(nCell)` | `O(1)` | `O(nCell)` | allowed | VAL-016, VAL-017 |
+| tabular:grid-profile.move | trusted | `O(sAxis)` worst-case | `O(1)` | `O(1)` | `O(nCell)` | forbidden | VAL-016, VAL-017 |
 | tabular:source.resolve-cold | external | `O(nRecord log nRecord + kRow)` worst-case | `O(nRecord)` | `O(kRow)` | `O(nRecord)` | allowed | VAL-016, VAL-017 |
 | tabular:source.resolve-invalidation | external | `O(nRecord log nRecord + kRow)` worst-case | `O(nRecord)` | `O(kRow)` | `O(nRecord)` | allowed | VAL-016, VAL-017 |
-| tabular:source.resolve-warm | trusted | `O(nRecord log nRecord + kRow)` worst-case | `O(nRecord)` | `O(kRow)` | `O(nRecord)` | allowed | VAL-016, VAL-017 |
+| tabular:source.resolve-warm | trusted | `O(kRow)` worst-case | `O(kRow)` | `O(kRow)` | `O(nRecord)` | forbidden | VAL-016, VAL-017 |
 | temporal:calendar.transition | trusted | `O(cCalendar)` worst-case | `O(cCalendar)` | `O(cCalendar)` | `O(cCalendar)` | allowed | VAL-016, VAL-017 |
 | temporal:field.transition | external | `O(sSegment)` worst-case | `O(sSegment)` | `O(sSegment)` | `O(sSegment)` | allowed | VAL-016, VAL-017 |
 | terminal:component.dispatch | trusted | `O(nDomain + cCommand)` worst-case | `O(nDomain + cCommand)` | `O(cCommand)` | `O(nDomain)` | allowed | VAL-016, VAL-017 |

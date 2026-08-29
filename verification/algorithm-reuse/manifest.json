@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "allowedMigrationOwners": ["WI-006", "WI-013", "WI-014", "WI-020", "WI-021", "WI-027", "WI-038", "WI-039", "WI-040"],
+  "allowedMigrationOwners": ["WI-006", "WI-013", "WI-014", "WI-020", "WI-021", "WI-027", "WI-039", "WI-040"],
   "detectors": [
     { "id": "raw-identity-lookup", "category": "raw-full-domain-scan", "pattern": "\\.(?:find|findIndex|some)\\s*\\(" },
     { "id": "immutable-view-construction", "category": "repeated-immutable-view", "pattern": "new\\s+IndexedSequence\\s*\\(" },
@@ -73,12 +73,12 @@
       "rationale": "Form field lookup, issues, validation, and structural sharing require one retained field/source index."
     },
     {
-      "id": "tabular-retained-resolution",
-      "detectors": ["*"],
-      "paths": ["packages/tabular/src/source.ts", "packages/tabular/src/data-table.ts", "packages/tabular/src/internal/grid-profile.ts", "packages/tabular/src/virtual.ts"],
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+      "id": "tabular-retained-current-indexes",
+      "detectors": ["derived-index-construction"],
+      "paths": ["packages/tabular/src/source.ts", "packages/tabular/src/internal/grid-profile.ts"],
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Source/query/projection and grid-profile indexes are retained for the complete current generation and released together on invalidation."
     },
     {
       "id": "virtual-incremental-index",

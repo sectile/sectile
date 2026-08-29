@@ -18,6 +18,14 @@ const benchmark = JSON.parse(await readFile('verification/benchmark.json', 'utf8
 assert.equal(benchmark.status, 'passed');
 assert.deepEqual(benchmark.scales.map((entry) => entry.recordCount), [1_000, 10_000, 100_000]);
 assert.ok(benchmark.scales.every((entry) => entry.completed === true && entry.operationCount > 0));
+assert.ok(benchmark.scales.every((entry) => entry.stages.warm.operationCount === 0));
+assert.ok(benchmark.scales.every((entry) => entry.stages.queryInvalidation.operations.getRowID === 0));
+assert.deepEqual(benchmark.generationChurn, {
+  ...benchmark.generationChurn,
+  generations: 10_000,
+  retainedStages: 1,
+  status: 'passed',
+});
 
 const consumer = JSON.parse(await readFile('../../verification/consumer-install/tabular.json', 'utf8'));
 assert.equal(consumer.status, 'passed');
@@ -41,8 +49,16 @@ const implementation = {
       recordCount: entry.recordCount,
       completed: entry.completed,
       operationCount: entry.operationCount,
+      warmOperationCount: entry.stages.warm.operationCount,
+      queryInvalidationIdentityOperations: entry.stages.queryInvalidation.operations.getRowID,
     })),
     timingPolicy: benchmark.timingPolicy,
+    generationChurn: {
+      generations: benchmark.generationChurn.generations,
+      retainedStages: benchmark.generationChurn.retainedStages,
+      tailGrowthBytes: benchmark.generationChurn.tailGrowthBytes,
+      ceilingBytes: benchmark.generationChurn.ceilingBytes,
+    },
   },
   footprint: {
     ...footprint,

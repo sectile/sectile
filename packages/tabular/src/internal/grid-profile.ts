@@ -1,9 +1,8 @@
 import { type DataTableController, type DataTableEvent, type DataTableOptions, tryCreateDataTable } from '../data-table.js';
-import { encodeTabularCellID } from '../model.js';
 import { fail, ok } from './foundation.js';
 import type {
   TabularCellAddress,
-  TabularColumnDefinition,
+  TabularColumnSchema,
   TabularColumnID,
   TabularCommand,
   TabularControlledValues,
@@ -62,6 +61,19 @@ export interface GridProfileProjection {
   readonly expansion: GridExpansionState;
 }
 
+interface GridProfileDomain {
+  readonly generation: number;
+  readonly rows: readonly GridProfileRow[];
+  readonly columns: GridProfileProjection['columns'];
+  readonly orderedColumns: readonly TabularColumnID[];
+  readonly cells: readonly TabularCellAddress[];
+  readonly cellsByRow: ReadonlyMap<TabularRowID | TabularGroupID, ReadonlyMap<TabularColumnID, TabularCellAddress>>;
+  readonly rowByID: ReadonlyMap<TabularRowID | TabularGroupID, GridProfileRow>;
+  readonly rowIndexByID: ReadonlyMap<TabularRowID | TabularGroupID, number>;
+  readonly columnIndexByID: ReadonlyMap<TabularColumnID, number>;
+  readonly editableColumnIDs: ReadonlySet<TabularColumnID>;
+}
+
 export type GridInteractionEvent =
   | { readonly type: 'focus-cell'; readonly cell: TabularCellAddress }
   | { readonly type: 'move-cell'; readonly direction: GridDirection; readonly boundary?: 'stop' | 'wrap-axis' }
@@ -116,6 +128,10 @@ class GridProfileRuntime implements GridProfileController {
   readonly #listeners = new Set<(command: GridProfileCommand) => void>();
   readonly #unsubscribeBase: () => void;
   #snapshot: GridProfileState;
+  #domain: GridProfileDomain | null = null;
+  #domainRows: readonly TabularRow[] | null = null;
+  #domainColumnState: TabularSnapshot['state']['columnState'] | null = null;
+  #domainSchema: TabularColumnSchema | null = null;
   #disposed = false;
 
   public constructor(kind: GridProfileKind, options: GridProfileOptions, base: DataTableController) {
@@ -131,7 +147,8 @@ class GridProfileRuntime implements GridProfileController {
   public getSnapshot(): GridProfileState { return this.#snapshot; }
 
   public getProjection(): GridProfileProjection {
-    return createProjection(this.#kind, this.#snapshot, this.#base.getProjection());
+    const base = this.#base.getProjection();
+    return projectDomain(this.#domainFor(this.#snapshot, base), this.#snapshot, base);
   }
 
   public dispatch(event: GridProfileEvent, expectedRevision: number = this.#snapshot.revision): TabularResult<GridProfileUpdate> {
@@ -146,7 +163,8 @@ class GridProfileRuntime implements GridProfileController {
       leading.push(freezeCancel(this.#snapshot.edit.cell, 'source-reset'));
       this.#emit(leading[0]!);
     }
-    const previous = this.getProjection();
+    const previousBase = this.#base.getProjection();
+    const previous = this.#domainFor(this.#snapshot, previousBase);
     const interactionBefore = event.type === 'replace-source'
       ? freezeState(this.#snapshot.revision, this.#snapshot.tabular, this.#snapshot.cursor.current, null)
       : this.#snapshot;
@@ -158,14 +176,8 @@ class GridProfileRuntime implements GridProfileController {
       interactionBefore.cursor.current,
       interactionBefore.edit.kind === 'editing' ? interactionBefore.edit.cell : null,
     );
-    const reconciled = reconcileInteractionState(
-      this.#kind,
-      previous,
-      createProjection(this.#kind, candidate, this.#base.getProjection()),
-      candidate,
-      this.#options,
-      event.type === 'replace-source' ? 'source-reset' : 'cell-removed',
-    );
+    const nextBase = this.#base.getProjection();
+    const reconciled = reconcileInteractionState(this.#kind, previous, this.#domainFor(candidate, nextBase), candidate, this.#options, event.type === 'replace-source' ? 'source-reset' : 'cell-removed');
     const commands = Object.freeze([...leading, ...withoutNativeCommit(changed.value.commands), ...reconciled.commands]);
     this.#snapshot = freezeState(
       this.#snapshot.revision + 1,
@@ -180,7 +192,8 @@ class GridProfileRuntime implements GridProfileController {
   public synchronizeView(response: TabularViewResponse): TabularResult<GridProfileState> {
     const profile = validateProfileRows(this.#kind, response.rows);
     if (!profile.ok) return profile;
-    const previous = this.getProjection();
+    const previousBase = this.#base.getProjection();
+    const previous = this.#domainFor(this.#snapshot, previousBase);
     const synchronized = this.#base.synchronizeView(response);
     if (!synchronized.ok) return synchronized;
     const candidate = freezeState(
@@ -189,14 +202,16 @@ class GridProfileRuntime implements GridProfileController {
       this.#snapshot.cursor.current,
       this.#snapshot.edit.kind === 'editing' ? this.#snapshot.edit.cell : null,
     );
-    const reconciled = reconcileInteractionState(this.#kind, previous, createProjection(this.#kind, candidate, this.#base.getProjection()), candidate, this.#options, 'cell-removed');
+    const nextBase = this.#base.getProjection();
+    const reconciled = reconcileInteractionState(this.#kind, previous, this.#domainFor(candidate, nextBase), candidate, this.#options, 'cell-removed');
     this.#snapshot = freezeState(this.#snapshot.revision + 1, synchronized.value, reconciled.cursor.current, reconciled.edit.kind === 'editing' ? reconciled.edit.cell : null);
     this.#emitAll(reconciled.commands);
     return ok(this.#snapshot);
   }
 
   public syncControlledValues(values: TabularControlledValues): TabularResult<GridProfileState> {
-    const previous = this.getProjection();
+    const previousBase = this.#base.getProjection();
+    const previous = this.#domainFor(this.#snapshot, previousBase);
     const synchronized = this.#base.syncControlledValues(values);
     if (!synchronized.ok) return synchronized;
     const candidate = freezeState(
@@ -205,7 +220,8 @@ class GridProfileRuntime implements GridProfileController {
       this.#snapshot.cursor.current,
       this.#snapshot.edit.kind === 'editing' ? this.#snapshot.edit.cell : null,
     );
-    const reconciled = reconcileInteractionState(this.#kind, previous, createProjection(this.#kind, candidate, this.#base.getProjection()), candidate, this.#options, 'cell-removed');
+    const nextBase = this.#base.getProjection();
+    const reconciled = reconcileInteractionState(this.#kind, previous, this.#domainFor(candidate, nextBase), candidate, this.#options, 'cell-removed');
     this.#snapshot = freezeState(this.#snapshot.revision + 1, synchronized.value, reconciled.cursor.current, reconciled.edit.kind === 'editing' ? reconciled.edit.cell : null);
     this.#emitAll(reconciled.commands);
     return ok(this.#snapshot);
@@ -244,12 +260,16 @@ class GridProfileRuntime implements GridProfileController {
     this.#disposed = true;
     this.#unsubscribeBase();
     this.#listeners.clear();
+    this.#domain = null;
+    this.#domainRows = null;
+    this.#domainColumnState = null;
+    this.#domainSchema = null;
     this.#base.dispose();
   }
 
   #dispatchInteraction(event: Exclude<GridInteractionEvent, { readonly type: 'set-row-expanded' }>): TabularResult<GridProfileUpdate> {
-    const projection = this.getProjection();
-    const result = reduceInteraction(this.#kind, this.#snapshot, projection, event, this.#options);
+    const base = this.#base.getProjection();
+    const result = reduceInteraction(this.#kind, this.#snapshot, this.#domainFor(this.#snapshot, base), event, this.#options);
     if (!result.ok) return result;
     this.#snapshot = freezeState(
       this.#snapshot.revision + 1,
@@ -263,7 +283,8 @@ class GridProfileRuntime implements GridProfileController {
 
   #setRowExpanded(rowID: TabularGroupID, open: boolean): TabularResult<GridProfileUpdate> {
     if (this.#kind !== 'data-tree-grid') return profileFailure('DataGrid does not own hierarchical expansion.');
-    const row = this.getProjection().rows.find((entry) => entry.rowID === rowID)?.row;
+    const base = this.#base.getProjection();
+    const row = this.#domainFor(this.#snapshot, base).rowByID.get(rowID)?.row;
     if (row?.kind !== 'group') return profileFailure('Tree-grid expansion requires a projected group row.');
     const current = this.#snapshot.tabular.state.expansion;
     const next = open
@@ -281,6 +302,24 @@ class GridProfileRuntime implements GridProfileController {
     return ok(true);
   }
 
+  #domainFor(
+    state: GridProfileState,
+    base: ReturnType<DataTableController['getProjection']>,
+  ): GridProfileDomain {
+    const schema = state.tabular.state.acceptedViewState.kind === 'none'
+      ? null
+      : state.tabular.state.acceptedViewState.view.columnSchema;
+    if (this.#domain !== null
+      && this.#domainRows === base.rows
+      && this.#domainColumnState === state.tabular.state.columnState
+      && this.#domainSchema === schema) return this.#domain;
+    this.#domain = createProfileDomain(this.#kind, state, base);
+    this.#domainRows = base.rows;
+    this.#domainColumnState = state.tabular.state.columnState;
+    this.#domainSchema = schema;
+    return this.#domain;
+  }
+
   #emit(command: GridProfileCommand): void {
     for (const listener of this.#listeners) listener(command);
   }
@@ -293,12 +332,12 @@ class GridProfileRuntime implements GridProfileController {
 function reduceInteraction(
   kind: GridProfileKind,
   state: GridProfileState,
-  projection: GridProfileProjection,
+  domain: GridProfileDomain,
   event: Exclude<GridInteractionEvent, { readonly type: 'set-row-expanded' }>,
   options: GridProfileOptions,
 ): TabularResult<{ readonly cursor: GridCursorState; readonly edit: GridEditState; readonly commands: readonly GridEditCommand[] }> {
   if (event.type === 'focus-cell') {
-    const target = findCell(projection, event.cell);
+    const target = findCell(domain, event.cell);
     if (target === null || disabled(options, event.cell)) return invalidEditTarget(event.cell, 'Focus target must be an enabled projected cell.');
     if (state.edit.kind === 'editing' && sameCell(state.edit.cell, event.cell)) {
       return ok(Object.freeze({ cursor: freezeCursor(event.cell), edit: state.edit, commands: Object.freeze([]) }));
@@ -310,12 +349,12 @@ function reduceInteraction(
   }
   if (event.type === 'move-cell') {
     if (state.edit.kind === 'editing') return invalidEditTarget(state.edit.cell, 'Navigation is suspended while editing.');
-    const target = moveCell(projection, state.cursor.current, event.direction, event.boundary ?? 'stop', options);
+    const target = moveCell(domain, state.cursor.current, event.direction, event.boundary ?? 'stop', options);
     return ok(Object.freeze({ cursor: freezeCursor(target), edit: state.edit, commands: Object.freeze([]) }));
   }
   if (event.type === 'begin-edit') {
     const cell = event.cell ?? state.cursor.current;
-    if (cell === null || !editableCell(kind, projection, state.tabular, cell, options)) return invalidEditTarget(cell, 'Editing requires an enabled editable leaf cell.');
+    if (cell === null || !editableCell(kind, domain, cell, options)) return invalidEditTarget(cell, 'Editing requires an enabled editable leaf cell.');
     const commands: GridEditCommand[] = [];
     if (state.edit.kind === 'editing' && !sameCell(state.edit.cell, cell)) commands.push(freezeCancel(state.edit.cell, 'focus-transfer'));
     if (state.edit.kind !== 'editing' || !sameCell(state.edit.cell, cell)) commands.push(Object.freeze({ type: 'begin-edit', cell: freezeCell(cell) }));
@@ -336,18 +375,15 @@ function reduceInteraction(
   }));
 }
 
-function createProjection(
-  kind: GridProfileKind,
+function projectDomain(
+  domain: GridProfileDomain,
   state: GridProfileState,
   base: ReturnType<DataTableController['getProjection']>,
 ): GridProfileProjection {
-  const columns = Object.freeze({ start: base.columns.start, center: base.columns.center, end: base.columns.end });
-  const orderedColumns = [...columns.start, ...columns.center, ...columns.end];
-  const rows = profileRows(kind, base.rows, orderedColumns);
   return Object.freeze({
-    generation: base.generation,
-    rows,
-    columns,
+    generation: domain.generation,
+    rows: domain.rows,
+    columns: domain.columns,
     cursor: state.cursor,
     edit: state.edit,
     rowSelection: base.rowSelection,
@@ -355,7 +391,47 @@ function createProjection(
   });
 }
 
-function profileRows(kind: GridProfileKind, rows: readonly TabularRow[], columns: readonly TabularColumnID[]): readonly GridProfileRow[] {
+function createProfileDomain(
+  kind: GridProfileKind,
+  state: GridProfileState,
+  base: ReturnType<DataTableController['getProjection']>,
+): GridProfileDomain {
+  const columns = Object.freeze({ start: base.columns.start, center: base.columns.center, end: base.columns.end });
+  const orderedColumns = Object.freeze([...columns.start, ...columns.center, ...columns.end]);
+  const cells: TabularCellAddress[] = [];
+  const cellsByRow = new Map<TabularRowID | TabularGroupID, ReadonlyMap<TabularColumnID, TabularCellAddress>>();
+  const rowByID = new Map<TabularRowID | TabularGroupID, GridProfileRow>();
+  const rowIndexByID = new Map<TabularRowID | TabularGroupID, number>();
+  const columnIndexByID = new Map<TabularColumnID, number>();
+  for (let index = 0; index < orderedColumns.length; index += 1) columnIndexByID.set(orderedColumns[index]!, index);
+  const rows = profileRows(kind, base.rows, orderedColumns, cells, cellsByRow, rowByID, rowIndexByID);
+  const schema = state.tabular.state.acceptedViewState.kind === 'none'
+    ? Object.freeze([])
+    : state.tabular.state.acceptedViewState.view.columnSchema.columns;
+  const editableColumnIDs = new Set(schema.filter((column) => column.capabilities?.includes('edit') === true).map((column) => column.id));
+  return Object.freeze({
+    generation: base.generation,
+    rows,
+    columns,
+    orderedColumns,
+    cells: Object.freeze(cells),
+    cellsByRow,
+    rowByID,
+    rowIndexByID,
+    columnIndexByID,
+    editableColumnIDs,
+  });
+}
+
+function profileRows(
+  kind: GridProfileKind,
+  rows: readonly TabularRow[],
+  columns: readonly TabularColumnID[],
+  cells: TabularCellAddress[],
+  cellsByRow: Map<TabularRowID | TabularGroupID, ReadonlyMap<TabularColumnID, TabularCellAddress>>,
+  rowByID: Map<TabularRowID | TabularGroupID, GridProfileRow>,
+  rowIndexByID: Map<TabularRowID | TabularGroupID, number>,
+): readonly GridProfileRow[] {
   const output: GridProfileRow[] = [];
   const ancestors: TabularGroupID[] = [];
   for (const row of rows) {
@@ -370,13 +446,21 @@ function profileRows(kind: GridProfileKind, rows: readonly TabularRow[], columns
       parentRowID = ancestors.at(-1) ?? null;
       depth = ancestors.length;
     }
-    output.push(Object.freeze({
+    const rowCells = columns.map((columnID) => freezeCell({ rowID: row.id, columnID }));
+    const byColumn = new Map<TabularColumnID, TabularCellAddress>();
+    for (const cell of rowCells) byColumn.set(cell.columnID, cell);
+    const profile = Object.freeze({
       row,
       rowID: row.id,
       parentRowID,
       depth,
-      cells: Object.freeze(columns.map((columnID) => freezeCell({ rowID: row.id, columnID }))),
-    }));
+      cells: Object.freeze(rowCells),
+    });
+    rowIndexByID.set(row.id, output.length);
+    rowByID.set(row.id, profile);
+    cellsByRow.set(row.id, byColumn);
+    cells.push(...rowCells);
+    output.push(profile);
   }
   return Object.freeze(output);
 }
@@ -397,8 +481,8 @@ function validateProfileRows(kind: GridProfileKind, rows: readonly TabularRow[])
 
 function reconcileInteractionState(
   kind: GridProfileKind,
-  previous: GridProfileProjection,
-  next: GridProfileProjection,
+  previous: GridProfileDomain,
+  next: GridProfileDomain,
   state: GridProfileState,
   options: GridProfileOptions,
   reason: GridEditCancelReason,
@@ -409,7 +493,7 @@ function reconcileInteractionState(
   const editRetained = state.edit.kind === 'editing'
     && fallback !== null
     && sameCell(state.edit.cell, fallback)
-    && editableCell(kind, next, state.tabular, fallback, options);
+    && editableCell(kind, next, fallback, options);
   const commands = state.edit.kind === 'editing' && !editRetained
     ? Object.freeze([freezeCancel(state.edit.cell, reason)])
     : Object.freeze([]);
@@ -417,43 +501,50 @@ function reconcileInteractionState(
 }
 
 function fallbackCell(
-  previous: GridProfileProjection,
-  next: GridProfileProjection,
+  previous: GridProfileDomain,
+  next: GridProfileDomain,
   current: TabularCellAddress,
   options: GridProfileOptions,
 ): TabularCellAddress | null {
-  const before = flatCells(previous);
-  const after = new Map(flatCells(next).filter((cell) => !disabled(options, cell)).map((cell) => [cellKey(cell), cell]));
-  const index = before.findIndex((cell) => sameCell(cell, current));
-  for (let cursor = index + 1; cursor < before.length; cursor += 1) {
-    const candidate = after.get(cellKey(before[cursor]!));
-    if (candidate !== undefined) return candidate;
+  const row = previous.rowIndexByID.get(current.rowID) ?? -1;
+  const column = previous.columnIndexByID.get(current.columnID) ?? -1;
+  const index = row < 0 || column < 0 ? -1 : row * previous.orderedColumns.length + column;
+  for (let cursor = index + 1; cursor < previous.cells.length; cursor += 1) {
+    const before = previous.cells[cursor]!;
+    const candidate = findCell(next, before);
+    if (candidate !== null && !disabled(options, candidate)) return candidate;
   }
   for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
-    const candidate = after.get(cellKey(before[cursor]!));
-    if (candidate !== undefined) return candidate;
+    const before = previous.cells[cursor]!;
+    const candidate = findCell(next, before);
+    if (candidate !== null && !disabled(options, candidate)) return candidate;
   }
-  return after.values().next().value ?? null;
+  for (const candidate of next.cells) if (!disabled(options, candidate)) return candidate;
+  return null;
 }
 
 function moveCell(
-  projection: GridProfileProjection,
+  domain: GridProfileDomain,
   current: TabularCellAddress | null,
   direction: GridDirection,
   boundary: 'stop' | 'wrap-axis',
   options: GridProfileOptions,
 ): TabularCellAddress | null {
   if (boundary !== 'stop' && boundary !== 'wrap-axis') return current;
-  const rows = projection.rows;
-  const columns = [...projection.columns.start, ...projection.columns.center, ...projection.columns.end];
+  const rows = domain.rows;
+  const columns = domain.orderedColumns;
   if (rows.length === 0 || columns.length === 0) return null;
   if (current === null) {
-    const cells = flatCells(projection).filter((cell) => !disabled(options, cell));
-    return direction === 'left' || direction === 'up' ? cells.at(-1) ?? null : cells[0] ?? null;
+    if (direction === 'left' || direction === 'up') {
+      for (let index = domain.cells.length - 1; index >= 0; index -= 1) if (!disabled(options, domain.cells[index]!)) return domain.cells[index]!;
+      return null;
+    }
+    for (const cell of domain.cells) if (!disabled(options, cell)) return cell;
+    return null;
   }
-  let row = rows.findIndex((entry) => entry.rowID === current.rowID);
-  let column = columns.indexOf(current.columnID);
-  if (row < 0 || column < 0) return fallbackCell(projection, projection, current, options);
+  let row = domain.rowIndexByID.get(current.rowID) ?? -1;
+  let column = domain.columnIndexByID.get(current.columnID) ?? -1;
+  if (row < 0 || column < 0) return fallbackCell(domain, domain, current, options);
   const rowStep = direction === 'down' ? 1 : direction === 'up' ? -1 : 0;
   const columnStep = direction === 'right' ? 1 : direction === 'left' ? -1 : 0;
   const limit = rowStep === 0 ? columns.length : rows.length;
@@ -465,32 +556,25 @@ function moveCell(
       row = (row + rows.length) % rows.length;
       column = (column + columns.length) % columns.length;
     }
-    const candidate = freezeCell({ rowID: rows[row]!.rowID, columnID: columns[column]! });
-    if (!disabled(options, candidate)) return candidate;
+    const candidate = findCell(domain, { rowID: rows[row]!.rowID, columnID: columns[column]! });
+    if (candidate !== null && !disabled(options, candidate)) return candidate;
   }
   return current;
 }
 
 function editableCell(
   kind: GridProfileKind,
-  projection: GridProfileProjection,
-  tabular: TabularSnapshot,
+  domain: GridProfileDomain,
   cell: TabularCellAddress,
   options: GridProfileOptions,
 ): boolean {
-  const row = projection.rows.find((entry) => entry.rowID === cell.rowID)?.row;
+  const row = domain.rowByID.get(cell.rowID)?.row;
   if (row === undefined || row.kind !== 'leaf' || disabled(options, cell)) return false;
-  const view = tabular.state.acceptedViewState.kind === 'none' ? null : tabular.state.acceptedViewState.view;
-  const column: TabularColumnDefinition | undefined = view?.columnSchema.columns.find(({ id }) => id === cell.columnID);
-  return column?.capabilities?.includes('edit') === true && (kind === 'data-grid' || row.kind === 'leaf');
+  return domain.editableColumnIDs.has(cell.columnID) && (kind === 'data-grid' || row.kind === 'leaf');
 }
 
-function flatCells(projection: GridProfileProjection): readonly TabularCellAddress[] {
-  return Object.freeze(projection.rows.flatMap((row) => row.cells));
-}
-
-function findCell(projection: GridProfileProjection, cell: TabularCellAddress): TabularCellAddress | null {
-  return flatCells(projection).find((candidate) => sameCell(candidate, cell)) ?? null;
+function findCell(domain: GridProfileDomain, cell: TabularCellAddress): TabularCellAddress | null {
+  return domain.cellsByRow.get(cell.rowID)?.get(cell.columnID) ?? null;
 }
 
 function withoutNativeCommit(commands: readonly { readonly type: string }[]): readonly GridProfileCommand[] {
@@ -519,7 +603,6 @@ function freezeEditing(cell: TabularCellAddress): GridEditState { return Object.
 function freezeCell(cell: TabularCellAddress): TabularCellAddress { return Object.freeze({ rowID: cell.rowID, columnID: cell.columnID }); }
 function freezeCancel(cell: TabularCellAddress, reason: GridEditCancelReason): GridEditCommand { return Object.freeze({ type: 'cancel-edit', cell: freezeCell(cell), reason }); }
 function sameCell(left: TabularCellAddress, right: TabularCellAddress): boolean { return left.rowID === right.rowID && left.columnID === right.columnID; }
-function cellKey(cell: TabularCellAddress): string { return encodeTabularCellID(cell); }
 function disabled(options: GridProfileOptions, cell: TabularCellAddress): boolean { return options.isCellDisabled?.(cell) === true; }
 
 function invalidEditTarget<T>(cell: TabularCellAddress | null, message: string): TabularResult<T> {

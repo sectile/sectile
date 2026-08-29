@@ -45,7 +45,7 @@ for (const recordCount of [1_000, 10_000, 100_000]) {
     },
   });
   const constructed = performance.now();
-  const result = resolveClientTabularRequest(source, {
+  const baseRequest = {
     protocolVersion: 1,
     requestID: 1,
     sourceGeneration: 0,
@@ -61,26 +61,66 @@ for (const recordCount of [1_000, 10_000, 100_000]) {
     expansion: [],
     access: { kind: 'window', start: 0, count: 100 },
     columnSchemaRevision: 0,
+  };
+  const cold = resolveClientTabularRequest(source, baseRequest);
+  const coldCompleted = performance.now();
+  assert.equal(cold.ok, true);
+  assert.equal(cold.value.rows.length, 100);
+  assert.equal(cold.value.matchingLeafCount.kind, 'known');
+  assert.equal(cold.value.matchingLeafCount.value, recordCount - Math.ceil(recordCount / 3));
+  const coldOperations = { ...counters };
+
+  const warm = resolveClientTabularRequest(source, {
+    ...baseRequest,
+    requestID: 2,
+    query: structuredClone(baseRequest.query),
+    access: { kind: 'window', start: 1, count: 100 },
   });
-  const completed = performance.now();
-  assert.equal(result.ok, true);
-  assert.equal(result.value.rows.length, 100);
-  assert.equal(result.value.matchingLeafCount.kind, 'known');
-  assert.equal(result.value.matchingLeafCount.value, recordCount - Math.ceil(recordCount / 3));
+  const warmCompleted = performance.now();
+  assert.equal(warm.ok, true);
+  const warmOperations = counterDelta(counters, coldOperations);
+  assert.deepEqual(warmOperations, { getRowID: 0, getValue: 0, predicate: 0, comparator: 0 });
+
+  const beforeInvalidation = { ...counters };
+  const invalidated = resolveClientTabularRequest(source, {
+    ...baseRequest,
+    requestID: 3,
+    queryRevision: 2,
+    query: {
+      ...baseRequest.query,
+      sort: [{ ...baseRequest.query.sort[0], direction: 'ascending' }],
+    },
+  });
+  const invalidatedCompleted = performance.now();
+  assert.equal(invalidated.ok, true);
+  const invalidationOperations = counterDelta(counters, beforeInvalidation);
+  assert.equal(invalidationOperations.getRowID, 0);
+  assert.ok(invalidationOperations.getValue > 0 && invalidationOperations.predicate > 0 && invalidationOperations.comparator > 0);
   scales.push({
     recordCount,
     completed: true,
-    matchingLeafCount: result.value.matchingLeafCount.value,
-    returnedRows: result.value.rows.length,
-    operationCount: Object.values(counters).reduce((total, count) => total + count, 0),
-    operations: counters,
+    matchingLeafCount: cold.value.matchingLeafCount.value,
+    returnedRows: cold.value.rows.length,
+    operationCount: Object.values(coldOperations).reduce((total, count) => total + count, 0),
+    operations: coldOperations,
+    stages: {
+      warm: { operationCount: 0, operations: warmOperations },
+      queryInvalidation: {
+        operationCount: Object.values(invalidationOperations).reduce((total, count) => total + count, 0),
+        operations: invalidationOperations,
+      },
+    },
     timingsMs: {
       construct: round(constructed - started),
-      resolve: round(completed - constructed),
-      total: round(completed - started),
+      resolve: round(coldCompleted - constructed),
+      warm: round(warmCompleted - coldCompleted),
+      queryInvalidation: round(invalidatedCompleted - warmCompleted),
+      total: round(invalidatedCompleted - started),
     },
   });
 }
+
+const generationChurn = measureGenerationChurn();
 
 const evidence = {
   schemaVersion: 1,
@@ -90,10 +130,60 @@ const evidence = {
   environment: { node: process.version, platform: process.platform, architecture: process.arch },
   timingPolicy: 'informational-no-threshold',
   scales,
+  generationChurn,
 };
 await writeFile('verification/benchmark.json', `${JSON.stringify(evidence, null, 2)}\n`);
 console.log(JSON.stringify(evidence, null, 2));
 
 function round(value) {
   return Math.round(value * 1_000) / 1_000;
+}
+
+function counterDelta(current, previous) {
+  return Object.fromEntries(Object.keys(current).map((key) => [key, current[key] - previous[key]]));
+}
+
+function measureGenerationChurn() {
+  assert.equal(typeof globalThis.gc, 'function', 'Generation churn evidence requires --expose-gc.');
+  const records = Array.from({ length: 64 }, (_, index) => ({ id: `churn-${index}`, value: index }));
+  const source = createClientTabularSource({
+    records,
+    columnSchema: { revision: 0, columns: [{ id: 'value' }], headers: [] },
+    getRowID: (record) => record.id,
+    getValue: (record, columnID) => record[columnID],
+  });
+  const resolveGeneration = (sourceGeneration) => {
+    const result = resolveClientTabularRequest(source, {
+      protocolVersion: 1,
+      requestID: sourceGeneration,
+      sourceGeneration,
+      queryRevision: 0,
+      expansionRevision: 0,
+      query: { filters: [], sort: [], groups: [], aggregates: [], pivots: [] },
+      expansion: [],
+      access: { kind: 'window', start: 0, count: 1 },
+      columnSchemaRevision: 0,
+    });
+    assert.equal(result.ok, true);
+  };
+  for (let generation = 0; generation < 2_000; generation += 1) resolveGeneration(generation);
+  globalThis.gc();
+  const before = process.memoryUsage().heapUsed;
+  for (let generation = 2_000; generation < 6_000; generation += 1) resolveGeneration(generation);
+  globalThis.gc();
+  const middle = process.memoryUsage().heapUsed;
+  for (let generation = 6_000; generation < 10_000; generation += 1) resolveGeneration(generation);
+  globalThis.gc();
+  const after = process.memoryUsage().heapUsed;
+  const tailGrowthBytes = Math.max(0, after - middle);
+  assert.ok(tailGrowthBytes <= 8 * 1024 * 1024, `Retained heap grew ${tailGrowthBytes} bytes during the final 4k generations.`);
+  return {
+    generations: 10_000,
+    recordsPerGeneration: records.length,
+    retainedStages: 1,
+    heapUsedBytes: { before, middle, after },
+    tailGrowthBytes,
+    ceilingBytes: 8 * 1024 * 1024,
+    status: 'passed',
+  };
 }

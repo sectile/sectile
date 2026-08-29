@@ -367,7 +367,8 @@ function compatibleGridState(expected: GridVirtualState, current: GridVirtualSta
 
 function unionTracks<ID extends string>(current: readonly PartitionedTrack<ID>[], target: readonly PartitionedTrack<ID>[]): readonly PartitionedTrack<ID>[] {
   const targetMap = new Map(target.map((track) => [track.id, track]));
-  return Object.freeze([...current.map((track) => targetMap.get(track.id) ?? track), ...target.filter((track) => !current.some((entry) => entry.id === track.id))]);
+  const currentIDs = new Set(current.map((track) => track.id));
+  return Object.freeze([...current.map((track) => targetMap.get(track.id) ?? track), ...target.filter((track) => !currentIDs.has(track.id))]);
 }
 
 function sameTracks<ID extends string>(left: readonly PartitionedTrack<ID>[], right: readonly PartitionedTrack<ID>[]): boolean {

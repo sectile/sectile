@@ -208,7 +208,7 @@ class DataTableRuntime implements DataTableController {
     if (!columnState.ok) return columnState;
     const accessState = synchronizeAccess(this.#snapshot.state.accessState, view.value);
     if (!accessState.ok) return accessState;
-    const projectionChanged = projectionSignature(this.#snapshot.state) !== viewSignature(view.value, columnState.value);
+    const projectionChanged = !sameProjection(this.#snapshot.state, view.value, columnState.value);
     const state = Object.freeze({
       ...this.#snapshot.state,
       columnState: columnState.value,
@@ -241,7 +241,13 @@ class DataTableRuntime implements DataTableController {
       requestNeeded = true;
     }
     if (values.rowSelection !== undefined) next = Object.freeze({ ...next, rowSelection: values.rowSelection });
-    if (values.columnState !== undefined) next = Object.freeze({ ...next, columnState: values.columnState });
+    if (values.columnState !== undefined) next = Object.freeze({
+      ...next,
+      columnState: values.columnState,
+      projectionGeneration: sameColumnProjection(current.columnState, values.columnState)
+        ? next.projectionGeneration
+        : next.projectionGeneration + 1,
+    });
     if (values.accessState !== undefined && values.accessState !== current.accessState) { next = Object.freeze({ ...next, accessState: values.accessState }); requestNeeded = true; }
     if (values.expansion !== undefined && values.expansion !== current.expansion) {
       next = Object.freeze({ ...next, expansion: Object.freeze([...values.expansion]), expansionRevision: next.expansionRevision + 1 });
@@ -364,7 +370,16 @@ function reduceDataTableEvent(
     const selection = selectAllMatchingRows(state.sourceGeneration, state.queryRevision, model.limits);
     return selection.ok ? ok(Object.freeze({ state: Object.freeze({ ...state, rowSelection: selection.value }), commands: Object.freeze([]) })) : selection;
   }
-  if (event.type === 'set-column-state') return ok(Object.freeze({ state: Object.freeze({ ...state, columnState: event.columnState }), commands: Object.freeze([]) }));
+  if (event.type === 'set-column-state') return ok(Object.freeze({
+    state: Object.freeze({
+      ...state,
+      columnState: event.columnState,
+      projectionGeneration: sameColumnProjection(state.columnState, event.columnState)
+        ? state.projectionGeneration
+        : state.projectionGeneration + 1,
+    }),
+    commands: Object.freeze([]),
+  }));
   if (event.type === 'set-access') return requestAfter(Object.freeze({ ...state, accessState: event.accessState }));
   if (event.type === 'set-query') {
     const query = tryCreateTabularQuery(event.query, model.limits);
@@ -435,13 +450,27 @@ function synchronizeAccess(state: TabularAccessState, view: { readonly visibleRo
     : fail('transition-rejection', 'response-envelope-mismatch', pagination.error.message, pagination.error.details);
 }
 
-function projectionSignature(state: TabularState): string {
-  const view = state.acceptedViewState.kind === 'none' ? null : state.acceptedViewState.view;
-  return JSON.stringify([view?.rows.map((row) => row.id) ?? [], state.columnState.order, state.columnState.pinnedStart, state.columnState.pinnedEnd]);
+function sameProjection(
+  state: TabularState,
+  view: { readonly rows: readonly TabularRow[] },
+  columns: TabularColumnState,
+): boolean {
+  const currentView = state.acceptedViewState.kind === 'none' ? null : state.acceptedViewState.view;
+  const previousRows = currentView?.rows ?? [];
+  return previousRows.length === view.rows.length
+    && previousRows.every((row, index) => row.id === view.rows[index]?.id)
+    && sameColumnProjection(state.columnState, columns);
 }
 
-function viewSignature(view: { readonly rows: readonly TabularRow[] }, columns: TabularColumnState): string {
-  return JSON.stringify([view.rows.map((row) => row.id), columns.order, columns.pinnedStart, columns.pinnedEnd]);
+function sameColumnProjection(left: TabularColumnState, right: TabularColumnState): boolean {
+  return sameIDs(left.order, right.order)
+    && sameIDs(left.hidden, right.hidden)
+    && sameIDs(left.pinnedStart, right.pinnedStart)
+    && sameIDs(left.pinnedEnd, right.pinnedEnd);
+}
+
+function sameIDs(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((id, index) => id === right[index]);
 }
 
 export type {

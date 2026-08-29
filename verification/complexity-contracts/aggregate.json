@@ -22102,7 +22102,7 @@
         "tabular:grid-profile:move:100000"
       ],
       "specificationCeiling": "O(sAxis)",
-      "reviewedWeakening": "WI-038 retains the projection index; WI-006 alone replaces movement semantics with Core Grid.",
+      "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
@@ -22117,17 +22117,17 @@
           }
         ],
         "time": {
-          "bound": "O(nCell + sAxis)",
+          "bound": "O(sAxis)",
           "kind": "worst-case",
           "runtimeState": "trusted"
         },
         "space": {
-          "auxiliary": "O(nCell)",
+          "auxiliary": "O(1)",
           "output": "O(1)",
           "retained": "O(nCell)"
         },
         "resources": {
-          "allocations": "O(nCell)",
+          "allocations": "O(1)",
           "cacheEntries": "O(nCell)",
           "listeners": "0",
           "observers": "0",
@@ -22149,15 +22149,15 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The incumbent reconstructs flattened cell/index views before applying bounded axis movement.",
-        "adversarialWitness": "One adjacent move in a 100k-cell projection recreates every cell record.",
+        "proof": "The current projection generation retains row, column, and cell indexes; a valid adjacent move performs O(1) coordinate lookup and scans only candidates on its movement axis.",
+        "adversarialWitness": "Every candidate on a 100k-row axis is disabled, forcing one bounded axis scan without rebuilding cell records or indexes.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
-          "allowed": true,
-          "rationale": "Recorded incumbent weakness owned by WI-038/WI-006."
+          "allowed": false,
+          "rationale": "Canonical movement is bounded to one axis; whole-domain recovery is a separate reconciliation fallback."
         }
       }
     },
@@ -22285,15 +22285,15 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Invalidation discards the incumbent derived snapshot, then repeats normalization, filtering, grouping, and sorting before slicing.",
-        "adversarialWitness": "A revision change followed by a one-row access rebuilds and sorts a reverse-ordered 100k-record source.",
+        "proof": "A source generation rebuilds normalization plus query stages; a query revision reuses normalized identities but rebuilds filtering, grouping, pivot discovery, and sorting before slicing.",
+        "adversarialWitness": "Alternating query revisions over a reverse-ordered 100k-record source rebuild and sort the current query stage on every resolve.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "An external source revision invalidates every retained derived index in the incumbent implementation."
+          "rationale": "Changed source or query semantics require inspecting the affected current-stage input."
         }
       }
     },
@@ -22306,7 +22306,7 @@
         "tabular:resolve:warm:100000"
       ],
       "specificationCeiling": "O(kRow)",
-      "reviewedWeakening": "WI-038 owns the retained warm-path index required to reduce repeated access to output-sensitive work.",
+      "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
@@ -22321,17 +22321,17 @@
           }
         ],
         "time": {
-          "bound": "O(nRecord log nRecord + kRow)",
+          "bound": "O(kRow)",
           "kind": "worst-case",
           "runtimeState": "trusted"
         },
         "space": {
-          "auxiliary": "O(nRecord)",
+          "auxiliary": "O(kRow)",
           "output": "O(kRow)",
           "retained": "O(nRecord)"
         },
         "resources": {
-          "allocations": "O(nRecord + kRow)",
+          "allocations": "O(kRow)",
           "cacheEntries": "O(nRecord)",
           "listeners": "0",
           "observers": "0",
@@ -22353,15 +22353,15 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The incumbent recomputes normalization, filtering, grouping, and sorting even when the source revision and query are unchanged.",
-        "adversarialWitness": "Two identical one-row accesses over a reverse-ordered 100k-record source repeat the full sort on the second access.",
+        "proof": "Equal source, query, and expansion revisions reuse the single retained projection; resolve validates the envelope and slices only the requested output window.",
+        "adversarialWitness": "A 100k-record retained projection returns a 100-row window without invoking identity, filter, sort, group, pivot, aggregate, or full-projection work.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
-          "allowed": true,
-          "rationale": "Recorded incumbent weakness; WI-038 replaces this path with retained revision-keyed indexes."
+          "allowed": false,
+          "rationale": "Warm resolution is output-sensitive and cannot rescan the retained source or projection."
         }
       }
     },

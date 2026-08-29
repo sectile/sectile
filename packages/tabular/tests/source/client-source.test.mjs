@@ -222,3 +222,125 @@ test('TAB-SRC-08: authoritative deletion deltas require unique valid row identit
   assert.equal(malformed.ok, false);
   assert.equal(malformed.error.code, 'invalid-id');
 });
+
+test('TAB-SRC-09: one current source, query, and expansion stage is retained by explicit revisions', () => {
+  const counters = {
+    getRowID: 0, getValue: 0, predicate: 0, comparator: 0,
+    grouping: 0, aggregation: 0, pivot: 0,
+  };
+  const mutableRecords = [
+    { id: 'r1', name: 'Alpha', team: 'A', score: 2, quarter: 'Q1', active: true },
+    { id: 'r2', name: 'Beta', team: 'B', score: 4, quarter: 'Q2', active: true },
+    { id: 'r3', name: 'Gamma', team: 'A', score: 1, quarter: 'Q2', active: false },
+  ];
+  const local = createClientTabularSource({
+    records: mutableRecords,
+    columnSchema: {
+      revision: 0,
+      columns: ['name', 'team', 'score', 'quarter', 'active'].map((id) => ({ id })),
+      headers: [],
+    },
+    getRowID: (record) => { counters.getRowID += 1; return record.id; },
+    getValue: (record, columnID) => { counters.getValue += 1; return record[columnID]; },
+    policies: {
+      predicates: {
+        equals: (record, descriptor, getValue) => {
+          counters.predicate += 1;
+          return getValue(record, descriptor.columnID) === descriptor.value;
+        },
+      },
+      comparators: {
+        value: (left, right, descriptor, getValue) => {
+          counters.comparator += 1;
+          return getValue(left, descriptor.columnID) - getValue(right, descriptor.columnID);
+        },
+      },
+      grouping: {
+        team: (record, descriptor, depth, getValue) => {
+          counters.grouping += 1;
+          const value = getValue(record, descriptor.columnID);
+          return { groupID: `${depth}:team:${value}`, label: value };
+        },
+      },
+      aggregation: {
+        sum: (items, descriptor, getValue) => {
+          counters.aggregation += 1;
+          return items.reduce((total, record) => total + getValue(record, descriptor.columnID), 0);
+        },
+      },
+      pivot: {
+        quarter: (items) => {
+          counters.pivot += 1;
+          return [...new Set(items.map((record) => record.quarter))].sort().map((quarter) => ({
+            column: { id: `pivot:${quarter}:sum`, capabilities: [] },
+            header: { kind: 'column', id: `header:${quarter}:sum`, columnID: `pivot:${quarter}:sum`, label: quarter },
+            aggregateID: 'sum-score',
+            matches: (record) => record.quarter === quarter,
+          }));
+        },
+      },
+    },
+  });
+  const query = {
+    filters: [{ id: 'active', scope: 'column', columnID: 'active', predicate: 'equals', value: true }],
+    sort: [{ id: 'score', columnID: 'score', direction: 'ascending', comparator: 'value' }],
+    groups: [{ id: 'team', columnID: 'team', policy: 'team' }],
+    aggregates: [{ id: 'sum-score', columnID: 'score', policy: 'sum' }],
+    pivots: [{ id: 'quarter', columnID: 'quarter', valuePolicy: 'quarter', aggregateIDs: ['sum-score'] }],
+  };
+  const cold = resolveClientTabularRequest(local, request({ requestID: 1, queryRevision: 1, query }));
+  assert.equal(cold.ok, true);
+  const afterCold = { ...counters };
+
+  const warm = resolveClientTabularRequest(local, request({
+    requestID: 2,
+    queryRevision: 1,
+    query: structuredClone(query),
+    access: { kind: 'window', start: 1, count: 1 },
+  }));
+  assert.equal(warm.ok, true);
+  assert.deepEqual(counters, afterCold);
+
+  const invalidatedQuery = resolveClientTabularRequest(local, request({ requestID: 3, queryRevision: 2, query: structuredClone(query) }));
+  assert.equal(invalidatedQuery.ok, true);
+  assert.equal(counters.getRowID, afterCold.getRowID);
+  assert.ok(counters.predicate > afterCold.predicate);
+  assert.ok(counters.comparator > afterCold.comparator);
+  assert.ok(counters.grouping > afterCold.grouping);
+  assert.ok(counters.pivot > afterCold.pivot);
+  const afterQuery = { ...counters };
+
+  const expanded = resolveClientTabularRequest(local, request({
+    requestID: 4,
+    queryRevision: 2,
+    expansionRevision: 1,
+    query: structuredClone(query),
+    expansion: ['0:team:A'],
+  }));
+  assert.equal(expanded.ok, true);
+  assert.equal(counters.getRowID, afterQuery.getRowID);
+  assert.equal(counters.predicate, afterQuery.predicate);
+  assert.equal(counters.comparator, afterQuery.comparator);
+  assert.equal(counters.grouping, afterQuery.grouping);
+  assert.equal(counters.aggregation, afterQuery.aggregation);
+  assert.equal(counters.pivot, afterQuery.pivot);
+  assert.ok(counters.getValue > afterQuery.getValue);
+
+  mutableRecords[0].name = 'Changed';
+  const retained = resolveClientTabularRequest(local, request({
+    requestID: 5, queryRevision: 2, expansionRevision: 1, query, expansion: ['0:team:A'],
+  }));
+  assert.equal(retained.ok, true);
+  assert.equal(retained.value.rows.find((row) => row.id === 'r1').cells.name, 'Alpha');
+
+  const refreshed = resolveClientTabularRequest(local, request({
+    requestID: 6, sourceGeneration: 1, queryRevision: 2, expansionRevision: 1, query, expansion: ['0:team:A'],
+  }));
+  assert.equal(refreshed.ok, true);
+  assert.equal(refreshed.value.rows.find((row) => row.id === 'r1').cells.name, 'Changed');
+  assert.ok(counters.getRowID > afterQuery.getRowID);
+
+  const stale = resolveClientTabularRequest(local, request({ requestID: 7, sourceGeneration: 0, queryRevision: 2, query }));
+  assert.equal(stale.ok, false);
+  assert.equal(stale.error.code, 'stale-source-generation');
+});

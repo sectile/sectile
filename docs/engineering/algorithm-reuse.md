@@ -2,26 +2,26 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all eight package source trees.
 
-Findings: 430; migration owners: WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
+Findings: 417; migration owners: WI-020, WI-021, WI-027, WI-039, WI-040.
 
 ## Classifications
 
 | Classification | Count |
 |---|---:|
 | bounded-small | 10 |
-| migration-required | 108 |
-| result-proportional | 143 |
-| reuse | 169 |
+| migration-required | 84 |
+| result-proportional | 149 |
+| reuse | 174 |
 
 ## Categories
 
 | Category | Count |
 |---|---:|
 | controller-connection-rebuild | 34 |
-| discarded-canonical-index | 39 |
+| discarded-canonical-index | 40 |
 | measurement-authority | 16 |
-| private-algorithm-bypass | 11 |
-| raw-full-domain-scan | 286 |
+| private-algorithm-bypass | 4 |
+| raw-full-domain-scan | 279 |
 | repeated-immutable-view | 14 |
 | whole-domain-validation | 30 |
 
@@ -59,30 +59,6 @@ Findings: 430; migration owners: WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:860` | raw-identity-lookup |
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:861` | raw-identity-lookup |
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1004` | linear-membership |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/data-table.ts:440` | serialization-signature |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/data-table.ts:444` | serialization-signature |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:266` | raw-identity-lookup |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:270` | linear-membership |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:385` | raw-identity-lookup |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:425` | full-materialization |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:426` | derived-index-construction |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:426` | full-materialization |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:427` | raw-identity-lookup |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:451` | full-materialization |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:454` | raw-identity-lookup |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:481` | raw-identity-lookup |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:484` | raw-identity-lookup |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:485` | linear-membership |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:488` | full-materialization |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:493` | full-materialization |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:493` | raw-identity-lookup |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/source.ts:292` | derived-index-construction |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/source.ts:329` | derived-index-construction |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/source.ts:330` | derived-index-construction |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/source.ts:347` | linear-membership |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/source.ts:509` | derived-index-construction |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/virtual.ts:369` | derived-index-construction |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/virtual.ts:370` | raw-identity-lookup |
 | WI-039 | virtual-incremental-index | `packages/virtual/src/partitioned-track-grid-layout.ts:488` | derived-index-construction |
 | WI-039 | virtual-incremental-index | `packages/virtual/src/partitioned-track-grid-layout.ts:489` | derived-index-construction |
 | WI-039 | virtual-incremental-index | `packages/virtual/src/partitioned-track-grid-layout.ts:524` | derived-index-construction |

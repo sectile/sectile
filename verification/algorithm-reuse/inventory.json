@@ -2674,28 +2674,6 @@
       "rationale": "Form field lookup, issues, validation, and structural sharing require one retained field/source index."
     },
     {
-      "detector": "serialization-signature",
-      "category": "private-algorithm-bypass",
-      "path": "packages/tabular/src/data-table.ts",
-      "line": 440,
-      "evidence": "JSON.stringify(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "serialization-signature",
-      "category": "private-algorithm-bypass",
-      "path": "packages/tabular/src/data-table.ts",
-      "line": 444,
-      "evidence": "JSON.stringify(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
       "path": "packages/tabular/src/internal/columns.ts",
@@ -2751,169 +2729,48 @@
       "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
     },
     {
-      "detector": "raw-identity-lookup",
-      "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 266,
-      "evidence": ".find(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
       "detector": "linear-membership",
       "category": "raw-full-domain-scan",
       "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 270,
+      "line": 291,
       "evidence": ".includes(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "raw-identity-lookup",
-      "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 385,
-      "evidence": ".some(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "full-materialization",
-      "category": "private-algorithm-bypass",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 425,
-      "evidence": "flatCells(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+      "rule": "tabular-residual-reviewed",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
     },
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
       "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 426,
-      "evidence": "new Map(flatCells(next).filter((cell) => !disabled(options, cell)).map(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "full-materialization",
-      "category": "private-algorithm-bypass",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 426,
-      "evidence": "flatCells(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "raw-identity-lookup",
-      "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 427,
-      "evidence": ".findIndex(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "full-materialization",
-      "category": "private-algorithm-bypass",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 451,
-      "evidence": "flatCells(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "raw-identity-lookup",
-      "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 454,
-      "evidence": ".findIndex(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "raw-identity-lookup",
-      "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 481,
-      "evidence": ".find(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "raw-identity-lookup",
-      "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 484,
-      "evidence": ".find(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+      "line": 411,
+      "evidence": "new Set(schema.filter((column) => column.capabilities?.includes('edit') === true).map(",
+      "rule": "tabular-retained-current-indexes",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Source/query/projection and grid-profile indexes are retained for the complete current generation and released together on invalidation."
     },
     {
       "detector": "linear-membership",
       "category": "raw-full-domain-scan",
       "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 485,
+      "line": 411,
       "evidence": ".includes(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "full-materialization",
-      "category": "private-algorithm-bypass",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 488,
-      "evidence": "flatCells(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "full-materialization",
-      "category": "private-algorithm-bypass",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 493,
-      "evidence": "flatCells(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+      "rule": "tabular-residual-reviewed",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
     },
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
       "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 493,
-      "evidence": ".find(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+      "line": 469,
+      "evidence": ".some(",
+      "rule": "tabular-residual-reviewed",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
     },
     {
       "detector": "raw-identity-lookup",
@@ -3029,56 +2886,56 @@
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
       "path": "packages/tabular/src/source.ts",
-      "line": 292,
+      "line": 67,
+      "evidence": "new Set(options.columnSchema.columns.map(",
+      "rule": "tabular-retained-current-indexes",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Source/query/projection and grid-profile indexes are retained for the complete current generation and released together on invalidation."
+    },
+    {
+      "detector": "derived-index-construction",
+      "category": "discarded-canonical-index",
+      "path": "packages/tabular/src/source.ts",
+      "line": 419,
       "evidence": "new Set(records.map(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+      "rule": "tabular-retained-current-indexes",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Source/query/projection and grid-profile indexes are retained for the complete current generation and released together on invalidation."
     },
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
       "path": "packages/tabular/src/source.ts",
-      "line": 329,
+      "line": 475,
       "evidence": "new Set(columns.map(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+      "rule": "tabular-retained-current-indexes",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Source/query/projection and grid-profile indexes are retained for the complete current generation and released together on invalidation."
     },
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
       "path": "packages/tabular/src/source.ts",
-      "line": 330,
+      "line": 476,
       "evidence": "new Map(query.aggregates.map(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+      "rule": "tabular-retained-current-indexes",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Source/query/projection and grid-profile indexes are retained for the complete current generation and released together on invalidation."
     },
     {
       "detector": "linear-membership",
       "category": "raw-full-domain-scan",
       "path": "packages/tabular/src/source.ts",
-      "line": 347,
+      "line": 493,
       "evidence": ".includes(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
-    },
-    {
-      "detector": "derived-index-construction",
-      "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/source.ts",
-      "line": 509,
-      "evidence": "new Set(source.options.columnSchema.columns.map(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+      "rule": "tabular-residual-reviewed",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
     },
     {
       "detector": "derived-index-construction",
@@ -3086,21 +2943,21 @@
       "path": "packages/tabular/src/virtual.ts",
       "line": 369,
       "evidence": "new Map(target.map(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+      "rule": "tabular-residual-reviewed",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
     },
     {
-      "detector": "raw-identity-lookup",
-      "category": "raw-full-domain-scan",
+      "detector": "derived-index-construction",
+      "category": "discarded-canonical-index",
       "path": "packages/tabular/src/virtual.ts",
       "line": 370,
-      "evidence": ".some(",
-      "rule": "tabular-retained-resolution",
-      "classification": "migration-required",
-      "owner": "WI-038",
-      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+      "evidence": "new Set(current.map(",
+      "rule": "tabular-residual-reviewed",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
     },
     {
       "detector": "whole-state-validation",

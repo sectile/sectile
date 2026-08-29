@@ -116,3 +116,26 @@ test('TAB-GRD-05: request execution remains single-owner and disposable', () => 
   controller.dispose();
   assert.equal(controller.dispatch({ type: 'request-view' }).ok, false);
 });
+
+test('TAB-GRD-06: projection cells and indexes are retained across adjacent movement', () => {
+  let disabledChecks = 0;
+  const controller = createDataGrid({
+    columns,
+    isCellDisabled: () => { disabledChecks += 1; return false; },
+  });
+  assert.equal(controller.synchronizeView(resolve(controller)).ok, true);
+  const first = controller.getProjection();
+  const second = controller.getProjection();
+  assert.notEqual(second, first);
+  assert.equal(second.rows, first.rows);
+  assert.equal(second.columns, first.columns);
+  assert.equal(second.rows[0].cells[0], first.rows[0].cells[0]);
+
+  assert.equal(controller.dispatch({ type: 'focus-cell', cell: first.rows[0].cells[0] }).ok, true);
+  const afterFocus = disabledChecks;
+  assert.equal(controller.dispatch({ type: 'move-cell', direction: 'down' }).ok, true);
+  assert.equal(disabledChecks, afterFocus + 1);
+  const afterMove = controller.getProjection();
+  assert.equal(afterMove.rows, first.rows);
+  assert.equal(afterMove.rows[1].cells[0], first.rows[1].cells[0]);
+});

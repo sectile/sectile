@@ -27,6 +27,112 @@ import type {
 interface ClientSource<RecordValue> extends TabularSource {
   readonly options: TabularClientSourceOptions<RecordValue>;
   readonly limits: TabularLimits;
+  readonly staticColumnIDs: ReadonlySet<string>;
+  resolveProjection(request: TabularRequest): TabularResult<ClientProjectionStage<RecordValue>>;
+}
+
+interface ClientSourceStage<RecordValue> {
+  readonly sourceGeneration: number;
+  readonly records: readonly ClientRecordItem<RecordValue>[];
+}
+
+interface ClientQueryStage<RecordValue> {
+  readonly source: ClientSourceStage<RecordValue>;
+  readonly queryRevision: number;
+  readonly query: TabularQuery;
+  readonly filtered: readonly ClientRecordItem<RecordValue>[];
+  readonly prepared: ClientPreparedProjection<RecordValue>;
+}
+
+interface ClientProjectionStage<RecordValue> {
+  readonly query: ClientQueryStage<RecordValue>;
+  readonly expansionRevision: number;
+  readonly projection: ClientProjection;
+}
+
+class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
+  // sourceGeneration covers records, row/value accessors, and callback-policy observations.
+  public readonly options: TabularClientSourceOptions<RecordValue>;
+  public readonly limits: TabularLimits;
+  public readonly staticColumnIDs: ReadonlySet<string>;
+  #sourceStage: ClientSourceStage<RecordValue> | null = null;
+  #queryStage: ClientQueryStage<RecordValue> | null = null;
+  #projectionStage: ClientProjectionStage<RecordValue> | null = null;
+  #viewSourceGeneration = -1;
+  #viewRevision = 0;
+
+  public constructor(options: TabularClientSourceOptions<RecordValue>, limits: TabularLimits) {
+    this.options = options;
+    this.limits = limits;
+    this.staticColumnIDs = new Set(options.columnSchema.columns.map((column) => column.id));
+  }
+
+  public resolve(request: TabularRequest): TabularResult<TabularViewResponse> {
+    if (this.#viewSourceGeneration >= 0 && request.sourceGeneration < this.#viewSourceGeneration) {
+      return fail('transition-rejection', 'stale-source-generation', 'Client source generation cannot move backward.');
+    }
+    const viewRevision = request.sourceGeneration === this.#viewSourceGeneration ? this.#viewRevision + 1 : 1;
+    const response = resolveClient(this, request, viewRevision);
+    if (response.ok) {
+      this.#viewSourceGeneration = request.sourceGeneration;
+      this.#viewRevision = response.value.viewRevision;
+    }
+    return response;
+  }
+
+  public resolveProjection(request: TabularRequest): TabularResult<ClientProjectionStage<RecordValue>> {
+    let source = this.#sourceStage;
+    if (source === null || source.sourceGeneration !== request.sourceGeneration) {
+      const normalized = normalizeClientRecords(this, request.sourceGeneration);
+      if (!normalized.ok) return normalized;
+      source = normalized.value;
+      this.#sourceStage = source;
+      this.#queryStage = null;
+      this.#projectionStage = null;
+    }
+    let query = this.#queryStage;
+    if (query === null
+      || query.source !== source
+      || query.queryRevision !== request.queryRevision
+      || query.prepared.schema.revision < request.columnSchemaRevision) {
+      const normalized = tryCreateTabularQuery(request.query, this.limits);
+      if (!normalized.ok) return transitionFailure(normalized);
+      const filtered = filterAndSortClientRecords(this, source.records, normalized.value);
+      if (!filtered.ok) return filtered;
+      const prepared = prepareClientProjection(this, filtered.value, normalized.value, request);
+      if (!prepared.ok) return prepared;
+      query = Object.freeze({
+        source,
+        queryRevision: request.queryRevision,
+        query: normalized.value,
+        filtered: filtered.value,
+        prepared: prepared.value,
+      });
+      this.#queryStage = query;
+      this.#projectionStage = null;
+    }
+    const retained = this.#projectionStage;
+    if (retained !== null
+      && retained.query === query
+      && retained.expansionRevision === request.expansionRevision
+      && retained.projection.schema.revision >= request.columnSchemaRevision) {
+      return ok(retained);
+    }
+    if (!Array.isArray(request.expansion) || request.expansion.length > this.limits.maxRows) {
+      return fail('resource-rejection', 'row-ceiling-exceeded', 'Request expansion exceeds the row ceiling.');
+    }
+    const expansion = normalizeIDs(request.expansion, 'groupID', this.limits);
+    if (!expansion.ok) return expansion;
+    const projection = projectClientExpansion(query.prepared, request.expansion, this.limits);
+    if (!projection.ok) return projection;
+    const stage = Object.freeze({
+      query,
+      expansionRevision: request.expansionRevision,
+      projection: projection.value,
+    });
+    this.#projectionStage = stage;
+    return ok(stage);
+  }
 }
 
 export function createClientTabularSource<RecordValue>(
@@ -51,17 +157,11 @@ function tryCreateClientTabularSource<RecordValue>(
       ceiling: limits.maxScanRecords,
     });
   }
-  const viewRevisions = new Map<number, number>();
-  const source: ClientSource<RecordValue> = Object.freeze({
-    options: Object.freeze({ ...options, records: Object.freeze([...options.records]), columnSchema: schema.value.schema }),
-    limits,
-    resolve: (request: TabularRequest): TabularResult<TabularViewResponse> => {
-      const current = viewRevisions.get(request.sourceGeneration) ?? 0;
-      const response = resolveClient(source, request, current + 1);
-      if (response.ok) viewRevisions.set(request.sourceGeneration, response.value.viewRevision);
-      return response;
-    },
-  });
+  const source = new ClientSourceRuntime(Object.freeze({
+    ...options,
+    records: Object.freeze([...options.records]),
+    columnSchema: schema.value.schema,
+  }), limits);
   return ok(source);
 }
 
@@ -152,14 +252,39 @@ function resolveClient<RecordValue>(
   request: TabularRequest,
   viewRevision: number,
 ): TabularResult<TabularViewResponse> {
-  const invalid = validateRequest(request, source.limits);
+  const invalid = validateRequestEnvelope(request);
   if (invalid !== null) return invalid;
-  const query = tryCreateTabularQuery(request.query, source.limits);
-  if (!query.ok) return transitionFailure(query);
   if (request.columnSchemaRevision < source.options.columnSchema.revision) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Request column schema revision predates the client source.');
   }
-  const records: { readonly record: RecordValue; readonly rowID: TabularRowID; readonly inputIndex: number }[] = [];
+  const projected = source.resolveProjection(request);
+  if (!projected.ok) return projected;
+  const projection = projected.value.projection;
+  const matchingLeafCount = projected.value.query.filtered.length;
+  const range = sliceRange(request.access, projection.rows.length);
+  if (!range.ok) return range;
+  const rows = sliceVisibleRows(projection.rows, range.value.start, range.value.end);
+  return ok(Object.freeze({
+    protocolVersion: 1,
+    requestID: request.requestID,
+    sourceGeneration: request.sourceGeneration,
+    queryRevision: request.queryRevision,
+    expansionRevision: request.expansionRevision,
+    viewRevision,
+    access: Object.freeze({ ...request.access }),
+    matchingLeafCount: Object.freeze({ kind: 'known', value: matchingLeafCount }),
+    visibleRowCount: Object.freeze({ kind: 'known', value: projection.rows.length }),
+    rows,
+    columnSchema: projection.schema,
+    removedRowIDs: Object.freeze([]),
+  }));
+}
+
+function normalizeClientRecords<RecordValue>(
+  source: ClientSource<RecordValue>,
+  sourceGeneration: number,
+): TabularResult<ClientSourceStage<RecordValue>> {
+  const records: ClientRecordItem<RecordValue>[] = [];
   const rowIDs = new Set<string>();
   for (let index = 0; index < source.options.records.length; index += 1) {
     const record = source.options.records[index]!;
@@ -175,12 +300,20 @@ function resolveClient<RecordValue>(
     rowIDs.add(rowID);
     records.push(Object.freeze({ record, rowID, inputIndex: index }));
   }
+  return ok(Object.freeze({ sourceGeneration, records: Object.freeze(records) }));
+}
+
+function filterAndSortClientRecords<RecordValue>(
+  source: ClientSource<RecordValue>,
+  records: readonly ClientRecordItem<RecordValue>[],
+  query: TabularQuery,
+): TabularResult<readonly ClientRecordItem<RecordValue>[]> {
   let filtered = records;
-  for (const descriptor of query.value.filters) {
+  for (const descriptor of query.filters) {
     if (descriptor.enabled === false) continue;
     const policy = source.options.policies?.predicates?.[descriptor.predicate];
     if (policy === undefined) return fail('construction', 'missing-policy-key', 'Filter predicate policy is not registered.', { policy: descriptor.predicate });
-    const next = [];
+    const next: ClientRecordItem<RecordValue>[] = [];
     for (const item of filtered) {
       try {
         if (policy(item.record, descriptor, source.options.getValue)) next.push(item);
@@ -190,57 +323,36 @@ function resolveClient<RecordValue>(
     }
     filtered = next;
   }
-  if (query.value.sort.length > 0) {
-    const comparatorPolicies: {
-      readonly descriptor: TabularSort;
-      readonly policy: TabularComparisonPolicy<RecordValue>;
-    }[] = [];
-    for (const descriptor of query.value.sort) {
-      const policy = source.options.policies?.comparators?.[descriptor.comparator];
-      if (policy === undefined) return fail('construction', 'missing-policy-key', 'Sort comparator policy is not registered.', { policy: descriptor.comparator });
-      comparatorPolicies.push(Object.freeze({ descriptor, policy }));
-    }
-    let comparisonFailure: TabularResult<never> | null = null;
-    filtered = [...filtered].sort((left, right) => {
-      if (comparisonFailure !== null) return 0;
-      for (const entry of comparatorPolicies) {
-        let value: number;
-        try {
-          value = entry.policy(left.record, right.record, entry.descriptor, source.options.getValue);
-        } catch (error) {
-          comparisonFailure = policyFailure(entry.descriptor.comparator, error);
-          return 0;
-        }
-        if (!Number.isFinite(value)) {
-          comparisonFailure = fail('transition-rejection', 'source-policy-failed', 'Comparator policies must return finite numbers.');
-          return 0;
-        }
-        if (value !== 0) return entry.descriptor.direction === 'ascending' ? Math.sign(value) : -Math.sign(value);
-      }
-      return left.inputIndex - right.inputIndex;
-    });
-    if (comparisonFailure !== null) return comparisonFailure;
+  if (query.sort.length === 0) return ok(filtered);
+  const comparatorPolicies: {
+    readonly descriptor: TabularSort;
+    readonly policy: TabularComparisonPolicy<RecordValue>;
+  }[] = [];
+  for (const descriptor of query.sort) {
+    const policy = source.options.policies?.comparators?.[descriptor.comparator];
+    if (policy === undefined) return fail('construction', 'missing-policy-key', 'Sort comparator policy is not registered.', { policy: descriptor.comparator });
+    comparatorPolicies.push(Object.freeze({ descriptor, policy }));
   }
-  const projected = projectClientRows(source, filtered, query.value, request);
-  if (!projected.ok) return projected;
-  const matchingLeafCount = filtered.length;
-  const range = sliceRange(request.access, projected.value.rows.length);
-  if (!range.ok) return range;
-  const rows = sliceVisibleRows(projected.value.rows, range.value.start, range.value.end);
-  return ok(Object.freeze({
-    protocolVersion: 1,
-    requestID: request.requestID,
-    sourceGeneration: request.sourceGeneration,
-    queryRevision: request.queryRevision,
-    expansionRevision: request.expansionRevision,
-    viewRevision,
-    access: Object.freeze({ ...request.access }),
-    matchingLeafCount: Object.freeze({ kind: 'known', value: matchingLeafCount }),
-    visibleRowCount: Object.freeze({ kind: 'known', value: projected.value.rows.length }),
-    rows,
-    columnSchema: projected.value.schema,
-    removedRowIDs: Object.freeze([]),
-  }));
+  let comparisonFailure: TabularResult<never> | null = null;
+  const sorted = [...filtered].sort((left, right) => {
+    if (comparisonFailure !== null) return 0;
+    for (const entry of comparatorPolicies) {
+      let value: number;
+      try {
+        value = entry.policy(left.record, right.record, entry.descriptor, source.options.getValue);
+      } catch (error) {
+        comparisonFailure = policyFailure(entry.descriptor.comparator, error);
+        return 0;
+      }
+      if (!Number.isFinite(value)) {
+        comparisonFailure = fail('transition-rejection', 'source-policy-failed', 'Comparator policies must return finite numbers.');
+        return 0;
+      }
+      if (value !== 0) return entry.descriptor.direction === 'ascending' ? Math.sign(value) : -Math.sign(value);
+    }
+    return left.inputIndex - right.inputIndex;
+  });
+  return comparisonFailure === null ? ok(Object.freeze(sorted)) : comparisonFailure;
 }
 
 interface ClientRecordItem<RecordValue> {
@@ -262,60 +374,94 @@ interface ClientPivotRuntime<RecordValue> {
   readonly aggregate: TabularQuery['aggregates'][number];
 }
 
-interface ClientProjection<RecordValue> {
+interface ClientProjection {
   readonly rows: readonly TabularResolvedRow[];
   readonly schema: TabularColumnSchema;
-  readonly pivots: readonly ClientPivotRuntime<RecordValue>[];
 }
 
-function projectClientRows<RecordValue>(
+interface ClientPreparedProjection<RecordValue> {
+  readonly source: ClientSource<RecordValue>;
+  readonly records: readonly ClientRecordItem<RecordValue>[];
+  readonly query: TabularQuery;
+  readonly schema: TabularColumnSchema;
+  readonly pivots: readonly ClientPivotRuntime<RecordValue>[];
+  readonly groups: readonly ClientGroupNode<RecordValue>[];
+  readonly groupIDs: ReadonlySet<string>;
+  readonly leafRows: Map<string, TabularResolvedRow>;
+  readonly groupCells: Map<string, Readonly<Record<string, TabularWireValue>>>;
+}
+
+function prepareClientProjection<RecordValue>(
   source: ClientSource<RecordValue>,
   records: readonly ClientRecordItem<RecordValue>[],
   query: TabularQuery,
   request: TabularRequest,
-): TabularResult<ClientProjection<RecordValue>> {
+): TabularResult<ClientPreparedProjection<RecordValue>> {
   const pivotProjection = resolveClientPivots(source, records, query, request);
   if (!pivotProjection.ok) return pivotProjection;
   if (query.groups.length === 0) {
     if (pivotProjection.value.pivots.length > 0) {
       return fail('transition-rejection', 'invalid-query-descriptor', 'Client pivot projection requires at least one grouping descriptor.');
     }
-    const rows: TabularResolvedRow[] = [];
-    for (const item of records) {
-      const row = createClientLeafRow(source, item, pivotProjection.value.schema.columns);
-      if (!row.ok) return row;
-      rows.push(row.value);
-    }
-    return ok(Object.freeze({ rows: Object.freeze(rows), schema: pivotProjection.value.schema, pivots: pivotProjection.value.pivots }));
+    return ok(Object.freeze({
+      source,
+      records,
+      query,
+      schema: pivotProjection.value.schema,
+      pivots: pivotProjection.value.pivots,
+      groups: Object.freeze([]),
+      groupIDs: new Set<string>(),
+      leafRows: new Map<string, TabularResolvedRow>(),
+      groupCells: new Map<string, Readonly<Record<string, TabularWireValue>>>(),
+    }));
   }
   const groupIDs = new Set<string>();
   const leafIDs = new Set(records.map((item) => item.rowID));
   const groups = buildClientGroups(source, records, query, 0, groupIDs, leafIDs);
   if (!groups.ok) return groups;
-  const requestedExpansion = new Set(request.expansion);
+  return ok(Object.freeze({
+    source,
+    records,
+    query,
+    schema: pivotProjection.value.schema,
+    pivots: pivotProjection.value.pivots,
+    groups: groups.value,
+    groupIDs,
+    leafRows: new Map<string, TabularResolvedRow>(),
+    groupCells: new Map<string, Readonly<Record<string, TabularWireValue>>>(),
+  }));
+}
+
+function projectClientExpansion<RecordValue>(
+  prepared: ClientPreparedProjection<RecordValue>,
+  expansion: readonly string[],
+  limits: TabularLimits,
+): TabularResult<ClientProjection> {
+  if (prepared.groups.length === 0) {
+    const rows: TabularResolvedRow[] = [];
+    for (const item of prepared.records) {
+      const row = clientLeafRow(prepared, item);
+      if (!row.ok) return row;
+      rows.push(row.value);
+    }
+    return ok(Object.freeze({ rows: Object.freeze(rows), schema: prepared.schema }));
+  }
+  const requestedExpansion = new Set(expansion);
   for (const groupID of requestedExpansion) {
-    if (!groupIDs.has(groupID)) {
+    if (!prepared.groupIDs.has(groupID)) {
       return fail('transition-rejection', 'response-envelope-mismatch', 'Expansion identifies an unknown group.', { groupID });
     }
   }
   const rows: TabularResolvedRow[] = [];
-  for (const group of groups.value) {
-    const flattened = flattenClientGroup(
-      source,
-      group,
-      query,
-      requestedExpansion,
-      null,
-      pivotProjection.value.schema.columns,
-      pivotProjection.value.pivots,
-    );
+  for (const group of prepared.groups) {
+    const flattened = flattenClientGroup(prepared, group, requestedExpansion, null);
     if (!flattened.ok) return flattened;
     rows.push(...flattened.value);
-    if (rows.length > source.limits.maxRows) {
+    if (rows.length > limits.maxRows) {
       return fail('resource-rejection', 'row-ceiling-exceeded', 'Grouped visible rows exceed the configured ceiling.');
     }
   }
-  return ok(Object.freeze({ rows: Object.freeze(rows), schema: pivotProjection.value.schema, pivots: pivotProjection.value.pivots }));
+  return ok(Object.freeze({ rows: Object.freeze(rows), schema: prepared.schema }));
 }
 
 function resolveClientPivots<RecordValue>(
@@ -427,19 +573,51 @@ function buildClientGroups<RecordValue>(
 }
 
 function flattenClientGroup<RecordValue>(
-  source: ClientSource<RecordValue>,
+  prepared: ClientPreparedProjection<RecordValue>,
   group: ClientGroupNode<RecordValue>,
-  query: TabularQuery,
   expansion: ReadonlySet<string>,
   parentGroupID: string | null,
-  columns: readonly TabularColumnDefinition[],
-  pivots: readonly ClientPivotRuntime<RecordValue>[],
 ): TabularResult<readonly TabularResolvedRow[]> {
+  const cells = clientGroupCells(prepared, group);
+  if (!cells.ok) return cells;
+  const expanded = expansion.has(group.id);
+  const rows: TabularResolvedRow[] = [Object.freeze({
+    kind: 'group',
+    id: group.id,
+    parentGroupID,
+    depth: group.depth,
+    expanded,
+    cells: cells.value,
+  })];
+  if (!expanded) return ok(Object.freeze(rows));
+  if (group.children.length > 0) {
+    for (const child of group.children) {
+      const flattened = flattenClientGroup(prepared, child, expansion, group.id);
+      if (!flattened.ok) return flattened;
+      rows.push(...flattened.value);
+    }
+  } else {
+    for (const item of group.records) {
+      const leaf = clientLeafRow(prepared, item);
+      if (!leaf.ok) return leaf;
+      rows.push(leaf.value);
+    }
+  }
+  return ok(Object.freeze(rows));
+}
+
+function clientGroupCells<RecordValue>(
+  prepared: ClientPreparedProjection<RecordValue>,
+  group: ClientGroupNode<RecordValue>,
+): TabularResult<Readonly<Record<string, TabularWireValue>>> {
+  const cached = prepared.groupCells.get(group.id);
+  if (cached !== undefined) return ok(cached);
+  const source = prepared.source;
   const cells: Record<string, TabularWireValue> = {};
-  for (const column of columns) {
+  for (const column of prepared.schema.columns) {
     Object.defineProperty(cells, column.id, { value: null, enumerable: true, writable: false, configurable: true });
   }
-  for (const pivot of pivots) {
+  for (const pivot of prepared.pivots) {
     const policy = source.options.policies?.aggregation?.[pivot.aggregate.policy];
     if (policy === undefined) return fail('construction', 'missing-policy-key', 'Pivot aggregation policy is not registered.', { policy: pivot.aggregate.policy });
     const matchingRecords: RecordValue[] = [];
@@ -458,7 +636,7 @@ function flattenClientGroup<RecordValue>(
     if (!normalized.ok) return normalized;
     Object.defineProperty(cells, pivot.value.column.id, { value: normalized.value, enumerable: true, writable: false, configurable: true });
   }
-  for (const descriptor of query.aggregates) {
+  for (const descriptor of prepared.query.aggregates) {
     const policy = source.options.policies?.aggregation?.[descriptor.policy];
     if (policy === undefined) return fail('construction', 'missing-policy-key', 'Aggregation policy is not registered.', { policy: descriptor.policy });
     let value: TabularWireValue;
@@ -471,33 +649,22 @@ function flattenClientGroup<RecordValue>(
     if (!normalized.ok) return normalized;
     Object.defineProperty(cells, descriptor.columnID, { value: normalized.value, enumerable: true, writable: false, configurable: true });
   }
-  const groupDescriptor = query.groups[group.depth]!;
+  const groupDescriptor = prepared.query.groups[group.depth]!;
   Object.defineProperty(cells, groupDescriptor.columnID, { value: group.label, enumerable: true, writable: false, configurable: true });
   Object.freeze(cells);
-  const expanded = expansion.has(group.id);
-  const rows: TabularResolvedRow[] = [Object.freeze({
-    kind: 'group',
-    id: group.id,
-    parentGroupID,
-    depth: group.depth,
-    expanded,
-    cells,
-  })];
-  if (!expanded) return ok(Object.freeze(rows));
-  if (group.children.length > 0) {
-    for (const child of group.children) {
-      const flattened = flattenClientGroup(source, child, query, expansion, group.id, columns, pivots);
-      if (!flattened.ok) return flattened;
-      rows.push(...flattened.value);
-    }
-  } else {
-    for (const item of group.records) {
-      const leaf = createClientLeafRow(source, item, columns);
-      if (!leaf.ok) return leaf;
-      rows.push(leaf.value);
-    }
-  }
-  return ok(Object.freeze(rows));
+  prepared.groupCells.set(group.id, cells);
+  return ok(cells);
+}
+
+function clientLeafRow<RecordValue>(
+  prepared: ClientPreparedProjection<RecordValue>,
+  item: ClientRecordItem<RecordValue>,
+): TabularResult<TabularResolvedRow> {
+  const cached = prepared.leafRows.get(item.rowID);
+  if (cached !== undefined) return ok(cached);
+  const row = createClientLeafRow(prepared.source, item, prepared.schema.columns);
+  if (row.ok) prepared.leafRows.set(item.rowID, row.value);
+  return row;
 }
 
 function createClientLeafRow<RecordValue>(
@@ -506,10 +673,9 @@ function createClientLeafRow<RecordValue>(
   columns: readonly TabularColumnDefinition[],
 ): TabularResult<TabularResolvedRow> {
   const cells: Record<string, TabularWireValue> = {};
-  const staticIDs = new Set(source.options.columnSchema.columns.map((column) => column.id));
   for (const column of columns) {
     let value: TabularWireValue;
-    if (!staticIDs.has(column.id)) value = null;
+    if (!source.staticColumnIDs.has(column.id)) value = null;
     else try {
         value = source.options.getValue(item.record, column.id);
       } catch (error) {
@@ -523,6 +689,18 @@ function createClientLeafRow<RecordValue>(
 }
 
 function validateRequest(request: TabularRequest, limits: TabularLimits): TabularResult<never> | null {
+  const envelope = validateRequestEnvelope(request);
+  if (envelope !== null) return envelope;
+  const query = tryCreateTabularQuery(request.query, limits);
+  if (!query.ok) return transitionFailure(query);
+  if (!Array.isArray(request.expansion) || request.expansion.length > limits.maxRows) {
+    return fail('resource-rejection', 'row-ceiling-exceeded', 'Request expansion exceeds the row ceiling.');
+  }
+  const expansion = normalizeIDs(request.expansion, 'groupID', limits);
+  return expansion.ok ? validateAccess(request.access) : expansion;
+}
+
+function validateRequestEnvelope(request: TabularRequest): TabularResult<never> | null {
   if (request === null || typeof request !== 'object' || request.protocolVersion !== 1) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular request protocolVersion must be 1.');
   }
@@ -533,13 +711,6 @@ function validateRequest(request: TabularRequest, limits: TabularLimits): Tabula
   ] as const) {
     if (!isNonNegativeSafeInteger(value)) return fail('transition-rejection', 'response-envelope-mismatch', `${label} must be a non-negative safe integer.`);
   }
-  const query = tryCreateTabularQuery(request.query, limits);
-  if (!query.ok) return transitionFailure(query);
-  if (!Array.isArray(request.expansion) || request.expansion.length > limits.maxRows) {
-    return fail('resource-rejection', 'row-ceiling-exceeded', 'Request expansion exceeds the row ceiling.');
-  }
-  const expansion = normalizeIDs(request.expansion, 'groupID', limits);
-  if (!expansion.ok) return expansion;
   return validateAccess(request.access);
 }
 

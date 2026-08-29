@@ -50,25 +50,37 @@
       {
         "recordCount": 1000,
         "completed": true,
-        "operationCount": 20991
+        "operationCount": 20991,
+        "warmOperationCount": 0,
+        "queryInvalidationIdentityOperations": 0
       },
       {
         "recordCount": 10000,
         "completed": true,
-        "operationCount": 277152
+        "operationCount": 277152,
+        "warmOperationCount": 0,
+        "queryInvalidationIdentityOperations": 0
       },
       {
         "recordCount": 100000,
         "completed": true,
-        "operationCount": 3436701
+        "operationCount": 3436701,
+        "warmOperationCount": 0,
+        "queryInvalidationIdentityOperations": 0
       }
     ],
-    "timingPolicy": "informational-no-threshold"
+    "timingPolicy": "informational-no-threshold",
+    "generationChurn": {
+      "generations": 10000,
+      "retainedStages": 1,
+      "tailGrowthBytes": 3712,
+      "ceilingBytes": 8388608
+    }
   },
   "footprint": {
-    "javascriptBytes": 133094,
+    "javascriptBytes": 141315,
     "declarationBytes": 39338,
-    "sourceMapBytes": 139710,
+    "sourceMapBytes": 147486,
     "packedBytes": 55011,
     "declarationFiles": 13,
     "publicSubpaths": 9

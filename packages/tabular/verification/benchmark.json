@@ -22,10 +22,32 @@
         "predicate": 1000,
         "comparator": 5331
       },
+      "stages": {
+        "warm": {
+          "operationCount": 0,
+          "operations": {
+            "getRowID": 0,
+            "getValue": 0,
+            "predicate": 0,
+            "comparator": 0
+          }
+        },
+        "queryInvalidation": {
+          "operationCount": 20168,
+          "operations": {
+            "getRowID": 0,
+            "getValue": 13778,
+            "predicate": 1000,
+            "comparator": 5390
+          }
+        }
+      },
       "timingsMs": {
-        "construct": 0.573,
-        "resolve": 4.261,
-        "total": 4.834
+        "construct": 0.762,
+        "resolve": 3.662,
+        "warm": 0.078,
+        "queryInvalidation": 2.517,
+        "total": 7.019
       }
     },
     {
@@ -40,10 +62,32 @@
         "predicate": 10000,
         "comparator": 75718
       },
+      "stages": {
+        "warm": {
+          "operationCount": 0,
+          "operations": {
+            "getRowID": 0,
+            "getValue": 0,
+            "predicate": 0,
+            "comparator": 0
+          }
+        },
+        "queryInvalidation": {
+          "operationCount": 268367,
+          "operations": {
+            "getRowID": 0,
+            "getValue": 182244,
+            "predicate": 10000,
+            "comparator": 76123
+          }
+        }
+      },
       "timingsMs": {
-        "construct": 0.067,
-        "resolve": 16.377,
-        "total": 16.444
+        "construct": 0.116,
+        "resolve": 15.918,
+        "warm": 0.074,
+        "queryInvalidation": 9.243,
+        "total": 25.351
       }
     },
     {
@@ -58,11 +102,46 @@
         "predicate": 100000,
         "comparator": 978901
       },
+      "stages": {
+        "warm": {
+          "operationCount": 0,
+          "operations": {
+            "getRowID": 0,
+            "getValue": 0,
+            "predicate": 0,
+            "comparator": 0
+          }
+        },
+        "queryInvalidation": {
+          "operationCount": 3350888,
+          "operations": {
+            "getRowID": 0,
+            "getValue": 2267258,
+            "predicate": 100000,
+            "comparator": 983630
+          }
+        }
+      },
       "timingsMs": {
-        "construct": 0.196,
-        "resolve": 162.699,
-        "total": 162.895
+        "construct": 0.218,
+        "resolve": 174.766,
+        "warm": 0.074,
+        "queryInvalidation": 132.686,
+        "total": 307.744
       }
     }
-  ]
+  ],
+  "generationChurn": {
+    "generations": 10000,
+    "recordsPerGeneration": 64,
+    "retainedStages": 1,
+    "heapUsedBytes": {
+      "before": 41013760,
+      "middle": 41007944,
+      "after": 41011656
+    },
+    "tailGrowthBytes": 3712,
+    "ceilingBytes": 8388608,
+    "status": "passed"
+  }
 }
