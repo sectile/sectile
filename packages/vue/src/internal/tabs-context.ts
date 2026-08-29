@@ -13,14 +13,14 @@ export interface TabsRootContext {
   readonly disabled: ComputedRef<boolean>;
   readonly readonly: ComputedRef<boolean>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
+  readonly items: ComputedRef<readonly string[]>;
   readonly orientation: ComputedRef<'horizontal' | 'vertical'>;
   readonly direction: ComputedRef<HostDirection>;
   readonly partContract: PartContract;
   select(value: string, target: HTMLElement): void;
   keydown(event: KeyboardEvent): void;
   ids(value: string): TabsIDs;
-  relativeTarget(direction: -1 | 1): string | null;
-  activateRelative(direction: -1 | 1): boolean;
+  activateTarget(value: string): boolean;
 }
 
 export const tabsRootContextKey = Symbol('SectileTabsRoot');

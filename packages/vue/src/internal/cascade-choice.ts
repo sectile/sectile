@@ -11,7 +11,7 @@ import {
   type SlotsType,
   type VNodeChild,
 } from 'vue';
-import type { TreeNodeInput } from '@sectile/core/tree';
+import { tryCreateTree, type TreeNodeInput } from '@sectile/core/tree';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { collectionBranchIDs } from './collection.js';
 
@@ -218,9 +218,11 @@ export function initialCascadeColumns(
   nodes: readonly TreeNodeInput<string>[],
   path: readonly string[] = [],
 ): readonly (readonly string[])[] {
-  const columns: string[][] = [nodes.filter((node) => node.parentID === null).map((node) => node.id)];
+  const tree = tryCreateTree(nodes);
+  if (!tree.ok) throw new TypeError(tree.error.message);
+  const columns: (readonly string[])[] = [tree.value.roots.ids];
   for (const id of path) {
-    const children = nodes.filter((node) => node.parentID === id).map((node) => node.id);
+    const children = tree.value.childrenOf(id)?.ids ?? [];
     if (children.length > 0) columns.push(children);
   }
   return columns;
@@ -231,15 +233,10 @@ export function cascadeItemPath(
   value: string | null,
 ): readonly string[] {
   if (value === null) return [];
-  const parents = new Map(nodes.map((node) => [node.id, node.parentID]));
-  if (!parents.has(value)) return [];
-  const path: string[] = [value];
-  let current = parents.get(value) ?? null;
-  while (current !== null) {
-    path.push(current);
-    current = parents.get(current) ?? null;
-  }
-  return path.reverse();
+  const tree = tryCreateTree(nodes);
+  if (!tree.ok) throw new TypeError(tree.error.message);
+  const ancestors = tree.value.ancestorsOf(value);
+  return ancestors === null ? [] : Object.freeze([...ancestors].reverse().concat(value));
 }
 
 export function cascadeBranchItems(nodes: readonly TreeNodeInput<string>[]): ReadonlySet<string> {

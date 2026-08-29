@@ -133,22 +133,7 @@ export const TabsRoot = defineComponent({
       if (root !== undefined) void nextTick(() => focusTrigger(root, result.snapshot.state.cursor.current));
       return true;
     };
-    const relativeTarget = (direction: -1 | 1): string | null => {
-      if (props.disabled || props.readonly) return null;
-      const selectedIndex = props.items.indexOf(value.value);
-      let index = selectedIndex < 0
-        ? direction > 0 ? 0 : props.items.length - 1
-        : selectedIndex + direction;
-      while (index >= 0 && index < props.items.length) {
-        const candidate = props.items[index];
-        if (candidate !== undefined && !disabledItems.value.has(candidate)) return candidate;
-        index += direction;
-      }
-      return null;
-    };
-    const activateRelative = (direction: -1 | 1): boolean => {
-      const target = relativeTarget(direction);
-      if (target === null) return false;
+    const activateTarget = (target: string): boolean => {
       if (!apply(controller.value.handleEvent({ type: 'focus', id: target }))) return false;
       if (!apply(controller.value.handleEvent({ type: 'activate', id: target }))) return false;
       void nextTick(() => {
@@ -158,14 +143,14 @@ export const TabsRoot = defineComponent({
     };
     const part = usePartContract('tabs', 'root');
     provide<TabsRootContext>(tabsRootContextKey, {
-      value, highlighted, disabled, readonly, orientation, direction, disabledItems, partContract: part, ids,
+      value, highlighted, disabled, readonly, orientation, direction, disabledItems,
+      items: computed(() => props.items), partContract: part, ids,
       select: (id, target) => apply(controller.value.handleEvent({ type: 'activate', id }), target.closest('[role="tablist"]') as HTMLElement | undefined),
       keydown: (event) => {
         if (!apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) return;
         event.preventDefault();
       },
-      relativeTarget,
-      activateRelative,
+      activateTarget,
     });
     const slotProps = computed<TabsRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: props.disabled, readonly: props.readonly }));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, getTabsRootAttributes(), {

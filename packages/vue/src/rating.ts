@@ -14,6 +14,8 @@ import {
   type SlotsType,
   type VNodeChild,
 } from 'vue';
+import { applyRatingEvent, tryCreateRatingState } from '@sectile/core/rating';
+import { createSequence } from '@sectile/core/sequence';
 import {
   RadioGroupIndicator,
   RadioGroupItem,
@@ -83,6 +85,7 @@ export const RatingRoot = defineComponent({
     const disabled = computed(() => props.disabled);
     const readonly = computed(() => props.readonly);
     const clearable = computed(() => props.clearable);
+    const domain = computed(() => createSequence(props.items));
     const update = (next: string): void => {
       if (!controlled) localValue.value = next;
       emit('update:modelValue', next);
@@ -91,7 +94,11 @@ export const RatingRoot = defineComponent({
       value, disabled, readonly, clearable,
       clear: () => {
         if (!props.clearable || props.disabled || props.readonly) return;
-        update('');
+        const current = tryCreateRatingState(domain.value, value.value || null);
+        if (!current.ok) throw new TypeError(current.error.message);
+        const cleared = applyRatingEvent(domain.value, current.value, 'clear');
+        if (!cleared.ok) throw new TypeError(cleared.error.message);
+        update(cleared.value.state.selection.selected[0] ?? '');
       },
     });
     return (): VNodeChild => h(RadioGroupRoot as Component, mergeProps(attrs, {

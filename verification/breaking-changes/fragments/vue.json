@@ -25,6 +25,14 @@
       "symbols": ["all runtime and type exports"],
       "replacement": null,
       "removalReason": "Replaced by the complete checked core/list/grid/masonry/spatial mapping in verification/entrypoint-migrations/WI-025.json."
+    },
+    {
+      "id": "WI-009:checkbox-group-domain",
+      "change": "signature-changed",
+      "before": { "subpath": "./checkbox-group" },
+      "symbols": ["CheckboxGroupRootProps.items"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./checkbox-group" },
+      "removalReason": "CheckboxGroupRoot now requires the canonical ordered item domain used for validation, deterministic selection order, and bounded membership."
     }
   ]
 }

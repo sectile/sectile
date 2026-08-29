@@ -19,7 +19,7 @@
     "hostProjections": [
       { "name": "@sectile/dom", "classification": "platform-only" },
       { "name": "@sectile/terminal", "classification": "platform-only" },
-      { "name": "@sectile/vue", "classification": "platform-only", "migrationException": "vue-component-semantics" }
+      { "name": "@sectile/vue", "classification": "platform-only" }
     ]
   },
   "domainAuthority": [
@@ -42,14 +42,7 @@
     {
       "root": "packages/vue/src/internal",
       "classification": "platform-only",
-      "semanticException": "vue-component-semantics",
-      "semanticPaths": [
-        "packages/vue/src/internal/cascade-choice.ts",
-        "packages/vue/src/internal/collection.ts",
-        "packages/vue/src/internal/controlled-state.ts",
-        "packages/vue/src/internal/date-picker.ts",
-        "packages/vue/src/internal/tabs-context.ts"
-      ]
+      "semanticPaths": []
     }
   ],
   "dependencyGraph": [
@@ -63,7 +56,6 @@
     { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "semanticDependencies": ["@sectile/core", "@sectile/dom", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] }
   ],
   "migrationExceptions": [
-    { "id": "vue-component-semantics", "owner": "WI-009", "scope": "Vue renderer-neutral collection and component semantics" },
     { "id": "vue-form-semantics", "owner": "WI-029", "scope": "Vue Form whole-state projection and component subscriptions" },
     { "id": "vue-virtual-projection", "owner": "WI-040", "scope": "Vue Virtual measurement and collection projection ownership" },
     { "id": "floating-positioning-surface", "owner": "WI-036", "scope": "DOM and Vue positioned components expose third-party positioning semantics" }

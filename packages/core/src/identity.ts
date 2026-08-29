@@ -12,6 +12,16 @@ export interface StableIDNormalizationOptions {
 
 export { validateStableID };
 
+export function sameStableIDOrder<ID extends StableID>(
+  left: readonly ID[],
+  right: readonly ID[],
+): boolean {
+  return left === right || (
+    left.length === right.length
+    && left.every((id, index) => id === right[index])
+  );
+}
+
 export function tryNormalizeStableIDs<ID extends StableID>(
   ids: readonly ID[],
   options: StableIDNormalizationOptions = {},

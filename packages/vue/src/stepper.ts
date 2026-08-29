@@ -1,4 +1,6 @@
 import { computed, defineComponent, h, mergeProps, type Component, type PropType, type SlotsType, type VNodeChild } from 'vue';
+import { applyStepperEvent, tryCreateStepperState } from '@sectile/core/stepper';
+import { createSequence } from '@sectile/core/sequence';
 import {
   TabsContent,
   TabsIndicator,
@@ -82,7 +84,22 @@ function createAction(name: 'Previous' | 'Next', direction: -1 | 1) {
       if (root.partContract.scope !== 'stepper') {
         throw new TypeError(`Stepper${name} must be used inside StepperRoot.`);
       }
-      const targetValue = computed(() => props.disabled ? null : root.relativeTarget(direction));
+      const domain = computed(() => createSequence(root.items.value));
+      const targetValue = computed(() => {
+        if (props.disabled || root.disabled.value || root.readonly.value) return null;
+        const selected = root.value.value || null;
+        const current = tryCreateStepperState(domain.value, selected, selected);
+        if (!current.ok) throw new TypeError(current.error.message);
+        const moved = applyStepperEvent(
+          domain.value,
+          current.value,
+          direction < 0 ? 'previous-step' : 'next-step',
+          { eligible: (id) => !root.disabledItems.value.has(id) },
+        );
+        if (!moved.ok) throw new TypeError(moved.error.message);
+        const candidate = moved.value.state.cursor.current;
+        return candidate === selected ? null : candidate;
+      });
       const disabled = computed(() => props.disabled || targetValue.value === null);
       const slotProps = computed<StepperActionSlotProps>(() => Object.freeze({
         value: root.value.value,
@@ -104,7 +121,8 @@ function createAction(name: 'Previous' | 'Next', direction: -1 | 1) {
             event.preventDefault();
             return;
           }
-          root.activateRelative(direction);
+          const target = targetValue.value;
+          if (target !== null) root.activateTarget(target);
         },
       }), { default: () => slots['default']?.(slotProps.value) });
     },

@@ -186,6 +186,20 @@
       "before": { "subpath": "./color-picker" },
       "symbols": ["ColorValue is the canonical Rgba8 declaration closure"],
       "replacement": { "package": "@sectile/core", "subpath": "./color-picker" }
+    },
+    {
+      "id": "WI-009:collection-reconciliation",
+      "change": "signature-changed",
+      "before": { "subpath": "./adapter-runtime" },
+      "symbols": ["tryReconcileCollectionIdentities"],
+      "replacement": { "package": "@sectile/core", "subpath": "./adapter-runtime" }
+    },
+    {
+      "id": "WI-009:stable-id-order",
+      "change": "signature-changed",
+      "before": { "subpath": "./identity" },
+      "symbols": ["sameStableIDOrder"],
+      "replacement": { "package": "@sectile/core", "subpath": "./identity" }
     }
   ]
 }

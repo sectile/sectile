@@ -5,6 +5,26 @@
   "kind": "internal-operations",
   "operations": [
     {
+      "id": "collection.external-reconcile",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/internal/collection.ts",
+      "benchmarkIDs": ["VAL-023:vue-collection-reconcile-work"],
+      "specificationCeiling": "O(nOption + sSelected + dDisabled)",
+      "contract": {
+        "variables": [
+          { "name": "nOption", "meaning": "external option count", "ceiling": "component domain ceiling" },
+          { "name": "sSelected", "meaning": "requested selection count", "ceiling": "component domain ceiling" },
+          { "name": "dDisabled", "meaning": "disabled option count", "ceiling": "component domain ceiling" }
+        ],
+        "time": { "bound": "O(nOption + sSelected + dDisabled)", "kind": "expected", "runtimeState": "external" },
+        "space": { "auxiliary": "O(nOption + sSelected + dDisabled)", "output": "O(sSelected)", "retained": "O(sSelected)" },
+        "resources": { "allocations": "O(nOption + sSelected + dDisabled)", "cacheEntries": "O(nOption + sSelected + dDisabled)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Vue delegates the explicit prop-replacement boundary to Core collection reconciliation and retains only the resulting controller snapshot.",
+        "adversarialWitness": "A disjoint equal-size prop replacement invalidates selection and current while visiting every external option once.",
+        "fullScan": { "allowed": true, "rationale": "External option replacement requires validation; ordinary controller events bypass this path." }
+      }
+    },
+    {
       "id": "projection.reconfigure",
       "inherits": "linear-v1",
       "source": "packages/vue/src/internal/virtual-list.ts",

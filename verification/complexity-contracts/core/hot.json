@@ -74,6 +74,26 @@
       }
     },
     {
+      "id": "adapter.collection-reconcile",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": ["VAL-023:collection-reconcile-work"],
+      "specificationCeiling": "O(nDomain + sSelected + dDisabled)",
+      "contract": {
+        "variables": [
+          { "name": "nDomain", "meaning": "external collection item count", "ceiling": "Sequence maxItems" },
+          { "name": "sSelected", "meaning": "requested selected identity count", "ceiling": "sSelected <= nDomain after reconciliation" },
+          { "name": "dDisabled", "meaning": "disabled identity count", "ceiling": "dDisabled <= nDomain" }
+        ],
+        "time": { "bound": "O(nDomain + sSelected + dDisabled)", "kind": "expected", "runtimeState": "external" },
+        "space": { "auxiliary": "O(nDomain + sSelected + dDisabled)", "output": "O(sSelected)", "retained": "O(sSelected)" },
+        "resources": { "allocations": "O(nDomain + sSelected + dDisabled)", "cacheEntries": "O(nDomain + sSelected + dDisabled)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "External identities are validated/indexed once, selected and disabled membership use Sets, and one domain-order pass emits canonical selection before bounded current fallback queries.",
+        "adversarialWitness": "A maximum domain with every selected identity ordered oppositely and all but the last item disabled visits each input once.",
+        "fullScan": { "allowed": true, "rationale": "An explicit external option replacement must validate and reconcile its complete domain once." }
+      }
+    },
+    {
       "id": "adapter.facade-destroy",
       "inherits": "lifecycle-v1",
       "source": "packages/core/src/adapter-runtime.ts",
@@ -364,6 +384,22 @@
         "proof": "The normalizer checks the ceiling once, scans each ID's code units once, records one uniqueness entry, and emits one frozen ordered snapshot.",
         "adversarialWitness": "The final maximum-width ID duplicates the first after all prior identities have been validated.",
         "fullScan": { "allowed": true, "rationale": "External identity input must be completely validated and uniqueness requires observing every accepted ID." }
+      }
+    },
+    {
+      "id": "identity.same-order",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/identity.ts",
+      "benchmarkIDs": ["VAL-023:stable-id-order-comparison"],
+      "specificationCeiling": "O(nID)",
+      "contract": {
+        "variables": [{ "name": "nID", "meaning": "identity count in equal-length inputs", "ceiling": "owning domain ceiling" }],
+        "time": { "bound": "O(nID)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "0", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Identity or length mismatch exits immediately; equal-length distinct arrays compare each aligned identity at most once.",
+        "adversarialWitness": "Two maximum equal-length vectors differ only at the final identity.",
+        "fullScan": { "allowed": true, "rationale": "Exact ordered equality has a linear lower bound for distinct equal-length arrays." }
       }
     },
     {

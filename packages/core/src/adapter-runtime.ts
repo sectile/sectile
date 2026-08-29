@@ -1,5 +1,7 @@
 import type { Result, SectileError, StableID } from './shared.js';
 import type { CoreErrorCode } from './error-code.js';
+import { sameStableIDOrder, tryNormalizeStableIDs } from './identity.js';
+import { tryCreateSequence } from './structures/sequence.js';
 import {
   tryCreateInteractionState,
   requireInteraction,
@@ -411,6 +413,66 @@ export function createCollectionComponentController<
 
 export interface IdentityDomain<ID extends StableID> {
   contains(id: ID): boolean;
+}
+
+export type CollectionSelectionMode = 'single' | 'multiple';
+
+export interface ReconciledCollectionIdentities<ID extends StableID> {
+  readonly selected: readonly ID[];
+  readonly current: ID | null;
+  readonly selectionChanged: boolean;
+  readonly currentChanged: boolean;
+}
+
+export interface ReconcileCollectionIdentitiesOptions {
+  readonly preserveNullCurrent?: boolean;
+}
+
+export function tryReconcileCollectionIdentities<ID extends StableID>(
+  items: readonly ID[],
+  selected: readonly ID[],
+  current: ID | null,
+  disabledItems: readonly ID[],
+  mode: CollectionSelectionMode,
+  options: ReconcileCollectionIdentitiesOptions = {},
+): Result<ReconciledCollectionIdentities<ID>> {
+  if (mode !== 'single' && mode !== 'multiple') {
+    return {
+      ok: false,
+      error: {
+        class: 'construction',
+        code: 'invalid-selection-mode',
+        message: 'Collection selection mode must be single or multiple.',
+      },
+    };
+  }
+  const domain = tryCreateSequence(items);
+  if (!domain.ok) return domain;
+  const normalizedSelection = tryNormalizeStableIDs(selected);
+  if (!normalizedSelection.ok) return normalizedSelection;
+  const disabled = tryCreateDisabledIdentitySet(domain.value, disabledItems);
+  if (!disabled.ok) return disabled;
+  const requested = new Set(normalizedSelection.value);
+  const selectedInDomain = domain.value.ids.filter((id) => requested.has(id));
+  const nextSelected = Object.freeze(
+    mode === 'single' ? selectedInDomain.slice(0, 1) : selectedInDomain,
+  );
+  const nextCurrent = current === null && options.preserveNullCurrent === true
+    ? null
+    : current !== null && domain.value.contains(current) && !disabled.value.has(current)
+      ? current
+      : nextSelected.find((id) => !disabled.value.has(id))
+        ?? domain.value.ids.find((id) => !disabled.value.has(id))
+        ?? null;
+  return {
+    ok: true,
+    value: Object.freeze({
+      selected: nextSelected,
+      current: nextCurrent,
+      selectionChanged: !sameStableIDOrder(selected, nextSelected),
+      currentChanged: current !== nextCurrent,
+    }),
+  };
 }
 
 export function tryCreateDisabledIdentitySet<ID extends StableID>(
