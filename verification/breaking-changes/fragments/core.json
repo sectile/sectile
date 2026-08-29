@@ -3,6 +3,20 @@
   "package": "@sectile/core",
   "entries": [
     {
+      "id": "WI-002:result-constructors",
+      "change": "signature-changed",
+      "before": { "subpath": "./result" },
+      "symbols": ["okResult", "failResult"],
+      "replacement": { "package": "@sectile/core", "subpath": "./result" }
+    },
+    {
+      "id": "WI-002:machine-update-constructor",
+      "change": "signature-changed",
+      "before": { "subpath": "./revision" },
+      "symbols": ["createMachineUpdate"],
+      "replacement": { "package": "@sectile/core", "subpath": "./revision" }
+    },
+    {
       "id": "WI-030:grid-control-split",
       "change": "signature-changed",
       "before": {

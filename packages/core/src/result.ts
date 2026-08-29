@@ -1,6 +1,8 @@
 import type { ErrorClass, Result, SectileError } from './shared.js';
 import type { CoreErrorCode } from './error-code.js';
 
+export { fail as failResult, ok as okResult } from './internal/kernel/foundation.js';
+
 export class SectileResultError<Code extends string = CoreErrorCode>
   extends Error implements SectileError<Code> {
   public readonly class: ErrorClass;

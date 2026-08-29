@@ -10,3 +10,4 @@ export {
 } from './internal/runtime/revision.js';
 
 export { tryCreateRevisionSnapshot } from './internal/runtime/revision.js';
+export { createMachineUpdate } from './internal/kernel/machine.js';

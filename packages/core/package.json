@@ -91,6 +91,11 @@
       "import": "./dist/result.js",
       "default": "./dist/result.js"
     },
+    "./identity": {
+      "types": "./dist/identity.d.ts",
+      "import": "./dist/identity.js",
+      "default": "./dist/identity.js"
+    },
     "./selection": {
       "types": "./dist/selection.d.ts",
       "import": "./dist/selection.js",

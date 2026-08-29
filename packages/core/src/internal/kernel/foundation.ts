@@ -90,11 +90,11 @@ export function memoizeWeakPair<Owner extends object, Key extends object, Value>
   return value;
 }
 
-export function ok<T>(value: T): Result<T> {
+export function ok<T, Code extends string = CoreErrorCode>(value: T): Result<T, Code> {
   return { ok: true, value };
 }
 
-export function fail<T = never, Code extends CoreErrorCode = CoreErrorCode>(
+export function fail<T = never, Code extends string = CoreErrorCode>(
   errorClass: SectileError['class'],
   code: Code,
   message: string,
@@ -111,7 +111,7 @@ export function fail<T = never, Code extends CoreErrorCode = CoreErrorCode>(
   };
 }
 
-export function resourceError<Code extends CoreErrorCode>(
+export function resourceError<Code extends string = CoreErrorCode>(
   code: Code,
   message: string,
   details?: Readonly<Record<string, unknown>>,

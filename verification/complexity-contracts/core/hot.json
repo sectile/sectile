@@ -247,6 +247,56 @@
       }
     },
     {
+      "id": "foundation.result-construction",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/internal/kernel/foundation.ts",
+      "benchmarkIDs": ["VAL-002:result-construction"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "time": { "bound": "O(1)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Success and failure constructors create one fixed-shape discriminated result and retain supplied detail records by immutable contract.",
+        "adversarialWitness": "A failure with a maximum-size caller-owned detail record performs no enumeration or copy of that record.",
+        "fullScan": { "allowed": false, "rationale": "Result construction has no collection input owned by the primitive." }
+      }
+    },
+    {
+      "id": "foundation.machine-update",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/kernel/machine.ts",
+      "benchmarkIDs": ["core:controller:handle", "VAL-002:machine-update-construction"],
+      "specificationCeiling": "O(cCommand)",
+      "contract": {
+        "variables": [{ "name": "cCommand", "meaning": "commands emitted by one transition", "ceiling": "component command ceiling" }],
+        "time": { "bound": "O(cCommand)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(cCommand)", "retained": "O(cCommand)" },
+        "resources": { "allocations": "O(cCommand)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Non-empty commands are copied and frozen into one output vector; the empty path reuses one frozen singleton. No second command-array copy is made.",
+        "adversarialWitness": "A maximum command batch copies and freezes each command once; repeated zero-command updates share the same empty vector.",
+        "fullScan": { "allowed": true, "rationale": "Observable immutable command output requires visiting each emitted command once." }
+      }
+    },
+    {
+      "id": "identity.normalize",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/identity.ts",
+      "benchmarkIDs": ["VAL-002:stable-id-normalization"],
+      "specificationCeiling": "O(nID + uID)",
+      "contract": {
+        "variables": [
+          { "name": "nID", "meaning": "identity count", "ceiling": "caller/domain maxItems" },
+          { "name": "uID", "meaning": "total UTF-16 code units across identities", "ceiling": "nID * maxIDCodeUnits" }
+        ],
+        "time": { "bound": "O(nID + uID)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(nID)", "output": "O(nID)", "retained": "O(nID)" },
+        "resources": { "allocations": "O(nID)", "cacheEntries": "O(nID)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The normalizer checks the ceiling once, scans each ID's code units once, records one uniqueness entry, and emits one frozen ordered snapshot.",
+        "adversarialWitness": "The final maximum-width ID duplicates the first after all prior identities have been validated.",
+        "fullScan": { "allowed": true, "rationale": "External identity input must be completely validated and uniqueness requires observing every accepted ID." }
+      }
+    },
+    {
       "id": "geometry.scalar",
       "inherits": "constant-v1",
       "source": "packages/core/src/structures/geometry.ts",
