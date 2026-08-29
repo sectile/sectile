@@ -33,12 +33,15 @@ test('includes every public workspace package in releases', () => {
   assert.deepEqual([...publishedPackageDirectories].sort(), publicDirectories);
 });
 
-test('release retries load current verification and packaging tooling', () => {
+test('release retries verify tagged source and load the complete current publication tool closure', () => {
   const workflow = readFileSync(join(root, '.github/workflows/release.yml'), 'utf8');
-  assert.match(
-    workflow,
-    /git restore --source=origin\/main -- scripts\/verify\.mjs scripts\/publish-packages\.mjs/u,
-  );
+  assert.equal(/git restore[^\n]*scripts\/verify\.mjs/u.test(workflow), false);
+  for (const path of [
+    'scripts/publish-packages.mjs',
+    'scripts/lib/packed-package-contract.mjs',
+    'scripts/lib/published-packages.mjs',
+    'scripts/lib/source-map-policy.mjs',
+  ]) assert.ok(workflow.includes(path), `${path} is absent from publication tooling restore`);
   assert.equal(workflow.includes('.release-artifacts'), false);
   assert.match(workflow, /--pack-destination=release-artifacts/u);
   assert.match(workflow, /path: release-artifacts\/\*\.tgz/u);

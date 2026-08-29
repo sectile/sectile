@@ -141,6 +141,9 @@ function workspaceContractSteps() {
     commandStep('representation crossovers', 'pnpm', ['check:crossovers']),
     commandStep('entrypoint migrations', 'pnpm', ['check:entrypoint-migrations']),
     commandStep('published source maps', process.execPath, [join(root, 'scripts', 'source-map-policy.mjs'), 'check']),
+    commandStep('packed publication artifacts', process.execPath, [
+      join(root, 'scripts', 'publish-packages.mjs'), '--pack-only',
+    ]),
     commandStep('workspace boundaries', 'pnpm', ['check:boundaries']),
     commandStep('public signatures', 'pnpm', ['check:signatures']),
     commandStep('component completeness', 'pnpm', ['check:components']),

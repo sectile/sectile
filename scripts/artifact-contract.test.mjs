@@ -17,6 +17,12 @@ test('published packages follow their workspace dependency order', async () => {
   }
 });
 
+test('full verification packs the same publication artifacts used by release', async () => {
+  const source = await readFile(join(root, 'scripts', 'verify.mjs'), 'utf8');
+  assert.match(source, /packed publication artifacts/u);
+  assert.match(source, /publish-packages\.mjs'\), '--pack-only'/u);
+});
+
 test('runtime tests consume verification artifacts instead of production dist', async () => {
   const offenders = [];
   for (const directory of publishedPackageDirectories) {

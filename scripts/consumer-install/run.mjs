@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { validateInstallBaseline } from './check.mjs';
+import { inspectPackedPackageDirectory } from '../lib/packed-package-contract.mjs';
+import { publishedPackageDirectories } from '../lib/published-packages.mjs';
 
 const execFile = promisify(execFileCallback);
 const repoRoot = resolve('.');
@@ -16,7 +18,7 @@ if (process.env['SECTILE_KEEP_INSTALL'] === '1') process.stderr.write(`consumer 
 try {
   const packDirectory = join(temporaryRoot, 'packs');
   await mkdir(packDirectory);
-  const packageNames = ['core', 'dom', 'form', 'tabular', 'temporal', 'terminal', 'virtual', 'vue'];
+  const packageNames = publishedPackageDirectories;
   for (const packageName of packageNames) {
     const manifest = JSON.parse(await readFile(resolve(repoRoot, `packages/${packageName}/package.json`), 'utf8'));
     const thirdPartyRuntime = Object.keys(manifest.dependencies ?? {})
@@ -143,6 +145,8 @@ async function inspectTarball(root, packageName, tarball) {
   await mkdir(directory);
   await run('tar', ['-xzf', tarball, '-C', directory], repoRoot);
   const packageRoot = join(directory, 'package');
+  const sourceManifest = JSON.parse(await readFile(resolve(repoRoot, `packages/${packageName}/package.json`), 'utf8'));
+  await inspectPackedPackageDirectory(packageRoot, { sourceManifest });
   const files = await filesUnder(packageRoot);
   const categories = {
     runtimeJS: { files: 0, bytes: 0 },

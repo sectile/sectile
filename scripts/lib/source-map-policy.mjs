@@ -3,8 +3,9 @@ import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { tmpdir } from 'node:os';
+import { publishedPackageDirectories } from './published-packages.mjs';
 
-export const packageNames = Object.freeze(['core', 'dom', 'form', 'tabular', 'temporal', 'terminal', 'virtual', 'vue']);
+export const packageNames = publishedPackageDirectories;
 
 export async function inspectSourceMapPackages(root) {
   const packages = [];
@@ -61,8 +62,16 @@ export function validateSourceMapFiles(contents) {
     assert.ok(Array.isArray(map.sources) && map.sources.length > 0, `${path}: source list required`);
     assert.equal(map.sourcesContent, undefined, `${path}: sourcesContent is forbidden`);
     assert.equal(map.file, path.slice(path.lastIndexOf('/') + 1, -4), `${path}: source-map file target drifted`);
+    assertPortableSourcePath(path, map.sourceRoot ?? '');
+    for (const source of map.sources) assertPortableSourcePath(path, source);
   }
   return Object.freeze({ javascriptFiles: javascript.length, declarationFiles: declarations.length, sourceMapFiles: maps.length, declarationMapFiles: 0 });
+}
+
+function assertPortableSourcePath(mapPath, source) {
+  assert.equal(typeof source, 'string', `${mapPath}: source path must be a string`);
+  assert.equal(/^\/|^[A-Za-z]:[\\/]|^[a-z][a-z0-9+.-]*:/iu.test(source), false,
+    `${mapPath}: private or URL source path is forbidden: ${source}`);
 }
 
 export function validateSourceMapBudget(current, baseline) {

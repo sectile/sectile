@@ -3,10 +3,14 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readdir, readFile, rm, rmdir } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { publishedPackageDirectories } from './lib/published-packages.mjs';
+import {
+  assertPackedManifestMatchesSource,
+  inspectPackedPackage,
+} from './lib/packed-package-contract.mjs';
+import { discoverPublishedPackageDirectories } from './lib/published-packages.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const packageDirectories = publishedPackageDirectories;
+const packageDirectories = discoverPublishedPackageDirectories(join(root, 'packages'));
 const registry = 'https://registry.npmjs.org';
 const packOnly = process.argv.includes('--pack-only');
 const bootstrapOnly = process.argv.includes('--bootstrap-only');
@@ -55,17 +59,6 @@ function assertSupportedNpm() {
   const [major, minor, patch] = version.split('.').map(Number);
   assert.equal([major, minor, patch].every(Number.isInteger), true, `invalid npm version: ${version}`);
   assert.equal(major > 11 || (major === 11 && (minor > 5 || (minor === 5 && patch >= 1))), true, `npm 11.5.1 or newer is required for trusted publishing; found ${version}`);
-}
-
-function assertPackedDistribution(name, tarball) {
-  const entries = run('tar', ['-tzf', tarball], { capture: true }).split('\n');
-  const contains = (extension) => entries.some((entry) => /^(?:package\/)?dist\//.test(entry) && entry.endsWith(extension));
-  assert.equal(contains('.js'), true, `${name} tarball does not contain built JavaScript`);
-  assert.equal(contains('.d.ts'), true, `${name} tarball does not contain declarations`);
-  assert.equal(contains('.js.map'), true, `${name} tarball does not contain JavaScript source maps`);
-  assert.equal(contains('.d.ts.map'), true, `${name} tarball does not contain declaration source maps`);
-  assert.equal(entries.some((entry) => /^(?:package\/)?(?:src|tests|benchmarks)\//u.test(entry)), false,
-    `${name} tarball contains development sources`);
 }
 
 function registryContains(specifier, environment) {
@@ -170,7 +163,7 @@ async function packPackages(packageEntries, destination) {
     const files = (await readdir(destination)).filter((file) => file.endsWith('.tgz') && !before.has(file));
     assert.equal(files.length, 1, `${entry.manifest.name} did not produce exactly one tarball`);
     const tarball = join(destination, files[0]);
-    assertPackedDistribution(entry.manifest.name, tarball);
+    await inspectPackedPackage(tarball, { sourceManifest: entry.manifest });
     packed.push({ ...entry, tarball });
   }
   return packed;
@@ -184,12 +177,12 @@ async function loadPackedPackages(packageEntries, directory) {
   const packed = [];
   for (const file of files) {
     const tarball = join(directory, file);
-    const manifest = JSON.parse(run('tar', ['-xOzf', tarball, 'package/package.json'], { capture: true }));
+    const { manifest } = await inspectPackedPackage(tarball);
     const entry = byName.get(manifest.name);
     assert.notEqual(entry, undefined, `unexpected package tarball: ${manifest.name}`);
     assert.equal(manifest.version, entry.manifest.version,
       `${manifest.name} tarball version ${manifest.version} does not match ${entry.manifest.version}`);
-    assertPackedDistribution(manifest.name, tarball);
+    assertPackedManifestMatchesSource(manifest, entry.manifest);
     packed.push({ ...entry, tarball });
     byName.delete(manifest.name);
   }

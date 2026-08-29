@@ -30,4 +30,6 @@ test('intentional unmapped, inline, dangling, declaration-map, and sourcesConten
   assert.throws(() => validateSourceMapFiles(staleDeclaration), /stale declaration-map/u);
   const embedded = valid(); embedded.set('dist/index.js.map', JSON.stringify({ version: 3, file: 'index.js', sources: ['../src/index.ts'], sourcesContent: [''], names: [], mappings: '' }));
   assert.throws(() => validateSourceMapFiles(embedded), /sourcesContent/u);
+  const privatePath = valid(); privatePath.set('dist/index.js.map', JSON.stringify({ version: 3, file: 'index.js', sources: ['/Users/private/src/index.ts'], names: [], mappings: '' }));
+  assert.throws(() => validateSourceMapFiles(privatePath), /private or URL source path/u);
 });
