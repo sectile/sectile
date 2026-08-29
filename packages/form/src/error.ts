@@ -5,6 +5,7 @@ export type FormErrorCode =
   | 'form-field-id-empty'
   | 'form-field-id-invalid'
   | 'form-field-id-missing'
+  | 'form-field-meta-invalid'
   | 'form-field-order-invalid'
   | 'form-field-path-empty'
   | 'form-field-path-index-invalid'

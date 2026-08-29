@@ -9,18 +9,54 @@
       "inherits": "linear-v1",
       "source": "packages/form/src/internal/form.ts",
       "benchmarkIDs": ["VAL-030:form-field-update-work"],
-      "specificationCeiling": "O(fField + iIssue)",
+      "specificationCeiling": "O(fField/64 + 64 + iFieldIssue)",
       "contract": {
         "variables": [
           { "name": "fField", "meaning": "registered field count", "ceiling": "maxFields" },
-          { "name": "iIssue", "meaning": "incoming and removed issue count", "ceiling": "maxIssues" }
+          { "name": "iFieldIssue", "meaning": "issues owned by the changed field", "ceiling": "maxIssues" }
         ],
-        "time": { "bound": "O(fField + iIssue)", "kind": "worst-case", "runtimeState": "trusted" },
-        "space": { "auxiliary": "O(fField + iIssue)", "output": "O(fField + iIssue)", "retained": "O(fField + iIssue)" },
-        "resources": { "allocations": "O(fField + iIssue)", "cacheEntries": "O(fField + iIssue)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "proof": "The incumbent normalizes the complete field object and redistributes issues across field snapshots.",
-        "adversarialWitness": "One field change in a 10k-field form with source-wide issues.",
-        "fullScan": { "allowed": true, "rationale": "Recorded incumbent weakness owned by WI-027; no new caller may assume it is bounded." }
+        "time": { "bound": "O(fField/64 + 64 + iFieldIssue)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(fField/64 + 64 + iFieldIssue)", "output": "O(1)", "retained": "O(fField + iIssue)" },
+        "resources": { "allocations": "O(fField/64 + 64 + iFieldIssue)", "cacheEntries": "O(fField + iIssue)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The retained ID index resolves one field, then one 64-entry chunk and the outer chunk vector are copied; issue ownership/source indexes are updated only for the changed field's issues.",
+        "adversarialWitness": "One field metadata or issue change in a 10k-field canonical form copies one chunk and the 157-entry chunk vector without visiting unrelated field records.",
+        "fullScan": { "allowed": false, "rationale": "Canonical single-field updates use the retained index and chunk path." }
+      }
+    },
+    {
+      "id": "field.get",
+      "inherits": "constant-v1",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": ["VAL-031:form-field-get-work"],
+      "specificationCeiling": "expected O(1)",
+      "contract": {
+        "variables": [{ "name": "fField", "meaning": "registered field count", "ceiling": "maxFields" }],
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(fField)" },
+        "resources": { "allocations": "0", "cacheEntries": "O(fField)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Canonical Form state retains ID-to-index mapping and resolves one fixed-size chunk coordinate.",
+        "adversarialWitness": "First, middle, last, and absent IDs in a 10k-field canonical form perform one map lookup.",
+        "fullScan": { "allowed": false, "rationale": "Only forged external states use the compatibility-free validation boundary before becoming canonical." }
+      }
+    },
+    {
+      "id": "issues.replace-source",
+      "inherits": "linear-v1",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": ["VAL-031:form-source-issue-replacement-work"],
+      "specificationCeiling": "O(iIncoming + iRemoved + jField*(fField/64 + 64 + iFieldIssue))",
+      "contract": {
+        "variables": [
+          { "name": "iIncoming", "meaning": "incoming issues for the source", "ceiling": "maxIssues" },
+          { "name": "iRemoved", "meaning": "previous issues for the source", "ceiling": "maxIssues" },
+          { "name": "jField", "meaning": "fields losing or receiving source issues", "ceiling": "jField <= fField" }
+        ],
+        "time": { "bound": "O(iIncoming + iRemoved + jField*(fField/64 + 64 + iFieldIssue))", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(iIncoming + iRemoved + jField + fField/64)", "output": "O(iIncoming)", "retained": "O(fField + iIssue)" },
+        "resources": { "allocations": "O(iIncoming + iRemoved + jField + fField/64)", "cacheEntries": "O(fField + iIssue)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Retained source-owner indexes enumerate only affected fields; incoming issues are partitioned once and changed chunks are copied once per batch.",
+        "adversarialWitness": "Replacing one source affecting one field in a 10k-field form does not visit the other 9,999 field records.",
+        "fullScan": { "allowed": false, "rationale": "Source-wide replacement is proportional to source issues, affected fields, and the bounded chunk path." }
       }
     },
     {
@@ -34,14 +70,13 @@
           { "name": "fField", "meaning": "field input count", "ceiling": "maxFields" },
           { "name": "uID", "meaning": "unique field identity count", "ceiling": "uID <= fField" }
         ],
-        "time": { "bound": "O(fField * uID)", "kind": "worst-case", "runtimeState": "external" },
+        "time": { "bound": "O(fField + uID + iIssue)", "kind": "worst-case", "runtimeState": "external" },
         "space": { "auxiliary": "O(fField)", "output": "O(fField)", "retained": "O(fField)" },
         "resources": { "allocations": "O(fField)", "cacheEntries": "O(fField)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "proof": "The incumbent duplicate check performs repeated prefix lookups while constructing normalized fields.",
-        "adversarialWitness": "A maximum-size unique field list forces every prefix lookup to miss.",
-        "fullScan": { "allowed": true, "rationale": "Construction must visit all fields, while the quadratic incumbent is frozen for WI-027." }
-      },
-      "reviewedWeakening": "WI-027 owns replacement with the required one-pass indexed construction."
+        "proof": "Core stable-ID normalization and the Form field/issue store each visit construction input once while building retained indexes and 64-entry chunks.",
+        "adversarialWitness": "A maximum-size unique field and issue list performs one bounded validation/indexing pass.",
+        "fullScan": { "allowed": true, "rationale": "External construction must validate and index every supplied field and issue exactly once per declared layer." }
+      }
     }
   ]
 }

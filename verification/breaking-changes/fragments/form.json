@@ -1,5 +1,14 @@
 {
   "schemaVersion": 1,
   "package": "@sectile/form",
-  "entries": []
+  "entries": [
+    {
+      "id": "WI-027:typed-field-state-commands",
+      "change": "signature-changed",
+      "before": { "subpath": "./state" },
+      "symbols": ["FormEvent update-field", "FormFieldInput.valid"],
+      "replacement": { "package": "@sectile/form", "subpath": "./state" },
+      "removalReason": "Field validity is derived from issues; use getFormField, setFormFieldMeta, replaceFormFieldIssues, upsertFormFieldIssue, removeFormFieldIssue, and clearFormFieldIssues."
+    }
+  ]
 }
