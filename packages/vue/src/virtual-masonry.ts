@@ -1,4 +1,4 @@
-import { defineComponent, h, onMounted, onUpdated, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type SlotsType, type VNodeChild, type VNodeProps } from 'vue';
+import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type SlotsType, type VNodeChild, type VNodeProps } from 'vue';
 import { createExtentIndex, createUniformExtentIndex } from '@sectile/virtual/extent-index';
 import { createMasonryLayout, masonryLayoutStrategy, type MasonryLayoutState, type MasonryMeasurement, type MasonryMutation, type MasonryPlacement, type MasonryPlacementPolicy } from '@sectile/virtual/masonry-layout';
 import { createAxisMeasurementResolver, type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
@@ -101,13 +101,18 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
     const root = shallowRef<VirtualizerRootExpose>();
     const viewportWidth = shallowRef(initialViewport?.width ?? 0);
     const bootstrapElements = new Map<number, HTMLElement>();
+    let bootstrapScheduled = false;
+    let disposed = false;
     const isBootstrapping = (): boolean => requiresDOMBootstrap(props.itemSize, props.estimateSize)
       && automaticEstimate.value === undefined
       && prepared.value.ids.length > 0;
     const bootstrapItemRef = (index: number, value: unknown): void => {
       const element = value instanceof HTMLElement ? value : null;
       if (element === null) bootstrapElements.delete(index);
-      else bootstrapElements.set(index, element);
+      else {
+        bootstrapElements.set(index, element);
+        scheduleBootstrap();
+      }
     };
     const completeBootstrap = (): void => {
       if (!isBootstrapping()) return;
@@ -138,8 +143,24 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
         estimate,
       );
     };
-    onMounted(completeBootstrap);
-    onUpdated(completeBootstrap);
+    function scheduleBootstrap(): void {
+      if (
+        disposed
+        || bootstrapScheduled
+        || automaticEstimate.value !== undefined
+        || prepared.value.ids.length === 0
+      ) return;
+      bootstrapScheduled = true;
+      void nextTick(() => {
+        bootstrapScheduled = false;
+        if (!disposed) completeBootstrap();
+      });
+    }
+    onMounted(scheduleBootstrap);
+    onBeforeUnmount(() => {
+      disposed = true;
+      bootstrapElements.clear();
+    });
     const measure = props.itemSize === undefined
       ? createAxisMeasurementResolver<MasonryLayoutState<string>, string>('vertical')
       : undefined;
@@ -149,7 +170,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
       () => {
         if (requiresDOMBootstrap(props.itemSize, props.estimateSize) && automaticEstimate.value === undefined) {
           prepared.value = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
-          bootstrapElements.clear();
+          scheduleBootstrap();
           return;
         }
         const exposed = root.value;

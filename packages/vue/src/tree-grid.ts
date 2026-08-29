@@ -41,10 +41,21 @@ export interface TreeGridPartProps { readonly as?: PrimitiveAs; readonly asChild
 
 interface Context {
   readonly state: ComputedRef<TreeGridRootSlotProps>;
+  readonly expandedRows: ComputedRef<ReadonlySet<string>>;
   registerRow(element: HTMLElement, rowIndex: number, level: number, expanded: boolean | undefined): void;
   registerCell(element: HTMLElement, id: string, columnIndex: number): void;
   registerDisclosure(element: HTMLElement, id: string): void;
   registerEditor(element: HTMLInputElement, id: string, label: string | undefined): void;
+}
+interface TreeGridConnectionOwner {
+  readonly rows: readonly TreeGridRowInput<string, string>[];
+  readonly getCellValue: TreeGridCellValueResolver;
+  readonly setCellValue: TreeGridCellValueSetter;
+  readonly disabled: boolean;
+  readonly readonly: boolean;
+  readonly eligible: TreeGridPolicies<string>['eligible'];
+  readonly boundary: TreeGridPolicies<string>['boundary'];
+  readonly maxScan: number | undefined;
 }
 const key = Symbol('SectileTreeGridRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
@@ -65,6 +76,7 @@ export const TreeGridRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: TreeGridRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const element = shallowRef<HTMLElement>(); const connection = shallowRef<TreeGridConnection<string, string>>();
+    let connectionOwner: TreeGridConnectionOwner | undefined;
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localExpanded = shallowRef<readonly string[]>(props.expandedValue !== undefined ? props.expandedValue : props.defaultExpandedValue);
     const localHighlight = shallowRef<string | null>(props.highlightedValue !== undefined ? props.highlightedValue : props.defaultHighlightedValue);
@@ -81,9 +93,15 @@ export const TreeGridRoot = defineComponent({
       highlightedValue: props.highlightedValue !== undefined ? props.highlightedValue : localHighlight.value,
       editMode: props.editMode ?? localEditMode.value, disabled: props.disabled, readonly: props.readonly,
     }));
+    const expandedRows = computed<ReadonlySet<string>>(
+      () => new Set(state.value.expandedValue),
+    );
     const refreshParts = (): void => {
       if (element.value === undefined || connection.value === undefined) return;
-      connection.value.setGridAttributes(props.rows.length, Math.max(0, ...props.rows.map((row) => row.cells.length)));
+      connection.value.setGridAttributes(
+        props.rows.length,
+        maxTreeGridColumnCount(props.rows),
+      );
       element.value.querySelectorAll<HTMLElement>('[data-sectile-tree-grid-row]').forEach((node) => connection.value?.setRowAttributes(node, { rowIndex: numberData(node.dataset['rowIndex'], 1), level: numberData(node.dataset['level'], 1), ...(node.dataset['expandable'] === undefined ? {} : { expanded: node.dataset['expanded'] !== undefined }) }));
       element.value.querySelectorAll<HTMLElement>('[data-sectile-tree-grid-cell]').forEach((node) => { const id = node.dataset['sectileTreeGridCell']; if (id !== undefined) connection.value?.setCellAttributes(node, { id, columnIndex: numberData(node.dataset['columnIndex'], 1) }); });
       element.value.querySelectorAll<HTMLElement>('[data-sectile-tree-grid-disclosure]').forEach((node) => { const id = node.dataset['sectileTreeGridDisclosure']; if (id !== undefined) connection.value?.setDisclosureAttributes(node, id); });
@@ -91,9 +109,15 @@ export const TreeGridRoot = defineComponent({
     };
     const refresh = (): void => { const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return; localValue.value = snapshot.selection.selected[0] ?? null; localExpanded.value = snapshot.expansion.ids; localHighlight.value = snapshot.cursor.current; localEditMode.value = snapshot.editMode; refreshParts(); };
     const connect = (): void => {
+      const nextOwner = snapshotTreeGridConnectionOwner(props);
+      if (
+        connection.value !== undefined
+        && connectionOwner !== undefined
+        && sameTreeGridConnectionOwner(connectionOwner, nextOwner)
+      ) return;
       connection.value?.disconnect(); if (element.value === undefined) return;
-      const cells = props.rows.flatMap((row) => row.cells.filter((id): id is string => id !== null));
-      const branches = collectionBranchIDs(props.rows);
+      const cells = nextOwner.rows.flatMap((row) => row.cells.filter((id): id is string => id !== null));
+      const branches = collectionBranchIDs(nextOwner.rows);
       const requestedValue = controlled.value ? props.modelValue as string | null : localValue.value;
       const requestedExpanded = controlled.expanded ? props.expandedValue as readonly string[] : localExpanded.value;
       const requestedHighlight = controlled.highlighted ? props.highlightedValue as string | null : localHighlight.value;
@@ -127,19 +151,20 @@ export const TreeGridRoot = defineComponent({
       if (controlled.highlighted && requestedHighlight !== reconciled.current) emit('update:highlightedValue', reconciled.current);
       if (controlled.editMode && props.editMode !== editMode) emit('update:editMode', editMode);
       connection.value = createTreeGrid({
-        root: element.value, rows: props.rows, getCellValue: props.getCellValue, setCellValue: props.setCellValue,
+        root: element.value, rows: nextOwner.rows, getCellValue: nextOwner.getCellValue, setCellValue: nextOwner.setCellValue,
         ...(controlled.value ? { value } : { defaultValue: value }),
         ...(controlled.expanded ? { expandedValue: expanded } : { defaultExpandedValue: expanded }),
         ...(controlled.highlighted ? { highlightedValue: reconciled.current } : { defaultHighlightedValue: reconciled.current }),
         ...(controlled.editMode ? { editMode } : { defaultEditMode: editMode }),
-        disabled: props.disabled, readOnly: props.readonly, ...(props.policies === undefined ? {} : { policies: props.policies }),
+        disabled: nextOwner.disabled, readOnly: nextOwner.readonly, ...(props.policies === undefined ? {} : { policies: props.policies }),
         onValueChange: ({ value }) => { localValue.value = value; emit('update:modelValue', value); }, onExpandedValueChange: ({ value }) => { localExpanded.value = value; emit('update:expandedValue', value); },
         onHighlightedValueChange: ({ value }) => { localHighlight.value = value; emit('update:highlightedValue', value); }, onEditModeChange: ({ value }) => { localEditMode.value = value; emit('update:editMode', value); }, onUpdate: refresh,
       });
+      connectionOwner = nextOwner;
       refreshParts(); refresh();
     };
     provide<Context>(key, {
-      state, registerRow: (node, rowIndex, level, expanded) => connection.value?.setRowAttributes(node, { rowIndex, level, ...(expanded === undefined ? {} : { expanded }) }),
+      state, expandedRows, registerRow: (node, rowIndex, level, expanded) => connection.value?.setRowAttributes(node, { rowIndex, level, ...(expanded === undefined ? {} : { expanded }) }),
       registerCell: (node, id, columnIndex) => connection.value?.setCellAttributes(node, { id, columnIndex }), registerDisclosure: (node, id) => connection.value?.setDisclosureAttributes(node, id),
       registerEditor: (node, id, label) => connection.value?.bindEditor(node, { id, ...(label === undefined ? {} : { label }) }),
     });
@@ -163,7 +188,7 @@ export const TreeGridRow = defineComponent({
   name: 'SectileTreeGridRow', inheritAttrs: false,
   props: { value: { type: String, required: true }, rowIndex: { type: Number, required: true }, level: { type: Number, default: 1 }, expandable: { type: Boolean, default: false }, ...partProps },
   slots: Object as SlotsType<{ default: (props: TreeGridRowSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('TreeGridRow'); const state = computed<TreeGridRowSlotProps>(() => ({ ...root.state.value, value: props.value, expanded: root.state.value.expandedValue.includes(props.value) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+  setup(props, { attrs, slots }) { const root = useRoot('TreeGridRow'); const state = computed<TreeGridRowSlotProps>(() => ({ ...root.state.value, value: props.value, expanded: root.expandedRows.value.has(props.value) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerRow(node, props.rowIndex, props.level, props.expandable ? state.value.expanded : undefined); },
     'data-sectile-tree-grid-row': props.value, 'data-row-index': props.rowIndex, 'data-level': props.level, 'data-expandable': props.expandable ? '' : undefined,
     'data-expanded': props.expandable && state.value.expanded ? '' : undefined, 'data-scope': 'tree-grid', 'data-part': 'row',
@@ -181,7 +206,7 @@ export const TreeGridCell = defineComponent({
   }), { default: () => slots['default']?.(state.value) }); },
 });
 
-export const TreeGridDisclosure = defineComponent({ name: 'SectileTreeGridDisclosure', inheritAttrs: false, props: { for: { type: String, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: TreeGridRowSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('TreeGridDisclosure'); const state = computed<TreeGridRowSlotProps>(() => ({ ...root.state.value, value: props.for, expanded: root.state.value.expandedValue.includes(props.for) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined, disabled: props.as === 'button' ? root.state.value.disabled : undefined, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerDisclosure(node, props.for); }, 'data-sectile-tree-grid-disclosure': props.for, 'data-scope': 'tree-grid', 'data-part': 'disclosure', 'data-state': state.value.expanded ? 'open' : 'closed' }), { default: () => slots['default']?.(state.value) }); } });
+export const TreeGridDisclosure = defineComponent({ name: 'SectileTreeGridDisclosure', inheritAttrs: false, props: { for: { type: String, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: TreeGridRowSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('TreeGridDisclosure'); const state = computed<TreeGridRowSlotProps>(() => ({ ...root.state.value, value: props.for, expanded: root.expandedRows.value.has(props.for) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined, disabled: props.as === 'button' ? root.state.value.disabled : undefined, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerDisclosure(node, props.for); }, 'data-sectile-tree-grid-disclosure': props.for, 'data-scope': 'tree-grid', 'data-part': 'disclosure', 'data-state': state.value.expanded ? 'open' : 'closed' }), { default: () => slots['default']?.(state.value) }); } });
 
 export const TreeGridEditor = defineComponent({
   name: 'SectileTreeGridEditor', inheritAttrs: false,
@@ -190,5 +215,67 @@ export const TreeGridEditor = defineComponent({
 });
 
 function numberData(value: string | undefined, fallback: number): number { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : fallback; }
+function maxTreeGridColumnCount(
+  rows: readonly TreeGridRowInput<string, string>[],
+): number {
+  let maximum = 0;
+  for (const row of rows) maximum = Math.max(maximum, row.cells.length);
+  return maximum;
+}
 function useRoot(part: string): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError(`${part} must be used inside TreeGridRoot.`); return root; }
+
+function snapshotTreeGridConnectionOwner(
+  props: Readonly<{
+    rows: readonly TreeGridRowInput<string, string>[];
+    getCellValue: TreeGridCellValueResolver;
+    setCellValue: TreeGridCellValueSetter;
+    disabled: boolean;
+    readonly: boolean;
+    policies: TreeGridPolicies<string> | undefined;
+  }>,
+): TreeGridConnectionOwner {
+  return Object.freeze({
+    rows: Object.freeze(props.rows.map((row) => Object.freeze({
+      id: row.id,
+      parentID: row.parentID,
+      cells: Object.freeze([...row.cells]),
+    }))),
+    getCellValue: props.getCellValue,
+    setCellValue: props.setCellValue,
+    disabled: props.disabled,
+    readonly: props.readonly,
+    eligible: props.policies?.eligible,
+    boundary: props.policies?.boundary,
+    maxScan: props.policies?.maxScan,
+  });
+}
+
+function sameTreeGridConnectionOwner(
+  left: TreeGridConnectionOwner,
+  right: TreeGridConnectionOwner,
+): boolean {
+  if (
+    left.rows.length !== right.rows.length
+    || left.getCellValue !== right.getCellValue
+    || left.setCellValue !== right.setCellValue
+    || left.disabled !== right.disabled
+    || left.readonly !== right.readonly
+    || left.eligible !== right.eligible
+    || left.boundary !== right.boundary
+    || left.maxScan !== right.maxScan
+  ) return false;
+  for (let rowIndex = 0; rowIndex < left.rows.length; rowIndex += 1) {
+    const leftRow = left.rows[rowIndex]!;
+    const rightRow = right.rows[rowIndex]!;
+    if (
+      leftRow.id !== rightRow.id
+      || leftRow.parentID !== rightRow.parentID
+      || leftRow.cells.length !== rightRow.cells.length
+    ) return false;
+    for (let column = 0; column < leftRow.cells.length; column += 1) {
+      if (leftRow.cells[column] !== rightRow.cells[column]) return false;
+    }
+  }
+  return true;
+}
 export type { TreeGridEditMode, TreeGridPolicies, TreeGridRowInput };

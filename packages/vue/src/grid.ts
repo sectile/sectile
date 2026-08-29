@@ -4,7 +4,7 @@ import {
 } from 'vue';
 import { createGridControl, type GridConnection, type GridEditMode, type GridPolicies } from '@sectile/dom/grid';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { reconcileCollectionState } from './internal/collection.js';
+import { reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface GridRootProps {
@@ -32,6 +32,16 @@ interface Context {
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
   registerCell(element: HTMLElement, id: string, disabled: boolean): void;
 }
+interface GridConnectionOwner {
+  readonly rows: readonly (readonly (string | null)[])[];
+  readonly disabledItems: readonly string[];
+  readonly disabled: boolean;
+  readonly readonly: boolean;
+  readonly label: string | undefined;
+  readonly eligible: GridPolicies<string>['eligible'];
+  readonly boundary: GridPolicies<string>['boundary'];
+  readonly maxScan: number | undefined;
+}
 const key = Symbol('SectileGridRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
 
@@ -54,6 +64,7 @@ export const GridRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: GridRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const element = shallowRef<HTMLElement>(); const connection = shallowRef<GridConnection<string>>();
+    let connectionOwner: GridConnectionOwner | undefined;
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localHighlight = shallowRef<string | null>(props.highlightedValue !== undefined ? props.highlightedValue : props.defaultHighlightedValue);
     const localEditMode = shallowRef<GridEditMode>(props.editMode ?? props.defaultEditMode);
@@ -70,15 +81,21 @@ export const GridRoot = defineComponent({
     const refreshParts = (): void => { if (element.value === undefined || connection.value === undefined) return; element.value.querySelectorAll<HTMLElement>('[data-sectile-grid-cell]').forEach((node) => { const id = node.dataset['sectileGridCell']; if (id !== undefined) connection.value?.setCellAttributes(node, id, { disabled: node.dataset['sectileGridItemDisabled'] !== undefined }); }); };
     const refresh = (): void => { const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return; localValue.value = snapshot.selection.selected[0] ?? null; localHighlight.value = snapshot.cursor.current; localEditMode.value = snapshot.editMode; refreshParts(); };
     const connect = (): void => {
+      const nextOwner = snapshotGridConnectionOwner(props);
+      if (
+        connection.value !== undefined
+        && connectionOwner !== undefined
+        && sameGridConnectionOwner(connectionOwner, nextOwner)
+      ) return;
       connection.value?.disconnect(); if (element.value === undefined) return;
-      const items = props.rows.flatMap((row) => row.filter((id): id is string => id !== null));
+      const items = nextOwner.rows.flatMap((row) => row.filter((id): id is string => id !== null));
       const requestedValue = controlled.value ? props.modelValue as string | null : localValue.value;
       const requestedHighlight = controlled.highlighted ? props.highlightedValue as string | null : localHighlight.value;
       const reconciled = reconcileCollectionState(
         items,
         requestedValue === null ? [] : [requestedValue],
         requestedHighlight,
-        props.disabledItems,
+        nextOwner.disabledItems,
         'single',
         { preserveNullCurrent: true },
       );
@@ -94,16 +111,17 @@ export const GridRoot = defineComponent({
       if (controlled.highlighted && requestedHighlight !== reconciled.current) emit('update:highlightedValue', reconciled.current);
       if (controlled.editMode && props.editMode !== editMode) emit('update:editMode', editMode);
       connection.value = createGridControl({
-        root: element.value, rows: props.rows,
+        root: element.value, rows: nextOwner.rows,
         ...(controlled.value ? { value } : { defaultValue: value }),
         ...(controlled.highlighted ? { highlightedValue: reconciled.current } : { defaultHighlightedValue: reconciled.current }),
         ...(controlled.editMode ? { editMode } : { defaultEditMode: editMode }),
-        disabledItems: props.disabledItems, disabled: props.disabled, readOnly: props.readonly,
-        ...(props.label === undefined ? {} : { label: props.label }), ...(props.policies === undefined ? {} : { policies: props.policies }),
+        disabledItems: nextOwner.disabledItems, disabled: nextOwner.disabled, readOnly: nextOwner.readonly,
+        ...(nextOwner.label === undefined ? {} : { label: nextOwner.label }), ...(props.policies === undefined ? {} : { policies: props.policies }),
         onValueChange: (value) => { localValue.value = value; emit('update:modelValue', value); }, onHighlightedValueChange: (value) => { localHighlight.value = value; emit('update:highlightedValue', value); },
         onEditModeChange: (value) => { localEditMode.value = value; emit('update:editMode', value); }, onEditStart: (id) => emit('editStart', id),
         onEditCommit: (id) => emit('editCommit', id), onEditCancel: (id) => emit('editCancel', id), onUpdate: refresh,
       });
+      connectionOwner = nextOwner;
       refreshParts(); refresh();
     };
     const disabledItems = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
@@ -143,4 +161,59 @@ export const GridCell = defineComponent({
 });
 
 function useRoot(part: string): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError(`${part} must be used inside GridRoot.`); return root; }
+
+function snapshotGridConnectionOwner(
+  props: Readonly<{
+    rows: readonly (readonly (string | null)[])[];
+    disabledItems: readonly string[];
+    disabled: boolean;
+    readonly: boolean;
+    label: string | undefined;
+    policies: GridPolicies<string> | undefined;
+  }>,
+): GridConnectionOwner {
+  return Object.freeze({
+    rows: Object.freeze(props.rows.map((row) => Object.freeze([...row]))),
+    disabledItems: Object.freeze([...props.disabledItems]),
+    disabled: props.disabled,
+    readonly: props.readonly,
+    label: props.label,
+    eligible: props.policies?.eligible,
+    boundary: props.policies?.boundary,
+    maxScan: props.policies?.maxScan,
+  });
+}
+
+function sameGridConnectionOwner(
+  left: GridConnectionOwner,
+  right: GridConnectionOwner,
+): boolean {
+  if (
+    left.rows.length !== right.rows.length
+    || !sameIDRows(left.rows, right.rows)
+    || !sameIDs(left.disabledItems, right.disabledItems)
+    || left.disabled !== right.disabled
+    || left.readonly !== right.readonly
+    || left.label !== right.label
+    || left.eligible !== right.eligible
+    || left.boundary !== right.boundary
+    || left.maxScan !== right.maxScan
+  ) return false;
+  return true;
+}
+
+function sameIDRows(
+  left: readonly (readonly (string | null)[])[],
+  right: readonly (readonly (string | null)[])[],
+): boolean {
+  for (let row = 0; row < left.length; row += 1) {
+    const leftRow = left[row]!;
+    const rightRow = right[row]!;
+    if (leftRow.length !== rightRow.length) return false;
+    for (let column = 0; column < leftRow.length; column += 1) {
+      if (leftRow[column] !== rightRow[column]) return false;
+    }
+  }
+  return true;
+}
 export type { GridEditMode, GridPolicies };

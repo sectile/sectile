@@ -1,4 +1,4 @@
-import { defineComponent, h, onMounted, onUpdated, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type SlotsType, type VNodeChild, type VNodeProps } from 'vue';
+import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type SlotsType, type VNodeChild, type VNodeProps } from 'vue';
 import { createExtentIndex, createUniformExtentIndex, type Extent, type ExtentIndex } from '@sectile/virtual/extent-index';
 import { createDenseTrackGridLayout, trackGridLayoutStrategy, type GridRegion, type GridTrackMeasurement, type TrackGridLayoutState, type TrackGridMutation } from '@sectile/virtual/track-grid-layout';
 import { createAxisMeasurementResolver, type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
@@ -103,10 +103,15 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
     const viewportWidth = shallowRef(initialViewport?.width ?? 0);
     const measuredHeights = new Map<string, number>();
     const bootstrapElements = new Map<number, HTMLElement>();
+    let bootstrapScheduled = false;
+    let disposed = false;
     const bootstrapItemRef = (index: number, value: unknown): void => {
       const element = value instanceof HTMLElement ? value : null;
       if (element === null) bootstrapElements.delete(index);
-      else bootstrapElements.set(index, element);
+      else {
+        bootstrapElements.set(index, element);
+        scheduleBootstrap();
+      }
     };
     const completeBootstrap = (): void => {
       if (
@@ -140,8 +145,24 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
         maximum,
       );
     };
-    onMounted(completeBootstrap);
-    onUpdated(completeBootstrap);
+    function scheduleBootstrap(): void {
+      if (
+        disposed
+        || bootstrapScheduled
+        || automaticEstimate.value !== undefined
+        || prepared.value.ids.length === 0
+      ) return;
+      bootstrapScheduled = true;
+      void nextTick(() => {
+        bootstrapScheduled = false;
+        if (!disposed) completeBootstrap();
+      });
+    }
+    onMounted(scheduleBootstrap);
+    onBeforeUnmount(() => {
+      disposed = true;
+      bootstrapElements.clear();
+    });
     const measure = props.itemSize === undefined
       ? (({ element, placement, state }) => {
           const bounds = element.getBoundingClientRect();
@@ -150,18 +171,23 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
           const grid = state as TrackGridLayoutState<string>;
           const region = grid.regions.at(placement.index);
           if (region === undefined) return null;
+          const height = gridMeasuredRowHeight(
+            region.row,
+            grid.columns.size,
+            prepared.value,
+            props.items,
+            props.estimateSize,
+            measuredHeights,
+            automaticEstimate.value,
+          );
+          const current = grid.rows.extentAt(region.row);
+          if (current?.kind === 'exact' && nearlyEqual(current.value, height)) {
+            return null;
+          }
           return Object.freeze({
             axis: 'row' as const,
             index: region.row,
-            extent: exactExtent(gridMeasuredRowHeight(
-              region.row,
-              grid.columns.size,
-              prepared.value,
-              props.items,
-              props.estimateSize,
-              measuredHeights,
-              automaticEstimate.value,
-            )),
+            extent: exactExtent(height),
           });
         }) satisfies VirtualMeasurementResolver<TrackGridLayoutState<string>, string, GridTrackMeasurement>
       : undefined;
@@ -169,7 +195,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
     const sync = (): void => {
       if (requiresDOMBootstrap(props.itemSize, props.estimateSize) && automaticEstimate.value === undefined) {
         prepared.value = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
-        bootstrapElements.clear();
+        scheduleBootstrap();
         return;
       }
       const exposed = root.value;
@@ -188,6 +214,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
       }
       if (syncVirtualGrid(
         exposed,
+        prepared.value,
         next,
         props.items,
         props,
@@ -400,6 +427,7 @@ function gridMeasuredRowHeight(
 
 function syncVirtualGrid(
   exposed: VirtualizerRootExpose,
+  previous: PreparedVirtualList,
   prepared: PreparedVirtualList,
   items: readonly unknown[],
   props: Readonly<{
@@ -416,6 +444,9 @@ function syncVirtualGrid(
   let state = exposed.state as TrackGridLayoutState<string>;
   const rowCount = Math.ceil(prepared.ids.length / geometry.count);
   const currentColumn = state.columns.extentAt(0);
+  const itemEstimatesChanged = props.itemSize === undefined
+    && typeof props.estimateSize === 'function'
+    && previous.items !== items;
   if (
     state.regions.size === prepared.ids.length
     && prepared.change === null
@@ -425,6 +456,7 @@ function syncVirtualGrid(
     && state.columnGap === props.laneGap
     && currentColumn?.kind === 'exact'
     && nearlyEqual(currentColumn.value, geometry.extent)
+    && !itemEstimatesChanged
   ) return true;
   const rowExtents = createGridRowExtents(rowCount, geometry.count, items, props, automaticEstimate).map((extent, row) => {
     if (props.itemSize !== undefined) return extent;
@@ -441,45 +473,31 @@ function syncVirtualGrid(
       ? exactExtent(measuredHeight)
       : extent;
   });
-  let valid = true;
-  const mutate = (mutation: TrackGridMutation<string>): void => {
-    if (!valid) return;
-    const result = exposed.mutate(mutation);
-    if (!result.ok) {
-      valid = false;
-      return;
-    }
-    state = exposed.state as TrackGridLayoutState<string>;
-  };
-  if (geometry.count > state.columns.size) mutate(Object.freeze({
-    type: 'splice-tracks', axis: 'column', index: state.columns.size, deleteCount: 0,
-    inserted: Object.freeze(Array.from({ length: geometry.count - state.columns.size }, () => exactExtent(geometry.extent))),
-  }));
-  if (rowCount > state.rows.size) mutate(Object.freeze({
-    type: 'splice-tracks', axis: 'row', index: state.rows.size, deleteCount: 0,
-    inserted: Object.freeze(rowExtents.slice(state.rows.size)),
-  }));
-  if (prepared.change !== null) mutate(Object.freeze({
-    type: 'patch-dense-regions',
-    patch: Object.freeze({
-      type: 'splice',
-      index: prepared.change.index,
-      deleteCount: prepared.change.deleteCount,
-      inserted: prepared.change.inserted,
+  const result = exposed.mutate(Object.freeze({
+    type: 'reconfigure-dense',
+    rowPatch: Object.freeze({
+      index: 0,
+      deleteCount: state.rows.size,
+      inserted: Object.freeze(rowExtents),
     }),
-  }));
-  if (rowCount < state.rows.size) mutate(Object.freeze({
-    type: 'splice-tracks', axis: 'row', index: rowCount, deleteCount: state.rows.size - rowCount, inserted: Object.freeze([]),
-  }));
-  if (geometry.count < state.columns.size) mutate(Object.freeze({
-    type: 'splice-tracks', axis: 'column', index: geometry.count, deleteCount: state.columns.size - geometry.count, inserted: Object.freeze([]),
-  }));
-  if (rowCount > 0) mutate(Object.freeze({
-    type: 'splice-tracks', axis: 'row', index: 0, deleteCount: rowCount, inserted: Object.freeze(rowExtents),
-  }));
-  if (geometry.count > 0) mutate(Object.freeze({
-    type: 'splice-tracks', axis: 'column', index: 0, deleteCount: geometry.count,
-    inserted: Object.freeze(Array.from({ length: geometry.count }, () => exactExtent(geometry.extent))),
-  }));
-  return valid;
+    columnPatch: Object.freeze({
+      index: 0,
+      deleteCount: state.columns.size,
+      inserted: Object.freeze(Array.from(
+        { length: geometry.count },
+        () => exactExtent(geometry.extent),
+      )),
+    }),
+    ...(prepared.change === null
+      ? {}
+      : {
+          regionPatch: Object.freeze({
+            type: 'splice' as const,
+            index: prepared.change.index,
+            deleteCount: prepared.change.deleteCount,
+            inserted: prepared.change.inserted,
+          }),
+        }),
+  }) satisfies TrackGridMutation<string>);
+  return result.ok;
 }

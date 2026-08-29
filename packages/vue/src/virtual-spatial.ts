@@ -87,6 +87,10 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
           if (bounds.width <= 0 || bounds.height <= 0) return null;
           const current = (state as SpatialLayoutState<string>).items.at(placement.index);
           if (current === undefined) return null;
+          if (
+            current.rect.width === bounds.width
+            && current.rect.height === bounds.height
+          ) return null;
           return Object.freeze({
             id: placement.id,
             rect: Object.freeze({

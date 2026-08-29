@@ -1,4 +1,4 @@
-import { defineComponent, h, onBeforeUnmount, onMounted, onUpdated, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type ShallowRef, type SlotsType, type VNodeArrayChildren, type VNodeChild, type VNodeProps } from 'vue';
+import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type ShallowRef, type SlotsType, type VNodeArrayChildren, type VNodeChild, type VNodeProps } from 'vue';
 import { createSequence, type BoundaryPolicy, type Direction, type MoveResult, type ScanOptions, type Sequence } from '@sectile/core/sequence';
 import { createExtentIndex, createUniformExtentIndex, type Extent, type ExtentIndex } from '@sectile/virtual/extent-index';
 import { linearLayoutStrategy, tryApplyLinearPatch, createLinearLayout, type LinearAxis, type LinearLayoutState, type LinearMeasurement, type LinearPatch } from '@sectile/virtual/linear-layout';
@@ -169,6 +169,8 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       requiresDOMBootstrap(props.itemSize, props.estimateSize) && prepared.value.ids.length > 0 ? 1 : 0,
     );
     const bootstrapElements = new Map<number, HTMLElement>();
+    let bootstrapScheduled = false;
+    let disposed = false;
     const state = shallowRef(
       requiresDOMBootstrap(props.itemSize, props.estimateSize)
         ? createEmptyVirtualListState(props)
@@ -223,7 +225,10 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     const bootstrapItemRef = (index: number, value: unknown): void => {
       const element = value instanceof HTMLElement ? value : null;
       if (element === null) bootstrapElements.delete(index);
-      else bootstrapElements.set(index, element);
+      else {
+        bootstrapElements.set(index, element);
+        scheduleBootstrap();
+      }
     };
     const completeBootstrap = (): void => {
       if (
@@ -272,8 +277,20 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
         automaticEstimate.value,
       );
     };
-    onMounted(completeBootstrap);
-    onUpdated(completeBootstrap);
+    function scheduleBootstrap(): void {
+      if (
+        disposed
+        || bootstrapScheduled
+        || automaticEstimate.value !== undefined
+        || bootstrapCount.value === 0
+      ) return;
+      bootstrapScheduled = true;
+      void nextTick(() => {
+        bootstrapScheduled = false;
+        if (!disposed) completeBootstrap();
+      });
+    }
+    onMounted(scheduleBootstrap);
 
     watch(
       () => props.items,
@@ -281,8 +298,8 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
         const next = updatePreparedVirtualList(prepared.value, items, props.getKey);
         if (requiresDOMBootstrap(props.itemSize, props.estimateSize) && automaticEstimate.value === undefined) {
           prepared.value = next;
-          bootstrapElements.clear();
           bootstrapCount.value = next.ids.length > 0 ? 1 : 0;
+          scheduleBootstrap();
           return;
         }
         const patch = reconcileVirtualList(
@@ -339,33 +356,12 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     );
 
     onBeforeUnmount(() => {
+      disposed = true;
       for (const unregister of registrations.values()) unregister();
       registrations.clear();
       elements.clear();
       itemRefs.clear();
       bootstrapElements.clear();
-    });
-
-    onUpdated(() => {
-      if (props.itemSize !== undefined) return;
-      const measurements: { readonly index: number; readonly extent: Extent }[] = [];
-      for (const [id, element] of elements) {
-        const index = state.value.domain.indexOf(id);
-        if (index === null) continue;
-        const bounds = element.getBoundingClientRect();
-        const value = props.axis === 'vertical' ? bounds.height : bounds.width;
-        if (value <= 0) continue;
-        const current = state.value.extents.extentAt(index);
-        if (
-          current?.kind === 'exact'
-          && Math.abs(current.value - value) < 0.01
-        ) continue;
-        measurements.push(Object.freeze({
-          index,
-          extent: Object.freeze({ kind: 'exact', value }),
-        }));
-      }
-      if (measurements.length > 0) virtualizer.measure(measurements);
     });
 
     expose(Object.freeze({
@@ -489,6 +485,7 @@ export function createVirtualListMeasurementResolver(
   return ({ element, placement, state }) => {
     const bounds = element.getBoundingClientRect();
     const value = axis === 'vertical' ? bounds.height : bounds.width;
+    if (!Number.isFinite(value) || value <= 0) return null;
     const current = state.extents.extentAt(placement.index);
     if (current?.kind === 'exact' && Math.abs(current.value - value) < 0.01) return null;
     return Object.freeze({

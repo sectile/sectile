@@ -190,11 +190,13 @@ class DOMVirtualizer<
   readonly #items = new Map<ID, HTMLElement>();
   readonly #itemIDs = new Map<Element, ID>();
   readonly #pendingEntries = new Map<Element, ResizeObserverEntry>();
+  readonly #placementByID = new Map<ID, VirtualPlacement<ID>>();
   readonly #handleScroll: () => void;
   #state: State;
   #plan: VirtualLayoutPlan<ID>;
   #overscan: number | Partial<VirtualInsets> | undefined;
   #frame: number | null = null;
+  #viewportDirty = false;
   #disconnected = false;
 
   public constructor(
@@ -213,7 +215,7 @@ class DOMVirtualizer<
     this.#onError = options.onError;
     this.#plan = unwrap(this.#query(this.#state, this.#overscan));
     this.#handleScroll = (): void => {
-      this.#publishCurrent();
+      this.refresh();
     };
     this.#rootObserver = this.#environment.createResizeObserver((): void => {
       this.refresh();
@@ -224,13 +226,14 @@ class DOMVirtualizer<
           if (this.#itemIDs.has(entry.target))
             this.#pendingEntries.set(entry.target, entry);
         }
-        this.refresh();
+        this.#schedule();
       },
     );
     this.#root.addEventListener('scroll', this.#handleScroll, {
       passive: true,
     });
     this.#rootObserver.observe(this.#root);
+    this.#indexPlacements(this.#plan);
     this.#onPlanChange?.(this.#plan, this);
   }
 
@@ -255,6 +258,9 @@ class DOMVirtualizer<
     overscan?: number | Partial<VirtualInsets>,
   ): DOMVirtualResult<VirtualLayoutPlan<ID>> {
     this.#requireConnected();
+    if (sameOverscan(this.#overscan, overscan)) {
+      return { ok: true, value: this.#plan };
+    }
     const plan = this.#query(this.#state, overscan);
     if (!plan.ok) return this.#report(plan);
     this.#overscan = overscan;
@@ -292,16 +298,13 @@ class DOMVirtualizer<
     measurements: readonly Measurement[],
   ): DOMVirtualResult<VirtualLayoutMutation<State>> {
     this.#requireConnected();
-    const before = this.#query(this.#state, this.#overscan);
-    if (!before.ok) return this.#reportFailure(before);
     const result = this.#strategy.tryMeasure(this.#state, {
-      generation: before.value.generation,
+      generation: this.#plan.generation,
       measurements,
-      anchor: before.value.anchor,
+      anchor: this.#plan.anchor,
     });
     if (!result.ok) return this.#report(result);
-    this.#applyMutation(result.value);
-    this.#publishCurrent();
+    if (this.#applyMutation(result.value)) this.#publishCurrent();
     return result;
   }
 
@@ -309,15 +312,12 @@ class DOMVirtualizer<
     mutation: Mutation,
   ): DOMVirtualResult<VirtualLayoutMutation<State>> {
     this.#requireConnected();
-    const before = this.#query(this.#state, this.#overscan);
-    if (!before.ok) return this.#reportFailure(before);
     const result = this.#strategy.tryMutate(this.#state, {
       mutation,
-      anchor: before.value.anchor,
+      anchor: this.#plan.anchor,
     });
     if (!result.ok) return this.#report(result);
-    this.#applyMutation(result.value);
-    this.#publishCurrent();
+    if (this.#applyMutation(result.value)) this.#publishCurrent();
     return result;
   }
 
@@ -339,32 +339,42 @@ class DOMVirtualizer<
   }
 
   public refresh(): void {
+    if (this.#disconnected) return;
+    this.#viewportDirty = true;
+    this.#schedule();
+  }
+
+  #schedule(): void {
     if (this.#disconnected || this.#frame !== null) return;
     this.#frame = this.#environment.requestFrame((): void => {
       this.#frame = null;
-      this.flush();
+      this.#flushScheduled();
     });
   }
 
   public flush(): DOMVirtualResult<VirtualLayoutPlan<ID>> {
+    return this.#flush(true);
+  }
+
+  #flushScheduled(): DOMVirtualResult<VirtualLayoutPlan<ID>> {
+    return this.#flush(false);
+  }
+
+  #flush(forceViewportRead: boolean): DOMVirtualResult<VirtualLayoutPlan<ID>> {
     this.#requireConnected();
     if (this.#frame !== null) {
       this.#environment.cancelFrame(this.#frame);
       this.#frame = null;
     }
-    const before = this.#query(this.#state, this.#overscan);
-    if (!before.ok) return this.#report(before);
     const entries = [...this.#pendingEntries.values()];
     this.#pendingEntries.clear();
+    let changed = false;
     if (this.#measure !== undefined && entries.length > 0) {
-      const placements = new Map(
-        before.value.placements.map((placement) => [placement.id, placement]),
-      );
       const measurements: Measurement[] = [];
       for (const entry of entries) {
         const id = this.#itemIDs.get(entry.target);
         if (id === undefined) continue;
-        const placement = placements.get(id);
+        const placement = this.#placementByID.get(id);
         const element = this.#items.get(id);
         if (placement === undefined || element === undefined) continue;
         const resolved = this.#measure({
@@ -380,14 +390,20 @@ class DOMVirtualizer<
       }
       if (measurements.length > 0) {
         const measured = this.#strategy.tryMeasure(this.#state, {
-          generation: before.value.generation,
+          generation: this.#plan.generation,
           measurements,
-          anchor: before.value.anchor,
+          anchor: this.#plan.anchor,
         });
         if (!measured.ok) return this.#reportFailure(measured);
-        this.#applyMutation(measured.value);
+        changed = this.#applyMutation(measured.value);
       }
     }
+    const viewportDirty = forceViewportRead || this.#viewportDirty;
+    this.#viewportDirty = false;
+    if (!changed && (!viewportDirty || sameRect(
+      this.#readViewport(this.#root),
+      this.#plan.viewport,
+    ))) return { ok: true, value: this.#plan };
     return this.#publishCurrent();
   }
 
@@ -402,6 +418,7 @@ class DOMVirtualizer<
     this.#items.clear();
     this.#itemIDs.clear();
     this.#pendingEntries.clear();
+    this.#placementByID.clear();
   }
 
   #query(
@@ -414,16 +431,20 @@ class DOMVirtualizer<
     });
   }
 
-  #applyMutation(mutation: VirtualLayoutMutation<State>): void {
+  #applyMutation(mutation: VirtualLayoutMutation<State>): boolean {
+    const stateChanged = !Object.is(this.#state, mutation.state);
+    const scrollChanged = mutation.scrollDelta.x !== 0
+      || mutation.scrollDelta.y !== 0;
     this.#state = mutation.state;
-    if (mutation.scrollDelta.x !== 0 || mutation.scrollDelta.y !== 0) {
+    if (scrollChanged) {
       const viewport = this.#readViewport(this.#root);
       this.#writeScroll(this.#root, {
         x: viewport.x + mutation.scrollDelta.x,
         y: viewport.y + mutation.scrollDelta.y,
       });
     }
-    this.#onStateChange?.(this.#state);
+    if (stateChanged) this.#onStateChange?.(this.#state);
+    return stateChanged || scrollChanged;
   }
 
   #publishCurrent(): DOMVirtualResult<VirtualLayoutPlan<ID>> {
@@ -435,7 +456,15 @@ class DOMVirtualizer<
 
   #publish(plan: VirtualLayoutPlan<ID>): void {
     this.#plan = plan;
+    this.#indexPlacements(plan);
     this.#onPlanChange?.(plan, this);
+  }
+
+  #indexPlacements(plan: VirtualLayoutPlan<ID>): void {
+    this.#placementByID.clear();
+    for (const placement of plan.placements) {
+      this.#placementByID.set(placement.id, placement);
+    }
   }
 
   #report<T>(result: DOMVirtualResult<T>): DOMVirtualResult<T> {
@@ -469,6 +498,32 @@ function defaultViewport(root: HTMLElement): VirtualRect {
 
 function defaultScrollWriter(root: HTMLElement, point: VirtualPoint): void {
   root.scrollTo({ left: point.x, top: point.y, behavior: 'auto' });
+}
+
+function sameRect(left: VirtualRect, right: VirtualRect): boolean {
+  return left.x === right.x
+    && left.y === right.y
+    && left.width === right.width
+    && left.height === right.height;
+}
+
+function sameOverscan(
+  left: number | Partial<VirtualInsets> | undefined,
+  right: number | Partial<VirtualInsets> | undefined,
+): boolean {
+  if (Object.is(left, right)) return true;
+  return overscanSide(left, 'top') === overscanSide(right, 'top')
+    && overscanSide(left, 'right') === overscanSide(right, 'right')
+    && overscanSide(left, 'bottom') === overscanSide(right, 'bottom')
+    && overscanSide(left, 'left') === overscanSide(right, 'left');
+}
+
+function overscanSide(
+  overscan: number | Partial<VirtualInsets> | undefined,
+  side: keyof VirtualInsets,
+): number {
+  if (typeof overscan === 'number') return overscan;
+  return overscan?.[side] ?? 0;
 }
 
 function browserEnvironment(root: HTMLElement): VirtualizerEnvironment {

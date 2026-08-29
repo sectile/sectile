@@ -79,6 +79,7 @@ export interface ListboxPartProps {
 
 interface ListboxRootContext {
   readonly selectedIDs: ComputedRef<readonly string[]>;
+  readonly selectedIDSet: ComputedRef<ReadonlySet<string>>;
   readonly highlightedValue: ComputedRef<string | null>;
   readonly disabled: ComputedRef<boolean>;
   readonly readonly: ComputedRef<boolean>;
@@ -146,6 +147,10 @@ export const ListboxRoot = defineComponent({
     const itemID = (id: string): string => `sectile-listbox-${instanceID}-option-${encodeURIComponent(id).replaceAll('%', '-')}`;
     const rootElement = ref<HTMLElement | null>(null);
     const submissionElement = ref<HTMLSelectElement | null>(null);
+    let controllerProps = snapshotListboxControllerProps({
+      ...props,
+      direction: direction.value,
+    });
     const participation = useCompositeFormControl({
       root: rootElement,
       submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
@@ -157,8 +162,8 @@ export const ListboxRoot = defineComponent({
           controller.value = createController(
             controlled,
             next,
-            next[0] ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
-            { ...props, direction: direction.value },
+            next[0] ?? firstEnabledItem(controllerProps) ?? null,
+            controllerProps,
             emit,
           );
           snapshot.value = controller.value.getSnapshot();
@@ -170,29 +175,37 @@ export const ListboxRoot = defineComponent({
     const controller = shallowRef(createController(
       controlled,
       initialValue,
-      initialValue[0] ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
-      { ...props, direction: direction.value },
+      initialValue[0] ?? firstEnabledItem(controllerProps) ?? null,
+      controllerProps,
       emit,
     ));
     const snapshot = shallowRef(controller.value.getSnapshot());
     const rebuild = (): void => {
+      const nextControllerProps = snapshotListboxControllerProps({
+        ...props,
+        direction: direction.value,
+      });
+      if (sameListboxControllerProps(controllerProps, nextControllerProps)) {
+        return;
+      }
       const requested = controlled
         ? toIDs(props.modelValue, props.selectionMode)
         : snapshot.value.state.selection.selected;
       const reconciled = reconcileCollectionState(
-        props.items,
+        nextControllerProps.items,
         requested,
         snapshot.value.state.cursor.current,
-        props.disabledItems,
-        props.selectionMode,
+        nextControllerProps.disabledItems,
+        nextControllerProps.selectionMode,
       );
       controller.value = createController(
         controlled,
         reconciled.selected,
         reconciled.current,
-        { ...props, direction: direction.value },
+        nextControllerProps,
         emit,
       );
+      controllerProps = nextControllerProps;
       snapshot.value = controller.value.getSnapshot();
       if (controlled && !sameIDs(requested, reconciled.selected)) {
         emit('update:modelValue', fromIDs(reconciled.selected, props.selectionMode));
@@ -213,6 +226,9 @@ export const ListboxRoot = defineComponent({
     );
 
     const selectedIDs = computed(() => snapshot.value.state.selection.selected);
+    const selectedIDSet = computed<ReadonlySet<string>>(
+      () => new Set(selectedIDs.value),
+    );
     const highlightedValue = computed(() => snapshot.value.state.cursor.current);
     const disabled = computed(() => props.disabled);
     const readonly = computed(() => props.readonly);
@@ -246,6 +262,7 @@ export const ListboxRoot = defineComponent({
     };
     provide<ListboxRootContext>(listboxRootContextKey, {
       selectedIDs,
+      selectedIDSet,
       highlightedValue,
       disabled,
       readonly,
@@ -284,7 +301,7 @@ export const ListboxRoot = defineComponent({
         style: visuallyHiddenInputStyle,
       }, props.items.map((id) => h('option', {
         value: id,
-        selected: selectedIDs.value.includes(id),
+        selected: selectedIDSet.value.has(id),
       }, id)))];
     };
   },
@@ -308,7 +325,7 @@ export const ListboxItem = defineComponent({
     const root = useListboxRootContext('ListboxItem');
     const slotProps = computed<ListboxItemSlotProps>(() => Object.freeze({
       value: props.value,
-      selected: root.selectedIDs.value.includes(props.value),
+      selected: root.selectedIDSet.value.has(props.value),
       highlighted: root.highlightedValue.value === props.value,
       disabled: root.disabled.value || props.disabled || root.disabledItems.value.has(props.value),
     }));
@@ -316,7 +333,7 @@ export const ListboxItem = defineComponent({
     const attributes = computed(() => getListboxItemAttributes(
       {
         cursor: { current: root.highlightedValue.value },
-        selection: { has: (id: string) => root.selectedIDs.value.includes(id) },
+        selection: { has: (id: string) => root.selectedIDSet.value.has(id) },
       },
       { id: props.value, disabled: props.disabled },
       { disabled: slotProps.value.disabled, elementID: root.itemID(props.value) },
@@ -374,6 +391,36 @@ function useListboxRootContext(part: string): ListboxRootContext {
   const context = inject<ListboxRootContext>(listboxRootContextKey);
   if (context === undefined) throw new TypeError(`${part} must be used inside ListboxRoot.`);
   return context;
+}
+
+function snapshotListboxControllerProps(
+  props: ListboxControllerProps,
+): ListboxControllerProps {
+  return Object.freeze({
+    ...props,
+    items: Object.freeze([...props.items]),
+    disabledItems: Object.freeze([...props.disabledItems]),
+  });
+}
+
+function sameListboxControllerProps(
+  left: ListboxControllerProps,
+  right: ListboxControllerProps,
+): boolean {
+  return sameIDs(left.items, right.items)
+    && sameIDs(left.disabledItems, right.disabledItems)
+    && left.selectionMode === right.selectionMode
+    && left.disabled === right.disabled
+    && left.readonly === right.readonly
+    && left.orientation === right.orientation
+    && left.direction === right.direction
+    && left.textValue === right.textValue;
+}
+
+function firstEnabledItem(props: ListboxControllerProps): string | undefined {
+  if (props.disabledItems.length === 0) return props.items[0];
+  const disabled = new Set(props.disabledItems);
+  return props.items.find((id) => !disabled.has(id));
 }
 
 function useListboxItemContext(part: string): ListboxItemContext {

@@ -72,10 +72,22 @@ type TrackGridStateInput<ID extends StableID> = Omit<
 
 export interface GridTrackMeasurement { readonly axis: 'row' | 'column'; readonly index: number; readonly extent: Extent; }
 
+export interface TrackGridExtentPatch {
+  readonly index: number;
+  readonly deleteCount: number;
+  readonly inserted: readonly Extent[];
+}
+
 export type TrackGridMutation<ID extends StableID = StableID> =
   | { readonly type: 'replace-regions'; readonly regions: readonly GridRegion<ID>[] }
   | { readonly type: 'patch-dense-regions'; readonly patch: SequencePatch<ID> }
-  | { readonly type: 'splice-tracks'; readonly axis: 'row' | 'column'; readonly index: number; readonly deleteCount: number; readonly inserted: readonly Extent[] };
+  | { readonly type: 'splice-tracks'; readonly axis: 'row' | 'column'; readonly index: number; readonly deleteCount: number; readonly inserted: readonly Extent[] }
+  | {
+      readonly type: 'reconfigure-dense';
+      readonly rowPatch?: TrackGridExtentPatch;
+      readonly columnPatch?: TrackGridExtentPatch;
+      readonly regionPatch?: SequencePatch<ID>;
+    };
 
 export interface TrackGridLayoutPlan<ID extends StableID = StableID> extends VirtualLayoutPlan<ID> {
   readonly rowRange: TrackRange;
@@ -292,10 +304,49 @@ export function applyTrackGridMutation<ID extends StableID>(state: TrackGridLayo
 }
 
 export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridLayoutState<ID>, mutation: TrackGridMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualResult<VirtualLayoutMutation<TrackGridLayoutState<ID>>> {
-  if (mutation.type !== 'replace-regions' && mutation.type !== 'patch-dense-regions' && mutation.type !== 'splice-tracks') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Grid mutation type is unsupported.', { mutation });
+  if (mutation.type !== 'replace-regions' && mutation.type !== 'patch-dense-regions' && mutation.type !== 'splice-tracks' && mutation.type !== 'reconfigure-dense') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Grid mutation type is unsupported.', { mutation });
   const before = anchorRect(state, anchor);
   const current = getInternals(state);
   if (!current.ok) return current;
+  if (mutation.type === 'reconfigure-dense') {
+    if (current.value.dense === null) return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Dense grid reconfiguration requires a dense grid state.');
+    const rows = applyTrackPatch(state.rows, mutation.rowPatch);
+    if (!rows.ok) return rows;
+    const columns = applyTrackPatch(state.columns, mutation.columnPatch);
+    if (!columns.ok) return columns;
+    const domain = mutation.regionPatch === undefined
+      ? ok(current.value.dense.domain)
+      : tryApplySequencePatch(current.value.dense.domain, mutation.regionPatch, {
+          maxItems: state.maxRegions,
+        });
+    if (!domain.ok) return domain;
+    if (
+      (columns.value.size === 0 && domain.value.size > 0)
+      || domain.value.size > rows.value.size * columns.value.size
+    ) {
+      return fail('transition-rejection', 'virtual-layout-region-invalid', 'Dense grid tracks must contain every item.');
+    }
+    if (
+      rows.value === state.rows
+      && columns.value === state.columns
+      && domain.value === current.value.dense.domain
+    ) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+    const generation = nextGeneration(state.generation);
+    if (!generation.ok) return generation;
+    const next = createDenseState(
+      {
+        ...state,
+        rows: rows.value,
+        columns: columns.value,
+        generation: generation.value,
+      },
+      domain.value,
+    );
+    return ok(Object.freeze({
+      state: next,
+      scrollDelta: anchorDelta(before, anchorRect(next, anchor)),
+    }));
+  }
   if (mutation.type === 'patch-dense-regions') {
     if (current.value.dense === null) return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Dense region patches require a dense grid state.');
     const domain = tryApplySequencePatch(current.value.dense.domain, mutation.patch, {
@@ -346,6 +397,18 @@ export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridL
   if (!generation.ok) return generation;
   const next = createState({ ...state, rows, columns, regions: regionArrayView(validated.value.map(({ value }) => value)), generation: generation.value }, validated.value);
   return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
+}
+
+function applyTrackPatch(
+  target: ExtentIndex,
+  patch: TrackGridExtentPatch | undefined,
+): VirtualResult<ExtentIndex> {
+  if (patch === undefined) return ok(target);
+  return target.splice(
+    patch.index,
+    patch.deleteCount,
+    patch.inserted,
+  );
 }
 
 export function trackGridScrollTarget<ID extends StableID>(state: TrackGridLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualPoint {

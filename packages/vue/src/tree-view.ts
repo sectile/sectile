@@ -39,9 +39,20 @@ export interface TreeViewGroupProps extends TreeViewPartProps { readonly for: st
 
 interface Context {
   readonly state: ComputedRef<TreeViewRootSlotProps>;
+  readonly selectedItems: ComputedRef<ReadonlySet<string>>;
+  readonly expandedItems: ComputedRef<ReadonlySet<string>>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
   registerItem(element: HTMLElement, id: string, disabled: boolean): void;
   registerDisclosure(element: HTMLElement, id: string): void;
+}
+interface TreeViewConnectionOwner {
+  readonly nodes: readonly TreeNodeInput<string>[];
+  readonly selectionMode: TreeViewSelectionMode;
+  readonly disabledItems: readonly string[];
+  readonly disabled: boolean;
+  readonly readonly: boolean;
+  readonly label: string | undefined;
+  readonly eligible: TreeViewEligiblePredicate<string> | undefined;
 }
 const key = Symbol('SectileTreeViewRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
@@ -62,6 +73,7 @@ export const TreeViewRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: TreeViewRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const element = shallowRef<HTMLElement>(); const connection = shallowRef<TreeViewConnection<string>>();
+    let connectionOwner: TreeViewConnectionOwner | undefined;
     const localValue = shallowRef<readonly string[]>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localExpanded = shallowRef<readonly string[]>(props.expandedValues !== undefined ? props.expandedValues : props.defaultExpandedValues);
     const localHighlight = shallowRef<string | null>(props.highlightedValue !== undefined ? props.highlightedValue : props.defaultHighlightedValue);
@@ -83,9 +95,15 @@ export const TreeViewRoot = defineComponent({
     };
     const refresh = (): void => { const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return; localValue.value = snapshot.selection.selected; localExpanded.value = snapshot.expansion.ids; localHighlight.value = snapshot.cursor.current; refreshParts(); };
     const connect = (): void => {
+      const nextOwner = snapshotTreeViewConnectionOwner(props);
+      if (
+        connection.value !== undefined
+        && connectionOwner !== undefined
+        && sameTreeViewConnectionOwner(connectionOwner, nextOwner)
+      ) return;
       connection.value?.disconnect(); if (element.value === undefined) return;
-      const items = props.nodes.map((node) => node.id);
-      const branches = collectionBranchIDs(props.nodes);
+      const items = nextOwner.nodes.map((node) => node.id);
+      const branches = collectionBranchIDs(nextOwner.nodes);
       const requestedValue = controlled.value ? props.modelValue as readonly string[] : localValue.value;
       const requestedExpanded = controlled.expanded ? props.expandedValues as readonly string[] : localExpanded.value;
       const requestedHighlight = controlled.highlighted ? props.highlightedValue as string | null : localHighlight.value;
@@ -93,8 +111,8 @@ export const TreeViewRoot = defineComponent({
         items,
         requestedValue,
         requestedHighlight,
-        props.disabledItems,
-        props.selectionMode,
+        nextOwner.disabledItems,
+        nextOwner.selectionMode,
         { preserveNullCurrent: true },
       );
       const expanded = reconcileCollectionState(
@@ -112,21 +130,28 @@ export const TreeViewRoot = defineComponent({
       if (controlled.expanded && !sameIDs(requestedExpanded, expanded)) emit('update:expandedValues', expanded);
       if (controlled.highlighted && requestedHighlight !== reconciled.current) emit('update:highlightedValue', reconciled.current);
       connection.value = createTreeView({
-        root: element.value, nodes: props.nodes, selectionMode: props.selectionMode,
+        root: element.value, nodes: nextOwner.nodes, selectionMode: nextOwner.selectionMode,
         ...(controlled.value ? { value: reconciled.selected } : { defaultValue: reconciled.selected }),
         ...(controlled.expanded ? { expandedValues: expanded } : { defaultExpandedValues: expanded }),
         ...(controlled.highlighted ? { highlightedValue: reconciled.current } : { defaultHighlightedValue: reconciled.current }),
-        disabledItems: props.disabledItems, disabled: props.disabled, readOnly: props.readonly,
+        disabledItems: nextOwner.disabledItems, disabled: nextOwner.disabled, readOnly: nextOwner.readonly,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         onValueChange: ({ value }) => { localValue.value = value; emit('update:modelValue', value); },
         onExpandedValuesChange: ({ value }) => { localExpanded.value = value; emit('update:expandedValues', value); },
         onHighlightedValueChange: ({ value }) => { localHighlight.value = value; emit('update:highlightedValue', value); }, onUpdate: refresh,
       });
-      connection.value.setTreeAttributes(props.label); refreshParts(); refresh();
+      connectionOwner = nextOwner;
+      connection.value.setTreeAttributes(nextOwner.label); refreshParts(); refresh();
     };
     const disabledItems = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
+    const selectedItems = computed<ReadonlySet<string>>(
+      () => new Set(state.value.value),
+    );
+    const expandedItems = computed<ReadonlySet<string>>(
+      () => new Set(state.value.expandedValues),
+    );
     provide<Context>(key, {
-      state, disabledItems,
+      state, selectedItems, expandedItems, disabledItems,
       registerItem: (node, id, disabled) => connection.value?.setItemAttributes(node, { id, disabled }),
       registerDisclosure: (node, id) => connection.value?.setDisclosureAttributes(node, id),
     });
@@ -154,7 +179,7 @@ export const TreeViewGroup = defineComponent({
   slots: Object as SlotsType<{ default: (props: TreeViewRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('TreeViewGroup');
-    const expanded = computed(() => root.state.value.expandedValues.includes(props.for));
+    const expanded = computed(() => root.expandedItems.value.has(props.for));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, role: 'group', hidden: !expanded.value,
       'data-scope': 'tree-view', 'data-part': 'group', 'data-state': expanded.value ? 'open' : 'closed',
@@ -166,7 +191,7 @@ export const TreeViewItem = defineComponent({
   name: 'SectileTreeViewItem', inheritAttrs: false,
   props: { value: { type: String, required: true }, disabled: { type: Boolean, default: false }, ...partProps },
   slots: Object as SlotsType<{ default: (props: TreeViewItemSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('TreeViewItem'); const state = computed<TreeViewItemSlotProps>(() => ({ expandedValues: root.state.value.expandedValues, highlightedValue: root.state.value.highlightedValue, readonly: root.state.value.readonly, value: props.value, selectedValues: root.state.value.value, selected: root.state.value.value.includes(props.value), expanded: root.state.value.expandedValues.includes(props.value), highlighted: root.state.value.highlightedValue === props.value, disabled: root.state.value.disabled || props.disabled || root.disabledItems.value.has(props.value) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+  setup(props, { attrs, slots }) { const root = useRoot('TreeViewItem'); const state = computed<TreeViewItemSlotProps>(() => ({ expandedValues: root.state.value.expandedValues, highlightedValue: root.state.value.highlightedValue, readonly: root.state.value.readonly, value: props.value, selectedValues: root.state.value.value, selected: root.selectedItems.value.has(props.value), expanded: root.expandedItems.value.has(props.value), highlighted: root.state.value.highlightedValue === props.value, disabled: root.state.value.disabled || props.disabled || root.disabledItems.value.has(props.value) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerItem(node, props.value, props.disabled); },
     'data-sectile-tree-view-item': props.value, 'data-scope': 'tree-view', 'data-part': 'item',
     'data-selected': state.value.selected ? '' : undefined, 'data-expanded': state.value.expanded ? '' : undefined, 'data-highlighted': state.value.highlighted ? '' : undefined,
@@ -178,7 +203,7 @@ export const TreeViewDisclosure = defineComponent({
   name: 'SectileTreeViewDisclosure', inheritAttrs: false,
   props: { for: { type: String, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: TreeViewItemSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('TreeViewDisclosure'); const state = computed<TreeViewItemSlotProps>(() => ({ expandedValues: root.state.value.expandedValues, highlightedValue: root.state.value.highlightedValue, readonly: root.state.value.readonly, value: props.for, selectedValues: root.state.value.value, selected: root.state.value.value.includes(props.for), expanded: root.state.value.expandedValues.includes(props.for), highlighted: root.state.value.highlightedValue === props.for, disabled: root.state.value.disabled || root.disabledItems.value.has(props.for) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+  setup(props, { attrs, slots }) { const root = useRoot('TreeViewDisclosure'); const state = computed<TreeViewItemSlotProps>(() => ({ expandedValues: root.state.value.expandedValues, highlightedValue: root.state.value.highlightedValue, readonly: root.state.value.readonly, value: props.for, selectedValues: root.state.value.value, selected: root.selectedItems.value.has(props.for), expanded: root.expandedItems.value.has(props.for), highlighted: root.state.value.highlightedValue === props.for, disabled: root.state.value.disabled || root.disabledItems.value.has(props.for) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined, disabled: props.as === 'button' ? state.value.disabled : undefined,
     elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerDisclosure(node, props.for); }, 'data-sectile-tree-view-disclosure': props.for,
     'data-scope': 'tree-view', 'data-part': 'disclosure', 'data-state': state.value.expanded ? 'open' : 'closed',
@@ -186,4 +211,52 @@ export const TreeViewDisclosure = defineComponent({
 });
 
 function useRoot(part: string): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError(`${part} must be used inside TreeViewRoot.`); return root; }
+
+function snapshotTreeViewConnectionOwner(
+  props: Readonly<{
+    nodes: readonly TreeNodeInput<string>[];
+    selectionMode: TreeViewSelectionMode;
+    disabledItems: readonly string[];
+    disabled: boolean;
+    readonly: boolean;
+    label: string | undefined;
+    policies: TreeViewPolicies<string> | undefined;
+  }>,
+): TreeViewConnectionOwner {
+  return Object.freeze({
+    nodes: Object.freeze(props.nodes.map((node) => Object.freeze({
+      id: node.id,
+      parentID: node.parentID,
+    }))),
+    selectionMode: props.selectionMode,
+    disabledItems: Object.freeze([...props.disabledItems]),
+    disabled: props.disabled,
+    readonly: props.readonly,
+    label: props.label,
+    eligible: props.policies?.eligible,
+  });
+}
+
+function sameTreeViewConnectionOwner(
+  left: TreeViewConnectionOwner,
+  right: TreeViewConnectionOwner,
+): boolean {
+  if (
+    left.nodes.length !== right.nodes.length
+    || !sameIDs(left.disabledItems, right.disabledItems)
+    || left.selectionMode !== right.selectionMode
+    || left.disabled !== right.disabled
+    || left.readonly !== right.readonly
+    || left.label !== right.label
+    || left.eligible !== right.eligible
+  ) return false;
+  for (let index = 0; index < left.nodes.length; index += 1) {
+    const leftNode = left.nodes[index]!;
+    const rightNode = right.nodes[index]!;
+    if (leftNode.id !== rightNode.id || leftNode.parentID !== rightNode.parentID) {
+      return false;
+    }
+  }
+  return true;
+}
 export type { TreeNodeInput, TreeViewSelectionMode };
