@@ -1,5 +1,15 @@
 # @sectile/vue
 
+## 0.10.0
+
+### Changes
+
+- fix(vue): reconfigure dynamic interaction state (b3d7bd3)
+- perf(vue): measure changed virtual rows eagerly (4f3ba09)
+- perf(vue): measure new virtual rows incrementally (65243ae)
+- refactor(vue): use shallow refs for element handles (ee916dd)
+- fix(dom)!: preserve native text editing semantics (8317807)
+
 ## 0.9.0
 
 ### Changes

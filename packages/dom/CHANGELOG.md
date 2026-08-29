@@ -1,5 +1,11 @@
 # @sectile/dom
 
+## 0.10.0
+
+### Changes
+
+- fix(dom)!: preserve native text editing semantics (8317807)
+
 ## 0.9.0
 
 ### Changes

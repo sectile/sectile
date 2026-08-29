@@ -1,5 +1,11 @@
 # @sectile/tabular
 
+## 0.10.0
+
+### Changes
+
+- No package-specific changes.
+
 ## 0.9.0
 
 ### Changes
