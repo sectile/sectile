@@ -79,6 +79,8 @@ export interface TextUpdate {
 
 type TextErrorClass = Extract<ErrorClass, 'construction' | 'transition-rejection'>;
 
+const canonicalTextStates = new WeakSet<object>();
+
 export function isWellFormedPlainText(text: string): boolean {
   return typeof text === 'string' && isWellFormedUTF16(text);
 }
@@ -86,8 +88,7 @@ export function isWellFormedPlainText(text: string): boolean {
 export function isTextCodeUnitBoundary(text: string, offset: number): boolean {
   if (!isWellFormedPlainText(text) || !Number.isSafeInteger(offset)) return false;
   if (offset < 0 || offset > text.length) return false;
-  if (offset === 0 || offset === text.length) return true;
-  return !(isHighSurrogate(text.charCodeAt(offset - 1)) && isLowSurrogate(text.charCodeAt(offset)));
+  return isKnownTextCodeUnitBoundary(text, offset);
 }
 
 export function createTextSnapshot(
@@ -236,9 +237,10 @@ export function replaceTextState(
     endCodeUnitOffset,
     replacement,
     'transition-rejection',
+    canonicalTextStates.has(state),
   );
   if (!replaced.ok) return replaced;
-  const snapshot = createSnapshot(replaced.value, selection, 'transition-rejection');
+  const snapshot = createSnapshot(replaced.value, selection, 'transition-rejection', true);
   if (!snapshot.ok) return snapshot;
   return ok(sameSnapshot(state.snapshot, snapshot.value) ? state : stateFromSnapshot(snapshot.value));
 }
@@ -263,9 +265,10 @@ export function startTextComposition(
     endCodeUnitOffset,
     composingText,
     'transition-rejection',
+    canonicalTextStates.has(state),
   );
   if (!projected.ok) return projected;
-  const snapshot = createSnapshot(projected.value, selection, 'transition-rejection');
+  const snapshot = createSnapshot(projected.value, selection, 'transition-rejection', true);
   if (!snapshot.ok) return snapshot;
   const composition = freezeComposition({
     baseline: state.snapshot,
@@ -273,7 +276,7 @@ export function startTextComposition(
     endCodeUnitOffset,
     composingText,
   });
-  return ok(Object.freeze({ snapshot: snapshot.value, composition }));
+  return ok(textEditingState(snapshot.value, composition));
 }
 
 export function updateTextComposition(
@@ -295,12 +298,13 @@ export function updateTextComposition(
     current.endCodeUnitOffset,
     composingText,
     'transition-rejection',
+    canonicalTextStates.has(state),
   );
   if (!projected.ok) return projected;
-  const snapshot = createSnapshot(projected.value, selection, 'transition-rejection');
+  const snapshot = createSnapshot(projected.value, selection, 'transition-rejection', true);
   if (!snapshot.ok) return snapshot;
   const composition = freezeComposition({ ...current, composingText });
-  return ok(Object.freeze({ snapshot: snapshot.value, composition }));
+  return ok(textEditingState(snapshot.value, composition));
 }
 
 export function commitTextComposition(state: TextEditingState): Result<TextEditingState> {
@@ -329,8 +333,9 @@ function createSnapshot(
   text: string,
   selection: TextSelectionInput,
   errorClass: TextErrorClass,
+  textIsCanonical = false,
 ): Result<TextSnapshot> {
-  if (!isWellFormedPlainText(text)) {
+  if (!textIsCanonical && !isWellFormedPlainText(text)) {
     return fail(errorClass, 'ill-formed-text', 'Plain text must be a well-formed UTF-16 string.');
   }
   if (!isObject(selection)) {
@@ -370,6 +375,7 @@ function normalizeEditingState(
   state: TextEditingState,
   errorClass: TextErrorClass,
 ): Result<TextEditingState> {
+  if (isObject(state) && canonicalTextStates.has(state)) return ok(state);
   if (!isObject(state)) {
     return fail(errorClass, 'invalid-text-state', 'Text editing state must be an object.');
   }
@@ -391,6 +397,7 @@ function normalizeEditingState(
     state.composition.endCodeUnitOffset,
     state.composition.composingText,
     errorClass,
+    true,
   );
   if (!projected.ok) return projected;
   if (projected.value !== snapshot.value.text) {
@@ -400,15 +407,15 @@ function normalizeEditingState(
       'Text composition snapshot must equal its baseline replacement.',
     );
   }
-  return ok(Object.freeze({
-    snapshot: snapshot.value,
-    composition: freezeComposition({
+  return ok(textEditingState(
+    snapshot.value,
+    freezeComposition({
       baseline: baseline.value,
       startCodeUnitOffset: state.composition.startCodeUnitOffset,
       endCodeUnitOffset: state.composition.endCodeUnitOffset,
       composingText: state.composition.composingText,
     }),
-  }));
+  ));
 }
 
 function normalizeSnapshot(
@@ -427,8 +434,11 @@ function replaceChecked(
   endCodeUnitOffset: number,
   replacement: string,
   errorClass: TextErrorClass,
+  sourceIsCanonical = false,
 ): Result<string> {
-  const range = validateRange(text, startCodeUnitOffset, endCodeUnitOffset, errorClass);
+  const range = sourceIsCanonical
+    ? validateKnownTextRange(text, startCodeUnitOffset, endCodeUnitOffset, errorClass)
+    : validateRange(text, startCodeUnitOffset, endCodeUnitOffset, errorClass);
   if (!range.ok) return range;
   if (!isWellFormedPlainText(replacement)) {
     return fail(
@@ -451,6 +461,15 @@ function validateRange(
   if (!isWellFormedPlainText(text)) {
     return fail(errorClass, 'ill-formed-text', 'Plain text must be a well-formed UTF-16 string.');
   }
+  return validateKnownTextRange(text, startCodeUnitOffset, endCodeUnitOffset, errorClass);
+}
+
+function validateKnownTextRange(
+  text: string,
+  startCodeUnitOffset: number,
+  endCodeUnitOffset: number,
+  errorClass: TextErrorClass,
+): Result<true> {
   const startError = validateOffset(text, startCodeUnitOffset, 'startCodeUnitOffset', errorClass);
   if (startError !== null) return startError;
   const endError = validateOffset(text, endCodeUnitOffset, 'endCodeUnitOffset', errorClass);
@@ -480,7 +499,7 @@ function validateOffset(
       { [name]: offset, codeUnitLength: text.length },
     );
   }
-  if (!isTextCodeUnitBoundary(text, offset)) {
+  if (!isKnownTextCodeUnitBoundary(text, offset)) {
     return fail(
       errorClass,
       'surrogate-boundary',
@@ -492,7 +511,16 @@ function validateOffset(
 }
 
 function stateFromSnapshot(snapshot: TextSnapshot): TextEditingState {
-  return Object.freeze({ snapshot, composition: null });
+  return textEditingState(snapshot, null);
+}
+
+function textEditingState(
+  snapshot: TextSnapshot,
+  composition: TextComposition | null,
+): TextEditingState {
+  const state = Object.freeze({ snapshot, composition });
+  canonicalTextStates.add(state);
+  return state;
 }
 
 function freezeComposition(composition: TextComposition): TextComposition {
@@ -513,6 +541,11 @@ function isHighSurrogate(code: number): boolean {
 
 function isLowSurrogate(code: number): boolean {
   return code >= 0xdc00 && code <= 0xdfff;
+}
+
+function isKnownTextCodeUnitBoundary(text: string, offset: number): boolean {
+  if (offset === 0 || offset === text.length) return true;
+  return !(isHighSurrogate(text.charCodeAt(offset - 1)) && isLowSurrogate(text.charCodeAt(offset)));
 }
 
 function isObject(value: unknown): value is object {

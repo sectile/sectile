@@ -599,22 +599,74 @@
       }
     },
     {
+      "id": "reorder.sequence-transition",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/reorder.ts",
+      "benchmarkIDs": ["VAL-019:sequence-reorder:100000"],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "ordered identity cardinality", "ceiling": "Sequence maxItems" }],
+        "time": { "bound": "O(n)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(n)", "retained": "O(n)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "O(n)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "A canonical state retains its Sequence owner. Source and target resolve through its index, one move overlay is created in O(1), and the public full ids snapshot is materialized exactly once.",
+        "adversarialWitness": "Moving the first identity after the last in a maximum-size canonical sequence performs two indexed lookups, one overlay, and one full output materialization.",
+        "fullScan": { "allowed": true, "rationale": "Only the public full ordered output has a linear lower bound; source and target lookup do not scan." }
+      }
+    },
+    {
+      "id": "reorder.tree-transition",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/reorder.ts",
+      "benchmarkIDs": ["VAL-019:tree-reorder:100000"],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "tree node cardinality", "ceiling": "Tree maxItems" }],
+        "time": { "bound": "O(n)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(n)", "output": "O(n)", "retained": "O(n)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "O(n)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "A canonical state retains the current Tree and input-order index. Cycle, source, target, parent, and last-sibling queries reuse those indexes; one output vector and exactly one next Tree are constructed.",
+        "adversarialWitness": "Moving a root with a maximum-size subtree under the last branch performs constant indexed resolution followed by one complete immutable output and one next-tree validation.",
+        "fullScan": { "allowed": true, "rationale": "The next immutable tree and public full node snapshot must each account for all n nodes; the current tree is not reconstructed." }
+      }
+    },
+    {
+      "id": "text.replace-canonical",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/editing/text.ts",
+      "benchmarkIDs": ["VAL-019:text-replace-canonical:100000"],
+      "specificationCeiling": "O(nInsert + nOut)",
+      "contract": {
+        "variables": [
+          { "name": "nInsert", "meaning": "replacement UTF-16 code units requiring validation", "ceiling": "maxCodeUnits" },
+          { "name": "nOut", "meaning": "immutable output UTF-16 code units", "ceiling": "maxCodeUnits" }
+        ],
+        "time": { "bound": "O(nInsert + nOut)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(nOut)", "retained": "O(nOut)" },
+        "resources": { "allocations": "O(nOut)", "cacheEntries": "1 provenance mark per live state", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "A module-private WeakSet proves the source state was built from well-formed text. Replacement validation scans only inserted code units, source cuts and output selection inspect adjacent code units, and immutable string construction pays the unavoidable output cost.",
+        "adversarialWitness": "A one-code-unit replacement at the end of a maximum-size canonical text checks two local boundaries without validating the unchanged prefix.",
+        "fullScan": { "allowed": true, "rationale": "The inserted text must be validated and the immutable output must be produced; unchanged canonical source code units are not validation-scanned." }
+      }
+    },
+    {
       "id": "text.replace",
       "inherits": "linear-v1",
       "source": "packages/core/src/internal/editing/text.ts",
       "benchmarkIDs": ["VAL-017:text-boundary-work"],
-      "specificationCeiling": "O(nText + nInsert)",
+      "specificationCeiling": "O(nText + nInsert + nOut)",
       "contract": {
         "variables": [
           { "name": "nText", "meaning": "source text UTF-16 code units", "ceiling": "maxCodeUnits" },
-          { "name": "nInsert", "meaning": "replacement UTF-16 code units", "ceiling": "maxCodeUnits" }
+          { "name": "nInsert", "meaning": "replacement UTF-16 code units", "ceiling": "maxCodeUnits" },
+          { "name": "nOut", "meaning": "immutable output UTF-16 code units", "ceiling": "maxCodeUnits" }
         ],
-        "time": { "bound": "O(nText + nInsert)", "kind": "worst-case", "runtimeState": "external" },
-        "space": { "auxiliary": "O(nText + nInsert)", "output": "O(nText + nInsert)", "retained": "O(nText + nInsert)" },
-        "resources": { "allocations": "O(nText + nInsert)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "proof": "External text validation and immutable replacement inspect/copy bounded UTF-16 input and output.",
+        "time": { "bound": "O(nText + nInsert + nOut)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(1)", "output": "O(nOut)", "retained": "O(nOut)" },
+        "resources": { "allocations": "O(nOut)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "External source and replacement text are each validated once, offsets use local boundary checks after that proof, and immutable replacement materializes the output once.",
         "adversarialWitness": "Maximum valid text replaced at the final surrogate boundary.",
-        "fullScan": { "allowed": true, "rationale": "External full-string validation is recorded until WI-021 proves local validation." }
+        "fullScan": { "allowed": true, "rationale": "Untrusted source and replacement strings require complete UTF-16 validation before projection." }
       }
     },
     {

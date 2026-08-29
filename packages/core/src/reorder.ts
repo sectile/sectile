@@ -1,8 +1,13 @@
 import { createMachineUpdate, type MachineUpdate } from './internal/kernel/machine.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 import { unwrap } from './result.js';
-import { tryCreateSequence, type SequencePatch } from './structures/sequence.js';
-import { tryCreateTree, type TreeNodeInput } from './structures/tree.js';
+import {
+  applySequencePatch,
+  tryCreateSequence,
+  type Sequence,
+  type SequencePatch,
+} from './structures/sequence.js';
+import { tryCreateTree, type Tree, type TreeNodeInput } from './structures/tree.js';
 import type { Result, StableID } from './shared.js';
 
 export interface SequenceReorderState<ID extends StableID = StableID> {
@@ -42,6 +47,14 @@ export type TreeReorderCommand<ID extends StableID = StableID> = {
 export type TreeReorderUpdate<ID extends StableID = StableID> =
   MachineUpdate<TreeReorderState<ID>, TreeReorderCommand<ID>>;
 
+interface TreeReorderOwner<ID extends StableID> {
+  readonly tree: Tree<ID>;
+  readonly positions: ReadonlyMap<ID, number>;
+}
+
+const sequenceReorderOwners = new WeakMap<object, Sequence<StableID>>();
+const treeReorderOwners = new WeakMap<object, TreeReorderOwner<StableID>>();
+
 export function createSequenceReorderState<ID extends StableID>(
   ids: readonly ID[],
 ): SequenceReorderState<ID> {
@@ -53,7 +66,7 @@ export function tryCreateSequenceReorderState<ID extends StableID>(
 ): Result<SequenceReorderState<ID>> {
   const sequence = tryCreateSequence(ids);
   return sequence.ok
-    ? ok(Object.freeze({ ids: Object.freeze([...sequence.value.ids]) }))
+    ? ok(sequenceReorderState(sequence.value))
     : sequence;
 }
 
@@ -61,28 +74,38 @@ export function applySequenceReorderEvent<ID extends StableID>(
   state: SequenceReorderState<ID>,
   event: SequenceReorderEvent<ID>,
 ): Result<SequenceReorderUpdate<ID>> {
-  const valid = tryCreateSequenceReorderState(state.ids);
-  if (!valid.ok) return transitionFailure(valid);
-  const sourceIndex = state.ids.indexOf(event.id);
-  if (sourceIndex < 0) return missingID(event.id);
+  let sequence = sequenceReorderOwners.get(state) as Sequence<ID> | undefined;
+  if (sequence === undefined) {
+    const valid = tryCreateSequenceReorderState(state.ids);
+    if (!valid.ok) return transitionFailure(valid);
+    sequence = sequenceReorderOwners.get(valid.value) as Sequence<ID>;
+  }
+  const sourceIndex = sequence.indexOf(event.id);
+  if (sourceIndex === null) return missingID(event.id);
   if ((event.type === 'move-before' || event.type === 'move-after') && event.id === event.targetID) {
     return createMachineUpdate(state);
   }
-  const ids = state.ids.filter((id) => id !== event.id);
   let destination: number;
   if (event.type === 'move-to-start') destination = 0;
-  else if (event.type === 'move-to-end') destination = ids.length;
+  else if (event.type === 'move-to-end') destination = sequence.size - 1;
   else {
-    const targetIndex = ids.indexOf(event.targetID);
-    if (targetIndex < 0) return missingID(event.targetID);
-    destination = targetIndex + (event.type === 'move-after' ? 1 : 0);
+    const targetIndex = sequence.indexOf(event.targetID);
+    if (targetIndex === null) return missingID(event.targetID);
+    const postRemovalTarget = targetIndex > sourceIndex ? targetIndex - 1 : targetIndex;
+    destination = postRemovalTarget + (event.type === 'move-after' ? 1 : 0);
   }
-  ids.splice(destination, 0, event.id);
-  if (ids.every((id, index) => id === state.ids[index])) return createMachineUpdate(state);
-  const next = Object.freeze({ ids: Object.freeze(ids) });
+  const patch = Object.freeze({
+    type: 'move' as const,
+    from: sourceIndex,
+    to: destination,
+    count: 1,
+  });
+  const nextSequence = applySequencePatch(sequence, patch);
+  if (nextSequence === sequence) return createMachineUpdate(state);
+  const next = sequenceReorderState(nextSequence);
   return createMachineUpdate(next, [{
     type: 'sequence-order-changed',
-    patch: Object.freeze({ type: 'move', from: sourceIndex, to: destination, count: 1 }),
+    patch,
   }]);
 }
 
@@ -97,21 +120,25 @@ export function tryCreateTreeReorderState<ID extends StableID>(
 ): Result<TreeReorderState<ID>> {
   const tree = tryCreateTree(nodes);
   if (!tree.ok) return tree;
-  return ok(Object.freeze({ nodes: freezeNodes(nodes) }));
+  return ok(treeReorderState(freezeNodes(nodes), tree.value));
 }
 
 export function applyTreeReorderEvent<ID extends StableID>(
   state: TreeReorderState<ID>,
   event: TreeReorderEvent<ID>,
 ): Result<TreeReorderUpdate<ID>> {
-  const tree = tryCreateTree(state.nodes);
-  if (!tree.ok) return transitionFailure(tree);
-  if (!tree.value.has(event.id)) return missingID(event.id);
-  if (event.parentID !== null && !tree.value.has(event.parentID)) return missingID(event.parentID);
-  if (
-    event.parentID === event.id
-    || (event.parentID !== null && tree.value.ancestorsOf(event.parentID)?.includes(event.id) === true)
-  ) {
+  let owner = treeReorderOwners.get(state) as TreeReorderOwner<ID> | undefined;
+  let canonicalState = state;
+  if (owner === undefined) {
+    const valid = tryCreateTreeReorderState(state.nodes);
+    if (!valid.ok) return transitionFailure(valid);
+    canonicalState = valid.value;
+    owner = treeReorderOwners.get(canonicalState) as TreeReorderOwner<ID>;
+  }
+  const { tree, positions } = owner;
+  if (!tree.has(event.id)) return missingID(event.id);
+  if (event.parentID !== null && !tree.has(event.parentID)) return missingID(event.parentID);
+  if (event.parentID !== null && isWithinSubtree(tree, event.id, event.parentID)) {
     return fail(
       'transition-rejection',
       'reorder-tree-cycle',
@@ -123,7 +150,7 @@ export function applyTreeReorderEvent<ID extends StableID>(
   if (beforeID === event.id) return createMachineUpdate(state);
   if (
     beforeID !== null
-    && (!tree.value.has(beforeID) || tree.value.parentOf(beforeID) !== event.parentID)
+    && (!tree.has(beforeID) || tree.parentOf(beforeID) !== event.parentID)
   ) {
     return fail(
       'transition-rejection',
@@ -133,26 +160,72 @@ export function applyTreeReorderEvent<ID extends StableID>(
     );
   }
 
-  const moving = state.nodes.find((node) => node.id === event.id)!;
-  const remaining = state.nodes.filter((node) => node.id !== event.id);
+  const sourceIndex = positions.get(event.id)!;
+  const nodes = [...canonicalState.nodes];
+  nodes.splice(sourceIndex, 1);
   let destination: number;
   if (beforeID !== null) {
-    destination = remaining.findIndex((node) => node.id === beforeID);
+    destination = postRemovalIndex(positions.get(beforeID)!, sourceIndex);
   } else {
-    const siblingIndices = remaining.flatMap((node, index) => (
-      node.parentID === event.parentID ? [index] : []
-    ));
-    if (siblingIndices.length > 0) destination = siblingIndices.at(-1)! + 1;
-    else if (event.parentID === null) destination = remaining.length;
-    else destination = remaining.findIndex((node) => node.id === event.parentID) + 1;
+    const siblings = event.parentID === null ? tree.roots : tree.childrenOf(event.parentID)!;
+    let lastSibling = siblings.at(siblings.size - 1);
+    if (lastSibling === event.id) lastSibling = siblings.at(siblings.size - 2);
+    if (lastSibling !== null) {
+      destination = postRemovalIndex(positions.get(lastSibling)!, sourceIndex) + 1;
+    } else if (event.parentID === null) {
+      destination = nodes.length;
+    } else {
+      destination = postRemovalIndex(positions.get(event.parentID)!, sourceIndex) + 1;
+    }
   }
-  const nodes = [...remaining];
-  nodes.splice(destination, 0, Object.freeze({ id: moving.id, parentID: event.parentID }));
+  if (destination === sourceIndex && tree.parentOf(event.id) === event.parentID) {
+    return createMachineUpdate(state);
+  }
+  nodes.splice(destination, 0, Object.freeze({ id: event.id, parentID: event.parentID }));
+  Object.freeze(nodes);
   const nextTree = tryCreateTree(nodes);
   if (!nextTree.ok) return transitionFailure(nextTree);
-  if (sameNodes(state.nodes, nodes)) return createMachineUpdate(state);
-  const next = Object.freeze({ nodes: freezeNodes(nodes) });
+  const next = treeReorderState(nodes, nextTree.value);
   return createMachineUpdate(next, [{ type: 'tree-order-changed', nodes: next.nodes }]);
+}
+
+function sequenceReorderState<ID extends StableID>(
+  sequence: Sequence<ID>,
+): SequenceReorderState<ID> {
+  const state = Object.freeze({ ids: sequence.ids });
+  sequenceReorderOwners.set(state, sequence as Sequence<StableID>);
+  return state;
+}
+
+function treeReorderState<ID extends StableID>(
+  nodes: readonly TreeNodeInput<ID>[],
+  tree: Tree<ID>,
+): TreeReorderState<ID> {
+  const positions = new Map<ID, number>();
+  for (let index = 0; index < nodes.length; index += 1) {
+    positions.set(nodes[index]!.id, index);
+  }
+  const state = Object.freeze({ nodes });
+  treeReorderOwners.set(state, {
+    tree,
+    positions,
+  } as TreeReorderOwner<StableID>);
+  return state;
+}
+
+function isWithinSubtree<ID extends StableID>(
+  tree: Tree<ID>,
+  root: ID,
+  candidate: ID,
+): boolean {
+  const rootInterval = tree.subtreeIntervalOf(root)!;
+  const candidateInterval = tree.subtreeIntervalOf(candidate)!;
+  return candidateInterval.start >= rootInterval.start
+    && candidateInterval.start < rootInterval.endExclusive;
+}
+
+function postRemovalIndex(index: number, removedIndex: number): number {
+  return index > removedIndex ? index - 1 : index;
 }
 
 function missingID<ID extends StableID>(id: ID): Result<never> {
@@ -168,15 +241,6 @@ function freezeNodes<ID extends StableID>(
   nodes: readonly TreeNodeInput<ID>[],
 ): readonly TreeNodeInput<ID>[] {
   return Object.freeze(nodes.map((node) => Object.freeze({ ...node })));
-}
-
-function sameNodes<ID extends StableID>(
-  left: readonly TreeNodeInput<ID>[],
-  right: readonly TreeNodeInput<ID>[],
-): boolean {
-  return left.length === right.length && left.every((node, index) => (
-    node.id === right[index]?.id && node.parentID === right[index]?.parentID
-  ));
 }
 
 function transitionFailure<T>(result: Result<T>): Result<never> {
