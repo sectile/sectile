@@ -3,6 +3,7 @@ import type { ErrorClass } from '@sectile/core';
 export type FormErrorCode =
   | 'form-field-id-duplicate'
   | 'form-field-id-empty'
+  | 'form-field-id-invalid'
   | 'form-field-id-missing'
   | 'form-field-order-invalid'
   | 'form-field-path-empty'

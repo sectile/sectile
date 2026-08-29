@@ -1,7 +1,8 @@
+import { failResult, okResult } from '@sectile/core/result';
 import { FormResultError, type FormError, type FormErrorCode, type FormResult } from '../error.js';
 
 export function ok<T>(value: T): FormResult<T> {
-  return { ok: true, value };
+  return okResult<T, FormErrorCode>(value);
 }
 
 export function fail<T = never, Code extends FormErrorCode = FormErrorCode>(
@@ -10,15 +11,7 @@ export function fail<T = never, Code extends FormErrorCode = FormErrorCode>(
   message: string,
   details?: Readonly<Record<string, unknown>>,
 ): FormResult<T, Code> {
-  return {
-    ok: false,
-    error: {
-      class: errorClass,
-      code,
-      message,
-      ...(details === undefined ? {} : { details }),
-    },
-  };
+  return failResult<T, Code>(errorClass, code, message, details);
 }
 
 export function unwrap<T, Code extends string>(result: FormResult<T, Code>): T {

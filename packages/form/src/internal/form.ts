@@ -1,4 +1,10 @@
 import type { StableID } from '@sectile/core';
+import { tryNormalizeStableIDs, validateStableID } from '@sectile/core/identity';
+import {
+  createMachineUpdate,
+  type MachineUpdate,
+} from '@sectile/core/revision';
+import type { FormErrorCode } from '../error.js';
 import type { FormResult as Result } from '../error.js';
 import { fail, ok, unwrap } from './result.js';
 
@@ -115,6 +121,8 @@ export interface FormUpdate<ID extends StableID = StableID> {
   readonly state: FormState<ID>;
   readonly commands: readonly FormCommand<ID>[];
 }
+
+type CoreFormUpdate<ID extends StableID> = MachineUpdate<FormState<ID>, FormCommand<ID>>;
 
 export interface FormStateInput<ID extends StableID = StableID> {
   readonly validationGeneration?: number;
@@ -354,16 +362,16 @@ export function tryCreateFormState<ID extends StableID = StableID>(
     );
   }
 
+  const inputFields = input.fields ?? [];
+  const fieldIDs = tryNormalizeStableIDs(inputFields.map((field) => field.id));
+  if (!fieldIDs.ok) return fieldIdentityError(fieldIDs.error.code);
+  if (fieldIDs.value.some((id) => id.trim().length === 0)) {
+    return fieldIdentityError('empty-id');
+  }
+
   const fields: FormFieldState<ID>[] = [];
-  for (const inputField of input.fields ?? []) {
-    if (fields.some((field) => field.id === inputField.id)) {
-      return fail(
-        'construction',
-        'form-field-id-duplicate',
-        'Form field identifiers must be unique.',
-      );
-    }
-    const field = normalizeField(inputField);
+  for (const inputField of inputFields) {
+    const field = normalizeField(inputField, false);
     if (!field.ok) return field;
     fields.push(field.value);
   }
@@ -374,11 +382,16 @@ export function tryCreateFormState<ID extends StableID = StableID>(
     ...issues.value.map((issue) => issue.id),
     ...fields.flatMap((field) => field.issues.map((issue) => issue.id)),
   ];
-  if (new Set(issueIds).size !== issueIds.length) {
+  const normalizedIssueIDs = tryNormalizeStableIDs(issueIds);
+  if (!normalizedIssueIDs.ok) {
     return fail(
       'construction',
-      'form-issue-id-duplicate',
-      'Form issue identifiers must be unique.',
+      normalizedIssueIDs.error.code === 'duplicate-id'
+        ? 'form-issue-id-duplicate'
+        : 'form-issue-invalid',
+      normalizedIssueIDs.error.code === 'duplicate-id'
+        ? 'Form issue identifiers must be unique.'
+        : 'Form issue identifiers must be valid stable IDs.',
     );
   }
 
@@ -525,19 +538,23 @@ function reorderFields<ID extends StableID>(
   state: FormState<ID>,
   ids: readonly ID[],
 ): Result<FormUpdate<ID>> {
-  if (
-    ids.length !== state.fields.length
-    || new Set(ids).size !== ids.length
-    || ids.some((id) => !state.fields.some((field) => field.id === id))
-  ) {
+  if (ids.length !== state.fields.length) {
     return fail(
       'transition-rejection',
       'form-field-order-invalid',
       'Form field order must contain every registered field exactly once.',
     );
   }
+  const normalized = tryNormalizeStableIDs(ids);
+  if (!normalized.ok) return invalidFieldOrder();
   const byId = new Map(state.fields.map((field) => [field.id, field]));
-  return rebuild(state, ids.map((id) => byId.get(id)!), state.issues);
+  const fields: FormFieldState<ID>[] = [];
+  for (const id of normalized.value) {
+    const field = byId.get(id);
+    if (field === undefined) return invalidFieldOrder();
+    fields.push(field);
+  }
+  return rebuild(state, fields, state.issues);
 }
 
 function replaceIssues<ID extends StableID>(
@@ -781,13 +798,11 @@ function reinitialize<ID extends StableID>(
 
 function normalizeField<ID extends StableID>(
   input: FormFieldInput<ID>,
+  validateID = true,
 ): Result<FormFieldState<ID>> {
-  if (input.id.trim().length === 0) {
-    return fail(
-      'construction',
-      'form-field-id-empty',
-      'Form field identifiers must not be empty.',
-    );
+  if (validateID) {
+    const identity = validateFormFieldID(input.id);
+    if (!identity.ok) return identity;
   }
   const name = input.name?.trim() || null;
   const issues = normalizeIssues(input.issues ?? [], input.id);
@@ -806,6 +821,16 @@ function normalizeIssues<ID extends StableID>(
   input: readonly FormIssue<ID>[],
   fieldId: ID | undefined,
 ): Result<readonly FormIssue<ID>[]> {
+  const ids = tryNormalizeStableIDs(input.map((issue) => issue.id));
+  if (!ids.ok) {
+    return ids.error.code === 'duplicate-id'
+      ? fail('construction', 'form-issue-id-duplicate', 'Form issue identifiers must be unique.')
+      : fail(
+        'construction',
+        'form-issue-invalid',
+        'Form issue identifiers and messages must not be empty and IDs must be valid.',
+      );
+  }
   const issues: FormIssue<ID>[] = [];
   for (const issue of input) {
     if (issue.id.trim().length === 0 || issue.message.trim().length === 0) {
@@ -813,13 +838,6 @@ function normalizeIssues<ID extends StableID>(
         'construction',
         'form-issue-invalid',
         'Form issue identifiers and messages must not be empty.',
-      );
-    }
-    if (issues.some((candidate) => candidate.id === issue.id)) {
-      return fail(
-        'construction',
-        'form-issue-id-duplicate',
-        'Form issue identifiers must be unique.',
       );
     }
     if (fieldId !== undefined && issue.fieldId !== undefined && issue.fieldId !== fieldId) {
@@ -945,7 +963,65 @@ function update<ID extends StableID>(
   state: FormState<ID>,
   commands: readonly FormCommand<ID>[] = [],
 ): Result<FormUpdate<ID>> {
-  return ok(Object.freeze({ state, commands: Object.freeze([...commands]) }));
+  return createMachineUpdate<FormState<ID>, FormCommand<ID>, FormErrorCode>(
+    state,
+    commands,
+  ) as Result<CoreFormUpdate<ID>>;
+}
+
+function validateFormFieldID<ID extends StableID>(id: ID): Result<true> {
+  if (typeof id === 'string' && id.trim().length === 0) {
+    return fail(
+      'construction',
+      'form-field-id-empty',
+      'Form field identifiers must not be empty.',
+    );
+  }
+  const error = validateStableID(id);
+  if (error === null) return ok(true);
+  if (error.code === 'empty-id') {
+    return fail(
+      'construction',
+      'form-field-id-empty',
+      'Form field identifiers must not be empty.',
+    );
+  }
+  return fail(
+    error.class,
+    'form-field-id-invalid',
+    'Form field identifiers must be valid stable IDs.',
+    error.details,
+  );
+}
+
+function fieldIdentityError(code: string): Result<never> {
+  if (code === 'duplicate-id') {
+    return fail(
+      'construction',
+      'form-field-id-duplicate',
+      'Form field identifiers must be unique.',
+    );
+  }
+  if (code === 'empty-id') {
+    return fail(
+      'construction',
+      'form-field-id-empty',
+      'Form field identifiers must not be empty.',
+    );
+  }
+  return fail(
+    'construction',
+    'form-field-id-invalid',
+    'Form field identifiers must be valid stable IDs.',
+  );
+}
+
+function invalidFieldOrder(): Result<never> {
+  return fail(
+    'transition-rejection',
+    'form-field-order-invalid',
+    'Form field order must contain every registered field exactly once.',
+  );
 }
 
 function transitionError<T>(result: Result<T>): Result<never> {
