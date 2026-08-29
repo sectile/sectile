@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { ArrowLeft, Check, Copy, Download, Gauge, Languages, Plus, RotateCcw, Trash2, Upload, X } from '@lucide/vue';
+import { ArrowLeft, Check, Copy, Download, Gauge, Languages, Pencil, Plus, RotateCcw, Trash2, Upload, X } from '@lucide/vue';
 import { withBase } from 'vitepress';
 import { useDocsLocale } from '../locale.js';
 import { summarizeVirtualBenchmarkPlan } from '../virtual-benchmark-plan.js';
@@ -16,12 +16,11 @@ import type {
 } from '../virtual-benchmark-data.js';
 import DemoPopover from './DemoPopover.vue';
 import DemoProgress from './DemoProgress.vue';
-import DemoFormField from './DemoFormField.vue';
-import DemoSelect, { type DemoSelectOption } from './DemoSelect.vue';
-import DemoSpinButton from './DemoSpinButton.vue';
+import type { DemoSelectOption } from './DemoSelect.vue';
 import DemoVirtualList from './DemoVirtualList.vue';
 import DocsButton from './DocsButton.vue';
 import VirtualBenchmarkReport from './VirtualBenchmarkReport.vue';
+import VirtualBenchmarkTargetFields from './VirtualBenchmarkTargetFields.vue';
 
 type LabStatus = 'idle' | 'running' | 'complete' | 'cancelled' | 'error';
 type Preset = 'quick' | 'standard' | 'custom';
@@ -172,6 +171,7 @@ const automaticLibraries = new Set(['Sectile Virtual', 'React Virtuoso', 'Virtua
 const { isKorean } = useDocsLocale();
 const status = ref<LabStatus>('idle');
 const composerOpen = ref(false);
+const editingTargetID = ref<number | null>(null);
 const targets = ref<BenchmarkTarget[]>([]);
 const nextTargetID = ref(1);
 const preset = ref<Preset>('standard');
@@ -211,6 +211,7 @@ const checkpoints = ref<BenchmarkCheckpoint[]>([]);
 const latestCheckpoint = ref<BenchmarkCheckpoint>();
 const checkpointHistoryList = ref<DemoVirtualListHandle | null>(null);
 const nextCheckpointID = ref(1);
+let draftBeforeEdit: BenchmarkTarget | null = null;
 
 const copy = computed(() => isKorean.value ? {
   back: 'Sectile 문서',
@@ -221,6 +222,9 @@ const copy = computed(() => isKorean.value ? {
   addTarget: '측정 세트 추가',
   targetComposer: '측정 세트 만들기',
   addToQueue: '추가',
+  editTarget: '편집',
+  editTargetTitle: (index: number) => `측정 세트 ${index} 수정`,
+  saveTarget: '저장',
   closeComposer: '취소',
   removeTarget: '측정 세트 삭제',
   emptyTargets: '추가된 측정 세트가 없습니다.',
@@ -323,6 +327,9 @@ const copy = computed(() => isKorean.value ? {
   addTarget: 'Add benchmark set',
   targetComposer: 'Create benchmark set',
   addToQueue: 'Add',
+  editTarget: 'Edit',
+  editTargetTitle: (index: number) => `Edit benchmark set ${index}`,
+  saveTarget: 'Save',
   closeComposer: 'Cancel',
   removeTarget: 'Remove benchmark set',
   emptyTargets: 'No benchmark sets added.',
@@ -540,7 +547,14 @@ const localeHref = computed(() => withBase(isKorean.value ? '/benchmarks/virtual
 
 onMounted(() => window.addEventListener('message', receiveRunnerMessage));
 onBeforeUnmount(() => window.removeEventListener('message', receiveRunnerMessage));
-watch(composerOpen, (open) => { if (open) targetError.value = ''; });
+watch(composerOpen, (open) => {
+  if (!open) return;
+  if (editingTargetID.value !== null) {
+    editingTargetID.value = null;
+    restoreCreateDraft();
+  }
+  targetError.value = '';
+});
 
 function formatPlanDuration(seconds: number): string {
   if (seconds < 60) return copy.value.seconds(Math.max(5, Math.ceil(seconds / 5) * 5));
@@ -552,29 +566,9 @@ function optionList(ids: readonly string[]): readonly DemoSelectOption[] {
   return ids.map((id) => ({ id, label: copy.value.option[id as keyof typeof copy.value.option] ?? id }));
 }
 
-function applyPreset(next: string | null): void {
-  if (next !== 'quick' && next !== 'standard' && next !== 'custom') return;
-  preset.value = next;
-  if (next === 'quick') {
-    rows.value = 10_000;
-    baselineRounds.value = 1;
-    warmupScrolls.value = 1;
-    scrollSamples.value = 2;
-    mutationRounds.value = 1;
-    mutationSamples.value = 1;
-  } else if (next === 'standard') {
-    rows.value = 100_000;
-    baselineRounds.value = 5;
-    warmupScrolls.value = 5;
-    scrollSamples.value = 20;
-    mutationRounds.value = 5;
-    mutationSamples.value = 10;
-  }
-}
-
-function targetSnapshot(): BenchmarkTarget {
+function targetSnapshot(id = nextTargetID.value): BenchmarkTarget {
   return Object.freeze({
-    id: nextTargetID.value,
+    id,
     preset: preset.value,
     profile: profile.value,
     phase: phase.value,
@@ -592,6 +586,43 @@ function targetSnapshot(): BenchmarkTarget {
   });
 }
 
+function loadTargetDraft(target: BenchmarkTarget): void {
+  preset.value = target.preset;
+  profile.value = target.profile;
+  phase.value = target.phase;
+  library.value = target.library;
+  baselineMode.value = target.baselineMode;
+  mutationMode.value = target.mutationMode;
+  operation.value = target.operation;
+  location.value = target.location;
+  rows.value = target.rows;
+  baselineRounds.value = target.baselineRounds;
+  warmupScrolls.value = target.warmupScrolls;
+  scrollSamples.value = target.scrollSamples;
+  mutationRounds.value = target.mutationRounds;
+  mutationSamples.value = target.mutationSamples;
+}
+
+function restoreCreateDraft(): void {
+  if (draftBeforeEdit !== null) loadTargetDraft(draftBeforeEdit);
+  draftBeforeEdit = null;
+}
+
+function updateTargetEditor(target: BenchmarkTarget, open: boolean): void {
+  if (open) {
+    composerOpen.value = false;
+    if (editingTargetID.value === null) draftBeforeEdit = targetSnapshot();
+    loadTargetDraft(target);
+    targetError.value = '';
+    editingTargetID.value = target.id;
+    return;
+  }
+  if (editingTargetID.value !== target.id) return;
+  editingTargetID.value = null;
+  targetError.value = '';
+  restoreCreateDraft();
+}
+
 function submitTarget() {
   const target = targetSnapshot();
   const invalidReason = invalidConfiguration(target);
@@ -607,7 +638,26 @@ function submitTarget() {
   return { ok: true as const };
 }
 
+function submitTargetEdit(targetID: number) {
+  const target = targetSnapshot(targetID);
+  const invalidReason = invalidConfiguration(target);
+  if (invalidReason !== null) {
+    targetError.value = invalidReason;
+    return { ok: false as const, issues: [{ id: 'target-configuration', message: invalidReason }] };
+  }
+  targets.value = targets.value.map((current) => current.id === targetID ? target : current);
+  targetError.value = '';
+  errorMessage.value = '';
+  editingTargetID.value = null;
+  restoreCreateDraft();
+  return { ok: true as const };
+}
+
 function removeTarget(targetID: number): void {
+  if (editingTargetID.value === targetID) {
+    editingTargetID.value = null;
+    restoreCreateDraft();
+  }
   targets.value = targets.value.filter((target) => target.id !== targetID);
 }
 
@@ -1167,118 +1217,31 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
 
             <template #summary>{{ targetError }}</template>
 
-            <div class="benchmark-composer__grid">
-              <DemoFormField name="preset" :label="copy.preset">
-                <DemoSelect :model-value="preset" :options="presetOptions" :label="copy.preset" @update:model-value="applyPreset" />
-              </DemoFormField>
-              <DemoFormField name="profile" :label="copy.profile">
-                <DemoSelect v-model="profile" :options="profileOptions" :label="copy.profile" />
-              </DemoFormField>
-              <DemoFormField name="phase" :label="copy.phase">
-                <DemoSelect v-model="phase" :options="phaseOptions" :label="copy.phase" />
-              </DemoFormField>
-              <DemoFormField name="library" :label="copy.library">
-                <DemoSelect v-model="library" :options="libraryOptions" :label="copy.library" />
-              </DemoFormField>
-              <DemoFormField v-if="phase !== 'mutations'" name="baselineMode" :label="copy.baselineMode">
-                <DemoSelect v-model="baselineMode" :options="baselineModeOptions" :label="copy.baselineMode" />
-              </DemoFormField>
-              <DemoFormField v-if="phase !== 'baseline'" name="mutationMode" :label="copy.mutationMode">
-                <DemoSelect v-model="mutationMode" :options="mutationModeOptions" :label="copy.mutationMode" />
-              </DemoFormField>
-              <DemoFormField v-if="phase !== 'baseline'" name="operation" :label="copy.operation">
-                <DemoSelect v-model="operation" :options="operationOptions" :label="copy.operation" />
-              </DemoFormField>
-              <DemoFormField v-if="phase !== 'baseline'" name="location" :label="copy.location">
-                <DemoSelect v-model="location" :options="locationOptions" :label="copy.location" />
-              </DemoFormField>
-            </div>
-
-            <div class="benchmark-composer__numbers">
-              <DemoFormField
-                name="rows"
-                :label="copy.rows"
-                :hint="copy.rowsHelp"
-                :help-label="copy.help(copy.rows)"
-                :minimum="copy.number(2)"
-                :maximum="copy.number(1000000)"
-                :minimum-label="copy.minimum"
-                :maximum-label="copy.maximum"
-                :readonly="preset !== 'custom'"
-              >
-                <DemoSpinButton v-model="rows" :label="copy.rows" :decrement-label="copy.decrease(copy.rows)" :increment-label="copy.increase(copy.rows)" :min="2" :max="1000000" :readonly="preset !== 'custom'" />
-              </DemoFormField>
-              <DemoFormField
-                v-if="phase !== 'mutations'"
-                name="baselineRounds"
-                :label="copy.baselineRounds"
-                :hint="copy.baselineRoundsHelp"
-                :help-label="copy.help(copy.baselineRounds)"
-                :minimum="copy.number(1)"
-                :maximum="copy.number(50)"
-                :minimum-label="copy.minimum"
-                :maximum-label="copy.maximum"
-                :readonly="preset !== 'custom'"
-              >
-                <DemoSpinButton v-model="baselineRounds" :label="copy.baselineRounds" :decrement-label="copy.decrease(copy.baselineRounds)" :increment-label="copy.increase(copy.baselineRounds)" :min="1" :max="50" :readonly="preset !== 'custom'" />
-              </DemoFormField>
-              <DemoFormField
-                v-if="phase !== 'mutations'"
-                name="warmupScrolls"
-                :label="copy.warmupScrolls"
-                :hint="copy.warmupScrollsHelp"
-                :help-label="copy.help(copy.warmupScrolls)"
-                :minimum="copy.number(0)"
-                :maximum="copy.number(100)"
-                :minimum-label="copy.minimum"
-                :maximum-label="copy.maximum"
-                :readonly="preset !== 'custom'"
-              >
-                <DemoSpinButton v-model="warmupScrolls" :label="copy.warmupScrolls" :decrement-label="copy.decrease(copy.warmupScrolls)" :increment-label="copy.increase(copy.warmupScrolls)" :min="0" :max="100" :readonly="preset !== 'custom'" />
-              </DemoFormField>
-              <DemoFormField
-                v-if="phase !== 'mutations'"
-                name="scrollSamples"
-                :label="copy.scrollSamples"
-                :hint="copy.scrollSamplesHelp"
-                :help-label="copy.help(copy.scrollSamples)"
-                :minimum="copy.number(1)"
-                :maximum="copy.number(200)"
-                :minimum-label="copy.minimum"
-                :maximum-label="copy.maximum"
-                :readonly="preset !== 'custom'"
-              >
-                <DemoSpinButton v-model="scrollSamples" :label="copy.scrollSamples" :decrement-label="copy.decrease(copy.scrollSamples)" :increment-label="copy.increase(copy.scrollSamples)" :min="1" :max="200" :readonly="preset !== 'custom'" />
-              </DemoFormField>
-              <DemoFormField
-                v-if="phase !== 'baseline'"
-                name="mutationRounds"
-                :label="copy.mutationRounds"
-                :hint="copy.mutationRoundsHelp"
-                :help-label="copy.help(copy.mutationRounds)"
-                :minimum="copy.number(1)"
-                :maximum="copy.number(50)"
-                :minimum-label="copy.minimum"
-                :maximum-label="copy.maximum"
-                :readonly="preset !== 'custom'"
-              >
-                <DemoSpinButton v-model="mutationRounds" :label="copy.mutationRounds" :decrement-label="copy.decrease(copy.mutationRounds)" :increment-label="copy.increase(copy.mutationRounds)" :min="1" :max="50" :readonly="preset !== 'custom'" />
-              </DemoFormField>
-              <DemoFormField
-                v-if="phase !== 'baseline'"
-                name="mutationSamples"
-                :label="copy.mutationSamples"
-                :hint="copy.mutationSamplesHelp"
-                :help-label="copy.help(copy.mutationSamples)"
-                :minimum="copy.number(1)"
-                :maximum="copy.number(50)"
-                :minimum-label="copy.minimum"
-                :maximum-label="copy.maximum"
-                :readonly="preset !== 'custom'"
-              >
-                <DemoSpinButton v-model="mutationSamples" :label="copy.mutationSamples" :decrement-label="copy.decrease(copy.mutationSamples)" :increment-label="copy.increase(copy.mutationSamples)" :min="1" :max="50" :readonly="preset !== 'custom'" />
-              </DemoFormField>
-            </div>
+            <VirtualBenchmarkTargetFields
+              v-model:preset="preset"
+              v-model:profile="profile"
+              v-model:phase="phase"
+              v-model:library="library"
+              v-model:baseline-mode="baselineMode"
+              v-model:mutation-mode="mutationMode"
+              v-model:operation="operation"
+              v-model:location="location"
+              v-model:rows="rows"
+              v-model:baseline-rounds="baselineRounds"
+              v-model:warmup-scrolls="warmupScrolls"
+              v-model:scroll-samples="scrollSamples"
+              v-model:mutation-rounds="mutationRounds"
+              v-model:mutation-samples="mutationSamples"
+              :copy="copy"
+              :preset-options="presetOptions"
+              :profile-options="profileOptions"
+              :phase-options="phaseOptions"
+              :library-options="libraryOptions"
+              :baseline-mode-options="baselineModeOptions"
+              :mutation-mode-options="mutationModeOptions"
+              :operation-options="operationOptions"
+              :location-options="locationOptions"
+            />
           </DemoPopover>
         </header>
 
@@ -1298,9 +1261,54 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
                 <div v-if="target.phase !== 'baseline'"><dt>{{ copy.location }}</dt><dd>{{ selectionLabel(target.location) }}</dd></div>
               </dl>
             </div>
-            <button type="button" class="benchmark-target__remove" :aria-label="copy.removeTarget" @click="removeTarget(target.id)">
-              <Trash2 :size="15" aria-hidden="true" />
-            </button>
+            <div class="benchmark-target__actions">
+              <DemoPopover
+                :model-value="editingTargetID === target.id"
+                :title="copy.editTargetTitle(index + 1)"
+                :submit="() => submitTargetEdit(target.id)"
+                :cancel-label="copy.closeComposer"
+                :submit-label="copy.saveTarget"
+                align="end"
+                @update:model-value="updateTargetEditor(target, $event)"
+              >
+                <template #trigger>
+                  <button type="button" class="benchmark-target__edit">
+                    <Pencil :size="14" aria-hidden="true" />{{ copy.editTarget }}
+                  </button>
+                </template>
+
+                <template #summary>{{ targetError }}</template>
+
+                <VirtualBenchmarkTargetFields
+                  v-model:preset="preset"
+                  v-model:profile="profile"
+                  v-model:phase="phase"
+                  v-model:library="library"
+                  v-model:baseline-mode="baselineMode"
+                  v-model:mutation-mode="mutationMode"
+                  v-model:operation="operation"
+                  v-model:location="location"
+                  v-model:rows="rows"
+                  v-model:baseline-rounds="baselineRounds"
+                  v-model:warmup-scrolls="warmupScrolls"
+                  v-model:scroll-samples="scrollSamples"
+                  v-model:mutation-rounds="mutationRounds"
+                  v-model:mutation-samples="mutationSamples"
+                  :copy="copy"
+                  :preset-options="presetOptions"
+                  :profile-options="profileOptions"
+                  :phase-options="phaseOptions"
+                  :library-options="libraryOptions"
+                  :baseline-mode-options="baselineModeOptions"
+                  :mutation-mode-options="mutationModeOptions"
+                  :operation-options="operationOptions"
+                  :location-options="locationOptions"
+                />
+              </DemoPopover>
+              <button type="button" class="benchmark-target__remove" :aria-label="copy.removeTarget" @click="removeTarget(target.id)">
+                <Trash2 :size="15" aria-hidden="true" />
+              </button>
+            </div>
           </li>
         </ol>
         <div v-else class="benchmark-targets-empty">
@@ -1706,7 +1714,7 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
 .benchmark-target {
   display: grid;
   min-width: 0;
-  grid-template-columns: 1.75rem minmax(0, 1fr) 2.25rem;
+  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
   align-items: start;
   gap: .75rem;
   border: 1px solid var(--sectile-border-subtle);
@@ -1767,11 +1775,15 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
   overflow-wrap: anywhere;
 }
 
+.benchmark-target__actions {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+}
+
+.benchmark-target__edit,
 .benchmark-target__remove {
-  display: grid;
-  width: 2.25rem;
-  height: 2.25rem;
-  place-items: center;
+  min-height: 2.25rem;
   border: 0;
   border-radius: .5rem;
   padding: 0;
@@ -1780,8 +1792,27 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
   cursor: pointer;
 }
 
+.benchmark-target__edit {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding-inline: .55rem;
+  font: inherit;
+  font-size: .68rem;
+  font-weight: 700;
+}
+
+.benchmark-target__remove {
+  display: grid;
+  width: 2.25rem;
+  place-items: center;
+}
+
+.benchmark-target__edit:hover { color: var(--sectile-content-primary); background: var(--sectile-surface-hover); }
+.benchmark-target__edit:active { background: var(--sectile-surface-selected); }
 .benchmark-target__remove:hover { color: var(--sectile-feedback-critical); background: var(--sectile-surface-hover); }
 .benchmark-target__remove:active { background: var(--sectile-surface-selected); }
+.benchmark-target__edit:focus-visible,
 .benchmark-target__remove:focus-visible { outline: 2px solid var(--sectile-focus-ring); outline-offset: 2px; }
 
 .benchmark-targets-empty {
@@ -1818,21 +1849,6 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
 .benchmark-add-target:hover { color: var(--sectile-content-primary); background: var(--sectile-surface-hover); }
 .benchmark-add-target:active { background: var(--sectile-surface-selected); }
 .benchmark-add-target:focus-visible { outline: 2px solid var(--sectile-focus-ring); outline-offset: 2px; }
-
-.benchmark-composer__grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.benchmark-composer__numbers {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 16rem));
-  gap: 1rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--sectile-border-subtle);
-}
 
 .benchmark-config__error {
   margin-top: .85rem !important;
@@ -2301,11 +2317,6 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
   pointer-events: none;
 }
 
-@media (max-width: 980px) {
-  .benchmark-composer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .benchmark-composer__numbers { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
 @media (max-width: 620px) {
   .benchmark-workspace-bar { padding-inline: .75rem; }
   .benchmark-workspace { padding: .75rem; }
@@ -2317,9 +2328,8 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
   .benchmark-results__heading,
   .benchmark-raw > header { display: grid; gap: 1rem; }
   .benchmark-config > .benchmark-config__heading { display: flex; gap: 1rem; }
-  .benchmark-composer__grid,
-  .benchmark-composer__numbers { grid-template-columns: minmax(0, 1fr); }
-  .benchmark-target { grid-template-columns: 1.75rem minmax(0, 1fr) 2.25rem; }
+  .benchmark-target { grid-template-columns: 1.75rem minmax(0, 1fr); }
+  .benchmark-target__actions { grid-column: 2; justify-content: flex-end; }
   .benchmark-target__body p { white-space: normal; }
   .benchmark-plan-summary > header { display: grid; gap: .3rem; }
   .benchmark-plan-summary > header p { text-align: left; }
