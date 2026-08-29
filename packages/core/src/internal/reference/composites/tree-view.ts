@@ -52,6 +52,7 @@ export function applyReferenceTreeViewEvent<ID extends StableID>(
   if (typeof event === 'object') {
     if (!tree.has(event.id)) return rejected('tree-view-target-outside-tree');
     if (event.type === 'set-expanded') {
+      if (!visible.includes(event.id)) return rejected('tree-view-target-hidden');
       const requested = event.open
         ? [...expansion.ids, event.id]
         : expansion.ids.filter((id) => id !== event.id);

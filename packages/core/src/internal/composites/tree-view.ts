@@ -1,7 +1,7 @@
 import { unwrap } from '../../result.js';
 import type { Result, SectileError, StableID } from '../../shared.js';
 import type { Tree } from '../../structures/tree.js';
-import { fail, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, hasCanonicalState, memoizeWeakPair, ok } from '../kernel/foundation.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
 import {
@@ -56,6 +56,8 @@ export interface TreeViewUpdate<ID extends StableID = StableID> {
   readonly commands: readonly TreeViewCommand<ID>[];
 }
 
+const treeVisibleViews = new WeakMap<object, WeakMap<object, ReturnType<Tree<StableID>['visible']>>>();
+
 export function createTreeViewState<ID extends StableID>(
   tree: Tree<ID>,
   input: TreeViewStateInput<ID> = {},
@@ -70,7 +72,7 @@ export function tryCreateTreeViewState<ID extends StableID>(
   selectionMode: TreeViewSelectionMode = 'multiple',
 ): Result<TreeViewState<ID>> {
   const expansion = createExpansionState(tree, input.expanded ?? []);
-  const visible = tree.visible(expansion);
+  const visible = treeVisible(tree, expansion);
   const current = input.current ?? null;
   if (current !== null && !visible.contains(current)) {
     return fail(
@@ -82,7 +84,7 @@ export function tryCreateTreeViewState<ID extends StableID>(
   }
   const selection = createSelectionState(tree.preorder(), selectionMode, input);
   if (!selection.ok) return selection;
-  return ok(treeViewState(expansion, createCursorState(current), selection.value));
+  return ok(treeViewState(tree, expansion, createCursorState(current), selection.value));
 }
 
 export function applyTreeViewEvent<ID extends StableID>(
@@ -99,7 +101,8 @@ export function applyTreeViewEvent<ID extends StableID>(
       { event },
     );
   }
-  const expansion = createExpansionState(tree, state.expansion.ids);
+  const canonical = hasCanonicalState(tree, state);
+  const expansion = canonical ? state.expansion : createExpansionState(tree, state.expansion.ids);
   if (policies.eligible !== undefined && typeof policies.eligible !== 'function') {
     return fail('transition-rejection', 'invalid-eligibility-policy', 'Tree-view eligibility policy must be a function.');
   }
@@ -108,12 +111,12 @@ export function applyTreeViewEvent<ID extends StableID>(
   if (selectionMode !== 'single' && selectionMode !== 'multiple') {
     return fail('transition-rejection', 'invalid-selection-mode', 'Tree-view selection mode must be single or multiple.', { selectionMode });
   }
-  const visible = tree.visible(expansion);
-  const stateError = validateTreeViewState(tree, visible, state, selectionMode);
+  const visible = treeVisible(tree, expansion);
+  const stateError = canonical ? null : validateTreeViewState(tree, visible, state, selectionMode);
   if (stateError !== null) return { ok: false, error: stateError };
   const normalized = sameExpansion(expansion, state.expansion)
     ? state
-    : treeViewState(expansion, state.cursor, state.selection);
+    : treeViewState(tree, expansion, state.cursor, state.selection);
   const current = state.cursor.current;
 
   if (typeof event === 'object') {
@@ -126,12 +129,13 @@ export function applyTreeViewEvent<ID extends StableID>(
       );
     }
     if (event.type === 'set-expanded') {
+      if (!visible.contains(event.id)) return fail('transition-rejection', 'tree-view-target-hidden', 'Expansion changes require a visible tree-view item.', { id: event.id });
       if (!eligible(event.id)) return fail('transition-rejection', 'tree-view-target-ineligible', 'Disabled tree-view items cannot change expansion.', { id: event.id });
       const nextExpansion = setExpansionOpen(expansion, event.id, event.open, tree);
-      const nextVisible = tree.visible(nextExpansion);
+      const nextVisible = treeVisible(tree, nextExpansion);
       const target = current !== null && nextVisible.contains(current) ? current : event.id;
       return createMachineUpdate(
-        treeViewState(nextExpansion, createCursorState(target), state.selection),
+        treeViewState(tree, nextExpansion, createCursorState(target), state.selection),
         target === current ? [] : [{ type: 'focus', id: target }],
       );
     }
@@ -146,11 +150,11 @@ export function applyTreeViewEvent<ID extends StableID>(
     if (!eligible(event.id)) return fail('transition-rejection', 'tree-view-target-ineligible', 'Direct tree-view focus and selection require an eligible identity.', { id: event.id });
     if (event.type === 'focus') {
       return createMachineUpdate(
-        treeViewState(expansion, createCursorState(event.id), state.selection),
+        treeViewState(tree, expansion, createCursorState(event.id), state.selection),
         [{ type: 'focus', id: event.id }],
       );
     }
-    return createMachineUpdate(treeViewState(
+    return createMachineUpdate(treeViewState(tree,
       expansion,
       createCursorState(event.id),
       selectForMode(state.selection, event.id, tree.preorder(), selectionMode),
@@ -163,7 +167,7 @@ export function applyTreeViewEvent<ID extends StableID>(
       : movementTarget(visible, current, event === 'next' ? 1 : -1, eligible);
     if (target === null) return createMachineUpdate(normalized);
     return createMachineUpdate(
-      treeViewState(expansion, createCursorState(target), state.selection),
+      treeViewState(tree, expansion, createCursorState(target), state.selection),
       [{ type: 'focus', id: target }],
     );
   }
@@ -173,7 +177,7 @@ export function applyTreeViewEvent<ID extends StableID>(
     const children = tree.childrenOf(current);
     if (children === null || children.size === 0) return createMachineUpdate(normalized);
     if (!expansion.has(current)) {
-      return createMachineUpdate(treeViewState(
+      return createMachineUpdate(treeViewState(tree,
         setExpansionOpen(expansion, current, true, tree),
         state.cursor,
         state.selection,
@@ -182,7 +186,7 @@ export function applyTreeViewEvent<ID extends StableID>(
     const target = eligibleFromEdge(children, 1, eligible);
     if (target === null) return createMachineUpdate(normalized);
     return createMachineUpdate(
-      treeViewState(expansion, createCursorState(target), state.selection),
+      treeViewState(tree, expansion, createCursorState(target), state.selection),
       [{ type: 'focus', id: target }],
     );
   }
@@ -190,7 +194,7 @@ export function applyTreeViewEvent<ID extends StableID>(
   if (event === 'left') {
     if (current === null) return createMachineUpdate(normalized);
     if (expansion.has(current)) {
-      return createMachineUpdate(treeViewState(
+      return createMachineUpdate(treeViewState(tree,
         setExpansionOpen(expansion, current, false, tree),
         state.cursor,
         state.selection,
@@ -199,7 +203,7 @@ export function applyTreeViewEvent<ID extends StableID>(
     const parent = eligibleAncestor(tree, current, eligible);
     if (parent === null) return createMachineUpdate(normalized);
     return createMachineUpdate(
-      treeViewState(expansion, createCursorState(parent), state.selection),
+      treeViewState(tree, expansion, createCursorState(parent), state.selection),
       [{ type: 'focus', id: parent }],
     );
   }
@@ -208,7 +212,7 @@ export function applyTreeViewEvent<ID extends StableID>(
     return fail('transition-rejection', 'no-cursor', 'Tree-view selection requires a cursor.');
   }
   if (!eligible(current)) return fail('transition-rejection', 'tree-view-target-ineligible', 'Tree-view selection requires an eligible cursor.', { id: current });
-  return createMachineUpdate(treeViewState(
+  return createMachineUpdate(treeViewState(tree,
     expansion,
     state.cursor,
     selectForMode(state.selection, current, tree.preorder(), selectionMode),
@@ -314,12 +318,19 @@ function sameExpansion<ID extends StableID>(
 }
 
 function treeViewState<ID extends StableID>(
+  tree: Tree<ID>,
   expansion: ExpansionState<ID>,
   cursor: CursorState<ID>,
   selection: SelectionState<ID>,
 ): TreeViewState<ID> {
-  return Object.freeze({ expansion, cursor, selection });
+  return bindCanonicalState(tree, Object.freeze({ expansion, cursor, selection }));
 }
+
+function treeVisible<ID extends StableID>(tree: Tree<ID>, expansion: ExpansionState<ID>): ReturnType<Tree<ID>['visible']> {
+  return memoizeWeakPair(treeVisibleViews, tree, expansion, createTreeVisible) as ReturnType<Tree<ID>['visible']>;
+}
+
+function createTreeVisible(owner: object, expansion: object): ReturnType<Tree<StableID>['visible']> { return (owner as Tree<StableID>).visible(expansion as ExpansionState<StableID>); }
 
 function isTreeViewEvent<ID extends StableID>(value: unknown): value is TreeViewEvent<ID> {
   if (typeof value === 'string') {

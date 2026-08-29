@@ -49,6 +49,47 @@ const safeCeilingErrorCodes: Readonly<Record<SafeCeilingName, CoreErrorCode>> = 
   total: 'invalid-total',
 });
 
+const canonicalOwners = new WeakMap<object, object>();
+
+export function bindCanonicalState<State extends object>(owner: object, state: State): State {
+  canonicalOwners.set(state, owner);
+  return state;
+}
+
+export function hasCanonicalState(owner: object, state: object): boolean {
+  return canonicalOwners.get(state) === owner;
+}
+
+export function memoizeWeak<Key extends object, Value>(
+  cache: WeakMap<Key, Value>,
+  key: Key,
+  create: (key: Key) => Value,
+): Value {
+  const cached = cache.get(key);
+  if (cached !== undefined) return cached;
+  const value = create(key);
+  cache.set(key, value);
+  return value;
+}
+
+export function memoizeWeakPair<Owner extends object, Key extends object, Value>(
+  cache: WeakMap<Owner, WeakMap<Key, Value>>,
+  owner: Owner,
+  key: Key,
+  create: (owner: Owner, key: Key) => Value,
+): Value {
+  let owned = cache.get(owner);
+  if (owned === undefined) {
+    owned = new WeakMap();
+    cache.set(owner, owned);
+  }
+  const cached = owned.get(key);
+  if (cached !== undefined) return cached;
+  const value = create(owner, key);
+  owned.set(key, value);
+  return value;
+}
+
 export function ok<T>(value: T): Result<T> {
   return { ok: true, value };
 }

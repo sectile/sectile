@@ -1,7 +1,7 @@
 import type { Tree } from '../../structures/tree.js';
 import type { CoreErrorCode } from '../../error-code.js';
 import type { Result, StableID } from '../../shared.js';
-import { fail, freezeArray, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, freezeArray, hasCanonicalState, ok } from '../kernel/foundation.js';
 
 export type CascadeChoiceEvent<ID extends StableID = StableID> =
   | 'next' | 'previous' | 'first' | 'last'
@@ -70,7 +70,7 @@ export function tryCreateCascadeChoiceState<ID extends StableID>(
   const path = input.path === undefined ? inferredPath : [...input.path];
   const pathError = validatePath(tree, path, errors);
   if (pathError !== null) return pathError;
-  return ok(choiceState({ value, highlighted, path }));
+  return ok(choiceState(tree, { value, highlighted, path }));
 }
 
 export function getCascadeChoiceColumns<ID extends StableID>(
@@ -101,8 +101,10 @@ export function applyCascadeChoiceEvent<ID extends StableID>(
   policies: CascadeChoicePolicies<ID>,
   errors: CascadeChoiceErrorProfile,
 ): Result<CascadeChoiceTransition<ID>> {
-  const valid = tryCreateCascadeChoiceState(tree, state, errors);
-  if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
+  if (!hasCanonicalState(tree, state)) {
+    const validation = tryCreateCascadeChoiceState(tree, state, errors);
+    if (!validation.ok) return { ok: false, error: { ...validation.error, class: 'transition-rejection' } };
+  }
   if (typeof event === 'object') {
     if (!tree.has(event.id)) {
       return fail('transition-rejection', errors.targetUnavailable, `${errors.label} target must exist in the tree.`);
@@ -111,19 +113,19 @@ export function applyCascadeChoiceEvent<ID extends StableID>(
       return fail('transition-rejection', errors.targetDisabled, `${errors.label} target must be eligible.`);
     }
     return event.type === 'focus'
-      ? focus(state, event.id)
+      ? focus(tree, state, event.id)
       : choose(tree, state, event.id, policies, errors);
   }
   if (event === 'left') {
     const parent = state.highlighted === null ? null : tree.parentOf(state.highlighted);
     if (parent === null) return transition(state);
-    return focus(choiceState(state, { path: ancestors(tree, parent) }), parent);
+    return focus(tree, choiceState(tree, state, { path: ancestors(tree, parent) }), parent);
   }
   if (event === 'right') {
     if (state.highlighted === null || tree.isLeaf(state.highlighted) !== false) return transition(state);
     const child = firstEligible(tree.childrenOf(state.highlighted)?.ids ?? [], policies);
     if (child === null) return transition(state);
-    return focus(choiceState(state, { path: [...ancestors(tree, state.highlighted), state.highlighted] }), child);
+    return focus(tree, choiceState(tree, state, { path: [...ancestors(tree, state.highlighted), state.highlighted] }), child);
   }
   if (event === 'select') {
     return state.highlighted === null
@@ -143,15 +145,16 @@ export function applyCascadeChoiceEvent<ID extends StableID>(
     const index = currentIndex < 0 ? fallback : Math.min(eligible.length - 1, Math.max(0, currentIndex + delta));
     next = eligible[index] as ID;
   }
-  return focus(state, next);
+  return focus(tree, state, next);
 }
 
 function focus<ID extends StableID>(
+  tree: Tree<ID>,
   state: CascadeChoiceState<ID>,
   id: ID,
 ): Result<CascadeChoiceTransition<ID>> {
   if (id === state.highlighted) return transition(state, [], 'focus');
-  return transition(choiceState(state, { highlighted: id }), [{ type: 'focus', id }], 'focus');
+  return transition(choiceState(tree, state, { highlighted: id }), [{ type: 'focus', id }], 'focus');
 }
 
 function choose<ID extends StableID>(
@@ -163,14 +166,14 @@ function choose<ID extends StableID>(
 ): Result<CascadeChoiceTransition<ID>> {
   const leaf = tree.isLeaf(id) === true;
   if ((policies.selectable?.(id, leaf) ?? leaf) === true) {
-    const next = choiceState(state, { value: id, highlighted: id, path: ancestors(tree, id) });
+    const next = choiceState(tree, state, { value: id, highlighted: id, path: ancestors(tree, id) });
     return transition(next, [{ type: 'select-value', id }], 'commit');
   }
   if (leaf) {
     return fail('transition-rejection', errors.targetUnselectable, `${errors.label} policy rejected the target.`);
   }
   const child = firstEligible(tree.childrenOf(id)?.ids ?? [], policies);
-  const next = choiceState(state, {
+  const next = choiceState(tree, state, {
     highlighted: child ?? id,
     path: [...ancestors(tree, id), id],
   });
@@ -199,14 +202,15 @@ function validatePath<ID extends StableID>(
 }
 
 function choiceState<ID extends StableID>(
+  tree: Tree<ID>,
   state: CascadeChoiceState<ID>,
   patch: Partial<CascadeChoiceState<ID>> = {},
 ): CascadeChoiceState<ID> {
-  return Object.freeze({
+  return bindCanonicalState(tree, Object.freeze({
     value: patch.value === undefined ? state.value : patch.value,
     highlighted: patch.highlighted === undefined ? state.highlighted : patch.highlighted,
     path: freezeArray(patch.path ?? state.path),
-  });
+  }));
 }
 
 function transition<ID extends StableID>(

@@ -8,14 +8,14 @@
       "sourceMapFiles": 95,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 446073,
-        "declarations": 159228,
-        "sourceMaps": 477376,
-        "total": 1082677
+        "javascript": 450900,
+        "declarations": 159758,
+        "sourceMaps": 482596,
+        "total": 1093254
       },
       "packed": {
-        "tarballBytes": 189734,
-        "unpackedBytes": 1097426,
+        "tarballBytes": 191698,
+        "unpackedBytes": 1108003,
         "files": 288
       }
     },

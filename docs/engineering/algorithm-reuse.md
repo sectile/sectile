@@ -2,15 +2,15 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all eight package source trees.
 
-Findings: 432; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
+Findings: 430; migration owners: WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
 
 ## Classifications
 
 | Classification | Count |
 |---|---:|
 | bounded-small | 10 |
-| migration-required | 111 |
-| result-proportional | 142 |
+| migration-required | 108 |
+| result-proportional | 143 |
 | reuse | 169 |
 
 ## Categories
@@ -21,27 +21,24 @@ Findings: 432; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039,
 | discarded-canonical-index | 39 |
 | measurement-authority | 16 |
 | private-algorithm-bypass | 11 |
-| raw-full-domain-scan | 285 |
+| raw-full-domain-scan | 286 |
 | repeated-immutable-view | 14 |
-| whole-domain-validation | 33 |
+| whole-domain-validation | 30 |
 
 ## Migration-required findings
 
 | Owner | Rule | Source | Detector |
 |---|---|---|---|
-| WI-013 | core-trusted-transition-validation | `packages/core/src/internal/composites/cascade-choice.ts:104` | whole-state-validation |
-| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/cascade-choice.ts:245` | raw-identity-lookup |
-| WI-013 | core-trusted-transition-validation | `packages/core/src/internal/composites/grid-control.ts:36` | whole-state-validation |
-| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/grid-control.ts:79` | immutable-view-construction |
-| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/linear-action.ts:169` | linear-membership |
-| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/linear-choice.ts:255` | linear-membership |
-| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/menu.ts:20` | raw-identity-lookup |
-| WI-013 | core-trusted-transition-validation | `packages/core/src/internal/composites/menu.ts:28` | whole-state-validation |
-| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/menu.ts:43` | linear-membership |
-| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/tree-grid.ts:111` | derived-index-construction |
-| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/tree-grid.ts:426` | immutable-view-construction |
-| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/tree-grid.ts:518` | linear-membership |
-| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/tree-view.ts:326` | linear-membership |
+| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/cascade-choice.ts:249` | raw-identity-lookup |
+| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/grid-control.ts:88` | immutable-view-construction |
+| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/linear-action.ts:172` | linear-membership |
+| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/linear-choice.ts:258` | linear-membership |
+| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/menu.ts:22` | raw-identity-lookup |
+| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/menu.ts:46` | linear-membership |
+| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/tree-grid.ts:115` | derived-index-construction |
+| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/tree-grid.ts:440` | immutable-view-construction |
+| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/tree-grid.ts:533` | linear-membership |
+| WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/tree-view.ts:337` | linear-membership |
 | WI-021 | core-text-reorder-local-proof | `packages/core/src/reorder.ts:113` | linear-membership |
 | WI-021 | core-text-reorder-local-proof | `packages/core/src/reorder.ts:136` | raw-identity-lookup |
 | WI-021 | core-text-reorder-local-proof | `packages/core/src/reorder.ts:140` | raw-identity-lookup |

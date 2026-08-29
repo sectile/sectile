@@ -9,7 +9,7 @@ import type {
 import type { Grid } from '../../structures/grid.js';
 import type { Sequence } from '../../structures/sequence.js';
 import type { Tree } from '../../structures/tree.js';
-import { fail, freezeArray, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, freezeArray, hasCanonicalState, memoizeWeak, memoizeWeakPair, ok } from '../kernel/foundation.js';
 import { findEligibleFromEdge, IndexedSequence } from '../kernel/indexed-sequence.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
@@ -92,6 +92,10 @@ export interface TreeGridUpdate<
   readonly state: TreeGridState<RowID, CellID>;
   readonly commands: readonly TreeGridCommand<CellID>[];
 }
+
+const allCellViews = new WeakMap<object, Sequence<StableID>>();
+const visibleCellViews = new WeakMap<object, WeakMap<object, Sequence<StableID>>>();
+const visibleRowViews = new WeakMap<object, WeakMap<object, ReadonlySet<StableID>>>();
 
 class IndexedTreeGridModel<RowID extends StableID, CellID extends StableID>
   implements TreeGridModel<RowID, CellID> {
@@ -207,7 +211,7 @@ export function tryCreateTreeGridState<RowID extends StableID, CellID extends St
       'Tree-grid editing requires a current cell.',
     );
   }
-  return ok(treeGridState(
+  return ok(treeGridState(model,
     expansion,
     createCursorState(current),
     selection.value,
@@ -221,10 +225,11 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
   event: TreeGridEvent<RowID, CellID>,
   policies: TreeGridPolicies<CellID> = {},
 ): Result<TreeGridUpdate<RowID, CellID>> {
-  const expansion = createExpansionState(model.tree, state.expansion.ids);
+  const canonical = hasCanonicalState(model, state);
+  const expansion = canonical ? state.expansion : createExpansionState(model.tree, state.expansion.ids);
   const visible = visibleCells(model, expansion);
   const domain = allCells(model);
-  const stateError = validateTreeGridState(visible, domain, state);
+  const stateError = canonical ? null : validateTreeGridState(visible, domain, state);
   if (stateError !== null) return { ok: false, error: stateError };
   if (!isTreeGridEvent(event)) {
     return fail(
@@ -253,7 +258,7 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
 
   const normalized = sameExpansion(expansion, state.expansion)
     ? state
-    : treeGridState(expansion, state.cursor, state.selection, state.editMode);
+    : treeGridState(model, expansion, state.cursor, state.selection, state.editMode);
   const current = state.cursor.current;
 
   if (typeof event === 'object') {
@@ -273,7 +278,7 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
         ? current
         : (rowIndex === null ? null : model.grid.row(rowIndex)?.at(0) ?? null);
       return createMachineUpdate(
-        treeGridState(nextExpansion, createCursorState(target), state.selection, 'navigation'),
+        treeGridState(model, nextExpansion, createCursorState(target), state.selection, 'navigation'),
         target === null || target === current ? [] : [{ type: 'focus', id: target }],
       );
     }
@@ -288,19 +293,19 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
     const cursor = createCursorState(event.id);
     if (event.type === 'focus') {
       return createMachineUpdate(
-        treeGridState(expansion, cursor, state.selection, 'navigation'),
+        treeGridState(model, expansion, cursor, state.selection, 'navigation'),
         [{ type: 'focus', id: event.id }],
       );
     }
     const selection = selectOne(state.selection, event.id, domain);
     if (event.type === 'select') {
       return createMachineUpdate(
-        treeGridState(expansion, cursor, selection, 'navigation'),
+        treeGridState(model, expansion, cursor, selection, 'navigation'),
         [{ type: 'focus', id: event.id }],
       );
     }
     return createMachineUpdate(
-      treeGridState(expansion, cursor, selection, 'editing'),
+      treeGridState(model, expansion, cursor, selection, 'editing'),
       [{ type: 'focus', id: event.id }, { type: 'begin-edit', id: event.id }],
     );
   }
@@ -314,7 +319,7 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
       );
     }
     return createMachineUpdate(
-      treeGridState(expansion, state.cursor, state.selection, 'navigation'),
+      treeGridState(model, expansion, state.cursor, state.selection, 'navigation'),
       [{ type: event, id: current }],
     );
   }
@@ -332,7 +337,7 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
       return fail('transition-rejection', 'no-cursor', 'Tree-grid editing requires a cursor.');
     }
     return createMachineUpdate(
-      treeGridState(expansion, state.cursor, state.selection, 'editing'),
+      treeGridState(model, expansion, state.cursor, state.selection, 'editing'),
       [{ type: 'begin-edit', id: current }],
     );
   }
@@ -344,7 +349,7 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
     return createMachineUpdate(
       selection === state.selection
         ? normalized
-        : treeGridState(expansion, state.cursor, selection, 'navigation'),
+        : treeGridState(model, expansion, state.cursor, selection, 'navigation'),
     );
   }
   if (event === 'expand' || event === 'collapse') {
@@ -360,7 +365,7 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
     return createMachineUpdate(
       nextExpansion === expansion
         ? normalized
-        : treeGridState(nextExpansion, state.cursor, state.selection, 'navigation'),
+        : treeGridState(model, nextExpansion, state.cursor, state.selection, 'navigation'),
     );
   }
 
@@ -378,7 +383,7 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
     if (!initial.ok) return initial;
     target = initial.value;
   } else {
-    const visibleRows = new Set(model.tree.visible(expansion).ids);
+    const visibleRows = visibleRowsFor(model, expansion);
     const movement = model.grid.move(current, event, boundary, {
       eligible: (id) => {
         const row = model.rowOfCell(id);
@@ -391,7 +396,7 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
   }
   if (target === null) return createMachineUpdate(normalized);
   return createMachineUpdate(
-    treeGridState(expansion, createCursorState(target), state.selection, 'navigation'),
+    treeGridState(model, expansion, createCursorState(target), state.selection, 'navigation'),
     [{ type: 'focus', id: target }],
   );
 }
@@ -399,16 +404,25 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
 function allCells<RowID extends StableID, CellID extends StableID>(
   model: TreeGridModel<RowID, CellID>,
 ): Sequence<CellID> {
-  return cellsWhere(model, () => true);
+  return memoizeWeak(allCellViews, model, createAllCells) as Sequence<CellID>;
 }
+
+function createAllCells(owner: object): Sequence<StableID> { return cellsWhere(owner as TreeGridModel<StableID, StableID>, () => true); }
 
 function visibleCells<RowID extends StableID, CellID extends StableID>(
   model: TreeGridModel<RowID, CellID>,
   expansion: ExpansionState<RowID>,
 ): Sequence<CellID> {
-  const visibleRows = new Set(model.tree.visible(expansion).ids);
-  return cellsWhere(model, (row) => visibleRows.has(row));
+  return memoizeWeakPair(visibleCellViews, model, expansion, createVisibleCells) as Sequence<CellID>;
 }
+
+function createVisibleCells(owner: object, expansion: object): Sequence<StableID> { const model = owner as TreeGridModel<StableID, StableID>; const rows = visibleRowsFor(model, expansion as ExpansionState<StableID>); return cellsWhere(model, (row) => rows.has(row)); }
+
+function visibleRowsFor<RowID extends StableID, CellID extends StableID>(model: TreeGridModel<RowID, CellID>, expansion: ExpansionState<RowID>): ReadonlySet<RowID> {
+  return memoizeWeakPair(visibleRowViews, model, expansion, createVisibleRows) as ReadonlySet<RowID>;
+}
+
+function createVisibleRows(owner: object, expansion: object): ReadonlySet<StableID> { return new Set((owner as TreeGridModel<StableID, StableID>).tree.visible(expansion as ExpansionState<StableID>).ids); }
 
 function cellsWhere<RowID extends StableID, CellID extends StableID>(
   model: TreeGridModel<RowID, CellID>,
@@ -482,12 +496,13 @@ function validateTreeGridState<CellID extends StableID>(
 }
 
 function treeGridState<RowID extends StableID, CellID extends StableID>(
+  model: TreeGridModel<RowID, CellID>,
   expansion: ExpansionState<RowID>,
   cursor: CursorState<CellID>,
   selection: SelectionState<CellID>,
   editMode: TreeGridEditMode,
 ): TreeGridState<RowID, CellID> {
-  return Object.freeze({ expansion, cursor, selection, editMode });
+  return bindCanonicalState(model, Object.freeze({ expansion, cursor, selection, editMode }));
 }
 
 function sameExpansion<ID extends StableID>(

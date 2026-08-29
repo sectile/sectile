@@ -9,7 +9,7 @@ import {
   type TextEvent,
   tryCreateTextEditingState,
 } from '../editing/text.js';
-import { fail, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, hasCanonicalState, ok } from '../kernel/foundation.js';
 import { findEligibleFromEdge } from '../kernel/indexed-sequence.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import { unwrap } from '../../result.js';
@@ -86,7 +86,7 @@ export function tryCreateComboboxState<ID extends StableID>(
   }
   const selection = createSelectionState(domain, 'single', input);
   if (!selection.ok) return selection;
-  return ok(comboboxState(
+  return ok(comboboxState(domain,
     normalizedText.value,
     popupOpen,
     createCursorState(current),
@@ -103,6 +103,8 @@ export function applyComboboxEvent<ID extends StableID>(
 ): Result<ComboboxUpdate<ID>> {
   const policyValidation = validatePolicies(policies);
   if (!policyValidation.ok) return policyValidation;
+  const stateValidation = validateComboboxState(domain, state);
+  if (stateValidation !== null) return stateValidation;
   const current = state;
 
   if (isTextEvent(event)) {
@@ -130,7 +132,7 @@ export function applyComboboxEvent<ID extends StableID>(
         { id: event.id },
       );
     }
-    return acceptComboboxCandidate(domain, labels, comboboxState(
+    return acceptComboboxCandidate(domain, labels, comboboxState(domain,
       current.text,
       current.popupOpen,
       createCursorState(event.id),
@@ -152,7 +154,7 @@ export function applyComboboxEvent<ID extends StableID>(
     case 'previous':
       return moveCombobox(domain, labels, current, -1, policies);
     case 'close':
-      return createMachineUpdate(comboboxState(
+      return createMachineUpdate(comboboxState(domain,
         current.text,
         false,
         current.cursor,
@@ -168,6 +170,8 @@ export function acceptComboboxCandidate<ID extends StableID>(
   labels: ReadonlyMap<ID, string>,
   state: ComboboxState<ID>,
 ): Result<ComboboxUpdate<ID>> {
+  const stateValidation = validateComboboxState(domain, state);
+  if (stateValidation !== null) return stateValidation;
   const current = state.cursor.current;
   if (current === null || !domain.contains(current)) {
     return fail(
@@ -206,7 +210,7 @@ export function acceptComboboxCandidate<ID extends StableID>(
   });
   if (!text.ok) return text;
   const selection = selectOne(state.selection, current, domain);
-  const next = comboboxState(text.value, false, state.cursor, selection);
+  const next = comboboxState(domain, text.value, false, state.cursor, selection);
   return createMachineUpdate(next, [{ type: 'accept', id: current }]);
 }
 
@@ -232,7 +236,7 @@ function editComboboxText<ID extends StableID>(
     if (!first.ok) return first;
     current = first.value;
   }
-  const next = comboboxState(
+  const next = comboboxState(domain,
     edited.value.state,
     true,
     createCursorState(current),
@@ -280,14 +284,15 @@ function moveCombobox<ID extends StableID>(
     if (movement.kind === 'resource-rejected') return { ok: false, error: movement.error };
     target = movement.kind === 'found' ? movement.id : state.cursor.current;
   }
-  return updateCursor(state, target);
+  return updateCursor(domain, state, target);
 }
 
 function updateCursor<ID extends StableID>(
+  domain: Sequence<ID>,
   state: ComboboxState<ID>,
   current: ID | null,
 ): Result<ComboboxUpdate<ID>> {
-  const next = comboboxState(
+  const next = comboboxState(domain,
     state.text,
     true,
     current === state.cursor.current ? state.cursor : createCursorState(current),
@@ -366,12 +371,24 @@ function committedQuery(text: TextEditingState): string {
 }
 
 function comboboxState<ID extends StableID>(
+  domain: Sequence<ID>,
   text: TextEditingState,
   popupOpen: boolean,
   cursor: CursorState<ID>,
   selection: SelectionState<ID>,
 ): ComboboxState<ID> {
-  return Object.freeze({ text, popupOpen, cursor, selection });
+  return bindCanonicalState(domain, Object.freeze({ text, popupOpen, cursor, selection }));
+}
+
+function validateComboboxState<ID extends StableID>(domain: Sequence<ID>, state: ComboboxState<ID>): Result<never> | null {
+  if (hasCanonicalState(domain, state)) return null;
+  const validation = tryCreateComboboxState(domain, state.text, {
+    current: state.cursor.current,
+    selected: state.selection.selected,
+    anchor: state.selection.anchor,
+    popupOpen: state.popupOpen,
+  });
+  return validation.ok ? null : { ok: false, error: { ...validation.error, class: 'transition-rejection' } };
 }
 
 function isTextEvent<ID extends StableID>(

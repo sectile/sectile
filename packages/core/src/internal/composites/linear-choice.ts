@@ -1,6 +1,6 @@
 import type { BoundaryPolicy, Result, SectileError, StableID } from '../../shared.js';
 import type { Sequence } from '../../structures/sequence.js';
-import { fail, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, hasCanonicalState, ok } from '../kernel/foundation.js';
 import { findEligibleFromEdge } from '../kernel/indexed-sequence.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
@@ -63,7 +63,7 @@ export function createLinearChoiceState<ID extends StableID>(
   }
   const selection = createSelectionState(domain, 'single', input);
   if (!selection.ok) return selection;
-  return ok(linearChoiceState(createCursorState(current), selection.value));
+  return ok(linearChoiceState(domain, createCursorState(current), selection.value));
 }
 
 export function applyLinearChoiceEvent<ID extends StableID>(
@@ -72,7 +72,9 @@ export function applyLinearChoiceEvent<ID extends StableID>(
   event: LinearChoiceEvent<ID>,
   policies: LinearChoicePolicies<ID> = {},
 ): Result<LinearChoiceUpdate<ID>> {
-  const stateError = validateLinearChoiceState(domain, state);
+  const stateError = hasCanonicalState(domain, state)
+    ? null
+    : validateLinearChoiceState(domain, state);
   if (stateError !== null) return { ok: false, error: stateError };
   if (!isLinearChoiceEvent(event)) {
     return fail(
@@ -168,7 +170,7 @@ function focusTarget<ID extends StableID>(
 ): Result<LinearChoiceUpdate<ID>> {
   const selection = follows ? selectOne(state.selection, id, domain) : state.selection;
   return createMachineUpdate(
-    linearChoiceState(createCursorState(id), selection),
+    linearChoiceState(domain, createCursorState(id), selection),
     [{ type: 'focus', id }],
   );
 }
@@ -184,7 +186,7 @@ function chooseTarget<ID extends StableID>(
   if (focus && state.cursor.current !== id) commands.push({ type: 'focus', id });
   if (activate) commands.push({ type: 'activate', id });
   return createMachineUpdate(
-    linearChoiceState(createCursorState(id), selectOne(state.selection, id, domain)),
+    linearChoiceState(domain, createCursorState(id), selectOne(state.selection, id, domain)),
     commands,
   );
 }
@@ -227,10 +229,11 @@ function validateLinearChoiceState<ID extends StableID>(
 }
 
 function linearChoiceState<ID extends StableID>(
+  domain: Sequence<ID>,
   cursor: CursorState<ID>,
   selection: SelectionState<ID>,
 ): LinearChoiceState<ID> {
-  return Object.freeze({ cursor, selection });
+  return bindCanonicalState(domain, Object.freeze({ cursor, selection }));
 }
 
 function isAvailable<ID extends StableID>(

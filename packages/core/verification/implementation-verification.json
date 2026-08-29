@@ -82,9 +82,9 @@
   "treeView": {
     "models": 2000,
     "transitions": 20000,
-    "accepted": 16672,
-    "rejected": 3328,
-    "commands": 7633
+    "accepted": 15982,
+    "rejected": 4018,
+    "commands": 7659
   },
   "combobox": {
     "models": 2000,

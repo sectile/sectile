@@ -1,7 +1,7 @@
 import { unwrap } from '../../result.js';
 import type { BoundaryPolicy, Result, SectileError, StableID } from '../../shared.js';
 import type { Sequence } from '../../structures/sequence.js';
-import { fail, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, hasCanonicalState, ok } from '../kernel/foundation.js';
 import { findEligibleFromEdge } from '../kernel/indexed-sequence.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
@@ -58,7 +58,7 @@ export function tryCreateLinearActionState<ID extends StableID>(
       { current },
     );
   }
-  return ok(linearActionState(current));
+  return ok(linearActionState(domain, current));
 }
 
 export function applyLinearActionEvent<ID extends StableID>(
@@ -67,7 +67,9 @@ export function applyLinearActionEvent<ID extends StableID>(
   event: LinearActionEvent<ID>,
   policies: LinearActionPolicies<ID> = {},
 ): Result<LinearActionUpdate<ID>> {
-  const stateError = validateState(domain, state);
+  const stateError = hasCanonicalState(domain, state)
+    ? null
+    : validateState(domain, state);
   if (stateError !== null) return { ok: false, error: stateError };
   if (!isLinearActionEvent(event)) {
     return fail(
@@ -103,13 +105,13 @@ export function applyLinearActionEvent<ID extends StableID>(
       );
     }
     return event.type === 'focus'
-      ? focus(event.id)
-      : invoke(state, event.id, true);
+      ? focus(domain, event.id)
+      : invoke(domain, state, event.id, true);
   }
   if (event === 'invoke') {
     return state.cursor.current === null
       ? fail('transition-rejection', 'no-cursor', 'Linear action invocation requires a cursor.')
-      : invoke(state, state.cursor.current, false);
+      : invoke(domain, state, state.cursor.current, false);
   }
   const direction = event === 'next' || event === 'first' ? 1 : -1;
   const eligible = policies.eligible ?? (() => true);
@@ -129,14 +131,15 @@ export function applyLinearActionEvent<ID extends StableID>(
     if (movement.kind === 'resource-rejected') return { ok: false, error: movement.error };
     target = movement.kind === 'found' ? movement.id : null;
   }
-  return target === null ? createMachineUpdate(state) : focus(target);
+  return target === null ? createMachineUpdate(state) : focus(domain, target);
 }
 
-function focus<ID extends StableID>(id: ID): Result<LinearActionUpdate<ID>> {
-  return createMachineUpdate(linearActionState(id), [{ type: 'focus', id }]);
+function focus<ID extends StableID>(domain: Sequence<ID>, id: ID): Result<LinearActionUpdate<ID>> {
+  return createMachineUpdate(linearActionState(domain, id), [{ type: 'focus', id }]);
 }
 
 function invoke<ID extends StableID>(
+  domain: Sequence<ID>,
   state: LinearActionState<ID>,
   id: ID,
   direct: boolean,
@@ -144,11 +147,11 @@ function invoke<ID extends StableID>(
   const commands: LinearActionCommand<ID>[] = [];
   if (direct && state.cursor.current !== id) commands.push({ type: 'focus', id });
   commands.push({ type: 'invoke', id });
-  return createMachineUpdate(linearActionState(id), commands);
+  return createMachineUpdate(linearActionState(domain, id), commands);
 }
 
-function linearActionState<ID extends StableID>(current: ID | null): LinearActionState<ID> {
-  return Object.freeze({ cursor: createCursorState(current) });
+function linearActionState<ID extends StableID>(domain: Sequence<ID>, current: ID | null): LinearActionState<ID> {
+  return bindCanonicalState(domain, Object.freeze({ cursor: createCursorState(current) }));
 }
 
 function validateState<ID extends StableID>(

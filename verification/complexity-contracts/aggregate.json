@@ -19294,6 +19294,228 @@
     {
       "package": "core",
       "surface": "hot",
+      "id": "canonical-state.transition",
+      "source": "packages/core/src/internal/kernel/foundation.ts",
+      "benchmarkIDs": [
+        "core:listbox:next:100000",
+        "core:grid-control:right:100000",
+        "core:tree-view:next:100000",
+        "core:tree-grid:right:100000",
+        "core:menu:next:100000",
+        "core:cascade:next:100000"
+      ],
+      "specificationCeiling": "O(sMove + oResult)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "sMove",
+            "meaning": "eligible candidates visited by the requested movement",
+            "ceiling": "operation maxScan or selected axis length"
+          },
+          {
+            "name": "oResult",
+            "meaning": "state and command output cardinality",
+            "ceiling": "component command ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(sMove + oResult)",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(oResult)",
+          "retained": "O(oResult)"
+        },
+        "resources": {
+          "allocations": "O(oResult)",
+          "cacheEntries": "O(1)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "A module-private family plus exact owner WeakMap check is O(1); trusted states skip whole-domain validation and execute only the requested movement and bounded output construction.",
+        "adversarialWitness": "A canonical 100,000-item state moves one eligible step without reading unrelated domain identities; a different owner cannot hit the provenance check.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Canonical unchanged-owner transitions may visit only movement candidates and result output."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "canonical-state.validation-external",
+      "source": "packages/core/src/internal/kernel/foundation.ts",
+      "benchmarkIDs": [
+        "core:listbox:next:external:100000",
+        "core:grid-control:right:external:100000",
+        "core:tree-view:next:external:100000",
+        "core:tree-grid:right:external:100000",
+        "core:menu:next:external:100000",
+        "core:cascade:next:external:100000"
+      ],
+      "specificationCeiling": "O(n + k + sMove)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "external domain cardinality requiring validation",
+            "ceiling": "domain maxItems"
+          },
+          {
+            "name": "k",
+            "meaning": "external selected, expanded, or path identities",
+            "ceiling": "k <= n"
+          },
+          {
+            "name": "sMove",
+            "meaning": "eligible movement candidates visited after validation",
+            "ceiling": "operation maxScan or selected axis length"
+          }
+        ],
+        "time": {
+          "bound": "O(n + k + sMove)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(n + k)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(n + k)",
+          "cacheEntries": "O(1)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Missing, forged, or owner-mismatched provenance routes through the pre-existing full state/domain validation before any transition.",
+        "adversarialWitness": "A structurally valid copied state over 100,000 identities exercises complete error-equivalent validation; an invalid final identity rejects with the original error.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Untrusted external state must be validated before it can influence canonical semantics."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "canonical-state.view-cache",
+      "source": "packages/core/src/internal/composites/tree-grid.ts",
+      "benchmarkIDs": [
+        "core:grid-control:right:100000",
+        "core:tree-view:next:100000",
+        "core:tree-grid:right:100000",
+        "core:menu:next:100000"
+      ],
+      "specificationCeiling": "O(n + v)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "immutable owner domain cardinality",
+            "ceiling": "domain maxItems"
+          },
+          {
+            "name": "v",
+            "meaning": "visible identities emitted for one expansion/path owner",
+            "ceiling": "v <= n"
+          }
+        ],
+        "time": {
+          "bound": "O(n + v)",
+          "kind": "amortized",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(n + v)",
+          "output": "O(n + v)",
+          "retained": "O(n + v)"
+        },
+        "resources": {
+          "allocations": "O(n + v)",
+          "cacheEntries": "O(n + v)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Weak owner maps retain one flattened grid/tree-grid domain and one visible derivation per live immutable expansion/path identity; repeated reads return the indexed view in O(1).",
+        "adversarialWitness": "The first fully visible maximum-size owner materializes every identity; repeated canonical transitions perform zero cell or visible-tree reconstruction.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Only first construction of an output-sized immutable derived view scans its owner; repeated canonical access does not."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
       "id": "color-text.parse",
       "source": "packages/core/src/editing/color-text.ts",
       "benchmarkIDs": [

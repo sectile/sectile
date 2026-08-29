@@ -2,7 +2,7 @@ import { unwrap } from '../../result.js';
 import type { BoundaryPolicy, Result, SectileError, StableID } from '../../shared.js';
 import type { Sequence } from '../../structures/sequence.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
-import { fail, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, hasCanonicalState, ok } from '../kernel/foundation.js';
 import { findEligibleFromEdge } from '../kernel/indexed-sequence.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import {
@@ -83,7 +83,7 @@ export function tryCreateListboxState<ID extends StableID>(
   }
   const selection = createSelectionState(domain, selectionMode, input);
   if (!selection.ok) return selection;
-  return ok(listboxState(createCursorState(current), selection.value));
+  return ok(listboxState(domain, createCursorState(current), selection.value));
 }
 
 export function applyListboxEvent<ID extends StableID>(
@@ -92,7 +92,9 @@ export function applyListboxEvent<ID extends StableID>(
   event: ListboxEvent<ID>,
   policies: ListboxPolicies<ID> = {},
 ): Result<ListboxUpdate<ID>> {
-  const stateError = validateListboxState(domain, state);
+  const stateError = hasCanonicalState(domain, state)
+    ? null
+    : validateListboxState(domain, state);
   if (stateError !== null) return { ok: false, error: stateError };
   if (!isListboxEvent(event)) {
     return fail(
@@ -168,18 +170,18 @@ export function applyListboxEvent<ID extends StableID>(
         ? selectOne(state.selection, event.id, domain)
         : state.selection;
       return createMachineUpdate(
-        listboxState(createCursorState(event.id), selection),
+        listboxState(domain, createCursorState(event.id), selection),
         [{ type: 'focus', id: event.id }],
       );
     }
     if (event.type === 'toggle') {
-      return createMachineUpdate(listboxState(
+      return createMachineUpdate(listboxState(domain,
         createCursorState(event.id),
         selectForMode(state.selection, event.id, domain, selectionMode, deselectable),
       ), [{ type: 'focus', id: event.id }]);
     }
     return createMachineUpdate(
-      listboxState(createCursorState(event.id), selectOne(state.selection, event.id, domain)),
+      listboxState(domain, createCursorState(event.id), selectOne(state.selection, event.id, domain)),
       [{ type: 'focus', id: event.id }, { type: 'activate', id: event.id }],
     );
   }
@@ -197,7 +199,7 @@ export function applyListboxEvent<ID extends StableID>(
       const current = state.cursor.current;
       if (current === null) return noCursor();
       return createMachineUpdate(
-        listboxState(
+        listboxState(domain,
           state.cursor,
           selectForMode(state.selection, current, domain, selectionMode, deselectable),
         ),
@@ -207,14 +209,14 @@ export function applyListboxEvent<ID extends StableID>(
       const current = state.cursor.current;
       if (current === null) return noCursor();
       return createMachineUpdate(
-        listboxState(state.cursor, selectOne(state.selection, current, domain)),
+        listboxState(domain, state.cursor, selectOne(state.selection, current, domain)),
         [{ type: 'activate', id: current }],
       );
     }
     case 'clear': {
       const selection = clearSelection(state.selection);
       return createMachineUpdate(
-        selection === state.selection ? state : listboxState(state.cursor, selection),
+        selection === state.selection ? state : listboxState(domain, state.cursor, selection),
       );
     }
   }
@@ -307,7 +309,7 @@ function moveListbox<ID extends StableID>(
   const selection = selectionFollowsFocus
     ? selectOne(state.selection, target, domain)
     : state.selection;
-  return createMachineUpdate(listboxState(cursor, selection), [{ type: 'focus', id: target }]);
+  return createMachineUpdate(listboxState(domain, cursor, selection), [{ type: 'focus', id: target }]);
 }
 
 function moveListboxToEdge<ID extends StableID>(
@@ -326,7 +328,7 @@ function moveListboxToEdge<ID extends StableID>(
     return createMachineUpdate(state);
   }
   return createMachineUpdate(
-    listboxState(
+    listboxState(domain,
       createCursorState(target.value),
       selectionFollowsFocus ? selectOne(state.selection, target.value, domain) : state.selection,
     ),
@@ -407,10 +409,11 @@ function validateListboxState<ID extends StableID>(
 }
 
 function listboxState<ID extends StableID>(
+  domain: Sequence<ID>,
   cursor: CursorState<ID>,
   selection: SelectionState<ID>,
 ): ListboxState<ID> {
-  return Object.freeze({ cursor, selection });
+  return bindCanonicalState(domain, Object.freeze({ cursor, selection }));
 }
 
 function noCursor<ID extends StableID>(): Result<ListboxUpdate<ID>> {

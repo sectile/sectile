@@ -8,7 +8,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 368 | 26 | 36 |
+| core | 368 | 26 | 39 |
 | dom | 432 | 190 | 5 |
 | form | 12 | 0 | 2 |
 | tabular | 32 | 0 | 4 |
@@ -32,6 +32,9 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:adapter.facade-destroy | connected | `O(pSubscriber + rResource)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:adapter.facade-subscribe | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:anchored-layout.solve | external | `O(cAnchor)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| core:canonical-state.transition | trusted | `O(sMove + oResult)` expected | `O(1)` | `O(oResult)` | `O(oResult)` | forbidden | VAL-016, VAL-017 |
+| core:canonical-state.validation-external | external | `O(n + k + sMove)` worst-case | `O(n + k)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
+| core:canonical-state.view-cache | trusted | `O(n + v)` amortized | `O(n + v)` | `O(n + v)` | `O(n + v)` | allowed | VAL-016, VAL-017 |
 | core:color-text.parse | external | `O(tColor)` worst-case | `O(tColor)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | core:color.convert | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:color.gamut | external | `O(kGamut)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |

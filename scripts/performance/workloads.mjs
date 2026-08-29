@@ -35,6 +35,15 @@ import {
   applyListboxEvent,
   createListboxState,
 } from '../../packages/core/dist/listbox.js';
+import { applyGridEvent, createGridState } from '../../packages/core/dist/grid-control.js';
+import { applyTreeViewEvent, createTreeViewState } from '../../packages/core/dist/tree-view.js';
+import { applyMenuEvent, createMenuState } from '../../packages/core/dist/menu.js';
+import { applyCascadeListEvent, createCascadeListState } from '../../packages/core/dist/cascade-list.js';
+import {
+  applyTreeGridEvent,
+  createTreeGridModel,
+  createTreeGridState,
+} from '../../packages/core/dist/tree-grid.js';
 import {
   applyRevisionedEvent,
   createRevisionSnapshot,
@@ -61,7 +70,7 @@ import {
 } from '../../packages/virtual/dist/spatial-layout.js';
 
 export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 10,
+  version: 13,
   scales: Object.freeze([1_000, 10_000, 100_000]),
   patchDepths: Object.freeze([1, 8, 32, 64]),
   changedDensities: Object.freeze([1, 32, 'full']),
@@ -245,13 +254,43 @@ export function createWorkloads({ quick = false } = {}) {
     );
 
     const listboxState = createListboxState(sequence, { current: ids[0], selected: [ids[0]] });
-    workloads.push(timed(
-      `core:listbox:next:${size}`,
-      'core-semantic',
-      { size, operation: 'canonical-transition' },
-      iterations(size, quick),
-      () => unwrap(applyListboxEvent(sequence, listboxState, 'next')).state.selection.size,
-    ));
+    const externalListboxState = Object.freeze({ ...listboxState });
+    const treeRoot = `tree-${size}-0`;
+    const treeViewState = createTreeViewState(tree, { expanded: [treeRoot], current: treeRoot });
+    const externalTreeViewState = Object.freeze({ ...treeViewState });
+    const menuState = createMenuState(tree, true, treeRoot);
+    const externalMenuState = Object.freeze({ ...menuState });
+    const cascadeDepth = Math.min(size, 1_024);
+    const cascadeTree = createTree(Array.from({ length: cascadeDepth }, (_, index) => ({
+      id: `cascade-${size}-${index}`,
+      parentID: index === 0 ? null : `cascade-${size}-${index - 1}`,
+    })));
+    const cascadeState = createCascadeListState(cascadeTree, { value: `cascade-${size}-${cascadeDepth - 1}` });
+    const externalCascadeState = Object.freeze({ ...cascadeState });
+    const gridID = 'grid-' + size + '-0';
+    const gridState = createGridState(grid, { current: gridID, selected: [gridID] });
+    const externalGridState = Object.freeze({ ...gridState });
+    const rowIDs = Array.from({ length: rowCount }, (_, index) => `tree-grid-row-${size}-${index}`);
+    const rowTree = createTree(rowIDs.map((id) => ({ id, parentID: null })));
+    const treeGridModel = createTreeGridModel(rowTree, grid, rowIDs);
+    const treeGridState = createTreeGridState(treeGridModel, { current: gridID });
+    const externalTreeGridState = Object.freeze({ ...treeGridState });
+    const semanticIterations = iterations(size, quick);
+    const canonicalIterations = quick ? 100 : 10_000;
+    workloads.push(
+      timed(`core:listbox:next:${size}`, 'core-semantic', { size, operation: 'canonical-transition' }, canonicalIterations, () => unwrap(applyListboxEvent(sequence, listboxState, 'next')).state.selection.size),
+      timed(`core:listbox:next:external:${size}`, 'core-semantic', { size, operation: 'external-validation-reference' }, semanticIterations, () => unwrap(applyListboxEvent(sequence, externalListboxState, 'next')).state.selection.size),
+      timed(`core:tree-view:next:${size}`, 'core-semantic', { size, operation: 'canonical-transition' }, canonicalIterations, () => unwrap(applyTreeViewEvent(tree, treeViewState, 'next')).state.selection.size),
+      timed(`core:tree-view:next:external:${size}`, 'core-semantic', { size, operation: 'external-validation-reference' }, semanticIterations, () => unwrap(applyTreeViewEvent(tree, externalTreeViewState, 'next')).state.selection.size),
+      timed(`core:menu:next:${size}`, 'core-semantic', { size, operation: 'canonical-transition' }, canonicalIterations, () => unwrap(applyMenuEvent(tree, menuState, 'next')).state.openPath.length),
+      timed(`core:menu:next:external:${size}`, 'core-semantic', { size, operation: 'external-validation-reference' }, semanticIterations, () => unwrap(applyMenuEvent(tree, externalMenuState, 'next')).state.openPath.length),
+      timed(`core:cascade:next:${size}`, 'core-semantic', { size, depth: cascadeDepth, operation: 'canonical-transition' }, canonicalIterations, () => unwrap(applyCascadeListEvent(cascadeTree, cascadeState, 'next')).state.path.length),
+      timed(`core:cascade:next:external:${size}`, 'core-semantic', { size, depth: cascadeDepth, operation: 'external-validation-reference' }, semanticIterations, () => unwrap(applyCascadeListEvent(cascadeTree, externalCascadeState, 'next')).state.path.length),
+      timed(`core:grid-control:right:${size}`, 'core-semantic', { size, operation: 'canonical-transition' }, canonicalIterations, () => unwrap(applyGridEvent(grid, gridState, 'right')).state.selection.size),
+      timed(`core:grid-control:right:external:${size}`, 'core-semantic', { size, operation: 'external-validation-reference' }, semanticIterations, () => unwrap(applyGridEvent(ephemeralOwner(grid), externalGridState, 'right')).state.selection.size),
+      timed(`core:tree-grid:right:${size}`, 'core-semantic', { size, operation: 'canonical-transition' }, canonicalIterations, () => unwrap(applyTreeGridEvent(treeGridModel, treeGridState, 'right')).state.selection.size),
+      timed(`core:tree-grid:right:external:${size}`, 'core-semantic', { size, operation: 'external-validation-reference' }, semanticIterations, () => unwrap(applyTreeGridEvent(treeGridModel, externalTreeGridState, 'right')).state.selection.size),
+    );
 
     workloads.push(...createTabularWorkloads(size, quick));
     workloads.push(...createVirtualWorkloads(size, quick));
@@ -443,6 +482,15 @@ function iterations(size, quick) {
   if (size >= 100_000) return 1;
   if (size >= 10_000) return 3;
   return 10;
+}
+
+function ephemeralOwner(owner) {
+  return new Proxy(owner, {
+    get(target, property) {
+      const value = Reflect.get(target, property, target);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
 }
 
 function timed(id, family, dimensions, iterationCount, operation) {
