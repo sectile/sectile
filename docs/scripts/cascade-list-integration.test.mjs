@@ -26,6 +26,9 @@ test('DemoCascadeList keeps a stable column region without popup parts', async (
   assert.match(demo, /from '@sectile\/vue\/cascade-list';/u);
   assert.match(demo, /<CascadeListColumn/u);
   assert.match(demo, /columnDepths\(columns\)/u);
+  assert.match(demo, /grid-auto-columns: max-content/u);
+  assert.match(demo, /\.cascade-list-column \{ display: grid; min-width: 10rem;/u);
+  assert.match(demo, /\.cascade-list-item > span:first-child \{ flex: 0 0 auto; white-space: nowrap; \}/u);
   assert.match(demo, /\.cascade-list-column\[hidden\] \{ display: grid; visibility: hidden; \}/u);
   assert.doesNotMatch(demo, /Cascade(?:List|Select)(?:Trigger|Content)/u);
   assert.match(componentCase, /import DemoCascadeList from '\.\/DemoCascadeList\.vue';/u);

@@ -93,12 +93,12 @@ function columnDepths(columns: readonly (readonly string[])[]): readonly number[
 .demo-cascade-list__selection { display: flex; min-width: 0; min-height: 1.25rem; align-items: baseline; gap: 0.65rem; }
 .demo-cascade-list__selection-label { flex: 0 0 auto; color: var(--sectile-content-tertiary); font-size: 0.7rem; font-weight: 700; }
 .demo-cascade-list__value { min-width: 0; overflow: hidden; color: var(--sectile-content-secondary); font-size: 0.76rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.demo-cascade-list__columns { display: grid; min-width: 0; grid-auto-flow: column; grid-auto-columns: minmax(10rem, 1fr); overflow-x: auto; border: 1px solid var(--sectile-border-control); border-radius: 0.7rem; background: var(--sectile-surface); }
-.cascade-list-column { display: grid; min-width: 0; min-height: 12rem; align-content: start; gap: 0.1rem; padding: 0.3rem; border-inline-end: 1px solid var(--sectile-border-control); }
+.demo-cascade-list__columns { display: grid; min-width: 0; grid-auto-flow: column; grid-auto-columns: max-content; overflow-x: auto; border: 1px solid var(--sectile-border-control); border-radius: 0.7rem; background: var(--sectile-surface); }
+.cascade-list-column { display: grid; min-width: 10rem; min-height: 12rem; align-content: start; gap: 0.1rem; padding: 0.3rem; border-inline-end: 1px solid var(--sectile-border-control); }
 .cascade-list-column:last-child { border-inline-end: 0; }
 .cascade-list-column[hidden] { display: grid; visibility: hidden; }
 .cascade-list-item { display: flex; min-width: 0; min-height: 2.55rem; align-items: center; justify-content: space-between; gap: 1rem; border: 0; border-radius: 0.4rem; padding: 0.5rem 0.65rem; color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; outline: 0; }
-.cascade-list-item > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cascade-list-item > span:first-child { flex: 0 0 auto; white-space: nowrap; }
 .cascade-list-item:hover:not([aria-disabled='true']), .cascade-list-item[data-highlighted]:not([data-expanded]):not([data-selected]) { background: var(--sectile-surface-subtle); }
 .cascade-list-item:is([data-expanded], [data-selected]) { color: var(--sectile-action); font-weight: 650; }
 .cascade-list-item:focus-visible { outline: 2px solid var(--sectile-focus-ring); outline-offset: -2px; }
@@ -107,6 +107,6 @@ function columnDepths(columns: readonly (readonly string[])[]): readonly number[
 .cascade-list-item:is([data-expanded], [data-selected]) .cascade-list-item__end { color: var(--sectile-action); }
 
 @media (max-width: 640px) {
-  .demo-cascade-list__columns { grid-auto-columns: minmax(9rem, 1fr); }
+  .cascade-list-column { min-width: 9rem; }
 }
 </style>
