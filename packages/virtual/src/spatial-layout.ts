@@ -8,7 +8,7 @@ import {
 } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
 import { boundsOfRects, createRect, isFiniteRect } from '@sectile/core/geometry';
-import { blockedRepairBound, createBlockedVector, type BlockedVector, useBlockedRepair } from './internal/blocked-vector.js';
+import { blockedRepairBound, createBlockedVector, createOwnedBlockedVector, type BlockedVector, useBlockedRepair } from './internal/blocked-vector.js';
 import { fail, ok } from './internal/foundation.js';
 import { recordRepairDiagnostics } from './internal/repair-diagnostics.js';
 import {
@@ -191,6 +191,23 @@ export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialL
   const before = anchorRect(state, batch.anchor);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
+  if (state.items.size < 1_024 || replacements.size >= state.items.size / 2) {
+    const items = new Array<SpatialItem<ID>>(data.value.items.size);
+    data.value.items.forEach((item, index) => { items[index] = replacements.get(index) ?? item; });
+    const next = createOwnedState(state.domain, items, state.maxItems, generation.value);
+    const blockCeiling = Math.ceil(state.items.size / LEAF_SIZE);
+    const touchedPartitions = Math.min(replacements.size, blockCeiling) * 2;
+    recordRepairDiagnostics(next, {
+      mode: 'rebuild',
+      changed: replacements.size,
+      touchedBlocks: touchedPartitions,
+      copiedNodes: 0,
+      copiedEntries: 0,
+      rebuiltItems: state.items.size,
+      repairBound: blockedRepairBound(replacements.size, state.items.size, touchedPartitions),
+    });
+    return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
+  }
   const changes = [...replacements].sort(([left], [right]) => left - right);
   const touchedLeaves = [...new Set(changes.map(([index]) => data.value.leafIndexByItemIndex[index]!))].sort((left, right) => left - right);
   const touchedVectorBlocks = new Set(changes.map(([index]) => Math.floor(index / LEAF_SIZE))).size;
@@ -213,7 +230,7 @@ export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialL
   } else {
     const items = new Array<SpatialItem<ID>>(data.value.items.size);
     data.value.items.forEach((item, index) => { items[index] = replacements.get(index) ?? item; });
-    next = createState(state.domain, items, state.maxItems, generation.value);
+    next = createOwnedState(state.domain, items, state.maxItems, generation.value);
     recordRepairDiagnostics(next, {
       mode: 'rebuild',
       changed: changes.length,
@@ -339,10 +356,19 @@ export function spatialRectAt<ID extends StableID>(state: SpatialLayoutState<ID>
 
 function createState<ID extends StableID>(domain: Sequence<ID>, items: readonly SpatialItem<ID>[], maxItems: number, generation: number): SpatialLayoutState<ID> {
   const vector = createBlockedVector(items);
+  return createStateFromVector(domain, vector, maxItems, generation);
+}
+
+function createOwnedState<ID extends StableID>(domain: Sequence<ID>, items: SpatialItem<ID>[], maxItems: number, generation: number): SpatialLayoutState<ID> {
+  return createStateFromVector(domain, createOwnedBlockedVector(items), maxItems, generation);
+}
+
+function createStateFromVector<ID extends StableID>(domain: Sequence<ID>, vector: BlockedVector<SpatialItem<ID>>, maxItems: number, generation: number): SpatialLayoutState<ID> {
   const mutable = { domain, items: vector.view, maxItems, generation };
   Object.defineProperty(mutable, spatialLayoutStateBrand, { value: true });
   const state = Object.freeze(mutable) as SpatialLayoutState<ID>;
-  const indexed = items.map((value, index) => Object.freeze({ value, index, zIndex: value.zIndex ?? 0 }));
+  const indexed: IndexedSpatialItem<ID>[] = [];
+  vector.forEach((value, index) => { indexed.push(Object.freeze({ value, index, zIndex: value.zIndex ?? 0 })); });
   const packed = buildPackedTree(indexed);
   internals.set(state, {
     root: packed.root,

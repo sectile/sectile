@@ -5,11 +5,11 @@ const metrics = [];
 const ids = Array.from({ length: 100_000 }, (_, index) => index);
 
 function measure(family, candidate, input, operation, metadata) {
-  for (let warmup = 0; warmup < 2; warmup += 1) sink ^= operation();
+  for (let warmup = 0; warmup < 4; warmup += 1) sink ^= operation();
   const calibrationStarted = performance.now();
   sink ^= operation();
   const calibrationNanos = Math.max(1, (performance.now() - calibrationStarted) * 1_000_000);
-  const repetitions = Math.max(1, Math.min(512, Math.ceil(2_000_000 / calibrationNanos)));
+  const repetitions = Math.max(1, Math.min(2_048, Math.ceil(10_000_000 / calibrationNanos)));
   const samples = [];
   for (let sample = 0; sample < 5; sample += 1) {
     globalThis.gc?.();

@@ -81,7 +81,7 @@ import {
 } from '../../packages/virtual/dist/partitioned-track-grid-layout.js';
 
 export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 16,
+  version: 18,
   scales: Object.freeze([1_000, 10_000, 100_000]),
   patchDepths: Object.freeze([1, 8, 32, 64]),
   changedDensities: Object.freeze([1, 32, 'full']),

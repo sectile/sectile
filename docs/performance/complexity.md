@@ -8,14 +8,14 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 368 | 26 | 39 |
-| dom | 432 | 190 | 5 |
-| form | 12 | 0 | 2 |
+| core | 381 | 26 | 53 |
+| dom | 414 | 181 | 8 |
+| form | 19 | 0 | 5 |
 | tabular | 32 | 0 | 4 |
 | temporal | 99 | 24 | 2 |
 | terminal | 347 | 177 | 2 |
-| virtual | 89 | 0 | 11 |
-| vue | 705 | 315 | 2 |
+| virtual | 89 | 0 | 16 |
+| vue | 710 | 315 | 4 |
 
 ## Variables
 
@@ -28,24 +28,35 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Operation | Runtime state | Time | Auxiliary | Output | Retained | Full scan | Evidence |
 |---|---|---:|---:|---:|---:|---|---|
+| core:adapter.collection-domain-replace | external | `O(nDomain + kState)` worst-case | `O(1)` | `O(kState)` | `O(nDomain + kState)` | allowed | VAL-016, VAL-017 |
+| core:adapter.collection-reconcile | external | `O(nDomain + sSelected + dDisabled)` expected | `O(nDomain + sSelected + dDisabled)` | `O(sSelected)` | `O(sSelected)` | allowed | VAL-016, VAL-017 |
+| core:adapter.controlled-component-sync | trusted | `O(oCreate)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:adapter.controller-handle | trusted | `O(cCommand)` worst-case | `O(cCommand)` | `O(cCommand)` | `O(cCommand)` | forbidden | VAL-016, VAL-017 |
+| core:adapter.disabled-identities | external | `O(nDisabled)` expected | `O(nDisabled)` | `O(1)` | `O(nDisabled)` | allowed | VAL-016, VAL-017 |
 | core:adapter.facade-destroy | connected | `O(pSubscriber + rResource)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| core:adapter.facade-method-read | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(pMethod)` | forbidden | VAL-016, VAL-017 |
 | core:adapter.facade-subscribe | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:anchored-layout.solve | external | `O(cAnchor)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:canonical-state.transition | trusted | `O(sMove + oResult)` expected | `O(1)` | `O(oResult)` | `O(oResult)` | forbidden | VAL-016, VAL-017 |
 | core:canonical-state.validation-external | external | `O(n + k + sMove)` worst-case | `O(n + k)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
-| core:canonical-state.view-cache | trusted | `O(n + v)` amortized | `O(n + v)` | `O(n + v)` | `O(n + v)` | allowed | VAL-016, VAL-017 |
+| core:canonical-state.view-cache | trusted | `O(vRow * cColumn + vCell)` amortized | `O(vRow + vCell)` | `O(vCell)` | `O(vRow + vCell)` | allowed | VAL-016, VAL-017 |
 | core:color-text.parse | external | `O(tColor)` worst-case | `O(tColor)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | core:color.convert | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:color.gamut | external | `O(kGamut)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:exact-ratio.arithmetic | external | `O(M(b) + b*D(b))` worst-case | `O(b)` | `O(b)` | `O(b)` | forbidden | VAL-016, VAL-017 |
 | core:exact-ratio.compare | external | `O(M(b) + b)` worst-case | `O(b)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| core:exact-ratio.format-percentage | external | `O(b*D(b))` worst-case | `O(b)` | `O(b)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| core:foundation.machine-update | trusted | `O(cCommand)` worst-case | `O(1)` | `O(cCommand)` | `O(cCommand)` | allowed | VAL-016, VAL-017 |
+| core:foundation.result-construction | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:geometry.bounds | external | `O(nRect)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | core:geometry.scalar | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:grid.domain | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(n)` | forbidden | VAL-016, VAL-017 |
 | core:grid.move | trusted | `O(sAxis)` expected | `O(1)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | core:grid.position | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| core:grid.scan-axis | trusted | `O(sAxis)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | core:grid.view | trusted | `O(sAxis + k)` worst-case | `O(sAxis)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
+| core:identity.normalize | external | `O(nID + uID)` worst-case | `O(nID)` | `O(nID)` | `O(nID)` | allowed | VAL-016, VAL-017 |
+| core:identity.same-order | trusted | `O(nID)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | core:index-span.contains | trusted | `O(log a)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:index-span.set-algebra | trusted | `O(a + bSpan)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | VAL-016, VAL-017 |
 | core:index-span.transform | trusted | `O(a)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | VAL-016, VAL-017 |
@@ -53,6 +64,8 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:metric-index.lookup-distance | trusted | `O(d)` worst-case | `O(1)` | `O(d)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | core:metric-index.query | trusted | `O(x*d + rMetric)` worst-case | `O(d + log x + rMetric)` | `O(rMetric)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | core:range.arithmetic | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| core:reorder.sequence-transition | trusted | `O(n)` worst-case | `O(1)` | `O(n)` | `O(n)` | allowed | VAL-016, VAL-017 |
+| core:reorder.tree-transition | trusted | `O(n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | VAL-016, VAL-017 |
 | core:selection-expression.algebra | trusted | `O(eLeft + eRight)` expected | `O(eLeft + eRight)` | `O(eResult)` | `O(eResult)` | allowed | VAL-016, VAL-017 |
 | core:selection-expression.materialize | trusted | `O(nDomain)` worst-case | `O(1)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
 | core:selection-expression.membership | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(eSelection)` | forbidden | VAL-016, VAL-017 |
@@ -62,18 +75,25 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:sequence.index-of | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:sequence.materialize | external | `O(n + k)` worst-case | `O(n + dPatch)` | `O(n + k)` | `O(n + k)` | allowed | VAL-016, VAL-017 |
 | core:sequence.patch-lookup | trusted | `O(dPatch)` expected | `O(dPatch)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
-| core:text.replace | external | `O(nText + nInsert)` worst-case | `O(nText + nInsert)` | `O(nText + nInsert)` | `O(nText + nInsert)` | allowed | VAL-016, VAL-017 |
+| core:text.replace | external | `O(nText + nInsert + nOut)` worst-case | `O(1)` | `O(nOut)` | `O(nOut)` | allowed | VAL-016, VAL-017 |
+| core:text.replace-canonical | trusted | `O(nInsert + nOut)` worst-case | `O(1)` | `O(nOut)` | `O(nOut)` | allowed | VAL-016, VAL-017 |
 | core:tree.construct | external | `O(n + k)` expected | `O(n)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
 | core:tree.subtree-interval | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(n)` | forbidden | VAL-016, VAL-017 |
 | core:tree.views | trusted | `O(n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | VAL-016, VAL-017 |
 | core:tree.visible | external | `O(n + k)` expected | `O(n)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
+| dom:form.subscribe | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| dom:form.subscription-dispatch | connected | `O(sForm + uSource + sAffected)` worst-case | `O(sForm + uSource + sAffected)` | `O(1)` | `O(sForm + sField)` | forbidden | VAL-016, VAL-017 |
+| dom:form.unsubscribe | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | dom:position.connect | connected | `O(aDom)` worst-case | `O(aDom)` | `O(1)` | `O(aDom)` | forbidden | VAL-016, VAL-017 |
 | dom:position.disconnect | connected | `O(aDom)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | dom:position.discovery | connected | `O(aDom)` worst-case | `O(aDom)` | `O(aDom)` | `O(aDom)` | allowed | VAL-016, VAL-017 |
 | dom:position.schedule | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | dom:position.update | connected | `O(aDom + cAnchor)` worst-case | `O(aDom + cAnchor)` | `O(1)` | `O(aDom)` | forbidden | VAL-016, VAL-017 |
-| form:field.update | trusted | `O(fField + iIssue)` worst-case | `O(fField + iIssue)` | `O(fField + iIssue)` | `O(fField + iIssue)` | allowed | VAL-016, VAL-017 |
-| form:state.construct | external | `O(fField * uID)` worst-case | `O(fField)` | `O(fField)` | `O(fField)` | allowed | VAL-016, VAL-017 |
+| form:field.get | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(fField)` | forbidden | VAL-016, VAL-017 |
+| form:field.ids-by-issue-source | trusted | `O(uSource)` worst-case | `O(uSource)` | `O(uSource)` | `O(fField + iIssue)` | forbidden | VAL-016, VAL-017 |
+| form:field.update | trusted | `O(fField/64 + 64 + iFieldIssue)` worst-case | `O(fField/64 + 64 + iFieldIssue)` | `O(1)` | `O(fField + iIssue)` | forbidden | VAL-016, VAL-017 |
+| form:issues.replace-source | trusted | `O(iIncoming + iRemoved + jField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIncoming + iRemoved + jField + fField/64)` | `O(iIncoming)` | `O(fField + iIssue)` | forbidden | VAL-016, VAL-017 |
+| form:state.construct | external | `O(fField + uID + iIssue)` worst-case | `O(fField)` | `O(fField)` | `O(fField)` | allowed | VAL-016, VAL-017 |
 | tabular:grid-profile.move | trusted | `O(sAxis)` worst-case | `O(1)` | `O(1)` | `O(nCell)` | forbidden | VAL-016, VAL-017 |
 | tabular:source.resolve-cold | external | `O(nRecord log nRecord + kRow)` worst-case | `O(nRecord)` | `O(kRow)` | `O(nRecord)` | allowed | VAL-016, VAL-017 |
 | tabular:source.resolve-invalidation | external | `O(nRecord log nRecord + kRow)` worst-case | `O(nRecord)` | `O(kRow)` | `O(nRecord)` | allowed | VAL-016, VAL-017 |
@@ -83,16 +103,23 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | terminal:component.dispatch | trusted | `O(nDomain + cCommand)` worst-case | `O(nDomain + cCommand)` | `O(cCommand)` | `O(nDomain)` | allowed | VAL-016, VAL-017 |
 | terminal:screen.render | connected | `O(rRow * cColumn)` worst-case | `O(rRow * cColumn)` | `O(rRow * cColumn)` | `O(rRow * cColumn)` | allowed | VAL-016, VAL-017 |
 | virtual:extent.lookup | trusted | `O(log n)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| virtual:indexed-view.at | trusted | `O(log nItem)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| virtual:indexed-view.iterate | trusted | `O(nItem)` worst-case | `O(log nItem)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
+| virtual:indexed-view.to-array | trusted | `O(nItem)` worst-case | `O(log nItem)` | `O(nItem)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | virtual:linear.measure | trusted | `O(jChanged log nItem)` worst-case | `O(jChanged log nItem)` | `O(1)` | `O(jChanged log nItem)` | forbidden | VAL-016, VAL-017 |
 | virtual:linear.query | trusted | `O((log nItem)^2 + kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:masonry.measure | trusted | `O(nItem log lLane + jChanged log nItem)` worst-case | `O(nItem + jChanged log nItem)` | `O(nItem)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
 | virtual:masonry.query | trusted | `O(vLane log nItem + kPlacement log kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
-| virtual:partitioned.measure | trusted | `O(nTrack + nRegion log nRegion + jChanged)` worst-case | `O(nTrack + nRegion)` | `O(nTrack + nRegion)` | `O(nTrack + nRegion)` | allowed | VAL-016, VAL-017 |
+| virtual:partitioned.measure.incremental | trusted | `O(jChanged log nTrack + rRepair)` worst-case | `O(jChanged + rRepair)` | `O(1)` | `O(rRepair)` | forbidden | VAL-016, VAL-017 |
+| virtual:partitioned.measure.rebuild | trusted | `O(nTrack + nRegion log nRegion)` worst-case | `O(nTrack + nRegion)` | `O(nTrack + nRegion)` | `O(nTrack + nRegion)` | allowed | VAL-016, VAL-017 |
 | virtual:partitioned.query | trusted | `O(log nRegion + cCandidate + kPlacement log kPlacement)` expected | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
-| virtual:spatial.measure | trusted | `O(nItem log nItem + jChanged)` expected | `O(nItem)` | `O(nItem)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
+| virtual:spatial.measure.incremental | trusted | `O(jChanged log jChanged + rRepair)` worst-case | `O(jChanged + rRepair)` | `O(1)` | `O(rRepair)` | forbidden | VAL-016, VAL-017 |
+| virtual:spatial.measure.rebuild | trusted | `O(nItem log nItem)` worst-case | `O(nItem)` | `O(nItem)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
 | virtual:spatial.query | trusted | `O(log nItem + kPlacement)` expected | `O(log nItem + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.measure | trusted | `O(jChanged log nTrack)` worst-case | `O(jChanged log nTrack)` | `O(1)` | `O(jChanged log nTrack)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.query | trusted | `O(log nRegion + cCandidate + kPlacement log kPlacement)` worst-case | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| vue:collection.external-reconcile | external | `O(nOption + sSelected + dDisabled)` expected | `O(nOption + sSelected + dDisabled)` | `O(sSelected)` | `O(sSelected)` | allowed | VAL-016, VAL-017 |
+| vue:form.selector-bridge | mounted | `O(sForm + sField)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | vue:projection.reconfigure | mounted | `O(nOption + uOption)` worst-case | `O(nOption + uOption)` | `O(uOption)` | `O(uOption)` | allowed | VAL-016, VAL-017 |
 | vue:virtual.measurement-update | mounted | `O(nMounted + jChanged + kPlacement)` worst-case | `O(nMounted + jChanged + kPlacement)` | `O(kPlacement)` | `O(nMounted)` | allowed | VAL-016, VAL-017 |
 

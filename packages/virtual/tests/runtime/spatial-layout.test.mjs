@@ -161,4 +161,15 @@ test('SPA-03: sparse measurements path-copy bounded blocks and dense batches reb
   const rebuilt = createSpatialLayout(dense.items.toArray());
   const viewport = { x: 100, y: 0, width: 300, height: 500 };
   assert.deepEqual(querySpatialLayout(dense, { viewport }).placements, querySpatialLayout(rebuilt, { viewport }).placements);
+
+  const fullMeasurements = dense.items.toArray().map((item) => ({
+    id: item.id,
+    rect: { ...item.rect, width: item.rect.width + 1 },
+  }));
+  const full = applySpatialMeasurements(dense, {
+    generation: dense.generation,
+    measurements: fullMeasurements,
+  }).state;
+  assert.equal(readRepairDiagnostics(full)?.mode, 'rebuild');
+  assert.deepEqual(full.items.toArray().map(({ rect }) => rect.width), fullMeasurements.map(({ rect }) => rect.width));
 });

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "workItem": "WI-018",
-  "fingerprint": "fnv1a32:026bf15a",
+  "fingerprint": "fnv1a32:89be214b",
   "decisions": [
     {
       "id": "sequence",

@@ -25,4 +25,8 @@ test('missing decisions, candidate evidence, and Virtual repair bounds fail', as
   const noisy = structuredClone(baseline);
   noisy.metrics[0].timing.relativeMAD = 0.11;
   assert.throws(() => validateCrossoverDecisions(manifest, noisy), /dispersion/u);
+  assert.throws(
+    () => validateCrossoverDecisions(manifest, { ...baseline, processCount: 8 }),
+    /at least nine isolated processes/u,
+  );
 });

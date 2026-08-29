@@ -106,7 +106,7 @@ test('GRD-04: row and column measurements preserve the index, anchor, and genera
   const inserted = applyTrackGridMutation(measured.state, {
     type: 'splice-tracks', axis: 'row', index: 0, deleteCount: 0, inserted: [exact(7)],
   }, anchor);
-  assert.deepEqual(inserted.state.regions, [{ id: 'anchor', row: 3, column: 2 }]);
+  assert.deepEqual(inserted.state.regions.toArray(), [{ id: 'anchor', row: 3, column: 2 }]);
   assert.ok(trackGridRegionRect(inserted.state, anchor.id) !== null);
 });
 
@@ -120,7 +120,7 @@ test('dense grid patches derive regions and visible placements from sequence ind
     patch: { type: 'splice', index: 1, deleteCount: 2, inserted: ['x', 'y', 'z'] },
   }).state;
   assert.equal(changed.regions.size, 6);
-  assert.deepEqual([...changed.regions].map(({ id, row, column }) => [id, row, column]), [
+  assert.deepEqual([...changed.regions.iterate()].map(({ id, row, column }) => [id, row, column]), [
     ['a', 0, 0],
     ['x', 0, 1],
     ['y', 0, 2],

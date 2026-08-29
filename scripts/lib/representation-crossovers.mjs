@@ -24,7 +24,7 @@ export function validateCrossoverDecisions(manifest, baseline) {
   assert.equal(manifest.workItem, 'WI-018', 'crossover decision owner drifted');
   assert.equal(baseline.schemaVersion, 1, 'crossover baseline schema drifted');
   assert.equal(baseline.workItem, 'WI-018', 'crossover baseline owner drifted');
-  assert.equal(baseline.processCount, 5, 'crossovers require five isolated processes');
+  assert.ok(baseline.processCount >= 9, 'crossovers require at least nine isolated processes');
   assert.equal(baseline.fingerprint, manifest.fingerprint, 'decision/baseline fingerprint drifted');
   assert.deepEqual(
     manifest.decisions.map(({ id }) => id).sort(),
@@ -94,7 +94,7 @@ function requireMatrix(metrics) {
 function validateMetric(metric) {
   assert.ok(typeof metric.id === 'string' && metric.id.length > 0, 'metric id missing');
   assert.ok(typeof metric.candidate === 'string' && metric.candidate.length > 0, `${metric.id}: candidate missing`);
-  assert.ok(metric.timing.count === 5, `${metric.id}: timing process count drifted`);
+  assert.ok(metric.timing.count >= 9, `${metric.id}: timing process count drifted`);
   for (const key of ['median', 'p95', 'relativeMAD', 'minimum', 'maximum']) {
     assert.ok(Number.isFinite(metric.timing[key]) && metric.timing[key] >= 0, `${metric.id}: invalid timing ${key}`);
   }
@@ -110,7 +110,7 @@ export function renderCrossoverDocumentation(manifest, baseline) {
   const lines = [
     '# Representation crossovers',
     '',
-    'This generated record freezes WI-018 representation choices before implementation. Timings are medians from five isolated Node processes; deterministic work, allocation units, retained bytes, observed heap delta, and prototype source bytes are separate evidence dimensions. A selected adaptive representation includes the fallback named in its rule.',
+    'This generated record freezes WI-018 representation choices before implementation. Timings are medians from nine isolated Node processes; deterministic work, allocation units, retained bytes, observed heap delta, and prototype source bytes are separate evidence dimensions. A selected adaptive representation includes the fallback named in its rule.',
     '',
     '| Family | Selected | Frozen rule | Evidence range |',
     '|---|---|---|---|',

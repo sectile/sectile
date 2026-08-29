@@ -1,6 +1,7 @@
 import { performance } from 'node:perf_hooks';
 import { getHeapStatistics } from 'node:v8';
 import { DEFAULT_BATCH_COUNT, QUICK_BATCH_COUNT } from './config.mjs';
+import { collectRetainedGarbage, collectTransientGarbage } from './gc-policy.mjs';
 import { createWorkloads } from './workloads.mjs';
 
 const quick = process.env['SECTILE_PERFORMANCE_QUICK'] === '1';
@@ -27,7 +28,7 @@ for (const workload of createWorkloads({ quick })) {
       sink = consume(sink, workload.operation(iteration + warmupBatch * measuredIterations));
     }
   }
-  globalThis.gc?.();
+  collectTransientGarbage();
   const samples = [];
   for (let batch = 0; batch < batchCount; batch += 1) {
     const startedAt = performance.now();
@@ -36,13 +37,13 @@ for (const workload of createWorkloads({ quick })) {
     }
     samples.push(((performance.now() - startedAt) * 1_000_000) / measuredIterations);
   }
-  globalThis.gc?.();
+  collectTransientGarbage();
   const heapBefore = getHeapStatistics().used_heap_size;
   for (let iteration = 0; iteration < workload.iterations; iteration += 1) {
     sink = consume(sink, workload.operation(iteration));
   }
   const heapAfterMeasurement = getHeapStatistics().used_heap_size;
-  globalThis.gc?.();
+  collectRetainedGarbage();
   const heapRetainedAfterGC = getHeapStatistics().used_heap_size;
   metrics.push(Object.freeze({
     id: workload.id,

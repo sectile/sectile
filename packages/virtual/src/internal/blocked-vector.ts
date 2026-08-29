@@ -2,11 +2,18 @@ import type { VirtualIndexedView } from '../layout.js';
 
 const BLOCK_SIZE = 64;
 
-type VectorNode<T> = VectorLeaf<T> | VectorBranch<T>;
+type VectorNode<T> = VectorLeaf<T> | VectorSliceLeaf<T> | VectorBranch<T>;
 
 interface VectorLeaf<T> {
   readonly kind: 'leaf';
   readonly entries: readonly T[];
+  readonly size: number;
+}
+
+interface VectorSliceLeaf<T> {
+  readonly kind: 'slice';
+  readonly entries: readonly T[];
+  readonly start: number;
   readonly size: number;
 }
 
@@ -36,6 +43,15 @@ export function createBlockedVector<T>(values: readonly T[]): BlockedVector<T> {
   const leaves: VectorNode<T>[] = [];
   for (let start = 0; start < values.length; start += BLOCK_SIZE) {
     leaves.push(leaf(values.slice(start, start + BLOCK_SIZE)));
+  }
+  return createVector(build(leaves, 0, leaves.length));
+}
+
+export function createOwnedBlockedVector<T>(values: T[]): BlockedVector<T> {
+  const entries = Object.freeze(values);
+  const leaves: VectorNode<T>[] = [];
+  for (let start = 0; start < entries.length; start += BLOCK_SIZE) {
+    leaves.push(sliceLeaf(entries, start, Math.min(entries.length, start + BLOCK_SIZE)));
   }
   return createVector(build(leaves, 0, leaves.length));
 }
@@ -97,6 +113,10 @@ function* iterate<T>(root: VectorNode<T> | null): IterableIterator<T> {
     yield* root.entries;
     return;
   }
+  if (root.kind === 'slice') {
+    for (let index = 0; index < root.size; index += 1) yield root.entries[root.start + index]!;
+    return;
+  }
   yield* iterate(root.left);
   yield* iterate(root.right);
 }
@@ -107,6 +127,10 @@ function forEach<T>(root: VectorNode<T> | null, callback: (value: T, index: numb
   const visit = (node: VectorNode<T>): void => {
     if (node.kind === 'leaf') {
       for (const value of node.entries) callback(value, index++);
+      return;
+    }
+    if (node.kind === 'slice') {
+      for (let local = 0; local < node.size; local += 1) callback(node.entries[node.start + local]!, index++);
       return;
     }
     visit(node.left);
@@ -136,7 +160,7 @@ function at<T>(root: VectorNode<T> | null, index: number): T | undefined {
     if (local < node.left.size) node = node.left;
     else { local -= node.left.size; node = node.right; }
   }
-  return node.entries[local];
+  return node.kind === 'leaf' ? node.entries[local] : node.entries[node.start + local];
 }
 
 function updateNode<T>(
@@ -148,8 +172,10 @@ function updateNode<T>(
   work: { copiedNodes: number; copiedEntries: number },
 ): VectorNode<T> {
   if (from === to) return node;
-  if (node.kind === 'leaf') {
-    const entries = [...node.entries];
+  if (node.kind !== 'branch') {
+    const entries = node.kind === 'leaf'
+      ? [...node.entries]
+      : node.entries.slice(node.start, node.start + node.size);
     work.copiedNodes += 1;
     work.copiedEntries += entries.length;
     for (let cursor = from; cursor < to; cursor += 1) {
@@ -170,6 +196,10 @@ function updateNode<T>(
 
 function leaf<T>(entries: T[]): VectorLeaf<T> {
   return Object.freeze({ kind: 'leaf', entries: Object.freeze(entries), size: entries.length });
+}
+
+function sliceLeaf<T>(entries: readonly T[], start: number, end: number): VectorSliceLeaf<T> {
+  return Object.freeze({ kind: 'slice', entries, start, size: end - start });
 }
 
 function branch<T>(left: VectorNode<T>, right: VectorNode<T>): VectorBranch<T> {

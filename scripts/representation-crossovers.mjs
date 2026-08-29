@@ -12,6 +12,7 @@ const manifestPath = resolve('verification/representation-crossovers/decisions.j
 const baselinePath = resolve('verification/representation-crossovers/baseline.json');
 const documentationPath = resolve('docs/performance/representations.md');
 const workerPath = resolve('scripts/representation-crossovers-worker.mjs');
+const PROCESS_COUNT = 9;
 const [workerSource, manifestSource] = await Promise.all([
   readFile(workerPath, 'utf8'),
   readFile(manifestPath, 'utf8'),
@@ -23,7 +24,7 @@ const fingerprint = stableCrossoverFingerprint(workerSource, fingerprintInput);
 
 if (mode === 'record') {
   const processes = [];
-  for (let processIndex = 0; processIndex < 5; processIndex += 1) {
+  for (let processIndex = 0; processIndex < PROCESS_COUNT; processIndex += 1) {
     const output = execFileSync(process.execPath, ['--expose-gc', workerPath], {
       cwd: resolve('.'),
       encoding: 'utf8',
@@ -40,7 +41,7 @@ if (mode === 'record') {
     }
   }
   const metrics = [...byID].sort(([left], [right]) => left.localeCompare(right)).map(([id, entries]) => {
-    assert.equal(entries.length, 5, `${id}: missing isolated process result`);
+    assert.equal(entries.length, PROCESS_COUNT, `${id}: missing isolated process result`);
     const first = entries[0];
     return Object.freeze({
       id,
@@ -60,7 +61,7 @@ if (mode === 'record') {
     schemaVersion: 1,
     workItem: 'WI-018',
     fingerprint,
-    processCount: 5,
+    processCount: PROCESS_COUNT,
     runtime: {
       node: process.version,
       v8: process.versions.v8,
@@ -76,7 +77,7 @@ if (mode === 'record') {
     writeFile(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8'),
     writeFile(documentationPath, documentation, 'utf8'),
   ]);
-  console.log(JSON.stringify({ status: 'recorded', decisions: manifest.decisions.length, metrics: metrics.length, processCount: 5 }));
+  console.log(JSON.stringify({ status: 'recorded', decisions: manifest.decisions.length, metrics: metrics.length, processCount: PROCESS_COUNT }));
 } else {
   assert.equal(manifest.fingerprint, fingerprint, 'crossover source or decisions changed; re-record required');
   const baseline = JSON.parse(await readFile(baselinePath, 'utf8'));
