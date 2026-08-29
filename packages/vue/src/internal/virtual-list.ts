@@ -200,8 +200,41 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     const registrations = new Map<string, () => void>();
     const elements = new Map<string, HTMLElement>();
     const itemRefs = new Map<string, (value: unknown) => void>();
+    const pendingMeasurements = new Set<string>();
+    let measurementScheduled = false;
     const setRootElement = (value: unknown): void => {
       virtualizer.root.value = value instanceof HTMLElement ? value : null;
+    };
+
+    const measurePendingItems = (): void => {
+      measurementScheduled = false;
+      if (disposed || pendingMeasurements.size === 0) return;
+      const connection = virtualizer.connection.value;
+      if (connection === undefined) return;
+      const measurements: LinearMeasurement[] = [];
+      for (const id of pendingMeasurements) {
+        const element = elements.get(id);
+        const index = state.value.domain.indexOf(id);
+        if (element === undefined || index === null) continue;
+        const current = state.value.extents.extentAt(index);
+        if (current?.kind === 'exact') continue;
+        const measurement = measureVirtualListElement(
+          props.axis,
+          id,
+          element,
+          state.value,
+        );
+        if (measurement !== null) measurements.push(measurement);
+      }
+      pendingMeasurements.clear();
+      if (measurements.length > 0) connection.measure(measurements);
+    };
+    const scheduleItemMeasurement = (id: string): void => {
+      if (props.itemSize !== undefined) return;
+      pendingMeasurements.add(id);
+      if (measurementScheduled) return;
+      measurementScheduled = true;
+      void nextTick(measurePendingItems);
     };
 
     const itemRef = (id: string): ((value: unknown) => void) => {
@@ -216,6 +249,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
         if (element !== null) {
           elements.set(id, element);
           registrations.set(id, virtualizer.registerItem(element, id));
+          scheduleItemMeasurement(id);
         }
       };
       itemRefs.set(id, callback);
@@ -362,6 +396,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       elements.clear();
       itemRefs.clear();
       bootstrapElements.clear();
+      pendingMeasurements.clear();
     });
 
     expose(Object.freeze({
@@ -482,17 +517,27 @@ export const VirtualList = VirtualListRuntime as typeof VirtualListRuntime & Vir
 export function createVirtualListMeasurementResolver(
   axis: LinearAxis,
 ): VirtualMeasurementResolver<LinearLayoutState<string>, string, LinearMeasurement> {
-  return ({ element, placement, state }) => {
-    const bounds = element.getBoundingClientRect();
-    const value = axis === 'vertical' ? bounds.height : bounds.width;
-    if (!Number.isFinite(value) || value <= 0) return null;
-    const current = state.extents.extentAt(placement.index);
-    if (current?.kind === 'exact' && Math.abs(current.value - value) < 0.01) return null;
-    return Object.freeze({
-      index: placement.index,
-      extent: Object.freeze({ kind: 'exact' as const, value }),
-    });
-  };
+  return ({ element, placement, state }) =>
+    measureVirtualListElement(axis, placement.id, element, state);
+}
+
+function measureVirtualListElement(
+  axis: LinearAxis,
+  id: string,
+  element: HTMLElement,
+  state: LinearLayoutState<string>,
+): LinearMeasurement | null {
+  const index = state.domain.indexOf(id);
+  if (index === null) return null;
+  const bounds = element.getBoundingClientRect();
+  const value = axis === 'vertical' ? bounds.height : bounds.width;
+  if (!Number.isFinite(value) || value <= 0) return null;
+  const current = state.extents.extentAt(index);
+  if (current?.kind === 'exact' && Math.abs(current.value - value) < 0.01) return null;
+  return Object.freeze({
+    index,
+    extent: Object.freeze({ kind: 'exact' as const, value }),
+  });
 }
 
 export function createVirtualListState(

@@ -131,6 +131,93 @@ test('VirtualList renders intrinsic rows without per-item Sectile wrappers and r
   }
 });
 
+test('VirtualList measures only newly rendered unknown identities after keyed reconciliation', async () => {
+  const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  const boundsDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'getBoundingClientRect');
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+    configurable: true,
+    get() { return 80; },
+  });
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+    configurable: true,
+    get() { return 120; },
+  });
+  let itemReads = 0;
+  Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
+    configurable: true,
+    value() {
+      const height = Number(this.dataset.height);
+      if (!Number.isFinite(height) || height <= 0) {
+        return boundsDescriptor?.value?.call(this) ?? {
+          x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0,
+          width: 0, height: 0, toJSON() {},
+        };
+      }
+      itemReads += 1;
+      return {
+        x: 0, y: 0, top: 0, right: 120, bottom: height, left: 0,
+        width: 120, height, toJSON() {},
+      };
+    },
+  });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const list = ref();
+  const items = shallowRef(Array.from({ length: 20 }, (_, index) => ({
+    id: `row-${index}`,
+    label: `Row ${index}`,
+    height: 20,
+  })));
+  const app = createApp({
+    render: () => h(VirtualList, {
+      ref: list,
+      items: items.value,
+      getKey: (value) => value.id,
+      estimateSize: 20,
+      overscan: 0,
+      itemAttributes: (value) => ({
+        'data-id': value.id,
+        'data-height': String(value.height),
+      }),
+    }, { default: ({ value }) => value.label }),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    assert.equal(itemReads, 4);
+    for (let index = 0; index < 4; index += 1) {
+      assert.deepEqual(list.value.state.extents.extentAt(index), { kind: 'exact', value: 20 });
+    }
+
+    itemReads = 0;
+    items.value = items.value.map((item, index) => index === 0
+      ? { ...item, label: 'Changed row' }
+      : item);
+    await settle();
+    assert.equal(itemReads, 0);
+
+    items.value = [
+      items.value[0],
+      { id: 'inserted', label: 'Inserted', height: 35 },
+      ...items.value.slice(1),
+    ];
+    await settle();
+    assert.equal(itemReads, 1);
+    assert.deepEqual(list.value.state.extents.extentAt(1), { kind: 'exact', value: 35 });
+  } finally {
+    app.unmount();
+    host.remove();
+    if (heightDescriptor === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
+    if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
+    if (boundsDescriptor === undefined) delete HTMLElement.prototype.getBoundingClientRect;
+    else Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', boundsDescriptor);
+  }
+});
+
 test('VirtualList keeps the layout domain for value-only replacements and measures the changed row once', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
   const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
