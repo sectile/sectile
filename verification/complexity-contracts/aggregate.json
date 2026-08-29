@@ -13268,15 +13268,6 @@
       "inherits": "public-callable-v1"
     },
     {
-      "key": "vue:./data-grid:defineDataGridColumns",
-      "package": "vue",
-      "subpath": "./data-grid",
-      "exportName": "defineDataGridColumns",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
       "key": "vue:./data-grid:useDataGrid",
       "package": "vue",
       "subpath": "./data-grid",
@@ -13295,28 +13286,10 @@
       "inherits": "public-callable-v1"
     },
     {
-      "key": "vue:./data-grid:useDataGridSource",
-      "package": "vue",
-      "subpath": "./data-grid",
-      "exportName": "useDataGridSource",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
       "key": "vue:./data-table:createDataTableComponents",
       "package": "vue",
       "subpath": "./data-table",
       "exportName": "createDataTableComponents",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "vue:./data-table:defineDataTableColumns",
-      "package": "vue",
-      "subpath": "./data-table",
-      "exportName": "defineDataTableColumns",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -13340,28 +13313,10 @@
       "inherits": "public-callable-v1"
     },
     {
-      "key": "vue:./data-table:useDataTableSource",
-      "package": "vue",
-      "subpath": "./data-table",
-      "exportName": "useDataTableSource",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
       "key": "vue:./data-tree-grid:createDataTreeGridComponents",
       "package": "vue",
       "subpath": "./data-tree-grid",
       "exportName": "createDataTreeGridComponents",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "vue:./data-tree-grid:defineDataTreeGridColumns",
-      "package": "vue",
-      "subpath": "./data-tree-grid",
-      "exportName": "defineDataTreeGridColumns",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -13380,15 +13335,6 @@
       "package": "vue",
       "subpath": "./data-tree-grid",
       "exportName": "useDataTreeGridContext",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "vue:./data-tree-grid:useDataTreeGridSource",
-      "package": "vue",
-      "subpath": "./data-tree-grid",
-      "exportName": "useDataTreeGridSource",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"

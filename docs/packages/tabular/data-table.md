@@ -48,7 +48,7 @@ Order, visibility, and start/end pinning are portable semantic state. Pixel widt
 
 ## Connect data and render request states
 
-`useDataTableSource` executes requests and exposes `status`, `error`, `reload`, and `cancel`. Tabular does not prescribe the spinner, empty state, error copy, or retry control. It keeps the last accepted view while exposing the new request separately.
+`useDataTable({ source })` executes requests, and the returned controller exposes `status`, `error`, `reload`, and `cancel`. Tabular does not prescribe the spinner, empty state, error copy, or retry control. It keeps the last accepted view while exposing the new request separately.
 
 | Situation | Read this state |
 | --- | --- |
@@ -61,7 +61,7 @@ See [async data sources](./data-source) for the complete flow.
 
 ## Preserve row types in Vue
 
-`createDataTableComponents(table)` creates a component namespace bound to the controller schema. A Body slot therefore preserves the `useDataTable<UserCells>` type for `row.cells`, and Cell inherits the row ID from Body.
+`createDataTableComponents(table)` creates a component namespace bound to the source response schema. A Body slot therefore preserves the inferred `rows[].cells` type, and Cell inherits the row ID from Body.
 
 ```vue
 <DataTable.Body v-slot="{ row }">

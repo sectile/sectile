@@ -344,3 +344,49 @@ test('TAB-SRC-09: one current source, query, and expansion stage is retained by 
   assert.equal(stale.ok, false);
   assert.equal(stale.error.code, 'stale-source-generation');
 });
+
+test('TAB-SRC-10: response columns resolve nested object and array cell paths while direct keys win', () => {
+  const active = request();
+  const response = {
+    ...active,
+    viewRevision: 1,
+    matchingLeafCount: { kind: 'known', value: 1 },
+    visibleRowCount: { kind: 'known', value: 1 },
+    rows: [{
+      kind: 'leaf',
+      id: 'nested',
+      cells: {
+        profile: { name: 'Nested' },
+        items: [{ price: 42 }],
+        'profile.name': 'Direct',
+      },
+    }],
+    columnSchema: {
+      revision: 0,
+      columns: [{ id: 'profile.name' }, { id: 'items[0].price' }],
+      headers: [],
+    },
+    removedRowIDs: [],
+  };
+  const accepted = synchronizeTabularView(active, response);
+  assert.equal(accepted.ok, true);
+  assert.equal(accepted.value.rows[0].cells.profile.name, 'Nested');
+  assert.equal(accepted.value.rows[0].cells.items[0].price, 42);
+  assert.equal(accepted.value.rows[0].cells['profile.name'], 'Direct');
+  assert.equal(Object.isFrozen(accepted.value.rows[0].cells.profile), true);
+
+  const missing = synchronizeTabularView(active, {
+    ...response,
+    rows: [{ kind: 'leaf', id: 'nested', cells: { profile: { name: 'Nested' }, items: [] } }],
+  });
+  assert.equal(missing.ok, false);
+  assert.equal(missing.error.code, 'response-envelope-mismatch');
+
+  const malformed = synchronizeTabularView(active, {
+    ...response,
+    rows: [{ kind: 'leaf', id: 'nested', cells: { items: [{ price: 42 }] } }],
+    columnSchema: { revision: 0, columns: [{ id: 'items.[0].price' }], headers: [] },
+  });
+  assert.equal(malformed.ok, false);
+  assert.equal(malformed.error.code, 'response-envelope-mismatch');
+});

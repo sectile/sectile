@@ -90,6 +90,6 @@ test('base Tabular profiles are complete and remain Virtual-free', async () => {
     assert.doesNotMatch(source, /@sectile\/virtual|\.\/virtual\.js/);
     const module = await import(`../.verification-dist/${profile}.js`);
     assert.equal(module[`${profile === 'data-table' ? 'DataTable' : profile === 'data-grid' ? 'DataGrid' : 'DataTreeGrid'}Loading`], undefined);
-    assert.equal(typeof module[profile === 'data-table' ? 'useDataTableSource' : profile === 'data-grid' ? 'useDataGridSource' : 'useDataTreeGridSource'], 'function');
+    assert.equal(module[profile === 'data-table' ? 'useDataTableSource' : profile === 'data-grid' ? 'useDataGridSource' : 'useDataTreeGridSource'], undefined);
   }
 });

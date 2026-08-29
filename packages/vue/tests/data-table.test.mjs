@@ -3,16 +3,16 @@ import test from 'node:test';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
 import {
-  defineDataTableColumns,
   useDataTable,
   createDataTableComponents,
   useDataTableContext,
 } from '../.verification-dist/data-table.js';
 
-const columns = defineDataTableColumns([{ id: 'name', label: 'Name', capabilities: ['sort', 'edit'] }]);
+const columns = [{ id: 'name', label: 'Name', capabilities: ['sort', 'edit'] }];
+const source = async (request) => ({ ...request, viewRevision: 1, matchingLeafCount: { kind: 'known', value: 0 }, visibleRowCount: { kind: 'known', value: 0 }, rows: [], columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [] });
 
 test('Vue DataTable returns one stable, exact component namespace per controller', () => {
-  const controller = useDataTable({ columns });
+  const controller = useDataTable({ source });
   const first = createDataTableComponents(controller);
   const second = createDataTableComponents(controller);
   assert.equal(first, second);
@@ -29,7 +29,7 @@ test('Vue DataTable renders one native table tree and propagates controller cont
   let controller;
   const app = createSSRApp({
     setup() {
-      controller = useDataTable({ columns });
+      controller = useDataTable({ source });
       const DataTable = createDataTableComponents(controller);
       accept(controller, [{ kind: 'leaf', id: 'r1', cells: { name: 'Ada' } }]);
       return () => h(DataTable.Provider, null, { default: () => h(DataTable.Root, null, { default: () => [h(DataTable.Caption, null, () => 'Users'), h(DataTable.Header, null, () => h(DataTable.HeaderRow, null, () => h(DataTable.ColumnHeader, { column: 'name' }, () => 'Name'))), h(DataTable.Body, null, { default: ({ row }) => h(DataTable.Cell, { column: 'name' }, () => row.cells.name) }), h(Probe)] }) });
@@ -55,19 +55,19 @@ function accept(controller, rows) {
 }
 
 test('Vue DataTable rejects missing providers and invalid asChild composition', async () => {
-  await assert.rejects(() => renderToString(createSSRApp({ setup() { const controller = useDataTable({ columns }); const DataTable = createDataTableComponents(controller); return () => h(DataTable.Root); } })), /matching Provider/);
-  const app = createSSRApp({ setup() { const controller = useDataTable({ columns }); const DataTable = createDataTableComponents(controller); return () => h(DataTable.Provider, null, { default: () => h(DataTable.Root, { asChild: true }, { default: () => [h('table'), h('table')] }) }); } });
+  await assert.rejects(() => renderToString(createSSRApp({ setup() { const controller = useDataTable({ source }); const DataTable = createDataTableComponents(controller); return () => h(DataTable.Root); } })), /matching Provider/);
+  const app = createSSRApp({ setup() { const controller = useDataTable({ source }); const DataTable = createDataTableComponents(controller); return () => h(DataTable.Provider, null, { default: () => h(DataTable.Root, { asChild: true }, { default: () => [h('table'), h('table')] }) }); } });
   app.config.warnHandler = () => {};
   await assert.rejects(() => renderToString(app), /requires exactly one element child/);
 });
 
 test('Vue DataTable rejects controlled/default ownership conflicts atomically', () => {
-  assert.throws(() => useDataTable({ columns, query: { value: { sort: [], filters: [], groups: [], aggregates: [], pivots: [] } }, defaultQuery: { sort: [], filters: [], groups: [], aggregates: [], pivots: [] } }), /mutually exclusive/);
+  assert.throws(() => useDataTable({ source, query: { value: { sort: [], filters: [], groups: [], aggregates: [], pivots: [] } }, defaultQuery: { sort: [], filters: [], groups: [], aggregates: [], pivots: [] } }), /mutually exclusive/);
 });
 
 test('Vue DataTable resolves the nearest nested Provider', async () => {
   let nearest; let inner;
   const Probe = { setup() { nearest = useDataTableContext().controller; return () => null; } };
-  const app = createSSRApp({ setup() { const outer = useDataTable({ columns }); inner = useDataTable({ columns }); const OuterTable = createDataTableComponents(outer); const InnerTable = createDataTableComponents(inner); return () => h(OuterTable.Provider, null, { default: () => h(InnerTable.Provider, null, { default: () => h(InnerTable.Root, null, () => h(Probe)) }) }); } });
+  const app = createSSRApp({ setup() { const outer = useDataTable({ source }); inner = useDataTable({ source }); const OuterTable = createDataTableComponents(outer); const InnerTable = createDataTableComponents(inner); return () => h(OuterTable.Provider, null, { default: () => h(InnerTable.Provider, null, { default: () => h(InnerTable.Root, null, () => h(Probe)) }) }); } });
   await renderToString(app); assert.equal(nearest, inner);
 });

@@ -8,7 +8,6 @@ const { createApp, h, nextTick } = await import('vue');
 const {
   useDataTable,
   createDataTableComponents,
-  useDataTableSource,
 } = await import('../.verification-dist/data-table.js');
 const { CheckboxIndicator, CheckboxRoot } = await import('../.verification-dist/checkbox.js');
 
@@ -18,9 +17,7 @@ test('automatic Body renders accepted rows and supplies row identity to nested p
   let source;
   const app = createApp({
     setup() {
-      const controller = useDataTable({ columns });
-      const DataTable = createDataTableComponents(controller);
-      source = useDataTableSource(controller, async (request) => ({
+      const controller = useDataTable({ source: async (request) => ({
         ...request,
         viewRevision: 1,
         matchingLeafCount: { kind: 'known', value: 2 },
@@ -31,7 +28,9 @@ test('automatic Body renders accepted rows and supplies row identity to nested p
         ],
         columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] },
         removedRowIDs: [],
-      }));
+      }) });
+      const DataTable = createDataTableComponents(controller);
+      source = controller;
       return () => h(DataTable.Provider, null, {
         default: () => h(DataTable.Root, null, {
           default: () => [
@@ -72,9 +71,7 @@ test('Tabular selection parts adopt the reusable Checkbox component', async () =
   let source;
   const app = createApp({
     setup() {
-      const controller = useDataTable({ columns });
-      const DataTable = createDataTableComponents(controller);
-      source = useDataTableSource(controller, async (request) => ({
+      const controller = useDataTable({ source: async (request) => ({
         ...request,
         viewRevision: 1,
         matchingLeafCount: { kind: 'known', value: 4 },
@@ -87,7 +84,9 @@ test('Tabular selection parts adopt the reusable Checkbox component', async () =
         ],
         columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] },
         removedRowIDs: [],
-      }));
+      }) });
+      const DataTable = createDataTableComponents(controller);
+      source = controller;
       const selected = (selection, rowID) => selection.kind === 'explicit-rows'
         ? selection.rowIDs.includes(rowID)
         : !selection.excludedRowIDs.includes(rowID);

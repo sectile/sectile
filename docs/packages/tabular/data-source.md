@@ -43,17 +43,20 @@ Wrap server data with the request identity before synchronizing it.
 return {
   protocolVersion: request.protocolVersion,
   requestID: request.requestID,
-  profile: request.profile,
-  sourceRevision: payload.sourceRevision,
+  sourceGeneration: request.sourceGeneration,
   queryRevision: request.queryRevision,
-  accessRevision: request.accessRevision,
   expansionRevision: request.expansionRevision,
-  view: {
-    revision: payload.viewRevision,
-    columnSchema: columns,
-    rows: payload.rows,
-    access: { kind: 'page', pageIndex: payload.page, pageSize: 25, totalRowCount: payload.total },
+  viewRevision: payload.viewRevision,
+  access: request.access,
+  matchingLeafCount: { kind: 'known', value: payload.total },
+  visibleRowCount: { kind: 'known', value: payload.rows.length },
+  rows: payload.rows,
+  columnSchema: {
+    revision: request.columnSchemaRevision,
+    columns: payload.columns,
+    headers: payload.headers ?? [],
   },
+  removedRowIDs: [],
 }
 ```
 
@@ -71,7 +74,7 @@ Tabular exposes state without prescribing its presentation.
 | Error | Retain the last view and offer a described retry |
 | Cancellation | Do not present it as an error; await the next request |
 
-Vue's `useDataTableSource`, `useDataGridSource`, and `useDataTreeGridSource` expose `status`, `error`, `reload`, `cancel`, `replaceResolver`, and `dispose`. Core and DOM compose the same policy from an application-owned `AbortController` and controller request state.
+Vue's `useDataTable`, `useDataGrid`, and `useDataTreeGrid` accept `source` directly. Their controllers expose `status`, `error`, `reload`, `cancel`, `replaceResolver`, and `dispose`. Core and DOM compose the same policy from an application-owned `AbortController` and controller request state.
 
 ## Page and window access
 

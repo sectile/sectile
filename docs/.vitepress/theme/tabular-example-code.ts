@@ -16,26 +16,18 @@ export type TabularExampleKind =
 
 export type TabularExampleSources = Readonly<Record<'vue' | 'dom' | 'core', string>>;
 
-const tableSetup = `const columns = defineDataTableColumns([
-  { id: 'name', capabilities: ['sort', 'filter', 'edit'] },
-  { id: 'team', capabilities: ['sort', 'filter'] },
-  { id: 'status', capabilities: ['sort', 'filter'] },
-])
-const table = useDataTable<UserCells>({ columns })
-const DataTable = createDataTableComponents(table)
-
-useDataTableSource(table, request => resolveUsers(request, columns))`;
+const tableSetup = `const table = useDataTable({
+  source: resolveUsers,
+})
+const DataTable = createDataTableComponents(table)`;
 
 function vueTable(template: string): string {
   return `<script setup lang="ts">
 import {
   createDataTableComponents,
-  defineDataTableColumns,
   useDataTable,
-  useDataTableSource,
 } from '@sectile/vue/data-table'
 
-interface UserCells { name: string; team: string; status: string }
 ${tableSetup}
 </script>
 
@@ -217,15 +209,13 @@ connection.handleEvent({
 
 const gridOverview = Object.freeze({
   vue: `<script setup lang="ts">
-import { createDataGridComponents, defineDataGridColumns, useDataGrid, useDataGridSource } from '@sectile/vue/data-grid'
-const columns = defineDataGridColumns([{ id: 'task', capabilities: ['sort', 'edit'] }, { id: 'owner', capabilities: ['edit'] }, { id: 'status' }])
-const grid = useDataGrid({ columns })
+import { createDataGridComponents, useDataGrid } from '@sectile/vue/data-grid'
+const grid = useDataGrid({ source: resolveWork })
 const DataGrid = createDataGridComponents(grid)
-useDataGridSource(grid, request => resolveWork(request, columns))
 </script>
 <template><DataGrid.Provider><DataGrid.Root aria-label="출시 준비">
-  <DataGrid.Header><DataGrid.HeaderRow><DataGrid.ColumnHeader v-for="column in columns" :key="column.id" :column="column.id">{{ column.id }}</DataGrid.ColumnHeader></DataGrid.HeaderRow></DataGrid.Header>
-  <DataGrid.Body v-slot="{ row }"><DataGrid.Cell v-for="column in columns" :key="column.id" :column="column.id">{{ row.cells[column.id] }}</DataGrid.Cell></DataGrid.Body>
+  <DataGrid.Header><DataGrid.HeaderRow><DataGrid.ColumnHeader column="task">작업</DataGrid.ColumnHeader><DataGrid.ColumnHeader column="owner">담당자</DataGrid.ColumnHeader><DataGrid.ColumnHeader column="status">상태</DataGrid.ColumnHeader></DataGrid.HeaderRow></DataGrid.Header>
+  <DataGrid.Body v-slot="{ row }"><DataGrid.Cell column="task">{{ row.cells.task }}</DataGrid.Cell><DataGrid.Cell column="owner">{{ row.cells.owner }}</DataGrid.Cell><DataGrid.Cell column="status">{{ row.cells.status }}</DataGrid.Cell></DataGrid.Body>
 </DataGrid.Root></DataGrid.Provider></template>`,
   dom: `import { createDataGrid } from '@sectile/dom/tabular'
 const grid = createDataGrid({ columns, root: document.querySelector('[role=grid]')! })
@@ -281,14 +271,12 @@ grid.dispatch({
 
 const treeOverview = Object.freeze({
   vue: `<script setup lang="ts">
-import { createDataTreeGridComponents, defineDataTreeGridColumns, useDataTreeGrid, useDataTreeGridSource } from '@sectile/vue/data-tree-grid'
-const columns = defineDataTreeGridColumns([{ id: 'service', capabilities: ['sort', 'edit'] }, { id: 'owner' }, { id: 'status' }])
-const tree = useDataTreeGrid({ columns })
+import { createDataTreeGridComponents, useDataTreeGrid } from '@sectile/vue/data-tree-grid'
+const tree = useDataTreeGrid({ source: resolveServices })
 const DataTreeGrid = createDataTreeGridComponents(tree)
-useDataTreeGridSource(tree, request => resolveServices(request, columns))
 </script>
 <template><DataTreeGrid.Provider><DataTreeGrid.Root aria-label="서비스 소유권">
-  <DataTreeGrid.Header><DataTreeGrid.HeaderRow><DataTreeGrid.ColumnHeader v-for="column in columns" :key="column.id" :column="column.id">{{ column.id }}</DataTreeGrid.ColumnHeader></DataTreeGrid.HeaderRow></DataTreeGrid.Header>
+  <DataTreeGrid.Header><DataTreeGrid.HeaderRow><DataTreeGrid.ColumnHeader column="service">서비스</DataTreeGrid.ColumnHeader><DataTreeGrid.ColumnHeader column="owner">담당자</DataTreeGrid.ColumnHeader><DataTreeGrid.ColumnHeader column="status">상태</DataTreeGrid.ColumnHeader></DataTreeGrid.HeaderRow></DataTreeGrid.Header>
   <DataTreeGrid.Body v-slot="{ row }"><DataTreeGrid.Cell column="service"><DataTreeGrid.RowDisclosure v-if="row.kind === 'group'" />{{ row.cells.service }}</DataTreeGrid.Cell><DataTreeGrid.Cell column="owner">{{ row.cells.owner }}</DataTreeGrid.Cell><DataTreeGrid.Cell column="status">{{ row.cells.status }}</DataTreeGrid.Cell></DataTreeGrid.Body>
 </DataTreeGrid.Root></DataTreeGrid.Provider></template>`,
   dom: `import { createDataTreeGrid } from '@sectile/dom/tabular'
@@ -326,13 +314,15 @@ const treeSelection = Object.freeze({
 });
 
 const remoteSource = Object.freeze({
-  vue: `const source = useDataTableSource(table, async (request, { signal }) => {
-  const response = await fetch('/api/users?' + encodeRequest(request), { signal })
-  if (!response.ok) throw new Error('사용자를 불러오지 못했습니다.')
-  return toViewResponse(request, columns, await response.json())
+  vue: `const table = useDataTable({
+  source: async (request, { signal }) => {
+    const response = await fetch('/api/users?' + encodeRequest(request), { signal })
+    if (!response.ok) throw new Error('사용자를 불러오지 못했습니다.')
+    return toViewResponse(request, await response.json())
+  },
 })
 
-// source.status, source.error, source.reload and source.cancel own no UI policy.`,
+// table.status, table.error, table.reload and table.cancel own no UI policy.`,
   dom: `let active = new AbortController()
 connection.controller.attachRequestExecutor(async ({ request }) => {
   active.abort()
@@ -351,7 +341,7 @@ table.attachRequestExecutor(async ({ request }) => {
 });
 
 const contracts = Object.freeze({
-  vue: `const table = useDataTable({ columns })
+  vue: `const table = useDataTable({ source: resolveUsers })
 watchEffect(() => {
   const state = table.snapshot.value.state
   console.log(state.queryRevision, state.sourceGeneration, state.requestState)

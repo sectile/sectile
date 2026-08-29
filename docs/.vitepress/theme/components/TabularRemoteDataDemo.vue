@@ -4,9 +4,7 @@ import { ArrowDown, ArrowUp, ChevronsUpDown, Cloud, RefreshCw, Server } from '@l
 import { TextField } from '@sectile/vue/text';
 import {
   createDataTableComponents,
-  defineDataTableColumns,
   useDataTable,
-  useDataTableSource,
   type DataTableSourceResolver,
   type DataTableViewResponse,
 } from '@sectile/vue/data-table';
@@ -75,13 +73,13 @@ interface UserRecord extends UserCells {
   readonly id: string;
 }
 
-const columns = defineDataTableColumns([
+const sourceColumns = [
   { id: 'name', label: 'Name', capabilities: ['sort', 'filter'] },
   { id: 'team', label: 'Team', capabilities: ['sort', 'filter'] },
   { id: 'role', label: 'Role', capabilities: ['sort', 'filter'] },
   { id: 'location', label: 'Location', capabilities: ['sort', 'filter'] },
   { id: 'status', label: 'Status', capabilities: ['sort', 'filter'] },
-]);
+] as const;
 
 const names = {
   ko: ['김민서', '박준호', '이서윤', '정하린', '최도윤', '한지우', '윤서준', '강유나', '오하람', '송예린', '임도현', '조수아', '백지훈', '문채원', '남현우', '신가은', '유태민', '권서아'],
@@ -109,8 +107,12 @@ const records = computed<readonly UserRecord[]>(() => {
   }));
 });
 
-const table = useDataTable<UserCells>({
-  columns,
+const table = useDataTable({
+  source: async (request, { signal }) => {
+    const params = requestParams(request);
+    lastRequest.value = `GET /api/users?${params}`;
+    return toViewResponse(request, await mockFetchUsers(params, signal));
+  },
   defaultAccessState: {
     kind: 'page',
     page: 1,
@@ -193,16 +195,12 @@ function toViewResponse(request: Request, result: { readonly rows: readonly User
         status: record.status,
       },
     })),
-    columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] },
+    columnSchema: { revision: request.columnSchemaRevision, columns: sourceColumns, headers: [] },
     removedRowIDs: [],
   };
 }
 
-const source = useDataTableSource(table, async (request, { signal }) => {
-  const params = requestParams(request);
-  lastRequest.value = `GET /api/users?${params}`;
-  return toViewResponse(request, await mockFetchUsers(params, signal));
-});
+const source = table;
 
 watch(isKorean, () => source.reload());
 
@@ -271,14 +269,11 @@ function previewFailure(): void {
                   <DocsCheckbox :model-value="bulkSelectionValue(rowSelection, visibleRows)" />
                 </DataTable.BulkSelectionControl>
               </th>
-              <DataTable.ColumnHeader v-for="(column, index) in columns" :key="column.id" :column="column.id">
-                <DataTable.SortTrigger :column="column.id">
-                  {{ copy.columns[index] }}
-                  <ArrowUp v-if="direction(column.id) === 'ascending'" :size="14" aria-hidden="true" />
-                  <ArrowDown v-else-if="direction(column.id) === 'descending'" :size="14" aria-hidden="true" />
-                  <ChevronsUpDown v-else :size="14" aria-hidden="true" />
-                </DataTable.SortTrigger>
-              </DataTable.ColumnHeader>
+              <DataTable.ColumnHeader column="name"><DataTable.SortTrigger column="name">{{ copy.columns[0] }}<ArrowUp v-if="direction('name') === 'ascending'" :size="14" aria-hidden="true" /><ArrowDown v-else-if="direction('name') === 'descending'" :size="14" aria-hidden="true" /><ChevronsUpDown v-else :size="14" aria-hidden="true" /></DataTable.SortTrigger></DataTable.ColumnHeader>
+              <DataTable.ColumnHeader column="team"><DataTable.SortTrigger column="team">{{ copy.columns[1] }}<ArrowUp v-if="direction('team') === 'ascending'" :size="14" aria-hidden="true" /><ArrowDown v-else-if="direction('team') === 'descending'" :size="14" aria-hidden="true" /><ChevronsUpDown v-else :size="14" aria-hidden="true" /></DataTable.SortTrigger></DataTable.ColumnHeader>
+              <DataTable.ColumnHeader column="role"><DataTable.SortTrigger column="role">{{ copy.columns[2] }}<ArrowUp v-if="direction('role') === 'ascending'" :size="14" aria-hidden="true" /><ArrowDown v-else-if="direction('role') === 'descending'" :size="14" aria-hidden="true" /><ChevronsUpDown v-else :size="14" aria-hidden="true" /></DataTable.SortTrigger></DataTable.ColumnHeader>
+              <DataTable.ColumnHeader column="location"><DataTable.SortTrigger column="location">{{ copy.columns[3] }}<ArrowUp v-if="direction('location') === 'ascending'" :size="14" aria-hidden="true" /><ArrowDown v-else-if="direction('location') === 'descending'" :size="14" aria-hidden="true" /><ChevronsUpDown v-else :size="14" aria-hidden="true" /></DataTable.SortTrigger></DataTable.ColumnHeader>
+              <DataTable.ColumnHeader column="status"><DataTable.SortTrigger column="status">{{ copy.columns[4] }}<ArrowUp v-if="direction('status') === 'ascending'" :size="14" aria-hidden="true" /><ArrowDown v-else-if="direction('status') === 'descending'" :size="14" aria-hidden="true" /><ChevronsUpDown v-else :size="14" aria-hidden="true" /></DataTable.SortTrigger></DataTable.ColumnHeader>
             </DataTable.HeaderRow>
           </DataTable.Header>
           <DataTable.Body>

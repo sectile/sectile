@@ -311,7 +311,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "d46d5e3f91a1f95900162ef430b6be9f9461800e8051e7cd8378d90195c19654",
+  "fingerprint": "09c26a8d6a8d1f0bbc34822889ef4fba1320bd5adff46c93562fbb782960225e",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -355,15 +355,15 @@
     },
     {
       "path": "dist/data-grid.d.ts",
-      "sha256": "91afeb18c329277be6f7778d2adba8a04c24cff82408058c8708430a5d50b947"
+      "sha256": "fd56d1edadbd60eb23c270a2185ba440db72b1ad4610063ed434f90a6822256c"
     },
     {
       "path": "dist/data-table.d.ts",
-      "sha256": "4549f1c91f211c2ff39c8f06fa8844c302c6588a8fa592964f8b042b7f708f94"
+      "sha256": "101a3ea414f9396fe419e72d1e288031445738442cc12ac31d23134f2c551574"
     },
     {
       "path": "dist/data-tree-grid.d.ts",
-      "sha256": "fc04549a7ac1c2acccd470c3c363922cfb06f4eb4479113d3c10ce16a494bd54"
+      "sha256": "89db378ae3e77f49f4eaecb47333a04e0f9d365cd8f4d0326035f4de35cb63f8"
     },
     {
       "path": "dist/date-field.d.ts",
@@ -459,7 +459,7 @@
     },
     {
       "path": "dist/internal/tabular-profile.d.ts",
-      "sha256": "e6d4802695d73fc94e74bfb14d26322703c4cb234f3bfb70e7395097305e4081"
+      "sha256": "ed4280a4cc6cd7ff955f2923aebee31293e379424805d2d17651adc12ac93b29"
     },
     {
       "path": "dist/internal/virtual-collection-model.d.ts",

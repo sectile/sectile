@@ -12,14 +12,13 @@ import {
   type DataGridState,
   type DataGridUpdate,
 } from '@sectile/tabular/data-grid';
-import type { TabularAcceptedViewState, TabularAccessState, TabularCellRecord, TabularColumnDefinition, TabularColumnState, TabularError, TabularGroupID, TabularHeaderNode, TabularHeaderNodeID, TabularLimits, TabularQuery, TabularRequest, TabularRequestState, TabularResult, TabularRow, TabularRowID, TabularRowSelection, TabularView, TabularViewResponse, TabularWireValue } from '@sectile/tabular';
+import type { TabularAcceptedViewState, TabularAccessState, TabularCellRecord, TabularColumnState, TabularError, TabularGroupID, TabularHeaderNodeID, TabularLimits, TabularQuery, TabularRequest, TabularRequestState, TabularResult, TabularRow, TabularRowID, TabularRowSelection, TabularView, TabularViewResponse, TabularWireValue } from '@sectile/tabular';
 import type { PrimitiveAs } from './primitive.js';
-import type { DataTableCellsFromColumns, DataTableColumn, DataTableColumnID, DataTableReactiveInput, DataTableWritableRef } from './data-table.js';
+import type { DataTableColumnID, DataTableGroupCellsFromSource, DataTableLeafCellsFromSource, DataTableReactiveInput, DataTableWritableRef } from './data-table.js';
 import { createTabularComponentSuite, type TabularBodyComponent, type TabularComponent } from './internal/tabular-components.js';
 import { createTabularParts, type HostConnection } from './internal/tabular-parts.js';
-import { aliasVueProfileController, controlledValues, createVueProfileController, useProfile, useProfileSource, type ProfileContext, type SourceOptions, type SourceResolver, type SourceReturn, type SourceStatus, type VueProfileController } from './internal/tabular-profile.js';
+import { aliasVueProfileController, controlledValues, createVueProfileController, useProfile, useProfileSource, type ProfileContext, type SourceResolver, type SourceReturn, type SourceStatus, type VueProfileController } from './internal/tabular-profile.js';
 
-export type DataGridColumn<RecordValue = unknown, ID extends string = string, CellValue extends TabularWireValue = TabularWireValue> = DataTableColumn<RecordValue, ID, CellValue>;
 export type DataGridQuery = TabularQuery;
 export type DataGridViewRow<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = TabularRow<LeafCells, GroupCells>;
 export type DataGridView<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = TabularView<DataGridViewRow<LeafCells, GroupCells>>;
@@ -48,12 +47,15 @@ export type DataGridCursorChangeHandler = (value: DataGridCursorState) => void;
 export type DataGridEditStateChangeHandler = (value: DataGridEditState) => void;
 export type DataGridColumnSizeChangeHandler = (value: DataGridColumnSizeState) => void;
 
-export interface UseDataGridOptions<Columns extends readonly DataGridColumn<never>[] = readonly DataGridColumn<never>[], LeafCells extends object = DataTableCellsFromColumns<Columns>, GroupCells extends object = LeafCells> {
-  readonly columns: DataTableReactiveInput<Columns>;
-  readonly headers?: DataTableReactiveInput<readonly TabularHeaderNode[]>;
+export type DataGridSourceResolver<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = (request: TabularRequest, context: { readonly signal: AbortSignal }) => DataGridViewResponse<LeafCells, GroupCells> | Promise<DataGridViewResponse<LeafCells, GroupCells>>;
+type DataGridSourceResponse<Source extends SourceResolver> = Awaited<ReturnType<Source>>;
+export interface UseDataGridOptions<Source extends SourceResolver = DataGridSourceResolver> {
+  readonly source: Source;
   readonly sourceKey?: DataTableReactiveInput<string>;
   readonly limits?: Partial<TabularLimits>;
-  readonly initialView?: DataGridViewResponse<LeafCells, GroupCells>;
+  readonly initialView?: DataGridSourceResponse<Source>;
+  readonly onSourceError?: DataGridSourceErrorHandler;
+  readonly onSourceStatusChange?: DataGridStatusChangeHandler;
   readonly query?: DataTableWritableRef<DataGridQuery>; readonly defaultQuery?: DataGridQuery; readonly onQueryChange?: DataGridQueryChangeHandler;
   readonly rowSelection?: DataTableWritableRef<DataGridRowSelection>; readonly defaultRowSelection?: DataGridRowSelection; readonly onRowSelectionChange?: DataGridRowSelectionChangeHandler;
   readonly columnState?: DataTableWritableRef<DataGridColumnState>; readonly defaultColumnState?: DataGridColumnState; readonly onColumnStateChange?: DataGridColumnStateChangeHandler;
@@ -64,16 +66,15 @@ export interface UseDataGridOptions<Columns extends readonly DataGridColumn<neve
   readonly isCellDisabled?: SemanticDataGridOptions['isCellDisabled'];
 }
 declare const dataGridSchema: unique symbol;
-export interface DataGridController<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> extends VueProfileController<DataGridState, DataGridEvent, SemanticDataGridCommand> { readonly [dataGridSchema]?: { readonly leaf: LeafCells; readonly group: GroupCells }; readonly acceptedViewState: ComputedRef<DataGridAcceptedViewState<LeafCells, GroupCells>>; getProjection(): DataGridProjection }
+export interface DataGridController<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> extends VueProfileController<DataGridState, DataGridEvent, SemanticDataGridCommand>, SourceReturn<DataGridSourceResolver<LeafCells, GroupCells>> { readonly [dataGridSchema]?: { readonly leaf: LeafCells; readonly group: GroupCells }; readonly acceptedViewState: ComputedRef<DataGridAcceptedViewState<LeafCells, GroupCells>>; getProjection(): DataGridProjection }
 interface HostOptions { readonly columnSizes?: Readonly<Record<string, number>>; readonly defaultColumnSizes?: Readonly<Record<string, number>>; readonly onColumnSizesChange?: DataGridColumnSizeChangeHandler }
 const hosts = new WeakMap<object, HostOptions>();
 
-export function defineDataGridColumns<const Columns extends readonly DataGridColumn<never>[]>(columns: Columns): Columns { return columns; }
-export function useDataGrid<ExplicitLeafCells extends object | undefined = undefined, ExplicitGroupCells extends object | undefined = ExplicitLeafCells, const Columns extends readonly DataGridColumn<never>[] = readonly DataGridColumn<never>[], LeafCells extends object = ExplicitLeafCells extends object ? ExplicitLeafCells : DataTableCellsFromColumns<Columns>, GroupCells extends object = ExplicitGroupCells extends object ? ExplicitGroupCells : LeafCells>(options: UseDataGridOptions<Columns, LeafCells, GroupCells>): DataGridController<LeafCells, GroupCells> {
+export function useDataGrid<const Source extends SourceResolver, LeafCells extends object = DataTableLeafCellsFromSource<Source>, GroupCells extends object = DataTableGroupCellsFromSource<Source>>(options: UseDataGridOptions<Source>): DataGridController<LeafCells, GroupCells> {
   for (const property of ['query', 'rowSelection', 'columnState', 'accessState', 'cursor', 'editState', 'columnSizeState']) assertExclusive(options, property);
   const semantic = createDataGrid({
-    columns: stripColumns(toValue(options.columns)),
-    ...(options.headers === undefined ? {} : { headers: toValue(options.headers) }),
+    columns: options.initialView?.columnSchema.columns ?? [],
+    headers: options.initialView?.columnSchema.headers ?? [],
     ...(options.limits === undefined ? {} : { limits: options.limits }),
     ...(options.isCellDisabled === undefined ? {} : { isCellDisabled: options.isCellDisabled }),
     controlled: { query: options.query !== undefined, rowSelection: options.rowSelection !== undefined, columnState: options.columnState !== undefined, accessState: options.accessState !== undefined, expansion: false },
@@ -101,30 +102,28 @@ export function useDataGrid<ExplicitLeafCells extends object | undefined = undef
     requestView: () => { const before = base.getSnapshot(); const result = base.requestView(); if (result.ok) notify(before, result.value); return result; },
     abandonRequest: (requestID: number) => { const before = base.getSnapshot(); const result = base.abandonRequest(requestID); if (result.ok) notify(before, result.value); return result; },
     getProjection: () => semantic.getProjection(),
-  }) as DataGridController<LeafCells, GroupCells>;
+  });
   aliasVueProfileController(controller, base);
   hosts.set(controller, Object.freeze({ ...(options.columnSizeState === undefined ? {} : { columnSizes: options.columnSizeState.value }), ...(options.defaultColumnSizeState === undefined ? {} : { defaultColumnSizes: options.defaultColumnSizeState }), ...(options.onColumnSizeStateChange === undefined ? {} : { onColumnSizesChange: options.onColumnSizeStateChange }) }));
-  if (options.initialView !== undefined) unwrap(controller.synchronizeView(options.initialView));
+  if (options.initialView !== undefined) unwrap(controller.synchronizeView(options.initialView as DataGridViewResponse<LeafCells, GroupCells>));
+  const source = useProfileSource(controller, options.source, {
+    ...(options.onSourceError === undefined ? {} : { onError: options.onSourceError }),
+    ...(options.onSourceStatusChange === undefined ? {} : { onStatusChange: options.onSourceStatusChange }),
+  });
   const desiredCursor = options.cursor?.value ?? options.defaultCursor;
   if (desiredCursor?.current !== null && desiredCursor?.current !== undefined && controller.getProjection().rows.length > 0) unwrap(controller.dispatch({ type: 'focus-cell', cell: desiredCursor.current }));
   const stops: Array<() => void> = [];
   const sync = () => unwrap(controller.syncControlledValues(controlledValues(options)));
   for (const source of [options.query, options.rowSelection, options.columnState, options.accessState]) if (source !== undefined) stops.push(watch(() => source.value, sync));
   if (options.sourceKey !== undefined) stops.push(watch(() => toValue(options.sourceKey!), () => { unwrap(controller.dispatch({ type: 'replace-source' })); }));
-  stops.push(watch(() => toValue(options.columns), () => { unwrap(controller.dispatch({ type: 'replace-source' })); }, { deep: false }));
   if (options.cursor !== undefined) stops.push(watch(() => options.cursor!.value, (value) => { if (value.current !== null) unwrap(controller.dispatch({ type: 'focus-cell', cell: value.current })); }));
   if (options.editState !== undefined) stops.push(watch(() => options.editState!.value, (value) => { unwrap(controller.dispatch(value.kind === 'editing' ? { type: 'begin-edit', cell: value.cell } : { type: 'cancel-edit', reason: 'application' })); }));
   const rawDispose = controller.dispose;
-  const wrapped = Object.freeze({ ...controller, dispose: () => { for (const stop of stops.splice(0)) stop(); rawDispose(); } }) as DataGridController<LeafCells, GroupCells>;
+  const wrapped = Object.freeze({ ...controller, status: source.status, error: source.error, reload: source.reload, cancel: source.cancel, replaceResolver: (resolver: DataGridSourceResolver<LeafCells, GroupCells>) => source.replaceResolver(resolver as SourceResolver), dispose: () => { for (const stop of stops.splice(0)) stop(); source.dispose(); rawDispose(); } }) as DataGridController<LeafCells, GroupCells>;
   aliasVueProfileController(wrapped, controller); hosts.set(wrapped, hosts.get(controller) ?? {});
   if (getCurrentScope() !== undefined) onScopeDispose(wrapped.dispose);
   return wrapped;
 }
-
-export type DataGridSourceResolver<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = (request: TabularRequest, context: { readonly signal: AbortSignal }) => DataGridViewResponse<LeafCells, GroupCells> | Promise<DataGridViewResponse<LeafCells, GroupCells>>;
-export interface UseDataGridSourceOptions { readonly onError?: DataGridSourceErrorHandler; readonly onStatusChange?: DataGridStatusChangeHandler }
-export interface UseDataGridSourceReturn extends SourceReturn {}
-export function useDataGridSource<LeafCells extends object, GroupCells extends object>(controller: DataGridController<LeafCells, GroupCells>, resolver: DataGridSourceResolver<LeafCells, GroupCells>, options?: UseDataGridSourceOptions): UseDataGridSourceReturn { return useProfileSource(controller, resolver as SourceResolver, options as SourceOptions | undefined); }
 
 export interface DataGridContextValue extends Omit<ProfileContext<DataGridState, DataGridEvent, SemanticDataGridCommand, HostConnection>, 'connection'> {}
 const publicKey: InjectionKey<ProfileContext<DataGridState, DataGridEvent, SemanticDataGridCommand, HostConnection>> = Symbol('SectileDataGrid');
@@ -190,7 +189,6 @@ export function createDataGridComponents<LeafCells extends object, GroupCells ex
   }) as unknown as DataGridComponents<LeafCells, GroupCells>;
 }
 
-function stripColumns(columns: readonly DataGridColumn<never>[]): readonly TabularColumnDefinition[] { return columns.map(({ getValue: _getValue, groupValue: _groupValue, aggregate: _aggregate, ...column }) => Object.freeze(column)); }
 function assertExclusive(options: object, property: string): void { const values = options as Record<string, unknown>; const fallback = `default${property[0]!.toUpperCase()}${property.slice(1)}`; if (values[property] !== undefined && values[fallback] !== undefined) throw new TypeError(`${property} and ${fallback} are mutually exclusive.`); }
 function unwrap<T>(result: TabularResult<T>): T { if (!result.ok) throw new TypeError(result.error.message); return result.value; }
 export type { DataGridCursorState, DataGridEditState, DataGridEvent, DataGridProjection, DataGridState, DataGridUpdate, SemanticDataGridController };

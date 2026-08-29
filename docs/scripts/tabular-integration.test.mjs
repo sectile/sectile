@@ -55,7 +55,8 @@ test('Tabular documentation covers interactive profiles, hosts, sources, and opt
     assert.match(source, /pnpm add @sectile\/vue @sectile\/tabular vue/u);
     assert.match(source, /createData(?:Table|Grid)Components/u);
     assert.match(source, /DataGrid\.Provider/u);
-    assert.match(source, /useData(?:Table|Grid)Source/u);
+    assert.match(source, /source:/u);
+    assert.doesNotMatch(source, /useData(?:Table|Grid)Source/u);
     assert.match(source, /loading/iu);
   }
   const featureKinds = [
@@ -114,6 +115,9 @@ test('Tabular Vue examples use automatic Body rows and concise public props', as
   for (const [index, source] of sources.slice(0, 3).entries()) {
     assert.match(source, new RegExp(`@sectile/vue/${['data-table', 'data-grid', 'data-tree-grid'][index]}`));
     assert.doesNotMatch(source, /@sectile\/vue\/tabular/u);
+    assert.match(source, /const sourceColumns =/u);
+    assert.doesNotMatch(source, /const columns =|v-for="[^"]*column[^"]*columns/u);
+    assert.match(source, /ColumnHeader[^>]* column="/u);
   }
   for (const source of sources) {
     assert.doesNotMatch(source, /@sectile\/vue\/tabular/u);

@@ -445,10 +445,8 @@
       "platform": "browser",
       "runtimeExports": [
         "createDataGridComponents",
-        "defineDataGridColumns",
         "useDataGrid",
-        "useDataGridContext",
-        "useDataGridSource"
+        "useDataGridContext"
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/tabular",
@@ -464,10 +462,8 @@
       "platform": "browser",
       "runtimeExports": [
         "createDataTableComponents",
-        "defineDataTableColumns",
         "useDataTable",
-        "useDataTableContext",
-        "useDataTableSource"
+        "useDataTableContext"
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/tabular",
@@ -483,10 +479,8 @@
       "platform": "browser",
       "runtimeExports": [
         "createDataTreeGridComponents",
-        "defineDataTreeGridColumns",
         "useDataTreeGrid",
-        "useDataTreeGridContext",
-        "useDataTreeGridSource"
+        "useDataTreeGridContext"
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/tabular",

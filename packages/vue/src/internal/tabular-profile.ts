@@ -1,5 +1,6 @@
 import {
   computed,
+  getCurrentInstance,
   inject,
   onBeforeUnmount,
   onMounted,
@@ -175,12 +176,12 @@ export interface SourceOptions {
   readonly onError?: (error: unknown) => void;
   readonly onStatusChange?: (status: SourceStatus) => void;
 }
-export interface SourceReturn {
+export interface SourceReturn<Resolver extends SourceResolver = SourceResolver> {
   readonly status: Readonly<ShallowRef<SourceStatus>>;
   readonly error: Readonly<ShallowRef<unknown | null>>;
   reload(): void;
   cancel(): void;
-  replaceResolver(resolver: SourceResolver): void;
+  replaceResolver(resolver: Resolver): void;
   dispose(): void;
 }
 
@@ -263,13 +264,15 @@ export function useProfileSource<State, Event, Command>(
     releaseExecutor();
   };
 
-  onMounted(() => {
-    mounted = true;
-    const pending = queued ?? controller.requestState.value.pendingRequest;
-    queued = null;
-    if (pending !== null) execute(pending);
-  });
-  onBeforeUnmount(dispose);
+  if (getCurrentInstance() !== null) {
+    onMounted(() => {
+      mounted = true;
+      const pending = queued ?? controller.requestState.value.pendingRequest;
+      queued = null;
+      if (pending !== null) execute(pending);
+    });
+    onBeforeUnmount(dispose);
+  }
   return Object.freeze({ status: readonly(status), error: readonly(error), reload, cancel, replaceResolver, dispose });
 }
 

@@ -48,7 +48,7 @@ Header row에 `depth`를 직접 지정하지 않습니다. leaf header는 `colum
 
 ## 데이터를 연결하고 상태 화면 만들기
 
-`useDataTableSource`는 request를 실행하고 `status`, `error`, `reload`, `cancel`을 제공합니다. spinner, empty 화면, 오류 문구, retry 버튼은 제품마다 달라서 Tabular가 시각 디자인을 정하지 않습니다. 대신 이전에 승인된 view를 유지한 채 새 request 상태를 별도로 노출합니다.
+`useDataTable({ source })`가 request를 실행하고 반환된 controller가 `status`, `error`, `reload`, `cancel`을 제공합니다. spinner, empty 화면, 오류 문구, retry 버튼은 제품마다 달라서 Tabular가 시각 디자인을 정하지 않습니다. 대신 이전에 승인된 view를 유지한 채 새 request 상태를 별도로 노출합니다.
 
 | 상황 | 사용할 값 |
 | --- | --- |
@@ -61,7 +61,7 @@ Header row에 `depth`를 직접 지정하지 않습니다. leaf header는 `colum
 
 ## Vue에서 row 타입 유지하기
 
-`createDataTableComponents(table)`가 controller schema와 결합된 component namespace를 만듭니다. 그래서 Body slot의 `row.cells`는 `useDataTable<UserCells>`에 지정한 타입을 유지하고, Cell은 상위 Body의 row ID를 자동으로 사용합니다.
+`createDataTableComponents(table)`가 source response schema와 결합된 component namespace를 만듭니다. 그래서 Body slot의 `row.cells`는 `rows[].cells`에서 추론된 타입을 유지하고, Cell은 상위 Body의 row ID를 자동으로 사용합니다.
 
 ```vue
 <DataTable.Body v-slot="{ row }">

@@ -738,6 +738,10 @@ function normalizeRows(
   columns: readonly TabularColumnDefinition[],
   limits: TabularLimits,
 ): TabularResult<readonly TabularResolvedRow[]> {
+  const columnPaths = columns.map((column) => Object.freeze({
+    id: column.id,
+    segments: parseCellPath(column.id, limits.maxQueryValueDepth),
+  }));
   const ids = new Set<string>();
   const result: TabularResolvedRow[] = [];
   for (const row of input) {
@@ -754,18 +758,69 @@ function normalizeRows(
     if (row.cells === null || typeof row.cells !== 'object' || Array.isArray(row.cells)) {
       return fail('transition-rejection', 'response-envelope-mismatch', 'Response row cells must be a record.');
     }
-    const cells: Record<string, TabularWireValue> = {};
-    for (const column of columns) {
-      if (!Object.hasOwn(row.cells, column.id)) {
+    const normalized = normalizeWireValue(row.cells, limits);
+    if (!normalized.ok) return normalized;
+    const cells = normalized.value as Readonly<Record<string, TabularWireValue>>;
+    for (const column of columnPaths) {
+      if (!hasCellValue(cells, column.id, column.segments)) {
         return fail('transition-rejection', 'response-envelope-mismatch', 'Every response row requires one value for every schema column.', { rowID: row.id, columnID: column.id });
       }
-      const value = normalizeWireValue(row.cells[column.id], limits);
-      if (!value.ok) return value;
-      Object.defineProperty(cells, column.id, { value: value.value, enumerable: true, writable: false, configurable: false });
     }
-    result.push(Object.freeze({ ...row, cells: Object.freeze(cells) }));
+    result.push(Object.freeze({ ...row, cells }));
   }
   return ok(Object.freeze(result));
+}
+
+type CellPathSegment = string | number;
+
+function parseCellPath(path: string, maxDepth: number): readonly CellPathSegment[] | null {
+  if (path.length === 0) return null;
+  const segments: CellPathSegment[] = [];
+  let index = 0;
+  while (index < path.length) {
+    const propertyStart = index;
+    while (index < path.length && path[index] !== '.' && path[index] !== '[' && path[index] !== ']') index += 1;
+    if (propertyStart === index) return null;
+    segments.push(path.slice(propertyStart, index));
+    while (path[index] === '[') {
+      const end = path.indexOf(']', index + 1);
+      if (end < 0) return null;
+      const value = path.slice(index + 1, end);
+      if (!/^\d+$/u.test(value)) return null;
+      const numeric = Number(value);
+      if (!Number.isSafeInteger(numeric)) return null;
+      segments.push(numeric);
+      index = end + 1;
+    }
+    if (index === path.length) break;
+    if (path[index] !== '.') return null;
+    index += 1;
+    if (index === path.length) return null;
+  }
+  if (segments.length > maxDepth) return null;
+  return Object.freeze(segments);
+}
+
+function hasCellValue(
+  cells: Readonly<Record<string, TabularWireValue>>,
+  columnID: string,
+  path: readonly CellPathSegment[] | null,
+): boolean {
+  if (Object.hasOwn(cells, columnID)) return true;
+  if (path === null) return false;
+  let current: TabularWireValue = cells;
+  for (const segment of path) {
+    if (current === null || typeof current !== 'object') return false;
+    if (Array.isArray(current)) {
+      if (typeof segment !== 'number' || !Object.hasOwn(current, segment)) return false;
+      current = current[segment]!;
+      continue;
+    }
+    const record = current as Readonly<Record<string, TabularWireValue>>;
+    if (typeof segment !== 'string' || !Object.hasOwn(record, segment)) return false;
+    current = record[segment]!;
+  }
+  return true;
 }
 
 function normalizeWireValue(value: unknown, limits: TabularLimits): TabularResult<TabularWireValue> {

@@ -43,17 +43,20 @@ comparator와 predicate 문자열의 실제 의미는 source와 서버가 공유
 return {
   protocolVersion: request.protocolVersion,
   requestID: request.requestID,
-  profile: request.profile,
-  sourceRevision: payload.sourceRevision,
+  sourceGeneration: request.sourceGeneration,
   queryRevision: request.queryRevision,
-  accessRevision: request.accessRevision,
   expansionRevision: request.expansionRevision,
-  view: {
-    revision: payload.viewRevision,
-    columnSchema: columns,
-    rows: payload.rows,
-    access: { kind: 'page', pageIndex: payload.page, pageSize: 25, totalRowCount: payload.total },
+  viewRevision: payload.viewRevision,
+  access: request.access,
+  matchingLeafCount: { kind: 'known', value: payload.total },
+  visibleRowCount: { kind: 'known', value: payload.rows.length },
+  rows: payload.rows,
+  columnSchema: {
+    revision: request.columnSchemaRevision,
+    columns: payload.columns,
+    headers: payload.headers ?? [],
   },
+  removedRowIDs: [],
 }
 ```
 
@@ -71,7 +74,7 @@ Tabular는 상태를 제공하지만 그 화면을 그리지 않습니다.
 | error | 마지막 결과를 유지하고 오류 설명과 retry 제공 |
 | 취소 | 오류로 표시하지 않고 다음 request를 기다림 |
 
-Vue의 `useDataTableSource`, `useDataGridSource`, `useDataTreeGridSource`는 `status`, `error`, `reload`, `cancel`, `replaceResolver`, `dispose`를 제공합니다. Core와 DOM에서는 응용 프로그램의 `AbortController`와 controller request state로 같은 정책을 구성합니다.
+Vue의 `useDataTable`, `useDataGrid`, `useDataTreeGrid`는 `source`를 직접 받고 반환된 controller가 `status`, `error`, `reload`, `cancel`, `replaceResolver`, `dispose`를 제공합니다. Core와 DOM에서는 응용 프로그램의 `AbortController`와 controller request state로 같은 정책을 구성합니다.
 
 ## page와 window
 

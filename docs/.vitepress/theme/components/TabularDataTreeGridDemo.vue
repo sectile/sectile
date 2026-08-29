@@ -3,9 +3,7 @@ import { computed, reactive, ref, useId } from 'vue';
 import { ChevronRight, PencilLine, Workflow } from '@lucide/vue';
 import {
   createDataTreeGridComponents,
-  defineDataTreeGridColumns,
   useDataTreeGrid,
-  useDataTreeGridSource,
   type DataTreeGridCommand,
   type DataTreeGridEditState,
   type DataTreeGridRootExpose,
@@ -58,18 +56,15 @@ interface ServiceCells {
   readonly region: string;
   readonly status: string;
 }
-const columns = defineDataTreeGridColumns([
+const sourceColumns = [
   { id: 'name', label: 'Service', capabilities: ['edit'] },
   { id: 'owner', label: 'Owner', capabilities: ['edit'] },
   { id: 'tier', label: 'Tier', capabilities: ['edit'] },
   { id: 'region', label: 'Region', capabilities: ['edit'] },
   { id: 'status', label: 'Status', capabilities: ['edit'] },
-]);
+] as const;
 let viewRevision = 0;
-const tree = useDataTreeGrid<ServiceCells>({ columns, defaultExpansion: ['commerce', 'experience', 'foundation'] });
-const DataTreeGrid = createDataTreeGridComponents(tree);
-const treeRoot = ref<DataTreeGridRootExpose<ServiceCells> | null>(null);
-useDataTreeGridSource(tree, (request): DataTreeGridViewResponse<ServiceCells> => {
+const tree = useDataTreeGrid({ defaultExpansion: ['commerce', 'experience', 'foundation'], source: (request): DataTreeGridViewResponse<ServiceCells> => {
   const rows = groups.flatMap((group) => {
     const expanded = request.expansion.includes(group.id);
     const parent = { kind: 'group' as const, id: group.id, parentGroupID: null, depth: 0, expanded, cells: { name: group.name, owner: group.owner, tier: '', region: '', status: '' } };
@@ -81,9 +76,11 @@ useDataTreeGridSource(tree, (request): DataTreeGridViewResponse<ServiceCells> =>
     queryRevision: request.queryRevision, expansionRevision: request.expansionRevision,
     viewRevision: ++viewRevision, access: request.access,
     matchingLeafCount: { kind: 'known', value: records.length }, visibleRowCount: { kind: 'known', value: rows.length },
-    rows, columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [],
+    rows, columnSchema: { revision: request.columnSchemaRevision, columns: sourceColumns, headers: [] }, removedRowIDs: [],
   };
-});
+} });
+const DataTreeGrid = createDataTreeGridComponents(tree);
+const treeRoot = ref<DataTreeGridRootExpose<ServiceCells> | null>(null);
 
 const rows = computed(() => {
   const accepted = tree.acceptedViewState.value;
@@ -137,25 +134,19 @@ const focusLabel = computed(() => ({
     <DataTreeGrid.Provider>
       <div class="tabular-demo__viewport">
         <DataTreeGrid.Root ref="treeRoot" class="tabular-grid tabular-tree-grid" :aria-labelledby="titleID" @command="handleCommand">
-          <DataTreeGrid.Header><DataTreeGrid.HeaderRow><DataTreeGrid.ColumnHeader v-for="(column, index) in columns" :key="column.id" :column="column.id">{{ copy.columns[index] }}</DataTreeGrid.ColumnHeader></DataTreeGrid.HeaderRow></DataTreeGrid.Header>
+          <DataTreeGrid.Header><DataTreeGrid.HeaderRow><DataTreeGrid.ColumnHeader column="name">{{ copy.columns[0] }}</DataTreeGrid.ColumnHeader><DataTreeGrid.ColumnHeader column="owner">{{ copy.columns[1] }}</DataTreeGrid.ColumnHeader><DataTreeGrid.ColumnHeader column="tier">{{ copy.columns[2] }}</DataTreeGrid.ColumnHeader><DataTreeGrid.ColumnHeader column="region">{{ copy.columns[3] }}</DataTreeGrid.ColumnHeader><DataTreeGrid.ColumnHeader column="status">{{ copy.columns[4] }}</DataTreeGrid.ColumnHeader></DataTreeGrid.HeaderRow></DataTreeGrid.Header>
           <DataTreeGrid.Body v-slot="{ row }">
-            <DataTreeGrid.Cell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
-              <template v-if="column.id === 'name'">
-                <DataTreeGrid.RowDisclosure v-if="row.kind === 'group'" as-child :aria-label="copy.toggleGroup(row.cells.name)">
-                  <DocsButton appearance="ghost" icon-only><ChevronRight :size="16" aria-hidden="true" /></DocsButton>
-                </DataTreeGrid.RowDisclosure>
-                <span v-else class="tabular-tree-grid__indent" aria-hidden="true" />
-                <DataTreeGrid.RowSelectionControl v-if="row.kind === 'leaf'" v-slot="{ rowSelection }" as-child name="services" :aria-label="copy.selectRow(row.cells.name)">
-                  <DocsCheckbox :model-value="rowSelectionValue(rowSelection, row.id)" />
-                </DataTreeGrid.RowSelectionControl>
-              </template>
-              <strong v-if="row.kind === 'group' && column.id === 'name'">{{ row.cells.name }}</strong>
-              <DocsStatusBadge v-else-if="column.id === 'status' && row.kind === 'leaf' && !isEditing(editState, row.id, column.id)" :intent="statusIntent(row.cells.status)">{{ copy.status[row.cells.status as keyof typeof copy.status] }}</DocsStatusBadge>
-              <span v-else-if="!isEditing(editState, row.id, column.id)">{{ row.cells[column.id] }}</span>
-              <DataTreeGrid.Editor v-if="row.kind === 'leaf'" as-child :column="column.id">
-                <DocsInlineEditor :value="row.cells[column.id]" :aria-label="copy.editCell(column.id, row.cells.name)" />
-              </DataTreeGrid.Editor>
+            <DataTreeGrid.Cell column="name" v-slot="{ editState }">
+              <DataTreeGrid.RowDisclosure v-if="row.kind === 'group'" as-child :aria-label="copy.toggleGroup(row.cells.name)"><DocsButton appearance="ghost" icon-only><ChevronRight :size="16" aria-hidden="true" /></DocsButton></DataTreeGrid.RowDisclosure>
+              <span v-else class="tabular-tree-grid__indent" aria-hidden="true" />
+              <DataTreeGrid.RowSelectionControl v-if="row.kind === 'leaf'" v-slot="{ rowSelection }" as-child name="services" :aria-label="copy.selectRow(row.cells.name)"><DocsCheckbox :model-value="rowSelectionValue(rowSelection, row.id)" /></DataTreeGrid.RowSelectionControl>
+              <strong v-if="row.kind === 'group'">{{ row.cells.name }}</strong><span v-else-if="!isEditing(editState, row.id, 'name')">{{ row.cells.name }}</span>
+              <DataTreeGrid.Editor v-if="row.kind === 'leaf'" as-child column="name"><DocsInlineEditor :value="row.cells.name" :aria-label="copy.editCell('name', row.cells.name)" /></DataTreeGrid.Editor>
             </DataTreeGrid.Cell>
+            <DataTreeGrid.Cell column="owner" v-slot="{ editState }"><span v-if="row.kind === 'group' || !isEditing(editState, row.id, 'owner')">{{ row.cells.owner }}</span><DataTreeGrid.Editor v-if="row.kind === 'leaf'" as-child column="owner"><DocsInlineEditor :value="row.cells.owner" :aria-label="copy.editCell('owner', row.cells.name)" /></DataTreeGrid.Editor></DataTreeGrid.Cell>
+            <DataTreeGrid.Cell column="tier" v-slot="{ editState }"><span v-if="row.kind === 'group' || !isEditing(editState, row.id, 'tier')">{{ row.cells.tier }}</span><DataTreeGrid.Editor v-if="row.kind === 'leaf'" as-child column="tier"><DocsInlineEditor :value="row.cells.tier" :aria-label="copy.editCell('tier', row.cells.name)" /></DataTreeGrid.Editor></DataTreeGrid.Cell>
+            <DataTreeGrid.Cell column="region" v-slot="{ editState }"><span v-if="row.kind === 'group' || !isEditing(editState, row.id, 'region')">{{ row.cells.region }}</span><DataTreeGrid.Editor v-if="row.kind === 'leaf'" as-child column="region"><DocsInlineEditor :value="row.cells.region" :aria-label="copy.editCell('region', row.cells.name)" /></DataTreeGrid.Editor></DataTreeGrid.Cell>
+            <DataTreeGrid.Cell column="status" v-slot="{ editState }"><DocsStatusBadge v-if="row.kind === 'leaf' && !isEditing(editState, row.id, 'status')" :intent="statusIntent(row.cells.status)">{{ copy.status[row.cells.status as keyof typeof copy.status] }}</DocsStatusBadge><DataTreeGrid.Editor v-if="row.kind === 'leaf'" as-child column="status"><DocsInlineEditor :value="row.cells.status" :aria-label="copy.editCell('status', row.cells.name)" /></DataTreeGrid.Editor></DataTreeGrid.Cell>
           </DataTreeGrid.Body>
         </DataTreeGrid.Root>
       </div>

@@ -97,7 +97,7 @@ test('interactive examples highlight Vue template fragments with nested tokens',
 
 test('interactive examples format and highlight Vue host script fragments as TypeScript', async () => {
   const rendered = await renderCodeSource(
-    'const source = useDataTableSource(table, async request => resolve(request))',
+    'const table = useDataTable({ source: async request => resolve(request) })',
     'vue',
     'github-light-default',
   );

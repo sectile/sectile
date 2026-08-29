@@ -2,12 +2,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
-import { defineDataGridColumns, useDataGrid, createDataGridComponents } from '../.verification-dist/data-grid.js';
+import { useDataGrid, createDataGridComponents } from '../.verification-dist/data-grid.js';
 
-const columns = defineDataGridColumns([{ id: 'name', capabilities: ['edit'] }]);
+const columns = [{ id: 'name', capabilities: ['edit'] }];
+const source = async (request) => ({ ...request, viewRevision: 1, matchingLeafCount: { kind: 'known', value: 0 }, visibleRowCount: { kind: 'known', value: 0 }, rows: [], columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [] });
 
 test('Vue DataGrid exposes only the bound grid component namespace', () => {
-  const components = createDataGridComponents(useDataGrid({ columns }));
+  const components = createDataGridComponents(useDataGrid({ source }));
   assert.deepEqual(Object.keys(components).sort(), [
     'Body', 'BulkSelectionControl', 'Cell', 'ColumnHeader', 'ColumnResizeHandle',
     'Editor', 'FilterControl', 'Header', 'HeaderRow', 'Provider', 'Root', 'Row',
@@ -16,7 +17,7 @@ test('Vue DataGrid exposes only the bound grid component namespace', () => {
 });
 
 test('Vue DataGrid owns ARIA grid composition without a repeated controller prop', async () => {
-  const app = createSSRApp({ setup() { const controller = useDataGrid({ columns }); const DataGrid = createDataGridComponents(controller); accept(controller, [{ kind: 'leaf', id: 'r1', cells: { name: 'Ada' } }]); return () => h(DataGrid.Provider, null, { default: () => h(DataGrid.Root, null, { default: () => [h(DataGrid.Header, null, () => h(DataGrid.HeaderRow, null, () => h(DataGrid.ColumnHeader, { column: 'name' }, () => 'Name'))), h(DataGrid.Body, null, { default: ({ row }) => h(DataGrid.Cell, { column: 'name' }, () => row.cells.name) })] }) }); } });
+  const app = createSSRApp({ setup() { const controller = useDataGrid({ source }); const DataGrid = createDataGridComponents(controller); accept(controller, [{ kind: 'leaf', id: 'r1', cells: { name: 'Ada' } }]); return () => h(DataGrid.Provider, null, { default: () => h(DataGrid.Root, null, { default: () => [h(DataGrid.Header, null, () => h(DataGrid.HeaderRow, null, () => h(DataGrid.ColumnHeader, { column: 'name' }, () => 'Name'))), h(DataGrid.Body, null, { default: ({ row }) => h(DataGrid.Cell, { column: 'name' }, () => row.cells.name) })] }) }); } });
   const html = await renderToString(app);
   assert.match(html, /role="grid"/);
   assert.match(html, /role="rowgroup"/);
@@ -35,5 +36,5 @@ function accept(controller, rows) {
 test('Vue DataGrid rejects a hierarchical initial view', () => {
   const request = { protocolVersion: 1, requestID: 1, sourceGeneration: 0, queryRevision: 0, expansionRevision: 0, query: { sort: [], filters: [], groups: [], aggregates: [], pivots: [] }, expansion: [], access: { kind: 'page', page: 1, itemsPerPage: 25 }, columnSchemaRevision: 0 };
   const initialView = { ...request, viewRevision: 1, matchingLeafCount: { kind: 'known', value: 0 }, visibleRowCount: { kind: 'known', value: 1 }, rows: [{ kind: 'group', id: 'g', parentGroupID: null, depth: 0, expanded: false, cells: { name: 'Group' } }], columnSchema: { revision: 0, columns, headers: [] }, removedRowIDs: [] };
-  assert.throws(() => useDataGrid({ columns, initialView }), /flat leaf-row views/);
+  assert.throws(() => useDataGrid({ source, initialView }), /flat leaf-row views/);
 });

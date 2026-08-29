@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { defineDataTableColumns, useDataTable, createDataTableComponents } from '../../.verification-dist/data-table.js';
-import { defineDataGridColumns, useDataGrid, createDataGridComponents } from '../../.verification-dist/data-grid.js';
-import { defineDataTreeGridColumns, useDataTreeGrid, createDataTreeGridComponents } from '../../.verification-dist/data-tree-grid.js';
+import { useDataTable, createDataTableComponents, type DataTableSourceResolver } from '../../.verification-dist/data-table.js';
+import { useDataGrid, createDataGridComponents, type DataGridSourceResolver } from '../../.verification-dist/data-grid.js';
+import { useDataTreeGrid, createDataTreeGridComponents, type DataTreeGridSourceResolver } from '../../.verification-dist/data-tree-grid.js';
 
 interface Cells {
   readonly name: string;
   readonly active: boolean;
 }
 
-const table = useDataTable<Cells>({ columns: defineDataTableColumns([{ id: 'name' }, { id: 'active' }]) });
-const grid = useDataGrid<Cells>({ columns: defineDataGridColumns([{ id: 'name' }, { id: 'active' }]) });
-const treeGrid = useDataTreeGrid<Cells>({ columns: defineDataTreeGridColumns([{ id: 'name' }, { id: 'active' }]) });
+const response = async (request: Parameters<DataTableSourceResolver<Cells>>[0]) => ({ ...request, viewRevision: 1, matchingLeafCount: { kind: 'known' as const, value: 0 }, visibleRowCount: { kind: 'known' as const, value: 0 }, rows: [], columnSchema: { revision: request.columnSchemaRevision, columns: [{ id: 'name' }, { id: 'active' }], headers: [] }, removedRowIDs: [] });
+const table = useDataTable({ source: response as DataTableSourceResolver<Cells> });
+const grid = useDataGrid({ source: response as DataGridSourceResolver<Cells> });
+const treeGrid = useDataTreeGrid({ source: response as DataTreeGridSourceResolver<Cells> });
 const DataTable = createDataTableComponents(table);
 const DataGrid = createDataGridComponents(grid);
 const DataTreeGrid = createDataTreeGridComponents(treeGrid);

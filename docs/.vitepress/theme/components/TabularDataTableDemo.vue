@@ -4,9 +4,7 @@ import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff, Pin, Table2 } from '@lucide
 import { TextField } from '@sectile/vue/text';
 import {
   createDataTableComponents,
-  defineDataTableColumns,
   useDataTable,
-  useDataTableSource,
   type DataTableViewResponse,
 } from '@sectile/vue/data-table';
 import { useDocsLocale } from '../locale.js';
@@ -67,13 +65,13 @@ const records = computed<readonly UserRecord[]>(() => isKorean.value ? [
   { id: 'sofia', name: 'Sofia Rossi', team: 'Runtime', role: 'Principal engineer', lastActive: 'Aug 25', status: 'active' },
   { id: 'omar', name: 'Omar Haddad', team: 'Developer tools', role: 'Product engineer', lastActive: 'Aug 21', status: 'suspended' },
 ]);
-const columns = defineDataTableColumns([
+const sourceColumns = [
   { id: 'name', label: 'Name', capabilities: ['sort', 'filter', 'edit'], headerNodeID: 'name-header' },
   { id: 'team', label: 'Team', capabilities: ['sort', 'filter'], headerNodeID: 'team-header' },
   { id: 'role', label: 'Role', capabilities: ['sort', 'filter'], headerNodeID: 'role-header' },
   { id: 'lastActive', label: 'Last active', capabilities: ['sort', 'filter'], headerNodeID: 'last-active-header' },
   { id: 'status', label: 'Status', capabilities: ['sort', 'filter'], headerNodeID: 'status-header' },
-]);
+] as const;
 const headers = [
   { kind: 'group' as const, id: 'identity', children: [
     { kind: 'column' as const, id: 'name-header', columnID: 'name' },
@@ -87,9 +85,7 @@ const headers = [
 ];
 let viewRevision = 0;
 
-const table = useDataTable<UserCells>({ columns, headers });
-const DataTable = createDataTableComponents(table);
-const source = useDataTableSource(table, (request): DataTableViewResponse<UserCells> => {
+const table = useDataTable({ source: (request): DataTableViewResponse<UserCells> => {
   const filter = request.query.filters.find((entry) => entry.enabled !== false)?.value;
   const needle = typeof filter === 'string' ? filter.trim().toLocaleLowerCase() : '';
   let result = records.value.filter((record) => `${record.name} ${record.team} ${record.role} ${record.lastActive} ${record.status}`.toLocaleLowerCase().includes(needle));
@@ -103,9 +99,11 @@ const source = useDataTableSource(table, (request): DataTableViewResponse<UserCe
     queryRevision: request.queryRevision, expansionRevision: request.expansionRevision,
     viewRevision: ++viewRevision, access: request.access,
     matchingLeafCount: { kind: 'known', value: rows.length }, visibleRowCount: { kind: 'known', value: rows.length },
-    rows, columnSchema: { revision: request.columnSchemaRevision, columns, headers }, removedRowIDs: [],
+    rows, columnSchema: { revision: request.columnSchemaRevision, columns: sourceColumns, headers }, removedRowIDs: [],
   };
-});
+} });
+const DataTable = createDataTableComponents(table);
+const source = table;
 
 const rows = computed(() => {
   const accepted = table.acceptedViewState.value;
@@ -117,7 +115,11 @@ const selectedCount = computed(() => {
   return selection.kind === 'explicit-rows' ? selection.rowIDs.length : Math.max(0, rows.value.length - selection.excludedRowIDs.length);
 });
 const columnState = computed(() => table.snapshot.value.state.columnState);
-const visibleColumns = computed(() => columns.filter((column) => !columnState.value.hidden.includes(column.id)));
+const visibleColumnCount = computed(() => {
+  void table.snapshot.value;
+  const partitions = table.getProjection().columns;
+  return partitions.start.length + partitions.center.length + partitions.end.length;
+});
 const roleHidden = computed(() => columnState.value.hidden.includes('role'));
 const namePinned = computed(() => columnState.value.pinnedStart.includes('name'));
 const focusState = computed(() => {
@@ -152,6 +154,7 @@ const direction = (columnID: string) => {
   return snapshot.state.query.sort.find((item) => item.columnID === columnID)?.direction;
 };
 const statusIntent = (status: UserCells['status']) => status === 'active' ? 'success' : status === 'suspended' ? 'critical' : 'warning';
+const isColumnVisible = (columnID: keyof UserCells) => !columnState.value.hidden.includes(columnID);
 </script>
 
 <template>
@@ -192,26 +195,14 @@ const statusIntent = (status: UserCells['status']) => status === 'active' ? 'suc
               <DataTable.ColumnHeader header="activity">{{ copy.activity }}</DataTable.ColumnHeader>
             </DataTable.HeaderRow>
             <DataTable.HeaderRow>
-              <DataTable.ColumnHeader
-                v-for="column in visibleColumns"
-                :key="column.id"
-                :column="column.id"
-                :class="{ 'tabular-table__pinned': namePinned && column.id === 'name' }"
-              >
-                <DataTable.SortTrigger :column="column.id">
-                  {{ copy.columns[columns.findIndex(item => item.id === column.id)] }}
-                  <ArrowUp v-if="direction(column.id) === 'ascending'" :size="14" aria-hidden="true" />
-                  <ArrowDown v-else-if="direction(column.id) === 'descending'" :size="14" aria-hidden="true" />
-                  <ChevronsUpDown v-else :size="14" aria-hidden="true" />
-                </DataTable.SortTrigger>
-                <DataTable.ColumnResizeHandle
-                  v-if="focus === 'columns'"
-                  :column="column.id"
-                  :min-size="110"
-                  :max-size="360"
-                  :aria-label="`${copy.columns[columns.findIndex(item => item.id === column.id)]} resize`"
-                />
+              <DataTable.ColumnHeader v-if="isColumnVisible('name')" column="name" :class="{ 'tabular-table__pinned': namePinned }">
+                <DataTable.SortTrigger column="name">{{ copy.columns[0] }}<ArrowUp v-if="direction('name') === 'ascending'" :size="14" aria-hidden="true" /><ArrowDown v-else-if="direction('name') === 'descending'" :size="14" aria-hidden="true" /><ChevronsUpDown v-else :size="14" aria-hidden="true" /></DataTable.SortTrigger>
+                <DataTable.ColumnResizeHandle v-if="focus === 'columns'" column="name" :min-size="110" :max-size="360" :aria-label="`${copy.columns[0]} resize`" />
               </DataTable.ColumnHeader>
+              <DataTable.ColumnHeader v-if="isColumnVisible('team')" column="team"><DataTable.SortTrigger column="team">{{ copy.columns[1] }}<ArrowUp v-if="direction('team') === 'ascending'" :size="14" aria-hidden="true" /><ArrowDown v-else-if="direction('team') === 'descending'" :size="14" aria-hidden="true" /><ChevronsUpDown v-else :size="14" aria-hidden="true" /></DataTable.SortTrigger><DataTable.ColumnResizeHandle v-if="focus === 'columns'" column="team" :min-size="110" :max-size="360" :aria-label="`${copy.columns[1]} resize`" /></DataTable.ColumnHeader>
+              <DataTable.ColumnHeader v-if="isColumnVisible('role')" column="role"><DataTable.SortTrigger column="role">{{ copy.columns[2] }}<ArrowUp v-if="direction('role') === 'ascending'" :size="14" aria-hidden="true" /><ArrowDown v-else-if="direction('role') === 'descending'" :size="14" aria-hidden="true" /><ChevronsUpDown v-else :size="14" aria-hidden="true" /></DataTable.SortTrigger><DataTable.ColumnResizeHandle v-if="focus === 'columns'" column="role" :min-size="110" :max-size="360" :aria-label="`${copy.columns[2]} resize`" /></DataTable.ColumnHeader>
+              <DataTable.ColumnHeader v-if="isColumnVisible('lastActive')" column="lastActive"><DataTable.SortTrigger column="lastActive">{{ copy.columns[3] }}<ArrowUp v-if="direction('lastActive') === 'ascending'" :size="14" aria-hidden="true" /><ArrowDown v-else-if="direction('lastActive') === 'descending'" :size="14" aria-hidden="true" /><ChevronsUpDown v-else :size="14" aria-hidden="true" /></DataTable.SortTrigger><DataTable.ColumnResizeHandle v-if="focus === 'columns'" column="lastActive" :min-size="110" :max-size="360" :aria-label="`${copy.columns[3]} resize`" /></DataTable.ColumnHeader>
+              <DataTable.ColumnHeader v-if="isColumnVisible('status')" column="status"><DataTable.SortTrigger column="status">{{ copy.columns[4] }}<ArrowUp v-if="direction('status') === 'ascending'" :size="14" aria-hidden="true" /><ArrowDown v-else-if="direction('status') === 'descending'" :size="14" aria-hidden="true" /><ChevronsUpDown v-else :size="14" aria-hidden="true" /></DataTable.SortTrigger><DataTable.ColumnResizeHandle v-if="focus === 'columns'" column="status" :min-size="110" :max-size="360" :aria-label="`${copy.columns[4]} resize`" /></DataTable.ColumnHeader>
             </DataTable.HeaderRow>
           </DataTable.Header>
           <DataTable.Body>
@@ -221,21 +212,18 @@ const statusIntent = (status: UserCells['status']) => status === 'active' ? 'suc
                   <DocsCheckbox :model-value="rowSelectionValue(rowSelection, row.id)" />
                 </DataTable.SelectionControl>
               </td>
-              <DataTable.Cell
-                v-for="column in visibleColumns"
-                :key="column.id"
-                :column="column.id"
-                :class="{ 'tabular-table__pinned': namePinned && column.id === 'name' }"
-              >
-                <template v-if="column.id === 'name' && focus === 'structure'">
+              <DataTable.Cell v-if="isColumnVisible('name')" column="name" :class="{ 'tabular-table__pinned': namePinned }">
+                <template v-if="focus === 'structure'">
                   <DataTable.Editor as-child column="name"><input class="tabular-table__editor" :value="row.cells.name" :aria-label="`${row.cells.name} edit`"></DataTable.Editor>
                 </template>
-                <strong v-else-if="column.id === 'name'">{{ row.cells.name }}</strong>
-                <DocsStatusBadge v-else-if="column.id === 'status'" :intent="statusIntent(row.cells.status)">{{ copy.status[row.cells.status] }}</DocsStatusBadge>
-                <template v-else>{{ row.cells[column.id] }}</template>
+                <strong v-else>{{ row.cells.name }}</strong>
               </DataTable.Cell>
+              <DataTable.Cell v-if="isColumnVisible('team')" column="team">{{ row.cells.team }}</DataTable.Cell>
+              <DataTable.Cell v-if="isColumnVisible('role')" column="role">{{ row.cells.role }}</DataTable.Cell>
+              <DataTable.Cell v-if="isColumnVisible('lastActive')" column="lastActive">{{ row.cells.lastActive }}</DataTable.Cell>
+              <DataTable.Cell v-if="isColumnVisible('status')" column="status"><DocsStatusBadge :intent="statusIntent(row.cells.status)">{{ copy.status[row.cells.status] }}</DocsStatusBadge></DataTable.Cell>
             </template>
-            <template #empty><tr><td :colspan="visibleColumns.length + 1" class="tabular-demo__empty">{{ source.status.value === 'loading' ? copy.loading : copy.empty }}</td></tr></template>
+            <template #empty><tr><td :colspan="visibleColumnCount + 1" class="tabular-demo__empty">{{ source.status.value === 'loading' ? copy.loading : copy.empty }}</td></tr></template>
           </DataTable.Body>
         </DataTable.Root>
       </div>

@@ -29,24 +29,14 @@ Create the controller in `setup`, then call `createData*Components` once to obta
 ```vue
 <script setup lang="ts">
 import {
-  defineDataGridColumns,
   useDataGrid,
   createDataGridComponents,
-  useDataGridSource,
 } from '@sectile/vue/data-grid'
 
-interface UserCells {
-  readonly name: string
-}
-
-const columns = defineDataGridColumns([
-  { id: 'name', capabilities: ['sort', 'filter', 'edit'] },
-])
-const grid = useDataGrid<UserCells>({ columns })
+const grid = useDataGrid({
+  source: (request, { signal }) => resolveUsers(request, signal),
+})
 const DataGrid = createDataGridComponents(grid)
-const source = useDataGridSource(grid, (request, { signal }) =>
-  resolveUsers(request, signal),
-)
 </script>
 
 <template>
@@ -56,8 +46,8 @@ const source = useDataGridSource(grid, (request, { signal }) =>
     </DataGrid.Root>
   </DataGrid.Provider>
 
-  <p v-if="source.status.value === 'loading'">Loading…</p>
-  <button v-if="source.status.value === 'error'" @click="source.reload">Retry</button>
+  <p v-if="grid.status.value === 'loading'">Loading…</p>
+  <button v-if="grid.status.value === 'error'" @click="grid.reload">Retry</button>
 </template>
 ```
 
@@ -67,15 +57,15 @@ Nested Providers form nested scopes and each part resolves the nearest matching 
 
 | Profile | Creation and context | Structure | Controls and editing |
 | --- | --- | --- | --- |
-| DataTable | `useDataTable`, `createDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns` | `DataTable.Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor` |
-| DataGrid | `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
-| DataTreeGrid | `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
+| DataTable | `useDataTable`, `createDataTableComponents`, `useDataTableContext` | `DataTable.Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor` |
+| DataGrid | `useDataGrid`, `createDataGridComponents`, `useDataGridContext` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
+| DataTreeGrid | `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridContext` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
 
 Every profile entry point exports its own parts, `Props`, `SlotProps`, controller contracts, source contracts, and helpers. The Vue package root does not export these APIs.
 
 ## Source execution and UI states
 
-`useData*Source` attaches exactly one executor to a controller and starts after mount. It exposes reactive `status` and `error`, cancels replaced work, and ignores stale completion. Its resolver owns transport only. The application owns loading, empty, stale, error, retry, cache, and suspense presentation.
+`useData*` owns exactly one source executor and starts it after mount. The returned controller exposes reactive `status` and `error`, cancels replaced work, and ignores stale completion. Its resolver owns transport only. The application owns loading, empty, stale, error, retry, cache, and suspense presentation.
 
 SSR does not execute a source resolver. Hydration must begin from the same accepted view. `sourceKey` replaces a semantic source generation; `replaceResolver` changes transport logic without changing the controller.
 
@@ -83,26 +73,39 @@ The [async data source](./data-source) guide includes a working sort, search, an
 
 ## Type inference
 
-`defineData*Columns` infers IDs and value types from `getValue`. Remote projections without record accessors declare their cell schema once through `useData*<Cells>()`. `createData*Components(controller)` carries that schema into every part and Body slot.
+The source response is the schema owner. `useData*` infers leaf and group cell types from `rows[].cells`, and `createData*Components(controller)` carries them into every part and Body slot. `column` accepts inferred nested paths, including array indexes. A direct cell key wins over path traversal, so an existing flat key such as `"profile.name"` remains valid.
+
+Do not copy that schema into a second client-side `columns` configuration. Declare stable presentation directly with Compound parts. If the server truly returns a dynamic schema, iterate the accepted source schema in the template instead.
 
 ```ts
-interface UserRecord {
-  readonly id: string
-  readonly profile: { readonly name: string }
-  readonly quota: number
-}
-
-const columns = defineDataTableColumns([
-  { id: 'name', getValue: (user: UserRecord) => user.profile.name },
-  { id: 'quota', getValue: (user: UserRecord) => user.quota },
-])
-
-const inferred = useDataTable({ columns })
+const inferred = useDataTable({
+  source: async (request) => ({
+    ...request,
+    viewRevision: 1,
+    matchingLeafCount: { kind: 'known', value: 1 },
+    visibleRowCount: { kind: 'known', value: 1 },
+    rows: [{
+      kind: 'leaf',
+      id: 'user-1',
+      cells: { profile: { name: 'Ada' }, items: [{ price: 10 }] },
+    }],
+    columnSchema: {
+      revision: request.columnSchemaRevision,
+      columns: [{ id: 'profile.name' }, { id: 'items[0].price' }],
+      headers: [],
+    },
+    removedRowIDs: [],
+  }),
+})
 const InferredTable = createDataTableComponents(inferred)
+// accepted: profile.name, items[0].price
+```
 
-interface RemoteCells { readonly name: string; readonly quota: number }
-const remote = useDataTable<RemoteCells>({ columns })
-const RemoteTable = createDataTableComponents(remote)
+```vue
+<InferredTable.Body v-slot="{ row }">
+  <InferredTable.Cell column="profile.name">{{ row.cells.profile.name }}</InferredTable.Cell>
+  <InferredTable.Cell column="items[0].price">{{ row.cells.items[0]?.price }}</InferredTable.Cell>
+</InferredTable.Body>
 ```
 
 There is no separate broad component API. The namespace created for a controller is the single public component API for its schema and Provider scope.
@@ -116,7 +119,7 @@ const query = ref(createTabularQuery())
 const selection = ref<DataTableRowSelection>({ kind: 'explicit-rows', rowIDs: [] })
 
 const table = useDataTable({
-  columns,
+  source: resolveUsers,
   query,
   onQueryChange: (next) => { query.value = next },
   rowSelection: selection,
@@ -143,7 +146,7 @@ Use `useData*Context()` when a descendant component needs the same values in scr
 - Body repeats accepted rows by default. Its slot exposes `{ row, rowIndex, isGroup }`; `manual` enables explicit low-level Row composition.
 - Cells and leaf headers use `column="name"`. Explicit `rowID` is needed only outside automatic Body composition.
 - Only a nested group header uses `header="employment"` to identify its schema node. `HeaderRow` has no depth prop; the schema determines depth, spans, and ARIA metadata.
-- Body slot rows preserve the cell schema carried by the controller. Getter-based columns infer their value types; remote projections can declare the schema with `useData*<Cells>()`. Leaf and group schemas can be distinct.
+- Body slot rows preserve the leaf or group cell schema inferred from the source response. Compound `column` props accept its nested object and array paths.
 - Name a native DataTable with `Caption` or `aria-labelledby`. Grid and TreeGrid use `aria-label` or `aria-labelledby`.
 - Native DataTable markup retains table semantics and form submission.
 - DataGrid and DataTreeGrid project grid/treegrid ARIA, a roving tab stop, cursor, and edit state.

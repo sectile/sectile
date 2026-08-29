@@ -226,17 +226,24 @@ async function missingEntrypoint(directory, specifier) {
 async function typeConsumer(directory) {
   await writeFile(join(directory, 'consumer.ts'), `
     import {
-      defineDataTableColumns,
       useDataTable,
       createDataTableComponents,
       type DataTableContextValue,
     } from '@sectile/vue/data-table';
-    type Row = { id: string; name: string };
-    const columns = defineDataTableColumns([{ id: 'name', getValue: (row: Row) => row.name }]);
-    const table = useDataTable({ columns });
+    const columns = [{ id: 'profile.name' }, { id: 'items[0].price' }];
+    const table = useDataTable({ source: async (request) => ({
+      ...request,
+      viewRevision: 1,
+      matchingLeafCount: { kind: 'known', value: 1 },
+      visibleRowCount: { kind: 'known', value: 1 },
+      rows: [{ kind: 'leaf', id: 'r1', cells: { profile: { name: 'Ada' }, items: [{ price: 10 }] } }],
+      columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] },
+      removedRowIDs: [],
+    }) });
     const DataTable = createDataTableComponents(table);
+    const nestedCell: InstanceType<typeof DataTable.Cell>['$props'] = { column: 'items[0].price' };
     const context = {} as DataTableContextValue;
-    void [DataTable.Provider, table, context];
+    void [DataTable.Provider, table, nestedCell, context];
   `);
   await writeFile(join(directory, 'tsconfig.json'), `${JSON.stringify({
     compilerOptions: {

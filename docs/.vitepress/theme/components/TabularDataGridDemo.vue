@@ -3,9 +3,7 @@ import { computed, reactive, ref, useId } from 'vue';
 import { ArrowDownUp, CheckCircle2, PencilLine, TableCellsSplit } from '@lucide/vue';
 import {
   createDataGridComponents,
-  defineDataGridColumns,
   useDataGrid,
-  useDataGridSource,
   type DataGridCommand,
   type DataGridEditState,
   type DataGridRootExpose,
@@ -53,19 +51,16 @@ interface ReleaseCells {
   readonly risk: string;
   readonly status: string;
 }
-const columns = defineDataGridColumns([
+const sourceColumns = [
   { id: 'task', label: 'Task', capabilities: ['sort', 'edit'] },
   { id: 'owner', label: 'Owner', capabilities: ['sort', 'edit'] },
   { id: 'area', label: 'Area', capabilities: ['sort', 'edit'] },
   { id: 'target', label: 'Target', capabilities: ['sort', 'edit'] },
   { id: 'risk', label: 'Risk', capabilities: ['sort', 'edit'] },
   { id: 'status', label: 'Status', capabilities: ['sort', 'edit'] },
-]);
+] as const;
 let viewRevision = 0;
-const grid = useDataGrid<ReleaseCells>({ columns });
-const DataGrid = createDataGridComponents(grid);
-const gridRoot = ref<DataGridRootExpose<ReleaseCells> | null>(null);
-useDataGridSource(grid, (request): DataGridViewResponse<ReleaseCells> => {
+const grid = useDataGrid({ source: (request): DataGridViewResponse<ReleaseCells> => {
   let result = [...records];
   const sort = request.query.sort[0];
   if (sort !== undefined) result.sort((left, right) => String(left[sort.columnID as keyof typeof left]).localeCompare(String(right[sort.columnID as keyof typeof right])) * (sort.direction === 'ascending' ? 1 : -1));
@@ -75,9 +70,11 @@ useDataGridSource(grid, (request): DataGridViewResponse<ReleaseCells> => {
     queryRevision: request.queryRevision, expansionRevision: request.expansionRevision,
     viewRevision: ++viewRevision, access: request.access,
     matchingLeafCount: { kind: 'known', value: rows.length }, visibleRowCount: { kind: 'known', value: rows.length },
-    rows, columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [],
+    rows, columnSchema: { revision: request.columnSchemaRevision, columns: sourceColumns, headers: [] }, removedRowIDs: [],
   };
-});
+} });
+const DataGrid = createDataGridComponents(grid);
+const gridRoot = ref<DataGridRootExpose<ReleaseCells> | null>(null);
 
 const rows = computed(() => {
   const accepted = grid.acceptedViewState.value;
@@ -142,22 +139,27 @@ const focusLabel = computed(() => ({
         <DataGrid.Root ref="gridRoot" class="tabular-grid" :aria-labelledby="titleID" @command="handleCommand">
           <DataGrid.Header>
             <DataGrid.HeaderRow>
-              <DataGrid.ColumnHeader v-for="(column, index) in columns" :key="column.id" :column="column.id">
-                <DataGrid.SortTrigger :column="column.id">{{ copy.columns[index] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGrid.SortTrigger>
-              </DataGrid.ColumnHeader>
+              <DataGrid.ColumnHeader column="task"><DataGrid.SortTrigger column="task">{{ copy.columns[0] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGrid.SortTrigger></DataGrid.ColumnHeader>
+              <DataGrid.ColumnHeader column="owner"><DataGrid.SortTrigger column="owner">{{ copy.columns[1] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGrid.SortTrigger></DataGrid.ColumnHeader>
+              <DataGrid.ColumnHeader column="area"><DataGrid.SortTrigger column="area">{{ copy.columns[2] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGrid.SortTrigger></DataGrid.ColumnHeader>
+              <DataGrid.ColumnHeader column="target"><DataGrid.SortTrigger column="target">{{ copy.columns[3] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGrid.SortTrigger></DataGrid.ColumnHeader>
+              <DataGrid.ColumnHeader column="risk"><DataGrid.SortTrigger column="risk">{{ copy.columns[4] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGrid.SortTrigger></DataGrid.ColumnHeader>
+              <DataGrid.ColumnHeader column="status"><DataGrid.SortTrigger column="status">{{ copy.columns[5] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGrid.SortTrigger></DataGrid.ColumnHeader>
             </DataGrid.HeaderRow>
           </DataGrid.Header>
           <DataGrid.Body v-slot="{ row }">
-            <DataGrid.Cell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
-              <DataGrid.RowSelectionControl v-if="column.id === 'task'" v-slot="{ rowSelection }" as-child name="release-items" :aria-label="copy.selectRow(row.cells.task)">
+            <DataGrid.Cell column="task" v-slot="{ editState }">
+              <DataGrid.RowSelectionControl v-slot="{ rowSelection }" as-child name="release-items" :aria-label="copy.selectRow(row.cells.task)">
                 <DocsCheckbox :model-value="rowSelectionValue(rowSelection, row.id)" />
               </DataGrid.RowSelectionControl>
-              <DocsStatusBadge v-if="column.id === 'status' && !isEditing(editState, row.id, column.id)" :intent="statusIntent(row.cells.status)">{{ copy.status[row.cells.status as keyof typeof copy.status] }}</DocsStatusBadge>
-              <span v-else-if="!isEditing(editState, row.id, column.id)">{{ row.cells[column.id] }}</span>
-              <DataGrid.Editor as-child :column="column.id">
-                <DocsInlineEditor :value="row.cells[column.id]" :aria-label="copy.editCell(column.id, row.cells.task)" />
-              </DataGrid.Editor>
+              <span v-if="!isEditing(editState, row.id, 'task')">{{ row.cells.task }}</span>
+              <DataGrid.Editor as-child column="task"><DocsInlineEditor :value="row.cells.task" :aria-label="copy.editCell('task', row.cells.task)" /></DataGrid.Editor>
             </DataGrid.Cell>
+            <DataGrid.Cell column="owner" v-slot="{ editState }"><span v-if="!isEditing(editState, row.id, 'owner')">{{ row.cells.owner }}</span><DataGrid.Editor as-child column="owner"><DocsInlineEditor :value="row.cells.owner" :aria-label="copy.editCell('owner', row.cells.task)" /></DataGrid.Editor></DataGrid.Cell>
+            <DataGrid.Cell column="area" v-slot="{ editState }"><span v-if="!isEditing(editState, row.id, 'area')">{{ row.cells.area }}</span><DataGrid.Editor as-child column="area"><DocsInlineEditor :value="row.cells.area" :aria-label="copy.editCell('area', row.cells.task)" /></DataGrid.Editor></DataGrid.Cell>
+            <DataGrid.Cell column="target" v-slot="{ editState }"><span v-if="!isEditing(editState, row.id, 'target')">{{ row.cells.target }}</span><DataGrid.Editor as-child column="target"><DocsInlineEditor :value="row.cells.target" :aria-label="copy.editCell('target', row.cells.task)" /></DataGrid.Editor></DataGrid.Cell>
+            <DataGrid.Cell column="risk" v-slot="{ editState }"><span v-if="!isEditing(editState, row.id, 'risk')">{{ row.cells.risk }}</span><DataGrid.Editor as-child column="risk"><DocsInlineEditor :value="row.cells.risk" :aria-label="copy.editCell('risk', row.cells.task)" /></DataGrid.Editor></DataGrid.Cell>
+            <DataGrid.Cell column="status" v-slot="{ editState }"><DocsStatusBadge v-if="!isEditing(editState, row.id, 'status')" :intent="statusIntent(row.cells.status)">{{ copy.status[row.cells.status as keyof typeof copy.status] }}</DocsStatusBadge><DataGrid.Editor as-child column="status"><DocsInlineEditor :value="row.cells.status" :aria-label="copy.editCell('status', row.cells.task)" /></DataGrid.Editor></DataGrid.Cell>
           </DataGrid.Body>
         </DataGrid.Root>
       </div>

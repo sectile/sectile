@@ -29,24 +29,14 @@ pnpm add @sectile/vue @sectile/tabular vue
 ```vue
 <script setup lang="ts">
 import {
-  defineDataGridColumns,
   useDataGrid,
   createDataGridComponents,
-  useDataGridSource,
 } from '@sectile/vue/data-grid'
 
-interface UserCells {
-  readonly name: string
-}
-
-const columns = defineDataGridColumns([
-  { id: 'name', capabilities: ['sort', 'filter', 'edit'] },
-])
-const grid = useDataGrid<UserCells>({ columns })
+const grid = useDataGrid({
+  source: (request, { signal }) => resolveUsers(request, signal),
+})
 const DataGrid = createDataGridComponents(grid)
-const source = useDataGridSource(grid, (request, { signal }) =>
-  resolveUsers(request, signal),
-)
 </script>
 
 <template>
@@ -56,8 +46,8 @@ const source = useDataGridSource(grid, (request, { signal }) =>
     </DataGrid.Root>
   </DataGrid.Provider>
 
-  <p v-if="source.status.value === 'loading'">불러오는 중…</p>
-  <button v-if="source.status.value === 'error'" @click="source.reload">다시 시도</button>
+  <p v-if="grid.status.value === 'loading'">불러오는 중…</p>
+  <button v-if="grid.status.value === 'error'" @click="grid.reload">다시 시도</button>
 </template>
 ```
 
@@ -67,15 +57,15 @@ Provider를 중첩하면 각 part가 가장 가까운 matching Provider를 사�
 
 | 프로필 | 생성·context | 구조 | 조작·편집 |
 | --- | --- | --- | --- |
-| DataTable | `useDataTable`, `createDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns` | `DataTable.Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor` |
-| DataGrid | `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
-| DataTreeGrid | `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
+| DataTable | `useDataTable`, `createDataTableComponents`, `useDataTableContext` | `DataTable.Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor` |
+| DataGrid | `useDataGrid`, `createDataGridComponents`, `useDataGridContext` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
+| DataTreeGrid | `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridContext` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
 
 각 프로필 진입점은 자체 part, `Props`, `SlotProps`, controller·source 계약과 helper를 내보냅니다. Vue package root에서는 이 API를 내보내지 않습니다.
 
 ## source 실행과 UI 상태
 
-`useData*Source`는 controller 하나에 executor 하나만 연결하고 mount 뒤에 시작합니다. reactive `status`와 `error`를 제공하고 교체된 작업을 취소하며 stale 완료를 무시합니다. resolver는 transport만 소유합니다. loading, empty, stale, error, retry, cache, suspense 화면은 응용 프로그램이 정합니다.
+`useData*`는 source executor 하나를 직접 소유하고 mount 뒤에 시작합니다. 반환된 controller가 reactive `status`와 `error`를 제공하고 교체된 작업을 취소하며 stale 완료를 무시합니다. resolver는 transport만 소유합니다. loading, empty, stale, error, retry, cache, suspense 화면은 응용 프로그램이 정합니다.
 
 SSR에서는 resolver를 실행하지 않습니다. hydration은 같은 accepted view에서 시작해야 합니다. `sourceKey`는 semantic source generation을 교체하고 `replaceResolver`는 controller를 바꾸지 않은 채 transport logic만 바꿉니다.
 
@@ -83,31 +73,39 @@ SSR에서는 resolver를 실행하지 않습니다. hydration은 같은 accepted
 
 ## type 추론
 
-`defineData*Columns`의 `getValue`가 있으면 column ID와 cell value type을 추론합니다. 원격 response처럼 record accessor가 없는 경우 `useData*<Cells>()`에 schema를 한 번 선언합니다. `createData*Components(controller)`가 이 schema를 모든 compound part와 Body slot에 결합합니다.
+source response가 schema의 정본입니다. `useData*`는 `rows[].cells`에서 leaf와 group cell type을 추론하고 `createData*Components(controller)`가 이를 모든 compound part와 Body slot에 결합합니다. `column`에는 object 중첩 path와 배열 index까지 추론됩니다. `cells`에 같은 이름의 평면 key가 있으면 path 탐색보다 우선하므로 기존의 `"profile.name"` 같은 ID도 유지됩니다.
+
+이 schema를 별도의 client `columns` 설정으로 복사하지 않습니다. 고정된 화면은 Compound part를 template에 직접 선언합니다. 서버가 실제로 동적 schema를 반환하는 경우에만 accepted source schema를 template에서 순회합니다.
 
 ```ts
-interface UserRecord {
-  readonly id: string
-  readonly profile: { readonly name: string }
-  readonly quota: number
-}
-
-const columns = defineDataTableColumns([
-  { id: 'name', getValue: (user: UserRecord) => user.profile.name },
-  { id: 'quota', getValue: (user: UserRecord) => user.quota },
-])
-
-const inferred = useDataTable({ columns })
+const inferred = useDataTable({
+  source: async (request) => ({
+    ...request,
+    viewRevision: 1,
+    matchingLeafCount: { kind: 'known', value: 1 },
+    visibleRowCount: { kind: 'known', value: 1 },
+    rows: [{
+      kind: 'leaf',
+      id: 'user-1',
+      cells: { profile: { name: 'Ada' }, items: [{ price: 10 }] },
+    }],
+    columnSchema: {
+      revision: request.columnSchemaRevision,
+      columns: [{ id: 'profile.name' }, { id: 'items[0].price' }],
+      headers: [],
+    },
+    removedRowIDs: [],
+  }),
+})
 const InferredTable = createDataTableComponents(inferred)
-// Body의 row.cells.name은 string, row.cells.quota는 number
+// profile.name, items[0].price를 column으로 사용할 수 있습니다.
+```
 
-interface RemoteCells {
-  readonly name: string
-  readonly quota: number
-}
-
-const remote = useDataTable<RemoteCells>({ columns })
-const RemoteTable = createDataTableComponents(remote)
+```vue
+<InferredTable.Body v-slot="{ row }">
+  <InferredTable.Cell column="profile.name">{{ row.cells.profile.name }}</InferredTable.Cell>
+  <InferredTable.Cell column="items[0].price">{{ row.cells.items[0]?.price }}</InferredTable.Cell>
+</InferredTable.Body>
 ```
 
 bound namespace 밖의 broad component를 별도로 유지하지 않습니다. controller마다 만든 namespace가 schema type과 Provider scope의 단일 공개 component API입니다.
@@ -121,13 +119,13 @@ const query = ref(createTabularQuery())
 const selection = ref<DataTableRowSelection>({ kind: 'explicit-rows', rowIDs: [] })
 
 const table = useDataTable({
-  columns,
+  source: resolveUsers,
   query,
   onQueryChange: (next) => { query.value = next },
   rowSelection: selection,
   onRowSelectionChange: (next) => { selection.value = next },
   defaultColumnState: {
-    order: columns.map((column) => column.id),
+    order: ['name'],
     hidden: [], pinnedStart: ['name'], pinnedEnd: [],
   },
 })
@@ -154,7 +152,7 @@ Root/Provider/part slot은 source와 interaction state를 함께 제공합니다
 - Body는 accepted row를 기본으로 반복합니다. slot은 `{ row, rowIndex, isGroup }`를 제공하고 `manual`은 명시적인 저수준 Row 구성을 켭니다.
 - cell과 leaf header에는 `column="name"`을 사용합니다. 자동 Body 밖에서만 명시적인 `rowID`가 필요합니다.
 - 중첩 group header만 `header="employment"`로 schema node를 지정합니다. `HeaderRow`에는 depth prop이 없으며 schema가 중첩 깊이, span, ARIA metadata를 결정합니다.
-- Body slot의 row는 controller가 가진 cell schema를 보존합니다. getter가 있는 column은 반환값 type을 추론하고, 원격 projection은 `useData*<Cells>()`로 schema를 선언할 수 있습니다. leaf와 group schema도 분리할 수 있습니다.
+- Body slot의 row는 source response에서 추론한 leaf 또는 group cell schema를 보존합니다. Compound `column` prop은 중첩 object와 배열 path를 받습니다.
 - native DataTable은 `Caption`이나 `aria-labelledby`로 이름을 붙입니다. Grid와 TreeGrid는 `aria-label` 또는 `aria-labelledby`를 사용합니다.
 - DataTable은 native table 의미와 form submission을 유지합니다.
 - DataGrid와 DataTreeGrid는 grid/treegrid ARIA, roving tab stop, cursor, edit state를 투영합니다.
