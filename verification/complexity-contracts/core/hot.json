@@ -56,6 +56,44 @@
       }
     },
     {
+      "id": "exact-ratio.arithmetic",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/range.ts",
+      "benchmarkIDs": ["VAL-035:exact-ratio-arithmetic-work"],
+      "specificationCeiling": "O(M(b) + b*D(b))",
+      "contract": {
+        "variables": [
+          { "name": "b", "meaning": "maximum numerator or denominator bit width", "ceiling": "maxNumeratorBits and maxDenominatorBits" },
+          { "name": "M", "meaning": "bounded b-bit multiplication cost", "ceiling": "runtime BigInt multiplication implementation" },
+          { "name": "D", "meaning": "bounded b-bit division cost", "ceiling": "runtime BigInt division implementation" }
+        ],
+        "time": { "bound": "O(M(b) + b*D(b))", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(b)", "output": "O(b)", "retained": "O(b)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Cross-cancellation bounds multiplication/division intermediates; addition uses denominator GCD; every retained result is reduced and rechecked.",
+        "adversarialWitness": "Coprime maximum-width operands force the widest allowed intermediate and Euclidean reduction.",
+        "fullScan": { "allowed": false, "rationale": "Exact scalar algebra cannot traverse collection cardinality." }
+      }
+    },
+    {
+      "id": "exact-ratio.compare",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/range.ts",
+      "benchmarkIDs": ["VAL-035:exact-ratio-compare-work"],
+      "specificationCeiling": "O(M(b) + b)",
+      "contract": {
+        "variables": [
+          { "name": "b", "meaning": "maximum numerator or denominator bit width", "ceiling": "maxNumeratorBits and maxDenominatorBits" },
+          { "name": "M", "meaning": "bounded b-bit multiplication cost", "ceiling": "runtime BigInt multiplication implementation" }
+        ],
+        "time": { "bound": "O(M(b) + b)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(b)", "output": "O(1)", "retained": "O(1)" },
+        "proof": "Each operand is validated and reduced by Euclidean GCD, then compared with two bounded-width cross products.",
+        "adversarialWitness": "Coprime Fibonacci-sized operands at both configured width ceilings maximize remainder calls.",
+        "fullScan": { "allowed": false, "rationale": "Work depends on operand width, never a represented domain cardinality." }
+      }
+    },
+    {
       "id": "grid.domain",
       "inherits": "constant-v1",
       "source": "packages/core/src/structures/grid.ts",
@@ -112,6 +150,61 @@
         "proof": "The first row/column read scans one axis and retains one immutable indexed view; every repeated read of that coordinate is O(1) with zero allocation.",
         "adversarialWitness": "The first fully occupied maximum-length axis read emits every cell; a repeated read returns the identical view.",
         "fullScan": { "allowed": true, "rationale": "Only the first requested axis read is scanned and its output contains every occupied identity on that axis." }
+      }
+    },
+    {
+      "id": "index-span.contains",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/index-span.ts",
+      "benchmarkIDs": ["VAL-035:index-span-membership-work"],
+      "specificationCeiling": "O(log a)",
+      "contract": {
+        "variables": [{ "name": "a", "meaning": "normalized span count", "ceiling": "maxSpans" }],
+        "time": { "bound": "O(log a)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "0", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Binary search halves the sorted disjoint span vector after each comparison.",
+        "adversarialWitness": "A miss between the final pair of maximum-count singleton spans reaches logarithmic depth.",
+        "fullScan": { "allowed": false, "rationale": "Membership must not linearly scan spans or expand indexes." }
+      }
+    },
+    {
+      "id": "index-span.set-algebra",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/index-span.ts",
+      "benchmarkIDs": ["VAL-035:index-span-merge-work"],
+      "specificationCeiling": "O(a + bSpan)",
+      "contract": {
+        "variables": [
+          { "name": "a", "meaning": "left normalized span count", "ceiling": "maxSpans" },
+          { "name": "bSpan", "meaning": "right normalized span count", "ceiling": "maxSpans" },
+          { "name": "rSpan", "meaning": "result normalized span count", "ceiling": "maxSpans" }
+        ],
+        "time": { "bound": "O(a + bSpan)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(rSpan)", "retained": "O(rSpan)" },
+        "resources": { "allocations": "O(rSpan)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Two monotone cursors visit each input span at most once and normalize while emitting without sorting or index expansion.",
+        "adversarialWitness": "Alternating disjoint singleton spans force every input visit and maximum output spans.",
+        "fullScan": { "allowed": true, "rationale": "Both explicit span vectors are the bounded inputs and every output span may be required." }
+      }
+    },
+    {
+      "id": "index-span.transform",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/index-span.ts",
+      "benchmarkIDs": ["VAL-035:index-span-transform-work"],
+      "specificationCeiling": "O(a)",
+      "contract": {
+        "variables": [
+          { "name": "a", "meaning": "input normalized span count", "ceiling": "maxSpans" },
+          { "name": "rSpan", "meaning": "result normalized span count", "ceiling": "maxSpans" }
+        ],
+        "time": { "bound": "O(a)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(rSpan)", "retained": "O(rSpan)" },
+        "resources": { "allocations": "O(rSpan)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Clamp, translate, and resize traverse the ordered input once, validate each boundary, and coalesce while emitting.",
+        "adversarialWitness": "Maximum-count separated spans survive the transform without merging.",
+        "fullScan": { "allowed": true, "rationale": "An immutable transformed result must inspect and emit every surviving span." }
       }
     },
     {

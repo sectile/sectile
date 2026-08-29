@@ -79,6 +79,10 @@
       "types": "dist/grid-control.d.ts"
     },
     {
+      "subpath": "./index-span",
+      "types": "dist/structures/index-span.d.ts"
+    },
+    {
       "subpath": "./interaction",
       "types": "dist/interaction.d.ts"
     },
@@ -251,7 +255,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "2639d8425e4631c3528c5935f85a466ef160f30b48258b1eb694262c143c2266",
+  "fingerprint": "e0e1179e52d18263795e4e0f9f95470389cbd56158181cf48907121726a6cbd8",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -384,6 +388,10 @@
     {
       "path": "dist/internal/kernel/decimal.d.ts",
       "sha256": "2a53b6a11e3238dbae6d1d3f899f25713632c5165c8b125eadd5f501f131c325"
+    },
+    {
+      "path": "dist/internal/kernel/exact-ratio.d.ts",
+      "sha256": "696fdb58549536a883893508abb533bbabd9cad559df33be3b5947e3f75e5381"
     },
     {
       "path": "dist/internal/kernel/machine.d.ts",
@@ -522,8 +530,12 @@
       "sha256": "63ffff7ea4025a7024cf8beb65b27cf9e76b4520de04be1c42e445352d5ceb41"
     },
     {
+      "path": "dist/structures/index-span.d.ts",
+      "sha256": "eb89590b7faabd19420e48422243b15ebbda7565907b3cb52d4d35abc35e1ff7"
+    },
+    {
       "path": "dist/structures/range.d.ts",
-      "sha256": "606ca380fa09a281a31f0618cb7eb254ce69fc6f797cf6619af3c4300f6c710e"
+      "sha256": "77421760947b2d7169a7190ded5115245e2a48ac18cd80adc5a0857e2232654e"
     },
     {
       "path": "dist/structures/sequence.d.ts",

@@ -1,4 +1,5 @@
 import type { Result } from '../../shared.js';
+import type { ExactRatio } from './exact-ratio.js';
 import {
   addDecimal,
   compareDecimal,
@@ -30,11 +31,6 @@ export interface ParsedBoundedScalar {
   readonly canonicalMin: string;
   readonly canonicalMax: string;
   readonly canonicalValue: string;
-}
-
-export interface InternalExactRatio {
-  readonly numerator: bigint;
-  readonly denominator: bigint;
 }
 
 export function tryParseBoundedScalar(
@@ -96,7 +92,7 @@ export function boundedRatio(
   value: ExactDecimal,
   min: ExactDecimal,
   max: ExactDecimal,
-): InternalExactRatio {
+): ExactRatio {
   if (compareDecimal(min, max) === 0) return Object.freeze({ numerator: 0n, denominator: 1n });
   const [numerator, denominator] = decimalQuotient(
     subtractDecimal(value, min),
@@ -114,7 +110,7 @@ export function midpointDecimal(min: ExactDecimal, max: ExactDecimal): ExactDeci
 }
 
 export function formatRatioPercentage(
-  ratio: InternalExactRatio,
+  ratio: ExactRatio,
   scale: number = DEFAULT_PERCENTAGE_SCALE,
 ): string {
   if (ratio.denominator <= 0n) throw new RangeError('ratio denominator must be positive');

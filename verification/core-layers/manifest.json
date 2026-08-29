@@ -31,6 +31,7 @@
     ".": { "source": "src/index.ts" },
     "./sequence": { "source": "src/structures/sequence.ts" },
     "./range": { "source": "src/structures/range.ts" },
+    "./index-span": { "source": "src/structures/index-span.ts" },
     "./grid": { "source": "src/structures/grid.ts" },
     "./grid-control": { "source": "src/grid-control.ts" },
     "./tree": { "source": "src/structures/tree.ts" },

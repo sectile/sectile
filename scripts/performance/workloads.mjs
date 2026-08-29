@@ -3,7 +3,16 @@ import {
   createSequence,
 } from '../../packages/core/dist/structures/sequence.js';
 import { createGrid } from '../../packages/core/dist/structures/grid.js';
-import { createRange } from '../../packages/core/dist/structures/range.js';
+import {
+  addExactRatios,
+  createExactRatio,
+  createRange,
+} from '../../packages/core/dist/structures/range.js';
+import {
+  containsIndexInSpanSet,
+  createIndexSpanSet,
+  unionIndexSpanSets,
+} from '../../packages/core/dist/structures/index-span.js';
 import { createTree } from '../../packages/core/dist/structures/tree.js';
 import {
   createSelectionState,
@@ -39,7 +48,7 @@ import {
 } from '../../packages/virtual/dist/spatial-layout.js';
 
 export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 4,
+  version: 5,
   scales: Object.freeze([1_000, 10_000, 100_000]),
   patchDepths: Object.freeze([1, 8, 32, 64]),
   changedDensities: Object.freeze([1, 32, 'full']),
@@ -147,6 +156,27 @@ export function createWorkloads({ quick = false } = {}) {
         (grid.row(iteration % rowCount)?.size ?? 0) + (grid.column(iteration % columnCount)?.size ?? 0)),
     );
 
+    const contiguousSpans = Object.freeze(Array.from(
+      { length: size },
+      (_, index) => Object.freeze({ start: index, endExclusive: index + 1 }),
+    ));
+    const separatedLeft = createIndexSpanSet(Array.from(
+      { length: size >>> 1 },
+      (_, index) => ({ start: index * 4, endExclusive: index * 4 + 1 }),
+    ));
+    const separatedRight = createIndexSpanSet(Array.from(
+      { length: size >>> 1 },
+      (_, index) => ({ start: index * 4 + 2, endExclusive: index * 4 + 3 }),
+    ));
+    workloads.push(
+      timed(`core:index-span:normalize:${size}`, 'core-structure', { size, operation: 'normalize-contiguous' }, iterations(size, quick), () =>
+        createIndexSpanSet(contiguousSpans).spanCount),
+      timed(`core:index-span:contains:${size}`, 'core-structure', { size, spans: separatedLeft.spanCount, operation: 'contains' }, quick ? 1_000 : 10_000, (iteration) =>
+        containsIndexInSpanSet(separatedLeft, (iteration * 8191) % (size * 2)) ? 1 : 0),
+      timed(`core:index-span:union:${size}`, 'core-structure', { size, spans: separatedLeft.spanCount + separatedRight.spanCount, operation: 'union' }, iterations(size, quick), () =>
+        unionIndexSpanSets(separatedLeft, separatedRight).spanCount),
+    );
+
     const listboxState = createListboxState(sequence, { current: ids[0], selected: [ids[0]] });
     workloads.push(timed(
       `core:listbox:next:${size}`,
@@ -166,6 +196,10 @@ export function createWorkloads({ quick = false } = {}) {
     const ratio = range.ratioOfTick(tick);
     return ratio === null ? -1 : range.tickFromRatio(ratio) ?? -1;
   }));
+  const wideRatioLeft = createExactRatio((1n << 1_023n) - 1n, (1n << 1_021n) - 1n);
+  const wideRatioRight = createExactRatio((1n << 1_019n) - 1n, (1n << 1_017n) - 1n);
+  workloads.push(timed('core:exact-ratio:add:1024', 'core-structure', { operation: 'reduced-add', bits: 1_024 }, quick ? 100 : 1_000, () =>
+    Number(addExactRatios(wideRatioLeft, wideRatioRight).numerator & 1n)));
   workloads.push(...createRuntimeWorkloads(quick));
   return Object.freeze(workloads);
 }

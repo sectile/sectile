@@ -2,7 +2,7 @@
 
 > Generated from `verification/core-layers/manifest.json` and Core source imports.
 
-Modules: 111; edges: 454; public subpaths: 63; cycles: 0; upward edges: 0.
+Modules: 113; edges: 460; public subpaths: 64; cycles: 0; upward edges: 0.
 
 ## Layers
 
@@ -11,21 +11,21 @@ Modules: 111; edges: 454; public subpaths: 63; cycles: 0; upward edges: 0.
 | composites | 11 |
 | editing | 1 |
 | foundation | 3 |
-| kernel | 5 |
+| kernel | 6 |
 | public | 57 |
 | reference | 24 |
 | runtime | 1 |
 | state | 5 |
-| structures | 4 |
+| structures | 5 |
 
 ## Highest public blast radius
 
 | Module | Transitive dependents | Public subpaths |
 |---|---:|---:|
-| `src/error-code.ts` | 106 | 59 |
-| `src/shared.ts` | 105 | 59 |
-| `src/result.ts` | 95 | 58 |
-| `src/internal/kernel/foundation.ts` | 101 | 57 |
+| `src/error-code.ts` | 107 | 60 |
+| `src/shared.ts` | 106 | 60 |
+| `src/result.ts` | 96 | 59 |
+| `src/internal/kernel/foundation.ts` | 102 | 58 |
 | `src/internal/kernel/machine.ts` | 75 | 45 |
 | `src/internal/kernel/indexed-sequence.ts` | 55 | 29 |
 | `src/structures/sequence.ts` | 54 | 29 |
@@ -33,6 +33,7 @@ Modules: 111; edges: 454; public subpaths: 63; cycles: 0; upward edges: 0.
 | `src/internal/state/selection.ts` | 27 | 14 |
 | `src/internal/kernel/decimal.ts` | 18 | 12 |
 | `src/structures/tree.ts` | 20 | 11 |
+| `src/internal/kernel/exact-ratio.ts` | 15 | 9 |
 | `src/structures/range.ts` | 13 | 9 |
 | `src/internal/composites/linear-choice.ts` | 6 | 5 |
 | `src/internal/editing/text.ts` | 8 | 5 |
@@ -41,7 +42,6 @@ Modules: 111; edges: 454; public subpaths: 63; cycles: 0; upward edges: 0.
 | `src/menu.ts` | 3 | 4 |
 | `src/text.ts` | 3 | 4 |
 | `src/collection-window.ts` | 3 | 3 |
-| `src/interaction.ts` | 2 | 3 |
 
 ## Public subpaths
 
@@ -66,6 +66,7 @@ Modules: 111; edges: 454; public subpaths: 63; cycles: 0; upward edges: 0.
 | `./feed` | `src/feed.ts` | public | `src/collection-window.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/internal/state/cursor.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./grid` | `src/structures/grid.ts` | structures | `src/internal/kernel/foundation.ts`, `src/internal/kernel/indexed-sequence.ts`, `src/result.ts`, `src/shared.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./grid-control` | `src/grid-control.ts` | public | `src/internal/composites/grid-control.ts`, `src/shared.ts`, `src/structures/grid.ts` |
+| `./index-span` | `src/structures/index-span.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts` |
 | `./interaction` | `src/interaction.ts` | public | `src/result.ts`, `src/shared.ts` |
 | `./layer-stack` | `src/layer-stack.ts` | public | `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./listbox` | `src/listbox.ts` | public | `src/internal/composites/listbox.ts`, `src/internal/composites/listbox.ts` |
@@ -84,7 +85,7 @@ Modules: 111; edges: 454; public subpaths: 63; cycles: 0; upward edges: 0.
 | `./progress` | `src/progress.ts` | public | `src/internal/kernel/bounded-scalar.ts`, `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/range.ts` |
 | `./quantity-field` | `src/quantity-field.ts` | public | `src/internal/kernel/decimal.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/number-field.ts`, `src/result.ts`, `src/shared.ts`, `src/text.ts`, `src/units.ts` |
 | `./radio-group` | `src/radio-group.ts` | public | `src/internal/composites/linear-choice.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
-| `./range` | `src/structures/range.ts` | structures | `src/internal/kernel/decimal.ts`, `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/shared.ts` |
+| `./range` | `src/structures/range.ts` | structures | `src/internal/kernel/decimal.ts`, `src/internal/kernel/exact-ratio.ts`, `src/internal/kernel/exact-ratio.ts`, `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/shared.ts` |
 | `./rating` | `src/rating.ts` | public | `src/internal/kernel/machine.ts`, `src/internal/state/selection.ts`, `src/radio-group.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./reorder` | `src/reorder.ts` | public | `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts`, `src/structures/tree.ts` |
 | `./result` | `src/result.ts` | foundation | `src/error-code.ts`, `src/error-code.ts`, `src/shared.ts`, `src/shared.ts` |

@@ -322,6 +322,36 @@
       ]
     },
     {
+      "subpath": "./index-span",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_MAX_SPANS",
+        "clampIndexSpan",
+        "clampIndexSpanSet",
+        "containsIndex",
+        "containsIndexInSpanSet",
+        "createIndexSpan",
+        "createIndexSpanSet",
+        "intersectIndexSpanSets",
+        "resizeIndexSpan",
+        "resizeIndexSpanSet",
+        "subtractIndexSpanSets",
+        "translateIndexSpan",
+        "translateIndexSpanSet",
+        "tryCreateIndexSpan",
+        "tryCreateIndexSpanSet",
+        "unionIndexSpanSets"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./interaction",
       "classification": "named-subpath",
       "platform": "browser",
@@ -624,16 +654,30 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
+        "DEFAULT_MAX_RATIO_DENOMINATOR_BITS",
+        "DEFAULT_MAX_RATIO_NUMERATOR_BITS",
+        "addExactRatios",
+        "clampExactRatio",
+        "compareExactRatios",
         "createBoundedRange",
+        "createExactRatio",
         "createRange",
+        "divideExactRatios",
+        "interpolateExactRatios",
+        "invertExactRatio",
+        "mapExactRatio",
+        "multiplyExactRatios",
+        "subtractExactRatios",
         "tryCreateBoundedRange",
+        "tryCreateExactRatio",
         "tryCreateRange"
       ],
       "typeBearing": true,
       "optionalPeer": null,
       "rootEquivalentExport": null,
       "fixtureModes": [
-        "side-effect"
+        "side-effect",
+        "named"
       ]
     },
     {

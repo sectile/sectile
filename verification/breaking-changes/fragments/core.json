@@ -109,6 +109,62 @@
       "before": { "subpath": "./tree-view" },
       "symbols": ["Tree declaration closure"],
       "replacement": { "package": "@sectile/core", "subpath": "./tree-view" }
+    },
+    {
+      "id": "WI-031:range-exact-ratio-algebra",
+      "change": "signature-changed",
+      "before": { "subpath": "./range" },
+      "symbols": ["ExactRatio", "bounded ExactRatio algebra"],
+      "replacement": { "package": "@sectile/core", "subpath": "./range" }
+    },
+    {
+      "id": "WI-031:meter-range-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./meter" },
+      "symbols": ["ExactRatio declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./meter" }
+    },
+    {
+      "id": "WI-031:meter-group-range-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./meter-group" },
+      "symbols": ["ExactRatio declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./meter-group" }
+    },
+    {
+      "id": "WI-031:multi-thumb-slider-range-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./multi-thumb-slider" },
+      "symbols": ["QuantizedRange declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./multi-thumb-slider" }
+    },
+    {
+      "id": "WI-031:progress-range-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./progress" },
+      "symbols": ["ExactRatio declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./progress" }
+    },
+    {
+      "id": "WI-031:slider-range-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./slider" },
+      "symbols": ["QuantizedRange declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./slider" }
+    },
+    {
+      "id": "WI-031:spin-button-range-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./spin-button" },
+      "symbols": ["QuantizedRange declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./spin-button" }
+    },
+    {
+      "id": "WI-031:window-splitter-range-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./window-splitter" },
+      "symbols": ["QuantizedRange declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./window-splitter" }
     }
   ]
 }

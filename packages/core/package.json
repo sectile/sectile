@@ -36,6 +36,11 @@
       "import": "./dist/structures/range.js",
       "default": "./dist/structures/range.js"
     },
+    "./index-span": {
+      "types": "./dist/structures/index-span.d.ts",
+      "import": "./dist/structures/index-span.js",
+      "default": "./dist/structures/index-span.js"
+    },
     "./grid": {
       "types": "./dist/structures/grid.d.ts",
       "import": "./dist/structures/grid.js",

@@ -202,6 +202,26 @@
       "pair": null
     },
     {
+      "id": "core:./index-span:named",
+      "package": "core",
+      "subpath": "./index-span",
+      "source": "@sectile/core/index-span",
+      "exportName": "createIndexSpanSet",
+      "mode": "named",
+      "platform": "browser",
+      "pair": null
+    },
+    {
+      "id": "core:./index-span:side-effect",
+      "package": "core",
+      "subpath": "./index-span",
+      "source": "@sectile/core/index-span",
+      "exportName": null,
+      "mode": "side-effect",
+      "platform": "browser",
+      "pair": null
+    },
+    {
       "id": "core:./interaction:side-effect",
       "package": "core",
       "subpath": "./interaction",
@@ -368,6 +388,16 @@
       "source": "@sectile/core/radio-group",
       "exportName": null,
       "mode": "side-effect",
+      "platform": "browser",
+      "pair": null
+    },
+    {
+      "id": "core:./range:named",
+      "package": "core",
+      "subpath": "./range",
+      "source": "@sectile/core/range",
+      "exportName": "createExactRatio",
+      "mode": "named",
       "platform": "browser",
       "pair": null
     },
@@ -4301,6 +4331,68 @@
       "dependencies": []
     },
     {
+      "id": "core:./index-span:named",
+      "bundler": "esbuild",
+      "mode": "named",
+      "source": "@sectile/core/index-span",
+      "exportName": "createIndexSpanSet",
+      "platform": "browser",
+      "raw": 2966,
+      "gzip": 1137,
+      "brotli": 1019,
+      "modules": [
+        "@sectile/core/dist/internal/kernel/foundation.js",
+        "@sectile/core/dist/result.js",
+        "@sectile/core/dist/structures/index-span.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "core:./index-span:named",
+      "bundler": "vite",
+      "mode": "named",
+      "source": "@sectile/core/index-span",
+      "exportName": "createIndexSpanSet",
+      "platform": "browser",
+      "raw": 2338,
+      "gzip": 936,
+      "brotli": 834,
+      "modules": [
+        "@sectile/core/dist/internal/kernel/foundation.js",
+        "@sectile/core/dist/result.js",
+        "@sectile/core/dist/structures/index-span.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "core:./index-span:side-effect",
+      "bundler": "esbuild",
+      "mode": "side-effect",
+      "source": "@sectile/core/index-span",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
+      "id": "core:./index-span:side-effect",
+      "bundler": "vite",
+      "mode": "side-effect",
+      "source": "@sectile/core/index-span",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
       "id": "core:./interaction:side-effect",
       "bundler": "esbuild",
       "mode": "side-effect",
@@ -4740,6 +4832,42 @@
       "gzip": 20,
       "brotli": 1,
       "modules": [],
+      "dependencies": []
+    },
+    {
+      "id": "core:./range:named",
+      "bundler": "esbuild",
+      "mode": "named",
+      "source": "@sectile/core/range",
+      "exportName": "createExactRatio",
+      "platform": "browser",
+      "raw": 2567,
+      "gzip": 984,
+      "brotli": 882,
+      "modules": [
+        "@sectile/core/dist/internal/kernel/foundation.js",
+        "@sectile/core/dist/result.js",
+        "@sectile/core/dist/structures/range.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "core:./range:named",
+      "bundler": "vite",
+      "mode": "named",
+      "source": "@sectile/core/range",
+      "exportName": "createExactRatio",
+      "platform": "browser",
+      "raw": 1925,
+      "gzip": 779,
+      "brotli": 696,
+      "modules": [
+        "@sectile/core/dist/internal/kernel/foundation.js",
+        "@sectile/core/dist/result.js",
+        "@sectile/core/dist/structures/range.js",
+        "fixture"
+      ],
       "dependencies": []
     },
     {

@@ -15,7 +15,7 @@ const hostPackagePaths = {
 };
 const vuePackagePath = 'packages/vue/package.json';
 const supportSubpaths = new Set([
-  'package.json', 'adapter-runtime', 'sequence', 'selection', 'extent-index', 'range', 'grid-control', 'tree', 'result', 'revision', 'interaction',
+  'package.json', 'adapter-runtime', 'sequence', 'selection', 'extent-index', 'range', 'index-span', 'grid-control', 'tree', 'result', 'revision', 'interaction',
   'collection-window', 'virtual-layout', 'virtual', 'layer-stack', 'reorder',
   'form',
   'appearance', 'keyboard', 'layout', 'node', 'screen', 'units',

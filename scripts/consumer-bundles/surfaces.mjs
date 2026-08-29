@@ -112,6 +112,8 @@ function shouldMeasureNamed(packageName, subpath, classification) {
   const representatives = new Set([
     'core:./sequence',
     'core:./color-picker',
+    'core:./range',
+    'core:./index-span',
     'dom:./listbox',
     'dom:./popover',
     'form:./form',

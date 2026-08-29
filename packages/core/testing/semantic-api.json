@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "5ac87a37991e3ba2a245d7947af6fc5badeafb7929f6b7e5ceab30e7c2894952",
+    "publicSignatureFingerprint": "a4f7bde69d2d61e831325f30ae9e48735e1ee54a36ce6388441e1cc1316db74e",
     "subpaths": [
       ".",
       "./accordion",
@@ -31,6 +31,7 @@
       "./feed",
       "./grid",
       "./grid-control",
+      "./index-span",
       "./interaction",
       "./layer-stack",
       "./listbox",
@@ -512,6 +513,6 @@
   ],
   "acceptance": {
     "classification": "type-change-reviewed",
-    "reason": "WI-014-adds-cached-grid-domain-and-half-open-tree-subtree-observations-with-reviewed-type-closure"
+    "reason": "WI-031-adds-index-span-subpath-and-bounded-exact-ratio-algebra"
   }
 }

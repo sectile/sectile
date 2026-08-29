@@ -929,6 +929,150 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "core:./index-span:DEFAULT_MAX_SPANS",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "DEFAULT_MAX_SPANS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./index-span:clampIndexSpan",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "clampIndexSpan",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:clampIndexSpanSet",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "clampIndexSpanSet",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:containsIndex",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "containsIndex",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:containsIndexInSpanSet",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "containsIndexInSpanSet",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:createIndexSpan",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "createIndexSpan",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:createIndexSpanSet",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "createIndexSpanSet",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:intersectIndexSpanSets",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "intersectIndexSpanSets",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:resizeIndexSpan",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "resizeIndexSpan",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:resizeIndexSpanSet",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "resizeIndexSpanSet",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:subtractIndexSpanSets",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "subtractIndexSpanSets",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:translateIndexSpan",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "translateIndexSpan",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:translateIndexSpanSet",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "translateIndexSpanSet",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:tryCreateIndexSpan",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "tryCreateIndexSpan",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:tryCreateIndexSpanSet",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "tryCreateIndexSpanSet",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./index-span:unionIndexSpanSets",
+      "package": "core",
+      "subpath": "./index-span",
+      "exportName": "unionIndexSpanSets",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "core:./interaction:createInteractionState",
       "package": "core",
       "subpath": "./interaction",
@@ -1550,10 +1694,64 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "core:./range:DEFAULT_MAX_RATIO_DENOMINATOR_BITS",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "DEFAULT_MAX_RATIO_DENOMINATOR_BITS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./range:DEFAULT_MAX_RATIO_NUMERATOR_BITS",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "DEFAULT_MAX_RATIO_NUMERATOR_BITS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./range:addExactRatios",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "addExactRatios",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./range:clampExactRatio",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "clampExactRatio",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./range:compareExactRatios",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "compareExactRatios",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "core:./range:createBoundedRange",
       "package": "core",
       "subpath": "./range",
       "exportName": "createBoundedRange",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./range:createExactRatio",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "createExactRatio",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -1568,10 +1766,73 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "core:./range:divideExactRatios",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "divideExactRatios",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./range:interpolateExactRatios",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "interpolateExactRatios",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./range:invertExactRatio",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "invertExactRatio",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./range:mapExactRatio",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "mapExactRatio",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./range:multiplyExactRatios",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "multiplyExactRatios",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./range:subtractExactRatios",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "subtractExactRatios",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "core:./range:tryCreateBoundedRange",
       "package": "core",
       "subpath": "./range",
       "exportName": "tryCreateBoundedRange",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./range:tryCreateExactRatio",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "tryCreateExactRatio",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -18197,6 +18458,145 @@
     {
       "package": "core",
       "surface": "hot",
+      "id": "exact-ratio.arithmetic",
+      "source": "packages/core/src/structures/range.ts",
+      "benchmarkIDs": [
+        "VAL-035:exact-ratio-arithmetic-work"
+      ],
+      "specificationCeiling": "O(M(b) + b*D(b))",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "b",
+            "meaning": "maximum numerator or denominator bit width",
+            "ceiling": "maxNumeratorBits and maxDenominatorBits"
+          },
+          {
+            "name": "M",
+            "meaning": "bounded b-bit multiplication cost",
+            "ceiling": "runtime BigInt multiplication implementation"
+          },
+          {
+            "name": "D",
+            "meaning": "bounded b-bit division cost",
+            "ceiling": "runtime BigInt division implementation"
+          }
+        ],
+        "time": {
+          "bound": "O(M(b) + b*D(b))",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(b)",
+          "output": "O(b)",
+          "retained": "O(b)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Cross-cancellation bounds multiplication/division intermediates; addition uses denominator GCD; every retained result is reduced and rechecked.",
+        "adversarialWitness": "Coprime maximum-width operands force the widest allowed intermediate and Euclidean reduction.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Exact scalar algebra cannot traverse collection cardinality."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "exact-ratio.compare",
+      "source": "packages/core/src/structures/range.ts",
+      "benchmarkIDs": [
+        "VAL-035:exact-ratio-compare-work"
+      ],
+      "specificationCeiling": "O(M(b) + b)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "b",
+            "meaning": "maximum numerator or denominator bit width",
+            "ceiling": "maxNumeratorBits and maxDenominatorBits"
+          },
+          {
+            "name": "M",
+            "meaning": "bounded b-bit multiplication cost",
+            "ceiling": "runtime BigInt multiplication implementation"
+          }
+        ],
+        "time": {
+          "bound": "O(M(b) + b)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(b)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Each operand is validated and reduced by Euclidean GCD, then compared with two bounded-width cross products.",
+        "adversarialWitness": "Coprime Fibonacci-sized operands at both configured width ceilings maximize remainder calls.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Work depends on operand width, never a represented domain cardinality."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
       "id": "grid.domain",
       "source": "packages/core/src/structures/grid.ts",
       "benchmarkIDs": [
@@ -18446,6 +18846,209 @@
         "fullScan": {
           "allowed": true,
           "rationale": "Only the first requested axis read is scanned and its output contains every occupied identity on that axis."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "index-span.contains",
+      "source": "packages/core/src/structures/index-span.ts",
+      "benchmarkIDs": [
+        "VAL-035:index-span-membership-work"
+      ],
+      "specificationCeiling": "O(log a)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "a",
+            "meaning": "normalized span count",
+            "ceiling": "maxSpans"
+          }
+        ],
+        "time": {
+          "bound": "O(log a)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Binary search halves the sorted disjoint span vector after each comparison.",
+        "adversarialWitness": "A miss between the final pair of maximum-count singleton spans reaches logarithmic depth.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Membership must not linearly scan spans or expand indexes."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "index-span.set-algebra",
+      "source": "packages/core/src/structures/index-span.ts",
+      "benchmarkIDs": [
+        "VAL-035:index-span-merge-work"
+      ],
+      "specificationCeiling": "O(a + bSpan)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "a",
+            "meaning": "left normalized span count",
+            "ceiling": "maxSpans"
+          },
+          {
+            "name": "bSpan",
+            "meaning": "right normalized span count",
+            "ceiling": "maxSpans"
+          },
+          {
+            "name": "rSpan",
+            "meaning": "result normalized span count",
+            "ceiling": "maxSpans"
+          }
+        ],
+        "time": {
+          "bound": "O(a + bSpan)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(rSpan)",
+          "retained": "O(rSpan)"
+        },
+        "resources": {
+          "allocations": "O(rSpan)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Two monotone cursors visit each input span at most once and normalize while emitting without sorting or index expansion.",
+        "adversarialWitness": "Alternating disjoint singleton spans force every input visit and maximum output spans.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Both explicit span vectors are the bounded inputs and every output span may be required."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "index-span.transform",
+      "source": "packages/core/src/structures/index-span.ts",
+      "benchmarkIDs": [
+        "VAL-035:index-span-transform-work"
+      ],
+      "specificationCeiling": "O(a)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "a",
+            "meaning": "input normalized span count",
+            "ceiling": "maxSpans"
+          },
+          {
+            "name": "rSpan",
+            "meaning": "result normalized span count",
+            "ceiling": "maxSpans"
+          }
+        ],
+        "time": {
+          "bound": "O(a)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(rSpan)",
+          "retained": "O(rSpan)"
+        },
+        "resources": {
+          "allocations": "O(rSpan)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Clamp, translate, and resize traverse the ordered input once, validate each boundary, and coalesce while emitting.",
+        "adversarialWitness": "Maximum-count separated spans survive the transform without merging.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "An immutable transformed result must inspect and emit every surviving span."
         }
       }
     },

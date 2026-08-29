@@ -41,7 +41,7 @@ export function deriveFixtures(fragments) {
         const exportName = mode === 'root-named'
           ? surface.rootEquivalentExport
           : mode === 'named'
-            ? surface.rootEquivalentExport ?? surface.runtimeExports[0]
+            ? representativeNamedExport(fragment.package, surface.subpath, surface)
             : null;
         fixtures.push(Object.freeze({
           id: `${fragment.package}:${surface.subpath}:${mode}`,
@@ -57,6 +57,18 @@ export function deriveFixtures(fragments) {
     }
   }
   return Object.freeze(fixtures.sort((left, right) => left.id.localeCompare(right.id)));
+}
+
+function representativeNamedExport(packageName, subpath, surface) {
+  const preferred = new Map([
+    ['core:./index-span', 'createIndexSpanSet'],
+    ['core:./range', 'createExactRatio'],
+  ]).get(`${packageName}:${subpath}`);
+  if (preferred !== undefined) {
+    assert.ok(surface.runtimeExports.includes(preferred), `${packageName}:${subpath}: representative export missing`);
+    return preferred;
+  }
+  return surface.rootEquivalentExport ?? surface.runtimeExports[0];
 }
 
 function fixtureSource(fixture) {

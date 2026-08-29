@@ -138,6 +138,10 @@
       "layer": "kernel"
     },
     {
+      "path": "src/internal/kernel/exact-ratio.ts",
+      "layer": "kernel"
+    },
+    {
       "path": "src/internal/kernel/foundation.ts",
       "layer": "kernel"
     },
@@ -375,6 +379,10 @@
     },
     {
       "path": "src/structures/grid.ts",
+      "layer": "structures"
+    },
+    {
+      "path": "src/structures/index-span.ts",
       "layer": "structures"
     },
     {
@@ -1285,6 +1293,11 @@
     {
       "source": "src/internal/kernel/bounded-scalar.ts",
       "target": "src/internal/kernel/decimal.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/bounded-scalar.ts",
+      "target": "src/internal/kernel/exact-ratio.ts",
       "kind": "import"
     },
     {
@@ -2403,8 +2416,33 @@
       "kind": "import"
     },
     {
+      "source": "src/structures/index-span.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/index-span.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/index-span.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
       "source": "src/structures/range.ts",
       "target": "src/internal/kernel/decimal.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/range.ts",
+      "target": "src/internal/kernel/exact-ratio.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/structures/range.ts",
+      "target": "src/internal/kernel/exact-ratio.ts",
       "kind": "import"
     },
     {
@@ -2945,6 +2983,16 @@
       ]
     },
     {
+      "subpath": "./index-span",
+      "source": "src/structures/index-span.ts",
+      "layer": "structures",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
       "subpath": "./interaction",
       "source": "src/interaction.ts",
       "layer": "public",
@@ -3150,6 +3198,8 @@
       "layer": "structures",
       "facadeTargets": [
         "src/internal/kernel/decimal.ts",
+        "src/internal/kernel/exact-ratio.ts",
+        "src/internal/kernel/exact-ratio.ts",
         "src/internal/kernel/foundation.ts",
         "src/result.ts",
         "src/shared.ts",
@@ -3579,7 +3629,7 @@
         "src/result.ts",
         "src/shared.ts"
       ],
-      "transitiveDependentCount": 106,
+      "transitiveDependentCount": 107,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -3598,6 +3648,7 @@
         "./feed",
         "./grid",
         "./grid-control",
+        "./index-span",
         "./interaction",
         "./layer-stack",
         "./listbox",
@@ -3885,6 +3936,25 @@
       ]
     },
     {
+      "module": "src/internal/kernel/exact-ratio.ts",
+      "directDependents": [
+        "src/internal/kernel/bounded-scalar.ts",
+        "src/structures/range.ts"
+      ],
+      "transitiveDependentCount": 15,
+      "publicSubpaths": [
+        ".",
+        "./meter",
+        "./meter-group",
+        "./multi-thumb-slider",
+        "./progress",
+        "./range",
+        "./slider",
+        "./spin-button",
+        "./window-splitter"
+      ]
+    },
+    {
       "module": "src/internal/kernel/foundation.ts",
       "directDependents": [
         "src/accordion.ts",
@@ -3931,6 +4001,7 @@
         "src/select.ts",
         "src/spin-button.ts",
         "src/structures/grid.ts",
+        "src/structures/index-span.ts",
         "src/structures/range.ts",
         "src/structures/sequence.ts",
         "src/structures/tree.ts",
@@ -3940,7 +4011,7 @@
         "src/toggle-group.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 101,
+      "transitiveDependentCount": 102,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -3959,6 +4030,7 @@
         "./feed",
         "./grid",
         "./grid-control",
+        "./index-span",
         "./layer-stack",
         "./listbox",
         "./menu",
@@ -4640,6 +4712,7 @@
         "src/spin-button.ts",
         "src/stepper.ts",
         "src/structures/grid.ts",
+        "src/structures/index-span.ts",
         "src/structures/range.ts",
         "src/structures/sequence.ts",
         "src/structures/tree.ts",
@@ -4653,7 +4726,7 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 95,
+      "transitiveDependentCount": 96,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4672,6 +4745,7 @@
         "./feed",
         "./grid",
         "./grid-control",
+        "./index-span",
         "./interaction",
         "./layer-stack",
         "./listbox",
@@ -4822,6 +4896,7 @@
         "src/spin-button.ts",
         "src/stepper.ts",
         "src/structures/grid.ts",
+        "src/structures/index-span.ts",
         "src/structures/range.ts",
         "src/structures/sequence.ts",
         "src/structures/tree.ts",
@@ -4835,7 +4910,7 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 105,
+      "transitiveDependentCount": 106,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4854,6 +4929,7 @@
         "./feed",
         "./grid",
         "./grid-control",
+        "./index-span",
         "./interaction",
         "./layer-stack",
         "./listbox",
@@ -4941,6 +5017,14 @@
         "./grid",
         "./grid-control",
         "./tree-grid"
+      ]
+    },
+    {
+      "module": "src/structures/index-span.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./index-span"
       ]
     },
     {

@@ -1,5 +1,6 @@
 import { unwrap } from '../result.js';
 import { type Result, type TiePolicy } from '../shared.js';
+import type { ExactRatio } from '../internal/kernel/exact-ratio.js';
 import {
   addDecimal,
   compareDecimal,
@@ -8,7 +9,6 @@ import {
   floorFraction,
   multiplyDecimalByInteger,
   parseDecimal,
-  reduceFraction,
   subtractDecimal,
   type ExactDecimal,
 } from '../internal/kernel/decimal.js';
@@ -33,9 +33,249 @@ export interface BoundedRangeInput extends RangeOptions {
   readonly step: string;
 }
 
-export interface ExactRatio {
-  readonly numerator: bigint;
-  readonly denominator: bigint;
+export type { ExactRatio } from '../internal/kernel/exact-ratio.js';
+
+export interface ExactRatioOptions {
+  /** Maximum absolute numerator width accepted and retained. */
+  readonly maxNumeratorBits?: number;
+  /** Maximum denominator width accepted and retained. */
+  readonly maxDenominatorBits?: number;
+}
+
+export const DEFAULT_MAX_RATIO_NUMERATOR_BITS = 4_096;
+export const DEFAULT_MAX_RATIO_DENOMINATOR_BITS = 4_096;
+
+interface RatioLimits {
+  readonly maxNumeratorBits: number;
+  readonly maxDenominatorBits: number;
+}
+
+export function createExactRatio(
+  numerator: bigint,
+  denominator: bigint,
+  options: ExactRatioOptions = {},
+): ExactRatio {
+  return unwrap(tryCreateExactRatio(numerator, denominator, options));
+}
+
+export function tryCreateExactRatio(
+  numerator: bigint,
+  denominator: bigint,
+  options: ExactRatioOptions = {},
+): Result<ExactRatio> {
+  const limits = tryRatioLimits(options);
+  if (!limits.ok) return limits;
+  return canonicalRatio(numerator, denominator, limits.value);
+}
+
+export function compareExactRatios(
+  left: ExactRatio,
+  right: ExactRatio,
+  options: ExactRatioOptions = {},
+): -1 | 0 | 1 {
+  const [a, b] = checkedRatioPair(left, right, options);
+  const leftProduct = a.numerator * b.denominator;
+  const rightProduct = b.numerator * a.denominator;
+  return leftProduct < rightProduct ? -1 : leftProduct > rightProduct ? 1 : 0;
+}
+
+export function clampExactRatio(
+  value: ExactRatio,
+  minimum: ExactRatio,
+  maximum: ExactRatio,
+  options: ExactRatioOptions = {},
+): ExactRatio {
+  const limits = unwrap(tryRatioLimits(options));
+  const canonicalValue = unwrap(canonicalRatio(value.numerator, value.denominator, limits));
+  const canonicalMinimum = unwrap(canonicalRatio(minimum.numerator, minimum.denominator, limits));
+  const canonicalMaximum = unwrap(canonicalRatio(maximum.numerator, maximum.denominator, limits));
+  if (compareCanonicalRatios(canonicalMinimum, canonicalMaximum) > 0) {
+    return unwrap(fail('construction', 'inverted-bounds', 'minimum must not exceed maximum.'));
+  }
+  if (compareCanonicalRatios(canonicalValue, canonicalMinimum) < 0) return canonicalMinimum;
+  if (compareCanonicalRatios(canonicalValue, canonicalMaximum) > 0) return canonicalMaximum;
+  return canonicalValue;
+}
+
+export function addExactRatios(
+  left: ExactRatio,
+  right: ExactRatio,
+  options: ExactRatioOptions = {},
+): ExactRatio {
+  const limits = unwrap(tryRatioLimits(options));
+  const a = unwrap(canonicalRatio(left.numerator, left.denominator, limits));
+  const b = unwrap(canonicalRatio(right.numerator, right.denominator, limits));
+  const divisor = gcd(a.denominator, b.denominator);
+  const leftScale = b.denominator / divisor;
+  const rightScale = a.denominator / divisor;
+  return unwrap(canonicalRatio(
+    a.numerator * leftScale + b.numerator * rightScale,
+    a.denominator * leftScale,
+    limits,
+  ));
+}
+
+export function subtractExactRatios(
+  left: ExactRatio,
+  right: ExactRatio,
+  options: ExactRatioOptions = {},
+): ExactRatio {
+  return addExactRatios(left, { numerator: -right.numerator, denominator: right.denominator }, options);
+}
+
+export function multiplyExactRatios(
+  left: ExactRatio,
+  right: ExactRatio,
+  options: ExactRatioOptions = {},
+): ExactRatio {
+  const limits = unwrap(tryRatioLimits(options));
+  const a = unwrap(canonicalRatio(left.numerator, left.denominator, limits));
+  const b = unwrap(canonicalRatio(right.numerator, right.denominator, limits));
+  const crossA = gcd(abs(a.numerator), b.denominator);
+  const crossB = gcd(abs(b.numerator), a.denominator);
+  return unwrap(canonicalRatio(
+    (a.numerator / crossA) * (b.numerator / crossB),
+    (a.denominator / crossB) * (b.denominator / crossA),
+    limits,
+  ));
+}
+
+export function divideExactRatios(
+  dividend: ExactRatio,
+  divisor: ExactRatio,
+  options: ExactRatioOptions = {},
+): ExactRatio {
+  if (divisor.numerator === 0n) {
+    return unwrap(fail('construction', 'invalid-boundary', 'divisor must not be zero.'));
+  }
+  return multiplyExactRatios(
+    dividend,
+    { numerator: divisor.denominator, denominator: divisor.numerator },
+    options,
+  );
+}
+
+export function invertExactRatio(
+  ratio: ExactRatio,
+  options: ExactRatioOptions = {},
+): ExactRatio {
+  if (ratio.numerator === 0n) {
+    return unwrap(fail('construction', 'invalid-boundary', 'zero has no multiplicative inverse.'));
+  }
+  return createExactRatio(ratio.denominator, ratio.numerator, options);
+}
+
+export function interpolateExactRatios(
+  start: ExactRatio,
+  end: ExactRatio,
+  position: ExactRatio,
+  options: ExactRatioOptions = {},
+): ExactRatio {
+  return addExactRatios(
+    start,
+    multiplyExactRatios(subtractExactRatios(end, start, options), position, options),
+    options,
+  );
+}
+
+export function mapExactRatio(
+  value: ExactRatio,
+  sourceStart: ExactRatio,
+  sourceEnd: ExactRatio,
+  targetStart: ExactRatio,
+  targetEnd: ExactRatio,
+  options: ExactRatioOptions = {},
+): ExactRatio {
+  const sourceSpan = subtractExactRatios(sourceEnd, sourceStart, options);
+  if (sourceSpan.numerator === 0n) {
+    return unwrap(fail('construction', 'invalid-boundary', 'source range must have non-zero width.'));
+  }
+  const position = divideExactRatios(subtractExactRatios(value, sourceStart, options), sourceSpan, options);
+  return interpolateExactRatios(targetStart, targetEnd, position, options);
+}
+
+function checkedRatioPair(
+  left: ExactRatio,
+  right: ExactRatio,
+  options: ExactRatioOptions,
+): readonly [ExactRatio, ExactRatio] {
+  const limits = unwrap(tryRatioLimits(options));
+  return [
+    unwrap(canonicalRatio(left.numerator, left.denominator, limits)),
+    unwrap(canonicalRatio(right.numerator, right.denominator, limits)),
+  ];
+}
+
+function compareCanonicalRatios(left: ExactRatio, right: ExactRatio): -1 | 0 | 1 {
+  const a = left.numerator * right.denominator;
+  const b = right.numerator * left.denominator;
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+function tryRatioLimits(options: ExactRatioOptions): Result<RatioLimits> {
+  const maxNumeratorBits = options.maxNumeratorBits ?? DEFAULT_MAX_RATIO_NUMERATOR_BITS;
+  const maxDenominatorBits = options.maxDenominatorBits ?? DEFAULT_MAX_RATIO_DENOMINATOR_BITS;
+  if (!Number.isSafeInteger(maxNumeratorBits) || maxNumeratorBits < 1) {
+    return fail('construction', 'invalid-max-count', 'maxNumeratorBits must be a positive safe integer.', { maxNumeratorBits });
+  }
+  if (!Number.isSafeInteger(maxDenominatorBits) || maxDenominatorBits < 1) {
+    return fail('construction', 'invalid-max-count', 'maxDenominatorBits must be a positive safe integer.', { maxDenominatorBits });
+  }
+  return ok(Object.freeze({ maxNumeratorBits, maxDenominatorBits }));
+}
+
+function canonicalRatio(
+  numerator: bigint,
+  denominator: bigint,
+  limits: RatioLimits,
+): Result<ExactRatio> {
+  if (typeof numerator !== 'bigint' || typeof denominator !== 'bigint') {
+    return fail('construction', 'invalid-boundary', 'numerator and denominator must be bigint values.');
+  }
+  if (denominator === 0n) {
+    return fail('construction', 'invalid-boundary', 'denominator must not be zero.');
+  }
+  const numeratorBits = bitLength(numerator);
+  const denominatorBits = bitLength(denominator);
+  if (numeratorBits > limits.maxNumeratorBits) {
+    return fail('resource-rejection', 'count-ceiling-exceeded', 'numerator exceeds maxNumeratorBits.', {
+      numeratorBits,
+      maxNumeratorBits: limits.maxNumeratorBits,
+    });
+  }
+  if (denominatorBits > limits.maxDenominatorBits) {
+    return fail('resource-rejection', 'count-ceiling-exceeded', 'denominator exceeds maxDenominatorBits.', {
+      denominatorBits,
+      maxDenominatorBits: limits.maxDenominatorBits,
+    });
+  }
+  if (numerator === 0n) return ok(Object.freeze({ numerator: 0n, denominator: 1n }));
+  const sign = denominator < 0n ? -1n : 1n;
+  const divisor = gcd(abs(numerator), abs(denominator));
+  return ok(Object.freeze({
+    numerator: (numerator / divisor) * sign,
+    denominator: abs(denominator) / divisor,
+  }));
+}
+
+function bitLength(value: bigint): number {
+  const magnitude = abs(value);
+  return magnitude === 0n ? 0 : magnitude.toString(2).length;
+}
+
+function abs(value: bigint): bigint {
+  return value < 0n ? -value : value;
+}
+
+function gcd(left: bigint, right: bigint): bigint {
+  let a = abs(left);
+  let b = abs(right);
+  while (b !== 0n) {
+    const remainder = a % b;
+    a = b;
+    b = remainder;
+  }
+  return a === 0n ? 1n : a;
 }
 
 export interface QuantizedRange {
@@ -133,19 +373,15 @@ class ExactQuantizedRange implements QuantizedRange {
 
   public ratioOfTick(tick: number): ExactRatio | null {
     if (!validTick(tick, this.count)) return null;
-    if (this.count === 0) return Object.freeze({ numerator: 0n, denominator: 1n });
-    const [numerator, denominator] = reduceFraction(BigInt(tick), BigInt(this.count));
-    return Object.freeze({ numerator, denominator });
+    if (this.count === 0) return createExactRatio(0n, 1n);
+    return createExactRatio(BigInt(tick), BigInt(this.count));
   }
 
   public tickFromRatio(ratio: ExactRatio, tie: TiePolicy = 'lower'): number | null {
-    if (ratio.denominator === 0n || !isTiePolicy(tie)) return null;
-    let numerator = ratio.numerator;
-    let denominator = ratio.denominator;
-    if (denominator < 0n) {
-      numerator = -numerator;
-      denominator = -denominator;
-    }
+    if (!isTiePolicy(tie)) return null;
+    const canonical = tryCreateExactRatio(ratio.numerator, ratio.denominator);
+    if (!canonical.ok) return null;
+    let { numerator, denominator } = canonical.value;
     numerator = clampBigInt(numerator, 0n, denominator);
     if (this.count === 0) return 0;
     const scaled = numerator * BigInt(this.count);

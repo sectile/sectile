@@ -2,25 +2,25 @@
   "schemaVersion": 1,
   "packages": {
     "core": {
-      "tarballBytes": 162397,
-      "unpackedBytes": 908972,
-      "unpackedFiles": 264,
+      "tarballBytes": 171960,
+      "unpackedBytes": 963094,
+      "unpackedFiles": 270,
       "categories": {
         "runtimeJS": {
-          "files": 87,
-          "bytes": 367019
+          "files": 89,
+          "bytes": 390795
         },
         "declarations": {
-          "files": 87,
-          "bytes": 141674
+          "files": 89,
+          "bytes": 146270
         },
         "sourceMaps": {
-          "files": 87,
-          "bytes": 386794
+          "files": 89,
+          "bytes": 412361
         },
         "other": {
           "files": 3,
-          "bytes": 13485
+          "bytes": 13668
         }
       }
     },

@@ -25,3 +25,11 @@
 | WI-030 | @sectile/terminal | `./grid` | `GridEditMode`, `GridPolicies`, `GridState`, `GridEvent` | @sectile/terminal/grid |
 | WI-030 | @sectile/terminal | `.` | `GridEditMode`, `GridPolicies`, `GridState`, `GridEvent` | @sectile/terminal |
 | WI-030 | @sectile/core | `./tree-grid` | `GridControl declaration closure`, `Tree declaration closure` | @sectile/core/grid-control |
+| WI-031 | @sectile/core | `./meter-group` | `ExactRatio declaration closure` | @sectile/core/meter-group |
+| WI-031 | @sectile/core | `./meter` | `ExactRatio declaration closure` | @sectile/core/meter |
+| WI-031 | @sectile/core | `./multi-thumb-slider` | `QuantizedRange declaration closure` | @sectile/core/multi-thumb-slider |
+| WI-031 | @sectile/core | `./progress` | `ExactRatio declaration closure` | @sectile/core/progress |
+| WI-031 | @sectile/core | `./range` | `ExactRatio`, `bounded ExactRatio algebra` | @sectile/core/range |
+| WI-031 | @sectile/core | `./slider` | `QuantizedRange declaration closure` | @sectile/core/slider |
+| WI-031 | @sectile/core | `./spin-button` | `QuantizedRange declaration closure` | @sectile/core/spin-button |
+| WI-031 | @sectile/core | `./window-splitter` | `QuantizedRange declaration closure` | @sectile/core/window-splitter |
