@@ -40,6 +40,10 @@ export class ReferenceGrid<ID extends StableID> implements Grid<ID> {
       : Object.freeze({ row: Math.floor(index / this.columnCount), column: index % this.columnCount });
   }
 
+  public domain(): ReferenceSequence<ID> {
+    return new ReferenceSequence(this.#cells.filter((id): id is ID => id !== null));
+  }
+
   public row(row: number): ReferenceSequence<ID> | null {
     if (!Number.isSafeInteger(row) || row < 0 || row >= this.rowCount) return null;
     const result: ID[] = [];

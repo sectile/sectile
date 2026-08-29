@@ -49,6 +49,7 @@ export function runDeterministicWitness(size) {
   const selected = unwrap(createSelectionState(domain, 'multiple', { selected: [ids[0]], anchor: ids[0] }));
   domainCounts.at = 0;
   domainCounts.contains = 0;
+  domainCounts.indexOf = 0;
   toggleMultipleSelection(selected, ids[size - 1], domain);
 
   const columnCount = Math.min(100, size);
@@ -65,6 +66,8 @@ export function runDeterministicWitness(size) {
   });
 
   const tree = createTree(ids.map((id, index) => ({ id, parentID: index === 0 ? null : ids[Math.floor((index - 1) / 2)] })));
+  const preorder = tree.preorder();
+  const treeViewsCached = preorder === tree.preorder() && tree.postorder() === tree.postorder();
   let expansionReads = 0;
   const expansion = tree.normalizeExpansion({
     *[Symbol.iterator]() {
@@ -75,6 +78,9 @@ export function runDeterministicWitness(size) {
     },
   });
   const visible = tree.visible(expansion);
+  const gridViewsCached = grid.domain() === grid.domain()
+    && grid.row(0) === grid.row(0)
+    && grid.column(0) === grid.column(0);
 
   const text = 'a'.repeat(size);
   const replacement = unwrap(replacePlainText(text, size - 1, size, 'z'));
@@ -90,8 +96,18 @@ export function runDeterministicWitness(size) {
       scanned: moved.scanned,
     }),
     selection: Object.freeze({ ...domainCounts }),
-    grid: Object.freeze({ eligibleCalls: gridEligibleCalls, scanned: gridMove.scanned }),
-    tree: Object.freeze({ expansionReads, visibleEntries: visible.size }),
+    grid: Object.freeze({
+      eligibleCalls: gridEligibleCalls,
+      scanned: gridMove.scanned,
+      viewsCached: gridViewsCached,
+      domainEntries: grid.domain().size,
+    }),
+    tree: Object.freeze({
+      expansionReads,
+      visibleEntries: visible.size,
+      viewsCached: treeViewsCached,
+      rootIntervalEntries: tree.subtreeIntervalOf(ids[0])?.endExclusive ?? 0,
+    }),
     text: Object.freeze({ inspectedUpperBound: text.length + 1, outputCodeUnits: replacement.length }),
   });
 }

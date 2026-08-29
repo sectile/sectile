@@ -226,3 +226,21 @@ test('sequence projections and patches preserve their resource contract', () => 
     inserted: ['delta', 'epsilon'],
   }).error.code, 'item-ceiling-exceeded');
 });
+
+test('patch overlays compact before lookup depth can exceed 32', () => {
+  let sequence = createSequence(['base'], { maxItems: 128 });
+  for (let index = 0; index < 65; index += 1) {
+    sequence = applySequencePatch(sequence, {
+      type: 'splice',
+      index: sequence.size,
+      deleteCount: 0,
+      inserted: [`overlay-${index}`],
+    });
+    assert.ok(sequence.depth <= 32);
+  }
+  assert.equal(sequence.size, 66);
+  assert.equal(sequence.indexOf('base'), 0);
+  assert.equal(sequence.at(65), 'overlay-64');
+  assert.equal(sequence.move('base', 1).id, 'overlay-0');
+  assert.equal(sequence.ids.length, 66);
+});

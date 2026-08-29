@@ -2,27 +2,27 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all eight package source trees.
 
-Findings: 434; migration owners: WI-013, WI-014, WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
+Findings: 433; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
 
 ## Classifications
 
 | Classification | Count |
 |---|---:|
 | bounded-small | 10 |
-| migration-required | 120 |
-| result-proportional | 142 |
-| reuse | 162 |
+| migration-required | 111 |
+| result-proportional | 141 |
+| reuse | 171 |
 
 ## Categories
 
 | Category | Count |
 |---|---:|
 | controller-connection-rebuild | 34 |
-| discarded-canonical-index | 41 |
+| discarded-canonical-index | 39 |
 | measurement-authority | 16 |
 | private-algorithm-bypass | 11 |
 | raw-full-domain-scan | 286 |
-| repeated-immutable-view | 13 |
+| repeated-immutable-view | 14 |
 | whole-domain-validation | 33 |
 
 ## Migration-required findings
@@ -46,15 +46,6 @@ Findings: 434; migration owners: WI-013, WI-014, WI-020, WI-021, WI-027, WI-038,
 | WI-021 | core-text-reorder-local-proof | `packages/core/src/reorder.ts:136` | raw-identity-lookup |
 | WI-021 | core-text-reorder-local-proof | `packages/core/src/reorder.ts:140` | raw-identity-lookup |
 | WI-021 | core-text-reorder-local-proof | `packages/core/src/reorder.ts:147` | raw-identity-lookup |
-| WI-014 | core-structure-index-reuse | `packages/core/src/structures/grid.ts:99` | immutable-view-construction |
-| WI-014 | core-structure-index-reuse | `packages/core/src/structures/grid.ts:109` | immutable-view-construction |
-| WI-014 | core-structure-index-reuse | `packages/core/src/structures/sequence.ts:83` | immutable-view-construction |
-| WI-014 | core-structure-index-reuse | `packages/core/src/structures/tree.ts:86` | immutable-view-construction |
-| WI-014 | core-structure-index-reuse | `packages/core/src/structures/tree.ts:105` | immutable-view-construction |
-| WI-014 | core-structure-index-reuse | `packages/core/src/structures/tree.ts:129` | immutable-view-construction |
-| WI-014 | core-structure-index-reuse | `packages/core/src/structures/tree.ts:133` | immutable-view-construction |
-| WI-014 | core-structure-index-reuse | `packages/core/src/structures/tree.ts:162` | immutable-view-construction |
-| WI-014 | core-structure-index-reuse | `packages/core/src/structures/tree.ts:301` | raw-identity-lookup |
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:359` | raw-identity-lookup |
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:472` | raw-identity-lookup |
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:483` | raw-identity-lookup |

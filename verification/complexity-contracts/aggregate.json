@@ -18197,6 +18197,70 @@
     {
       "package": "core",
       "surface": "hot",
+      "id": "grid.domain",
+      "source": "packages/core/src/structures/grid.ts",
+      "benchmarkIDs": [
+        "core:grid:views:1000",
+        "core:grid:views:10000",
+        "core:grid:views:100000"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "occupied grid identity cardinality",
+            "ceiling": "maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(n)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "O(n)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Construction retains one row-major indexed domain view; every observation returns that same immutable owner.",
+        "adversarialWitness": "Repeated domain reads on a maximum-size grid preserve object identity and perform no cell visits.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "The domain is indexed once during construction."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
       "id": "grid.move",
       "source": "packages/core/src/structures/grid.ts",
       "benchmarkIDs": [
@@ -18342,7 +18406,7 @@
         ],
         "time": {
           "bound": "O(sAxis + k)",
-          "kind": "expected",
+          "kind": "worst-case",
           "runtimeState": "trusted"
         },
         "space": {
@@ -18373,15 +18437,15 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The incumbent row/column view visits the selected axis and constructs a fresh indexed sequence for occupied identities.",
-        "adversarialWitness": "A fully occupied maximum-length axis emits and indexes every cell.",
+        "proof": "The first row/column read scans one axis and retains one immutable indexed view; every repeated read of that coordinate is O(1) with zero allocation.",
+        "adversarialWitness": "The first fully occupied maximum-length axis read emits every cell; a repeated read returns the identical view.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "The requested output contains every occupied identity on that one axis; cached reuse is owned by WI-014."
+          "rationale": "Only the first requested axis read is scanned and its output contains every occupied identity on that axis."
         }
       }
     },
@@ -18451,7 +18515,7 @@
         "core:selection:toggle:10000",
         "core:selection:toggle:100000"
       ],
-      "specificationCeiling": "O(nDomain)",
+      "specificationCeiling": "O(sSelected + log nDomain)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
@@ -18467,7 +18531,7 @@
           }
         ],
         "time": {
-          "bound": "O(nDomain + sSelected)",
+          "bound": "O(sSelected + log nDomain)",
           "kind": "expected",
           "runtimeState": "trusted"
         },
@@ -18477,7 +18541,7 @@
           "retained": "O(sSelected)"
         },
         "resources": {
-          "allocations": "O(nDomain + sSelected)",
+          "allocations": "O(sSelected)",
           "cacheEntries": "O(sSelected)",
           "listeners": "0",
           "observers": "0",
@@ -18499,15 +18563,15 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The current implementation copies selected IDs then restores canonical order by visiting every domain position.",
-        "adversarialWitness": "A 100k domain with one selected ID still performs nDomain at-calls.",
+        "proof": "Canonical state retains ordered domain indexes; toggle performs one domain index lookup, binary search, and immutable selected-vector copy without a domain scan.",
+        "adversarialWitness": "A 100k domain with one selected ID performs one indexOf call and zero at/contains calls.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
-          "allowed": true,
-          "rationale": "Recorded incumbent weakness owned by WI-014/WI-020; it may not worsen before migration."
+          "allowed": false,
+          "rationale": "Selection work is proportional to selected output, never unselected domain cardinality."
         }
       }
     },
@@ -18599,12 +18663,12 @@
         },
         "space": {
           "auxiliary": "O(n)",
-          "output": "O(k)",
-          "retained": "O(k)"
+          "output": "O(n)",
+          "retained": "O(n)"
         },
         "resources": {
-          "allocations": "O(n + k)",
-          "cacheEntries": "O(k)",
+          "allocations": "O(n)",
+          "cacheEntries": "O(n)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
@@ -18625,7 +18689,7 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Validation and stable-ID indexing visit each input identity a bounded number of times.",
+        "proof": "One pass validates identities while building the sole frozen snapshot and index; construction performs no second snapshot copy or intermediate tuple vector.",
         "adversarialWitness": "A maximum-size unique identity vector reaches the final validation/index entry.",
         "evidence": [
           "VAL-016",
@@ -18710,13 +18774,18 @@
         "variables": [
           {
             "name": "n",
-            "meaning": "visited input or state cardinality",
-            "ceiling": "operation resource ceiling"
+            "meaning": "indexed base cardinality",
+            "ceiling": "maxItems"
           },
           {
             "name": "k",
-            "meaning": "produced result cardinality",
+            "meaning": "materialized inserted identity cardinality",
             "ceiling": "k <= n"
+          },
+          {
+            "name": "dPatch",
+            "meaning": "retained patch overlay depth",
+            "ceiling": "dPatch <= 32"
           }
         ],
         "time": {
@@ -18725,21 +18794,20 @@
           "runtimeState": "external"
         },
         "space": {
-          "auxiliary": "O(n)",
-          "output": "O(k)",
-          "retained": "O(k)"
+          "auxiliary": "O(n + dPatch)",
+          "output": "O(n + k)",
+          "retained": "O(n + k)"
         },
         "resources": {
-          "allocations": "O(n + k)",
-          "cacheEntries": "O(k)",
+          "allocations": "O(n + dPatch)",
+          "cacheEntries": "O(n + k)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
         "assumptions": [
-          "hash lookup is expected O(1)",
-          "external input is validated exactly once at its boundary"
+          "retained patch depth is compacted at 32 overlays"
         ],
         "ceilings": [
           "operation item and output ceilings"
@@ -18752,7 +18820,7 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Materialization copies the parent vector once and applies the retained patch.",
+        "proof": "Materialization walks at most 32 metadata overlays, copies the indexed base vector once, applies patches in order, and caches the one frozen result; no parent vector is recursively materialized.",
         "adversarialWitness": "A depth-64 patched 100k sequence requests the full ids projection.",
         "evidence": [
           "VAL-016",
@@ -18780,7 +18848,7 @@
           {
             "name": "dPatch",
             "meaning": "retained patch overlay depth",
-            "ceiling": "dPatch <= 64"
+            "ceiling": "dPatch <= 32"
           }
         ],
         "time": {
@@ -18817,7 +18885,7 @@
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
         "proof": "Lookup translates through at most one retained patch per overlay depth before the indexed base lookup.",
-        "adversarialWitness": "A missing ID traverses every depth-64 overlay before the base map miss.",
+        "adversarialWitness": "A missing ID traverses every depth-32 overlay before the base map miss; the next patch compacts first.",
         "evidence": [
           "VAL-016",
           "VAL-017"
@@ -18967,6 +19035,70 @@
     {
       "package": "core",
       "surface": "hot",
+      "id": "tree.subtree-interval",
+      "source": "packages/core/src/structures/tree.ts",
+      "benchmarkIDs": [
+        "core:tree:views:1000",
+        "core:tree:views:10000",
+        "core:tree:views:100000"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "tree node cardinality retained by construction",
+            "ceiling": "maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(n)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "O(n)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Construction records one preorder index and numeric end boundary per node; lookup is one map access plus one array read and allocates only the returned pair.",
+        "adversarialWitness": "Root and deepest-leaf interval reads on a maximum-depth tree each perform one lookup.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Subtree membership boundaries are retained during construction."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
       "id": "tree.views",
       "source": "packages/core/src/structures/tree.ts",
       "benchmarkIDs": [
@@ -18990,18 +19122,18 @@
           }
         ],
         "time": {
-          "bound": "O(n + k)",
+          "bound": "O(n)",
           "kind": "worst-case",
-          "runtimeState": "external"
+          "runtimeState": "trusted"
         },
         "space": {
           "auxiliary": "O(n)",
-          "output": "O(k)",
-          "retained": "O(k)"
+          "output": "O(n)",
+          "retained": "O(n)"
         },
         "resources": {
-          "allocations": "O(n + k)",
-          "cacheEntries": "O(k)",
+          "allocations": "O(n)",
+          "cacheEntries": "O(n)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
@@ -19022,15 +19154,15 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The incumbent preorder/postorder observation constructs a fresh indexed sequence from the retained traversal vector.",
-        "adversarialWitness": "Repeated preorder reads on a maximum-size tree reindex every retained node.",
+        "proof": "The first child/preorder/postorder read builds one indexed immutable view; repeated reads return that same view in O(1) with zero allocation.",
+        "adversarialWitness": "A first maximum-size preorder read indexes every node, then repeated reads preserve object identity.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "Recorded incumbent repeated-view construction is owned by WI-014 and may not worsen."
+          "rationale": "Only first observation constructs the output-sized retained view."
         }
       }
     },
@@ -21017,17 +21149,21 @@
           "scanned": 64
         },
         "selection": {
-          "at": 1000,
-          "contains": 1,
-          "indexOf": 0
+          "at": 0,
+          "contains": 0,
+          "indexOf": 1
         },
         "grid": {
           "eligibleCalls": 32,
-          "scanned": 32
+          "scanned": 32,
+          "viewsCached": true,
+          "domainEntries": 1000
         },
         "tree": {
           "expansionReads": 64,
-          "visibleEntries": 129
+          "visibleEntries": 129,
+          "viewsCached": true,
+          "rootIntervalEntries": 1000
         },
         "text": {
           "inspectedUpperBound": 1001,
@@ -21043,17 +21179,21 @@
           "scanned": 64
         },
         "selection": {
-          "at": 10000,
-          "contains": 1,
-          "indexOf": 0
+          "at": 0,
+          "contains": 0,
+          "indexOf": 1
         },
         "grid": {
           "eligibleCalls": 32,
-          "scanned": 32
+          "scanned": 32,
+          "viewsCached": true,
+          "domainEntries": 10000
         },
         "tree": {
           "expansionReads": 64,
-          "visibleEntries": 129
+          "visibleEntries": 129,
+          "viewsCached": true,
+          "rootIntervalEntries": 10000
         },
         "text": {
           "inspectedUpperBound": 10001,
@@ -21069,17 +21209,21 @@
           "scanned": 64
         },
         "selection": {
-          "at": 100000,
-          "contains": 1,
-          "indexOf": 0
+          "at": 0,
+          "contains": 0,
+          "indexOf": 1
         },
         "grid": {
           "eligibleCalls": 32,
-          "scanned": 32
+          "scanned": 32,
+          "viewsCached": true,
+          "domainEntries": 100000
         },
         "tree": {
           "expansionReads": 64,
-          "visibleEntries": 129
+          "visibleEntries": 129,
+          "viewsCached": true,
+          "rootIntervalEntries": 100000
         },
         "text": {
           "inspectedUpperBound": 100001,

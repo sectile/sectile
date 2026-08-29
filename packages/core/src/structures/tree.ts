@@ -25,6 +25,11 @@ export interface TreeOptions extends ResourceCeilings {
   readonly maxDepth?: number;
 }
 
+export interface TreeSubtreeInterval {
+  readonly start: number;
+  readonly endExclusive: number;
+}
+
 export interface Tree<ID extends StableID = StableID> {
   readonly size: number;
   readonly roots: Sequence<ID>;
@@ -34,6 +39,7 @@ export interface Tree<ID extends StableID = StableID> {
   isLeaf(id: ID): boolean | null;
   depthOf(id: ID): number | null;
   ancestorsOf(id: ID): readonly ID[] | null;
+  subtreeIntervalOf(id: ID): TreeSubtreeInterval | null;
   preorder(): Sequence<ID>;
   postorder(): Sequence<ID>;
   normalizeExpansion(expanded: Iterable<ID>): Expansion<ID>;
@@ -73,6 +79,11 @@ class IndexedTree<ID extends StableID> implements Tree<ID> {
   readonly #depth: ReadonlyMap<ID, number>;
   readonly #preorder: readonly ID[];
   readonly #postorder: readonly ID[];
+  readonly #preorderIndex: ReadonlyMap<ID, number>;
+  readonly #subtreeEnds: readonly number[];
+  readonly #childViews = new Map<ID, Sequence<ID>>();
+  readonly #preorderView: Sequence<ID>;
+  #postorderView: Sequence<ID> | null = null;
 
   public constructor(
     roots: readonly ID[],
@@ -81,6 +92,8 @@ class IndexedTree<ID extends StableID> implements Tree<ID> {
     depth: ReadonlyMap<ID, number>,
     preorder: readonly ID[],
     postorder: readonly ID[],
+    preorderIndex: ReadonlyMap<ID, number>,
+    subtreeEnds: readonly number[],
   ) {
     this.size = preorder.length;
     this.roots = new IndexedSequence(roots) as SequenceView<ID>;
@@ -89,6 +102,14 @@ class IndexedTree<ID extends StableID> implements Tree<ID> {
     this.#depth = depth;
     this.#preorder = freezeArray(preorder);
     this.#postorder = freezeArray(postorder);
+    this.#preorderIndex = preorderIndex;
+    this.#subtreeEnds = freezeArray(subtreeEnds);
+    this.#preorderView = new IndexedSequence(
+      this.#preorder,
+      100_000,
+      DEFAULT_MAX_ID_CODE_UNITS,
+      preorderIndex,
+    ) as SequenceView<ID>;
     Object.freeze(this);
   }
 
@@ -102,7 +123,12 @@ class IndexedTree<ID extends StableID> implements Tree<ID> {
 
   public childrenOf(id: ID): Sequence<ID> | null {
     const children = this.#children.get(id);
-    return children === undefined ? null : (new IndexedSequence(children) as SequenceView<ID>);
+    if (children === undefined) return null;
+    const cached = this.#childViews.get(id);
+    if (cached !== undefined) return cached;
+    const view = new IndexedSequence(children) as SequenceView<ID>;
+    this.#childViews.set(id, view);
+    return view;
   }
 
   public isLeaf(id: ID): boolean | null {
@@ -125,12 +151,21 @@ class IndexedTree<ID extends StableID> implements Tree<ID> {
     return freezeArray(result);
   }
 
+  public subtreeIntervalOf(id: ID): TreeSubtreeInterval | null {
+    const start = this.#preorderIndex.get(id);
+    if (start === undefined) return null;
+    return Object.freeze({ start, endExclusive: this.#subtreeEnds[start]! });
+  }
+
   public preorder(): Sequence<ID> {
-    return new IndexedSequence(this.#preorder) as SequenceView<ID>;
+    return this.#preorderView;
   }
 
   public postorder(): Sequence<ID> {
-    return new IndexedSequence(this.#postorder) as SequenceView<ID>;
+    if (this.#postorderView === null) {
+      this.#postorderView = new IndexedSequence(this.#postorder) as SequenceView<ID>;
+    }
+    return this.#postorderView;
   }
 
   public normalizeExpansion(expanded: Iterable<ID>): Expansion<ID> {
@@ -247,6 +282,8 @@ export function tryCreateTree<ID extends StableID>(
   const depth = new Map<ID, number>();
   const preorder: ID[] = [];
   const postorder: ID[] = [];
+  const preorderIndex = new Map<ID, number>();
+  const subtreeEnds: number[] = [];
   for (const root of roots) {
     const stack: TraversalFrame<ID>[] = [{ id: root, depth: 0, nextChild: 0 }];
     while (stack.length > 0) {
@@ -272,6 +309,7 @@ export function tryCreateTree<ID extends StableID>(
         }
         marks.set(frame.id, 1);
         depth.set(frame.id, frame.depth);
+        preorderIndex.set(frame.id, preorder.length);
         preorder.push(frame.id);
       }
 
@@ -293,6 +331,7 @@ export function tryCreateTree<ID extends StableID>(
 
       marks.set(frame.id, 2);
       postorder.push(frame.id);
+      subtreeEnds[preorderIndex.get(frame.id)!] = preorder.length;
       stack.pop();
     }
   }
@@ -306,7 +345,16 @@ export function tryCreateTree<ID extends StableID>(
 
   const children = new Map<ID, readonly ID[]>();
   for (const [id, values] of childrenMutable) children.set(id, freezeArray(values));
-  return ok(new IndexedTree(roots, parent, children, depth, preorder, postorder));
+  return ok(new IndexedTree(
+    roots,
+    parent,
+    children,
+    depth,
+    preorder,
+    postorder,
+    preorderIndex,
+    subtreeEnds,
+  ));
 }
 
 function isExpansion<ID extends StableID>(value: Expansion<ID> | Iterable<ID>): value is Expansion<ID> {

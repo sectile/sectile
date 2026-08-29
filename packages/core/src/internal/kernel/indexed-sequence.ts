@@ -41,7 +41,7 @@ export type IndexedSequencePatch<ID extends StableID> =
       readonly count: number;
     };
 
-const MAX_PATCH_DEPTH = 64;
+const MAX_PATCH_DEPTH = 32;
 
 export class IndexedSequence<ID extends StableID> implements SequenceView<ID> {
   public readonly ids: readonly ID[];
@@ -53,11 +53,21 @@ export class IndexedSequence<ID extends StableID> implements SequenceView<ID> {
     ids: readonly ID[],
     maxItems = 100_000,
     maxIDCodeUnits = 1_024,
+    index?: ReadonlyMap<ID, number>,
   ) {
-    this.ids = freezeArray(ids);
+    this.ids = Object.isFrozen(ids) ? ids : freezeArray(ids);
     this.maxItems = maxItems;
     this.maxIDCodeUnits = maxIDCodeUnits;
-    this.#index = new Map(this.ids.map((id, index) => [id, index]));
+    if (index === undefined) {
+      const built = new Map<ID, number>();
+      for (let position = 0; position < this.ids.length; position += 1) {
+        const id = this.ids[position];
+        if (id !== undefined) built.set(id, position);
+      }
+      this.#index = built;
+    } else {
+      this.#index = index;
+    }
     Object.freeze(this);
   }
 
@@ -100,7 +110,7 @@ export class IndexedSequence<ID extends StableID> implements SequenceView<ID> {
     boundary: BoundaryPolicy = 'stop',
     options: ScanOptions<ID> = {},
   ): MoveResult<ID> {
-    return moveInSequence(this.ids, this.#index, current, direction, boundary, options);
+    return moveInSequence(this, current, direction, boundary, options);
   }
 }
 
@@ -119,6 +129,7 @@ export class PatchedSequence<ID extends StableID> implements SequenceView<ID> {
     patch: IndexedSequencePatch<ID>,
     maxItems: number,
     maxIDCodeUnits: number,
+    insertedIndex?: ReadonlyMap<ID, number>,
   ) {
     this.#parent = parent instanceof PatchedSequence && parent.depth >= MAX_PATCH_DEPTH
       ? new IndexedSequence(parent.ids, parent.maxItems, parent.maxIDCodeUnits)
@@ -130,24 +141,37 @@ export class PatchedSequence<ID extends StableID> implements SequenceView<ID> {
     this.maxItems = maxItems;
     this.maxIDCodeUnits = maxIDCodeUnits;
     this.depth = this.#parent instanceof PatchedSequence ? this.#parent.depth + 1 : 1;
-    this.#insertedIndex = patch.type === 'splice'
-      ? new Map(patch.inserted.map((id, index) => [id, index]))
-      : null;
+    if (patch.type === 'splice') {
+      if (insertedIndex !== undefined) this.#insertedIndex = insertedIndex;
+      else {
+        const built = new Map<ID, number>();
+        for (let index = 0; index < patch.inserted.length; index += 1) {
+          const id = patch.inserted[index];
+          if (id !== undefined) built.set(id, index);
+        }
+        this.#insertedIndex = built;
+      }
+    } else this.#insertedIndex = null;
     Object.freeze(this);
   }
 
   public get ids(): readonly ID[] {
     if (this.#materialized !== null) return this.#materialized;
-    const ids = [...this.#parent.ids];
-    if (this.#patch.type === 'splice') {
-      ids.splice(
-        this.#patch.index,
-        this.#patch.deleteCount,
-        ...this.#patch.inserted,
-      );
-    } else if (this.#patch.count > 0 && this.#patch.from !== this.#patch.to) {
-      const moved = ids.splice(this.#patch.from, this.#patch.count);
-      ids.splice(this.#patch.to, 0, ...moved);
+    const patches: IndexedSequencePatch<ID>[] = [];
+    let base: SequenceView<ID> = this;
+    while (base instanceof PatchedSequence) {
+      patches.push(base.#patch);
+      base = base.#parent;
+    }
+    const ids = [...base.ids];
+    for (let index = patches.length - 1; index >= 0; index -= 1) {
+      const patch = patches[index];
+      if (patch?.type === 'splice') {
+        ids.splice(patch.index, patch.deleteCount, ...patch.inserted);
+      } else if (patch !== undefined && patch.count > 0 && patch.from !== patch.to) {
+        const moved = ids.splice(patch.from, patch.count);
+        ids.splice(patch.to, 0, ...moved);
+      }
     }
     this.#materialized = Object.freeze(ids);
     return this.#materialized;
@@ -205,14 +229,7 @@ export class PatchedSequence<ID extends StableID> implements SequenceView<ID> {
     boundary: BoundaryPolicy = 'stop',
     options: ScanOptions<ID> = {},
   ): MoveResult<ID> {
-    return moveInSequence(
-      this.ids,
-      null,
-      current,
-      direction,
-      boundary,
-      options,
-    );
+    return moveInSequence(this, current, direction, boundary, options);
   }
 }
 
@@ -248,15 +265,14 @@ function movedIndex<ID extends StableID>(
 }
 
 export function moveInSequence<ID extends StableID>(
-  ids: readonly ID[],
-  index: ReadonlyMap<ID, number> | null,
+  sequence: Pick<SequenceView<ID>, 'size' | 'at' | 'indexOf'>,
   current: ID,
   direction: Direction,
   boundary: BoundaryPolicy,
   options: ScanOptions<ID>,
 ): MoveResult<ID> {
-  const currentIndex = index === null ? ids.indexOf(current) : index.get(current);
-  if (currentIndex === undefined || currentIndex < 0) return { kind: 'none', scanned: 0 };
+  const currentIndex = sequence.indexOf(current);
+  if (currentIndex === null) return { kind: 'none', scanned: 0 };
   if (direction !== -1 && direction !== 1) return invalidMovement('invalid-direction');
   if (boundary !== 'stop' && boundary !== 'wrap') return invalidMovement('invalid-boundary');
 
@@ -265,15 +281,15 @@ export function moveInSequence<ID extends StableID>(
     return { kind: 'resource-rejected', scanned: 0, error: normalized };
   }
   const eligible = options.eligible ?? (() => true);
-  const size = ids.length;
+  const size = sequence.size;
   let scanned = 0;
   let candidateIndex = currentIndex + direction;
 
   while (candidateIndex >= 0 && candidateIndex < size) {
     if (scanned === normalized) return scanRejected(scanned, normalized);
-    const candidate = ids[candidateIndex];
+    const candidate = sequence.at(candidateIndex);
     scanned += 1;
-    if (candidate !== undefined && eligible(candidate)) {
+    if (candidate !== null && eligible(candidate)) {
       return { kind: 'found', id: candidate, scanned };
     }
     candidateIndex += direction;
@@ -283,9 +299,9 @@ export function moveInSequence<ID extends StableID>(
     candidateIndex = direction > 0 ? 0 : size - 1;
     while (candidateIndex !== currentIndex) {
       if (scanned === normalized) return scanRejected(scanned, normalized);
-      const candidate = ids[candidateIndex];
+      const candidate = sequence.at(candidateIndex);
       scanned += 1;
-      if (candidate !== undefined && eligible(candidate)) {
+      if (candidate !== null && eligible(candidate)) {
         return { kind: 'found', id: candidate, scanned };
       }
       candidateIndex += direction;

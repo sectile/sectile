@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "515a29822522b32ec4256f0b41685ece4d69cee27e8185bcbb8e821c07ca9877",
+    "publicSignatureFingerprint": "5ac87a37991e3ba2a245d7947af6fc5badeafb7929f6b7e5ceab30e7c2894952",
     "subpaths": [
       ".",
       "./accordion",
@@ -511,7 +511,7 @@
     }
   ],
   "acceptance": {
-    "classification": "breaking",
-    "reason": "WI-030 splits GridControl declarations from the pure Grid structure into @sectile/core/grid-control."
+    "classification": "type-change-reviewed",
+    "reason": "WI-014-adds-cached-grid-domain-and-half-open-tree-subtree-observations-with-reviewed-type-closure"
   }
 }

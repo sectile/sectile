@@ -8,7 +8,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 254 | 25 | 17 |
+| core | 254 | 25 | 19 |
 | dom | 432 | 190 | 5 |
 | form | 12 | 0 | 2 |
 | tabular | 31 | 0 | 4 |
@@ -31,19 +31,21 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:adapter.controller-handle | trusted | `O(cCommand)` worst-case | `O(cCommand)` | `O(cCommand)` | `O(cCommand)` | forbidden | VAL-016, VAL-017 |
 | core:adapter.facade-destroy | connected | `O(pSubscriber + rResource)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:adapter.facade-subscribe | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| core:grid.domain | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(n)` | forbidden | VAL-016, VAL-017 |
 | core:grid.move | trusted | `O(sAxis)` expected | `O(1)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | core:grid.position | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
-| core:grid.view | trusted | `O(sAxis + k)` expected | `O(sAxis)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
+| core:grid.view | trusted | `O(sAxis + k)` worst-case | `O(sAxis)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
 | core:range.arithmetic | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
-| core:selection.toggle | trusted | `O(nDomain + sSelected)` expected | `O(sSelected)` | `O(sSelected)` | `O(sSelected)` | allowed | VAL-016, VAL-017 |
+| core:selection.toggle | trusted | `O(sSelected + log nDomain)` expected | `O(sSelected)` | `O(sSelected)` | `O(sSelected)` | forbidden | VAL-016, VAL-017 |
 | core:sequence.at | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
-| core:sequence.construct | external | `O(n + k)` expected | `O(n)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
+| core:sequence.construct | external | `O(n + k)` expected | `O(n)` | `O(n)` | `O(n)` | allowed | VAL-016, VAL-017 |
 | core:sequence.index-of | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
-| core:sequence.materialize | external | `O(n + k)` worst-case | `O(n)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
+| core:sequence.materialize | external | `O(n + k)` worst-case | `O(n + dPatch)` | `O(n + k)` | `O(n + k)` | allowed | VAL-016, VAL-017 |
 | core:sequence.patch-lookup | trusted | `O(dPatch)` expected | `O(dPatch)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:text.replace | external | `O(nText + nInsert)` worst-case | `O(nText + nInsert)` | `O(nText + nInsert)` | `O(nText + nInsert)` | allowed | VAL-016, VAL-017 |
 | core:tree.construct | external | `O(n + k)` expected | `O(n)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
-| core:tree.views | external | `O(n + k)` worst-case | `O(n)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
+| core:tree.subtree-interval | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(n)` | forbidden | VAL-016, VAL-017 |
+| core:tree.views | trusted | `O(n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | VAL-016, VAL-017 |
 | core:tree.visible | external | `O(n + k)` expected | `O(n)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
 | dom:position.connect | connected | `O(aDom)` worst-case | `O(aDom)` | `O(1)` | `O(aDom)` | forbidden | VAL-016, VAL-017 |
 | dom:position.disconnect | connected | `O(aDom)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
@@ -78,9 +80,9 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Scale | Sequence predicate calls | Selection domain `at` calls | Grid scan/callbacks | Tree expansion reads | Text output code units |
 |---:|---:|---:|---:|---:|---:|
-| 1000 | 1000 | 1000 | 32/32 | 64 | 1000 |
-| 10000 | 10000 | 10000 | 32/32 | 64 | 10000 |
-| 100000 | 100000 | 100000 | 32/32 | 64 | 100000 |
+| 1000 | 1000 | 0 | 32/32 | 64 | 1000 |
+| 10000 | 10000 | 0 | 32/32 | 64 | 10000 |
+| 100000 | 100000 | 0 | 32/32 | 64 | 100000 |
 
 Host resource witness: 1 reducer call, 1 effect projection, 2 notifications, 0 retained subscriptions, 1 disconnect.
 

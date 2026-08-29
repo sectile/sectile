@@ -40,6 +40,7 @@ export interface Grid<ID extends StableID = StableID> {
   readonly size: number;
   cellAt(row: number, column: number): ID | null;
   positionOf(id: ID): GridPosition | null;
+  domain(): Sequence<ID>;
   row(row: number): Sequence<ID> | null;
   column(column: number): Sequence<ID> | null;
   move(
@@ -56,17 +57,22 @@ class IndexedGrid<ID extends StableID> implements Grid<ID> {
   public readonly size: number;
   readonly #cells: readonly (ID | null)[];
   readonly #positions: ReadonlyMap<ID, GridPosition>;
+  readonly #domainView: Sequence<ID>;
+  readonly #rowViews = new Map<number, Sequence<ID>>();
+  readonly #columnViews = new Map<number, Sequence<ID>>();
 
   public constructor(
     rowCount: number,
     columnCount: number,
     cells: readonly (ID | null)[],
     positions: ReadonlyMap<ID, GridPosition>,
+    domainIDs: readonly ID[],
   ) {
     this.rowCount = rowCount;
     this.columnCount = columnCount;
     this.#cells = freezeArray(cells);
     this.#positions = positions;
+    this.#domainView = new IndexedSequence(domainIDs) as SequenceView<ID>;
     this.size = positions.size;
     Object.freeze(this);
   }
@@ -89,24 +95,36 @@ class IndexedGrid<ID extends StableID> implements Grid<ID> {
     return this.#positions.get(id) ?? null;
   }
 
+  public domain(): Sequence<ID> {
+    return this.#domainView;
+  }
+
   public row(row: number): Sequence<ID> | null {
     if (!Number.isSafeInteger(row) || row < 0 || row >= this.rowCount) return null;
+    const cached = this.#rowViews.get(row);
+    if (cached !== undefined) return cached;
     const ids: ID[] = [];
     for (let column = 0; column < this.columnCount; column += 1) {
       const id = this.cellAt(row, column);
       if (id !== null) ids.push(id);
     }
-    return new IndexedSequence(ids) as SequenceView<ID>;
+    const view = new IndexedSequence(ids) as SequenceView<ID>;
+    this.#rowViews.set(row, view);
+    return view;
   }
 
   public column(column: number): Sequence<ID> | null {
     if (!Number.isSafeInteger(column) || column < 0 || column >= this.columnCount) return null;
+    const cached = this.#columnViews.get(column);
+    if (cached !== undefined) return cached;
     const ids: ID[] = [];
     for (let row = 0; row < this.rowCount; row += 1) {
       const id = this.cellAt(row, column);
       if (id !== null) ids.push(id);
     }
-    return new IndexedSequence(ids) as SequenceView<ID>;
+    const view = new IndexedSequence(ids) as SequenceView<ID>;
+    this.#columnViews.set(column, view);
+    return view;
   }
 
   public move(
@@ -233,6 +251,7 @@ export function tryCreateGrid<ID extends StableID>(
 
   const cells: (ID | null)[] = Array.from({ length: cellCount }, () => null);
   const positions = new Map<ID, GridPosition>();
+  const domainIDs: ID[] = [];
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
     const row = rows[rowIndex] ?? [];
     for (let column = 0; column < row.length; column += 1) {
@@ -254,10 +273,11 @@ export function tryCreateGrid<ID extends StableID>(
       }
       const position = Object.freeze({ row: rowIndex, column });
       positions.set(id, position);
+      domainIDs.push(id);
       cells[rowIndex * columnCount + column] = id;
     }
   }
-  return ok(new IndexedGrid(rows.length, columnCount, cells, positions));
+  return ok(new IndexedGrid(rows.length, columnCount, cells, positions, domainIDs));
 }
 
 function gridScanRejected<ID extends StableID>(scanned: number, maxScan: number): MoveResult<ID> {

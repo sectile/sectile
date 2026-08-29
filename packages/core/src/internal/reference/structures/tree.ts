@@ -1,4 +1,4 @@
-import type { Expansion, Tree } from '../../../structures/tree.js';
+import type { Expansion, Tree, TreeSubtreeInterval } from '../../../structures/tree.js';
 import type { StableID } from '../../../shared.js';
 import { freezeArray } from '../../kernel/foundation.js';
 import { ReferenceSequence } from './sequence.js';
@@ -58,6 +58,15 @@ export class ReferenceTree<ID extends StableID> implements Tree<ID> {
     let parent = this.parentOf(id);
     while (parent !== null) { result.push(parent); parent = this.parentOf(parent); }
     return freezeArray(result);
+  }
+  public subtreeIntervalOf(id: ID): TreeSubtreeInterval | null {
+    if (!this.has(id)) return null;
+    const preorder = this.preorder().ids;
+    const start = preorder.indexOf(id);
+    const depth = this.depthOf(id)!;
+    let end = start + 1;
+    while (end < preorder.length && this.depthOf(preorder[end]!)! > depth) end += 1;
+    return Object.freeze({ start, endExclusive: end });
   }
   public preorder(): ReferenceSequence<ID> {
     const children = this.childrenTable();

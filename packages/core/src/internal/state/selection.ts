@@ -24,11 +24,20 @@ class ImmutableSelectionState<ID extends StableID> implements SelectionState<ID>
   public readonly selected: readonly ID[];
   public readonly anchor: ID | null;
   readonly #selected: ReadonlySet<ID>;
+  readonly #domain: SelectionDomain<ID> | null;
+  readonly #indexes: readonly number[];
 
-  public constructor(selected: readonly ID[], anchor: ID | null) {
-    this.selected = freezeArray(selected);
+  public constructor(
+    selected: readonly ID[],
+    indexes: readonly number[],
+    anchor: ID | null,
+    domain: SelectionDomain<ID> | null,
+  ) {
+    this.selected = Object.isFrozen(selected) ? selected : freezeArray(selected);
     this.anchor = anchor;
     this.#selected = new Set(this.selected);
+    this.#domain = domain;
+    this.#indexes = Object.isFrozen(indexes) ? indexes : freezeArray(indexes);
     Object.freeze(this);
   }
 
@@ -38,6 +47,10 @@ class ImmutableSelectionState<ID extends StableID> implements SelectionState<ID>
 
   public has(id: ID): boolean {
     return this.#selected.has(id);
+  }
+
+  public indexesFor(domain: SelectionDomain<ID>): readonly number[] | null {
+    return this.#domain === domain ? this.#indexes : null;
   }
 }
 
@@ -61,8 +74,10 @@ export function createSelectionState<ID extends StableID>(
       { selectedCount: requested.size },
     );
   }
+  const indexed: Array<readonly [number, ID]> = [];
   for (const id of requested) {
-    if (!domain.contains(id)) {
+    const index = domain.indexOf(id);
+    if (index === null) {
       return fail(
         'construction',
         'selected-id-outside-domain',
@@ -70,6 +85,7 @@ export function createSelectionState<ID extends StableID>(
         { id },
       );
     }
+    indexed.push([index, id]);
   }
 
   const anchor = input.anchor ?? null;
@@ -81,7 +97,7 @@ export function createSelectionState<ID extends StableID>(
       { anchor },
     );
   }
-  return ok(selectionFromSet(domain, requested, anchor));
+  return ok(selectionFromIndexed(domain, indexed, anchor));
 }
 
 export function reconcileSelection<ID extends StableID>(
@@ -108,11 +124,13 @@ export function reconcileSelection<ID extends StableID>(
     );
   }
 
+  const indexed: Array<readonly [number, ID]> = [];
   for (const id of selected) {
-    if (!domain.contains(id)) selected.delete(id);
+    const index = domain.indexOf(id);
+    if (index !== null) indexed.push([index, id]);
   }
   const anchor = state.anchor !== null && domain.contains(state.anchor) ? state.anchor : null;
-  const result = selectionFromSet(domain, selected, anchor);
+  const result = selectionFromIndexed(domain, indexed, anchor);
   return ok(sameSelection(state, result) ? state : result);
 }
 
@@ -121,9 +139,10 @@ export function selectOne<ID extends StableID>(
   id: ID,
   domain: SelectionDomain<ID>,
 ): SelectionState<ID> {
-  if (!domain.contains(id)) return state;
+  const index = domain.indexOf(id);
+  if (index === null) return state;
   if (state.size === 1 && state.has(id) && state.anchor === id) return state;
-  return new ImmutableSelectionState([id], id);
+  return new ImmutableSelectionState([id], [index], id, domain);
 }
 
 export function toggleMultipleSelection<ID extends StableID>(
@@ -131,11 +150,25 @@ export function toggleMultipleSelection<ID extends StableID>(
   id: ID,
   domain: SelectionDomain<ID>,
 ): SelectionState<ID> {
-  if (!domain.contains(id)) return state;
-  const selected = new Set(state.selected);
-  if (selected.has(id)) selected.delete(id);
-  else selected.add(id);
-  return selectionFromSet(domain, selected, id);
+  const domainIndex = domain.indexOf(id);
+  if (domainIndex === null) return state;
+  const canonical = canonicalSelection(state, domain);
+  const position = lowerBound(canonical.indexes, domainIndex);
+  const selected = [...canonical.selected];
+  const indexes = [...canonical.indexes];
+  if (indexes[position] === domainIndex) {
+    selected.splice(position, 1);
+    indexes.splice(position, 1);
+  } else {
+    selected.splice(position, 0, id);
+    indexes.splice(position, 0, domainIndex);
+  }
+  return new ImmutableSelectionState(
+    Object.freeze(selected),
+    Object.freeze(indexes),
+    id,
+    domain,
+  );
 }
 
 export function clearSelection<ID extends StableID>(
@@ -143,7 +176,7 @@ export function clearSelection<ID extends StableID>(
 ): SelectionState<ID> {
   return state.size === 0 && state.anchor === null
     ? state
-    : new ImmutableSelectionState([], null);
+    : new ImmutableSelectionState(Object.freeze([]), Object.freeze([]), null, null);
 }
 
 export function selectInterval<ID extends StableID>(
@@ -157,27 +190,83 @@ export function selectInterval<ID extends StableID>(
   const extentIndex = domain.indexOf(extent);
   if (anchorIndex === null || extentIndex === null) return state;
 
-  const selected = additive ? new Set(state.selected) : new Set<ID>();
   const start = Math.min(anchorIndex, extentIndex);
   const end = Math.max(anchorIndex, extentIndex);
+  const range: Array<readonly [number, ID]> = [];
   for (let index = start; index <= end; index += 1) {
     const id = domain.at(index);
-    if (id !== null) selected.add(id);
+    if (id !== null) range.push([index, id]);
   }
-  return selectionFromSet(domain, selected, anchor);
+  if (!additive) return selectionFromIndexed(domain, range, anchor);
+
+  const canonical = canonicalSelection(state, domain);
+  const selected: ID[] = [];
+  const indexes: number[] = [];
+  let existingPosition = 0;
+  let rangePosition = 0;
+  while (existingPosition < canonical.indexes.length || rangePosition < range.length) {
+    const existingIndex = canonical.indexes[existingPosition] ?? Number.POSITIVE_INFINITY;
+    const rangeEntry = range[rangePosition];
+    const rangeIndex = rangeEntry?.[0] ?? Number.POSITIVE_INFINITY;
+    if (existingIndex < rangeIndex) {
+      indexes.push(existingIndex);
+      selected.push(canonical.selected[existingPosition]!);
+      existingPosition += 1;
+    } else {
+      indexes.push(rangeIndex);
+      selected.push(rangeEntry![1]);
+      rangePosition += 1;
+      if (existingIndex === rangeIndex) existingPosition += 1;
+    }
+  }
+  return new ImmutableSelectionState(
+    Object.freeze(selected),
+    Object.freeze(indexes),
+    anchor,
+    domain,
+  );
 }
 
-function selectionFromSet<ID extends StableID>(
+function selectionFromIndexed<ID extends StableID>(
   domain: SelectionDomain<ID>,
-  selected: ReadonlySet<ID>,
+  indexed: readonly (readonly [number, ID])[],
   anchor: ID | null,
 ): SelectionState<ID> {
-  const ordered: ID[] = [];
-  for (let index = 0; index < domain.size; index += 1) {
-    const id = domain.at(index);
-    if (id !== null && selected.has(id)) ordered.push(id);
+  const sorted = [...indexed].sort((left, right) => left[0] - right[0]);
+  const indexes = Object.freeze(sorted.map((entry) => entry[0]));
+  const selected = Object.freeze(sorted.map((entry) => entry[1]));
+  return new ImmutableSelectionState(selected, indexes, anchor, domain);
+}
+
+function canonicalSelection<ID extends StableID>(
+  state: SelectionState<ID>,
+  domain: SelectionDomain<ID>,
+): { readonly selected: readonly ID[]; readonly indexes: readonly number[] } {
+  if (state instanceof ImmutableSelectionState) {
+    const indexes = state.indexesFor(domain);
+    if (indexes !== null) return { selected: state.selected, indexes };
   }
-  return new ImmutableSelectionState(ordered, anchor);
+  const indexed: Array<readonly [number, ID]> = [];
+  for (const id of new Set(state.selected)) {
+    const index = domain.indexOf(id);
+    if (index !== null) indexed.push([index, id]);
+  }
+  indexed.sort((left, right) => left[0] - right[0]);
+  return {
+    selected: indexed.map((entry) => entry[1]),
+    indexes: indexed.map((entry) => entry[0]),
+  };
+}
+
+function lowerBound(values: readonly number[], target: number): number {
+  let low = 0;
+  let high = values.length;
+  while (low < high) {
+    const middle = low + Math.floor((high - low) / 2);
+    if ((values[middle] ?? Number.POSITIVE_INFINITY) < target) low = middle + 1;
+    else high = middle;
+  }
+  return low;
 }
 
 function sameSelection<ID extends StableID>(

@@ -56,6 +56,22 @@
       }
     },
     {
+      "id": "grid.domain",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/grid.ts",
+      "benchmarkIDs": ["core:grid:views:1000", "core:grid:views:10000", "core:grid:views:100000"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "occupied grid identity cardinality", "ceiling": "maxItems" }],
+        "time": { "bound": "O(1)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(n)" },
+        "resources": { "allocations": "0", "cacheEntries": "O(n)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Construction retains one row-major indexed domain view; every observation returns that same immutable owner.",
+        "adversarialWitness": "Repeated domain reads on a maximum-size grid preserve object identity and perform no cell visits.",
+        "fullScan": { "allowed": false, "rationale": "The domain is indexed once during construction." }
+      }
+    },
+    {
       "id": "grid.move",
       "inherits": "linear-v1",
       "source": "packages/core/src/structures/grid.ts",
@@ -90,12 +106,12 @@
           { "name": "sAxis", "meaning": "requested row or column cell count", "ceiling": "axis length" },
           { "name": "k", "meaning": "occupied identities emitted", "ceiling": "k <= sAxis" }
         ],
-        "time": { "bound": "O(sAxis + k)", "kind": "expected", "runtimeState": "trusted" },
+        "time": { "bound": "O(sAxis + k)", "kind": "worst-case", "runtimeState": "trusted" },
         "space": { "auxiliary": "O(sAxis)", "output": "O(k)", "retained": "O(k)" },
         "resources": { "allocations": "O(sAxis + k)", "cacheEntries": "O(k)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "proof": "The incumbent row/column view visits the selected axis and constructs a fresh indexed sequence for occupied identities.",
-        "adversarialWitness": "A fully occupied maximum-length axis emits and indexes every cell.",
-        "fullScan": { "allowed": true, "rationale": "The requested output contains every occupied identity on that one axis; cached reuse is owned by WI-014." }
+        "proof": "The first row/column read scans one axis and retains one immutable indexed view; every repeated read of that coordinate is O(1) with zero allocation.",
+        "adversarialWitness": "The first fully occupied maximum-length axis read emits every cell; a repeated read returns the identical view.",
+        "fullScan": { "allowed": true, "rationale": "Only the first requested axis read is scanned and its output contains every occupied identity on that axis." }
       }
     },
     {
@@ -117,18 +133,18 @@
       "inherits": "linear-v1",
       "source": "packages/core/src/internal/state/selection.ts",
       "benchmarkIDs": ["core:selection:toggle:1000", "core:selection:toggle:10000", "core:selection:toggle:100000"],
-      "specificationCeiling": "O(nDomain)",
+      "specificationCeiling": "O(sSelected + log nDomain)",
       "contract": {
         "variables": [
           { "name": "nDomain", "meaning": "selection domain cardinality", "ceiling": "maxItems" },
           { "name": "sSelected", "meaning": "selected identity cardinality", "ceiling": "sSelected <= nDomain" }
         ],
-        "time": { "bound": "O(nDomain + sSelected)", "kind": "expected", "runtimeState": "trusted" },
+        "time": { "bound": "O(sSelected + log nDomain)", "kind": "expected", "runtimeState": "trusted" },
         "space": { "auxiliary": "O(sSelected)", "output": "O(sSelected)", "retained": "O(sSelected)" },
-        "resources": { "allocations": "O(nDomain + sSelected)", "cacheEntries": "O(sSelected)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "proof": "The current implementation copies selected IDs then restores canonical order by visiting every domain position.",
-        "adversarialWitness": "A 100k domain with one selected ID still performs nDomain at-calls.",
-        "fullScan": { "allowed": true, "rationale": "Recorded incumbent weakness owned by WI-014/WI-020; it may not worsen before migration." }
+        "resources": { "allocations": "O(sSelected)", "cacheEntries": "O(sSelected)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Canonical state retains ordered domain indexes; toggle performs one domain index lookup, binary search, and immutable selected-vector copy without a domain scan.",
+        "adversarialWitness": "A 100k domain with one selected ID performs one indexOf call and zero at/contains calls.",
+        "fullScan": { "allowed": false, "rationale": "Selection work is proportional to selected output, never unselected domain cardinality." }
       }
     },
     {
@@ -146,7 +162,9 @@
       "specificationCeiling": "O(n)",
       "contract": {
         "time": { "bound": "O(n + k)", "kind": "expected", "runtimeState": "external" },
-        "proof": "Validation and stable-ID indexing visit each input identity a bounded number of times.",
+        "space": { "auxiliary": "O(n)", "output": "O(n)", "retained": "O(n)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "O(n)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "One pass validates identities while building the sole frozen snapshot and index; construction performs no second snapshot copy or intermediate tuple vector.",
         "adversarialWitness": "A maximum-size unique identity vector reaches the final validation/index entry.",
         "fullScan": { "allowed": true, "rationale": "Unique validation and index construction have a linear lower bound." }
       }
@@ -166,8 +184,16 @@
       "benchmarkIDs": ["core:sequence:materialize:100000:1", "core:sequence:materialize:100000:64"],
       "specificationCeiling": "O(n)",
       "contract": {
+        "variables": [
+          { "name": "n", "meaning": "indexed base cardinality", "ceiling": "maxItems" },
+          { "name": "k", "meaning": "materialized inserted identity cardinality", "ceiling": "k <= n" },
+          { "name": "dPatch", "meaning": "retained patch overlay depth", "ceiling": "dPatch <= 32" }
+        ],
+        "assumptions": ["retained patch depth is compacted at 32 overlays"],
         "time": { "bound": "O(n + k)", "kind": "worst-case", "runtimeState": "external" },
-        "proof": "Materialization copies the parent vector once and applies the retained patch.",
+        "space": { "auxiliary": "O(n + dPatch)", "output": "O(n + k)", "retained": "O(n + k)" },
+        "resources": { "allocations": "O(n + dPatch)", "cacheEntries": "O(n + k)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Materialization walks at most 32 metadata overlays, copies the indexed base vector once, applies patches in order, and caches the one frozen result; no parent vector is recursively materialized.",
         "adversarialWitness": "A depth-64 patched 100k sequence requests the full ids projection.",
         "fullScan": { "allowed": true, "rationale": "Explicit full ordered output requires n entries." }
       }
@@ -179,12 +205,12 @@
       "benchmarkIDs": ["core:sequence:patch-lookup:100000:1", "core:sequence:patch-lookup:100000:64"],
       "specificationCeiling": "O(dPatch)",
       "contract": {
-        "variables": [{ "name": "dPatch", "meaning": "retained patch overlay depth", "ceiling": "dPatch <= 64" }],
+        "variables": [{ "name": "dPatch", "meaning": "retained patch overlay depth", "ceiling": "dPatch <= 32" }],
         "time": { "bound": "O(dPatch)", "kind": "expected", "runtimeState": "trusted" },
         "space": { "auxiliary": "O(dPatch)", "output": "O(1)", "retained": "O(1)" },
         "resources": { "allocations": "O(dPatch)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
         "proof": "Lookup translates through at most one retained patch per overlay depth before the indexed base lookup.",
-        "adversarialWitness": "A missing ID traverses every depth-64 overlay before the base map miss.",
+        "adversarialWitness": "A missing ID traverses every depth-32 overlay before the base map miss; the next patch compacts first.",
         "fullScan": { "allowed": false, "rationale": "Patch lookup may traverse bounded overlay depth, never domain cardinality." }
       }
     },
@@ -221,15 +247,34 @@
       }
     },
     {
+      "id": "tree.subtree-interval",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/tree.ts",
+      "benchmarkIDs": ["core:tree:views:1000", "core:tree:views:10000", "core:tree:views:100000"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "tree node cardinality retained by construction", "ceiling": "maxItems" }],
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(n)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "O(n)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Construction records one preorder index and numeric end boundary per node; lookup is one map access plus one array read and allocates only the returned pair.",
+        "adversarialWitness": "Root and deepest-leaf interval reads on a maximum-depth tree each perform one lookup.",
+        "fullScan": { "allowed": false, "rationale": "Subtree membership boundaries are retained during construction." }
+      }
+    },
+    {
       "id": "tree.views",
       "inherits": "linear-v1",
       "source": "packages/core/src/structures/tree.ts",
       "benchmarkIDs": ["core:tree:views:1000", "core:tree:views:10000", "core:tree:views:100000"],
       "specificationCeiling": "O(n)",
       "contract": {
-        "proof": "The incumbent preorder/postorder observation constructs a fresh indexed sequence from the retained traversal vector.",
-        "adversarialWitness": "Repeated preorder reads on a maximum-size tree reindex every retained node.",
-        "fullScan": { "allowed": true, "rationale": "Recorded incumbent repeated-view construction is owned by WI-014 and may not worsen." }
+        "time": { "bound": "O(n)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(n)", "output": "O(n)", "retained": "O(n)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "O(n)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The first child/preorder/postorder read builds one indexed immutable view; repeated reads return that same view in O(1) with zero allocation.",
+        "adversarialWitness": "A first maximum-size preorder read indexes every node, then repeated reads preserve object identity.",
+        "fullScan": { "allowed": true, "rationale": "Only first observation constructs the output-sized retained view." }
       }
     },
     {

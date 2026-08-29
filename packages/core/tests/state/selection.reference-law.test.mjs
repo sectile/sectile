@@ -235,6 +235,32 @@ test('controlled snapshots reject invalid state and selection never owns cursor 
   assert.equal('current' in state, false);
 });
 
+test('canonical sparse and dense toggles never scan unselected domain positions', () => {
+  const base = createSequence(Array.from({ length: 10_000 }, (_, index) => `id-${index}`));
+  for (const selected of [
+    ['id-0'],
+    base.ids.filter((_id, index) => index % 2 === 0),
+    base.ids,
+  ]) {
+    const calls = { at: 0, contains: 0, indexOf: 0 };
+    const domain = {
+      size: base.size,
+      at(index) { calls.at += 1; return base.at(index); },
+      contains(id) { calls.contains += 1; return base.contains(id); },
+      indexOf(id) { calls.indexOf += 1; return base.indexOf(id); },
+    };
+    const state = unwrap(createSelectionState(domain, 'multiple', { selected }));
+    calls.at = 0;
+    calls.contains = 0;
+    calls.indexOf = 0;
+    const toggled = toggleMultipleSelection(state, 'id-9999', domain);
+    assert.equal(calls.at, 0);
+    assert.equal(calls.contains, 0);
+    assert.equal(calls.indexOf, 1);
+    assert.equal(toggled.has('id-9999'), !state.has('id-9999'));
+  }
+});
+
 function observe(state) {
   return { selected: state.selected, anchor: state.anchor };
 }

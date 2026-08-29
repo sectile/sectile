@@ -251,7 +251,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "9fe5cb5a3e77723b213b54e620009d6710253d2c9662938cd5ddf63af5c9822c",
+  "fingerprint": "2639d8425e4631c3528c5935f85a466ef160f30b48258b1eb694262c143c2266",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -519,7 +519,7 @@
     },
     {
       "path": "dist/structures/grid.d.ts",
-      "sha256": "655bcfef2279eaca50ef8f38a2ed1daf65683772b3c8eba4bd206d8dc6a17922"
+      "sha256": "63ffff7ea4025a7024cf8beb65b27cf9e76b4520de04be1c42e445352d5ceb41"
     },
     {
       "path": "dist/structures/range.d.ts",
@@ -531,7 +531,7 @@
     },
     {
       "path": "dist/structures/tree.d.ts",
-      "sha256": "30ecd42c4b50f8aea5737368e3b58b7312233414aaa65bc70f4aa612af9f0ade"
+      "sha256": "3fb26d6ec8a0edf5a13cd2515e1abc9ea4f9c1658a270faf79cd4231594609ad"
     },
     {
       "path": "dist/switch.d.ts",

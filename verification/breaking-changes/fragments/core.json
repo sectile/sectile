@@ -32,12 +32,83 @@
         "subpath": "./tree-grid"
       },
       "symbols": [
-        "GridControl declaration closure"
+        "GridControl declaration closure",
+        "Tree declaration closure"
       ],
       "replacement": {
         "package": "@sectile/core",
         "subpath": "./grid-control"
       }
+    },
+    {
+      "id": "WI-014:root-structure-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "." },
+      "symbols": ["Grid.domain", "Tree.subtreeIntervalOf", "TreeSubtreeInterval"],
+      "replacement": { "package": "@sectile/core", "subpath": "." }
+    },
+    {
+      "id": "WI-014:cascade-list-tree-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./cascade-list" },
+      "symbols": ["Tree declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./cascade-list" }
+    },
+    {
+      "id": "WI-014:cascade-select-tree-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./cascade-select" },
+      "symbols": ["Tree declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./cascade-select" }
+    },
+    {
+      "id": "WI-014:menu-tree-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./menu" },
+      "symbols": ["Tree declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./menu" }
+    },
+    {
+      "id": "WI-014:menu-button-tree-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./menu-button" },
+      "symbols": ["Tree declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./menu-button" }
+    },
+    {
+      "id": "WI-014:menubar-tree-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./menubar" },
+      "symbols": ["Tree declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./menubar" }
+    },
+    {
+      "id": "WI-014:navigation-menu-tree-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./navigation-menu" },
+      "symbols": ["Tree declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./navigation-menu" }
+    },
+    {
+      "id": "WI-014:reorder-grid-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./reorder" },
+      "symbols": ["Grid declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./reorder" }
+    },
+    {
+      "id": "WI-014:tree-observations",
+      "change": "signature-changed",
+      "before": { "subpath": "./tree" },
+      "symbols": ["Tree.subtreeIntervalOf", "TreeSubtreeInterval"],
+      "replacement": { "package": "@sectile/core", "subpath": "./tree" }
+    },
+    {
+      "id": "WI-014:tree-view-tree-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./tree-view" },
+      "symbols": ["Tree declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./tree-view" }
     }
   ]
 }

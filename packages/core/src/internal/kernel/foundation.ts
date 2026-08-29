@@ -182,8 +182,10 @@ export function assertNever(value: never): never {
 export function validateUniqueIDs<ID extends StableID>(
   ids: readonly ID[],
   maxIDCodeUnits: number,
+  indexByID?: Map<ID, number>,
 ): Result<readonly ID[]> {
-  const seen = new Set<ID>();
+  const snapshot: ID[] = [];
+  const seen = indexByID ?? new Map<ID, number>();
   for (let index = 0; index < ids.length; index += 1) {
     const id = ids[index];
     if (id === undefined) {
@@ -197,7 +199,8 @@ export function validateUniqueIDs<ID extends StableID>(
         index,
       });
     }
-    seen.add(id);
+    seen.set(id, index);
+    snapshot.push(id);
   }
-  return ok(freezeArray(ids));
+  return ok(Object.freeze(snapshot));
 }

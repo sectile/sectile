@@ -119,6 +119,10 @@ test('grid construction normalizes ragged rows and rejects invalid occupancy', (
   assert.equal(grid.cellAt(1, 1), null);
   assert.equal(grid.row(-1), null);
   assert.equal(grid.column(4), null);
+  assert.deepEqual(grid.domain().ids, ['a', 'b', 'c']);
+  assert.equal(grid.domain(), grid.domain());
+  assert.equal(grid.row(0), grid.row(0));
+  assert.equal(grid.column(0), grid.column(0));
   assert.equal(tryCreateGrid([['a'], ['a']]).error.code, 'duplicate-id');
   assert.equal(tryCreateGrid([], { maxIDCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
   assert.equal(tryCreateGrid([['a', 'b']], { columnCount: 1 }).error.code, 'column-count-too-small');

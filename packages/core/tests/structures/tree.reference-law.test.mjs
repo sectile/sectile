@@ -131,3 +131,21 @@ test('tree production traversal remains stack-safe at the declared depth ceiling
   assert.equal(tree.visible(expansion).size, size);
   assert.equal(tree.postorder().at(0), `deep-${size - 1}`);
 });
+
+test('tree production caches structural views and exposes half-open subtree intervals', () => {
+  const tree = createTree([
+    { id: 'root', parentID: null },
+    { id: 'a', parentID: 'root' },
+    { id: 'a1', parentID: 'a' },
+    { id: 'b', parentID: 'root' },
+  ]);
+  assert.equal(tree.preorder(), tree.preorder());
+  assert.equal(tree.postorder(), tree.postorder());
+  assert.equal(tree.childrenOf('root'), tree.childrenOf('root'));
+  assert.deepEqual(tree.subtreeIntervalOf('root'), { start: 0, endExclusive: 4 });
+  assert.deepEqual(tree.subtreeIntervalOf('a'), { start: 1, endExclusive: 3 });
+  assert.deepEqual(tree.subtreeIntervalOf('a1'), { start: 2, endExclusive: 3 });
+  assert.equal(tree.subtreeIntervalOf('missing'), null);
+  const interval = tree.subtreeIntervalOf('a');
+  assert.deepEqual(tree.preorder().ids.slice(interval.start, interval.endExclusive), ['a', 'a1']);
+});

@@ -77,13 +77,15 @@ export function tryCreateSequence<ID extends StableID>(
       maxItems,
     });
   }
-  const validated = validateUniqueIDs(ids, maxIDCodeUnits);
+  const index = new Map<ID, number>();
+  const validated = validateUniqueIDs(ids, maxIDCodeUnits, index);
   if (!validated.ok) return validated;
   return ok(
     new IndexedSequence(
       validated.value,
       maxItems,
       maxIDCodeUnits,
+      index,
     ) as SequenceView<ID>,
   );
 }
@@ -127,7 +129,9 @@ export function tryApplySequencePatch<ID extends StableID>(
         maxItems,
       });
     }
-    const inserted = validateUniqueIDs(patch.inserted, maxIDCodeUnits);
+    if (patch.deleteCount === 0 && patch.inserted.length === 0) return ok(sequence);
+    const insertedIndex = new Map<ID, number>();
+    const inserted = validateUniqueIDs(patch.inserted, maxIDCodeUnits, insertedIndex);
     if (!inserted.ok) {
       return fail('transition-rejection', inserted.error.code, inserted.error.message, inserted.error.details);
     }
@@ -147,6 +151,7 @@ export function tryApplySequencePatch<ID extends StableID>(
       Object.freeze({ ...patch, inserted: inserted.value }),
       maxItems,
       maxIDCodeUnits,
+      insertedIndex,
     ));
   } else {
     if (

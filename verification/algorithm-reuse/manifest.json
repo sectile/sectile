@@ -31,12 +31,30 @@
       "rationale": "Composite transitions must retain and reuse canonical structure indexes and immutable views."
     },
     {
-      "id": "core-structure-index-reuse",
-      "detectors": ["raw-identity-lookup", "immutable-view-construction", "derived-index-construction", "linear-membership"],
-      "prefixes": ["packages/core/src/structures/", "packages/core/src/internal/state/"],
-      "classification": "migration-required",
-      "owner": "WI-014",
-      "rationale": "Sequence, Selection, Tree, and Grid own the canonical indexes and cached views."
+      "id": "core-structure-selected-index-reuse",
+      "detectors": ["immutable-view-construction", "derived-index-construction"],
+      "paths": [
+        "packages/core/src/structures/grid.ts",
+        "packages/core/src/structures/sequence.ts",
+        "packages/core/src/structures/tree.ts",
+        "packages/core/src/internal/state/selection.ts"
+      ],
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "WI-014 construction paths retain the selected indexes, and repeated Tree/Grid observations return owner-cached immutable views."
+    },
+    {
+      "id": "core-structure-selected-output-scans",
+      "detectors": ["raw-identity-lookup", "linear-membership"],
+      "paths": [
+        "packages/core/src/structures/grid.ts",
+        "packages/core/src/structures/sequence.ts",
+        "packages/core/src/structures/tree.ts",
+        "packages/core/src/internal/state/selection.ts"
+      ],
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining WI-014 scans validate construction failures or materialize an explicit bounded result; canonical lookup and transition paths use retained indexes."
     },
     {
       "id": "core-text-reorder-local-proof",

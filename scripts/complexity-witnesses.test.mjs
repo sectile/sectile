@@ -14,13 +14,17 @@ test('deterministic complexity witnesses hold at 1k, 10k, and 100k', () => {
     assert.equal(report.sequence.outputEntries, Math.ceil(size / 2));
     assert.equal(report.sequence.eligibleCalls, 64);
     assert.equal(report.sequence.scanned, 64);
-    assert.equal(report.selection.contains, 1);
-    assert.equal(report.selection.at, size);
-    assert.equal(report.selection.indexOf, 0);
+    assert.equal(report.selection.contains, 0);
+    assert.equal(report.selection.at, 0);
+    assert.equal(report.selection.indexOf, 1);
     assert.equal(report.grid.eligibleCalls, report.grid.scanned);
     assert.ok(report.grid.scanned <= 32);
+    assert.equal(report.grid.viewsCached, true);
+    assert.equal(report.grid.domainEntries, size);
     assert.equal(report.tree.expansionReads, Math.min(size, 64));
     assert.ok(report.tree.visibleEntries <= size);
+    assert.equal(report.tree.viewsCached, true);
+    assert.equal(report.tree.rootIntervalEntries, size);
     assert.equal(report.text.outputCodeUnits, size);
     assert.ok(Number.isFinite(report.elapsedMilliseconds));
   }
