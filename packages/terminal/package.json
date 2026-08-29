@@ -1,6 +1,6 @@
 {
   "name": "@sectile/terminal",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Terminal host adapters for Sectile semantic interaction machines.",
   "license": "MIT",
   "type": "module",

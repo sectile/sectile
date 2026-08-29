@@ -1,6 +1,6 @@
 {
   "name": "@sectile/tabular",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Renderer-neutral tabular data and interaction semantics for Sectile.",
   "license": "MIT",
   "type": "module",

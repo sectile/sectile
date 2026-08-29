@@ -1,5 +1,23 @@
 # @sectile/terminal
 
+## 0.8.0
+
+### Changes
+
+- fix(hosts)!: complete semantic runtime alignment (c0f4ed8)
+- docs: scope performance engineering rules (c542973)
+- refactor(terminal): use canonical core controllers (63b6db3)
+- perf(packages): standardize published source maps (75193b9)
+- refactor(core): enforce module DAG (5526b11)
+- perf(tooling): accelerate workspace verification (9843c31)
+- feat(form): extract renderer-neutral form package (9825324)
+- fix(terminal): internalize Unicode cell layout (afe517a)
+- feat(api): expose cascade list entry points (832dfa6)
+- feat(adapters): add cascade list projections (cef18fc)
+- feat(meter-group): add host adapters (b3fece5)
+- feat(progress): add exact task progress (c37253d)
+- feat(meter): add exact read-only meter (2c21052)
+
 ## 0.7.0
 
 ### Changes

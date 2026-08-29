@@ -1,5 +1,56 @@
 # @sectile/dom
 
+## 0.8.0
+
+### Changes
+
+- fix(hosts)!: complete semantic runtime alignment (c0f4ed8)
+- test: cover performance alignment regressions (74de555)
+- docs: scope performance engineering rules (c542973)
+- fix(hosts): cancel stale lifecycle work (2a36b13)
+- perf(virtual): bound Vue projection work (b6cc7d6)
+- refactor(positioning)!: remove floating ui (0ae4140)
+- feat(dom)!: add granular form subscriptions (c9cb0ee)
+- refactor(dom): use canonical core controllers (50b22d0)
+- feat(dom): add internal positioning engine (a29610f)
+- feat(core): add selection expression algebra (6a2311a)
+- perf(packages): split optional consumer entrypoints (f3fe66e)
+- perf(packages): standardize published source maps (75193b9)
+- refactor(core): enforce module DAG (5526b11)
+- perf(tooling): accelerate workspace verification (9843c31)
+- feat(form): track value baselines and reinitialize (1891564)
+- test(form): cover complete scenario matrix (63036f7)
+- build(form): integrate package tooling (9f1675c)
+- feat(form): define typed submissions (84bbd12)
+- feat(form): harden field participation (bc99987)
+- feat(form): complete submission lifecycle (2a7c7fa)
+- feat(form): extract renderer-neutral form package (9825324)
+- feat(tabular): add checkbox range selection (7127e60)
+- refactor(hosts)!: aggregate Tabular host exports (9600493)
+- refactor(hosts)!: isolate optional capability families (db31333)
+- fix(tabular): reuse checkbox component for selection (3543f3d)
+- fix(tabular): make bulk selection controls tri-state (bd933af)
+- fix(dom): preserve controlled field editing state (5e85e7e)
+- feat(dom): coordinate tabular editing (3b14257)
+- feat(dom): add tabular profile adapters (1c2fb05)
+- fix(vue): preserve controlled IME composition (cdc6884)
+- feat(api): expose cascade list entry points (832dfa6)
+- feat(vue): add cascade list composition (bb6b431)
+- feat(adapters): add cascade list projections (cef18fc)
+- feat(meter-group): add host adapters (b3fece5)
+- feat(progress): add exact task progress (c37253d)
+- feat(meter): add exact read-only meter (2c21052)
+- refactor(adapters)!: isolate optional virtual integrations (56f1f2d)
+- fix(positioning): unify anchored overlay spacing (a07d0ce)
+- chore(signatures): record picker anchor API (059d392)
+- fix(positioning): preserve picker spacing and alignment (b509212)
+- chore(signatures): record popup positioning API (1c730b1)
+- feat(positioning): unify anchored popup engines (ee9b659)
+- fix(positioning): keep floating layers attached on scroll (df0726d)
+- fix(popover): align focus and modal contracts (fb49828)
+- perf(dom): publish virtual scroll plans immediately (f9f8725)
+- fix(toast): preserve controlled runtime state (2dfef60)
+
 ## 0.7.0
 
 ### Changes

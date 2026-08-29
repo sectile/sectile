@@ -1,5 +1,15 @@
 # @sectile/temporal
 
+## 0.8.0
+
+### Changes
+
+- docs: scope performance engineering rules (c542973)
+- refactor(temporal): reuse Core result primitives (21b7bce)
+- perf(packages): standardize published source maps (75193b9)
+- perf(tooling): accelerate workspace verification (9843c31)
+- fix(temporal): canonicalize calendar values (86f01e9)
+
 ## 0.7.0
 
 ### Changes

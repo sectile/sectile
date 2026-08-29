@@ -1,5 +1,45 @@
 # @sectile/core
 
+## 0.8.0
+
+### Changes
+
+- ci: aggregate release validation failures (4178272)
+- test: cover performance alignment regressions (74de555)
+- fix(core): restore foundation dependency direction (61c9fe1)
+- docs: scope performance engineering rules (c542973)
+- refactor(vue)!: delegate semantic reconciliation (6e78f58)
+- refactor(dom): use canonical core controllers (50b22d0)
+- feat(core): add canonical component controllers (c7e3ad3)
+- refactor(tabular): share core grid axis movement (0a72ac1)
+- feat(core): expose focused foundation primitives (873bf82)
+- perf(core): retain text and reorder proofs (c3bff1a)
+- perf(core): reuse retained composite indexes (8d201ef)
+- perf(core): stabilize facade method wrappers (9de9e3c)
+- perf(core): add canonical provenance fast paths (e7d78e1)
+- feat(core): add zero-dependency color algebra (f9730c8)
+- feat(core): add bounded geometry layout (c380773)
+- feat(core): add deterministic metric index (a2c8a7b)
+- feat(core): add selection expression algebra (6a2311a)
+- feat(core): add exact ratio and span algebra (8d09de4)
+- perf(core): optimize foundational structures (e3b96f6)
+- perf(packages): standardize published source maps (75193b9)
+- refactor(core): enforce module DAG (5526b11)
+- perf(tooling): accelerate workspace verification (9843c31)
+- feat(form): extract renderer-neutral form package (9825324)
+- chore(core): classify destroyed connection contract (e4e2595)
+- fix(core): make adapter lifecycles reentrant-safe (b3c515f)
+- feat(api): expose cascade list entry points (832dfa6)
+- feat(adapters): add cascade list projections (cef18fc)
+- feat(core): expose generic selection state (5d65293)
+- feat(core): add shared cascade list model (0c34df9)
+- feat(core): add exact meter group partitions (16f282c)
+- feat(progress): add exact task progress (c37253d)
+- feat(meter): add exact read-only meter (2c21052)
+- feat(core): add exact scalar foundation (44545d1)
+- perf(core): apply sequence patches incrementally (6f8313c)
+- fix(toast): preserve controlled runtime state (2dfef60)
+
 ## 0.7.0
 
 ### Changes
