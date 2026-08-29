@@ -1,5 +1,11 @@
 # @sectile/tabular
 
+## 0.9.0
+
+### Changes
+
+- refactor(vue)!: make tabular sources controller-owned (003507b)
+
 ## 0.8.0
 
 ### Changes

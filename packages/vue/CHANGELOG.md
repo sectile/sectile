@@ -1,5 +1,12 @@
 # @sectile/vue
 
+## 0.9.0
+
+### Changes
+
+- fix(positioning)!: keep anchored overlays visible (09923c0)
+- refactor(vue)!: make tabular sources controller-owned (003507b)
+
 ## 0.8.0
 
 ### Changes

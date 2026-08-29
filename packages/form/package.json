@@ -1,6 +1,6 @@
 {
   "name": "@sectile/form",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Renderer-neutral form paths, values, validation, and submission state for Sectile.",
   "license": "MIT",
   "type": "module",

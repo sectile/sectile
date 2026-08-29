@@ -1,5 +1,11 @@
 # @sectile/core
 
+## 0.9.0
+
+### Changes
+
+- fix(positioning)!: keep anchored overlays visible (09923c0)
+
 ## 0.8.0
 
 ### Changes
