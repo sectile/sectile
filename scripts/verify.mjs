@@ -56,7 +56,7 @@ const packagePipelines = Object.freeze({
   '@sectile/core': [
     'typecheck', 'test', 'build', 'check:contracts', 'check:public-api',
     'check:api-stability', 'check:semantic-api', 'check:laws', 'check:naming',
-    'check:layout', 'check:import-boundaries', 'check:dist-boundary',
+    'check:layout', 'check:module-dag', 'check:import-boundaries', 'check:dist-boundary',
     'check:subpaths', 'check:package', 'check:verification',
     'verify:reproducible-build',
   ],
@@ -131,8 +131,11 @@ function workspaceContractSteps() {
     .sort()
     .map((file) => join(root, 'verification', 'cross-host', file));
   return [
+    commandStep('validation artifact coverage', 'pnpm', ['check:validation-artifacts']),
     commandStep('cross-host verification', process.execPath, ['--test', '--test-concurrency=1', ...crossHostTests]),
     commandStep('tooling verification', 'pnpm', ['test:tooling']),
+    commandStep('semantic authority', 'pnpm', ['check:semantic-authority']),
+    commandStep('complexity contracts', 'pnpm', ['check:complexity']),
     commandStep('algorithm reuse inventory', 'pnpm', ['check:algorithm-reuse']),
     commandStep('representation crossovers', 'pnpm', ['check:crossovers']),
     commandStep('entrypoint migrations', 'pnpm', ['check:entrypoint-migrations']),
@@ -147,6 +150,8 @@ function workspaceContractSteps() {
     commandStep('public change gates', process.execPath, [
       join(root, 'scripts', 'check-public-change-gates.mjs'), '--full',
     ]),
+    commandStep('performance regression gates', 'pnpm', ['verify:performance']),
+    commandStep('lifecycle retention', 'pnpm', ['check:lifecycle-retention']),
   ];
 }
 
