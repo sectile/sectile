@@ -43,8 +43,13 @@ export function stashReleaseWorktree(root) {
   assert.notEqual(releaseWorktreeStatus(root), '', 'cannot stash a clean release worktree');
   git(root, ['stash', 'push', '--include-untracked', '--message', 'sectile release synchronization']);
   const stash = git(root, ['rev-parse', 'refs/stash'], true);
-  assert.equal(releaseWorktreeStatus(root), '', 'temporary release stash did not clean the worktree');
-  return Object.freeze({ head, stash });
+  const residualStatus = releaseWorktreeStatus(root);
+  assert.equal(
+    residualStatus === '' || residualStatus.split('\n').every((entry) => entry.startsWith('?? ')),
+    true,
+    `temporary release stash left tracked or staged changes:\n${residualStatus}`,
+  );
+  return Object.freeze({ head, residualStatus, stash });
 }
 
 function findStashReference(root, stash) {

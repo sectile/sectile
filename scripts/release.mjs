@@ -266,7 +266,7 @@ async function releaseFromDirtyWorkspace(requestedBump) {
       if (
         temporary !== undefined
         && run(workspaceRoot, 'git', ['rev-parse', 'HEAD'], { capture: true }) === temporary.head
-        && releaseWorktreeStatus(workspaceRoot) === ''
+        && releaseWorktreeStatus(workspaceRoot) === temporary.residualStatus
         && restoreReleaseWorktree(workspaceRoot, temporary.stash)
       ) {
         temporary = undefined;

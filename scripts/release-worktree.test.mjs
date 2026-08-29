@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -26,6 +26,7 @@ function createRepository() {
   writeFileSync(join(root, 'tracked.txt'), 'base\n');
   writeFileSync(join(root, 'staged.txt'), 'base\n');
   writeFileSync(join(root, 'release.txt'), 'base\n');
+  writeFileSync(join(root, '.gitignore'), '');
   git(root, ['add', '.']);
   git(root, ['commit', '-m', 'test: create fixture']);
   return root;
@@ -90,6 +91,29 @@ test('detects a restore conflict before advancing main', () => {
     assert.equal(readFileSync(join(root, 'release.txt'), 'utf8'), 'local work\n');
   } finally {
     if (worktree !== undefined) removeReleaseWorktree(root, worktree);
+    rmSync(root, { force: true, recursive: true });
+  }
+});
+
+test('preserves generated files revealed when dirty ignore rules are stashed', () => {
+  const root = createRepository();
+  try {
+    writeFileSync(join(root, '.gitignore'), 'generated/\n');
+    writeFileSync(join(root, 'tracked.txt'), 'local work\n');
+    mkdirSync(join(root, 'generated'));
+    writeFileSync(join(root, 'generated', 'asset.js'), 'generated output\n');
+    const originalStatus = releaseWorktreeStatus(root);
+
+    const temporary = stashReleaseWorktree(root);
+    assert.equal(temporary.residualStatus, '?? generated/asset.js');
+    assert.equal(releaseWorktreeStatus(root), temporary.residualStatus);
+    assert.equal(restoreReleaseWorktree(root, temporary.stash), true);
+
+    assert.equal(releaseWorktreeStatus(root), originalStatus);
+    assert.equal(readFileSync(join(root, 'tracked.txt'), 'utf8'), 'local work\n');
+    assert.equal(readFileSync(join(root, 'generated', 'asset.js'), 'utf8'), 'generated output\n');
+    assert.equal(git(root, ['stash', 'list']), '');
+  } finally {
     rmSync(root, { force: true, recursive: true });
   }
 });
