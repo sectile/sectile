@@ -5,6 +5,9 @@ import {
   type StableID,
 } from '../../shared.js';
 import type { CoreErrorCode } from '../../error-code.js';
+import { failResult as fail, okResult as ok } from '../../result.js';
+
+export { fail, ok };
 
 type SafeCeilingName =
   | 'columnCount'
@@ -88,27 +91,6 @@ export function memoizeWeakPair<Owner extends object, Key extends object, Value>
   const value = create(owner, key);
   owned.set(key, value);
   return value;
-}
-
-export function ok<T, Code extends string = CoreErrorCode>(value: T): Result<T, Code> {
-  return { ok: true, value };
-}
-
-export function fail<T = never, Code extends string = CoreErrorCode>(
-  errorClass: SectileError['class'],
-  code: Code,
-  message: string,
-  details?: Readonly<Record<string, unknown>>,
-): Result<T, Code> {
-  return {
-    ok: false,
-    error: {
-      class: errorClass,
-      code,
-      message,
-      ...(details === undefined ? {} : { details }),
-    },
-  };
 }
 
 export function resourceError<Code extends string = CoreErrorCode>(

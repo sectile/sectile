@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "621ad6c8facd8fe9915008b2500762cbaea70d0422db51111d8ef18fb7f4e01b",
+    "publicSignatureFingerprint": "2fc58cec5579bccf8614c1b1da53ecbbfa1d7f2e7b7c6d7063c6ff9c92188551",
     "subpaths": [
       ".",
       "./accordion",
@@ -35,6 +35,7 @@
       "./geometry",
       "./grid",
       "./grid-control",
+      "./identity",
       "./index-span",
       "./interaction",
       "./layer-stack",
@@ -519,6 +520,6 @@
   ],
   "acceptance": {
     "classification": "minor",
-    "reason": "WI-037_color_algebra_and_color_text_subpaths"
+    "reason": "WI-002_focused_identity_primitive"
   }
 }
