@@ -1,4 +1,5 @@
 import { type DataTableController, type DataTableEvent, type DataTableOptions, tryCreateDataTable } from '../data-table.js';
+import { scanGridAxis } from '@sectile/core/grid';
 import { fail, ok } from './foundation.js';
 import type {
   TabularCellAddress,
@@ -542,24 +543,23 @@ function moveCell(
     for (const cell of domain.cells) if (!disabled(options, cell)) return cell;
     return null;
   }
-  let row = domain.rowIndexByID.get(current.rowID) ?? -1;
-  let column = domain.columnIndexByID.get(current.columnID) ?? -1;
+  const row = domain.rowIndexByID.get(current.rowID) ?? -1;
+  const column = domain.columnIndexByID.get(current.columnID) ?? -1;
   if (row < 0 || column < 0) return fallbackCell(domain, domain, current, options);
-  const rowStep = direction === 'down' ? 1 : direction === 'up' ? -1 : 0;
-  const columnStep = direction === 'right' ? 1 : direction === 'left' ? -1 : 0;
-  const limit = rowStep === 0 ? columns.length : rows.length;
-  for (let scanned = 0; scanned < limit - (boundary === 'wrap-axis' ? 0 : 1); scanned += 1) {
-    row += rowStep;
-    column += columnStep;
-    if (row < 0 || row >= rows.length || column < 0 || column >= columns.length) {
-      if (boundary === 'stop') return current;
-      row = (row + rows.length) % rows.length;
-      column = (column + columns.length) % columns.length;
-    }
-    const candidate = findCell(domain, { rowID: rows[row]!.rowID, columnID: columns[column]! });
-    if (candidate !== null && !disabled(options, candidate)) return candidate;
-  }
-  return current;
+  const movement = scanGridAxis(rows.length, columns.length, { row, column }, direction, {
+    boundary,
+    accepts: (candidateRow, candidateColumn) => {
+      const candidate = domain.cellsByRow
+        .get(rows[candidateRow]!.rowID)
+        ?.get(columns[candidateColumn]!);
+      return candidate !== undefined && !disabled(options, candidate);
+    },
+  });
+  if (movement.kind !== 'found') return current;
+  return domain.cellsByRow
+    .get(rows[movement.position.row]!.rowID)
+    ?.get(columns[movement.position.column]!)
+    ?? current;
 }
 
 function editableCell(

@@ -80,7 +80,6 @@
     { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "semanticDependencies": ["@sectile/core", "@sectile/dom", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] }
   ],
   "migrationExceptions": [
-    { "id": "tabular-grid-movement", "owner": "WI-006", "scope": "@sectile/tabular grid-profile movement equivalent to Core Grid semantics" },
     { "id": "dom-component-semantics", "owner": "WI-007", "scope": "DOM renderer-neutral component control and shared semantic helpers" },
     { "id": "terminal-component-semantics", "owner": "WI-008", "scope": "Terminal renderer-neutral component control and shared semantic helpers" },
     { "id": "vue-component-semantics", "owner": "WI-009", "scope": "Vue renderer-neutral collection and component semantics" },

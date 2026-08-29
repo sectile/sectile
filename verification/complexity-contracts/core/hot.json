@@ -344,6 +344,22 @@
       }
     },
     {
+      "id": "grid.scan-axis",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/grid.ts",
+      "benchmarkIDs": ["VAL-006:grid-axis-equivalence", "VAL-017:grid-move-work"],
+      "specificationCeiling": "O(sAxis)",
+      "contract": {
+        "variables": [{ "name": "sAxis", "meaning": "visited coordinates on the selected axis", "ceiling": "maxScan and axis length minus the current coordinate" }],
+        "time": { "bound": "O(sAxis)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "callbacks": "sAxis", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The shared axis loop advances once per coordinate, invokes accepts exactly once for each visit, excludes the current coordinate after wrapping, and stops at maxScan, the first accepted coordinate, or the exhausted axis.",
+        "adversarialWitness": "A maximum-length axis whose callback rejects every coordinate visits exactly min(axis length minus one, maxScan) coordinates.",
+        "fullScan": { "allowed": true, "rationale": "Only the explicitly selected bounded axis may be scanned." }
+      }
+    },
+    {
       "id": "grid.position",
       "inherits": "constant-v1",
       "source": "packages/core/src/structures/grid.ts",

@@ -1,8 +1,9 @@
-import type { SectileError } from '@sectile/core/result';
+import { validateStableID } from '@sectile/core/identity';
+import { failResult, okResult, type SectileError } from '@sectile/core/result';
 import type { TabularErrorCode, TabularLimits, TabularResult } from '../contracts.js';
 
 export function ok<T>(value: T): TabularResult<T> {
-  return Object.freeze({ ok: true, value });
+  return okResult<T, TabularErrorCode>(value);
 }
 
 export function fail<T = never>(
@@ -11,15 +12,7 @@ export function fail<T = never>(
   message: string,
   details?: Readonly<Record<string, unknown>>,
 ): TabularResult<T> {
-  return Object.freeze({
-    ok: false,
-    error: Object.freeze({
-      class: errorClass,
-      code,
-      message,
-      ...(details === undefined ? {} : { details: Object.freeze({ ...details }) }),
-    }),
-  });
+  return failResult<T, TabularErrorCode>(errorClass, code, message, details);
 }
 
 export function validateID(
@@ -27,7 +20,9 @@ export function validateID(
   label: string,
   limits: Pick<TabularLimits, 'maxIDCodeUnits'>,
 ): SectileError<TabularErrorCode> | null {
-  if (typeof value !== 'string' || value.length === 0 || !isWellFormed(value)) {
+  const error = validateStableID(value as string, limits.maxIDCodeUnits);
+  if (error === null) return null;
+  if (error.code !== 'id-code-unit-ceiling-exceeded') {
     return Object.freeze({
       class: 'construction',
       code: 'invalid-id',
@@ -35,28 +30,14 @@ export function validateID(
       details: Object.freeze({ label }),
     });
   }
-  if (value.length > limits.maxIDCodeUnits) {
-    return Object.freeze({
-      class: 'resource-rejection',
-      code: 'id-code-unit-ceiling-exceeded',
-      message: `${label} exceeds the configured UTF-16 code-unit ceiling.`,
-      details: Object.freeze({ label, actual: value.length, ceiling: limits.maxIDCodeUnits }),
-    });
-  }
-  return null;
-}
-
-function isWellFormed(value: string): boolean {
-  for (let index = 0; index < value.length; index += 1) {
-    const code = value.charCodeAt(index);
-    if (code >= 0xd800 && code <= 0xdbff) {
-      if (index + 1 >= value.length) return false;
-      const next = value.charCodeAt(index + 1);
-      if (next < 0xdc00 || next > 0xdfff) return false;
-      index += 1;
-    } else if (code >= 0xdc00 && code <= 0xdfff) {
-      return false;
-    }
-  }
-  return true;
+  return Object.freeze({
+    class: 'resource-rejection',
+    code: 'id-code-unit-ceiling-exceeded',
+    message: `${label} exceeds the configured UTF-16 code-unit ceiling.`,
+    details: Object.freeze({
+      label,
+      actual: typeof value === 'string' ? value.length : 0,
+      ceiling: limits.maxIDCodeUnits,
+    }),
+  });
 }
