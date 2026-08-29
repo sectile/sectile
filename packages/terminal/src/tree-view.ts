@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createFacadeConnection, tryCreateDisabledIdentitySet, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { controlledFieldError as fieldError } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
@@ -153,8 +153,12 @@ function tryCreateTreeViewConnection<ID extends StableID>(
 ): Result<TreeViewConnection<ID>> {
   const tree = tryCreateTree(options.nodes);
   if (!tree.ok) return tree;
-  const disabled = new Set(options.disabledItems ?? []);
-  for (const id of disabled) if (!tree.value.has(id)) return { ok: false, error: { class: 'construction', code: 'disabled-item-outside-domain', message: 'Every disabled tree-view item must exist in the tree.', details: { id } } };
+  const disabledResult = tryCreateDisabledIdentitySet(
+    { contains: (id: ID) => tree.value.has(id) },
+    options.disabledItems,
+  );
+  if (!disabledResult.ok) return disabledResult;
+  const disabled = disabledResult.value;
   const suppliedEligibility = options.policies?.eligible;
   const policies: TreeViewPolicies<ID> = { ...options.policies, eligible: (id) => !disabled.has(id) && (suppliedEligibility?.(id) ?? true) };
   const controller = createTreeViewController({ ...options, policies, tree: tree.value });

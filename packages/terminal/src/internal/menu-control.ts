@@ -12,8 +12,9 @@ import {
 } from '@sectile/core/menu';
 import type { TerminalKeyboardInput } from '../keyboard.js';
 import {
-  createSemanticController,
-  type SemanticController,
+  createControlledComponentController,
+  tryCreateDisabledIdentitySet,
+  type ControlledComponentController,
 } from '@sectile/core/adapter-runtime';
 
 export type MenuKind = 'menu' | 'menubar' | 'menu-button' | 'navigation-menu';
@@ -53,20 +54,12 @@ export function createMenuControl<ID extends StableID>(
   const model = tryCreateMenuModel(options.items);
   if (!model.ok) return model;
 
-  const disabled = new Set(options.disabledItems ?? []);
-  for (const id of disabled) {
-    if (!model.value.tree.has(id)) {
-      return {
-        ok: false,
-        error: {
-          class: 'construction',
-          code: 'disabled-item-outside-domain',
-          message: 'Every disabled menu item must exist in the menu tree.',
-          details: { id },
-        },
-      };
-    }
-  }
+  const disabledResult = tryCreateDisabledIdentitySet(
+    { contains: (id: ID) => model.value.tree.has(id) },
+    options.disabledItems,
+  );
+  if (!disabledResult.ok) return disabledResult;
+  const disabled = disabledResult.value;
 
   const suppliedDisabled = options.policies?.disabled;
   const policies: MenuPolicies<ID> = {
@@ -77,7 +70,8 @@ export function createMenuControl<ID extends StableID>(
   const initialOpen = options.kind === 'menu-button'
     ? options.open ?? options.defaultOpen ?? false
     : true;
-  const runtime = createSemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, MenuCommand<ID>>({
+  const runtime = createControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>({
+    controlled: openControlled,
     interaction: options,
     initial: tryCreateMenuState(
       model.value.tree,
@@ -86,10 +80,8 @@ export function createMenuControl<ID extends StableID>(
       [],
     ),
     reducer: (state, event) => applyMenuEvent(model.value.tree, state, event, policies),
-    reconcile: (previous, proposed) => {
-      const open = options.kind === 'menu-button'
-        ? openControlled ? previous.open : proposed.open
-        : true;
+    create: (requestedOpen, proposed) => {
+      const open = options.kind === 'menu-button' ? requestedOpen : true;
       return tryCreateMenuState(
         model.value.tree,
         open,
@@ -97,16 +89,14 @@ export function createMenuControl<ID extends StableID>(
         open ? proposed.openPath : [],
       );
     },
-    notify: (previous, proposed) => {
-      if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open);
-    },
-    toEffect: (command) => command,
+    read: (state) => state.open,
+    onChange: (open) => options.onOpenChange?.(open),
   });
 
   return runtime.ok
     ? {
       ok: true,
-      value: new TerminalMenuControl(options, model.value.tree, runtime.value, openControlled),
+      value: new TerminalMenuControl(options, model.value.tree, runtime.value),
     }
     : runtime;
 }
@@ -114,21 +104,18 @@ export function createMenuControl<ID extends StableID>(
 class TerminalMenuControl<ID extends StableID> implements MenuControl<ID> {
   readonly #options: MenuControlOptions<ID>;
   readonly #tree: Tree<ID>;
-  readonly #runtime: SemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>>;
-  readonly #openControlled: boolean;
+  readonly #runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>;
   #typeaheadBuffer = '';
   #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
 
   public constructor(
     options: MenuControlOptions<ID>,
     tree: Tree<ID>,
-    runtime: SemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>>,
-    openControlled: boolean,
+    runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>,
   ) {
     this.#options = options;
     this.#tree = tree;
     this.#runtime = runtime;
-    this.#openControlled = openControlled;
   }
 
   public getSnapshot(): RevisionSnapshot<MenuState<ID>> {
@@ -136,23 +123,7 @@ class TerminalMenuControl<ID extends StableID> implements MenuControl<ID> {
   }
 
   public syncControlledValue(open: boolean): Result<RevisionSnapshot<MenuState<ID>>> {
-    if (!this.#openControlled) {
-      return {
-        ok: false,
-        error: {
-          class: 'construction',
-          code: 'uncontrolled-controller-sync',
-          message: 'Only a controlled menu button can synchronize open state.',
-        },
-      };
-    }
-    const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(tryCreateMenuState(
-      this.#tree,
-      open,
-      open ? state.cursor.current : null,
-      open ? state.openPath : [],
-    ));
+    const result = this.#runtime.syncControlledValue(open);
     if (result.ok) this.#options.onUpdate?.();
     return result;
   }

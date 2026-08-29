@@ -2,7 +2,6 @@
   "schemaVersion": 1,
   "ids": [
     "floating-positioning-surface",
-    "terminal-component-semantics",
     "vue-component-semantics",
     "vue-form-semantics",
     "vue-virtual-projection"

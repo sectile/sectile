@@ -18,7 +18,7 @@
     "tabularOwner": { "name": "@sectile/tabular", "manifest": "packages/tabular/package.json" },
     "hostProjections": [
       { "name": "@sectile/dom", "classification": "platform-only" },
-      { "name": "@sectile/terminal", "classification": "platform-only", "migrationException": "terminal-component-semantics" },
+      { "name": "@sectile/terminal", "classification": "platform-only" },
       { "name": "@sectile/vue", "classification": "platform-only", "migrationException": "vue-component-semantics" }
     ]
   },
@@ -37,15 +37,7 @@
     {
       "root": "packages/terminal/src/internal",
       "classification": "platform-only",
-      "semanticException": "terminal-component-semantics",
-      "semanticPaths": [
-        "packages/terminal/src/internal/cascade-choice.ts",
-        "packages/terminal/src/internal/checked-control.ts",
-        "packages/terminal/src/internal/disabled-items.ts",
-        "packages/terminal/src/internal/menu-control.ts",
-        "packages/terminal/src/internal/popup-control.ts",
-        "packages/terminal/src/internal/result.ts"
-      ]
+      "semanticPaths": []
     },
     {
       "root": "packages/vue/src/internal",
@@ -71,7 +63,6 @@
     { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "semanticDependencies": ["@sectile/core", "@sectile/dom", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] }
   ],
   "migrationExceptions": [
-    { "id": "terminal-component-semantics", "owner": "WI-008", "scope": "Terminal renderer-neutral component control and shared semantic helpers" },
     { "id": "vue-component-semantics", "owner": "WI-009", "scope": "Vue renderer-neutral collection and component semantics" },
     { "id": "vue-form-semantics", "owner": "WI-029", "scope": "Vue Form whole-state projection and component subscriptions" },
     { "id": "vue-virtual-projection", "owner": "WI-040", "scope": "Vue Virtual measurement and collection projection ownership" },

@@ -1,4 +1,5 @@
 import type { Result, StableID } from '@sectile/core';
+import { tryCreateDisabledIdentitySet } from '@sectile/core/adapter-runtime';
 import { tryCreateTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
 import type { TerminalKeyboardInput } from '../keyboard.js';
 
@@ -21,25 +22,16 @@ export interface TerminalCascadeChoiceDomain<ID extends StableID = StableID> {
 export function tryCreateTerminalCascadeChoiceDomain<ID extends StableID>(
   nodes: readonly TreeNodeInput<ID>[],
   disabledItems: readonly ID[] | undefined,
-  label: 'cascade list' | 'cascade select',
+  _label: 'cascade list' | 'cascade select',
 ): Result<TerminalCascadeChoiceDomain<ID>> {
   const tree = tryCreateTree(nodes);
   if (!tree.ok) return tree;
-  const disabled = new Set(disabledItems ?? []);
-  for (const id of disabled) {
-    if (!tree.value.has(id)) {
-      return {
-        ok: false,
-        error: {
-          class: 'construction',
-          code: 'disabled-item-outside-domain',
-          message: `Every disabled ${label} item must exist in the tree.`,
-          details: { id },
-        },
-      };
-    }
-  }
-  return { ok: true, value: Object.freeze({ tree: tree.value, disabledItems: disabled }) };
+  const disabled = tryCreateDisabledIdentitySet(
+    { contains: (id: ID) => tree.value.has(id) },
+    disabledItems,
+  );
+  if (!disabled.ok) return disabled;
+  return { ok: true, value: Object.freeze({ tree: tree.value, disabledItems: disabled.value }) };
 }
 
 export function withDisabledCascadeChoicePolicies<ID extends StableID, Policies extends TerminalCascadeChoicePolicies<ID>>(
