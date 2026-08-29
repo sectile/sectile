@@ -7,7 +7,7 @@
     {
       "id": "position.connect",
       "inherits": "lifecycle-v1",
-      "source": "packages/dom/src/internal/floating-position.ts",
+      "source": "packages/dom/src/internal/positioning/engine.ts",
       "benchmarkIDs": ["VAL-039:position-connect-resources"],
       "specificationCeiling": "O(aDom)",
       "contract": {
@@ -17,7 +17,7 @@
         "time": { "bound": "O(aDom)", "kind": "worst-case", "runtimeState": "connected" },
         "space": { "auxiliary": "O(aDom)", "output": "O(1)", "retained": "O(aDom)" },
         "resources": { "allocations": "O(aDom)", "cacheEntries": "O(aDom)", "listeners": "O(aDom)", "observers": "O(1)", "timers": "O(1)", "subscriptions": "O(1)" },
-        "proof": "Connection discovers the owned ancestor chain once and registers only connection-owned resources.",
+        "proof": "Connection discovers the owned ancestor chain once; source-owned WeakMap registries retain one physical listener and only callbacks for connections affected by that source.",
         "adversarialWitness": "Deep nested scrolling ancestors with every target connected.",
         "fullScan": { "allowed": false, "rationale": "Global documents or unrelated connections must never be scanned." }
       }
@@ -25,7 +25,7 @@
     {
       "id": "position.disconnect",
       "inherits": "lifecycle-v1",
-      "source": "packages/dom/src/internal/floating-position.ts",
+      "source": "packages/dom/src/internal/positioning/engine.ts",
       "benchmarkIDs": ["VAL-039:position-disconnect-zero"],
       "specificationCeiling": "O(aDom)",
       "contract": {
@@ -41,7 +41,7 @@
     {
       "id": "position.discovery",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/floating-position.ts",
+      "source": "packages/dom/src/internal/positioning/engine.ts",
       "benchmarkIDs": ["VAL-039:position-discovery-work"],
       "specificationCeiling": "O(aDom)",
       "contract": {
@@ -57,7 +57,7 @@
     {
       "id": "position.schedule",
       "inherits": "constant-v1",
-      "source": "packages/dom/src/internal/floating-position.ts",
+      "source": "packages/dom/src/internal/positioning/engine.ts",
       "benchmarkIDs": ["VAL-039:position-schedule-work"],
       "specificationCeiling": "O(1)",
       "contract": {
@@ -70,7 +70,7 @@
     {
       "id": "position.update",
       "inherits": "lifecycle-v1",
-      "source": "packages/dom/src/internal/floating-position.ts",
+      "source": "packages/dom/src/internal/positioning/engine.ts",
       "benchmarkIDs": ["VAL-039:position-update-work"],
       "specificationCeiling": "O(aDom + cAnchor)",
       "contract": {
@@ -81,7 +81,7 @@
         "time": { "bound": "O(aDom + cAnchor)", "kind": "worst-case", "runtimeState": "connected" },
         "space": { "auxiliary": "O(aDom + cAnchor)", "output": "O(1)", "retained": "O(aDom)" },
         "resources": { "allocations": "O(aDom + cAnchor)", "cacheEntries": "O(aDom)", "listeners": "O(aDom)", "observers": "O(1)", "timers": "O(1)", "subscriptions": "0" },
-        "proof": "An update consumes retained discovery, measures ancestors and a bounded candidate set, then commits one projection.",
+        "proof": "An update consumes retained discovery, completes reference/floating/boundary/ancestor reads, invokes the bounded Core AnchoredLayout solver, then commits one owned projection.",
         "adversarialWitness": "Every ancestor clips and every side candidate overflows.",
         "fullScan": { "allowed": false, "rationale": "Ordinary updates cannot rediscover ancestors or scan global connections." }
       }
