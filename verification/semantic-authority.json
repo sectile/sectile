@@ -17,7 +17,7 @@
     "tabularCatalogKey": "tabularProfiles",
     "tabularOwner": { "name": "@sectile/tabular", "manifest": "packages/tabular/package.json" },
     "hostProjections": [
-      { "name": "@sectile/dom", "classification": "platform-only", "migrationException": "dom-component-semantics" },
+      { "name": "@sectile/dom", "classification": "platform-only" },
       { "name": "@sectile/terminal", "classification": "platform-only", "migrationException": "terminal-component-semantics" },
       { "name": "@sectile/vue", "classification": "platform-only", "migrationException": "vue-component-semantics" }
     ]
@@ -32,16 +32,7 @@
     {
       "root": "packages/dom/src/internal",
       "classification": "platform-only",
-      "semanticException": "dom-component-semantics",
-      "semanticPaths": [
-        "packages/dom/src/internal/cascade-choice-binding.ts",
-        "packages/dom/src/internal/checked-control.ts",
-        "packages/dom/src/internal/disabled-items.ts",
-        "packages/dom/src/internal/exact-percentage.ts",
-        "packages/dom/src/internal/menu-control.ts",
-        "packages/dom/src/internal/popup-control.ts",
-        "packages/dom/src/internal/result.ts"
-      ]
+      "semanticPaths": []
     },
     {
       "root": "packages/terminal/src/internal",
@@ -80,7 +71,6 @@
     { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "semanticDependencies": ["@sectile/core", "@sectile/dom", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] }
   ],
   "migrationExceptions": [
-    { "id": "dom-component-semantics", "owner": "WI-007", "scope": "DOM renderer-neutral component control and shared semantic helpers" },
     { "id": "terminal-component-semantics", "owner": "WI-008", "scope": "Terminal renderer-neutral component control and shared semantic helpers" },
     { "id": "vue-component-semantics", "owner": "WI-009", "scope": "Vue renderer-neutral collection and component semantics" },
     { "id": "vue-form-semantics", "owner": "WI-029", "scope": "Vue Form whole-state projection and component subscriptions" },

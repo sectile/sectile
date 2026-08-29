@@ -282,6 +282,25 @@
       }
     },
     {
+      "id": "exact-ratio.format-percentage",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/range.ts",
+      "benchmarkIDs": ["VAL-021:exact-ratio-percentage"],
+      "specificationCeiling": "O(b*D(b))",
+      "contract": {
+        "variables": [
+          { "name": "b", "meaning": "numerator or denominator bit width", "ceiling": "ExactRatio construction ceilings" },
+          { "name": "D", "meaning": "bounded b-bit division cost", "ceiling": "runtime BigInt division implementation" }
+        ],
+        "time": { "bound": "O(b*D(b))", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(b)", "output": "O(b)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The external ratio is width-checked and reduced before one exact division at the fixed Core percentage precision materializes one decimal spelling; callers cannot expand the precision ceiling.",
+        "adversarialWitness": "A maximum-width non-terminating ratio exercises the fixed half-even precision and widest accepted division operands.",
+        "fullScan": { "allowed": false, "rationale": "Work depends on bounded scalar width and fixed precision, never collection cardinality." }
+      }
+    },
+    {
       "id": "geometry.bounds",
       "inherits": "linear-v1",
       "source": "packages/core/src/structures/geometry.ts",

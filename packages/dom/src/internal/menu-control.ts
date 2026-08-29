@@ -2,7 +2,11 @@ import type { Result, StableID } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { Tree, TreeNodeInput } from '@sectile/core/tree';
 import { applyMenuEvent, tryCreateMenuModel, tryCreateMenuState, type MenuCommand, type MenuEvent, type MenuPolicies, type MenuState } from '@sectile/core/menu';
-import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import {
+  createControlledComponentController,
+  tryCreateDisabledIdentitySet,
+  type ControlledComponentController,
+} from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './interaction.js';
 import { horizontalArrow, type ReadingDirection } from './direction.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './layer-binding.js';
@@ -40,32 +44,37 @@ export interface MenuControl<ID extends StableID> {
 
 export function createMenuControl<ID extends StableID>(options: MenuControlOptions<ID>): Result<MenuControl<ID>> {
   const model = tryCreateMenuModel(options.items); if (!model.ok) return model;
-  const disabled = new Set(options.disabledItems ?? []);
-  for (const id of disabled) if (!model.value.tree.has(id)) return { ok: false, error: { class: 'construction', code: 'disabled-item-outside-domain', message: 'Every disabled menu item must exist in the menu tree.', details: { id } } };
+  const disabledResult = tryCreateDisabledIdentitySet(
+    { contains: (id: ID) => model.value.tree.has(id) },
+    options.disabledItems,
+  );
+  if (!disabledResult.ok) return disabledResult;
+  const disabled = disabledResult.value;
   const suppliedDisabled = options.policies?.disabled;
   const policies: MenuPolicies<ID> = { ...options.policies, disabled: (id) => disabled.has(id) || (suppliedDisabled?.(id) ?? false) };
   const openControlled = options.kind === 'menu-button' && options.open !== undefined;
   const initialOpen = options.kind === 'menu-button' ? options.open ?? options.defaultOpen ?? false : true;
-  const runtime = createSemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, MenuCommand<ID>>({
-    interaction: options,
+  const runtime = createControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>({
+    controlled: openControlled,
     initial: tryCreateMenuState(model.value.tree, initialOpen, initialOpen ? options.defaultHighlightedValue ?? null : null, []),
     reducer: (state, event) => applyMenuEvent(model.value.tree, state, event, policies),
-    reconcile: (previous, proposed) => {
-      const open = options.kind === 'menu-button' ? openControlled ? previous.open : proposed.open : true;
+    create: (requestedOpen, proposed) => {
+      const open = options.kind === 'menu-button' ? requestedOpen : true;
       return tryCreateMenuState(model.value.tree, open, open ? proposed.cursor.current : null, open ? proposed.openPath : []);
     },
-    notify: (previous, proposed) => { if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); },
-    toEffect: (command) => command,
+    read: (state) => state.open,
+    onChange: (open) => options.onOpenChange?.(open),
+    interaction: options,
   });
-  return runtime.ok ? { ok: true, value: new DOMMenuControl(options, model.value.tree, runtime.value, policies, openControlled) } : runtime;
+  return runtime.ok ? { ok: true, value: new DOMMenuControl(options, model.value.tree, runtime.value, policies) } : runtime;
 }
 
 class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
-  readonly #options: MenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: SemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>>; readonly #policies: MenuPolicies<ID>; readonly #openControlled: boolean; readonly #elements = new Map<ID, HTMLElement>(); readonly #submenus = new Map<ID, HTMLElement>();
+  readonly #options: MenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>; readonly #policies: MenuPolicies<ID>; readonly #elements = new Map<ID, HTMLElement>(); readonly #submenus = new Map<ID, HTMLElement>();
   readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined; readonly #popupPosition: FloatingPositionConnection | undefined; readonly #submenuPositions = new Map<ID, FloatingPositionConnection>();
   #typeaheadBuffer = ''; #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
-  public constructor(options: MenuControlOptions<ID>, tree: Tree<ID>, runtime: SemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>>, policies: MenuPolicies<ID>, openControlled: boolean) {
-    this.#options = options; this.#tree = tree; this.#runtime = runtime; this.#policies = policies; this.#openControlled = openControlled;
+  public constructor(options: MenuControlOptions<ID>, tree: Tree<ID>, runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>, policies: MenuPolicies<ID>) {
+    this.#options = options; this.#tree = tree; this.#runtime = runtime; this.#policies = policies;
     setInteractionAttributes(options.root, options); if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options, { native: true });
     this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
     this.#layer = options.kind === 'menu-button' && options.trigger !== undefined ? createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close-popup'); } }) : undefined;
@@ -89,9 +98,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   }
   public getSnapshot(): RevisionSnapshot<MenuState<ID>> { return this.#runtime.getSnapshot(); }
   public syncControlledValue(open: boolean): Result<RevisionSnapshot<MenuState<ID>>> {
-    if (!this.#openControlled) return { ok: false, error: { class: 'construction', code: 'uncontrolled-controller-sync', message: 'Only a controlled menu button can synchronize open state.' } };
-    const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(tryCreateMenuState(this.#tree, open, open ? state.cursor.current : null, open ? state.openPath : []));
+    const result = this.#runtime.syncControlledValue(open);
     if (result.ok) { this.#refresh(); this.#options.onUpdate?.(); }
     return result;
   }

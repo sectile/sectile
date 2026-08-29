@@ -1,7 +1,10 @@
 import type { Result } from '@sectile/core';
 import type { InteractionStateInput } from '@sectile/core/interaction';
 import type { MachineUpdate, RevisionSnapshot } from '@sectile/core/revision';
-import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import {
+  createControlledComponentController,
+  type ControlledComponentController,
+} from '@sectile/core/adapter-runtime';
 
 export interface DOMCheckedControl<State, Event, Value> {
   getSnapshot(): RevisionSnapshot<State>;
@@ -15,7 +18,7 @@ export interface CheckedControlController<State, Event, Value> {
   syncControlledValue(value: Value): Result<RevisionSnapshot<State>>;
   handleEvent(event: Event): boolean;
 }
-export interface CheckedControlControllerOptions<State, Event, Command, Value> {
+export interface CheckedControlControllerOptions<State, Event, Command extends object, Value> {
   readonly controlled: boolean;
   readonly initial: Result<State>;
   readonly reducer: (state: State, event: Event) => Result<MachineUpdate<State, Command>>;
@@ -24,7 +27,7 @@ export interface CheckedControlControllerOptions<State, Event, Command, Value> {
   readonly onChange: ((value: Value) => void) | undefined;
   readonly interaction?: InteractionStateInput;
 }
-export interface DOMCheckedControlOptions<State, Event, Command, Value> {
+export interface DOMCheckedControlOptions<State, Event, Command extends object, Value> {
   readonly element: HTMLElement; readonly role?: string; readonly attribute: 'aria-checked' | 'aria-pressed';
   readonly controlled: boolean; readonly initial: Result<State>; readonly toggleEvent: Event;
   readonly reducer: (state: State, event: Event) => Result<MachineUpdate<State, Command>>;
@@ -47,25 +50,20 @@ export interface CheckedControlAttributes {
   readonly readOnly: boolean | undefined;
 }
 
-export function createCheckedControlController<State, Event, Command, Value>(
+export function createCheckedControlController<State, Event, Command extends object, Value>(
   options: CheckedControlControllerOptions<State, Event, Command, Value>,
 ): Result<CheckedControlController<State, Event, Value>> {
-  const runtime = createSemanticController<State, Event, Command, Command>({
+  const runtime = createControlledComponentController<State, Event, Command, Value>({
+    controlled: options.controlled,
     initial: options.initial,
     reducer: options.reducer,
-    reconcile: (previous, proposed) => options.controlled
-      ? options.create(options.read(previous))
-      : options.create(options.read(proposed)),
-    notify: (previous, proposed) => {
-      if (options.read(previous) !== options.read(proposed)) {
-        options.onChange?.(options.read(proposed));
-      }
-    },
-    toEffect: (command) => command,
-    interaction: options.interaction,
+    create: (value) => options.create(value),
+    read: options.read,
+    onChange: (value) => options.onChange?.(value),
+    ...(options.interaction === undefined ? {} : { interaction: options.interaction }),
   });
   if (!runtime.ok) return runtime;
-  return { ok: true, value: new CheckedControlControllerImpl(options, runtime.value) };
+  return { ok: true, value: checkedControlAdapter(runtime.value) };
 }
 
 export function getCheckedControlAttributes<Value>(options: {
@@ -100,7 +98,7 @@ export function getCheckedControlAttributes<Value>(options: {
   });
 }
 
-export function createDOMCheckedControl<State, Event, Command, Value>(options: DOMCheckedControlOptions<State, Event, Command, Value>): Result<DOMCheckedControl<State, Event, Value>> {
+export function createDOMCheckedControl<State, Event, Command extends object, Value>(options: DOMCheckedControlOptions<State, Event, Command, Value>): Result<DOMCheckedControl<State, Event, Value>> {
   const controller = createCheckedControlController<State, Event, Command, Value>({
     controlled: options.controlled,
     initial: options.initial,
@@ -113,7 +111,7 @@ export function createDOMCheckedControl<State, Event, Command, Value>(options: D
   if (!controller.ok) return controller;
   return { ok: true, value: new DOMCheckedControlImpl(options, controller.value) };
 }
-class DOMCheckedControlImpl<State, Event, Command, Value> implements DOMCheckedControl<State, Event, Value> {
+class DOMCheckedControlImpl<State, Event, Command extends object, Value> implements DOMCheckedControl<State, Event, Value> {
   readonly #options: DOMCheckedControlOptions<State, Event, Command, Value>;
   readonly #controller: CheckedControlController<State, Event, Value>; readonly #click: () => void;
   public constructor(options: DOMCheckedControlOptions<State, Event, Command, Value>, controller: CheckedControlController<State, Event, Value>) {
@@ -143,19 +141,14 @@ class DOMCheckedControlImpl<State, Event, Command, Value> implements DOMCheckedC
   public disconnect(): void { this.#options.element.removeEventListener('click', this.#click); }
 }
 
-class CheckedControlControllerImpl<State, Event, Command, Value> implements CheckedControlController<State, Event, Value> {
-  readonly #options: CheckedControlControllerOptions<State, Event, Command, Value>;
-  readonly #runtime: SemanticController<State, Event, Command>;
-  public constructor(options: CheckedControlControllerOptions<State, Event, Command, Value>, runtime: SemanticController<State, Event, Command>) {
-    this.#options = options;
-    this.#runtime = runtime;
-  }
-  public getSnapshot(): RevisionSnapshot<State> { return this.#runtime.getSnapshot(); }
-  public syncControlledValue(value: Value): Result<RevisionSnapshot<State>> {
-    if (!this.#options.controlled) return { ok: false, error: { class: 'construction', code: 'uncontrolled-controller-sync', message: 'An uncontrolled checked control cannot be synchronized externally.' } };
-    return this.#runtime.replace(this.#options.create(value));
-  }
-  public handleEvent(event: Event): boolean { return this.#runtime.handle(event).ok; }
+function checkedControlAdapter<State, Event, Command, Value>(
+  controller: ControlledComponentController<State, Event, Command, Value>,
+): CheckedControlController<State, Event, Value> {
+  return Object.freeze({
+    getSnapshot: () => controller.getSnapshot(),
+    syncControlledValue: (value: Value) => controller.syncControlledValue(value),
+    handleEvent: (event: Event) => controller.handle(event).ok,
+  });
 }
 
 function applyCheckedControlAttributes(element: HTMLElement, attributes: CheckedControlAttributes): void {

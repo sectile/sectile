@@ -86,14 +86,22 @@ for (const domain of manifest.domainAuthority) {
 
 for (const projection of manifest.componentAuthority.hostProjections) {
   assert.equal(projection.classification, 'platform-only', `${projection.name}: hosts are projections.`);
-  assert.ok(exceptions.has(projection.migrationException),
-    `${projection.name}: host semantic exception must be reviewed.`);
+  if (projection.migrationException !== undefined) {
+    assert.ok(exceptions.has(projection.migrationException),
+      `${projection.name}: host semantic exception must be reviewed.`);
+  }
 }
 
 for (const helperRoot of manifest.hostHelperRoots) {
   assert.equal(helperRoot.classification, 'platform-only', `${helperRoot.root}: helper root must be platform-only.`);
-  assert.ok(exceptions.has(helperRoot.semanticException),
-    `${helperRoot.root}: semantic helper exception must be reviewed.`);
+  if (helperRoot.semanticException !== undefined) {
+    assert.ok(exceptions.has(helperRoot.semanticException),
+      `${helperRoot.root}: semantic helper exception must be reviewed.`);
+  }
+  assert.ok(
+    helperRoot.semanticPaths.length === 0 || helperRoot.semanticException !== undefined,
+    `${helperRoot.root}: semantic helper paths require a reviewed exception.`,
+  );
   assertUnique(helperRoot.semanticPaths, `${helperRoot.root} semantic helper paths`);
   const files = await sourceFiles(helperRoot.root);
   const fileSet = new Set(files);

@@ -1,5 +1,6 @@
 import {
   applyFormEvent,
+  getFormField,
   tryCreateFormState,
   type FormCommand,
   type FormEvent,
@@ -320,7 +321,7 @@ export function tryCreateForm<
     return result.value.commands;
   };
   const field = (id: ID): FormFieldState<ID> | undefined => (
-    state.fields.find((candidate) => candidate.id === id)
+    getFormField(state, id) ?? undefined
   );
   const updateParticipant = (
     participant: FormParticipant<ID>,
@@ -332,10 +333,9 @@ export function tryCreateForm<
     const dirty = flags.dirty ?? current.dirty;
     if (touched === current.touched && dirty === current.dirty) return true;
     return transition({
-      type: 'update-field',
+      type: 'set-field-meta',
       id: participant.id,
-      touched,
-      dirty,
+      meta: { touched, dirty },
     }) !== null;
   };
   const valuesEqual = (
@@ -877,9 +877,9 @@ export function tryCreateForm<
     participant.element.dataset['part'] = 'field';
     if (replacing) {
       transition({
-        type: 'update-field',
+        type: 'set-field-meta',
         id: participant.id,
-        name: readParticipantName(participant),
+        meta: { name: readParticipantName(participant) },
       });
     } else {
       transition({
@@ -916,7 +916,9 @@ export function tryCreateForm<
       observeParticipant(participant);
       const currentField = field(id);
       const name = readParticipantName(participant);
-      if (currentField?.name !== name) transition({ type: 'update-field', id, name });
+      if (currentField?.name !== name) {
+        transition({ type: 'set-field-meta', id, meta: { name } });
+      }
       const previous = participantValues.get(id);
       const current = captureParticipant(participant);
       const baseline = participantBaselines.get(id);

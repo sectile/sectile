@@ -1,7 +1,10 @@
 import type { Result } from '@sectile/core';
 import type { InteractionStateInput } from '@sectile/core/interaction';
 import type { MachineUpdate, RevisionSnapshot } from '@sectile/core/revision';
-import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import {
+  createControlledComponentController,
+  type ControlledComponentController,
+} from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './interaction.js';
 import {
   createDOMLayerID,
@@ -23,7 +26,7 @@ export interface DOMPopupConnection<State, Event> {
   disconnect(): void;
 }
 
-export interface DOMPopupOptions<State, Event, Command> {
+export interface DOMPopupOptions<State, Event, Command extends object> {
   readonly root: HTMLElement;
   readonly trigger?: HTMLElement;
   readonly role: 'dialog' | 'alertdialog' | 'tooltip';
@@ -56,22 +59,23 @@ export interface DOMPopupOptions<State, Event, Command> {
   readonly manageVisibility?: boolean;
 }
 
-export function createDOMPopup<State, Event, Command>(options: DOMPopupOptions<State, Event, Command>): Result<DOMPopupConnection<State, Event>> {
-  const runtime = createSemanticController<State, Event, Command, Command>({
+export function createDOMPopup<State, Event, Command extends object>(options: DOMPopupOptions<State, Event, Command>): Result<DOMPopupConnection<State, Event>> {
+  const runtime = createControlledComponentController<State, Event, Command, boolean>({
+    controlled: options.controlled,
     initial: options.initial,
     reducer: options.reducer,
-    reconcile: (previous, proposed) => options.create(options.controlled ? options.read(previous) : options.read(proposed), proposed),
-    notify: (previous, proposed) => { if (options.read(previous) !== options.read(proposed)) options.onOpenChange?.(options.read(proposed)); },
-    toEffect: (command) => command,
-    interaction: options.interaction,
+    create: options.create,
+    read: options.read,
+    onChange: (open) => options.onOpenChange?.(open),
+    ...(options.interaction === undefined ? {} : { interaction: options.interaction }),
   });
   if (!runtime.ok) return runtime;
   return { ok: true, value: new DOMPopup(options, runtime.value) };
 }
 
-class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event> {
+class DOMPopup<State, Event, Command extends object> implements DOMPopupConnection<State, Event> {
   readonly #options: DOMPopupOptions<State, Event, Command>;
-  readonly #runtime: SemanticController<State, Event, Command>;
+  readonly #runtime: ControlledComponentController<State, Event, Command, boolean>;
   readonly #click: () => void;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #documentKeydown: (event: KeyboardEvent) => void;
@@ -87,7 +91,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
   #focused = false;
   #hovered = false;
 
-  public constructor(options: DOMPopupOptions<State, Event, Command>, runtime: SemanticController<State, Event, Command>) {
+  public constructor(options: DOMPopupOptions<State, Event, Command>, runtime: ControlledComponentController<State, Event, Command, boolean>) {
     this.#options = options;
     this.#runtime = runtime;
     this.#layerID = createDOMLayerID();
@@ -148,9 +152,8 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
 
   public getSnapshot(): RevisionSnapshot<State> { return this.#runtime.getSnapshot(); }
   public syncControlledValue(open: boolean): Result<RevisionSnapshot<State>> {
-    if (!this.#options.controlled) return { ok: false, error: { class: 'construction', code: 'uncontrolled-controller-sync', message: 'An uncontrolled popup cannot be synchronized externally.' } };
     const previous = this.#isOpen();
-    const result = this.#runtime.replace(this.#options.create(open, this.#runtime.getSnapshot().state));
+    const result = this.#runtime.syncControlledValue(open);
     if (result.ok) { this.#refresh(previous); this.#options.onUpdate?.(); }
     return result;
   }

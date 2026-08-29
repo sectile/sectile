@@ -13,6 +13,7 @@ import {
   type ExactDecimal,
 } from '../internal/kernel/decimal.js';
 import { fail, ok, validateSafeCeiling } from '../internal/kernel/foundation.js';
+import { formatRatioPercentage } from '../internal/kernel/bounded-scalar.js';
 
 export interface RangeOptions {
   readonly maxCount?: number;
@@ -44,6 +45,10 @@ export interface ExactRatioOptions {
 
 export const DEFAULT_MAX_RATIO_NUMERATOR_BITS = 4_096;
 export const DEFAULT_MAX_RATIO_DENOMINATOR_BITS = 4_096;
+
+export function formatExactRatioPercentage(ratio: ExactRatio): string {
+  return formatRatioPercentage(createExactRatio(ratio.numerator, ratio.denominator));
+}
 
 interface RatioLimits {
   readonly maxNumeratorBits: number;

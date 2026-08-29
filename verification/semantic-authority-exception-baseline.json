@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "ids": [
-    "dom-component-semantics",
     "floating-positioning-surface",
     "terminal-component-semantics",
     "vue-component-semantics",
