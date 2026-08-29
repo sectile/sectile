@@ -3,6 +3,7 @@ import { TextField } from '@sectile/vue/text';
 import { computed, ref } from 'vue';
 import catalog from '../../../data/components.json' with { type: 'json' };
 import { componentSections } from '../../../data/component-sections.js';
+import { catalogMatchRank } from '../catalog-search.js';
 import { useDocsLocale } from '../locale.js';
 import ComponentGalleryCard from './ComponentGalleryCard.vue';
 import DocsSearchField from './DocsSearchField.vue';
@@ -26,24 +27,34 @@ const familyName = (family: string) => isKorean.value ? (koFamilies[family] ?? t
 const componentsById = new Map(catalog.components.map((component) => [component.id, component]));
 
 const sections = computed(() => {
-  const search = query.value.trim().toLowerCase();
+  const search = query.value.trim();
 
   return componentSections
-    .map((section) => ({
-      ...section,
-      title: isKorean.value ? section.koText : section.text,
-      components: section.componentIds
+    .map((section, sectionIndex) => {
+      const components = section.componentIds
         .map((id) => componentsById.get(id))
         .filter((component): component is NonNullable<typeof component> => component !== undefined)
-        .filter((component) => search.length === 0 || [
-          component.id,
-          title(component.id).toLowerCase(),
-          component.family,
-          familyName(component.family).toLowerCase(),
-          ...component.capabilities,
-        ].some((value) => value.includes(search))),
-    }))
-    .filter((section) => section.components.length > 0);
+        .map((component, componentIndex) => ({
+          component,
+          componentIndex,
+          rank: catalogMatchRank(component, search, {
+            title: title(component.id),
+            family: familyName(component.family),
+          }),
+        }))
+        .filter(({ rank }) => Number.isFinite(rank))
+        .sort((left, right) => left.rank - right.rank || left.componentIndex - right.componentIndex);
+
+      return {
+        ...section,
+        sectionIndex,
+        title: isKorean.value ? section.koText : section.text,
+        components: components.map(({ component }) => component),
+        rank: components[0]?.rank ?? Number.POSITIVE_INFINITY,
+      };
+    })
+    .filter((section) => section.components.length > 0)
+    .sort((left, right) => left.rank - right.rank || left.sectionIndex - right.sectionIndex);
 });
 </script>
 

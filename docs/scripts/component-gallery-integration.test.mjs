@@ -16,6 +16,36 @@ test('component previews are visibility-gated during client-side navigation', as
   assert.doesNotMatch(source, /hydrateOnVisible/u);
 });
 
+test('component gallery previews keep every rendered overlay non-interactive', async () => {
+  const preview = await readFile(
+    new URL('.vitepress/theme/components/ComponentGalleryPreview.vue', docsRoot),
+    'utf8',
+  );
+  const card = await readFile(
+    new URL('.vitepress/theme/components/ComponentGalleryCard.vue', docsRoot),
+    'utf8',
+  );
+
+  assert.match(preview, /aria-hidden="true"\s+inert/u);
+  assert.match(preview, /<HostProvider :portal-target="portalTarget \?\? undefined">/u);
+  assert.match(preview, /\.component-gallery-preview\s*\{[^}]*pointer-events:\s*none;/u);
+  assert.match(card, /\.component-gallery-card\s*\{[^}]*isolation:\s*isolate;/u);
+  assert.match(card, /\.component-gallery-card__link\s*\{[^}]*z-index:\s*2;/u);
+});
+
+test('select previews keep the trigger surface stable and use a restrained selection tint', async () => {
+  const source = await readFile(
+    new URL('.vitepress/theme/components/DemoSelect.vue', docsRoot),
+    'utf8',
+  );
+  const triggerHover = source.match(/\.demo-select__trigger:hover:not\(:disabled\)\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';
+
+  assert.match(triggerHover, /background:\s*var\(--sectile-surface\);/u);
+  assert.doesNotMatch(triggerHover, /background:\s*var\(--sectile-surface-hover\);/u);
+  assert.match(source, /\.demo-select__option:is\(\[data-selected\], \[data-state="checked"\]\)\s*\{\s*background:\s*var\(--sectile-surface-interactive\);/u);
+  assert.match(source, /\[data-highlighted\][^{]*:not\(\[data-selected\]\):not\(\[data-state="checked"\]\)/u);
+});
+
 test('component example cards round their own surfaces without clipping floating content', async () => {
   const source = await readFile(
     new URL('.vitepress/theme/styles.css', docsRoot),

@@ -1,31 +1,38 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+
 defineOptions({ inheritAttrs: false });
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
+  readonly as?: 'button' | 'a' | 'label';
   readonly appearance?: 'primary' | 'outline' | 'ghost';
   readonly compact?: boolean;
   readonly href?: string;
   readonly iconOnly?: boolean;
   readonly large?: boolean;
+  readonly type?: 'button' | 'submit' | 'reset';
 }>(), {
   appearance: 'outline',
   compact: false,
   iconOnly: false,
   large: false,
+  type: 'button',
 });
+
+const element = computed(() => props.as ?? (props.href === undefined ? 'button' : 'a'));
 </script>
 
 <template>
   <component
-    :is="href ? 'a' : 'button'"
+    :is="element"
     v-bind="$attrs"
     class="docs-button"
-    :href="href"
-    :type="href ? undefined : 'button'"
-    :data-appearance="appearance"
-    :data-compact="compact ? '' : undefined"
-    :data-icon-only="iconOnly ? '' : undefined"
-    :data-large="large ? '' : undefined"
+    :href="element === 'a' ? props.href : undefined"
+    :type="element === 'button' ? props.type : undefined"
+    :data-appearance="props.appearance"
+    :data-compact="props.compact ? '' : undefined"
+    :data-icon-only="props.iconOnly ? '' : undefined"
+    :data-large="props.large ? '' : undefined"
   >
     <slot />
   </component>
@@ -88,25 +95,37 @@ withDefaults(defineProps<{
   background: transparent;
 }
 
-.docs-button:hover {
+.docs-button:hover:not(:disabled) {
   border-color: var(--sectile-border-strong);
   color: var(--sectile-content-primary);
   background: var(--sectile-surface-hover);
 }
 
-.docs-button[data-large]:hover {
+.docs-button[data-large]:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
-.docs-button[data-appearance='primary']:hover {
+.docs-button[data-appearance='primary']:hover:not(:disabled) {
   border-color: var(--sectile-action-hover);
   color: var(--sectile-content-on-accent);
   background: var(--sectile-action-hover);
 }
 
-.docs-button:focus-visible {
+.docs-button:focus-visible,
+.docs-button:has(input:focus-visible) {
   outline: 2px solid var(--sectile-focus-ring);
   outline-offset: 2px;
+}
+
+.docs-button:active:not(:disabled) {
+  background: var(--sectile-surface-selected);
+  transform: translateY(1px);
+}
+
+.docs-button[data-appearance='primary']:active:not(:disabled) {
+  border-color: var(--sectile-action-hover);
+  color: var(--sectile-content-on-accent);
+  background: var(--sectile-action-hover);
 }
 
 .docs-button:disabled {
@@ -114,6 +133,7 @@ withDefaults(defineProps<{
   color: var(--sectile-content-disabled);
   background: var(--sectile-surface-disabled);
   cursor: not-allowed;
+  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

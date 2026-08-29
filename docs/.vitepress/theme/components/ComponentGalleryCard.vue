@@ -24,6 +24,7 @@ defineProps<{
 <style scoped>
 .component-gallery-card {
   position: relative;
+  isolation: isolate;
   min-width: 0;
   margin: 0;
   overflow: hidden;
@@ -40,7 +41,7 @@ defineProps<{
 
 .component-gallery-card__link {
   position: absolute;
-  z-index: 1;
+  z-index: 2;
   inset: 0;
 }
 

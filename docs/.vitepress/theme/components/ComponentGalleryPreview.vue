@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue';
+import { HostProvider } from '@sectile/vue/host-provider';
 import { pinInputExampleOptions } from '../pin-input-example-options.js';
 
 const ComponentExamplePreview = defineAsyncComponent(() => import('./ComponentExamplePreview.vue'));
@@ -13,6 +14,7 @@ const pinOptions = computed(() => props.component === 'pin-input'
   ? pinInputExampleOptions(props.scenario)
   : undefined);
 const previewRoot = ref<HTMLElement | null>(null);
+const portalTarget = ref<HTMLElement | null>(null);
 const shouldRender = ref(false);
 let observer: IntersectionObserver | undefined;
 
@@ -39,16 +41,18 @@ onBeforeUnmount(() => observer?.disconnect());
     aria-hidden="true"
     inert
   >
-    <div class="component-gallery-preview__render">
-      <ComponentExamplePreview
-        v-if="shouldRender"
-        :component="component"
-        :scenario="scenario"
-        title=""
-        description=""
-        :pin-input-options="pinOptions"
-        preview
-      />
+    <div ref="portalTarget" class="component-gallery-preview__render">
+      <HostProvider v-if="portalTarget !== null" :portal-target="portalTarget">
+        <ComponentExamplePreview
+          v-if="shouldRender"
+          :component="component"
+          :scenario="scenario"
+          title=""
+          description=""
+          :pin-input-options="pinOptions"
+          preview
+        />
+      </HostProvider>
     </div>
   </div>
 </template>
@@ -56,6 +60,7 @@ onBeforeUnmount(() => observer?.disconnect());
 <style scoped>
 .component-gallery-preview {
   position: relative;
+  z-index: 0;
   height: 360px;
   overflow: hidden;
   border-bottom: 1px solid var(--vp-c-divider);

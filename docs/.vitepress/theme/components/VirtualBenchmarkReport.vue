@@ -12,6 +12,9 @@ import {
   type BenchmarkLocation,
   type BenchmarkOperation,
   type BenchmarkRowProfile,
+  type BaselineBenchmarkFailure,
+  type BaselineBenchmarkResult,
+  type BenchmarkRowProfileConditions,
   type MutationBenchmarkResult,
 } from '../virtual-benchmark-data.js';
 
@@ -27,7 +30,26 @@ type ChartResult = {
   readonly state: string | null;
   readonly notice: string | null;
   readonly failed: boolean;
+  readonly evidence: string | null;
 };
+
+const props = withDefaults(defineProps<{
+  readonly baselineResults?: readonly BaselineBenchmarkResult[];
+  readonly baselineFailures?: readonly BaselineBenchmarkFailure[];
+  readonly mutationResults?: readonly MutationBenchmarkResult[];
+  readonly rowProfileConditions?: Readonly<Partial<Record<BenchmarkRowProfile, BenchmarkRowProfileConditions>>>;
+  readonly defaultSelection?: string;
+  readonly showHeading?: boolean;
+  readonly showCriteria?: boolean;
+}>(), {
+  baselineResults: () => baselineBenchmarkResults,
+  baselineFailures: () => baselineBenchmarkFailures,
+  mutationResults: () => mutationBenchmarkResults,
+  rowProfileConditions: () => benchmarkRowProfiles,
+  defaultSelection: 'uniform:mount:fixed',
+  showHeading: true,
+  showCriteria: true,
+});
 
 const { isKorean } = useDocsLocale();
 const baselineScenarios: readonly BaselineScenario[] = Object.freeze(['mount', 'scroll']);
@@ -48,7 +70,7 @@ const cascadeNodes = Object.freeze([
     }))),
   ])),
 ]);
-const cascadeValue = ref<string | null>('uniform:mount:fixed');
+const cascadeValue = ref<string | null>(props.defaultSelection);
 
 const copy = computed(() => isKorean.value ? {
   title: '같은 조건에서 결과 비교',
@@ -72,6 +94,9 @@ const copy = computed(() => isKorean.value ? {
     ? `${total}회 모두 ${failures} 오류로 정상 화면에 도달하지 못했습니다.`
     : `${total}회 중 ${failed}회는 ${failures} 오류로 정상 화면에 도달하지 못했습니다.`,
   earlyStop: (actual: number, planned: number) => `동일 오류가 재현되어 ${planned}회 중 ${actual}회에서 종료했습니다.`,
+  mountEvidence: (rounds: number) => `${rounds}라운드`,
+  scrollEvidence: (samples: number, rounds: number, range: readonly [number, number]) => `표본 ${samples} · ${rounds}라운드 · 중앙값 범위 ${range[0].toFixed(1)}–${range[1].toFixed(1)} ms`,
+  mutationEvidence: (samples: number, planned: number) => `표본 ${samples}/${planned}`,
   failureCode: { exception: '실행', 'target-position': '대상 행 배치', 'scroll-anchor': '기준 행 이동', 'row-overlap': '행 겹침', 'scroll-height': '전체 높이 오차', 'blank-viewport': '빈 화면', timeout: '안정화 실패', 'row-gap': '행 사이 빈틈', 'row-height': '행 높이 오차', 'row-order': '행 순서 오류', 'duplicate-id': 'ID 중복', 'unexpected-id': '잘못된 ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `최대 ${maximum.toFixed(0)} ms · 로그 눈금` : `최대 ${maximum.toFixed(0)} ms`,
   criteriaTitle: '이 그래프의 측정 기준',
@@ -140,6 +165,9 @@ const copy = computed(() => isKorean.value ? {
     ? `All ${total} runs failed to reach a correct screen due to ${failures}.`
     : `${failed} of ${total} runs failed to reach a correct screen due to ${failures}.`,
   earlyStop: (actual: number, planned: number) => `The repeated error stopped the run after ${actual} of ${planned} samples.`,
+  mountEvidence: (rounds: number) => `${rounds} rounds`,
+  scrollEvidence: (samples: number, rounds: number, range: readonly [number, number]) => `n=${samples} · ${rounds} rounds · median range ${range[0].toFixed(1)}–${range[1].toFixed(1)} ms`,
+  mutationEvidence: (samples: number, planned: number) => `n=${samples}/${planned}`,
   failureCode: { exception: 'an execution error', 'target-position': 'target-row positioning', 'scroll-anchor': 'anchor movement', 'row-overlap': 'row overlap', 'scroll-height': 'a scroll-height error', 'blank-viewport': 'a blank viewport', timeout: 'a settle timeout', 'row-gap': 'a row gap', 'row-height': 'a row-height error', 'row-order': 'a row-order error', 'duplicate-id': 'a duplicate ID', 'unexpected-id': 'an unexpected ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `Max ${maximum.toFixed(0)} ms · logarithmic scale` : `Max ${maximum.toFixed(0)} ms`,
   criteriaTitle: 'Measurement criteria for this chart',
@@ -200,9 +228,15 @@ const legendSlots = computed<readonly (string | null)[]>(() => {
   if (scenario.value === 'scroll') return copy.value.scrollLegend;
   return copy.value.mutationLegend;
 });
-const libraryMetadata = computed(() => baselineBenchmarkResults
-  .filter((result) => result.mode === 'fixed')
-  .map(({ library, version, stack }) => ({ library, version, stack })));
+const libraryMetadata = computed(() => {
+  const entries = [...props.baselineResults, ...props.baselineFailures, ...props.mutationResults];
+  const seen = new Set<string>();
+  return entries.flatMap(({ library, version, stack }) => {
+    if (seen.has(library)) return [];
+    seen.add(library);
+    return [{ library, version, stack }];
+  });
+});
 
 const chartResults = computed<readonly ChartResult[]>(() => libraryMetadata.value.map((metadata) => {
   if (isBaselineScenario(scenario.value)) return baselineResult(metadata);
@@ -257,11 +291,11 @@ const selectedDescription = computed(() => {
 const totalHeightCriterion = computed(() => {
   if (rowProfile.value === 'uniform') return copy.value.criteriaValue.totalHeight.uniform;
   if (!isBaselineScenario(scenario.value)) return copy.value.criteriaValue.totalHeight.mutation;
-  const result = baselineBenchmarkResults.find((entry) => entry.rowProfile === rowProfile.value
+  const result = props.baselineResults.find((entry) => entry.rowProfile === rowProfile.value
     && entry.mode === baselineMode.value
     && entry.library === 'Sectile Virtual');
   if (result === undefined) return copy.value.criteriaValue.totalHeight.unavailable;
-  const distribution = benchmarkRowProfiles.heterogeneous?.heightDistribution;
+  const distribution = props.rowProfileConditions.heterogeneous?.heightDistribution;
   if (distribution === undefined) return copy.value.criteriaValue.totalHeight.unavailable;
   return copy.value.criteriaValue.totalHeight.measured(
     distribution.minimum,
@@ -291,9 +325,9 @@ const benchmarkCriteria = computed(() => {
 });
 
 function baselineResult(metadata: { readonly library: string; readonly version: string; readonly stack: string }): ChartResult {
-  const result = baselineBenchmarkResults.find((entry) => entry.rowProfile === rowProfile.value && entry.library === metadata.library && entry.mode === baselineMode.value);
+  const result = props.baselineResults.find((entry) => entry.rowProfile === rowProfile.value && entry.library === metadata.library && entry.mode === baselineMode.value);
   if (result === undefined) {
-    const failure = baselineBenchmarkFailures.find((entry) => entry.rowProfile === rowProfile.value && entry.library === metadata.library && entry.mode === baselineMode.value);
+    const failure = props.baselineFailures.find((entry) => entry.rowProfile === rowProfile.value && entry.library === metadata.library && entry.mode === baselineMode.value);
     if (failure === undefined) return unsupportedResult(metadata);
     return {
       ...metadata,
@@ -303,16 +337,28 @@ function baselineResult(metadata: { readonly library: string; readonly version: 
       state: copy.value.baselineFailure(failure.failedRounds, failure.totalRounds),
       notice: null,
       failed: true,
+      evidence: null,
     };
   }
   const values = scenario.value === 'mount'
     ? [result.mountMs, null, null]
     : [result.scrollMedianMs, result.scrollP95Ms, null];
-  return { ...metadata, values, initialRenderMs: result.mountMs, slowTailMs: [], state: null, notice: null, failed: false };
+  return {
+    ...metadata,
+    values,
+    initialRenderMs: result.mountMs,
+    slowTailMs: [],
+    state: null,
+    notice: null,
+    failed: false,
+    evidence: scenario.value === 'mount'
+      ? copy.value.mountEvidence(result.completedRounds)
+      : copy.value.scrollEvidence(result.scrollSampleCount, result.completedRounds, result.scrollRoundMedianRangeMs),
+  };
 }
 
 function mutationResult(metadata: { readonly library: string; readonly version: string; readonly stack: string }): ChartResult {
-  const result = mutationBenchmarkResults.find((entry) => entry.rowProfile === rowProfile.value
+  const result = props.mutationResults.find((entry) => entry.rowProfile === rowProfile.value
     && entry.library === metadata.library
     && entry.sizeMode === mutationMode.value
     && entry.operation === scenario.value
@@ -329,6 +375,7 @@ function mutationResult(metadata: { readonly library: string; readonly version: 
     state,
     notice,
     failed: result.failedSamples > 0,
+    evidence: copy.value.mutationEvidence(result.totalSamples, result.plannedSamples ?? result.totalSamples),
   };
 }
 
@@ -341,6 +388,7 @@ function unsupportedResult(metadata: { readonly library: string; readonly versio
     state: copy.value.unsupported,
     notice: null,
     failed: false,
+    evidence: null,
   };
 }
 
@@ -433,8 +481,12 @@ function failureLabel(result: MutationBenchmarkResult): string {
 </script>
 
 <template>
-  <section class="virtual-benchmark-report" aria-labelledby="benchmark-report-title">
-    <header class="report-heading">
+  <section
+    class="virtual-benchmark-report"
+    :aria-labelledby="showHeading ? 'benchmark-report-title' : undefined"
+    :aria-label="showHeading ? undefined : copy.conditionLabel"
+  >
+    <header v-if="showHeading" class="report-heading">
       <h2 id="benchmark-report-title">{{ copy.title }}</h2>
       <p>{{ copy.description }}</p>
     </header>
@@ -467,6 +519,11 @@ function failureLabel(result: MutationBenchmarkResult): string {
           <header>
             <strong>{{ result.library }}</strong>
             <small>v{{ result.version }} · {{ result.stack }}</small>
+            <small
+              class="benchmark-row__evidence"
+              :class="{ 'is-placeholder': result.evidence === null }"
+              :aria-hidden="result.evidence === null"
+            >{{ result.evidence ?? '—' }}</small>
             <div
               class="initial-render-time"
               :class="{
@@ -556,7 +613,7 @@ function failureLabel(result: MutationBenchmarkResult): string {
         </div>
       </div>
 
-      <footer class="benchmark-criteria" :aria-label="copy.criteriaTitle">
+      <footer v-if="showCriteria" class="benchmark-criteria" :aria-label="copy.criteriaTitle">
         <strong>{{ copy.criteriaTitle }}</strong>
         <dl>
           <div v-for="criterion in benchmarkCriteria" :key="criterion.label">
@@ -589,10 +646,11 @@ function failureLabel(result: MutationBenchmarkResult): string {
 .is-series-4 { --bar-color: var(--sectile-content-secondary); }
 .benchmark-chart { border-top: 1px solid var(--sectile-border-subtle); }
 .benchmark-row { display: grid; grid-template-columns: minmax(152px, 0.32fr) minmax(0, 1fr); gap: 16px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--sectile-border-subtle); }
-.benchmark-row header { display: grid; min-width: 0; gap: 0; }
+.benchmark-row header { display: grid; min-width: 0; grid-template-rows: repeat(3, minmax(0, auto)) 13px; align-content: center; gap: 0; }
 .benchmark-row header strong { overflow: hidden; font-size: 0.78rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .benchmark-row.is-sectile header strong { color: var(--sectile-action); }
 .benchmark-row header small { min-width: 0; overflow: hidden; color: var(--sectile-content-tertiary); font-size: 0.64rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.benchmark-row header .benchmark-row__evidence { margin-top: 2px; color: var(--sectile-content-secondary); }
 .benchmark-row header .initial-render-time { display: grid; grid-template-columns: auto minmax(24px, 1fr) 52px; align-items: center; gap: 5px; min-width: 0; min-height: 11px; margin-top: 2px; color: var(--sectile-content-secondary); font-size: 0.62rem; line-height: 1; }
 .initial-render-time span { color: var(--sectile-content-tertiary); }
 .initial-render-time data { overflow: hidden; color: var(--sectile-content-primary); font-size: 0.64rem; font-variant-numeric: tabular-nums; font-weight: 650; text-align: right; text-overflow: ellipsis; white-space: nowrap; }

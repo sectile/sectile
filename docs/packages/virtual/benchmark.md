@@ -7,6 +7,8 @@ description: Same-condition measurements of display speed, dynamic height handli
 
 Seven libraries render the same 100,000 rows. The suite measures initial display, scroll response, and the time required to settle after inserts, moves, removals, and height changes. Change the controls to compare every result in the same chart.
 
+[Open the benchmark lab →](/benchmarks/virtual)
+
 <VirtualBenchmarkReport />
 
 ## Row profiles

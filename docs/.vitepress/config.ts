@@ -2,6 +2,7 @@ import { defineConfig, type DefaultTheme } from 'vitepress';
 import catalog from '../data/components.json' with { type: 'json' };
 import { componentSections } from '../data/component-sections.js';
 import { vueTemplateFencePlugin } from './markdown/vue-template-fences.mjs';
+import { virtualBenchmarkRunner } from './virtual-benchmark-runner.js';
 
 const base = '/sectile/';
 const markdownHighlightCache = new Map<string, string>();
@@ -128,6 +129,7 @@ const packageSidebar: DefaultTheme.SidebarItem[] = [
       { text: 'DOM connection', link: '/packages/virtual/dom' },
       { text: 'Vue connection', link: '/packages/virtual/vue' },
       { text: 'Benchmark', link: '/packages/virtual/benchmark' },
+      { text: 'Benchmark lab', link: '/benchmarks/virtual' },
     ],
   },
   {
@@ -204,6 +206,7 @@ const koPackageSidebar: DefaultTheme.SidebarItem[] = [
       { text: 'DOM 연결', link: '/ko/packages/virtual/dom' },
       { text: 'Vue 연결', link: '/ko/packages/virtual/vue' },
       { text: '벤치마크', link: '/ko/packages/virtual/benchmark' },
+      { text: '벤치마크 실행', link: '/ko/benchmarks/virtual' },
     ],
   },
   {
@@ -237,6 +240,7 @@ const rootLocaleTheme: DefaultTheme.Config = {
     { text: 'Core theory', link: '/theory/' },
     { text: 'Components', link: '/components/', activeMatch: '^/components/' },
     packageNav,
+    { text: 'Benchmark', link: '/benchmarks/virtual', activeMatch: '^/benchmarks/' },
   ],
   sidebar: {
     '/guide/': [
@@ -262,6 +266,7 @@ const koLocaleTheme: DefaultTheme.Config = {
     { text: '코어 이론', link: '/ko/theory/' },
     { text: '컴포넌트', link: '/ko/components/', activeMatch: '^/ko/components/' },
     koPackageNav,
+    { text: '벤치마크', link: '/ko/benchmarks/virtual', activeMatch: '^/ko/benchmarks/' },
   ],
   sidebar: {
     '/ko/guide/': [
@@ -352,6 +357,7 @@ export default defineConfig({
     },
   },
   vite: {
+    plugins: [virtualBenchmarkRunner()],
     ssr: {
       noExternal: ['@xterm/xterm', '@xterm/addon-fit'],
     },

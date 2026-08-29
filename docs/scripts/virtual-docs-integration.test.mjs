@@ -87,3 +87,133 @@ test('Virtual spatial examples use irregular coordinates and variable rectangles
   assert.match(examples, /:get-z-index="node => node\.layer"/u);
   assert.match(layouts, /불규칙한 군집/u);
 });
+
+test('Virtual benchmark lab stays isolated and reuses docs controls', async () => {
+  const [lab, report, popover, formField, tooltip, virtualList, button, englishPage, koreanPage, config, runnerPlugin] = await Promise.all([
+    source('.vitepress/theme/components/VirtualBenchmarkLab.vue'),
+    source('.vitepress/theme/components/VirtualBenchmarkReport.vue'),
+    source('.vitepress/theme/components/DemoPopover.vue'),
+    source('.vitepress/theme/components/DemoFormField.vue'),
+    source('.vitepress/theme/components/DemoTooltip.vue'),
+    source('.vitepress/theme/components/DemoVirtualList.vue'),
+    source('.vitepress/theme/components/DocsButton.vue'),
+    source('benchmarks/virtual.md'),
+    source('ko/benchmarks/virtual.md'),
+    source('.vitepress/config.ts'),
+    source('.vitepress/virtual-benchmark-runner.ts'),
+  ]);
+
+  for (const page of [englishPage, koreanPage]) {
+    assert.match(page, /layout: false/u);
+    assert.match(page, /<VirtualBenchmarkLab \/>/u);
+  }
+  for (const component of ['DemoFormField', 'DemoPopover', 'DemoProgress', 'DemoSpinButton', 'DemoVirtualList', 'DocsButton', 'VirtualBenchmarkReport']) {
+    assert.match(lab, new RegExp(`import ${component} from`));
+  }
+  assert.match(lab, /import DemoSelect,/u);
+  assert.match(lab, /both: '전체'/u);
+  assert.match(lab, /both: 'All'/u);
+  assert.doesNotMatch(lab, /from ['"]@sectile\/vue/u);
+  assert.doesNotMatch(lab, /\bsandbox=/u);
+  assert.match(lab, /event\.origin !== window\.location\.origin/u);
+  assert.match(lab, /event\.source !== runnerFrame\.value\?\.contentWindow/u);
+  assert.match(lab, /window\.setTimeout\(\(\) => URL\.revokeObjectURL\(url\), 0\)/u);
+  assert.match(lab, /interface BenchmarkTarget/u);
+  assert.match(lab, /function submitTarget/u);
+  assert.match(popover, /FormRoot/u);
+  assert.match(popover, /FormSubmit/u);
+  assert.match(popover, /FormSummary/u);
+  assert.doesNotMatch(popover, /close-on-interact-outside/u);
+  assert.match(popover, /<DocsButton compact appearance="ghost" @click="close">/u);
+  assert.doesNotMatch(lab, /<template #submit-icon>/u);
+  const configActions = lab.match(/\.benchmark-config__actions\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';
+  assert.doesNotMatch(configActions, /border-top|padding-top/u);
+  const targetList = lab.match(/\.benchmark-targets\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';
+  const target = lab.match(/\.benchmark-target\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';
+  const emptyTargets = lab.match(/\.benchmark-targets-empty\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';
+  assert.doesNotMatch(targetList, /border-block/u);
+  assert.doesNotMatch(emptyTargets, /border-block/u);
+  assert.match(target, /border-radius:\s*\.65rem/u);
+  assert.match(target, /box-shadow:\s*0 4px 14px/u);
+  assert.match(lab, /if \(message\.type === 'checkpoint'\) recordCheckpoint\(message\);/u);
+  assert.match(lab, /checkpoints\.value = \[\.\.\.checkpoints\.value, previousCheckpoint\]/u);
+  assert.match(lab, /checkpointHistoryList\.value\?\.isAtEnd\(\)/u);
+  assert.match(lab, /latestCheckpoint\.value = checkpoint/u);
+  assert.match(lab, /class="benchmark-checkpoints"/u);
+  assert.match(lab, /<DemoVirtualList/u);
+  assert.match(virtualList, /from '@sectile\/vue\/virtual\/list'/u);
+  const running = lab.match(/\.benchmark-running\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';
+  const runningStack = lab.match(/\.benchmark-running-stack\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';
+  const checkpointCard = lab.match(/\.benchmark-checkpoints\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';
+  assert.match(running, /flex:\s*0 0 auto/u);
+  assert.doesNotMatch(running, /min-height/u);
+  assert.match(runningStack, /height:\s*calc\(100dvh/u);
+  assert.match(runningStack, /min-height:\s*0/u);
+  assert.match(checkpointCard, /flex:\s*1/u);
+  assert.match(formField, /FormField/u);
+  assert.match(formField, /FormLabel/u);
+  assert.match(formField, /FormDescription/u);
+  assert.match(formField, /FormMessage/u);
+  assert.match(formField, /import DemoTooltip from/u);
+  assert.match(formField, /props\.minimumLabel/u);
+  assert.match(formField, /props\.maximumLabel/u);
+  assert.match(tooltip, /TooltipRoot/u);
+  assert.match(tooltip, /TooltipTrigger/u);
+  assert.match(tooltip, /TooltipPortal/u);
+  assert.match(tooltip, /TooltipContent/u);
+  assert.match(tooltip, /@click="open = true"/u);
+  assert.match(button, /readonly as\?: 'button' \| 'a' \| 'label'/u);
+  assert.match(button, /hover:not\(:disabled\)/u);
+  assert.match(button, /data-appearance='primary'\]:active:not\(:disabled\)/u);
+  assert.match(button, /\.docs-button:disabled/u);
+  assert.ok(button.indexOf('.docs-button:disabled') > button.indexOf(".docs-button[data-appearance='primary']"));
+  assert.doesNotMatch(lab, /benchmark-button/u);
+  assert.match(lab, /:hint="copy\.rowsHelp"/u);
+  assert.match(lab, /:readonly="preset !== 'custom'"/u);
+  assert.doesNotMatch(lab, /v-if="preset === 'custom'/u);
+  assert.match(lab, /const runQueue/u);
+  assert.match(lab, /const showRunWorkspace = computed\(\(\) => !viewingResults\.value/u);
+  assert.match(lab, /status\.value === 'cancelled'/u);
+  assert.match(lab, /v-else-if="showRunWorkspace"/u);
+  assert.match(lab, /v-if="resultGroups\.length > 0"/u);
+  assert.match(lab, /@click="viewingResults = true"/u);
+  assert.match(lab, /\.benchmark-library-totals thead\s*\{[\s\S]*border-bottom:\s*1px solid var\(--sectile-border-strong\)/u);
+  assert.match(lab, /reportTargetIDs/u);
+  assert.match(lab, /baselineSamples: baselineSamples\.value/u);
+  assert.match(lab, /partialRun\.value = imported\.partialResults\?\.run/u);
+  assert.match(lab, /imported\.partialResults === undefined \? 'complete' : 'cancelled'/u);
+  assert.match(report, /\.\.\.props\.baselineFailures/u);
+  assert.match(report, /showHeading \? 'benchmark-report-title' : undefined/u);
+  assert.match(report, /scenario\.value === 'mount'[\s\S]*mountEvidence/u);
+  assert.match(config, /plugins: \[virtualBenchmarkRunner\(\)\]/u);
+  assert.match(config, /text: 'Benchmark', link: '\/benchmarks\/virtual', activeMatch: '\^\/benchmarks\/'/u);
+  assert.match(config, /text: 'Benchmark lab', link: '\/benchmarks\/virtual'/u);
+  assert.match(config, /text: '벤치마크', link: '\/ko\/benchmarks\/virtual', activeMatch: '\^\/ko\/benchmarks\/'/u);
+  assert.match(config, /text: '벤치마크 실행', link: '\/ko\/benchmarks\/virtual'/u);
+  assert.match(runnerPlugin, /outDir: runnerOutput/u);
+  assert.match(runnerPlugin, /mode: 'production'/u);
+  assert.match(runnerPlugin, /'process\.env\.NODE_ENV': JSON\.stringify\('production'\)/u);
+});
+
+test('Virtual benchmark runner reports checkpoints without rendering live result tables', async () => {
+  const [runner, mutationRunner, fixedAdapters, mutableAdapters, viteConfig] = await Promise.all([
+    readFile(new URL('../../benchmarks/virtual-ecosystem/src/main.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../../benchmarks/virtual-ecosystem/src/mutation-runner.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../../benchmarks/virtual-ecosystem/src/adapters.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../../benchmarks/virtual-ecosystem/src/mutable-adapters.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../../benchmarks/virtual-ecosystem/vite.config.ts', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(runner, /const EMBEDDED = search\.has\('embedded'\)/u);
+  assert.match(runner, /publish\('checkpoint'/u);
+  assert.match(runner, /window\.parent\.postMessage/u);
+  assert.match(runner, /baselineSamples: baselineSampleRecords/u);
+  assert.match(mutationRunner, /onCheckpoint\?\.\(\s*summarizeMutationResult/u);
+  assert.match(mutationRunner, /No supported mutation conditions match the selected filters/u);
+  assert.match(fixedAdapters, /item\.key\)\)\)\);/u);
+  assert.doesNotMatch(mutableAdapters, /\bCellMeasurer\b/u);
+  assert.match(mutableAdapters, /function ReactVirtualizedMeasuredRow/u);
+  assert.match(viteConfig, /__VUE_OPTIONS_API__:\s*true/u);
+  assert.match(viteConfig, /__VUE_PROD_DEVTOOLS__:\s*false/u);
+  assert.match(viteConfig, /__VUE_PROD_HYDRATION_MISMATCH_DETAILS__:\s*false/u);
+});

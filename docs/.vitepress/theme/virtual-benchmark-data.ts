@@ -63,7 +63,7 @@ export interface MutationBenchmarkResult {
   readonly totalSamples: number;
   readonly plannedSamples?: number;
   readonly earlyStopped?: boolean;
-  readonly earlyStopReason?: 'reproducible-failure' | 'stable-statistics' | null;
+  readonly earlyStopReason?: 'interactive-budget' | 'reproducible-failure' | 'stable-statistics' | null;
   readonly heightHandling: {
     readonly sizeInput: 'dom-measurement' | 'application-size';
     readonly initialEstimate: boolean;
