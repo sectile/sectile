@@ -81,7 +81,6 @@
   ],
   "migrationExceptions": [
     { "id": "form-foundation-clones", "owner": "WI-004", "scope": "@sectile/form generic Result, update, identity, uniqueness, and ordered-field helpers" },
-    { "id": "temporal-foundation-clones", "owner": "WI-005", "scope": "@sectile/temporal generic foundation and update helpers" },
     { "id": "tabular-grid-movement", "owner": "WI-006", "scope": "@sectile/tabular grid-profile movement equivalent to Core Grid semantics" },
     { "id": "virtual-foundation-clones", "owner": "WI-022", "scope": "@sectile/virtual generic foundation and update helpers" },
     { "id": "dom-component-semantics", "owner": "WI-007", "scope": "DOM renderer-neutral component control and shared semantic helpers" },
