@@ -39,7 +39,7 @@ test('composed Vue controls preserve their public scope and part contract after 
       h(stepper.StepperList, null, () => h(stepper.StepperStep, { value: 'account' })),
       h(stepper.StepperContent, { value: 'account' }),
     ])),
-    checkboxGroup: renderClient(() => h(checkboxGroup.CheckboxGroupRoot, null, () =>
+    checkboxGroup: renderClient(() => h(checkboxGroup.CheckboxGroupRoot, { items: ['alpha'] }, () =>
       h(checkboxGroup.CheckboxGroupItem, { value: 'alpha' }, () => h(checkboxGroup.CheckboxGroupIndicator)))),
     windowSplitter: renderClient(() => h(windowSplitter.WindowSplitterRoot, null, () => [
       h(windowSplitter.WindowSplitterPane, { side: 'before' }),

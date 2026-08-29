@@ -17,6 +17,8 @@ Vue package: `@sectile/vue/form`
 <strong class="component-api-label">Components</strong>
 <ul class="component-api-list">
   <li><code class="component-api-token">FormRoot</code></li>
+  <li><code class="component-api-token">FormSelector</code></li>
+  <li><code class="component-api-token">FormFieldSelector</code></li>
   <li><code class="component-api-token">FormField</code></li>
   <li><code class="component-api-token">FormLabel</code></li>
   <li><code class="component-api-token">FormDescription</code></li>
@@ -44,6 +46,24 @@ Vue package: `@sectile/vue/form`
 
 ```ts
 function defineFormSubmission<const Schema extends FormSchema<object, object>>(definition: FormSchemaSubmissionDefinition<Schema>): FormSchemaSubmissionDefinition<Schema>
+```
+
+#### `useFormSelector`
+
+```ts
+function useFormSelector<Selected>(selector: FormSelectorFunction<Selected>, options: FormSubscribeOptions<Selected> = {}): Readonly<ShallowRef<Selected>>
+```
+
+#### `useFormFieldSelector`
+
+```ts
+function useFormFieldSelector<Selected>(id: string, selector: FormFieldSelectorFunction<Selected>, options: FormSubscribeOptions<Selected> = {}): Readonly<ShallowRef<Selected>>
+```
+
+#### `useFormFieldController`
+
+```ts
+function useFormFieldController(id: string): FormFieldController
 ```
 
 #### `provideFormControlOwner`
@@ -200,6 +220,51 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 </div>
 </dl>
 
+#### `FormSelectorProps`
+
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>equals</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>NonNullable&lt;FormSubscribeOptions&lt;Selected&gt;['equals']&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Returns whether two selected snapshots are equivalent.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>select</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormSelectorFunction&lt;Selected&gt;</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Selects the form or field state exposed to the slot.</p>
+</dd>
+</div>
+</dl>
+
+#### `FormFieldSelectorProps`
+
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>equals</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>NonNullable&lt;FormSubscribeOptions&lt;Selected&gt;['equals']&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Returns whether two selected snapshots are equivalent.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>id</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Stable ID used to connect related parts.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>select</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormFieldSelectorFunction&lt;Selected&gt;</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Selects the form or field state exposed to the slot.</p>
+</dd>
+</div>
+</dl>
+
 #### `FormPartProps`
 
 <dl class="component-api-definitions component-api-definitions--props">
@@ -342,6 +407,13 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 
 <dl class="component-api-definitions component-api-definitions--slots">
 <div class="component-api-definition">
+<dt><code>clearIssues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(source?: FormIssueSource) =&gt; boolean</code></span></div>
+<p>Clears validation issues for this field.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>controlId</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
@@ -398,10 +470,83 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>removeIssue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(issueId: Parameters&lt;FormConnection&lt;string&gt;['removeFieldIssue']&gt;[1]) =&gt; boolean</code></span></div>
+<p>Removes one field issue by ID.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>replaceIssues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(source: FormIssueSource, issues: readonly FormIssue[]) =&gt; boolean</code></span></div>
+<p>Replaces validation issues for one source.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>setMeta</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(meta: FormFieldMetaInput) =&gt; boolean</code></span></div>
+<p>Updates mutable metadata for this field.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>touched</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
 <p>Whether the user has interacted with the field.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>upsertIssue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(issue: FormIssue) =&gt; boolean</code></span></div>
+<p>Adds or replaces one field issue.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>valid</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether current validation has no issues.</p>
+</dd>
+</div>
+</dl>
+
+#### `FormSummarySlotProps`
+
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>valid</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether current validation has no issues.</p>
+</dd>
+</div>
+</dl>
+
+#### `FormSubmitSlotProps`
+
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>canSubmit</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the form is valid and not currently submitting.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submissionStatus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['submissionStatus']</code></span></div>
+<p>Current submission lifecycle.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitting</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether form submission is currently in progress.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -436,6 +581,36 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 
 ```ts
 type FormState = FormConnection<string>['state']
+```
+
+#### `FormFieldState`
+
+```ts
+type FormFieldState = NonNullable<ReturnType<FormConnection<string>['getField']>>
+```
+
+#### `FormFieldMetaInput`
+
+```ts
+type FormFieldMetaInput = Parameters<FormConnection<string>['setFieldMeta']>[1]
+```
+
+#### `FormSubscribeOptions`
+
+```ts
+type FormSubscribeOptions<Selected> = DOMFormSubscribeOptions<Selected>
+```
+
+#### `FormSelectorFunction`
+
+```ts
+type FormSelectorFunction<Selected> = (state: FormState) => Selected
+```
+
+#### `FormFieldSelectorFunction`
+
+```ts
+type FormFieldSelectorFunction<Selected> = (field: FormFieldState | null) => Selected
 ```
 
 #### `FormIssue`
@@ -627,6 +802,39 @@ interface FormRootComponent {
     replaceIssues: FormReplaceIssuesAction;
     reinitialize: FormReinitializeAction;
     reset: FormResetAction;
+  };
+}
+```
+
+#### `FormFieldController`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `state` | `Readonly<ShallowRef<FormFieldState \| null>>` | Yes |
+| `setMeta` | `boolean` | Yes |
+| `replaceIssues` | `boolean` | Yes |
+| `upsertIssue` | `boolean` | Yes |
+| `removeIssue` | `boolean` | Yes |
+| `clearIssues` | `boolean` | Yes |
+
+#### `FormSelectorComponent`
+
+```ts
+interface FormSelectorComponent {
+  new <Selected>(props: FormSelectorProps<Selected>): {
+    $props: FormSelectorProps<Selected>;
+    $slots: { default?: (props: { readonly selected: Selected }) => VNodeChild };
+  };
+}
+```
+
+#### `FormFieldSelectorComponent`
+
+```ts
+interface FormFieldSelectorComponent {
+  new <Selected>(props: FormFieldSelectorProps<Selected>): {
+    $props: FormFieldSelectorProps<Selected>;
+    $slots: { default?: (props: { readonly selected: Selected }) => VNodeChild };
   };
 }
 ```

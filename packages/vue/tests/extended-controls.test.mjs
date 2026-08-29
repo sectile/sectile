@@ -12,7 +12,7 @@ import { WindowSplitterHandle, WindowSplitterPane, WindowSplitterRoot } from '..
 async function render(component) { return renderToString(createSSRApp({ render: component })); }
 
 test('Vue checkbox group keeps native checkbox form controls', async () => {
-  const html = await render(() => h(CheckboxGroupRoot, { defaultValue: ['alpha'], name: 'channels' }, {
+  const html = await render(() => h(CheckboxGroupRoot, { items: ['alpha'], defaultValue: ['alpha'], name: 'channels' }, {
     default: () => h(CheckboxGroupItem, { value: 'alpha' }, { default: ({ checked }) => [String(checked), h(CheckboxGroupIndicator)] }),
   }));
   assert.match(html, /role="group"/);

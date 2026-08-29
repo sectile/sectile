@@ -428,7 +428,7 @@ function measure(options: PositionEngineOptions, ancestors: readonly Element[], 
   if ((options.strategy ?? 'absolute') === 'absolute') {
     const parent = options.root.offsetParent;
     diagnostics.measurementReads += 1;
-    if (parent !== null) {
+    if (parent != null) {
       offsetParent = Object.freeze({
         rect: rect(parent.getBoundingClientRect()),
         scrollLeft: parent.scrollLeft,
@@ -451,7 +451,7 @@ function measure(options: PositionEngineOptions, ancestors: readonly Element[], 
 
 function viewportRect(document: Document, view: Window): Rect {
   const viewport = view.visualViewport;
-  return viewport === null
+  return viewport == null
     ? Object.freeze({ x: 0, y: 0, width: document.documentElement.clientWidth, height: document.documentElement.clientHeight })
     : Object.freeze({ x: viewport.offsetLeft, y: viewport.offsetTop, width: viewport.width, height: viewport.height });
 }

@@ -287,7 +287,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "c9f9ae28db0abf3c476c01854e5247b9011de56055b30afa23d2dda4ae2cfae1",
+  "fingerprint": "1da2c691898b84148f32ad9a5ca444ed0d8550b5f19e56f4a31c6fb113e9c283",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -391,7 +391,7 @@
     },
     {
       "path": "dist/internal/checked-control.d.ts",
-      "sha256": "e54fc12c0999a7c166a2df25e02a04dc9a838cfd215444e59b338714c69fd245"
+      "sha256": "4ca42094f3e105d551647a2a6f68bc95d73c952d73c7342915b2d2282b3ba8f6"
     },
     {
       "path": "dist/internal/menu-control.d.ts",
@@ -399,7 +399,7 @@
     },
     {
       "path": "dist/internal/popup-control.d.ts",
-      "sha256": "40034ca25b77b008bcf530429a94aa09f6e759886d24bac0d056834bf90aa030"
+      "sha256": "1a34f82bab94a968d2faffa8a72562b55e78768c0dc57d727596a01f2fe01d75"
     },
     {
       "path": "dist/internal/result.d.ts",
@@ -495,7 +495,7 @@
     },
     {
       "path": "dist/rating.d.ts",
-      "sha256": "ee5bc37cffc2b522db189f4b2569dfa3356734e629f85eb7979acf5659e918d7"
+      "sha256": "4a032678444703085b7d14f7d2c275f558e9c45f244da6649fc1d50c35d5be48"
     },
     {
       "path": "dist/reorder.d.ts",

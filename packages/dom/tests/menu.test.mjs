@@ -80,21 +80,23 @@ test('DOM menu owns hidden submenu surfaces and collision-safe placement', async
 
   menu.handleEvent('open-popup');
   menu.handleEvent('open-submenu');
-  await settlePosition();
+  await settlePosition(window);
   assert.equal(submenu.hidden, false);
-  assert.equal(submenu.dataset.placement, 'left-start');
+  assert.equal(submenu.dataset.side, 'left');
+  assert.equal(submenu.dataset.align, 'start');
   assert.equal(submenu.style.left, '252px');
   assert.equal(submenu.style.top, '120px');
 
   window.innerWidth = 800;
   window.dispatchEvent(new window.Event('resize'));
-  await settlePosition();
-  assert.equal(submenu.dataset.placement, 'right-start');
+  await settlePosition(window);
+  assert.equal(submenu.dataset.side, 'right');
+  assert.equal(submenu.dataset.align, 'start');
   assert.equal(submenu.style.left, '488px');
 });
 
 test('DOM menu button positions its popup without occupying trigger layout', async () => {
-  const { root, trigger } = menuDOM(500, 300, {
+  const { window, root, trigger } = menuDOM(500, 300, {
     root: { left: 0, right: 180, top: 0, bottom: 120, width: 180, height: 120 },
     trigger: { left: 100, right: 180, top: 60, bottom: 100, width: 80, height: 40 },
   });
@@ -106,17 +108,18 @@ test('DOM menu button positions its popup without occupying trigger layout', asy
 
   assert.equal(root.hidden, true);
   menu.handleEvent('open-popup');
-  await settlePosition();
+  await settlePosition(window);
 
   assert.equal(root.hidden, false);
-  assert.equal(root.dataset.placement, 'bottom-center');
+  assert.equal(root.dataset.side, 'bottom');
+  assert.equal(root.dataset.align, 'center');
   assert.equal(root.style.position, 'absolute');
   assert.equal(root.style.left, '50px');
   assert.equal(root.style.top, '108px');
 });
 
 test('DOM menubar opens its top-level submenu below the horizontal item', async () => {
-  const { root, file, child, submenu } = menuDOM(500, 300, {
+  const { window, root, file, child, submenu } = menuDOM(500, 300, {
     file: { left: 100, right: 180, top: 60, bottom: 100, width: 80, height: 40 },
     submenu: { left: 0, right: 140, top: 0, bottom: 120, width: 140, height: 120 },
   });
@@ -133,10 +136,11 @@ test('DOM menubar opens its top-level submenu below the horizontal item', async 
   assert.equal(child.dataset.level, '1');
   assert.equal(submenu.dataset.level, '1');
   menubar.handleEvent('open-submenu');
-  await settlePosition();
+  await settlePosition(window);
 
   assert.equal(submenu.hidden, false);
-  assert.equal(submenu.dataset.placement, 'bottom-start');
+  assert.equal(submenu.dataset.side, 'bottom');
+  assert.equal(submenu.dataset.align, 'start');
   assert.equal(submenu.style.left, '100px');
   assert.equal(submenu.style.top, '108px');
 });
@@ -160,7 +164,8 @@ test('DOM menus reverse horizontal navigation and submenu placement in RTL', asy
   root.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
   assert.equal(menu.getSnapshot().state.cursor.current, 'file');
   menu.handleEvent('open-submenu');
-  await settlePosition();
+  await settlePosition(window);
+  assert.equal(submenu.dataset.align, 'end');
   assert.equal(submenu.style.left, '340px');
   assert.equal(root.getAttribute('dir'), 'rtl');
 });
@@ -201,6 +206,8 @@ class FakeView {
 
 function menuDOM(width, height, rects = {}) {
   const window = new Window({ url: 'https://sectile.dev/' });
+  window.requestAnimationFrame = (callback) => setTimeout(() => callback(0), 0);
+  window.cancelAnimationFrame = (handle) => clearTimeout(handle);
   window.innerWidth = width;
   window.innerHeight = height;
   Object.defineProperties(window.document.documentElement, {
@@ -233,8 +240,8 @@ function menuDOM(width, height, rects = {}) {
   return { window, root, trigger, file, child, submenu };
 }
 
-async function settlePosition() {
-  await new Promise((resolve) => setTimeout(resolve, 20));
+async function settlePosition(window) {
+  await new Promise((resolve) => setTimeout(resolve, 10));
 }
 
 class FakeElement {

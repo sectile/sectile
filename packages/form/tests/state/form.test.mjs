@@ -119,7 +119,7 @@ test('indexed field commands preserve unrelated identity and make equal writes n
 
   const missing = setFormFieldMeta(initial, 'missing', { touched: true });
   assert.equal(missing.ok, false);
-  assert.equal(missing.error.code, 'form-field-not-registered');
+  assert.equal(missing.error.code, 'form-field-id-missing');
 });
 
 test('indexed issue commands update only the selected owner and retained source index', () => {
@@ -182,10 +182,12 @@ test('form registry preserves order and derives aggregate field state', () => {
   assert.equal(state.fields[0].name, 'account-email');
 
   state = applyFormEvent(state, {
-    type: 'update-field',
+    type: 'set-field-meta',
     id: 'email',
-    name: 'profile.email',
-    touched: true,
+    meta: {
+      name: 'profile.email',
+      touched: true,
+    },
   }).value.state;
   assert.equal(state.fields[0].name, 'profile.email');
   assert.equal(state.fields[0].touched, true);

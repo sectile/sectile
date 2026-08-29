@@ -119,13 +119,16 @@ test('DOM virtualizer publishes the visible range in the scroll event', () => {
   const fixture = createFixture({
     tryQuery: (state) => {
       queryCalls += 1;
-      return success(plan(state));
+      return success(plan(state, queryCalls === 1 ? 0 : 1));
     },
   });
   const connection = createVirtualizer(fixture.options);
 
+  fixture.options.root.scrollTop = 1;
   fixture.options.root.listeners.get('scroll')();
 
+  assert.equal(queryCalls, 1);
+  fixture.options.root.frame();
   assert.equal(queryCalls, 2);
   assert.equal(fixture.options.root.frame, null);
   connection.disconnect();
@@ -180,7 +183,10 @@ function createFixture(overrides = {}) {
       strategy,
       environment: {
         requestFrame: (callback) => {
-          root.frame = callback;
+          root.frame = (time) => {
+            root.frame = null;
+            callback(time);
+          };
           return 1;
         },
         cancelFrame: () => {
@@ -197,11 +203,11 @@ function createFixture(overrides = {}) {
   };
 }
 
-function plan(state) {
+function plan(state, viewportY = 0) {
   return Object.freeze({
     generation: state.generation,
     contentSize: Object.freeze({ width: 100, height: 80 }),
-    viewport: Object.freeze({ x: 0, y: 0, width: 100, height: 80 }),
+    viewport: Object.freeze({ x: 0, y: viewportY, width: 100, height: 80 }),
     renderBounds: Object.freeze({ x: 0, y: 0, width: 100, height: 80 }),
     placements: Object.freeze([
       placementFor('old', 0),

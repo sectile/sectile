@@ -84,7 +84,7 @@ const displayUnit = ref('centimetre')`,
 export const catalogCode: Readonly<Record<string, string>> = Object.freeze({
   'checkbox-group': sfc(
     'CheckboxGroupRoot, CheckboxGroupItem, CheckboxGroupIndicator',
-    `  <CheckboxGroupRoot :default-value="['dom']" name="packages">
+    `  <CheckboxGroupRoot :items="items.map(item => item.value)" :default-value="['dom']" name="packages">
     <CheckboxGroupItem v-for="item in items" :key="item.value" :value="item.value">
       <CheckboxGroupIndicator>✓</CheckboxGroupIndicator>
       {{ item.label }}

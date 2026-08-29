@@ -357,7 +357,9 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
             root.registerElement('content', node);
           },
           id: root.contentID, role: config.role, hidden: !present.value, dir: direction.value,
-          style: config.positioned === true ? { position: root.strategy.value } : undefined,
+          style: config.positioned === true
+            ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
+            : undefined,
           'aria-modal': config.role === 'tooltip' ? undefined : String(root.modal.value),
           'aria-label': root.label.value, 'aria-labelledby': root.label.value === undefined ? root.titleID : undefined, 'aria-describedby': root.descriptionID,
           'data-scope': config.scope, 'data-part': 'content', 'data-state': root.open.value ? 'open' : 'closed',

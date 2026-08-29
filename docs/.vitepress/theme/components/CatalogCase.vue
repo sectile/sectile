@@ -246,7 +246,7 @@ const recordAction = (value: string): void => {
   >
     <div class="catalog-demo">
       <p class="catalog-description">{{ description }}</p>
-      <CheckboxGroupRoot v-if="component === 'checkbox-group'" :default-value="selectedItems" name="channels" class="catalog-stack catalog-choice-group">
+      <CheckboxGroupRoot v-if="component === 'checkbox-group'" :items="releaseChannelIDs" :default-value="selectedItems" name="channels" class="catalog-stack catalog-choice-group">
         <CheckboxGroupItem v-for="item in releaseChannels" :key="item.id" :value="item.id" class="catalog-option catalog-choice-option">
           <span class="catalog-choice-marker"><CheckboxGroupIndicator><Check :size="15" :stroke-width="2.5" /></CheckboxGroupIndicator></span>
           <span class="catalog-option-copy"><strong>{{ item.label }}</strong><small>{{ item.detail }}</small></span>

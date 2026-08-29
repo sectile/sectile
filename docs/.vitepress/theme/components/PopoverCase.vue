@@ -2,13 +2,12 @@
 import { computed, ref } from 'vue';
 import { PopoverArrow, PopoverClose, PopoverContent, PopoverDescription, PopoverRoot, PopoverTitle, PopoverTrigger } from '@sectile/vue/popover';
 import { TextField } from '@sectile/vue/text';
-import type { ComputePositionReturn } from '@sectile/dom/popover';
 import DemoCard from './DemoCard.vue';
 import type { EventEntry } from '../types.js';
 
 const props = withDefaults(defineProps<{ readonly title: string; readonly description: string; readonly side?: 'top' | 'right' | 'bottom' | 'left'; readonly controlled?: boolean; readonly preview?: boolean }>(), { side: 'bottom', controlled: false, preview: false });
 const open = ref(props.preview);
-const resolvedSide = ref(props.side);
+const resolvedSide = computed(() => props.side);
 const revision = ref(0);
 const entries = ref<EventEntry[]>([]);
 const source = computed(() => `<script setup lang="ts">
@@ -35,9 +34,6 @@ function update(next: boolean): void {
   open.value = next; revision.value += 1;
   entries.value = [{ revision: revision.value, event: next ? 'open' : 'close', accepted: true, effects: [`set-open value=${next}`] }, ...entries.value].slice(0, 12);
 }
-function updatePosition(position: ComputePositionReturn): void {
-  resolvedSide.value = position.placement.split('-')[0] as typeof resolvedSide.value;
-}
 </script>
 
 <template>
@@ -52,7 +48,6 @@ function updatePosition(position: ComputePositionReturn): void {
         :restore-focus="!preview"
         :close-on-interact-outside="false"
         @update:open="update"
-        @position-change="updatePosition"
       >
         <PopoverTrigger class="secondary popover-trigger">Edit profile</PopoverTrigger>
         <PopoverContent class="popover-content">

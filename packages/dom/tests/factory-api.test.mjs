@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import packageManifest from '../package.json' with { type: 'json' };
 
-const excludedSubpaths = new Set(['./package.json', './form', './tabular', './virtual']);
+const excludedSubpaths = new Set(['./package.json', './form', './position', './tabular', './virtual']);
 
 test('every public DOM component exposes direct and fallible factories', async () => {
   const rootModule = await import('../.verification-dist/index.js');

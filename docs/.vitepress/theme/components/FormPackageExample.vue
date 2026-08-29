@@ -125,10 +125,9 @@ const resetExample = async (reinitialize: () => void): Promise<void> => {
 
         <FormSummary
           v-if="state.issues.length > 0"
-          v-slot="{ state: summaryState }"
           class="form-workbench__summary"
         >
-          {{ summaryState.issues.map((issue) => issue.message).join(' ') }}
+          {{ state.issues.map((issue) => issue.message).join(' ') }}
         </FormSummary>
 
         <div :key="controlRevision" class="form-workbench__fields">

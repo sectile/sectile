@@ -260,7 +260,9 @@ export const SelectContent = defineComponent({
     return h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); },
       id: root.contentID, role: 'listbox', hidden: !present.value, 'aria-label': root.label.value,
-      style: root.position.value ? { position: root.strategy.value } : undefined,
+      style: root.position.value
+        ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
+        : undefined,
       'aria-activedescendant': root.state.value.highlightedValue === null ? undefined : root.itemID(root.state.value.highlightedValue),
       'data-scope': 'select', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
     }), { default: () => slots['default']?.(root.state.value) });

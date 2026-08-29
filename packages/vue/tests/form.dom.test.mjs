@@ -1302,7 +1302,7 @@ test('Sectile group and selection controls keep semantics separate from successf
         h(FormField, { id: 'channels', name: ['preferences', 'channels'], required: true }, {
           default: () => [
             h(FormLabel, null, { default: () => 'Channels' }),
-            h(CheckboxGroupRoot, { defaultValue: ['email', 'sms'] }),
+            h(CheckboxGroupRoot, { items: ['email', 'sms'], defaultValue: ['email', 'sms'] }),
           ],
         }),
         h(FormField, { id: 'plan', name: ['billing', 'plan'], required: true }, {

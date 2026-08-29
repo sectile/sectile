@@ -187,6 +187,7 @@ function tryCreateTabsConnection<ID extends StableID>(
     reducer: (state, event) => applyTabsEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => tryCreateTabsState(domain.value, {
       selected: valueControlled || options.readOnly === true ? previous.selection.selected : proposed.selection.selected,
+      anchor: valueControlled || options.readOnly === true ? previous.selection.anchor : proposed.selection.anchor,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     }),
     notify: (previous, proposed) => {
@@ -288,8 +289,13 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
       return controlledError('tabs');
     }
     const current = this.#runtime.getSnapshot().state;
+    const nextSelected = this.#valueControlled ? selected(values.value ?? null) : current.selection.selected;
+    const nextID = nextSelected[0] ?? null;
     const result = this.#runtime.replace(tryCreateTabsState(this.#domain, {
-      selected: this.#valueControlled ? selected(values.value ?? null) : current.selection.selected,
+      selected: nextSelected,
+      anchor: this.#valueControlled && current.selection.selected[0] !== nextID
+        ? nextID
+        : current.selection.anchor,
       current: this.#highlightControlled
         ? (values.highlightedValue ?? null)
         : current.cursor.current,

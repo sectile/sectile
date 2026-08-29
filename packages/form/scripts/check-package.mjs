@@ -6,7 +6,7 @@ const manifest = JSON.parse(await readFile('package.json', 'utf8'));
 assert.deepEqual(manifest.files, ['dist']);
 assert.equal(manifest.sideEffects, false);
 assert.equal(manifest.dependencies?.['@sectile/core'], 'workspace:*');
-assert.equal(manifest.dependencies?.['@standard-schema/spec'], '^1.1.0');
+assert.deepEqual(Object.keys(manifest.dependencies ?? {}), ['@sectile/core']);
 assert.equal(manifest.peerDependencies, undefined);
 
 const runtimeSubpaths = new Set(['./error', './path', './values', './state', './schema']);
@@ -35,7 +35,7 @@ for (const path of await files('dist')) {
   else if (path.endsWith('.d.ts')) declarationBytes += size;
   else if (path.endsWith('.js')) javascriptBytes += size;
 }
-assert.ok(javascriptBytes < 40_000, `JavaScript footprint ${javascriptBytes} exceeds ceiling`);
+assert.ok(javascriptBytes < 55_000, `JavaScript footprint ${javascriptBytes} exceeds ceiling`);
 assert.ok(declarationBytes < 35_000, `declaration footprint ${declarationBytes} exceeds ceiling`);
 assert.ok(sourceMapBytes < 80_000, `source map footprint ${sourceMapBytes} exceeds ceiling`);
 

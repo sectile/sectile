@@ -119,6 +119,10 @@
       "types": "dist/popover.d.ts"
     },
     {
+      "subpath": "./position",
+      "types": "dist/position.d.ts"
+    },
+    {
       "subpath": "./progress",
       "types": "dist/progress.d.ts"
     },
@@ -275,7 +279,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "0b3a5eec7a39af018cee191308f10036674dda2d50f845787b032bd0d7b022c3",
+  "fingerprint": "d0c956158772eaf4a1b02eb4ebc1153a754c1e23c3bf2d1a3857aeb24dc34e99",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -379,7 +383,7 @@
     },
     {
       "path": "dist/form.d.ts",
-      "sha256": "010d99b9b038e917b297ad8fe59c57f000978b5a83fd2f009114529f04a17a27"
+      "sha256": "ffa4ca90ea8e099b15bf8cabb0f034c118d07d96002ba5dec4a5460b384e9db1"
     },
     {
       "path": "dist/grid.d.ts",
@@ -387,7 +391,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "1476dbbec8e8c7d402ee99599106ba0d40eaa64e684d9142ef8db59fa7715941"
+      "sha256": "4f1c9c731684488ef964642399b590d342b5d67b55c5f3227b9720570971f1a0"
     },
     {
       "path": "dist/interact-outside.d.ts",
@@ -395,15 +399,11 @@
     },
     {
       "path": "dist/internal/checked-control.d.ts",
-      "sha256": "a27486ce6b704b3b62c7f2010601ac2ac6b81be1572cc4f9b352fbbae37e6fe7"
+      "sha256": "c45320e8f5419c55023c694b4438a1c8ae708cdddddac9698f61fe426bfabed3"
     },
     {
       "path": "dist/internal/direction.d.ts",
       "sha256": "525026c46f24b7f5497e55ef451e086014cf8d5545c4e988b57861f5849ccf6a"
-    },
-    {
-      "path": "dist/internal/floating-position.d.ts",
-      "sha256": "4dc693a44ccbe8185ad6ca01062453e6a91d7f349cdf0aa78736ea233dd52e00"
     },
     {
       "path": "dist/internal/menu-control.d.ts",
@@ -411,11 +411,15 @@
     },
     {
       "path": "dist/internal/picker-position.d.ts",
-      "sha256": "821a99829523fd2ca6aaae1e8ea2e19bf0b429a48ac839f08c8f67e89018ee5a"
+      "sha256": "05fc16003787fc062a7f1090e472b1cb65264c164eb02f6258e33fb58faa8270"
     },
     {
       "path": "dist/internal/popup-control.d.ts",
-      "sha256": "144bfc7784b3da02340080d9537ba08c4233f0cf86f205424df6521c5bf2888d"
+      "sha256": "15fd8e615ec1940cb813bebd1c3af28d9739e5ad790551587a6a98fefd1ba8f0"
+    },
+    {
+      "path": "dist/internal/position-connection.d.ts",
+      "sha256": "b8eb1f3efe0c297b7a99e6eef5198e4f00f3cdf33f37595325e3c764cabbdccc"
     },
     {
       "path": "dist/internal/result.d.ts",
@@ -483,7 +487,11 @@
     },
     {
       "path": "dist/popover.d.ts",
-      "sha256": "aac36d20bd746d5eb5dfa45577eb7c3cb8b3dc8f4e3198aeb131c6344f565d9c"
+      "sha256": "8cca0e0d7ceaa32db4fc6bddddd93eeac530ac57bc48c4e45d3c35b9e76ba036"
+    },
+    {
+      "path": "dist/position.d.ts",
+      "sha256": "34ef2f09524321ca16bf579d49b65e40fbf5226b76c8d2be032870fa70c90c4b"
     },
     {
       "path": "dist/progress.d.ts",
@@ -503,7 +511,7 @@
     },
     {
       "path": "dist/rating.d.ts",
-      "sha256": "32ec958a92cc9fec67604f05a373d6f7a977b6a9772d88ffa9e109f88fbd66d2"
+      "sha256": "27232040967474d56280ebfbbac5c5ac9fa8c1a54d7237b5cbc0dcadc208526d"
     },
     {
       "path": "dist/reorder.d.ts",
@@ -511,7 +519,7 @@
     },
     {
       "path": "dist/select.d.ts",
-      "sha256": "33c38f0196aabf1a5e0bea953db81ce157d084709dd7adeff445502d0d50f76e"
+      "sha256": "77a67788cc56ae942da02ba541c4f6ca529a8a25dd09d1309e932fa04feca0a2"
     },
     {
       "path": "dist/slider.d.ts",
@@ -575,7 +583,7 @@
     },
     {
       "path": "dist/tooltip.d.ts",
-      "sha256": "cc1215c1dc2b89af8892f66ea7e67bee9ce81bfb7e717ac89be0afcbf6d2d1f9"
+      "sha256": "ede3cf1be1204c96f3b865bf2c987f0cecea1beff8d4e5b30c0690c95bc2b0b8"
     },
     {
       "path": "dist/tree-grid.d.ts",

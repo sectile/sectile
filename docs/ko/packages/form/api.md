@@ -17,6 +17,8 @@ Vue 패키지: `@sectile/vue/form`
 <strong class="component-api-label">컴포넌트</strong>
 <ul class="component-api-list">
   <li><code class="component-api-token">FormRoot</code></li>
+  <li><code class="component-api-token">FormSelector</code></li>
+  <li><code class="component-api-token">FormFieldSelector</code></li>
   <li><code class="component-api-token">FormField</code></li>
   <li><code class="component-api-token">FormLabel</code></li>
   <li><code class="component-api-token">FormDescription</code></li>
@@ -44,6 +46,24 @@ Vue 패키지: `@sectile/vue/form`
 
 ```ts
 function defineFormSubmission<const Schema extends FormSchema<object, object>>(definition: FormSchemaSubmissionDefinition<Schema>): FormSchemaSubmissionDefinition<Schema>
+```
+
+#### `useFormSelector`
+
+```ts
+function useFormSelector<Selected>(selector: FormSelectorFunction<Selected>, options: FormSubscribeOptions<Selected> = {}): Readonly<ShallowRef<Selected>>
+```
+
+#### `useFormFieldSelector`
+
+```ts
+function useFormFieldSelector<Selected>(id: string, selector: FormFieldSelectorFunction<Selected>, options: FormSubscribeOptions<Selected> = {}): Readonly<ShallowRef<Selected>>
+```
+
+#### `useFormFieldController`
+
+```ts
+function useFormFieldController(id: string): FormFieldController
 ```
 
 #### `provideFormControlOwner`
@@ -200,6 +220,51 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 </div>
 </dl>
 
+#### `FormSelectorProps`
+
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>equals</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>NonNullable&lt;FormSubscribeOptions&lt;Selected&gt;['equals']&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>선택한 두 상태 스냅샷이 같은지 판정하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>select</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormSelectorFunction&lt;Selected&gt;</code></span><span><span class="component-api-definition__label">기본값</span>필수</span></div>
+<p>슬롯에 노출할 폼 또는 필드 상태를 선택하는 함수입니다.</p>
+</dd>
+</div>
+</dl>
+
+#### `FormFieldSelectorProps`
+
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>equals</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>NonNullable&lt;FormSubscribeOptions&lt;Selected&gt;['equals']&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>선택한 두 상태 스냅샷이 같은지 판정하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>id</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span>필수</span></div>
+<p>관련 파트를 연결하는 안정적인 ID입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>select</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormFieldSelectorFunction&lt;Selected&gt;</code></span><span><span class="component-api-definition__label">기본값</span>필수</span></div>
+<p>슬롯에 노출할 폼 또는 필드 상태를 선택하는 함수입니다.</p>
+</dd>
+</div>
+</dl>
+
 #### `FormPartProps`
 
 <dl class="component-api-definitions component-api-definitions--props">
@@ -342,6 +407,13 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 
 <dl class="component-api-definitions component-api-definitions--slots">
 <div class="component-api-definition">
+<dt><code>clearIssues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>(source?: FormIssueSource) =&gt; boolean</code></span></div>
+<p>현재 필드의 검증 이슈를 비우는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>controlId</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
@@ -398,10 +470,83 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>removeIssue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>(issueId: Parameters&lt;FormConnection&lt;string&gt;['removeFieldIssue']&gt;[1]) =&gt; boolean</code></span></div>
+<p>ID로 필드 이슈 하나를 제거하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>replaceIssues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>(source: FormIssueSource, issues: readonly FormIssue[]) =&gt; boolean</code></span></div>
+<p>한 출처의 검증 이슈를 바꾸는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>setMeta</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>(meta: FormFieldMetaInput) =&gt; boolean</code></span></div>
+<p>현재 필드의 수정 가능한 메타 상태를 갱신하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>touched</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
 <p>사용자가 필드를 조작했는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>upsertIssue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>(issue: FormIssue) =&gt; boolean</code></span></div>
+<p>필드 이슈 하나를 추가하거나 교체하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>valid</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>현재 입력의 검증 통과 여부입니다.</p>
+</dd>
+</div>
+</dl>
+
+#### `FormSummarySlotProps`
+
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>valid</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>현재 입력의 검증 통과 여부입니다.</p>
+</dd>
+</div>
+</dl>
+
+#### `FormSubmitSlotProps`
+
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>canSubmit</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>폼이 유효하고 제출 중이 아닌지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submissionStatus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['submissionStatus']</code></span></div>
+<p>현재 제출 생명주기입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitting</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>폼 제출이 진행 중인지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -436,6 +581,36 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 
 ```ts
 type FormState = FormConnection<string>['state']
+```
+
+#### `FormFieldState`
+
+```ts
+type FormFieldState = NonNullable<ReturnType<FormConnection<string>['getField']>>
+```
+
+#### `FormFieldMetaInput`
+
+```ts
+type FormFieldMetaInput = Parameters<FormConnection<string>['setFieldMeta']>[1]
+```
+
+#### `FormSubscribeOptions`
+
+```ts
+type FormSubscribeOptions<Selected> = DOMFormSubscribeOptions<Selected>
+```
+
+#### `FormSelectorFunction`
+
+```ts
+type FormSelectorFunction<Selected> = (state: FormState) => Selected
+```
+
+#### `FormFieldSelectorFunction`
+
+```ts
+type FormFieldSelectorFunction<Selected> = (field: FormFieldState | null) => Selected
 ```
 
 #### `FormIssue`
@@ -627,6 +802,39 @@ interface FormRootComponent {
     replaceIssues: FormReplaceIssuesAction;
     reinitialize: FormReinitializeAction;
     reset: FormResetAction;
+  };
+}
+```
+
+#### `FormFieldController`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `state` | `Readonly<ShallowRef<FormFieldState \| null>>` | 필수 |
+| `setMeta` | `boolean` | 필수 |
+| `replaceIssues` | `boolean` | 필수 |
+| `upsertIssue` | `boolean` | 필수 |
+| `removeIssue` | `boolean` | 필수 |
+| `clearIssues` | `boolean` | 필수 |
+
+#### `FormSelectorComponent`
+
+```ts
+interface FormSelectorComponent {
+  new <Selected>(props: FormSelectorProps<Selected>): {
+    $props: FormSelectorProps<Selected>;
+    $slots: { default?: (props: { readonly selected: Selected }) => VNodeChild };
+  };
+}
+```
+
+#### `FormFieldSelectorComponent`
+
+```ts
+interface FormFieldSelectorComponent {
+  new <Selected>(props: FormFieldSelectorProps<Selected>): {
+    $props: FormFieldSelectorProps<Selected>;
+    $slots: { default?: (props: { readonly selected: Selected }) => VNodeChild };
   };
 }
 ```

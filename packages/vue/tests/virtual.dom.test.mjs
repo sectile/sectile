@@ -202,14 +202,15 @@ test('VirtualList keeps the layout domain for value-only replacements and measur
     await settle();
 
     assert.equal(list.value.state.domain, domain);
-    assert.equal(list.value.state.generation, generation + 1);
-    assert.deepEqual(list.value.state.extents.extentAt(0), { kind: 'exact', value: 40 });
+    assert.equal(list.value.state.generation, generation);
+    assert.deepEqual(list.value.state.extents.extentAt(0), { kind: 'exact', value: 20 });
     assert.match(firstRow.textContent, /Changed row/);
 
     FakeResizeObserver.notify(firstRow);
     list.value.flush();
     await settle();
     assert.equal(list.value.state.generation, generation + 1);
+    assert.deepEqual(list.value.state.extents.extentAt(0), { kind: 'exact', value: 40 });
   } finally {
     app.unmount();
     host.remove();

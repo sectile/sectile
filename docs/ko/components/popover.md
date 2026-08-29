@@ -65,14 +65,14 @@ Vue 패키지: `@sectile/vue/popover`
 <div class="component-api-definition">
 <dt><code>align</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>'start' | 'center' | 'end'</code></span><span><span class="component-api-definition__label">기본값</span><code>'center'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionAlign</code></span><span><span class="component-api-definition__label">기본값</span><code>'center'</code></span></div>
 <p>기준 요소를 중심으로 팝업 내용을 정렬할 위치입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>arrowPadding</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Padding</code></span><span><span class="component-api-definition__label">기본값</span><code>8</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>8</code></span></div>
 <p>화살표와 팝업 가장자리 사이에 둘 최소 간격입니다.</p>
 </dd>
 </div>
@@ -81,13 +81,6 @@ Vue 패키지: `@sectile/vue/popover`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
 <p>열릴 때 컴포넌트 안으로 포커스를 옮길지 여부입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>autoUpdate</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean | AutoUpdateOptions</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>레이아웃 변화에 맞춰 팝업 위치를 갱신할 방법입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -107,14 +100,14 @@ Vue 패키지: `@sectile/vue/popover`
 <div class="component-api-definition">
 <dt><code>collisionBoundary</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Boundary</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionBoundary</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
 <p>팝업을 화면 안에 유지할 때 사용할 경계입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>collisionPadding</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Padding</code></span><span><span class="component-api-definition__label">기본값</span><code>8</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionPadding</code></span><span><span class="component-api-definition__label">기본값</span><code>8</code></span></div>
 <p>팝업과 충돌 경계 사이에 둘 간격입니다.</p>
 </dd>
 </div>
@@ -161,13 +154,6 @@ Vue 패키지: `@sectile/vue/popover`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>middleware</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Middleware[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>기본 배치 규칙 뒤에 적용할 위치 계산 미들웨어입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
 <dt><code>modal</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
@@ -191,7 +177,7 @@ Vue 패키지: `@sectile/vue/popover`
 <div class="component-api-definition">
 <dt><code>side</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>'top' | 'right' | 'bottom' | 'left'</code></span><span><span class="component-api-definition__label">기본값</span><code>'bottom'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionSide</code></span><span><span class="component-api-definition__label">기본값</span><code>'bottom'</code></span></div>
 <p>기준 요소를 중심으로 팝업을 우선 배치할 방향입니다.</p>
 </dd>
 </div>
@@ -205,8 +191,15 @@ Vue 패키지: `@sectile/vue/popover`
 <div class="component-api-definition">
 <dt><code>strategy</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Strategy</code></span><span><span class="component-api-definition__label">기본값</span><code>'absolute'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionStrategy</code></span><span><span class="component-api-definition__label">기본값</span><code>'absolute'</code></span></div>
 <p>기준 요소에 연결된 콘텐츠의 CSS 위치 전략입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>tracking</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionTracking</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>기준 요소에 연결된 콘텐츠가 열린 동안 위치를 갱신할 방식입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -297,12 +290,6 @@ Vue 패키지: `@sectile/vue/popover`
 
 ```ts
 type PopoverOpenChangeHandler = PopupFactoryOptions['onOpenChange']
-```
-
-#### `PopoverPositionChangeHandler`
-
-```ts
-type PopoverPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>
 ```
 
 #### `PopoverInteractOutsideHandler`

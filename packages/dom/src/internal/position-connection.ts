@@ -77,8 +77,10 @@ export function createPosition(options: DOMPositionOptions): PositionConnection 
 }
 
 function canPosition(root: HTMLElement, reference: HTMLElement): boolean {
-  return root.ownerDocument.defaultView !== null
-    && root.ownerDocument === reference.ownerDocument
+  const document = root.ownerDocument;
+  return document !== undefined
+    && document.defaultView != null
+    && document === reference.ownerDocument
     && typeof root.getBoundingClientRect === 'function'
     && typeof reference.getBoundingClientRect === 'function';
 }

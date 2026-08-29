@@ -70,13 +70,6 @@ Vue package: `@sectile/vue/temporal/year-picker`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>autoUpdate</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['autoUpdate']</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
-<p>Whether and how positioned content tracks layout changes.</p>
-</dd>
-</div>
-<div class="component-api-definition">
 <dt><code>avoidCollisions</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
@@ -154,13 +147,6 @@ Vue package: `@sectile/vue/temporal/year-picker`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>middleware</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['middleware']</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
-<p>Positioning middleware applied after the built-in placement rules.</p>
-</dd>
-</div>
-<div class="component-api-definition">
 <dt><code>modelValue</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
@@ -228,6 +214,13 @@ Vue package: `@sectile/vue/temporal/year-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['strategy']</code></span><span><span class="component-api-definition__label">Default</span><code>'absolute'</code></span></div>
 <p>CSS positioning strategy used for anchored content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>tracking</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['tracking']</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Update strategy used while anchored content is open.</p>
 </dd>
 </div>
 </dl>
@@ -419,12 +412,6 @@ type YearPickerOpenChangeHandler = NonNullable<InstanceType<typeof YearPickerRoo
 
 ```ts
 type YearPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:highlightedValue']>
-```
-
-#### `YearPickerPositionChangeHandler`
-
-```ts
-type YearPickerPositionChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onPositionChange']>
 ```
 
 #### `YearPickerValue`

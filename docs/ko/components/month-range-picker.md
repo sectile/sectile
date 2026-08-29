@@ -71,13 +71,6 @@ Vue 패키지: `@sectile/vue/temporal/month-range-picker`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>autoUpdate</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['autoUpdate']</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>레이아웃 변화에 맞춰 팝업 위치를 갱신할 방법입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
 <dt><code>avoidCollisions</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
@@ -155,13 +148,6 @@ Vue 패키지: `@sectile/vue/temporal/month-range-picker`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>middleware</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['middleware']</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>기본 배치 규칙 뒤에 적용할 위치 계산 미들웨어입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
 <dt><code>modelValue</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateRange | null</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
@@ -229,6 +215,13 @@ Vue 패키지: `@sectile/vue/temporal/month-range-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['strategy']</code></span><span><span class="component-api-definition__label">기본값</span><code>'absolute'</code></span></div>
 <p>기준 요소에 연결된 콘텐츠의 CSS 위치 전략입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>tracking</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['tracking']</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>기준 요소에 연결된 콘텐츠가 열린 동안 위치를 갱신할 방식입니다.</p>
 </dd>
 </div>
 </dl>
@@ -413,12 +406,6 @@ type MonthRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof MonthRa
 
 ```ts
 type MonthRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:highlightedValue']>
-```
-
-#### `MonthRangePickerPositionChangeHandler`
-
-```ts
-type MonthRangePickerPositionChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onPositionChange']>
 ```
 
 #### `MonthRangePickerValue`

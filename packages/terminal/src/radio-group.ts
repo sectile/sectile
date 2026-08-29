@@ -90,6 +90,9 @@ function tryCreateRadioGroupConnection<ID extends StableID>(
       selected: valueControlled || options.readOnly === true
         ? previous.selection.selected
         : proposed.selection.selected,
+      anchor: valueControlled || options.readOnly === true
+        ? previous.selection.anchor
+        : proposed.selection.anchor,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     }),
     notify: (previous, proposed) => {
@@ -155,8 +158,13 @@ class TerminalRadioGroupConnection<ID extends StableID> implements RadioGroupCon
       } };
     }
     const state = this.#runtime.getSnapshot().state;
+    const nextSelected = this.#valueControlled ? selected(values.value ?? null) : state.selection.selected;
+    const nextID = nextSelected[0] ?? null;
     const result = this.#runtime.replace(tryCreateRadioGroupState(this.#domain, {
-      selected: this.#valueControlled ? selected(values.value ?? null) : state.selection.selected,
+      selected: nextSelected,
+      anchor: this.#valueControlled && state.selection.selected[0] !== nextID
+        ? nextID
+        : state.selection.anchor,
       current: this.#highlightControlled ? (values.highlightedValue ?? null) : state.cursor.current,
     }));
     if (result.ok) this.#options.onUpdate?.();

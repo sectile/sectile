@@ -77,6 +77,13 @@ Vue 패키지: `@sectile/vue/checkbox-group`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>items</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">기본값</span>필수</span></div>
+<p>컴포넌트가 관리할 순서 있는 항목 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>label</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>

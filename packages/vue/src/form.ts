@@ -165,6 +165,25 @@ export interface FormRootProps<
   readonly mapSubmitError?: FormSubmitErrorMapper;
 }
 
+export interface FormRootSlotProps {
+  readonly state: FormState;
+  readonly validationStatus: FormState['validationStatus'];
+  readonly validationTrigger: FormState['validationTrigger'];
+  readonly validationIntent: FormState['validationIntent'];
+  readonly submissionStatus: FormState['submissionStatus'];
+  readonly valid: boolean;
+  readonly touched: boolean;
+  readonly dirty: boolean;
+  readonly submitted: boolean;
+  readonly submitCount: number;
+  readonly submitStarted: FormSubmitStartedAction;
+  readonly submitSucceeded: FormSubmitSucceededAction;
+  readonly submitFailed: FormSubmitFailedAction;
+  readonly replaceIssues: FormReplaceIssuesAction;
+  readonly reinitialize: FormReinitializeAction;
+  readonly reset: FormResetAction;
+}
+
 export type FormRootPublicProps<
   Input extends object = Record<string, unknown>,
   Output extends object = Input,
@@ -181,7 +200,7 @@ export interface FormRootComponent {
   new <Input extends object = Record<string, unknown>, Output extends object = Input>(props: FormRootPublicProps<Input, Output>): {
     $props: FormRootPublicProps<Input, Output>;
     $slots: {
-      default?: () => VNodeChild;
+      default?: (props: FormRootSlotProps) => VNodeChild;
     };
     submitStarted: FormSubmitStartedAction;
     submitSucceeded: FormSubmitSucceededAction;
@@ -365,7 +384,7 @@ const FormRootImpl = defineComponent({
     reset: (): boolean => true,
     stateChange: (_state: FormState): boolean => true,
   },
-  slots: Object as SlotsType<{ default: () => VNodeChild }>,
+  slots: Object as SlotsType<{ default: (props: FormRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, expose, slots }) {
     const root = shallowRef<HTMLFormElement | null>(null);
     const summary = shallowRef<HTMLElement | null>(null);
@@ -478,6 +497,7 @@ const FormRootImpl = defineComponent({
       }
       syncConfiguredIssues();
       syncFieldDiagnostics();
+      emit('stateChange', connection.value.state);
     };
     const mountTask = useNextTickTask(mount);
 
@@ -523,6 +543,33 @@ const FormRootImpl = defineComponent({
       formContext,
       () => (current) => current.submissionStatus,
     );
+    const selectedState = useFormSelectorFromContext(formContext, () => (current) => current);
+    const validationTrigger = useFormSelectorFromContext(
+      formContext,
+      () => (current) => current.validationTrigger,
+    );
+    const validationIntent = useFormSelectorFromContext(
+      formContext,
+      () => (current) => current.validationIntent,
+    );
+    const valid = useFormSelectorFromContext(formContext, () => (current) => current.valid);
+    const touched = useFormSelectorFromContext(formContext, () => (current) => current.touched);
+    const dirty = useFormSelectorFromContext(formContext, () => (current) => current.dirty);
+    const submitted = useFormSelectorFromContext(formContext, () => (current) => current.submitted);
+    const submitCount = useFormSelectorFromContext(formContext, () => (current) => current.submitCount);
+    const slotProps: FormRootSlotProps = Object.freeze({
+      get state() { return selectedState.value; },
+      get validationStatus() { return validationStatus.value; },
+      get validationTrigger() { return validationTrigger.value; },
+      get validationIntent() { return validationIntent.value; },
+      get submissionStatus() { return submissionStatus.value; },
+      get valid() { return valid.value; },
+      get touched() { return touched.value; },
+      get dirty() { return dirty.value; },
+      get submitted() { return submitted.value; },
+      get submitCount() { return submitCount.value; },
+      ...actions,
+    });
     expose(actions);
 
     return (): VNodeChild => h('form', mergeProps(attrs, {
@@ -531,7 +578,7 @@ const FormRootImpl = defineComponent({
       'data-part': 'root',
       'data-validation-status': validationStatus.value,
       'data-submission-status': submissionStatus.value,
-    }), slots['default']?.() ?? []);
+    }), slots['default']?.(slotProps) ?? []);
   },
 });
 

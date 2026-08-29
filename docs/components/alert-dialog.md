@@ -62,14 +62,14 @@ Vue package: `@sectile/vue/alert-dialog`
 <div class="component-api-definition">
 <dt><code>align</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>'start' | 'center' | 'end'</code></span><span><span class="component-api-definition__label">Default</span><code>'center'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionAlign</code></span><span><span class="component-api-definition__label">Default</span><code>'center'</code></span></div>
 <p>Alignment of positioned content relative to its anchor.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>arrowPadding</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Padding</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
 <p>Minimum space kept between an arrow and the edge of positioned content.</p>
 </dd>
 </div>
@@ -78,13 +78,6 @@ Vue package: `@sectile/vue/alert-dialog`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
 <p>Whether focus moves into the component when it opens.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>autoUpdate</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean | AutoUpdateOptions</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
-<p>Whether and how positioned content tracks layout changes.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -104,14 +97,14 @@ Vue package: `@sectile/vue/alert-dialog`
 <div class="component-api-definition">
 <dt><code>collisionBoundary</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Boundary</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionBoundary</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Boundary used to keep positioned content visible.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>collisionPadding</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Padding</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionPadding</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
 <p>Space kept between positioned content and its collision boundary.</p>
 </dd>
 </div>
@@ -158,13 +151,6 @@ Vue package: `@sectile/vue/alert-dialog`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>middleware</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Middleware[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
-<p>Positioning middleware applied after the built-in placement rules.</p>
-</dd>
-</div>
-<div class="component-api-definition">
 <dt><code>open</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
@@ -181,7 +167,7 @@ Vue package: `@sectile/vue/alert-dialog`
 <div class="component-api-definition">
 <dt><code>side</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>'top' | 'right' | 'bottom' | 'left'</code></span><span><span class="component-api-definition__label">Default</span><code>'bottom'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionSide</code></span><span><span class="component-api-definition__label">Default</span><code>'bottom'</code></span></div>
 <p>Preferred side of the anchor for positioned content.</p>
 </dd>
 </div>
@@ -195,8 +181,15 @@ Vue package: `@sectile/vue/alert-dialog`
 <div class="component-api-definition">
 <dt><code>strategy</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Strategy</code></span><span><span class="component-api-definition__label">Default</span><code>'absolute'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionStrategy</code></span><span><span class="component-api-definition__label">Default</span><code>'absolute'</code></span></div>
 <p>CSS positioning strategy used for anchored content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>tracking</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionTracking</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Update strategy used while anchored content is open.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -287,12 +280,6 @@ Vue package: `@sectile/vue/alert-dialog`
 
 ```ts
 type AlertDialogOpenChangeHandler = PopupFactoryOptions['onOpenChange']
-```
-
-#### `AlertDialogPositionChangeHandler`
-
-```ts
-type AlertDialogPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>
 ```
 
 #### `AlertDialogInteractOutsideHandler`

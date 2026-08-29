@@ -22,7 +22,7 @@ test('DOM positioning reserves layout synchronously before measuring', () => {
   const root = window.document.createElement('div');
   const trigger = window.document.createElement('button');
   window.document.body.append(trigger, root);
-  const popover = createPopover({ root, trigger, strategy: 'absolute' });
+  const popover = createPopover({ root, trigger, defaultOpen: true, strategy: 'absolute' });
   assert.equal(root.style.position, 'absolute');
   assert.equal(root.style.visibility, 'hidden');
   popover.disconnect();
@@ -99,6 +99,20 @@ test('DOM positioning shares physical event sources and releases every resource'
   assert.equal(first.resizeObservers.every((observer) => observer.disconnected), true);
   assert.equal(first.intersectionObservers.every((observer) => observer.disconnected), true);
   first.close();
+});
+
+test('DOM positioning discovers shorthand overflow through computed axes', () => {
+  const fixture = createPositionFixture();
+  const scroller = fixture.window.document.createElement('div');
+  scroller.style.overflow = 'auto';
+  scroller.append(fixture.reference, fixture.root);
+  fixture.window.document.body.append(scroller);
+  const engine = createPositionEngine({ root: fixture.root, reference: fixture.reference });
+  engine.connect();
+  assert.equal(engine.diagnostics().discoveredAncestors, 1);
+  assert.equal(engine.diagnostics().sourceSubscriptions, 3);
+  engine.disconnect();
+  fixture.close();
 });
 
 test('DOM positioning cancels a queued generation before disconnect can project', () => {

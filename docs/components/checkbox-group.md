@@ -77,6 +77,13 @@ Vue package: `@sectile/vue/checkbox-group`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>items</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Ordered item values managed by the component.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>label</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>

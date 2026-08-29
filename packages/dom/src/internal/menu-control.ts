@@ -143,7 +143,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
       root: submenu,
       reference: anchor,
       side: opensFromMenubar ? 'bottom' : this.#options.direction === 'rtl' ? 'left' : 'right',
-      align: 'start',
+      align: opensFromMenubar && this.#options.direction === 'rtl' ? 'end' : 'start',
       sideOffset: 8,
     });
     this.#submenuPositions.set(parentID, position);

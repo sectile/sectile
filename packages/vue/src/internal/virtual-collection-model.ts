@@ -71,12 +71,35 @@ export function updatePreparedVirtualList(
   if (previous.items === items && previous.getKey === getKey) return previous;
   if (previous.getKey !== getKey) {
     const prepared = prepareVirtualList(items, getKey);
+    let prefix = 0;
+    while (
+      prefix < previous.ids.length
+      && prefix < prepared.ids.length
+      && previous.ids[prefix] === prepared.ids[prefix]
+    ) prefix += 1;
+    let suffix = 0;
+    while (
+      suffix < previous.ids.length - prefix
+      && suffix < prepared.ids.length - prefix
+      && previous.ids[previous.ids.length - suffix - 1]
+        === prepared.ids[prepared.ids.length - suffix - 1]
+    ) suffix += 1;
+    if (prefix === previous.ids.length && prefix === prepared.ids.length) {
+      return Object.freeze({
+        items,
+        ids: previous.ids,
+        getKey,
+        change: null,
+        initialIndex: previous.initialIndex,
+      });
+    }
+    const inserted = Object.freeze(prepared.ids.slice(prefix, prepared.ids.length - suffix));
     return Object.freeze({
       ...prepared,
       change: Object.freeze({
-        index: 0,
-        deleteCount: previous.ids.length,
-        inserted: prepared.ids,
+        index: prefix,
+        deleteCount: previous.ids.length - prefix - suffix,
+        inserted,
       }),
     });
   }
