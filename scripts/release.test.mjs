@@ -55,6 +55,7 @@ test('release retries verify tagged source and load the complete current publica
   assert.match(workflow, /--tarball-directory=release-artifacts/u);
   assert.match(workflow, /verification: verify:release/u);
   assert.equal(localRelease.includes("['verify:release']"), false);
+  assert.match(localRelease, /\['add', '--', 'packages', 'pnpm-lock\.yaml'\]/u);
   assert.match(manifest.scripts['publish:packages'], /--verbose package-publication/u);
 });
 

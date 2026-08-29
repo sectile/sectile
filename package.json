@@ -52,7 +52,6 @@
     "check:component-api:local": "pnpm -r --workspace-concurrency=1 --filter @sectile/core --filter @sectile/temporal --filter @sectile/virtual --filter @sectile/tabular --filter @sectile/dom --filter @sectile/terminal --filter @sectile/vue --if-present build && node scripts/check-component-public-api.mjs",
     "check:signatures": "node scripts/check-public-signatures.mjs",
     "update:signatures": "node scripts/update-public-signatures.mjs",
-    "update:tree": "node scripts/update-tree.mjs",
     "verify": "node scripts/verify.mjs",
     "verify:release": "node scripts/verify.mjs",
     "verify:compat": "node scripts/verify.mjs --compat",
