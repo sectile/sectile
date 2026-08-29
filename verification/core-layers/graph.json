@@ -62,6 +62,10 @@
       "layer": "public"
     },
     {
+      "path": "src/editing/color-text.ts",
+      "layer": "editing"
+    },
+    {
       "path": "src/error-code.ts",
       "layer": "foundation"
     },
@@ -382,6 +386,10 @@
       "layer": "structures"
     },
     {
+      "path": "src/structures/color.ts",
+      "layer": "structures"
+    },
+    {
       "path": "src/structures/geometry.ts",
       "layer": "structures"
     },
@@ -663,6 +671,11 @@
     },
     {
       "source": "src/color-picker.ts",
+      "target": "src/editing/color-text.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/color-picker.ts",
       "target": "src/internal/kernel/foundation.ts",
       "kind": "import"
     },
@@ -679,6 +692,11 @@
     {
       "source": "src/color-picker.ts",
       "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/color-picker.ts",
+      "target": "src/structures/color.ts",
       "kind": "import"
     },
     {
@@ -759,6 +777,21 @@
     {
       "source": "src/editable.ts",
       "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/editing/color-text.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/editing/color-text.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/editing/color-text.ts",
+      "target": "src/structures/color.ts",
       "kind": "import"
     },
     {
@@ -2422,6 +2455,21 @@
       "kind": "import"
     },
     {
+      "source": "src/structures/color.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/color.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/color.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
       "source": "src/structures/geometry.ts",
       "target": "src/internal/kernel/foundation.ts",
       "kind": "import"
@@ -2982,14 +3030,36 @@
       ]
     },
     {
+      "subpath": "./color",
+      "source": "src/structures/color.ts",
+      "layer": "structures",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
       "subpath": "./color-picker",
       "source": "src/color-picker.ts",
       "layer": "public",
       "facadeTargets": [
+        "src/editing/color-text.ts",
         "src/internal/kernel/foundation.ts",
         "src/internal/kernel/machine.ts",
         "src/result.ts",
-        "src/shared.ts"
+        "src/shared.ts",
+        "src/structures/color.ts"
+      ]
+    },
+    {
+      "subpath": "./color-text",
+      "source": "src/editing/color-text.ts",
+      "layer": "editing",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/shared.ts",
+        "src/structures/color.ts"
       ]
     },
     {
@@ -3746,6 +3816,17 @@
       ]
     },
     {
+      "module": "src/editing/color-text.ts",
+      "directDependents": [
+        "src/color-picker.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./color-picker",
+        "./color-text"
+      ]
+    },
+    {
       "module": "src/error-code.ts",
       "directDependents": [
         "src/adapter-runtime.ts",
@@ -3757,7 +3838,7 @@
         "src/result.ts",
         "src/shared.ts"
       ],
-      "transitiveDependentCount": 111,
+      "transitiveDependentCount": 113,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -3769,7 +3850,9 @@
         "./checkbox",
         "./checkbox-group",
         "./collection-window",
+        "./color",
         "./color-picker",
+        "./color-text",
         "./combobox",
         "./disclosure",
         "./drawer",
@@ -4097,6 +4180,7 @@
         "src/color-picker.ts",
         "src/drawer.ts",
         "src/editable.ts",
+        "src/editing/color-text.ts",
         "src/feed.ts",
         "src/internal/composites/cascade-choice.ts",
         "src/internal/composites/combobox.ts",
@@ -4133,6 +4217,7 @@
         "src/select.ts",
         "src/spin-button.ts",
         "src/structures/anchored-layout.ts",
+        "src/structures/color.ts",
         "src/structures/geometry.ts",
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
@@ -4147,7 +4232,7 @@
         "src/toggle-group.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 106,
+      "transitiveDependentCount": 108,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4159,7 +4244,9 @@
         "./checkbox",
         "./checkbox-group",
         "./collection-window",
+        "./color",
         "./color-picker",
+        "./color-text",
         "./combobox",
         "./disclosure",
         "./drawer",
@@ -4853,6 +4940,7 @@
         "src/spin-button.ts",
         "src/stepper.ts",
         "src/structures/anchored-layout.ts",
+        "src/structures/color.ts",
         "src/structures/geometry.ts",
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
@@ -4871,7 +4959,7 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 100,
+      "transitiveDependentCount": 102,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4883,7 +4971,9 @@
         "./checkbox",
         "./checkbox-group",
         "./collection-window",
+        "./color",
         "./color-picker",
+        "./color-text",
         "./combobox",
         "./disclosure",
         "./drawer",
@@ -4982,6 +5072,7 @@
         "src/combobox.ts",
         "src/drawer.ts",
         "src/editable.ts",
+        "src/editing/color-text.ts",
         "src/feed.ts",
         "src/grid-control.ts",
         "src/index.ts",
@@ -5045,6 +5136,7 @@
         "src/spin-button.ts",
         "src/stepper.ts",
         "src/structures/anchored-layout.ts",
+        "src/structures/color.ts",
         "src/structures/geometry.ts",
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
@@ -5063,7 +5155,7 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 110,
+      "transitiveDependentCount": 112,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -5075,7 +5167,9 @@
         "./checkbox",
         "./checkbox-group",
         "./collection-window",
+        "./color",
         "./color-picker",
+        "./color-text",
         "./combobox",
         "./disclosure",
         "./drawer",
@@ -5165,6 +5259,19 @@
       "transitiveDependentCount": 0,
       "publicSubpaths": [
         "./anchored-layout"
+      ]
+    },
+    {
+      "module": "src/structures/color.ts",
+      "directDependents": [
+        "src/color-picker.ts",
+        "src/editing/color-text.ts"
+      ],
+      "transitiveDependentCount": 2,
+      "publicSubpaths": [
+        "./color",
+        "./color-picker",
+        "./color-text"
       ]
     },
     {

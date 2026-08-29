@@ -33,8 +33,12 @@ function measure(iterations, operation) {
     globalThis.gc();
     const before = process.memoryUsage().heapUsed;
     const startedAt = performance.now();
-    for (let index = 0; index < iterations; index += 1) operation();
-    const peak = process.memoryUsage().heapUsed;
+    let peak = before;
+    for (let start = 0; start < iterations; start += 1_000) {
+      const end = Math.min(iterations, start + 1_000);
+      for (let index = start; index < end; index += 1) operation();
+      peak = Math.max(peak, process.memoryUsage().heapUsed);
+    }
     timings.push((performance.now() - startedAt) * 1_000_000 / iterations);
     allocations.push(Math.max(0, peak - before));
     globalThis.gc();

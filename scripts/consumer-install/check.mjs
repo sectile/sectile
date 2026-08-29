@@ -14,9 +14,10 @@ export function validateInstallBaseline(baseline, current) {
     const before = baseline.installs.find(({ packageManager }) => packageManager === report.packageManager);
     assert.ok(before !== undefined, `${report.packageManager}: install baseline missing`);
     assert.deepEqual(report.optionalPeersPresent, [], `${report.packageManager}: optional domain peer installed unexpectedly`);
+    assert.equal(report.dependencyNames.includes('colord'), false, `${report.packageManager}: colord remains installed`);
     assert.ok(report.installedBytes <= Math.ceil(before.installedBytes * 1.05) + 1024, `${report.packageManager}: installed bytes budget exceeded`);
     assert.deepEqual(report.dependencyNames.filter((name) => !before.dependencyNames.includes(name)), [], `${report.packageManager}: dependency tree expanded`);
-    for (const incumbent of ['colord', '@floating-ui/dom']) {
+    for (const incumbent of ['@floating-ui/dom']) {
       assert.ok(report.incumbents[incumbent].bytes <= Math.ceil(before.incumbents[incumbent].bytes * 1.05) + 32, `${report.packageManager}: ${incumbent} bytes expanded`);
     }
   }
@@ -25,5 +26,6 @@ export function validateInstallBaseline(baseline, current) {
     const after = current.incumbentPerformanceEvidence[incumbent];
     assert.ok(after.medianNanoseconds <= before.medianNanoseconds * 1.1, `${incumbent}: incumbent latency baseline regressed`);
     assert.ok(after.medianAllocationBytes <= before.medianAllocationBytes * 1.1, `${incumbent}: incumbent allocation baseline regressed`);
+    assert.ok(after.medianRetainedBytes <= before.medianRetainedBytes * 1.1 + 1_024, `${incumbent}: incumbent retained-heap baseline regressed`);
   }
 }

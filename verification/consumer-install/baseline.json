@@ -2,25 +2,25 @@
   "schemaVersion": 1,
   "packages": {
     "core": {
-      "tarballBytes": 181531,
-      "unpackedBytes": 1020545,
-      "unpackedFiles": 276,
+      "tarballBytes": 193453,
+      "unpackedBytes": 1088765,
+      "unpackedFiles": 288,
       "categories": {
         "runtimeJS": {
-          "files": 91,
-          "bytes": 416618
+          "files": 95,
+          "bytes": 442168
         },
         "declarations": {
-          "files": 91,
-          "bytes": 150634
+          "files": 95,
+          "bytes": 159228
         },
         "sourceMaps": {
-          "files": 91,
-          "bytes": 439211
+          "files": 95,
+          "bytes": 472621
         },
         "other": {
           "files": 3,
-          "bytes": 14082
+          "bytes": 14748
         }
       }
     },
@@ -140,21 +140,21 @@
       }
     },
     "virtual": {
-      "tarballBytes": 48777,
-      "unpackedBytes": 296257,
+      "tarballBytes": 48090,
+      "unpackedBytes": 291731,
       "unpackedFiles": 39,
       "categories": {
         "runtimeJS": {
           "files": 12,
-          "bytes": 119913
+          "bytes": 118338
         },
         "declarations": {
           "files": 12,
-          "bytes": 37183
+          "bytes": 36868
         },
         "sourceMaps": {
           "files": 12,
-          "bytes": 134431
+          "bytes": 131795
         },
         "other": {
           "files": 3,
@@ -163,8 +163,8 @@
       }
     },
     "vue": {
-      "tarballBytes": 265991,
-      "unpackedBytes": 2055589,
+      "tarballBytes": 266023,
+      "unpackedBytes": 2055849,
       "unpackedFiles": 294,
       "categories": {
         "runtimeJS": {
@@ -173,7 +173,7 @@
         },
         "declarations": {
           "files": 97,
-          "bytes": 622691
+          "bytes": 622951
         },
         "sourceMaps": {
           "files": 97,
@@ -189,8 +189,8 @@
   "installs": [
     {
       "packageManager": "npm",
-      "installedBytes": 22194822,
-      "installedFiles": 1558,
+      "installedBytes": 22136365,
+      "installedFiles": 1503,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -216,7 +216,6 @@
         "@vue/runtime-dom",
         "@vue/server-renderer",
         "@vue/shared",
-        "colord",
         "csstype",
         "entities",
         "estree-walker",
@@ -232,13 +231,7 @@
         {
           "name": "@sectile/core",
           "version": "0.7.0",
-          "dependencies": [
-            {
-              "name": "colord",
-              "version": "2.10.0",
-              "dependencies": []
-            }
-          ]
+          "dependencies": []
         },
         {
           "name": "@sectile/dom",
@@ -560,10 +553,6 @@
       ],
       "optionalPeersPresent": [],
       "incumbents": {
-        "colord": {
-          "files": 67,
-          "bytes": 126597
-        },
         "@floating-ui/dom": {
           "files": 11,
           "bytes": 174208
@@ -572,8 +561,8 @@
     },
     {
       "packageManager": "pnpm",
-      "installedBytes": 22223897,
-      "installedFiles": 1568,
+      "installedBytes": 22165389,
+      "installedFiles": 1513,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -595,7 +584,6 @@
         "@vue/runtime-dom",
         "@vue/server-renderer",
         "@vue/shared",
-        "colord",
         "csstype",
         "entities",
         "estree-walker",
@@ -610,13 +598,7 @@
         {
           "name": "@sectile/core",
           "version": "0.7.0",
-          "dependencies": [
-            {
-              "name": "colord",
-              "version": "2.10.0",
-              "dependencies": []
-            }
-          ]
+          "dependencies": []
         },
         {
           "name": "@sectile/dom",
@@ -779,7 +761,7 @@
                       "dependencies": [
                         {
                           "name": "@jridgewell/sourcemap-codec",
-                          "version": "1.5.5",
+                          "version": "1.6.0",
                           "dependencies": []
                         }
                       ]
@@ -893,10 +875,6 @@
       ],
       "optionalPeersPresent": [],
       "incumbents": {
-        "colord": {
-          "files": 67,
-          "bytes": 126597
-        },
         "@floating-ui/dom": {
           "files": 11,
           "bytes": 174208
@@ -907,15 +885,15 @@
   "incumbentPerformanceEvidence": {
     "colord": {
       "iterations": 20000,
-      "medianNanoseconds": 2366.3791999999994,
-      "medianAllocationBytes": 880912,
-      "medianRetainedBytes": 56776
+      "medianNanoseconds": 2326.6292,
+      "medianAllocationBytes": 2114888,
+      "medianRetainedBytes": 56744
     },
     "@floating-ui/dom": {
       "iterations": 50000,
-      "medianNanoseconds": 33.26584000000025,
-      "medianAllocationBytes": 1993776,
-      "medianRetainedBytes": 64
+      "medianNanoseconds": 32.71415999999931,
+      "medianAllocationBytes": 2091888,
+      "medianRetainedBytes": 0
     }
   }
 }

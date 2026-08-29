@@ -45,3 +45,4 @@
 | WI-034 | @sectile/virtual | `.` | `VirtualPoint, VirtualSize, VirtualRect, and VirtualInsets declaration closure` | @sectile/virtual |
 | WI-034 | @sectile/virtual | `./spatial-layout` | `Virtual geometry declaration closure` | @sectile/virtual/spatial-layout |
 | WI-034 | @sectile/virtual | `./track-grid-layout` | `Virtual geometry declaration closure` | @sectile/virtual/track-grid-layout |
+| WI-037 | @sectile/core | `./color-picker` | `ColorValue is the canonical Rgba8 declaration closure` | @sectile/core/color-picker |

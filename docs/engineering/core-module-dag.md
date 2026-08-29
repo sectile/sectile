@@ -2,30 +2,30 @@
 
 > Generated from `verification/core-layers/manifest.json` and Core source imports.
 
-Modules: 117; edges: 474; public subpaths: 68; cycles: 0; upward edges: 0.
+Modules: 119; edges: 482; public subpaths: 70; cycles: 0; upward edges: 0.
 
 ## Layers
 
 | Layer | Modules |
 |---|---:|
 | composites | 11 |
-| editing | 1 |
+| editing | 2 |
 | foundation | 3 |
 | kernel | 6 |
 | public | 57 |
 | reference | 24 |
 | runtime | 1 |
 | state | 5 |
-| structures | 9 |
+| structures | 10 |
 
 ## Highest public blast radius
 
 | Module | Transitive dependents | Public subpaths |
 |---|---:|---:|
-| `src/error-code.ts` | 111 | 64 |
-| `src/shared.ts` | 110 | 64 |
-| `src/result.ts` | 100 | 63 |
-| `src/internal/kernel/foundation.ts` | 106 | 62 |
+| `src/error-code.ts` | 113 | 66 |
+| `src/shared.ts` | 112 | 66 |
+| `src/result.ts` | 102 | 65 |
+| `src/internal/kernel/foundation.ts` | 108 | 64 |
 | `src/internal/kernel/machine.ts` | 75 | 45 |
 | `src/internal/kernel/indexed-sequence.ts` | 56 | 30 |
 | `src/structures/sequence.ts` | 55 | 30 |
@@ -58,7 +58,9 @@ Modules: 117; edges: 474; public subpaths: 68; cycles: 0; upward edges: 0.
 | `./checkbox` | `src/checkbox.ts` | public | `src/internal/state/checked.ts`, `src/internal/state/checked.ts` |
 | `./checkbox-group` | `src/checkbox-group.ts` | public | `src/internal/composites/listbox.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./collection-window` | `src/collection-window.ts` | public | `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts` |
-| `./color-picker` | `src/color-picker.ts` | public | `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts` |
+| `./color` | `src/structures/color.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts` |
+| `./color-picker` | `src/color-picker.ts` | public | `src/editing/color-text.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/color.ts` |
+| `./color-text` | `src/editing/color-text.ts` | editing | `src/internal/kernel/foundation.ts`, `src/shared.ts`, `src/structures/color.ts` |
 | `./combobox` | `src/combobox.ts` | public | `src/internal/composites/combobox.ts`, `src/internal/editing/text.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./dialog` | `src/dialog.ts` | public | none |
 | `./disclosure` | `src/disclosure.ts` | public | `src/internal/state/open-state.ts`, `src/internal/state/open-state.ts` |

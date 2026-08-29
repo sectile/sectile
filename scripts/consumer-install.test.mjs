@@ -8,14 +8,20 @@ test('intentional tarball, installed-byte, dependency, and incumbent regressions
   assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.packages.core.tarballBytes = 200; })), /tarball budget/u);
   assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.installs[0].installedBytes = 2_000; })), /installed bytes/u);
   assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.installs[0].dependencyNames.push('unexpected'); })), /dependency tree expanded/u);
-  assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.installs[0].incumbents.colord.bytes = 200; })), /colord bytes expanded/u);
+  assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.installs[0].incumbents['@floating-ui/dom'].bytes = 200; })), /@floating-ui\/dom bytes expanded/u);
+  assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.incumbentPerformanceEvidence.colord.medianNanoseconds = 200; })), /colord: incumbent latency/u);
+  assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.incumbentPerformanceEvidence.colord.medianRetainedBytes = 2_000; })), /colord: incumbent retained-heap/u);
 });
 
 function fixture() {
   return {
     schemaVersion: 1,
     packages: { core: { tarballBytes: 100, categories: Object.fromEntries(['runtimeJS', 'declarations', 'sourceMaps', 'other'].map((key) => [key, { bytes: 100 }])) } },
-    installs: [{ packageManager: 'npm', installedBytes: 100, dependencyNames: ['base'], optionalPeersPresent: [], incumbents: { colord: { bytes: 100 }, '@floating-ui/dom': { bytes: 100 } } }],
+    installs: [{ packageManager: 'npm', installedBytes: 100, dependencyNames: ['base'], optionalPeersPresent: [], incumbents: { '@floating-ui/dom': { bytes: 100 } } }],
+    incumbentPerformanceEvidence: {
+      colord: { medianNanoseconds: 100, medianAllocationBytes: 100, medianRetainedBytes: 100 },
+      '@floating-ui/dom': { medianNanoseconds: 100, medianAllocationBytes: 100, medianRetainedBytes: 100 },
+    },
   };
 }
 

@@ -47,8 +47,16 @@
       "types": "dist/collection-window.d.ts"
     },
     {
+      "subpath": "./color",
+      "types": "dist/structures/color.d.ts"
+    },
+    {
       "subpath": "./color-picker",
       "types": "dist/color-picker.d.ts"
+    },
+    {
+      "subpath": "./color-text",
+      "types": "dist/editing/color-text.d.ts"
     },
     {
       "subpath": "./combobox",
@@ -271,7 +279,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "779a23be35ba49f296d376ec9027149ba2bc0d24fbd1a56d7d516f0913d66450",
+  "fingerprint": "45395e7cb621b87d0b689efdcbb4cb69ed9a0c0be2507cb367bd07a5b6f50327",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -311,7 +319,7 @@
     },
     {
       "path": "dist/color-picker.d.ts",
-      "sha256": "2dc3c135cb620e556562573cc6cd78e3c40d7e06d5aa447e227d8df9d3872d7c"
+      "sha256": "15563773a9b330385f027793b6dc6153766743241b92d658c44b072e7ca3c1b7"
     },
     {
       "path": "dist/combobox.d.ts",
@@ -332,6 +340,10 @@
     {
       "path": "dist/editable.d.ts",
       "sha256": "99371a1d211e702be6f7ab231a3ec27302743da77a9716c8e1e47741c7eeb96e"
+    },
+    {
+      "path": "dist/editing/color-text.d.ts",
+      "sha256": "d5c232c4b95bf24ba08aee7ad524ef9a3ab38ff25a7281d0138be1ee2001444d"
     },
     {
       "path": "dist/error-code.d.ts",
@@ -544,6 +556,10 @@
     {
       "path": "dist/structures/anchored-layout.d.ts",
       "sha256": "35dbaa875f320c227aeb5111384a81290e3772c91a8058e5abf15d04f8b4cd6c"
+    },
+    {
+      "path": "dist/structures/color.d.ts",
+      "sha256": "9f1339cb2d47696e12fbc2c5fafdea54deca8cc5160e4bac18fe5bddae3cd87c"
     },
     {
       "path": "dist/structures/geometry.d.ts",

@@ -491,12 +491,9 @@ type ColorModel = Exclude<ColorFormat, 'hex'>
 
 #### `ColorValue`
 
-| 이름 | 타입 | 필수 |
-| --- | --- | --- |
-| `red` | `number` | 필수 |
-| `green` | `number` | 필수 |
-| `blue` | `number` | 필수 |
-| `alpha` | `number` | 필수 |
+```ts
+type ColorValue = Rgba8
+```
 
 ## 파트
 

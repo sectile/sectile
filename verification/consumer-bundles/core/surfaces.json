@@ -187,6 +187,53 @@
       ]
     },
     {
+      "subpath": "./color",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "OKLCH_GAMUT_ITERATIONS",
+        "createDeviceCmykColor",
+        "createHslColor",
+        "createHsvColor",
+        "createOklabColor",
+        "createOklchColor",
+        "createRgba8",
+        "createSrgbColor",
+        "deviceCmykToSrgb",
+        "hslToSrgb",
+        "hsvToSrgb",
+        "isSrgbInGamut",
+        "linearSrgbToOklab",
+        "linearSrgbToSrgb",
+        "normalizeHue",
+        "oklabToLinearSrgb",
+        "oklabToOklch",
+        "oklchToOklab",
+        "oklchToSrgb",
+        "rgba8ToSrgb",
+        "srgbToDeviceCmyk",
+        "srgbToHsl",
+        "srgbToHsv",
+        "srgbToLinearSrgb",
+        "srgbToOklch",
+        "srgbToRgba8",
+        "tryCreateDeviceCmykColor",
+        "tryCreateHslColor",
+        "tryCreateHsvColor",
+        "tryCreateOklabColor",
+        "tryCreateOklchColor",
+        "tryCreateRgba8",
+        "tryCreateSrgbColor"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./color-picker",
       "classification": "named-subpath",
       "platform": "browser",
@@ -201,6 +248,24 @@
         "setColorCoordinate",
         "tryCreateColorPickerState",
         "tryCreateColorValue"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./color-text",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "MAX_COLOR_TEXT_CODE_UNITS",
+        "createColorTextValue",
+        "formatColorText",
+        "parseColorText"
       ],
       "typeBearing": true,
       "optionalPeer": null,

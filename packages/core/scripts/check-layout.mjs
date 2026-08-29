@@ -2,8 +2,12 @@ import assert from 'node:assert/strict';
 import { readdir } from 'node:fs/promises';
 
 await assertEntries('src', {
-  directories: ['internal', 'structures'],
+  directories: ['editing', 'internal', 'structures'],
   files: ['accordion.ts', 'adapter-runtime.ts', 'alert-dialog.ts', 'carousel.ts', 'cascade-list.ts', 'cascade-select.ts', 'checkbox-group.ts', 'checkbox.ts', 'collection-window.ts', 'color-picker.ts', 'combobox.ts', 'dialog.ts', 'disclosure.ts', 'drawer.ts', 'editable.ts', 'error-code.ts', 'feed.ts', 'grid-control.ts', 'index.ts', 'interaction.ts', 'layer-stack.ts', 'listbox.ts', 'menu-button.ts', 'menu.ts', 'menubar.ts', 'meter-group.ts', 'meter.ts', 'multi-thumb-slider.ts', 'navigation-menu.ts', 'number-field.ts', 'pagination.ts', 'pin-input.ts', 'popover.ts', 'progress.ts', 'quantity-field.ts', 'radio-group.ts', 'rating.ts', 'reorder.ts', 'result.ts', 'revision.ts', 'select.ts', 'selection.ts', 'shared.ts', 'slider.ts', 'spin-button.ts', 'stepper.ts', 'switch.ts', 'tabs.ts', 'tags-input.ts', 'text.ts', 'timer.ts', 'toast.ts', 'toggle-button.ts', 'toggle-group.ts', 'toolbar.ts', 'tooltip.ts', 'tree-grid.ts', 'tree-view.ts', 'units.ts', 'window-splitter.ts'],
+});
+await assertEntries('src/editing', {
+  directories: [],
+  files: ['color-text.ts'],
 });
 await assertEntries('src/internal', {
   directories: ['composites', 'editing', 'kernel', 'reference', 'runtime', 'state'],
@@ -20,7 +24,7 @@ await assertEntries('tests', {
 
 console.log(JSON.stringify({
   status: 'passed',
-  sourceLayers: 6,
+  sourceLayers: 7,
   referenceLayers: 4,
   testLayers: 6,
 }, null, 2));

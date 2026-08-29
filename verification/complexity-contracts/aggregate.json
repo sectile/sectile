@@ -650,6 +650,303 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "core:./color:OKLCH_GAMUT_ITERATIONS",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "OKLCH_GAMUT_ITERATIONS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./color:createDeviceCmykColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "createDeviceCmykColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:createHslColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "createHslColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:createHsvColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "createHsvColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:createOklabColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "createOklabColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:createOklchColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "createOklchColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:createRgba8",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "createRgba8",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:createSrgbColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "createSrgbColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:deviceCmykToSrgb",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "deviceCmykToSrgb",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:hslToSrgb",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "hslToSrgb",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:hsvToSrgb",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "hsvToSrgb",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:isSrgbInGamut",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "isSrgbInGamut",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:linearSrgbToOklab",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "linearSrgbToOklab",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:linearSrgbToSrgb",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "linearSrgbToSrgb",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:normalizeHue",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "normalizeHue",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:oklabToLinearSrgb",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "oklabToLinearSrgb",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:oklabToOklch",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "oklabToOklch",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:oklchToOklab",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "oklchToOklab",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:oklchToSrgb",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "oklchToSrgb",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:rgba8ToSrgb",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "rgba8ToSrgb",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:srgbToDeviceCmyk",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "srgbToDeviceCmyk",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:srgbToHsl",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "srgbToHsl",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:srgbToHsv",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "srgbToHsv",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:srgbToLinearSrgb",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "srgbToLinearSrgb",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:srgbToOklch",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "srgbToOklch",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:srgbToRgba8",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "srgbToRgba8",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:tryCreateDeviceCmykColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "tryCreateDeviceCmykColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:tryCreateHslColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "tryCreateHslColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:tryCreateHsvColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "tryCreateHsvColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:tryCreateOklabColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "tryCreateOklabColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:tryCreateOklchColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "tryCreateOklchColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:tryCreateRgba8",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "tryCreateRgba8",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color:tryCreateSrgbColor",
+      "package": "core",
+      "subpath": "./color",
+      "exportName": "tryCreateSrgbColor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "core:./color-picker:applyColorPickerEvent",
       "package": "core",
       "subpath": "./color-picker",
@@ -735,6 +1032,42 @@
       "package": "core",
       "subpath": "./color-picker",
       "exportName": "tryCreateColorValue",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color-text:MAX_COLOR_TEXT_CODE_UNITS",
+      "package": "core",
+      "subpath": "./color-text",
+      "exportName": "MAX_COLOR_TEXT_CODE_UNITS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./color-text:createColorTextValue",
+      "package": "core",
+      "subpath": "./color-text",
+      "exportName": "createColorTextValue",
+      "kind": "function",
+      "aliasOf": "core:./color:createRgba8",
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color-text:formatColorText",
+      "package": "core",
+      "subpath": "./color-text",
+      "exportName": "formatColorText",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./color-text:parseColorText",
+      "package": "core",
+      "subpath": "./color-text",
+      "exportName": "parseColorText",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -18955,6 +19288,187 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Candidate count is a compile-time constant and no host, ancestor, or domain collection is accepted."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "color-text.parse",
+      "source": "packages/core/src/editing/color-text.ts",
+      "benchmarkIDs": [
+        "core:color-text:parse"
+      ],
+      "specificationCeiling": "O(tColor)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "tColor",
+            "meaning": "input color-text code units",
+            "ceiling": "MAX_COLOR_TEXT_CODE_UNITS = 256"
+          }
+        ],
+        "time": {
+          "bound": "O(tColor)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(tColor)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(tColor)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "The code-unit ceiling rejects before parsing; the closed grammar performs a fixed sequence of anchored parses and bounded token splits.",
+        "adversarialWitness": "A maximum-length invalid function reaches every grammar branch without exceeding the code-unit ceiling.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Reading the explicit bounded text input has a linear lower bound."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "color.convert",
+      "source": "packages/core/src/structures/color.ts",
+      "benchmarkIDs": [
+        "core:color:convert"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Every conversion evaluates a fixed scalar matrix or fixed three/four-channel formula and materializes one fixed-size value.",
+        "adversarialWitness": "An in-gamut OKLCH round trip exercises transfer functions, two matrices, polar conversion, and quantization.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Color values have fixed dimensionality and accept no collection."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "color.gamut",
+      "source": "packages/core/src/structures/color.ts",
+      "benchmarkIDs": [
+        "core:color:gamut-reduce"
+      ],
+      "specificationCeiling": "O(kGamut)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "kGamut",
+            "meaning": "chroma-reduction iterations",
+            "ceiling": "OKLCH_GAMUT_ITERATIONS = 12"
+          }
+        ],
+        "time": {
+          "bound": "O(kGamut)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(kGamut)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Reject and clip are one pass; reduce-chroma performs exactly twelve binary-search conversions with constant scalar state.",
+        "adversarialWitness": "A high-chroma out-of-gamut value forces all twelve reduction iterations.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "The iteration ceiling is fixed and independent of external cardinality."
         }
       }
     },

@@ -4,8 +4,8 @@ import { join } from 'node:path';
 
 const ceilings = Object.freeze({
   totalBytes: 1_125_000,
-  javascriptBytes: 440_000,
-  declarationBytes: 155_000,
+  javascriptBytes: 450_000,
+  declarationBytes: 165_000,
   sourceMapBytes: 570_000,
 });
 
@@ -39,6 +39,8 @@ for (const [category, ceiling] of Object.entries(ceilings)) {
 }
 const packageJSON = JSON.parse(await readFile('package.json', 'utf8'));
 assert.deepEqual(packageJSON.files, ['dist']);
+assert.deepEqual(packageJSON.dependencies ?? {}, {}, 'Core production dependencies must remain empty');
+assert.deepEqual(packageJSON.peerDependencies ?? {}, {}, 'Core production peer dependencies must remain empty');
 console.log(JSON.stringify({
   status: 'passed',
   files: paths.length,

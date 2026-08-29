@@ -61,6 +61,16 @@
       "import": "./dist/structures/anchored-layout.js",
       "default": "./dist/structures/anchored-layout.js"
     },
+    "./color": {
+      "types": "./dist/structures/color.d.ts",
+      "import": "./dist/structures/color.js",
+      "default": "./dist/structures/color.js"
+    },
+    "./color-text": {
+      "types": "./dist/editing/color-text.d.ts",
+      "import": "./dist/editing/color-text.js",
+      "default": "./dist/editing/color-text.js"
+    },
     "./grid": {
       "types": "./dist/structures/grid.d.ts",
       "import": "./dist/structures/grid.js",
@@ -385,8 +395,5 @@
   },
   "devDependencies": {
     "typescript": "7.0.2"
-  },
-  "dependencies": {
-    "colord": "^2.10.0"
   }
 }

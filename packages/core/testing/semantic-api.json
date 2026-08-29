@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "7378bf509b67ce7b417d3a503977b7253a60df8dca5ba25a3680de8b70acc4d1",
+    "publicSignatureFingerprint": "621ad6c8facd8fe9915008b2500762cbaea70d0422db51111d8ef18fb7f4e01b",
     "subpaths": [
       ".",
       "./accordion",
@@ -23,7 +23,9 @@
       "./checkbox",
       "./checkbox-group",
       "./collection-window",
+      "./color",
       "./color-picker",
+      "./color-text",
       "./combobox",
       "./dialog",
       "./disclosure",
@@ -517,6 +519,6 @@
   ],
   "acceptance": {
     "classification": "minor",
-    "reason": "WI-034_geometry_and_anchored_layout"
+    "reason": "WI-037_color_algebra_and_color_text_subpaths"
   }
 }

@@ -24,6 +24,8 @@ import {
   rectanglesIntersect,
 } from '../../packages/core/dist/structures/geometry.js';
 import { solveAnchoredLayout } from '../../packages/core/dist/structures/anchored-layout.js';
+import { oklchToSrgb, rgba8ToSrgb, srgbToOklch } from '../../packages/core/dist/structures/color.js';
+import { parseColorText } from '../../packages/core/dist/editing/color-text.js';
 import { createTree } from '../../packages/core/dist/structures/tree.js';
 import {
   createSelectionState,
@@ -59,7 +61,7 @@ import {
 } from '../../packages/virtual/dist/spatial-layout.js';
 
 export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 9,
+  version: 10,
   scales: Object.freeze([1_000, 10_000, 100_000]),
   patchDepths: Object.freeze([1, 8, 32, 64]),
   changedDensities: Object.freeze([1, 32, 'full']),
@@ -282,6 +284,15 @@ export function createWorkloads({ quick = false } = {}) {
       rectanglesIntersect(geometryLeft, geometryRight) ? 1 : 0),
     timed('core:anchored-layout:solve', 'core-structure', { operation: 'bounded-placement', candidates: 4 }, quick ? 1_000 : 10_000, () =>
       solveAnchoredLayout(anchoredInput).rect.x),
+    timed('core:color:convert', 'core-structure', { operation: 'srgb-oklch-roundtrip' }, quick ? 10_000 : 100_000, (iteration) => {
+      const srgb = rgba8ToSrgb({ red: iteration & 255, green: iteration >>> 3 & 255, blue: iteration >>> 7 & 255, alpha: 255 });
+      const converted = oklchToSrgb(srgbToOklch(srgb));
+      return converted.ok ? converted.value.red : -1;
+    }),
+    timed('core:color:gamut-reduce', 'core-structure', { operation: 'reduce-chroma', iterations: 12 }, quick ? 1_000 : 10_000, () =>
+      oklchToSrgb({ lightness: 0.8, chroma: 0.5, hue: 120, alpha: 1 }, 'reduce-chroma').value.green),
+    timed('core:color-text:parse', 'core-editing', { operation: 'parse', codeUnits: 34 }, quick ? 1_000 : 10_000, () =>
+      parseColorText('oklch(62.7955% 0.25768 29.2339)').value.red),
   );
   workloads.push(...createRuntimeWorkloads(quick));
   return Object.freeze(workloads);

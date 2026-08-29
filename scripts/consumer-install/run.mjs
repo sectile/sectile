@@ -16,8 +16,8 @@ if (process.env['SECTILE_KEEP_INSTALL'] === '1') process.stderr.write(`consumer 
 try {
   const coreManifest = JSON.parse(await readFile(resolve(repoRoot, 'packages/core/package.json'), 'utf8'));
   const domManifest = JSON.parse(await readFile(resolve(repoRoot, 'packages/dom/package.json'), 'utf8'));
-  assert.equal(typeof coreManifest.dependencies?.colord, 'string', 'colord incumbent must be recorded as a hard Core dependency');
-  assert.equal(coreManifest.peerDependencies?.colord, undefined, 'colord must not be misclassified as a peer');
+  assert.equal(coreManifest.dependencies?.colord, undefined, 'Core must not ship colord');
+  assert.equal(coreManifest.peerDependencies?.colord, undefined, 'Core must not expose colord as a peer');
   assert.equal(typeof domManifest.dependencies?.['@floating-ui/dom'], 'string', 'Floating UI incumbent must be recorded as a hard DOM dependency');
   assert.equal(domManifest.peerDependencies?.['@floating-ui/dom'], undefined, 'Floating UI must not be misclassified as a peer');
   const packDirectory = join(temporaryRoot, 'packs');
@@ -114,7 +114,6 @@ async function inspectVueInstall(root, packageManager, tarballs) {
   }
   const installation = await directoryMetrics(join(directory, 'node_modules'));
   const incumbents = {
-    colord: await installedPackageMetrics(directory, packageManager, 'colord'),
     '@floating-ui/dom': await installedPackageMetrics(directory, packageManager, '@floating-ui/dom'),
   };
   const dependencyTree = await installedDependencyTree(directory, packageManager);

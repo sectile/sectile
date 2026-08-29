@@ -66,6 +66,8 @@ function representativeNamedExport(packageName, subpath, surface) {
     ['core:./metric-index', 'createMetricIndex'],
     ['core:./geometry', 'intersectRects'],
     ['core:./anchored-layout', 'solveAnchoredLayout'],
+    ['core:./color', 'srgbToOklch'],
+    ['core:./color-text', 'parseColorText'],
     ['core:./range', 'createExactRatio'],
   ]).get(`${packageName}:${subpath}`);
   if (preferred !== undefined) {

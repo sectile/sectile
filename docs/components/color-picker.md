@@ -491,12 +491,9 @@ type ColorModel = Exclude<ColorFormat, 'hex'>
 
 #### `ColorValue`
 
-| Name | Type | Required |
-| --- | --- | --- |
-| `red` | `number` | Yes |
-| `green` | `number` | Yes |
-| `blue` | `number` | Yes |
-| `alpha` | `number` | Yes |
+```ts
+type ColorValue = Rgba8
+```
 
 ## Parts
 

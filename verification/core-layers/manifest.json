@@ -15,7 +15,8 @@
     "exact": {
       "src/error-code.ts": "foundation",
       "src/result.ts": "foundation",
-      "src/shared.ts": "foundation"
+      "src/shared.ts": "foundation",
+      "src/editing/color-text.ts": "editing"
     },
     "prefixes": [
       { "prefix": "src/internal/reference/", "layer": "reference" },
@@ -36,6 +37,8 @@
     "./metric-index": { "source": "src/structures/metric-index.ts" },
     "./geometry": { "source": "src/structures/geometry.ts" },
     "./anchored-layout": { "source": "src/structures/anchored-layout.ts" },
+    "./color": { "source": "src/structures/color.ts" },
+    "./color-text": { "source": "src/editing/color-text.ts" },
     "./grid": { "source": "src/structures/grid.ts" },
     "./grid-control": { "source": "src/grid-control.ts" },
     "./tree": { "source": "src/structures/tree.ts" },

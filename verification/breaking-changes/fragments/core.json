@@ -165,6 +165,13 @@
       "before": { "subpath": "./window-splitter" },
       "symbols": ["QuantizedRange declaration closure"],
       "replacement": { "package": "@sectile/core", "subpath": "./window-splitter" }
+    },
+    {
+      "id": "WI-037:color-picker-rgba8-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./color-picker" },
+      "symbols": ["ColorValue is the canonical Rgba8 declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./color-picker" }
     }
   ]
 }

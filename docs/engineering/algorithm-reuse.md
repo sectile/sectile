@@ -2,7 +2,7 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all eight package source trees.
 
-Findings: 433; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
+Findings: 432; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
 
 ## Classifications
 
@@ -10,7 +10,7 @@ Findings: 433; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039,
 |---|---:|
 | bounded-small | 10 |
 | migration-required | 111 |
-| result-proportional | 143 |
+| result-proportional | 142 |
 | reuse | 169 |
 
 ## Categories
@@ -21,7 +21,7 @@ Findings: 433; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039,
 | discarded-canonical-index | 39 |
 | measurement-authority | 16 |
 | private-algorithm-bypass | 11 |
-| raw-full-domain-scan | 286 |
+| raw-full-domain-scan | 285 |
 | repeated-immutable-view | 14 |
 | whole-domain-validation | 33 |
 

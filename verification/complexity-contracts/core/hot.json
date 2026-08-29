@@ -72,6 +72,52 @@
       }
     },
     {
+      "id": "color-text.parse",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/editing/color-text.ts",
+      "benchmarkIDs": ["core:color-text:parse"],
+      "specificationCeiling": "O(tColor)",
+      "contract": {
+        "variables": [{ "name": "tColor", "meaning": "input color-text code units", "ceiling": "MAX_COLOR_TEXT_CODE_UNITS = 256" }],
+        "time": { "bound": "O(tColor)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(tColor)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(tColor)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The code-unit ceiling rejects before parsing; the closed grammar performs a fixed sequence of anchored parses and bounded token splits.",
+        "adversarialWitness": "A maximum-length invalid function reaches every grammar branch without exceeding the code-unit ceiling.",
+        "fullScan": { "allowed": true, "rationale": "Reading the explicit bounded text input has a linear lower bound." }
+      }
+    },
+    {
+      "id": "color.convert",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/color.ts",
+      "benchmarkIDs": ["core:color:convert"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Every conversion evaluates a fixed scalar matrix or fixed three/four-channel formula and materializes one fixed-size value.",
+        "adversarialWitness": "An in-gamut OKLCH round trip exercises transfer functions, two matrices, polar conversion, and quantization.",
+        "fullScan": { "allowed": false, "rationale": "Color values have fixed dimensionality and accept no collection." }
+      }
+    },
+    {
+      "id": "color.gamut",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/color.ts",
+      "benchmarkIDs": ["core:color:gamut-reduce"],
+      "specificationCeiling": "O(kGamut)",
+      "contract": {
+        "variables": [{ "name": "kGamut", "meaning": "chroma-reduction iterations", "ceiling": "OKLCH_GAMUT_ITERATIONS = 12" }],
+        "time": { "bound": "O(kGamut)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(kGamut)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Reject and clip are one pass; reduce-chroma performs exactly twelve binary-search conversions with constant scalar state.",
+        "adversarialWitness": "A high-chroma out-of-gamut value forces all twelve reduction iterations.",
+        "fullScan": { "allowed": false, "rationale": "The iteration ceiling is fixed and independent of external cardinality." }
+      }
+    },
+    {
       "id": "exact-ratio.arithmetic",
       "inherits": "constant-v1",
       "source": "packages/core/src/structures/range.ts",
