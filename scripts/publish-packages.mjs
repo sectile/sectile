@@ -7,6 +7,7 @@ import {
   assertPackedManifestMatchesSource,
   inspectPackedPackage,
 } from './lib/packed-package-contract.mjs';
+import { completeNpmWebAuth, parseNpmWebAuthChallenge } from './lib/npm-publish-auth.mjs';
 import { discoverPublishedPackageDirectories } from './lib/published-packages.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -128,7 +129,7 @@ try {
     console.log(`validated ${packed.length} downloaded package tarballs for ${version}`);
   } else if (bootstrapOnly) {
     for (const { manifest, tarball } of unregistered) {
-      run('npm', ['publish', tarball, '--access', 'public', '--registry', registry], { env: npmEnvironment });
+      await publishTarball(tarball, npmEnvironment);
       console.log(`bootstrapped ${manifest.name}@${manifest.version}`);
     }
     if (unregistered.length === 0) console.log('all public package names are already registered');
@@ -143,7 +144,7 @@ try {
         console.log(`skipped ${manifest.name}@${manifest.version}; already published`);
         continue;
       }
-      run('npm', ['publish', tarball, '--access', 'public', '--registry', registry], { env: npmEnvironment });
+      await publishTarball(tarball, npmEnvironment);
     }
   }
 } finally {
@@ -153,6 +154,38 @@ try {
       if (error.code !== 'ENOTEMPTY' && error.code !== 'EEXIST') throw error;
     });
   }
+}
+
+async function publishTarball(tarball, environment) {
+  const arguments_ = ['publish', tarball, '--access', 'public', '--registry', registry];
+  if (process.env.CI !== undefined || (process.stdin.isTTY && process.stdout.isTTY)) {
+    run('npm', arguments_, { env: environment });
+    return;
+  }
+
+  const result = spawnSync('npm', [...arguments_, '--json'], {
+    cwd: root,
+    encoding: 'utf8',
+    env: environment,
+    maxBuffer: 16 * 1_024 * 1_024,
+  });
+  if (result.error !== undefined) throw result.error;
+  if (result.status === 0) {
+    writeProcessOutput(result);
+    return;
+  }
+  const challenge = parseNpmWebAuthChallenge(result.stdout, result.stderr);
+  if (challenge === null) {
+    writeProcessOutput(result);
+    throw new Error(`npm publish failed with exit code ${result.status ?? 'unknown'}`);
+  }
+  const otp = await completeNpmWebAuth(challenge);
+  run('npm', arguments_, { env: { ...environment, npm_config_otp: otp } });
+}
+
+function writeProcessOutput(result) {
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
 }
 
 async function packPackages(packageEntries, destination) {

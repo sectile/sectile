@@ -35,13 +35,18 @@ test('includes every public workspace package in releases', () => {
 
 test('release retries verify tagged source and load the complete current publication tool closure', () => {
   const workflow = readFileSync(join(root, '.github/workflows/release.yml'), 'utf8');
+  const publication = readFileSync(join(root, 'scripts/publish-packages.mjs'), 'utf8');
   assert.equal(/git restore[^\n]*scripts\/verify\.mjs/u.test(workflow), false);
   for (const path of [
     'scripts/publish-packages.mjs',
+    'scripts/lib/npm-publish-auth.mjs',
     'scripts/lib/packed-package-contract.mjs',
     'scripts/lib/published-packages.mjs',
     'scripts/lib/source-map-policy.mjs',
   ]) assert.ok(workflow.includes(path), `${path} is absent from publication tooling restore`);
+  assert.match(publication, /parseNpmWebAuthChallenge/u);
+  assert.match(publication, /completeNpmWebAuth/u);
+  assert.match(publication, /npm_config_otp/u);
   assert.equal(workflow.includes('.release-artifacts'), false);
   assert.match(workflow, /--pack-destination=release-artifacts/u);
   assert.match(workflow, /path: release-artifacts\/\*\.tgz/u);
