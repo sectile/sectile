@@ -1,5 +1,41 @@
 {
   "schemaVersion": 1,
   "package": "@sectile/tabular",
-  "entries": []
+  "entries": [
+    {
+      "id": "WI-032:root-selection-expression-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "." },
+      "symbols": ["TabularRowSelection declaration closure"],
+      "replacement": { "package": "@sectile/tabular", "subpath": "." }
+    },
+    {
+      "id": "WI-032:data-grid-selection-expression-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./data-grid" },
+      "symbols": ["TabularRowSelection declaration closure"],
+      "replacement": { "package": "@sectile/tabular", "subpath": "./data-grid" }
+    },
+    {
+      "id": "WI-032:data-table-selection-expression",
+      "change": "signature-changed",
+      "before": { "subpath": "./data-table" },
+      "symbols": ["rowSelectionContains", "TabularRowSelection declaration closure"],
+      "replacement": { "package": "@sectile/tabular", "subpath": "./data-table" }
+    },
+    {
+      "id": "WI-032:data-tree-grid-selection-expression-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./data-tree-grid" },
+      "symbols": ["TabularRowSelection declaration closure"],
+      "replacement": { "package": "@sectile/tabular", "subpath": "./data-tree-grid" }
+    },
+    {
+      "id": "WI-032:virtual-selection-expression-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./virtual" },
+      "symbols": ["TabularRowSelection declaration closure"],
+      "replacement": { "package": "@sectile/tabular", "subpath": "./virtual" }
+    }
+  ]
 }

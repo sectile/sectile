@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "a4f7bde69d2d61e831325f30ae9e48735e1ee54a36ce6388441e1cc1316db74e",
+    "publicSignatureFingerprint": "ee624de47716ff9fad9bcc64481334cca17ee9745a9fe3d78c97d6ed729cac44",
     "subpaths": [
       ".",
       "./accordion",
@@ -57,6 +57,7 @@
       "./revision",
       "./select",
       "./selection",
+      "./selection-expression",
       "./sequence",
       "./slider",
       "./spin-button",
@@ -513,6 +514,6 @@
   ],
   "acceptance": {
     "classification": "type-change-reviewed",
-    "reason": "WI-031-adds-index-span-subpath-and-bounded-exact-ratio-algebra"
+    "reason": "WI-032"
   }
 }

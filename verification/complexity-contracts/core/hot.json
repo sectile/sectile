@@ -222,6 +222,61 @@
       }
     },
     {
+      "id": "selection-expression.algebra",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/selection-expression.ts",
+      "benchmarkIDs": ["core:selection-expression:union:1000", "core:selection-expression:union:10000", "core:selection-expression:union:100000"],
+      "specificationCeiling": "O(eLeft + eRight)",
+      "contract": {
+        "variables": [
+          { "name": "eLeft", "meaning": "left exception cardinality", "ceiling": "maxExceptions" },
+          { "name": "eRight", "meaning": "right exception cardinality", "ceiling": "maxExceptions" },
+          { "name": "eResult", "meaning": "result exception cardinality", "ceiling": "maxExceptions" }
+        ],
+        "time": { "bound": "O(eLeft + eRight)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(eLeft + eRight)", "output": "O(eResult)", "retained": "O(eResult)" },
+        "resources": { "allocations": "O(eLeft + eRight)", "cacheEntries": "O(eResult)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Closed truth-table algebra visits each exception vector once using owner-local hash membership; it never expands a complement universe.",
+        "adversarialWitness": "Disjoint maximum exception vectors force both complete visits and maximum retained output.",
+        "fullScan": { "allowed": true, "rationale": "Both bounded exception vectors are explicit inputs; the represented universe remains unvisited." }
+      }
+    },
+    {
+      "id": "selection-expression.materialize",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/selection-expression.ts",
+      "benchmarkIDs": ["core:selection-expression:materialize:1000", "core:selection-expression:materialize:10000", "core:selection-expression:materialize:100000"],
+      "specificationCeiling": "O(nDomain)",
+      "contract": {
+        "variables": [
+          { "name": "nDomain", "meaning": "supplied Sequence cardinality", "ceiling": "Sequence maxItems" },
+          { "name": "k", "meaning": "materialized selected output cardinality", "ceiling": "k <= nDomain" }
+        ],
+        "time": { "bound": "O(nDomain)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(k)", "retained": "O(k)" },
+        "resources": { "allocations": "O(k)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Materialization alone walks the supplied canonical Sequence once and performs one expected-O(1) membership lookup per ID.",
+        "adversarialWitness": "A complement with no exceptions emits every maximum-size Sequence ID.",
+        "fullScan": { "allowed": true, "rationale": "The caller explicitly requests a finite materialization ordered by the supplied Sequence." }
+      }
+    },
+    {
+      "id": "selection-expression.membership",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/selection-expression.ts",
+      "benchmarkIDs": ["core:selection-expression:contains:1000", "core:selection-expression:contains:10000", "core:selection-expression:contains:100000"],
+      "specificationCeiling": "O(1) expected",
+      "contract": {
+        "variables": [{ "name": "eSelection", "meaning": "stored exception cardinality", "ceiling": "maxExceptions" }],
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(eSelection)" },
+        "resources": { "allocations": "0", "cacheEntries": "O(eSelection)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Construction retains one private hash index; membership performs exactly one exception lookup and polarity inversion.",
+        "adversarialWitness": "A missing ID against the maximum exception set still performs one hash lookup.",
+        "fullScan": { "allowed": false, "rationale": "Membership must not inspect exception or represented-domain cardinality." }
+      }
+    },
+    {
       "id": "selection.toggle",
       "inherits": "linear-v1",
       "source": "packages/core/src/internal/state/selection.ts",

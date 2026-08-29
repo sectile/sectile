@@ -2,36 +2,36 @@
   "schemaVersion": 1,
   "packages": {
     "core": {
-      "tarballBytes": 171960,
-      "unpackedBytes": 963094,
-      "unpackedFiles": 270,
+      "tarballBytes": 174875,
+      "unpackedBytes": 982101,
+      "unpackedFiles": 273,
       "categories": {
         "runtimeJS": {
-          "files": 89,
-          "bytes": 390795
+          "files": 90,
+          "bytes": 398634
         },
         "declarations": {
-          "files": 89,
-          "bytes": 146270
+          "files": 90,
+          "bytes": 148824
         },
         "sourceMaps": {
-          "files": 89,
-          "bytes": 412361
+          "files": 90,
+          "bytes": 420752
         },
         "other": {
           "files": 3,
-          "bytes": 13668
+          "bytes": 13891
         }
       }
     },
     "dom": {
-      "tarballBytes": 253246,
-      "unpackedBytes": 1583928,
+      "tarballBytes": 253226,
+      "unpackedBytes": 1583737,
       "unpackedFiles": 282,
       "categories": {
         "runtimeJS": {
           "files": 93,
-          "bytes": 646726
+          "bytes": 646661
         },
         "declarations": {
           "files": 93,
@@ -39,7 +39,7 @@
         },
         "sourceMaps": {
           "files": 93,
-          "bytes": 673119
+          "bytes": 672993
         },
         "other": {
           "files": 3,
@@ -71,21 +71,21 @@
       }
     },
     "tabular": {
-      "tarballBytes": 55011,
-      "unpackedBytes": 314167,
+      "tarballBytes": 55656,
+      "unpackedBytes": 316886,
       "unpackedFiles": 42,
       "categories": {
         "runtimeJS": {
           "files": 13,
-          "bytes": 131430
+          "bytes": 133094
         },
         "declarations": {
           "files": 13,
-          "bytes": 39002
+          "bytes": 39338
         },
         "sourceMaps": {
           "files": 13,
-          "bytes": 138991
+          "bytes": 139710
         },
         "other": {
           "files": 3,
@@ -189,8 +189,8 @@
   "installs": [
     {
       "packageManager": "npm",
-      "installedBytes": 22083440,
-      "installedFiles": 1546,
+      "installedBytes": 22156378,
+      "installedFiles": 1555,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -572,8 +572,8 @@
     },
     {
       "packageManager": "pnpm",
-      "installedBytes": 22102901,
-      "installedFiles": 1551,
+      "installedBytes": 22175839,
+      "installedFiles": 1560,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",

@@ -1,3 +1,11 @@
+import {
+  createSelectionExpression,
+  subtractSelectionExpressions,
+  toggleSelectionID,
+  tryCreateSelectionExpression,
+  unionSelectionExpressions,
+  type SelectionExpression,
+} from '@sectile/core/selection-expression';
 import { fail, ok, validateID } from './foundation.js';
 import type {
   TabularGroupID,
@@ -8,12 +16,39 @@ import type {
   TabularSelectionTarget,
 } from '../contracts.js';
 
+const ROW_SELECTION_EXPRESSION = Symbol('sectile.tabular.row-selection-expression');
+
+type CanonicalRowSelection = TabularRowSelection & {
+  readonly [ROW_SELECTION_EXPRESSION]: SelectionExpression<TabularRowID>;
+};
+
 export function createExplicitRowSelection(
   rowIDs: readonly TabularRowID[],
   limits: TabularLimits,
 ): TabularResult<TabularRowSelection> {
-  const ids = normalizeIDs(rowIDs, limits);
-  return ids.ok ? ok(Object.freeze({ kind: 'explicit-rows', rowIDs: ids.value })) : ids;
+  const expression = createExpression('explicit', rowIDs, limits);
+  return expression.ok ? ok(wrapExpression(expression.value)) : expression;
+}
+
+export function canonicalizeRowSelection(
+  selection: TabularRowSelection,
+  limits: TabularLimits,
+): TabularResult<TabularRowSelection> {
+  if (selection.kind === 'all-matching'
+    && (!validGeneration(selection.sourceGeneration) || !validGeneration(selection.queryRevision))) {
+    return fail('construction', 'invalid-controlled-shape', 'Selection bindings must be non-negative safe integers.');
+  }
+  if (ROW_SELECTION_EXPRESSION in selection) {
+    const current = expressionOf(selection);
+    if (current.maxExceptions === limits.maxSelectionIDs && current.maxIDCodeUnits === limits.maxIDCodeUnits) return ok(selection);
+  }
+  const exceptions = selection.kind === 'explicit-rows' ? selection.rowIDs : selection.excludedRowIDs;
+  const expression = createExpression(selection.kind === 'explicit-rows' ? 'explicit' : 'complement', exceptions, limits);
+  return expression.ok ? ok(wrapExpression(expression.value, selection)) : expression;
+}
+
+export function rowSelectionContains(selection: TabularRowSelection, rowID: TabularRowID): boolean {
+  return expressionOf(selection).contains(rowID);
 }
 
 export function toggleExplicitRowSelection(
@@ -23,17 +58,13 @@ export function toggleExplicitRowSelection(
 ): TabularResult<TabularRowSelection> {
   const error = validateID(rowID, 'rowID', limits);
   if (error !== null) return { ok: false, error };
-  const current = selection.kind === 'explicit-rows'
-    ? [...selection.rowIDs]
-    : [...selection.excludedRowIDs];
-  const index = current.indexOf(rowID);
-  if (index === -1) current.push(rowID);
-  else current.splice(index, 1);
-  const ids = normalizeIDs(current, limits);
-  if (!ids.ok) return ids;
-  return selection.kind === 'explicit-rows'
-    ? ok(Object.freeze({ kind: 'explicit-rows', rowIDs: ids.value }))
-    : ok(Object.freeze({ ...selection, excludedRowIDs: ids.value }));
+  const canonical = canonicalizeIfNeeded(selection, limits);
+  if (!canonical.ok) return canonical;
+  try {
+    return ok(wrapExpression(toggleSelectionID(expressionOf(canonical.value), rowID, expressionOptions(limits)), canonical.value));
+  } catch (cause) {
+    return expressionFailure(cause, limits);
+  }
 }
 
 export function setVisibleRowSelectionRange(
@@ -48,49 +79,38 @@ export function setVisibleRowSelectionRange(
   if (anchorError !== null) return { ok: false, error: anchorError };
   const rowError = validateID(rowID, 'rowID', limits);
   if (rowError !== null) return { ok: false, error: rowError };
-  if (typeof selected !== 'boolean') {
-    return fail('transition-rejection', 'invalid-selection-range', 'Range selection requires a boolean selected state.');
-  }
+  if (typeof selected !== 'boolean') return fail('transition-rejection', 'invalid-selection-range', 'Range selection requires a boolean selected state.');
   const anchorIndex = visibleRowIDs.indexOf(anchorRowID);
   const rowIndex = visibleRowIDs.indexOf(rowID);
   if (anchorIndex === -1 || rowIndex === -1) {
-    return fail('transition-rejection', 'invalid-selection-range', 'Range selection endpoints must be visible leaf rows.', {
-      anchorRowID,
-      rowID,
-    });
+    return fail('transition-rejection', 'invalid-selection-range', 'Range selection endpoints must be visible leaf rows.', { anchorRowID, rowID });
   }
+  const canonical = canonicalizeIfNeeded(selection, limits);
+  if (!canonical.ok) return canonical;
   const start = Math.min(anchorIndex, rowIndex);
   const end = Math.max(anchorIndex, rowIndex);
-  const range = new Set(visibleRowIDs.slice(start, end + 1));
-  const current = selection.kind === 'explicit-rows'
-    ? [...selection.rowIDs]
-    : [...selection.excludedRowIDs];
-  const next = new Set(current);
-  const addRange = selection.kind === 'explicit-rows' ? selected : !selected;
-  for (const candidate of range) {
-    if (addRange) next.add(candidate);
-    else next.delete(candidate);
+  const range = createExpression('explicit', visibleRowIDs.slice(start, end + 1), limits);
+  if (!range.ok) return range;
+  try {
+    const current = expressionOf(canonical.value);
+    const next = selected
+      ? unionSelectionExpressions(current, range.value, expressionOptions(limits))
+      : subtractSelectionExpressions(current, range.value, expressionOptions(limits));
+    return ok(wrapExpression(next, canonical.value));
+  } catch (cause) {
+    return expressionFailure(cause, limits);
   }
-  const ids = normalizeIDs([...next], limits);
-  if (!ids.ok) return ids;
-  return selection.kind === 'explicit-rows'
-    ? ok(Object.freeze({ kind: 'explicit-rows', rowIDs: ids.value }))
-    : ok(Object.freeze({ ...selection, excludedRowIDs: ids.value }));
 }
 
 export function selectAllMatchingRows(
   sourceGeneration: number,
   queryRevision: number,
+  limits: TabularLimits,
 ): TabularResult<TabularRowSelection> {
   if (!validGeneration(sourceGeneration) || !validGeneration(queryRevision)) {
     return fail('transition-rejection', 'invalid-controlled-shape', 'Selection bindings must be non-negative safe integers.');
   }
-  return ok(Object.freeze({
-    kind: 'all-matching',
-    sourceGeneration,
-    queryRevision,
-    excludedRowIDs: Object.freeze([]),
-  }));
+  return ok(wrapExpression(createSelectionExpression('complement', [], expressionOptions(limits)), { sourceGeneration, queryRevision }));
 }
 
 export function reconcileRowSelectionBinding(
@@ -99,10 +119,11 @@ export function reconcileRowSelectionBinding(
   queryRevision: number,
   sourceReplaced: boolean,
 ): TabularRowSelection {
-  if (sourceReplaced) return Object.freeze({ kind: 'explicit-rows', rowIDs: Object.freeze([]) });
+  const current = expressionOf(selection);
+  if (sourceReplaced) return wrapExpression(createSelectionExpression('explicit', [], current));
   if (selection.kind === 'all-matching'
     && (selection.sourceGeneration !== sourceGeneration || selection.queryRevision !== queryRevision)) {
-    return Object.freeze({ kind: 'explicit-rows', rowIDs: Object.freeze([]) });
+    return wrapExpression(createSelectionExpression('explicit', [], current));
   }
   return selection;
 }
@@ -112,17 +133,11 @@ export function reconcileAuthoritativeRowRemoval(
   removedRowIDs: readonly TabularRowID[],
 ): TabularRowSelection {
   if (removedRowIDs.length === 0) return selection;
+  const current = expressionOf(selection);
   const removed = new Set(removedRowIDs);
-  if (selection.kind === 'explicit-rows') {
-    const rowIDs = selection.rowIDs.filter((id) => !removed.has(id));
-    return rowIDs.length === selection.rowIDs.length
-      ? selection
-      : Object.freeze({ kind: 'explicit-rows', rowIDs: Object.freeze(rowIDs) });
-  }
-  const excludedRowIDs = selection.excludedRowIDs.filter((id) => !removed.has(id));
-  return excludedRowIDs.length === selection.excludedRowIDs.length
-    ? selection
-    : Object.freeze({ ...selection, excludedRowIDs: Object.freeze(excludedRowIDs) });
+  const retained = current.exceptions.filter((id) => !removed.has(id));
+  if (retained.length === current.exceptionCount) return selection;
+  return wrapExpression(createSelectionExpression(current.kind, retained, current), selection);
 }
 
 export function createGroupLeafSelectionTarget(
@@ -140,36 +155,72 @@ export function createGroupLeafSelectionTarget(
   const exclusions = selection.kind === 'all-matching'
     && selection.sourceGeneration === sourceGeneration
     && selection.queryRevision === queryRevision
-    ? selection.excludedRowIDs
+    ? expressionOf(selection).exceptions
     : Object.freeze([]);
-  return ok(Object.freeze({
-    kind: 'group-leaves',
-    sourceGeneration,
-    queryRevision,
-    groupID,
-    excludedRowIDs: exclusions,
-  }));
+  return ok(Object.freeze({ kind: 'group-leaves', sourceGeneration, queryRevision, groupID, excludedRowIDs: exclusions }));
 }
 
-function normalizeIDs(
-  input: readonly TabularRowID[],
+function canonicalizeIfNeeded(selection: TabularRowSelection, limits: TabularLimits): TabularResult<TabularRowSelection> {
+  return ROW_SELECTION_EXPRESSION in selection ? ok(selection) : canonicalizeRowSelection(selection, limits);
+}
+
+function expressionOf(selection: TabularRowSelection): SelectionExpression<TabularRowID> {
+  if (ROW_SELECTION_EXPRESSION in selection) return (selection as CanonicalRowSelection)[ROW_SELECTION_EXPRESSION];
+  const exceptions = selection.kind === 'explicit-rows' ? selection.rowIDs : selection.excludedRowIDs;
+  return createSelectionExpression(selection.kind === 'explicit-rows' ? 'explicit' : 'complement', exceptions, {
+    maxExceptions: Math.max(100_000, exceptions.length),
+  });
+}
+
+function createExpression(
+  kind: 'explicit' | 'complement',
+  exceptions: readonly TabularRowID[],
   limits: TabularLimits,
-): TabularResult<readonly TabularRowID[]> {
-  if (!Array.isArray(input)) return fail('construction', 'invalid-controlled-shape', 'Row selection must be an array.');
-  if (input.length > limits.maxSelectionIDs) {
+): TabularResult<SelectionExpression<TabularRowID>> {
+  const result = tryCreateSelectionExpression(kind, exceptions, {
+    maxExceptions: limits.maxSelectionIDs,
+    maxIDCodeUnits: limits.maxIDCodeUnits,
+  });
+  if (result.ok) return ok(result.value);
+  if (result.error.code === 'item-ceiling-exceeded') {
     return fail('resource-rejection', 'selection-id-ceiling-exceeded', 'Row selection exceeds the configured ceiling.', {
-      actual: input.length,
+      actual: exceptions.length,
       ceiling: limits.maxSelectionIDs,
     });
   }
-  const seen = new Set<string>();
-  for (const id of input) {
-    const error = validateID(id, 'rowID', limits);
-    if (error !== null) return { ok: false, error };
-    if (seen.has(id)) return fail('construction', 'duplicate-identity', 'Row selection identities must be unique.', { id });
-    seen.add(id);
+  if (result.error.code === 'duplicate-id') {
+    return fail('construction', 'duplicate-identity', 'Row selection identities must be unique.', result.error.details);
   }
-  return ok(Object.freeze([...input]));
+  return fail(result.error.class, 'invalid-controlled-shape', result.error.message, result.error.details);
+}
+
+function expressionOptions(limits: TabularLimits): { readonly maxExceptions: number; readonly maxIDCodeUnits: number } {
+  return { maxExceptions: limits.maxSelectionIDs, maxIDCodeUnits: limits.maxIDCodeUnits };
+}
+
+function wrapExpression(
+  expression: SelectionExpression<TabularRowID>,
+  binding: Pick<Extract<TabularRowSelection, { kind: 'all-matching' }>, 'sourceGeneration' | 'queryRevision'> | TabularRowSelection | undefined = undefined,
+): TabularRowSelection {
+  const output: Record<PropertyKey, unknown> = expression.kind === 'explicit'
+    ? { kind: 'explicit-rows', rowIDs: expression.exceptions }
+    : {
+        kind: 'all-matching',
+        sourceGeneration: binding !== undefined && 'sourceGeneration' in binding ? binding.sourceGeneration : 0,
+        queryRevision: binding !== undefined && 'queryRevision' in binding ? binding.queryRevision : 0,
+        excludedRowIDs: expression.exceptions,
+      };
+  Object.defineProperty(output, ROW_SELECTION_EXPRESSION, { value: expression });
+  return Object.freeze(output) as unknown as TabularRowSelection;
+}
+
+function expressionFailure(cause: unknown, limits: TabularLimits): TabularResult<never> {
+  if (cause instanceof Error && 'code' in cause && cause.code === 'item-ceiling-exceeded') {
+    return fail('resource-rejection', 'selection-id-ceiling-exceeded', 'Row selection exceeds the configured ceiling.', {
+      ceiling: limits.maxSelectionIDs,
+    });
+  }
+  throw cause;
 }
 
 function validGeneration(value: number): boolean {

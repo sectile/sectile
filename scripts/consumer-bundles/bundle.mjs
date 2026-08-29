@@ -62,6 +62,7 @@ export function deriveFixtures(fragments) {
 function representativeNamedExport(packageName, subpath, surface) {
   const preferred = new Map([
     ['core:./index-span', 'createIndexSpanSet'],
+    ['core:./selection-expression', 'createSelectionExpression'],
     ['core:./range', 'createExactRatio'],
   ]).get(`${packageName}:${subpath}`);
   if (preferred !== undefined) {

@@ -41,6 +41,11 @@
       "import": "./dist/structures/index-span.js",
       "default": "./dist/structures/index-span.js"
     },
+    "./selection-expression": {
+      "types": "./dist/structures/selection-expression.d.ts",
+      "import": "./dist/structures/selection-expression.js",
+      "default": "./dist/structures/selection-expression.js"
+    },
     "./grid": {
       "types": "./dist/structures/grid.d.ts",
       "import": "./dist/structures/grid.js",

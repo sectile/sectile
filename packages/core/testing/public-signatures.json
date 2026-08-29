@@ -179,6 +179,10 @@
       "types": "dist/selection.d.ts"
     },
     {
+      "subpath": "./selection-expression",
+      "types": "dist/structures/selection-expression.d.ts"
+    },
+    {
       "subpath": "./sequence",
       "types": "dist/structures/sequence.d.ts"
     },
@@ -255,7 +259,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "e0e1179e52d18263795e4e0f9f95470389cbd56158181cf48907121726a6cbd8",
+  "fingerprint": "d2c8f6326dbfdb5b3cfe9f1bfeacd63db151085f1e55edbf25aea02fb7bf3b75",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -536,6 +540,10 @@
     {
       "path": "dist/structures/range.d.ts",
       "sha256": "77421760947b2d7169a7190ded5115245e2a48ac18cd80adc5a0857e2232654e"
+    },
+    {
+      "path": "dist/structures/selection-expression.d.ts",
+      "sha256": "22d0694722782b81ab154b9922fc6a2fb56c6394b3ff39c8f27c7412284b194b"
     },
     {
       "path": "dist/structures/sequence.d.ts",

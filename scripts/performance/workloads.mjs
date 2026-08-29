@@ -13,6 +13,11 @@ import {
   createIndexSpanSet,
   unionIndexSpanSets,
 } from '../../packages/core/dist/structures/index-span.js';
+import {
+  createSelectionExpression,
+  materializeSelectionExpression,
+  unionSelectionExpressions,
+} from '../../packages/core/dist/structures/selection-expression.js';
 import { createTree } from '../../packages/core/dist/structures/tree.js';
 import {
   createSelectionState,
@@ -48,7 +53,7 @@ import {
 } from '../../packages/virtual/dist/spatial-layout.js';
 
 export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 5,
+  version: 6,
   scales: Object.freeze([1_000, 10_000, 100_000]),
   patchDepths: Object.freeze([1, 8, 32, 64]),
   changedDensities: Object.freeze([1, 32, 'full']),
@@ -129,6 +134,18 @@ export function createWorkloads({ quick = false } = {}) {
       iterations(size, quick),
       (iteration) => toggleMultipleSelection(selection, ids[(iteration * 97) % size], sequence).size,
     ));
+
+    const expressionLeft = createSelectionExpression('explicit', ids.filter((_id, index) => index % 2 === 0));
+    const expressionRight = createSelectionExpression('explicit', ids.filter((_id, index) => index % 2 === 1));
+    const expressionComplement = createSelectionExpression('complement', expressionLeft.exceptions);
+    workloads.push(
+      timed(`core:selection-expression:contains:${size}`, 'core-selection', { size, exceptions: expressionLeft.exceptionCount, operation: 'contains' }, quick ? 1_000 : 10_000, (iteration) =>
+        expressionLeft.contains(ids[(iteration * 8191) % size]) ? 1 : 0),
+      timed(`core:selection-expression:union:${size}`, 'core-selection', { size, exceptions: size, operation: 'union' }, iterations(size, quick), () =>
+        unionSelectionExpressions(expressionLeft, expressionRight).exceptionCount),
+      timed(`core:selection-expression:materialize:${size}`, 'core-selection', { size, exceptions: expressionComplement.exceptionCount, operation: 'materialize' }, iterations(size, quick), () =>
+        materializeSelectionExpression(expressionComplement, sequence).length),
+    );
 
     const tree = createTree(Array.from({ length: size }, (_, index) => ({
       id: `tree-${size}-${index}`,

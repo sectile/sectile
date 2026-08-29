@@ -37,6 +37,7 @@
       "runtimeExports": [
         "applyDataTableEvent",
         "createDataTable",
+        "rowSelectionContains",
         "tryCreateDataTable"
       ],
       "typeBearing": true,

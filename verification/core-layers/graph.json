@@ -390,6 +390,10 @@
       "layer": "structures"
     },
     {
+      "path": "src/structures/selection-expression.ts",
+      "layer": "structures"
+    },
+    {
       "path": "src/structures/sequence.ts",
       "layer": "structures"
     },
@@ -2466,6 +2470,26 @@
       "kind": "import"
     },
     {
+      "source": "src/structures/selection-expression.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/selection-expression.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/selection-expression.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/selection-expression.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
       "source": "src/structures/sequence.ts",
       "target": "src/internal/kernel/foundation.ts",
       "kind": "import"
@@ -3275,6 +3299,17 @@
       ]
     },
     {
+      "subpath": "./selection-expression",
+      "source": "src/structures/selection-expression.ts",
+      "layer": "structures",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
       "subpath": "./sequence",
       "source": "src/structures/sequence.ts",
       "layer": "structures",
@@ -3629,7 +3664,7 @@
         "src/result.ts",
         "src/shared.ts"
       ],
-      "transitiveDependentCount": 107,
+      "transitiveDependentCount": 108,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -3672,6 +3707,7 @@
         "./revision",
         "./select",
         "./selection",
+        "./selection-expression",
         "./sequence",
         "./slider",
         "./spin-button",
@@ -4003,6 +4039,7 @@
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
         "src/structures/range.ts",
+        "src/structures/selection-expression.ts",
         "src/structures/sequence.ts",
         "src/structures/tree.ts",
         "src/tags-input.ts",
@@ -4011,7 +4048,7 @@
         "src/toggle-group.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 102,
+      "transitiveDependentCount": 103,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4052,6 +4089,7 @@
         "./revision",
         "./select",
         "./selection",
+        "./selection-expression",
         "./sequence",
         "./slider",
         "./spin-button",
@@ -4086,7 +4124,7 @@
         "src/structures/sequence.ts",
         "src/structures/tree.ts"
       ],
-      "transitiveDependentCount": 55,
+      "transitiveDependentCount": 56,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4109,6 +4147,7 @@
         "./rating",
         "./reorder",
         "./select",
+        "./selection-expression",
         "./sequence",
         "./stepper",
         "./tabs",
@@ -4714,6 +4753,7 @@
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
         "src/structures/range.ts",
+        "src/structures/selection-expression.ts",
         "src/structures/sequence.ts",
         "src/structures/tree.ts",
         "src/switch.ts",
@@ -4726,7 +4766,7 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 96,
+      "transitiveDependentCount": 97,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4768,6 +4808,7 @@
         "./result",
         "./revision",
         "./select",
+        "./selection-expression",
         "./sequence",
         "./slider",
         "./spin-button",
@@ -4898,6 +4939,7 @@
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
         "src/structures/range.ts",
+        "src/structures/selection-expression.ts",
         "src/structures/sequence.ts",
         "src/structures/tree.ts",
         "src/switch.ts",
@@ -4910,7 +4952,7 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 106,
+      "transitiveDependentCount": 107,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4953,6 +4995,7 @@
         "./revision",
         "./select",
         "./selection",
+        "./selection-expression",
         "./sequence",
         "./slider",
         "./spin-button",
@@ -5055,6 +5098,14 @@
       ]
     },
     {
+      "module": "src/structures/selection-expression.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./selection-expression"
+      ]
+    },
+    {
       "module": "src/structures/sequence.ts",
       "directDependents": [
         "src/accordion.ts",
@@ -5086,11 +5137,12 @@
         "src/select.ts",
         "src/stepper.ts",
         "src/structures/grid.ts",
+        "src/structures/selection-expression.ts",
         "src/structures/tree.ts",
         "src/tabs.ts",
         "src/toggle-group.ts"
       ],
-      "transitiveDependentCount": 54,
+      "transitiveDependentCount": 55,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -5113,6 +5165,7 @@
         "./rating",
         "./reorder",
         "./select",
+        "./selection-expression",
         "./sequence",
         "./stepper",
         "./tabs",

@@ -784,6 +784,31 @@
       ]
     },
     {
+      "subpath": "./selection-expression",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_MAX_SELECTION_EXCEPTIONS",
+        "containsSelectionID",
+        "createSelectionExpression",
+        "excludeSelectionID",
+        "includeSelectionID",
+        "intersectSelectionExpressions",
+        "materializeSelectionExpression",
+        "subtractSelectionExpressions",
+        "toggleSelectionID",
+        "tryCreateSelectionExpression",
+        "unionSelectionExpressions"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./sequence",
       "classification": "named-subpath",
       "platform": "browser",

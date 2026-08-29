@@ -3,8 +3,8 @@ import { unwrap } from '@sectile/core/result';
 import { projectTabularColumnPartitions, reconcileTabularColumns } from './internal/columns.js';
 import { fail, ok } from './internal/foundation.js';
 import {
+  canonicalizeRowSelection,
   createGroupLeafSelectionTarget,
-  createExplicitRowSelection,
   reconcileAuthoritativeRowRemoval,
   reconcileRowSelectionBinding,
   selectAllMatchingRows,
@@ -34,6 +34,8 @@ import type {
   TabularViewResponse,
   TabularWireValue,
 } from './contracts.js';
+
+export { rowSelectionContains } from './internal/selection.js';
 
 export type DataTableState = TabularState;
 
@@ -336,10 +338,9 @@ function reduceDataTableEvent(
     return target.ok ? ok(Object.freeze({ state, commands: Object.freeze([{ type: 'request-bulk-selection' as const, target: target.value }]) })) : target;
   }
   if (event.type === 'set-row-selection') {
-    const ids = event.selection.kind === 'explicit-rows' ? event.selection.rowIDs : event.selection.excludedRowIDs;
-    const valid = createExplicitRowSelection(ids, model.limits);
+    const valid = canonicalizeRowSelection(event.selection, model.limits);
     if (!valid.ok) return valid;
-    return ok(Object.freeze({ state: Object.freeze({ ...state, rowSelection: event.selection }), commands: Object.freeze([]) }));
+    return ok(Object.freeze({ state: Object.freeze({ ...state, rowSelection: valid.value }), commands: Object.freeze([]) }));
   }
   if (event.type === 'toggle-row-selection') {
     const selection = toggleExplicitRowSelection(state.rowSelection, event.rowID, model.limits);
@@ -360,7 +361,7 @@ function reduceDataTableEvent(
     return selection.ok ? ok(Object.freeze({ state: Object.freeze({ ...state, rowSelection: selection.value }), commands: Object.freeze([]) })) : selection;
   }
   if (event.type === 'select-all-matching') {
-    const selection = selectAllMatchingRows(state.sourceGeneration, state.queryRevision);
+    const selection = selectAllMatchingRows(state.sourceGeneration, state.queryRevision, model.limits);
     return selection.ok ? ok(Object.freeze({ state: Object.freeze({ ...state, rowSelection: selection.value }), commands: Object.freeze([]) })) : selection;
   }
   if (event.type === 'set-column-state') return ok(Object.freeze({ state: Object.freeze({ ...state, columnState: event.columnState }), commands: Object.freeze([]) }));

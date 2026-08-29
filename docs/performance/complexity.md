@@ -8,10 +8,10 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 283 | 25 | 24 |
+| core | 294 | 25 | 27 |
 | dom | 432 | 190 | 5 |
 | form | 12 | 0 | 2 |
-| tabular | 31 | 0 | 4 |
+| tabular | 32 | 0 | 4 |
 | temporal | 99 | 24 | 2 |
 | terminal | 347 | 177 | 2 |
 | virtual | 89 | 0 | 11 |
@@ -41,6 +41,9 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:index-span.set-algebra | trusted | `O(a + bSpan)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | VAL-016, VAL-017 |
 | core:index-span.transform | trusted | `O(a)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | VAL-016, VAL-017 |
 | core:range.arithmetic | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| core:selection-expression.algebra | trusted | `O(eLeft + eRight)` expected | `O(eLeft + eRight)` | `O(eResult)` | `O(eResult)` | allowed | VAL-016, VAL-017 |
+| core:selection-expression.materialize | trusted | `O(nDomain)` worst-case | `O(1)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
+| core:selection-expression.membership | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(eSelection)` | forbidden | VAL-016, VAL-017 |
 | core:selection.toggle | trusted | `O(sSelected + log nDomain)` expected | `O(sSelected)` | `O(sSelected)` | `O(sSelected)` | forbidden | VAL-016, VAL-017 |
 | core:sequence.at | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:sequence.construct | external | `O(n + k)` expected | `O(n)` | `O(n)` | `O(n)` | allowed | VAL-016, VAL-017 |

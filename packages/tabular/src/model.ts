@@ -1,5 +1,6 @@
 import { unwrap } from '@sectile/core/result';
 import { fail, ok, validateID } from './internal/foundation.js';
+import { canonicalizeRowSelection } from './internal/selection.js';
 import type {
   TabularAccessState,
   TabularCellAddress,
@@ -365,22 +366,15 @@ function validateSlices(
   if (query.groups.length > model.limits.maxGroupDescriptors) return ceiling('group-descriptor-ceiling-exceeded', query.groups.length, model.limits.maxGroupDescriptors);
   if (query.aggregates.length > model.limits.maxAggregateDescriptors) return ceiling('aggregate-descriptor-ceiling-exceeded', query.aggregates.length, model.limits.maxAggregateDescriptors);
   if (query.pivots.length > model.limits.maxPivotDescriptors) return ceiling('pivot-descriptor-ceiling-exceeded', query.pivots.length, model.limits.maxPivotDescriptors);
-  const selected = rowSelection.kind === 'explicit-rows' ? rowSelection.rowIDs : rowSelection.excludedRowIDs;
-  if (selected.length > model.limits.maxSelectionIDs) return ceiling('selection-id-ceiling-exceeded', selected.length, model.limits.maxSelectionIDs);
-  const selectedIDs = new Set<string>();
-  for (const id of selected) {
-    const error = validateID(id, 'selectedRowID', model.limits);
-    if (error !== null) return { ok: false, error };
-    if (selectedIDs.has(id)) return fail('construction', 'duplicate-identity', 'Selection identities must be unique.', { id });
-    selectedIDs.add(id);
-  }
+  const canonicalSelection = canonicalizeRowSelection(rowSelection, model.limits);
+  if (!canonicalSelection.ok) return canonicalSelection;
   const columnResult = validateColumnState(columnState, model.columns);
   if (!columnResult.ok) return columnResult;
   if (!Array.isArray(expansion)) return fail('construction', 'invalid-controlled-shape', 'Expansion must be an array.');
   const frozenExpansion = Object.freeze([...expansion]);
   return ok(Object.freeze({
     query,
-    rowSelection: freezeSelection(rowSelection),
+    rowSelection: canonicalSelection.value,
     columnState: columnResult.value,
     accessState,
     expansion: frozenExpansion,
@@ -410,12 +404,6 @@ function validateColumnState(
     pinnedStart: Object.freeze([...state.pinnedStart]),
     pinnedEnd: Object.freeze([...state.pinnedEnd]),
   }));
-}
-
-function freezeSelection(selection: TabularRowSelection): TabularRowSelection {
-  return selection.kind === 'explicit-rows'
-    ? Object.freeze({ kind: 'explicit-rows', rowIDs: Object.freeze([...selection.rowIDs]) })
-    : Object.freeze({ ...selection, excludedRowIDs: Object.freeze([...selection.excludedRowIDs]) });
 }
 
 function controlledSubset(model: TabularModel, state: TabularState): TabularControlledValues {

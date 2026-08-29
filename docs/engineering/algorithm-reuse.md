@@ -2,7 +2,7 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all eight package source trees.
 
-Findings: 433; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
+Findings: 430; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
 
 ## Classifications
 
@@ -10,18 +10,18 @@ Findings: 433; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039,
 |---|---:|
 | bounded-small | 10 |
 | migration-required | 111 |
-| result-proportional | 141 |
-| reuse | 171 |
+| result-proportional | 140 |
+| reuse | 169 |
 
 ## Categories
 
 | Category | Count |
 |---|---:|
 | controller-connection-rebuild | 34 |
-| discarded-canonical-index | 39 |
+| discarded-canonical-index | 38 |
 | measurement-authority | 16 |
 | private-algorithm-bypass | 11 |
-| raw-full-domain-scan | 286 |
+| raw-full-domain-scan | 284 |
 | repeated-immutable-view | 14 |
 | whole-domain-validation | 33 |
 
@@ -62,8 +62,8 @@ Findings: 433; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039,
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:860` | raw-identity-lookup |
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:861` | raw-identity-lookup |
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1004` | linear-membership |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/data-table.ts:439` | serialization-signature |
-| WI-038 | tabular-retained-resolution | `packages/tabular/src/data-table.ts:443` | serialization-signature |
+| WI-038 | tabular-retained-resolution | `packages/tabular/src/data-table.ts:440` | serialization-signature |
+| WI-038 | tabular-retained-resolution | `packages/tabular/src/data-table.ts:444` | serialization-signature |
 | WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:266` | raw-identity-lookup |
 | WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:270` | linear-membership |
 | WI-038 | tabular-retained-resolution | `packages/tabular/src/internal/grid-profile.ts:385` | raw-identity-lookup |

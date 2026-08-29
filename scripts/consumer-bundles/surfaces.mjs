@@ -114,6 +114,7 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'core:./color-picker',
     'core:./range',
     'core:./index-span',
+    'core:./selection-expression',
     'dom:./listbox',
     'dom:./popover',
     'form:./form',

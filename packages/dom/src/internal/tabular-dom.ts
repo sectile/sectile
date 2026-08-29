@@ -13,6 +13,7 @@ import type {
   TabularView,
   TabularWireValue,
 } from '@sectile/tabular';
+import { rowSelectionContains } from '@sectile/tabular/data-table';
 
 export interface TabularDOMColumnSizeState {
   readonly revision: number;
@@ -271,9 +272,7 @@ export function rowIndex(snapshot: TabularSnapshot, rowID: string): number {
 }
 
 export function rowSelected(selection: TabularRowSelection, rowID: TabularRowID): boolean {
-  return selection.kind === 'explicit-rows'
-    ? selection.rowIDs.includes(rowID)
-    : !selection.excludedRowIDs.includes(rowID);
+  return rowSelectionContains(selection, rowID);
 }
 
 export function rowSelectionActivation(
@@ -323,9 +322,8 @@ export function allMatchingSelectionState(snapshot: TabularSnapshot): TabularDOM
   const total = count?.kind === 'known' ? count.value : null;
   if (total === 0) return 'unchecked';
   if (selection.kind === 'explicit-rows') {
-    const selected = new Set(selection.rowIDs);
     const visibleLeafIDs = view?.rows.filter((row) => row.kind === 'leaf').map((row) => row.id) ?? [];
-    const selectedVisibleCount = visibleLeafIDs.filter((rowID) => selected.has(rowID)).length;
+    const selectedVisibleCount = visibleLeafIDs.filter((rowID) => rowSelected(selection, rowID)).length;
     if (selectedVisibleCount === 0) return 'unchecked';
     return total !== null && visibleLeafIDs.length === total && selectedVisibleCount === total ? 'checked' : 'indeterminate';
   }

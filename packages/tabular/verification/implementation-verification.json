@@ -66,9 +66,9 @@
     "timingPolicy": "informational-no-threshold"
   },
   "footprint": {
-    "javascriptBytes": 131430,
-    "declarationBytes": 39002,
-    "sourceMapBytes": 138991,
+    "javascriptBytes": 133094,
+    "declarationBytes": 39338,
+    "sourceMapBytes": 139710,
     "packedBytes": 55011,
     "declarationFiles": 13,
     "publicSubpaths": 9

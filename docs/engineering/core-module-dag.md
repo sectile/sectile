@@ -2,7 +2,7 @@
 
 > Generated from `verification/core-layers/manifest.json` and Core source imports.
 
-Modules: 113; edges: 460; public subpaths: 64; cycles: 0; upward edges: 0.
+Modules: 114; edges: 464; public subpaths: 65; cycles: 0; upward edges: 0.
 
 ## Layers
 
@@ -16,19 +16,19 @@ Modules: 113; edges: 460; public subpaths: 64; cycles: 0; upward edges: 0.
 | reference | 24 |
 | runtime | 1 |
 | state | 5 |
-| structures | 5 |
+| structures | 6 |
 
 ## Highest public blast radius
 
 | Module | Transitive dependents | Public subpaths |
 |---|---:|---:|
-| `src/error-code.ts` | 107 | 60 |
-| `src/shared.ts` | 106 | 60 |
-| `src/result.ts` | 96 | 59 |
-| `src/internal/kernel/foundation.ts` | 102 | 58 |
+| `src/error-code.ts` | 108 | 61 |
+| `src/shared.ts` | 107 | 61 |
+| `src/result.ts` | 97 | 60 |
+| `src/internal/kernel/foundation.ts` | 103 | 59 |
 | `src/internal/kernel/machine.ts` | 75 | 45 |
-| `src/internal/kernel/indexed-sequence.ts` | 55 | 29 |
-| `src/structures/sequence.ts` | 54 | 29 |
+| `src/internal/kernel/indexed-sequence.ts` | 56 | 30 |
+| `src/structures/sequence.ts` | 55 | 30 |
 | `src/internal/state/cursor.ts` | 46 | 23 |
 | `src/internal/state/selection.ts` | 27 | 14 |
 | `src/internal/kernel/decimal.ts` | 18 | 12 |
@@ -92,6 +92,7 @@ Modules: 113; edges: 460; public subpaths: 64; cycles: 0; upward edges: 0.
 | `./revision` | `src/revision.ts` | public | `src/internal/runtime/revision.ts`, `src/internal/runtime/revision.ts` |
 | `./select` | `src/select.ts` | public | `src/internal/composites/linear-choice.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./selection` | `src/selection.ts` | public | `src/internal/state/selection.ts`, `src/shared.ts` |
+| `./selection-expression` | `src/structures/selection-expression.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./sequence` | `src/structures/sequence.ts` | structures | `src/internal/kernel/foundation.ts`, `src/internal/kernel/indexed-sequence.ts`, `src/result.ts`, `src/shared.ts`, `src/shared.ts` |
 | `./slider` | `src/slider.ts` | public | `src/internal/composites/slider.ts`, `src/internal/composites/slider.ts` |
 | `./spin-button` | `src/spin-button.ts` | public | `src/internal/composites/slider.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/range.ts` |

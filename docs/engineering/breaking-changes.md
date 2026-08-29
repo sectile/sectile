@@ -33,3 +33,8 @@
 | WI-031 | @sectile/core | `./slider` | `QuantizedRange declaration closure` | @sectile/core/slider |
 | WI-031 | @sectile/core | `./spin-button` | `QuantizedRange declaration closure` | @sectile/core/spin-button |
 | WI-031 | @sectile/core | `./window-splitter` | `QuantizedRange declaration closure` | @sectile/core/window-splitter |
+| WI-032 | @sectile/tabular | `./data-grid` | `TabularRowSelection declaration closure` | @sectile/tabular/data-grid |
+| WI-032 | @sectile/tabular | `./data-table` | `rowSelectionContains`, `TabularRowSelection declaration closure` | @sectile/tabular/data-table |
+| WI-032 | @sectile/tabular | `./data-tree-grid` | `TabularRowSelection declaration closure` | @sectile/tabular/data-tree-grid |
+| WI-032 | @sectile/tabular | `.` | `TabularRowSelection declaration closure` | @sectile/tabular |
+| WI-032 | @sectile/tabular | `./virtual` | `TabularRowSelection declaration closure` | @sectile/tabular/virtual |

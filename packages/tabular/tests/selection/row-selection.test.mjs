@@ -25,7 +25,7 @@ test('TAB-SEL-01: explicit selection toggles without depending on current visibi
 });
 
 test('TAB-SEL-02: all-matching selection binds to source and query, not access or expansion', () => {
-  const all = selectAllMatchingRows(3, 8);
+  const all = selectAllMatchingRows(3, 8, limits);
   assert.equal(all.ok, true);
   assert.equal(reconcileRowSelectionBinding(all.value, 3, 8, false), all.value);
   assert.deepEqual(reconcileRowSelectionBinding(all.value, 3, 9, false), { kind: 'explicit-rows', rowIDs: [] });
@@ -34,7 +34,7 @@ test('TAB-SEL-02: all-matching selection binds to source and query, not access o
 
 test('TAB-SEL-03: source replacement clears both selection modes', () => {
   const explicit = createExplicitRowSelection(['a'], limits);
-  const all = selectAllMatchingRows(0, 0);
+  const all = selectAllMatchingRows(0, 0, limits);
   assert.equal(explicit.ok && all.ok, true);
   assert.deepEqual(reconcileRowSelectionBinding(explicit.value, 1, 0, true), { kind: 'explicit-rows', rowIDs: [] });
   assert.deepEqual(reconcileRowSelectionBinding(all.value, 1, 0, true), { kind: 'explicit-rows', rowIDs: [] });
@@ -42,7 +42,7 @@ test('TAB-SEL-03: source replacement clears both selection modes', () => {
 
 test('TAB-SEL-04: authoritative deletion reconciles selected IDs and exclusions only', () => {
   const explicit = createExplicitRowSelection(['a', 'b', 'c'], limits);
-  const all = selectAllMatchingRows(1, 2);
+  const all = selectAllMatchingRows(1, 2, limits);
   const excluded = toggleExplicitRowSelection(all.value, 'b', limits);
   assert.equal(explicit.ok && all.ok && excluded.ok, true);
   assert.deepEqual(reconcileAuthoritativeRowRemoval(explicit.value, ['b']), { kind: 'explicit-rows', rowIDs: ['a', 'c'] });
@@ -53,7 +53,7 @@ test('TAB-SEL-04: authoritative deletion reconciles selected IDs and exclusions 
 });
 
 test('TAB-SEL-05: group bulk intent carries leaf binding and never stores a synthetic group ID', () => {
-  const all = selectAllMatchingRows(2, 5);
+  const all = selectAllMatchingRows(2, 5, limits);
   const excluded = toggleExplicitRowSelection(all.value, 'leaf-7', limits);
   const target = createGroupLeafSelectionTarget(excluded.value, 'group:team-a', 2, 5, limits);
   assert.equal(target.ok, true);
@@ -86,7 +86,7 @@ test('TAB-SEL-07: visible ranges apply one selected state in either direction', 
 });
 
 test('TAB-SEL-08: all-matching ranges update exclusions and reject hidden endpoints atomically', () => {
-  const all = selectAllMatchingRows(2, 4);
+  const all = selectAllMatchingRows(2, 4, limits);
   const excluded = setVisibleRowSelectionRange(all.value, ['a', 'b', 'c'], 'a', 'c', false, limits);
   assert.equal(excluded.ok, true);
   assert.deepEqual(excluded.value, {

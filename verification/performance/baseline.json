@@ -1,6 +1,6 @@
 {
   "schemaVersion": 4,
-  "createdAt": "2026-08-29T00:28:45.621Z",
+  "createdAt": "2026-08-29T01:02:35.272Z",
   "provenance": {
     "node": "v24.19.0",
     "v8": "13.6.233.17-node.51",
@@ -10,13 +10,13 @@
     "cpuModel": "Apple M2 Pro",
     "cpuCount": 10,
     "execArgv": [],
-    "workloadFingerprint": "afda6663f51b4e844b6ea2426d5975029c0fb59f520280b2233a98c1ae61e2d2",
-    "buildFingerprint": "57ec08a3889f01279b08c1b6b0dfa2764ecb07c1cae0d936ad9cd790cc757bac",
+    "workloadFingerprint": "25f93e26af8502e86e5d9ca9137e94d06acf1e0f5bb1adc983eee85445815716",
+    "buildFingerprint": "9373e714d3c55ad87ba16ee126463284222c80a4f649ec3c4db555beeab37396",
     "packageFootprint": {
-      "core": 949426,
-      "dom": 1569014,
+      "core": 968210,
+      "dom": 1568823,
       "form": 69911,
-      "tabular": 309423,
+      "tabular": 312142,
       "temporal": 223228,
       "terminal": 807518,
       "virtual": 291527,
@@ -29,11 +29,11 @@
     "isolatedProcesses": true,
     "forcedGC": true,
     "warmup": true,
-    "sink": 265170759,
+    "sink": 437084128,
     "quick": false
   },
   "workloadSchema": {
-    "version": 5,
+    "version": 6,
     "scales": [
       1000,
       10000,
@@ -83,19 +83,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 255.6584,
-        "p95": 260.22418,
-        "relativeMAD": 0.00467694392205,
-        "minimum": 254.3709,
-        "maximum": 261.0667
+        "median": 262.4875,
+        "p95": 263.22828,
+        "relativeMAD": 0.00325386923187,
+        "minimum": 255.7625,
+        "maximum": 263.3416
       },
       "batchTiming": {
         "count": 25,
-        "median": 258.1625,
-        "p95": 599.3683,
-        "relativeMAD": 0.0205781242429,
-        "minimum": 251.875,
-        "maximum": 615.4209
+        "median": 262.4875,
+        "p95": 611.46,
+        "relativeMAD": 0.0256202676318,
+        "minimum": 252.7208,
+        "maximum": 613.3917
       },
       "heap": {
         "peakDelta": {
@@ -111,7 +111,7 @@
           "median": 56,
           "p95": 56,
           "relativeMAD": 0,
-          "minimum": -256,
+          "minimum": 56,
           "maximum": 56
         },
         "positivePeakDeltaMedian": 5601568,
@@ -128,19 +128,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 8849.833,
-        "p95": 8936.4998,
-        "relativeMAD": 0.00104047161116,
-        "minimum": 8840.625,
-        "maximum": 8949.833
+        "median": 8863.833,
+        "p95": 8917.9922,
+        "relativeMAD": 0.00250072400958,
+        "minimum": 8841.667,
+        "maximum": 8922.084
       },
       "batchTiming": {
         "count": 25,
-        "median": 8873.5,
-        "p95": 9457.8088,
-        "relativeMAD": 0.00472384064897,
-        "minimum": 8827.125,
-        "maximum": 9695.167
+        "median": 8871.417,
+        "p95": 9449.1498,
+        "relativeMAD": 0.00340509300827,
+        "minimum": 8823.833,
+        "maximum": 9456.75
       },
       "heap": {
         "peakDelta": {
@@ -172,36 +172,36 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 53.1834000001,
-        "p95": 111.55664,
-        "relativeMAD": 0.0576608490599,
-        "minimum": 50.0292000001,
-        "maximum": 125.3833
+        "median": 53.9666000001,
+        "p95": 55.8275,
+        "relativeMAD": 0.0232384474841,
+        "minimum": 51.0458000001,
+        "maximum": 56.0750000001
       },
       "batchTiming": {
         "count": 25,
-        "median": 65.5041999999,
-        "p95": 125.39002,
-        "relativeMAD": 0.225748883276,
-        "minimum": 49.3624999999,
-        "maximum": 130.8334
+        "median": 53.9666000001,
+        "p95": 88.2841800001,
+        "relativeMAD": 0.0541223645734,
+        "minimum": 50.7291000002,
+        "maximum": 89.6916999998
       },
       "heap": {
         "peakDelta": {
           "count": 5,
           "median": 1521008,
-          "p95": 3084662.4,
+          "p95": 1521008,
           "relativeMAD": 0,
           "minimum": 1521008,
-          "maximum": 3475576
+          "maximum": 1521008
         },
         "retainedDelta": {
           "count": 5,
-          "median": -264,
-          "p95": -52.8,
+          "median": -296,
+          "p95": -264,
           "relativeMAD": 0,
-          "minimum": -17584,
-          "maximum": 0
+          "minimum": -296,
+          "maximum": -264
         },
         "positivePeakDeltaMedian": 1521008,
         "positiveRetainedDeltaMedian": 0
@@ -217,19 +217,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 142.5417,
-        "p95": 146.86498,
-        "relativeMAD": 0.0158732497227,
-        "minimum": 135.6333,
-        "maximum": 147.6208
+        "median": 138.6333,
+        "p95": 142.34914,
+        "relativeMAD": 0.00525991951429,
+        "minimum": 134.4,
+        "maximum": 143.0958
       },
       "batchTiming": {
         "count": 25,
-        "median": 142.3667,
-        "p95": 147.87744,
-        "relativeMAD": 0.0170629789129,
-        "minimum": 134,
-        "maximum": 149.0167
+        "median": 138.6333,
+        "p95": 147.66004,
+        "relativeMAD": 0.0142159207051,
+        "minimum": 134.1542,
+        "maximum": 148.9708
       },
       "heap": {
         "peakDelta": {
@@ -262,19 +262,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 154.934182033,
-        "p95": 159.491747222,
-        "relativeMAD": 0.0210276911347,
-        "minimum": 151.676273907,
-        "maximum": 159.773034027
+        "median": 148.992843718,
+        "p95": 149.68336,
+        "relativeMAD": 0.0041561431378,
+        "minimum": 144.884103949,
+        "maximum": 149.8292
       },
       "batchTiming": {
         "count": 25,
-        "median": 155.415540992,
-        "p95": 185.275442484,
-        "relativeMAD": 0.0242809672866,
-        "minimum": 148.020596496,
-        "maximum": 187.1458
+        "median": 148.6917,
+        "p95": 172.284318001,
+        "relativeMAD": 0.0196715754811,
+        "minimum": 141.7041,
+        "maximum": 199.3583
       },
       "heap": {
         "peakDelta": {
@@ -296,7 +296,7 @@
         "positivePeakDeltaMedian": 1520136,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 350560
+      "operations": 315540
     },
     "core:grid:position:100000": {
       "family": "core-structure",
@@ -307,19 +307,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 174.125,
-        "p95": 212.083133718,
-        "relativeMAD": 0.00998043991385,
-        "minimum": 165.835483871,
-        "maximum": 221.138206123
+        "median": 164.9333,
+        "p95": 235.049535714,
+        "relativeMAD": 0.0107993872008,
+        "minimum": 163.093226306,
+        "maximum": 252.1333
       },
       "batchTiming": {
         "count": 25,
-        "median": 193.857481673,
-        "p95": 440.517104717,
-        "relativeMAD": 0.13333440392,
-        "minimum": 163.748057933,
-        "maximum": 462.307172632
+        "median": 166.714478569,
+        "p95": 451.533295491,
+        "relativeMAD": 0.0376762631719,
+        "minimum": 160.4333,
+        "maximum": 482.75
       },
       "heap": {
         "peakDelta": {
@@ -341,7 +341,7 @@
         "positivePeakDeltaMedian": 1592664,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 317810
+      "operations": 310300
     },
     "core:grid:views:1000": {
       "family": "core-structure",
@@ -352,19 +352,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 127.834,
-        "p95": 298.233399999,
-        "relativeMAD": 0.550855015093,
-        "minimum": 57.4160000006,
-        "maximum": 298.624999999
+        "median": 58.7499999992,
+        "p95": 60.1666000005,
+        "relativeMAD": 0.0184340425398,
+        "minimum": 57.667,
+        "maximum": 60.2500000005
       },
       "batchTiming": {
         "count": 25,
-        "median": 217.708,
-        "p95": 302.4,
-        "relativeMAD": 0.389475811636,
-        "minimum": 57.041,
-        "maximum": 304.625000001
+        "median": 59.5830000002,
+        "p95": 232.3422,
+        "relativeMAD": 0.0216840374071,
+        "minimum": 57.5829999998,
+        "maximum": 237.583
       },
       "heap": {
         "peakDelta": {
@@ -377,10 +377,10 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": -208,
+          "median": 0,
           "p95": 0,
-          "relativeMAD": 0.807692307692,
-          "minimum": -376,
+          "relativeMAD": 0,
+          "minimum": 0,
           "maximum": 0
         },
         "positivePeakDeltaMedian": 600,
@@ -397,19 +397,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 53.3682579046,
-        "p95": 61.0203150894,
-        "relativeMAD": 0.0355332526535,
-        "minimum": 51.4719101128,
-        "maximum": 61.0972568578
+        "median": 53.8236380419,
+        "p95": 54.1618737077,
+        "relativeMAD": 0.00740929880083,
+        "minimum": 52.5825335897,
+        "maximum": 54.2224334587
       },
       "batchTiming": {
         "count": 25,
-        "median": 54.0441741357,
-        "p95": 68.402225451,
-        "relativeMAD": 0.053855779285,
-        "minimum": 51.0817727841,
-        "maximum": 70.5006234415
+        "median": 54.1825095046,
+        "p95": 68.8856785025,
+        "relativeMAD": 0.0295293800445,
+        "minimum": 52.3032629543,
+        "maximum": 71.0803652962
       },
       "heap": {
         "peakDelta": {
@@ -422,16 +422,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": -4072,
-          "p95": -3803.2,
-          "relativeMAD": 0.0825147347741,
+          "median": -6096,
+          "p95": -6096,
+          "relativeMAD": 0,
           "minimum": -6432,
-          "maximum": -3736
+          "maximum": -6096
         },
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 40285
+      "operations": 26860
     },
     "core:grid:views:100000": {
       "family": "core-structure",
@@ -442,19 +442,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 43.4590000004,
-        "p95": 43.8661999989,
-        "relativeMAD": 0.00865183275953,
-        "minimum": 42.5839999989,
-        "maximum": 43.9159999987
+        "median": 42.1669999996,
+        "p95": 43.1336000002,
+        "relativeMAD": 0.00789717077343,
+        "minimum": 41.4169999985,
+        "maximum": 43.2920000003
       },
       "batchTiming": {
         "count": 25,
-        "median": 43.4590000004,
-        "p95": 62.1583999997,
-        "relativeMAD": 0.0431671230412,
-        "minimum": 40.6669999993,
-        "maximum": 63.8340000005
+        "median": 42.1669999996,
+        "p95": 65.3583999996,
+        "relativeMAD": 0.0415253634312,
+        "minimum": 39.6249999994,
+        "maximum": 66.5410000001
       },
       "heap": {
         "peakDelta": {
@@ -488,19 +488,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 84.2708,
-        "p95": 90.2233599999,
-        "relativeMAD": 0.0210630491226,
-        "minimum": 82.4958,
-        "maximum": 90.4291999999
+        "median": 84.8833,
+        "p95": 89.91332,
+        "relativeMAD": 0.0154624054425,
+        "minimum": 83.5708000001,
+        "maximum": 90.1
       },
       "batchTiming": {
         "count": 25,
-        "median": 88.8875000001,
-        "p95": 96.61078,
-        "relativeMAD": 0.067829559837,
-        "minimum": 80.5375,
-        "maximum": 99.05
+        "median": 88.2291999999,
+        "p95": 94.92254,
+        "relativeMAD": 0.0400479659787,
+        "minimum": 82.8708,
+        "maximum": 98.4375
       },
       "heap": {
         "peakDelta": {
@@ -534,19 +534,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 126.421154162,
-        "p95": 127.638321198,
-        "relativeMAD": 0.00666502396363,
-        "minimum": 124.747880376,
-        "maximum": 127.731962951
+        "median": 126.313330361,
+        "p95": 132.180356809,
+        "relativeMAD": 0.00911314301278,
+        "minimum": 124.749723977,
+        "maximum": 133.581714139
       },
       "batchTiming": {
         "count": 25,
-        "median": 126.520357905,
-        "p95": 133.666466395,
-        "relativeMAD": 0.0124627661196,
-        "minimum": 123.289812839,
-        "maximum": 134.051411896
+        "median": 126.57492749,
+        "p95": 134.651638799,
+        "relativeMAD": 0.0173392198693,
+        "minimum": 124.120390408,
+        "maximum": 135.400222061
       },
       "heap": {
         "peakDelta": {
@@ -568,7 +568,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 632335
+      "operations": 565345
     },
     "core:index-span:contains:100000": {
       "family": "core-structure",
@@ -580,19 +580,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 187.188525386,
-        "p95": 192.559566361,
-        "relativeMAD": 0.0109664890237,
-        "minimum": 180.834649946,
-        "maximum": 193.389126377
+        "median": 179.248506632,
+        "p95": 181.384796101,
+        "relativeMAD": 0.0035817147326,
+        "minimum": 178.606489615,
+        "maximum": 181.454062883
       },
       "batchTiming": {
         "count": 25,
-        "median": 187.265478424,
-        "p95": 232.189897828,
-        "relativeMAD": 0.0389464473004,
-        "minimum": 177.46701886,
-        "maximum": 251.496899503
+        "median": 180.128256513,
+        "p95": 211.647218066,
+        "relativeMAD": 0.00969677354094,
+        "minimum": 177.957620085,
+        "maximum": 215.051332906
       },
       "heap": {
         "peakDelta": {
@@ -614,7 +614,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 481670
+      "operations": 469960
     },
     "core:index-span:normalize:1000": {
       "family": "core-structure",
@@ -625,19 +625,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 22484.1896552,
-        "p95": 22599.7103448,
-        "relativeMAD": 0.00551247357368,
-        "minimum": 21862.0689655,
-        "maximum": 22613.5
+        "median": 22270.8214286,
+        "p95": 22726.2931034,
+        "relativeMAD": 0.00187144293414,
+        "minimum": 21767.9482759,
+        "maximum": 22829.7413793
       },
       "batchTiming": {
         "count": 25,
-        "median": 22387.8153846,
-        "p95": 22832.3241379,
-        "relativeMAD": 0.010755317548,
-        "minimum": 21506.4655172,
-        "maximum": 23323.2758621
+        "median": 22312.5,
+        "p95": 23314.2241379,
+        "relativeMAD": 0.00846749734295,
+        "minimum": 21428.8793103,
+        "maximum": 23489.9482759
       },
       "heap": {
         "peakDelta": {
@@ -651,15 +651,15 @@
         "retainedDelta": {
           "count": 5,
           "median": -200,
-          "p95": -40,
+          "p95": -200,
           "relativeMAD": 0,
           "minimum": -200,
-          "maximum": 0
+          "maximum": -200
         },
         "positivePeakDeltaMedian": 784960,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 1485
+      "operations": 1440
     },
     "core:index-span:normalize:10000": {
       "family": "core-structure",
@@ -670,19 +670,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 209097.25,
-        "p95": 210636.092308,
-        "relativeMAD": 0.00841115796597,
-        "minimum": 204390.181818,
-        "maximum": 210856
+        "median": 204450.727273,
+        "p95": 205690.381818,
+        "relativeMAD": 0.00435401639247,
+        "minimum": 203343.75,
+        "maximum": 205777.75
       },
       "batchTiming": {
         "count": 25,
-        "median": 208704.833333,
-        "p95": 213692.805594,
-        "relativeMAD": 0.0153196637938,
-        "minimum": 202166.636364,
-        "maximum": 214607.583333
+        "median": 205223.454545,
+        "p95": 214539.178788,
+        "relativeMAD": 0.0116462853352,
+        "minimum": 201890.181818,
+        "maximum": 217604.166667
       },
       "heap": {
         "peakDelta": {
@@ -704,7 +704,7 @@
         "positivePeakDeltaMedian": 2210760,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 290
+      "operations": 295
     },
     "core:index-span:normalize:100000": {
       "family": "core-structure",
@@ -715,19 +715,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 2278264,
-        "p95": 2359389.06666,
-        "relativeMAD": 0.00709604623081,
-        "minimum": 2262097.33333,
-        "maximum": 2372986.33333
+        "median": 2282722.33333,
+        "p95": 2314033.46667,
+        "relativeMAD": 0.00447813261856,
+        "minimum": 2258875,
+        "maximum": 2319305.66667
       },
       "batchTiming": {
         "count": 25,
-        "median": 2278139,
-        "p95": 2617547.2,
-        "relativeMAD": 0.0108032623705,
-        "minimum": 2243083.33333,
-        "maximum": 3384597.33333
+        "median": 2289514,
+        "p95": 2376402.73333,
+        "relativeMAD": 0.0124116588353,
+        "minimum": 2243194.66667,
+        "maximum": 2399986
       },
       "heap": {
         "peakDelta": {
@@ -761,19 +761,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 50602.2268041,
-        "p95": 56359.9762773,
-        "relativeMAD": 0.00161274023999,
-        "minimum": 50520.6185567,
-        "maximum": 57604.3956044
+        "median": 51212.2395833,
+        "p95": 52395.5263158,
+        "relativeMAD": 0.0140941242264,
+        "minimum": 50236.5416667,
+        "maximum": 52628.9473684
       },
       "batchTiming": {
         "count": 25,
-        "median": 50951.8969072,
-        "p95": 64033.6989011,
-        "relativeMAD": 0.0296786622882,
-        "minimum": 48119.8453608,
-        "maximum": 67114.6907216
+        "median": 51212.2395833,
+        "p95": 55120.6900877,
+        "relativeMAD": 0.0318770917277,
+        "minimum": 48085.9375,
+        "maximum": 55460.0729167
       },
       "heap": {
         "peakDelta": {
@@ -795,7 +795,7 @@
         "positivePeakDeltaMedian": 1089520,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 2380
+      "operations": 2390
     },
     "core:index-span:union:10000": {
       "family": "core-structure",
@@ -807,19 +807,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 496922.9,
-        "p95": 512433.788889,
-        "relativeMAD": 0.0091784107756,
-        "minimum": 492361.9375,
-        "maximum": 514875
+        "median": 492300.421053,
+        "p95": 503957.902871,
+        "relativeMAD": 0.000994982175624,
+        "minimum": 491810.590909,
+        "maximum": 505721.526316
       },
       "batchTiming": {
         "count": 25,
-        "median": 495309.210526,
-        "p95": 532229.536364,
-        "relativeMAD": 0.0526864978501,
-        "minimum": 461661.4375,
-        "maximum": 535281.25
+        "median": 492300.421053,
+        "p95": 563530.797129,
+        "relativeMAD": 0.0232304664632,
+        "minimum": 457122.789474,
+        "maximum": 643537.315789
       },
       "heap": {
         "peakDelta": {
@@ -841,7 +841,7 @@
         "positivePeakDeltaMedian": 3157144,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 475
+      "operations": 505
     },
     "core:index-span:union:100000": {
       "family": "core-structure",
@@ -853,19 +853,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 5103194.33333,
-        "p95": 5571087.5,
-        "relativeMAD": 0.0239542448681,
-        "minimum": 4974458.5,
-        "maximum": 5657500
+        "median": 5086541.66667,
+        "p95": 5516855.73333,
+        "relativeMAD": 0.0152062714529,
+        "minimum": 5009194.33333,
+        "maximum": 5580736.33333
       },
       "batchTiming": {
         "count": 25,
-        "median": 5103194.33333,
-        "p95": 6697621,
-        "relativeMAD": 0.0511498582293,
-        "minimum": 4812062.5,
-        "maximum": 6903513.66667
+        "median": 5086541.66667,
+        "p95": 5804497.13333,
+        "relativeMAD": 0.0568739402179,
+        "minimum": 4784680.33333,
+        "maximum": 6019972
       },
       "heap": {
         "peakDelta": {
@@ -887,7 +887,7 @@
         "positivePeakDeltaMedian": 10767632,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 65
+      "operations": 75
     },
     "core:listbox:next:1000": {
       "family": "core-semantic",
@@ -898,19 +898,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 16684.525974,
-        "p95": 17624.6417198,
-        "relativeMAD": 0.0257661707063,
-        "minimum": 16254.6296296,
-        "maximum": 17726.1146497
+        "median": 16848.6066667,
+        "p95": 17121.3373232,
+        "relativeMAD": 0.010782893446,
+        "minimum": 16420.575,
+        "maximum": 17165.6050955
       },
       "batchTiming": {
         "count": 25,
-        "median": 16918.5584416,
-        "p95": 18021.2564729,
-        "relativeMAD": 0.0392767064051,
-        "minimum": 15372.9444444,
-        "maximum": 19878.90625
+        "median": 16848.6066667,
+        "p95": 17767.4713546,
+        "relativeMAD": 0.0254045735138,
+        "minimum": 15553.125,
+        "maximum": 17878.1847134
       },
       "heap": {
         "peakDelta": {
@@ -924,15 +924,15 @@
         "retainedDelta": {
           "count": 5,
           "median": 0,
-          "p95": 0,
+          "p95": 32,
           "relativeMAD": 0,
           "minimum": 0,
-          "maximum": 0
+          "maximum": 32
         },
         "positivePeakDeltaMedian": 411648,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 3950
+      "operations": 3890
     },
     "core:listbox:next:10000": {
       "family": "core-semantic",
@@ -943,19 +943,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 157135.59322,
-        "p95": 157949.079752,
-        "relativeMAD": 0.00597372639619,
-        "minimum": 153964.60177,
-        "maximum": 158074.278261
+        "median": 155856.929204,
+        "p95": 161288.430761,
+        "relativeMAD": 0.0116091266602,
+        "minimum": 154047.566372,
+        "maximum": 161829.009434
       },
       "batchTiming": {
         "count": 25,
-        "median": 156261.79646,
-        "p95": 159593.02276,
-        "relativeMAD": 0.00989245145335,
-        "minimum": 152560.106195,
-        "maximum": 163678.669492
+        "median": 156700.517857,
+        "p95": 166776.987871,
+        "relativeMAD": 0.015479197181,
+        "minimum": 152218.654867,
+        "maximum": 172964.622642
       },
       "heap": {
         "peakDelta": {
@@ -977,7 +977,7 @@
         "positivePeakDeltaMedian": 1204272,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 2865
+      "operations": 2785
     },
     "core:listbox:next:100000": {
       "family": "core-semantic",
@@ -988,19 +988,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 1569493.08333,
-        "p95": 1603098.63333,
-        "relativeMAD": 0.0151499552643,
-        "minimum": 1529923.07692,
-        "maximum": 1605555.58333
+        "median": 1556263.83333,
+        "p95": 1670304.88333,
+        "relativeMAD": 0.00476563367416,
+        "minimum": 1539725.66667,
+        "maximum": 1697805.58333
       },
       "batchTiming": {
         "count": 25,
-        "median": 1570513.91667,
-        "p95": 1640548.61667,
-        "relativeMAD": 0.0144901082538,
-        "minimum": 1514596.15385,
-        "maximum": 1664895.83333
+        "median": 1559277.75,
+        "p95": 1700758.38333,
+        "relativeMAD": 0.010421491617,
+        "minimum": 1526920.08333,
+        "maximum": 1730003.5
       },
       "heap": {
         "peakDelta": {
@@ -1022,7 +1022,7 @@
         "positivePeakDeltaMedian": 4002184,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 305
+      "operations": 300
     },
     "core:range:arithmetic": {
       "family": "core-structure",
@@ -1033,19 +1033,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 540.1125,
-        "p95": 542.97664,
-        "relativeMAD": 0.0057780554977,
-        "minimum": 533.9208,
-        "maximum": 543.2333
+        "median": 533.975,
+        "p95": 539.2975,
+        "relativeMAD": 0.00713984737113,
+        "minimum": 530.0208,
+        "maximum": 539.675
       },
       "batchTiming": {
         "count": 25,
-        "median": 540.1125,
-        "p95": 562.24914,
-        "relativeMAD": 0.0227113795736,
-        "minimum": 522.975,
-        "maximum": 568.45
+        "median": 533.975,
+        "p95": 557.98832,
+        "relativeMAD": 0.019976028841,
+        "minimum": 521.9917,
+        "maximum": 559.1792
       },
       "heap": {
         "peakDelta": {
@@ -1077,19 +1077,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 111.2333,
-        "p95": 113.45422,
-        "relativeMAD": 0.0124737825813,
-        "minimum": 107.5083,
-        "maximum": 113.9709
+        "median": 111.6542,
+        "p95": 114.65918,
+        "relativeMAD": 0.0118302759771,
+        "minimum": 109.3291,
+        "maximum": 115.2292
       },
       "batchTiming": {
         "count": 25,
-        "median": 111.2333,
-        "p95": 121.6942,
-        "relativeMAD": 0.02049026685,
-        "minimum": 107.1958,
-        "maximum": 122.2167
+        "median": 112.3375,
+        "p95": 123.3233,
+        "relativeMAD": 0.0239982196463,
+        "minimum": 107.1167,
+        "maximum": 127.225
       },
       "heap": {
         "peakDelta": {
@@ -1103,15 +1103,429 @@
         "retainedDelta": {
           "count": 5,
           "median": 0,
-          "p95": 3059.2,
+          "p95": 0,
           "relativeMAD": 0,
           "minimum": 0,
-          "maximum": 3824
+          "maximum": 0
         },
         "positivePeakDeltaMedian": 2001496,
         "positiveRetainedDeltaMedian": 0
       },
       "operations": 250000
+    },
+    "core:selection-expression:contains:1000": {
+      "family": "core-selection",
+      "dimensions": {
+        "size": 1000,
+        "exceptions": 500,
+        "operation": "contains"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 5,
+        "median": 39.7916,
+        "p95": 40.46834,
+        "relativeMAD": 0.0113114325637,
+        "minimum": 38.9458,
+        "maximum": 40.525
+      },
+      "batchTiming": {
+        "count": 25,
+        "median": 40.2125,
+        "p95": 41.88914,
+        "relativeMAD": 0.0233136462534,
+        "minimum": 38.5292,
+        "maximum": 42.3042
+      },
+      "heap": {
+        "peakDelta": {
+          "count": 5,
+          "median": 2888,
+          "p95": 2888,
+          "relativeMAD": 0,
+          "minimum": 600,
+          "maximum": 2888
+        },
+        "retainedDelta": {
+          "count": 5,
+          "median": -792,
+          "p95": 2288,
+          "relativeMAD": 0,
+          "minimum": -792,
+          "maximum": 2288
+        },
+        "positivePeakDeltaMedian": 2888,
+        "positiveRetainedDeltaMedian": 0
+      },
+      "operations": 250000
+    },
+    "core:selection-expression:contains:10000": {
+      "family": "core-selection",
+      "dimensions": {
+        "size": 10000,
+        "exceptions": 5000,
+        "operation": "contains"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 5,
+        "median": 50.1583000001,
+        "p95": 81.7774800001,
+        "relativeMAD": 0.0163641909733,
+        "minimum": 49.0708000001,
+        "maximum": 89.6458000001
+      },
+      "batchTiming": {
+        "count": 25,
+        "median": 51.0375,
+        "p95": 89.9925200001,
+        "relativeMAD": 0.0385344109697,
+        "minimum": 48.1166,
+        "maximum": 101.1875
+      },
+      "heap": {
+        "peakDelta": {
+          "count": 5,
+          "median": 3320,
+          "p95": 3320,
+          "relativeMAD": 0,
+          "minimum": 600,
+          "maximum": 3320
+        },
+        "retainedDelta": {
+          "count": 5,
+          "median": 584,
+          "p95": 584,
+          "relativeMAD": 0,
+          "minimum": 0,
+          "maximum": 584
+        },
+        "positivePeakDeltaMedian": 3320,
+        "positiveRetainedDeltaMedian": 584
+      },
+      "operations": 250000
+    },
+    "core:selection-expression:contains:100000": {
+      "family": "core-selection",
+      "dimensions": {
+        "size": 100000,
+        "exceptions": 50000,
+        "operation": "contains"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 5,
+        "median": 57.9826129347,
+        "p95": 61.246901968,
+        "relativeMAD": 0.0619649616903,
+        "minimum": 50.5576586721,
+        "maximum": 61.8542686243
+      },
+      "batchTiming": {
+        "count": 25,
+        "median": 55.2561401359,
+        "p95": 112.455917712,
+        "relativeMAD": 0.0901436216767,
+        "minimum": 49.7386537637,
+        "maximum": 116.907586783
+      },
+      "heap": {
+        "peakDelta": {
+          "count": 5,
+          "median": 600,
+          "p95": 600,
+          "relativeMAD": 0,
+          "minimum": 600,
+          "maximum": 600
+        },
+        "retainedDelta": {
+          "count": 5,
+          "median": 0,
+          "p95": 0,
+          "relativeMAD": 0,
+          "minimum": 0,
+          "maximum": 0
+        },
+        "positivePeakDeltaMedian": 600,
+        "positiveRetainedDeltaMedian": 0
+      },
+      "operations": 894695
+    },
+    "core:selection-expression:materialize:1000": {
+      "family": "core-selection",
+      "dimensions": {
+        "size": 1000,
+        "exceptions": 500,
+        "operation": "materialize"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 5,
+        "median": 21341.4427481,
+        "p95": 21487.7714523,
+        "relativeMAD": 0.00422699987366,
+        "minimum": 21198.3,
+        "maximum": 21520.9923077
+      },
+      "batchTiming": {
+        "count": 25,
+        "median": 21437.5,
+        "p95": 22488.75,
+        "relativeMAD": 0.017676508662,
+        "minimum": 20908.3333333,
+        "maximum": 23848.7760618
+      },
+      "heap": {
+        "peakDelta": {
+          "count": 5,
+          "median": 516616,
+          "p95": 516616,
+          "relativeMAD": 0,
+          "minimum": 516616,
+          "maximum": 516616
+        },
+        "retainedDelta": {
+          "count": 5,
+          "median": 0,
+          "p95": 0,
+          "relativeMAD": 0,
+          "minimum": 0,
+          "maximum": 0
+        },
+        "positivePeakDeltaMedian": 516616,
+        "positiveRetainedDeltaMedian": 0
+      },
+      "operations": 6610
+    },
+    "core:selection-expression:materialize:10000": {
+      "family": "core-selection",
+      "dimensions": {
+        "size": 10000,
+        "exceptions": 5000,
+        "operation": "materialize"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 5,
+        "median": 262126.3125,
+        "p95": 264517.875346,
+        "relativeMAD": 0.00266886734997,
+        "minimum": 253931.451613,
+        "maximum": 264940.870968
+      },
+      "batchTiming": {
+        "count": 25,
+        "median": 261934.129032,
+        "p95": 276545.937558,
+        "relativeMAD": 0.0243560604008,
+        "minimum": 247365.580645,
+        "maximum": 287510.392857
+      },
+      "heap": {
+        "peakDelta": {
+          "count": 5,
+          "median": 1703960,
+          "p95": 1703960,
+          "relativeMAD": 0,
+          "minimum": 1703960,
+          "maximum": 1703960
+        },
+        "retainedDelta": {
+          "count": 5,
+          "median": 0,
+          "p95": 0,
+          "relativeMAD": 0,
+          "minimum": 0,
+          "maximum": 0
+        },
+        "positivePeakDeltaMedian": 1703960,
+        "positiveRetainedDeltaMedian": 0
+      },
+      "operations": 765
+    },
+    "core:selection-expression:materialize:100000": {
+      "family": "core-selection",
+      "dimensions": {
+        "size": 100000,
+        "exceptions": 50000,
+        "operation": "materialize"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 5,
+        "median": 3212450,
+        "p95": 3497081.63,
+        "relativeMAD": 0.0148977882924,
+        "minimum": 3164591.6,
+        "maximum": 3508591.6
+      },
+      "batchTiming": {
+        "count": 25,
+        "median": 3278191.6,
+        "p95": 3882541.6,
+        "relativeMAD": 0.0310435180177,
+        "minimum": 3153816.8,
+        "maximum": 4137491.6
+      },
+      "heap": {
+        "peakDelta": {
+          "count": 5,
+          "median": 5226176,
+          "p95": 5226176,
+          "relativeMAD": 0,
+          "minimum": 5226176,
+          "maximum": 5226176
+        },
+        "retainedDelta": {
+          "count": 5,
+          "median": 0,
+          "p95": 0,
+          "relativeMAD": 0,
+          "minimum": 0,
+          "maximum": 0
+        },
+        "positivePeakDeltaMedian": 5226176,
+        "positiveRetainedDeltaMedian": 0
+      },
+      "operations": 120
+    },
+    "core:selection-expression:union:1000": {
+      "family": "core-selection",
+      "dimensions": {
+        "size": 1000,
+        "exceptions": 1000,
+        "operation": "union"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 5,
+        "median": 83563.0675676,
+        "p95": 85047.7532781,
+        "relativeMAD": 0.0160062587772,
+        "minimum": 80620.4615385,
+        "maximum": 85291.9303797
+      },
+      "batchTiming": {
+        "count": 25,
+        "median": 83161.3175676,
+        "p95": 87738.5232502,
+        "relativeMAD": 0.0172888058693,
+        "minimum": 79899.5769231,
+        "maximum": 87967.0316456
+      },
+      "heap": {
+        "peakDelta": {
+          "count": 5,
+          "median": 2049984,
+          "p95": 2049984,
+          "relativeMAD": 0,
+          "minimum": 2049984,
+          "maximum": 2049984
+        },
+        "retainedDelta": {
+          "count": 5,
+          "median": 0,
+          "p95": 0,
+          "relativeMAD": 0,
+          "minimum": 0,
+          "maximum": 0
+        },
+        "positivePeakDeltaMedian": 2049984,
+        "positiveRetainedDeltaMedian": 0
+      },
+      "operations": 3865
+    },
+    "core:selection-expression:union:10000": {
+      "family": "core-selection",
+      "dimensions": {
+        "size": 10000,
+        "exceptions": 10000,
+        "operation": "union"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 5,
+        "median": 1073631.57895,
+        "p95": 1100339.97451,
+        "relativeMAD": 0.0151854584381,
+        "minimum": 1046392.57895,
+        "maximum": 1102941.17647
+      },
+      "batchTiming": {
+        "count": 25,
+        "median": 1073631.57895,
+        "p95": 1196789.34675,
+        "relativeMAD": 0.0253709005344,
+        "minimum": 1018107.42105,
+        "maximum": 1253456.05556
+      },
+      "heap": {
+        "peakDelta": {
+          "count": 5,
+          "median": 7838816,
+          "p95": 7838841.6,
+          "relativeMAD": 0,
+          "minimum": 7838816,
+          "maximum": 7838848
+        },
+        "retainedDelta": {
+          "count": 5,
+          "median": 0,
+          "p95": 25.6,
+          "relativeMAD": 0,
+          "minimum": 0,
+          "maximum": 32
+        },
+        "positivePeakDeltaMedian": 7838816,
+        "positiveRetainedDeltaMedian": 0
+      },
+      "operations": 455
+    },
+    "core:selection-expression:union:100000": {
+      "family": "core-selection",
+      "dimensions": {
+        "size": 100000,
+        "exceptions": 100000,
+        "operation": "union"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 5,
+        "median": 11628708.5,
+        "p95": 11816787.6,
+        "relativeMAD": 0.0111935474176,
+        "minimum": 11498542,
+        "maximum": 11825146
+      },
+      "batchTiming": {
+        "count": 25,
+        "median": 11757937.5,
+        "p95": 12559325,
+        "relativeMAD": 0.0167687998001,
+        "minimum": 11432479.5,
+        "maximum": 14435958.5
+      },
+      "heap": {
+        "peakDelta": {
+          "count": 5,
+          "median": 22448936,
+          "p95": 22448936,
+          "relativeMAD": 0,
+          "minimum": 22448936,
+          "maximum": 22448936
+        },
+        "retainedDelta": {
+          "count": 5,
+          "median": 32,
+          "p95": 32,
+          "relativeMAD": 0,
+          "minimum": 32,
+          "maximum": 32
+        },
+        "positivePeakDeltaMedian": 22448936,
+        "positiveRetainedDeltaMedian": 32
+      },
+      "operations": 50
     },
     "core:selection:toggle:1000": {
       "family": "core-selection",
@@ -1123,41 +1537,41 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 786.521791767,
-        "p95": 818.321214171,
-        "relativeMAD": 0.0387645421362,
-        "minimum": 738.644549763,
-        "maximum": 818.648780488
+        "median": 802.42662116,
+        "p95": 811.544324986,
+        "relativeMAD": 0.00433672666788,
+        "minimum": 798.946716233,
+        "maximum": 812.626360339
       },
       "batchTiming": {
         "count": 25,
-        "median": 811.340193705,
-        "p95": 986.296274998,
-        "relativeMAD": 0.0316014042918,
-        "minimum": 737.263033175,
-        "maximum": 1023.5971564
+        "median": 807.216183575,
+        "p95": 963.030121646,
+        "relativeMAD": 0.0136257069933,
+        "minimum": 783.163043478,
+        "maximum": 1006.02047782
       },
       "heap": {
         "peakDelta": {
           "count": 5,
           "median": 22104,
-          "p95": 22232,
-          "relativeMAD": 0.00723850886717,
-          "minimum": 0,
-          "maximum": 22264
+          "p95": 23883.2,
+          "relativeMAD": 0,
+          "minimum": 22104,
+          "maximum": 24328
         },
         "retainedDelta": {
           "count": 5,
-          "median": 0,
-          "p95": 1676.8,
-          "relativeMAD": null,
-          "minimum": -253464,
-          "maximum": 2096
+          "median": -56,
+          "p95": 1632,
+          "relativeMAD": 0,
+          "minimum": -56,
+          "maximum": 2040
         },
         "positivePeakDeltaMedian": 22104,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 20820
+      "operations": 20855
     },
     "core:selection:toggle:10000": {
       "family": "core-selection",
@@ -1169,19 +1583,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 3830.50205038,
-        "p95": 4074.0499905,
-        "relativeMAD": 0.0103320284781,
-        "minimum": 3773.60691824,
-        "maximum": 4125.04276146
+        "median": 3862.8370294,
+        "p95": 4127.95180091,
+        "relativeMAD": 0.00719977949842,
+        "minimum": 3827.68088386,
+        "maximum": 4191.73460491
       },
       "batchTiming": {
         "count": 25,
-        "median": 3870.07890665,
-        "p95": 4200.36517259,
-        "relativeMAD": 0.027221992031,
-        "minimum": 3712.02410901,
-        "maximum": 4298.49304482
+        "median": 3928.37872559,
+        "p95": 4203.05688914,
+        "relativeMAD": 0.0299992518014,
+        "minimum": 3683.1057246,
+        "maximum": 4207.26648501
       },
       "heap": {
         "peakDelta": {
@@ -1203,7 +1617,7 @@
         "positivePeakDeltaMedian": 39768,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 45920
+      "operations": 45740
     },
     "core:selection:toggle:100000": {
       "family": "core-selection",
@@ -1215,19 +1629,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 42745.7196262,
-        "p95": 43461.606866,
-        "relativeMAD": 0.0179122006927,
-        "minimum": 40691.5408163,
-        "maximum": 43511.3895349
+        "median": 41357.3212121,
+        "p95": 42513.0006394,
+        "relativeMAD": 0.0107649959802,
+        "minimum": 40636.6815287,
+        "maximum": 42690.6176471
       },
       "batchTiming": {
         "count": 25,
-        "median": 43000.8503401,
-        "p95": 44887.6601804,
-        "relativeMAD": 0.0223952223695,
-        "minimum": 40538.2653061,
-        "maximum": 46167.8027211
+        "median": 41694.5217391,
+        "p95": 43566.9355034,
+        "relativeMAD": 0.0194796599672,
+        "minimum": 40263.5350318,
+        "maximum": 43976.4510869
       },
       "heap": {
         "peakDelta": {
@@ -1249,7 +1663,7 @@
         "positivePeakDeltaMedian": 98192,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 4645
+      "operations": 5395
     },
     "core:sequence:construct:1000": {
       "family": "core-structure",
@@ -1260,19 +1674,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 57137.2781457,
-        "p95": 59104.2676137,
-        "relativeMAD": 0.00804718366401,
-        "minimum": 56488.1921824,
-        "maximum": 59547.78
+        "median": 57762.8737542,
+        "p95": 59988.7049994,
+        "relativeMAD": 0.00914778080725,
+        "minimum": 56612.1688742,
+        "maximum": 60413.0622837
       },
       "batchTiming": {
         "count": 25,
-        "median": 57321.6059603,
-        "p95": 61517.646082,
-        "relativeMAD": 0.0175209434968,
-        "minimum": 55621.4723127,
-        "maximum": 62666.25
+        "median": 57762.8737542,
+        "p95": 62152.8424743,
+        "relativeMAD": 0.013667990702,
+        "minimum": 56143.2119205,
+        "maximum": 63165.9446367
       },
       "heap": {
         "peakDelta": {
@@ -1294,7 +1708,7 @@
         "positivePeakDeltaMedian": 891952,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 7710
+      "operations": 7560
     },
     "core:sequence:construct:10000": {
       "family": "core-structure",
@@ -1305,19 +1719,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 742866.333333,
-        "p95": 744226.460869,
-        "relativeMAD": 0.00221622954915,
-        "minimum": 726811.565217,
-        "maximum": 744512.695652
+        "median": 849543.545455,
+        "p95": 876234.095238,
+        "relativeMAD": 0.0346265243452,
+        "minimum": 725906.25,
+        "maximum": 878960.285714
       },
       "batchTiming": {
         "count": 25,
-        "median": 742866.333333,
-        "p95": 862273.182609,
-        "relativeMAD": 0.0189659415,
-        "minimum": 714347.826087,
-        "maximum": 886538.208333
+        "median": 850035.714286,
+        "p95": 1013707.28398,
+        "relativeMAD": 0.0564519137852,
+        "minimum": 721765.625,
+        "maximum": 1027343.28571
       },
       "heap": {
         "peakDelta": {
@@ -1339,7 +1753,7 @@
         "positivePeakDeltaMedian": 3717688,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 580
+      "operations": 540
     },
     "core:sequence:construct:100000": {
       "family": "core-structure",
@@ -1350,19 +1764,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 8135208.5,
-        "p95": 9547587.8,
-        "relativeMAD": 0.0202208093376,
-        "minimum": 7970708,
-        "maximum": 9856229.5
+        "median": 9489500,
+        "p95": 9730833.3,
+        "relativeMAD": 0.0304086095158,
+        "minimum": 8642805.66667,
+        "maximum": 9778062.5
       },
       "batchTiming": {
         "count": 25,
-        "median": 8326833,
-        "p95": 9990129.5,
-        "relativeMAD": 0.0444697281668,
-        "minimum": 7896167,
-        "maximum": 10056833.5
+        "median": 9489500,
+        "p95": 10708833.3,
+        "relativeMAD": 0.066500412737,
+        "minimum": 8171472,
+        "maximum": 10736041.5
       },
       "heap": {
         "peakDelta": {
@@ -1384,7 +1798,7 @@
         "positivePeakDeltaMedian": 10220632,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 50
+      "operations": 60
     },
     "core:sequence:index-of:1000": {
       "family": "core-structure",
@@ -1395,19 +1809,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 68.4291,
-        "p95": 74.19664,
-        "relativeMAD": 0.0551066724537,
-        "minimum": 61.6417,
-        "maximum": 74.6958
+        "median": 72.0334,
+        "p95": 79.72498,
+        "relativeMAD": 0.0105270610578,
+        "minimum": 71.1041,
+        "maximum": 81.4583
       },
       "batchTiming": {
         "count": 25,
-        "median": 71.5792,
-        "p95": 79.44418,
-        "relativeMAD": 0.0628688222276,
-        "minimum": 57.9833,
-        "maximum": 87.5875
+        "median": 72.7917,
+        "p95": 81.63838,
+        "relativeMAD": 0.0257021061467,
+        "minimum": 60.6083,
+        "maximum": 88.3583
       },
       "heap": {
         "peakDelta": {
@@ -1415,16 +1829,16 @@
           "median": 27056,
           "p95": 27056,
           "relativeMAD": 0,
-          "minimum": 20520,
+          "minimum": 18120,
           "maximum": 27056
         },
         "retainedDelta": {
           "count": 5,
           "median": 80,
-          "p95": 5225.6,
+          "p95": 80,
           "relativeMAD": 0,
-          "minimum": 80,
-          "maximum": 6512
+          "minimum": -6448,
+          "maximum": 80
         },
         "positivePeakDeltaMedian": 27056,
         "positiveRetainedDeltaMedian": 80
@@ -1440,19 +1854,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 41.5480468651,
-        "p95": 41.9140520326,
-        "relativeMAD": 0.00914091519231,
-        "minimum": 40.4978678685,
-        "maximum": 41.9278340379
+        "median": 41.533462713,
+        "p95": 41.9859064543,
+        "relativeMAD": 0.0110687381829,
+        "minimum": 40.7003241985,
+        "maximum": 42.0314429974
       },
       "batchTiming": {
         "count": 25,
-        "median": 40.865847497,
-        "p95": 44.4929533577,
-        "relativeMAD": 0.0268394798873,
-        "minimum": 38.8051813981,
-        "maximum": 44.9843698376
+        "median": 41.4550072776,
+        "p95": 45.6704709723,
+        "relativeMAD": 0.0182048714661,
+        "minimum": 39.8328602076,
+        "maximum": 46.3745255287
       },
       "heap": {
         "peakDelta": {
@@ -1474,7 +1888,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 1083975
+      "operations": 1059875
     },
     "core:sequence:index-of:100000": {
       "family": "core-structure",
@@ -1485,19 +1899,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 52.7705558813,
-        "p95": 63.3038235303,
-        "relativeMAD": 0.0404919363538,
-        "minimum": 50.6337738912,
-        "maximum": 64.4921402907
+        "median": 48.84896875,
+        "p95": 50.5365169093,
+        "relativeMAD": 0.0230358764247,
+        "minimum": 47.7236899424,
+        "maximum": 50.5498074206
       },
       "batchTiming": {
         "count": 25,
-        "median": 52.7705558813,
-        "p95": 118.355237042,
-        "relativeMAD": 0.114953515975,
-        "minimum": 46.630626483,
-        "maximum": 142.416059413
+        "median": 48.84896875,
+        "p95": 99.3324198823,
+        "relativeMAD": 0.0382048055975,
+        "minimum": 46.7656446871,
+        "maximum": 111.75
       },
       "heap": {
         "peakDelta": {
@@ -1519,7 +1933,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 906615
+      "operations": 876995
     },
     "core:sequence:materialize:1000:1": {
       "family": "core-structure",
@@ -1531,41 +1945,41 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 45.3548644338,
-        "p95": 69.011366844,
-        "relativeMAD": 0.0701062835683,
-        "minimum": 42.1752034466,
-        "maximum": 69.4003639673
+        "median": 14.606810387,
+        "p95": 17.129266229,
+        "relativeMAD": 0.0225933351948,
+        "minimum": 14.2767938238,
+        "maximum": 17.1440935673
       },
       "batchTiming": {
         "count": 25,
-        "median": 51.1363636364,
-        "p95": 71.5869697998,
-        "relativeMAD": 0.235547994834,
-        "minimum": 39.0912957187,
-        "maximum": 75.0775705187
+        "median": 14.606810387,
+        "p95": 66.67793271,
+        "relativeMAD": 0.0272536687611,
+        "minimum": 14.2087212151,
+        "maximum": 71.4587440159
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 616,
-          "p95": 616,
+          "median": 600,
+          "p95": 600,
           "relativeMAD": 0,
-          "minimum": 616,
-          "maximum": 616
+          "minimum": 600,
+          "maximum": 600
         },
         "retainedDelta": {
           "count": 5,
-          "median": 10264,
-          "p95": 27267.2,
-          "relativeMAD": 1.62042088854,
-          "minimum": -20632,
-          "maximum": 27360
+          "median": 5424,
+          "p95": 37865.6,
+          "relativeMAD": 0,
+          "minimum": 5008,
+          "maximum": 45976
         },
-        "positivePeakDeltaMedian": 616,
-        "positiveRetainedDeltaMedian": 10264
+        "positivePeakDeltaMedian": 600,
+        "positiveRetainedDeltaMedian": 5424
       },
-      "operations": 100320
+      "operations": 102430
     },
     "core:sequence:materialize:1000:32": {
       "family": "core-structure",
@@ -1577,19 +1991,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 12.1631221927,
-        "p95": 12.176405279,
-        "relativeMAD": 0.000338407288424,
-        "minimum": 12.1580904854,
-        "maximum": 12.1786970283
+        "median": 12.171980947,
+        "p95": 12.196158948,
+        "relativeMAD": 0.000650476502919,
+        "minimum": 12.1640633594,
+        "maximum": 12.199759395
       },
       "batchTiming": {
         "count": 25,
-        "median": 12.1672382819,
-        "p95": 12.2758044663,
-        "relativeMAD": 0.000914349196151,
-        "minimum": 11.8011322494,
-        "maximum": 12.2920808373
+        "median": 12.1724343675,
+        "p95": 12.3563530797,
+        "relativeMAD": 0.000999420845626,
+        "minimum": 12.1548784512,
+        "maximum": 12.414826969
       },
       "heap": {
         "peakDelta": {
@@ -1611,7 +2025,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 603405
+      "operations": 423015
     },
     "core:sequence:materialize:1000:64": {
       "family": "core-structure",
@@ -1623,19 +2037,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 12.2219719507,
-        "p95": 12.2960702129,
-        "relativeMAD": 0.0040010050749,
-        "minimum": 12.1730717789,
-        "maximum": 12.2996810647
+        "median": 12.1691038369,
+        "p95": 12.2617521656,
+        "relativeMAD": 0.00939562778266,
+        "minimum": 11.8222917913,
+        "maximum": 12.283440207
       },
       "batchTiming": {
         "count": 25,
-        "median": 12.2219719507,
-        "p95": 12.8890832276,
-        "relativeMAD": 0.00533554789821,
-        "minimum": 12.1503720912,
-        "maximum": 19.767318317
+        "median": 12.1722,
+        "p95": 12.3020385457,
+        "relativeMAD": 0.00817305860639,
+        "minimum": 11.810736154,
+        "maximum": 12.949038137
       },
       "heap": {
         "peakDelta": {
@@ -1657,7 +2071,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 596170
+      "operations": 430370
     },
     "core:sequence:materialize:1000:8": {
       "family": "core-structure",
@@ -1669,41 +2083,41 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 12.160719077,
-        "p95": 12.1874800511,
-        "relativeMAD": 0.000901432886541,
-        "minimum": 11.8110142745,
-        "maximum": 12.1932498283
+        "median": 12.1913483223,
+        "p95": 34.4168771156,
+        "relativeMAD": 0.000583194287624,
+        "minimum": 12.1793790078,
+        "maximum": 39.9714818328
       },
       "batchTiming": {
         "count": 25,
-        "median": 12.1579017977,
-        "p95": 12.3341652182,
-        "relativeMAD": 0.0007885986869,
-        "minimum": 11.8049627935,
-        "maximum": 12.8132583314
+        "median": 12.1948363145,
+        "p95": 40.659371423,
+        "relativeMAD": 0.00299168031996,
+        "minimum": 11.8296999932,
+        "maximum": 41.4649900252
       },
       "heap": {
         "peakDelta": {
           "count": 5,
           "median": 600,
-          "p95": 600,
+          "p95": 612.8,
           "relativeMAD": 0,
           "minimum": 600,
-          "maximum": 600
+          "maximum": 616
         },
         "retainedDelta": {
           "count": 5,
           "median": 0,
-          "p95": 0,
+          "p95": 25.6,
           "relativeMAD": 0,
           "minimum": 0,
-          "maximum": 0
+          "maximum": 32
         },
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 806830
+      "operations": 740950
     },
     "core:sequence:materialize:10000:1": {
       "family": "core-structure",
@@ -1715,19 +2129,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 12.1777392168,
-        "p95": 12.1992821429,
-        "relativeMAD": 0.0012556465636,
-        "minimum": 12.1593338305,
-        "maximum": 12.2008451403
+        "median": 12.1943534158,
+        "p95": 12.2674484137,
+        "relativeMAD": 0.00159401505248,
+        "minimum": 12.1711073087,
+        "maximum": 12.2808626674
       },
       "batchTiming": {
         "count": 25,
-        "median": 12.182896688,
-        "p95": 12.7338410461,
-        "relativeMAD": 0.00147324999507,
-        "minimum": 12.1488938602,
-        "maximum": 12.9776286354
+        "median": 12.1943534158,
+        "p95": 12.5950421418,
+        "relativeMAD": 0.00242501157512,
+        "minimum": 12.1508188707,
+        "maximum": 17.0783967734
       },
       "heap": {
         "peakDelta": {
@@ -1749,7 +2163,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 98860
+      "operations": 100805
     },
     "core:sequence:materialize:10000:32": {
       "family": "core-structure",
@@ -1761,19 +2175,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 12.181170641,
-        "p95": 12.1924637539,
-        "relativeMAD": 0.000500787196878,
-        "minimum": 12.1692665118,
-        "maximum": 12.1942011478
+        "median": 12.1929178473,
+        "p95": 12.4581823569,
+        "relativeMAD": 0.000812383100096,
+        "minimum": 12.1830125269,
+        "maximum": 12.5134894752
       },
       "batchTiming": {
         "count": 25,
-        "median": 12.1855141784,
-        "p95": 13.0133445311,
-        "relativeMAD": 0.00139846103209,
-        "minimum": 12.144065237,
-        "maximum": 13.5103747291
+        "median": 12.1958447907,
+        "p95": 12.5536853151,
+        "relativeMAD": 0.00247732864292,
+        "minimum": 12.1567371937,
+        "maximum": 12.8594722799
       },
       "heap": {
         "peakDelta": {
@@ -1795,7 +2209,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 78365
+      "operations": 85320
     },
     "core:sequence:materialize:10000:64": {
       "family": "core-structure",
@@ -1807,19 +2221,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 12.1949099939,
-        "p95": 12.2281013632,
-        "relativeMAD": 0.0013371078596,
-        "minimum": 12.176788936,
-        "maximum": 12.2341788367
+        "median": 12.1893677262,
+        "p95": 12.1986015397,
+        "relativeMAD": 0.000478263051124,
+        "minimum": 12.173478656,
+        "maximum": 12.2007978723
       },
       "batchTiming": {
         "count": 25,
-        "median": 12.2021521907,
-        "p95": 12.7977639659,
-        "relativeMAD": 0.00207858862222,
-        "minimum": 12.1533069185,
-        "maximum": 18.0329167937
+        "median": 12.1898162095,
+        "p95": 13.020744681,
+        "relativeMAD": 0.00217864834255,
+        "minimum": 12.1607629431,
+        "maximum": 16.3312362375
       },
       "heap": {
         "peakDelta": {
@@ -1841,7 +2255,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 84485
+      "operations": 82870
     },
     "core:sequence:materialize:10000:8": {
       "family": "core-structure",
@@ -1853,19 +2267,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 12.1710526317,
-        "p95": 12.2812137474,
-        "relativeMAD": 0.000682957534696,
-        "minimum": 12.1627403196,
-        "maximum": 12.2813648297
+        "median": 12.1951219516,
+        "p95": 12.5366428273,
+        "relativeMAD": 0.000863185414773,
+        "minimum": 12.1826771654,
+        "maximum": 12.6196730099
       },
       "batchTiming": {
         "count": 25,
-        "median": 12.1883656509,
-        "p95": 12.5743360889,
-        "relativeMAD": 0.00328843847272,
-        "minimum": 12.1399945843,
-        "maximum": 255.916535433
+        "median": 12.2045220968,
+        "p95": 12.7724570383,
+        "relativeMAD": 0.00267163974366,
+        "minimum": 12.1626631852,
+        "maximum": 12.8806788512
       },
       "heap": {
         "peakDelta": {
@@ -1887,7 +2301,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 93515
+      "operations": 85130
     },
     "core:sequence:materialize:100000:1": {
       "family": "core-structure",
@@ -1899,19 +2313,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 13.5135135163,
-        "p95": 14.9813871788,
-        "relativeMAD": 0.0305999989197,
-        "minimum": 12.5616438273,
-        "maximum": 15.3088235225
+        "median": 12.9459459532,
+        "p95": 13.4774891753,
+        "relativeMAD": 0.0204532377593,
+        "minimum": 12.6811594426,
+        "maximum": 13.5324675308
       },
       "batchTiming": {
         "count": 25,
-        "median": 13.671641804,
-        "p95": 25.0941176429,
-        "relativeMAD": 0.0821917808219,
-        "minimum": 12.4328358217,
-        "maximum": 25.5074626883
+        "median": 12.9870129897,
+        "p95": 29.348773439,
+        "relativeMAD": 0.0235507251452,
+        "minimum": 12.4415584249,
+        "maximum": 30.7971014358
       },
       "heap": {
         "peakDelta": {
@@ -1933,7 +2347,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 1760
+      "operations": 1790
     },
     "core:sequence:materialize:100000:32": {
       "family": "core-structure",
@@ -1945,19 +2359,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 13.2000000121,
-        "p95": 15.2556985307,
-        "relativeMAD": 0.0426997249381,
-        "minimum": 12.6363636424,
-        "maximum": 15.3235294099
+        "median": 13.2575757534,
+        "p95": 14.8230503615,
+        "relativeMAD": 0.0149253731361,
+        "minimum": 12.9154929748,
+        "maximum": 15.206349186
       },
       "batchTiming": {
         "count": 25,
-        "median": 13.8833333343,
-        "p95": 27.7335416661,
-        "relativeMAD": 0.0898177449105,
-        "minimum": 12.4999999874,
-        "maximum": 29.5942028996
+        "median": 13.2575757809,
+        "p95": 30.6410015602,
+        "relativeMAD": 0.043478262858,
+        "minimum": 12.3239436581,
+        "maximum": 32.970149257
       },
       "heap": {
         "peakDelta": {
@@ -1979,7 +2393,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 1635
+      "operations": 1680
     },
     "core:sequence:materialize:100000:64": {
       "family": "core-structure",
@@ -1991,19 +2405,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 13.2898550636,
-        "p95": 15.6421857986,
-        "relativeMAD": 0.0173179898576,
-        "minimum": 13.0597014884,
-        "maximum": 15.9666666756
+        "median": 13.1232876786,
+        "p95": 13.3181818195,
+        "relativeMAD": 0.0102328073642,
+        "minimum": 12.8676470548,
+        "maximum": 13.333333336
       },
       "batchTiming": {
         "count": 25,
-        "median": 13.6557377059,
-        "p95": 30.1093229615,
-        "relativeMAD": 0.0713676778627,
-        "minimum": 12.2950819548,
-        "maximum": 31.2499999988
+        "median": 13.1369863134,
+        "p95": 27.3301818203,
+        "relativeMAD": 0.0266666685128,
+        "minimum": 11.9863013661,
+        "maximum": 28.5479452019
       },
       "heap": {
         "peakDelta": {
@@ -2025,7 +2439,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 1650
+      "operations": 1775
     },
     "core:sequence:materialize:100000:8": {
       "family": "core-structure",
@@ -2037,19 +2451,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 13.4615384573,
-        "p95": 16.0545893786,
-        "relativeMAD": 0.0501333321701,
-        "minimum": 12.7866666783,
-        "maximum": 16.304347836
+        "median": 13.0156250009,
+        "p95": 13.2449473959,
+        "relativeMAD": 0.0113692539613,
+        "minimum": 12.8676470548,
+        "maximum": 13.2753623315
       },
       "batchTiming": {
         "count": 25,
-        "median": 13.4615384853,
-        "p95": 26.9464242389,
-        "relativeMAD": 0.062424244013,
-        "minimum": 12.2266666828,
-        "maximum": 33.8115942082
+        "median": 12.8676470815,
+        "p95": 27.9854149888,
+        "relativeMAD": 0.0237808223516,
+        "minimum": 12.2500000008,
+        "maximum": 28.6406250041
       },
       "heap": {
         "peakDelta": {
@@ -2071,7 +2485,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 1735
+      "operations": 1710
     },
     "core:sequence:move:1000": {
       "family": "core-structure",
@@ -2083,19 +2497,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 190.695392954,
-        "p95": 192.356176333,
-        "relativeMAD": 0.0107291339833,
-        "minimum": 156.219540906,
-        "maximum": 192.741389375
+        "median": 185.429027113,
+        "p95": 189.703489133,
+        "relativeMAD": 0.0264321465431,
+        "minimum": 172.990190421,
+        "maximum": 190.330314331
       },
       "batchTiming": {
         "count": 25,
-        "median": 189.559921414,
-        "p95": 463.765849921,
-        "relativeMAD": 0.0515448670886,
-        "minimum": 154.870512066,
-        "maximum": 495.688932548
+        "median": 186.682735426,
+        "p95": 464.006706792,
+        "relativeMAD": 0.0332217120357,
+        "minimum": 171.836122331,
+        "maximum": 467.426258993
       },
       "heap": {
         "peakDelta": {
@@ -2108,16 +2522,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": -9776,
+          "median": 224,
           "p95": 224,
-          "relativeMAD": 1.02291325696,
-          "minimum": -22624,
+          "relativeMAD": 0,
+          "minimum": -672,
           "maximum": 224
         },
         "positivePeakDeltaMedian": 17024,
-        "positiveRetainedDeltaMedian": 0
+        "positiveRetainedDeltaMedian": 224
       },
-      "operations": 42620
+      "operations": 44715
     },
     "core:sequence:move:10000": {
       "family": "core-structure",
@@ -2129,19 +2543,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 144.568397952,
-        "p95": 145.941963359,
-        "relativeMAD": 0.0102650657753,
-        "minimum": 140.656396517,
-        "maximum": 146.189596167
+        "median": 142.602272727,
+        "p95": 217.154937221,
+        "relativeMAD": 0.0185569773146,
+        "minimum": 139.325281804,
+        "maximum": 235.136251032
       },
       "batchTiming": {
         "count": 25,
-        "median": 145.505817933,
-        "p95": 220.797475927,
-        "relativeMAD": 0.0367804240802,
-        "minimum": 136.135298057,
-        "maximum": 221.142665773
+        "median": 144.759010601,
+        "p95": 249.75227085,
+        "relativeMAD": 0.053955060596,
+        "minimum": 135.096368716,
+        "maximum": 632.810900083
       },
       "heap": {
         "peakDelta": {
@@ -2157,13 +2571,13 @@
           "median": 0,
           "p95": 0,
           "relativeMAD": 0,
-          "minimum": -3904,
+          "minimum": 0,
           "maximum": 0
         },
         "positivePeakDeltaMedian": 1488,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 37100
+      "operations": 33980
     },
     "core:sequence:move:100000": {
       "family": "core-structure",
@@ -2175,19 +2589,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 240.835016834,
-        "p95": 251.039568588,
-        "relativeMAD": 0.0523145582135,
-        "minimum": 217.853610287,
-        "maximum": 253.434194342
+        "median": 253.819810326,
+        "p95": 256.799776354,
+        "relativeMAD": 0.0131073279376,
+        "minimum": 223.453892217,
+        "maximum": 257.146709817
       },
       "batchTiming": {
         "count": 25,
-        "median": 240.835016834,
-        "p95": 293.191337732,
-        "relativeMAD": 0.0567834297911,
-        "minimum": 216.286844709,
-        "maximum": 313.359788361
+        "median": 253.77562028,
+        "p95": 286.180829605,
+        "relativeMAD": 0.0163860456551,
+        "minimum": 214.820359283,
+        "maximum": 293.817702845
       },
       "heap": {
         "peakDelta": {
@@ -2200,16 +2614,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": 6720,
-          "p95": 7108.8,
-          "relativeMAD": 0.0321428571429,
-          "minimum": 6432,
-          "maximum": 7152
+          "median": 6576,
+          "p95": 6892.8,
+          "relativeMAD": 0,
+          "minimum": 6576,
+          "maximum": 6936
         },
         "positivePeakDeltaMedian": 896,
-        "positiveRetainedDeltaMedian": 6720
+        "positiveRetainedDeltaMedian": 6576
       },
-      "operations": 23180
+      "operations": 22140
     },
     "core:sequence:patch-lookup:1000:1": {
       "family": "core-structure",
@@ -2221,39 +2635,39 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 78.0334,
-        "p95": 183.33664,
-        "relativeMAD": 0.19244067284,
-        "minimum": 58.6916,
-        "maximum": 208.85
+        "median": 82.6082,
+        "p95": 83.08828,
+        "relativeMAD": 0.00675961950509,
+        "minimum": 81.4082,
+        "maximum": 83.1666
       },
       "batchTiming": {
         "count": 25,
-        "median": 78.2582000001,
-        "p95": 210.85672,
-        "relativeMAD": 0.127994254915,
-        "minimum": 56.625,
-        "maximum": 214.1832
+        "median": 81.8582,
+        "p95": 102.70508,
+        "relativeMAD": 0.0263651045337,
+        "minimum": 75.7584,
+        "maximum": 104.85
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 7168,
-          "p95": 7168,
+          "median": 616,
+          "p95": 616,
           "relativeMAD": 0,
           "minimum": 616,
-          "maximum": 7168
+          "maximum": 616
         },
         "retainedDelta": {
           "count": 5,
-          "median": 6712,
-          "p95": 6846.4,
-          "relativeMAD": 0.0250297973778,
-          "minimum": -16896,
-          "maximum": 6880
+          "median": 28840,
+          "p95": 33369.6,
+          "relativeMAD": 0.179750346741,
+          "minimum": 23656,
+          "maximum": 34112
         },
-        "positivePeakDeltaMedian": 7168,
-        "positiveRetainedDeltaMedian": 6712
+        "positivePeakDeltaMedian": 616,
+        "positiveRetainedDeltaMedian": 28840
       },
       "operations": 125000
     },
@@ -2267,19 +2681,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 292.611862203,
-        "p95": 305.022723362,
-        "relativeMAD": 0.047365144508,
-        "minimum": 265.219685606,
-        "maximum": 306.471465341
+        "median": 282.451047781,
+        "p95": 296.137946543,
+        "relativeMAD": 0.0575575768818,
+        "minimum": 264.473456683,
+        "maximum": 298.708245679
       },
       "batchTiming": {
         "count": 25,
-        "median": 292.503542411,
-        "p95": 307.488401372,
-        "relativeMAD": 0.0433195675942,
-        "minimum": 262.93850123,
-        "maximum": 311.322150232
+        "median": 282.451047781,
+        "p95": 300.123087077,
+        "relativeMAD": 0.0540280933433,
+        "minimum": 264.150683036,
+        "maximum": 310.294023017
       },
       "heap": {
         "peakDelta": {
@@ -2301,7 +2715,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 816200
+      "operations": 727325
     },
     "core:sequence:patch-lookup:1000:64": {
       "family": "core-structure",
@@ -2313,19 +2727,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 284.070357622,
-        "p95": 310.962607422,
-        "relativeMAD": 0.0594614230622,
-        "minimum": 263.818937732,
-        "maximum": 313.462862943
+        "median": 282.602456165,
+        "p95": 298.054610232,
+        "relativeMAD": 0.0342330211078,
+        "minimum": 255.453847452,
+        "maximum": 300.13649727
       },
       "batchTiming": {
         "count": 25,
-        "median": 284.070357622,
-        "p95": 317.952890854,
-        "relativeMAD": 0.0575564805866,
-        "minimum": 262.679098616,
-        "maximum": 321.156704245
+        "median": 285.395769552,
+        "p95": 300.78748425,
+        "relativeMAD": 0.0436854731696,
+        "minimum": 252.490212622,
+        "maximum": 310.299419012
       },
       "heap": {
         "peakDelta": {
@@ -2347,7 +2761,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 919250
+      "operations": 779150
     },
     "core:sequence:patch-lookup:1000:8": {
       "family": "core-structure",
@@ -2359,41 +2773,41 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 86.5241095178,
-        "p95": 91.5276931226,
-        "relativeMAD": 0.0244590372509,
-        "minimum": 84.4078131,
-        "maximum": 92.2410174751
+        "median": 89.2771592006,
+        "p95": 102.88954787,
+        "relativeMAD": 0.0110577068025,
+        "minimum": 84.7263372771,
+        "maximum": 106.169734394
       },
       "batchTiming": {
         "count": 25,
-        "median": 86.5241095178,
-        "p95": 121.662331418,
-        "relativeMAD": 0.0315758947501,
-        "minimum": 80.765849518,
-        "maximum": 125.396374326
+        "median": 88.9841558745,
+        "p95": 123.554875222,
+        "relativeMAD": 0.0486977350449,
+        "minimum": 84.3104655233,
+        "maximum": 124.03453506
       },
       "heap": {
         "peakDelta": {
           "count": 5,
           "median": 600,
-          "p95": 600,
+          "p95": 612.8,
           "relativeMAD": 0,
           "minimum": 600,
-          "maximum": 600
+          "maximum": 616
         },
         "retainedDelta": {
           "count": 5,
           "median": 0,
-          "p95": 0,
+          "p95": 25.6,
           "relativeMAD": 0,
           "minimum": -248,
-          "maximum": 0
+          "maximum": 32
         },
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 1226270
+      "operations": 1001720
     },
     "core:sequence:patch-lookup:10000:1": {
       "family": "core-structure",
@@ -2405,19 +2819,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 30.8685551643,
-        "p95": 31.3542176487,
-        "relativeMAD": 0.0175846202911,
-        "minimum": 28.5438316079,
-        "maximum": 31.4113669858
+        "median": 30.3481078024,
+        "p95": 32.6896763513,
+        "relativeMAD": 0.0413028741779,
+        "minimum": 28.3743893833,
+        "maximum": 33.265387116
       },
       "batchTiming": {
         "count": 25,
-        "median": 30.8685551643,
-        "p95": 32.3794738271,
-        "relativeMAD": 0.0340150334836,
-        "minimum": 28.3056163474,
-        "maximum": 32.4298870999
+        "median": 29.8383824723,
+        "p95": 33.2875142223,
+        "relativeMAD": 0.0311550939556,
+        "minimum": 28.172374921,
+        "maximum": 34.8241859457
       },
       "heap": {
         "peakDelta": {
@@ -2433,13 +2847,13 @@
           "median": 0,
           "p95": 0,
           "relativeMAD": 0,
-          "minimum": -6376,
+          "minimum": 0,
           "maximum": 0
         },
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 2178085
+      "operations": 2192040
     },
     "core:sequence:patch-lookup:10000:32": {
       "family": "core-structure",
@@ -2451,19 +2865,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 291.522139933,
-        "p95": 296.741024754,
-        "relativeMAD": 0.019050016727,
-        "minimum": 273.44176753,
-        "maximum": 297.075641575
+        "median": 285.78715558,
+        "p95": 289.221102461,
+        "relativeMAD": 0.0132126059946,
+        "minimum": 263.938061372,
+        "maximum": 289.563148665
       },
       "batchTiming": {
         "count": 25,
-        "median": 291.522139933,
-        "p95": 301.610631466,
-        "relativeMAD": 0.0195928050928,
-        "minimum": 267.042578271,
-        "maximum": 309.644579443
+        "median": 285.194301419,
+        "p95": 297.692103207,
+        "relativeMAD": 0.0304813894268,
+        "minimum": 263.502450911,
+        "maximum": 301.304898414
       },
       "heap": {
         "peakDelta": {
@@ -2485,7 +2899,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 773385
+      "operations": 807240
     },
     "core:sequence:patch-lookup:10000:64": {
       "family": "core-structure",
@@ -2497,19 +2911,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 280.350442372,
-        "p95": 301.083022682,
-        "relativeMAD": 0.0622380171915,
-        "minimum": 262.90198672,
-        "maximum": 301.446597666
+        "median": 290.022044148,
+        "p95": 298.054043636,
+        "relativeMAD": 0.0251825240852,
+        "minimum": 278.393002967,
+        "maximum": 299.886149058
       },
       "batchTiming": {
         "count": 25,
-        "median": 282.248678913,
-        "p95": 308.132255324,
-        "relativeMAD": 0.052976767232,
-        "minimum": 262.277029708,
-        "maximum": 330.863368641
+        "median": 289.518126843,
+        "p95": 305.683022653,
+        "relativeMAD": 0.0243570845054,
+        "minimum": 275.528978057,
+        "maximum": 337.56299496
       },
       "heap": {
         "peakDelta": {
@@ -2531,7 +2945,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 885275
+      "operations": 824000
     },
     "core:sequence:patch-lookup:10000:8": {
       "family": "core-structure",
@@ -2543,19 +2957,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 84.0771834149,
-        "p95": 85.6715046067,
-        "relativeMAD": 0.00677018818282,
-        "minimum": 82.3967937901,
-        "maximum": 86.0092168462
+        "median": 83.1141284515,
+        "p95": 84.2752277007,
+        "relativeMAD": 0.00458793388446,
+        "minimum": 80.7700785407,
+        "maximum": 84.4701719814
       },
       "batchTiming": {
         "count": 25,
-        "median": 84.2399201752,
-        "p95": 87.4617657352,
-        "relativeMAD": 0.0159354333886,
-        "minimum": 81.7267127911,
-        "maximum": 88.3942417608
+        "median": 83.1650367652,
+        "p95": 86.8315522857,
+        "relativeMAD": 0.0103080224798,
+        "minimum": 80.5358500127,
+        "maximum": 87.7336438552
       },
       "heap": {
         "peakDelta": {
@@ -2577,7 +2991,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 1405320
+      "operations": 1599725
     },
     "core:sequence:patch-lookup:100000:1": {
       "family": "core-structure",
@@ -2589,19 +3003,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 30.2416733482,
-        "p95": 31.1402613404,
-        "relativeMAD": 0.031009018929,
-        "minimum": 28.22667,
-        "maximum": 31.1794379695
+        "median": 30.6737106316,
+        "p95": 32.1439041735,
+        "relativeMAD": 0.0223818881173,
+        "minimum": 29.3821958457,
+        "maximum": 32.4742269609
       },
       "batchTiming": {
         "count": 25,
-        "median": 29.9996857867,
-        "p95": 32.432904244,
-        "relativeMAD": 0.0436780495523,
-        "minimum": 26.46667,
-        "maximum": 32.6786690222
+        "median": 30.7664675636,
+        "p95": 32.9188647391,
+        "relativeMAD": 0.0265666298747,
+        "minimum": 28.0970085813,
+        "maximum": 33.1643877287
       },
       "heap": {
         "peakDelta": {
@@ -2623,7 +3037,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 2177885
+      "operations": 1905235
     },
     "core:sequence:patch-lookup:100000:32": {
       "family": "core-structure",
@@ -2635,19 +3049,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 281.914408249,
-        "p95": 306.790652026,
-        "relativeMAD": 0.0468264684199,
-        "minimum": 265.504019652,
-        "maximum": 309.709448936
+        "median": 287.323382266,
+        "p95": 298.024452162,
+        "relativeMAD": 0.00817908510427,
+        "minimum": 264.507961438,
+        "maximum": 300.36324489
       },
       "batchTiming": {
         "count": 25,
-        "median": 283.969431517,
-        "p95": 310.223696507,
-        "relativeMAD": 0.0391279867424,
-        "minimum": 264.982972309,
-        "maximum": 310.749351035
+        "median": 286.9453125,
+        "p95": 301.076537812,
+        "relativeMAD": 0.0124697105829,
+        "minimum": 263.474409662,
+        "maximum": 307.692106396
       },
       "heap": {
         "peakDelta": {
@@ -2669,7 +3083,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 740775
+      "operations": 780090
     },
     "core:sequence:patch-lookup:100000:64": {
       "family": "core-structure",
@@ -2681,19 +3095,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 285.535835988,
-        "p95": 305.562106246,
-        "relativeMAD": 0.0411245469465,
-        "minimum": 268.654081007,
-        "maximum": 307.633040837
+        "median": 287.334253315,
+        "p95": 296.023357157,
+        "relativeMAD": 0.0121512572543,
+        "minimum": 262.648015788,
+        "maximum": 297.545085884
       },
       "batchTiming": {
         "count": 25,
-        "median": 286.806916228,
-        "p95": 309.14161998,
-        "relativeMAD": 0.036510457242,
-        "minimum": 267.229714956,
-        "maximum": 309.551130611
+        "median": 287.334253315,
+        "p95": 300.859914762,
+        "relativeMAD": 0.0121512572554,
+        "minimum": 262.023522509,
+        "maximum": 301.86511688
       },
       "heap": {
         "peakDelta": {
@@ -2715,7 +3129,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 859970
+      "operations": 919620
     },
     "core:sequence:patch-lookup:100000:8": {
       "family": "core-structure",
@@ -2727,19 +3141,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 83.8695756521,
-        "p95": 85.5678720742,
-        "relativeMAD": 0.00846987160573,
-        "minimum": 83.1592111147,
-        "maximum": 85.6775264236
+        "median": 84.9746120122,
+        "p95": 85.5244775628,
+        "relativeMAD": 0.00259820083872,
+        "minimum": 83.6432543477,
+        "maximum": 85.6206312265
       },
       "batchTiming": {
         "count": 25,
-        "median": 85.0441477041,
-        "p95": 87.7567238735,
-        "relativeMAD": 0.0158251785374,
-        "minimum": 82.8838851796,
-        "maximum": 89.0613921518
+        "median": 84.9746120122,
+        "p95": 88.1770589792,
+        "relativeMAD": 0.00648651937403,
+        "minimum": 82.2552509475,
+        "maximum": 88.4592842021
       },
       "heap": {
         "peakDelta": {
@@ -2761,7 +3175,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 1375880
+      "operations": 1374875
     },
     "core:sequence:splice:1000": {
       "family": "core-structure",
@@ -2773,19 +3187,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 390.087861859,
-        "p95": 400.95074313,
-        "relativeMAD": 0.0325491188818,
-        "minimum": 375.242836328,
-        "maximum": 402.784878049
+        "median": 386.586044071,
+        "p95": 400.24489052,
+        "relativeMAD": 0.028782097113,
+        "minimum": 373.569409389,
+        "maximum": 400.877912867
       },
       "batchTiming": {
         "count": 25,
-        "median": 390.087861859,
-        "p95": 536.604616579,
-        "relativeMAD": 0.0355326182199,
-        "minimum": 373.411016949,
-        "maximum": 549.324682203
+        "median": 390.521511018,
+        "p95": 497.923921472,
+        "relativeMAD": 0.0265194145708,
+        "minimum": 371.172135285,
+        "maximum": 547
       },
       "heap": {
         "peakDelta": {
@@ -2798,16 +3212,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": 1600,
-          "p95": 28176,
-          "relativeMAD": 0.03,
+          "median": 1584,
+          "p95": 23267.2,
+          "relativeMAD": 0.020202020202,
           "minimum": 1552,
           "maximum": 28688
         },
         "positivePeakDeltaMedian": 14408,
-        "positiveRetainedDeltaMedian": 1600
+        "positiveRetainedDeltaMedian": 1584
       },
-      "operations": 50250
+      "operations": 49265
     },
     "core:sequence:splice:10000": {
       "family": "core-structure",
@@ -2819,19 +3233,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 371.623129676,
-        "p95": 397.228390312,
-        "relativeMAD": 0.0237276116578,
-        "minimum": 362.805400372,
-        "maximum": 400.903785938
+        "median": 387.639962001,
+        "p95": 403.291998909,
+        "relativeMAD": 0.0279140300658,
+        "minimum": 376.309261301,
+        "maximum": 404.499859748
       },
       "batchTiming": {
         "count": 25,
-        "median": 382.526807809,
-        "p95": 456.638537336,
-        "relativeMAD": 0.0889095506965,
-        "minimum": 297.499068901,
-        "maximum": 474.127182045
+        "median": 387.639962001,
+        "p95": 464.555139042,
+        "relativeMAD": 0.184267903771,
+        "minimum": 301.636185133,
+        "maximum": 475.342337376
       },
       "heap": {
         "peakDelta": {
@@ -2844,16 +3258,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": -6696,
-          "p95": -1329.6,
-          "relativeMAD": 0.00716845878136,
+          "median": 0,
+          "p95": 0,
+          "relativeMAD": 0,
           "minimum": -6792,
           "maximum": 0
         },
         "positivePeakDeltaMedian": 3216,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 87960
+      "operations": 88410
     },
     "core:sequence:splice:100000": {
       "family": "core-structure",
@@ -2865,19 +3279,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 331.254122622,
-        "p95": 355.56669594,
-        "relativeMAD": 0.0236529993589,
-        "minimum": 323.418969072,
-        "maximum": 358.363972097
+        "median": 330.769359565,
+        "p95": 337.940607957,
+        "relativeMAD": 0.0233872783264,
+        "minimum": 320.034849129,
+        "maximum": 338.505154639
       },
       "batchTiming": {
         "count": 25,
-        "median": 331.254122622,
-        "p95": 574.143015722,
-        "relativeMAD": 0.036360719046,
-        "minimum": 315.56932409,
-        "maximum": 628.024329898
+        "median": 335.682421228,
+        "p95": 507.85297845,
+        "relativeMAD": 0.0495562367704,
+        "minimum": 313.819379516,
+        "maximum": 561.910135412
       },
       "heap": {
         "peakDelta": {
@@ -2899,7 +3313,7 @@
         "positivePeakDeltaMedian": 1496,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 57805
+      "operations": 60080
     },
     "core:tree:views:1000": {
       "family": "core-structure",
@@ -2910,19 +3324,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 23.2893652103,
-        "p95": 23.5271481162,
-        "relativeMAD": 0.011337674948,
-        "minimum": 21.4158311345,
-        "maximum": 23.5534124628
+        "median": 23.3836448596,
+        "p95": 24.5924081753,
+        "relativeMAD": 0.00173570259229,
+        "minimum": 23.3430578066,
+        "maximum": 24.8193027213
       },
       "batchTiming": {
         "count": 25,
-        "median": 23.360453649,
-        "p95": 49.7765785899,
-        "relativeMAD": 0.0800704614017,
-        "minimum": 21.2179419525,
-        "maximum": 54.6488625125
+        "median": 23.4306887533,
+        "p95": 44.2076036177,
+        "relativeMAD": 0.00956293853771,
+        "minimum": 22.9582781456,
+        "maximum": 50.5359265265
       },
       "heap": {
         "peakDelta": {
@@ -2936,7 +3350,7 @@
         "retainedDelta": {
           "count": 5,
           "median": 0,
-          "p95": 2041.6,
+          "p95": 2552,
           "relativeMAD": 0,
           "minimum": 0,
           "maximum": 2552
@@ -2944,7 +3358,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 52325
+      "operations": 50735
     },
     "core:tree:views:10000": {
       "family": "core-structure",
@@ -2955,19 +3369,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 17.1026430867,
-        "p95": 17.3917117104,
-        "relativeMAD": 0.0145765552749,
-        "minimum": 16.67834795,
-        "maximum": 17.4629798116
+        "median": 17.5485835463,
+        "p95": 41.0126106231,
+        "relativeMAD": 0.0177228698988,
+        "minimum": 17.2375722832,
+        "maximum": 41.06541
       },
       "batchTiming": {
         "count": 25,
-        "median": 17.1066393054,
-        "p95": 18.6385627504,
-        "relativeMAD": 0.0250365573084,
-        "minimum": 16.4201396439,
-        "maximum": 19.1698316059
+        "median": 20.4585794008,
+        "p95": 44.0866212188,
+        "relativeMAD": 0.178075635653,
+        "minimum": 16.6733353199,
+        "maximum": 51.7949105763
       },
       "heap": {
         "peakDelta": {
@@ -2989,7 +3403,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 1999330
+      "operations": 1897940
     },
     "core:tree:views:100000": {
       "family": "core-structure",
@@ -3000,19 +3414,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 19.6737570124,
-        "p95": 36.6805463426,
-        "relativeMAD": 0.0822697143601,
-        "minimum": 18.0552026426,
-        "maximum": 39.1574548032
+        "median": 19.9103791769,
+        "p95": 41.3231915569,
+        "relativeMAD": 0.0882707869993,
+        "minimum": 18.1528743375,
+        "maximum": 43.1881081248
       },
       "batchTiming": {
         "count": 25,
-        "median": 24.3607551425,
-        "p95": 59.5447961277,
-        "relativeMAD": 0.28419999983,
-        "minimum": 17.3420140799,
-        "maximum": 82.9953650058
+        "median": 33.6035850847,
+        "p95": 64.7000845681,
+        "relativeMAD": 0.414804808482,
+        "minimum": 17.1964564878,
+        "maximum": 68.2403972182
       },
       "heap": {
         "peakDelta": {
@@ -3034,7 +3448,7 @@
         "positivePeakDeltaMedian": 600,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 1959805
+      "operations": 1818370
     },
     "core:tree:visible:1000": {
       "family": "core-structure",
@@ -3045,19 +3459,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 30363.8608059,
-        "p95": 30740.1746858,
-        "relativeMAD": 0.00426195187191,
-        "minimum": 30170.2409241,
-        "maximum": 30830.1904762
+        "median": 30365.7243816,
+        "p95": 30565.8623034,
+        "relativeMAD": 0.00521684221358,
+        "minimum": 30207.3111888,
+        "maximum": 30574.8768116
       },
       "batchTiming": {
         "count": 25,
-        "median": 30363.8608059,
-        "p95": 38198.881414,
-        "relativeMAD": 0.00637665555794,
-        "minimum": 30135.1749175,
-        "maximum": 39169.9722222
+        "median": 30493.1779359,
+        "p95": 37476.7136247,
+        "relativeMAD": 0.00571040730315,
+        "minimum": 30190.7062937,
+        "maximum": 39203.2918149
       },
       "heap": {
         "peakDelta": {
@@ -3079,7 +3493,7 @@
         "positivePeakDeltaMedian": 18496,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 6825
+      "operations": 7085
     },
     "core:tree:visible:10000": {
       "family": "core-structure",
@@ -3090,19 +3504,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 288627.777778,
-        "p95": 292551.718181,
-        "relativeMAD": 0.0018191487044,
-        "minimum": 288102.72093,
-        "maximum": 293206.454545
+        "median": 293500,
+        "p95": 295362.2692,
+        "relativeMAD": 0.00689948892675,
+        "minimum": 291438.431818,
+        "maximum": 295725.609756
       },
       "batchTiming": {
         "count": 25,
-        "median": 288826.55814,
-        "p95": 338748.784355,
-        "relativeMAD": 0.00328119990258,
-        "minimum": 287309.116279,
-        "maximum": 339806.209302
+        "median": 292990.853659,
+        "p95": 341489.93101,
+        "relativeMAD": 0.00651725639853,
+        "minimum": 290512.318182,
+        "maximum": 342742.255814
       },
       "heap": {
         "peakDelta": {
@@ -3115,16 +3529,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": 720,
-          "p95": 2296,
-          "relativeMAD": 0,
+          "median": 2296,
+          "p95": 465164.8,
+          "relativeMAD": 0.686411149826,
           "minimum": 720,
-          "maximum": 2296
+          "maximum": 518664
         },
         "positivePeakDeltaMedian": 6400,
-        "positiveRetainedDeltaMedian": 720
+        "positiveRetainedDeltaMedian": 2296
       },
-      "operations": 1095
+      "operations": 1075
     },
     "core:tree:visible:100000": {
       "family": "core-structure",
@@ -3135,19 +3549,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 2885225,
-        "p95": 2918421.72,
-        "relativeMAD": 0.00168097808663,
-        "minimum": 2880375,
-        "maximum": 2924508.4
+        "median": 2946218.75,
+        "p95": 2963629.1,
+        "relativeMAD": 0.00726210502869,
+        "minimum": 2901718.75,
+        "maximum": 2967614.5
       },
       "batchTiming": {
         "count": 25,
-        "median": 2893066.8,
-        "p95": 3451498.4,
-        "relativeMAD": 0.00550671695524,
-        "minimum": 2871700,
-        "maximum": 3488573
+        "median": 2946218.75,
+        "p95": 3499385.55,
+        "relativeMAD": 0.0112184473742,
+        "minimum": 2893510.25,
+        "maximum": 3600020.75
       },
       "heap": {
         "peakDelta": {
@@ -3160,16 +3574,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": 2328,
-          "p95": 197363.2,
-          "relativeMAD": 0.676975945017,
-          "minimum": 752,
-          "maximum": 244584
+          "median": 936,
+          "p95": 211204.8,
+          "relativeMAD": 0.57264957265,
+          "minimum": 400,
+          "maximum": 263424
         },
         "positivePeakDeltaMedian": 2976,
-        "positiveRetainedDeltaMedian": 2328
+        "positiveRetainedDeltaMedian": 936
       },
-      "operations": 115
+      "operations": 100
     },
     "runner:calibration": {
       "family": "runner",
@@ -3179,38 +3593,38 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 172.383709,
-        "p95": 174.6712586,
-        "relativeMAD": 0.0135153896706,
-        "minimum": 169.774083,
-        "maximum": 174.713542
+        "median": 174.117334,
+        "p95": 175.6743,
+        "relativeMAD": 0.00607444402979,
+        "minimum": 172.612916,
+        "maximum": 175.799125
       },
       "batchTiming": {
         "count": 25,
-        "median": 171.787583,
-        "p95": 179.5315084,
-        "relativeMAD": 0.0127007607995,
-        "minimum": 166.172542,
-        "maximum": 180.901042
+        "median": 173.733542,
+        "p95": 177.0983584,
+        "relativeMAD": 0.0134955229313,
+        "minimum": 168.641375,
+        "maximum": 178.318125
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 172440,
-          "p95": 180606.4,
-          "relativeMAD": 0.00222686151705,
-          "minimum": 169784,
-          "maximum": 182552
+          "median": 171528,
+          "p95": 173259.2,
+          "relativeMAD": 0.00932792313791,
+          "minimum": 139624,
+          "maximum": 173304
         },
         "retainedDelta": {
           "count": 5,
           "median": -2560,
           "p95": -2560,
           "relativeMAD": 0,
-          "minimum": -2600,
+          "minimum": -2560,
           "maximum": -2560
         },
-        "positivePeakDeltaMedian": 172440,
+        "positivePeakDeltaMedian": 171528,
         "positiveRetainedDeltaMedian": 0
       },
       "operations": 25000000
@@ -3224,19 +3638,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 4872.47474747,
-        "p95": 4955.69542432,
-        "relativeMAD": 0.0027317168174,
-        "minimum": 4780.1504065,
-        "maximum": 4973.17303823
+        "median": 4873.87784679,
+        "p95": 4945.7555325,
+        "relativeMAD": 0.00236748237086,
+        "minimum": 4859.72709163,
+        "maximum": 4960.84024896
       },
       "batchTiming": {
         "count": 25,
-        "median": 4872.47474747,
-        "p95": 9572.11402276,
-        "relativeMAD": 0.132038054519,
-        "minimum": 4199.69512195,
-        "maximum": 9975.08484849
+        "median": 4873.87784679,
+        "p95": 9889.78441793,
+        "relativeMAD": 0.132087482192,
+        "minimum": 4217.58298755,
+        "maximum": 10017.7629482
       },
       "heap": {
         "peakDelta": {
@@ -3258,7 +3672,7 @@
         "positivePeakDeltaMedian": 1237472,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 12220
+      "operations": 12285
     },
     "tabular:grid-profile:move:10000": {
       "family": "tabular-profile",
@@ -3269,41 +3683,41 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 4103.65927528,
-        "p95": 4145.31880786,
-        "relativeMAD": 0.00340106728014,
-        "minimum": 4089.70245399,
-        "maximum": 4146.27239199
+        "median": 4116.7579235,
+        "p95": 4145.57017548,
+        "relativeMAD": 0.00288105516535,
+        "minimum": 4101.23343685,
+        "maximum": 4151.1517341
       },
       "batchTiming": {
         "count": 25,
-        "median": 4125.54899895,
-        "p95": 4831.40936901,
-        "relativeMAD": 0.011425490831,
-        "minimum": 4047.2512364,
-        "maximum": 4885.29557429
+        "median": 4121.30684008,
+        "p95": 4794.45361566,
+        "relativeMAD": 0.0142835887518,
+        "minimum": 4052.59562842,
+        "maximum": 4826.3431694
       },
       "heap": {
         "peakDelta": {
           "count": 5,
           "median": 1237472,
-          "p95": 1237472,
+          "p95": 1240249.6,
           "relativeMAD": 0,
-          "minimum": 1233832,
-          "maximum": 1237472
+          "minimum": 1237048,
+          "maximum": 1240944
         },
         "retainedDelta": {
           "count": 5,
-          "median": -1080,
-          "p95": 8281.6,
-          "relativeMAD": 0.474074074074,
-          "minimum": -1592,
+          "median": -808,
+          "p95": 10352,
+          "relativeMAD": 13.8118811881,
+          "minimum": -62976,
           "maximum": 10352
         },
         "positivePeakDeltaMedian": 1237472,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 48130
+      "operations": 48370
     },
     "tabular:grid-profile:move:100000": {
       "family": "tabular-profile",
@@ -3314,19 +3728,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 4183.59423952,
-        "p95": 4207.32426343,
-        "relativeMAD": 0.00289499847179,
-        "minimum": 4171.48274059,
-        "maximum": 4208.24962406
+        "median": 4194.94818653,
+        "p95": 4288.84857382,
+        "relativeMAD": 0.00642260235216,
+        "minimum": 4114.7439085,
+        "maximum": 4306.03070684
       },
       "batchTiming": {
         "count": 25,
-        "median": 4183.59423952,
-        "p95": 4583.34647518,
-        "relativeMAD": 0.0223131404709,
-        "minimum": 3995.53195985,
-        "maximum": 4629.50353069
+        "median": 4194.94818653,
+        "p95": 4638.82012534,
+        "relativeMAD": 0.0306521517788,
+        "minimum": 4024.42975635,
+        "maximum": 4680.86095017
       },
       "heap": {
         "peakDelta": {
@@ -3342,13 +3756,13 @@
           "median": -744,
           "p95": -744,
           "relativeMAD": 0,
-          "minimum": -800,
+          "minimum": -992,
           "maximum": -744
         },
         "positivePeakDeltaMedian": 1233832,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 48100
+      "operations": 47560
     },
     "tabular:resolve:cold:1000": {
       "family": "tabular-resolution",
@@ -3359,41 +3773,41 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 640781.25,
-        "p95": 653798.133334,
-        "relativeMAD": 0.0150329188003,
-        "minimum": 630905.6,
-        "maximum": 656191.666667
+        "median": 642966.125,
+        "p95": 647487.9875,
+        "relativeMAD": 0.00485620451622,
+        "minimum": 639843.75,
+        "maximum": 647682.25
       },
       "batchTiming": {
         "count": 25,
-        "median": 644224,
-        "p95": 971276.64,
-        "relativeMAD": 0.0337729319823,
-        "minimum": 614849,
-        "maximum": 980843.75
+        "median": 642966.125,
+        "p95": 908639.0625,
+        "relativeMAD": 0.0299471323885,
+        "minimum": 612763,
+        "maximum": 931338.933333
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 15987648,
-          "p95": 16016115.2,
-          "relativeMAD": 0.0017458477945,
-          "minimum": 15892288,
-          "maximum": 16020728
+          "median": 15835456,
+          "p95": 16283320,
+          "relativeMAD": 0.00417139866386,
+          "minimum": 15769400,
+          "maximum": 16360952
         },
         "retainedDelta": {
           "count": 5,
-          "median": 28416,
-          "p95": 37523.2,
-          "relativeMAD": 0.322635135135,
-          "minimum": -2016,
-          "maximum": 37584
+          "median": 37312,
+          "p95": 38998.4,
+          "relativeMAD": 0.0098627787307,
+          "minimum": -1864,
+          "maximum": 39328
         },
-        "positivePeakDeltaMedian": 15987648,
-        "positiveRetainedDeltaMedian": 28416
+        "positivePeakDeltaMedian": 15835456,
+        "positiveRetainedDeltaMedian": 37312
       },
-      "operations": 390
+      "operations": 395
     },
     "tabular:resolve:cold:10000": {
       "family": "tabular-resolution",
@@ -3404,39 +3818,39 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 6969819.33333,
-        "p95": 7026955.53333,
-        "relativeMAD": 0.00910076196189,
-        "minimum": 6633027.66667,
-        "maximum": 7033250
+        "median": 6808500,
+        "p95": 7047316.53334,
+        "relativeMAD": 0.0159400749064,
+        "minimum": 6697027.66667,
+        "maximum": 7079888.66667
       },
       "batchTiming": {
         "count": 25,
-        "median": 6894250,
-        "p95": 8482997.2,
-        "relativeMAD": 0.0351903881254,
-        "minimum": 6447319.33333,
-        "maximum": 8598083.33333
+        "median": 6816986,
+        "p95": 8793841.66667,
+        "relativeMAD": 0.0190333381938,
+        "minimum": 6593444.33333,
+        "maximum": 8966000
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 45201064,
-          "p95": 45367121.6,
-          "relativeMAD": 0.00406220526136,
-          "minimum": 44860424,
-          "maximum": 45384680
+          "median": 44847648,
+          "p95": 45533030.4,
+          "relativeMAD": 0.00747990173309,
+          "minimum": 44497728,
+          "maximum": 45657176
         },
         "retainedDelta": {
           "count": 5,
-          "median": 2488,
-          "p95": 4227.2,
-          "relativeMAD": 0.0868167202572,
-          "minimum": -1488,
-          "maximum": 4608
+          "median": 792,
+          "p95": 5472,
+          "relativeMAD": 3.42424242424,
+          "minimum": -1920,
+          "maximum": 5472
         },
-        "positivePeakDeltaMedian": 45201064,
-        "positiveRetainedDeltaMedian": 2488
+        "positivePeakDeltaMedian": 44847648,
+        "positiveRetainedDeltaMedian": 792
       },
       "operations": 75
     },
@@ -3449,38 +3863,38 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 85332292,
-        "p95": 87118108,
-        "relativeMAD": 0.0217214603822,
-        "minimum": 80121042,
-        "maximum": 87539958
+        "median": 82542542,
+        "p95": 84776608.6,
+        "relativeMAD": 0.00616702596826,
+        "minimum": 82033500,
+        "maximum": 85033792
       },
       "batchTiming": {
         "count": 25,
-        "median": 84421958,
-        "p95": 92479975.4,
-        "relativeMAD": 0.0369335191207,
-        "minimum": 79260750,
-        "maximum": 94489083
+        "median": 83747875,
+        "p95": 91565266.8,
+        "relativeMAD": 0.0324694805689,
+        "minimum": 79566292,
+        "maximum": 96209666
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 73789848,
-          "p95": 73877358.4,
-          "relativeMAD": 0.000157853692828,
-          "minimum": 72756944,
-          "maximum": 73898368
+          "median": 73937176,
+          "p95": 73991256,
+          "relativeMAD": 0.000815070351078,
+          "minimum": 73776504,
+          "maximum": 73997440
         },
         "retainedDelta": {
           "count": 5,
-          "median": -2024,
-          "p95": -382.4,
-          "relativeMAD": 0,
+          "median": -152,
+          "p95": 856,
+          "relativeMAD": 2.84210526316,
           "minimum": -2024,
-          "maximum": -296
+          "maximum": 1000
         },
-        "positivePeakDeltaMedian": 73789848,
+        "positivePeakDeltaMedian": 73937176,
         "positiveRetainedDeltaMedian": 0
       },
       "operations": 25
@@ -3494,41 +3908,41 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 604549,
-        "p95": 618106.7375,
-        "relativeMAD": 0.0122478273308,
-        "minimum": 593468.75,
-        "maximum": 620736.9375
+        "median": 602757.8125,
+        "p95": 626653.722059,
+        "relativeMAD": 0.00909708974033,
+        "minimum": 597274.470588,
+        "maximum": 629321.058824
       },
       "batchTiming": {
         "count": 25,
-        "median": 604549,
-        "p95": 891211.45,
-        "relativeMAD": 0.0412532731011,
-        "minimum": 570450.5625,
-        "maximum": 902231.75
+        "median": 611187.5,
+        "p95": 887865.027206,
+        "relativeMAD": 0.0317226710299,
+        "minimum": 571806.411765,
+        "maximum": 900848.9375
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 15772704,
-          "p95": 15982692.8,
-          "relativeMAD": 0.000513799029006,
-          "minimum": 15764600,
-          "maximum": 16004464
+          "median": 15794816,
+          "p95": 15794816,
+          "relativeMAD": 0,
+          "minimum": 15706376,
+          "maximum": 15794816
         },
         "retainedDelta": {
           "count": 5,
-          "median": -2104,
-          "p95": -1904,
-          "relativeMAD": 0.106463878327,
-          "minimum": -2464,
-          "maximum": -1880
+          "median": -2512,
+          "p95": -2081.6,
+          "relativeMAD": 0.0414012738854,
+          "minimum": -11736,
+          "maximum": -2000
         },
-        "positivePeakDeltaMedian": 15772704,
+        "positivePeakDeltaMedian": 15794816,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 410
+      "operations": 415
     },
     "tabular:resolve:invalidate:10000": {
       "family": "tabular-resolution",
@@ -3539,38 +3953,38 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 6851819.33333,
-        "p95": 7192072.4,
-        "relativeMAD": 0.0122250742358,
-        "minimum": 6679500,
-        "maximum": 7256194.66667
+        "median": 7135055.33333,
+        "p95": 7489683.53333,
+        "relativeMAD": 0.0401674530345,
+        "minimum": 6549611.33333,
+        "maximum": 7538236.33333
       },
       "batchTiming": {
         "count": 25,
-        "median": 6872430.66667,
-        "p95": 8949833.46667,
-        "relativeMAD": 0.0394672588428,
-        "minimum": 6500583.33333,
-        "maximum": 9356722.33333
+        "median": 7135055.33333,
+        "p95": 9014922.2,
+        "relativeMAD": 0.0581946432931,
+        "minimum": 6452639,
+        "maximum": 10137750
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 45435304,
-          "p95": 45982350.4,
-          "relativeMAD": 0.00363981277643,
-          "minimum": 45238592,
-          "maximum": 46077768
+          "median": 45339640,
+          "p95": 46178139.2,
+          "relativeMAD": 0.00923624448716,
+          "minimum": 44266304,
+          "maximum": 46283072
         },
         "retainedDelta": {
           "count": 5,
-          "median": -2120,
-          "p95": -1137.6,
-          "relativeMAD": 0.0188679245283,
-          "minimum": -2160,
-          "maximum": -976
+          "median": -1856,
+          "p95": 7937.6,
+          "relativeMAD": 6.34913793103,
+          "minimum": -44896,
+          "maximum": 9928
         },
-        "positivePeakDeltaMedian": 45435304,
+        "positivePeakDeltaMedian": 45339640,
         "positiveRetainedDeltaMedian": 0
       },
       "operations": 75
@@ -3584,38 +3998,38 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 82276958,
-        "p95": 89696308,
-        "relativeMAD": 0.0191305079607,
-        "minimum": 80702958,
-        "maximum": 90719708
+        "median": 84670791,
+        "p95": 85653525.2,
+        "relativeMAD": 0.00432015569572,
+        "minimum": 82469458,
+        "maximum": 85875417
       },
       "batchTiming": {
         "count": 25,
-        "median": 85097750,
-        "p95": 91249475,
-        "relativeMAD": 0.0426103040327,
-        "minimum": 80499583,
-        "maximum": 94612667
+        "median": 84305000,
+        "p95": 96107625.2,
+        "relativeMAD": 0.0291787675701,
+        "minimum": 81146333,
+        "maximum": 96700583
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 73154888,
-          "p95": 73219460.8,
-          "relativeMAD": 0.0000369626702183,
-          "minimum": 72126336,
-          "maximum": 73234928
+          "median": 73185000,
+          "p95": 73231652.8,
+          "relativeMAD": 0.000329575732732,
+          "minimum": 73121144,
+          "maximum": 73242040
         },
         "retainedDelta": {
           "count": 5,
           "median": -2024,
-          "p95": -987.2,
+          "p95": -814.4,
           "relativeMAD": 0,
           "minimum": -2024,
           "maximum": -728
         },
-        "positivePeakDeltaMedian": 73154888,
+        "positivePeakDeltaMedian": 73185000,
         "positiveRetainedDeltaMedian": 0
       },
       "operations": 25
@@ -3629,41 +4043,41 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 607322.2,
-        "p95": 626579.725,
-        "relativeMAD": 0.0165717431373,
-        "minimum": 596088.235294,
-        "maximum": 629794.3125
+        "median": 615674,
+        "p95": 629886.21397,
+        "relativeMAD": 0.0218349118202,
+        "minimum": 597382.352941,
+        "maximum": 630078.470588
       },
       "batchTiming": {
         "count": 25,
-        "median": 612044.25,
-        "p95": 902143.7125,
-        "relativeMAD": 0.0324008435665,
-        "minimum": 570759.823529,
-        "maximum": 978147.266667
+        "median": 625333.3125,
+        "p95": 913163.120588,
+        "relativeMAD": 0.0446976980118,
+        "minimum": 572269.647059,
+        "maximum": 926674.058824
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 15670248,
-          "p95": 15770088,
-          "relativeMAD": 0.00377785980158,
-          "minimum": 15611048,
-          "maximum": 15775416
+          "median": 15751752,
+          "p95": 15754241.6,
+          "relativeMAD": 0.000184868324489,
+          "minimum": 15612248,
+          "maximum": 15754664
         },
         "retainedDelta": {
           "count": 5,
-          "median": -1728,
-          "p95": 10912,
-          "relativeMAD": 0.486111111111,
-          "minimum": -2568,
-          "maximum": 10912
+          "median": -1624,
+          "p95": 10308.8,
+          "relativeMAD": 0.620689655172,
+          "minimum": -2632,
+          "maximum": 10712
         },
-        "positivePeakDeltaMedian": 15670248,
+        "positivePeakDeltaMedian": 15751752,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 400
+      "operations": 420
     },
     "tabular:resolve:warm:10000": {
       "family": "tabular-resolution",
@@ -3674,39 +4088,39 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 6739013.66667,
-        "p95": 7193855.53334,
-        "relativeMAD": 0.027243947321,
-        "minimum": 6554625,
-        "maximum": 7261666.66667
+        "median": 7152708.33333,
+        "p95": 7921377.8,
+        "relativeMAD": 0.0473499898062,
+        "minimum": 6741972.33333,
+        "maximum": 8028875
       },
       "batchTiming": {
         "count": 25,
-        "median": 6920888.66667,
-        "p95": 8860066.73333,
-        "relativeMAD": 0.0528853568227,
-        "minimum": 6448138.66667,
-        "maximum": 8926083.33333
+        "median": 7244569.66667,
+        "p95": 10295552.6,
+        "relativeMAD": 0.0724373828692,
+        "minimum": 6587694.33333,
+        "maximum": 10587805.6667
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 45444952,
-          "p95": 46004899.2,
-          "relativeMAD": 0.0106268348573,
-          "minimum": 44496040,
-          "maximum": 46024152
+          "median": 45081192,
+          "p95": 45839729.6,
+          "relativeMAD": 0.0207458578291,
+          "minimum": 43896432,
+          "maximum": 46016440
         },
         "retainedDelta": {
           "count": 5,
-          "median": -880,
-          "p95": -681.6,
-          "relativeMAD": 0.0454545454545,
-          "minimum": -39000,
-          "maximum": -632
+          "median": 3912,
+          "p95": 11003.2,
+          "relativeMAD": 1.56237218814,
+          "minimum": -44368,
+          "maximum": 11248
         },
-        "positivePeakDeltaMedian": 45444952,
-        "positiveRetainedDeltaMedian": 0
+        "positivePeakDeltaMedian": 45081192,
+        "positiveRetainedDeltaMedian": 3912
       },
       "operations": 75
     },
@@ -3719,28 +4133,28 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 84473500,
-        "p95": 89173458.4,
-        "relativeMAD": 0.0424664776528,
-        "minimum": 80688125,
-        "maximum": 89451625
+        "median": 82299875,
+        "p95": 86417433.8,
+        "relativeMAD": 0.0287095332769,
+        "minimum": 79937084,
+        "maximum": 86452959
       },
       "batchTiming": {
         "count": 25,
-        "median": 85158792,
-        "p95": 96624741.4,
-        "relativeMAD": 0.0449072950682,
-        "minimum": 79784583,
-        "maximum": 99472250
+        "median": 82299875,
+        "p95": 92981708.6,
+        "relativeMAD": 0.028709533277,
+        "minimum": 79744667,
+        "maximum": 108125583
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 73080104,
-          "p95": 73125116.8,
-          "relativeMAD": 0.000657470328723,
-          "minimum": 71890752,
-          "maximum": 73128152
+          "median": 72979192,
+          "p95": 73011744,
+          "relativeMAD": 0.000129900040549,
+          "minimum": 72966984,
+          "maximum": 73018504
         },
         "retainedDelta": {
           "count": 5,
@@ -3750,7 +4164,7 @@
           "minimum": -2024,
           "maximum": -2024
         },
-        "positivePeakDeltaMedian": 73080104,
+        "positivePeakDeltaMedian": 72979192,
         "positiveRetainedDeltaMedian": 0
       },
       "operations": 25
@@ -3765,19 +4179,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 1119.06928839,
-        "p95": 1132.35304658,
-        "relativeMAD": 0.00477856495168,
-        "minimum": 1104.88022814,
-        "maximum": 1134.33709981
+        "median": 1130.23012552,
+        "p95": 1156.52968148,
+        "relativeMAD": 0.000721647177494,
+        "minimum": 1129.41449814,
+        "maximum": 1160.16427105
       },
       "batchTiming": {
         "count": 25,
-        "median": 1123.82297552,
-        "p95": 2065.38878958,
-        "relativeMAD": 0.0168556327754,
-        "minimum": 1072.40304183,
-        "maximum": 2135.43687375
+        "median": 1130.23012552,
+        "p95": 2028.09689676,
+        "relativeMAD": 0.0252975474321,
+        "minimum": 1092.05954825,
+        "maximum": 2075.83682008
       },
       "heap": {
         "peakDelta": {
@@ -3793,13 +4207,13 @@
           "median": 4080,
           "p95": 4080,
           "relativeMAD": 0,
-          "minimum": 4080,
+          "minimum": -3848,
           "maximum": 4080
         },
         "positivePeakDeltaMedian": 31000,
         "positiveRetainedDeltaMedian": 4080
       },
-      "operations": 13090
+      "operations": 12375
     },
     "virtual:linear:measure:1000:1000": {
       "family": "virtual-layout",
@@ -3811,19 +4225,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 43443.4308094,
-        "p95": 43727.0494755,
-        "relativeMAD": 0.00676272206238,
-        "minimum": 43094.4444444,
-        "maximum": 43745.5722071
+        "median": 43567.8963731,
+        "p95": 44014.6306269,
+        "relativeMAD": 0.0054920703527,
+        "minimum": 43328.6184211,
+        "maximum": 44031.3307494
       },
       "batchTiming": {
         "count": 25,
-        "median": 43443.4308094,
-        "p95": 44132.5373409,
-        "relativeMAD": 0.00803312165853,
-        "minimum": 42011.6735219,
-        "maximum": 44405.0103627
+        "median": 43837.2247475,
+        "p95": 44618.7685076,
+        "relativeMAD": 0.00857637256607,
+        "minimum": 42013.7853535,
+        "maximum": 44735.5710594
       },
       "heap": {
         "peakDelta": {
@@ -3831,7 +4245,7 @@
           "median": 1545648,
           "p95": 1545648,
           "relativeMAD": 0,
-          "minimum": 1545648,
+          "minimum": 1545616,
           "maximum": 1545648
         },
         "retainedDelta": {
@@ -3845,7 +4259,7 @@
         "positivePeakDeltaMedian": 1545648,
         "positiveRetainedDeltaMedian": 24
       },
-      "operations": 9425
+      "operations": 9570
     },
     "virtual:linear:measure:1000:32": {
       "family": "virtual-layout",
@@ -3857,19 +4271,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 2213.834375,
-        "p95": 2284.04291638,
-        "relativeMAD": 0.015138196831,
-        "minimum": 2180.32091448,
-        "maximum": 2285.57819905
+        "median": 2304.03288364,
+        "p95": 2338.6484817,
+        "relativeMAD": 0.0184979287069,
+        "minimum": 2150.82698413,
+        "maximum": 2346.65271966
       },
       "batchTiming": {
         "count": 25,
-        "median": 2213.834375,
-        "p95": 2729.13598144,
-        "relativeMAD": 0.0627726091425,
-        "minimum": 2048.74613835,
-        "maximum": 2746.47414372
+        "median": 2304.03288364,
+        "p95": 2744.1067242,
+        "relativeMAD": 0.0895019445204,
+        "minimum": 2049.90079365,
+        "maximum": 2782.96904762
       },
       "heap": {
         "peakDelta": {
@@ -3891,7 +4305,7 @@
         "positivePeakDeltaMedian": 64760,
         "positiveRetainedDeltaMedian": 56
       },
-      "operations": 32240
+      "operations": 29515
     },
     "virtual:linear:measure:10000:1": {
       "family": "virtual-layout",
@@ -3903,19 +4317,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 1391.63459038,
-        "p95": 1495.1798176,
-        "relativeMAD": 0.0863250870742,
-        "minimum": 1237.52083334,
-        "maximum": 1511.76756757
+        "median": 1354.55069124,
+        "p95": 1409.27982313,
+        "relativeMAD": 0.0157834450185,
+        "minimum": 1298.05315204,
+        "maximum": 1417.61723701
       },
       "batchTiming": {
         "count": 25,
-        "median": 1401.90885417,
-        "p95": 1797.38702703,
-        "relativeMAD": 0.0823861911882,
-        "minimum": 1216.95963542,
-        "maximum": 1965.70221066
+        "median": 1354.55069124,
+        "p95": 1559.81210924,
+        "relativeMAD": 0.0744205826081,
+        "minimum": 1202.94635488,
+        "maximum": 1833.01647655
       },
       "heap": {
         "peakDelta": {
@@ -3928,16 +4342,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": 3632,
-          "p95": 3776,
-          "relativeMAD": 0.0396475770925,
-          "minimum": 3304,
-          "maximum": 3776
+          "median": 3776,
+          "p95": 5446.4,
+          "relativeMAD": 0.0381355932203,
+          "minimum": 24,
+          "maximum": 5864
         },
         "positivePeakDeltaMedian": 10344,
-        "positiveRetainedDeltaMedian": 3632
+        "positiveRetainedDeltaMedian": 3776
       },
-      "operations": 18985
+      "operations": 19545
     },
     "virtual:linear:measure:10000:10000": {
       "family": "virtual-layout",
@@ -3949,25 +4363,25 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 454176.526316,
-        "p95": 457656.775249,
-        "relativeMAD": 0.00575056355771,
-        "minimum": 447726.973684,
-        "maximum": 457873.894737
+        "median": 455404.27027,
+        "p95": 458274.220721,
+        "relativeMAD": 0.00254842376052,
+        "minimum": 452127.243243,
+        "maximum": 458701.567568
       },
       "batchTiming": {
         "count": 25,
-        "median": 454176.526316,
-        "p95": 463998.463158,
-        "relativeMAD": 0.0135453108136,
-        "minimum": 441042.717949,
-        "maximum": 468575.459459
+        "median": 456564.833333,
+        "p95": 465563.956757,
+        "relativeMAD": 0.00803733182048,
+        "minimum": 441924.342105,
+        "maximum": 466510.135135
       },
       "heap": {
         "peakDelta": {
           "count": 5,
           "median": 4508376,
-          "p95": 4508408,
+          "p95": 4508401.6,
           "relativeMAD": 0,
           "minimum": 4508376,
           "maximum": 4508408
@@ -3983,7 +4397,7 @@
         "positivePeakDeltaMedian": 4508376,
         "positiveRetainedDeltaMedian": 56
       },
-      "operations": 950
+      "operations": 925
     },
     "virtual:linear:measure:10000:32": {
       "family": "virtual-layout",
@@ -3995,41 +4409,41 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 2633.82286634,
-        "p95": 2733.94049065,
-        "relativeMAD": 0.0199819688874,
-        "minimum": 2536.93830922,
-        "maximum": 2745.81265508
+        "median": 2598.28389513,
+        "p95": 2624.46422629,
+        "relativeMAD": 0.00630125178418,
+        "minimum": 2579.08418891,
+        "maximum": 2627.99127061
       },
       "batchTiming": {
         "count": 25,
-        "median": 2633.82286634,
-        "p95": 3077.59403782,
-        "relativeMAD": 0.0751951500454,
-        "minimum": 2393.97638995,
-        "maximum": 3101.8397272
+        "median": 2601.83767228,
+        "p95": 3102.96275044,
+        "relativeMAD": 0.0710852490892,
+        "minimum": 2367.28031038,
+        "maximum": 3669.82542113
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 20832,
-          "p95": 20976,
-          "relativeMAD": 0.00576036866359,
+          "median": 20712,
+          "p95": 20923.2,
+          "relativeMAD": 0,
           "minimum": 20712,
           "maximum": 20976
         },
         "retainedDelta": {
           "count": 5,
-          "median": 56,
-          "p95": 6219.2,
-          "relativeMAD": 0.571428571429,
-          "minimum": 24,
-          "maximum": 7760
+          "median": 24,
+          "p95": 56,
+          "relativeMAD": 1.33333333333,
+          "minimum": -176,
+          "maximum": 56
         },
-        "positivePeakDeltaMedian": 20832,
-        "positiveRetainedDeltaMedian": 56
+        "positivePeakDeltaMedian": 20712,
+        "positiveRetainedDeltaMedian": 24
       },
-      "operations": 30120
+      "operations": 31820
     },
     "virtual:linear:measure:100000:1": {
       "family": "virtual-layout",
@@ -4041,19 +4455,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 1939.78096948,
-        "p95": 2030.65759163,
-        "relativeMAD": 0.00236458505995,
-        "minimum": 1935.19419238,
-        "maximum": 2052.08333334
+        "median": 1967.88235294,
+        "p95": 1997.40315845,
+        "relativeMAD": 0.00453994470587,
+        "minimum": 1908.49833887,
+        "maximum": 2004.26377952
       },
       "batchTiming": {
         "count": 25,
-        "median": 1939.78096948,
-        "p95": 2235.76932945,
-        "relativeMAD": 0.027489662826,
-        "minimum": 1767.04123712,
-        "maximum": 2399.77319588
+        "median": 1958.94827587,
+        "p95": 2256.59597766,
+        "relativeMAD": 0.0403793712975,
+        "minimum": 1765.64451828,
+        "maximum": 2414.73089701
       },
       "heap": {
         "peakDelta": {
@@ -4066,16 +4480,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": 1424,
-          "p95": 3836.8,
-          "relativeMAD": 2.11797752809,
+          "median": -3416,
+          "p95": 1424,
+          "relativeMAD": 0.416861826698,
           "minimum": -4840,
-          "maximum": 4440
+          "maximum": 1424
         },
         "positivePeakDeltaMedian": 4168,
-        "positiveRetainedDeltaMedian": 1424
+        "positiveRetainedDeltaMedian": 0
       },
-      "operations": 12800
+      "operations": 11210
     },
     "virtual:linear:measure:100000:100000": {
       "family": "virtual-layout",
@@ -4087,25 +4501,25 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 5356614.75,
-        "p95": 5484333.35,
-        "relativeMAD": 0.00832116029998,
-        "minimum": 5215093.75,
-        "maximum": 5516125
+        "median": 5367729.25,
+        "p95": 5596512.45,
+        "relativeMAD": 0.0261710759722,
+        "minimum": 5202416.75,
+        "maximum": 5651833.25
       },
       "batchTiming": {
         "count": 25,
-        "median": 5357166.75,
-        "p95": 5600314.45,
-        "relativeMAD": 0.0292754094317,
-        "minimum": 5026895.75,
-        "maximum": 5661791.5
+        "median": 5367729.25,
+        "p95": 5742443.65,
+        "relativeMAD": 0.0299377991168,
+        "minimum": 5034093.75,
+        "maximum": 5802052
       },
       "heap": {
         "peakDelta": {
           "count": 5,
           "median": 15229448,
-          "p95": 15230872,
+          "p95": 15230587.2,
           "relativeMAD": 0,
           "minimum": 15229448,
           "maximum": 15230872
@@ -4113,10 +4527,10 @@
         "retainedDelta": {
           "count": 5,
           "median": 56,
-          "p95": 1195.2,
-          "relativeMAD": 1.57142857143,
-          "minimum": -32,
-          "maximum": 1480
+          "p95": 1448,
+          "relativeMAD": 1,
+          "minimum": 0,
+          "maximum": 1448
         },
         "positivePeakDeltaMedian": 15229448,
         "positiveRetainedDeltaMedian": 56
@@ -4133,19 +4547,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 2769.30379746,
-        "p95": 2841.27941073,
-        "relativeMAD": 0.00286471983582,
-        "minimum": 2674.97900263,
-        "maximum": 2857.89168766
+        "median": 3056.45799458,
+        "p95": 3344.1142879,
+        "relativeMAD": 0.0577139261926,
+        "minimum": 2880.05780347,
+        "maximum": 3361.07943925
       },
       "batchTiming": {
         "count": 25,
-        "median": 2761.37051794,
-        "p95": 3244.79519088,
-        "relativeMAD": 0.0360152793489,
-        "minimum": 2625.7664042,
-        "maximum": 3365.86901763
+        "median": 3056.45799458,
+        "p95": 3417.54299065,
+        "relativeMAD": 0.083492857541,
+        "minimum": 2634.3420622,
+        "maximum": 3885.90186916
       },
       "heap": {
         "peakDelta": {
@@ -4159,15 +4573,15 @@
         "retainedDelta": {
           "count": 5,
           "median": 24,
-          "p95": 49.6,
+          "p95": 1124.8,
           "relativeMAD": 0,
           "minimum": 24,
-          "maximum": 56
+          "maximum": 1392
         },
         "positivePeakDeltaMedian": 7752,
         "positiveRetainedDeltaMedian": 24
       },
-      "operations": 10850
+      "operations": 11740
     },
     "virtual:linear:query:1000": {
       "family": "virtual-layout",
@@ -4178,19 +4592,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 7120.042,
-        "p95": 7133.5086,
-        "relativeMAD": 0.00190771346574,
-        "minimum": 7081.667,
-        "maximum": 7135.792
+        "median": 7084.458,
+        "p95": 7125.4662,
+        "relativeMAD": 0.000341169359745,
+        "minimum": 7082.041,
+        "maximum": 7132.291
       },
       "batchTiming": {
         "count": 25,
-        "median": 7119.625,
-        "p95": 7358.883,
-        "relativeMAD": 0.00533146057551,
-        "minimum": 7029,
-        "maximum": 7432.208
+        "median": 7084.458,
+        "p95": 7331.5498,
+        "relativeMAD": 0.00473458943509,
+        "minimum": 7032,
+        "maximum": 7374.958
       },
       "heap": {
         "peakDelta": {
@@ -4203,14 +4617,14 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": 5488,
-          "p95": 5488,
+          "median": 5560,
+          "p95": 5560,
           "relativeMAD": 0,
-          "minimum": 5488,
-          "maximum": 5488
+          "minimum": 5560,
+          "maximum": 5560
         },
         "positivePeakDeltaMedian": 12224856,
-        "positiveRetainedDeltaMedian": 5488
+        "positiveRetainedDeltaMedian": 5560
       },
       "operations": 25000
     },
@@ -4223,19 +4637,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 7161.666,
-        "p95": 7544.1582,
-        "relativeMAD": 0.00354889490797,
-        "minimum": 7136.25,
-        "maximum": 7626.458
+        "median": 7135.375,
+        "p95": 7224.6746,
+        "relativeMAD": 0.00470655011124,
+        "minimum": 7092.625,
+        "maximum": 7244.333
       },
       "batchTiming": {
         "count": 25,
-        "median": 7176.25,
-        "p95": 7659.9244,
-        "relativeMAD": 0.00731579864132,
-        "minimum": 7097,
-        "maximum": 9319.333
+        "median": 7146.041,
+        "p95": 7406.9666,
+        "relativeMAD": 0.00782475219486,
+        "minimum": 7056.666,
+        "maximum": 7446.084
       },
       "heap": {
         "peakDelta": {
@@ -4249,10 +4663,10 @@
         "retainedDelta": {
           "count": 5,
           "median": 6216,
-          "p95": 6280,
-          "relativeMAD": 0.010296010296,
-          "minimum": -15848,
-          "maximum": 6280
+          "p95": 6241.6,
+          "relativeMAD": 0.00514800514801,
+          "minimum": -16816,
+          "maximum": 6248
         },
         "positivePeakDeltaMedian": 12262400,
         "positiveRetainedDeltaMedian": 6216
@@ -4268,19 +4682,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 7212.667,
-        "p95": 7263.4582,
-        "relativeMAD": 0.00392836658063,
-        "minimum": 7154.25,
-        "maximum": 7273.708
+        "median": 7252.166,
+        "p95": 7323.6006,
+        "relativeMAD": 0.0122953611376,
+        "minimum": 7129.166,
+        "maximum": 7341.334
       },
       "batchTiming": {
         "count": 25,
-        "median": 7203.083,
-        "p95": 7495.692,
-        "relativeMAD": 0.00760674283534,
-        "minimum": 7139.833,
-        "maximum": 7529.042
+        "median": 7252.166,
+        "p95": 7484.7834,
+        "relativeMAD": 0.0112264391081,
+        "minimum": 7093.333,
+        "maximum": 7861.75
       },
       "heap": {
         "peakDelta": {
@@ -4294,10 +4708,10 @@
         "retainedDelta": {
           "count": 5,
           "median": 6256,
-          "p95": 6256,
+          "p95": 6332.8,
           "relativeMAD": 0,
           "minimum": 6256,
-          "maximum": 6256
+          "maximum": 6352
         },
         "positivePeakDeltaMedian": 12262400,
         "positiveRetainedDeltaMedian": 6256
@@ -4313,19 +4727,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 269720.666667,
-        "p95": 270875.948148,
-        "relativeMAD": 0.00171082345933,
-        "minimum": 268982.142857,
-        "maximum": 271049.407407
+        "median": 268925.925926,
+        "p95": 276600.662316,
+        "relativeMAD": 0.0116355824647,
+        "minimum": 264928.571429,
+        "maximum": 277737.068966
       },
       "batchTiming": {
         "count": 25,
-        "median": 269720.666667,
-        "p95": 366849.666667,
-        "relativeMAD": 0.0243678468766,
-        "minimum": 261099.714286,
-        "maximum": 373131.148148
+        "median": 269696.862069,
+        "p95": 370287.740996,
+        "relativeMAD": 0.0222268374032,
+        "minimum": 261830.357143,
+        "maximum": 372220.666667
       },
       "heap": {
         "peakDelta": {
@@ -4338,16 +4752,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": -9928,
-          "p95": 72875.2,
-          "relativeMAD": 0.2070910556,
-          "minimum": -13088,
-          "maximum": 93328
+          "median": -13088,
+          "p95": -10185.6,
+          "relativeMAD": 0.0654034229829,
+          "minimum": -13944,
+          "maximum": -9760
         },
         "positivePeakDeltaMedian": 6407976,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 685
+      "operations": 695
     },
     "virtual:spatial:build:10000": {
       "family": "virtual-layout",
@@ -4358,19 +4772,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 4981291.66667,
-        "p95": 5124886.75,
-        "relativeMAD": 0.00928474040367,
-        "minimum": 4935041.66667,
-        "maximum": 5135486
+        "median": 4932375,
+        "p95": 5110313.86667,
+        "relativeMAD": 0.00660324218455,
+        "minimum": 4899805.33333,
+        "maximum": 5118781.25
       },
       "batchTiming": {
         "count": 25,
-        "median": 5053389,
-        "p95": 6397128,
-        "relativeMAD": 0.0215436116238,
-        "minimum": 4902569.33333,
-        "maximum": 6412263.66667
+        "median": 4964708.33333,
+        "p95": 6319029.16667,
+        "relativeMAD": 0.0156325396759,
+        "minimum": 4881291.5,
+        "maximum": 6403236
       },
       "heap": {
         "peakDelta": {
@@ -4392,7 +4806,7 @@
         "positivePeakDeltaMedian": 21333760,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 85
+      "operations": 90
     },
     "virtual:spatial:build:100000": {
       "family": "virtual-layout",
@@ -4403,28 +4817,28 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 53052334,
-        "p95": 56708150,
-        "relativeMAD": 0.0181087037566,
-        "minimum": 52091625,
-        "maximum": 56934375
+        "median": 53787084,
+        "p95": 54763617,
+        "relativeMAD": 0.0146379565771,
+        "minimum": 52815500,
+        "maximum": 54810917
       },
       "batchTiming": {
         "count": 25,
-        "median": 53052334,
-        "p95": 58072975.4,
-        "relativeMAD": 0.0421682861304,
-        "minimum": 49101792,
-        "maximum": 62918584
+        "median": 53787084,
+        "p95": 58222249.4,
+        "relativeMAD": 0.0225697120892,
+        "minimum": 49142041,
+        "maximum": 60635291
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 65838712,
-          "p95": 65896609.6,
-          "relativeMAD": 0.000955790265156,
-          "minimum": 65698360,
-          "maximum": 65901640
+          "median": 65900488,
+          "p95": 65904510.4,
+          "relativeMAD": 0.0000699236096704,
+          "minimum": 65797384,
+          "maximum": 65905096
         },
         "retainedDelta": {
           "count": 5,
@@ -4434,7 +4848,7 @@
           "minimum": -10944,
           "maximum": -10944
         },
-        "positivePeakDeltaMedian": 65838712,
+        "positivePeakDeltaMedian": 65900488,
         "positiveRetainedDeltaMedian": 0
       },
       "operations": 25
@@ -4449,19 +4863,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 145549.567568,
-        "p95": 146717.321053,
-        "relativeMAD": 0.00804418170774,
-        "minimum": 141996.621622,
-        "maximum": 146720.394737
+        "median": 145253.289474,
+        "p95": 148381.10961,
+        "relativeMAD": 0.00894629421272,
+        "minimum": 143953.810811,
+        "maximum": 148808.567568
       },
       "batchTiming": {
         "count": 25,
-        "median": 144315.324324,
-        "p95": 248570.962162,
-        "relativeMAD": 0.0165588928456,
-        "minimum": 141018,
-        "maximum": 252461.72973
+        "median": 146671.277778,
+        "p95": 252094.070871,
+        "relativeMAD": 0.0216367400092,
+        "minimum": 142938.054054,
+        "maximum": 274257.891892
       },
       "heap": {
         "peakDelta": {
@@ -4474,16 +4888,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": 232936,
-          "p95": 453331.2,
-          "relativeMAD": 0.389325823402,
-          "minimum": 3328,
-          "maximum": 500816
+          "median": 3536,
+          "p95": 3536,
+          "relativeMAD": 0,
+          "minimum": 1864,
+          "maximum": 3536
         },
         "positivePeakDeltaMedian": 3435992,
-        "positiveRetainedDeltaMedian": 232936
+        "positiveRetainedDeltaMedian": 3536
       },
-      "operations": 935
+      "operations": 925
     },
     "virtual:spatial:measure:1000:1000": {
       "family": "virtual-layout",
@@ -4495,19 +4909,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 307069.852941,
-        "p95": 321628.305546,
-        "relativeMAD": 0.0146905642765,
-        "minimum": 302558.823529,
-        "maximum": 323030.617647
+        "median": 309196.088235,
+        "p95": 330119.576114,
+        "relativeMAD": 0.00678952353176,
+        "minimum": 307096.794118,
+        "maximum": 332838.235294
       },
       "batchTiming": {
         "count": 25,
-        "median": 312426.470588,
-        "p95": 411513.005882,
-        "relativeMAD": 0.0324507413509,
-        "minimum": 301788,
-        "maximum": 418606.617647
+        "median": 329882.352941,
+        "p95": 421984.117112,
+        "relativeMAD": 0.0732265691868,
+        "minimum": 301450.970588,
+        "maximum": 458020.852941
       },
       "heap": {
         "peakDelta": {
@@ -4520,16 +4934,16 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": 904,
-          "p95": 3184,
-          "relativeMAD": 0.0442477876106,
-          "minimum": 624,
-          "maximum": 3744
+          "median": 936,
+          "p95": 289436.8,
+          "relativeMAD": 0.692307692308,
+          "minimum": 288,
+          "maximum": 340328
         },
         "positivePeakDeltaMedian": 5530240,
-        "positiveRetainedDeltaMedian": 904
+        "positiveRetainedDeltaMedian": 936
       },
-      "operations": 855
+      "operations": 850
     },
     "virtual:spatial:measure:1000:32": {
       "family": "virtual-layout",
@@ -4541,19 +4955,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 159340.485714,
-        "p95": 161042.302467,
-        "relativeMAD": 0.00285986071875,
-        "minimum": 158884.794118,
-        "maximum": 161224.451613
+        "median": 160658.84375,
+        "p95": 166434.67742,
+        "relativeMAD": 0.00600534945653,
+        "minimum": 158427.083333,
+        "maximum": 167858.870968
       },
       "batchTiming": {
         "count": 25,
-        "median": 160313.705882,
-        "p95": 279059.798672,
-        "relativeMAD": 0.00968523846445,
-        "minimum": 157636.914286,
-        "maximum": 291275
+        "median": 160931,
+        "p95": 287396.774194,
+        "relativeMAD": 0.0186011396189,
+        "minimum": 157276.870968,
+        "maximum": 310466.125
       },
       "heap": {
         "peakDelta": {
@@ -4561,21 +4975,21 @@
           "median": 3502056,
           "p95": 3502056,
           "relativeMAD": 0,
-          "minimum": 3502056,
+          "minimum": 3501912,
           "maximum": 3502056
         },
         "retainedDelta": {
           "count": 5,
           "median": 1656,
-          "p95": 162771.2,
-          "relativeMAD": 0.570048309179,
-          "minimum": 608,
-          "maximum": 202872
+          "p95": 3600,
+          "relativeMAD": 0.695652173913,
+          "minimum": 504,
+          "maximum": 3600
         },
         "positivePeakDeltaMedian": 3502056,
         "positiveRetainedDeltaMedian": 1656
       },
-      "operations": 820
+      "operations": 810
     },
     "virtual:spatial:measure:10000:1": {
       "family": "virtual-layout",
@@ -4587,25 +5001,25 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 3528802.25,
-        "p95": 3637137.5,
-        "relativeMAD": 0.00987119638115,
-        "minimum": 3493968.75,
-        "maximum": 3654656.25
+        "median": 3521854.25,
+        "p95": 3615777.05,
+        "relativeMAD": 0.0052588348879,
+        "minimum": 3503333.4,
+        "maximum": 3631375
       },
       "batchTiming": {
         "count": 25,
-        "median": 3567062.5,
-        "p95": 4734323.05,
-        "relativeMAD": 0.0204913006149,
-        "minimum": 3464323,
-        "maximum": 4865948
+        "median": 3553385.25,
+        "p95": 4832627.05,
+        "relativeMAD": 0.0137397851809,
+        "minimum": 3498133.2,
+        "maximum": 4842666.75
       },
       "heap": {
         "peakDelta": {
           "count": 5,
           "median": 11246024,
-          "p95": 11246113.6,
+          "p95": 11246116.8,
           "relativeMAD": 0,
           "minimum": 11246024,
           "maximum": 11246136
@@ -4614,14 +5028,14 @@
           "count": 5,
           "median": -936,
           "p95": -776,
-          "relativeMAD": 0.034188034188,
-          "minimum": -1064,
+          "relativeMAD": 0,
+          "minimum": -15664,
           "maximum": -736
         },
         "positivePeakDeltaMedian": 11246024,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 100
+      "operations": 105
     },
     "virtual:spatial:measure:10000:10000": {
       "family": "virtual-layout",
@@ -4633,19 +5047,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 3547427,
-        "p95": 3720815.08,
-        "relativeMAD": 0.0446420743824,
-        "minimum": 3377683.2,
-        "maximum": 3744010.5
+        "median": 3376058.4,
+        "p95": 3509149.22,
+        "relativeMAD": 0.00540692661004,
+        "minimum": 3353516.8,
+        "maximum": 3537858.4
       },
       "batchTiming": {
         "count": 25,
-        "median": 3646520.75,
-        "p95": 4546989.55,
-        "relativeMAD": 0.0757605314601,
-        "minimum": 3354933.4,
-        "maximum": 4729145.75
+        "median": 3396058.2,
+        "p95": 4401838.44,
+        "relativeMAD": 0.0251860230193,
+        "minimum": 3310525,
+        "maximum": 4493489.5
       },
       "heap": {
         "peakDelta": {
@@ -4667,7 +5081,7 @@
         "positivePeakDeltaMedian": 18062504,
         "positiveRetainedDeltaMedian": 0
       },
-      "operations": 110
+      "operations": 120
     },
     "virtual:spatial:measure:10000:32": {
       "family": "virtual-layout",
@@ -4679,19 +5093,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 3620218.75,
-        "p95": 3915627,
-        "relativeMAD": 0.000785518830872,
-        "minimum": 3617375,
-        "maximum": 3981020.75
+        "median": 3698229,
+        "p95": 3721137.4,
+        "relativeMAD": 0.00731208099877,
+        "minimum": 3618635.5,
+        "maximum": 3725270.75
       },
       "batchTiming": {
         "count": 25,
-        "median": 3658656.25,
-        "p95": 4930835.35,
-        "relativeMAD": 0.0118753982423,
-        "minimum": 3601750,
-        "maximum": 5020229.25
+        "median": 3662937.5,
+        "p95": 4889600,
+        "relativeMAD": 0.0122482979848,
+        "minimum": 3607062.5,
+        "maximum": 5017177
       },
       "heap": {
         "peakDelta": {
@@ -4704,9 +5118,9 @@
         },
         "retainedDelta": {
           "count": 5,
-          "median": -3088,
+          "median": -32,
           "p95": -32,
-          "relativeMAD": 0.0103626943005,
+          "relativeMAD": 0,
           "minimum": -3120,
           "maximum": -32
         },
@@ -4725,38 +5139,38 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 35244125,
-        "p95": 36395291.4,
-        "relativeMAD": 0.0112524569698,
-        "minimum": 34847542,
-        "maximum": 36448833
+        "median": 35028542,
+        "p95": 35837833.6,
+        "relativeMAD": 0.0227802230535,
+        "minimum": 34144333,
+        "maximum": 35840667
       },
       "batchTiming": {
         "count": 25,
-        "median": 35723459,
-        "p95": 40842233.2,
-        "relativeMAD": 0.045080097087,
-        "minimum": 33984417,
-        "maximum": 42366083
+        "median": 35028542,
+        "p95": 40623791.6,
+        "relativeMAD": 0.02910483685,
+        "minimum": 33791833,
+        "maximum": 40780792
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 35193704,
-          "p95": 35257475.2,
-          "relativeMAD": 0.00139320373894,
-          "minimum": 35053312,
-          "maximum": 35261160
+          "median": 35174000,
+          "p95": 35208222.4,
+          "relativeMAD": 0.00114334451584,
+          "minimum": 35062448,
+          "maximum": 35214216
         },
         "retainedDelta": {
           "count": 5,
-          "median": -5528,
-          "p95": -224,
-          "relativeMAD": 0.976845151954,
+          "median": -10928,
+          "p95": -5528,
+          "relativeMAD": 0,
           "minimum": -10928,
-          "maximum": -32
+          "maximum": -5528
         },
-        "positivePeakDeltaMedian": 35193704,
+        "positivePeakDeltaMedian": 35174000,
         "positiveRetainedDeltaMedian": 0
       },
       "operations": 25
@@ -4771,28 +5185,28 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 52223500,
-        "p95": 54251658.6,
-        "relativeMAD": 0.011051059389,
-        "minimum": 51643875,
-        "maximum": 54614417
+        "median": 51357709,
+        "p95": 56950549.6,
+        "relativeMAD": 0.0425812413089,
+        "minimum": 48610291,
+        "maximum": 57956708
       },
       "batchTiming": {
         "count": 25,
-        "median": 52421417,
-        "p95": 84507733.2,
-        "relativeMAD": 0.0424325614853,
-        "minimum": 46929958,
-        "maximum": 88889417
+        "median": 50580708,
+        "p95": 83472633.6,
+        "relativeMAD": 0.0803081285459,
+        "minimum": 44395459,
+        "maximum": 85408875
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 54749928,
-          "p95": 54759240,
-          "relativeMAD": 0.0000438356740853,
-          "minimum": 54737016,
-          "maximum": 54760968
+          "median": 54749352,
+          "p95": 54773169.6,
+          "relativeMAD": 0.0000745214299523,
+          "minimum": 54738888,
+          "maximum": 54778104
         },
         "retainedDelta": {
           "count": 5,
@@ -4802,7 +5216,7 @@
           "minimum": 0,
           "maximum": 0
         },
-        "positivePeakDeltaMedian": 54749928,
+        "positivePeakDeltaMedian": 54749352,
         "positiveRetainedDeltaMedian": 0
       },
       "operations": 25
@@ -4817,28 +5231,28 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 36044459,
-        "p95": 37633841.6,
-        "relativeMAD": 0.0104800851637,
-        "minimum": 35556292,
-        "maximum": 37936750
+        "median": 35534667,
+        "p95": 36415641.2,
+        "relativeMAD": 0.00693103441774,
+        "minimum": 35288375,
+        "maximum": 36527041
       },
       "batchTiming": {
         "count": 25,
-        "median": 36044459,
-        "p95": 41127841,
-        "relativeMAD": 0.0281296218096,
-        "minimum": 34830833,
-        "maximum": 41690167
+        "median": 36258833,
+        "p95": 41291166.2,
+        "relativeMAD": 0.0316934359139,
+        "minimum": 34886500,
+        "maximum": 41413791
       },
       "heap": {
         "peakDelta": {
           "count": 5,
-          "median": 35059928,
-          "p95": 35251448,
-          "relativeMAD": 0.000475072281951,
-          "minimum": 34985480,
-          "maximum": 35296664
+          "median": 34958696,
+          "p95": 35361915.2,
+          "relativeMAD": 0.00182890116954,
+          "minimum": 34894760,
+          "maximum": 35424728
         },
         "retainedDelta": {
           "count": 5,
@@ -4848,7 +5262,7 @@
           "minimum": -3088,
           "maximum": 0
         },
-        "positivePeakDeltaMedian": 35059928,
+        "positivePeakDeltaMedian": 34958696,
         "positiveRetainedDeltaMedian": 0
       },
       "operations": 25
@@ -4862,19 +5276,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 475.542,
-        "p95": 490.917000001,
-        "relativeMAD": 0.0113028922787,
-        "minimum": 467,
-        "maximum": 493.417000001
+        "median": 476.458,
+        "p95": 698.633199999,
+        "relativeMAD": 0.0154809028288,
+        "minimum": 443.792,
+        "maximum": 752.332999999
       },
       "batchTiming": {
         "count": 25,
-        "median": 475.542,
-        "p95": 831.7666,
-        "relativeMAD": 0.0399523070515,
-        "minimum": 441.500000001,
-        "maximum": 928.791
+        "median": 483.834,
+        "p95": 850.3912,
+        "relativeMAD": 0.0590781135673,
+        "minimum": 439.25,
+        "maximum": 904.167
       },
       "heap": {
         "peakDelta": {
@@ -4882,7 +5296,7 @@
           "median": 1224816,
           "p95": 1224816,
           "relativeMAD": 0,
-          "minimum": 1223792,
+          "minimum": 1224816,
           "maximum": 1224816
         },
         "retainedDelta": {
@@ -4890,7 +5304,7 @@
           "median": 3096,
           "p95": 3121.6,
           "relativeMAD": 0,
-          "minimum": -968,
+          "minimum": 3096,
           "maximum": 3128
         },
         "positivePeakDeltaMedian": 1224816,
@@ -4907,39 +5321,39 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 1229.458,
-        "p95": 1274.0328,
-        "relativeMAD": 0.0198258094217,
-        "minimum": 1031.958,
-        "maximum": 1283.666
+        "median": 1242.625,
+        "p95": 1264.1496,
+        "relativeMAD": 0.0185759983905,
+        "minimum": 1161.334,
+        "maximum": 1265.708
       },
       "batchTiming": {
         "count": 25,
-        "median": 1229.458,
-        "p95": 1507.0162,
-        "relativeMAD": 0.0602574467773,
-        "minimum": 1014.5,
-        "maximum": 1632.25
+        "median": 1242.375,
+        "p95": 1537.1248,
+        "relativeMAD": 0.0435657510821,
+        "minimum": 1061.666,
+        "maximum": 1672.167
       },
       "heap": {
         "peakDelta": {
           "count": 5,
           "median": 1771224,
-          "p95": 1776849.6,
+          "p95": 1778256,
           "relativeMAD": 0,
-          "minimum": 1754272,
+          "minimum": 1771224,
           "maximum": 1778256
         },
         "retainedDelta": {
           "count": 5,
-          "median": 8520,
-          "p95": 13992,
-          "relativeMAD": 0.0037558685446,
-          "minimum": -1120,
-          "maximum": 15360
+          "median": 8488,
+          "p95": 8513.6,
+          "relativeMAD": 0.00377002827521,
+          "minimum": -1176,
+          "maximum": 8520
         },
         "positivePeakDeltaMedian": 1771224,
-        "positiveRetainedDeltaMedian": 8520
+        "positiveRetainedDeltaMedian": 8488
       },
       "operations": 25000
     },
@@ -4952,19 +5366,19 @@
       "unit": "nanoseconds-per-operation",
       "timing": {
         "count": 5,
-        "median": 2374.166,
-        "p95": 2435.4494,
-        "relativeMAD": 0.0313267901234,
-        "minimum": 2247.167,
-        "maximum": 2448.541
+        "median": 2280.75,
+        "p95": 2395.8172,
+        "relativeMAD": 0.026727173079,
+        "minimum": 2219.792,
+        "maximum": 2408.959
       },
       "batchTiming": {
         "count": 25,
-        "median": 2374.166,
-        "p95": 4483.0752,
-        "relativeMAD": 0.0564408722902,
-        "minimum": 2212.667,
-        "maximum": 5236.292
+        "median": 2324.5,
+        "p95": 4891.4254,
+        "relativeMAD": 0.049060873305,
+        "minimum": 2160.333,
+        "maximum": 5256.917
       },
       "heap": {
         "peakDelta": {
@@ -4978,10 +5392,10 @@
         "retainedDelta": {
           "count": 5,
           "median": 680,
-          "p95": 10979.2,
-          "relativeMAD": 0.494117647059,
-          "minimum": -3920,
-          "maximum": 13472
+          "p95": 10876.8,
+          "relativeMAD": 0.0941176470588,
+          "minimum": 616,
+          "maximum": 13352
         },
         "positivePeakDeltaMedian": 3967904,
         "positiveRetainedDeltaMedian": 680
@@ -4991,14 +5405,14 @@
   },
   "processResources": [
     {
-      "userCPUTime": 54964102,
-      "systemCPUTime": 2347941,
-      "maxRSS": 562768,
+      "userCPUTime": 54156562,
+      "systemCPUTime": 1331955,
+      "maxRSS": 559680,
       "sharedMemorySize": 0,
       "unsharedDataSize": 0,
       "unsharedStackSize": 0,
-      "minorPageFault": 147625,
-      "majorPageFault": 84,
+      "minorPageFault": 179010,
+      "majorPageFault": 81,
       "swappedOut": 0,
       "fsRead": 0,
       "fsWrite": 0,
@@ -5006,52 +5420,52 @@
       "ipcReceived": 0,
       "signalsCount": 0,
       "voluntaryContextSwitches": 1,
-      "involuntaryContextSwitches": 605253
+      "involuntaryContextSwitches": 287340
     },
     {
-      "userCPUTime": 52380665,
-      "systemCPUTime": 1614848,
-      "maxRSS": 555264,
+      "userCPUTime": 53536029,
+      "systemCPUTime": 1652070,
+      "maxRSS": 563264,
       "sharedMemorySize": 0,
       "unsharedDataSize": 0,
       "unsharedStackSize": 0,
-      "minorPageFault": 148280,
-      "majorPageFault": 79,
+      "minorPageFault": 173284,
+      "majorPageFault": 150,
       "swappedOut": 0,
       "fsRead": 0,
       "fsWrite": 0,
       "ipcSent": 0,
       "ipcReceived": 0,
       "signalsCount": 0,
-      "voluntaryContextSwitches": 0,
-      "involuntaryContextSwitches": 380468
+      "voluntaryContextSwitches": 60,
+      "involuntaryContextSwitches": 410675
     },
     {
-      "userCPUTime": 50020910,
-      "systemCPUTime": 1376208,
-      "maxRSS": 548752,
+      "userCPUTime": 56286955,
+      "systemCPUTime": 1678250,
+      "maxRSS": 563536,
       "sharedMemorySize": 0,
       "unsharedDataSize": 0,
       "unsharedStackSize": 0,
-      "minorPageFault": 147203,
-      "majorPageFault": 158,
+      "minorPageFault": 173855,
+      "majorPageFault": 157,
       "swappedOut": 0,
       "fsRead": 0,
       "fsWrite": 0,
       "ipcSent": 0,
       "ipcReceived": 0,
       "signalsCount": 0,
-      "voluntaryContextSwitches": 49,
-      "involuntaryContextSwitches": 314444
+      "voluntaryContextSwitches": 48,
+      "involuntaryContextSwitches": 395748
     },
     {
-      "userCPUTime": 49448677,
-      "systemCPUTime": 1256745,
-      "maxRSS": 556320,
+      "userCPUTime": 54403187,
+      "systemCPUTime": 1478105,
+      "maxRSS": 555920,
       "sharedMemorySize": 0,
       "unsharedDataSize": 0,
       "unsharedStackSize": 0,
-      "minorPageFault": 148272,
+      "minorPageFault": 178026,
       "majorPageFault": 158,
       "swappedOut": 0,
       "fsRead": 0,
@@ -5060,16 +5474,16 @@
       "ipcReceived": 0,
       "signalsCount": 0,
       "voluntaryContextSwitches": 45,
-      "involuntaryContextSwitches": 274021
+      "involuntaryContextSwitches": 331502
     },
     {
-      "userCPUTime": 50064799,
-      "systemCPUTime": 1314964,
-      "maxRSS": 555584,
+      "userCPUTime": 56006909,
+      "systemCPUTime": 1888482,
+      "maxRSS": 552384,
       "sharedMemorySize": 0,
       "unsharedDataSize": 0,
       "unsharedStackSize": 0,
-      "minorPageFault": 148657,
+      "minorPageFault": 174043,
       "majorPageFault": 158,
       "swappedOut": 0,
       "fsRead": 0,
@@ -5077,8 +5491,8 @@
       "ipcSent": 0,
       "ipcReceived": 0,
       "signalsCount": 0,
-      "voluntaryContextSwitches": 44,
-      "involuntaryContextSwitches": 269030
+      "voluntaryContextSwitches": 46,
+      "involuntaryContextSwitches": 478389
     }
   ]
 }

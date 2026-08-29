@@ -14,6 +14,7 @@ try {
     import { createSequence } from '@sectile/core/sequence';
     import { createRange } from '@sectile/core/range';
     import { createIndexSpanSet } from '@sectile/core/index-span';
+    import { createSelectionExpression } from '@sectile/core/selection-expression';
     import { createGrid } from '@sectile/core/grid';
     import { createTree } from '@sectile/core/tree';
     import { unwrap } from '@sectile/core/result';
@@ -26,7 +27,7 @@ try {
     import { createRevisionSnapshot } from '@sectile/core/revision';
     import { createTextEditingState } from '@sectile/core/text';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createIndexSpanSet, createGrid, createTree, unwrap, createSelectionState, createListboxState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState]) {
+    for (const value of [createSequence, createRange, createIndexSpanSet, createSelectionExpression, createGrid, createTree, unwrap, createSelectionState, createListboxState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -38,6 +39,7 @@ try {
     import { createSequence, type Sequence } from '@sectile/core/sequence';
     import { createRange, type QuantizedRange } from '@sectile/core/range';
     import { createIndexSpanSet, type IndexSpanSet } from '@sectile/core/index-span';
+    import { createSelectionExpression, type SelectionExpression } from '@sectile/core/selection-expression';
     import { createGrid, type Grid } from '@sectile/core/grid';
     import { createTree, type Tree } from '@sectile/core/tree';
     import { createSelectionState, type SelectionState } from '@sectile/core/selection';
@@ -51,6 +53,7 @@ try {
     const a: Sequence<string> = createSequence(['a']);
     const b: QuantizedRange = createRange({ origin: '0', step: '1', count: 1 });
     const spanSet: IndexSpanSet = createIndexSpanSet([{ start: 0, endExclusive: 1 }]);
+    const selectionExpression: SelectionExpression<string> = createSelectionExpression('explicit', ['a']);
     const c: Grid<string> = createGrid([['a']]);
     const d: Tree<string> = createTree([{ id: 'a', parentID: null }]);
     const selectionResult = createSelectionState(a, 'multiple');
@@ -78,7 +81,7 @@ try {
     }
     // @ts-expect-error Core codes remain a closed package-local contract
     const unknownCoreCode: CoreErrorCode = 'consumer-invented-error';
-    void [a, b, spanSet, c, d, selection, e, f, g, h, i, j, k, l, unknownCoreCode];
+    void [a, b, spanSet, selectionExpression, c, d, selection, e, f, g, h, i, j, k, l, unknownCoreCode];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
@@ -92,7 +95,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(typecheck.status, 0, `${typecheck.stdout}\n${typecheck.stderr}`);
-  console.log(JSON.stringify({ status: 'passed', subpaths: 15, typeConsumer: 'passed' }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', subpaths: 16, typeConsumer: 'passed' }, null, 2));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

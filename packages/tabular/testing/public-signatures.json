@@ -35,7 +35,7 @@
       "types": "dist/virtual.d.ts"
     }
   ],
-  "fingerprint": "b50b16287ea6c56e6b4d0dc4f27cab543f0aa66fc01d2b5674f17195d4b84160",
+  "fingerprint": "7e6afe9435902c4b1763dbddcd99c93c87d120034e180a187e3feca5cd9d764f",
   "files": [
     {
       "path": "dist/contracts.d.ts",
@@ -47,7 +47,7 @@
     },
     {
       "path": "dist/data-table.d.ts",
-      "sha256": "49c485342d782e6e93b7a277cd680cf84b47db81aa99a96aca0472eba2f50e04"
+      "sha256": "0fcdcbc9f6e7435b0b011e8fd39de2f1f4349057f196e03f448494caf55b0e88"
     },
     {
       "path": "dist/data-tree-grid.d.ts",
@@ -60,6 +60,10 @@
     {
       "path": "dist/internal/grid-profile.d.ts",
       "sha256": "7ffd7f7ef2f02d27552bf04089b4c7a648551df3d562f9f2883e0fbe10a827d0"
+    },
+    {
+      "path": "dist/internal/selection.d.ts",
+      "sha256": "cb036a63b65dd6eb81239f3d579238d5423c8e7b2c776e2c8b4649404eb792a0"
     },
     {
       "path": "dist/model.d.ts",
