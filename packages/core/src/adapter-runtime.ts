@@ -309,30 +309,38 @@ export function createFacadeConnection<
   if (!constructed.ok) return constructed;
   connection = constructed.value;
   const target = connection as Connection & Record<PropertyKey, unknown>;
+  const forwardedMethods = new Map<PropertyKey, (...args: readonly unknown[]) => unknown>();
+  const inactiveUnsubscribe = (): void => undefined;
+  const send = (input: unknown): boolean => active && Boolean(callFirst(target, ['handleEvent', 'handleKeyboardInput', 'handleKeyboardEvent', 'handleBeforeInput'], input));
+  const update = (input: unknown): unknown => active
+    ? callFirst(target, ['syncControlledValues', 'syncControlledValue', 'syncWindow'], input)
+    : destroyedConnectionResult();
+  const subscribe = (listener: FacadeSnapshotListener<Connection>): (() => void) => {
+    if (!active) return inactiveUnsubscribe;
+    subscribers.add(listener);
+    return (): void => { subscribers.delete(listener); };
+  };
+  const destroy = (): void => {
+    if (!active) return;
+    active = false;
+    const disconnect = target['disconnect'];
+    if (typeof disconnect === 'function') Reflect.apply(disconnect, target, []);
+    subscribers.clear();
+  };
   const facade = new Proxy(target, {
     get: (_target, property) => {
       if (property === 'state') return connection?.getSnapshot().state;
-      if (property === 'send') return (input: unknown): boolean => active && Boolean(callFirst(target, ['handleEvent', 'handleKeyboardInput', 'handleKeyboardEvent', 'handleBeforeInput'], input));
-      if (property === 'update') return (input: unknown): unknown => active
-        ? callFirst(target, ['syncControlledValues', 'syncControlledValue', 'syncWindow'], input)
-        : destroyedConnectionResult();
-      if (property === 'subscribe') return (listener: FacadeSnapshotListener<Connection>): (() => void) => {
-        if (!active) return (): void => undefined;
-        subscribers.add(listener);
-        return (): void => { subscribers.delete(listener); };
-      };
-      if (property === 'destroy') return (): void => {
-        if (!active) return;
-        active = false;
-        const disconnect = target['disconnect'];
-        if (typeof disconnect === 'function') Reflect.apply(disconnect, target, []);
-        subscribers.clear();
-      };
+      if (property === 'send') return send;
+      if (property === 'update') return update;
+      if (property === 'subscribe') return subscribe;
+      if (property === 'destroy') return destroy;
       const value = Reflect.get(target, property, target);
       const ownDescriptor = Reflect.getOwnPropertyDescriptor(target, property);
       if (ownDescriptor !== undefined && ownDescriptor.configurable === false) return value;
       if (typeof value !== 'function') return value;
-      return (...args: readonly unknown[]): unknown => {
+      const existing = forwardedMethods.get(property);
+      if (existing !== undefined) return existing;
+      const forwarded = (...args: readonly unknown[]): unknown => {
         if (active || isPostDestroyRead(property)) return Reflect.apply(value, target, args);
         if (typeof property === 'string' && property.startsWith('handle')) return false;
         if (typeof property === 'string' && property.startsWith('sync')) {
@@ -340,6 +348,8 @@ export function createFacadeConnection<
         }
         return undefined;
       };
+      forwardedMethods.set(property, forwarded);
+      return forwarded;
     },
   });
   return { ok: true, value: facade as unknown as FacadeConnection<Connection> };

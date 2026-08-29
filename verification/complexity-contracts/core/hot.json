@@ -56,6 +56,22 @@
       }
     },
     {
+      "id": "adapter.facade-method-read",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": ["core:facade:access"],
+      "specificationCeiling": "O(1) expected",
+      "contract": {
+        "variables": [{ "name": "pMethod", "meaning": "distinct forwarded connection method properties read from one facade", "ceiling": "connection method surface" }],
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(pMethod)" },
+        "resources": { "allocations": "amortized O(1) per distinct method and 0 per repeated read", "cacheEntries": "O(pMethod)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Special facade methods are created once and forwarded connection methods use one owner-local wrapper per property; repeated reads return stable function identity.",
+        "adversarialWitness": "Read every forwarded method once, then repeatedly read the same methods before and after destroy.",
+        "fullScan": { "allowed": false, "rationale": "One property read performs one bounded cache lookup and cannot enumerate the connection surface." }
+      }
+    },
+    {
       "id": "anchored-layout.solve",
       "inherits": "constant-v1",
       "source": "packages/core/src/structures/anchored-layout.ts",
