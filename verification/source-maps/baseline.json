@@ -3,20 +3,20 @@
   "packages": [
     {
       "package": "core",
-      "javascriptFiles": 90,
-      "declarationFiles": 90,
-      "sourceMapFiles": 90,
+      "javascriptFiles": 91,
+      "declarationFiles": 91,
+      "sourceMapFiles": 91,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 398634,
-        "declarations": 148824,
-        "sourceMaps": 420752,
-        "total": 968210
+        "javascript": 416618,
+        "declarations": 150634,
+        "sourceMaps": 439211,
+        "total": 1006463
       },
       "packed": {
-        "tarballBytes": 170304,
-        "unpackedBytes": 982102,
-        "files": 273
+        "tarballBytes": 177070,
+        "unpackedBytes": 1020546,
+        "files": 276
       }
     },
     {

@@ -1370,6 +1370,69 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "core:./metric-index:DEFAULT_MAX_METRIC_COORDINATE_MAGNITUDE",
+      "package": "core",
+      "subpath": "./metric-index",
+      "exportName": "DEFAULT_MAX_METRIC_COORDINATE_MAGNITUDE",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./metric-index:DEFAULT_MAX_METRIC_DIMENSIONS",
+      "package": "core",
+      "subpath": "./metric-index",
+      "exportName": "DEFAULT_MAX_METRIC_DIMENSIONS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./metric-index:DEFAULT_MAX_METRIC_ITEMS",
+      "package": "core",
+      "subpath": "./metric-index",
+      "exportName": "DEFAULT_MAX_METRIC_ITEMS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./metric-index:MAX_METRIC_DIMENSIONS",
+      "package": "core",
+      "subpath": "./metric-index",
+      "exportName": "MAX_METRIC_DIMENSIONS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./metric-index:MAX_METRIC_ITEMS",
+      "package": "core",
+      "subpath": "./metric-index",
+      "exportName": "MAX_METRIC_ITEMS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./metric-index:createMetricIndex",
+      "package": "core",
+      "subpath": "./metric-index",
+      "exportName": "createMetricIndex",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./metric-index:tryCreateMetricIndex",
+      "package": "core",
+      "subpath": "./metric-index",
+      "exportName": "tryCreateMetricIndex",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "core:./multi-thumb-slider:applyMultiThumbSliderEvent",
       "package": "core",
       "subpath": "./multi-thumb-slider",
@@ -19157,6 +19220,239 @@
         "fullScan": {
           "allowed": true,
           "rationale": "An immutable transformed result must inspect and emit every surviving span."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "metric-index.construct",
+      "source": "packages/core/src/structures/metric-index.ts",
+      "benchmarkIDs": [
+        "core:metric-index:construct:2d:packed:1000",
+        "core:metric-index:construct:2d:packed:10000",
+        "core:metric-index:construct:2d:packed:100000",
+        "core:metric-index:construct:2d:indexed:1000",
+        "core:metric-index:construct:2d:indexed:10000",
+        "core:metric-index:construct:2d:indexed:100000"
+      ],
+      "specificationCeiling": "O(x log x * d)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "x",
+            "meaning": "metric point count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "d",
+            "meaning": "fixed vector dimension",
+            "ceiling": "maxDimensions"
+          }
+        ],
+        "time": {
+          "bound": "O(x log x * d)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(x*d)",
+          "output": "O(1)",
+          "retained": "O(x*d + x)"
+        },
+        "resources": {
+          "allocations": "O(x log x * d)",
+          "cacheEntries": "O(x)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Boundary validation and packed storage visit x*d coordinates once. When expectedQueries reaches the frozen low-dimensional crossover, d stable presorts plus balanced level partitions build the private kd index during construction only; otherwise construction remains O(x*d).",
+        "adversarialWitness": "Maximum low-dimensional query-heavy input selects the indexed construction; high-dimensional, small, and low-query inputs retain the packed path.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Construction must validate and retain every externally supplied coordinate."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "metric-index.lookup-distance",
+      "source": "packages/core/src/structures/metric-index.ts",
+      "benchmarkIDs": [
+        "VAL-037:metric-index-lookup-distance-work"
+      ],
+      "specificationCeiling": "O(d)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "d",
+            "meaning": "fixed vector dimension",
+            "ceiling": "maxDimensions"
+          }
+        ],
+        "time": {
+          "bound": "O(d)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(d)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(d)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "ID resolution is one expected constant-time map lookup; coordinate snapshots and squared distance visit exactly d packed coordinates.",
+        "adversarialWitness": "Maximum dimension emits a full immutable snapshot or accumulates every squared component once.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "The explicit vector output or distance lower bound is proportional only to fixed dimension, never point count."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "metric-index.query",
+      "source": "packages/core/src/structures/metric-index.ts",
+      "benchmarkIDs": [
+        "core:metric-index:nearest:2d:indexed:1000",
+        "core:metric-index:nearest:2d:indexed:10000",
+        "core:metric-index:nearest:2d:indexed:100000",
+        "core:metric-index:nearest:2d:packed:1000",
+        "core:metric-index:nearest:2d:packed:10000",
+        "core:metric-index:nearest:2d:packed:100000",
+        "core:metric-index:radius:2d:indexed:1000",
+        "core:metric-index:radius:2d:indexed:10000",
+        "core:metric-index:radius:2d:indexed:100000",
+        "core:metric-index:radius:2d:packed:1000",
+        "core:metric-index:radius:2d:packed:10000",
+        "core:metric-index:radius:2d:packed:100000",
+        "core:metric-index:forward:2d:indexed:1000",
+        "core:metric-index:forward:2d:indexed:10000",
+        "core:metric-index:forward:2d:indexed:100000",
+        "core:metric-index:forward:2d:packed:1000",
+        "core:metric-index:forward:2d:packed:10000",
+        "core:metric-index:forward:2d:packed:100000",
+        "core:metric-index:nearest:32d:1000",
+        "core:metric-index:nearest:32d:10000",
+        "core:metric-index:nearest:32d:100000"
+      ],
+      "specificationCeiling": "O(x*d + rMetric)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "x",
+            "meaning": "indexed point count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "d",
+            "meaning": "fixed vector dimension",
+            "ceiling": "maxDimensions"
+          },
+          {
+            "name": "cMetric",
+            "meaning": "candidates inspected before indexed completion or fallback",
+            "ceiling": "x"
+          },
+          {
+            "name": "rMetric",
+            "meaning": "radius matches emitted in stable domain order",
+            "ceiling": "x"
+          }
+        ],
+        "time": {
+          "bound": "O(x*d + rMetric)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(d + log x + rMetric)",
+          "output": "O(rMetric)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(d + rMetric)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "balanced kd expected work is O(cMetric*d + rMetric) for the selected low-dimensional repeated-query regime"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Packed queries inspect x points. Indexed queries prune by squared axis distance, abort above x/2 candidates, and restart one packed scan; construction performs all index building so no query rebuild is hidden. Radius output is restored to domain order with bounded radix passes.",
+        "adversarialWitness": "Collinear or duplicate coordinates defeat pruning, cross the x/2 threshold, and execute the bounded packed fallback with stable ties.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Exact nearest and radius semantics require a bounded x*d fallback under adversarial geometry."
         }
       }
     },

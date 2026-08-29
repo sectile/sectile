@@ -1299,6 +1299,17 @@
       "rationale": "WI-014 construction paths retain the selected indexes, and repeated Tree/Grid observations return owner-cached immutable views."
     },
     {
+      "detector": "derived-index-construction",
+      "category": "discarded-canonical-index",
+      "path": "packages/core/src/structures/metric-index.ts",
+      "line": 407,
+      "evidence": "new Set(axisOrder.slice(",
+      "rule": "core-residual-reviewed",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Core scans construct, validate, or return the explicit immutable result and are covered by complexity contracts."
+    },
+    {
       "detector": "immutable-view-construction",
       "category": "repeated-immutable-view",
       "path": "packages/core/src/structures/sequence.ts",

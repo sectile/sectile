@@ -489,6 +489,27 @@
       ]
     },
     {
+      "subpath": "./metric-index",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_MAX_METRIC_COORDINATE_MAGNITUDE",
+        "DEFAULT_MAX_METRIC_DIMENSIONS",
+        "DEFAULT_MAX_METRIC_ITEMS",
+        "MAX_METRIC_DIMENSIONS",
+        "MAX_METRIC_ITEMS",
+        "createMetricIndex",
+        "tryCreateMetricIndex"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./multi-thumb-slider",
       "classification": "named-subpath",
       "platform": "browser",

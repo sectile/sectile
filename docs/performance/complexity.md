@@ -8,7 +8,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 294 | 25 | 27 |
+| core | 301 | 25 | 30 |
 | dom | 432 | 190 | 5 |
 | form | 12 | 0 | 2 |
 | tabular | 32 | 0 | 4 |
@@ -40,6 +40,9 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:index-span.contains | trusted | `O(log a)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:index-span.set-algebra | trusted | `O(a + bSpan)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | VAL-016, VAL-017 |
 | core:index-span.transform | trusted | `O(a)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | VAL-016, VAL-017 |
+| core:metric-index.construct | external | `O(x log x * d)` worst-case | `O(x*d)` | `O(1)` | `O(x*d + x)` | allowed | VAL-016, VAL-017 |
+| core:metric-index.lookup-distance | trusted | `O(d)` worst-case | `O(1)` | `O(d)` | `O(1)` | allowed | VAL-016, VAL-017 |
+| core:metric-index.query | trusted | `O(x*d + rMetric)` worst-case | `O(d + log x + rMetric)` | `O(rMetric)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | core:range.arithmetic | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:selection-expression.algebra | trusted | `O(eLeft + eRight)` expected | `O(eLeft + eRight)` | `O(eResult)` | `O(eResult)` | allowed | VAL-016, VAL-017 |
 | core:selection-expression.materialize | trusted | `O(nDomain)` worst-case | `O(1)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |

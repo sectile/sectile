@@ -46,6 +46,11 @@
       "import": "./dist/structures/selection-expression.js",
       "default": "./dist/structures/selection-expression.js"
     },
+    "./metric-index": {
+      "types": "./dist/structures/metric-index.d.ts",
+      "import": "./dist/structures/metric-index.js",
+      "default": "./dist/structures/metric-index.js"
+    },
     "./grid": {
       "types": "./dist/structures/grid.d.ts",
       "import": "./dist/structures/grid.js",

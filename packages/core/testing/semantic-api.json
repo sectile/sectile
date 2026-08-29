@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "ee624de47716ff9fad9bcc64481334cca17ee9745a9fe3d78c97d6ed729cac44",
+    "publicSignatureFingerprint": "59d0205943e037b3ee87c654b622c3315bb82a709da047e903724e8d1efff43a",
     "subpaths": [
       ".",
       "./accordion",
@@ -40,6 +40,7 @@
       "./menubar",
       "./meter",
       "./meter-group",
+      "./metric-index",
       "./multi-thumb-slider",
       "./navigation-menu",
       "./number-field",
@@ -513,7 +514,7 @@
     }
   ],
   "acceptance": {
-    "classification": "type-change-reviewed",
-    "reason": "WI-032"
+    "classification": "minor",
+    "reason": "WI-033-adds-representation-independent-MetricIndex"
   }
 }

@@ -18,6 +18,7 @@ import {
   materializeSelectionExpression,
   unionSelectionExpressions,
 } from '../../packages/core/dist/structures/selection-expression.js';
+import { createMetricIndex } from '../../packages/core/dist/structures/metric-index.js';
 import { createTree } from '../../packages/core/dist/structures/tree.js';
 import {
   createSelectionState,
@@ -53,7 +54,7 @@ import {
 } from '../../packages/virtual/dist/spatial-layout.js';
 
 export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 6,
+  version: 8,
   scales: Object.freeze([1_000, 10_000, 100_000]),
   patchDepths: Object.freeze([1, 8, 32, 64]),
   changedDensities: Object.freeze([1, 32, 'full']),
@@ -145,6 +146,40 @@ export function createWorkloads({ quick = false } = {}) {
         unionSelectionExpressions(expressionLeft, expressionRight).exceptionCount),
       timed(`core:selection-expression:materialize:${size}`, 'core-selection', { size, exceptions: expressionComplement.exceptionCount, operation: 'materialize' }, iterations(size, quick), () =>
         materializeSelectionExpression(expressionComplement, sequence).length),
+    );
+
+    const metric2Points = Object.freeze(ids.map((id, index) => Object.freeze({
+      id,
+      coordinates: Object.freeze([index % 997, Math.floor(index / 997)]),
+    })));
+    const metric2Packed = createMetricIndex(metric2Points, { dimensions: 2, maxItems: size });
+    const metric2 = createMetricIndex(metric2Points, { dimensions: 2, maxItems: size, expectedQueries: 128 });
+    const metric32 = createMetricIndex(ids.map((id, index) => ({
+      id,
+      coordinates: Array.from({ length: 32 }, (_, dimension) => ((index * (dimension + 3)) % 10_007) / 10_007),
+    })), { dimensions: 32, maxItems: size });
+    const metric32Targets = Object.freeze(Array.from({ length: 10 }, (_, target) => Object.freeze(
+      Array.from({ length: 32 }, (_, dimension) => (((target + 1) * (dimension + 5)) % 10_007) / 10_007),
+    )));
+    workloads.push(
+      timed(`core:metric-index:construct:2d:packed:${size}`, 'core-structure', { size, dimensions: 2, operation: 'construct-packed' }, iterations(size, quick), () =>
+        createMetricIndex(metric2Points, { dimensions: 2, maxItems: size }).size),
+      timed(`core:metric-index:construct:2d:indexed:${size}`, 'core-structure', { size, dimensions: 2, operation: 'construct-indexed' }, iterations(size, quick), () =>
+        createMetricIndex(metric2Points, { dimensions: 2, maxItems: size, expectedQueries: 128 }).size),
+      timed(`core:metric-index:nearest:2d:indexed:${size}`, 'core-structure', { size, dimensions: 2, operation: 'nearest-indexed' }, iterations(size, quick), (iteration) =>
+        metric2.nearest([(iteration * 8191) % 997, iteration % Math.ceil(size / 997)])?.squaredDistance ?? -1),
+      timed(`core:metric-index:nearest:2d:packed:${size}`, 'core-structure', { size, dimensions: 2, operation: 'nearest-packed' }, iterations(size, quick), (iteration) =>
+        metric2Packed.nearest([(iteration * 8191) % 997, iteration % Math.ceil(size / 997)])?.squaredDistance ?? -1),
+      timed(`core:metric-index:radius:2d:indexed:${size}`, 'core-structure', { size, dimensions: 2, operation: 'radius-indexed' }, iterations(size, quick), (iteration) =>
+        metric2.withinRadius([(iteration * 8191) % 997, iteration % Math.ceil(size / 997)], 2).length),
+      timed(`core:metric-index:radius:2d:packed:${size}`, 'core-structure', { size, dimensions: 2, operation: 'radius-packed' }, iterations(size, quick), (iteration) =>
+        metric2Packed.withinRadius([(iteration * 8191) % 997, iteration % Math.ceil(size / 997)], 2).length),
+      timed(`core:metric-index:forward:2d:indexed:${size}`, 'core-structure', { size, dimensions: 2, operation: 'forward-indexed' }, iterations(size, quick), (iteration) =>
+        metric2.forwardNearest([(iteration * 8191) % 997, iteration % Math.ceil(size / 997)], [1, 0.25])?.squaredDistance ?? -1),
+      timed(`core:metric-index:forward:2d:packed:${size}`, 'core-structure', { size, dimensions: 2, operation: 'forward-packed' }, iterations(size, quick), (iteration) =>
+        metric2Packed.forwardNearest([(iteration * 8191) % 997, iteration % Math.ceil(size / 997)], [1, 0.25])?.squaredDistance ?? -1),
+      timed(`core:metric-index:nearest:32d:${size}`, 'core-structure', { size, dimensions: 32, operation: 'nearest-packed' }, iterations(size, quick), (iteration) =>
+        metric32.nearest(metric32Targets[iteration % metric32Targets.length])?.squaredDistance ?? -1),
     );
 
     const tree = createTree(Array.from({ length: size }, (_, index) => ({

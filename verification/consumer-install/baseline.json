@@ -2,25 +2,25 @@
   "schemaVersion": 1,
   "packages": {
     "core": {
-      "tarballBytes": 174875,
-      "unpackedBytes": 982101,
-      "unpackedFiles": 273,
+      "tarballBytes": 181531,
+      "unpackedBytes": 1020545,
+      "unpackedFiles": 276,
       "categories": {
         "runtimeJS": {
-          "files": 90,
-          "bytes": 398634
+          "files": 91,
+          "bytes": 416618
         },
         "declarations": {
-          "files": 90,
-          "bytes": 148824
+          "files": 91,
+          "bytes": 150634
         },
         "sourceMaps": {
-          "files": 90,
-          "bytes": 420752
+          "files": 91,
+          "bytes": 439211
         },
         "other": {
           "files": 3,
-          "bytes": 13891
+          "bytes": 14082
         }
       }
     },
@@ -189,8 +189,8 @@
   "installs": [
     {
       "packageManager": "npm",
-      "installedBytes": 22156378,
-      "installedFiles": 1555,
+      "installedBytes": 22194822,
+      "installedFiles": 1558,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -572,8 +572,8 @@
     },
     {
       "packageManager": "pnpm",
-      "installedBytes": 22175839,
-      "installedFiles": 1560,
+      "installedBytes": 22223897,
+      "installedFiles": 1568,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -907,13 +907,13 @@
   "incumbentPerformanceEvidence": {
     "colord": {
       "iterations": 20000,
-      "medianNanoseconds": 2197.0791500000005,
+      "medianNanoseconds": 2366.3791999999994,
       "medianAllocationBytes": 880912,
       "medianRetainedBytes": 56776
     },
     "@floating-ui/dom": {
       "iterations": 50000,
-      "medianNanoseconds": 30.14333999999963,
+      "medianNanoseconds": 33.26584000000025,
       "medianAllocationBytes": 1993776,
       "medianRetainedBytes": 64
     }

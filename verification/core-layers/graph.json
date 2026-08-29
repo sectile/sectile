@@ -386,6 +386,10 @@
       "layer": "structures"
     },
     {
+      "path": "src/structures/metric-index.ts",
+      "layer": "structures"
+    },
+    {
       "path": "src/structures/range.ts",
       "layer": "structures"
     },
@@ -2435,6 +2439,21 @@
       "kind": "import"
     },
     {
+      "source": "src/structures/metric-index.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/metric-index.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/metric-index.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
       "source": "src/structures/range.ts",
       "target": "src/internal/kernel/decimal.ts",
       "kind": "import"
@@ -3106,6 +3125,16 @@
       ]
     },
     {
+      "subpath": "./metric-index",
+      "source": "src/structures/metric-index.ts",
+      "layer": "structures",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
       "subpath": "./multi-thumb-slider",
       "source": "src/multi-thumb-slider.ts",
       "layer": "public",
@@ -3664,7 +3693,7 @@
         "src/result.ts",
         "src/shared.ts"
       ],
-      "transitiveDependentCount": 108,
+      "transitiveDependentCount": 109,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -3692,6 +3721,7 @@
         "./menubar",
         "./meter",
         "./meter-group",
+        "./metric-index",
         "./multi-thumb-slider",
         "./navigation-menu",
         "./number-field",
@@ -4038,6 +4068,7 @@
         "src/spin-button.ts",
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
+        "src/structures/metric-index.ts",
         "src/structures/range.ts",
         "src/structures/selection-expression.ts",
         "src/structures/sequence.ts",
@@ -4048,7 +4079,7 @@
         "src/toggle-group.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 103,
+      "transitiveDependentCount": 104,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4075,6 +4106,7 @@
         "./menubar",
         "./meter",
         "./meter-group",
+        "./metric-index",
         "./multi-thumb-slider",
         "./navigation-menu",
         "./number-field",
@@ -4752,6 +4784,7 @@
         "src/stepper.ts",
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
+        "src/structures/metric-index.ts",
         "src/structures/range.ts",
         "src/structures/selection-expression.ts",
         "src/structures/sequence.ts",
@@ -4766,7 +4799,7 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 97,
+      "transitiveDependentCount": 98,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4794,6 +4827,7 @@
         "./menubar",
         "./meter",
         "./meter-group",
+        "./metric-index",
         "./multi-thumb-slider",
         "./navigation-menu",
         "./number-field",
@@ -4938,6 +4972,7 @@
         "src/stepper.ts",
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
+        "src/structures/metric-index.ts",
         "src/structures/range.ts",
         "src/structures/selection-expression.ts",
         "src/structures/sequence.ts",
@@ -4952,7 +4987,7 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 107,
+      "transitiveDependentCount": 108,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4980,6 +5015,7 @@
         "./menubar",
         "./meter",
         "./meter-group",
+        "./metric-index",
         "./multi-thumb-slider",
         "./navigation-menu",
         "./number-field",
@@ -5068,6 +5104,14 @@
       "transitiveDependentCount": 0,
       "publicSubpaths": [
         "./index-span"
+      ]
+    },
+    {
+      "module": "src/structures/metric-index.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./metric-index"
       ]
     },
     {

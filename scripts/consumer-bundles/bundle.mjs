@@ -63,6 +63,7 @@ function representativeNamedExport(packageName, subpath, surface) {
   const preferred = new Map([
     ['core:./index-span', 'createIndexSpanSet'],
     ['core:./selection-expression', 'createSelectionExpression'],
+    ['core:./metric-index', 'createMetricIndex'],
     ['core:./range', 'createExactRatio'],
   ]).get(`${packageName}:${subpath}`);
   if (preferred !== undefined) {

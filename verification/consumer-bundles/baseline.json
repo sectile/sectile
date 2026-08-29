@@ -302,6 +302,26 @@
       "pair": null
     },
     {
+      "id": "core:./metric-index:named",
+      "package": "core",
+      "subpath": "./metric-index",
+      "source": "@sectile/core/metric-index",
+      "exportName": "createMetricIndex",
+      "mode": "named",
+      "platform": "browser",
+      "pair": null
+    },
+    {
+      "id": "core:./metric-index:side-effect",
+      "package": "core",
+      "subpath": "./metric-index",
+      "source": "@sectile/core/metric-index",
+      "exportName": null,
+      "mode": "side-effect",
+      "platform": "browser",
+      "pair": null
+    },
+    {
       "id": "core:./multi-thumb-slider:side-effect",
       "package": "core",
       "subpath": "./multi-thumb-slider",
@@ -4612,6 +4632,69 @@
       "bundler": "vite",
       "mode": "side-effect",
       "source": "@sectile/core/meter",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
+      "id": "core:./metric-index:named",
+      "bundler": "esbuild",
+      "mode": "named",
+      "source": "@sectile/core/metric-index",
+      "exportName": "createMetricIndex",
+      "platform": "browser",
+      "raw": 9528,
+      "gzip": 3324,
+      "brotli": 2986,
+      "modules": [
+        "@sectile/core/dist/internal/kernel/foundation.js",
+        "@sectile/core/dist/result.js",
+        "@sectile/core/dist/structures/metric-index.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "core:./metric-index:named",
+      "bundler": "vite",
+      "mode": "named",
+      "source": "@sectile/core/metric-index",
+      "exportName": "createMetricIndex",
+      "platform": "browser",
+      "raw": 9665,
+      "gzip": 3342,
+      "brotli": 3000,
+      "modules": [
+        "@sectile/core/dist/internal/kernel/foundation.js",
+        "@sectile/core/dist/result.js",
+        "@sectile/core/dist/shared.js",
+        "@sectile/core/dist/structures/metric-index.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "core:./metric-index:side-effect",
+      "bundler": "esbuild",
+      "mode": "side-effect",
+      "source": "@sectile/core/metric-index",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
+      "id": "core:./metric-index:side-effect",
+      "bundler": "vite",
+      "mode": "side-effect",
+      "source": "@sectile/core/metric-index",
       "exportName": null,
       "platform": "browser",
       "raw": 0,

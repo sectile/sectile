@@ -115,6 +115,10 @@
       "types": "dist/meter-group.d.ts"
     },
     {
+      "subpath": "./metric-index",
+      "types": "dist/structures/metric-index.d.ts"
+    },
+    {
       "subpath": "./multi-thumb-slider",
       "types": "dist/multi-thumb-slider.d.ts"
     },
@@ -259,7 +263,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "d2c8f6326dbfdb5b3cfe9f1bfeacd63db151085f1e55edbf25aea02fb7bf3b75",
+  "fingerprint": "75c63c20dfd68b52766c59a919484539d59754d1dc9d50d666c1d0bd9ca75c46",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -536,6 +540,10 @@
     {
       "path": "dist/structures/index-span.d.ts",
       "sha256": "eb89590b7faabd19420e48422243b15ebbda7565907b3cb52d4d35abc35e1ff7"
+    },
+    {
+      "path": "dist/structures/metric-index.d.ts",
+      "sha256": "a3dccd71ad4986c3f2976365b7937cbce40a5c547dd2462bdaf6680f62ceba11"
     },
     {
       "path": "dist/structures/range.d.ts",

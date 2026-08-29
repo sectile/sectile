@@ -2,7 +2,7 @@
 
 > Generated from `verification/core-layers/manifest.json` and Core source imports.
 
-Modules: 114; edges: 464; public subpaths: 65; cycles: 0; upward edges: 0.
+Modules: 115; edges: 467; public subpaths: 66; cycles: 0; upward edges: 0.
 
 ## Layers
 
@@ -16,16 +16,16 @@ Modules: 114; edges: 464; public subpaths: 65; cycles: 0; upward edges: 0.
 | reference | 24 |
 | runtime | 1 |
 | state | 5 |
-| structures | 6 |
+| structures | 7 |
 
 ## Highest public blast radius
 
 | Module | Transitive dependents | Public subpaths |
 |---|---:|---:|
-| `src/error-code.ts` | 108 | 61 |
-| `src/shared.ts` | 107 | 61 |
-| `src/result.ts` | 97 | 60 |
-| `src/internal/kernel/foundation.ts` | 103 | 59 |
+| `src/error-code.ts` | 109 | 62 |
+| `src/shared.ts` | 108 | 62 |
+| `src/result.ts` | 98 | 61 |
+| `src/internal/kernel/foundation.ts` | 104 | 60 |
 | `src/internal/kernel/machine.ts` | 75 | 45 |
 | `src/internal/kernel/indexed-sequence.ts` | 56 | 30 |
 | `src/structures/sequence.ts` | 55 | 30 |
@@ -75,6 +75,7 @@ Modules: 114; edges: 464; public subpaths: 65; cycles: 0; upward edges: 0.
 | `./menubar` | `src/menubar.ts` | public | `src/internal/composites/menu.ts`, `src/internal/composites/menu.ts`, `src/menu.ts`, `src/menu.ts` |
 | `./meter` | `src/meter.ts` | public | `src/internal/kernel/bounded-scalar.ts`, `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/range.ts` |
 | `./meter-group` | `src/meter-group.ts` | public | `src/internal/kernel/bounded-scalar.ts`, `src/internal/kernel/foundation.ts`, `src/meter.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/range.ts` |
+| `./metric-index` | `src/structures/metric-index.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts` |
 | `./multi-thumb-slider` | `src/multi-thumb-slider.ts` | public | `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/internal/state/cursor.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/range.ts`, `src/structures/sequence.ts` |
 | `./navigation-menu` | `src/navigation-menu.ts` | public | `src/internal/composites/menu.ts`, `src/internal/composites/menu.ts`, `src/menu.ts`, `src/menu.ts`, `src/structures/tree.ts` |
 | `./number-field` | `src/number-field.ts` | public | `src/internal/kernel/decimal.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts`, `src/text.ts` |
