@@ -201,6 +201,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     const elements = new Map<string, HTMLElement>();
     const itemRefs = new Map<string, (value: unknown) => void>();
     const pendingMeasurements = new Set<string>();
+    const forcedMeasurements = new Set<string>();
     let measurementScheduled = false;
     const setRootElement = (value: unknown): void => {
       virtualizer.root.value = value instanceof HTMLElement ? value : null;
@@ -211,13 +212,15 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       if (disposed || pendingMeasurements.size === 0) return;
       const connection = virtualizer.connection.value;
       if (connection === undefined) return;
+      const queued = Array.from(pendingMeasurements);
+      pendingMeasurements.clear();
       const measurements: LinearMeasurement[] = [];
-      for (const id of pendingMeasurements) {
+      for (const id of queued) {
         const element = elements.get(id);
         const index = state.value.domain.indexOf(id);
         if (element === undefined || index === null) continue;
         const current = state.value.extents.extentAt(index);
-        if (current?.kind === 'exact') continue;
+        if (current?.kind === 'exact' && !forcedMeasurements.has(id)) continue;
         const measurement = measureVirtualListElement(
           props.axis,
           id,
@@ -226,15 +229,36 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
         );
         if (measurement !== null) measurements.push(measurement);
       }
-      pendingMeasurements.clear();
+      for (const id of queued) forcedMeasurements.delete(id);
       if (measurements.length > 0) connection.measure(measurements);
     };
-    const scheduleItemMeasurement = (id: string): void => {
+    const scheduleItemMeasurement = (id: string, force = false): void => {
       if (props.itemSize !== undefined) return;
       pendingMeasurements.add(id);
+      if (force) forcedMeasurements.add(id);
       if (measurementScheduled) return;
       measurementScheduled = true;
       void nextTick(measurePendingItems);
+    };
+    const scheduleChangedRenderedItemMeasurements = (
+      previousPrepared: PreparedVirtualList,
+      previousState: LinearLayoutState<string>,
+      nextPrepared: PreparedVirtualList,
+      nextState: LinearLayoutState<string>,
+    ): void => {
+      if (props.itemSize !== undefined) return;
+      for (const id of elements.keys()) {
+        const previousIndex = previousState.domain.indexOf(id);
+        const nextIndex = nextState.domain.indexOf(id);
+        if (
+          previousIndex !== null
+          && nextIndex !== null
+          && !Object.is(
+            previousPrepared.items[previousIndex],
+            nextPrepared.items[nextIndex],
+          )
+        ) scheduleItemMeasurement(id, true);
+      }
     };
 
     const itemRef = (id: string): ((value: unknown) => void) => {
@@ -329,7 +353,9 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     watch(
       () => props.items,
       (items) => {
-        const next = updatePreparedVirtualList(prepared.value, items, props.getKey);
+        const previousPrepared = prepared.value;
+        const previousState = state.value;
+        const next = updatePreparedVirtualList(previousPrepared, items, props.getKey);
         if (requiresDOMBootstrap(props.itemSize, props.estimateSize) && automaticEstimate.value === undefined) {
           prepared.value = next;
           bootstrapCount.value = next.ids.length > 0 ? 1 : 0;
@@ -344,6 +370,12 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
           automaticEstimate.value,
         );
         if (patch === null) {
+          scheduleChangedRenderedItemMeasurements(
+            previousPrepared,
+            previousState,
+            next,
+            previousState,
+          );
           prepared.value = next;
           return;
         }
@@ -355,6 +387,12 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
           return;
         }
         if (virtualizer.connection.value === undefined) state.value = result.value.state;
+        scheduleChangedRenderedItemMeasurements(
+          previousPrepared,
+          previousState,
+          next,
+          result.value.state,
+        );
         for (const id of itemRefs.keys()) {
           if (result.value.state.domain.indexOf(id) === null) itemRefs.delete(id);
         }
@@ -397,6 +435,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       itemRefs.clear();
       bootstrapElements.clear();
       pendingMeasurements.clear();
+      forcedMeasurements.clear();
     });
 
     expose(Object.freeze({

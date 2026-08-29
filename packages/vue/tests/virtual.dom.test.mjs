@@ -131,7 +131,7 @@ test('VirtualList renders intrinsic rows without per-item Sectile wrappers and r
   }
 });
 
-test('VirtualList measures only newly rendered unknown identities after keyed reconciliation', async () => {
+test('VirtualList measures only changed or newly rendered identities after keyed reconciliation', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
   const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
   const boundsDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'getBoundingClientRect');
@@ -192,12 +192,17 @@ test('VirtualList measures only newly rendered unknown identities after keyed re
     }
 
     itemReads = 0;
+    const unchangedState = list.value.state;
+    const unchangedPlan = list.value.plan;
     items.value = items.value.map((item, index) => index === 0
       ? { ...item, label: 'Changed row' }
       : item);
     await settle();
-    assert.equal(itemReads, 0);
+    assert.equal(itemReads, 1);
+    assert.equal(list.value.state, unchangedState);
+    assert.equal(list.value.plan, unchangedPlan);
 
+    itemReads = 0;
     items.value = [
       items.value[0],
       { id: 'inserted', label: 'Inserted', height: 35 },
@@ -289,8 +294,8 @@ test('VirtualList keeps the layout domain for value-only replacements and measur
     await settle();
 
     assert.equal(list.value.state.domain, domain);
-    assert.equal(list.value.state.generation, generation);
-    assert.deepEqual(list.value.state.extents.extentAt(0), { kind: 'exact', value: 20 });
+    assert.equal(list.value.state.generation, generation + 1);
+    assert.deepEqual(list.value.state.extents.extentAt(0), { kind: 'exact', value: 40 });
     assert.match(firstRow.textContent, /Changed row/);
 
     FakeResizeObserver.notify(firstRow);
