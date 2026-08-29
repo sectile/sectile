@@ -1,8 +1,9 @@
 import type { ErrorClass } from '@sectile/core';
+import { failResult, okResult } from '@sectile/core/result';
 import type { VirtualError, VirtualErrorCode, VirtualResult } from '../error.js';
 
 export function ok<T>(value: T): VirtualResult<T> {
-  return { ok: true, value };
+  return okResult<T, VirtualErrorCode>(value);
 }
 
 export function fail<T = never, Code extends VirtualErrorCode = VirtualErrorCode>(
@@ -11,19 +12,7 @@ export function fail<T = never, Code extends VirtualErrorCode = VirtualErrorCode
   message: string,
   details?: Readonly<Record<string, unknown>>,
 ): VirtualResult<T, Code> {
-  return {
-    ok: false,
-    error: {
-      class: errorClass,
-      code,
-      message,
-      ...(details === undefined ? {} : { details }),
-    },
-  };
-}
-
-export function freezeArray<T>(values: readonly T[]): readonly T[] {
-  return Object.freeze([...values]);
+  return failResult<T, Code>(errorClass, code, message, details);
 }
 
 export function validateMaxItems(value: number): VirtualError | null {
