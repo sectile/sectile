@@ -1,17 +1,16 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
+import { packInstalledDependencyClosure } from './local-dependency-closure.mjs';
 
 const root = resolve(import.meta.dirname, '..', '..');
-const store = resolve(root, '.pnpm-store');
 const packageNames = ['core', 'form', 'temporal', 'dom', 'terminal', 'vue'];
-const vueVersion = JSON.parse(
-  await readFile(resolve(root, 'packages/vue/node_modules/vue/package.json'), 'utf8'),
-).version;
 const temporary = await mkdtemp(join(tmpdir(), 'sectile-form-consumer-'));
+const store = join(temporary, 'pnpm-store');
 const tarballs = {};
+let vueDependency;
 
 try {
   for (const name of packageNames) {
@@ -25,6 +24,10 @@ try {
     assert.notEqual(file, undefined, `packed tarball missing for @sectile/${name}`);
     tarballs[name] = join(destination, file);
   }
+  vueDependency = await packInstalledDependencyClosure(
+    resolve(root, 'packages/vue/node_modules/vue/package.json'),
+    join(temporary, 'dependency-packs'),
+  );
 
   const form = await fixture('form', [tarballs.core, tarballs.form]);
   await runtime(form, `
@@ -45,7 +48,7 @@ try {
     tarballs.core,
     tarballs.dom,
     tarballs.vue,
-    `vue@${vueVersion}`,
+    vueDependency.entryTarball,
   ]);
   await runtime(vueBase, `
     const vue = await import('@sectile/vue');
@@ -64,7 +67,7 @@ try {
     tarballs.form,
     tarballs.dom,
     tarballs.vue,
-    `vue@${vueVersion}`,
+    vueDependency.entryTarball,
   ]);
   await runtime(vueForm, `
     const form = await import('@sectile/vue/form');
@@ -98,6 +101,8 @@ async function fixture(name, dependencies) {
     'overrides:',
     ...Object.entries(tarballs)
       .map(([packageName, path]) => `  '@sectile/${packageName}': 'file:${path}'`),
+    ...Object.entries(vueDependency.overrides)
+      .map(([packageName, path]) => `  '${packageName}': 'file:${path}'`),
     '',
   ].join('\n'));
   run('pnpm', ['add', '--offline', '--store-dir', store, ...dependencies], directory);

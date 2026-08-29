@@ -58,7 +58,7 @@
     "verify:compat": "node scripts/verify.mjs --compat",
     "release": "node scripts/release.mjs",
     "release:check": "node scripts/check-release.mjs",
-    "publish:packages": "node scripts/run-workspace-command.mjs package-publication -- pnpm run publish:packages:local",
+    "publish:packages": "node scripts/run-workspace-command.mjs --verbose package-publication -- pnpm run publish:packages:local",
     "publish:packages:local": "node scripts/publish-packages.mjs"
   },
   "devDependencies": {

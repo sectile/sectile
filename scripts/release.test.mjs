@@ -36,6 +36,7 @@ test('includes every public workspace package in releases', () => {
 test('release retries verify tagged source and load the complete current publication tool closure', () => {
   const workflow = readFileSync(join(root, '.github/workflows/release.yml'), 'utf8');
   const publication = readFileSync(join(root, 'scripts/publish-packages.mjs'), 'utf8');
+  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   assert.equal(/git restore[^\n]*scripts\/verify\.mjs/u.test(workflow), false);
   for (const path of [
     'scripts/publish-packages.mjs',
@@ -51,6 +52,7 @@ test('release retries verify tagged source and load the complete current publica
   assert.match(workflow, /--pack-destination=release-artifacts/u);
   assert.match(workflow, /path: release-artifacts\/\*\.tgz/u);
   assert.match(workflow, /--tarball-directory=release-artifacts/u);
+  assert.match(manifest.scripts['publish:packages'], /--verbose package-publication/u);
 });
 
 test('allows synchronized and fast-forwardable local release branches', () => {

@@ -3,14 +3,15 @@ import { spawnSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, relative, resolve } from 'node:path';
+import { packInstalledDependencyClosure } from './local-dependency-closure.mjs';
 
 const root = resolve(import.meta.dirname, '..', '..');
 const evidencePath = resolve(import.meta.dirname, 'tabular.json');
-const store = resolve(root, '.pnpm-store');
 const packageNames = ['core', 'tabular', 'temporal', 'virtual', 'dom', 'vue'];
-const vueVersion = JSON.parse(await readFile(resolve(root, 'packages/vue/node_modules/vue/package.json'), 'utf8')).version;
 const temporary = await mkdtemp(join(tmpdir(), 'sectile-tabular-consumer-'));
+const store = join(temporary, 'pnpm-store');
 const tarballs = {};
+let vueDependency;
 
 try {
   run('pnpm', ['--filter', '@sectile/core', 'build'], root);
@@ -29,6 +30,10 @@ try {
     assert.notEqual(file, undefined, `packed tarball missing for @sectile/${name}`);
     tarballs[name] = join(destination, file);
   }
+  vueDependency = await packInstalledDependencyClosure(
+    resolve(root, 'packages/vue/node_modules/vue/package.json'),
+    join(temporary, 'dependency-packs'),
+  );
 
   const declarationClosure = await checkDeclarationClosure(packageNames);
   const scenarios = [];
@@ -57,7 +62,12 @@ try {
   scenarios.push({ id: 'dom-runtime-virtual-without-type-peer', status: 'passed' });
   scenarios.push({ id: 'dom-base-without-optional-peers', status: 'passed' });
 
-  const vue = await fixture('vue-base', [tarballs.core, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
+  const vue = await fixture('vue-base', [
+    tarballs.core,
+    tarballs.dom,
+    tarballs.vue,
+    vueDependency.entryTarball,
+  ]);
   await runtime(vue, `
     const root = await import('@sectile/vue');
     if (typeof root.CheckboxRoot !== 'object') process.exit(2);
@@ -77,7 +87,13 @@ try {
   `);
   scenarios.push({ id: 'dom-tabular-explicit-opt-in', status: 'passed' });
 
-  const vueTabular = await fixture('vue-tabular', [tarballs.core, tarballs.tabular, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
+  const vueTabular = await fixture('vue-tabular', [
+    tarballs.core,
+    tarballs.tabular,
+    tarballs.dom,
+    tarballs.vue,
+    vueDependency.entryTarball,
+  ]);
   await runtime(vueTabular, `
     const table = await import('@sectile/vue/data-table');
     const grid = await import('@sectile/vue/data-grid');
@@ -101,7 +117,13 @@ try {
   `);
   scenarios.push({ id: 'dom-virtual-explicit-opt-in', status: 'passed' });
 
-  const vueVirtual = await fixture('vue-virtual', [tarballs.core, tarballs.dom, tarballs.vue, tarballs.virtual, `vue@${vueVersion}`]);
+  const vueVirtual = await fixture('vue-virtual', [
+    tarballs.core,
+    tarballs.dom,
+    tarballs.vue,
+    tarballs.virtual,
+    vueDependency.entryTarball,
+  ]);
   await runtime(vueVirtual, `
     const core = await import('@sectile/vue/virtual/core');
     const list = await import('@sectile/vue/virtual/list');
@@ -119,7 +141,13 @@ try {
   `);
   scenarios.push({ id: 'dom-temporal-explicit-opt-in', status: 'passed' });
 
-  const vueTemporal = await fixture('vue-temporal', [tarballs.core, tarballs.temporal, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
+  const vueTemporal = await fixture('vue-temporal', [
+    tarballs.core,
+    tarballs.temporal,
+    tarballs.dom,
+    tarballs.vue,
+    vueDependency.entryTarball,
+  ]);
   await runtime(vueTemporal, `
     const field = await import('@sectile/vue/temporal/date-field');
     const provider = await import('@sectile/vue/temporal/temporal-provider');
@@ -157,6 +185,8 @@ async function fixture(name, dependencies) {
     "  - '.'",
     'overrides:',
     ...Object.entries(tarballs).map(([packageName, path]) => `  '@sectile/${packageName}': 'file:${path}'`),
+    ...Object.entries(vueDependency.overrides)
+      .map(([packageName, path]) => `  '${packageName}': 'file:${path}'`),
     '',
   ].join('\n'));
   install(directory, dependencies);
