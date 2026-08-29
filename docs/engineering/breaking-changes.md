@@ -55,7 +55,7 @@
 | WI-028 | @sectile/dom | `./form` | `FormConnection.subscribe`, `FormConnection field mutation surface` | @sectile/dom/form |
 | WI-029 | @sectile/vue | `./form` | `FormRootSlotProps`, `FormRoot default slot`, `FormSummary default slot`, `FormReset default slot`, `FormSubmit default slot` | @sectile/vue/form |
 | WI-030 | @sectile/dom | `./grid` | `GridEditMode`, `GridPolicies`, `GridState`, `GridEvent` | @sectile/dom/grid |
-| WI-030 | @sectile/dom | `.` | `GridEditMode`, `GridPolicies`, `GridState`, `GridEvent` | @sectile/dom |
+| WI-030 | @sectile/dom | `.` | `GridEditMode`, `GridPolicies`, `GridState`, `GridEvent`, `TextConnection.handleEvent`, `FacadeConnection<TextConnection>.send` | @sectile/dom |
 | WI-030 | @sectile/core | `./grid` | `applyGridEvent`, `createGridState`, `tryCreateGridState`, `GridCommand`, `GridEditMode`, `GridEvent`, `GridPolicies`, `GridState`, `GridStateInput`, `GridUpdate` | @sectile/core/grid-control |
 | WI-030 | @sectile/terminal | `./grid` | `GridEditMode`, `GridPolicies`, `GridState`, `GridEvent` | @sectile/terminal/grid |
 | WI-030 | @sectile/terminal | `.` | `GridEditMode`, `GridPolicies`, `GridState`, `GridEvent` | @sectile/terminal |
@@ -94,3 +94,5 @@
 | WI-039 | @sectile/virtual | `./track-grid-layout` | `TrackGridLayoutState.regions readonly array`, `Virtual geometry declaration closure` | @sectile/virtual/track-grid-layout |
 | WI-039 | @sectile/virtual | `./partitioned-track-grid-layout` | `PartitionedTrackGridLayoutState.rows and columns readonly arrays`, `Virtual geometry declaration closure` | @sectile/virtual/partitioned-track-grid-layout |
 | WI-039 | @sectile/virtual | `./spatial-layout` | `SpatialLayoutState.items readonly array`, `Virtual geometry declaration closure` | @sectile/virtual/spatial-layout |
+| WI-046 | @sectile/dom | `./combobox` | `TextInput declaration closure` | @sectile/dom/combobox |
+| WI-046 | @sectile/dom | `./text` | `TextConnection.handleEvent`, `FacadeConnection<TextConnection>.send` | @sectile/dom/text |

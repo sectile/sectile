@@ -98,6 +98,12 @@ export function createHydrationFixture() {
             ),
           }),
         ]),
+        h(TextField, {
+          id: 'browser-email-input',
+          type: 'email',
+          autocomplete: 'username',
+          defaultValue: 'saved@example.com',
+        }),
         h(FormRoot, { id: 'browser-form', ...submission }, {
           default: () => [
             h(FormField, { id: 'browser-native', name: 'native', required: true }, {

@@ -9,6 +9,37 @@ app.mount('#app');
 await nextTick();
 
 const failures = [];
+const emailInput = document.querySelector('#browser-email-input');
+let emailBeforeInputCanceled = null;
+let emailSelectionUnavailable = null;
+if (!(emailInput instanceof HTMLInputElement)) {
+  failures.push('email text input');
+} else {
+  emailSelectionUnavailable = emailInput.selectionStart === null && emailInput.selectionEnd === null;
+  if (!emailSelectionUnavailable) failures.push('email selection API contract');
+  const beforeInput = new InputEvent('beforeinput', {
+    bubbles: true,
+    cancelable: true,
+    inputType: 'insertReplacementText',
+    data: 'other@example.com',
+  });
+  emailInput.dispatchEvent(beforeInput);
+  emailBeforeInputCanceled = beforeInput.defaultPrevented;
+  if (emailBeforeInputCanceled) failures.push('native beforeinput ownership');
+  emailInput.value = 'other@example.com';
+  emailInput.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    inputType: 'insertReplacementText',
+  }));
+  await nextTick();
+  emailInput.value = 'other@example.co';
+  emailInput.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    inputType: 'deleteContentBackward',
+  }));
+  await nextTick();
+  if (emailInput.value !== 'other@example.co') failures.push('email native deletion reconciliation');
+}
 const trigger = document.querySelector('[data-scope="disclosure"][data-part="trigger"]');
 const content = document.querySelector('[data-scope="disclosure"][data-part="content"]');
 if (trigger?.getAttribute('aria-controls') !== content?.id) failures.push('generated ID relationship');
@@ -125,6 +156,11 @@ const result = Object.freeze({
     teleported: externalInput instanceof HTMLInputElement && externalInput.form === coordinatedForm,
     invalidFocus: formInvalidFocus,
     submission: document.querySelector('#browser-form-submission')?.textContent ?? '',
+  }),
+  text: Object.freeze({
+    emailSelectionUnavailable,
+    emailBeforeInputCanceled,
+    emailValue: emailInput instanceof HTMLInputElement ? emailInput.value : null,
   }),
   tabularVirtual,
 });

@@ -31,7 +31,7 @@ const template = `<!doctype html>
     <div id="app">${rendered}</div>
     <div id="external-form-control"></div>
     <pre id="result">pending</pre>
-    <script type="module" src="/client.mjs?wi=15e"></script>
+    <script type="module" src="/client.mjs?wi=46"></script>
   </body>
 </html>`;
 

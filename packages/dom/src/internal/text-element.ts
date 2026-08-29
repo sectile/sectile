@@ -7,95 +7,79 @@ export interface DOMTextElementBindingOptions {
   readonly dispatch: (input: TextInput) => boolean;
 }
 
+interface ActiveComposition {
+  readonly baseText: string;
+  readonly startCodeUnitOffset: number;
+  readonly endCodeUnitOffset: number;
+  coreActive: boolean;
+  lastText: string;
+  lastSelection: TextSelectionInput;
+}
+
+export interface NativeReplacement {
+  readonly startCodeUnitOffset: number;
+  readonly endCodeUnitOffset: number;
+  readonly text: string;
+  readonly inspectedCodeUnits: number;
+}
+
 export class DOMTextElementBinding {
   readonly #element: TextElement;
   readonly #getState: () => TextEditingState;
   readonly #dispatch: (input: TextInput) => boolean;
-  readonly #handleBeforeInputEvent: (event: Event) => void;
   readonly #handleInputEvent: (event: Event) => void;
-  readonly #handleCompositionStart: (event: Event) => void;
-  readonly #handleCompositionUpdate: (event: Event) => void;
-  readonly #handleCompositionEnd: (event: Event) => void;
+  readonly #handleSearchEvent: () => void;
+  readonly #handleCompositionStart: () => void;
+  readonly #handleCompositionEnd: () => void;
+  #active = true;
   #composing = false;
-  #compositionStart = 0;
-  #ignoreNextCompositionInput = false;
+  #compositionEnding = false;
+  #composition: ActiveComposition | null = null;
+  #compositionGeneration = 0;
 
   public constructor(options: DOMTextElementBindingOptions) {
     this.#element = options.element;
     this.#getState = options.getState;
     this.#dispatch = options.dispatch;
-    this.#handleBeforeInputEvent = (event): void => {
-      if (this.handleBeforeInput(event as InputEvent)) event.preventDefault();
-    };
     this.#handleInputEvent = (event): void => {
-      if (this.#composing) return;
-      const inputEvent = event as InputEvent;
-      const inputType = (inputEvent as Partial<InputEvent>).inputType;
-      const ignoreCompositionTail = this.#ignoreNextCompositionInput
-        && (inputType === 'insertCompositionText' || inputType === undefined);
-      this.#ignoreNextCompositionInput = false;
-      if (ignoreCompositionTail) this.render();
-      else this.#reconcileNativeInput(inputEvent);
+      const inputType = (event as Partial<InputEvent>).inputType;
+      if (this.#composing || this.#compositionEnding) {
+        this.#reconcileComposition();
+        return;
+      }
+      this.#reconcileNativeInput(
+        typeof inputType === 'string' ? inputType : 'insertReplacementText',
+      );
     };
-    this.#handleCompositionStart = (event): void => {
-      this.#startComposition(event as CompositionEvent);
+    this.#handleSearchEvent = (): void => {
+      if (!this.isComposing) this.#reconcileNativeInput('insertReplacementText');
     };
-    this.#handleCompositionUpdate = (event): void => {
-      this.#updateComposition(event as CompositionEvent);
+    this.#handleCompositionStart = (): void => {
+      this.#startComposition();
     };
-    this.#handleCompositionEnd = (event): void => {
-      this.#endComposition(event as CompositionEvent);
+    this.#handleCompositionEnd = (): void => {
+      this.#endComposition();
     };
-    this.#element.addEventListener('beforeinput', this.#handleBeforeInputEvent);
     this.#element.addEventListener('input', this.#handleInputEvent);
+    this.#element.addEventListener('search', this.#handleSearchEvent);
     this.#element.addEventListener('compositionstart', this.#handleCompositionStart);
-    this.#element.addEventListener('compositionupdate', this.#handleCompositionUpdate);
     this.#element.addEventListener('compositionend', this.#handleCompositionEnd);
     this.render();
   }
 
   public get isComposing(): boolean {
-    return this.#composing;
+    return this.#composing || this.#compositionEnding;
   }
 
-  public handleBeforeInput(event: InputEvent): boolean {
-    if (this.#composing || event.isComposing) return false;
-    if (event.cancelable === false) return false;
-    const snapshot = this.#getState().snapshot;
-    let start = this.#element.selectionStart ?? snapshot.selection.startCodeUnitOffset;
-    let end = this.#element.selectionEnd ?? snapshot.selection.endCodeUnitOffset;
-    if (start === end && event.inputType === 'deleteContentBackward') {
-      start = previousCodePointOffset(snapshot.text, start);
-    } else if (start === end && event.inputType === 'deleteContentForward') {
-      end = nextCodePointOffset(snapshot.text, end);
-    }
-    const insertion = event.inputType === 'insertText'
-      || event.inputType === 'insertFromPaste'
-      || event.inputType === 'insertReplacementText';
-    const deletion = event.inputType === 'deleteContentBackward'
-      || event.inputType === 'deleteContentForward'
-      || event.inputType === 'deleteByCut';
-    if (!insertion && !deletion) return false;
-    if (insertion && typeof event.data !== 'string') return false;
-    const text = deletion ? '' : event.data as string;
-    const offset = start + text.length;
-    const input: TextInput = {
-      type: 'beforeinput',
-      inputType: event.inputType,
-      data: event.data,
-      startCodeUnitOffset: start,
-      endCodeUnitOffset: end,
-      selection: collapsedSelection(offset),
-    };
-    if (this.#dispatch(input)) this.render();
-    return true;
+  public handleBeforeInput(_event: InputEvent): boolean {
+    return false;
   }
 
   public render(): void {
-    if (this.#composing) return;
+    if (!this.#active || this.isComposing) return;
     const snapshot = this.#getState().snapshot;
     if (this.#element.value !== snapshot.text) this.#element.value = snapshot.text;
-    if (!('type' in this.#element) || this.#element.type === 'text' || this.#element.tagName === 'TEXTAREA') {
+    if (supportsSelection(this.#element)) {
       this.#element.setSelectionRange(
         snapshot.selection.anchorCodeUnitOffset,
         snapshot.selection.focusCodeUnitOffset,
@@ -104,20 +88,24 @@ export class DOMTextElementBinding {
   }
 
   public disconnect(): void {
-    this.#element.removeEventListener('beforeinput', this.#handleBeforeInputEvent);
+    if (!this.#active) return;
+    this.#active = false;
+    this.#compositionGeneration += 1;
     this.#element.removeEventListener('input', this.#handleInputEvent);
+    this.#element.removeEventListener('search', this.#handleSearchEvent);
     this.#element.removeEventListener('compositionstart', this.#handleCompositionStart);
-    this.#element.removeEventListener('compositionupdate', this.#handleCompositionUpdate);
     this.#element.removeEventListener('compositionend', this.#handleCompositionEnd);
   }
 
-  #reconcileNativeInput(event: InputEvent): void {
+  #reconcileNativeInput(inputType: string): void {
     const snapshot = this.#getState().snapshot;
-    const replacement = minimalReplacement(snapshot.text, this.#element.value);
-    const selection = selectionFromElement(this.#element, snapshot.selection);
+    if (this.#element.value === snapshot.text) return;
+    const replacement = deriveNativeReplacement(snapshot.text, this.#element.value);
+    const selection = selectionFromElement(this.#element)
+      ?? collapsedSelection(nativeSelectionFallback(inputType, replacement, this.#element.value.length));
     this.#dispatch({
       type: 'input',
-      inputType: event.inputType,
+      inputType,
       text: replacement.text,
       startCodeUnitOffset: replacement.startCodeUnitOffset,
       endCodeUnitOffset: replacement.endCodeUnitOffset,
@@ -126,67 +114,113 @@ export class DOMTextElementBinding {
     this.render();
   }
 
-  #startComposition(event: CompositionEvent): void {
-    if (this.#composing) return;
+  #startComposition(): void {
+    if (this.isComposing) return;
     const snapshot = this.#getState().snapshot;
-    this.#compositionStart = this.#element.selectionStart
-      ?? snapshot.selection.startCodeUnitOffset;
-    const end = this.#element.selectionEnd ?? snapshot.selection.endCodeUnitOffset;
+    const selection = selectionFromElement(this.#element) ?? snapshot.selection;
+    const start = selectionStart(selection);
+    const end = selectionEnd(selection);
     this.#composing = true;
-    const text = event.data ?? '';
-    this.#dispatch({
-      type: 'composition-start',
-      text,
-      startCodeUnitOffset: this.#compositionStart,
+    this.#composition = {
+      baseText: snapshot.text,
+      startCodeUnitOffset: start,
       endCodeUnitOffset: end,
-      selection: collapsedSelection(this.#compositionStart + text.length),
+      coreActive: false,
+      lastText: snapshot.text.slice(start, end),
+      lastSelection: selection,
+    };
+    this.#composition.coreActive = this.#dispatch({
+      type: 'composition-start',
+      text: snapshot.text.slice(start, end),
+      startCodeUnitOffset: start,
+      endCodeUnitOffset: end,
+      selection,
     });
   }
 
-  #updateComposition(event: CompositionEvent): void {
-    if (!this.#composing) return;
-    const text = event.data ?? '';
-    this.#dispatch({
-      type: 'composition-update',
-      text,
-      selection: collapsedSelection(this.#compositionStart + text.length),
-    });
-  }
+  #reconcileComposition(): void {
+    const composition = this.#composition;
+    if (composition === null) return;
+    const replacedLength = composition.endCodeUnitOffset - composition.startCodeUnitOffset;
+    const composingLength = this.#element.value.length - (composition.baseText.length - replacedLength);
+    const validLength = composingLength >= 0
+      && composition.startCodeUnitOffset + composingLength <= this.#element.value.length;
+    const replacement = validLength
+      ? {
+          startCodeUnitOffset: composition.startCodeUnitOffset,
+          endCodeUnitOffset: composition.endCodeUnitOffset,
+          text: this.#element.value.slice(
+            composition.startCodeUnitOffset,
+            composition.startCodeUnitOffset + composingLength,
+          ),
+        }
+      : deriveNativeReplacement(composition.baseText, this.#element.value);
+    const selection = selectionFromElement(this.#element)
+      ?? collapsedSelection(replacement.startCodeUnitOffset + replacement.text.length);
 
-  #endComposition(event: CompositionEvent): void {
-    if (!this.#composing) return;
-    const current = this.#getState().composition?.composingText ?? '';
-    const text = event.data ?? current;
-    if (text !== current) {
-      this.#dispatch({
-        type: 'composition-update',
-        text,
-        selection: collapsedSelection(this.#compositionStart + text.length),
+    if (!composition.coreActive) {
+      composition.coreActive = this.#dispatch({
+        type: 'composition-start',
+        text: replacement.text,
+        startCodeUnitOffset: replacement.startCodeUnitOffset,
+        endCodeUnitOffset: replacement.endCodeUnitOffset,
+        selection,
       });
+      if (composition.coreActive) {
+        composition.lastText = replacement.text;
+        composition.lastSelection = selection;
+      }
+      return;
     }
+    if (composition.lastText === replacement.text
+      && sameSelection(composition.lastSelection, selection)) return;
+    if (this.#dispatch({ type: 'composition-update', text: replacement.text, selection })) {
+      composition.lastText = replacement.text;
+      composition.lastSelection = selection;
+    }
+  }
+
+  #endComposition(): void {
+    if (!this.#composing) return;
+    this.#reconcileComposition();
     this.#composing = false;
-    this.#ignoreNextCompositionInput = true;
-    if (this.#dispatch({ type: 'composition-commit' })) this.render();
+    this.#compositionEnding = true;
+    const generation = ++this.#compositionGeneration;
+    queueMicrotask(() => {
+      if (!this.#active || generation !== this.#compositionGeneration) return;
+      const composition = this.#composition;
+      if (composition?.coreActive === true) this.#dispatch({ type: 'composition-commit' });
+      this.#composition = null;
+      this.#compositionEnding = false;
+      this.render();
+    });
   }
 }
 
-function minimalReplacement(previous: string, next: string): {
-  readonly startCodeUnitOffset: number;
-  readonly endCodeUnitOffset: number;
-  readonly text: string;
-} {
+export function deriveNativeReplacement(previous: string, next: string): NativeReplacement {
+  let inspectedCodeUnits = 0;
   let start = 0;
   const sharedLength = Math.min(previous.length, next.length);
-  while (start < sharedLength && previous[start] === next[start]) start += 1;
-  while (start > 0 && (!isTextCodeUnitBoundary(previous, start) || !isTextCodeUnitBoundary(next, start))) start -= 1;
+  while (start < sharedLength) {
+    inspectedCodeUnits += 1;
+    if (previous[start] !== next[start]) break;
+    start += 1;
+  }
+  while (start > 0 && (!isTextCodeUnitBoundary(previous, start) || !isTextCodeUnitBoundary(next, start))) {
+    inspectedCodeUnits += 1;
+    start -= 1;
+  }
 
   let previousEnd = previous.length;
   let nextEnd = next.length;
-  while (previousEnd > start && nextEnd > start && previous[previousEnd - 1] === next[nextEnd - 1]) {
+  while (previousEnd > start && nextEnd > start) {
+    inspectedCodeUnits += 1;
+    if (previous[previousEnd - 1] !== next[nextEnd - 1]) break;
     previousEnd -= 1;
     nextEnd -= 1;
   }
   while (!isTextCodeUnitBoundary(previous, previousEnd) || !isTextCodeUnitBoundary(next, nextEnd)) {
+    inspectedCodeUnits += 1;
     previousEnd += 1;
     nextEnd += 1;
   }
@@ -194,34 +228,54 @@ function minimalReplacement(previous: string, next: string): {
     startCodeUnitOffset: start,
     endCodeUnitOffset: previousEnd,
     text: next.slice(start, nextEnd),
+    inspectedCodeUnits,
   });
 }
 
-function selectionFromElement(
-  element: TextElement,
-  fallback: TextEditingState['snapshot']['selection'],
-): TextSelectionInput {
-  const start = element.selectionStart ?? fallback.startCodeUnitOffset;
-  const end = element.selectionEnd ?? fallback.endCodeUnitOffset;
+function selectionFromElement(element: TextElement): TextSelectionInput | null {
+  const start = element.selectionStart;
+  const end = element.selectionEnd;
+  if (start === null || end === null) return null;
   return element.selectionDirection === 'backward'
     ? { anchorCodeUnitOffset: end, focusCodeUnitOffset: start }
     : { anchorCodeUnitOffset: start, focusCodeUnitOffset: end };
+}
+
+function selectionStart(selection: TextSelectionInput): number {
+  return Math.min(selection.anchorCodeUnitOffset, selection.focusCodeUnitOffset);
+}
+
+function selectionEnd(selection: TextSelectionInput): number {
+  return Math.max(selection.anchorCodeUnitOffset, selection.focusCodeUnitOffset);
+}
+
+function sameSelection(left: TextSelectionInput, right: TextSelectionInput): boolean {
+  return left.anchorCodeUnitOffset === right.anchorCodeUnitOffset
+    && left.focusCodeUnitOffset === right.focusCodeUnitOffset;
 }
 
 function collapsedSelection(offset: number): TextSelectionInput {
   return Object.freeze({ anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset });
 }
 
-function previousCodePointOffset(text: string, offset: number): number {
-  if (offset <= 0) return 0;
-  const previous = text.charCodeAt(offset - 1);
-  if (previous >= 0xdc00 && previous <= 0xdfff && offset >= 2) return offset - 2;
-  return offset - 1;
+function supportsSelection(element: TextElement): boolean {
+  if (element.tagName === 'TEXTAREA' || !('type' in element)) return true;
+  return element.type === 'text'
+    || element.type === ''
+    || element.type === 'search'
+    || element.type === 'tel'
+    || element.type === 'url'
+    || element.type === 'password';
 }
 
-function nextCodePointOffset(text: string, offset: number): number {
-  if (offset >= text.length) return text.length;
-  const current = text.charCodeAt(offset);
-  if (current >= 0xd800 && current <= 0xdbff && offset + 1 < text.length) return offset + 2;
-  return offset + 1;
+function nativeSelectionFallback(
+  inputType: string,
+  replacement: NativeReplacement,
+  nextLength: number,
+): number {
+  return inputType === 'insertReplacementText'
+    || inputType === 'historyUndo'
+    || inputType === 'historyRedo'
+    ? nextLength
+    : replacement.startCodeUnitOffset + replacement.text.length;
 }

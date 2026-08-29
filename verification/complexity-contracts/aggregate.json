@@ -23094,6 +23094,74 @@
       }
     },
     {
+      "package": "dom",
+      "surface": "hot",
+      "id": "text.native-reconcile",
+      "source": "packages/dom/src/internal/text-element.ts",
+      "benchmarkIDs": [
+        "VAL-046:dom-text-native-reconcile-work"
+      ],
+      "specificationCeiling": "O(n)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "previous and native text code-unit count",
+            "ceiling": "connected native control value length"
+          },
+          {
+            "name": "j",
+            "meaning": "replaced and inserted code-unit count",
+            "ceiling": "n"
+          }
+        ],
+        "time": {
+          "bound": "O(n)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(n)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(n)",
+          "cacheEntries": "0",
+          "listeners": "4",
+          "observers": "0",
+          "timers": "O(1)",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Reconciliation scans a shared prefix and suffix at most once, emits one Core replace transition, and retains only one active composition record plus one generation-guarded composition finalizer.",
+        "adversarialWitness": "A 100k-code-unit replacement differing only in the final surrogate pair reconstructs the exact native value within the deterministic two-input-length inspection ceiling; disconnect invalidates the pending finalizer.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Autocomplete, history, and selectionless input types expose the resulting value but not a trustworthy changed range, so exact reconciliation may inspect the complete owned value."
+        }
+      }
+    },
+    {
       "package": "form",
       "surface": "hot",
       "id": "field.get",

@@ -104,14 +104,14 @@ test('Vue combobox keeps live Hangul composition under native input ownership', 
   });
 
   for (const segment of [
-    { live: 'ㅎ', data: '한', committed: '한', duplicateTail: '한한' },
-    { live: '한ㄱ', data: '글', committed: '한글', duplicateTail: '한글글' },
+    { live: 'ㅎ', data: '한', committed: '한' },
+    { live: '한ㄱ', data: '글', committed: '한글' },
   ]) {
     frameworkValueWrites = 0;
     input.dispatchEvent(compositionEvent('compositionstart', ''));
     valueDescriptor.set.call(input, segment.live);
     input.setSelectionRange(segment.live.length, segment.live.length);
-    input.dispatchEvent(compositionEvent('compositionupdate', segment.data));
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
     await nextTick();
 
     assert.equal(input.value, segment.live);
@@ -119,10 +119,10 @@ test('Vue combobox keeps live Hangul composition under native input ownership', 
 
     valueDescriptor.set.call(input, segment.committed);
     input.setSelectionRange(segment.committed.length, segment.committed.length);
-    input.dispatchEvent(compositionEvent('compositionend', segment.data));
-    valueDescriptor.set.call(input, segment.duplicateTail);
-    input.setSelectionRange(segment.duplicateTail.length, segment.duplicateTail.length);
     input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+    input.dispatchEvent(compositionEvent('compositionend', segment.data));
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+    await Promise.resolve();
     await nextTick();
 
     assert.equal(input.value, segment.committed);
@@ -159,15 +159,17 @@ test('controlled Vue combobox preserves Hangul composition metadata through owne
   await nextTick();
   valueDescriptor.set.call(input, '시');
   input.setSelectionRange(1, 1);
-  input.dispatchEvent(compositionEvent('compositionupdate', '시'));
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
   await nextTick();
   assert.equal(inputValue.value, '시');
 
   valueDescriptor.set.call(input, '시안');
   input.setSelectionRange(2, 2);
-  input.dispatchEvent(compositionEvent('compositionupdate', '시안'));
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
   await nextTick();
   input.dispatchEvent(compositionEvent('compositionend', '시안'));
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await Promise.resolve();
   await nextTick();
 
   assert.equal(inputValue.value, '시안');

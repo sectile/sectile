@@ -28,8 +28,9 @@
       "id": "WI-030:dom-root-grid-control-closure",
       "change": "signature-changed",
       "before": { "subpath": "." },
-      "symbols": ["GridEditMode", "GridPolicies", "GridState", "GridEvent"],
-      "replacement": { "package": "@sectile/dom", "subpath": "." }
+      "symbols": ["GridEditMode", "GridPolicies", "GridState", "GridEvent", "TextConnection.handleEvent", "FacadeConnection<TextConnection>.send"],
+      "replacement": { "package": "@sectile/dom", "subpath": "." },
+      "removalReason": "Programmatic text transitions use handleEvent or send; handleBeforeInput is reserved for observing native beforeinput without cancellation."
     },
     {
       "id": "WI-028:granular-form-subscriptions",
@@ -108,6 +109,22 @@
       "before": { "subpath": "./toggle-button" },
       "symbols": ["Core Result declaration closure"],
       "replacement": { "package": "@sectile/dom", "subpath": "./toggle-button" }
+    },
+    {
+      "id": "WI-046:text-native-dispatch",
+      "change": "signature-changed",
+      "before": { "subpath": "./text" },
+      "symbols": ["TextConnection.handleEvent", "FacadeConnection<TextConnection>.send"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./text" },
+      "removalReason": "Programmatic text transitions use handleEvent or send; handleBeforeInput is reserved for observing native beforeinput without cancellation."
+    },
+    {
+      "id": "WI-046:combobox-text-native-dispatch",
+      "change": "signature-changed",
+      "before": { "subpath": "./combobox" },
+      "symbols": ["TextInput declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./combobox" },
+      "removalReason": "Combobox text transitions retain the same TextInput union while their declaration closure adopts the native-owned Text connection surface."
     }
   ]
 }

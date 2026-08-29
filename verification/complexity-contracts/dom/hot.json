@@ -328,6 +328,53 @@
           "rationale": "Ordinary updates cannot rediscover ancestors or scan global connections."
         }
       }
+    },
+    {
+      "id": "text.native-reconcile",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/internal/text-element.ts",
+      "benchmarkIDs": [
+        "VAL-046:dom-text-native-reconcile-work"
+      ],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "previous and native text code-unit count",
+            "ceiling": "connected native control value length"
+          },
+          {
+            "name": "j",
+            "meaning": "replaced and inserted code-unit count",
+            "ceiling": "n"
+          }
+        ],
+        "time": {
+          "bound": "O(n)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(n)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(n)",
+          "cacheEntries": "0",
+          "listeners": "4",
+          "observers": "0",
+          "timers": "O(1)",
+          "subscriptions": "0"
+        },
+        "proof": "Reconciliation scans a shared prefix and suffix at most once, emits one Core replace transition, and retains only one active composition record plus one generation-guarded composition finalizer.",
+        "adversarialWitness": "A 100k-code-unit replacement differing only in the final surrogate pair reconstructs the exact native value within the deterministic two-input-length inspection ceiling; disconnect invalidates the pending finalizer.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Autocomplete, history, and selectionless input types expose the resulting value but not a trustworthy changed range, so exact reconciliation may inspect the complete owned value."
+        }
+      }
     }
   ]
 }

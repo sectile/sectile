@@ -121,6 +121,7 @@ export interface TextConnection {
   syncControlledValues(
     values: TextControlledValues,
   ): Result<RevisionSnapshot<TextEditingState>>;
+  handleEvent(input: TextInput): boolean;
   handleBeforeInput(event: InputEvent): boolean;
   render(): void;
   disconnect(): void;
@@ -250,6 +251,12 @@ class DOMTextConnection implements TextConnection {
 
   public handleBeforeInput(event: InputEvent): boolean {
     return this.#binding.handleBeforeInput(event);
+  }
+
+  public handleEvent(input: TextInput): boolean {
+    const result = this.#dispatch(input);
+    if (result.ok) this.render();
+    return result.ok;
   }
 
   public render(): void {

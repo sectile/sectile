@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unwrap } from '@sectile/core/result';
 import { createTextEditingState } from '@sectile/core/text';
+import { deriveNativeReplacement } from '../.verification-dist/internal/text-element.js';
 import { createText, createTextController, createTextState, toTextEvent } from '../.verification-dist/text.js';
 
 test('DOM text creates a caret-preserving state from a plain string', () => {
@@ -11,7 +12,7 @@ test('DOM text creates a caret-preserving state from a plain string', () => {
   assert.equal(state.snapshot.selection.focusCodeUnitOffset, 2);
 });
 
-test('DOM text facade owns beforeinput rendering and IME composition lifecycle', () => {
+test('DOM text facade separates semantic edits from native IME ownership', async () => {
   const element = new FakeTextElement();
   const transitions = [];
   const connection = createText({
@@ -20,23 +21,60 @@ test('DOM text facade owns beforeinput rendering and IME composition lifecycle',
     onTransition: ({ input }) => transitions.push(input.type),
   });
   assert.equal(element.value, 'a');
-  assert.equal(connection.handleBeforeInput(inputEvent('insertText', '한')), true);
+  assert.equal(connection.handleEvent({
+    type: 'beforeinput',
+    inputType: 'insertText',
+    data: '한',
+    startCodeUnitOffset: 1,
+    endCodeUnitOffset: 1,
+    selection: selection(2),
+  }), true);
   assert.equal(connection.getValue(), 'a한');
   assert.equal(element.value, 'a한');
   assert.deepEqual(element.selection, [2, 2]);
 
   element.emit('compositionstart', { data: '' });
-  element.emit('compositionupdate', { data: '글' });
+  element.value = 'a한ㄱ';
+  element.selectionStart = 3;
+  element.selectionEnd = 3;
+  element.emit('input', { inputType: 'insertCompositionText' });
+  element.value = 'a한글';
+  element.selectionStart = 3;
+  element.selectionEnd = 3;
+  element.emit('input', { inputType: 'insertCompositionText' });
   element.emit('compositionend', { data: '글' });
+  element.emit('input', { inputType: 'insertCompositionText' });
+  await Promise.resolve();
   assert.equal(connection.getValue(), 'a한글');
   assert.equal(connection.getSnapshot().state.composition, null);
   assert.deepEqual(transitions, [
     'beforeinput',
     'composition-start',
     'composition-update',
+    'composition-update',
     'composition-commit',
   ]);
   connection.disconnect();
+  assert.equal(element.listeners.get('input')?.size ?? 0, 0);
+});
+
+test('selectionless email input adopts autocomplete and native deletion results', () => {
+  const initial = 'saved@example.com';
+  const element = new FakeSelectionlessTextElement();
+  const connection = createText({
+    element,
+    defaultValue: createTextEditingState(initial, selection(initial.length)),
+  });
+
+  element.value = 'other@example.com';
+  element.emit('input', { inputType: 'insertReplacementText' });
+  assert.equal(connection.getValue(), 'other@example.com');
+  assert.equal(connection.getSnapshot().state.snapshot.selection.focusCodeUnitOffset, 17);
+
+  element.value = 'other@example.co';
+  element.emit('input', { inputType: 'deleteContentBackward' });
+  assert.equal(connection.getValue(), 'other@example.co');
+  assert.equal(connection.getSnapshot().state.snapshot.selection.focusCodeUnitOffset, 16);
   assert.equal(element.listeners.get('beforeinput')?.size ?? 0, 0);
 });
 
@@ -107,6 +145,21 @@ test('DOM text adopts non-cancelable and Unicode-safe native replacements', () =
   assert.deepEqual(element.selection, [3, 3]);
 });
 
+test('DOM text adopts the native search clear action and removes its listener', () => {
+  const element = new FakeTextElement();
+  const connection = createText({ element, defaultValue: createTextState('select') });
+
+  element.value = '';
+  element.selectionStart = 0;
+  element.selectionEnd = 0;
+  element.emit('search', {});
+
+  assert.equal(connection.getValue(), '');
+  assert.equal(element.value, '');
+  connection.disconnect();
+  assert.equal(element.listeners.get('search')?.size ?? 0, 0);
+});
+
 test('controlled DOM text proposes native edits and restores until synchronized', () => {
   const initial = createTextEditingState('alpha beta', selection(10));
   const element = new FakeTextElement();
@@ -128,6 +181,43 @@ test('controlled DOM text proposes native edits and restores until synchronized'
   connection.syncControlledValues({ value: proposed });
   assert.equal(connection.getValue(), 'alpha ');
   assert.equal(element.value, 'alpha ');
+});
+
+test('disconnect invalidates a pending IME commit and releases native listeners', async () => {
+  const element = new FakeTextElement();
+  const transitions = [];
+  const connection = createText({
+    element,
+    onTransition: ({ input }) => transitions.push(input.type),
+  });
+
+  element.emit('compositionstart', { data: '' });
+  element.value = '한';
+  element.selectionStart = 1;
+  element.selectionEnd = 1;
+  element.emit('input', { inputType: 'insertCompositionText' });
+  element.emit('compositionend', { data: '한' });
+  connection.disconnect();
+  await Promise.resolve();
+
+  assert.deepEqual(transitions, ['composition-start', 'composition-update']);
+  assert.equal(element.listeners.get('input')?.size ?? 0, 0);
+  assert.equal(element.listeners.get('search')?.size ?? 0, 0);
+  assert.equal(element.listeners.get('compositionstart')?.size ?? 0, 0);
+  assert.equal(element.listeners.get('compositionend')?.size ?? 0, 0);
+});
+
+test('native replacement reconciliation has linear bounded work and exact output', () => {
+  const size = 100_000;
+  const previous = `${'a'.repeat(size - 2)}😀`;
+  const next = `${'a'.repeat(size - 2)}😁`;
+  const replacement = deriveNativeReplacement(previous, next);
+  const actual = previous.slice(0, replacement.startCodeUnitOffset)
+    + replacement.text
+    + previous.slice(replacement.endCodeUnitOffset);
+
+  assert.equal(actual, next);
+  assert.ok(replacement.inspectedCodeUnits <= previous.length + next.length + 2);
 });
 
 test('DOM beforeinput and composition inputs map to semantic text events', () => {
@@ -264,11 +354,9 @@ function selection(offset) {
   return { anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset };
 }
 
-function inputEvent(inputType, data = null) {
-  return { inputType, data, isComposing: false, preventDefault() {} };
-}
-
 class FakeTextElement {
+  tagName = 'INPUT';
+  type = 'text';
   value = '';
   selectionStart = 0;
   selectionEnd = 0;
@@ -294,5 +382,16 @@ class FakeTextElement {
     this.selectionStart = start;
     this.selectionEnd = end;
     this.selection = [start, end];
+  }
+}
+
+class FakeSelectionlessTextElement extends FakeTextElement {
+  type = 'email';
+  selectionStart = null;
+  selectionEnd = null;
+  selectionDirection = null;
+
+  setSelectionRange() {
+    throw new Error('selection APIs are unavailable for email inputs');
   }
 }

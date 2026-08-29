@@ -31,15 +31,13 @@ test('DOM quantity field owns compatible unit options, text editing, and canonic
   });
   assert.deepEqual(unitSelect.children.map(({ value }) => value), ['meter', 'centimeter', 'inch']);
   assert.equal(input.value, '100');
-  input.setSelectionRange(0, 3);
-  input.emit('beforeinput', beforeInput('250.5'));
+  nativeInput(input, '250.5');
   input.emit('keydown', keyboard('Enter'));
   assert.deepEqual(field.getQuantity(), { value: '2.505', unit: 'meter' });
   unitSelect.value = 'meter';
   unitSelect.emit('change', {});
   assert.equal(field.getText(), '2.505');
-  input.setSelectionRange(0, input.value.length);
-  input.emit('beforeinput', beforeInput('2+2'));
+  nativeInput(input, '2+2');
   input.emit('blur', {});
   assert.equal(field.getText(), '2.505');
   assert.equal(input.attributes.get('aria-invalid'), 'false');
@@ -80,8 +78,7 @@ test('DOM quantity field applies unit-system defaults and commits inline unit ex
   });
   assert.equal(field.getDisplayUnit(), 'foot');
   assert.deepEqual(unitSelect.children.map(({ value }) => value), ['inch', 'foot', 'yard', 'mile']);
-  input.setSelectionRange(0, input.value.length);
-  input.emit('beforeinput', beforeInput('100-20% cm'));
+  nativeInput(input, '100-20% cm');
   input.emit('keydown', keyboard('Enter'));
   assert.deepEqual(field.getQuantity(), { value: '0.8', unit: 'metre' });
   assert.equal(field.getDisplayUnit(), 'centimetre');
@@ -116,8 +113,7 @@ test('controlled DOM quantity field rebases clean display text and preserves act
   assert.equal(input.value, '200');
   assert.deepEqual([input.selectionStart, input.selectionEnd], [0, 3]);
 
-  input.setSelectionRange(0, input.value.length);
-  input.emit('beforeinput', beforeInput('2+'));
+  nativeInput(input, '2+');
   assert.equal(field.syncControlledValues({
     quantity: { value: '3', unit: 'meter' },
     displayUnit: 'meter',
@@ -129,7 +125,11 @@ function replaceAll(previous, text) {
   return { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: previous.length, text, selection: { anchorCodeUnitOffset: text.length, focusCodeUnitOffset: text.length } };
 }
 function keyboard(key) { return { key, isComposing: false, preventDefault() {} }; }
-function beforeInput(data) { return { inputType: 'insertText', data, cancelable: true, isComposing: false, preventDefault() {} }; }
+function nativeInput(input, value) {
+  input.value = value;
+  input.setSelectionRange(value.length, value.length);
+  input.emit('input', { inputType: 'insertReplacementText' });
+}
 class FakeElement {
   attributes = new Map(); listeners = new Map(); disabled = false;
   addEventListener(type, listener) { const listeners = this.listeners.get(type) ?? new Set(); listeners.add(listener); this.listeners.set(type, listeners); }

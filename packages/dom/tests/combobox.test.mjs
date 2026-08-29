@@ -12,7 +12,7 @@ import {
   toComboboxTextEvent,
 } from '../.verification-dist/combobox.js';
 
-test('DOM combobox facade owns construction, text input, ARIA, navigation, and acceptance', () => {
+test('DOM combobox facade owns construction, native text input, ARIA, navigation, and acceptance', async () => {
   const input = new FakeTextElement();
   const popup = new FakeElement();
   popup.id = 'cities-popup';
@@ -31,7 +31,10 @@ test('DOM combobox facade owns construction, text input, ARIA, navigation, and a
   assert.equal(input.attributes.get('aria-controls'), 'cities-popup');
   assert.equal(popup.attributes.get('role'), 'listbox');
 
-  assert.equal(connection.handleBeforeInput(inputEvent('insertText', 'al')), true);
+  input.value = 'al';
+  input.selectionStart = 2;
+  input.selectionEnd = 2;
+  input.emit('input', { inputType: 'insertText' });
   assert.equal(connection.getSnapshot().state.cursor.current, 'a');
   assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown')), true);
   assert.equal(input.attributes.get('aria-activedescendant'), 'sectile-combobox-c');
@@ -52,8 +55,13 @@ test('DOM combobox facade owns construction, text input, ARIA, navigation, and a
     policies: fixture().policies,
   });
   imeInput.emit('compositionstart', { data: '' });
-  imeInput.emit('compositionupdate', { data: 'be' });
+  imeInput.value = 'be';
+  imeInput.selectionStart = 2;
+  imeInput.selectionEnd = 2;
+  imeInput.emit('input', { inputType: 'insertCompositionText' });
   imeInput.emit('compositionend', { data: 'be' });
+  imeInput.emit('input', { inputType: 'insertCompositionText' });
+  await Promise.resolve();
   assert.equal(imeConnection.getSnapshot().state.text.snapshot.text, 'be');
   assert.equal(imeConnection.getSnapshot().state.cursor.current, 'b');
   imeConnection.disconnect();
@@ -107,23 +115,23 @@ test('DOM keyboard and text inputs map onto combobox semantics', () => {
   });
 });
 
-test('DOM combobox restores controlled text after each native IME commit', () => {
+test('DOM combobox commits consecutive native IME results once each', async () => {
   const input = new FakeTextElement();
   const connection = createCombobox({
     items: [{ id: 'hangul', label: '한글' }],
     input,
   });
 
-  commitComposition(input, '한', '한한');
+  await commitComposition(input, '한');
   assert.equal(connection.getSnapshot().state.text.snapshot.text, '한');
   assert.equal(input.value, '한');
 
-  commitComposition(input, '글', '한글글');
+  await commitComposition(input, '글');
   assert.equal(connection.getSnapshot().state.text.snapshot.text, '한글');
   assert.equal(input.value, '한글');
 });
 
-test('DOM combobox leaves live native IME text under browser ownership', () => {
+test('DOM combobox leaves live native IME text under browser ownership', async () => {
   const input = new TrackingTextElement();
   let connection;
   connection = createCombobox({
@@ -133,13 +141,18 @@ test('DOM combobox leaves live native IME text under browser ownership', () => {
   });
 
   input.emit('compositionstart', { data: '' });
-  input.emit('compositionupdate', { data: '한' });
+  input.setNativeValue('한');
+  input.selectionStart = 1;
+  input.selectionEnd = 1;
+  input.emit('input', { inputType: 'insertCompositionText' });
   assert.equal(connection.getSnapshot().state.text.snapshot.text, '한');
   assert.equal(input.valueWrites, 0);
 
   input.emit('compositionend', { data: '한' });
+  input.emit('input', { inputType: 'insertCompositionText' });
+  await Promise.resolve();
   assert.equal(input.value, '한');
-  assert.equal(input.valueWrites, 1);
+  assert.equal(input.valueWrites, 0);
 });
 
 test('controlled DOM combobox carries IME proposals across synchronous composition events', () => {
@@ -179,7 +192,10 @@ test('DOM combobox adopts native word deletion through the shared text binding',
     input,
   });
 
-  assert.equal(connection.handleBeforeInput(inputEvent('insertText', 'alpha beta')), true);
+  input.value = 'alpha beta';
+  input.selectionStart = 10;
+  input.selectionEnd = 10;
+  input.emit('input', { inputType: 'insertText' });
   input.value = 'alpha ';
   input.selectionStart = 6;
   input.selectionEnd = 6;
@@ -346,18 +362,15 @@ function selection(offset) {
   return { anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset };
 }
 
-function inputEvent(inputType, data = null) {
-  return { inputType, data, isComposing: false, preventDefault() {} };
-}
-
-function commitComposition(input, text, nativeValue) {
+async function commitComposition(input, text) {
   input.emit('compositionstart', { data: '' });
-  input.emit('compositionupdate', { data: text });
+  input.value += text;
+  input.selectionStart = input.value.length;
+  input.selectionEnd = input.value.length;
+  input.emit('input', { inputType: 'insertCompositionText' });
   input.emit('compositionend', { data: text });
-  input.value = nativeValue;
-  input.selectionStart = nativeValue.length;
-  input.selectionEnd = nativeValue.length;
-  input.emit('input', {});
+  input.emit('input', { inputType: 'insertCompositionText' });
+  await Promise.resolve();
 }
 
 function keyboardEvent(key, overrides = {}) {
@@ -431,6 +444,10 @@ class TrackingTextElement extends FakeElement {
   set value(value) {
     this.#value = value;
     this.valueWrites += 1;
+  }
+
+  setNativeValue(value) {
+    this.#value = value;
   }
 
   setSelectionRange(start, end) {

@@ -137,35 +137,35 @@ test('controlled Vue TextField leaves consecutive Hangul composition under nativ
 
   composing = true;
   input.dispatchEvent(compositionEvent('compositionstart', ''));
-  input.dispatchEvent(compositionEvent('compositionupdate', 'ㅎ'));
-  await nextTick();
   valueDescriptor.set.call(input, 'ㅎ');
-  input.setSelectionRange(input.value.length, input.value.length);
-  input.dispatchEvent(compositionEvent('compositionupdate', '한'));
+  input.setSelectionRange(1, 1);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
   await nextTick();
   valueDescriptor.set.call(input, '한');
-  input.setSelectionRange(input.value.length, input.value.length);
+  input.setSelectionRange(1, 1);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await nextTick();
   input.dispatchEvent(compositionEvent('compositionend', '한'));
   composing = false;
-  valueDescriptor.set.call(input, '한한');
   input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await Promise.resolve();
   await nextTick();
 
   composing = true;
   input.setSelectionRange(input.value.length, input.value.length);
   input.dispatchEvent(compositionEvent('compositionstart', ''));
-  input.dispatchEvent(compositionEvent('compositionupdate', 'ㄱ'));
-  await nextTick();
   valueDescriptor.set.call(input, '한ㄱ');
-  input.setSelectionRange(input.value.length, input.value.length);
-  input.dispatchEvent(compositionEvent('compositionupdate', '글'));
+  input.setSelectionRange(2, 2);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
   await nextTick();
   valueDescriptor.set.call(input, '한글');
-  input.setSelectionRange(input.value.length, input.value.length);
+  input.setSelectionRange(2, 2);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await nextTick();
   input.dispatchEvent(compositionEvent('compositionend', '글'));
   composing = false;
-  valueDescriptor.set.call(input, '한글글');
   input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await Promise.resolve();
   await nextTick();
 
   assert.deepEqual(writes.filter((write) => write.composing), []);

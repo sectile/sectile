@@ -9,7 +9,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
 | core | 381 | 26 | 53 |
-| dom | 414 | 181 | 8 |
+| dom | 414 | 181 | 9 |
 | form | 19 | 0 | 5 |
 | tabular | 32 | 0 | 4 |
 | temporal | 99 | 24 | 2 |
@@ -89,6 +89,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:position.discovery | connected | `O(aDom)` worst-case | `O(aDom)` | `O(aDom)` | `O(aDom)` | allowed | VAL-016, VAL-017 |
 | dom:position.schedule | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | dom:position.update | connected | `O(aDom + cAnchor)` worst-case | `O(aDom + cAnchor)` | `O(1)` | `O(aDom)` | forbidden | VAL-016, VAL-017 |
+| dom:text.native-reconcile | connected | `O(n)` worst-case | `O(1)` | `O(n)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | form:field.get | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(fField)` | forbidden | VAL-016, VAL-017 |
 | form:field.ids-by-issue-source | trusted | `O(uSource)` worst-case | `O(uSource)` | `O(uSource)` | `O(fField + iIssue)` | forbidden | VAL-016, VAL-017 |
 | form:field.update | trusted | `O(fField/64 + 64 + iFieldIssue)` worst-case | `O(fField/64 + 64 + iFieldIssue)` | `O(1)` | `O(fField + iIssue)` | forbidden | VAL-016, VAL-017 |

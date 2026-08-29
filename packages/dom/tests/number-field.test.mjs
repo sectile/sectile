@@ -14,14 +14,12 @@ test('DOM number field commits calculator expressions and retains invalid drafts
     policies: { evaluator: createCalculatorExpression() },
     onValueChange: (change) => changes.push(change),
   });
-  input.setSelectionRange(0, 2);
-  input.emit('beforeinput', beforeInput('50-20%'));
+  nativeInput(input, '50-20%');
   input.emit('keydown', keyboard('Enter'));
   assert.equal(field.getValue(), '40');
   assert.equal(field.getText(), '40');
   assert.deepEqual(changes, [{ value: '40', expression: '50-20%' }]);
-  input.setSelectionRange(0, 2);
-  input.emit('beforeinput', beforeInput('1/0'));
+  nativeInput(input, '1/0');
   input.emit('keydown', keyboard('Enter'));
   assert.equal(field.getText(), '1/0');
   assert.equal(input.attributes.get('aria-invalid'), 'true');
@@ -30,17 +28,21 @@ test('DOM number field commits calculator expressions and retains invalid drafts
   assert.equal(input.attributes.get('aria-invalid'), 'false');
 });
 
-test('DOM number field ignores Enter while IME composition is active', () => {
+test('DOM number field ignores Enter while IME composition is active', async () => {
   const input = new FakeInput();
   const field = createNumberField({ input, defaultValue: '1' });
   input.setSelectionRange(1, 1);
   input.emit('compositionstart', { data: '' });
-  input.emit('compositionupdate', { data: '2' });
+  input.value = '12';
+  input.setSelectionRange(2, 2);
+  input.emit('input', { inputType: 'insertCompositionText' });
   input.emit('keydown', keyboard('Enter', true));
   assert.equal(field.getSnapshot().state.value, '1');
   assert.equal(field.getSnapshot().state.inputState.snapshot.text, '12');
   assert.notEqual(field.getSnapshot().state.inputState.composition, null);
   input.emit('compositionend', { data: '2' });
+  input.emit('input', { inputType: 'insertCompositionText' });
+  await Promise.resolve();
   input.emit('keydown', keyboard('Enter'));
   assert.equal(field.getSnapshot().state.value, '12');
   assert.equal(field.getSnapshot().state.inputState.snapshot.text, '12');
@@ -56,13 +58,14 @@ test('controlled DOM number field rebases clean text without replacing a draft o
 
   const draftInput = new FakeInput();
   const draft = createNumberField({ input: draftInput, value: '12' });
-  draftInput.setSelectionRange(0, 2);
-  draftInput.emit('beforeinput', beforeInput('1+'));
+  nativeInput(draftInput, '1+');
   assert.equal(draft.syncControlledValues({ value: '34' }).ok, true);
   assert.equal(draftInput.value, '1+');
 
   draftInput.emit('compositionstart', { data: '' });
-  draftInput.emit('compositionupdate', { data: '한' });
+  draftInput.value = '1+한';
+  draftInput.setSelectionRange(3, 3);
+  draftInput.emit('input', { inputType: 'insertCompositionText' });
   const composing = draft.getSnapshot().state.inputState;
   assert.notEqual(composing.composition, null);
   assert.equal(draft.syncControlledValues({ value: '56' }).ok, true);
@@ -71,7 +74,11 @@ test('controlled DOM number field rebases clean text without replacing a draft o
 });
 
 function keyboard(key, isComposing = false) { return { key, isComposing, preventDefault() {} }; }
-function beforeInput(data) { return { inputType: 'insertText', data, cancelable: true, isComposing: false, preventDefault() {} }; }
+function nativeInput(input, value) {
+  input.value = value;
+  input.setSelectionRange(value.length, value.length);
+  input.emit('input', { inputType: 'insertReplacementText' });
+}
 class FakeInput {
   attributes = new Map(); listeners = new Map(); value = ''; type = ''; inputMode = ''; disabled = false; readOnly = false; required = false; selectionStart = 0; selectionEnd = 0; selectionDirection = 'none';
   addEventListener(type, listener) { const listeners = this.listeners.get(type) ?? new Set(); listeners.add(listener); this.listeners.set(type, listeners); }

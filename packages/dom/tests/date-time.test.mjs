@@ -103,7 +103,7 @@ test('controlled DOM civil field sync does not disturb active composition metada
   const field = createDateField({ input, value: createDateValue(2026, 8, 18) });
   input.setSelectionRange(5, 7);
   input.emit('compositionstart', { data: '' });
-  input.emit('compositionupdate', { data: '구' });
+  compositionInput(input, '2026-구-18', 6);
   const composing = field.getSnapshot().state.inputState;
   assert.notEqual(composing.composition, null);
 
@@ -225,7 +225,7 @@ test('controlled DOM date picker preserves the stepped segment until owner sync'
   assert.deepEqual([input.selectionStart, input.selectionEnd], [5, 7]);
 });
 
-test('controlled DOM picker preserves active field composition during external value sync', () => {
+test('controlled DOM picker preserves active field composition during external value sync', async () => {
   const input = new FakeInput();
   const picker = createDatePicker({
     root: new FakeElement(),
@@ -236,12 +236,14 @@ test('controlled DOM picker preserves active field composition during external v
   });
   input.setSelectionRange(5, 7);
   input.emit('compositionstart', { data: '' });
-  input.emit('compositionupdate', { data: '구' });
+  compositionInput(input, '2026-구-18', 6);
 
   assert.equal(picker.syncControlledValues({ value: createDateValue(2026, 9, 18) }).ok, true);
-  input.emit('compositionupdate', { data: '구월' });
+  compositionInput(input, '2026-구월-18', 7);
   assert.equal(input.attributes.get('aria-invalid'), 'false');
   input.emit('compositionend', { data: '구월' });
+  input.emit('input', { inputType: 'insertCompositionText' });
+  await Promise.resolve();
   assert.equal(input.attributes.get('aria-invalid'), 'false');
 });
 
@@ -554,6 +556,7 @@ test('DOM date-time field steps the selected committed segment after an invalid 
 
 function keyboard(key) { return { key, isComposing: false, preventDefault() {} }; }
 function replaceInput(input, value) { input.value = value; input.setSelectionRange(value.length, value.length); input.emit('input', { inputType: 'insertText' }); }
+function compositionInput(input, value, offset) { input.value = value; input.setSelectionRange(offset, offset); input.emit('input', { inputType: 'insertCompositionText' }); }
 class FakeElement {
   attributes = new Map(); listeners = new Map(); dataset = {}; disabled = false; hidden = false; tabIndex = 0;
   addEventListener(type, listener) { const values = this.listeners.get(type) ?? new Set(); values.add(listener); this.listeners.set(type, values); }
