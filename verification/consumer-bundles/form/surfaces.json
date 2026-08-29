@@ -71,8 +71,15 @@
       "platform": "browser",
       "runtimeExports": [
         "applyFormEvent",
+        "clearFormFieldIssues",
         "createFormState",
-        "tryCreateFormState"
+        "getFormField",
+        "getFormFieldIDsByIssueSource",
+        "removeFormFieldIssue",
+        "replaceFormFieldIssues",
+        "setFormFieldMeta",
+        "tryCreateFormState",
+        "upsertFormFieldIssue"
       ],
       "typeBearing": true,
       "optionalPeer": null,

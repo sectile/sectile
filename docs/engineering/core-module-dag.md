@@ -2,7 +2,7 @@
 
 > Generated from `verification/core-layers/manifest.json` and Core source imports.
 
-Modules: 119; edges: 482; public subpaths: 70; cycles: 0; upward edges: 0.
+Modules: 120; edges: 492; public subpaths: 71; cycles: 0; upward edges: 0.
 
 ## Layers
 
@@ -12,7 +12,7 @@ Modules: 119; edges: 482; public subpaths: 70; cycles: 0; upward edges: 0.
 | editing | 2 |
 | foundation | 3 |
 | kernel | 6 |
-| public | 57 |
+| public | 58 |
 | reference | 24 |
 | runtime | 1 |
 | state | 5 |
@@ -22,17 +22,18 @@ Modules: 119; edges: 482; public subpaths: 70; cycles: 0; upward edges: 0.
 
 | Module | Transitive dependents | Public subpaths |
 |---|---:|---:|
-| `src/error-code.ts` | 113 | 66 |
-| `src/shared.ts` | 112 | 66 |
-| `src/result.ts` | 102 | 65 |
-| `src/internal/kernel/foundation.ts` | 108 | 64 |
+| `src/error-code.ts` | 114 | 67 |
+| `src/result.ts` | 112 | 67 |
+| `src/shared.ts` | 113 | 67 |
+| `src/internal/kernel/foundation.ts` | 109 | 65 |
 | `src/internal/kernel/machine.ts` | 75 | 45 |
-| `src/internal/kernel/indexed-sequence.ts` | 56 | 30 |
-| `src/structures/sequence.ts` | 55 | 30 |
+| `src/internal/kernel/indexed-sequence.ts` | 57 | 31 |
+| `src/structures/sequence.ts` | 56 | 31 |
 | `src/internal/state/cursor.ts` | 46 | 23 |
 | `src/internal/state/selection.ts` | 27 | 14 |
 | `src/internal/kernel/decimal.ts` | 18 | 12 |
 | `src/structures/tree.ts` | 20 | 11 |
+| `src/internal/kernel/bounded-scalar.ts` | 14 | 9 |
 | `src/internal/kernel/exact-ratio.ts` | 15 | 9 |
 | `src/structures/range.ts` | 13 | 9 |
 | `src/internal/composites/linear-choice.ts` | 6 | 5 |
@@ -41,7 +42,6 @@ Modules: 119; edges: 482; public subpaths: 70; cycles: 0; upward edges: 0.
 | `src/internal/composites/slider.ts` | 6 | 4 |
 | `src/menu.ts` | 3 | 4 |
 | `src/text.ts` | 3 | 4 |
-| `src/collection-window.ts` | 3 | 3 |
 
 ## Public subpaths
 
@@ -49,7 +49,7 @@ Modules: 119; edges: 482; public subpaths: 70; cycles: 0; upward edges: 0.
 |---|---|---|---|
 | `.` | `src/index.ts` | public | `src/cascade-list.ts`, `src/cascade-select.ts`, `src/collection-window.ts`, `src/editable.ts`, `src/error-code.ts`, `src/interaction.ts`, `src/layer-stack.ts`, `src/number-field.ts`, `src/pin-input.ts`, `src/quantity-field.ts`, `src/reorder.ts`, `src/selection.ts`, `src/shared.ts`, `src/shared.ts`, `src/spin-button.ts`, `src/structures/sequence.ts`, `src/tags-input.ts`, `src/units.ts` |
 | `./accordion` | `src/accordion.ts` | public | `src/internal/composites/linear-action.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/internal/state/cursor.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
-| `./adapter-runtime` | `src/adapter-runtime.ts` | public | `src/error-code.ts`, `src/interaction.ts`, `src/revision.ts`, `src/shared.ts` |
+| `./adapter-runtime` | `src/adapter-runtime.ts` | public | `src/error-code.ts`, `src/identity.ts`, `src/interaction.ts`, `src/revision.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./alert-dialog` | `src/alert-dialog.ts` | public | none |
 | `./anchored-layout` | `src/structures/anchored-layout.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/geometry.ts` |
 | `./carousel` | `src/carousel.ts` | public | `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/internal/state/cursor.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
@@ -70,6 +70,7 @@ Modules: 119; edges: 482; public subpaths: 70; cycles: 0; upward edges: 0.
 | `./geometry` | `src/structures/geometry.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts` |
 | `./grid` | `src/structures/grid.ts` | structures | `src/internal/kernel/foundation.ts`, `src/internal/kernel/indexed-sequence.ts`, `src/result.ts`, `src/shared.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./grid-control` | `src/grid-control.ts` | public | `src/internal/composites/grid-control.ts`, `src/shared.ts`, `src/structures/grid.ts` |
+| `./identity` | `src/identity.ts` | public | `src/internal/kernel/foundation.ts`, `src/shared.ts`, `src/shared.ts`, `src/shared.ts`, `src/shared.ts` |
 | `./index-span` | `src/structures/index-span.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts` |
 | `./interaction` | `src/interaction.ts` | public | `src/result.ts`, `src/shared.ts` |
 | `./layer-stack` | `src/layer-stack.ts` | public | `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
@@ -90,11 +91,11 @@ Modules: 119; edges: 482; public subpaths: 70; cycles: 0; upward edges: 0.
 | `./progress` | `src/progress.ts` | public | `src/internal/kernel/bounded-scalar.ts`, `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/range.ts` |
 | `./quantity-field` | `src/quantity-field.ts` | public | `src/internal/kernel/decimal.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/number-field.ts`, `src/result.ts`, `src/shared.ts`, `src/text.ts`, `src/units.ts` |
 | `./radio-group` | `src/radio-group.ts` | public | `src/internal/composites/linear-choice.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
-| `./range` | `src/structures/range.ts` | structures | `src/internal/kernel/decimal.ts`, `src/internal/kernel/exact-ratio.ts`, `src/internal/kernel/exact-ratio.ts`, `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/shared.ts` |
+| `./range` | `src/structures/range.ts` | structures | `src/internal/kernel/bounded-scalar.ts`, `src/internal/kernel/decimal.ts`, `src/internal/kernel/exact-ratio.ts`, `src/internal/kernel/exact-ratio.ts`, `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/shared.ts` |
 | `./rating` | `src/rating.ts` | public | `src/internal/kernel/machine.ts`, `src/internal/state/selection.ts`, `src/radio-group.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./reorder` | `src/reorder.ts` | public | `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts`, `src/structures/tree.ts` |
 | `./result` | `src/result.ts` | foundation | `src/error-code.ts`, `src/error-code.ts`, `src/shared.ts`, `src/shared.ts` |
-| `./revision` | `src/revision.ts` | public | `src/internal/runtime/revision.ts`, `src/internal/runtime/revision.ts` |
+| `./revision` | `src/revision.ts` | public | `src/internal/kernel/machine.ts`, `src/internal/runtime/revision.ts`, `src/internal/runtime/revision.ts` |
 | `./select` | `src/select.ts` | public | `src/internal/composites/linear-choice.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./selection` | `src/selection.ts` | public | `src/internal/state/selection.ts`, `src/shared.ts` |
 | `./selection-expression` | `src/structures/selection-expression.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |

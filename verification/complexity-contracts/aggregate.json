@@ -326,6 +326,24 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "core:./adapter-runtime:createCollectionComponentController",
+      "package": "core",
+      "subpath": "./adapter-runtime",
+      "exportName": "createCollectionComponentController",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./adapter-runtime:createControlledComponentController",
+      "package": "core",
+      "subpath": "./adapter-runtime",
+      "exportName": "createControlledComponentController",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "core:./adapter-runtime:createFacadeConnection",
       "package": "core",
       "subpath": "./adapter-runtime",
@@ -357,6 +375,24 @@
       "package": "core",
       "subpath": "./adapter-runtime",
       "exportName": "synchronizeControllerState",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./adapter-runtime:tryCreateDisabledIdentitySet",
+      "package": "core",
+      "subpath": "./adapter-runtime",
+      "exportName": "tryCreateDisabledIdentitySet",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./adapter-runtime:tryReconcileCollectionIdentities",
+      "package": "core",
+      "subpath": "./adapter-runtime",
+      "exportName": "tryReconcileCollectionIdentities",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -1496,6 +1532,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "core:./grid:scanGridAxis",
+      "package": "core",
+      "subpath": "./grid",
+      "exportName": "scanGridAxis",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "core:./grid:tryCreateGrid",
       "package": "core",
       "subpath": "./grid",
@@ -1527,6 +1572,42 @@
       "package": "core",
       "subpath": "./grid-control",
       "exportName": "tryCreateGridState",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./identity:DEFAULT_MAX_ID_CODE_UNITS",
+      "package": "core",
+      "subpath": "./identity",
+      "exportName": "DEFAULT_MAX_ID_CODE_UNITS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./identity:sameStableIDOrder",
+      "package": "core",
+      "subpath": "./identity",
+      "exportName": "sameStableIDOrder",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./identity:tryNormalizeStableIDs",
+      "package": "core",
+      "subpath": "./identity",
+      "exportName": "tryNormalizeStableIDs",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./identity:validateStableID",
+      "package": "core",
+      "subpath": "./identity",
+      "exportName": "validateStableID",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -2441,6 +2522,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "core:./range:formatExactRatioPercentage",
+      "package": "core",
+      "subpath": "./range",
+      "exportName": "formatExactRatioPercentage",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "core:./range:interpolateExactRatios",
       "package": "core",
       "subpath": "./range",
@@ -2603,6 +2693,24 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "core:./result:failResult",
+      "package": "core",
+      "subpath": "./result",
+      "exportName": "failResult",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./result:okResult",
+      "package": "core",
+      "subpath": "./result",
+      "exportName": "okResult",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "core:./result:unwrap",
       "package": "core",
       "subpath": "./result",
@@ -2616,6 +2724,15 @@
       "package": "core",
       "subpath": "./revision",
       "exportName": "applyRevisionedEvent",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./revision:createMachineUpdate",
+      "package": "core",
+      "subpath": "./revision",
+      "exportName": "createMachineUpdate",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -4475,91 +4592,10 @@
       "inherits": "public-callable-v1"
     },
     {
-      "key": "dom:./popover:arrow",
-      "package": "dom",
-      "subpath": "./popover",
-      "exportName": "arrow",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./popover:autoPlacement",
-      "package": "dom",
-      "subpath": "./popover",
-      "exportName": "autoPlacement",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
       "key": "dom:./popover:createPopover",
       "package": "dom",
       "subpath": "./popover",
       "exportName": "createPopover",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./popover:flip",
-      "package": "dom",
-      "subpath": "./popover",
-      "exportName": "flip",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./popover:hide",
-      "package": "dom",
-      "subpath": "./popover",
-      "exportName": "hide",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./popover:inline",
-      "package": "dom",
-      "subpath": "./popover",
-      "exportName": "inline",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./popover:limitShift",
-      "package": "dom",
-      "subpath": "./popover",
-      "exportName": "limitShift",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./popover:offset",
-      "package": "dom",
-      "subpath": "./popover",
-      "exportName": "offset",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./popover:shift",
-      "package": "dom",
-      "subpath": "./popover",
-      "exportName": "shift",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./popover:size",
-      "package": "dom",
-      "subpath": "./popover",
-      "exportName": "size",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -5699,93 +5735,12 @@
       "inherits": "public-callable-v1"
     },
     {
-      "key": "dom:./tooltip:arrow",
-      "package": "dom",
-      "subpath": "./tooltip",
-      "exportName": "arrow",
-      "kind": "function",
-      "aliasOf": "dom:./popover:arrow",
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./tooltip:autoPlacement",
-      "package": "dom",
-      "subpath": "./tooltip",
-      "exportName": "autoPlacement",
-      "kind": "function",
-      "aliasOf": "dom:./popover:autoPlacement",
-      "inherits": "public-callable-v1"
-    },
-    {
       "key": "dom:./tooltip:createTooltip",
       "package": "dom",
       "subpath": "./tooltip",
       "exportName": "createTooltip",
       "kind": "function",
       "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./tooltip:flip",
-      "package": "dom",
-      "subpath": "./tooltip",
-      "exportName": "flip",
-      "kind": "function",
-      "aliasOf": "dom:./popover:flip",
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./tooltip:hide",
-      "package": "dom",
-      "subpath": "./tooltip",
-      "exportName": "hide",
-      "kind": "function",
-      "aliasOf": "dom:./popover:hide",
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./tooltip:inline",
-      "package": "dom",
-      "subpath": "./tooltip",
-      "exportName": "inline",
-      "kind": "function",
-      "aliasOf": "dom:./popover:inline",
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./tooltip:limitShift",
-      "package": "dom",
-      "subpath": "./tooltip",
-      "exportName": "limitShift",
-      "kind": "function",
-      "aliasOf": "dom:./popover:limitShift",
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./tooltip:offset",
-      "package": "dom",
-      "subpath": "./tooltip",
-      "exportName": "offset",
-      "kind": "function",
-      "aliasOf": "dom:./popover:offset",
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./tooltip:shift",
-      "package": "dom",
-      "subpath": "./tooltip",
-      "exportName": "shift",
-      "kind": "function",
-      "aliasOf": "dom:./popover:shift",
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "dom:./tooltip:size",
-      "package": "dom",
-      "subpath": "./tooltip",
-      "exportName": "size",
-      "kind": "function",
-      "aliasOf": "dom:./popover:size",
       "inherits": "public-callable-v1"
     },
     {
@@ -7553,6 +7508,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "form:./state:clearFormFieldIssues",
+      "package": "form",
+      "subpath": "./state",
+      "exportName": "clearFormFieldIssues",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "form:./state:createFormState",
       "package": "form",
       "subpath": "./state",
@@ -7562,10 +7526,64 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "form:./state:getFormField",
+      "package": "form",
+      "subpath": "./state",
+      "exportName": "getFormField",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "form:./state:getFormFieldIDsByIssueSource",
+      "package": "form",
+      "subpath": "./state",
+      "exportName": "getFormFieldIDsByIssueSource",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "form:./state:removeFormFieldIssue",
+      "package": "form",
+      "subpath": "./state",
+      "exportName": "removeFormFieldIssue",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "form:./state:replaceFormFieldIssues",
+      "package": "form",
+      "subpath": "./state",
+      "exportName": "replaceFormFieldIssues",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "form:./state:setFormFieldMeta",
+      "package": "form",
+      "subpath": "./state",
+      "exportName": "setFormFieldMeta",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "form:./state:tryCreateFormState",
       "package": "form",
       "subpath": "./state",
       "exportName": "tryCreateFormState",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "form:./state:upsertFormFieldIssue",
+      "package": "form",
+      "subpath": "./state",
+      "exportName": "upsertFormFieldIssue",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -13673,6 +13691,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "vue:./form:FormFieldSelector",
+      "package": "vue",
+      "subpath": "./form",
+      "exportName": "FormFieldSelector",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "vue:./form:FormLabel",
       "package": "vue",
       "subpath": "./form",
@@ -13704,6 +13731,15 @@
       "package": "vue",
       "subpath": "./form",
       "exportName": "FormRoot",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./form:FormSelector",
+      "package": "vue",
+      "subpath": "./form",
+      "exportName": "FormSelector",
       "kind": "object",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -13803,6 +13839,33 @@
       "package": "vue",
       "subpath": "./form",
       "exportName": "useFormControl",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./form:useFormFieldController",
+      "package": "vue",
+      "subpath": "./form",
+      "exportName": "useFormFieldController",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./form:useFormFieldSelector",
+      "package": "vue",
+      "subpath": "./form",
+      "exportName": "useFormFieldSelector",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./form:useFormSelector",
+      "package": "vue",
+      "subpath": "./form",
+      "exportName": "useFormSelector",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -19041,6 +19104,209 @@
     {
       "package": "core",
       "surface": "hot",
+      "id": "adapter.collection-domain-replace",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": [
+        "VAL-020:collection-domain-replace"
+      ],
+      "specificationCeiling": "O(nDomain + kState)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nDomain",
+            "meaning": "replacement domain cardinality",
+            "ceiling": "component domain ceiling"
+          },
+          {
+            "name": "kState",
+            "meaning": "canonical state output cardinality",
+            "ceiling": "component state ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(nDomain + kState)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(kState)",
+          "retained": "O(nDomain + kState)"
+        },
+        "resources": {
+          "allocations": "O(kState)",
+          "cacheEntries": "O(1)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Domain replacement is an explicit boundary that invokes the component's one canonical reconciliation constructor and retains only the new domain and snapshot; identical owner replacement is O(1).",
+        "adversarialWitness": "A disjoint maximum domain forces the component reconciliation to emit its complete canonical state exactly once.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A distinct external domain must be validated and reconciled; ordinary handle calls retain the owner."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "adapter.collection-reconcile",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": [
+        "VAL-023:collection-reconcile-work"
+      ],
+      "specificationCeiling": "O(nDomain + sSelected + dDisabled)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nDomain",
+            "meaning": "external collection item count",
+            "ceiling": "Sequence maxItems"
+          },
+          {
+            "name": "sSelected",
+            "meaning": "requested selected identity count",
+            "ceiling": "sSelected <= nDomain after reconciliation"
+          },
+          {
+            "name": "dDisabled",
+            "meaning": "disabled identity count",
+            "ceiling": "dDisabled <= nDomain"
+          }
+        ],
+        "time": {
+          "bound": "O(nDomain + sSelected + dDisabled)",
+          "kind": "expected",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nDomain + sSelected + dDisabled)",
+          "output": "O(sSelected)",
+          "retained": "O(sSelected)"
+        },
+        "resources": {
+          "allocations": "O(nDomain + sSelected + dDisabled)",
+          "cacheEntries": "O(nDomain + sSelected + dDisabled)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "External identities are validated/indexed once, selected and disabled membership use Sets, and one domain-order pass emits canonical selection before bounded current fallback queries.",
+        "adversarialWitness": "A maximum domain with every selected identity ordered oppositely and all but the last item disabled visits each input once.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "An explicit external option replacement must validate and reconcile its complete domain once."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "adapter.controlled-component-sync",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": [
+        "VAL-020:controlled-component-sync"
+      ],
+      "specificationCeiling": "O(oCreate)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "oCreate",
+            "meaning": "component-specific canonical state construction work",
+            "ceiling": "component state contract"
+          }
+        ],
+        "time": {
+          "bound": "O(oCreate)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "O(1)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Controlled sync performs one ownership branch, one component state constructor, and one revision replacement without host projection or domain traversal.",
+        "adversarialWitness": "Controlled and uncontrolled sync at the revision ceiling exercise the only bounded branches.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Any collection work belongs to the declared component state constructor."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
       "id": "adapter.controller-handle",
       "source": "packages/core/src/adapter-runtime.ts",
       "benchmarkIDs": [
@@ -19102,6 +19368,69 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Unrelated controllers and subscribers are outside the owner."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "adapter.disabled-identities",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": [
+        "VAL-020:disabled-identity-normalization"
+      ],
+      "specificationCeiling": "O(nDisabled)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nDisabled",
+            "meaning": "supplied disabled identity count",
+            "ceiling": "component domain ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(nDisabled)",
+          "kind": "expected",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nDisabled)",
+          "output": "O(1)",
+          "retained": "O(nDisabled)"
+        },
+        "resources": {
+          "allocations": "O(nDisabled)",
+          "cacheEntries": "O(nDisabled)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Construction inserts supplied identities into one Set and performs one expected-O(1) domain membership check per distinct identity.",
+        "adversarialWitness": "Every supplied ID is distinct and the final ID lies outside the domain.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External disabled input must be validated exactly once at construction."
         }
       }
     },
@@ -19170,6 +19499,68 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Only facade-owned subscribers and connection resources may be visited."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "adapter.facade-method-read",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": [
+        "core:facade:access"
+      ],
+      "specificationCeiling": "O(1) expected",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "pMethod",
+            "meaning": "distinct forwarded connection method properties read from one facade",
+            "ceiling": "connection method surface"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "expected",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(pMethod)"
+        },
+        "resources": {
+          "allocations": "amortized O(1) per distinct method and 0 per repeated read",
+          "cacheEntries": "O(pMethod)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Special facade methods are created once and forwarded connection methods use one owner-local wrapper per property; repeated reads return stable function identity.",
+        "adversarialWitness": "Read every forwarded method once, then repeatedly read the same methods before and after destroy.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "One property read performs one bounded cache lookup and cannot enumerate the connection surface."
         }
       }
     },
@@ -19453,34 +19844,39 @@
         "core:tree-grid:right:100000",
         "core:menu:next:100000"
       ],
-      "specificationCeiling": "O(n + v)",
+      "specificationCeiling": "O(vRow * cColumn + vCell)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
-            "name": "n",
-            "meaning": "immutable owner domain cardinality",
-            "ceiling": "domain maxItems"
+            "name": "vRow",
+            "meaning": "visible rows emitted for one immutable expansion owner",
+            "ceiling": "vRow <= grid.rowCount"
           },
           {
-            "name": "v",
-            "meaning": "visible identities emitted for one expansion/path owner",
-            "ceiling": "v <= n"
+            "name": "cColumn",
+            "meaning": "coordinates in a cold visible row view",
+            "ceiling": "grid.columnCount"
+          },
+          {
+            "name": "vCell",
+            "meaning": "visible occupied cells emitted for one expansion owner",
+            "ceiling": "vCell <= grid.size"
           }
         ],
         "time": {
-          "bound": "O(n + v)",
+          "bound": "O(vRow * cColumn + vCell)",
           "kind": "amortized",
           "runtimeState": "trusted"
         },
         "space": {
-          "auxiliary": "O(n + v)",
-          "output": "O(n + v)",
-          "retained": "O(n + v)"
+          "auxiliary": "O(vRow + vCell)",
+          "output": "O(vCell)",
+          "retained": "O(vRow + vCell)"
         },
         "resources": {
-          "allocations": "O(n + v)",
-          "cacheEntries": "O(n + v)",
+          "allocations": "O(vRow + vCell)",
+          "cacheEntries": "O(vRow + vCell)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
@@ -19501,15 +19897,15 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Weak owner maps retain one flattened grid/tree-grid domain and one visible derivation per live immutable expansion/path identity; repeated reads return the indexed view in O(1).",
-        "adversarialWitness": "The first fully visible maximum-size owner materializes every identity; repeated canonical transitions perform zero cell or visible-tree reconstruction.",
+        "proof": "Grid-control and tree-grid consume the Grid owner's O(1) retained domain view. A tree-grid expansion traverses only visible rows, reuses owner-cached row views, and materializes one indexed visible-cell output; repeated reads of that expansion return the cached view in O(1).",
+        "adversarialWitness": "A sparse grid with one visible row visits only that row's coordinates and emitted cells instead of the full rectangle; repeated canonical transitions perform zero domain, row, or visible-tree reconstruction.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "Only first construction of an output-sized immutable derived view scans its owner; repeated canonical access does not."
+          "rationale": "Cold row views may scan coordinates only in visible rows, and the derived visible-cell index must visit its complete output once."
         }
       }
     },
@@ -19836,6 +20232,193 @@
     {
       "package": "core",
       "surface": "hot",
+      "id": "exact-ratio.format-percentage",
+      "source": "packages/core/src/structures/range.ts",
+      "benchmarkIDs": [
+        "VAL-021:exact-ratio-percentage"
+      ],
+      "specificationCeiling": "O(b*D(b))",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "b",
+            "meaning": "numerator or denominator bit width",
+            "ceiling": "ExactRatio construction ceilings"
+          },
+          {
+            "name": "D",
+            "meaning": "bounded b-bit division cost",
+            "ceiling": "runtime BigInt division implementation"
+          }
+        ],
+        "time": {
+          "bound": "O(b*D(b))",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(b)",
+          "output": "O(b)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "The external ratio is width-checked and reduced before one exact division at the fixed Core percentage precision materializes one decimal spelling; callers cannot expand the precision ceiling.",
+        "adversarialWitness": "A maximum-width non-terminating ratio exercises the fixed half-even precision and widest accepted division operands.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Work depends on bounded scalar width and fixed precision, never collection cardinality."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "foundation.machine-update",
+      "source": "packages/core/src/internal/kernel/machine.ts",
+      "benchmarkIDs": [
+        "core:controller:handle",
+        "VAL-002:machine-update-construction"
+      ],
+      "specificationCeiling": "O(cCommand)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "cCommand",
+            "meaning": "commands emitted by one transition",
+            "ceiling": "component command ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(cCommand)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(cCommand)",
+          "retained": "O(cCommand)"
+        },
+        "resources": {
+          "allocations": "O(cCommand)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Non-empty commands are copied and frozen into one output vector; the empty path reuses one frozen singleton. No second command-array copy is made.",
+        "adversarialWitness": "A maximum command batch copies and freezes each command once; repeated zero-command updates share the same empty vector.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Observable immutable command output requires visiting each emitted command once."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "foundation.result-construction",
+      "source": "packages/core/src/internal/kernel/foundation.ts",
+      "benchmarkIDs": [
+        "VAL-002:result-construction"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Success and failure constructors create one fixed-shape discriminated result and retain supplied detail records by immutable contract.",
+        "adversarialWitness": "A failure with a maximum-size caller-owned detail record performs no enumeration or copy of that record.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Result construction has no collection input owned by the primitive."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
       "id": "geometry.bounds",
       "source": "packages/core/src/structures/geometry.ts",
       "benchmarkIDs": [
@@ -20143,6 +20726,71 @@
     {
       "package": "core",
       "surface": "hot",
+      "id": "grid.scan-axis",
+      "source": "packages/core/src/structures/grid.ts",
+      "benchmarkIDs": [
+        "VAL-006:grid-axis-equivalence",
+        "VAL-017:grid-move-work"
+      ],
+      "specificationCeiling": "O(sAxis)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "sAxis",
+            "meaning": "visited coordinates on the selected axis",
+            "ceiling": "maxScan and axis length minus the current coordinate"
+          }
+        ],
+        "time": {
+          "bound": "O(sAxis)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0",
+          "callbacks": "sAxis"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "The shared axis loop advances once per coordinate, invokes accepts exactly once for each visit, excludes the current coordinate after wrapping, and stops at maxScan, the first accepted coordinate, or the exhausted axis.",
+        "adversarialWitness": "A maximum-length axis whose callback rejects every coordinate visits exactly min(axis length minus one, maxScan) coordinates.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Only the explicitly selected bounded axis may be scanned."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
       "id": "grid.view",
       "source": "packages/core/src/structures/grid.ts",
       "benchmarkIDs": [
@@ -20207,6 +20855,137 @@
         "fullScan": {
           "allowed": true,
           "rationale": "Only the first requested axis read is scanned and its output contains every occupied identity on that axis."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "identity.normalize",
+      "source": "packages/core/src/identity.ts",
+      "benchmarkIDs": [
+        "VAL-002:stable-id-normalization"
+      ],
+      "specificationCeiling": "O(nID + uID)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nID",
+            "meaning": "identity count",
+            "ceiling": "caller/domain maxItems"
+          },
+          {
+            "name": "uID",
+            "meaning": "total UTF-16 code units across identities",
+            "ceiling": "nID * maxIDCodeUnits"
+          }
+        ],
+        "time": {
+          "bound": "O(nID + uID)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nID)",
+          "output": "O(nID)",
+          "retained": "O(nID)"
+        },
+        "resources": {
+          "allocations": "O(nID)",
+          "cacheEntries": "O(nID)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "The normalizer checks the ceiling once, scans each ID's code units once, records one uniqueness entry, and emits one frozen ordered snapshot.",
+        "adversarialWitness": "The final maximum-width ID duplicates the first after all prior identities have been validated.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External identity input must be completely validated and uniqueness requires observing every accepted ID."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "identity.same-order",
+      "source": "packages/core/src/identity.ts",
+      "benchmarkIDs": [
+        "VAL-023:stable-id-order-comparison"
+      ],
+      "specificationCeiling": "O(nID)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nID",
+            "meaning": "identity count in equal-length inputs",
+            "ceiling": "owning domain ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(nID)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Identity or length mismatch exits immediately; equal-length distinct arrays compare each aligned identity at most once.",
+        "adversarialWitness": "Two maximum equal-length vectors differ only at the final identity.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Exact ordered equality has a linear lower bound for distinct equal-length arrays."
         }
       }
     },
@@ -20699,6 +21478,132 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Scalar range arithmetic cannot traverse range count."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "reorder.sequence-transition",
+      "source": "packages/core/src/reorder.ts",
+      "benchmarkIDs": [
+        "VAL-019:sequence-reorder:100000"
+      ],
+      "specificationCeiling": "O(n)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "ordered identity cardinality",
+            "ceiling": "Sequence maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(n)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(n)",
+          "retained": "O(n)"
+        },
+        "resources": {
+          "allocations": "O(n)",
+          "cacheEntries": "O(n)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "A canonical state retains its Sequence owner. Source and target resolve through its index, one move overlay is created in O(1), and the public full ids snapshot is materialized exactly once.",
+        "adversarialWitness": "Moving the first identity after the last in a maximum-size canonical sequence performs two indexed lookups, one overlay, and one full output materialization.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Only the public full ordered output has a linear lower bound; source and target lookup do not scan."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "reorder.tree-transition",
+      "source": "packages/core/src/reorder.ts",
+      "benchmarkIDs": [
+        "VAL-019:tree-reorder:100000"
+      ],
+      "specificationCeiling": "O(n)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "tree node cardinality",
+            "ceiling": "Tree maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(n)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(n)",
+          "output": "O(n)",
+          "retained": "O(n)"
+        },
+        "resources": {
+          "allocations": "O(n)",
+          "cacheEntries": "O(n)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "A canonical state retains the current Tree and input-order index. Cycle, source, target, parent, and last-sibling queries reuse those indexes; one output vector and exactly one next Tree are constructed.",
+        "adversarialWitness": "Moving a root with a maximum-size subtree under the last branch performs constant indexed resolution followed by one complete immutable output and one next-tree validation.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "The next immutable tree and public full node snapshot must each account for all n nodes; the current tree is not reconstructed."
         }
       }
     },
@@ -21310,7 +22215,7 @@
       "benchmarkIDs": [
         "VAL-017:text-boundary-work"
       ],
-      "specificationCeiling": "O(nText + nInsert)",
+      "specificationCeiling": "O(nText + nInsert + nOut)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
@@ -21323,20 +22228,25 @@
             "name": "nInsert",
             "meaning": "replacement UTF-16 code units",
             "ceiling": "maxCodeUnits"
+          },
+          {
+            "name": "nOut",
+            "meaning": "immutable output UTF-16 code units",
+            "ceiling": "maxCodeUnits"
           }
         ],
         "time": {
-          "bound": "O(nText + nInsert)",
+          "bound": "O(nText + nInsert + nOut)",
           "kind": "worst-case",
           "runtimeState": "external"
         },
         "space": {
-          "auxiliary": "O(nText + nInsert)",
-          "output": "O(nText + nInsert)",
-          "retained": "O(nText + nInsert)"
+          "auxiliary": "O(1)",
+          "output": "O(nOut)",
+          "retained": "O(nOut)"
         },
         "resources": {
-          "allocations": "O(nText + nInsert)",
+          "allocations": "O(nOut)",
           "cacheEntries": "0",
           "listeners": "0",
           "observers": "0",
@@ -21358,7 +22268,7 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "External text validation and immutable replacement inspect/copy bounded UTF-16 input and output.",
+        "proof": "External source and replacement text are each validated once, offsets use local boundary checks after that proof, and immutable replacement materializes the output once.",
         "adversarialWitness": "Maximum valid text replaced at the final surrogate boundary.",
         "evidence": [
           "VAL-016",
@@ -21366,7 +22276,75 @@
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "External full-string validation is recorded until WI-021 proves local validation."
+          "rationale": "Untrusted source and replacement strings require complete UTF-16 validation before projection."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "text.replace-canonical",
+      "source": "packages/core/src/internal/editing/text.ts",
+      "benchmarkIDs": [
+        "VAL-019:text-replace-canonical:100000"
+      ],
+      "specificationCeiling": "O(nInsert + nOut)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nInsert",
+            "meaning": "replacement UTF-16 code units requiring validation",
+            "ceiling": "maxCodeUnits"
+          },
+          {
+            "name": "nOut",
+            "meaning": "immutable output UTF-16 code units",
+            "ceiling": "maxCodeUnits"
+          }
+        ],
+        "time": {
+          "bound": "O(nInsert + nOut)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(nOut)",
+          "retained": "O(nOut)"
+        },
+        "resources": {
+          "allocations": "O(nOut)",
+          "cacheEntries": "1 provenance mark per live state",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "A module-private WeakSet proves the source state was built from well-formed text. Replacement validation scans only inserted code units, source cuts and output selection inspect adjacent code units, and immutable string construction pays the unavoidable output cost.",
+        "adversarialWitness": "A one-code-unit replacement at the end of a maximum-size canonical text checks two local boundaries without validating the unchanged prefix.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "The inserted text must be validated and the immutable output must be produced; unchanged canonical source code units are not validation-scanned."
         }
       }
     },
@@ -21645,8 +22623,222 @@
     {
       "package": "dom",
       "surface": "hot",
+      "id": "form.subscribe",
+      "source": "packages/dom/src/form.ts",
+      "benchmarkIDs": [
+        "VAL-032:dom-form-subscribe-resources"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "a",
+            "meaning": "owned ancestors or registered host resources",
+            "ceiling": "document and package resource ceilings"
+          },
+          {
+            "name": "p",
+            "meaning": "affected subscribers or projected targets",
+            "ceiling": "connection-owned registration count"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "expected",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "1"
+        },
+        "assumptions": [
+          "resources are connection-owned",
+          "disconnect is idempotent"
+        ],
+        "ceilings": [
+          "ancestor, observer, timer, listener, and subscription ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:lifecycle-work"
+        ],
+        "deterministicWork": [
+          "registrations do not exceed declared owned-resource and affected-target cardinalities",
+          "disconnect leaves every resource counter at zero"
+        ],
+        "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
+        "proof": "Construction evaluates one selector, retains one record, and inserts it into one form or field Set channel.",
+        "adversarialWitness": "A subscription to an absent field still allocates one field-channel record and no domain projection.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Subscription construction cannot inspect registered fields or other subscriptions."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
+      "id": "form.subscription-dispatch",
+      "source": "packages/dom/src/form.ts",
+      "benchmarkIDs": [
+        "VAL-032:dom-form-selector-dispatch-work"
+      ],
+      "specificationCeiling": "O(sForm + uSource + sAffected)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "sForm",
+            "meaning": "active coarse form subscriptions",
+            "ceiling": "connection-owned subscriptions"
+          },
+          {
+            "name": "uSource",
+            "meaning": "field owners affected by a source-wide issue transition",
+            "ceiling": "registered field count"
+          },
+          {
+            "name": "sAffected",
+            "meaning": "subscriptions in affected field channels",
+            "ceiling": "all connection-owned field subscriptions for reset/reinitialize"
+          },
+          {
+            "name": "sField",
+            "meaning": "all active field subscriptions retained by the connection",
+            "ceiling": "connection-owned subscriptions"
+          }
+        ],
+        "time": {
+          "bound": "O(sForm + uSource + sAffected)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(sForm + uSource + sAffected)",
+          "output": "O(1)",
+          "retained": "O(sForm + sField)"
+        },
+        "resources": {
+          "allocations": "O(sForm + uSource + sAffected)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(sForm + sField)"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Dispatch snapshots the coarse channel and only event-routed field channels; source-wide events reuse Form owner indexes and reset/reinitialize explicitly visit every subscribed field channel.",
+        "adversarialWitness": "A source replacement touching one of 10k fields evaluates coarse selectors plus only that field's channel, while reset deliberately evaluates every subscribed field channel.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Ordinary single-field updates cannot enumerate unrelated fields or field subscription channels."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
+      "id": "form.unsubscribe",
+      "source": "packages/dom/src/form.ts",
+      "benchmarkIDs": [
+        "VAL-032:dom-form-unsubscribe-work"
+      ],
+      "specificationCeiling": "expected O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "a",
+            "meaning": "owned ancestors or registered host resources",
+            "ceiling": "document and package resource ceilings"
+          },
+          {
+            "name": "p",
+            "meaning": "affected subscribers or projected targets",
+            "ceiling": "connection-owned registration count"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "expected",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "-1"
+        },
+        "assumptions": [
+          "resources are connection-owned",
+          "disconnect is idempotent"
+        ],
+        "ceilings": [
+          "ancestor, observer, timer, listener, and subscription ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:lifecycle-work"
+        ],
+        "deterministicWork": [
+          "registrations do not exceed declared owned-resource and affected-target cardinalities",
+          "disconnect leaves every resource counter at zero"
+        ],
+        "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
+        "proof": "The idempotent disposer marks one record inactive, deletes it from one Set, and removes an empty field channel from one Map.",
+        "adversarialWitness": "Repeated disposal during active dispatch changes no other channel and retains no subscription.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Unsubscribe owns a direct record and channel reference."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
       "id": "position.connect",
-      "source": "packages/dom/src/internal/floating-position.ts",
+      "source": "packages/dom/src/internal/positioning/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-connect-resources"
       ],
@@ -21693,7 +22885,7 @@
           "disconnect leaves every resource counter at zero"
         ],
         "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
-        "proof": "Connection discovers the owned ancestor chain once and registers only connection-owned resources.",
+        "proof": "Connection discovers the owned ancestor chain once; source-owned WeakMap registries retain one physical listener and only callbacks for connections affected by that source.",
         "adversarialWitness": "Deep nested scrolling ancestors with every target connected.",
         "evidence": [
           "VAL-016",
@@ -21709,7 +22901,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "position.disconnect",
-      "source": "packages/dom/src/internal/floating-position.ts",
+      "source": "packages/dom/src/internal/positioning/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-disconnect-zero"
       ],
@@ -21772,7 +22964,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "position.discovery",
-      "source": "packages/dom/src/internal/floating-position.ts",
+      "source": "packages/dom/src/internal/positioning/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-discovery-work"
       ],
@@ -21835,7 +23027,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "position.schedule",
-      "source": "packages/dom/src/internal/floating-position.ts",
+      "source": "packages/dom/src/internal/positioning/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-schedule-work"
       ],
@@ -21891,7 +23083,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "position.update",
-      "source": "packages/dom/src/internal/floating-position.ts",
+      "source": "packages/dom/src/internal/positioning/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-update-work"
       ],
@@ -21943,7 +23135,7 @@
           "disconnect leaves every resource counter at zero"
         ],
         "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
-        "proof": "An update consumes retained discovery, measures ancestors and a bounded candidate set, then commits one projection.",
+        "proof": "An update consumes retained discovery, completes reference/floating/boundary/ancestor reads, invokes the bounded Core AnchoredLayout solver, then commits one owned projection.",
         "adversarialWitness": "Every ancestor clips and every side candidate overflows.",
         "evidence": [
           "VAL-016",
@@ -21958,12 +23150,12 @@
     {
       "package": "form",
       "surface": "hot",
-      "id": "field.update",
+      "id": "field.get",
       "source": "packages/form/src/internal/form.ts",
       "benchmarkIDs": [
-        "VAL-030:form-field-update-work"
+        "VAL-031:form-field-get-work"
       ],
-      "specificationCeiling": "O(fField + iIssue)",
+      "specificationCeiling": "expected O(1)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
@@ -21971,25 +23163,92 @@
             "name": "fField",
             "meaning": "registered field count",
             "ceiling": "maxFields"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(fField)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "O(fField)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Canonical Form state retains ID-to-index mapping and resolves one fixed-size chunk coordinate.",
+        "adversarialWitness": "First, middle, last, and absent IDs in a 10k-field canonical form perform one map lookup.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Only forged external states use the compatibility-free validation boundary before becoming canonical."
+        }
+      }
+    },
+    {
+      "package": "form",
+      "surface": "hot",
+      "id": "field.ids-by-issue-source",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": [
+        "VAL-032:form-source-owner-query-work"
+      ],
+      "specificationCeiling": "O(uSource)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "uSource",
+            "meaning": "fields owning issues from the requested source",
+            "ceiling": "uSource <= fField"
+          },
+          {
+            "name": "fField",
+            "meaning": "registered field count retained by the form",
+            "ceiling": "maxFields"
           },
           {
             "name": "iIssue",
-            "meaning": "incoming and removed issue count",
+            "meaning": "all retained form issues",
             "ceiling": "maxIssues"
           }
         ],
         "time": {
-          "bound": "O(fField + iIssue)",
+          "bound": "O(uSource)",
           "kind": "worst-case",
           "runtimeState": "trusted"
         },
         "space": {
-          "auxiliary": "O(fField + iIssue)",
-          "output": "O(fField + iIssue)",
+          "auxiliary": "O(uSource)",
+          "output": "O(uSource)",
           "retained": "O(fField + iIssue)"
         },
         "resources": {
-          "allocations": "O(fField + iIssue)",
+          "allocations": "O(uSource)",
           "cacheEntries": "O(fField + iIssue)",
           "listeners": "0",
           "observers": "0",
@@ -22011,15 +23270,176 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The incumbent normalizes the complete field object and redistributes issues across field snapshots.",
-        "adversarialWitness": "One field change in a 10k-field form with source-wide issues.",
+        "proof": "The canonical source-owner delta index enumerates only owners of the requested source and materializes the explicit returned snapshot.",
+        "adversarialWitness": "One issue source owned by every registered field emits every owner once without inspecting unrelated issue sources.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
-          "allowed": true,
-          "rationale": "Recorded incumbent weakness owned by WI-027; no new caller may assume it is bounded."
+          "allowed": false,
+          "rationale": "Canonical queries reuse the retained source-owner index; only forged input falls back to complete validation/projection."
+        }
+      }
+    },
+    {
+      "package": "form",
+      "surface": "hot",
+      "id": "field.update",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": [
+        "VAL-030:form-field-update-work"
+      ],
+      "specificationCeiling": "O(fField/64 + 64 + iFieldIssue)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "fField",
+            "meaning": "registered field count",
+            "ceiling": "maxFields"
+          },
+          {
+            "name": "iFieldIssue",
+            "meaning": "issues owned by the changed field",
+            "ceiling": "maxIssues"
+          },
+          {
+            "name": "iIssue",
+            "meaning": "all retained form issues",
+            "ceiling": "maxIssues"
+          }
+        ],
+        "time": {
+          "bound": "O(fField/64 + 64 + iFieldIssue)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(fField/64 + 64 + iFieldIssue)",
+          "output": "O(1)",
+          "retained": "O(fField + iIssue)"
+        },
+        "resources": {
+          "allocations": "O(fField/64 + 64 + iFieldIssue)",
+          "cacheEntries": "O(fField + iIssue)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "The retained ID index resolves one field, then one 64-entry chunk and the outer chunk vector are copied; issue ownership/source indexes are updated only for the changed field's issues.",
+        "adversarialWitness": "One field metadata or issue change in a 10k-field canonical form copies one chunk and the 157-entry chunk vector without visiting unrelated field records.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Canonical single-field updates use the retained index and chunk path."
+        }
+      }
+    },
+    {
+      "package": "form",
+      "surface": "hot",
+      "id": "issues.replace-source",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": [
+        "VAL-031:form-source-issue-replacement-work"
+      ],
+      "specificationCeiling": "O(iIncoming + iRemoved + jField*(fField/64 + 64 + iFieldIssue))",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "iIncoming",
+            "meaning": "incoming issues for the source",
+            "ceiling": "maxIssues"
+          },
+          {
+            "name": "iRemoved",
+            "meaning": "previous issues for the source",
+            "ceiling": "maxIssues"
+          },
+          {
+            "name": "jField",
+            "meaning": "fields losing or receiving source issues",
+            "ceiling": "jField <= fField"
+          },
+          {
+            "name": "fField",
+            "meaning": "registered field count retained by the form",
+            "ceiling": "maxFields"
+          },
+          {
+            "name": "iFieldIssue",
+            "meaning": "issues owned by one affected field",
+            "ceiling": "maxIssues"
+          },
+          {
+            "name": "iIssue",
+            "meaning": "all retained form issues",
+            "ceiling": "maxIssues"
+          }
+        ],
+        "time": {
+          "bound": "O(iIncoming + iRemoved + jField*(fField/64 + 64 + iFieldIssue))",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(iIncoming + iRemoved + jField + fField/64)",
+          "output": "O(iIncoming)",
+          "retained": "O(fField + iIssue)"
+        },
+        "resources": {
+          "allocations": "O(iIncoming + iRemoved + jField + fField/64)",
+          "cacheEntries": "O(fField + iIssue)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Retained source-owner indexes enumerate only affected fields; incoming issues are partitioned once and changed chunks are copied once per batch.",
+        "adversarialWitness": "Replacing one source affecting one field in a 10k-field form does not visit the other 9,999 field records.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Source-wide replacement is proportional to source issues, affected fields, and the bounded chunk path."
         }
       }
     },
@@ -22031,8 +23451,8 @@
       "benchmarkIDs": [
         "VAL-030:form-construct-work"
       ],
-      "specificationCeiling": "O(fField + uID)",
-      "reviewedWeakening": "WI-027 owns replacement with the required one-pass indexed construction.",
+      "specificationCeiling": "O(fField + uID + iIssue)",
+      "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
@@ -22044,10 +23464,15 @@
             "name": "uID",
             "meaning": "unique field identity count",
             "ceiling": "uID <= fField"
+          },
+          {
+            "name": "iIssue",
+            "meaning": "issues supplied during construction",
+            "ceiling": "maxIssues"
           }
         ],
         "time": {
-          "bound": "O(fField * uID)",
+          "bound": "O(fField + uID + iIssue)",
           "kind": "worst-case",
           "runtimeState": "external"
         },
@@ -22079,15 +23504,15 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The incumbent duplicate check performs repeated prefix lookups while constructing normalized fields.",
-        "adversarialWitness": "A maximum-size unique field list forces every prefix lookup to miss.",
+        "proof": "Core stable-ID normalization and the Form field/issue store each visit construction input once while building retained indexes and 64-entry chunks.",
+        "adversarialWitness": "A maximum-size unique field and issue list performs one bounded validation/indexing pass.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "Construction must visit all fields, while the quadratic incumbent is frozen for WI-027."
+          "rationale": "External construction must validate and index every supplied field and issue exactly once per declared layer."
         }
       }
     },
@@ -22692,6 +24117,194 @@
     {
       "package": "virtual",
       "surface": "hot",
+      "id": "indexed-view.at",
+      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "benchmarkIDs": [
+        "VAL-017:indexed-view-at-work"
+      ],
+      "specificationCeiling": "O(log nItem)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "indexed view item count",
+            "ceiling": "owner ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(log nItem)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Blocked views descend one balanced block path; packed and dense views use direct indexed reads.",
+        "adversarialWitness": "Read the final item of a maximum-depth blocked owner.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "One indexed read cannot visit unrelated blocks."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
+      "id": "indexed-view.iterate",
+      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "benchmarkIDs": [
+        "VAL-017:indexed-view-iterate-work"
+      ],
+      "specificationCeiling": "O(nItem)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "indexed view item count",
+            "ceiling": "owner ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(log nItem)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(nItem)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Iteration visits each retained block and item exactly once without array materialization.",
+        "adversarialWitness": "Consume a maximum-size view to iterator completion.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Explicit iteration requests the complete logical collection."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
+      "id": "indexed-view.to-array",
+      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "benchmarkIDs": [
+        "VAL-017:indexed-view-materialize-work"
+      ],
+      "specificationCeiling": "O(nItem)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "indexed view item count",
+            "ceiling": "owner ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(log nItem)",
+          "output": "O(nItem)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(nItem)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "toArray allocates one output array and fills each position once from the retained owner.",
+        "adversarialWitness": "Materialize a maximum-size blocked view.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "The explicit snapshot output itself contains every item."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
       "id": "linear.measure",
       "source": "packages/virtual/src/linear-layout.ts",
       "benchmarkIDs": [
@@ -22978,12 +24591,86 @@
     {
       "package": "virtual",
       "surface": "hot",
-      "id": "partitioned.measure",
+      "id": "partitioned.measure.incremental",
       "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
       "benchmarkIDs": [
-        "VAL-017:partitioned-measure-work"
+        "virtual:partitioned:measure:100000:1",
+        "virtual:partitioned:measure:100000:32"
       ],
-      "specificationCeiling": "O(nTrack + nRegion log nRegion + jChanged)",
+      "specificationCeiling": "O(jChanged log nTrack + rRepair)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nTrack",
+            "meaning": "partitioned row and column track count",
+            "ceiling": "maxTracks"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "changed track measurements",
+            "ceiling": "jChanged <= nTrack"
+          },
+          {
+            "name": "rRepair",
+            "meaning": "selected blocked-vector repair bound",
+            "ceiling": "rRepair < nTrack / 2"
+          }
+        ],
+        "time": {
+          "bound": "O(jChanged log nTrack + rRepair)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(jChanged + rRepair)",
+          "output": "O(1)",
+          "retained": "O(rRepair)"
+        },
+        "resources": {
+          "allocations": "O(jChanged + rRepair)",
+          "cacheEntries": "O(rRepair)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Identity maps locate changed tracks; blocked vectors and prefix indexes path-copy bounded paths while region indexes and partition boundaries retain owner identity.",
+        "adversarialWitness": "Changed tracks occupy disjoint 64-entry blocks across both axes while remaining below the half-rebuild crossover.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Sparse measurement may not visit unchanged tracks or regions."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
+      "id": "partitioned.measure.rebuild",
+      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "benchmarkIDs": [
+        "virtual:partitioned:measure:100000:100000"
+      ],
+      "specificationCeiling": "O(nTrack + nRegion log nRegion)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
@@ -22996,15 +24683,10 @@
             "name": "nRegion",
             "meaning": "partitioned region count",
             "ceiling": "maxRegions"
-          },
-          {
-            "name": "jChanged",
-            "meaning": "changed track measurements",
-            "ceiling": "jChanged <= nTrack"
           }
         ],
         "time": {
-          "bound": "O(nTrack + nRegion log nRegion + jChanged)",
+          "bound": "O(nTrack + nRegion log nRegion)",
           "kind": "worst-case",
           "runtimeState": "trusted"
         },
@@ -23036,15 +24718,15 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The incumbent copies measured tracks then reconstructs partition ranges, track indexes, and the nested grid state.",
-        "adversarialWitness": "One changed pinned track with maximum regions rebuilds every derived partition/index.",
+        "proof": "When the deterministic repair bound reaches half the track count, one packed rebuild replaces track, prefix, partition, and region indexes.",
+        "adversarialWitness": "A dense batch changes every track and forces the selected rebuild branch.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "Recorded incumbent rebuild is owned by WI-039 and may not worsen before repair selection."
+          "rationale": "The crossover explicitly selects one full rebuild for dense changes."
         }
       }
     },
@@ -23124,14 +24806,13 @@
     {
       "package": "virtual",
       "surface": "hot",
-      "id": "spatial.measure",
+      "id": "spatial.measure.incremental",
       "source": "packages/virtual/src/spatial-layout.ts",
       "benchmarkIDs": [
         "virtual:spatial:measure:100000:1",
-        "virtual:spatial:measure:100000:32",
-        "virtual:spatial:measure:100000:100000"
+        "virtual:spatial:measure:100000:32"
       ],
-      "specificationCeiling": "O(nItem log nItem)",
+      "specificationCeiling": "O(jChanged log jChanged + rRepair)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
@@ -23144,11 +24825,79 @@
             "name": "jChanged",
             "meaning": "changed measurement count",
             "ceiling": "jChanged <= nItem"
+          },
+          {
+            "name": "rRepair",
+            "meaning": "selected blocked-vector and packed-tree repair bound",
+            "ceiling": "rRepair < nItem / 2"
           }
         ],
         "time": {
-          "bound": "O(nItem log nItem + jChanged)",
-          "kind": "expected",
+          "bound": "O(jChanged log jChanged + rRepair)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(jChanged + rRepair)",
+          "output": "O(1)",
+          "retained": "O(rRepair)"
+        },
+        "resources": {
+          "allocations": "O(jChanged + rRepair)",
+          "cacheEntries": "O(rRepair)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Retained ID and item-to-leaf indexes identify changes; sorted change sets path-copy 64-entry vector leaves and only touched packed-tree paths.",
+        "adversarialWitness": "Changed rectangles occupy distinct spatial leaves while the explicit repair bound remains below half the item count.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Sparse measurement may not visit unchanged items or packed-tree leaves."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
+      "id": "spatial.measure.rebuild",
+      "source": "packages/virtual/src/spatial-layout.ts",
+      "benchmarkIDs": [
+        "virtual:spatial:measure:100000:100000"
+      ],
+      "specificationCeiling": "O(nItem log nItem)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "spatial item count",
+            "ceiling": "maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem log nItem)",
+          "kind": "worst-case",
           "runtimeState": "trusted"
         },
         "space": {
@@ -23157,7 +24906,7 @@
           "retained": "O(nItem)"
         },
         "resources": {
-          "allocations": "O(nItem + jChanged)",
+          "allocations": "O(nItem)",
           "cacheEntries": "O(nItem)",
           "listeners": "0",
           "observers": "0",
@@ -23179,15 +24928,15 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The incumbent applies changed rectangles then bulk-rebuilds the packed spatial index.",
-        "adversarialWitness": "One changed rectangle in a 100k-item layout still rebuilds the packed index.",
+        "proof": "When the deterministic repair bound reaches half the item count, one STR sort and packed-tree rebuild replaces the owner.",
+        "adversarialWitness": "A dense measurement changes every rectangle and forces the selected rebuild branch.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "Recorded incumbent rebuild owned by WI-039; sparse repair may not regress beyond it."
+          "rationale": "The crossover explicitly selects one full packed rebuild for dense changes."
         }
       }
     },
@@ -23399,6 +25148,147 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Full work is allowed only when candidate/output cardinality itself reaches nRegion."
+        }
+      }
+    },
+    {
+      "package": "vue",
+      "surface": "hot",
+      "id": "collection.external-reconcile",
+      "source": "packages/vue/src/internal/collection.ts",
+      "benchmarkIDs": [
+        "VAL-023:vue-collection-reconcile-work"
+      ],
+      "specificationCeiling": "O(nOption + sSelected + dDisabled)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nOption",
+            "meaning": "external option count",
+            "ceiling": "component domain ceiling"
+          },
+          {
+            "name": "sSelected",
+            "meaning": "requested selection count",
+            "ceiling": "component domain ceiling"
+          },
+          {
+            "name": "dDisabled",
+            "meaning": "disabled option count",
+            "ceiling": "component domain ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(nOption + sSelected + dDisabled)",
+          "kind": "expected",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nOption + sSelected + dDisabled)",
+          "output": "O(sSelected)",
+          "retained": "O(sSelected)"
+        },
+        "resources": {
+          "allocations": "O(nOption + sSelected + dDisabled)",
+          "cacheEntries": "O(nOption + sSelected + dDisabled)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Vue delegates the explicit prop-replacement boundary to Core collection reconciliation and retains only the resulting controller snapshot.",
+        "adversarialWitness": "A disjoint equal-size prop replacement invalidates selection and current while visiting every external option once.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External option replacement requires validation; ordinary controller events bypass this path."
+        }
+      }
+    },
+    {
+      "package": "vue",
+      "surface": "hot",
+      "id": "form.selector-bridge",
+      "source": "packages/vue/src/form.ts",
+      "benchmarkIDs": [
+        "VAL-033:vue-form-granular-reactivity"
+      ],
+      "specificationCeiling": "O(sForm + sField)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "sForm",
+            "meaning": "active subscribers on the form channel",
+            "ceiling": "mounted form selector count"
+          },
+          {
+            "name": "sField",
+            "meaning": "active subscribers for one field identifier",
+            "ceiling": "mounted selectors for that field"
+          }
+        ],
+        "time": {
+          "bound": "O(sForm + sField)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(1)"
+        },
+        "assumptions": [
+          "resources are connection-owned",
+          "disconnect is idempotent"
+        ],
+        "ceilings": [
+          "ancestor, observer, timer, listener, and subscription ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:lifecycle-work"
+        ],
+        "deterministicWork": [
+          "registrations do not exceed declared owned-resource and affected-target cardinalities",
+          "disconnect leaves every resource counter at zero"
+        ],
+        "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
+        "proof": "Each composable owns one shallowRef and one DOM Form selector subscription; field selectors bind directly to the field-ID channel and all reconnect cleanup uses one retained disposer.",
+        "adversarialWitness": "A field update with unrelated field subscribers must invoke only the changed field channel and form selectors whose selected value changes.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "The Vue bridge neither scans FormState.fields nor materializes the complete state projection."
         }
       }
     },

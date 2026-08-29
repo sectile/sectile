@@ -95,6 +95,10 @@
       "types": "dist/grid-control.d.ts"
     },
     {
+      "subpath": "./identity",
+      "types": "dist/identity.d.ts"
+    },
+    {
       "subpath": "./index-span",
       "types": "dist/structures/index-span.d.ts"
     },
@@ -279,7 +283,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "45395e7cb621b87d0b689efdcbb4cb69ed9a0c0be2507cb367bd07a5b6f50327",
+  "fingerprint": "8e96167d0539e1d12988dc4bfacb76355def6fa61e27b5548890ffe52663ae67",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -287,7 +291,7 @@
     },
     {
       "path": "dist/adapter-runtime.d.ts",
-      "sha256": "060121d1da14dc8de116aba9648553a877b000e48cbbdb0ddcba02f99bd1142b"
+      "sha256": "7d2200ef7315c84ef349edd4dbe65b33287ffbe00c522e5d98b9f09f2f2b082c"
     },
     {
       "path": "dist/alert-dialog.d.ts",
@@ -358,6 +362,10 @@
       "sha256": "bb7c86a755b0ab86ee1c202ac5a5ea45a36b48a1694c31a88ed2d4cb45c496f9"
     },
     {
+      "path": "dist/identity.d.ts",
+      "sha256": "b4515c32373a622feae530d908c8c209111059f9a1d87a967cd52a80fbb78f64"
+    },
+    {
       "path": "dist/index.d.ts",
       "sha256": "6345254858c1d5cb0eae75aaa34eddffe6c56e1924b366f84c53b8f2ab027ed2"
     },
@@ -422,8 +430,12 @@
       "sha256": "696fdb58549536a883893508abb533bbabd9cad559df33be3b5947e3f75e5381"
     },
     {
+      "path": "dist/internal/kernel/foundation.d.ts",
+      "sha256": "48db3149cb8fd86f2c4e50f7838b23a71176a569bb6a3901b3c0a8174e90c1e1"
+    },
+    {
       "path": "dist/internal/kernel/machine.d.ts",
-      "sha256": "369ade3108e633da9deb79e8ce431d8bfee150b715d10d8ef794a18000fb807e"
+      "sha256": "33a12f6d4ac6899c3796ed01b80c6a71b58e2b8dcf32c77fb4193a6a5fdced1c"
     },
     {
       "path": "dist/internal/runtime/revision.d.ts",
@@ -523,11 +535,11 @@
     },
     {
       "path": "dist/result.d.ts",
-      "sha256": "88bed4cb00cc90a98d7fa68f09b7a2c53c28dd225ca7e42e499ee7a2158d2743"
+      "sha256": "58951dcc7de752ee95986ed6841b80a1857177ce65d7d38d40d913ccb356d971"
     },
     {
       "path": "dist/revision.d.ts",
-      "sha256": "ed9c17e44b0f8e001283b255666ac88dc907a01d1442a28aff2509fe70d21411"
+      "sha256": "24d325c81f1cccfa5c370c0351a333086892dd76f9aa8f1b65b0d05368675ed7"
     },
     {
       "path": "dist/select.d.ts",
@@ -567,7 +579,7 @@
     },
     {
       "path": "dist/structures/grid.d.ts",
-      "sha256": "63ffff7ea4025a7024cf8beb65b27cf9e76b4520de04be1c42e445352d5ceb41"
+      "sha256": "64ce75d082d58df9c37ef851a9dd03e1dad42c079e12c67eb60baaf9525526de"
     },
     {
       "path": "dist/structures/index-span.d.ts",
@@ -579,7 +591,7 @@
     },
     {
       "path": "dist/structures/range.d.ts",
-      "sha256": "77421760947b2d7169a7190ded5115245e2a48ac18cd80adc5a0857e2232654e"
+      "sha256": "c2abb6a4c957fcddffcdb12968c01e381b253ec4e5841d70493d437ae02afe8a"
     },
     {
       "path": "dist/structures/selection-expression.d.ts",

@@ -650,16 +650,7 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
-        "arrow",
-        "autoPlacement",
         "createPopover",
-        "flip",
-        "hide",
-        "inline",
-        "limitShift",
-        "offset",
-        "shift",
-        "size",
         "tryCreatePopover"
       ],
       "typeBearing": true,
@@ -670,6 +661,16 @@
         "named",
         "root-named"
       ]
+    },
+    {
+      "subpath": "./position",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": []
     },
     {
       "subpath": "./progress",
@@ -1259,16 +1260,7 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
-        "arrow",
-        "autoPlacement",
         "createTooltip",
-        "flip",
-        "hide",
-        "inline",
-        "limitShift",
-        "offset",
-        "shift",
-        "size",
         "tryCreateTooltip"
       ],
       "typeBearing": true,

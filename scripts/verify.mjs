@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { withArtifactSession } from './lib/artifact-session.mjs';
 import { boundedFailureOutput } from './lib/compact-process.mjs';
 import { loadPublishedPackageGraph } from './lib/workspace-graph.mjs';
+import { runVerificationSteps } from './lib/verification-runner.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const rawArguments = process.argv.slice(2).filter((argument) => argument !== '--');
@@ -190,26 +191,26 @@ function runVerification() {
   if (verbose) console.log(`verification: ${modeLabel} (${targetLabel}) on ${process.version}`);
   cleanGeneratedOutputs();
 
-  for (const [index, step] of steps.entries()) {
-    if (!quietRequested) console.log(`[${index + 1}/${steps.length}] ${step.label}`);
-    for (const { detail, command, args } of step.commands) {
-      const startedAt = performance.now();
+  const result = runVerificationSteps(steps, {
+    onFailure: ({ command, result: commandResult, startedAt }) => {
+      reportFailure(command.detail, startedAt, commandResult);
+    },
+    onStep: (step, index, total) => {
+      if (!quietRequested) console.log(`[${index + 1}/${total}] ${step.label}`);
+    },
+    run: ({ detail, command, args }) => {
       if (verbose) console.log(`  ${detail}`);
-      const result = spawnSync(command, args, {
+      return spawnSync(command, args, {
         cwd: root,
         encoding: 'utf8',
         maxBuffer: 32 * 1_024 * 1_024,
         stdio: verbose ? 'inherit' : ['ignore', 'pipe', 'pipe'],
       });
-      if (result.error !== undefined) {
-        reportFailure(detail, startedAt, result);
-        throw result.error;
-      }
-      if (result.status !== 0) {
-        reportFailure(detail, startedAt, result);
-        return result.status ?? 1;
-      }
-    }
+    },
+  });
+  if (result.status !== 0) {
+    console.error(`verification failed: ${result.failures.length} command(s) across ${steps.length} stages (${elapsedSeconds(verificationStartedAt)}s)`);
+    return result.status;
   }
 
   console.log(`verification passed: ${steps.length} stages (${elapsedSeconds(verificationStartedAt)}s)`);

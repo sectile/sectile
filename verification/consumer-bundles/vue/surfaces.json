@@ -599,10 +599,12 @@
       "runtimeExports": [
         "FormDescription",
         "FormField",
+        "FormFieldSelector",
         "FormLabel",
         "FormMessage",
         "FormReset",
         "FormRoot",
+        "FormSelector",
         "FormSubmit",
         "FormSummary",
         "compositeControlCapabilities",
@@ -614,6 +616,9 @@
         "provideFormControlOwner",
         "useCompositeFormControl",
         "useFormControl",
+        "useFormFieldController",
+        "useFormFieldSelector",
+        "useFormSelector",
         "useNativeInputFormControl"
       ],
       "typeBearing": true,

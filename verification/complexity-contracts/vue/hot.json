@@ -8,80 +8,200 @@
       "id": "collection.external-reconcile",
       "inherits": "linear-v1",
       "source": "packages/vue/src/internal/collection.ts",
-      "benchmarkIDs": ["VAL-023:vue-collection-reconcile-work"],
+      "benchmarkIDs": [
+        "VAL-023:vue-collection-reconcile-work"
+      ],
       "specificationCeiling": "O(nOption + sSelected + dDisabled)",
       "contract": {
         "variables": [
-          { "name": "nOption", "meaning": "external option count", "ceiling": "component domain ceiling" },
-          { "name": "sSelected", "meaning": "requested selection count", "ceiling": "component domain ceiling" },
-          { "name": "dDisabled", "meaning": "disabled option count", "ceiling": "component domain ceiling" }
+          {
+            "name": "nOption",
+            "meaning": "external option count",
+            "ceiling": "component domain ceiling"
+          },
+          {
+            "name": "sSelected",
+            "meaning": "requested selection count",
+            "ceiling": "component domain ceiling"
+          },
+          {
+            "name": "dDisabled",
+            "meaning": "disabled option count",
+            "ceiling": "component domain ceiling"
+          }
         ],
-        "time": { "bound": "O(nOption + sSelected + dDisabled)", "kind": "expected", "runtimeState": "external" },
-        "space": { "auxiliary": "O(nOption + sSelected + dDisabled)", "output": "O(sSelected)", "retained": "O(sSelected)" },
-        "resources": { "allocations": "O(nOption + sSelected + dDisabled)", "cacheEntries": "O(nOption + sSelected + dDisabled)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "time": {
+          "bound": "O(nOption + sSelected + dDisabled)",
+          "kind": "expected",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nOption + sSelected + dDisabled)",
+          "output": "O(sSelected)",
+          "retained": "O(sSelected)"
+        },
+        "resources": {
+          "allocations": "O(nOption + sSelected + dDisabled)",
+          "cacheEntries": "O(nOption + sSelected + dDisabled)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
         "proof": "Vue delegates the explicit prop-replacement boundary to Core collection reconciliation and retains only the resulting controller snapshot.",
         "adversarialWitness": "A disjoint equal-size prop replacement invalidates selection and current while visiting every external option once.",
-        "fullScan": { "allowed": true, "rationale": "External option replacement requires validation; ordinary controller events bypass this path." }
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External option replacement requires validation; ordinary controller events bypass this path."
+        }
+      }
+    },
+    {
+      "id": "form.selector-bridge",
+      "inherits": "lifecycle-v1",
+      "source": "packages/vue/src/form.ts",
+      "benchmarkIDs": [
+        "VAL-033:vue-form-granular-reactivity"
+      ],
+      "specificationCeiling": "O(sForm + sField)",
+      "contract": {
+        "variables": [
+          {
+            "name": "sForm",
+            "meaning": "active subscribers on the form channel",
+            "ceiling": "mounted form selector count"
+          },
+          {
+            "name": "sField",
+            "meaning": "active subscribers for one field identifier",
+            "ceiling": "mounted selectors for that field"
+          }
+        ],
+        "time": {
+          "bound": "O(sForm + sField)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(1)"
+        },
+        "proof": "Each composable owns one shallowRef and one DOM Form selector subscription; field selectors bind directly to the field-ID channel and all reconnect cleanup uses one retained disposer.",
+        "adversarialWitness": "A field update with unrelated field subscribers must invoke only the changed field channel and form selectors whose selected value changes.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "The Vue bridge neither scans FormState.fields nor materializes the complete state projection."
+        }
       }
     },
     {
       "id": "projection.reconfigure",
       "inherits": "linear-v1",
       "source": "packages/vue/src/internal/virtual-list.ts",
-      "benchmarkIDs": ["vue:mounted-virtual-projection"],
+      "benchmarkIDs": [
+        "vue:mounted-virtual-projection"
+      ],
       "specificationCeiling": "O(nOption + uOption)",
       "contract": {
         "variables": [
-          { "name": "nOption", "meaning": "external option count", "ceiling": "component maxItems" },
-          { "name": "uOption", "meaning": "unique normalized option count", "ceiling": "uOption <= nOption" }
+          {
+            "name": "nOption",
+            "meaning": "external option count",
+            "ceiling": "component maxItems"
+          },
+          {
+            "name": "uOption",
+            "meaning": "unique normalized option count",
+            "ceiling": "uOption <= nOption"
+          }
         ],
-        "time": { "bound": "O(nOption + uOption)", "kind": "worst-case", "runtimeState": "mounted" },
-        "space": { "auxiliary": "O(nOption + uOption)", "output": "O(uOption)", "retained": "O(uOption)" },
-        "resources": { "allocations": "O(nOption + uOption)", "cacheEntries": "O(uOption)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "time": {
+          "bound": "O(nOption + uOption)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(nOption + uOption)",
+          "output": "O(uOption)",
+          "retained": "O(uOption)"
+        },
+        "resources": {
+          "allocations": "O(nOption + uOption)",
+          "cacheEntries": "O(uOption)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
         "proof": "External replacement normalization and identity comparison visit each option/index once.",
         "adversarialWitness": "Equal-value replacement with new array/object identities at the maxItems ceiling.",
-        "fullScan": { "allowed": true, "rationale": "External replacement requires one normalization pass; canonical same-generation updates must be O(1)." }
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External replacement requires one normalization pass; canonical same-generation updates must be O(1)."
+        }
       }
     },
     {
       "id": "virtual.measurement-update",
       "inherits": "lifecycle-v1",
       "source": "packages/vue/src/internal/virtual-list.ts",
-      "benchmarkIDs": ["vue:mounted-virtual-projection"],
+      "benchmarkIDs": [
+        "vue:mounted-virtual-projection"
+      ],
       "specificationCeiling": "O(jChanged + kPlacement)",
       "contract": {
         "variables": [
-          { "name": "nMounted", "meaning": "currently mounted rendered elements", "ceiling": "virtual rendered-entry ceiling" },
-          { "name": "jChanged", "meaning": "ResizeObserver changed entries", "ceiling": "mounted rendered entry count" },
-          { "name": "kPlacement", "meaning": "final projected placements", "ceiling": "virtual query result ceiling" }
+          {
+            "name": "nMounted",
+            "meaning": "currently mounted rendered elements",
+            "ceiling": "virtual rendered-entry ceiling"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "ResizeObserver changed entries",
+            "ceiling": "mounted rendered entry count"
+          },
+          {
+            "name": "kPlacement",
+            "meaning": "final projected placements",
+            "ceiling": "virtual query result ceiling"
+          }
         ],
-        "time": { "bound": "O(nMounted + jChanged + kPlacement)", "kind": "worst-case", "runtimeState": "mounted" },
-        "space": { "auxiliary": "O(nMounted + jChanged + kPlacement)", "output": "O(kPlacement)", "retained": "O(nMounted)" },
-        "resources": { "allocations": "O(nMounted + jChanged + kPlacement)", "cacheEntries": "O(nMounted)", "listeners": "0", "observers": "O(1)", "timers": "O(1)", "subscriptions": "O(nMounted)" },
+        "time": {
+          "bound": "O(nMounted + jChanged + kPlacement)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(nMounted + jChanged + kPlacement)",
+          "output": "O(kPlacement)",
+          "retained": "O(nMounted)"
+        },
+        "resources": {
+          "allocations": "O(nMounted + jChanged + kPlacement)",
+          "cacheEntries": "O(nMounted)",
+          "listeners": "0",
+          "observers": "O(1)",
+          "timers": "O(1)",
+          "subscriptions": "O(nMounted)"
+        },
         "proof": "The incumbent onUpdated path may rescan mounted elements before measurement/query publication.",
         "adversarialWitness": "One changed element after a render with every mounted placement measurable.",
-        "fullScan": { "allowed": true, "rationale": "Recorded incumbent mounted sweep owned by WI-040; later updates must become changed-entry proportional." }
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Recorded incumbent mounted sweep owned by WI-040; later updates must become changed-entry proportional."
+        }
       },
       "reviewedWeakening": "WI-040 removes the recurring mounted sweep after canonical Virtual batching is available."
-    },
-    {
-      "id": "form.selector-bridge",
-      "inherits": "lifecycle-v1",
-      "source": "packages/vue/src/form.ts",
-      "benchmarkIDs": ["VAL-033:vue-form-granular-reactivity"],
-      "specificationCeiling": "O(sForm + sField) selector dispatch and O(1) Vue bridge work per selected change",
-      "contract": {
-        "variables": [
-          { "name": "sForm", "meaning": "active subscribers on the form channel", "ceiling": "mounted form selector count" },
-          { "name": "sField", "meaning": "active subscribers for one field identifier", "ceiling": "mounted selectors for that field" }
-        ],
-        "time": { "bound": "O(sForm + sField) per form transition plus consumer selector cost; O(1) Vue bridge work per changed selection", "kind": "worst-case", "runtimeState": "mounted" },
-        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1) per mounted selector" },
-        "resources": { "allocations": "O(1) per connect or changed selection", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "1 per mounted selector" },
-        "proof": "Each composable owns one shallowRef and one DOM Form selector subscription; field selectors bind directly to the field-ID channel and all reconnect cleanup uses one retained disposer.",
-        "adversarialWitness": "A field update with unrelated field subscribers must invoke only the changed field channel and form selectors whose selected value changes.",
-        "fullScan": { "allowed": false, "rationale": "The Vue bridge neither scans FormState.fields nor materializes the complete state projection." }
-      }
     }
   ]
 }

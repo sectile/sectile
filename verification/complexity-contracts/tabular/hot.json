@@ -8,76 +8,190 @@
       "id": "grid-profile.move",
       "inherits": "linear-v1",
       "source": "packages/tabular/src/internal/grid-profile.ts",
-      "benchmarkIDs": ["tabular:grid-profile:move:1000", "tabular:grid-profile:move:10000", "tabular:grid-profile:move:100000"],
+      "benchmarkIDs": [
+        "tabular:grid-profile:move:1000",
+        "tabular:grid-profile:move:10000",
+        "tabular:grid-profile:move:100000"
+      ],
       "specificationCeiling": "O(sAxis)",
       "contract": {
         "variables": [
-          { "name": "nCell", "meaning": "projected cell count", "ceiling": "grid cell ceiling" },
-          { "name": "sAxis", "meaning": "movement candidates on one axis", "ceiling": "row or column length" }
+          {
+            "name": "nCell",
+            "meaning": "projected cell count",
+            "ceiling": "grid cell ceiling"
+          },
+          {
+            "name": "sAxis",
+            "meaning": "movement candidates on one axis",
+            "ceiling": "row or column length"
+          }
         ],
-        "time": { "bound": "O(sAxis)", "kind": "worst-case", "runtimeState": "trusted" },
-        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(nCell)" },
-        "resources": { "allocations": "O(1)", "cacheEntries": "O(nCell)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "time": {
+          "bound": "O(sAxis)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(nCell)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "O(nCell)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
         "proof": "The current projection generation retains row, column, and cell indexes; a valid adjacent move performs O(1) coordinate lookup and scans only candidates on its movement axis.",
         "adversarialWitness": "Every candidate on a 100k-row axis is disabled, forcing one bounded axis scan without rebuilding cell records or indexes.",
-        "fullScan": { "allowed": false, "rationale": "Canonical movement is bounded to one axis; whole-domain recovery is a separate reconciliation fallback." }
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Canonical movement is bounded to one axis; whole-domain recovery is a separate reconciliation fallback."
+        }
       }
     },
     {
       "id": "source.resolve-cold",
       "inherits": "linear-v1",
       "source": "packages/tabular/src/source.ts",
-      "benchmarkIDs": ["tabular:resolve:cold:100000"],
+      "benchmarkIDs": [
+        "tabular:resolve:cold:100000"
+      ],
       "specificationCeiling": "O(nRecord log nRecord)",
       "contract": {
         "variables": [
-          { "name": "nRecord", "meaning": "source record count", "ceiling": "source record ceiling" },
-          { "name": "kRow", "meaning": "returned page or window rows", "ceiling": "kRow <= nRecord" }
+          {
+            "name": "nRecord",
+            "meaning": "source record count",
+            "ceiling": "source record ceiling"
+          },
+          {
+            "name": "kRow",
+            "meaning": "returned page or window rows",
+            "ceiling": "kRow <= nRecord"
+          }
         ],
-        "time": { "bound": "O(nRecord log nRecord + kRow)", "kind": "worst-case", "runtimeState": "external" },
-        "space": { "auxiliary": "O(nRecord)", "output": "O(kRow)", "retained": "O(nRecord)" },
-        "resources": { "allocations": "O(nRecord + kRow)", "cacheEntries": "O(nRecord)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "time": {
+          "bound": "O(nRecord log nRecord + kRow)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nRecord)",
+          "output": "O(kRow)",
+          "retained": "O(nRecord)"
+        },
+        "resources": {
+          "allocations": "O(nRecord + kRow)",
+          "cacheEntries": "O(nRecord)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
         "proof": "Cold normalization/filter/group/projection are linear and comparator sorting dominates at n log n before access slicing.",
         "adversarialWitness": "Every record passes filters and reverse-order sort requires comparison work before a one-row window.",
-        "fullScan": { "allowed": true, "rationale": "Cold resolution must inspect the external snapshot before producing the first query index." }
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Cold resolution must inspect the external snapshot before producing the first query index."
+        }
       }
     },
     {
       "id": "source.resolve-invalidation",
       "inherits": "linear-v1",
       "source": "packages/tabular/src/source.ts",
-      "benchmarkIDs": ["tabular:resolve:invalidate:100000"],
+      "benchmarkIDs": [
+        "tabular:resolve:invalidate:100000"
+      ],
       "specificationCeiling": "O(nRecord log nRecord)",
       "contract": {
         "variables": [
-          { "name": "nRecord", "meaning": "source record count", "ceiling": "source record ceiling" },
-          { "name": "kRow", "meaning": "returned page or window rows", "ceiling": "kRow <= nRecord" }
+          {
+            "name": "nRecord",
+            "meaning": "source record count",
+            "ceiling": "source record ceiling"
+          },
+          {
+            "name": "kRow",
+            "meaning": "returned page or window rows",
+            "ceiling": "kRow <= nRecord"
+          }
         ],
-        "time": { "bound": "O(nRecord log nRecord + kRow)", "kind": "worst-case", "runtimeState": "external" },
-        "space": { "auxiliary": "O(nRecord)", "output": "O(kRow)", "retained": "O(nRecord)" },
-        "resources": { "allocations": "O(nRecord + kRow)", "cacheEntries": "O(nRecord)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "time": {
+          "bound": "O(nRecord log nRecord + kRow)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nRecord)",
+          "output": "O(kRow)",
+          "retained": "O(nRecord)"
+        },
+        "resources": {
+          "allocations": "O(nRecord + kRow)",
+          "cacheEntries": "O(nRecord)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
         "proof": "A source generation rebuilds normalization plus query stages; a query revision reuses normalized identities but rebuilds filtering, grouping, pivot discovery, and sorting before slicing.",
         "adversarialWitness": "Alternating query revisions over a reverse-ordered 100k-record source rebuild and sort the current query stage on every resolve.",
-        "fullScan": { "allowed": true, "rationale": "Changed source or query semantics require inspecting the affected current-stage input." }
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Changed source or query semantics require inspecting the affected current-stage input."
+        }
       }
     },
     {
       "id": "source.resolve-warm",
       "inherits": "linear-v1",
       "source": "packages/tabular/src/source.ts",
-      "benchmarkIDs": ["tabular:resolve:warm:100000"],
+      "benchmarkIDs": [
+        "tabular:resolve:warm:100000"
+      ],
       "specificationCeiling": "O(kRow)",
       "contract": {
         "variables": [
-          { "name": "nRecord", "meaning": "source record count", "ceiling": "source record ceiling" },
-          { "name": "kRow", "meaning": "returned page or window rows", "ceiling": "kRow <= nRecord" }
+          {
+            "name": "nRecord",
+            "meaning": "source record count",
+            "ceiling": "source record ceiling"
+          },
+          {
+            "name": "kRow",
+            "meaning": "returned page or window rows",
+            "ceiling": "kRow <= nRecord"
+          }
         ],
-        "time": { "bound": "O(kRow)", "kind": "worst-case", "runtimeState": "trusted" },
-        "space": { "auxiliary": "O(kRow)", "output": "O(kRow)", "retained": "O(nRecord)" },
-        "resources": { "allocations": "O(kRow)", "cacheEntries": "O(nRecord)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "time": {
+          "bound": "O(kRow)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(kRow)",
+          "output": "O(kRow)",
+          "retained": "O(nRecord)"
+        },
+        "resources": {
+          "allocations": "O(kRow)",
+          "cacheEntries": "O(nRecord)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
         "proof": "Equal source, query, and expansion revisions reuse the single retained projection; resolve validates the envelope and slices only the requested output window.",
         "adversarialWitness": "A 100k-record retained projection returns a 100-row window without invoking identity, filter, sort, group, pivot, aggregate, or full-projection work.",
-        "fullScan": { "allowed": false, "rationale": "Warm resolution is output-sensitive and cannot rescan the retained source or projection." }
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Warm resolution is output-sensitive and cannot rescan the retained source or projection."
+        }
       }
     }
   ]

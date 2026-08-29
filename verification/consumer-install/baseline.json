@@ -1,83 +1,83 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "packages": {
     "core": {
-      "tarballBytes": 196963,
-      "unpackedBytes": 1108002,
-      "unpackedFiles": 288,
+      "tarballBytes": 201583,
+      "unpackedBytes": 1134326,
+      "unpackedFiles": 291,
       "categories": {
         "runtimeJS": {
-          "files": 95,
-          "bytes": 450900
+          "files": 96,
+          "bytes": 461629
         },
         "declarations": {
-          "files": 95,
-          "bytes": 159758
+          "files": 96,
+          "bytes": 165166
         },
         "sourceMaps": {
-          "files": 95,
-          "bytes": 482596
+          "files": 96,
+          "bytes": 492641
         },
         "other": {
           "files": 3,
-          "bytes": 14748
+          "bytes": 14890
         }
       }
     },
     "dom": {
-      "tarballBytes": 253222,
-      "unpackedBytes": 1583737,
-      "unpackedFiles": 282,
+      "tarballBytes": 262896,
+      "unpackedBytes": 1649587,
+      "unpackedFiles": 288,
       "categories": {
         "runtimeJS": {
-          "files": 93,
-          "bytes": 646661
+          "files": 95,
+          "bytes": 679707
         },
         "declarations": {
-          "files": 93,
-          "bytes": 249169
+          "files": 95,
+          "bytes": 250098
         },
         "sourceMaps": {
-          "files": 93,
-          "bytes": 672993
+          "files": 95,
+          "bytes": 704760
         },
         "other": {
           "files": 3,
-          "bytes": 14914
+          "bytes": 15022
         }
       }
     },
     "form": {
-      "tarballBytes": 15461,
-      "unpackedBytes": 73667,
+      "tarballBytes": 24040,
+      "unpackedBytes": 123133,
       "unpackedFiles": 27,
       "categories": {
         "runtimeJS": {
           "files": 8,
-          "bytes": 29832
+          "bytes": 52462
         },
         "declarations": {
           "files": 8,
-          "bytes": 9772
+          "bytes": 12675
         },
         "sourceMaps": {
           "files": 8,
-          "bytes": 30307
+          "bytes": 54279
         },
         "other": {
           "files": 3,
-          "bytes": 3756
+          "bytes": 3717
         }
       }
     },
     "tabular": {
-      "tarballBytes": 58280,
-      "unpackedBytes": 332895,
+      "tarballBytes": 58495,
+      "unpackedBytes": 333111,
       "unpackedFiles": 42,
       "categories": {
         "runtimeJS": {
           "files": 13,
-          "bytes": 141315
+          "bytes": 141617
         },
         "declarations": {
           "files": 13,
@@ -85,7 +85,7 @@
         },
         "sourceMaps": {
           "files": 13,
-          "bytes": 147486
+          "bytes": 147400
         },
         "other": {
           "files": 3,
@@ -94,13 +94,13 @@
       }
     },
     "temporal": {
-      "tarballBytes": 35331,
-      "unpackedBytes": 228741,
+      "tarballBytes": 35228,
+      "unpackedBytes": 228332,
       "unpackedFiles": 60,
       "categories": {
         "runtimeJS": {
           "files": 19,
-          "bytes": 90867
+          "bytes": 90714
         },
         "declarations": {
           "files": 19,
@@ -108,7 +108,7 @@
         },
         "sourceMaps": {
           "files": 19,
-          "bytes": 98324
+          "bytes": 98068
         },
         "other": {
           "files": 3,
@@ -117,21 +117,21 @@
       }
     },
     "terminal": {
-      "tarballBytes": 128491,
-      "unpackedBytes": 821788,
+      "tarballBytes": 128425,
+      "unpackedBytes": 825359,
       "unpackedFiles": 243,
       "categories": {
         "runtimeJS": {
           "files": 80,
-          "bytes": 313842
+          "bytes": 315655
         },
         "declarations": {
           "files": 80,
-          "bytes": 164523
+          "bytes": 164589
         },
         "sourceMaps": {
           "files": 80,
-          "bytes": 329153
+          "bytes": 330845
         },
         "other": {
           "files": 3,
@@ -140,21 +140,21 @@
       }
     },
     "virtual": {
-      "tarballBytes": 48090,
-      "unpackedBytes": 291731,
-      "unpackedFiles": 39,
+      "tarballBytes": 55792,
+      "unpackedBytes": 337848,
+      "unpackedFiles": 42,
       "categories": {
         "runtimeJS": {
-          "files": 12,
-          "bytes": 118338
+          "files": 13,
+          "bytes": 138787
         },
         "declarations": {
-          "files": 12,
-          "bytes": 36868
+          "files": 13,
+          "bytes": 39144
         },
         "sourceMaps": {
-          "files": 12,
-          "bytes": 131795
+          "files": 13,
+          "bytes": 155187
         },
         "other": {
           "files": 3,
@@ -163,21 +163,21 @@
       }
     },
     "vue": {
-      "tarballBytes": 266022,
-      "unpackedBytes": 2055849,
-      "unpackedFiles": 294,
+      "tarballBytes": 271564,
+      "unpackedBytes": 2088381,
+      "unpackedFiles": 297,
       "categories": {
         "runtimeJS": {
-          "files": 97,
-          "bytes": 688876
+          "files": 98,
+          "bytes": 705967
         },
         "declarations": {
-          "files": 97,
-          "bytes": 622951
+          "files": 98,
+          "bytes": 622805
         },
         "sourceMaps": {
-          "files": 97,
-          "bytes": 727660
+          "files": 98,
+          "bytes": 743247
         },
         "other": {
           "files": 3,
@@ -189,16 +189,13 @@
   "installs": [
     {
       "packageManager": "npm",
-      "installedBytes": 22155602,
-      "installedFiles": 1503,
+      "installedBytes": 21820329,
+      "installedFiles": 1474,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
         "@babel/parser",
         "@babel/types",
-        "@floating-ui/core",
-        "@floating-ui/dom",
-        "@floating-ui/utils",
         "@jridgewell/sourcemap-codec",
         "@sectile/core",
         "@sectile/dom",
@@ -237,28 +234,6 @@
           "name": "@sectile/dom",
           "version": "0.7.0",
           "dependencies": [
-            {
-              "name": "@floating-ui/dom",
-              "version": "1.8.0",
-              "dependencies": [
-                {
-                  "name": "@floating-ui/core",
-                  "version": "1.8.0",
-                  "dependencies": [
-                    {
-                      "name": "@floating-ui/utils",
-                      "version": "0.2.12",
-                      "dependencies": []
-                    }
-                  ]
-                },
-                {
-                  "name": "@floating-ui/utils",
-                  "version": "0.2.12",
-                  "dependencies": []
-                }
-              ]
-            },
             {
               "name": "@sectile/core",
               "version": "0.7.0",
@@ -551,26 +526,17 @@
           ]
         }
       ],
-      "optionalPeersPresent": [],
-      "incumbents": {
-        "@floating-ui/dom": {
-          "files": 11,
-          "bytes": 174208
-        }
-      }
+      "optionalPeersPresent": []
     },
     {
       "packageManager": "pnpm",
-      "installedBytes": 22184626,
-      "installedFiles": 1513,
+      "installedBytes": 21848829,
+      "installedFiles": 1484,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
         "@babel/parser",
         "@babel/types",
-        "@floating-ui/core",
-        "@floating-ui/dom",
-        "@floating-ui/utils",
         "@jridgewell/sourcemap-codec",
         "@sectile/core",
         "@sectile/dom",
@@ -604,28 +570,6 @@
           "name": "@sectile/dom",
           "version": "0.7.0",
           "dependencies": [
-            {
-              "name": "@floating-ui/dom",
-              "version": "1.8.0",
-              "dependencies": [
-                {
-                  "name": "@floating-ui/core",
-                  "version": "1.8.0",
-                  "dependencies": [
-                    {
-                      "name": "@floating-ui/utils",
-                      "version": "0.2.12",
-                      "dependencies": []
-                    }
-                  ]
-                },
-                {
-                  "name": "@floating-ui/utils",
-                  "version": "0.2.12",
-                  "dependencies": []
-                }
-              ]
-            },
             {
               "name": "@sectile/core",
               "version": "0.7.0",
@@ -873,27 +817,7 @@
           "dependencies": []
         }
       ],
-      "optionalPeersPresent": [],
-      "incumbents": {
-        "@floating-ui/dom": {
-          "files": 11,
-          "bytes": 174208
-        }
-      }
+      "optionalPeersPresent": []
     }
-  ],
-  "incumbentPerformanceEvidence": {
-    "colord": {
-      "iterations": 20000,
-      "medianNanoseconds": 1268.9333499999989,
-      "medianAllocationBytes": 2031656,
-      "medianRetainedBytes": 10208
-    },
-    "@floating-ui/dom": {
-      "iterations": 50000,
-      "medianNanoseconds": 34.14666000000011,
-      "medianAllocationBytes": 2091888,
-      "medianRetainedBytes": 0
-    }
-  }
+  ]
 }

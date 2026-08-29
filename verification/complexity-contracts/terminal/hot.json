@@ -8,38 +8,94 @@
       "id": "component.dispatch",
       "inherits": "linear-v1",
       "source": "packages/terminal/src/listbox.ts",
-      "benchmarkIDs": ["VAL-013:terminal-controller-trace"],
+      "benchmarkIDs": [
+        "VAL-013:terminal-controller-trace"
+      ],
       "specificationCeiling": "O(nDomain + cCommand)",
       "contract": {
         "variables": [
-          { "name": "nDomain", "meaning": "component domain cardinality", "ceiling": "component maxItems" },
-          { "name": "cCommand", "meaning": "canonical commands emitted", "ceiling": "command ceiling" }
+          {
+            "name": "nDomain",
+            "meaning": "component domain cardinality",
+            "ceiling": "component maxItems"
+          },
+          {
+            "name": "cCommand",
+            "meaning": "canonical commands emitted",
+            "ceiling": "command ceiling"
+          }
         ],
-        "time": { "bound": "O(nDomain + cCommand)", "kind": "worst-case", "runtimeState": "trusted" },
-        "space": { "auxiliary": "O(nDomain + cCommand)", "output": "O(cCommand)", "retained": "O(nDomain)" },
-        "resources": { "allocations": "O(nDomain + cCommand)", "cacheEntries": "O(nDomain)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "time": {
+          "bound": "O(nDomain + cCommand)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(nDomain + cCommand)",
+          "output": "O(cCommand)",
+          "retained": "O(nDomain)"
+        },
+        "resources": {
+          "allocations": "O(nDomain + cCommand)",
+          "cacheEntries": "O(nDomain)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
         "proof": "The host delegates semantics then projects terminal effects/layout without scanning another component owner.",
         "adversarialWitness": "Maximum canonical domain with every emitted command projected to the screen owner.",
-        "fullScan": { "allowed": true, "rationale": "Current canonical transitions may validate a full domain; terminal may not duplicate that semantic scan." }
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Current canonical transitions may validate a full domain; terminal may not duplicate that semantic scan."
+        }
       }
     },
     {
       "id": "screen.render",
       "inherits": "linear-v1",
       "source": "packages/terminal/src/screen.ts",
-      "benchmarkIDs": ["VAL-017:terminal-screen-work"],
+      "benchmarkIDs": [
+        "VAL-017:terminal-screen-work"
+      ],
       "specificationCeiling": "O(rRow * cColumn)",
       "contract": {
         "variables": [
-          { "name": "rRow", "meaning": "terminal screen rows", "ceiling": "screen row ceiling" },
-          { "name": "cColumn", "meaning": "terminal screen columns", "ceiling": "screen column ceiling" }
+          {
+            "name": "rRow",
+            "meaning": "terminal screen rows",
+            "ceiling": "screen row ceiling"
+          },
+          {
+            "name": "cColumn",
+            "meaning": "terminal screen columns",
+            "ceiling": "screen column ceiling"
+          }
         ],
-        "time": { "bound": "O(rRow * cColumn)", "kind": "worst-case", "runtimeState": "connected" },
-        "space": { "auxiliary": "O(rRow * cColumn)", "output": "O(rRow * cColumn)", "retained": "O(rRow * cColumn)" },
-        "resources": { "allocations": "O(rRow * cColumn)", "cacheEntries": "O(rRow * cColumn)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "time": {
+          "bound": "O(rRow * cColumn)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(rRow * cColumn)",
+          "output": "O(rRow * cColumn)",
+          "retained": "O(rRow * cColumn)"
+        },
+        "resources": {
+          "allocations": "O(rRow * cColumn)",
+          "cacheEntries": "O(rRow * cColumn)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
         "proof": "A full screen projection touches each bounded cell and emits its grapheme/appearance state.",
         "adversarialWitness": "Every screen cell contains a distinct styled grapheme.",
-        "fullScan": { "allowed": true, "rationale": "A requested full screen output has row-by-column size." }
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A requested full screen output has row-by-column size."
+        }
       }
     }
   ]

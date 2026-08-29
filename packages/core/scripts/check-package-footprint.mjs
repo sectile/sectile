@@ -3,9 +3,9 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const ceilings = Object.freeze({
-  totalBytes: 1_125_000,
-  javascriptBytes: 451_000,
-  declarationBytes: 165_000,
+  totalBytes: 1_140_000,
+  javascriptBytes: 466_000,
+  declarationBytes: 167_000,
   sourceMapBytes: 570_000,
 });
 

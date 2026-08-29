@@ -3,38 +3,38 @@
   "packages": [
     {
       "package": "core",
+      "javascriptFiles": 96,
+      "declarationFiles": 96,
+      "sourceMapFiles": 96,
+      "declarationMapFiles": 0,
+      "bytes": {
+        "javascript": 461629,
+        "declarations": 165166,
+        "sourceMaps": 492641,
+        "total": 1119436
+      },
+      "packed": {
+        "tarballBytes": 196376,
+        "unpackedBytes": 1134327,
+        "files": 291
+      }
+    },
+    {
+      "package": "dom",
       "javascriptFiles": 95,
       "declarationFiles": 95,
       "sourceMapFiles": 95,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 450900,
-        "declarations": 159758,
-        "sourceMaps": 482596,
-        "total": 1093254
+        "javascript": 679707,
+        "declarations": 250098,
+        "sourceMaps": 704760,
+        "total": 1634565
       },
       "packed": {
-        "tarballBytes": 191698,
-        "unpackedBytes": 1108003,
+        "tarballBytes": 254778,
+        "unpackedBytes": 1649642,
         "files": 288
-      }
-    },
-    {
-      "package": "dom",
-      "javascriptFiles": 93,
-      "declarationFiles": 93,
-      "sourceMapFiles": 93,
-      "declarationMapFiles": 0,
-      "bytes": {
-        "javascript": 646661,
-        "declarations": 249169,
-        "sourceMaps": 672993,
-        "total": 1568823
-      },
-      "packed": {
-        "tarballBytes": 245186,
-        "unpackedBytes": 1583792,
-        "files": 282
       }
     },
     {
@@ -44,14 +44,14 @@
       "sourceMapFiles": 8,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 29832,
-        "declarations": 9772,
-        "sourceMaps": 30307,
-        "total": 69911
+        "javascript": 52462,
+        "declarations": 12675,
+        "sourceMaps": 54279,
+        "total": 119416
       },
       "packed": {
-        "tarballBytes": 15193,
-        "unpackedBytes": 73674,
+        "tarballBytes": 23577,
+        "unpackedBytes": 123140,
         "files": 27
       }
     },
@@ -62,14 +62,14 @@
       "sourceMapFiles": 13,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 141220,
-        "declarations": 39437,
-        "sourceMaps": 147472,
-        "total": 328129
+        "javascript": 141617,
+        "declarations": 39338,
+        "sourceMaps": 147400,
+        "total": 328355
       },
       "packed": {
-        "tarballBytes": 56825,
-        "unpackedBytes": 332904,
+        "tarballBytes": 57012,
+        "unpackedBytes": 333130,
         "files": 42
       }
     },
@@ -80,14 +80,14 @@
       "sourceMapFiles": 19,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 90867,
+        "javascript": 90714,
         "declarations": 34037,
-        "sourceMaps": 98324,
-        "total": 223228
+        "sourceMaps": 98068,
+        "total": 222819
       },
       "packed": {
-        "tarballBytes": 34207,
-        "unpackedBytes": 228748,
+        "tarballBytes": 34108,
+        "unpackedBytes": 228339,
         "files": 60
       }
     },
@@ -98,51 +98,51 @@
       "sourceMapFiles": 80,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 313842,
-        "declarations": 164523,
-        "sourceMaps": 329153,
-        "total": 807518
+        "javascript": 315655,
+        "declarations": 164589,
+        "sourceMaps": 330845,
+        "total": 811089
       },
       "packed": {
-        "tarballBytes": 124249,
-        "unpackedBytes": 821801,
+        "tarballBytes": 124207,
+        "unpackedBytes": 825372,
         "files": 243
       }
     },
     {
       "package": "virtual",
-      "javascriptFiles": 12,
-      "declarationFiles": 12,
-      "sourceMapFiles": 12,
+      "javascriptFiles": 13,
+      "declarationFiles": 13,
+      "sourceMapFiles": 13,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 118338,
-        "declarations": 36868,
-        "sourceMaps": 131795,
-        "total": 287001
+        "javascript": 138787,
+        "declarations": 39144,
+        "sourceMaps": 155187,
+        "total": 333118
       },
       "packed": {
-        "tarballBytes": 46424,
-        "unpackedBytes": 291738,
-        "files": 39
+        "tarballBytes": 53849,
+        "unpackedBytes": 337855,
+        "files": 42
       }
     },
     {
       "package": "vue",
-      "javascriptFiles": 97,
-      "declarationFiles": 97,
-      "sourceMapFiles": 97,
+      "javascriptFiles": 98,
+      "declarationFiles": 98,
+      "sourceMapFiles": 98,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 688876,
-        "declarations": 622951,
-        "sourceMaps": 727660,
-        "total": 2039487
+        "javascript": 705967,
+        "declarations": 622805,
+        "sourceMaps": 743247,
+        "total": 2072019
       },
       "packed": {
-        "tarballBytes": 256680,
-        "unpackedBytes": 2055910,
-        "files": 294
+        "tarballBytes": 262214,
+        "unpackedBytes": 2088442,
+        "files": 297
       }
     }
   ]

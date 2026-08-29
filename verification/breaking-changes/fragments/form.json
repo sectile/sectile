@@ -6,16 +6,45 @@
       "id": "WI-027:typed-field-state-commands",
       "change": "signature-changed",
       "before": { "subpath": "./state" },
-      "symbols": ["FormEvent update-field", "FormFieldInput.valid"],
+      "symbols": ["FormEvent update-field", "FormFieldInput.valid", "getFormFieldIDsByIssueSource"],
       "replacement": { "package": "@sectile/form", "subpath": "./state" },
       "removalReason": "Field validity is derived from issues; use getFormField, setFormFieldMeta, replaceFormFieldIssues, upsertFormFieldIssue, removeFormFieldIssue, and clearFormFieldIssues."
     },
     {
-      "id": "WI-028:source-owner-query",
+      "id": "WI-027:root-field-command-closure",
       "change": "signature-changed",
-      "before": { "subpath": "./state" },
-      "symbols": ["getFormFieldIDsByIssueSource"],
-      "replacement": { "package": "@sectile/form", "subpath": "./state" }
+      "before": { "subpath": "." },
+      "symbols": ["typed field-state commands", "local StandardSchema declaration closure"],
+      "replacement": { "package": "@sectile/form", "subpath": "." }
+    },
+    {
+      "id": "WI-002:error-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./error" },
+      "symbols": ["Core Result declaration closure"],
+      "replacement": { "package": "@sectile/form", "subpath": "./error" }
+    },
+    {
+      "id": "WI-002:path-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./path" },
+      "symbols": ["Core Result declaration closure"],
+      "replacement": { "package": "@sectile/form", "subpath": "./path" }
+    },
+    {
+      "id": "WI-038:local-standard-schema-contract",
+      "change": "signature-changed",
+      "before": { "subpath": "./schema" },
+      "symbols": ["StandardSchemaV1 structural declaration"],
+      "replacement": { "package": "@sectile/form", "subpath": "./schema" },
+      "removalReason": "The runtime dependency type is replaced by the equivalent local structural Standard Schema contract."
+    },
+    {
+      "id": "WI-002:values-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./values" },
+      "symbols": ["Core Result declaration closure"],
+      "replacement": { "package": "@sectile/form", "subpath": "./values" }
     }
   ]
 }

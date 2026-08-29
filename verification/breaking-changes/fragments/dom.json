@@ -40,12 +40,74 @@
       "removalReason": "Use subscribeForm or subscribeField and the typed get/set/issue methods; whole-state subscription overloads are removed."
     },
     {
-      "id": "WI-036:sectile-positioning-surface",
+      "id": "WI-036:alert-dialog-positioning-surface",
       "change": "signature-changed",
-      "before": { "subpath": "./popover, ./tooltip, ./select, ./temporal/*-picker" },
-      "symbols": ["Floating UI function/type re-exports", "middleware", "autoUpdate", "onPositionChange", "PopoverPositionChangeHandler", "TooltipPositionChangeHandler", "Floating UI Boundary/Padding/ReferenceElement/Strategy types"],
-      "replacement": { "package": "@sectile/dom", "subpath": "./position" },
-      "removalReason": "Use the closed PositionOptions contract and common data-side/data-align/data-reference-hidden plus --sectile-position-* projections. Resolved compute callbacks and arbitrary middleware are removed."
+      "before": { "subpath": "./alert-dialog" },
+      "symbols": ["Floating UI declaration closure", "PositionOptions"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+    },
+    {
+      "id": "WI-036:dialog-positioning-surface",
+      "change": "signature-changed",
+      "before": { "subpath": "./dialog" },
+      "symbols": ["Floating UI declaration closure", "PositionOptions"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+    },
+    {
+      "id": "WI-036:drawer-positioning-surface",
+      "change": "signature-changed",
+      "before": { "subpath": "./drawer" },
+      "symbols": ["Floating UI declaration closure", "PositionOptions"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+    },
+    {
+      "id": "WI-036:popover-positioning-surface",
+      "change": "signature-changed",
+      "before": { "subpath": "./popover" },
+      "symbols": ["middleware", "autoUpdate", "onPositionChange", "Floating UI type re-exports"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+    },
+    {
+      "id": "WI-036:select-positioning-surface",
+      "change": "signature-changed",
+      "before": { "subpath": "./select" },
+      "symbols": ["middleware", "autoUpdate", "onPositionChange", "Floating UI declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+    },
+    {
+      "id": "WI-036:tooltip-positioning-surface",
+      "change": "signature-changed",
+      "before": { "subpath": "./tooltip" },
+      "symbols": ["middleware", "autoUpdate", "onPositionChange", "Floating UI type re-exports"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+    },
+    {
+      "id": "WI-013:rating-canonical-engine",
+      "change": "signature-changed",
+      "before": { "subpath": "./rating" },
+      "symbols": ["Rating controller declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./rating" }
+    },
+    {
+      "id": "WI-002:checkbox-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./checkbox" },
+      "symbols": ["Core Result declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./checkbox" }
+    },
+    {
+      "id": "WI-002:switch-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./switch" },
+      "symbols": ["Core Result declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./switch" }
+    },
+    {
+      "id": "WI-002:toggle-button-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./toggle-button" },
+      "symbols": ["Core Result declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./toggle-button" }
     }
   ]
 }

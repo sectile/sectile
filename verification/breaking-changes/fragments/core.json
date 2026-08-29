@@ -188,18 +188,67 @@
       "replacement": { "package": "@sectile/core", "subpath": "./color-picker" }
     },
     {
+      "id": "WI-002:checkbox-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./checkbox" },
+      "symbols": ["Result and machine-update declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./checkbox" }
+    },
+    {
+      "id": "WI-002:collection-window-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./collection-window" },
+      "symbols": ["Result declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./collection-window" }
+    },
+    {
+      "id": "WI-002:disclosure-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./disclosure" },
+      "symbols": ["Result and machine-update declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./disclosure" }
+    },
+    {
+      "id": "WI-002:editable-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./editable" },
+      "symbols": ["Result and machine-update declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./editable" }
+    },
+    {
+      "id": "WI-002:feed-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./feed" },
+      "symbols": ["Result and revision declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./feed" }
+    },
+    {
+      "id": "WI-002:layer-stack-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./layer-stack" },
+      "symbols": ["Result declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./layer-stack" }
+    },
+    {
+      "id": "WI-002:switch-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./switch" },
+      "symbols": ["Result and machine-update declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./switch" }
+    },
+    {
+      "id": "WI-002:tooltip-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./tooltip" },
+      "symbols": ["Result and machine-update declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./tooltip" }
+    },
+    {
       "id": "WI-009:collection-reconciliation",
       "change": "signature-changed",
       "before": { "subpath": "./adapter-runtime" },
       "symbols": ["tryReconcileCollectionIdentities"],
       "replacement": { "package": "@sectile/core", "subpath": "./adapter-runtime" }
-    },
-    {
-      "id": "WI-009:stable-id-order",
-      "change": "signature-changed",
-      "before": { "subpath": "./identity" },
-      "symbols": ["sameStableIDOrder"],
-      "replacement": { "package": "@sectile/core", "subpath": "./identity" }
     }
   ]
 }

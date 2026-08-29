@@ -15,6 +15,69 @@
       "before": { "subpath": "." },
       "symbols": ["GridEditMode", "GridPolicies", "GridState", "GridEvent"],
       "replacement": { "package": "@sectile/terminal", "subpath": "." }
+    },
+    {
+      "id": "WI-002:alert-dialog-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./alert-dialog" },
+      "symbols": ["Core Result declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./alert-dialog" }
+    },
+    {
+      "id": "WI-013:checkbox-canonical-engine",
+      "change": "signature-changed",
+      "before": { "subpath": "./checkbox" },
+      "symbols": ["Checkbox controller declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./checkbox" }
+    },
+    {
+      "id": "WI-002:dialog-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./dialog" },
+      "symbols": ["Core Result declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./dialog" }
+    },
+    {
+      "id": "WI-002:drawer-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./drawer" },
+      "symbols": ["Core Result declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./drawer" }
+    },
+    {
+      "id": "WI-002:popover-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./popover" },
+      "symbols": ["Core Result declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./popover" }
+    },
+    {
+      "id": "WI-013:rating-canonical-engine",
+      "change": "signature-changed",
+      "before": { "subpath": "./rating" },
+      "symbols": ["Rating controller declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./rating" }
+    },
+    {
+      "id": "WI-013:switch-canonical-engine",
+      "change": "signature-changed",
+      "before": { "subpath": "./switch" },
+      "symbols": ["Switch controller declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./switch" }
+    },
+    {
+      "id": "WI-013:toggle-button-canonical-engine",
+      "change": "signature-changed",
+      "before": { "subpath": "./toggle-button" },
+      "symbols": ["Toggle-button controller declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./toggle-button" }
+    },
+    {
+      "id": "WI-002:tooltip-foundation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./tooltip" },
+      "symbols": ["Core Result declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./tooltip" }
     }
   ]
 }

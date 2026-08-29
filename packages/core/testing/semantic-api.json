@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "2fc58cec5579bccf8614c1b1da53ecbbfa1d7f2e7b7c6d7063c6ff9c92188551",
+    "publicSignatureFingerprint": "bd15591cd758ad185bf56df185a226a3496dd6d944286e6cfd830d16f33fdf5e",
     "subpaths": [
       ".",
       "./accordion",
@@ -519,7 +519,7 @@
     }
   ],
   "acceptance": {
-    "classification": "minor",
-    "reason": "WI-002_focused_identity_primitive"
+    "classification": "type-change-reviewed",
+    "reason": "WI-002_result_helper_declaration_owner_move_preserves_consumer_signatures"
   }
 }

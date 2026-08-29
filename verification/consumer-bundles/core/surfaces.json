@@ -37,10 +37,14 @@
       "runtimeExports": [
         "applyControllerEvent",
         "controlledFieldError",
+        "createCollectionComponentController",
+        "createControlledComponentController",
         "createFacadeConnection",
         "createHostAdapter",
         "createSemanticController",
-        "synchronizeControllerState"
+        "synchronizeControllerState",
+        "tryCreateDisabledIdentitySet",
+        "tryReconcileCollectionIdentities"
       ],
       "typeBearing": true,
       "optionalPeer": null,
@@ -419,6 +423,7 @@
       "platform": "browser",
       "runtimeExports": [
         "createGrid",
+        "scanGridAxis",
         "tryCreateGrid"
       ],
       "typeBearing": true,
@@ -436,6 +441,23 @@
         "applyGridEvent",
         "createGridState",
         "tryCreateGridState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./identity",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_MAX_ID_CODE_UNITS",
+        "sameStableIDOrder",
+        "tryNormalizeStableIDs",
+        "validateStableID"
       ],
       "typeBearing": true,
       "optionalPeer": null,
@@ -807,6 +829,7 @@
         "createExactRatio",
         "createRange",
         "divideExactRatios",
+        "formatExactRatioPercentage",
         "interpolateExactRatios",
         "invertExactRatio",
         "mapExactRatio",
@@ -865,6 +888,8 @@
       "platform": "browser",
       "runtimeExports": [
         "SectileResultError",
+        "failResult",
+        "okResult",
         "unwrap"
       ],
       "typeBearing": true,
@@ -880,6 +905,7 @@
       "platform": "browser",
       "runtimeExports": [
         "applyRevisionedEvent",
+        "createMachineUpdate",
         "createRevisionSnapshot",
         "mapRevisionCommands",
         "rejectRevisionInput",

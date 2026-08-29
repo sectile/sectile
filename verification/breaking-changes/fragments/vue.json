@@ -43,12 +43,67 @@
       "removalReason": "Use useFormSelector, useFormFieldSelector, FormSelector, or FormFieldSelector for explicit state projections. FormSubmit exposes only valid, submitting, canSubmit, and submissionStatus; FormSummary exposes valid; FormReset has no state projection."
     },
     {
-      "id": "WI-036:sectile-positioning-props",
+      "id": "WI-025:root-aggregate-removal-closure",
       "change": "signature-changed",
-      "before": { "subpath": "./popover, ./tooltip, ./select, ./temporal/*-picker" },
-      "symbols": ["middleware", "autoUpdate", "positionChange emits/handlers", "Floating UI Boundary/Padding/Strategy-derived props"],
-      "replacement": { "package": "@sectile/dom", "subpath": "./position" },
-      "removalReason": "Vue positioned components now accept only Sectile PositionOptions and consume the shared DOM positioning engine projection."
+      "before": { "subpath": "." },
+      "symbols": ["tabular, temporal, and virtual aggregate declaration closures"],
+      "replacement": { "package": "@sectile/vue", "subpath": "." }
+    },
+    {
+      "id": "WI-009:cascade-list-domain-reconciliation",
+      "change": "signature-changed",
+      "before": { "subpath": "./cascade-list" },
+      "symbols": ["stable item-domain reconciliation declaration closure"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./cascade-list" }
+    },
+    {
+      "id": "WI-009:cascade-select-domain-reconciliation",
+      "change": "signature-changed",
+      "before": { "subpath": "./cascade-select" },
+      "symbols": ["stable item-domain reconciliation declaration closure"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./cascade-select" }
+    },
+    {
+      "id": "WI-036:alert-dialog-positioning-props",
+      "change": "signature-changed",
+      "before": { "subpath": "./alert-dialog" },
+      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+    },
+    {
+      "id": "WI-036:dialog-positioning-props",
+      "change": "signature-changed",
+      "before": { "subpath": "./dialog" },
+      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+    },
+    {
+      "id": "WI-036:drawer-positioning-props",
+      "change": "signature-changed",
+      "before": { "subpath": "./drawer" },
+      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+    },
+    {
+      "id": "WI-036:popover-positioning-props",
+      "change": "signature-changed",
+      "before": { "subpath": "./popover" },
+      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+    },
+    {
+      "id": "WI-036:select-positioning-props",
+      "change": "signature-changed",
+      "before": { "subpath": "./select" },
+      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+    },
+    {
+      "id": "WI-036:tooltip-positioning-props",
+      "change": "signature-changed",
+      "before": { "subpath": "./tooltip" },
+      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
     }
   ]
 }

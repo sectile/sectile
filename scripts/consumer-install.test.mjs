@@ -2,26 +2,25 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { validateInstallBaseline } from './consumer-install/check.mjs';
 
-test('intentional tarball, installed-byte, dependency, and incumbent regressions fail', () => {
+test('intentional tarball, installed-byte, dependency, and third-party regressions fail', () => {
   const baseline = fixture();
   assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.installs[0].optionalPeersPresent.push('@sectile/form'); })), /optional domain peer/u);
   assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.packages.core.tarballBytes = 200; })), /tarball budget/u);
   assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.installs[0].installedBytes = 2_000; })), /installed bytes/u);
   assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.installs[0].dependencyNames.push('unexpected'); })), /dependency tree expanded/u);
-  assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.installs[0].incumbents['@floating-ui/dom'].bytes = 200; })), /@floating-ui\/dom bytes expanded/u);
-  assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.incumbentPerformanceEvidence.colord.medianNanoseconds = 200; })), /colord: incumbent latency/u);
-  assert.throws(() => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.incumbentPerformanceEvidence.colord.medianRetainedBytes = 2_000; })), /colord: incumbent retained-heap/u);
+  for (const dependency of ['colord', '@standard-schema/spec', '@floating-ui/dom']) {
+    assert.throws(
+      () => validateInstallBaseline(baseline, mutate(baseline, (copy) => { copy.installs[0].dependencyNames.push(dependency); })),
+      new RegExp(dependency.replace('/', '\\/')),
+    );
+  }
 });
 
 function fixture() {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     packages: { core: { tarballBytes: 100, categories: Object.fromEntries(['runtimeJS', 'declarations', 'sourceMaps', 'other'].map((key) => [key, { bytes: 100 }])) } },
-    installs: [{ packageManager: 'npm', installedBytes: 100, dependencyNames: ['base'], optionalPeersPresent: [], incumbents: { '@floating-ui/dom': { bytes: 100 } } }],
-    incumbentPerformanceEvidence: {
-      colord: { medianNanoseconds: 100, medianAllocationBytes: 100, medianRetainedBytes: 100 },
-      '@floating-ui/dom': { medianNanoseconds: 100, medianAllocationBytes: 100, medianRetainedBytes: 100 },
-    },
+    installs: [{ packageManager: 'npm', installedBytes: 100, dependencyNames: ['base'], optionalPeersPresent: [] }],
   };
 }
 

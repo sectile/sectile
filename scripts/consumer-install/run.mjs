@@ -14,15 +14,15 @@ assert.ok(mode === 'record' || mode === 'check', 'Usage: run.mjs <record|check>'
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'sectile-consumer-install-'));
 if (process.env['SECTILE_KEEP_INSTALL'] === '1') process.stderr.write(`consumer install temp: ${temporaryRoot}\n`);
 try {
-  const coreManifest = JSON.parse(await readFile(resolve(repoRoot, 'packages/core/package.json'), 'utf8'));
-  const domManifest = JSON.parse(await readFile(resolve(repoRoot, 'packages/dom/package.json'), 'utf8'));
-  assert.equal(coreManifest.dependencies?.colord, undefined, 'Core must not ship colord');
-  assert.equal(coreManifest.peerDependencies?.colord, undefined, 'Core must not expose colord as a peer');
-  assert.equal(typeof domManifest.dependencies?.['@floating-ui/dom'], 'string', 'Floating UI incumbent must be recorded as a hard DOM dependency');
-  assert.equal(domManifest.peerDependencies?.['@floating-ui/dom'], undefined, 'Floating UI must not be misclassified as a peer');
   const packDirectory = join(temporaryRoot, 'packs');
   await mkdir(packDirectory);
   const packageNames = ['core', 'dom', 'form', 'tabular', 'temporal', 'terminal', 'virtual', 'vue'];
+  for (const packageName of packageNames) {
+    const manifest = JSON.parse(await readFile(resolve(repoRoot, `packages/${packageName}/package.json`), 'utf8'));
+    const thirdPartyRuntime = Object.keys(manifest.dependencies ?? {})
+      .filter((dependency) => !dependency.startsWith('@sectile/'));
+    assert.deepEqual(thirdPartyRuntime, [], `${packageName}: third-party runtime dependency remains`);
+  }
   const tarballs = {};
   for (const packageName of packageNames) {
     await run('pnpm', ['--filter', `@sectile/${packageName}`, 'pack', '--pack-destination', packDirectory], repoRoot);
@@ -34,13 +34,10 @@ try {
   for (const packageName of packageNames) packages[packageName] = await inspectTarball(temporaryRoot, packageName, tarballs[packageName]);
   const installs = [];
   for (const packageManager of ['npm', 'pnpm']) installs.push(await inspectVueInstall(temporaryRoot, packageManager, tarballs));
-  const incumbentProcess = await run(process.execPath, ['--expose-gc', resolve(repoRoot, 'scripts/consumer-install/incumbent-worker.mjs')], repoRoot);
-  const incumbentPerformanceEvidence = JSON.parse(incumbentProcess.stdout).reports;
   const report = Object.freeze({
-    schemaVersion: 1,
+    schemaVersion: 2,
     packages,
     installs,
-    incumbentPerformanceEvidence,
   });
   const baselinePath = resolve(repoRoot, 'verification/consumer-install/baseline.json');
   if (mode === 'record') await writeFile(baselinePath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
@@ -113,9 +110,6 @@ async function inspectVueInstall(root, packageManager, tarballs) {
     for (const specifier of removed) await assertMissingEntrypoint(directory, packageManager, specifier);
   }
   const installation = await directoryMetrics(join(directory, 'node_modules'));
-  const incumbents = {
-    '@floating-ui/dom': await installedPackageMetrics(directory, packageManager, '@floating-ui/dom'),
-  };
   const dependencyTree = await installedDependencyTree(directory, packageManager);
   const dependencyNames = new Set();
   collectNormalizedNames(dependencyTree, dependencyNames);
@@ -135,7 +129,6 @@ async function inspectVueInstall(root, packageManager, tarballs) {
     dependencyNames: Object.freeze([...dependencyNames].sort()),
     dependencyTree,
     optionalPeersPresent: Object.freeze(optionalPeersPresent),
-    incumbents: Object.freeze(incumbents),
   });
 }
 
@@ -197,15 +190,6 @@ function collectNormalizedNames(entries, names) {
     names.add(entry.name);
     collectNormalizedNames(entry.dependencies, names);
   }
-}
-
-async function installedPackageMetrics(directory, packageManager, packageName) {
-  if (packageManager === 'npm') return directoryMetrics(join(directory, 'node_modules', ...packageName.split('/')));
-  const store = join(directory, 'node_modules/.pnpm');
-  const prefix = packageName.replace('/', '+').replace('@', '@');
-  const candidate = (await readdir(store)).find((name) => name.startsWith(`${prefix}@`));
-  assert.ok(candidate !== undefined, `${packageManager}: ${packageName} incumbent missing`);
-  return directoryMetrics(join(store, candidate, 'node_modules', ...packageName.split('/')));
 }
 
 async function directoryMetrics(path) {

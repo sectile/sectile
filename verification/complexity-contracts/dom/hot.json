@@ -8,132 +8,325 @@
       "id": "form.subscribe",
       "inherits": "lifecycle-v1",
       "source": "packages/dom/src/form.ts",
-      "benchmarkIDs": ["VAL-032:dom-form-subscribe-resources"],
+      "benchmarkIDs": [
+        "VAL-032:dom-form-subscribe-resources"
+      ],
       "specificationCeiling": "O(1)",
       "contract": {
-        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "connected" },
-        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1) per subscription" },
-        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "1" },
+        "time": {
+          "bound": "O(1)",
+          "kind": "expected",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "1"
+        },
         "proof": "Construction evaluates one selector, retains one record, and inserts it into one form or field Set channel.",
         "adversarialWitness": "A subscription to an absent field still allocates one field-channel record and no domain projection.",
-        "fullScan": { "allowed": false, "rationale": "Subscription construction cannot inspect registered fields or other subscriptions." }
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Subscription construction cannot inspect registered fields or other subscriptions."
+        }
       }
     },
     {
       "id": "form.subscription-dispatch",
       "inherits": "linear-v1",
       "source": "packages/dom/src/form.ts",
-      "benchmarkIDs": ["VAL-032:dom-form-selector-dispatch-work"],
+      "benchmarkIDs": [
+        "VAL-032:dom-form-selector-dispatch-work"
+      ],
       "specificationCeiling": "O(sForm + uSource + sAffected)",
       "contract": {
         "variables": [
-          { "name": "sForm", "meaning": "active coarse form subscriptions", "ceiling": "connection-owned subscriptions" },
-          { "name": "uSource", "meaning": "field owners affected by a source-wide issue transition", "ceiling": "uSource <= fField" },
-          { "name": "sAffected", "meaning": "subscriptions in affected field channels", "ceiling": "all connection-owned field subscriptions for reset/reinitialize" }
+          {
+            "name": "sForm",
+            "meaning": "active coarse form subscriptions",
+            "ceiling": "connection-owned subscriptions"
+          },
+          {
+            "name": "uSource",
+            "meaning": "field owners affected by a source-wide issue transition",
+            "ceiling": "registered field count"
+          },
+          {
+            "name": "sAffected",
+            "meaning": "subscriptions in affected field channels",
+            "ceiling": "all connection-owned field subscriptions for reset/reinitialize"
+          },
+          {
+            "name": "sField",
+            "meaning": "all active field subscriptions retained by the connection",
+            "ceiling": "connection-owned subscriptions"
+          }
         ],
-        "time": { "bound": "O(sForm + uSource + sAffected)", "kind": "worst-case", "runtimeState": "connected" },
-        "space": { "auxiliary": "O(sForm + uSource + sAffected)", "output": "O(1)", "retained": "O(sForm + sField)" },
-        "resources": { "allocations": "O(sForm + uSource + sAffected)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "O(sForm + sField)" },
+        "time": {
+          "bound": "O(sForm + uSource + sAffected)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(sForm + uSource + sAffected)",
+          "output": "O(1)",
+          "retained": "O(sForm + sField)"
+        },
+        "resources": {
+          "allocations": "O(sForm + uSource + sAffected)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(sForm + sField)"
+        },
         "proof": "Dispatch snapshots the coarse channel and only event-routed field channels; source-wide events reuse Form owner indexes and reset/reinitialize explicitly visit every subscribed field channel.",
         "adversarialWitness": "A source replacement touching one of 10k fields evaluates coarse selectors plus only that field's channel, while reset deliberately evaluates every subscribed field channel.",
-        "fullScan": { "allowed": false, "rationale": "Ordinary single-field updates cannot enumerate unrelated fields or field subscription channels." }
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Ordinary single-field updates cannot enumerate unrelated fields or field subscription channels."
+        }
       }
     },
     {
       "id": "form.unsubscribe",
       "inherits": "lifecycle-v1",
       "source": "packages/dom/src/form.ts",
-      "benchmarkIDs": ["VAL-032:dom-form-unsubscribe-work"],
+      "benchmarkIDs": [
+        "VAL-032:dom-form-unsubscribe-work"
+      ],
       "specificationCeiling": "expected O(1)",
       "contract": {
-        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "connected" },
-        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
-        "resources": { "allocations": "0", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "-1" },
+        "time": {
+          "bound": "O(1)",
+          "kind": "expected",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "-1"
+        },
         "proof": "The idempotent disposer marks one record inactive, deletes it from one Set, and removes an empty field channel from one Map.",
         "adversarialWitness": "Repeated disposal during active dispatch changes no other channel and retains no subscription.",
-        "fullScan": { "allowed": false, "rationale": "Unsubscribe owns a direct record and channel reference." }
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Unsubscribe owns a direct record and channel reference."
+        }
       }
     },
     {
       "id": "position.connect",
       "inherits": "lifecycle-v1",
       "source": "packages/dom/src/internal/positioning/engine.ts",
-      "benchmarkIDs": ["VAL-039:position-connect-resources"],
+      "benchmarkIDs": [
+        "VAL-039:position-connect-resources"
+      ],
       "specificationCeiling": "O(aDom)",
       "contract": {
         "variables": [
-          { "name": "aDom", "meaning": "overflow/document ancestor count", "ceiling": "owned document ancestor chain" }
+          {
+            "name": "aDom",
+            "meaning": "overflow/document ancestor count",
+            "ceiling": "owned document ancestor chain"
+          }
         ],
-        "time": { "bound": "O(aDom)", "kind": "worst-case", "runtimeState": "connected" },
-        "space": { "auxiliary": "O(aDom)", "output": "O(1)", "retained": "O(aDom)" },
-        "resources": { "allocations": "O(aDom)", "cacheEntries": "O(aDom)", "listeners": "O(aDom)", "observers": "O(1)", "timers": "O(1)", "subscriptions": "O(1)" },
+        "time": {
+          "bound": "O(aDom)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(aDom)",
+          "output": "O(1)",
+          "retained": "O(aDom)"
+        },
+        "resources": {
+          "allocations": "O(aDom)",
+          "cacheEntries": "O(aDom)",
+          "listeners": "O(aDom)",
+          "observers": "O(1)",
+          "timers": "O(1)",
+          "subscriptions": "O(1)"
+        },
         "proof": "Connection discovers the owned ancestor chain once; source-owned WeakMap registries retain one physical listener and only callbacks for connections affected by that source.",
         "adversarialWitness": "Deep nested scrolling ancestors with every target connected.",
-        "fullScan": { "allowed": false, "rationale": "Global documents or unrelated connections must never be scanned." }
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Global documents or unrelated connections must never be scanned."
+        }
       }
     },
     {
       "id": "position.disconnect",
       "inherits": "lifecycle-v1",
       "source": "packages/dom/src/internal/positioning/engine.ts",
-      "benchmarkIDs": ["VAL-039:position-disconnect-zero"],
+      "benchmarkIDs": [
+        "VAL-039:position-disconnect-zero"
+      ],
       "specificationCeiling": "O(aDom)",
       "contract": {
-        "variables": [{ "name": "aDom", "meaning": "connection-owned ancestor/resources count", "ceiling": "owned document ancestor chain" }],
-        "time": { "bound": "O(aDom)", "kind": "worst-case", "runtimeState": "connected" },
-        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
-        "resources": { "allocations": "0", "cacheEntries": "0", "listeners": "O(aDom)", "observers": "O(1)", "timers": "O(1)", "subscriptions": "O(1)" },
+        "variables": [
+          {
+            "name": "aDom",
+            "meaning": "connection-owned ancestor/resources count",
+            "ceiling": "owned document ancestor chain"
+          }
+        ],
+        "time": {
+          "bound": "O(aDom)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "0",
+          "listeners": "O(aDom)",
+          "observers": "O(1)",
+          "timers": "O(1)",
+          "subscriptions": "O(1)"
+        },
         "proof": "Cleanup visits each connection-owned disposer once and clears all retained resources.",
         "adversarialWitness": "Maximum ancestor registrations followed by repeated idempotent disconnect.",
-        "fullScan": { "allowed": false, "rationale": "Only the connection-owned disposer vector is visited." }
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Only the connection-owned disposer vector is visited."
+        }
       }
     },
     {
       "id": "position.discovery",
       "inherits": "linear-v1",
       "source": "packages/dom/src/internal/positioning/engine.ts",
-      "benchmarkIDs": ["VAL-039:position-discovery-work"],
+      "benchmarkIDs": [
+        "VAL-039:position-discovery-work"
+      ],
       "specificationCeiling": "O(aDom)",
       "contract": {
-        "variables": [{ "name": "aDom", "meaning": "overflow/document ancestor count", "ceiling": "owned document ancestor chain" }],
-        "time": { "bound": "O(aDom)", "kind": "worst-case", "runtimeState": "connected" },
-        "space": { "auxiliary": "O(aDom)", "output": "O(aDom)", "retained": "O(aDom)" },
-        "resources": { "allocations": "O(aDom)", "cacheEntries": "O(aDom)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "variables": [
+          {
+            "name": "aDom",
+            "meaning": "overflow/document ancestor count",
+            "ceiling": "owned document ancestor chain"
+          }
+        ],
+        "time": {
+          "bound": "O(aDom)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(aDom)",
+          "output": "O(aDom)",
+          "retained": "O(aDom)"
+        },
+        "resources": {
+          "allocations": "O(aDom)",
+          "cacheEntries": "O(aDom)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
         "proof": "Discovery walks the owned overflow/document ancestor chain once and records each unique source.",
         "adversarialWitness": "Every ancestor establishes a distinct clipping or scrolling context.",
-        "fullScan": { "allowed": true, "rationale": "Initial connection discovery must classify every owned ancestor exactly once." }
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Initial connection discovery must classify every owned ancestor exactly once."
+        }
       }
     },
     {
       "id": "position.schedule",
       "inherits": "constant-v1",
       "source": "packages/dom/src/internal/positioning/engine.ts",
-      "benchmarkIDs": ["VAL-039:position-schedule-work"],
+      "benchmarkIDs": [
+        "VAL-039:position-schedule-work"
+      ],
       "specificationCeiling": "O(1)",
       "contract": {
-        "resources": { "allocations": "O(1)", "cacheEntries": "O(1)", "listeners": "0", "observers": "0", "timers": "O(1)", "subscriptions": "0" },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "O(1)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "O(1)",
+          "subscriptions": "0"
+        },
         "proof": "Generation coalescing retains at most one pending update callback per connection.",
         "adversarialWitness": "Many synchronous invalidations before the next frame still retain one scheduled callback.",
-        "fullScan": { "allowed": false, "rationale": "Scheduling cannot inspect ancestors, candidates, or unrelated connections." }
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Scheduling cannot inspect ancestors, candidates, or unrelated connections."
+        }
       }
     },
     {
       "id": "position.update",
       "inherits": "lifecycle-v1",
       "source": "packages/dom/src/internal/positioning/engine.ts",
-      "benchmarkIDs": ["VAL-039:position-update-work"],
+      "benchmarkIDs": [
+        "VAL-039:position-update-work"
+      ],
       "specificationCeiling": "O(aDom + cAnchor)",
       "contract": {
         "variables": [
-          { "name": "aDom", "meaning": "retained ancestor measurements", "ceiling": "owned document ancestor chain" },
-          { "name": "cAnchor", "meaning": "bounded anchor candidates", "ceiling": "four sides and alignment candidates" }
+          {
+            "name": "aDom",
+            "meaning": "retained ancestor measurements",
+            "ceiling": "owned document ancestor chain"
+          },
+          {
+            "name": "cAnchor",
+            "meaning": "bounded anchor candidates",
+            "ceiling": "four sides and alignment candidates"
+          }
         ],
-        "time": { "bound": "O(aDom + cAnchor)", "kind": "worst-case", "runtimeState": "connected" },
-        "space": { "auxiliary": "O(aDom + cAnchor)", "output": "O(1)", "retained": "O(aDom)" },
-        "resources": { "allocations": "O(aDom + cAnchor)", "cacheEntries": "O(aDom)", "listeners": "O(aDom)", "observers": "O(1)", "timers": "O(1)", "subscriptions": "0" },
+        "time": {
+          "bound": "O(aDom + cAnchor)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(aDom + cAnchor)",
+          "output": "O(1)",
+          "retained": "O(aDom)"
+        },
+        "resources": {
+          "allocations": "O(aDom + cAnchor)",
+          "cacheEntries": "O(aDom)",
+          "listeners": "O(aDom)",
+          "observers": "O(1)",
+          "timers": "O(1)",
+          "subscriptions": "0"
+        },
         "proof": "An update consumes retained discovery, completes reference/floating/boundary/ancestor reads, invokes the bounded Core AnchoredLayout solver, then commits one owned projection.",
         "adversarialWitness": "Every ancestor clips and every side candidate overflows.",
-        "fullScan": { "allowed": false, "rationale": "Ordinary updates cannot rediscover ancestors or scan global connections." }
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Ordinary updates cannot rediscover ancestors or scan global connections."
+        }
       }
     }
   ]

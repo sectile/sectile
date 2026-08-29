@@ -78,6 +78,10 @@
       "layer": "public"
     },
     {
+      "path": "src/identity.ts",
+      "layer": "public"
+    },
+    {
       "path": "src/index.ts",
       "layer": "public"
     },
@@ -521,6 +525,11 @@
     },
     {
       "source": "src/adapter-runtime.ts",
+      "target": "src/identity.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/adapter-runtime.ts",
       "target": "src/interaction.ts",
       "kind": "import"
     },
@@ -532,6 +541,11 @@
     {
       "source": "src/adapter-runtime.ts",
       "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/adapter-runtime.ts",
+      "target": "src/structures/sequence.ts",
       "kind": "import"
     },
     {
@@ -843,6 +857,31 @@
       "source": "src/grid-control.ts",
       "target": "src/structures/grid.ts",
       "kind": "export"
+    },
+    {
+      "source": "src/identity.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/identity.ts",
+      "target": "src/shared.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/identity.ts",
+      "target": "src/shared.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/identity.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/identity.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
     },
     {
       "source": "src/index.ts",
@@ -1362,6 +1401,11 @@
     {
       "source": "src/internal/kernel/foundation.ts",
       "target": "src/error-code.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/foundation.ts",
+      "target": "src/result.ts",
       "kind": "import"
     },
     {
@@ -2321,6 +2365,11 @@
     },
     {
       "source": "src/revision.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/revision.ts",
       "target": "src/internal/runtime/revision.ts",
       "kind": "export"
     },
@@ -2542,6 +2591,11 @@
     {
       "source": "src/structures/metric-index.ts",
       "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/range.ts",
+      "target": "src/internal/kernel/bounded-scalar.ts",
       "kind": "import"
     },
     {
@@ -2938,9 +2992,11 @@
       "layer": "public",
       "facadeTargets": [
         "src/error-code.ts",
+        "src/identity.ts",
         "src/interaction.ts",
         "src/revision.ts",
-        "src/shared.ts"
+        "src/shared.ts",
+        "src/structures/sequence.ts"
       ]
     },
     {
@@ -3157,6 +3213,18 @@
         "src/internal/composites/grid-control.ts",
         "src/shared.ts",
         "src/structures/grid.ts"
+      ]
+    },
+    {
+      "subpath": "./identity",
+      "source": "src/identity.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/shared.ts",
+        "src/shared.ts",
+        "src/shared.ts",
+        "src/shared.ts"
       ]
     },
     {
@@ -3384,6 +3452,7 @@
       "source": "src/structures/range.ts",
       "layer": "structures",
       "facadeTargets": [
+        "src/internal/kernel/bounded-scalar.ts",
         "src/internal/kernel/decimal.ts",
         "src/internal/kernel/exact-ratio.ts",
         "src/internal/kernel/exact-ratio.ts",
@@ -3435,6 +3504,7 @@
       "source": "src/revision.ts",
       "layer": "public",
       "facadeTargets": [
+        "src/internal/kernel/machine.ts",
         "src/internal/runtime/revision.ts",
         "src/internal/runtime/revision.ts"
       ]
@@ -3838,7 +3908,7 @@
         "src/result.ts",
         "src/shared.ts"
       ],
-      "transitiveDependentCount": 113,
+      "transitiveDependentCount": 114,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -3861,6 +3931,7 @@
         "./geometry",
         "./grid",
         "./grid-control",
+        "./identity",
         "./index-span",
         "./interaction",
         "./layer-stack",
@@ -3924,6 +3995,17 @@
       "transitiveDependentCount": 0,
       "publicSubpaths": [
         "./grid-control"
+      ]
+    },
+    {
+      "module": "src/identity.ts",
+      "directDependents": [
+        "src/adapter-runtime.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./adapter-runtime",
+        "./identity"
       ]
     },
     {
@@ -4116,13 +4198,20 @@
       "directDependents": [
         "src/meter-group.ts",
         "src/meter.ts",
-        "src/progress.ts"
+        "src/progress.ts",
+        "src/structures/range.ts"
       ],
-      "transitiveDependentCount": 3,
+      "transitiveDependentCount": 14,
       "publicSubpaths": [
+        ".",
         "./meter",
         "./meter-group",
-        "./progress"
+        "./multi-thumb-slider",
+        "./progress",
+        "./range",
+        "./slider",
+        "./spin-button",
+        "./window-splitter"
       ]
     },
     {
@@ -4182,6 +4271,7 @@
         "src/editable.ts",
         "src/editing/color-text.ts",
         "src/feed.ts",
+        "src/identity.ts",
         "src/internal/composites/cascade-choice.ts",
         "src/internal/composites/combobox.ts",
         "src/internal/composites/grid-control.ts",
@@ -4232,7 +4322,7 @@
         "src/toggle-group.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 108,
+      "transitiveDependentCount": 109,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4255,6 +4345,7 @@
         "./geometry",
         "./grid",
         "./grid-control",
+        "./identity",
         "./index-span",
         "./layer-stack",
         "./listbox",
@@ -4313,10 +4404,11 @@
         "src/structures/sequence.ts",
         "src/structures/tree.ts"
       ],
-      "transitiveDependentCount": 56,
+      "transitiveDependentCount": 57,
       "publicSubpaths": [
         ".",
         "./accordion",
+        "./adapter-runtime",
         "./carousel",
         "./cascade-list",
         "./cascade-select",
@@ -4379,6 +4471,7 @@
         "src/quantity-field.ts",
         "src/rating.ts",
         "src/reorder.ts",
+        "src/revision.ts",
         "src/select.ts",
         "src/spin-button.ts",
         "src/tags-input.ts"
@@ -4920,6 +5013,7 @@
         "src/internal/composites/tree-grid.ts",
         "src/internal/composites/tree-view.ts",
         "src/internal/editing/text.ts",
+        "src/internal/kernel/foundation.ts",
         "src/internal/runtime/revision.ts",
         "src/internal/state/checked.ts",
         "src/internal/state/open-state.ts",
@@ -4959,7 +5053,7 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 102,
+      "transitiveDependentCount": 112,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4982,6 +5076,7 @@
         "./geometry",
         "./grid",
         "./grid-control",
+        "./identity",
         "./index-span",
         "./interaction",
         "./layer-stack",
@@ -5006,6 +5101,7 @@
         "./result",
         "./revision",
         "./select",
+        "./selection",
         "./selection-expression",
         "./sequence",
         "./slider",
@@ -5075,6 +5171,7 @@
         "src/editing/color-text.ts",
         "src/feed.ts",
         "src/grid-control.ts",
+        "src/identity.ts",
         "src/index.ts",
         "src/interaction.ts",
         "src/internal/composites/cascade-choice.ts",
@@ -5155,7 +5252,7 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 112,
+      "transitiveDependentCount": 113,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -5178,6 +5275,7 @@
         "./geometry",
         "./grid",
         "./grid-control",
+        "./identity",
         "./index-span",
         "./interaction",
         "./layer-stack",
@@ -5357,6 +5455,7 @@
       "module": "src/structures/sequence.ts",
       "directDependents": [
         "src/accordion.ts",
+        "src/adapter-runtime.ts",
         "src/carousel.ts",
         "src/checkbox-group.ts",
         "src/combobox.ts",
@@ -5390,10 +5489,11 @@
         "src/tabs.ts",
         "src/toggle-group.ts"
       ],
-      "transitiveDependentCount": 55,
+      "transitiveDependentCount": 56,
       "publicSubpaths": [
         ".",
         "./accordion",
+        "./adapter-runtime",
         "./carousel",
         "./cascade-list",
         "./cascade-select",

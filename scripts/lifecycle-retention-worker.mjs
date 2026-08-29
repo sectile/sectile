@@ -20,29 +20,37 @@ Object.assign(globalThis, {
   Node: window.Node,
 });
 const resources = installResourceCounters(window);
+const workload = process.env['SECTILE_LIFECYCLE_WORKLOAD'] ?? 'all';
+const heapCheck = workload !== 'position-resources';
+const batchCount = heapCheck ? 12 : 3;
+const warmupBatches = heapCheck ? 2 : 0;
+const measuredBatches = heapCheck ? batchCount - warmupBatches : 0;
 const baselineListeners = resources.activeListeners();
 const baselineRegistry = readPositionSourceRegistryDiagnostics();
 const samples = [];
 
-for (let batch = 0; batch < 12; batch += 1) {
+for (let batch = 0; batch < batchCount; batch += 1) {
   runBatch(window, resources, baselineListeners, baselineRegistry, 1_000);
   window.document.body.replaceChildren();
   forceGC();
-  if (batch >= 2) samples.push(getHeapStatistics().used_heap_size);
+  if (heapCheck && batch >= warmupBatches) samples.push(getHeapStatistics().used_heap_size);
 }
 
-const early = median(samples.slice(0, 3));
-const late = median(samples.slice(-3));
-const noise = relativeMAD(samples.slice(0, 3));
-const band = Math.max(0.05, noise * 3);
-assert.ok(late <= early * (1 + band), `lifecycle retained heap grew ${late - early} bytes beyond ${(band * 100).toFixed(2)}%`);
+const early = heapCheck ? median(samples.slice(0, 3)) : null;
+const late = heapCheck ? median(samples.slice(-3)) : null;
+const noise = heapCheck ? relativeMAD(samples.slice(0, 3)) : null;
+const band = noise === null ? null : Math.max(0.05, noise * 3);
+if (early !== null && late !== null && band !== null) {
+  assert.ok(late <= early * (1 + band), `lifecycle retained heap grew ${late - early} bytes beyond ${(band * 100).toFixed(2)}%`);
+}
 window.close();
-process.stdout.write(`${JSON.stringify({ cyclesPerBatch: 1_000, warmupBatches: 2, measuredBatches: 10, earlyMedian: early, lateMedian: late, relativeMAD: noise, band })}\n`);
+process.stdout.write(`${JSON.stringify({ workload, cyclesPerBatch: 1_000, batchCount, warmupBatches, measuredBatches, heapCheck, earlyMedian: early, lateMedian: late, relativeMAD: noise, band })}\n`);
 
 function runBatch(view, resources, baselineListeners, baselineRegistry, count) {
   const document = view.document;
   for (let index = 0; index < count; index += 1) {
-    const facade = unwrap(createFacadeConnection({}, (options) => {
+    if (workload === 'all' || workload === 'facade') {
+      const facade = unwrap(createFacadeConnection({}, (options) => {
       let state = 0;
       return { ok: true, value: {
         getSnapshot: () => ({ state }),
@@ -50,36 +58,52 @@ function runBatch(view, resources, baselineListeners, baselineRegistry, count) {
         disconnect() {},
       } };
     }));
-    const unsubscribe = facade.subscribe(() => {});
-    facade.send('toggle');
-    unsubscribe();
-    facade.destroy();
+      const unsubscribe = facade.subscribe(() => {});
+      facade.send('toggle');
+      unsubscribe();
+      facade.destroy();
+    }
 
-    const checkboxElement = document.createElement('button');
-    const checkbox = createDOMCheckbox({ element: checkboxElement });
-    checkbox.destroy();
-    const terminal = createTerminalCheckbox();
-    terminal.send('toggle');
-    terminal.destroy();
+    if (workload === 'all' || workload === 'controls') {
+      const checkboxElement = document.createElement('button');
+      const checkbox = createDOMCheckbox({ element: checkboxElement });
+      checkbox.destroy();
+      const terminal = createTerminalCheckbox();
+      terminal.send('toggle');
+      terminal.destroy();
+    }
 
-    const formElement = document.createElement('form');
-    const input = document.createElement('input');
-    formElement.append(input);
-    const form = createForm({ form: formElement, participants: [{ id: 'field', element: input }] });
-    const unsubscribeField = form.subscribeField('field', (field) => field?.dirty ?? false, () => {});
-    form.setFieldMeta('field', { dirty: true });
-    unsubscribeField();
-    form.destroy();
-    assert.equal(form.setFieldMeta('field', { dirty: false }), false);
+    if (workload === 'all' || workload === 'form') {
+      const formElement = document.createElement('form');
+      const input = document.createElement('input');
+      formElement.append(input);
+      const form = createForm({ form: formElement, participants: [{ id: 'field', element: input }] });
+      const unsubscribeField = form.subscribeField('field', (field) => field?.dirty ?? false, () => {});
+      form.setFieldMeta('field', { dirty: true });
+      unsubscribeField();
+      form.destroy();
+      assert.equal(form.setFieldMeta('field', { dirty: false }), false);
+    }
 
-    const reference = document.createElement('button');
-    const root = document.createElement('div');
-    document.body.append(reference, root);
-    const position = createPositionEngine({ root, reference });
-    position.connect();
-    position.disconnect();
-    reference.remove();
-    root.remove();
+    if (workload === 'all' || workload === 'position-resources') {
+      const reference = document.createElement('button');
+      const root = document.createElement('div');
+      // Happy DOM retains computed-style getter allocations for connected nodes.
+      // Heap retention therefore uses detached nodes, while a separate workload
+      // exercises connected ancestor discovery and verifies every resource count.
+      if (workload === 'position-resources') document.body.append(reference, root);
+      const position = createPositionEngine({ root, reference });
+      position.connect();
+      position.disconnect();
+      reference.remove();
+      root.remove();
+    }
+  }
+  if (workload === 'all' || workload === 'position-resources') {
+    view.dispatchEvent(new view.Event('scroll'));
+    view.dispatchEvent(new view.Event('resize'));
+    document.body.dispatchEvent(new view.Event('scroll'));
+    document.documentElement.dispatchEvent(new view.Event('scroll'));
   }
   assert.equal(resources.activeListeners(), baselineListeners);
   assert.equal(resources.activeObservers(), 0);
