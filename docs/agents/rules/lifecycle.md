@@ -25,6 +25,7 @@ per-connection resources until listener count, dispatch work, allocation, and
 retained-heap measurements show a shared registry wins. Shared source events
 dispatch only to affected owners.
 
-Lifecycle contracts state both peak resources while connected and zero-resource
-postconditions after cleanup. Close verification exercises repeated
-connect/reconfigure/disconnect churn and stale callbacks.
+Lifecycle contracts and their test scenarios are written with the connection.
+They state both peak resources while connected and zero-resource postconditions
+after cleanup. Close executes repeated connect/reconfigure/disconnect churn and
+stale-callback checks.

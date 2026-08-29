@@ -59,8 +59,9 @@ crossover evidence. Account for index construction and retained memory.
 for frozen choices. Replacing one requires latency, allocation, retained heap,
 adversarial, and bundle evidence against the production implementation.
 
-Every changed hot operation needs a complexity contract, source proof,
-adversarial witness, and deterministic work/resource counter. Baselines are
-review inputs, not values adjusted to the current result. Record the previous
-value, measured delta, contributors, consumer impact, and approved ceiling
-before replacing a baseline.
+Every changed hot operation adds its complexity contract, source proof,
+adversarial witness, deterministic work/resource counter, and production-bound
+validation code with the implementation. Execute and calibrate them at close.
+Baselines are review inputs, not values adjusted to the current result. Record
+the previous value, measured delta, contributors, consumer impact, and approved
+ceiling before replacing a baseline.

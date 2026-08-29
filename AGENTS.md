@@ -30,7 +30,9 @@ Finish read-only analysis before runtime edits. Record in the active work item:
 3. incumbent and proposed time, space, allocation, and resource bounds;
 4. read/write frequency;
 5. existing Core/domain APIs and retained structures considered;
-6. public API complexity and lifecycle ownership.
+6. public API complexity and lifecycle ownership;
+7. validation artifacts that will prove correctness, bounds, cleanup, and
+   public-surface behavior at close.
 
 Runtime implementation is blocked until ownership and representation are
 settled. Portable semantics belong to Core or one domain owner. DOM, Vue, and
@@ -39,8 +41,10 @@ platform resources; they do not reimplement portable transitions.
 
 ### Implementation cadence
 
-During implementation, validate each coherent batch only with the narrowest
-relevant package production build and `git diff --check`. Production builds own
-the implementation typecheck. Defer tests, performance and heap runs, bundle and
-install gates, browser checks, generated inventories and docs, and baseline
-recording to close. Follow `docs/agents/rules/validation.md` when entering close.
+Write the required tests, reference fixtures, adversarial witnesses,
+deterministic counters, and verification registrations with the implementation.
+During implementation, execute only the narrowest relevant package production
+build and `git diff --check`; production builds own implementation typechecking.
+Defer running tests, performance and heap measurements, bundle and install
+gates, browser checks, generated inventories and docs, and baseline recording to
+close. Follow `docs/agents/rules/validation.md` when entering close.

@@ -19,10 +19,10 @@ source maps, package files, or third-party replacement.
   contain no private paths or unintended sources. Verify declarations and maps
   resolve from packed artifacts.
 
-Any public export, dependency, or closure change records a breaking mapping and
-gets two-bundler consumer evidence, raw/gzip/brotli impact, tarball and installed
-footprint, isolated import/install coverage, declaration coverage, and source
-map checks during close.
+Any public export, dependency, or closure change adds its breaking mapping and
+consumer fixtures with the implementation. Close runs two-bundler evidence,
+raw/gzip/brotli impact, tarball and installed footprint, isolated import/install
+coverage, declaration coverage, and source-map checks.
 
 Do not increase bundle or install ceilings to follow the current output. Record
 the old ceiling, delta, contributors, and approved replacement as a separate
