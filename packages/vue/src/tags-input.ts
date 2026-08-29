@@ -90,6 +90,7 @@ export const TagsInputRoot = defineComponent({
     const localTags = shallowRef<readonly string[]>(props.modelValue ?? initialTags);
     const localInput = shallowRef(props.inputValue ?? props.defaultInputValue);
     const valueControlled = props.modelValue !== undefined; const inputControlled = props.inputValue !== undefined;
+    let mounted = false;
     const state = computed<TagsInputRootSlotProps>(() => Object.freeze({
       value: props.modelValue ?? localTags.value, inputValue: props.inputValue ?? localInput.value,
       disabled: props.disabled, readonly: props.readonly,
@@ -108,7 +109,8 @@ export const TagsInputRoot = defineComponent({
     };
     const connect = (): void => {
       connection.value?.disconnect();
-      if (root.value === null || input.value === null) return;
+      connection.value = undefined;
+      if (!mounted || root.value === null || input.value === null) return;
       connection.value = createTagsInput({
         root: root.value, input: input.value, direction: direction.value,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
@@ -127,7 +129,8 @@ export const TagsInputRoot = defineComponent({
       registerDelete: (element, index) => connection.value?.setTagAttributes(element, index),
       clear: () => { for (let index = state.value.value.length - 1; index >= 0; index -= 1) connection.value?.handleEvent({ type: 'remove', index }); },
     });
-    onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
+    onMounted(() => { mounted = true; connect(); });
+    onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); connection.value = undefined; });
     watch([() => props.disabled, () => props.readonly, () => props.label, () => props.policies, direction], connect);
     watch([() => props.modelValue, () => props.inputValue], () => {
       if (connection.value === undefined) return;

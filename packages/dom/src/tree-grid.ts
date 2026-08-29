@@ -320,6 +320,8 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
   #editBaseline: { readonly id: CellID; readonly value: string } | null = null;
   #composing = false;
   #commitAfterComposition = false;
+  #active = true;
+  #compositionCommitTimer: ReturnType<typeof setTimeout> | null = null;
 
   public constructor(options: TreeGridConnectionOptions<RowID, CellID>) {
     this.#controller = options.controller;
@@ -445,7 +447,10 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
       this.#composing = false;
       if (!this.#commitAfterComposition) return;
       this.#commitAfterComposition = false;
-      setTimeout((): void => {
+      if (this.#compositionCommitTimer !== null) clearTimeout(this.#compositionCommitTimer);
+      this.#compositionCommitTimer = setTimeout((): void => {
+        this.#compositionCommitTimer = null;
+        if (!this.#active) return;
         if (this.#controller.getSnapshot().state.editMode !== 'editing') return;
         this.#dispatchKeyboardInput({ key: 'Enter' });
       }, 0);
@@ -476,6 +481,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
 
   public focusCurrent(): void {
     queueMicrotask((): void => {
+      if (!this.#active) return;
       const current = this.#controller.getSnapshot().state.cursor.current;
       if (current === null) {
         this.#root.focus();
@@ -496,6 +502,9 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
   }
 
   public disconnect(): void {
+    this.#active = false;
+    if (this.#compositionCommitTimer !== null) clearTimeout(this.#compositionCommitTimer);
+    this.#compositionCommitTimer = null;
     this.#root.removeEventListener('keydown', this.#handleKeydown);
     this.#root.removeEventListener('click', this.#handleClick);
     this.#root.removeEventListener('dblclick', this.#handleDoubleClick);

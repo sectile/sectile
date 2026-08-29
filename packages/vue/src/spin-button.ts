@@ -127,10 +127,11 @@ export const SpinButtonRoot = defineComponent({
     const disconnect = (): void => {
       connection.value?.disconnect();
       connection.value = undefined;
+      inputElement.value = undefined;
     };
     const connect = (input: HTMLInputElement): void => {
-      inputElement.value = input;
       disconnect();
+      inputElement.value = input;
       connection.value = createSpinButton({
         input,
         min: String(props.min),

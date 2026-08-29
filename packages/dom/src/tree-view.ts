@@ -224,6 +224,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
   readonly #disabled: ReadonlySet<ID>;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handleClick: (event: MouseEvent) => void;
+  #active = true;
 
   public constructor(options: TreeViewConnectionOptions<ID>) {
     this.#controller = options.controller;
@@ -325,6 +326,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
 
   public focusCurrent(): void {
     queueMicrotask((): void => {
+      if (!this.#active) return;
       const current = this.#controller.getSnapshot().state.cursor.current;
       if (current === null) {
         this.#root.focus();
@@ -339,6 +341,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
   }
 
   public disconnect(): void {
+    this.#active = false;
     this.#root.removeEventListener('keydown', this.#handleKeydown);
     this.#root.removeEventListener('click', this.#handleClick);
   }

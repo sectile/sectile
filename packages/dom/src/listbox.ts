@@ -319,6 +319,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   readonly #itemIDs = new Map<ID, string>();
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handleClick: (event: MouseEvent) => void;
+  #active = true;
 
   public constructor(options: ListboxConnectionOptions<ID>) {
     this.#controller = options.controller;
@@ -434,6 +435,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
 
   public focusCurrent(): void {
     queueMicrotask((): void => {
+      if (!this.#active) return;
       const current = this.#controller.getSnapshot().state.cursor.current;
       const activeDescendantID = current === null ? undefined : this.#itemIDs.get(current);
       applyAttributes(this.#root, { 'aria-activedescendant': activeDescendantID });
@@ -442,8 +444,10 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   }
 
   public disconnect(): void {
+    this.#active = false;
     this.#root.removeEventListener('keydown', this.#handleKeydown);
     this.#root.removeEventListener('click', this.#handleClick);
+    this.#itemIDs.clear();
   }
 
   #applyEffects(effects: readonly ListboxEffect<ID>[]): void {

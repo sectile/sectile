@@ -114,6 +114,7 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
     readonly click: () => void;
   }>();
   readonly #keydown: (event: KeyboardEvent) => void;
+  #active = true;
 
   public constructor(
     options: FeedOptions<ID>,
@@ -201,6 +202,7 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
 
   public focusCurrent(): void {
     queueMicrotask(() => {
+      if (!this.#active) return;
       const current = this.getSnapshot().state.cursor.current;
       if (current === null) this.#options.root.focus();
       else this.#elements.get(current)?.element.focus();
@@ -208,6 +210,7 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
   }
 
   public disconnect(): void {
+    this.#active = false;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     for (const { element, click } of this.#elements.values()) {
       element.removeEventListener('click', click);

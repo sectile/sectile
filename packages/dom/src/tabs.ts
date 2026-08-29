@@ -246,6 +246,7 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
   readonly #disabledItems: ReadonlySet<ID>;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
+  #active = true;
 
   public constructor(
     options: TabsOptions<ID>,
@@ -324,13 +325,14 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
       for (const effect of result.commands) {
         if (effect.type === 'activate-tab') this.#options.onActivate?.(effect.id);
       }
-      queueMicrotask(() => focusData(this.#options.root, 'tabsId', result.snapshot.state.cursor.current));
+      queueMicrotask(() => { if (this.#active) focusData(this.#options.root, 'tabsId', result.snapshot.state.cursor.current); });
     }
     if (result.ok) this.#options.onUpdate?.();
     return result.ok;
   }
 
   public disconnect(): void {
+    this.#active = false;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
   }

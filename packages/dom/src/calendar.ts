@@ -123,6 +123,7 @@ class DOMCalendar implements CalendarConnection {
   readonly #grid: HTMLElement;
   readonly #runtime: DOMTemporalController<CalendarState, CalendarEvent, CalendarCommand>;
   readonly #controls: { readonly value: boolean; readonly highlighted: boolean };
+  #active = true;
   readonly #keydown = (event: KeyboardEvent): void => {
     if (this.handleKeyboardEvent(event)) event.preventDefault();
   };
@@ -198,7 +199,7 @@ class DOMCalendar implements CalendarConnection {
     this.refresh();
     this.#options.onUpdate?.();
     if (result.commands.some((command) => command.type === 'highlight-changed')) {
-      queueMicrotask(() => this.focusCurrent());
+      queueMicrotask(() => { if (this.#active) this.focusCurrent(); });
     }
     return true;
   }
@@ -218,6 +219,7 @@ class DOMCalendar implements CalendarConnection {
     });
   }
   public disconnect(): void {
+    this.#active = false;
     this.#grid.removeEventListener('keydown', this.#keydown);
     this.#grid.removeEventListener('click', this.#click);
   }

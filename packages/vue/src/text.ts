@@ -73,6 +73,7 @@ export const TextField = defineComponent({
     let controller: TextController | null = null;
     let connection: TextConnection | null = null;
     let proposedState: TextState | null = null;
+    let mounted = false;
 
     const createController = (state: TextState): TextController => {
       const result = createTextController({
@@ -101,7 +102,7 @@ export const TextField = defineComponent({
       return result.value;
     };
     const mountConnection = (state: TextState): void => {
-      if (element.value === null) return;
+      if (!mounted || element.value === null) return;
       connection?.disconnect();
       controller = createController(state);
       connection = connectText({
@@ -120,8 +121,17 @@ export const TextField = defineComponent({
       },
     });
 
-    onMounted(() => mountConnection(createTextState(initialValue)));
-    onBeforeUnmount(() => connection?.disconnect());
+    onMounted(() => {
+      mounted = true;
+      mountConnection(createTextState(initialValue));
+    });
+    onBeforeUnmount(() => {
+      mounted = false;
+      connection?.disconnect();
+      connection = null;
+      controller = null;
+      proposedState = null;
+    });
 
     watch(() => props.modelValue, (value) => {
       if (!controlled || value === undefined || connection === null) return;

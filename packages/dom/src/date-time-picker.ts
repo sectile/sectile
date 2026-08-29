@@ -160,6 +160,7 @@ class DOMDateTimePicker implements DateTimePickerConnection {
   readonly #layer: DOMLayerBinding;
   readonly #position: PositionConnection;
   #syncingFields = false;
+  #active = true;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => {
     const semantic = keyEvent(event);
@@ -315,7 +316,7 @@ class DOMDateTimePicker implements DateTimePickerConnection {
       if (result.commands.some((command) => command.type === 'open-changed' && !command.open)) {
         this.options.trigger.focus();
       } else if (result.commands.some((command) => command.type === 'highlight-changed')) {
-        queueMicrotask(() => this.options.grid.querySelector<HTMLElement>('[tabindex="0"]')?.focus());
+        queueMicrotask(() => { if (this.#active) this.options.grid.querySelector<HTMLElement>('[tabindex="0"]')?.focus(); });
       }
     }
     return result.ok;
@@ -344,6 +345,7 @@ class DOMDateTimePicker implements DateTimePickerConnection {
   }
 
   public disconnect(): void {
+    this.#active = false;
     this.#layer.disconnect();
     this.#position.disconnect();
     this.#dateTimeField?.disconnect();

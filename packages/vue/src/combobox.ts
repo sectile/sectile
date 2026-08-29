@@ -138,7 +138,7 @@ export const ComboboxRoot = defineComponent({
       registerInput: (element) => { input.value = element; }, registerPopup: (element) => { popup.value = element; },
       registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, { id, disabled }),
     });
-    onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
+    onMounted(connect); onBeforeUnmount(() => { connection.value?.disconnect(); connection.value = undefined; proposedInputState = null; });
     watch(() => props.items, (items, previousItems) => {
       if (!sameComboboxItems(items, previousItems)) connect();
     });

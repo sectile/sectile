@@ -56,6 +56,7 @@ class DOMCascadeChoiceBindingImplementation<
   readonly #itemSelector: '[data-cascade-list-id]' | '[data-cascade-select-id]';
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
+  #active = true;
 
   public constructor(options: DOMCascadeChoiceBindingOptions<ID, Event>) {
     this.#options = options;
@@ -131,6 +132,7 @@ class DOMCascadeChoiceBindingImplementation<
 
   public focusItem(id: ID): void {
     queueMicrotask(() => {
+      if (!this.#active) return;
       for (const element of this.#options.surface.querySelectorAll<HTMLElement>(this.#itemSelector)) {
         if (element.dataset[this.#idDataKey] === id) element.focus();
       }
@@ -138,6 +140,7 @@ class DOMCascadeChoiceBindingImplementation<
   }
 
   public disconnect(): void {
+    this.#active = false;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.surface.removeEventListener('click', this.#click);
   }

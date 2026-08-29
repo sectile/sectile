@@ -1,9 +1,10 @@
-import { computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild } from 'vue';
+import { computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild } from 'vue';
 import { createTimeRangeField, tryCreateTimeRangeFieldState, type TimeRangeFieldConnection, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/dom/temporal/time-range-field';
 import type { TimeRange } from '@sectile/temporal/time-range-field';
 import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import { useNextTickTask } from './internal/scheduled-task.js';
 
 export interface TimeRangeFieldRootProps { readonly modelValue?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly policies?: TimeRangeFieldPolicies; readonly disabled?: boolean; readonly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TimeRangeFieldRootSlotProps { readonly value: TimeRange | null; readonly startText: string; readonly endText: string; readonly active: 'start' | 'end'; readonly disabled: boolean; readonly: boolean }
@@ -23,9 +24,10 @@ export const TimeRangeFieldRoot = defineComponent({
     ] });
     const refresh = (): void => { if (connection !== null) snapshot.value = connection.getSnapshot().state; };
     const mount = (): void => { if (startInput.value === null || endInput.value === null) return; connection?.disconnect(); connection = createTimeRangeField({ startInput: startInput.value, endInput: endInput.value, ...(controlled ? { value: props.modelValue as TimeRange | null } : { defaultValue: snapshot.value.value }), ...(props.policies === undefined ? {} : { policies: props.policies }), disabled: props.disabled, readOnly: props.readonly, required: props.required, ...(props.startLabel === undefined ? {} : { startLabel: props.startLabel }), ...(props.endLabel === undefined ? {} : { endLabel: props.endLabel }), onValueChange: (value) => emit('update:modelValue', value), onUpdate: refresh }); refresh(); };
-    onMounted(mount); onBeforeUnmount(() => connection?.disconnect());
+    const mountTask = useNextTickTask(mount);
+    onMounted(mount); onBeforeUnmount(() => { mountTask.cancel(); connection?.disconnect(); connection = null; });
     watch(() => props.modelValue, (value) => { if (!controlled || value === undefined || connection === null) return; const result = connection.syncControlledValues({ value }); if (!result.ok) throw new TypeError(result.error.message); snapshot.value = result.value.state; });
-    watch([() => props.policies, () => props.disabled, () => props.readonly, () => props.required, () => props.startLabel, () => props.endLabel], () => { void nextTick(mount); });
+    watch([() => props.policies, () => props.disabled, () => props.readonly, () => props.required, () => props.startLabel, () => props.endLabel], mountTask.schedule);
     const slotProps = computed<TimeRangeFieldRootSlotProps>(() => Object.freeze({ value: snapshot.value.value, startText: snapshot.value.start.inputState.snapshot.text, endText: snapshot.value.end.inputState.snapshot.text, active: snapshot.value.active, disabled: props.disabled, readonly: props.readonly })); provide<Context>(contextKey, { slotProps, startInput, endInput });
     return (): VNodeChild => h(Primitive, mergeProps(participation.controlProps.value, attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => { root.value = element as HTMLElement | null; }, role: 'group', 'data-scope': 'time-range-field', 'data-part': 'root', 'data-disabled': props.disabled ? '' : undefined, 'data-readonly': props.readonly ? '' : undefined }), { default: () => slots['default']?.(slotProps.value) });
   },

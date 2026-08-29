@@ -150,6 +150,7 @@ class DOMCarousel<ID extends StableID> implements CarouselConnection<ID> {
   readonly #focusin: () => void;
   readonly #focusout: (event: FocusEvent) => void;
   #timer: unknown = noCarouselTimer;
+  #active = true;
 
   public constructor(
     options: CarouselOptions<ID>,
@@ -283,6 +284,7 @@ class DOMCarousel<ID extends StableID> implements CarouselConnection<ID> {
   }
 
   public disconnect(): void {
+    this.#active = false;
     this.#clearTimer();
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.previousButton?.removeEventListener('click', this.#previous);
@@ -338,9 +340,10 @@ class DOMCarousel<ID extends StableID> implements CarouselConnection<ID> {
 
   #resetTimer(): void {
     this.#clearTimer();
-    if (this.#autoplay === null || this.#slides.size < 2 || isCarouselRotationPaused(this.getSnapshot().state)) return;
+    if (!this.#active || this.#autoplay === null || this.#slides.size < 2 || isCarouselRotationPaused(this.getSnapshot().state)) return;
     this.#timer = this.#autoplay.scheduler.schedule(() => {
       this.#timer = noCarouselTimer;
+      if (!this.#active) return;
       this.handleEvent('next');
     }, this.#autoplay.delayMs);
   }

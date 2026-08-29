@@ -66,6 +66,7 @@ import {
   type FormSubmissionRegistration,
   type FormSubmissionSource,
 } from './internal/form-control.js';
+import { useNextTickTask } from './internal/scheduled-task.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostId } from './host-provider.js';
 
@@ -478,9 +479,14 @@ const FormRootImpl = defineComponent({
       syncConfiguredIssues();
       syncFieldDiagnostics();
     };
+    const mountTask = useNextTickTask(mount);
 
-    onMounted(() => { void nextTick(mount); });
-    onBeforeUnmount(() => connection.value?.destroy());
+    onMounted(mountTask.schedule);
+    onBeforeUnmount(() => {
+      mountTask.cancel();
+      connection.value?.destroy();
+      connection.value = null;
+    });
     watch([
       summary,
       () => props.schema,
@@ -1106,15 +1112,19 @@ export const FormField = defineComponent({
       ]);
       syncDiagnostic();
     };
+    const mountTask = useNextTickTask(mount);
 
-    onMounted(() => { void nextTick(mount); });
+    onMounted(mountTask.schedule);
     onBeforeUnmount(() => {
+      mountTask.cancel();
       observer?.disconnect();
+      observer = undefined;
       restoreControlAttributes();
       if (diagnosticId !== undefined) formContext.setFieldDiagnostic(diagnosticId, null);
       unregister?.();
+      unregister = undefined;
     });
-    watch([id, nameKey], () => { void nextTick(mount); });
+    watch([id, nameKey], mountTask.schedule);
     watch([
       activeControl,
       effectiveControlId,

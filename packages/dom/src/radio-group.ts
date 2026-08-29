@@ -215,6 +215,7 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
   readonly #disabledItems: ReadonlySet<ID>;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
+  #active = true;
 
   public constructor(
     options: RadioGroupOptions<ID>, domain: Sequence<ID>,
@@ -279,6 +280,7 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
   public handleEvent(event: RadioGroupEvent<ID>): boolean {
     const result = this.#runtime.handle(event);
     if (result.ok) queueMicrotask(() => {
+      if (!this.#active) return;
       for (const element of this.#options.root.querySelectorAll<HTMLElement>('[data-radio-group-id]')) {
         if (element.dataset['radioGroupId'] === result.snapshot.state.cursor.current) element.focus();
       }
@@ -288,6 +290,7 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
   }
 
   public disconnect(): void {
+    this.#active = false;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
   }

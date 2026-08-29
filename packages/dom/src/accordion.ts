@@ -319,6 +319,7 @@ class DOMAccordionConnection<ID extends StableID> implements AccordionConnection
   readonly #disabledItems: ReadonlySet<ID>;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
+  #active = true;
 
   public constructor(options: AccordionOptions<ID> & { readonly controller: AccordionController<ID> }) {
     this.#options = options;
@@ -406,13 +407,14 @@ class DOMAccordionConnection<ID extends StableID> implements AccordionConnection
   public handleEvent(event: AccordionEvent<ID>): boolean {
     const result = this.#options.controller.handleEvent(event);
     if (result.ok) {
-      queueMicrotask(() => focusCurrent(this.#options.root, result.snapshot.state.cursor.current));
+      queueMicrotask(() => { if (this.#active) focusCurrent(this.#options.root, result.snapshot.state.cursor.current); });
       this.#options.onUpdate?.();
     }
     return result.ok;
   }
 
   public disconnect(): void {
+    this.#active = false;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
   }

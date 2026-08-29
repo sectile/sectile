@@ -4,7 +4,6 @@ import {
   h,
   inject,
   mergeProps,
-  nextTick,
   onBeforeUnmount,
   onMounted,
   provide,
@@ -25,6 +24,7 @@ import {
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useNativeInputFormControl } from './internal/form-control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import { useNextTickTask } from './internal/scheduled-task.js';
 
 export interface EditableRootProps {
   readonly modelValue?: string;
@@ -101,12 +101,13 @@ export const EditableRoot = defineComponent({
     const cancelTrigger = ref<HTMLElement | null>(null);
     const multiline = ref(false);
     let connection: EditableConnection | null = null;
+    let mounted = false;
 
     const refresh = (): void => {
       if (connection !== null) snapshot.value = connection.getSnapshot().state;
     };
     const mount = (): void => {
-      if (root.value === null || preview.value === null || input.value === null) return;
+      if (!mounted || root.value === null || preview.value === null || input.value === null) return;
       connection?.disconnect();
       connection = createEditable({
         root: root.value,
@@ -135,9 +136,18 @@ export const EditableRoot = defineComponent({
         mount();
       });
     };
+    const mountTask = useNextTickTask(mount);
 
-    onMounted(mount);
-    onBeforeUnmount(() => connection?.disconnect());
+    onMounted(() => {
+      mounted = true;
+      mount();
+    });
+    onBeforeUnmount(() => {
+      mounted = false;
+      mountTask.cancel();
+      connection?.disconnect();
+      connection = null;
+    });
     watch(() => props.modelValue, (value) => {
       if (!controlled || value === undefined || connection === null) return;
       const result = connection.syncControlledValue(value);
@@ -146,7 +156,7 @@ export const EditableRoot = defineComponent({
     });
     watch(
       [() => props.disabled, () => props.readonly, () => props.submitOnBlur, () => props.policies],
-      () => { void nextTick(mount); },
+      mountTask.schedule,
     );
 
     const slotProps = computed<EditableRootSlotProps>(() => Object.freeze({

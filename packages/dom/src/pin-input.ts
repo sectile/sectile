@@ -42,6 +42,7 @@ class DOMPinInputConnection implements PinInputConnection {
   readonly #options: PinInputOptions;
   readonly #runtime: SemanticController<PinInputState, PinInputEvent, PinInputEffect>;
   readonly #controlled: boolean;
+  #active = true;
   constructor(options: PinInputOptions, runtime: SemanticController<PinInputState, PinInputEvent, PinInputEffect>, controlled: boolean) {
     this.#options = options; this.#runtime = runtime; this.#controlled = controlled;
     options.root.setAttribute('role', 'group'); if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
@@ -59,8 +60,8 @@ class DOMPinInputConnection implements PinInputConnection {
   }
   getSnapshot(): RevisionSnapshot<PinInputState> { return this.#runtime.getSnapshot(); }
   syncControlledValue(value: string): Result<RevisionSnapshot<PinInputState>> { if (!this.#controlled) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Only a controlled pin input accepts external values.' } }; const result = this.#runtime.replace(pinInputStateAtCurrent(this.#options.inputs.length, value, this.#runtime.getSnapshot().state.current)); if (result.ok) { this.#render(); this.#options.onUpdate?.(); } return result; }
-  handleEvent(event: PinInputEvent): boolean { const result = this.#runtime.handle(event); if (!result.ok) return false; this.#render(); for (const effect of result.commands) { if (effect.type === 'focus-cell') queueMicrotask(() => this.#options.inputs[effect.index]?.focus()); else this.#options.onComplete?.(effect.value); } this.#options.onUpdate?.(); return true; }
-  disconnect(): void { for (const remove of this.#listeners) remove(); }
+  handleEvent(event: PinInputEvent): boolean { const result = this.#runtime.handle(event); if (!result.ok) return false; this.#render(); for (const effect of result.commands) { if (effect.type === 'focus-cell') queueMicrotask(() => { if (this.#active) this.#options.inputs[effect.index]?.focus(); }); else this.#options.onComplete?.(effect.value); } this.#options.onUpdate?.(); return true; }
+  disconnect(): void { this.#active = false; for (const remove of this.#listeners) remove(); this.#listeners.length = 0; }
   #render(): void { const state = this.#runtime.getSnapshot().state; this.#options.inputs.forEach((input, index) => { input.value = state.values[index] ?? ''; input.tabIndex = state.current === index ? 0 : -1; }); }
 }
 

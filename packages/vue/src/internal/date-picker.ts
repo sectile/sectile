@@ -325,11 +325,15 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         if (runtimeProps.defaultView !== 'month') connection.value.handleEvent({ type: 'set-view-mode', value: runtimeProps.defaultView });
         refreshCells(); refresh();
       };
+      let mounted = false;
       let connectQueued = false;
       const scheduleConnect = (): void => {
-        if (connectQueued) return;
+        if (!mounted || connectQueued) return;
         connectQueued = true;
-        void nextTick(() => { connectQueued = false; connect(); });
+        void nextTick(() => {
+          connectQueued = false;
+          if (mounted) connect();
+        });
       };
       const moveBy = (unit: PickerNavigationUnit, delta: number): void => {
         const direction = delta < 0 ? -1 : 1;
@@ -395,7 +399,16 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         selectMonth,
         selectYear,
       });
-      onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
+      onMounted(() => {
+        mounted = true;
+        connect();
+      });
+      onBeforeUnmount(() => {
+        mounted = false;
+        connectQueued = false;
+        connection.value?.disconnect();
+        connection.value = undefined;
+      });
       watch([
         () => runtimeProps.disabled, () => runtimeProps.readonly, () => runtimeProps.required, () => runtimeProps.label, () => runtimeProps.policies,
         () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset,

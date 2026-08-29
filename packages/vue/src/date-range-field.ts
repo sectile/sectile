@@ -4,7 +4,6 @@ import {
   h,
   inject,
   mergeProps,
-  nextTick,
   onBeforeUnmount,
   onMounted,
   provide,
@@ -22,6 +21,7 @@ import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
 } from './internal/form-control.js';
+import { useNextTickTask } from './internal/scheduled-task.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
@@ -80,6 +80,7 @@ export const DateRangeFieldRoot = defineComponent({
     const startInput = ref<HTMLInputElement | null>(null);
     const endInput = ref<HTMLInputElement | null>(null);
     const root = ref<HTMLElement | null>(null);
+    let mounted = false;
     const participation = useCompositeFormControl({
       root,
       focusTarget: startInput,
@@ -106,7 +107,7 @@ export const DateRangeFieldRoot = defineComponent({
 
     const refresh = (): void => { if (connection !== null) snapshot.value = connection.getSnapshot().state; };
     const mount = (): void => {
-      if (startInput.value === null || endInput.value === null) return;
+      if (!mounted || startInput.value === null || endInput.value === null) return;
       connection?.disconnect();
       connection = createDateRangeField({
         startInput: startInput.value,
@@ -123,9 +124,18 @@ export const DateRangeFieldRoot = defineComponent({
       });
       refresh();
     };
+    const mountTask = useNextTickTask(mount);
 
-    onMounted(mount);
-    onBeforeUnmount(() => connection?.disconnect());
+    onMounted(() => {
+      mounted = true;
+      mount();
+    });
+    onBeforeUnmount(() => {
+      mounted = false;
+      mountTask.cancel();
+      connection?.disconnect();
+      connection = null;
+    });
     watch(() => props.modelValue, (value) => {
       if (!controlled || value === undefined || connection === null) return;
       const result = connection.syncControlledValues({ value });
@@ -135,7 +145,7 @@ export const DateRangeFieldRoot = defineComponent({
     watch(
       [() => props.policies, () => props.disabled, () => props.readonly, () => props.required,
         () => props.startLabel, () => props.endLabel],
-      () => { void nextTick(mount); },
+      mountTask.schedule,
     );
 
     const slotProps = computed<DateRangeFieldRootSlotProps>(() => Object.freeze({

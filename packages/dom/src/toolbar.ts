@@ -128,6 +128,7 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
   readonly #disabledItems: ReadonlySet<ID>;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
+  #active = true;
 
   public constructor(
     options: ToolbarOptions<ID>, domain: Sequence<ID>,
@@ -185,6 +186,7 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
         if (effect.type === 'invoke-control') this.#options.onInvoke?.(effect.id);
       }
       queueMicrotask(() => {
+        if (!this.#active) return;
         for (const element of this.#options.root.querySelectorAll<HTMLElement>('[data-toolbar-id]')) {
           if (element.dataset['toolbarId'] === result.snapshot.state.cursor.current) element.focus();
         }
@@ -195,6 +197,7 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
   }
 
   public disconnect(): void {
+    this.#active = false;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
   }
