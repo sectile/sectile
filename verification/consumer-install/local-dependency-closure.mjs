@@ -12,10 +12,10 @@ export async function packInstalledDependencyClosure(entryManifestPath, destinat
   const overrides = {};
   for (const dependency of [...packages.values()].sort((left, right) => left.name.localeCompare(right.name))) {
     const before = new Set(await readdir(destination));
-    run('npm', ['pack', '--ignore-scripts', '--pack-destination', destination], dirname(dependency.path), {
+    run('pnpm', ['pack', '--pack-destination', destination], dirname(dependency.path), {
       ...process.env,
-      npm_config_cache: join(destination, '.npm-cache'),
-    });
+      npm_config_ignore_scripts: 'true',
+    }, `${dependency.name}@${dependency.version}`);
     const created = (await readdir(destination))
       .filter((file) => file.endsWith('.tgz') && !before.has(file));
     assert.equal(created.length, 1, `${dependency.name}@${dependency.version} did not produce one tarball`);
@@ -86,7 +86,7 @@ async function loadManifest(path) {
   return Object.freeze({ name: manifest.name, version: manifest.version, manifest, path });
 }
 
-function run(command, args, cwd, env) {
+function run(command, args, cwd, env, detail) {
   const result = spawnSync(command, args, {
     cwd,
     encoding: 'utf8',
@@ -97,6 +97,6 @@ function run(command, args, cwd, env) {
   assert.equal(
     result.status,
     0,
-    `${command} ${args.map((value) => basename(value)).join(' ')}\n${result.stdout}\n${result.stderr}`,
+    `${detail}: ${command} ${args.map((value) => basename(value)).join(' ')}\n${result.stdout}\n${result.stderr}`,
   );
 }

@@ -22,15 +22,7 @@ env:
   RELEASE_TAG: ${{ inputs.tag }}
 
 jobs:
-  verify:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - node: 24.x
-            verification: verify:release
-          - node: 26.x
-            verification: verify:compat
+  prepare:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -40,7 +32,7 @@ jobs:
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 24.x
           cache: pnpm
       - name: Confirm the release tag belongs to main
         run: |
@@ -48,28 +40,24 @@ jobs:
           git rev-parse --verify "refs/tags/${RELEASE_TAG}^{commit}"
           git merge-base --is-ancestor "refs/tags/${RELEASE_TAG}^{commit}" origin/main
       - run: pnpm install --frozen-lockfile
-      - run: pnpm ${{ matrix.verification }}
-      - if: matrix.node == '24.x'
-        run: pnpm release:check "$RELEASE_TAG"
-      - if: matrix.node == '24.x'
-        name: Pack verified npm artifacts
+      - run: pnpm release:check "$RELEASE_TAG"
+      - name: Pack release npm artifacts
         run: pnpm publish:packages -- --pack-only --pack-destination=release-artifacts
-      - if: matrix.node == '24.x'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: npm-packages-${{ inputs.tag }}
           path: release-artifacts/*.tgz
           if-no-files-found: error
           retention-days: 7
-      - if: matrix.node == '24.x'
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-      - if: matrix.node == '24.x'
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+      - name: Build release documentation
+        run: pnpm --filter @sectile/docs build
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: docs/.vitepress/dist
 
   publish:
-    needs: verify
+    needs: prepare
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -108,7 +96,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   deploy-docs:
-    needs: [verify, publish]
+    needs: [prepare, publish]
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

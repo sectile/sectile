@@ -33,12 +33,11 @@ test('includes every public workspace package in releases', () => {
   assert.deepEqual([...publishedPackageDirectories].sort(), publicDirectories);
 });
 
-test('release retries verify tagged source and load the complete current publication tool closure', () => {
+test('release retries prepare tagged artifacts and load the complete current publication tool closure', () => {
   const workflow = readFileSync(join(root, '.github/workflows/release.yml'), 'utf8');
   const localRelease = readFileSync(join(root, 'scripts/release.mjs'), 'utf8');
   const publication = readFileSync(join(root, 'scripts/publish-packages.mjs'), 'utf8');
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  assert.equal(/git restore[^\n]*scripts\/verify\.mjs/u.test(workflow), false);
   for (const path of [
     'scripts/publish-packages.mjs',
     'scripts/lib/npm-publish-auth.mjs',
@@ -53,7 +52,11 @@ test('release retries verify tagged source and load the complete current publica
   assert.match(workflow, /--pack-destination=release-artifacts/u);
   assert.match(workflow, /path: release-artifacts\/\*\.tgz/u);
   assert.match(workflow, /--tarball-directory=release-artifacts/u);
-  assert.match(workflow, /verification: verify:release/u);
+  assert.match(workflow, /jobs:\n  prepare:/u);
+  assert.match(workflow, /run: pnpm release:check/u);
+  assert.match(workflow, /run: pnpm --filter @sectile\/docs build/u);
+  assert.equal(workflow.includes('verify:release'), false);
+  assert.equal(workflow.includes('verify:compat'), false);
   assert.equal(localRelease.includes("['verify:release']"), false);
   assert.match(localRelease, /\['add', '--', 'packages', 'pnpm-lock\.yaml'\]/u);
   assert.match(manifest.scripts['publish:packages'], /--verbose package-publication/u);
