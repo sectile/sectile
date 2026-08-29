@@ -129,3 +129,9 @@ test('Tabular Vue examples use automatic Body rows and concise public props', as
     assert.doesNotMatch(source, /<Data(?:Table|Grid|TreeGrid)\.Provider\s+:controller=/u);
   }
 });
+
+test('Tabular examples follow the page-level host preference', async () => {
+  const source = await read('.vitepress/theme/components/TabularExampleFrame.vue');
+  assert.match(source, /useHostPreference\(\)/u);
+  assert.doesNotMatch(source, /사용 환경|Code host|tabular-example__host-tabs/u);
+});

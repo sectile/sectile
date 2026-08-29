@@ -2,23 +2,25 @@
 import { CodeXml, Eye } from '@lucide/vue';
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from '@sectile/vue/tabs';
 import { computed, ref } from 'vue';
+import { hostLabels, type Host, useHostPreference } from '../host-preference.js';
 import { useDocsLocale } from '../locale.js';
 import HighlightedCode from './HighlightedCode.vue';
 
-type TabularHost = 'vue' | 'dom' | 'core';
-
 const props = defineProps<{
-  sources: Readonly<Record<TabularHost, string>>;
+  sources: Readonly<Partial<Record<Host, string>>>;
   title: string;
   description: string;
 }>();
 
 const modes = ['view', 'code'] as const;
-const hosts = ['vue', 'dom', 'core'] as const;
 const mode = ref<(typeof modes)[number]>('view');
-const host = ref<TabularHost>('vue');
+const { host } = useHostPreference();
 const { isKorean } = useDocsLocale();
-const source = computed(() => props.sources[host.value]);
+const source = computed(() => props.sources[host.value] ?? null);
+const language = computed(() => host.value === 'vue' ? 'vue' : 'ts');
+const unavailableMessage = computed(() => isKorean.value
+  ? `${hostLabels[host.value]} 환경용 Tabular 예제가 없습니다. 페이지 헤더에서 Vue, DOM 또는 Core를 선택하세요.`
+  : `No Tabular example is available for ${hostLabels[host.value]}. Choose Vue, DOM, or Core in the page header.`);
 </script>
 
 <template>
@@ -45,21 +47,8 @@ const source = computed(() => props.sources[host.value]);
     </TabsContent>
 
     <TabsContent class="tabular-example__code" value="code">
-      <div class="tabular-example__code-toolbar">
-        <span>{{ isKorean ? '사용 환경' : 'Host' }}</span>
-        <div class="tabular-example__host-tabs" role="group" :aria-label="isKorean ? '코드 사용 환경' : 'Code host'">
-          <button
-            v-for="option in hosts"
-            :key="option"
-            type="button"
-            :aria-pressed="host === option"
-            @click="host = option"
-          >
-            {{ option === 'vue' ? 'Vue' : option === 'dom' ? 'DOM' : 'Core' }}
-          </button>
-        </div>
-      </div>
-      <HighlightedCode :source="source" :language="host === 'vue' ? 'vue' : 'ts'" />
+      <HighlightedCode v-if="source !== null" :source="source" :language="language" />
+      <p v-else class="tabular-example__unavailable" role="status">{{ unavailableMessage }}</p>
     </TabsContent>
   </TabsRoot>
 </template>
