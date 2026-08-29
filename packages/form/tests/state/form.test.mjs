@@ -2,8 +2,15 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   applyFormEvent,
+  clearFormFieldIssues,
   createFormState,
+  getFormField,
+  getFormFieldIDsByIssueSource,
+  removeFormFieldIssue,
+  replaceFormFieldIssues,
+  setFormFieldMeta,
   tryCreateFormState,
+  upsertFormFieldIssue,
 } from '../../.verification-dist/state.js';
 import {
   appendFormFieldPath,
@@ -89,6 +96,72 @@ const requiredIssue = {
   message: 'Enter an email address.',
   source: 'field',
 };
+
+test('indexed field commands preserve unrelated identity and make equal writes no-ops', () => {
+  const initial = createFormState({
+    fields: [
+      { id: 'email', name: 'email' },
+      { id: 'profile', name: 'profile' },
+    ],
+  });
+  const profile = getFormField(initial, 'profile');
+  assert.ok(profile !== null);
+
+  const changed = setFormFieldMeta(initial, 'email', { dirty: true });
+  assert.equal(changed.ok, true);
+  assert.equal(getFormField(changed.value.state, 'profile'), profile);
+  assert.equal(getFormField(changed.value.state, 'email')?.dirty, true);
+
+  const equal = setFormFieldMeta(changed.value.state, 'email', { dirty: true });
+  assert.equal(equal.ok, true);
+  assert.equal(equal.value.state, changed.value.state);
+  assert.deepEqual(equal.value.commands, []);
+
+  const missing = setFormFieldMeta(initial, 'missing', { touched: true });
+  assert.equal(missing.ok, false);
+  assert.equal(missing.error.code, 'form-field-not-registered');
+});
+
+test('indexed issue commands update only the selected owner and retained source index', () => {
+  const issue = {
+    id: 'email-server',
+    fieldId: 'email',
+    message: 'Already used.',
+    source: 'server',
+  };
+  const initial = createFormState({
+    fields: [
+      { id: 'email', name: 'email' },
+      { id: 'profile', name: 'profile' },
+    ],
+  });
+  const profile = getFormField(initial, 'profile');
+
+  const replaced = replaceFormFieldIssues(initial, 'email', 'server', [issue]);
+  assert.equal(replaced.ok, true);
+  assert.equal(getFormField(replaced.value.state, 'profile'), profile);
+  assert.deepEqual(getFormFieldIDsByIssueSource(replaced.value.state, 'server'), ['email']);
+  assert.equal(replaced.value.state.valid, false);
+
+  const upserted = upsertFormFieldIssue(replaced.value.state, 'email', {
+    ...issue,
+    message: 'Use another address.',
+  });
+  assert.equal(upserted.ok, true);
+  assert.equal(getFormField(upserted.value.state, 'email')?.issues[0].message, 'Use another address.');
+
+  const absent = removeFormFieldIssue(upserted.value.state, 'email', 'absent');
+  assert.equal(absent.ok, true);
+  assert.equal(absent.value.state, upserted.value.state);
+
+  const removed = removeFormFieldIssue(upserted.value.state, 'email', issue.id);
+  assert.equal(removed.ok, true);
+  assert.deepEqual(getFormFieldIDsByIssueSource(removed.value.state, 'server'), []);
+
+  const cleared = clearFormFieldIssues(replaced.value.state, 'email', 'server');
+  assert.equal(cleared.ok, true);
+  assert.equal(cleared.value.state.valid, true);
+});
 
 test('form registry preserves order and derives aggregate field state', () => {
   let state = createFormState({

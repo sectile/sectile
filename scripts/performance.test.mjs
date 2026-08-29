@@ -87,6 +87,9 @@ test('workload schema covers required scales, patch depth, density, domains, and
     if (family === 'runner') continue;
     assert.equal(workloads.some((workload) => workload.family === family), true, family);
   }
+  assert.equal(workloads.some(({ id }) => id === 'core:text:replace:1000'), true);
+  assert.equal(workloads.some(({ id }) => id === 'core:sequence-reorder:move:1000'), true);
+  assert.equal(workloads.some(({ id }) => id === 'core:tree-reorder:move:1000'), true);
 });
 
 function fixture() {

@@ -31,11 +31,16 @@ const {
   FormMessage,
   FormReset,
   FormRoot,
+  FormSelector,
+  FormFieldSelector,
   FormSubmit,
   FormSummary,
   provideFormControlOwner,
   useCompositeFormControl,
   useFormControl,
+  useFormFieldController,
+  useFormFieldSelector,
+  useFormSelector,
   useNativeInputFormControl,
 } = await import('../.verification-dist/form.js');
 const { CheckboxRoot } = await import('../.verification-dist/checkbox.js');
@@ -128,6 +133,114 @@ test('Vue Form value-control inventory is an explicit integration ratchet', () =
       .every(({ family }) => family !== 'compound'),
     true,
   );
+});
+
+test('Vue Form selector hooks rerender only affected form and field channels', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const renders = { dirty: 0, email: 0, profile: 0 };
+  let emailController;
+  const DirtyProbe = defineComponent({
+    setup() {
+      const dirty = useFormSelector((state) => state.dirty);
+      return () => { renders.dirty += 1; return h('output', { 'data-probe': 'dirty' }, String(dirty.value)); };
+    },
+  });
+  const FieldProbe = defineComponent({
+    props: { id: { type: String, required: true } },
+    setup(props) {
+      const dirty = useFormFieldSelector(props.id, (field) => field?.dirty ?? false);
+      if (props.id === 'email') emailController = useFormFieldController(props.id);
+      return () => { renders[props.id] += 1; return h('output', { 'data-probe': props.id }, String(dirty.value)); };
+    },
+  });
+  const app = createApp({
+    render: () => h(FormRoot, null, {
+      default: () => [
+        h(FormField, { id: 'email' }, { default: () => h('input') }),
+        h(FormField, { id: 'profile' }, { default: () => h('input') }),
+        h(DirtyProbe),
+        h(FieldProbe, { id: 'email' }),
+        h(FieldProbe, { id: 'profile' }),
+      ],
+    }),
+  });
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+    renders.dirty = 0;
+    renders.email = 0;
+    renders.profile = 0;
+
+    assert.equal(emailController.setMeta({ dirty: true }), true);
+    await nextTick();
+    assert.deepEqual(renders, { dirty: 1, email: 1, profile: 0 });
+
+    assert.equal(emailController.setMeta({ dirty: true }), true);
+    await nextTick();
+    assert.deepEqual(renders, { dirty: 1, email: 1, profile: 0 });
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
+test('Vue Form selector components honor equality and field isolation', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const renders = { form: 0, email: 0, profile: 0 };
+  let emailController;
+  const ControllerProbe = defineComponent({
+    setup() {
+      emailController = useFormFieldController('email');
+      return () => [];
+    },
+  });
+  const app = createApp({
+    render: () => h(FormRoot, null, {
+      default: () => [
+        h(FormField, { id: 'email' }, { default: () => h('input') }),
+        h(FormField, { id: 'profile' }, { default: () => h('input') }),
+        h(ControllerProbe),
+        h(FormSelector, {
+          select: (state) => ({ valid: state.valid }),
+          equals: (left, right) => left.valid === right.valid,
+        }, { default: ({ selected }) => { renders.form += 1; return h('output', String(selected.valid)); } }),
+        h(FormFieldSelector, {
+          id: 'email',
+          select: (field) => field?.issues ?? [],
+        }, { default: ({ selected }) => { renders.email += 1; return h('output', String(selected.length)); } }),
+        h(FormFieldSelector, {
+          id: 'profile',
+          select: (field) => field?.issues ?? [],
+        }, { default: ({ selected }) => { renders.profile += 1; return h('output', String(selected.length)); } }),
+      ],
+    }),
+  });
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+    renders.form = 0;
+    renders.email = 0;
+    renders.profile = 0;
+
+    emailController.setMeta({ dirty: true });
+    await nextTick();
+    assert.deepEqual(renders, { form: 0, email: 0, profile: 0 });
+
+    emailController.upsertIssue({ id: 'server-email', message: 'Unavailable', source: 'server', fieldId: 'email' });
+    await nextTick();
+    assert.deepEqual(renders, { form: 1, email: 1, profile: 0 });
+
+    emailController.upsertIssue({ id: 'server-email', message: 'Unavailable', source: 'server', fieldId: 'email' });
+    await nextTick();
+    assert.deepEqual(renders, { form: 1, email: 1, profile: 0 });
+  } finally {
+    app.unmount();
+    host.remove();
+  }
 });
 
 test('Vue Form coordinates native validation, focus, FormData, and reset without owning values', async () => {

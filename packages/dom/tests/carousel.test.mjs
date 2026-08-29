@@ -94,6 +94,23 @@ test('DOM carousel autoplay pauses independently for hover and cleans up its tim
   assert.equal(scheduler.pending, 0);
 });
 
+test('DOM carousel rejects a custom scheduler callback that races disconnect', () => {
+  let scheduled;
+  const scheduler = {
+    schedule(callback) { scheduled = callback; return 1; },
+    cancel() {},
+  };
+  const carousel = createCarousel({
+    root: new FakeElement(),
+    slides: ['a', 'b'],
+    autoplay: { scheduler },
+  });
+  const before = carousel.getSnapshot();
+  carousel.disconnect();
+  scheduled();
+  assert.equal(carousel.getSnapshot(), before);
+});
+
 test('DOM carousel explicit resume overrides its existing focus pause', () => {
   const scheduler = new FakeScheduler();
   const root = new FakeElement();

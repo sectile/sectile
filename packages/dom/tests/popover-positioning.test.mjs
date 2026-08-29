@@ -1,66 +1,165 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
-import {
-  arrow,
-  autoPlacement,
-  flip,
-  hide,
-  inline,
-  limitShift,
-  offset,
-  shift,
-  size,
-} from '../.verification-dist/popover.js';
-import {
-  arrow as tooltipArrow,
-  autoPlacement as tooltipAutoPlacement,
-  flip as tooltipFlip,
-  hide as tooltipHide,
-  inline as tooltipInline,
-  limitShift as tooltipLimitShift,
-  offset as tooltipOffset,
-  shift as tooltipShift,
-  size as tooltipSize,
-} from '../.verification-dist/tooltip.js';
 import { createPopover } from '../.verification-dist/popover.js';
+import {
+  createPositionEngine,
+  readPositionSourceRegistryDiagnostics,
+  selectPositionRoute,
+} from '../.verification-dist/internal/positioning/engine.js';
 
-test('DOM floating positioning reserves layout synchronously before measuring', () => {
+const completeCapabilities = Object.freeze({
+  anchorName: true,
+  positionAnchor: true,
+  positionArea: true,
+  positionTryFallbacks: true,
+  positionVisibility: true,
+  anchorCenter: true,
+});
+
+test('DOM positioning reserves layout synchronously before measuring', () => {
   const window = new Window({ url: 'https://sectile.dev/' });
   const root = window.document.createElement('div');
   const trigger = window.document.createElement('button');
   window.document.body.append(trigger, root);
-
   const popover = createPopover({ root, trigger, strategy: 'absolute' });
-
   assert.equal(root.style.position, 'absolute');
   assert.equal(root.style.visibility, 'hidden');
   popover.disconnect();
   window.close();
 });
 
-test('DOM popover exposes the Floating UI middleware surface', () => {
-  assert.deepEqual([
-    offset(8).name,
-    flip().name,
-    shift({ limiter: limitShift() }).name,
-    size().name,
-    arrow({ element: {} }).name,
-    hide().name,
-    inline().name,
-    autoPlacement().name,
-  ], ['offset', 'flip', 'shift', 'size', 'arrow', 'hide', 'inline', 'autoPlacement']);
+test('DOM positioning selects CSS only for the fully supported narrow route', () => {
+  const window = new Window({ url: 'https://sectile.dev/' });
+  const root = window.document.createElement('div');
+  const reference = window.document.createElement('button');
+  window.document.body.append(reference, root);
+  assert.equal(selectPositionRoute({ root, reference, capabilities: completeCapabilities, avoidCollisions: false }), 'css-anchor');
+  assert.equal(selectPositionRoute({ root, reference, capabilities: completeCapabilities, avoidCollisions: true }), 'javascript');
+  assert.equal(selectPositionRoute({ root, reference, capabilities: completeCapabilities, avoidCollisions: false, onLayout() {} }), 'javascript');
+  window.close();
 });
 
-test('DOM tooltip exposes the same Floating UI middleware surface', () => {
-  assert.deepEqual([
-    tooltipOffset(8).name,
-    tooltipFlip().name,
-    tooltipShift({ limiter: tooltipLimitShift() }).name,
-    tooltipSize().name,
-    tooltipArrow({ element: {} }).name,
-    tooltipHide().name,
-    tooltipInline().name,
-    tooltipAutoPlacement().name,
-  ], ['offset', 'flip', 'shift', 'size', 'arrow', 'hide', 'inline', 'autoPlacement']);
+test('DOM JavaScript positioning coalesces updates and restores owned projection', () => {
+  const fixture = createPositionFixture();
+  fixture.root.style.left = '3px';
+  fixture.root.dataset.side = 'before';
+  const layouts = [];
+  const engine = createPositionEngine({
+    root: fixture.root,
+    reference: fixture.reference,
+    collisionBoundary: fixture.boundary,
+    capabilities: completeCapabilities,
+    side: 'bottom',
+    align: 'start',
+    onLayout: (layout) => layouts.push(layout),
+  });
+  engine.connect();
+  engine.update();
+  engine.update();
+  assert.equal(fixture.frames.pending, 1);
+  assert.equal(engine.diagnostics().coalescedUpdates, 2);
+  fixture.frames.flush();
+  assert.equal(layouts.length, 1);
+  assert.equal(fixture.root.dataset.positionRoute, 'javascript');
+  assert.equal(fixture.root.dataset.side, 'bottom');
+  assert.equal(fixture.root.style.visibility, '');
+  assert.equal(fixture.root.style.getPropertyValue('--sectile-position-anchor-width'), '40px');
+  assert.equal(engine.diagnostics().completedUpdates, 1);
+  engine.disconnect();
+  assert.equal(fixture.frames.pending, 0);
+  assert.equal(fixture.root.style.left, '3px');
+  assert.equal(fixture.root.dataset.side, 'before');
+  assert.equal(fixture.root.dataset.positionRoute, undefined);
+  assert.equal(engine.diagnostics().sourceSubscriptions, 0);
+  assert.equal(engine.diagnostics().resizeObservers, 0);
+  assert.equal(engine.diagnostics().layoutObservers, 0);
+  fixture.close();
 });
+
+test('DOM positioning shares physical event sources and releases every resource', () => {
+  const before = readPositionSourceRegistryDiagnostics();
+  const first = createPositionFixture();
+  const secondRoot = first.window.document.createElement('div');
+  first.window.document.body.append(secondRoot);
+  setRect(secondRoot, { x: 0, y: 0, width: 30, height: 10 });
+  const one = createPositionEngine({ root: first.root, reference: first.reference });
+  const two = createPositionEngine({ root: secondRoot, reference: first.reference });
+  one.connect();
+  two.connect();
+  const connected = readPositionSourceRegistryDiagnostics();
+  assert.equal(connected.physicalListeners - before.physicalListeners, 2);
+  assert.equal(connected.callbacks - before.callbacks, 4);
+  assert.equal(first.resizeObservers.length, 2);
+  assert.equal(first.intersectionObservers.length, 2);
+  assert.deepEqual(first.intersectionObservers.map((observer) => observer.targets.length), [1, 1]);
+  one.disconnect();
+  two.disconnect();
+  assert.deepEqual(readPositionSourceRegistryDiagnostics(), before);
+  assert.equal(first.resizeObservers.every((observer) => observer.disconnected), true);
+  assert.equal(first.intersectionObservers.every((observer) => observer.disconnected), true);
+  first.close();
+});
+
+test('DOM positioning cancels a queued generation before disconnect can project', () => {
+  const fixture = createPositionFixture();
+  const engine = createPositionEngine({ root: fixture.root, reference: fixture.reference });
+  engine.connect();
+  assert.equal(fixture.frames.pending, 1);
+  engine.disconnect();
+  fixture.frames.flush();
+  assert.equal(engine.diagnostics().completedUpdates, 0);
+  assert.equal(fixture.root.dataset.positionRoute, undefined);
+  fixture.close();
+});
+
+function createPositionFixture() {
+  const window = new Window({ url: 'https://sectile.dev/' });
+  const frames = installFrameQueue(window);
+  const resizeObservers = [];
+  const intersectionObservers = [];
+  window.ResizeObserver = class {
+    targets = [];
+    disconnected = false;
+    constructor(callback) { this.callback = callback; resizeObservers.push(this); }
+    observe(target) { this.targets.push(target); }
+    disconnect() { this.disconnected = true; this.targets.length = 0; }
+  };
+  window.IntersectionObserver = class {
+    targets = [];
+    disconnected = false;
+    constructor(callback) { this.callback = callback; intersectionObservers.push(this); }
+    observe(target) { this.targets.push(target); }
+    disconnect() { this.disconnected = true; this.targets.length = 0; }
+  };
+  const reference = window.document.createElement('button');
+  const root = window.document.createElement('div');
+  const boundary = window.document.createElement('div');
+  window.document.body.append(boundary, reference, root);
+  setRect(reference, { x: 20, y: 20, width: 40, height: 20 });
+  setRect(root, { x: 0, y: 0, width: 30, height: 10 });
+  setRect(boundary, { x: 0, y: 0, width: 200, height: 200 });
+  return { window, root, reference, boundary, frames, resizeObservers, intersectionObservers, close() { window.close(); } };
+}
+
+function installFrameQueue(window) {
+  let sequence = 0;
+  const callbacks = new Map();
+  window.requestAnimationFrame = (callback) => { const id = ++sequence; callbacks.set(id, callback); return id; };
+  window.cancelAnimationFrame = (id) => { callbacks.delete(id); };
+  return {
+    get pending() { return callbacks.size; },
+    flush() { const queued = [...callbacks.values()]; callbacks.clear(); for (const callback of queued) callback(0); },
+  };
+}
+
+function setRect(element, value) {
+  element.getBoundingClientRect = () => Object.freeze({
+    ...value,
+    top: value.y,
+    right: value.x + value.width,
+    bottom: value.y + value.height,
+    left: value.x,
+    toJSON() { return this; },
+  });
+}

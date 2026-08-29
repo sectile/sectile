@@ -26,6 +26,13 @@ import {
 import { solveAnchoredLayout } from '../../packages/core/dist/structures/anchored-layout.js';
 import { oklchToSrgb, rgba8ToSrgb, srgbToOklch } from '../../packages/core/dist/structures/color.js';
 import { parseColorText } from '../../packages/core/dist/editing/color-text.js';
+import { replacePlainText } from '../../packages/core/dist/text.js';
+import {
+  applySequenceReorderEvent,
+  applyTreeReorderEvent,
+  createSequenceReorderState,
+  createTreeReorderState,
+} from '../../packages/core/dist/reorder.js';
 import { createTree } from '../../packages/core/dist/structures/tree.js';
 import {
   createSelectionState,
@@ -74,7 +81,7 @@ import {
 } from '../../packages/virtual/dist/partitioned-track-grid-layout.js';
 
 export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 15,
+  version: 16,
   scales: Object.freeze([1_000, 10_000, 100_000]),
   patchDepths: Object.freeze([1, 8, 32, 64]),
   changedDensities: Object.freeze([1, 32, 'full']),
@@ -84,6 +91,7 @@ export const WORKLOAD_SCHEMA = Object.freeze({
     'core-selection',
     'core-semantic',
     'core-runtime',
+    'core-editing',
     'tabular-resolution',
     'tabular-profile',
     'virtual-layout',
@@ -219,6 +227,28 @@ export function createWorkloads({ quick = false } = {}) {
         tree.preorder().at((iteration * 8191) % size)?.length ?? 0),
       timed(`core:tree:visible:${size}`, 'core-structure', { size, operation: 'visible' }, iterations(size, quick), () =>
         tree.visible(tree.normalizeExpansion([`tree-${size}-0`])).size),
+    );
+
+    const text = 'a'.repeat(size);
+    const sequenceReorder = createSequenceReorderState(ids);
+    const treeReorder = createTreeReorderState(Array.from({ length: size }, (_, index) => ({
+      id: `reorder-tree-${size}-${index}`,
+      parentID: index === 0 ? null : `reorder-tree-${size}-${Math.floor((index - 1) / 2)}`,
+    })));
+    workloads.push(
+      timed(`core:text:replace:${size}`, 'core-editing', { size, operation: 'replace-one' }, iterations(size, quick), () =>
+        unwrap(replacePlainText(text, size - 1, size, 'z')).length),
+      timed(`core:sequence-reorder:move:${size}`, 'core-editing', { size, operation: 'move-before' }, iterations(size, quick), () =>
+        unwrap(applySequenceReorderEvent(sequenceReorder, {
+          type: 'move-before', id: ids[size - 1], targetID: ids[0],
+        })).state.ids.length),
+      timed(`core:tree-reorder:move:${size}`, 'core-editing', { size, operation: 'move-node' }, iterations(size, quick), () =>
+        unwrap(applyTreeReorderEvent(treeReorder, {
+          type: 'move-node',
+          id: `reorder-tree-${size}-${size - 1}`,
+          parentID: 'reorder-tree-' + size + '-0',
+          beforeID: 'reorder-tree-' + size + '-1',
+        })).state.nodes.length),
     );
 
     const columnCount = size === 1_000 ? 40 : size === 10_000 ? 100 : 400;

@@ -195,6 +195,32 @@ test('DOM controlled PIN input keeps its active cell while values synchronize', 
   assert.equal(pin.getSnapshot().state.current, 5);
 });
 
+test('DOM scheduled focus and IME work are inert after disconnect', async () => {
+  const inputs = [new FakeElement(), new FakeElement()];
+  const pin = createPinInput({ root: new FakeElement(), inputs });
+  pin.handleEvent('next');
+  pin.disconnect();
+  await Promise.resolve();
+  assert.equal(inputs[1].focused, false);
+  assert.equal(inputs.every((input) => [...input.listeners.values()].every((set) => set.size === 0)), true);
+
+  const root = new FakeElement();
+  const input = new FakeElement();
+  const tags = createTagsInput({ root, input });
+  input.emit('compositionstart', { data: '' });
+  input.value = 'stale';
+  root.emit('keydown', {
+    key: 'Enter',
+    target: input,
+    isComposing: true,
+    preventDefault() {},
+  });
+  input.emit('compositionend', { data: 'stale' });
+  tags.disconnect();
+  await Promise.resolve();
+  assert.deepEqual(tags.getSnapshot().state.tags, []);
+});
+
 test('DOM extended facades reject mutations while read-only', () => {
   const select = createSelect({ root: new FakeElement(), trigger: new FakeElement(), popup: new FakeElement(), items: ['a', 'b'], defaultValue: 'a', readOnly: true });
   assert.equal(select.handleEvent({ type: 'select', id: 'b' }), false);

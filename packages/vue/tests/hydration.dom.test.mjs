@@ -24,7 +24,7 @@ const { renderToString } = await import('@vue/server-renderer');
 const { DisclosureContent, DisclosureRoot, DisclosureTrigger } = await import('../.verification-dist/disclosure.js');
 const { DialogContent, DialogRoot, DialogTrigger } = await import('../.verification-dist/dialog.js');
 const { PinInputInput, PinInputRoot } = await import('../.verification-dist/pin-input.js');
-const { FormField, FormRoot } = await import('../.verification-dist/form.js');
+const { FormField, FormFieldSelector, FormRoot, FormSelector } = await import('../.verification-dist/form.js');
 const { TextField } = await import('../.verification-dist/text.js');
 
 async function hydrate(component) {
@@ -127,10 +127,19 @@ test('[HYD-07] Form hydration registers one participant and preserves controlled
         id: 'email',
         name: ['profile', 'email'],
       }, {
-        default: () => h(TextField, {
-          modelValue: 'owner@sectile.dev',
-          'onUpdate:modelValue': () => {},
-        }),
+        default: () => [
+          h(TextField, {
+            modelValue: 'owner@sectile.dev',
+            'onUpdate:modelValue': () => {},
+          }),
+          h(FormFieldSelector, {
+            id: 'email',
+            select: (field) => field?.valid ?? true,
+          }, { default: ({ selected }) => h('output', { 'data-field-valid': '' }, String(selected)) }),
+          h(FormSelector, {
+            select: (state) => state.submissionStatus,
+          }, { default: ({ selected }) => h('output', { 'data-submit-status': '' }, selected) }),
+        ],
       }),
     }),
   };
@@ -146,6 +155,8 @@ test('[HYD-07] Form hydration registers one participant and preserves controlled
     assert.equal(new FormData(form).get('profile.email'), 'owner@sectile.dev');
     assert.equal(states.at(-1).fields.length, 1);
     assert.equal(states.at(-1).fields[0].id, 'email');
+    assert.equal(rendered.host.querySelector('[data-field-valid]').textContent, 'true');
+    assert.equal(rendered.host.querySelector('[data-submit-status]').textContent, 'idle');
     assert.deepEqual(rendered.warnings, []);
   } finally {
     rendered.app.unmount();

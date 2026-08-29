@@ -12,6 +12,61 @@ test('DOM defineFormSubmission returns one immutable schema/handler binding', ()
   assert.equal(Object.isFrozen(submission), true);
 });
 
+test('DOM Form selector channels notify only affected form and field dependencies', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const email = document.createElement('input');
+    const profile = document.createElement('input');
+    email.name = 'email';
+    profile.name = 'profile';
+    formElement.append(email, profile);
+    document.body.append(formElement);
+    const form = createForm({
+      form: formElement,
+      participants: [
+        { id: 'email', element: email },
+        { id: 'profile', element: profile },
+      ],
+    });
+    const dirty = [];
+    const emailDirty = [];
+    const profileDirty = [];
+    const unsubscribeDirty = form.subscribeForm(
+      (state) => state.dirty,
+      (selected, previous) => dirty.push([previous, selected]),
+    );
+    const unsubscribeEmail = form.subscribeField(
+      'email',
+      (field) => field?.dirty ?? false,
+      (selected, previous) => emailDirty.push([previous, selected]),
+    );
+    form.subscribeField(
+      'profile',
+      (field) => field?.dirty ?? false,
+      (selected, previous) => profileDirty.push([previous, selected]),
+    );
+
+    assert.equal(form.setFieldMeta('email', { dirty: true }), true);
+    assert.deepEqual(dirty, [[false, true]]);
+    assert.deepEqual(emailDirty, [[false, true]]);
+    assert.deepEqual(profileDirty, []);
+
+    assert.equal(form.setFieldMeta('email', { dirty: true }), true);
+    assert.deepEqual(dirty, [[false, true]]);
+    assert.deepEqual(emailDirty, [[false, true]]);
+
+    unsubscribeDirty();
+    unsubscribeEmail();
+    form.destroy();
+    assert.equal(form.setFieldMeta('profile', { dirty: true }), false);
+    assert.deepEqual(profileDirty, []);
+  } finally {
+    dom.restore();
+  }
+});
+
 function installDOM() {
   const window = new Window({ url: 'https://sectile.dev/forms' });
   const previous = {

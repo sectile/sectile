@@ -52,6 +52,68 @@ test('DOM virtualizer discards queued measurements when an element is recycled',
   connection.disconnect();
 });
 
+test('DOM virtualizer batches changed observer entries into one mutation and publication', () => {
+  const counters = { resolve: 0, measure: 0, query: 0, state: 0, plan: 0 };
+  const fixture = createFixture({
+    tryQuery: (state) => {
+      counters.query += 1;
+      return success(plan(state));
+    },
+    tryMeasure: (state, batch) => {
+      counters.measure += 1;
+      assert.deepEqual(batch.measurements, [41, 42]);
+      return mutation(Object.freeze({ generation: state.generation + 1 }));
+    },
+  });
+  const connection = createVirtualizer({
+    ...fixture.options,
+    measure: ({ entry }) => { counters.resolve += 1; return entry.measurement; },
+    onStateChange: () => { counters.state += 1; },
+    onPlanChange: () => { counters.plan += 1; },
+  });
+  const first = new FakeElement();
+  const second = new FakeElement();
+  connection.registerItem(first, 'old');
+  connection.registerItem(second, 'new');
+  counters.query = 0;
+  counters.plan = 0;
+
+  fixture.itemObserver().emit([
+    { target: first, measurement: 41 },
+    { target: second, measurement: 42 },
+  ]);
+  assert.equal(fixture.options.root.frame instanceof Function, true);
+  fixture.options.root.frame();
+
+  assert.deepEqual(counters, { resolve: 2, measure: 1, query: 1, state: 1, plan: 1 });
+  assert.equal(connection.getState().generation, 1);
+  connection.disconnect();
+});
+
+test('DOM virtualizer publishes nothing for an equal measurement batch', () => {
+  const counters = { measure: 0, query: 0, state: 0, plan: 0 };
+  const fixture = createFixture({
+    tryQuery: (state) => { counters.query += 1; return success(plan(state)); },
+    tryMeasure: (state) => { counters.measure += 1; return mutation(state); },
+  });
+  const connection = createVirtualizer({
+    ...fixture.options,
+    measure: ({ entry }) => entry.measurement,
+    onStateChange: () => { counters.state += 1; },
+    onPlanChange: () => { counters.plan += 1; },
+  });
+  const element = new FakeElement();
+  connection.registerItem(element, 'old');
+  counters.query = 0;
+  counters.plan = 0;
+
+  fixture.itemObserver().emit([{ target: element, measurement: 40 }]);
+  fixture.options.root.frame();
+
+  assert.deepEqual(counters, { measure: 1, query: 0, state: 0, plan: 0 });
+  connection.disconnect();
+});
+
 test('DOM virtualizer publishes the visible range in the scroll event', () => {
   let queryCalls = 0;
   const fixture = createFixture({

@@ -189,6 +189,13 @@ test('VirtualList keeps the layout domain for value-only replacements and measur
 
     const domain = list.value.state.domain;
     const generation = list.value.state.generation;
+    const equalState = list.value.state;
+    const equalPlan = list.value.plan;
+    items.value = items.value.map((item) => ({ ...item }));
+    await settle();
+    assert.equal(list.value.state, equalState);
+    assert.equal(list.value.plan, equalPlan);
+
     items.value = items.value.map((item, index) => index === 0
       ? { ...item, label: 'Changed row', height: 40 }
       : item);
@@ -386,6 +393,8 @@ test('VirtualGrid derives responsive columns and reconciles declarative items', 
   const host = document.createElement('div');
   document.body.append(host);
   const grid = ref();
+  const stateChanges = [];
+  const planChanges = [];
   const items = ref(Array.from({ length: 12 }, (_, index) => ({ id: `grid-${index}` })));
   const app = createApp({
     render: () => h(VirtualGrid, {
@@ -398,6 +407,8 @@ test('VirtualGrid derives responsive columns and reconciles declarative items', 
       laneGap: 10,
       initialViewport: { x: 0, y: 0, width: 120, height: 100 },
       overscan: 0,
+      onStateChange: (state) => stateChanges.push(state),
+      onPlanChange: (plan) => planChanges.push(plan),
     }, { default: ({ key, row, column }) => `${key}:${row}:${column}` }),
   });
 
@@ -410,14 +421,36 @@ test('VirtualGrid derives responsive columns and reconciles declarative items', 
     assert.match(host.textContent, /grid-1:0:1/);
 
     const first = host.querySelector('[data-virtual-layout="virtual-grid"][data-part="item"]');
+    const second = host.querySelectorAll('[data-virtual-layout="virtual-grid"][data-part="item"]')[1];
     first.getBoundingClientRect = () => ({
       x: 0, y: 0, top: 0, right: 55, bottom: 35, left: 0,
       width: 55, height: 35, toJSON() {},
     });
+    second.getBoundingClientRect = () => ({
+      x: 55, y: 0, top: 0, right: 110, bottom: 45, left: 55,
+      width: 55, height: 45, toJSON() {},
+    });
+    const generation = grid.value.state.generation;
+    stateChanges.length = 0;
+    planChanges.length = 0;
     FakeResizeObserver.notify(first);
+    FakeResizeObserver.notify(second);
     grid.value.flush();
     await settle();
-    assert.deepEqual(grid.value.state.rows.extentAt(0), { kind: 'exact', value: 35 });
+    assert.deepEqual(grid.value.state.rows.extentAt(0), { kind: 'exact', value: 45 });
+    assert.equal(grid.value.state.generation, generation + 1);
+    assert.equal(stateChanges.length, 1);
+    assert.equal(planChanges.length, 1);
+
+    stateChanges.length = 0;
+    planChanges.length = 0;
+    FakeResizeObserver.notify(first);
+    FakeResizeObserver.notify(second);
+    grid.value.flush();
+    await settle();
+    assert.equal(grid.value.state.generation, generation + 1);
+    assert.equal(stateChanges.length, 0);
+    assert.equal(planChanges.length, 0);
 
     const root = host.querySelector('[data-scope="virtualizer"][data-part="root"]');
     Object.defineProperty(root, 'clientWidth', { configurable: true, value: 240 });
