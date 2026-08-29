@@ -44,6 +44,7 @@
     "verify:reproducible-build:workspace": "pnpm -r --workspace-concurrency=1 --if-present verify:reproducible-build",
     "check:boundaries": "node scripts/check-workspace-boundaries.mjs",
     "check:components": "node scripts/check-component-completeness.mjs",
+    "check:semantic-authority": "node scripts/check-semantic-authority.mjs",
     "check:form-scenarios": "node scripts/check-form-scenarios.mjs",
     "check:component-api": "node scripts/run-workspace-command.mjs component-api-check -- pnpm run check:component-api:local",
     "check:component-api:local": "pnpm -r --workspace-concurrency=1 --filter @sectile/core --filter @sectile/temporal --filter @sectile/virtual --filter @sectile/tabular --filter @sectile/dom --filter @sectile/terminal --filter @sectile/vue --if-present build && node scripts/check-component-public-api.mjs",

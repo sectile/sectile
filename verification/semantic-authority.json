@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "classifications": ["canonical", "declared-alias", "platform-only"],
+  "componentAuthority": {
+    "catalog": "verification/component-completeness.json",
+    "canonicalPackages": [
+      { "name": "@sectile/core", "manifest": "packages/core/package.json" },
+      { "name": "@sectile/temporal", "manifest": "packages/temporal/package.json" }
+    ],
+    "aliases": [
+      { "id": "checkbox-group", "owner": "@sectile/core/checkbox-group", "target": "@sectile/core/listbox", "composition": "multiple-selection policy" },
+      { "id": "rating", "owner": "@sectile/core/rating", "target": "@sectile/core/radio-group", "composition": "score vocabulary and clear command" },
+      { "id": "stepper", "owner": "@sectile/core/stepper", "target": "packages/core/src/internal/composites/linear-choice.ts", "composition": "step vocabulary and manual activation policy" },
+      { "id": "menubar", "owner": "@sectile/core/menubar", "target": "@sectile/core/menu", "composition": "declared export alias" },
+      { "id": "window-splitter", "owner": "@sectile/core/window-splitter", "target": "@sectile/core/slider", "composition": "separator vocabulary and projection" }
+    ],
+    "tabularCatalogKey": "tabularProfiles",
+    "tabularOwner": { "name": "@sectile/tabular", "manifest": "packages/tabular/package.json" },
+    "hostProjections": [
+      { "name": "@sectile/dom", "classification": "platform-only", "migrationException": "dom-component-semantics" },
+      { "name": "@sectile/terminal", "classification": "platform-only", "migrationException": "terminal-component-semantics" },
+      { "name": "@sectile/vue", "classification": "platform-only", "migrationException": "vue-component-semantics" }
+    ]
+  },
+  "domainAuthority": [
+    { "name": "@sectile/form", "manifest": "packages/form/package.json", "classification": "canonical" },
+    { "name": "@sectile/temporal", "manifest": "packages/temporal/package.json", "classification": "canonical" },
+    { "name": "@sectile/tabular", "manifest": "packages/tabular/package.json", "classification": "canonical" },
+    { "name": "@sectile/virtual", "manifest": "packages/virtual/package.json", "classification": "canonical" }
+  ],
+  "hostHelperRoots": [
+    {
+      "root": "packages/dom/src/internal",
+      "classification": "platform-only",
+      "semanticException": "dom-component-semantics",
+      "semanticPaths": [
+        "packages/dom/src/internal/cascade-choice-binding.ts",
+        "packages/dom/src/internal/checked-control.ts",
+        "packages/dom/src/internal/disabled-items.ts",
+        "packages/dom/src/internal/exact-percentage.ts",
+        "packages/dom/src/internal/menu-control.ts",
+        "packages/dom/src/internal/popup-control.ts",
+        "packages/dom/src/internal/result.ts"
+      ]
+    },
+    {
+      "root": "packages/terminal/src/internal",
+      "classification": "platform-only",
+      "semanticException": "terminal-component-semantics",
+      "semanticPaths": [
+        "packages/terminal/src/internal/cascade-choice.ts",
+        "packages/terminal/src/internal/checked-control.ts",
+        "packages/terminal/src/internal/disabled-items.ts",
+        "packages/terminal/src/internal/menu-control.ts",
+        "packages/terminal/src/internal/popup-control.ts",
+        "packages/terminal/src/internal/result.ts"
+      ]
+    },
+    {
+      "root": "packages/vue/src/internal",
+      "classification": "platform-only",
+      "semanticException": "vue-component-semantics",
+      "semanticPaths": [
+        "packages/vue/src/internal/cascade-choice.ts",
+        "packages/vue/src/internal/collection.ts",
+        "packages/vue/src/internal/controlled-state.ts",
+        "packages/vue/src/internal/date-picker.ts",
+        "packages/vue/src/internal/tabs-context.ts"
+      ]
+    }
+  ],
+  "dependencyGraph": [
+    { "name": "@sectile/core", "manifest": "packages/core/package.json", "semanticDependencies": [] },
+    { "name": "@sectile/form", "manifest": "packages/form/package.json", "semanticDependencies": ["@sectile/core"] },
+    { "name": "@sectile/temporal", "manifest": "packages/temporal/package.json", "semanticDependencies": ["@sectile/core"] },
+    { "name": "@sectile/virtual", "manifest": "packages/virtual/package.json", "semanticDependencies": ["@sectile/core"] },
+    { "name": "@sectile/tabular", "manifest": "packages/tabular/package.json", "semanticDependencies": ["@sectile/core", "@sectile/virtual"] },
+    { "name": "@sectile/dom", "manifest": "packages/dom/package.json", "semanticDependencies": ["@sectile/core", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] },
+    { "name": "@sectile/terminal", "manifest": "packages/terminal/package.json", "semanticDependencies": ["@sectile/core", "@sectile/temporal"] },
+    { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "semanticDependencies": ["@sectile/core", "@sectile/dom", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] }
+  ],
+  "migrationExceptions": [
+    { "id": "form-foundation-clones", "owner": "WI-004", "scope": "@sectile/form generic Result, update, identity, uniqueness, and ordered-field helpers" },
+    { "id": "temporal-foundation-clones", "owner": "WI-005", "scope": "@sectile/temporal generic foundation and update helpers" },
+    { "id": "tabular-grid-movement", "owner": "WI-006", "scope": "@sectile/tabular grid-profile movement equivalent to Core Grid semantics" },
+    { "id": "virtual-foundation-clones", "owner": "WI-022", "scope": "@sectile/virtual generic foundation and update helpers" },
+    { "id": "dom-component-semantics", "owner": "WI-007", "scope": "DOM renderer-neutral component control and shared semantic helpers" },
+    { "id": "terminal-component-semantics", "owner": "WI-008", "scope": "Terminal renderer-neutral component control and shared semantic helpers" },
+    { "id": "vue-component-semantics", "owner": "WI-009", "scope": "Vue renderer-neutral collection and component semantics" },
+    { "id": "vue-form-semantics", "owner": "WI-029", "scope": "Vue Form whole-state projection and component subscriptions" },
+    { "id": "vue-virtual-projection", "owner": "WI-040", "scope": "Vue Virtual measurement and collection projection ownership" },
+    { "id": "floating-positioning-surface", "owner": "WI-036", "scope": "DOM and Vue positioned components expose third-party positioning semantics" }
+  ]
+}
