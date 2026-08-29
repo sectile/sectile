@@ -1,5 +1,55 @@
 {
   "schemaVersion": 1,
   "package": "@sectile/virtual",
-  "entries": []
+  "entries": [
+    {
+      "id": "WI-034:root-core-geometry-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "." },
+      "symbols": ["VirtualPoint, VirtualSize, VirtualRect, and VirtualInsets declaration closure"],
+      "replacement": { "package": "@sectile/virtual", "subpath": "." }
+    },
+    {
+      "id": "WI-034:layout-core-geometry-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./layout" },
+      "symbols": ["VirtualPoint, VirtualSize, VirtualRect, and VirtualInsets declaration closure"],
+      "replacement": { "package": "@sectile/virtual", "subpath": "./layout" }
+    },
+    {
+      "id": "WI-034:linear-layout-core-geometry-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./linear-layout" },
+      "symbols": ["Virtual geometry declaration closure"],
+      "replacement": { "package": "@sectile/virtual", "subpath": "./linear-layout" }
+    },
+    {
+      "id": "WI-034:masonry-layout-core-geometry-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./masonry-layout" },
+      "symbols": ["Virtual geometry declaration closure"],
+      "replacement": { "package": "@sectile/virtual", "subpath": "./masonry-layout" }
+    },
+    {
+      "id": "WI-034:partitioned-track-grid-layout-core-geometry-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./partitioned-track-grid-layout" },
+      "symbols": ["Virtual geometry declaration closure"],
+      "replacement": { "package": "@sectile/virtual", "subpath": "./partitioned-track-grid-layout" }
+    },
+    {
+      "id": "WI-034:spatial-layout-core-geometry-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./spatial-layout" },
+      "symbols": ["Virtual geometry declaration closure"],
+      "replacement": { "package": "@sectile/virtual", "subpath": "./spatial-layout" }
+    },
+    {
+      "id": "WI-034:track-grid-layout-core-geometry-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./track-grid-layout" },
+      "symbols": ["Virtual geometry declaration closure"],
+      "replacement": { "package": "@sectile/virtual", "subpath": "./track-grid-layout" }
+    }
+  ]
 }

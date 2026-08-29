@@ -38,3 +38,10 @@
 | WI-032 | @sectile/tabular | `./data-tree-grid` | `TabularRowSelection declaration closure` | @sectile/tabular/data-tree-grid |
 | WI-032 | @sectile/tabular | `.` | `TabularRowSelection declaration closure` | @sectile/tabular |
 | WI-032 | @sectile/tabular | `./virtual` | `TabularRowSelection declaration closure` | @sectile/tabular/virtual |
+| WI-034 | @sectile/virtual | `./layout` | `VirtualPoint, VirtualSize, VirtualRect, and VirtualInsets declaration closure` | @sectile/virtual/layout |
+| WI-034 | @sectile/virtual | `./linear-layout` | `Virtual geometry declaration closure` | @sectile/virtual/linear-layout |
+| WI-034 | @sectile/virtual | `./masonry-layout` | `Virtual geometry declaration closure` | @sectile/virtual/masonry-layout |
+| WI-034 | @sectile/virtual | `./partitioned-track-grid-layout` | `Virtual geometry declaration closure` | @sectile/virtual/partitioned-track-grid-layout |
+| WI-034 | @sectile/virtual | `.` | `VirtualPoint, VirtualSize, VirtualRect, and VirtualInsets declaration closure` | @sectile/virtual |
+| WI-034 | @sectile/virtual | `./spatial-layout` | `Virtual geometry declaration closure` | @sectile/virtual/spatial-layout |
+| WI-034 | @sectile/virtual | `./track-grid-layout` | `Virtual geometry declaration closure` | @sectile/virtual/track-grid-layout |

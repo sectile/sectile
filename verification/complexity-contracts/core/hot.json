@@ -56,6 +56,22 @@
       }
     },
     {
+      "id": "anchored-layout.solve",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/anchored-layout.ts",
+      "benchmarkIDs": ["core:anchored-layout:solve"],
+      "specificationCeiling": "O(cAnchor)",
+      "contract": {
+        "variables": [{ "name": "cAnchor", "meaning": "evaluated placement candidates", "ceiling": "MAX_ANCHORED_LAYOUT_CANDIDATES = 4" }],
+        "time": { "bound": "O(cAnchor)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The solver validates fixed-size records, evaluates one preferred side or exactly four scalar side candidates without arrays or sorting, then materializes only the fixed-size winning result.",
+        "adversarialWitness": "A preferred placement overflowing every boundary edge evaluates all four candidates and shifts the winner while retaining constant auxiliary state.",
+        "fullScan": { "allowed": false, "rationale": "Candidate count is a compile-time constant and no host, ancestor, or domain collection is accepted." }
+      }
+    },
+    {
       "id": "exact-ratio.arithmetic",
       "inherits": "constant-v1",
       "source": "packages/core/src/structures/range.ts",
@@ -91,6 +107,37 @@
         "proof": "Each operand is validated and reduced by Euclidean GCD, then compared with two bounded-width cross products.",
         "adversarialWitness": "Coprime Fibonacci-sized operands at both configured width ceilings maximize remainder calls.",
         "fullScan": { "allowed": false, "rationale": "Work depends on operand width, never a represented domain cardinality." }
+      }
+    },
+    {
+      "id": "geometry.bounds",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/structures/geometry.ts",
+      "benchmarkIDs": ["core:geometry:bounds:1000", "core:geometry:bounds:10000", "core:geometry:bounds:100000"],
+      "specificationCeiling": "O(nRect)",
+      "contract": {
+        "variables": [{ "name": "nRect", "meaning": "validated input rectangle count", "ceiling": "maxRects" }],
+        "time": { "bound": "O(nRect)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "One scalar reduction validates each bounded input rectangle and retains only four extrema before materializing one result.",
+        "adversarialWitness": "Maximum rect input makes every final rectangle extend one bound and therefore requires every visit.",
+        "fullScan": { "allowed": true, "rationale": "Computing bounds of an explicit external collection has a linear lower bound." }
+      }
+    },
+    {
+      "id": "geometry.scalar",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/structures/geometry.ts",
+      "benchmarkIDs": ["core:geometry:intersection", "VAL-038:geometry-scalar-work"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "time": { "bound": "O(1)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Point, size, rectangle, inset, intersection, containment, overflow, clamp, and alignment operations use a fixed number of finite-number scalar comparisons and arithmetic steps.",
+        "adversarialWitness": "Fractional negative coordinates and oversized extents execute the same bounded scalar branches.",
+        "fullScan": { "allowed": false, "rationale": "Fixed-dimensional geometry cannot traverse collection cardinality." }
       }
     },
     {

@@ -35,7 +35,7 @@
       "types": "dist/track-grid-layout.d.ts"
     }
   ],
-  "fingerprint": "ebce6bc8c7cb578794ec4fb2a146d13e22eabafdc3d144ce70cbf1ea9133e251",
+  "fingerprint": "aa9c80e5c7e2eadfd00dcb408d4456ac57913592c1ff97f3c2b2706a373854a7",
   "files": [
     {
       "path": "dist/error.d.ts",
@@ -55,7 +55,7 @@
     },
     {
       "path": "dist/layout.d.ts",
-      "sha256": "a2b406cd2b60630e1b462179076cbe34a42bd36f1b275e42b29d68f9845b79bd"
+      "sha256": "f6a07af6b2703d04bf174a0951202147035a356d8639fa473e612136b7f63348"
     },
     {
       "path": "dist/linear-layout.d.ts",

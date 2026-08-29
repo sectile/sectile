@@ -19,6 +19,11 @@ import {
   unionSelectionExpressions,
 } from '../../packages/core/dist/structures/selection-expression.js';
 import { createMetricIndex } from '../../packages/core/dist/structures/metric-index.js';
+import {
+  boundsOfRects,
+  rectanglesIntersect,
+} from '../../packages/core/dist/structures/geometry.js';
+import { solveAnchoredLayout } from '../../packages/core/dist/structures/anchored-layout.js';
 import { createTree } from '../../packages/core/dist/structures/tree.js';
 import {
   createSelectionState,
@@ -54,7 +59,7 @@ import {
 } from '../../packages/virtual/dist/spatial-layout.js';
 
 export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 8,
+  version: 9,
   scales: Object.freeze([1_000, 10_000, 100_000]),
   patchDepths: Object.freeze([1, 8, 32, 64]),
   changedDensities: Object.freeze([1, 32, 'full']),
@@ -84,6 +89,14 @@ export function createWorkloads({ quick = false } = {}) {
 
   for (const size of scales) {
     const ids = Object.freeze(Array.from({ length: size }, (_, index) => `id-${size}-${index}`));
+    const geometryRects = Object.freeze(Array.from({ length: size }, (_, index) => Object.freeze({
+      x: index % 997,
+      y: Math.floor(index / 997),
+      width: 10,
+      height: 10,
+    })));
+    workloads.push(timed(`core:geometry:bounds:${size}`, 'core-structure', { size, operation: 'bounds' }, iterations(size, quick), () =>
+      boundsOfRects(geometryRects, { maxRects: size })?.width ?? 0));
     const sequence = createSequence(ids, { maxItems: size + 128 });
     workloads.push(
       timed(`core:sequence:construct:${size}`, 'core-structure', { size, operation: 'construct' }, iterations(size, quick), () =>
@@ -252,6 +265,24 @@ export function createWorkloads({ quick = false } = {}) {
   const wideRatioRight = createExactRatio((1n << 1_019n) - 1n, (1n << 1_017n) - 1n);
   workloads.push(timed('core:exact-ratio:add:1024', 'core-structure', { operation: 'reduced-add', bits: 1_024 }, quick ? 100 : 1_000, () =>
     Number(addExactRatios(wideRatioLeft, wideRatioRight).numerator & 1n)));
+  const anchoredInput = Object.freeze({
+    reference: Object.freeze({ x: 972, y: 740, width: 40, height: 30 }),
+    floating: Object.freeze({ width: 180, height: 120 }),
+    boundary: Object.freeze({ x: 0, y: 0, width: 1_024, height: 768 }),
+    side: 'bottom',
+    align: 'center',
+    offset: 8,
+    padding: 12,
+    arrow: Object.freeze({ width: 10, height: 6 }),
+  });
+  const geometryLeft = Object.freeze({ x: 10, y: 20, width: 40, height: 30 });
+  const geometryRight = Object.freeze({ x: 30, y: 25, width: 35, height: 45 });
+  workloads.push(
+    timed('core:geometry:intersection', 'core-structure', { operation: 'intersection' }, quick ? 10_000 : 100_000, () =>
+      rectanglesIntersect(geometryLeft, geometryRight) ? 1 : 0),
+    timed('core:anchored-layout:solve', 'core-structure', { operation: 'bounded-placement', candidates: 4 }, quick ? 1_000 : 10_000, () =>
+      solveAnchoredLayout(anchoredInput).rect.x),
+  );
   workloads.push(...createRuntimeWorkloads(quick));
   return Object.freeze(workloads);
 }

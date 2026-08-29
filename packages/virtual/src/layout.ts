@@ -1,10 +1,22 @@
 import type { StableID } from '@sectile/core';
+import {
+  ZERO_INSETS,
+  ZERO_POINT,
+  pointDelta,
+  rectanglesIntersect,
+  tryCreateInsets,
+  tryCreateRect,
+  type Insets,
+  type Point,
+  type Rect,
+  type Size,
+} from '@sectile/core/geometry';
 import type { VirtualResult } from './error.js';
 
-export interface VirtualPoint { readonly x: number; readonly y: number; }
-export interface VirtualSize { readonly width: number; readonly height: number; }
-export interface VirtualRect extends VirtualPoint, VirtualSize {}
-export interface VirtualInsets { readonly top: number; readonly right: number; readonly bottom: number; readonly left: number; }
+export type VirtualPoint = Point;
+export type VirtualSize = Size;
+export type VirtualRect = Rect;
+export type VirtualInsets = Insets;
 export interface VirtualQueryInput { readonly viewport: VirtualRect; readonly overscan?: number | Partial<VirtualInsets>; }
 export interface VirtualPlacement<ID extends StableID = StableID> { readonly id: ID; readonly index: number; readonly rect: VirtualRect; readonly visible: boolean; readonly zIndex?: number; }
 export interface VirtualAnchor<ID extends StableID = StableID> { readonly id: ID; readonly viewportOffset: VirtualPoint; }
@@ -29,12 +41,12 @@ export interface VirtualLayoutStrategy<State, ID extends StableID, Measurement, 
   tryScrollTarget(state: State, id: ID, viewport: VirtualRect, alignment?: VirtualScrollAlignment): VirtualResult<VirtualPoint>;
 }
 
-export const ZERO_POINT: VirtualPoint = Object.freeze({ x: 0, y: 0 });
-export const ZERO_INSETS: VirtualInsets = Object.freeze({ top: 0, right: 0, bottom: 0, left: 0 });
+export { ZERO_INSETS, ZERO_POINT, pointDelta, rectanglesIntersect };
 
 export function normalizeQuery(input: VirtualQueryInput): VirtualResult<{ readonly viewport: VirtualRect; readonly overscan: VirtualInsets; readonly renderBounds: VirtualRect }> {
-  const viewport = freezeRect(input.viewport);
-  if (viewport === null) return invalidGeometry('Viewport coordinates and extents must be finite and non-negative.', input.viewport);
+  const viewportResult = tryCreateRect(input.viewport);
+  if (!viewportResult.ok || viewportResult.value.x < 0 || viewportResult.value.y < 0) return invalidGeometry('Viewport coordinates and extents must be finite and non-negative.', input.viewport);
+  const viewport = viewportResult.value;
   const overscan = normalizeInsets(input.overscan);
   if (overscan === null) return invalidGeometry('Overscan must contain finite non-negative extents.', input.overscan);
   const renderX = Math.max(0, viewport.x - overscan.left);
@@ -49,15 +61,6 @@ export function normalizeQuery(input: VirtualQueryInput): VirtualResult<{ readon
       height: viewport.y + viewport.height + overscan.bottom - renderY,
     }),
   }) };
-}
-
-export function rectanglesIntersect(left: VirtualRect, right: VirtualRect): boolean {
-  return left.x < right.x + right.width && right.x < left.x + left.width
-    && left.y < right.y + right.height && right.y < left.y + left.height;
-}
-
-export function pointDelta(before: VirtualRect, after: VirtualRect): VirtualPoint {
-  return Object.freeze({ x: after.x - before.x, y: after.y - before.y });
 }
 
 export function anchorForPlan<ID extends StableID>(viewport: VirtualRect, placements: readonly VirtualPlacement<ID>[]): VirtualAnchor<ID> | null {
@@ -82,17 +85,10 @@ export function alignedScrollOffset(itemStart: number, itemExtent: number, viewp
   return Math.min(Math.max(0, target), Math.max(0, contentExtent - viewportExtent));
 }
 
-function freezeRect(value: VirtualRect): VirtualRect | null {
-  if (value === null || typeof value !== 'object' || !Number.isFinite(value.x) || !Number.isFinite(value.y)
-    || !Number.isFinite(value.width) || !Number.isFinite(value.height) || value.x < 0 || value.y < 0 || value.width < 0 || value.height < 0) return null;
-  return Object.freeze({ x: value.x, y: value.y, width: value.width, height: value.height });
-}
-
 function normalizeInsets(value: number | Partial<VirtualInsets> | undefined): VirtualInsets | null {
   if (value === undefined) return ZERO_INSETS;
-  if (typeof value === 'number') return Number.isFinite(value) && value >= 0 ? Object.freeze({ top: value, right: value, bottom: value, left: value }) : null;
-  const result = { top: value.top ?? 0, right: value.right ?? 0, bottom: value.bottom ?? 0, left: value.left ?? 0 };
-  return Object.values(result).every((item) => Number.isFinite(item) && item >= 0) ? Object.freeze(result) : null;
+  const result = tryCreateInsets(value);
+  return result.ok ? result.value : null;
 }
 
 function invalidGeometry<T>(message: string, value: unknown): VirtualResult<T> {

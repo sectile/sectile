@@ -378,6 +378,14 @@
       "layer": "public"
     },
     {
+      "path": "src/structures/anchored-layout.ts",
+      "layer": "structures"
+    },
+    {
+      "path": "src/structures/geometry.ts",
+      "layer": "structures"
+    },
+    {
       "path": "src/structures/grid.ts",
       "layer": "structures"
     },
@@ -2394,6 +2402,41 @@
       "kind": "import"
     },
     {
+      "source": "src/structures/anchored-layout.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/anchored-layout.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/anchored-layout.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/anchored-layout.ts",
+      "target": "src/structures/geometry.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/geometry.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/geometry.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/geometry.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
       "source": "src/structures/grid.ts",
       "target": "src/internal/kernel/foundation.ts",
       "kind": "import"
@@ -2859,6 +2902,17 @@
       "facadeTargets": []
     },
     {
+      "subpath": "./anchored-layout",
+      "source": "src/structures/anchored-layout.ts",
+      "layer": "structures",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/geometry.ts"
+      ]
+    },
+    {
       "subpath": "./carousel",
       "source": "src/carousel.ts",
       "layer": "public",
@@ -3000,6 +3054,16 @@
         "src/result.ts",
         "src/shared.ts",
         "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./geometry",
+      "source": "src/structures/geometry.ts",
+      "layer": "structures",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts"
       ]
     },
     {
@@ -3693,11 +3757,12 @@
         "src/result.ts",
         "src/shared.ts"
       ],
-      "transitiveDependentCount": 109,
+      "transitiveDependentCount": 111,
       "publicSubpaths": [
         ".",
         "./accordion",
         "./adapter-runtime",
+        "./anchored-layout",
         "./carousel",
         "./cascade-list",
         "./cascade-select",
@@ -3710,6 +3775,7 @@
         "./drawer",
         "./editable",
         "./feed",
+        "./geometry",
         "./grid",
         "./grid-control",
         "./index-span",
@@ -4066,6 +4132,8 @@
         "src/reorder.ts",
         "src/select.ts",
         "src/spin-button.ts",
+        "src/structures/anchored-layout.ts",
+        "src/structures/geometry.ts",
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
         "src/structures/metric-index.ts",
@@ -4079,11 +4147,12 @@
         "src/toggle-group.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 104,
+      "transitiveDependentCount": 106,
       "publicSubpaths": [
         ".",
         "./accordion",
         "./adapter-runtime",
+        "./anchored-layout",
         "./carousel",
         "./cascade-list",
         "./cascade-select",
@@ -4096,6 +4165,7 @@
         "./drawer",
         "./editable",
         "./feed",
+        "./geometry",
         "./grid",
         "./grid-control",
         "./index-span",
@@ -4782,6 +4852,8 @@
         "src/select.ts",
         "src/spin-button.ts",
         "src/stepper.ts",
+        "src/structures/anchored-layout.ts",
+        "src/structures/geometry.ts",
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
         "src/structures/metric-index.ts",
@@ -4799,11 +4871,12 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 98,
+      "transitiveDependentCount": 100,
       "publicSubpaths": [
         ".",
         "./accordion",
         "./adapter-runtime",
+        "./anchored-layout",
         "./carousel",
         "./cascade-list",
         "./cascade-select",
@@ -4816,6 +4889,7 @@
         "./drawer",
         "./editable",
         "./feed",
+        "./geometry",
         "./grid",
         "./grid-control",
         "./index-span",
@@ -4970,6 +5044,8 @@
         "src/selection.ts",
         "src/spin-button.ts",
         "src/stepper.ts",
+        "src/structures/anchored-layout.ts",
+        "src/structures/geometry.ts",
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
         "src/structures/metric-index.ts",
@@ -4987,11 +5063,12 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 108,
+      "transitiveDependentCount": 110,
       "publicSubpaths": [
         ".",
         "./accordion",
         "./adapter-runtime",
+        "./anchored-layout",
         "./carousel",
         "./cascade-list",
         "./cascade-select",
@@ -5004,6 +5081,7 @@
         "./drawer",
         "./editable",
         "./feed",
+        "./geometry",
         "./grid",
         "./grid-control",
         "./index-span",
@@ -5079,6 +5157,25 @@
       "transitiveDependentCount": 0,
       "publicSubpaths": [
         "./stepper"
+      ]
+    },
+    {
+      "module": "src/structures/anchored-layout.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./anchored-layout"
+      ]
+    },
+    {
+      "module": "src/structures/geometry.ts",
+      "directDependents": [
+        "src/structures/anchored-layout.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./anchored-layout",
+        "./geometry"
       ]
     },
     {

@@ -2,7 +2,7 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all eight package source trees.
 
-Findings: 431; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
+Findings: 433; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039, WI-040.
 
 ## Classifications
 
@@ -10,7 +10,7 @@ Findings: 431; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039,
 |---|---:|
 | bounded-small | 10 |
 | migration-required | 111 |
-| result-proportional | 141 |
+| result-proportional | 143 |
 | reuse | 169 |
 
 ## Categories
@@ -21,7 +21,7 @@ Findings: 431; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039,
 | discarded-canonical-index | 39 |
 | measurement-authority | 16 |
 | private-algorithm-bypass | 11 |
-| raw-full-domain-scan | 284 |
+| raw-full-domain-scan | 286 |
 | repeated-immutable-view | 14 |
 | whole-domain-validation | 33 |
 
@@ -90,9 +90,9 @@ Findings: 431; migration owners: WI-013, WI-020, WI-021, WI-027, WI-038, WI-039,
 | WI-039 | virtual-incremental-index | `packages/virtual/src/partitioned-track-grid-layout.ts:489` | derived-index-construction |
 | WI-039 | virtual-incremental-index | `packages/virtual/src/partitioned-track-grid-layout.ts:524` | derived-index-construction |
 | WI-039 | virtual-incremental-index | `packages/virtual/src/partitioned-track-grid-layout.ts:608` | derived-index-construction |
-| WI-039 | virtual-incremental-index | `packages/virtual/src/spatial-layout.ts:238` | raw-identity-lookup |
-| WI-039 | virtual-incremental-index | `packages/virtual/src/spatial-layout.ts:303` | derived-index-construction |
-| WI-039 | virtual-incremental-index | `packages/virtual/src/spatial-layout.ts:303` | full-index-rebuild |
+| WI-039 | virtual-incremental-index | `packages/virtual/src/spatial-layout.ts:239` | raw-identity-lookup |
+| WI-039 | virtual-incremental-index | `packages/virtual/src/spatial-layout.ts:304` | derived-index-construction |
+| WI-039 | virtual-incremental-index | `packages/virtual/src/spatial-layout.ts:304` | full-index-rebuild |
 | WI-039 | virtual-incremental-index | `packages/virtual/src/track-grid-layout.ts:382` | derived-index-construction |
 | WI-039 | virtual-incremental-index | `packages/virtual/src/track-grid-layout.ts:382` | full-index-rebuild |
 | WI-039 | virtual-incremental-index | `packages/virtual/src/track-grid-layout.ts:538` | full-index-rebuild |

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 const ceilings = Object.freeze({
   totalBytes: 1_125_000,
-  javascriptBytes: 420_000,
+  javascriptBytes: 440_000,
   declarationBytes: 155_000,
   sourceMapBytes: 570_000,
 });

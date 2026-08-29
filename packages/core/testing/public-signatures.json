@@ -19,6 +19,10 @@
       "types": "dist/alert-dialog.d.ts"
     },
     {
+      "subpath": "./anchored-layout",
+      "types": "dist/structures/anchored-layout.d.ts"
+    },
+    {
       "subpath": "./carousel",
       "types": "dist/carousel.d.ts"
     },
@@ -69,6 +73,10 @@
     {
       "subpath": "./feed",
       "types": "dist/feed.d.ts"
+    },
+    {
+      "subpath": "./geometry",
+      "types": "dist/structures/geometry.d.ts"
     },
     {
       "subpath": "./grid",
@@ -263,7 +271,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "75c63c20dfd68b52766c59a919484539d59754d1dc9d50d666c1d0bd9ca75c46",
+  "fingerprint": "779a23be35ba49f296d376ec9027149ba2bc0d24fbd1a56d7d516f0913d66450",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -532,6 +540,14 @@
     {
       "path": "dist/stepper.d.ts",
       "sha256": "dc192cccf0d7d709c117266d3ac1d1db63ef1369299a02a23ce835faf7f346af"
+    },
+    {
+      "path": "dist/structures/anchored-layout.d.ts",
+      "sha256": "35dbaa875f320c227aeb5111384a81290e3772c91a8058e5abf15d04f8b4cd6c"
+    },
+    {
+      "path": "dist/structures/geometry.d.ts",
+      "sha256": "a9ad3b15f5d6c1564b8a6d4e17099172df8cbd35f01545564a115a0d00c69deb"
     },
     {
       "path": "dist/structures/grid.d.ts",

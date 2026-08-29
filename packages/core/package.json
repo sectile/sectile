@@ -51,6 +51,16 @@
       "import": "./dist/structures/metric-index.js",
       "default": "./dist/structures/metric-index.js"
     },
+    "./geometry": {
+      "types": "./dist/structures/geometry.d.ts",
+      "import": "./dist/structures/geometry.js",
+      "default": "./dist/structures/geometry.js"
+    },
+    "./anchored-layout": {
+      "types": "./dist/structures/anchored-layout.d.ts",
+      "import": "./dist/structures/anchored-layout.js",
+      "default": "./dist/structures/anchored-layout.js"
+    },
     "./grid": {
       "types": "./dist/structures/grid.d.ts",
       "import": "./dist/structures/grid.js",

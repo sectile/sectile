@@ -16,6 +16,8 @@ try {
     import { createIndexSpanSet } from '@sectile/core/index-span';
     import { createSelectionExpression } from '@sectile/core/selection-expression';
     import { createMetricIndex } from '@sectile/core/metric-index';
+    import { createRect } from '@sectile/core/geometry';
+    import { solveAnchoredLayout } from '@sectile/core/anchored-layout';
     import { createGrid } from '@sectile/core/grid';
     import { createTree } from '@sectile/core/tree';
     import { unwrap } from '@sectile/core/result';
@@ -28,7 +30,7 @@ try {
     import { createRevisionSnapshot } from '@sectile/core/revision';
     import { createTextEditingState } from '@sectile/core/text';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createIndexSpanSet, createSelectionExpression, createMetricIndex, createGrid, createTree, unwrap, createSelectionState, createListboxState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState]) {
+    for (const value of [createSequence, createRange, createIndexSpanSet, createSelectionExpression, createMetricIndex, createRect, solveAnchoredLayout, createGrid, createTree, unwrap, createSelectionState, createListboxState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -42,6 +44,8 @@ try {
     import { createIndexSpanSet, type IndexSpanSet } from '@sectile/core/index-span';
     import { createSelectionExpression, type SelectionExpression } from '@sectile/core/selection-expression';
     import { createMetricIndex, type MetricIndex } from '@sectile/core/metric-index';
+    import { createRect, type Rect } from '@sectile/core/geometry';
+    import { solveAnchoredLayout, type AnchoredLayout } from '@sectile/core/anchored-layout';
     import { createGrid, type Grid } from '@sectile/core/grid';
     import { createTree, type Tree } from '@sectile/core/tree';
     import { createSelectionState, type SelectionState } from '@sectile/core/selection';
@@ -57,6 +61,8 @@ try {
     const spanSet: IndexSpanSet = createIndexSpanSet([{ start: 0, endExclusive: 1 }]);
     const selectionExpression: SelectionExpression<string> = createSelectionExpression('explicit', ['a']);
     const metricIndex: MetricIndex<string> = createMetricIndex([{ id: 'a', coordinates: [0, 1] }]);
+    const rect: Rect = createRect({ x: 0, y: 0, width: 10, height: 10 });
+    const anchored: AnchoredLayout = solveAnchoredLayout({ reference: rect, floating: { width: 2, height: 2 }, boundary: rect });
     const c: Grid<string> = createGrid([['a']]);
     const d: Tree<string> = createTree([{ id: 'a', parentID: null }]);
     const selectionResult = createSelectionState(a, 'multiple');
@@ -84,7 +90,7 @@ try {
     }
     // @ts-expect-error Core codes remain a closed package-local contract
     const unknownCoreCode: CoreErrorCode = 'consumer-invented-error';
-    void [a, b, spanSet, selectionExpression, metricIndex, c, d, selection, e, f, g, h, i, j, k, l, unknownCoreCode];
+    void [a, b, spanSet, selectionExpression, metricIndex, rect, anchored, c, d, selection, e, f, g, h, i, j, k, l, unknownCoreCode];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
@@ -98,7 +104,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(typecheck.status, 0, `${typecheck.stdout}\n${typecheck.stderr}`);
-  console.log(JSON.stringify({ status: 'passed', subpaths: 17, typeConsumer: 'passed' }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', subpaths: 19, typeConsumer: 'passed' }, null, 2));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

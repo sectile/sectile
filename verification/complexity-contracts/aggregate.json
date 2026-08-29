@@ -389,6 +389,33 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "core:./anchored-layout:MAX_ANCHORED_LAYOUT_CANDIDATES",
+      "package": "core",
+      "subpath": "./anchored-layout",
+      "exportName": "MAX_ANCHORED_LAYOUT_CANDIDATES",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./anchored-layout:solveAnchoredLayout",
+      "package": "core",
+      "subpath": "./anchored-layout",
+      "exportName": "solveAnchoredLayout",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./anchored-layout:trySolveAnchoredLayout",
+      "package": "core",
+      "subpath": "./anchored-layout",
+      "exportName": "trySolveAnchoredLayout",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "core:./carousel:applyCarouselEvent",
       "package": "core",
       "subpath": "./carousel",
@@ -879,6 +906,249 @@
       "package": "core",
       "subpath": "./feed",
       "exportName": "tryCreateFeedState",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:DEFAULT_MAX_GEOMETRY_RECTS",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "DEFAULT_MAX_GEOMETRY_RECTS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./geometry:MAX_GEOMETRY_RECTS",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "MAX_GEOMETRY_RECTS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "core:./geometry:ZERO_INSETS",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "ZERO_INSETS",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:ZERO_POINT",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "ZERO_POINT",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:alignRect",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "alignRect",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:boundRects",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "boundRects",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:boundsOfRects",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "boundsOfRects",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:clampRect",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "clampRect",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:createInsets",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "createInsets",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:createPoint",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "createPoint",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:createRect",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "createRect",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:createSize",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "createSize",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:insetRect",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "insetRect",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:intersectRects",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "intersectRects",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:isFinitePoint",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "isFinitePoint",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:isFiniteRect",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "isFiniteRect",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:isFiniteSize",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "isFiniteSize",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:outsetRect",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "outsetRect",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:pointDelta",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "pointDelta",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:rectContainsPoint",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "rectContainsPoint",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:rectContainsRect",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "rectContainsRect",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:rectOverflow",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "rectOverflow",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:rectanglesIntersect",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "rectanglesIntersect",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:tryCreateInsets",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "tryCreateInsets",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:tryCreatePoint",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "tryCreatePoint",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:tryCreateRect",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "tryCreateRect",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./geometry:tryCreateSize",
+      "package": "core",
+      "subpath": "./geometry",
+      "exportName": "tryCreateSize",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -18629,6 +18899,68 @@
     {
       "package": "core",
       "surface": "hot",
+      "id": "anchored-layout.solve",
+      "source": "packages/core/src/structures/anchored-layout.ts",
+      "benchmarkIDs": [
+        "core:anchored-layout:solve"
+      ],
+      "specificationCeiling": "O(cAnchor)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "cAnchor",
+            "meaning": "evaluated placement candidates",
+            "ceiling": "MAX_ANCHORED_LAYOUT_CANDIDATES = 4"
+          }
+        ],
+        "time": {
+          "bound": "O(cAnchor)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "The solver validates fixed-size records, evaluates one preferred side or exactly four scalar side candidates without arrays or sorting, then materializes only the fixed-size winning result.",
+        "adversarialWitness": "A preferred placement overflowing every boundary edge evaluates all four candidates and shifts the winner while retaining constant auxiliary state.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Candidate count is a compile-time constant and no host, ancestor, or domain collection is accepted."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
       "id": "exact-ratio.arithmetic",
       "source": "packages/core/src/structures/range.ts",
       "benchmarkIDs": [
@@ -18762,6 +19094,128 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Work depends on operand width, never a represented domain cardinality."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "geometry.bounds",
+      "source": "packages/core/src/structures/geometry.ts",
+      "benchmarkIDs": [
+        "core:geometry:bounds:1000",
+        "core:geometry:bounds:10000",
+        "core:geometry:bounds:100000"
+      ],
+      "specificationCeiling": "O(nRect)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nRect",
+            "meaning": "validated input rectangle count",
+            "ceiling": "maxRects"
+          }
+        ],
+        "time": {
+          "bound": "O(nRect)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "One scalar reduction validates each bounded input rectangle and retains only four extrema before materializing one result.",
+        "adversarialWitness": "Maximum rect input makes every final rectangle extend one bound and therefore requires every visit.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Computing bounds of an explicit external collection has a linear lower bound."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "geometry.scalar",
+      "source": "packages/core/src/structures/geometry.ts",
+      "benchmarkIDs": [
+        "core:geometry:intersection",
+        "VAL-038:geometry-scalar-work"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Point, size, rectangle, inset, intersection, containment, overflow, clamp, and alignment operations use a fixed number of finite-number scalar comparisons and arithmetic steps.",
+        "adversarialWitness": "Fractional negative coordinates and oversized extents execute the same bounded scalar branches.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Fixed-dimensional geometry cannot traverse collection cardinality."
         }
       }
     },

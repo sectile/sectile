@@ -10,12 +10,13 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "59d0205943e037b3ee87c654b622c3315bb82a709da047e903724e8d1efff43a",
+    "publicSignatureFingerprint": "7378bf509b67ce7b417d3a503977b7253a60df8dca5ba25a3680de8b70acc4d1",
     "subpaths": [
       ".",
       "./accordion",
       "./adapter-runtime",
       "./alert-dialog",
+      "./anchored-layout",
       "./carousel",
       "./cascade-list",
       "./cascade-select",
@@ -29,6 +30,7 @@
       "./drawer",
       "./editable",
       "./feed",
+      "./geometry",
       "./grid",
       "./grid-control",
       "./index-span",
@@ -515,6 +517,6 @@
   ],
   "acceptance": {
     "classification": "minor",
-    "reason": "WI-033-adds-representation-independent-MetricIndex"
+    "reason": "WI-034_geometry_and_anchored_layout"
   }
 }

@@ -311,7 +311,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "aa61e962bd1981623fcb60664a847bea68115df3451317d6a0bdac9176ac1787",
+  "fingerprint": "ebf745a938d4084d735c9f56b3bc025578fd5426afaf1a2e35dac105049a5205",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -471,11 +471,11 @@
     },
     {
       "path": "dist/internal/virtual-core.d.ts",
-      "sha256": "5e9174fd7d3ad4a56409568efa7a0a4430cc55616c92a10d6504fd9e30c7a762"
+      "sha256": "a5888b0a99cd558c732919ad2fe96b703f30b2de87c118cdc971e9874af699b0"
     },
     {
       "path": "dist/internal/virtual-list.d.ts",
-      "sha256": "e16bb78fbf5902d6668b57560b80fba76d6ad5705addd01a5637c455ac17105c"
+      "sha256": "1ba103d725aaa098738bd3410b19747a28fadd73b39886ea778051c50f0d8a86"
     },
     {
       "path": "dist/listbox.d.ts",
@@ -643,7 +643,7 @@
     },
     {
       "path": "dist/virtual-grid.d.ts",
-      "sha256": "5585117ede63ebf646552909602a6920585b527f3670c4e81c064804ba395715"
+      "sha256": "742e417ec2e27186f698de1a23bd07b613501ac787594e39e1d293c5002e2ddb"
     },
     {
       "path": "dist/virtual-list.d.ts",
@@ -651,11 +651,11 @@
     },
     {
       "path": "dist/virtual-masonry.d.ts",
-      "sha256": "84906381e3f30029a50e60077ff30cebd6d079799d10f88ddc8a3b181554cf12"
+      "sha256": "b86aad163ed39f927ca880b90c5fc16bf4a7ab8fbe269233c8ee8cf971458538"
     },
     {
       "path": "dist/virtual-spatial.d.ts",
-      "sha256": "3d93f931e615120b8691675ee8609093c1684c5f430efc70b831eaf9e1c9f045"
+      "sha256": "a0db2c2a2f6f8ab5edcdbadc92e16b7c35044548937525ec4623c806cdaee0c8"
     },
     {
       "path": "dist/window-splitter.d.ts",

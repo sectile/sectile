@@ -116,6 +116,8 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'core:./index-span',
     'core:./selection-expression',
     'core:./metric-index',
+    'core:./geometry',
+    'core:./anchored-layout',
     'dom:./listbox',
     'dom:./popover',
     'form:./form',

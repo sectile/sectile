@@ -7,6 +7,7 @@ import {
   type SequencePatch,
 } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
+import { boundsOfRects, createRect, isFiniteRect } from '@sectile/core/geometry';
 import { fail, ok } from './internal/foundation.js';
 import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
@@ -174,7 +175,7 @@ export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialL
   const replacements = new Map<ID, VirtualRect>();
   for (const measurement of batch.measurements) {
     if (replacements.has(measurement.id) || !data.value.byID.has(measurement.id) || !validRect(measurement.rect)) return fail('transition-rejection', 'virtual-layout-measurement-invalid', 'Spatial measurements require unique existing IDs and valid rectangles.', { measurement });
-    replacements.set(measurement.id, freezeRect(measurement.rect));
+    replacements.set(measurement.id, createRect(measurement.rect));
   }
   const before = anchorRect(state, batch.anchor);
   const items = state.items.map((item) => replacements.has(item.id) ? Object.freeze({ ...item, rect: replacements.get(item.id)! }) : item);
@@ -246,7 +247,7 @@ function tryApplySpatialPatch<ID extends StableID>(
     }
     frozenInserted.push(Object.freeze({
       id: item.id,
-      rect: freezeRect(item.rect),
+      rect: createRect(item.rect),
       ...(item.zIndex === undefined || item.zIndex === 0 ? {} : { zIndex: item.zIndex }),
     }));
   }
@@ -311,7 +312,7 @@ function validateItems<ID extends StableID>(items: readonly SpatialItem<ID>[], m
   const frozen: SpatialItem<ID>[] = [];
   for (const item of items) {
     if (!validRect(item.rect) || (item.zIndex !== undefined && (!Number.isSafeInteger(item.zIndex)))) return fail('construction', 'virtual-layout-geometry-invalid', 'Spatial items require finite non-negative rectangles and safe-integer z-indices.', { item });
-    frozen.push(Object.freeze({ id: item.id, rect: freezeRect(item.rect), ...(item.zIndex === undefined || item.zIndex === 0 ? {} : { zIndex: item.zIndex }) }));
+    frozen.push(Object.freeze({ id: item.id, rect: createRect(item.rect), ...(item.zIndex === undefined || item.zIndex === 0 ? {} : { zIndex: item.zIndex }) }));
   }
   return ok(Object.freeze({ domain: domain.value, items: Object.freeze(frozen) }));
 }
@@ -319,13 +320,13 @@ function validateItems<ID extends StableID>(items: readonly SpatialItem<ID>[], m
 function buildPackedTree<ID extends StableID>(items: readonly IndexedSpatialItem<ID>[]): SpatialNode<ID> | null {
   if (items.length === 0) return null;
   let level = packedGroups(items, (item) => item.value.rect).map((group): SpatialNode<ID> => Object.freeze({
-    bounds: boundsOfRects(group.map((item) => item.value.rect)),
+    bounds: boundsOfRects(group.map((item) => item.value.rect))!,
     items: Object.freeze(group),
     children: null,
   }));
   while (level.length > 1) {
     level = packedGroups(level, (node) => node.bounds).map((children): SpatialNode<ID> => Object.freeze({
-      bounds: boundsOfRects(children.map((node) => node.bounds)),
+      bounds: boundsOfRects(children.map((node) => node.bounds))!,
       items: null,
       children: Object.freeze(children),
     }));
@@ -356,23 +357,8 @@ function packedGroups<T>(values: readonly T[], rectOf: (value: T) => VirtualRect
   return groups;
 }
 
-function boundsOfRects(rects: readonly VirtualRect[]): VirtualRect {
-  let minX = Number.POSITIVE_INFINITY;
-  let minY = Number.POSITIVE_INFINITY;
-  let maxX = 0;
-  let maxY = 0;
-  for (const rect of rects) {
-    minX = Math.min(minX, rect.x);
-    minY = Math.min(minY, rect.y);
-    maxX = Math.max(maxX, rect.x + rect.width);
-    maxY = Math.max(maxY, rect.y + rect.height);
-  }
-  return Object.freeze({ x: minX, y: minY, width: maxX - minX, height: maxY - minY });
-}
-
 function center(rect: VirtualRect, axis: 'x' | 'y'): number { return axis === 'x' ? rect.x + rect.width / 2 : rect.y + rect.height / 2; }
-function validRect(rect: VirtualRect): boolean { return rect !== null && typeof rect === 'object' && finiteNonNegative(rect.x) && finiteNonNegative(rect.y) && finiteNonNegative(rect.width) && finiteNonNegative(rect.height); }
-function freezeRect(rect: VirtualRect): VirtualRect { return Object.freeze({ x: rect.x, y: rect.y, width: rect.width, height: rect.height }); }
+function validRect(rect: VirtualRect): boolean { return isFiniteRect(rect) && rect.x >= 0 && rect.y >= 0; }
 function anchorRect<ID extends StableID>(state: SpatialLayoutState<ID>, anchor: VirtualAnchor<ID> | null | undefined): VirtualRect | null { return anchor === null || anchor === undefined ? null : spatialRectAt(state, anchor.id); }
 function getInternals<ID extends StableID>(state: SpatialLayoutState<ID>): VirtualResult<SpatialInternals<ID>> { const value = internals.get(state as SpatialLayoutState); return value === undefined ? fail('construction', 'virtual-layout-domain-mismatch', 'Spatial state must be created by createSpatialLayout().') : ok(value as SpatialInternals<ID>); }
 function validSnapshotHeader<ID extends StableID>(snapshot: SpatialLayoutSnapshot<ID>): boolean {
@@ -389,4 +375,3 @@ function validSnapshotHeader<ID extends StableID>(snapshot: SpatialLayoutSnapsho
 function snapshotFailure<T>(): VirtualResult<T> { return fail('construction', 'virtual-layout-snapshot-invalid', 'Spatial layout snapshot is invalid.'); }
 function anchorDelta(before: VirtualRect | null, after: VirtualRect | null): VirtualPoint { return before === null || after === null ? ZERO_POINT : pointDelta(before, after); }
 function nextGeneration(generation: number): VirtualResult<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }
-function finiteNonNegative(value: number): boolean { return Number.isFinite(value) && value >= 0; }

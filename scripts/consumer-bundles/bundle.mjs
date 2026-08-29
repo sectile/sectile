@@ -64,6 +64,8 @@ function representativeNamedExport(packageName, subpath, surface) {
     ['core:./index-span', 'createIndexSpanSet'],
     ['core:./selection-expression', 'createSelectionExpression'],
     ['core:./metric-index', 'createMetricIndex'],
+    ['core:./geometry', 'intersectRects'],
+    ['core:./anchored-layout', 'solveAnchoredLayout'],
     ['core:./range', 'createExactRatio'],
   ]).get(`${packageName}:${subpath}`);
   if (preferred !== undefined) {

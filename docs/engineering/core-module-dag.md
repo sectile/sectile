@@ -2,7 +2,7 @@
 
 > Generated from `verification/core-layers/manifest.json` and Core source imports.
 
-Modules: 115; edges: 467; public subpaths: 66; cycles: 0; upward edges: 0.
+Modules: 117; edges: 474; public subpaths: 68; cycles: 0; upward edges: 0.
 
 ## Layers
 
@@ -16,16 +16,16 @@ Modules: 115; edges: 467; public subpaths: 66; cycles: 0; upward edges: 0.
 | reference | 24 |
 | runtime | 1 |
 | state | 5 |
-| structures | 7 |
+| structures | 9 |
 
 ## Highest public blast radius
 
 | Module | Transitive dependents | Public subpaths |
 |---|---:|---:|
-| `src/error-code.ts` | 109 | 62 |
-| `src/shared.ts` | 108 | 62 |
-| `src/result.ts` | 98 | 61 |
-| `src/internal/kernel/foundation.ts` | 104 | 60 |
+| `src/error-code.ts` | 111 | 64 |
+| `src/shared.ts` | 110 | 64 |
+| `src/result.ts` | 100 | 63 |
+| `src/internal/kernel/foundation.ts` | 106 | 62 |
 | `src/internal/kernel/machine.ts` | 75 | 45 |
 | `src/internal/kernel/indexed-sequence.ts` | 56 | 30 |
 | `src/structures/sequence.ts` | 55 | 30 |
@@ -51,6 +51,7 @@ Modules: 115; edges: 467; public subpaths: 66; cycles: 0; upward edges: 0.
 | `./accordion` | `src/accordion.ts` | public | `src/internal/composites/linear-action.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/internal/state/cursor.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./adapter-runtime` | `src/adapter-runtime.ts` | public | `src/error-code.ts`, `src/interaction.ts`, `src/revision.ts`, `src/shared.ts` |
 | `./alert-dialog` | `src/alert-dialog.ts` | public | none |
+| `./anchored-layout` | `src/structures/anchored-layout.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/geometry.ts` |
 | `./carousel` | `src/carousel.ts` | public | `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/internal/state/cursor.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./cascade-list` | `src/cascade-list.ts` | public | `src/internal/composites/cascade-choice.ts`, `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/tree.ts` |
 | `./cascade-select` | `src/cascade-select.ts` | public | `src/internal/composites/cascade-choice.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/tree.ts` |
@@ -64,6 +65,7 @@ Modules: 115; edges: 467; public subpaths: 66; cycles: 0; upward edges: 0.
 | `./drawer` | `src/drawer.ts` | public | `src/internal/composites/popup.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts` |
 | `./editable` | `src/editable.ts` | public | `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts` |
 | `./feed` | `src/feed.ts` | public | `src/collection-window.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/internal/state/cursor.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
+| `./geometry` | `src/structures/geometry.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts` |
 | `./grid` | `src/structures/grid.ts` | structures | `src/internal/kernel/foundation.ts`, `src/internal/kernel/indexed-sequence.ts`, `src/result.ts`, `src/shared.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./grid-control` | `src/grid-control.ts` | public | `src/internal/composites/grid-control.ts`, `src/shared.ts`, `src/structures/grid.ts` |
 | `./index-span` | `src/structures/index-span.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts` |
