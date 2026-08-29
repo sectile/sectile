@@ -3,7 +3,6 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { createElement, useLayoutEffect, useRef, useSyncExternalStore, type ComponentType, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import {
-  CellMeasurer,
   CellMeasurerCache,
   List as ReactVirtualizedList,
   type ListRowProps,
@@ -18,6 +17,8 @@ import {
   type BenchmarkItem, type RowProfile,
 } from './constants.js';
 import type { MutationLocation, MutationOperation, MutationScenario } from './mutations.js';
+import { sectileVirtualVersion } from './package-versions.js';
+import { shouldCommitMeasuredHeight } from './react-virtualized-measurement.js';
 
 export interface MutableMountedAdapter {
   readonly scroller: HTMLElement;
@@ -60,7 +61,6 @@ const automaticHeightHandling: HeightHandling = Object.freeze({
 const benchmarkItemKey = (item: BenchmarkItem): string => item.id;
 
 const ReactVirtualizedListComponent = ReactVirtualizedList as unknown as ComponentType<Record<string, unknown>>;
-const CellMeasurerComponent = CellMeasurer as unknown as ComponentType<Record<string, unknown>>;
 const VListComponent = VList as unknown as ComponentType<Record<string, unknown>>;
 const SectileList = VirtualList as unknown as Parameters<typeof h>[0];
 const VueDynamicScroller = DynamicScroller as unknown as Parameters<typeof h>[0];
@@ -221,6 +221,32 @@ function ReactVirtuosoAutomatic({ store }: { readonly store: MutableStore }) {
   });
 }
 
+interface ReactVirtualizedMeasuredRowProps {
+  readonly cache: CellMeasurerCache;
+  readonly item: BenchmarkItem;
+  readonly index: number;
+  readonly parent: ListRowProps['parent'];
+  readonly rowProfile: RowProfile;
+  readonly style: React.CSSProperties;
+}
+
+function ReactVirtualizedMeasuredRow({ cache, item, index, parent, rowProfile, style }: ReactVirtualizedMeasuredRowProps) {
+  const rowRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (row === null) return;
+    const renderedHeight = row.style.height;
+    row.style.height = 'auto';
+    const width = Math.ceil(row.offsetWidth);
+    const height = Math.ceil(row.offsetHeight);
+    row.style.height = renderedHeight;
+    if (!shouldCommitMeasuredHeight(cache.has(index, 0), cache.getHeight(index, 0), height)) return;
+    cache.set(index, 0, width, height);
+    parent.recomputeGridSize?.({ columnIndex: 0, rowIndex: index });
+  });
+  return createElement('div', { ref: rowRef, style }, reactRow(item, index, rowProfile));
+}
+
 function ReactVirtualizedMutable({ store }: { readonly store: MutableStore }) {
   const snapshot = useMutableSnapshot(store);
   const listRef = useRef<ReactVirtualizedList>(null);
@@ -236,16 +262,14 @@ function ReactVirtualizedMutable({ store }: { readonly store: MutableStore }) {
   }, [snapshot.revision, snapshot.changeIndex, snapshot.operation]);
   const rowRenderer = ({ index, key, style, parent }: ListRowProps) => {
     const item = snapshot.items[index]!;
-    return createElement(CellMeasurerComponent, {
+    return createElement(ReactVirtualizedMeasuredRow, {
       cache: cacheRef.current,
-      columnIndex: 0,
       key,
+      item,
+      index,
       parent,
-      rowIndex: index,
-      children: ({ registerChild }: { readonly registerChild: (element?: Element | null) => void }) => createElement('div', {
-        ref: registerChild,
-        style,
-      }, reactRow(item, index, snapshot.rowProfile)),
+      rowProfile: snapshot.rowProfile,
+      style,
     });
   };
   return createElement(ReactVirtualizedListComponent, {
@@ -329,7 +353,7 @@ function reactMutableAdapter(
 
 function createSectileMutableAdapter(sizeMode: DynamicSizeMode): MutableBenchmarkAdapter {
   return Object.freeze({
-  name: 'Sectile Virtual', version: '0.7.0', stack: 'Vue 3.5.22', sizeMode,
+  name: 'Sectile Virtual', version: sectileVirtualVersion, stack: 'Vue 3.5.22', sizeMode,
   heightHandling: sizeMode === 'estimated' ? estimatedHeightHandling : automaticHeightHandling,
   mount(host: HTMLElement, initialItems: readonly BenchmarkItem[], rowProfile: RowProfile) {
     const data = shallowRef(initialItems);

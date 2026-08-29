@@ -214,11 +214,13 @@ function mergeMutationGroup(results) {
     .map((sample) => sample.elapsedMs)
     .sort((left, right) => left - right);
   const minimumP95Samples = 30;
-  const earlyStopReason = results.some((result) => result.earlyStopReason === 'reproducible-failure')
-    ? 'reproducible-failure'
-    : results.some((result) => result.earlyStopReason === 'stable-statistics')
-      ? 'stable-statistics'
-      : null;
+  const earlyStopReason = results.some((result) => result.earlyStopReason === 'interactive-budget')
+    ? 'interactive-budget'
+    : results.some((result) => result.earlyStopReason === 'reproducible-failure')
+      ? 'reproducible-failure'
+      : results.some((result) => result.earlyStopReason === 'stable-statistics')
+        ? 'stable-statistics'
+        : null;
   return {
     ...template,
     runIds: unique(results.flatMap((result) => result.runIds ?? [])),

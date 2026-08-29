@@ -3,6 +3,10 @@ import { ITEM_COUNT, items, ROW_HEIGHT, VIEWPORT_HEIGHT, type RowProfile } from 
 import { createHeightOracle, type ExpectedLayout, type HeightOracle } from './fixture.js';
 import { requiresExactTotalHeight } from './baseline-policy.js';
 import {
+  EMBEDDED_LONG_TASK_BUDGET_MS,
+  exceedsEmbeddedLongTaskBudget,
+} from './interactive-budget.js';
+import {
   distributionIsStable,
   distributionSnapshot,
   formatElapsed,
@@ -169,6 +173,7 @@ declare global {
 }
 
 const search = new URLSearchParams(window.location.search);
+const EMBEDDED = search.has('embedded');
 const QUICK_RUN = search.has('quick');
 const requestedBaselineRounds = positiveInteger(search.get('baseline-rounds'));
 const ADAPTIVE_BASELINE = !QUICK_RUN && requestedBaselineRounds === undefined;
@@ -176,8 +181,8 @@ const ROUNDS = requestedBaselineRounds ?? (QUICK_RUN ? 1 : 5);
 const MINIMUM_BASELINE_ROUNDS = ADAPTIVE_BASELINE ? 3 : ROUNDS;
 const BASELINE_MEDIAN_RELATIVE_TOLERANCE = 0.05;
 const BASELINE_P95_RELATIVE_TOLERANCE = 0.1;
-const WARMUP_SCROLLS = QUICK_RUN ? 1 : 5;
-const RECORDED_SCROLLS = QUICK_RUN ? 2 : 20;
+const WARMUP_SCROLLS = nonNegativeInteger(search.get('warmup-scrolls')) ?? (QUICK_RUN ? 1 : 5);
+const RECORDED_SCROLLS = positiveInteger(search.get('scroll-samples')) ?? (QUICK_RUN ? 2 : 20);
 const FRAME_TIMEOUT_MS = 4_000;
 const STABLE_FAILURE_MIN_MS = 300;
 const STABLE_FAILURE_FRAMES = 8;
@@ -190,9 +195,17 @@ const benchmarkCases = Object.freeze([
   ...automaticMutableAdapters.map((adapter) => dynamicCase(adapter, rowProfile)),
 ]);
 const libraryFilter = search.get('library');
+const baselineModeFilter = parseBaselineHeightMode(search.get('baseline-mode'));
+const selectedLibraryNames = [...new Set(benchmarkCases
+  .filter((entry) => (
+    (!search.has('sectile') || entry.name === 'Sectile Virtual')
+    && (libraryFilter === null || entry.name === libraryFilter)
+  ))
+  .map((entry) => entry.name))];
 const activeCases = benchmarkCases.filter((entry) => (
   (!search.has('sectile') || entry.name === 'Sectile Virtual')
   && (libraryFilter === null || entry.name === libraryFilter)
+  && (baselineModeFilter === undefined || entry.mode === baselineModeFilter)
   && (!search.has('fixed') || entry.mode === 'fixed')
 ));
 const BASELINE_ROTATION_STEP = rotationStep(activeCases.length, ROUNDS);
@@ -224,10 +237,12 @@ const heightModeSupport: readonly HeightModeSupport[] = Object.freeze(fixedAdapt
 const root = document.querySelector<HTMLElement>('#app');
 if (root === null) throw new Error('Missing benchmark root.');
 
-root.innerHTML = `
+root.innerHTML = EMBEDDED ? `
+  <div id="mount" aria-hidden="true"></div>
+` : `
   <header>
     <h1>Virtualization ecosystem benchmark</h1>
-    <p>100,000 rows · ${rowProfile} DOM-height profile · fixed, estimated, and no-height-input conditions · 720 × 480 viewport</p>
+    <p>${ITEM_COUNT.toLocaleString()} rows · ${rowProfile} DOM-height profile · fixed, estimated, and no-height-input conditions · 720 × 480 viewport</p>
     <button type="button" id="run">Run benchmark</button>
   </header>
   <section aria-live="polite">
@@ -259,42 +274,69 @@ const resultsBody = document.querySelector<HTMLElement>('#results');
 const supportResultsBody = document.querySelector<HTMLElement>('#support-results');
 const mutationResultsBody = document.querySelector<HTMLElement>('#mutation-results');
 const json = document.querySelector<HTMLElement>('#json');
-if (
+if (mountHost === null) throw new Error('Benchmark mount host is missing.');
+const benchmarkMountHost: HTMLElement = mountHost;
+if (!EMBEDDED && (
   runButton === null
   || status === null
-  || mountHost === null
   || resultsBody === null
   || supportResultsBody === null
   || mutationResultsBody === null
   || json === null
-) throw new Error('Benchmark UI is incomplete.');
+)) throw new Error('Benchmark UI is incomplete.');
 
-for (const support of heightModeSupport) supportResultsBody.append(renderSupport(support));
-runButton.addEventListener('click', () => { void runAll(); });
+if (supportResultsBody !== null) for (const support of heightModeSupport) supportResultsBody.append(renderSupport(support));
+runButton?.addEventListener('click', () => { void runAll(); });
+if (EMBEDDED) queueMicrotask(() => { void runAll(); });
+
+let currentStatus = 'Ready.';
+
+function setStatus(message: string): void {
+  currentStatus = message;
+  if (status !== null) status.textContent = message;
+}
+
+function publish(type: string, detail: Readonly<Record<string, unknown>> = {}): void {
+  if (!EMBEDDED || window.parent === window) return;
+  window.parent.postMessage({ channel: 'sectile-virtual-benchmark', type, ...detail }, window.location.origin);
+}
 
 async function runAll(): Promise<void> {
   const runId = crypto.randomUUID();
   const observedAt = new Date().toISOString();
   const runStartedAt = performance.now();
-  runButton!.disabled = true;
-  resultsBody!.replaceChildren();
-  mutationResultsBody!.replaceChildren();
-  json!.textContent = '';
+  if (runButton !== null) runButton.disabled = true;
+  resultsBody?.replaceChildren();
+  mutationResultsBody?.replaceChildren();
+  if (json !== null) json.textContent = '';
   const raw = new Map<string, RawBenchmarkResult[]>();
   const baselineFailures: BaselineBenchmarkFailure[] = [];
+  const baselineFailedCases = new Set<string>();
   const baselineEarlyStops = new Set<string>();
   const baselineStatistics = new Map<string, DistributionSnapshot>();
   const baselineTotal = activeCases.length * ROUNDS;
   let baselineResolved = 0;
   let baselineExecuted = 0;
   try {
-    status!.textContent = `Calibrating ${rowProfile} row heights…`;
+    if (!MUTATIONS_ONLY && activeCases.length === 0) {
+      throw new Error('No supported baseline conditions match the selected filters.');
+    }
+    setStatus(`Calibrating ${rowProfile} row heights…`);
+    publish('progress', {
+      phase: 'calibration',
+      message: currentStatus,
+      completed: 0,
+      total: 1,
+      run: Object.freeze({ id: runId, observedAt, source: __BENCHMARK_SOURCE__, environment: navigator.userAgent }),
+    });
     const oracle = await createHeightOracle(rowProfile);
     if (!MUTATIONS_ONLY) {
       for (let index = 0; index < activeCases.length; index += 1) {
         const benchmarkCase = activeCases[index]!;
-        status!.textContent = `Warming ${index + 1}/${activeCases.length} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`;
-        await warmCase(benchmarkCase, mountHost!, oracle);
+        setStatus(`Warming ${index + 1}/${activeCases.length} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`);
+        publish('progress', { phase: 'warmup', message: currentStatus, completed: index, total: activeCases.length });
+        await idleFrame();
+        await warmCase(benchmarkCase, benchmarkMountHost, oracle);
         await idleFrame();
       }
     }
@@ -302,24 +344,28 @@ async function runAll(): Promise<void> {
       const order = rotate(activeCases, roundIndex * BASELINE_ROTATION_STEP);
       for (const benchmarkCase of order) {
         const key = caseKey(benchmarkCase);
-        if (baselineEarlyStops.has(key)) {
+        if (baselineEarlyStops.has(key) || baselineFailedCases.has(key)) {
           baselineResolved += 1;
-          status!.textContent = baselineProgress(
+          setStatus(baselineProgress(
             baselineResolved,
             baselineExecuted,
             baselineTotal,
             runStartedAt,
-            `${benchmarkCase.mode} · ${benchmarkCase.name} · stable statistics`,
-          );
+            `${benchmarkCase.mode} · ${benchmarkCase.name} · ${baselineFailedCases.has(key) ? 'stopped after failure' : 'stable statistics'}`,
+          ));
+          publish('progress', { phase: 'baseline', message: currentStatus, completed: baselineResolved, total: baselineTotal });
           continue;
         }
-        status!.textContent = `Round ${roundIndex + 1}/${ROUNDS} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`;
+        setStatus(`Round ${roundIndex + 1}/${ROUNDS} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`);
+        publish('progress', { phase: 'baseline', message: currentStatus, completed: baselineResolved, total: baselineTotal });
+        await idleFrame();
         const caseStartedAt = performance.now();
         let result: RawBenchmarkResult;
         try {
-          result = await runCase(benchmarkCase, mountHost!, oracle);
+          result = await runCase(benchmarkCase, benchmarkMountHost, oracle);
         } catch (error) {
           const reason = error instanceof Error ? error.message : String(error);
+          baselineFailedCases.add(key);
           baselineFailures.push(Object.freeze({
             rowProfile,
             mode: benchmarkCase.mode,
@@ -330,9 +376,18 @@ async function runAll(): Promise<void> {
             elapsedMs: round(performance.now() - caseStartedAt),
             message: reason,
           }));
-          resultsBody!.append(renderBaselineFailure(benchmarkCase, reason));
+          resultsBody?.append(renderBaselineFailure(benchmarkCase, reason));
           baselineResolved += 1;
           baselineExecuted += 1;
+          publish('checkpoint', {
+            phase: 'baseline',
+            message: reason,
+            completed: baselineResolved,
+            total: baselineTotal,
+            baselineFailure: baselineFailures.at(-1),
+            baselineSampleKey: key,
+            baselineSamples: baselineSampleRecords(runId, raw.get(key) ?? []),
+          });
           await idleFrame();
           continue;
         }
@@ -350,13 +405,24 @@ async function runAll(): Promise<void> {
           p95RelativeTolerance: BASELINE_P95_RELATIVE_TOLERANCE,
         })) baselineEarlyStops.add(key);
         if (currentStatistics !== undefined) baselineStatistics.set(key, currentStatistics);
-        status!.textContent = baselineProgress(
+        setStatus(baselineProgress(
           baselineResolved,
           baselineExecuted,
           baselineTotal,
           runStartedAt,
           `${benchmarkCase.mode} · ${benchmarkCase.name}`,
-        );
+        ));
+        publish('checkpoint', {
+          phase: 'baseline',
+          message: currentStatus,
+          completed: baselineResolved,
+          total: baselineTotal,
+          ...(samples.length >= MINIMUM_BASELINE_ROUNDS
+            ? { baselineResult: aggregate(benchmarkCase, samples, baselineEarlyStops.has(key)) }
+            : {}),
+          baselineSampleKey: key,
+          baselineSamples: baselineSampleRecords(runId, samples),
+        });
         await idleFrame();
       }
     }
@@ -369,27 +435,29 @@ async function runAll(): Promise<void> {
     });
     const baselineSamples = Object.freeze(Object.fromEntries(baselineCases.map((entry) => [
       caseKey(entry),
-      Object.freeze((raw.get(caseKey(entry)) ?? []).flatMap((round, roundIndex) => (
-        round.scrollMeasurements.map((measurement, sampleIndex) => Object.freeze({
-          runId,
-          round: roundIndex + 1,
-          sample: sampleIndex + 1,
-          ...measurement,
-        }))
-      ))),
+      baselineSampleRecords(runId, raw.get(caseKey(entry)) ?? []),
     ])));
-    for (const result of baselineResults) resultsBody!.append(renderResult(result));
+    if (resultsBody !== null) for (const result of baselineResults) resultsBody.append(renderResult(result));
     const mutationResults = BASELINE_ONLY
       ? Object.freeze([])
       : await runMutationBenchmarks(
-          mountHost!,
-          (message) => { status!.textContent = message; },
+          benchmarkMountHost,
+          (message) => { setStatus(message); },
           rowProfile,
           oracle,
-          [...new Set(activeCases.map((entry) => entry.name))],
+          selectedLibraryNames,
           mutationFilter,
+          (result, progress) => {
+            publish('checkpoint', {
+              phase: 'mutations',
+              message: progress.message,
+              completed: progress.completed,
+              total: progress.total,
+              mutationResult: result,
+            });
+          },
         );
-    for (const result of mutationResults) mutationResultsBody!.append(renderMutationResult(result));
+    if (mutationResultsBody !== null) for (const result of mutationResults) mutationResultsBody.append(renderMutationResult(result));
     const run = Object.freeze({
       id: runId,
       observedAt,
@@ -411,7 +479,7 @@ async function runAll(): Promise<void> {
       mutationResults: reportedMutationResults,
       heightModeSupport,
     });
-    json!.textContent = JSON.stringify({
+    const report = {
       benchmark: 'sectile-virtual-ecosystem',
       protocolVersion: 6,
       environment: navigator.userAgent,
@@ -458,25 +526,52 @@ async function runAll(): Promise<void> {
       baselineFailures: reportedBaselineFailures,
       baselineSamples,
       mutationResults: reportedMutationResults,
-    }, null, 2);
-    status!.textContent = 'Complete.';
+    };
+    if (json !== null) json.textContent = JSON.stringify(report, null, 2);
+    setStatus('Complete.');
+    publish('complete', { report });
   } catch (error) {
-    const activeCase = status!.textContent;
-    status!.textContent = `Failed during ${activeCase}: ${error instanceof Error ? error.message : String(error)}`;
-    throw error;
+    const message = `Failed during ${currentStatus}: ${error instanceof Error ? error.message : String(error)}`;
+    setStatus(message);
+    publish('error', { message });
+    if (!EMBEDDED) throw error;
   } finally {
-    runButton!.disabled = false;
+    if (runButton !== null) runButton.disabled = false;
   }
+}
+
+function baselineSampleRecords(
+  runId: string,
+  rounds: readonly RawBenchmarkResult[],
+): readonly (BaselineSample & { readonly runId: string })[] {
+  return Object.freeze(rounds.flatMap((roundResult, roundIndex) => (
+    roundResult.scrollMeasurements.map((measurement, sampleIndex) => Object.freeze({
+      runId,
+      round: roundIndex + 1,
+      sample: sampleIndex + 1,
+      ...measurement,
+    }))
+  )));
 }
 
 function parseHeightMode(value: string | null): MutationBenchmarkFilter['sizeMode'] {
   return value === 'estimated' || value === 'automatic' ? value : undefined;
 }
 
+function parseBaselineHeightMode(value: string | null): HeightMode | undefined {
+  return value === 'fixed' || value === 'estimated' || value === 'automatic' ? value : undefined;
+}
+
 function positiveInteger(value: string | null): number | undefined {
   if (value === null) return undefined;
   const parsed = Number.parseInt(value, 10);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function nonNegativeInteger(value: string | null): number | undefined {
+  if (value === null) return undefined;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
 function parseRowProfile(value: string | null): RowProfile {
@@ -553,6 +648,12 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement, oracle: 
         : undefined;
       const measurement = await measureScrollLayout(mounted.scroller, expected, offset, expectedLayout, strictTotalHeight);
       if (index >= WARMUP_SCROLLS) measurements.push(measurement);
+      if (exceedsEmbeddedLongTaskBudget(EMBEDDED, measurement.elapsedMs)) {
+        throw new Error(
+          `Interactive runner stopped ${benchmarkCase.name} after a ${round(measurement.elapsedMs)}ms scroll exceeded the ${EMBEDDED_LONG_TASK_BUDGET_MS}ms responsiveness budget.`,
+        );
+      }
+      if (EMBEDDED) await yieldToBrowser();
     }
     const renderedRows = host.querySelectorAll('.bench-row').length;
     const domElements = host.querySelectorAll('*').length;
@@ -1025,4 +1126,5 @@ function percentile(sorted: readonly number[], ratio: number): number {
 }
 function round(value: number): number { return Number(value.toFixed(3)); }
 function idleFrame(): Promise<void> { return new Promise((resolve) => setTimeout(resolve, 50)); }
+function yieldToBrowser(): Promise<void> { return new Promise((resolve) => setTimeout(resolve, 0)); }
 function nextAnimationFrame(): Promise<void> { return new Promise((resolve) => requestAnimationFrame(() => resolve())); }

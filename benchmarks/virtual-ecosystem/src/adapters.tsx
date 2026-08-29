@@ -13,6 +13,7 @@ import {
   ITEM_COUNT, items, OVERSCAN_PX, OVERSCAN_ROWS, ROW_HEIGHT, VIEWPORT_HEIGHT, VIEWPORT_WIDTH, contentFor,
   type BenchmarkItem,
 } from './constants.js';
+import { sectileVirtualVersion } from './package-versions.js';
 
 const ReactVirtualizedListComponent = ReactVirtualizedList as unknown as React.ComponentType<Record<string, unknown>>;
 const VListComponent = VList as unknown as React.ComponentType<Record<string, unknown>>;
@@ -38,8 +39,9 @@ function rowText(index: number): string {
   return item === undefined ? `Customer request ${index}` : contentFor(item).title;
 }
 
-function reactRow(index: number, style?: React.CSSProperties) {
+function reactRow(index: number, style?: React.CSSProperties, key?: React.Key) {
   return createElement('div', {
+    key,
     className: 'bench-row',
     'data-index': index,
     style: { ...style, height: ROW_HEIGHT },
@@ -78,7 +80,7 @@ function TanStackList() {
     inset: '0 0 auto 0',
     transform: `translateY(${item.start}px)`,
     width: '100%',
-  }))));
+  }, item.key))));
 }
 
 function ReactWindowRow({ index, style }: RowComponentProps<Record<string, never>>) {
@@ -161,7 +163,7 @@ function reactAdapter(name: string, version: string, element: React.ReactElement
 
 const sectileAdapter: BenchmarkAdapter = Object.freeze({
   name: 'Sectile Virtual',
-  version: '0.7.0',
+  version: sectileVirtualVersion,
   stack: 'Vue 3.5.22',
   mount(host: HTMLElement) {
     const component = defineComponent({

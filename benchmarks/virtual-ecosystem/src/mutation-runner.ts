@@ -12,6 +12,10 @@ import {
 } from './failure-reproduction.js';
 import type { ExpectedLayout, HeightOracle } from './fixture.js';
 import {
+  EMBEDDED_LONG_TASK_BUDGET_MS,
+  exceedsEmbeddedLongTaskBudget,
+} from './interactive-budget.js';
+import {
   automaticMutableAdapters,
   mutableAdapters,
   type DynamicSizeMode,
@@ -63,7 +67,7 @@ export interface MutationBenchmarkResult {
   readonly totalSamples: number;
   readonly plannedSamples: number;
   readonly earlyStopped: boolean;
-  readonly earlyStopReason: 'reproducible-failure' | 'stable-statistics' | null;
+  readonly earlyStopReason: MutationEarlyStopReason | null;
   readonly heightHandling: HeightHandling;
   readonly samples: readonly MutationSampleRecord[];
   readonly failures: readonly MutationFailure[];
@@ -82,6 +86,13 @@ export interface MutationBenchmarkFilter {
   readonly location?: MutationLocation;
 }
 
+export interface MutationBenchmarkProgress {
+  readonly completed: number;
+  readonly executed: number;
+  readonly total: number;
+  readonly message: string;
+}
+
 type FailureCode =
   | 'exception'
   | 'target-position'
@@ -95,6 +106,8 @@ type FailureCode =
   | 'blank-viewport'
   | 'scroll-height'
   | 'scroll-anchor';
+
+type MutationEarlyStopReason = 'interactive-budget' | 'reproducible-failure' | 'stable-statistics';
 
 interface Anchor {
   readonly id: string;
@@ -134,8 +147,9 @@ class MutationPreparationError extends Error {
   }
 }
 
-const QUICK_RUN = new URLSearchParams(window.location.search).has('quick');
 const mutationSearch = new URLSearchParams(window.location.search);
+const EMBEDDED = mutationSearch.has('embedded');
+const QUICK_RUN = mutationSearch.has('quick');
 const requestedRounds = positiveInteger(mutationSearch.get('mutation-rounds'));
 const requestedSamples = positiveInteger(mutationSearch.get('mutation-samples'));
 const ADAPTIVE_SAMPLING = !QUICK_RUN && requestedRounds === undefined && requestedSamples === undefined;
@@ -171,6 +185,7 @@ export const mutationConditions = Object.freeze({
   medianRelativeTolerance: MEDIAN_RELATIVE_TOLERANCE,
   p95RelativeTolerance: P95_RELATIVE_TOLERANCE,
   goodRecoveryMs: GOOD_RECOVERY_MS,
+  embeddedLongTaskBudgetMs: EMBEDDED_LONG_TASK_BUDGET_MS,
   frameTimeoutMs: FRAME_TIMEOUT_MS,
   stableFailureMinMs: STABLE_FAILURE_MIN_MS,
   stableFailureFrames: STABLE_FAILURE_FRAMES,
@@ -190,6 +205,7 @@ export async function runMutationBenchmarks(
   oracle: HeightOracle,
   libraries?: readonly string[],
   filter: MutationBenchmarkFilter = {},
+  onCheckpoint?: (result: MutationBenchmarkResult, progress: MutationBenchmarkProgress) => void,
 ): Promise<readonly MutationBenchmarkResult[]> {
   const libraryAdapters = libraries === undefined
     ? [...mutableAdapters, ...automaticMutableAdapters]
@@ -197,6 +213,9 @@ export async function runMutationBenchmarks(
   const selectedAdapters = libraryAdapters.filter((adapter) => (
     filter.sizeMode === undefined || adapter.sizeMode === filter.sizeMode
   ));
+  if (selectedAdapters.length === 0) {
+    throw new Error('No supported mutation conditions match the selected filters.');
+  }
   const scenarios = mutationOperations
     .filter((operation) => filter.operation === undefined || operation === filter.operation)
     .flatMap((operation) => mutationLocations
@@ -204,7 +223,7 @@ export async function runMutationBenchmarks(
       .map((location) => createMutationScenario(operation, location, rowProfile, oracle)));
   const raw = new Map<string, RawScenarioResult>();
   const failureReproductions = new Map<string, FailureReproductionStreak>();
-  const earlyStops = new Map<string, 'reproducible-failure' | 'stable-statistics'>();
+  const earlyStops = new Map<string, MutationEarlyStopReason>();
   const previousStatistics = new Map<string, DistributionSnapshot>();
   const total = selectedAdapters.length * scenarios.length * MAX_MUTATION_SAMPLES;
   const progressStartedAt = performance.now();
@@ -232,21 +251,16 @@ export async function runMutationBenchmarks(
           continue;
         }
         const sampleOffset = result.outcomes.length;
-        const roundOutcomes = await runMutationRound(adapter, scenario, host, batchSize, (localSample) => {
-          const sample = sampleOffset + localSample + 1;
-          resolved += 1;
-          executed += 1;
-          onProgress(progressMessage(
-            resolved,
-            executed,
-            total,
-            progressStartedAt,
-            `${adapter.name} · ${adapter.sizeMode} · ${scenario.operation}/${scenario.location}`,
-          ));
-          return sample;
-        });
-        await nextFrame();
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        const roundOutcomes = await runMutationRound(
+          adapter,
+          scenario,
+          host,
+          batchSize,
+          (localSample) => sampleOffset + localSample + 1,
+        );
+        const interactiveBudgetExceeded = roundOutcomes.some(({ outcome }) => (
+          exceedsEmbeddedLongTaskBudget(EMBEDDED, outcome.elapsedMs)
+        ));
         for (const { sample, outcome } of roundOutcomes) {
           if (outcome.elapsedMs !== null) result.samples.push(outcome.elapsedMs);
           if (outcome.elapsedMs !== null && outcome.failures.length > 0) result.recoverySamples.push(outcome.elapsedMs);
@@ -258,19 +272,24 @@ export async function runMutationBenchmarks(
           }));
           result.failures.push(...outcome.failures);
         }
-        const signature = reproducibleFailureSignature(
-          roundOutcomes.map(({ outcome }) => outcome),
-          Math.min(REPRODUCIBLE_FAILURE_SAMPLES_PER_BATCH, batchSize),
-        );
-        const reproduction = advanceFailureReproduction(failureReproductions.get(key), signature);
-        if (reproduction === undefined) failureReproductions.delete(key);
-        else {
-          failureReproductions.set(key, reproduction);
-          if (reproduction.rounds >= REPRODUCIBLE_FAILURE_ROUNDS) earlyStops.set(key, 'reproducible-failure');
+        if (interactiveBudgetExceeded) {
+          earlyStops.set(key, 'interactive-budget');
+        } else {
+          const signature = reproducibleFailureSignature(
+            roundOutcomes.map(({ outcome }) => outcome),
+            Math.min(REPRODUCIBLE_FAILURE_SAMPLES_PER_BATCH, batchSize),
+          );
+          const reproduction = advanceFailureReproduction(failureReproductions.get(key), signature);
+          if (reproduction === undefined) failureReproductions.delete(key);
+          else {
+            failureReproductions.set(key, reproduction);
+            if (reproduction.rounds >= REPRODUCIBLE_FAILURE_ROUNDS) earlyStops.set(key, 'reproducible-failure');
+          }
         }
         const currentStatistics = distributionSnapshot(result.samples);
         if (
-          ADAPTIVE_SAMPLING
+          !interactiveBudgetExceeded
+          && ADAPTIVE_SAMPLING
           && result.outcomes.every((outcome) => outcome.outcome === 'clean')
           && distributionIsStable(previousStatistics.get(key), currentStatistics, {
             minimumSamples: MINIMUM_STABLE_SAMPLES,
@@ -281,45 +300,76 @@ export async function runMutationBenchmarks(
           earlyStops.set(key, 'stable-statistics');
         }
         if (currentStatistics !== undefined) previousStatistics.set(key, currentStatistics);
+        resolved += interactiveBudgetExceeded ? batchSize : roundOutcomes.length;
+        executed += roundOutcomes.length;
+        const message = progressMessage(
+          resolved,
+          executed,
+          total,
+          progressStartedAt,
+          `${adapter.name} · ${adapter.sizeMode} · ${scenario.operation}/${scenario.location}`,
+        );
+        onProgress(message);
+        onCheckpoint?.(
+          summarizeMutationResult(rowProfile, adapter, scenario, result, earlyStops.get(key) ?? null),
+          Object.freeze({ completed: resolved, executed, total, message }),
+        );
+        await nextFrame();
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
     }
   }
 
   return Object.freeze(selectedAdapters.flatMap((adapter) => scenarios.map((scenario) => {
     const collected = raw.get(resultKey(adapter, scenario)) ?? { samples: [], recoverySamples: [], outcomes: [], failures: [] };
-    const sorted = [...collected.samples].sort((left, right) => left - right);
-    const recoveries = [...collected.recoverySamples].sort((left, right) => left - right);
-    const correctSamples = collected.outcomes.filter((sample) => sample.outcome === 'clean').length;
-    const recoveredSamples = collected.outcomes.filter((sample) => sample.outcome === 'recovered').length;
-    const failedSamples = collected.outcomes.filter((sample) => sample.outcome === 'failed').length;
-    const plannedSamples = MAX_MUTATION_SAMPLES;
-    const earlyStopReason = earlyStops.get(resultKey(adapter, scenario)) ?? null;
-    const earlyStopped = earlyStopReason !== null && collected.outcomes.length < plannedSamples;
-    return Object.freeze({
+    return summarizeMutationResult(
       rowProfile,
-      library: adapter.name,
-      version: adapter.version,
-      stack: adapter.stack,
-      sizeMode: adapter.sizeMode,
-      operation: scenario.operation,
-      location: scenario.location,
-      medianMs: sorted.length === 0 ? null : round(percentile(sorted, 0.5)),
-      p95Ms: sorted.length < MINIMUM_P95_SAMPLES ? null : round(percentile(sorted, 0.95)),
-      recoveryMedianMs: recoveries.length === 0 ? null : round(percentile(recoveries, 0.5)),
-      recoveryP95Ms: recoveries.length < MINIMUM_P95_SAMPLES ? null : round(percentile(recoveries, 0.95)),
-      settledSamples: sorted.length,
-      correctSamples,
-      recoveredSamples,
-      failedSamples,
-      totalSamples: collected.outcomes.length,
-      plannedSamples,
-      earlyStopped,
-      earlyStopReason: earlyStopped ? earlyStopReason : null,
-      heightHandling: adapter.heightHandling,
-      samples: Object.freeze(collected.outcomes),
-      failures: Object.freeze(collected.failures),
-    });
+      adapter,
+      scenario,
+      collected,
+      earlyStops.get(resultKey(adapter, scenario)) ?? null,
+    );
   })));
+}
+
+function summarizeMutationResult(
+  rowProfile: RowProfile,
+  adapter: MutableBenchmarkAdapter,
+  scenario: MutationScenario,
+  collected: RawScenarioResult,
+  earlyStopReason: MutationEarlyStopReason | null,
+): MutationBenchmarkResult {
+  const sorted = [...collected.samples].sort((left, right) => left - right);
+  const recoveries = [...collected.recoverySamples].sort((left, right) => left - right);
+  const correctSamples = collected.outcomes.filter((sample) => sample.outcome === 'clean').length;
+  const recoveredSamples = collected.outcomes.filter((sample) => sample.outcome === 'recovered').length;
+  const failedSamples = collected.outcomes.filter((sample) => sample.outcome === 'failed').length;
+  const plannedSamples = MAX_MUTATION_SAMPLES;
+  const earlyStopped = earlyStopReason !== null && collected.outcomes.length < plannedSamples;
+  return Object.freeze({
+    rowProfile,
+    library: adapter.name,
+    version: adapter.version,
+    stack: adapter.stack,
+    sizeMode: adapter.sizeMode,
+    operation: scenario.operation,
+    location: scenario.location,
+    medianMs: sorted.length === 0 ? null : round(percentile(sorted, 0.5)),
+    p95Ms: sorted.length < MINIMUM_P95_SAMPLES ? null : round(percentile(sorted, 0.95)),
+    recoveryMedianMs: recoveries.length === 0 ? null : round(percentile(recoveries, 0.5)),
+    recoveryP95Ms: recoveries.length < MINIMUM_P95_SAMPLES ? null : round(percentile(recoveries, 0.95)),
+    settledSamples: sorted.length,
+    correctSamples,
+    recoveredSamples,
+    failedSamples,
+    totalSamples: collected.outcomes.length,
+    plannedSamples,
+    earlyStopped,
+    earlyStopReason: earlyStopped ? earlyStopReason : null,
+    heightHandling: adapter.heightHandling,
+    samples: Object.freeze([...collected.outcomes]),
+    failures: Object.freeze([...collected.failures]),
+  });
 }
 
 async function runMutationRound(
@@ -337,9 +387,11 @@ async function runMutationRound(
     await waitForElement(host, '.bench-scroller');
     await waitForRows(host);
     for (let localSample = 0; localSample < sampleCount; localSample += 1) {
+      if (EMBEDDED && localSample > 0) await yieldToBrowser();
       const sample = beginSample(localSample);
       const execution = await runMountedMutationSample(adapter, mounted, scenario, host, sample);
       outcomes.push(Object.freeze({ sample, outcome: execution.outcome }));
+      if (exceedsEmbeddedLongTaskBudget(EMBEDDED, execution.outcome.elapsedMs)) break;
       if (localSample === sampleCount - 1 || !execution.didMutate) continue;
       if (execution.outcome.elapsedMs === null) {
         mounted.unmount();
@@ -908,6 +960,7 @@ function percentile(sorted: readonly number[], ratio: number): number {
 
 function round(value: number): number { return Number(value.toFixed(3)); }
 function nextFrame(): Promise<void> { return new Promise((resolve) => requestAnimationFrame(() => resolve())); }
+function yieldToBrowser(): Promise<void> { return new Promise((resolve) => setTimeout(resolve, 0)); }
 function positiveInteger(value: string | null): number | undefined {
   if (value === null) return undefined;
   const parsed = Number(value);

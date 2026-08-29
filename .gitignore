@@ -3,6 +3,7 @@
 node_modules/
 .pnpm-store/
 **/.vitepress/cache/
+docs/public/benchmark-runner/
 
 dist/
 .*-dist/

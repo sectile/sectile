@@ -10,7 +10,11 @@
     "src/baseline-policy.ts",
     "src/baseline-policy.test.ts",
     "src/failure-reproduction.ts",
-    "src/failure-reproduction.test.ts"
+    "src/failure-reproduction.test.ts",
+    "src/interactive-budget.ts",
+    "src/interactive-budget.test.ts",
+    "src/react-virtualized-measurement.ts",
+    "src/react-virtualized-measurement.test.ts"
   ],
   "exclude": []
 }

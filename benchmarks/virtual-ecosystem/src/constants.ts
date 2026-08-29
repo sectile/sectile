@@ -1,4 +1,5 @@
-export const ITEM_COUNT = 100_000;
+export const DEFAULT_ITEM_COUNT = 100_000;
+export const ITEM_COUNT = benchmarkItemCount();
 export const ROW_HEIGHT = 72;
 export const CONTENT_VARIANT_COUNT = 256;
 export const CONTENT_CORPUS_VERSION = 1;
@@ -69,4 +70,10 @@ export function stableVariant(index: number): number {
   value = ((value >>> 16) ^ value) * 0x45d9f3b;
   value = (value >>> 16) ^ value;
   return Math.abs(value) % CONTENT_VARIANT_COUNT;
+}
+
+function benchmarkItemCount(): number {
+  if (typeof window === 'undefined') return DEFAULT_ITEM_COUNT;
+  const value = Number(new URLSearchParams(window.location.search).get('rows'));
+  return Number.isInteger(value) && value >= 2 && value <= 1_000_000 ? value : DEFAULT_ITEM_COUNT;
 }
