@@ -105,11 +105,7 @@ const optionLabel = (id: string): string => (
 }
 
 .demo-select__content {
-  position: absolute;
   z-index: 12;
-  top: calc(100% + var(--sectile-overlay-gap));
-  right: 0;
-  left: 0;
 }
 
 .demo-select--compact {
@@ -125,7 +121,6 @@ const optionLabel = (id: string): string => (
 }
 
 .demo-select--compact .demo-select__content {
-  left: auto;
   min-width: 100%;
   padding: .3rem;
   border-radius: .6rem;

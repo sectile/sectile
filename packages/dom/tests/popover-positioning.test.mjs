@@ -42,12 +42,17 @@ test('DOM positioning selects CSS only for the fully supported narrow route', ()
 
 test('DOM JavaScript positioning coalesces updates and restores owned projection', () => {
   const fixture = createPositionFixture();
+  const arrow = fixture.window.document.createElement('div');
+  fixture.root.append(arrow);
+  arrow.style.position = 'relative';
+  setRect(arrow, { x: 0, y: 0, width: 8, height: 8 });
   fixture.root.style.left = '3px';
   fixture.root.dataset.side = 'before';
   const layouts = [];
   const engine = createPositionEngine({
     root: fixture.root,
     reference: fixture.reference,
+    arrow,
     collisionBoundary: fixture.boundary,
     capabilities: completeCapabilities,
     side: 'bottom',
@@ -64,6 +69,7 @@ test('DOM JavaScript positioning coalesces updates and restores owned projection
   assert.equal(fixture.root.dataset.positionRoute, 'javascript');
   assert.equal(fixture.root.dataset.side, 'bottom');
   assert.equal(fixture.root.style.visibility, '');
+  assert.equal(arrow.style.position, 'absolute');
   assert.equal(fixture.root.style.getPropertyValue('--sectile-position-anchor-width'), '40px');
   assert.equal(engine.diagnostics().completedUpdates, 1);
   engine.disconnect();
@@ -71,6 +77,7 @@ test('DOM JavaScript positioning coalesces updates and restores owned projection
   assert.equal(fixture.root.style.left, '3px');
   assert.equal(fixture.root.dataset.side, 'before');
   assert.equal(fixture.root.dataset.positionRoute, undefined);
+  assert.equal(arrow.style.position, 'relative');
   assert.equal(engine.diagnostics().sourceSubscriptions, 0);
   assert.equal(engine.diagnostics().resizeObservers, 0);
   assert.equal(engine.diagnostics().layoutObservers, 0);
@@ -111,6 +118,126 @@ test('DOM positioning discovers shorthand overflow through computed axes', () =>
   engine.connect();
   assert.equal(engine.diagnostics().discoveredAncestors, 1);
   assert.equal(engine.diagnostics().sourceSubscriptions, 3);
+  engine.disconnect();
+  fixture.close();
+});
+
+test('DOM positioning tracks reference scrollers without treating them as portal clipping boundaries', () => {
+  const fixture = createPositionFixture();
+  const scroller = fixture.window.document.createElement('div');
+  scroller.style.overflow = 'hidden';
+  fixture.window.document.body.append(scroller, fixture.root);
+  scroller.append(fixture.reference);
+  setRect(scroller, { x: 0, y: 0, width: 200, height: 140 });
+  setRect(fixture.reference, { x: 80, y: 100, width: 40, height: 20 });
+  setRect(fixture.root, { x: 0, y: 0, width: 80, height: 80 });
+  setRect(fixture.boundary, { x: 0, y: 0, width: 300, height: 300 });
+  const engine = createPositionEngine({
+    root: fixture.root,
+    reference: fixture.reference,
+    collisionBoundary: fixture.boundary,
+    side: 'bottom',
+  });
+  engine.connect();
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'bottom');
+  assert.equal(engine.diagnostics().discoveredAncestors, 1);
+  assert.equal(engine.diagnostics().sourceSubscriptions, 3);
+  engine.disconnect();
+  fixture.close();
+});
+
+test('DOM positioning returns to the preferred side when scrolling restores space', () => {
+  const fixture = createPositionFixture();
+  setRect(fixture.root, { x: 0, y: 0, width: 80, height: 80 });
+  setRect(fixture.boundary, { x: 0, y: 0, width: 300, height: 300 });
+  setRect(fixture.reference, { x: 80, y: 20, width: 40, height: 20 });
+  const engine = createPositionEngine({
+    root: fixture.root,
+    reference: fixture.reference,
+    collisionBoundary: fixture.boundary,
+    side: 'bottom',
+  });
+  engine.connect();
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'bottom');
+
+  setRect(fixture.reference, { x: 80, y: 185, width: 40, height: 20 });
+  fixture.window.dispatchEvent(new fixture.window.Event('scroll'));
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'top');
+
+  setRect(fixture.reference, { x: 80, y: 184, width: 40, height: 20 });
+  fixture.window.dispatchEvent(new fixture.window.Event('scroll'));
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'bottom');
+  engine.disconnect();
+  fixture.close();
+});
+
+test('DOM positioning flips a preferred top side on the first clipped pixel and returns when it fits', () => {
+  const fixture = createPositionFixture();
+  setRect(fixture.root, { x: 0, y: 0, width: 80, height: 80 });
+  setRect(fixture.boundary, { x: 0, y: 0, width: 300, height: 300 });
+  setRect(fixture.reference, { x: 80, y: 200, width: 40, height: 20 });
+  const engine = createPositionEngine({
+    root: fixture.root,
+    reference: fixture.reference,
+    collisionBoundary: fixture.boundary,
+    side: 'top',
+  });
+  engine.connect();
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'top');
+
+  setRect(fixture.reference, { x: 80, y: 95, width: 40, height: 20 });
+  fixture.window.dispatchEvent(new fixture.window.Event('scroll'));
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'bottom');
+
+  setRect(fixture.reference, { x: 80, y: 96, width: 40, height: 20 });
+  fixture.window.dispatchEvent(new fixture.window.Event('scroll'));
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'top');
+  engine.disconnect();
+  fixture.close();
+});
+
+test('DOM positioning keeps a popup visible by default when neither side can fit', () => {
+  const fixture = createPositionFixture();
+  setRect(fixture.root, { x: 0, y: 0, width: 80, height: 180 });
+  setRect(fixture.boundary, { x: 0, y: 0, width: 300, height: 100 });
+  setRect(fixture.reference, { x: 80, y: -21, width: 40, height: 20 });
+  const engine = createPositionEngine({
+    root: fixture.root,
+    reference: fixture.reference,
+    collisionBoundary: fixture.boundary,
+    side: 'bottom',
+  });
+  engine.connect();
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.referenceHidden, 'true');
+  assert.equal(fixture.root.style.visibility, '');
+  assert.ok(fixture.root.dataset.side === 'bottom' || fixture.root.dataset.side === 'top');
+  engine.disconnect();
+  fixture.close();
+});
+
+test('DOM positioning hides a detached popup only when explicitly requested', () => {
+  const fixture = createPositionFixture();
+  setRect(fixture.root, { x: 0, y: 0, width: 80, height: 80 });
+  setRect(fixture.boundary, { x: 0, y: 0, width: 300, height: 300 });
+  setRect(fixture.reference, { x: 80, y: -21, width: 40, height: 20 });
+  const engine = createPositionEngine({
+    root: fixture.root,
+    reference: fixture.reference,
+    collisionBoundary: fixture.boundary,
+    hideWhenDetached: true,
+  });
+  engine.connect();
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.referenceHidden, 'true');
+  assert.equal(fixture.root.style.visibility, 'hidden');
   engine.disconnect();
   fixture.close();
 });

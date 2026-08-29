@@ -174,7 +174,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       collisionBoundary: { type: [String, Object] as PropType<PositionBoundary>, default: undefined },
       avoidCollisions: { type: Boolean, default: true },
       arrowPadding: { type: Number, default: 8 },
-      hideWhenDetached: { type: Boolean, default: true },
+      hideWhenDetached: { type: Boolean, default: false },
       strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
       tracking: { type: String as PropType<PositionTracking>, default: 'events' },
       unmountOnExit: { type: Boolean, default: false },

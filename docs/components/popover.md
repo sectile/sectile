@@ -128,7 +128,7 @@ Vue package: `@sectile/vue/popover`
 <div class="component-api-definition">
 <dt><code>hideWhenDetached</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
 <p>Whether positioned content hides when its anchor leaves the layout.</p>
 </dd>
 </div>

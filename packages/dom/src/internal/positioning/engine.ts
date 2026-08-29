@@ -96,6 +96,11 @@ interface SourceEntry {
   readonly listener: EventListener;
 }
 
+interface DiscoveredAncestors {
+  readonly clipping: readonly Element[];
+  readonly sources: readonly Element[];
+}
+
 interface OwnedValue {
   readonly previous: string | null;
   applied: string;
@@ -143,7 +148,7 @@ export function selectPositionRoute(options: PositionEngineOptions): PositionRou
     && capabilities.positionArea
     && ((options.align ?? 'center') !== 'center' || capabilities.anchorCenter)
     && (!(options.avoidCollisions ?? true) || capabilities.positionTryFallbacks)
-    && (!(options.hideWhenDetached ?? true) || capabilities.positionVisibility);
+    && (!(options.hideWhenDetached ?? false) || capabilities.positionVisibility);
   const semantic = (options.collisionBoundary === undefined || options.collisionBoundary === 'viewport')
     && options.arrow === undefined
     && options.avoidCollisions === false
@@ -258,10 +263,11 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
       return;
     }
     diagnostics.discoveryRuns += 1;
-    clippingAncestors = discoverOverflowAncestors(options.reference, options.root, view);
-    diagnostics.discoveredAncestors = clippingAncestors.length;
+    const ancestors = discoverOverflowAncestors(options.reference, options.root, view);
+    clippingAncestors = ancestors.clipping;
+    diagnostics.discoveredAncestors = ancestors.sources.length;
     const invalidate = (): void => schedule();
-    const sources = new Set<EventTarget>([view, ...clippingAncestors]);
+    const sources = new Set<EventTarget>([view, ...ancestors.sources]);
     for (const source of sources) {
       disposers.push(subscribeSource(source, 'scroll', invalidate));
       diagnostics.sourceSubscriptions += 1;
@@ -373,20 +379,28 @@ function subscribeSource(target: EventTarget, type: 'scroll' | 'resize', callbac
   };
 }
 
-function discoverOverflowAncestors(reference: Element, root: Element, view: Window): readonly Element[] {
-  const output: Element[] = [];
-  const seen = new Set<Element>();
-  for (const start of [reference, root]) {
+function discoverOverflowAncestors(reference: Element, root: Element, view: Window): DiscoveredAncestors {
+  const clipping: Element[] = [];
+  const sources: Element[] = [];
+  const clippingSeen = new Set<Element>();
+  const sourceSeen = new Set<Element>();
+  for (const [start, clipsRoot] of [[reference, false], [root, true]] as const) {
     let current: Element | null = parentElement(start);
     while (current !== null) {
-      if (!seen.has(current) && clipsOrScrolls(view.getComputedStyle(current))) {
-        seen.add(current);
-        output.push(current);
+      if (clipsOrScrolls(view.getComputedStyle(current))) {
+        if (!sourceSeen.has(current)) {
+          sourceSeen.add(current);
+          sources.push(current);
+        }
+        if (clipsRoot && !clippingSeen.has(current)) {
+          clippingSeen.add(current);
+          clipping.push(current);
+        }
       }
       current = parentElement(current);
     }
   }
-  return Object.freeze(output);
+  return Object.freeze({ clipping: Object.freeze(clipping), sources: Object.freeze(sources) });
 }
 
 function parentElement(element: Element): Element | null {
@@ -478,7 +492,7 @@ function projectJavaScript(
   writeStyle(styles, options.root, 'position', options.strategy ?? 'absolute', diagnostics);
   writeStyle(styles, options.root, 'left', `${x}px`, diagnostics);
   writeStyle(styles, options.root, 'top', `${y}px`, diagnostics);
-  writeStyle(styles, options.root, 'visibility', (options.hideWhenDetached ?? true) && hidden ? 'hidden' : '', diagnostics);
+  writeStyle(styles, options.root, 'visibility', (options.hideWhenDetached ?? false) && hidden ? 'hidden' : '', diagnostics);
   writeStyle(styles, options.root, '--sectile-position-available-width', `${layout.availableSize.width}px`, diagnostics);
   writeStyle(styles, options.root, '--sectile-position-available-height', `${layout.availableSize.height}px`, diagnostics);
   writeStyle(styles, options.root, '--sectile-position-anchor-width', `${measurement.reference.width}px`, diagnostics);
@@ -488,6 +502,7 @@ function projectJavaScript(
   writeData(data, options.root, 'align', layout.align, diagnostics);
   writeData(data, options.root, 'referenceHidden', String(hidden), diagnostics);
   if (options.arrow !== undefined) {
+    writeStyle(styles, options.arrow, 'position', 'absolute', diagnostics);
     writeData(data, options.arrow, 'side', layout.side, diagnostics);
     writeStyle(styles, options.arrow, 'left', layout.arrow === null ? '' : `${layout.arrow.x}px`, diagnostics);
     writeStyle(styles, options.arrow, 'top', layout.arrow === null ? '' : `${layout.arrow.y}px`, diagnostics);
@@ -510,7 +525,7 @@ function projectCSS(
   writeStyle(styles, options.root, 'position-area', side, diagnostics);
   writeStyle(styles, options.root, 'justify-self', align === 'center' ? 'anchor-center' : align, diagnostics);
   writeStyle(styles, options.root, 'position-try-fallbacks', (options.avoidCollisions ?? true) ? 'flip-block, flip-inline' : '', diagnostics);
-  writeStyle(styles, options.root, 'position-visibility', (options.hideWhenDetached ?? true) ? 'anchors-visible' : '', diagnostics);
+  writeStyle(styles, options.root, 'position-visibility', (options.hideWhenDetached ?? false) ? 'anchors-visible' : '', diagnostics);
   writeStyle(styles, options.root, sideMargin(side), `${options.sideOffset ?? 8}px`, diagnostics);
   writeStyle(styles, options.root, '--sectile-position-anchor-width', 'anchor-size(width)', diagnostics);
   writeStyle(styles, options.root, '--sectile-position-anchor-height', 'anchor-size(height)', diagnostics);

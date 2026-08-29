@@ -27,6 +27,30 @@ test('side, align, offset, padding, flip, shift, size, arrow, and hidden outcome
   assert.equal(solveAnchoredLayout({ ...base, reference: { x: 400, y: 400, width: 10, height: 10 } }).referenceHidden, true);
 });
 
+test('shift preserves the anchor gap when floating content exceeds the placement axis', () => {
+  const vertical = solveAnchoredLayout({
+    reference: { x: 130, y: 80, width: 40, height: 40 },
+    floating: { width: 280, height: 160 },
+    boundary: { x: 0, y: 0, width: 300, height: 200 },
+    side: 'bottom',
+    offset: 8,
+    padding: 8,
+  });
+  assert.equal(vertical.side, 'bottom');
+  assert.equal(vertical.rect.y, 128);
+
+  const horizontal = solveAnchoredLayout({
+    reference: { x: 80, y: 130, width: 40, height: 40 },
+    floating: { width: 160, height: 280 },
+    boundary: { x: 0, y: 0, width: 200, height: 300 },
+    side: 'right',
+    offset: 8,
+    padding: 8,
+  });
+  assert.equal(horizontal.side, 'right');
+  assert.equal(horizontal.rect.x, 128);
+});
+
 test('solver agrees with an independent scalar candidate reference', () => {
   const sides = ['top', 'right', 'bottom', 'left'];
   const aligns = ['start', 'center', 'end'];
@@ -79,8 +103,11 @@ function solveReference(input) {
     if (best === null || overflow < best.overflow) best = { side, rect, overflow };
   }
   if (input.shift !== false) {
-    best.rect.x = clamp(best.rect.x, inner.x, inner.x + inner.width - best.rect.width);
-    best.rect.y = clamp(best.rect.y, inner.y, inner.y + inner.height - best.rect.height);
+    if (best.side === 'top' || best.side === 'bottom') {
+      best.rect.x = clamp(best.rect.x, inner.x, inner.x + inner.width - best.rect.width);
+    } else {
+      best.rect.y = clamp(best.rect.y, inner.y, inner.y + inner.height - best.rect.height);
+    }
   }
   delete best.overflow;
   return { rect: best.rect, side: best.side, candidateCount: candidates.length };

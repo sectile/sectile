@@ -297,7 +297,6 @@ html[lang='ko-KR'] .vp-doc :where(h1, h2, h3, h4, p, li, dt, dd, strong, small, 
 }
 
 .sectile-example {
-  overflow: hidden;
   margin: 18px 0 34px;
   border: 1px solid var(--vp-c-divider);
   border-radius: 14px;
@@ -312,6 +311,7 @@ html[lang='ko-KR'] .vp-doc :where(h1, h2, h3, h4, p, li, dt, dd, strong, small, 
   gap: 8px;
   padding: 8px;
   border-bottom: 1px solid var(--vp-c-divider);
+  border-radius: 13px 13px 0 0;
   background: var(--vp-c-bg-soft);
 }
 
@@ -442,10 +442,16 @@ html[lang='ko-KR'] .vp-doc :where(h1, h2, h3, h4, p, li, dt, dd, strong, small, 
   padding: 0;
 }
 
+.sectile-example__preview > .component-example-stage,
+.sectile-example__preview > .terminal-component-example {
+  border-radius: 0 0 13px 13px;
+}
+
 .sectile-example__code {
   overflow: auto;
   min-height: 180px;
   max-height: 620px;
+  border-radius: 0 0 13px 13px;
   background: var(--vp-code-block-bg);
 }
 

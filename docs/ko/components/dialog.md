@@ -125,7 +125,7 @@ Vue 패키지: `@sectile/vue/dialog`
 <div class="component-api-definition">
 <dt><code>hideWhenDetached</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
 <p>기준 요소가 레이아웃에서 벗어나면 팝업을 숨길지 여부입니다.</p>
 </dd>
 </div>

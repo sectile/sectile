@@ -206,7 +206,7 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
       sideOffset: { type: Number, default: 8 },
       collisionPadding: { type: [Number, Object] as PropType<PickerPositionOptions['collisionPadding']>, default: 8 },
       collisionBoundary: { type: [String, Object] as PropType<PickerPositionOptions['collisionBoundary']>, default: undefined },
-      avoidCollisions: { type: Boolean, default: true }, hideWhenDetached: { type: Boolean, default: true },
+      avoidCollisions: { type: Boolean, default: true }, hideWhenDetached: { type: Boolean, default: false },
       strategy: { type: String as PropType<NonNullable<PickerPositionOptions['strategy']>>, default: 'absolute' },
       tracking: { type: String as PropType<NonNullable<PickerPositionOptions['tracking']>>, default: 'events' },
       as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },

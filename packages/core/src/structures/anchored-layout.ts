@@ -115,8 +115,11 @@ export function trySolveAnchoredLayout(input: AnchoredLayoutInput): Result<Ancho
   if (input.shift !== false) {
     const maxX = innerX + innerWidth - floating.width;
     const maxY = innerY + innerHeight - floating.height;
-    bestX = maxX < innerX ? innerX : Math.min(Math.max(bestX, innerX), maxX);
-    bestY = maxY < innerY ? innerY : Math.min(Math.max(bestY, innerY), maxY);
+    if (bestSide === 'top' || bestSide === 'bottom') {
+      bestX = maxX < innerX ? innerX : Math.min(Math.max(bestX, innerX), maxX);
+    } else {
+      bestY = maxY < innerY ? innerY : Math.min(Math.max(bestY, innerY), maxY);
+    }
   }
   const rect = Object.freeze({ x: bestX, y: bestY, width: floating.width, height: floating.height });
   const overflow = overflowRecord(rect, innerX, innerY, innerWidth, innerHeight);

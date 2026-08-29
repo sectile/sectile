@@ -82,7 +82,7 @@ export const SelectRoot = defineComponent({
     align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'start' },
     sideOffset: { type: Number, default: 8 }, collisionPadding: { type: [Number, Object] as PropType<PositionPadding>, default: 8 },
     collisionBoundary: { type: [String, Object] as PropType<PositionBoundary>, default: undefined }, avoidCollisions: { type: Boolean, default: true },
-    hideWhenDetached: { type: Boolean, default: true }, strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
+    hideWhenDetached: { type: Boolean, default: false }, strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
     tracking: { type: String as PropType<PositionTracking>, default: 'events' },
     unmountOnExit: { type: Boolean, default: false },
     policies: { type: Object as PropType<SelectPolicies<string>>, default: undefined },
