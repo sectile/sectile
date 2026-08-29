@@ -41,10 +41,9 @@ platform resources; they do not reimplement portable transitions.
 
 ### Implementation cadence
 
-Write the required tests, reference fixtures, adversarial witnesses,
-deterministic counters, and verification registrations with the implementation.
-During implementation, execute only the narrowest relevant package production
-build and `git diff --check`; production builds own implementation typechecking.
-Defer running tests, performance and heap measurements, bundle and install
-gates, browser checks, generated inventories and docs, and baseline recording to
-close. Follow `docs/agents/rules/validation.md` when entering close.
+Write the minimum non-duplicative validation artifacts selected by the risk
+matrix in `docs/agents/rules/validation.md` with the implementation. During
+implementation, execute only the narrowest relevant package production build
+and `git diff --check`; production builds own implementation typechecking. Defer
+running tests, performance and heap measurements, bundle and install gates,
+browser checks, generated inventories and docs, and baseline recording to close.

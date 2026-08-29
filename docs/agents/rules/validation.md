@@ -4,22 +4,51 @@ Load this rule when planning or running verification and when entering close.
 
 ### During implementation
 
-Finish read-only analysis and the design gate before edits. Each work item owns
-its validation code and adds it with the implementation. Prepare every artifact
-needed to make close an execution-and-fix phase rather than a test-authoring
-phase:
+Finish read-only analysis and the design gate before edits. Each work item adds
+the minimum validation code needed to make close an execution-and-fix phase
+rather than a test-authoring phase. Add a validation artifact only when it
+catches a plausible regression, directly proves an acceptance criterion, and
+does not duplicate an existing check.
 
-- valid, invalid, no-op, boundary, and regression tests;
-- reference or differential fixtures for migrated semantics;
-- adversarial witnesses and deterministic work/resource counters;
-- lifecycle churn and zero-resource cleanup scenarios;
-- public signature, breaking-change, bundle, install, SSR, hydration, browser,
-  or source-map fixtures when the surface changes;
-- complexity, authority, crossover, and verification manifest registrations.
+| Change | Minimum evidence |
+|---|---|
+| Documentation only | `git diff --check` |
+| Bug fix | failing reproduction and one regression assertion |
+| Semantic behavior | representative accepted or rejected path needed to define the contract |
+| Behavior-preserving refactor | existing coverage or one before/after differential |
+| Hot operation | result equivalence and deterministic work counter |
+| Representation change | crossover evidence and adversarial fallback |
+| Lifecycle/resource change | ownership churn and zero-resource cleanup |
+| Public API change | type fixture and breaking mapping |
+| Export or dependency change | consumer bundle, install, and tree-shaking fixture |
+| Vue SSR/hydration change | SSR or hydration fixture for the affected behavior |
+| Browser-only DOM behavior | focused browser scenario |
+| Source-map policy change | source-map fixture |
+
+Choose only matching rows. Prefer extending an existing fixture over creating a
+new file. Do not duplicate one fact across unit, integration, differential, and
+browser layers. Do not add a runtime test for a condition already guaranteed by
+the type system or an existing invariant check. Performance counters, browser
+fixtures, bundle fixtures, and crossover evidence are conditional, not default.
+
+### Canonical behavior, not rejected alternatives
+
+When behavior changes from A to B, test the positive canonical behavior B. The
+request to choose B does not create a permanent requirement that A must never be
+chosen again. Remove or replace obsolete A tests; do not append a negative test,
+test name, fixture, comment, or manifest entry whose only purpose is preserving
+the history that A was rejected. This is a rejected-alternative lock-in test.
+
+A negative assertion is justified only when it defines B's observable contract,
+rejects invalid input, protects a durable safety/security/data invariant, or the
+task explicitly requires a permanent prohibition. Record the durable reason in
+that case. Express ordinary preference changes as current positive behavior and
+keep superseded alternatives out of active validation artifacts.
 
 Validation code must exercise the production export or a shared production
-kernel. Benchmark-only replicas and source-existence checks are insufficient.
-Do not record a measured baseline or generated output during implementation.
+kernel. Benchmark-only replicas, implementation-detail assertions, and
+source-existence checks are insufficient. Do not record a measured baseline or
+generated output during implementation.
 
 For each coherent batch execute only:
 
