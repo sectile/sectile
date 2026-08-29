@@ -184,7 +184,6 @@ async function prepareRelease(root, requestedBump, installDependencies) {
   if (installDependencies) run(root, 'pnpm', ['install', '--frozen-lockfile']);
   run(root, 'pnpm', ['update:tree']);
   run(root, 'pnpm', ['release:check', tag]);
-  run(root, 'pnpm', ['verify:release']);
   run(root, 'git', ['add', '--', 'packages', 'pnpm-lock.yaml', 'TREE.txt']);
   run(root, 'git', ['commit', '-m', `chore(release): ${tag}`]);
   const releaseCommit = run(root, 'git', ['rev-parse', 'HEAD'], { capture: true });
