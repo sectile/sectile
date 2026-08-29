@@ -236,11 +236,36 @@ test('patch overlays compact before lookup depth can exceed 32', () => {
       deleteCount: 0,
       inserted: [`overlay-${index}`],
     });
-    assert.ok(sequence.depth <= 32);
+    assert.ok(sequence.depth === undefined || sequence.depth <= 32);
   }
   assert.equal(sequence.size, 66);
   assert.equal(sequence.indexOf('base'), 0);
   assert.equal(sequence.at(65), 'overlay-64');
   assert.equal(sequence.move('base', 1).id, 'overlay-0');
   assert.equal(sequence.ids.length, 66);
+});
+
+test('patch overlays compact when cumulative changed cardinality exceeds one eighth', () => {
+  let sequence = createSequence(Array.from({ length: 128 }, (_, index) => `base-${index}`), {
+    maxItems: 256,
+  });
+  for (let index = 0; index < 18; index += 1) {
+    sequence = applySequencePatch(sequence, {
+      type: 'splice',
+      index: sequence.size,
+      deleteCount: 0,
+      inserted: [`added-${index}`],
+    });
+  }
+  assert.equal(sequence.depth, 18);
+  sequence = applySequencePatch(sequence, {
+    type: 'splice',
+    index: sequence.size,
+    deleteCount: 0,
+    inserted: ['compacting-change'],
+  });
+  assert.equal(sequence.depth, undefined);
+  assert.equal(sequence.size, 147);
+  assert.equal(sequence.at(146), 'compacting-change');
+  assert.equal(sequence.indexOf('base-127'), 127);
 });

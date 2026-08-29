@@ -79,7 +79,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
     const initialViewport = props.initialViewport === undefined
       ? undefined
       : Object.freeze({ ...props.initialViewport });
-    const prepared = shallowRef(prepareVirtualList(props.items, props.getKey));
+    const prepared = shallowRef(prepareVirtualList(props.items, props.getKey, props.maxItems));
     const initialGeometry = resolveResponsiveLanes(
       initialViewport?.width ?? 0,
       props.laneCount,
@@ -90,7 +90,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
     const automaticEstimate = shallowRef<number>();
     const initialState = requiresDOMBootstrap(props.itemSize, props.estimateSize)
       ? createVirtualMasonryState(
-          prepareVirtualList([], props.getKey),
+          prepareVirtualList([], props.getKey, props.maxItems),
           [],
           props,
           initialGeometry,
@@ -105,7 +105,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
     let disposed = false;
     const isBootstrapping = (): boolean => requiresDOMBootstrap(props.itemSize, props.estimateSize)
       && automaticEstimate.value === undefined
-      && prepared.value.ids.length > 0;
+      && prepared.value.domain.size > 0;
     const bootstrapItemRef = (index: number, value: unknown): void => {
       const element = value instanceof HTMLElement ? value : null;
       if (element === null) bootstrapElements.delete(index);
@@ -123,7 +123,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
         props.maxLaneCount,
         props.laneGap,
       );
-      const count = Math.min(geometry.count, prepared.value.ids.length);
+      const count = Math.min(geometry.count, prepared.value.domain.size);
       let total = 0;
       for (let index = 0; index < count; index += 1) {
         const element = bootstrapElements.get(index);
@@ -148,7 +148,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
         disposed
         || bootstrapScheduled
         || automaticEstimate.value !== undefined
-        || prepared.value.ids.length === 0
+        || prepared.value.domain.size === 0
       ) return;
       bootstrapScheduled = true;
       void nextTick(() => {
@@ -267,7 +267,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
                   props.maxLaneCount,
                   props.laneGap,
                 ).count,
-                prepared.value.ids.length,
+                prepared.value.domain.size,
               ),
               resolveResponsiveLanes(
                 viewportWidth.value,
@@ -361,6 +361,6 @@ function createCollectionExtents(
       ? estimatedExtent(requireAutomaticEstimate(estimate), undefined, 0)
       : null;
   return shared === null
-    ? createExtentIndex(prepared.ids.map((_id, index) => estimatedExtent(estimate!, items[index], index)), { maxItems: props.maxItems })
-    : createUniformExtentIndex(prepared.ids.length, shared, { maxItems: props.maxItems });
+    ? createExtentIndex(Array.from({ length: prepared.domain.size }, (_unused, index) => estimatedExtent(estimate!, items[index], index)), { maxItems: props.maxItems })
+    : createUniformExtentIndex(prepared.domain.size, shared, { maxItems: props.maxItems });
 }

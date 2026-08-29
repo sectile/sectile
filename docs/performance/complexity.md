@@ -121,8 +121,8 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:track.query | trusted | `O(log nRegion + cCandidate + kPlacement log kPlacement)` worst-case | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | vue:collection.external-reconcile | external | `O(nOption + sSelected + dDisabled)` expected | `O(nOption + sSelected + dDisabled)` | `O(sSelected)` | `O(sSelected)` | allowed | VAL-016, VAL-017 |
 | vue:form.selector-bridge | mounted | `O(sForm + sField)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
-| vue:projection.reconfigure | mounted | `O(nOption + uOption)` worst-case | `O(nOption + uOption)` | `O(uOption)` | `O(uOption)` | allowed | VAL-016, VAL-017 |
-| vue:virtual.measurement-update | mounted | `O(nMounted + jChanged + kPlacement)` worst-case | `O(nMounted + jChanged + kPlacement)` | `O(kPlacement)` | `O(nMounted)` | allowed | VAL-016, VAL-017 |
+| vue:projection.reconfigure | mounted | `O(nItem + jChanged)` worst-case | `O(jChanged)` | `O(jChanged)` | `O(nItem + jChanged)` | allowed | VAL-016, VAL-017 |
+| vue:virtual.measurement-update | mounted | `O(nMounted + jChanged + kPlacement)` worst-case | `O(nMounted + jChanged + kPlacement)` | `O(kPlacement)` | `O(nMounted)` | forbidden | VAL-016, VAL-017 |
 
 ## Deterministic scaling evidence
 

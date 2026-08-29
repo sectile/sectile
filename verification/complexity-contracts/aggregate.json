@@ -22064,7 +22064,8 @@
           "subscriptions": "0"
         },
         "assumptions": [
-          "retained patch depth is compacted at 32 overlays"
+          "retained patch depth is compacted at 32 overlays",
+          "retained cumulative changed cardinality is compacted above one eighth of the resulting domain"
         ],
         "ceilings": [
           "operation item and output ceilings"
@@ -22077,7 +22078,7 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Materialization walks at most 32 metadata overlays, copies the indexed base vector once, applies patches in order, and caches the one frozen result; no parent vector is recursively materialized.",
+        "proof": "Materialization walks at most 32 metadata overlays whose cumulative changed cardinality is at most one eighth of the resulting domain, copies the indexed base vector once, applies patches in order, and caches the one frozen result; larger changes compact eagerly.",
         "adversarialWitness": "A depth-64 patched 100k sequence requests the full ids projection.",
         "evidence": [
           "VAL-016",
@@ -25310,46 +25311,45 @@
       "package": "vue",
       "surface": "hot",
       "id": "projection.reconfigure",
-      "source": "packages/vue/src/internal/virtual-list.ts",
+      "source": "packages/vue/src/internal/virtual-collection-model.ts",
       "benchmarkIDs": [
         "vue:mounted-virtual-projection"
       ],
-      "specificationCeiling": "O(nOption + uOption)",
+      "specificationCeiling": "O(nItem + jChanged)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
-            "name": "nOption",
-            "meaning": "external option count",
+            "name": "nItem",
+            "meaning": "external item count",
             "ceiling": "component maxItems"
           },
           {
-            "name": "uOption",
-            "meaning": "unique normalized option count",
-            "ceiling": "uOption <= nOption"
+            "name": "jChanged",
+            "meaning": "inserted and deleted keyed-window cardinality",
+            "ceiling": "jChanged <= nItem"
           }
         ],
         "time": {
-          "bound": "O(nOption + uOption)",
+          "bound": "O(nItem + jChanged)",
           "kind": "worst-case",
           "runtimeState": "mounted"
         },
         "space": {
-          "auxiliary": "O(nOption + uOption)",
-          "output": "O(uOption)",
-          "retained": "O(uOption)"
+          "auxiliary": "O(jChanged)",
+          "output": "O(jChanged)",
+          "retained": "O(nItem + jChanged)"
         },
         "resources": {
-          "allocations": "O(nOption + uOption)",
-          "cacheEntries": "O(uOption)",
+          "allocations": "O(jChanged)",
+          "cacheEntries": "O(jChanged)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
         "assumptions": [
-          "hash lookup is expected O(1)",
-          "external input is validated exactly once at its boundary"
+          "getKey resolver identity remains stable across the external array replacement"
         ],
         "ceilings": [
           "operation item and output ceilings"
@@ -25362,15 +25362,15 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "External replacement normalization and identity comparison visit each option/index once.",
-        "adversarialWitness": "Equal-value replacement with new array/object identities at the maxItems ceiling.",
+        "proof": "A stable key resolver discovers the changed keyed window with one prefix/suffix identity scan, validates only inserted identities, and delegates the splice to Core's bounded Sequence overlay instead of allocating another complete ID snapshot.",
+        "adversarialWitness": "A one-item insertion at the start of a maxItems array must compare the retained suffix but allocate only one inserted ID and bounded patch metadata.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "External replacement requires one normalization pass; canonical same-generation updates must be O(1)."
+          "rationale": "A raw external array replacement has no trusted patch descriptor, so semantic change discovery may inspect every retained item identity; allocation remains proportional to the changed keyed window."
         }
       }
     },
@@ -25382,8 +25382,8 @@
       "benchmarkIDs": [
         "vue:mounted-virtual-projection"
       ],
-      "specificationCeiling": "O(jChanged + kPlacement)",
-      "reviewedWeakening": "WI-040 removes the recurring mounted sweep after canonical Virtual batching is available.",
+      "specificationCeiling": "O(nMounted + jChanged + kPlacement)",
+      "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
@@ -25435,15 +25435,15 @@
           "disconnect leaves every resource counter at zero"
         ],
         "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
-        "proof": "The incumbent onUpdated path may rescan mounted elements before measurement/query publication.",
-        "adversarialWitness": "One changed element after a render with every mounted placement measurable.",
+        "proof": "ResizeObserver callbacks enqueue only changed entries; keyed value replacements may inspect the currently mounted identities to schedule forced measurements, and one coalesced batch performs at most one Virtual measurement mutation and placement publication.",
+        "adversarialWitness": "Every mounted row changes value identity while one ResizeObserver batch reports every mounted element.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
-          "allowed": true,
-          "rationale": "Recorded incumbent mounted sweep owned by WI-040; later updates must become changed-entry proportional."
+          "allowed": false,
+          "rationale": "Measurement may visit the mounted render window but cannot inspect unmounted collection items."
         }
       }
     }

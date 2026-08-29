@@ -77,7 +77,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
     const initialViewport = props.initialViewport === undefined
       ? undefined
       : Object.freeze({ ...props.initialViewport });
-    const prepared = shallowRef(prepareVirtualList(props.items, props.getKey));
+    const prepared = shallowRef(prepareVirtualList(props.items, props.getKey, props.maxItems));
     const initialGeometry = resolveResponsiveLanes(
       initialViewport?.width ?? 0,
       props.laneCount,
@@ -88,10 +88,10 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
     const automaticEstimate = shallowRef<number>();
     const isBootstrapping = (): boolean => requiresDOMBootstrap(props.itemSize, props.estimateSize)
       && automaticEstimate.value === undefined
-      && prepared.value.ids.length > 0;
+      && prepared.value.domain.size > 0;
     const initialState = requiresDOMBootstrap(props.itemSize, props.estimateSize)
       ? createVirtualGridState(
-          prepareVirtualList([], props.getKey),
+          prepareVirtualList([], props.getKey, props.maxItems),
           [],
           props,
           initialGeometry,
@@ -117,7 +117,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
       if (
         automaticEstimate.value !== undefined
         || !requiresDOMBootstrap(props.itemSize, props.estimateSize)
-        || prepared.value.ids.length === 0
+        || prepared.value.domain.size === 0
       ) return;
       const geometry = resolveResponsiveLanes(
         viewportWidth.value,
@@ -126,7 +126,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
         props.maxLaneCount,
         props.laneGap,
       );
-      const count = Math.min(geometry.count, prepared.value.ids.length);
+      const count = Math.min(geometry.count, prepared.value.domain.size);
       let maximum = 0;
       for (let index = 0; index < count; index += 1) {
         const element = bootstrapElements.get(index);
@@ -150,7 +150,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
         disposed
         || bootstrapScheduled
         || automaticEstimate.value !== undefined
-        || prepared.value.ids.length === 0
+        || prepared.value.domain.size === 0
       ) return;
       bootstrapScheduled = true;
       void nextTick(() => {
@@ -209,8 +209,9 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
         props.laneGap,
       );
       if (measuredHeights.size > 2_048) {
-        const active = new Set(next.ids);
-        for (const id of measuredHeights.keys()) if (!active.has(id)) measuredHeights.delete(id);
+        for (const id of measuredHeights.keys()) {
+          if (!next.domain.contains(id)) measuredHeights.delete(id);
+        }
       }
       if (syncVirtualGrid(
         exposed,
@@ -277,7 +278,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
                   props.maxLaneCount,
                   props.laneGap,
                 ).count,
-                prepared.value.ids.length,
+                prepared.value.domain.size,
               ),
               resolveResponsiveLanes(
                 viewportWidth.value,
@@ -341,11 +342,11 @@ function createVirtualGridState(
   geometry: ResponsiveLaneGeometry,
   automaticEstimate?: number,
 ): TrackGridLayoutState<string> {
-  const rowCount = Math.ceil(prepared.ids.length / geometry.count);
+  const rowCount = Math.ceil(prepared.domain.size / geometry.count);
   return createDenseTrackGridLayout(
     createGridRowExtentIndex(rowCount, geometry.count, items, props, automaticEstimate),
     createUniformExtentIndex(geometry.count, exactExtent(geometry.extent), { maxItems: props.maxItems }),
-    prepared.ids,
+    prepared.domain.ids,
     {
       rowGap: props.rowGap,
       columnGap: props.laneGap,
@@ -411,10 +412,10 @@ function gridMeasuredRowHeight(
   automaticEstimate?: number,
 ): number {
   const start = row * columnCount;
-  const end = Math.min(prepared.ids.length, start + columnCount);
+  const end = Math.min(prepared.domain.size, start + columnCount);
   let maximum = 0;
   for (let index = start; index < end; index += 1) {
-    const id = prepared.ids[index]!;
+    const id = prepared.domain.at(index)!;
     const resolvedEstimate = requireAutomaticEstimate(estimate ?? automaticEstimate);
     const fallback = typeof resolvedEstimate === 'function'
       ? resolvedEstimate(items[index], index)
@@ -442,13 +443,13 @@ function syncVirtualGrid(
   automaticEstimate?: number,
 ): boolean {
   let state = exposed.state as TrackGridLayoutState<string>;
-  const rowCount = Math.ceil(prepared.ids.length / geometry.count);
+  const rowCount = Math.ceil(prepared.domain.size / geometry.count);
   const currentColumn = state.columns.extentAt(0);
   const itemEstimatesChanged = props.itemSize === undefined
     && typeof props.estimateSize === 'function'
     && previous.items !== items;
   if (
-    state.regions.size === prepared.ids.length
+    state.regions.size === prepared.domain.size
     && prepared.change === null
     && state.rows.size === rowCount
     && state.columns.size === geometry.count

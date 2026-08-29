@@ -119,6 +119,7 @@ export class PatchedSequence<ID extends StableID> implements SequenceView<ID> {
   public readonly maxItems: number;
   public readonly maxIDCodeUnits: number;
   public readonly depth: number;
+  public readonly changedCardinality: number;
   readonly #parent: SequenceView<ID>;
   readonly #patch: IndexedSequencePatch<ID>;
   readonly #insertedIndex: ReadonlyMap<ID, number> | null;
@@ -141,6 +142,12 @@ export class PatchedSequence<ID extends StableID> implements SequenceView<ID> {
     this.maxItems = maxItems;
     this.maxIDCodeUnits = maxIDCodeUnits;
     this.depth = this.#parent instanceof PatchedSequence ? this.#parent.depth + 1 : 1;
+    const localChanged = patch.type === 'splice'
+      ? patch.deleteCount + patch.inserted.length
+      : patch.count;
+    this.changedCardinality = (
+      this.#parent instanceof PatchedSequence ? this.#parent.changedCardinality : 0
+    ) + localChanged;
     if (patch.type === 'splice') {
       if (insertedIndex !== undefined) this.#insertedIndex = insertedIndex;
       else {
@@ -157,6 +164,11 @@ export class PatchedSequence<ID extends StableID> implements SequenceView<ID> {
 
   public get ids(): readonly ID[] {
     if (this.#materialized !== null) return this.#materialized;
+    this.#materialized = Object.freeze(this.copyIDs());
+    return this.#materialized;
+  }
+
+  public copyIDs(): ID[] {
     const patches: IndexedSequencePatch<ID>[] = [];
     let base: SequenceView<ID> = this;
     while (base instanceof PatchedSequence) {
@@ -173,8 +185,7 @@ export class PatchedSequence<ID extends StableID> implements SequenceView<ID> {
         ids.splice(patch.to, 0, ...moved);
       }
     }
-    this.#materialized = Object.freeze(ids);
-    return this.#materialized;
+    return ids;
   }
 
   public at(index: number): ID | null {

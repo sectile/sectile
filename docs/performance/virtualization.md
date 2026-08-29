@@ -64,3 +64,5 @@ The query viewport moves across each domain instead of repeatedly hitting one ca
 Pretext measures prepared text line layout. Sectile includes persistent geometry lookup, identity-aware placement materialization, measurement generations, and anchor bookkeeping. The operations are not equivalent, so the raw ratio is not presented as a winner.
 
 Both scripts intentionally omit machine-dependent pass/fail thresholds. Re-run before and after a change on the same machine and browser.
+
+Large-collection findings and the implementation work derived from them are tracked in [virtualization scaling work](virtualization-improvements.md).

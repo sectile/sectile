@@ -74,13 +74,13 @@ export function renderHighLevelItems(
   render: (value: unknown, key: string, index: number, placement: VirtualPlacement<string>) => VNodeChild,
   empty: (() => VNodeChild) | undefined,
 ): VNodeArrayChildren {
-  if (prepared.ids.length === 0) {
+  if (prepared.domain.size === 0) {
     const child = empty?.();
     return child === undefined || child === null ? [] : [child];
   }
   return placements.flatMap((placement) => {
     const index = placement.index;
-    if (index >= items.length || prepared.ids[index] !== placement.id) return [];
+    if (index >= items.length || prepared.domain.at(index) !== placement.id) return [];
     const value = items[index];
     const attributes = itemAttributes?.(value, index) ?? {};
     return [h(VirtualizerItem, {
@@ -108,8 +108,8 @@ export function renderCollectionBootstrapItems(
   render: (value: unknown, key: string, index: number, placement: VirtualPlacement<string>) => VNodeChild,
   itemRef: (index: number, value: unknown) => void,
 ): VNodeArrayChildren {
-  return Array.from({ length: Math.min(count, prepared.ids.length) }, (_unused, index) => {
-    const id = prepared.ids[index]!;
+  return Array.from({ length: Math.min(count, prepared.domain.size) }, (_unused, index) => {
+    const id = prepared.domain.at(index)!;
     const value = items[index];
     const attributes = itemAttributes?.(value, index) ?? {};
     const placement = Object.freeze({

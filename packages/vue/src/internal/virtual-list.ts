@@ -163,10 +163,10 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
   }>,
   setup(props, { attrs, emit, expose, slots }) {
     assertVirtualListSizeMode(props.itemSize, props.estimateSize);
-    const prepared = shallowRef(prepareVirtualList(props.items, props.getKey));
+    const prepared = shallowRef(prepareVirtualList(props.items, props.getKey, props.maxItems));
     const automaticEstimate = shallowRef<number>();
     const bootstrapCount = shallowRef(
-      requiresDOMBootstrap(props.itemSize, props.estimateSize) && prepared.value.ids.length > 0 ? 1 : 0,
+      requiresDOMBootstrap(props.itemSize, props.estimateSize) && prepared.value.domain.size > 0 ? 1 : 0,
     );
     const bootstrapElements = new Map<number, HTMLElement>();
     let bootstrapScheduled = false;
@@ -292,9 +292,9 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       if (
         automaticEstimate.value !== undefined
         || !requiresDOMBootstrap(props.itemSize, props.estimateSize)
-        || prepared.value.ids.length === 0
+        || prepared.value.domain.size === 0
       ) return;
-      const count = Math.min(bootstrapCount.value, prepared.value.ids.length);
+      const count = Math.min(bootstrapCount.value, prepared.value.domain.size);
       const extents: number[] = [];
       for (let index = 0; index < count; index += 1) {
         const element = bootstrapElements.get(index);
@@ -317,9 +317,9 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
           : props.initialViewport?.width ?? 0;
       const target = viewportExtent + bootstrapTrailingOverscanExtent(props.overscan, props.axis);
       const average = extents.reduce((sum, extent) => sum + extent, 0) / extents.length;
-      if (target > total && count < prepared.value.ids.length) {
+      if (target > total && count < prepared.value.domain.size) {
         const nextCount = Math.min(
-          prepared.value.ids.length,
+          prepared.value.domain.size,
           Math.max(count + 1, Math.ceil((target + props.gap) / (average + props.gap))),
         );
         bootstrapCount.value = nextCount;
@@ -358,7 +358,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
         const next = updatePreparedVirtualList(previousPrepared, items, props.getKey);
         if (requiresDOMBootstrap(props.itemSize, props.estimateSize) && automaticEstimate.value === undefined) {
           prepared.value = next;
-          bootstrapCount.value = next.ids.length > 0 ? 1 : 0;
+          bootstrapCount.value = next.domain.size > 0 ? 1 : 0;
           scheduleBootstrap();
           return;
         }
@@ -473,7 +473,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       const children = (plan?.placements.map((placement) => {
         const index = placement.index;
         const value = props.items[index];
-        if (index >= props.items.length || prepared.value.ids[index] !== placement.id) return null;
+        if (index >= props.items.length || prepared.value.domain.at(index) !== placement.id) return null;
         const itemAttributes = props.itemAttributes?.(value, index) ?? {};
         const itemStyle = virtualItemStyle(placement, props.itemSize === undefined
           ? undefined
@@ -522,7 +522,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
           bootstrapItemRef,
         ));
       }
-      if (prepared.value.ids.length === 0) {
+      if (prepared.value.domain.size === 0) {
         const empty = slots['empty']?.();
         if (empty !== undefined && empty !== null) children.push(empty);
       }
@@ -601,14 +601,14 @@ export function createVirtualListState(
     createPreparedVirtualListSequence(prepared, props.maxItems),
     sharedExtent === null
       ? createExtentIndex(
-          prepared.ids.map((_id, index) => estimatedExtent(
+          Array.from({ length: prepared.domain.size }, (_unused, index) => estimatedExtent(
             estimate!,
             items[index],
             index,
           )),
           { maxItems: props.maxItems },
         )
-      : createUniformExtentIndex(prepared.ids.length, sharedExtent, {
+      : createUniformExtentIndex(prepared.domain.size, sharedExtent, {
           maxItems: props.maxItems,
         }),
     { axis: props.axis, gap: props.gap, crossExtent: 1 },
@@ -652,9 +652,9 @@ export function renderVirtualListBootstrapItems(
   render: ((props: VirtualListSlotProps<unknown>) => VNodeChild) | undefined,
   itemRef: (index: number, value: unknown) => void,
 ): VNodeArrayChildren {
-  return Array.from({ length: Math.min(count, prepared.ids.length) }, (_unused, index) => {
+  return Array.from({ length: Math.min(count, prepared.domain.size) }, (_unused, index) => {
     const value = items[index];
-    const id = prepared.ids[index]!;
+    const id = prepared.domain.at(index)!;
     const attributes = props.itemAttributes?.(value, index) ?? {};
     const placement = Object.freeze({
       id,

@@ -2,7 +2,7 @@ import { defineComponent, h, shallowRef, watch, type AllowedComponentProps, type
 import { createSpatialLayout, spatialLayoutStrategy, type SpatialItem, type SpatialLayoutState, type SpatialMeasurement, type SpatialMutation, type SpatialPlacement } from '@sectile/virtual/spatial-layout';
 import { type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
 import { VirtualizerContent, VirtualizerRoot, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './internal/virtual-core.js';
-import { createPreparedVirtualListSequence, prepareVirtualList, updatePreparedVirtualList, type PreparedVirtualList, type VirtualListItemAttributes, type VirtualListKeyResolver } from './internal/virtual-collection-model.js';
+import { prepareVirtualList, updatePreparedVirtualList, type PreparedVirtualList, type VirtualListItemAttributes, type VirtualListKeyResolver } from './internal/virtual-collection-model.js';
 import type { VirtualListSlotProps } from './internal/virtual-list.js';
 import { createHighLevelVirtualExpose, renderHighLevelItems, type VirtualCollectionBaseProps } from './internal/virtual-collection.js';
 
@@ -78,7 +78,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
     const initialViewport = props.initialViewport === undefined
       ? undefined
       : Object.freeze({ ...props.initialViewport });
-    const prepared = shallowRef(prepareVirtualList(props.items, props.getKey));
+    const prepared = shallowRef(prepareVirtualList(props.items, props.getKey, props.maxItems));
     const initialState = createVirtualSpatialState(prepared.value, props.items, props);
     const root = shallowRef<VirtualizerRootExpose>();
     const measure = props.measureSize
@@ -218,7 +218,7 @@ function createSpatialItems(
     getZIndex: VirtualSpatialZIndexResolver<unknown>;
   }>,
 ): readonly SpatialItem<string>[] {
-  return createSpatialItemsRange(prepared, items, props, 0, prepared.ids.length);
+  return createSpatialItemsRange(prepared, items, props, 0, prepared.domain.size);
 }
 
 function createSpatialItemsRange(
@@ -234,7 +234,7 @@ function createSpatialItemsRange(
   return Object.freeze(Array.from({ length: count }, (_unused, localIndex) => {
     const index = start + localIndex;
     return Object.freeze({
-      id: prepared.ids[index]!,
+      id: prepared.domain.at(index)!,
       rect: Object.freeze({ ...props.getRect(items[index], index) }),
       zIndex: typeof props.getZIndex === 'number'
         ? props.getZIndex

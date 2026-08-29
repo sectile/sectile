@@ -1,5 +1,5 @@
 
-import { createSequence, type BoundaryPolicy, type Direction, type MoveResult, type ScanOptions, type Sequence } from '@sectile/core/sequence';
+import { applySequencePatch, createSequence, type BoundaryPolicy, type Direction, type MoveResult, type ScanOptions, type Sequence } from '@sectile/core/sequence';
 import type { Extent } from '@sectile/virtual/extent-index';
 import type { LinearLayoutState, LinearPatch } from '@sectile/virtual/linear-layout';
 
@@ -18,10 +18,9 @@ export type VirtualListItemAttributes<Value> = {
 
 export interface PreparedVirtualList {
   readonly items: readonly unknown[];
-  readonly ids: readonly string[];
+  readonly domain: Sequence<string>;
   readonly getKey: VirtualListKeyResolver<unknown>;
   readonly change: PreparedVirtualListChange | null;
-  readonly initialIndex: ReadonlyMap<string, number> | null;
 }
 
 export interface PreparedVirtualListChange {
@@ -33,7 +32,12 @@ export interface PreparedVirtualListChange {
 export function prepareVirtualList(
   items: readonly unknown[],
   getKey: VirtualListKeyResolver<unknown>,
+  maxItems = 1_000_000,
 ): PreparedVirtualList {
+  validateVirtualListMaxItems(maxItems);
+  if (items.length > maxItems) {
+    throw new RangeError(`VirtualList received ${items.length} items, exceeding maxItems ${maxItems}.`);
+  }
   const ids: string[] = [];
   const indexByID = new Map<string, number>();
   for (let index = 0; index < items.length; index += 1) {
@@ -54,12 +58,12 @@ export function prepareVirtualList(
     ids.push(id);
     indexByID.set(id, index);
   }
+  const frozenIDs = Object.freeze(ids);
   return Object.freeze({
     items,
-    ids: Object.freeze(ids),
+    domain: createIndexedVirtualListSequence(frozenIDs, indexByID, maxItems),
     getKey,
     change: null,
-    initialIndex: indexByID,
   });
 }
 
@@ -70,35 +74,34 @@ export function updatePreparedVirtualList(
 ): PreparedVirtualList {
   if (previous.items === items && previous.getKey === getKey) return previous;
   if (previous.getKey !== getKey) {
-    const prepared = prepareVirtualList(items, getKey);
+    const prepared = prepareVirtualList(items, getKey, previous.domain.maxItems);
     let prefix = 0;
     while (
-      prefix < previous.ids.length
-      && prefix < prepared.ids.length
-      && previous.ids[prefix] === prepared.ids[prefix]
+      prefix < previous.domain.size
+      && prefix < prepared.domain.size
+      && previous.domain.at(prefix) === prepared.domain.at(prefix)
     ) prefix += 1;
     let suffix = 0;
     while (
-      suffix < previous.ids.length - prefix
-      && suffix < prepared.ids.length - prefix
-      && previous.ids[previous.ids.length - suffix - 1]
-        === prepared.ids[prepared.ids.length - suffix - 1]
+      suffix < previous.domain.size - prefix
+      && suffix < prepared.domain.size - prefix
+      && previous.domain.at(previous.domain.size - suffix - 1)
+        === prepared.domain.at(prepared.domain.size - suffix - 1)
     ) suffix += 1;
-    if (prefix === previous.ids.length && prefix === prepared.ids.length) {
+    if (prefix === previous.domain.size && prefix === prepared.domain.size) {
       return Object.freeze({
         items,
-        ids: previous.ids,
+        domain: previous.domain,
         getKey,
         change: null,
-        initialIndex: previous.initialIndex,
       });
     }
-    const inserted = Object.freeze(prepared.ids.slice(prefix, prepared.ids.length - suffix));
+    const inserted = Object.freeze(prepared.domain.ids.slice(prefix, prepared.domain.size - suffix));
     return Object.freeze({
       ...prepared,
       change: Object.freeze({
         index: prefix,
-        deleteCount: previous.ids.length - prefix - suffix,
+        deleteCount: previous.domain.size - prefix - suffix,
         inserted,
       }),
     });
@@ -121,17 +124,16 @@ export function updatePreparedVirtualList(
   if (prefix === previous.items.length && prefix === items.length) {
     return Object.freeze({
       items,
-      ids: previous.ids,
+      domain: previous.domain,
       getKey,
       change: null,
-      initialIndex: previous.initialIndex,
     });
   }
   const changedEnd = items.length - suffix;
   if (previous.items.length === items.length) {
     let sameDomain = true;
     for (let index = prefix; index < changedEnd; index += 1) {
-      if (validateVirtualListKey(getKey(items[index], index)) !== previous.ids[index]) {
+      if (validateVirtualListKey(getKey(items[index], index)) !== previous.domain.at(index)) {
         sameDomain = false;
         break;
       }
@@ -139,10 +141,9 @@ export function updatePreparedVirtualList(
     if (sameDomain) {
       return Object.freeze({
         items,
-        ids: previous.ids,
+        domain: previous.domain,
         getKey,
         change: null,
-        initialIndex: previous.initialIndex,
       });
     }
   }
@@ -157,20 +158,16 @@ export function updatePreparedVirtualList(
     insertedIDs.add(id);
   }
   const frozenInserted = Object.freeze(inserted);
+  const change = Object.freeze({
+    index: prefix,
+    deleteCount: previous.domain.size - prefix - suffix,
+    inserted: frozenInserted,
+  });
   return Object.freeze({
     items,
-    ids: Object.freeze([
-      ...previous.ids.slice(0, prefix),
-      ...frozenInserted,
-      ...previous.ids.slice(previous.ids.length - suffix),
-    ]),
+    domain: applySequencePatch(previous.domain, Object.freeze({ type: 'splice', ...change })),
     getKey,
-    initialIndex: null,
-    change: Object.freeze({
-      index: prefix,
-      deleteCount: previous.ids.length - prefix - suffix,
-      inserted: frozenInserted,
-    }),
+    change,
   });
 }
 
@@ -191,27 +188,32 @@ export function createPreparedVirtualListSequence(
   prepared: PreparedVirtualList,
   maxItems: number,
 ): Sequence<string> {
-  if (!Number.isSafeInteger(maxItems) || maxItems < 0) {
-    throw new TypeError('VirtualList maxItems must be a non-negative safe integer.');
+  validateVirtualListMaxItems(maxItems);
+  if (prepared.domain.size > maxItems) {
+    throw new RangeError(`VirtualList received ${prepared.domain.size} items, exceeding maxItems ${maxItems}.`);
   }
-  if (prepared.ids.length > maxItems) {
-    throw new RangeError(`VirtualList received ${prepared.ids.length} items, exceeding maxItems ${maxItems}.`);
-  }
-  const index = prepared.initialIndex;
-  if (index === null) return createSequence(prepared.ids, { maxItems, maxIDCodeUnits: 1_024 });
+  if (prepared.domain.maxItems === maxItems) return prepared.domain;
+  return createSequence(prepared.domain.ids, { maxItems, maxIDCodeUnits: 1_024 });
+}
+
+function createIndexedVirtualListSequence(
+  ids: readonly string[],
+  index: ReadonlyMap<string, number>,
+  maxItems: number,
+): Sequence<string> {
   let materialized: Sequence<string> | undefined;
   const complete = (): Sequence<string> => {
-    materialized ??= createSequence(prepared.ids, { maxItems, maxIDCodeUnits: 1_024 });
+    materialized ??= createSequence(ids, { maxItems, maxIDCodeUnits: 1_024 });
     return materialized;
   };
   return Object.freeze({
-    size: prepared.ids.length,
-    ids: prepared.ids,
+    size: ids.length,
+    ids,
     maxItems,
     maxIDCodeUnits: 1_024,
     at: (position: number): string | null => (
-      Number.isSafeInteger(position) && position >= 0 && position < prepared.ids.length
-        ? prepared.ids[position] ?? null
+      Number.isSafeInteger(position) && position >= 0 && position < ids.length
+        ? ids[position] ?? null
         : null
     ),
     indexOf: (id: string): number | null => index.get(id) ?? null,
@@ -231,6 +233,12 @@ export function createPreparedVirtualListSequence(
       options?: ScanOptions<string>,
     ): MoveResult<string> => complete().move(current, direction, boundary, options),
   });
+}
+
+function validateVirtualListMaxItems(maxItems: number): void {
+  if (!Number.isSafeInteger(maxItems) || maxItems < 0) {
+    throw new TypeError('VirtualList maxItems must be a non-negative safe integer.');
+  }
 }
 
 export function isWellFormedVirtualListKey(value: string): boolean {

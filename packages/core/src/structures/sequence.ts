@@ -146,6 +146,18 @@ export function tryApplySequencePatch<ID extends StableID>(
         });
       }
     }
+    if (shouldMaterializeSequencePatch(
+      sequence,
+      patch.deleteCount + inserted.value.length,
+      nextSize,
+    )) {
+      return applyMaterializedSequencePatch(
+        sequence,
+        Object.freeze({ ...patch, inserted: inserted.value }),
+        maxItems,
+        maxIDCodeUnits,
+      );
+    }
     return ok(new PatchedSequence(
       sequence,
       Object.freeze({ ...patch, inserted: inserted.value }),
@@ -166,6 +178,9 @@ export function tryApplySequencePatch<ID extends StableID>(
       || patch.to > size - patch.count
     ) return invalidPatch(patch, size);
     if (patch.count === 0 || patch.from === patch.to) return ok(sequence);
+    if (shouldMaterializeSequencePatch(sequence, patch.count, size)) {
+      return applyMaterializedSequencePatch(sequence, patch, maxItems, maxIDCodeUnits);
+    }
     return ok(new PatchedSequence(
       sequence,
       Object.freeze({ ...patch }),
@@ -175,13 +190,26 @@ export function tryApplySequencePatch<ID extends StableID>(
   }
 }
 
+function shouldMaterializeSequencePatch<ID extends StableID>(
+  sequence: Sequence<ID>,
+  changedCardinality: number,
+  nextSize: number,
+): boolean {
+  const previousChanged = sequence instanceof PatchedSequence
+    ? sequence.changedCardinality
+    : 0;
+  return previousChanged + changedCardinality > nextSize / 8;
+}
+
 function applyMaterializedSequencePatch<ID extends StableID>(
   sequence: Sequence<ID>,
   patch: SequencePatch<ID>,
   maxItems: number,
   maxIDCodeUnits: number,
 ): Result<Sequence<ID>> {
-  const ids = [...sequence.ids];
+  const ids = sequence instanceof PatchedSequence
+    ? sequence.copyIDs()
+    : [...sequence.ids];
   if (patch.type === 'splice') {
     if (
       !Number.isSafeInteger(patch.index)
