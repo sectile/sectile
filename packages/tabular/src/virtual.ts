@@ -21,7 +21,7 @@ import {
   type PartitionedTrackGridMutation,
   type PartitionedTrackGridRegion,
 } from '@sectile/virtual/partitioned-track-grid-layout';
-import type { VirtualLayoutStrategy } from '@sectile/virtual/layout';
+import type { VirtualIndexedView, VirtualLayoutStrategy } from '@sectile/virtual/layout';
 import type { DataGridProjection } from './data-grid.js';
 import type { DataTableProjection } from './data-table.js';
 import type { DataTreeGridProjection } from './data-tree-grid.js';
@@ -271,12 +271,14 @@ function createGridAdapter(
   _tree: boolean,
 ): DataGridVirtualAdapter {
   const cellIDs = state.regions.map((region) => region.id);
+  const rowIndexes = trackIndexes(state.rows);
+  const columnIndexes = trackIndexes(state.columns);
   const adapter: DataGridVirtualAdapter = Object.freeze({
     projectionGeneration,
     state,
     strategy: partitionedTrackGridLayoutStrategy as DataGridVirtualAdapter['strategy'],
-    locateRow: (rowID: TabularRowID) => locator(state.rows.map((track) => track.id), rowID),
-    locateColumn: (columnID: TabularColumnID) => locator(state.columns.map((track) => track.id), columnID),
+    locateRow: (rowID: TabularRowID) => indexedLocator(rowIndexes, rowID),
+    locateColumn: (columnID: TabularColumnID) => indexedLocator(columnIndexes, columnID),
     locateCell: (cell: TabularCellAddress) => locator(cellIDs, encodeTabularCellID(cell)),
   });
   gridPrivate.set(adapter, Object.freeze({ rowExtents, columnExtents, limits }));
@@ -365,14 +367,46 @@ function compatibleGridState(expected: GridVirtualState, current: GridVirtualSta
     && sameRegions(expected.regions, current.regions);
 }
 
-function unionTracks<ID extends string>(current: readonly PartitionedTrack<ID>[], target: readonly PartitionedTrack<ID>[]): readonly PartitionedTrack<ID>[] {
+type TrackSource<ID extends string> = readonly PartitionedTrack<ID>[] | VirtualIndexedView<PartitionedTrack<ID>>;
+
+function unionTracks<ID extends string>(current: TrackSource<ID>, target: readonly PartitionedTrack<ID>[]): readonly PartitionedTrack<ID>[] {
   const targetMap = new Map(target.map((track) => [track.id, track]));
-  const currentIDs = new Set(current.map((track) => track.id));
-  return Object.freeze([...current.map((track) => targetMap.get(track.id) ?? track), ...target.filter((track) => !currentIDs.has(track.id))]);
+  const currentIDs = new Set<ID>();
+  const output: PartitionedTrack<ID>[] = [];
+  for (const track of iterateTracks(current)) {
+    currentIDs.add(track.id);
+    output.push(targetMap.get(track.id) ?? track);
+  }
+  for (const track of target) if (!currentIDs.has(track.id)) output.push(track);
+  return Object.freeze(output);
 }
 
-function sameTracks<ID extends string>(left: readonly PartitionedTrack<ID>[], right: readonly PartitionedTrack<ID>[]): boolean {
-  return left.length === right.length && left.every((track, index) => track.id === right[index]?.id && track.partition === right[index]?.partition);
+function sameTracks<ID extends string>(left: TrackSource<ID>, right: TrackSource<ID>): boolean {
+  if (trackSize(left) !== trackSize(right)) return false;
+  const leftValues = iterateTracks(left);
+  const rightValues = iterateTracks(right);
+  while (true) {
+    const leftValue = leftValues.next();
+    const rightValue = rightValues.next();
+    if (leftValue.done || rightValue.done) return leftValue.done === rightValue.done;
+    if (leftValue.value.id !== rightValue.value.id || leftValue.value.partition !== rightValue.value.partition) return false;
+  }
+}
+
+function trackIndexes<ID extends string>(tracks: VirtualIndexedView<PartitionedTrack<ID>>): ReadonlyMap<ID, number> {
+  const indexes = new Map<ID, number>();
+  tracks.forEach((track, index) => indexes.set(track.id, index));
+  return indexes;
+}
+
+function trackSize<ID extends string>(tracks: TrackSource<ID>): number {
+  return Array.isArray(tracks) ? tracks.length : (tracks as VirtualIndexedView<PartitionedTrack<ID>>).size;
+}
+
+function iterateTracks<ID extends string>(tracks: TrackSource<ID>): IterableIterator<PartitionedTrack<ID>> {
+  return Array.isArray(tracks)
+    ? tracks.values()
+    : (tracks as VirtualIndexedView<PartitionedTrack<ID>>).iterate();
 }
 
 function sameRegions(left: readonly PartitionedTrackGridRegion[], right: readonly PartitionedTrackGridRegion[]): boolean {
@@ -386,6 +420,11 @@ function sameIDs(left: readonly string[], right: readonly string[]): boolean {
 function locator<ID extends string>(ids: readonly ID[], id: ID): TabularVirtualLocator<ID> | null {
   const index = ids.indexOf(id);
   return index < 0 ? null : Object.freeze({ id, index });
+}
+
+function indexedLocator<ID extends string>(indexes: ReadonlyMap<ID, number>, id: ID): TabularVirtualLocator<ID> | null {
+  const index = indexes.get(id);
+  return index === undefined ? null : Object.freeze({ id, index });
 }
 
 function extentFor<ID extends string>(policy: TabularVirtualExtentPolicy<ID>, id: ID, index: number): Extent {

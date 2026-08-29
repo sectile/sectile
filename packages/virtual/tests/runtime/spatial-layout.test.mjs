@@ -9,6 +9,7 @@ import {
   spatialRectAt,
   tryApplySpatialMeasurements,
 } from '../../.verification-dist/spatial-layout.js';
+import { readRepairDiagnostics } from '../../.verification-dist/internal/repair-diagnostics.js';
 
 function intersects(left, right) {
   return left.x < right.x + right.width && right.x < left.x + left.width
@@ -71,8 +72,8 @@ test('SPA-03: measurement, update, and removal keep domain and index observation
       { id: 'added', rect: { x: 2, y: 3, width: 4, height: 5 } },
     ],
   }).state;
-  assert.deepEqual(updated.domain.ids, updated.items.map(({ id }) => id));
-  for (const item of updated.items) assert.deepEqual(spatialRectAt(updated, item.id), item.rect);
+  assert.deepEqual(updated.domain.ids, updated.items.toArray().map(({ id }) => id));
+  for (const item of updated.items.iterate()) assert.deepEqual(spatialRectAt(updated, item.id), item.rect);
   assert.equal(spatialRectAt(updated, 'item-0'), null);
   assert.equal(spatialRectAt(updated, 'item-39'), null);
 });
@@ -93,7 +94,7 @@ test('spatial splice patches preserve declaration order and validate inserted id
     ],
   }).state;
   assert.deepEqual(changed.domain.ids, ['a', 'x', 'y', 'c']);
-  assert.deepEqual(changed.items.map(({ id }) => id), changed.domain.ids);
+  assert.deepEqual(changed.items.toArray().map(({ id }) => id), changed.domain.ids);
   assert.deepEqual(
     querySpatialLayout(changed, { viewport: { x: 0, y: 0, width: 60, height: 20 } })
       .placements.map(({ id, index }) => [id, index]),
@@ -123,4 +124,41 @@ test('SPA-04: boundaries, zero-size rectangles, anchors, and stale generations a
   });
   assert.deepEqual(changed.scrollDelta, { x: 3, y: 7 });
   assert.equal(tryApplySpatialMeasurements(changed.state, { generation: 0, measurements: [] }).ok, false);
+});
+
+test('SPA-03: sparse measurements path-copy bounded blocks and dense batches rebuild', () => {
+  const items = Array.from({ length: 4_096 }, (_, index) => ({
+    id: `item-${index}`,
+    rect: { x: (index % 64) * 11, y: Math.floor(index / 64) * 13, width: 10, height: 12 },
+  }));
+  const state = createSpatialLayout(items);
+  const sparse = applySpatialMeasurements(state, {
+    generation: state.generation,
+    measurements: [{ id: 'item-2048', rect: { ...items[2048].rect, width: 17 } }],
+  }).state;
+  const sparseWork = readRepairDiagnostics(sparse);
+  assert.equal(sparseWork?.mode, 'incremental');
+  assert.equal(sparseWork?.changed, 1);
+  assert.ok(sparseWork.copiedEntries <= sparseWork.repairBound);
+  assert.ok(sparseWork.copiedNodes <= sparseWork.repairBound);
+  assert.equal(Object.isFrozen(sparse.items), true);
+  assert.deepEqual(
+    querySpatialLayout(sparse, { viewport: { x: 0, y: 300, width: 800, height: 300 } }).placements.map(({ id }) => id),
+    referenceQuery(sparse.items.toArray(), { x: 0, y: 300, width: 800, height: 300 }),
+  );
+  const same = applySpatialMeasurements(sparse, {
+    generation: sparse.generation,
+    measurements: [{ id: 'item-2048', rect: sparse.items.at(2048).rect }],
+  }).state;
+  assert.equal(same, sparse);
+
+  const measurements = Array.from({ length: 1_024 }, (_, index) => ({
+    id: `item-${index}`,
+    rect: { ...sparse.items.at(index).rect, height: 14 },
+  }));
+  const dense = applySpatialMeasurements(sparse, { generation: sparse.generation, measurements }).state;
+  assert.equal(readRepairDiagnostics(dense)?.mode, 'rebuild');
+  const rebuilt = createSpatialLayout(dense.items.toArray());
+  const viewport = { x: 100, y: 0, width: 300, height: 500 };
+  assert.deepEqual(querySpatialLayout(dense, { viewport }).placements, querySpatialLayout(rebuilt, { viewport }).placements);
 });

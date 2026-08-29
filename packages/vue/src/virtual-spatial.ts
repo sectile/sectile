@@ -85,7 +85,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
       ? (({ element, placement, state }) => {
           const bounds = element.getBoundingClientRect();
           if (bounds.width <= 0 || bounds.height <= 0) return null;
-          const current = (state as SpatialLayoutState<string>).items[placement.index];
+          const current = (state as SpatialLayoutState<string>).items.at(placement.index);
           if (current === undefined) return null;
           return Object.freeze({
             id: placement.id,
@@ -247,7 +247,7 @@ function preserveSpatialMeasurements(
   if (!preserve) return items;
   return Object.freeze(items.map((item) => {
     const previousIndex = state.domain.indexOf(item.id);
-    const previous = previousIndex === null ? undefined : state.items[previousIndex];
+    const previous = previousIndex === null ? undefined : state.items.at(previousIndex);
     return previous === undefined
       ? item
       : Object.freeze({

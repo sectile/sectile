@@ -5,6 +5,51 @@
   "kind": "internal-operations",
   "operations": [
     {
+      "id": "indexed-view.at",
+      "inherits": "constant-v1",
+      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "benchmarkIDs": ["VAL-017:indexed-view-at-work"],
+      "specificationCeiling": "O(log nItem)",
+      "contract": {
+        "variables": [{ "name": "nItem", "meaning": "indexed view item count", "ceiling": "owner ceiling" }],
+        "time": { "bound": "O(log nItem)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "proof": "Blocked views descend one balanced block path; packed and dense views use direct indexed reads.",
+        "adversarialWitness": "Read the final item of a maximum-depth blocked owner.",
+        "fullScan": { "allowed": false, "rationale": "One indexed read cannot visit unrelated blocks." }
+      }
+    },
+    {
+      "id": "indexed-view.iterate",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "benchmarkIDs": ["VAL-017:indexed-view-iterate-work"],
+      "specificationCeiling": "O(nItem)",
+      "contract": {
+        "variables": [{ "name": "nItem", "meaning": "indexed view item count", "ceiling": "owner ceiling" }],
+        "time": { "bound": "O(nItem)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(log nItem)", "output": "O(1)", "retained": "O(1)" },
+        "proof": "Iteration visits each retained block and item exactly once without array materialization.",
+        "adversarialWitness": "Consume a maximum-size view to iterator completion.",
+        "fullScan": { "allowed": true, "rationale": "Explicit iteration requests the complete logical collection." }
+      }
+    },
+    {
+      "id": "indexed-view.to-array",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "benchmarkIDs": ["VAL-017:indexed-view-materialize-work"],
+      "specificationCeiling": "O(nItem)",
+      "contract": {
+        "variables": [{ "name": "nItem", "meaning": "indexed view item count", "ceiling": "owner ceiling" }],
+        "time": { "bound": "O(nItem)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(log nItem)", "output": "O(nItem)", "retained": "O(1)" },
+        "proof": "toArray allocates one output array and fills each position once from the retained owner.",
+        "adversarialWitness": "Materialize a maximum-size blocked view.",
+        "fullScan": { "allowed": true, "rationale": "The explicit snapshot output itself contains every item." }
+      }
+    },
+    {
       "id": "extent.lookup",
       "inherits": "constant-v1",
       "source": "packages/virtual/src/extent-index.ts",
@@ -97,23 +142,42 @@
       }
     },
     {
-      "id": "partitioned.measure",
+      "id": "partitioned.measure.incremental",
       "inherits": "linear-v1",
       "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
-      "benchmarkIDs": ["VAL-017:partitioned-measure-work"],
-      "specificationCeiling": "O(nTrack + nRegion log nRegion + jChanged)",
+      "benchmarkIDs": ["virtual:partitioned:measure:100000:1", "virtual:partitioned:measure:100000:32"],
+      "specificationCeiling": "O(jChanged log nTrack + rRepair)",
       "contract": {
         "variables": [
           { "name": "nTrack", "meaning": "partitioned row and column track count", "ceiling": "maxTracks" },
-          { "name": "nRegion", "meaning": "partitioned region count", "ceiling": "maxRegions" },
-          { "name": "jChanged", "meaning": "changed track measurements", "ceiling": "jChanged <= nTrack" }
+          { "name": "jChanged", "meaning": "changed track measurements", "ceiling": "jChanged <= nTrack" },
+          { "name": "rRepair", "meaning": "selected blocked-vector repair bound", "ceiling": "rRepair < nTrack / 2" }
         ],
-        "time": { "bound": "O(nTrack + nRegion log nRegion + jChanged)", "kind": "worst-case", "runtimeState": "trusted" },
+        "time": { "bound": "O(jChanged log nTrack + rRepair)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(jChanged + rRepair)", "output": "O(1)", "retained": "O(rRepair)" },
+        "resources": { "allocations": "O(jChanged + rRepair)", "cacheEntries": "O(rRepair)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Identity maps locate changed tracks; blocked vectors and prefix indexes path-copy bounded paths while region indexes and partition boundaries retain owner identity.",
+        "adversarialWitness": "Changed tracks occupy disjoint 64-entry blocks across both axes while remaining below the half-rebuild crossover.",
+        "fullScan": { "allowed": false, "rationale": "Sparse measurement may not visit unchanged tracks or regions." }
+      }
+    },
+    {
+      "id": "partitioned.measure.rebuild",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "benchmarkIDs": ["virtual:partitioned:measure:100000:100000"],
+      "specificationCeiling": "O(nTrack + nRegion log nRegion)",
+      "contract": {
+        "variables": [
+          { "name": "nTrack", "meaning": "partitioned row and column track count", "ceiling": "maxTracks" },
+          { "name": "nRegion", "meaning": "partitioned region count", "ceiling": "maxRegions" }
+        ],
+        "time": { "bound": "O(nTrack + nRegion log nRegion)", "kind": "worst-case", "runtimeState": "trusted" },
         "space": { "auxiliary": "O(nTrack + nRegion)", "output": "O(nTrack + nRegion)", "retained": "O(nTrack + nRegion)" },
         "resources": { "allocations": "O(nTrack + nRegion)", "cacheEntries": "O(nTrack + nRegion)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "proof": "The incumbent copies measured tracks then reconstructs partition ranges, track indexes, and the nested grid state.",
-        "adversarialWitness": "One changed pinned track with maximum regions rebuilds every derived partition/index.",
-        "fullScan": { "allowed": true, "rationale": "Recorded incumbent rebuild is owned by WI-039 and may not worsen before repair selection." }
+        "proof": "When the deterministic repair bound reaches half the track count, one packed rebuild replaces track, prefix, partition, and region indexes.",
+        "adversarialWitness": "A dense batch changes every track and forces the selected rebuild branch.",
+        "fullScan": { "allowed": true, "rationale": "The crossover explicitly selects one full rebuild for dense changes." }
       }
     },
     {
@@ -137,22 +201,39 @@
       }
     },
     {
-      "id": "spatial.measure",
+      "id": "spatial.measure.incremental",
       "inherits": "linear-v1",
       "source": "packages/virtual/src/spatial-layout.ts",
-      "benchmarkIDs": ["virtual:spatial:measure:100000:1", "virtual:spatial:measure:100000:32", "virtual:spatial:measure:100000:100000"],
-      "specificationCeiling": "O(nItem log nItem)",
+      "benchmarkIDs": ["virtual:spatial:measure:100000:1", "virtual:spatial:measure:100000:32"],
+      "specificationCeiling": "O(jChanged log jChanged + rRepair)",
       "contract": {
         "variables": [
           { "name": "nItem", "meaning": "spatial item count", "ceiling": "maxItems" },
-          { "name": "jChanged", "meaning": "changed measurement count", "ceiling": "jChanged <= nItem" }
+          { "name": "jChanged", "meaning": "changed measurement count", "ceiling": "jChanged <= nItem" },
+          { "name": "rRepair", "meaning": "selected blocked-vector and packed-tree repair bound", "ceiling": "rRepair < nItem / 2" }
         ],
-        "time": { "bound": "O(nItem log nItem + jChanged)", "kind": "expected", "runtimeState": "trusted" },
+        "time": { "bound": "O(jChanged log jChanged + rRepair)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(jChanged + rRepair)", "output": "O(1)", "retained": "O(rRepair)" },
+        "resources": { "allocations": "O(jChanged + rRepair)", "cacheEntries": "O(rRepair)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Retained ID and item-to-leaf indexes identify changes; sorted change sets path-copy 64-entry vector leaves and only touched packed-tree paths.",
+        "adversarialWitness": "Changed rectangles occupy distinct spatial leaves while the explicit repair bound remains below half the item count.",
+        "fullScan": { "allowed": false, "rationale": "Sparse measurement may not visit unchanged items or packed-tree leaves." }
+      }
+    },
+    {
+      "id": "spatial.measure.rebuild",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/spatial-layout.ts",
+      "benchmarkIDs": ["virtual:spatial:measure:100000:100000"],
+      "specificationCeiling": "O(nItem log nItem)",
+      "contract": {
+        "variables": [{ "name": "nItem", "meaning": "spatial item count", "ceiling": "maxItems" }],
+        "time": { "bound": "O(nItem log nItem)", "kind": "worst-case", "runtimeState": "trusted" },
         "space": { "auxiliary": "O(nItem)", "output": "O(nItem)", "retained": "O(nItem)" },
-        "resources": { "allocations": "O(nItem + jChanged)", "cacheEntries": "O(nItem)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "proof": "The incumbent applies changed rectangles then bulk-rebuilds the packed spatial index.",
-        "adversarialWitness": "One changed rectangle in a 100k-item layout still rebuilds the packed index.",
-        "fullScan": { "allowed": true, "rationale": "Recorded incumbent rebuild owned by WI-039; sparse repair may not regress beyond it." }
+        "resources": { "allocations": "O(nItem)", "cacheEntries": "O(nItem)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "When the deterministic repair bound reaches half the item count, one STR sort and packed-tree rebuild replaces the owner.",
+        "adversarialWitness": "A dense measurement changes every rectangle and forces the selected rebuild branch.",
+        "fullScan": { "allowed": true, "rationale": "The crossover explicitly selects one full packed rebuild for dense changes." }
       }
     },
     {

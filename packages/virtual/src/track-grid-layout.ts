@@ -15,7 +15,7 @@ import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
   type VirtualAnchor, type VirtualLayoutMutation, type VirtualLayoutPlan, type VirtualLayoutStrategy,
   type VirtualMeasurementBatch, type VirtualPlacement, type VirtualPoint, type VirtualQueryInput,
-  type VirtualRect, type VirtualScrollAlignment,
+  type VirtualIndexedView, type VirtualRect, type VirtualScrollAlignment,
 } from './layout.js';
 
 export interface GridRegion<ID extends StableID = StableID> {
@@ -32,7 +32,7 @@ export interface TrackGridLayoutState<ID extends StableID = StableID> {
   readonly [trackGridLayoutStateBrand]: true;
   readonly rows: ExtentIndex;
   readonly columns: ExtentIndex;
-  readonly regions: readonly GridRegion<ID>[];
+  readonly regions: VirtualIndexedView<GridRegion<ID>>;
   readonly rowGap: number;
   readonly columnGap: number;
   readonly rowFlow: LinearFlow;
@@ -64,6 +64,11 @@ export interface TrackGridLayoutInput {
   readonly columnFlow?: LinearFlow;
   readonly maxRegions?: number;
 }
+
+type TrackGridStateInput<ID extends StableID> = Omit<
+  TrackGridLayoutState<ID>,
+  typeof trackGridLayoutStateBrand | 'regions'
+> & { readonly regions: VirtualIndexedView<GridRegion<ID>> };
 
 export interface GridTrackMeasurement { readonly axis: 'row' | 'column'; readonly index: number; readonly extent: Extent; }
 
@@ -156,7 +161,7 @@ export function tryCreateTrackGridLayout<ID extends StableID>(
   if (!Number.isSafeInteger(maxRegions) || maxRegions < 0) return fail('construction', 'invalid-max-items', 'maxRegions must be a non-negative safe integer.', { maxRegions });
   const indexed = validateRegions(rows.size, columns.size, regions, maxRegions);
   if (!indexed.ok) return indexed;
-  return ok(createState({ rows, columns, regions: indexed.value.map(({ value }) => value), rowGap, columnGap, rowFlow, columnFlow, maxRegions, generation: 0 }, indexed.value));
+  return ok(createState({ rows, columns, regions: regionArrayView(indexed.value.map(({ value }) => value)), rowGap, columnGap, rowFlow, columnFlow, maxRegions, generation: 0 }, indexed.value));
 }
 
 export function snapshotTrackGridLayout<ID extends StableID>(
@@ -166,6 +171,8 @@ export function snapshotTrackGridLayout<ID extends StableID>(
   const columns = state.columns.slice(0, state.columns.size);
   if (rows === null || columns === null)
     throw new Error('Internal invariant breach: grid track range is invalid.');
+  const regions: GridRegion<ID>[] = [];
+  state.regions.forEach((region) => regions.push(Object.freeze({ ...region })));
   return Object.freeze({
     schemaVersion: 1,
     kind: 'track-grid',
@@ -173,7 +180,7 @@ export function snapshotTrackGridLayout<ID extends StableID>(
     rowMaxItems: state.rows.maxItems,
     columns,
     columnMaxItems: state.columns.maxItems,
-    regions: Object.freeze(state.regions.map((region) => Object.freeze({ ...region }))),
+    regions: Object.freeze(regions),
     rowGap: state.rowGap,
     columnGap: state.columnGap,
     rowFlow: state.rowFlow,
@@ -305,7 +312,7 @@ export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridL
   }
   let rows = state.rows;
   let columns = state.columns;
-  let regions: readonly GridRegion<ID>[] = state.regions;
+  let regions: readonly GridRegion<ID>[] = state.regions.toArray();
   if (mutation.type === 'replace-regions') regions = mutation.regions;
   else {
     const target = mutation.axis === 'row' ? rows : columns;
@@ -337,7 +344,7 @@ export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridL
     : validated;
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const next = createState({ ...state, rows, columns, regions: validated.value.map(({ value }) => value), generation: generation.value }, validated.value);
+  const next = createState({ ...state, rows, columns, regions: regionArrayView(validated.value.map(({ value }) => value)), generation: generation.value }, validated.value);
   return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
 }
 
@@ -369,8 +376,8 @@ export function trackGridRegionRect<ID extends StableID>(state: TrackGridLayoutS
   return region === undefined ? null : regionRect(state, region.value as GridRegion<ID>);
 }
 
-function createState<ID extends StableID>(state: Omit<TrackGridLayoutState<ID>, typeof trackGridLayoutStateBrand>, indexed: readonly IndexedRegion<ID>[] | null, reusable?: GridInternals<ID>): TrackGridLayoutState<ID> {
-  const mutable = { ...state, regions: reusable === undefined ? Object.freeze([...state.regions]) : state.regions };
+function createState<ID extends StableID>(state: TrackGridStateInput<ID>, indexed: readonly IndexedRegion<ID>[] | null, reusable?: GridInternals<ID>): TrackGridLayoutState<ID> {
+  const mutable = { ...state };
   Object.defineProperty(mutable, trackGridLayoutStateBrand, { value: true });
   const frozen = Object.freeze(mutable) as TrackGridLayoutState<ID>;
   if (reusable !== undefined) {
@@ -384,7 +391,7 @@ function createState<ID extends StableID>(state: Omit<TrackGridLayoutState<ID>, 
 }
 
 function createDenseState<ID extends StableID>(
-  state: Omit<TrackGridLayoutState<ID>, typeof trackGridLayoutStateBrand>,
+  state: TrackGridStateInput<ID>,
   domain: Sequence<ID>,
 ): TrackGridLayoutState<ID> {
   const columnCount = state.columns.size;
@@ -399,30 +406,49 @@ function createDenseState<ID extends StableID>(
 function denseRegions<ID extends StableID>(
   domain: Sequence<ID>,
   columnCount: number,
-): readonly GridRegion<ID>[] {
-  const target = new Array<GridRegion<ID>>(domain.size);
-  return new Proxy(target, {
-    get(array, property, receiver) {
-      if (typeof property === 'string') {
-        const index = Number(property);
-        if (Number.isSafeInteger(index) && index >= 0 && index < domain.size) {
-          const existing = array[index];
-          if (existing !== undefined) return existing;
-          const id = domain.at(index);
-          if (id === null) return undefined;
-          const region = Object.freeze({
-            id,
-            row: Math.floor(index / columnCount),
-            column: index % columnCount,
-          });
-          array[index] = region;
-          return region;
-        }
-      }
-      return Reflect.get(array, property, receiver);
+): VirtualIndexedView<GridRegion<ID>> {
+  return createIndexedView(domain.size, (index) => {
+    const id = domain.at(index);
+    if (id === null) return undefined;
+    return Object.freeze({
+      id,
+      row: Math.floor(index / columnCount),
+      column: index % columnCount,
+    });
+  });
+}
+
+function regionArrayView<ID extends StableID>(regions: GridRegion<ID>[]): VirtualIndexedView<GridRegion<ID>> {
+  const owned = Object.freeze(regions);
+  return createIndexedView(owned.length, (index) => owned[index]);
+}
+
+function createIndexedView<T>(size: number, read: (index: number) => T | undefined): VirtualIndexedView<T> {
+  const at = (index: number): T | undefined => Number.isSafeInteger(index) && index >= 0 && index < size
+    ? read(index)
+    : undefined;
+  const iterate = function* iterate(): IterableIterator<T> {
+    for (let index = 0; index < size; index += 1) {
+      const value = read(index);
+      if (value !== undefined) yield value;
+    }
+  };
+  const forEach = (callback: (value: T, index: number) => void): void => {
+    for (let index = 0; index < size; index += 1) {
+      const value = read(index);
+      if (value !== undefined) callback(value, index);
+    }
+  };
+  return Object.freeze({
+    size,
+    at,
+    iterate,
+    forEach,
+    toArray: (): readonly T[] => {
+      const output = new Array<T>(size);
+      forEach((value, index) => { output[index] = value; });
+      return Object.freeze(output);
     },
-    set: () => false,
-    deleteProperty: () => false,
   });
 }
 

@@ -114,12 +114,12 @@ test('dense grid patches derive regions and visible placements from sequence ind
   const rows = createExtentIndex(Array.from({ length: 4 }, () => exact(20)));
   const columns = createExtentIndex(Array.from({ length: 3 }, () => exact(30)));
   const state = createDenseTrackGridLayout(rows, columns, ['a', 'b', 'c', 'd', 'e']);
-  assert.deepEqual(state.regions[4], { id: 'e', row: 1, column: 1 });
+  assert.deepEqual(state.regions.at(4), { id: 'e', row: 1, column: 1 });
   const changed = applyTrackGridMutation(state, {
     type: 'patch-dense-regions',
     patch: { type: 'splice', index: 1, deleteCount: 2, inserted: ['x', 'y', 'z'] },
   }).state;
-  assert.equal(changed.regions.length, 6);
+  assert.equal(changed.regions.size, 6);
   assert.deepEqual([...changed.regions].map(({ id, row, column }) => [id, row, column]), [
     ['a', 0, 0],
     ['x', 0, 1],

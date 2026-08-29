@@ -148,7 +148,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
           if (bounds.height <= 0) return null;
           measuredHeights.set(placement.id, bounds.height);
           const grid = state as TrackGridLayoutState<string>;
-          const region = grid.regions[placement.index];
+          const region = grid.regions.at(placement.index);
           if (region === undefined) return null;
           return Object.freeze({
             axis: 'row' as const,
@@ -281,7 +281,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
               props.itemSize === undefined ? 'width' : 'both',
               (value, key, index, placement) => {
                 const grid = (root.value?.state as TrackGridLayoutState<string> | undefined);
-                const region = grid?.regions[placement.index];
+                const region = grid?.regions.at(placement.index);
                 return slots['default']?.({
                   value,
                   key,
@@ -417,7 +417,7 @@ function syncVirtualGrid(
   const rowCount = Math.ceil(prepared.ids.length / geometry.count);
   const currentColumn = state.columns.extentAt(0);
   if (
-    state.regions.length === prepared.ids.length
+    state.regions.size === prepared.ids.length
     && prepared.change === null
     && state.rows.size === rowCount
     && state.columns.size === geometry.count

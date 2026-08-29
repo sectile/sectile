@@ -13,6 +13,7 @@ import {
   tryApplyPartitionedTrackGridMutation,
   tryCreatePartitionedTrackGridLayout,
 } from '../../.verification-dist/partitioned-track-grid-layout.js';
+import { readRepairDiagnostics } from '../../.verification-dist/internal/repair-diagnostics.js';
 
 const exact = (value) => ({ kind: 'exact', value });
 const estimated = (value) => ({ kind: 'estimated', value });
@@ -76,7 +77,7 @@ test('PTG-02: measurement follows track identity across reorder and partition mu
     ],
   }).state;
 
-  assert.deepEqual(changed.columns.map(({ id, partition, extent }) => [id, partition, extent]), [
+  assert.deepEqual(changed.columns.toArray().map(({ id, partition, extent }) => [id, partition, extent]), [
     ['middle', 'start', exact(120)],
     ['left', 'center', exact(40)],
     ['right', 'end', exact(50)],
@@ -97,7 +98,7 @@ test('PTG-03: stale measurement and cross-partition spans reject atomically', ()
     generation: state.generation,
     measurements: [{ axis: 'row', id: 'body-a', extent: exact(30) }],
   }).ok, false);
-  assert.equal(measured.rows.find(({ id }) => id === 'body-a')?.extent.value, 25);
+  assert.equal(measured.rows.toArray().find(({ id }) => id === 'body-a')?.extent.value, 25);
 
   const invalid = tryCreatePartitionedTrackGridLayout(
     [
@@ -110,7 +111,7 @@ test('PTG-03: stale measurement and cross-partition spans reject atomically', ()
   assert.equal(invalid.ok, false);
   assert.equal(tryApplyPartitionedTrackGridMutation(state, {
     type: 'replace-row-tracks',
-    tracks: state.rows.filter(({ id }) => id !== 'body-a'),
+    tracks: state.rows.toArray().filter(({ id }) => id !== 'body-a'),
   }).ok, false);
   assert.equal(state.generation, 0);
 });
@@ -188,6 +189,45 @@ test('PTG-01: partitioned queries equal an independent full geometry scan', () =
     const actual = queryPartitionedTrackGridLayout(state, { viewport }).placements.map(({ id }) => id).sort();
     assert.deepEqual(actual, expected);
   }
+});
+
+test('PTG-02: mixed-axis sparse batches commit once and dense batches rebuild', () => {
+  const rows = Array.from({ length: 1_024 }, (_, index) => ({ id: `row-${index}`, partition: 'center', extent: exact(10) }));
+  const columns = Array.from({ length: 64 }, (_, index) => ({ id: `column-${index}`, partition: 'center', extent: exact(12) }));
+  const regions = [{ id: 'region', row: 'row-500', column: 'column-32' }];
+  const state = createPartitionedTrackGridLayout(rows, columns, regions);
+  const combined = applyPartitionedTrackGridMeasurements(state, {
+    generation: state.generation,
+    measurements: [
+      { axis: 'row', id: 'row-500', extent: exact(17) },
+      { axis: 'column', id: 'column-32', extent: exact(19) },
+    ],
+  }).state;
+  assert.equal(combined.generation, state.generation + 1);
+  const sparseWork = readRepairDiagnostics(combined);
+  assert.equal(sparseWork?.mode, 'incremental');
+  assert.equal(sparseWork?.changed, 2);
+  assert.ok(sparseWork.copiedEntries <= sparseWork.repairBound);
+  assert.deepEqual(combined.rows.at(500).extent, exact(17));
+  assert.deepEqual(combined.columns.at(32).extent, exact(19));
+  const same = applyPartitionedTrackGridMeasurements(combined, {
+    generation: combined.generation,
+    measurements: [
+      { axis: 'row', id: 'row-500', extent: exact(17) },
+      { axis: 'column', id: 'column-32', extent: exact(19) },
+    ],
+  }).state;
+  assert.equal(same, combined);
+
+  const measurements = Array.from({ length: 16 }, (_, index) => ({ axis: 'row', id: `row-${index}`, extent: exact(11) }));
+  const dense = applyPartitionedTrackGridMeasurements(combined, { generation: combined.generation, measurements }).state;
+  assert.equal(readRepairDiagnostics(dense)?.mode, 'rebuild');
+  const rebuilt = createPartitionedTrackGridLayout(dense.rows.toArray(), dense.columns.toArray(), regions);
+  const viewport = { x: 350, y: 4_800, width: 300, height: 300 };
+  assert.deepEqual(
+    queryPartitionedTrackGridLayout(dense, { viewport }).placements,
+    queryPartitionedTrackGridLayout(rebuilt, { viewport }).placements,
+  );
 });
 
 function referenceTracks(tracks, gap) {

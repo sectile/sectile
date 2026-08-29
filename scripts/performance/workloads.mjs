@@ -68,9 +68,13 @@ import {
   createSpatialLayout,
   querySpatialLayout,
 } from '../../packages/virtual/dist/spatial-layout.js';
+import {
+  applyPartitionedTrackGridMeasurements,
+  createPartitionedTrackGridLayout,
+} from '../../packages/virtual/dist/partitioned-track-grid-layout.js';
 
 export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 14,
+  version: 15,
   scales: Object.freeze([1_000, 10_000, 100_000]),
   patchDepths: Object.freeze([1, 8, 32, 64]),
   changedDensities: Object.freeze([1, 32, 'full']),
@@ -449,6 +453,17 @@ function createVirtualWorkloads(size, quick) {
     zIndex: index % 7,
   })));
   const spatial = createSpatialLayout(spatialItems);
+  const partitionedRows = Object.freeze(Array.from({ length: size }, (_, index) => Object.freeze({
+    id: `partitioned-row-${size}-${index}`,
+    partition: 'center',
+    extent: estimated(44),
+  })));
+  const partitionedColumns = Object.freeze(Array.from({ length: 64 }, (_, index) => Object.freeze({
+    id: `partitioned-column-${size}-${index}`,
+    partition: 'center',
+    extent: exact(96),
+  })));
+  const partitioned = createPartitionedTrackGridLayout(partitionedRows, partitionedColumns, []);
   const changes = quick ? [1, 32] : [1, 32, size];
   const workloads = [
     timed(`virtual:linear:query:${size}`, 'virtual-layout', { size, operation: 'query' }, quick ? 100 : 1_000, (iteration) =>
@@ -473,11 +488,18 @@ function createVirtualWorkloads(size, quick) {
       id: `spatial-${size}-${index}`,
       rect: Object.freeze({ x: index * 3, y: index * 5, width: 30, height: 30 }),
     })));
+    const partitionedMeasurements = Object.freeze(Array.from({ length: changed }, (_, index) => Object.freeze({
+      axis: 'row',
+      id: `partitioned-row-${size}-${index}`,
+      extent: exact(36 + (index & 15)),
+    })));
     workloads.push(
       timed(`virtual:linear:measure:${size}:${changed}`, 'virtual-layout', { size, changed, operation: 'measurement' }, iterations(size, quick), () =>
         applyLinearMeasurements(linear, { generation: linear.generation, measurements: linearMeasurements }).state.generation),
       timed(`virtual:spatial:measure:${size}:${changed}`, 'virtual-layout', { size, changed, operation: 'measurement' }, iterations(size, quick), () =>
         applySpatialMeasurements(spatial, { generation: spatial.generation, measurements: spatialMeasurements }).state.generation),
+      timed(`virtual:partitioned:measure:${size}:${changed}`, 'virtual-layout', { size, changed, operation: 'measurement' }, iterations(size, quick), () =>
+        applyPartitionedTrackGridMeasurements(partitioned, { generation: partitioned.generation, measurements: partitionedMeasurements }).state.generation),
     );
   }
   return workloads;

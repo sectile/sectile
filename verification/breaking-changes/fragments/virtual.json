@@ -50,6 +50,27 @@
       "before": { "subpath": "./track-grid-layout" },
       "symbols": ["Virtual geometry declaration closure"],
       "replacement": { "package": "@sectile/virtual", "subpath": "./track-grid-layout" }
+    },
+    {
+      "id": "WI-039:spatial-indexed-view",
+      "change": "signature-changed",
+      "before": { "subpath": "./spatial-layout" },
+      "symbols": ["SpatialLayoutState.items readonly array"],
+      "replacement": { "package": "@sectile/virtual", "subpath": "./spatial-layout" }
+    },
+    {
+      "id": "WI-039:partitioned-track-indexed-views",
+      "change": "signature-changed",
+      "before": { "subpath": "./partitioned-track-grid-layout" },
+      "symbols": ["PartitionedTrackGridLayoutState.rows and columns readonly arrays"],
+      "replacement": { "package": "@sectile/virtual", "subpath": "./partitioned-track-grid-layout" }
+    },
+    {
+      "id": "WI-039:dense-grid-indexed-view",
+      "change": "signature-changed",
+      "before": { "subpath": "./track-grid-layout" },
+      "symbols": ["TrackGridLayoutState.regions readonly array"],
+      "replacement": { "package": "@sectile/virtual", "subpath": "./track-grid-layout" }
     }
   ]
 }

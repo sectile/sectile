@@ -431,9 +431,9 @@ test('VirtualGrid derives responsive columns and reconciles declarative items', 
 
     items.value = [{ id: 'grid-new' }, ...items.value];
     await settle();
-    assert.equal(grid.value.state.regions.length, 13);
-    assert.equal(grid.value.state.regions[0].id, 'grid-new');
-    assert.equal(grid.value.state.regions[4].row, 1);
+    assert.equal(grid.value.state.regions.size, 13);
+    assert.equal(grid.value.state.regions.at(0).id, 'grid-new');
+    assert.equal(grid.value.state.regions.at(4).row, 1);
   } finally {
     app.unmount();
     host.remove();
@@ -539,14 +539,14 @@ test('VirtualSpatial measures DOM size while data owns position and z-order', as
     FakeResizeObserver.notify(first);
     spatial.value.flush();
     await settle();
-    const measured = spatial.value.state.items.find((item) => item.id === first.textContent.split(':')[0]);
+    const measured = spatial.value.state.items.toArray().find((item) => item.id === first.textContent.split(':')[0]);
     assert.equal(measured.rect.width, 30);
     assert.equal(measured.rect.height, 40);
 
     items.value = [items.value[1], { ...items.value[0], x: 30 }];
     await settle();
     assert.deepEqual(spatial.value.state.domain.ids, ['node-b', 'node-a']);
-    assert.equal(spatial.value.state.items[1].rect.x, 30);
+    assert.equal(spatial.value.state.items.at(1).rect.x, 30);
   } finally {
     app.unmount();
     host.remove();

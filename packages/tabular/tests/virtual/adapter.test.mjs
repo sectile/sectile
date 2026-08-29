@@ -72,18 +72,18 @@ test('TAB-VIR-03: partitioned Grid adapter survives measurement and center to pi
   const reconciled = reconcileDataGridVirtualAdapter(adapter, measured.value.state, nextProjection);
   assert.equal(reconciled.ok, true);
   assert.equal(reconciled.value.adapter.strategy, adapter.strategy);
-  assert.equal(reconciled.value.state.rows.find((track) => track.id === 'r1').extent.value, 37);
-  assert.equal(reconciled.value.state.columns.find((track) => track.id === 'name').extent.value, 144);
-  assert.equal(reconciled.value.state.columns.find((track) => track.id === 'name').partition, 'start');
+  assert.equal(reconciled.value.state.rows.toArray().find((track) => track.id === 'r1').extent.value, 37);
+  assert.equal(reconciled.value.state.columns.toArray().find((track) => track.id === 'name').extent.value, 144);
+  assert.equal(reconciled.value.state.columns.toArray().find((track) => track.id === 'name').partition, 'start');
   assert.deepEqual(reconciled.value.adapter.locateColumn('score'), { id: 'score', index: 1 });
   assert.equal(reconciled.value.adapter.locateCell({ rowID: 'r3', columnID: 'score' }).index >= 0, true);
 
   const pivotProjection = gridProjection(['r1'], { start: [], center: ['name', 'pivot:sum'], end: [] }, 8);
   const pivoted = reconcileDataGridVirtualAdapter(reconciled.value.adapter, reconciled.value.state, pivotProjection);
   assert.equal(pivoted.ok, true);
-  assert.deepEqual(pivoted.value.state.rows.map((track) => track.id), ['r1']);
-  assert.deepEqual(pivoted.value.state.columns.map((track) => track.id), ['name', 'pivot:sum']);
-  assert.equal(pivoted.value.state.columns.find((track) => track.id === 'name').extent.value, 144);
+  assert.deepEqual(pivoted.value.state.rows.toArray().map((track) => track.id), ['r1']);
+  assert.deepEqual(pivoted.value.state.columns.toArray().map((track) => track.id), ['name', 'pivot:sum']);
+  assert.equal(pivoted.value.state.columns.toArray().find((track) => track.id === 'name').extent.value, 144);
   assert.equal(pivoted.value.adapter.locateCell({ rowID: 'r3', columnID: 'score' }), null);
 
   const tree = createDataTreeGridVirtualAdapter({

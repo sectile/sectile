@@ -17,6 +17,18 @@ export type VirtualPoint = Point;
 export type VirtualSize = Size;
 export type VirtualRect = Rect;
 export type VirtualInsets = Insets;
+export interface VirtualIndexedView<T> {
+  /** Constant-time cardinality. */
+  readonly size: number;
+  /** Indexed lookup; O(log n) worst-case across Virtual representations. */
+  at(index: number): T | undefined;
+  /** Lazy full traversal in O(n) time without snapshot allocation. */
+  iterate(): IterableIterator<T>;
+  /** Full traversal in O(n) time without snapshot allocation. */
+  forEach(callback: (value: T, index: number) => void): void;
+  /** Explicit immutable snapshot materialization in O(n) time and output space. */
+  toArray(): readonly T[];
+}
 export interface VirtualQueryInput { readonly viewport: VirtualRect; readonly overscan?: number | Partial<VirtualInsets>; }
 export interface VirtualPlacement<ID extends StableID = StableID> { readonly id: ID; readonly index: number; readonly rect: VirtualRect; readonly visible: boolean; readonly zIndex?: number; }
 export interface VirtualAnchor<ID extends StableID = StableID> { readonly id: ID; readonly viewportOffset: VirtualPoint; }
