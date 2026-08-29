@@ -33,7 +33,7 @@ export type DrawerOpenChangeHandler = PopupFactoryOptions['onOpenChange'];
 export type DrawerInteractOutsideHandler = NonNullable<PopupFactoryOptions['onInteractOutside']>;
 export type DrawerRootProps = Omit<PopupRootProps,
   'align' | 'sideOffset' | 'collisionPadding' | 'collisionBoundary' | 'avoidCollisions' |
-  'arrowPadding' | 'hideWhenDetached' | 'strategy' | 'middleware' | 'autoUpdate'
+  'arrowPadding' | 'hideWhenDetached' | 'strategy' | 'tracking'
 > & {
   readonly side?: DrawerSide;
   readonly swipeToDismiss?: boolean;

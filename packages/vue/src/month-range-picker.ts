@@ -25,7 +25,6 @@ export type MonthRangePickerRootSlotProps = PickerRootSlotProps<DateRange | null
 export type MonthRangePickerValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:modelValue']>;
 export type MonthRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:open']>;
 export type MonthRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:highlightedValue']>;
-export type MonthRangePickerPositionChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onPositionChange']>;
 export const MonthRangePickerTrigger = specializePickerRootPart('date-range', PickerTrigger);
 export const MonthRangePickerAnchor = specializePickerRootPart('date-range', PickerAnchor);
 export const MonthRangePickerPortal = PickerPortal;

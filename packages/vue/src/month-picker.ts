@@ -25,7 +25,6 @@ export type MonthPickerRootSlotProps = PickerRootSlotProps<DateValue | null>;
 export type MonthPickerValueChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:modelValue']>;
 export type MonthPickerOpenChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:open']>;
 export type MonthPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:highlightedValue']>;
-export type MonthPickerPositionChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onPositionChange']>;
 export const MonthPickerTrigger = specializePickerRootPart('date', PickerTrigger);
 export const MonthPickerAnchor = specializePickerRootPart('date', PickerAnchor);
 export const MonthPickerPortal = PickerPortal;

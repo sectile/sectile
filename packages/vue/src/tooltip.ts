@@ -27,7 +27,6 @@ const parts = createPopupComponents({
 
 export const TooltipRoot = parts.Root;
 export type TooltipOpenChangeHandler = PopupFactoryOptions['onOpenChange'];
-export type TooltipPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>;
 export const TooltipTrigger = parts.Trigger;
 export const TooltipPortal = parts.Portal;
 export const TooltipContent = parts.Content;
@@ -36,7 +35,7 @@ export type TooltipRootProps = Pick<PopupRootProps,
   | 'open' | 'defaultOpen' | 'disabled'
   | 'side' | 'align' | 'sideOffset'
   | 'collisionPadding' | 'collisionBoundary' | 'avoidCollisions'
-  | 'arrowPadding' | 'hideWhenDetached' | 'strategy' | 'middleware' | 'autoUpdate' | 'unmountOnExit'
+  | 'arrowPadding' | 'hideWhenDetached' | 'strategy' | 'tracking' | 'unmountOnExit'
 >;
 export type TooltipRootSlotProps = PopupRootSlotProps;
 export type TooltipPartProps = PopupPartProps;

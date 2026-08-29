@@ -15,7 +15,6 @@ const parts = createPopupComponents({
 
 export const DialogRoot = parts.Root;
 export type DialogOpenChangeHandler = PopupFactoryOptions['onOpenChange'];
-export type DialogPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>;
 export type DialogInteractOutsideHandler = NonNullable<PopupFactoryOptions['onInteractOutside']>;
 export const DialogTrigger = parts.Trigger;
 export const DialogPortal = parts.Portal;

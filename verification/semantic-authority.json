@@ -56,7 +56,6 @@
     { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "semanticDependencies": ["@sectile/core", "@sectile/dom", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] }
   ],
   "migrationExceptions": [
-    { "id": "vue-virtual-projection", "owner": "WI-040", "scope": "Vue Virtual measurement and collection projection ownership" },
-    { "id": "floating-positioning-surface", "owner": "WI-036", "scope": "DOM and Vue positioned components expose third-party positioning semantics" }
+    { "id": "vue-virtual-projection", "owner": "WI-040", "scope": "Vue Virtual measurement and collection projection ownership" }
   ]
 }

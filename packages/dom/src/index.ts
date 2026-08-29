@@ -1,6 +1,15 @@
 export type { FacadeConnection } from '@sectile/core/adapter-runtime';
 export type { ReadingDirection } from './internal/direction.js';
 export type { InteractOutsideEvent, InteractOutsideHandler } from './interact-outside.js';
+export type {
+  PositionAlign,
+  PositionBoundary,
+  PositionOptions,
+  PositionPadding,
+  PositionSide,
+  PositionStrategy,
+  PositionTracking,
+} from './position.js';
 export {
   createReorder,
   tryCreateReorder,
@@ -434,7 +443,6 @@ export type {
   PopoverInitialFocusHandler,
   PopoverInteractOutsideHandler,
   PopoverOpenChangeHandler,
-  PopoverPositionChangeHandler,
   PopoverUpdateHandler,
 } from './popover.js';
 export type {
@@ -514,7 +522,6 @@ export type {
 } from './toolbar.js';
 export type {
   TooltipOpenChangeHandler,
-  TooltipPositionChangeHandler,
   TooltipUpdateHandler,
 } from './tooltip.js';
 export type {

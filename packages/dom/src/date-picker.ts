@@ -14,7 +14,7 @@ import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 import { currentReferenceDate } from './internal/reference-date.js';
 import { createPickerPosition, type PickerPositionOptions } from './internal/picker-position.js';
-import type { FloatingPositionConnection } from './internal/floating-position.js';
+import type { PositionConnection } from './internal/position-connection.js';
 
 export type { PickerPositionOptions } from './internal/picker-position.js';
 
@@ -72,7 +72,7 @@ class DOMDatePicker implements DatePickerConnection {
   readonly options: DatePickerOptions; readonly runtime: DOMTemporalController<DatePickerState, DatePickerEvent, DatePickerCommand>; readonly controls: { value: boolean; highlighted: boolean; open: boolean };
   readonly #field: FacadeConnection<DateFieldConnection> | null;
   readonly #layer: DOMLayerBinding;
-  readonly #position: FloatingPositionConnection;
+  readonly #position: PositionConnection;
   #syncingField = false;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => { const semantic = keyEvent(event); if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };

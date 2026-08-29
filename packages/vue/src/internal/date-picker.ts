@@ -54,8 +54,7 @@ export interface PickerPositionProps {
   readonly avoidCollisions?: boolean;
   readonly hideWhenDetached?: boolean;
   readonly strategy?: PickerPositionOptions['strategy'];
-  readonly middleware?: PickerPositionOptions['middleware'];
-  readonly autoUpdate?: PickerPositionOptions['autoUpdate'];
+  readonly tracking?: PickerPositionOptions['tracking'];
 }
 
 export interface PickerRootConfig {
@@ -108,8 +107,7 @@ interface ResolvedPickerRootProps<Kind extends PickerKind> {
   readonly avoidCollisions: boolean;
   readonly hideWhenDetached: boolean;
   readonly strategy: NonNullable<PickerPositionOptions['strategy']>;
-  readonly middleware: PickerPositionOptions['middleware'];
-  readonly autoUpdate: PickerPositionOptions['autoUpdate'];
+  readonly tracking: NonNullable<PickerPositionOptions['tracking']>;
   readonly as: PrimitiveAs;
   readonly asChild: boolean;
 }
@@ -123,7 +121,6 @@ export type PickerRootPublicProps<Kind extends PickerKind> =
     readonly 'onUpdate:modelValue'?: (value: PickerValueFor<Kind>) => unknown;
     readonly 'onUpdate:open'?: (value: boolean) => unknown;
     readonly 'onUpdate:highlightedValue'?: (value: DateValue) => unknown;
-    readonly onPositionChange?: NonNullable<PickerPositionOptions['onPositionChange']>;
   };
 
 export interface PickerRootComponent<Kind extends PickerKind> {
@@ -170,7 +167,6 @@ interface Context {
   readonly granularity: 'day' | 'month' | 'year';
   readonly inline: boolean;
   readonly position: ComputedRef<boolean>;
-  readonly positioned: ComputedRef<boolean>;
   readonly strategy: ComputedRef<NonNullable<PickerPositionOptions['strategy']>>;
   readonly state: ComputedRef<PickerRootSlotProps>;
   register(part: PickerInputPart | 'anchor' | 'content' | 'grid' | 'trigger', element?: HTMLElement): void;
@@ -209,19 +205,17 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
       align: { type: String as PropType<NonNullable<PickerPositionOptions['align']>>, default: 'center' },
       sideOffset: { type: Number, default: 8 },
       collisionPadding: { type: [Number, Object] as PropType<PickerPositionOptions['collisionPadding']>, default: 8 },
-      collisionBoundary: { type: [String, Object, Array] as PropType<PickerPositionOptions['collisionBoundary']>, default: undefined },
+      collisionBoundary: { type: [String, Object] as PropType<PickerPositionOptions['collisionBoundary']>, default: undefined },
       avoidCollisions: { type: Boolean, default: true }, hideWhenDetached: { type: Boolean, default: true },
       strategy: { type: String as PropType<NonNullable<PickerPositionOptions['strategy']>>, default: 'absolute' },
-      middleware: { type: Array as PropType<PickerPositionOptions['middleware']>, default: undefined },
-      autoUpdate: { type: [Boolean, Object] as PropType<PickerPositionOptions['autoUpdate']>, default: undefined },
+      tracking: { type: String as PropType<NonNullable<PickerPositionOptions['tracking']>>, default: 'events' },
       as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
     },
-    emits: { 'update:modelValue': (_value: PickerValueFor<Kind>): boolean => true, 'update:open': (_value: boolean): boolean => true, 'update:highlightedValue': (_value: DateValue): boolean => true, positionChange: (_position: Parameters<NonNullable<PickerPositionOptions['onPositionChange']>>[0]): boolean => true },
+    emits: { 'update:modelValue': (_value: PickerValueFor<Kind>): boolean => true, 'update:open': (_value: boolean): boolean => true, 'update:highlightedValue': (_value: DateValue): boolean => true },
     slots: Object as SlotsType<{ default: (props: PickerRootSlotProps<PickerValueFor<Kind>>) => VNodeChild }>,
     setup(props, { emit, slots }) {
       const runtimeProps = props as unknown as ResolvedPickerRootProps<Kind>;
       const elements = new Map<string, HTMLElement>(); const connection = shallowRef<PickerConnection>();
-      const positioned = shallowRef(inline || !runtimeProps.position);
       const hostReferenceDate = useTemporalReferenceDate();
       const referenceDate = computed(() => runtimeProps.referenceDate ?? hostReferenceDate.value);
       const inlineTrigger = typeof document === 'undefined' || !inline || kind === 'calendar' ? undefined : document.createElement('button');
@@ -288,7 +282,6 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         connection.value?.disconnect();
         const content = elements.get('content'); const grid = elements.get('grid'); const trigger = elements.get('trigger') ?? inlineTrigger;
         if (content === undefined || grid === undefined || (kind !== 'calendar' && trigger === undefined)) return;
-        positioned.value = inline || !runtimeProps.position;
         const base: Record<string, unknown> = {
           root: content, grid, disabled: runtimeProps.disabled, readOnly: runtimeProps.readonly, required: runtimeProps.required,
           referenceDate: referenceDate.value,
@@ -311,11 +304,7 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
             position: runtimeProps.position, side: runtimeProps.side, align: runtimeProps.align, sideOffset: runtimeProps.sideOffset,
             collisionPadding: runtimeProps.collisionPadding, avoidCollisions: runtimeProps.avoidCollisions,
             hideWhenDetached: runtimeProps.hideWhenDetached, strategy: runtimeProps.strategy,
-            middleware: runtimeProps.middleware, autoUpdate: runtimeProps.autoUpdate,
-            onPositionChange: (position: Parameters<NonNullable<PickerPositionOptions['onPositionChange']>>[0]) => {
-              positioned.value = true;
-              emit('positionChange', position);
-            },
+            tracking: runtimeProps.tracking,
           });
           if (runtimeProps.collisionBoundary !== undefined) base['collisionBoundary'] = runtimeProps.collisionBoundary;
           if (controlled.open) base['open'] = runtimeProps.open;
@@ -361,11 +350,10 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
       };
       provide<Context>(key, {
         kind, scope, granularity, inline, state, periodAvailable,
-        position: computed(() => runtimeProps.position), positioned: computed(() => positioned.value), strategy: computed(() => runtimeProps.strategy),
+        position: computed(() => runtimeProps.position), strategy: computed(() => runtimeProps.strategy),
         register: (part, element) => {
           if (elements.get(part) === element || (element === undefined && !elements.has(part))) return;
           if (element === undefined) elements.delete(part); else elements.set(part, element);
-          if (part === 'content') positioned.value = inline || !runtimeProps.position;
           scheduleConnect();
         },
         registerCell: (element, value) => connection.value?.setCellAttributes(element, value),
@@ -412,7 +400,7 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         () => runtimeProps.disabled, () => runtimeProps.readonly, () => runtimeProps.required, () => runtimeProps.label, () => runtimeProps.policies,
         () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset,
         () => runtimeProps.collisionPadding, () => runtimeProps.collisionBoundary, () => runtimeProps.avoidCollisions,
-        () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.middleware, () => runtimeProps.autoUpdate,
+        () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.tracking,
       ], connect);
       watch(referenceDate, (value) => {
         if (
@@ -464,7 +452,7 @@ export const PickerContent = /* @__PURE__ */ defineComponent({
   setup(props, { attrs, slots }) { const root = useRoot('PickerContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.register('content', node instanceof HTMLElement ? node : undefined),
     role: root.inline ? 'group' : 'dialog', 'aria-modal': root.inline ? undefined : 'false', hidden: root.inline ? false : !root.state.value.open, 'data-scope': root.scope, 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
-    style: !root.inline && root.position.value ? { position: root.strategy.value, visibility: root.positioned.value ? undefined : 'hidden' } : undefined,
+    style: !root.inline && root.position.value ? { position: root.strategy.value } : undefined,
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
 

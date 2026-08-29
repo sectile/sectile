@@ -18,7 +18,13 @@ import {
   type SlotsType,
   type VNodeChild,
 } from 'vue';
-import type { AutoUpdateOptions, Boundary, ComputePositionReturn, Middleware, Padding, Strategy } from '@sectile/dom/popover';
+import type {
+  PositionBoundary,
+  PositionOptions,
+  PositionPadding,
+  PositionStrategy,
+  PositionTracking,
+} from '@sectile/dom/position';
 import type { InteractOutsideEvent, InteractOutsideHandler } from '@sectile/dom';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useHostDirection, useHostId, useHostPortalTarget } from '../host-provider.js';
@@ -33,7 +39,7 @@ export interface PopupConnection {
   disconnect(): void;
 }
 
-export interface PopupFactoryOptions {
+export interface PopupFactoryOptions extends PositionOptions {
   readonly root: HTMLElement;
   readonly trigger?: HTMLElement;
   readonly anchor?: HTMLElement;
@@ -54,22 +60,10 @@ export interface PopupFactoryOptions {
   readonly closeOnInteractOutside?: boolean;
   readonly interactOutsideExclusions?: readonly HTMLElement[];
   readonly onInteractOutside?: InteractOutsideHandler;
-  readonly side?: 'top' | 'right' | 'bottom' | 'left';
   readonly swipeToDismiss?: boolean;
   readonly swipeThreshold?: number;
   readonly swipeVelocityThreshold?: number;
-  readonly align?: 'start' | 'center' | 'end';
-  readonly sideOffset?: number;
-  readonly collisionPadding?: Padding;
-  readonly collisionBoundary?: Boundary;
-  readonly avoidCollisions?: boolean;
-  readonly arrowPadding?: Padding;
-  readonly hideWhenDetached?: boolean;
-  readonly strategy?: Strategy;
-  readonly middleware?: Middleware[];
-  readonly autoUpdate?: boolean | AutoUpdateOptions;
   readonly onOpenChange: (open: boolean) => void;
-  readonly onPositionChange?: (position: ComputePositionReturn) => void;
   readonly onUpdate: () => void;
   readonly manageVisibility?: boolean;
 }
@@ -90,7 +84,7 @@ export interface PopupRootSlotProps {
   readonly open: boolean;
   readonly disabled: boolean;
 }
-export interface PopupRootProps {
+export interface PopupRootProps extends PositionOptions {
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly disabled?: boolean;
@@ -102,17 +96,6 @@ export interface PopupRootProps {
   readonly trapFocus?: boolean;
   readonly closeOnInteractOutside?: boolean;
   readonly interactOutsideExclusions?: readonly HTMLElement[];
-  readonly side?: 'top' | 'right' | 'bottom' | 'left';
-  readonly align?: 'start' | 'center' | 'end';
-  readonly sideOffset?: number;
-  readonly collisionPadding?: Padding;
-  readonly collisionBoundary?: Boundary;
-  readonly avoidCollisions?: boolean;
-  readonly arrowPadding?: Padding;
-  readonly hideWhenDetached?: boolean;
-  readonly strategy?: Strategy;
-  readonly middleware?: Middleware[];
-  readonly autoUpdate?: boolean | AutoUpdateOptions;
   readonly unmountOnExit?: boolean;
 }
 export interface PopupPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
@@ -125,13 +108,12 @@ interface PopupContext {
   readonly disabled: ComputedRef<boolean>;
   readonly modal: ComputedRef<boolean>;
   readonly unmountOnExit: ComputedRef<boolean>;
-  readonly positioned: ComputedRef<boolean>;
   readonly label: ComputedRef<string | undefined>;
   readonly contentID: string;
   readonly titleID: string;
   readonly descriptionID: string;
   readonly side: ComputedRef<'top' | 'right' | 'bottom' | 'left'>;
-  readonly strategy: ComputedRef<Strategy>;
+  readonly strategy: ComputedRef<PositionStrategy>;
   registerElement(part: PopupElementPart, element?: HTMLElement): void;
   activateTrigger(event?: Event): void;
   deactivateTrigger(event?: Event): void;
@@ -188,19 +170,17 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       swipeVelocityThreshold: { type: Number, default: 0.5 },
       align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'center' },
       sideOffset: { type: Number, default: 8 },
-      collisionPadding: { type: [Number, Object] as PropType<Padding>, default: 8 },
-      collisionBoundary: { type: [String, Object, Array] as PropType<Boundary>, default: undefined },
+      collisionPadding: { type: [Number, Object] as PropType<PositionPadding>, default: 8 },
+      collisionBoundary: { type: [String, Object] as PropType<PositionBoundary>, default: undefined },
       avoidCollisions: { type: Boolean, default: true },
-      arrowPadding: { type: [Number, Object] as PropType<Padding>, default: 8 },
+      arrowPadding: { type: Number, default: 8 },
       hideWhenDetached: { type: Boolean, default: true },
-      strategy: { type: String as PropType<Strategy>, default: 'absolute' },
-      middleware: { type: Array as PropType<Middleware[]>, default: undefined },
-      autoUpdate: { type: [Boolean, Object] as PropType<boolean | AutoUpdateOptions>, default: undefined },
+      strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
+      tracking: { type: String as PropType<PositionTracking>, default: 'events' },
       unmountOnExit: { type: Boolean, default: false },
     },
     emits: {
       'update:open': (_open: boolean): boolean => true,
-      positionChange: (_position: ComputePositionReturn): boolean => true,
       interactOutside: (_event: InteractOutsideEvent): boolean => true,
     },
     slots: Object as SlotsType<{ default: (props: PopupRootSlotProps) => VNodeChild }>,
@@ -213,7 +193,6 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const overlay = shallowRef<HTMLElement>();
       const handle = shallowRef<HTMLElement>();
       const content = shallowRef<HTMLElement>();
-      const positioned = shallowRef(config.positioned !== true);
       const connection = shallowRef<PopupConnection>();
       const id = useHostId();
       const contentID = `sectile-${config.scope}-${id}-content`;
@@ -267,26 +246,15 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           arrowPadding: props.arrowPadding,
           hideWhenDetached: props.hideWhenDetached,
           strategy: props.strategy,
-          ...(props.middleware === undefined ? {} : { middleware: props.middleware }),
-          ...(props.autoUpdate === undefined ? {} : { autoUpdate: props.autoUpdate }),
+          tracking: props.tracking,
           manageVisibility: false,
           onOpenChange: (next) => {
             if (!controlled) localOpen.value = next;
             emit('update:open', next);
           },
-          onPositionChange: (position) => {
-            const becamePositioned = !positioned.value;
-            positioned.value = true;
-            emit('positionChange', position);
-            if (becamePositioned) void nextTick(() => connection.value?.refresh());
-          },
           onInteractOutside: (event) => { emit('interactOutside', event); },
           onUpdate: update,
         });
-        if (config.positioned === true && trigger.value === undefined && anchor.value === undefined) {
-          content.value.style.visibility = '';
-          positioned.value = true;
-        }
         update();
       };
       let connectScheduled = false;
@@ -304,7 +272,6 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         const target = elements[part];
         if (target.value === element) return;
         target.value = element;
-        if (part === 'content') positioned.value = config.positioned !== true;
         if (content.value === undefined) disconnect();
         else scheduleConnect();
       };
@@ -335,14 +302,14 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         () => props.swipeToDismiss, () => props.swipeThreshold, () => props.swipeVelocityThreshold, () => props.align,
         () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary,
         () => props.avoidCollisions, () => props.arrowPadding, () => props.hideWhenDetached,
-        () => props.strategy, () => props.middleware, () => props.autoUpdate,
+        () => props.strategy, () => props.tracking,
       ], connect);
       onBeforeUnmount(() => {
         destroyed = true;
         disconnect();
       });
       provide<PopupContext>(contextKey, {
-        open, disabled, modal, unmountOnExit, positioned: computed(() => positioned.value), label, contentID, titleID, descriptionID, side, strategy,
+        open, disabled, modal, unmountOnExit, label, contentID, titleID, descriptionID, side, strategy,
         registerElement, activateTrigger, deactivateTrigger,
         close: () => { connection.value?.handleEvent('close'); },
         refresh: () => { connection.value?.refresh(); },
@@ -390,7 +357,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
             root.registerElement('content', node);
           },
           id: root.contentID, role: config.role, hidden: !present.value, dir: direction.value,
-          style: config.positioned === true ? { position: root.strategy.value, visibility: root.positioned.value ? undefined : 'hidden' } : undefined,
+          style: config.positioned === true ? { position: root.strategy.value } : undefined,
           'aria-modal': config.role === 'tooltip' ? undefined : String(root.modal.value),
           'aria-label': root.label.value, 'aria-labelledby': root.label.value === undefined ? root.titleID : undefined, 'aria-describedby': root.descriptionID,
           'data-scope': config.scope, 'data-part': 'content', 'data-state': root.open.value ? 'open' : 'closed',

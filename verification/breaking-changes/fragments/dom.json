@@ -38,6 +38,14 @@
       "symbols": ["FormConnection.subscribe", "FormConnection field mutation surface"],
       "replacement": { "package": "@sectile/dom", "subpath": "./form" },
       "removalReason": "Use subscribeForm or subscribeField and the typed get/set/issue methods; whole-state subscription overloads are removed."
+    },
+    {
+      "id": "WI-036:sectile-positioning-surface",
+      "change": "signature-changed",
+      "before": { "subpath": "./popover, ./tooltip, ./select, ./temporal/*-picker" },
+      "symbols": ["Floating UI function/type re-exports", "middleware", "autoUpdate", "onPositionChange", "PopoverPositionChangeHandler", "TooltipPositionChangeHandler", "Floating UI Boundary/Padding/ReferenceElement/Strategy types"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" },
+      "removalReason": "Use the closed PositionOptions contract and common data-side/data-align/data-reference-hidden plus --sectile-position-* projections. Resolved compute callbacks and arbitrary middleware are removed."
     }
   ]
 }

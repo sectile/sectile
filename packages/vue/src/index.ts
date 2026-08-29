@@ -637,19 +637,15 @@ export type {
 } from './window-splitter.js';
 export type {
   DialogOpenChangeHandler,
-  DialogPositionChangeHandler,
 } from './dialog.js';
 export type {
   PopoverOpenChangeHandler,
-  PopoverPositionChangeHandler,
 } from './popover.js';
 export type {
   AlertDialogOpenChangeHandler,
-  AlertDialogPositionChangeHandler,
 } from './alert-dialog.js';
 export type {
   TooltipOpenChangeHandler,
-  TooltipPositionChangeHandler,
 } from './tooltip.js';
 export type {
   MenuButtonInvokeHandler,

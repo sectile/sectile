@@ -156,6 +156,11 @@
       "import": "./dist/popover.js",
       "default": "./dist/popover.js"
     },
+    "./position": {
+      "types": "./dist/position.d.ts",
+      "import": "./dist/position.js",
+      "default": "./dist/position.js"
+    },
     "./toast": {
       "types": "./dist/toast.d.ts",
       "import": "./dist/toast.js",
@@ -371,14 +376,13 @@
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.8.0",
     "@sectile/core": "workspace:*"
   },
   "peerDependencies": {
     "@sectile/form": "workspace:*",
     "@sectile/tabular": "workspace:*",
-    "@sectile/virtual": "workspace:*",
-    "@sectile/temporal": "workspace:*"
+    "@sectile/temporal": "workspace:*",
+    "@sectile/virtual": "workspace:*"
   },
   "peerDependenciesMeta": {
     "@sectile/form": {
@@ -397,9 +401,9 @@
   "devDependencies": {
     "@sectile/form": "workspace:*",
     "@sectile/tabular": "workspace:*",
+    "@sectile/temporal": "workspace:*",
     "@sectile/virtual": "workspace:*",
     "happy-dom": "^20.11.6",
-    "typescript": "7.0.2",
-    "@sectile/temporal": "workspace:*"
+    "typescript": "7.0.2"
   }
 }

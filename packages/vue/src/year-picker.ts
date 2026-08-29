@@ -25,7 +25,6 @@ export type YearPickerRootSlotProps = PickerRootSlotProps<DateValue | null>;
 export type YearPickerValueChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:modelValue']>;
 export type YearPickerOpenChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:open']>;
 export type YearPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:highlightedValue']>;
-export type YearPickerPositionChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onPositionChange']>;
 export const YearPickerTrigger = specializePickerRootPart('date', PickerTrigger);
 export const YearPickerAnchor = specializePickerRootPart('date', PickerAnchor);
 export const YearPickerPortal = PickerPortal;

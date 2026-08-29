@@ -17,7 +17,6 @@ export type DatePickerRootSlotProps = PickerRootSlotProps<DateValue | null>;
 export type DatePickerValueChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:modelValue']>;
 export type DatePickerOpenChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:open']>;
 export type DatePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:highlightedValue']>;
-export type DatePickerPositionChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onPositionChange']>;
 export const DatePickerTrigger = specializePickerRootPart('date', PickerTrigger);
 export const DatePickerAnchor = specializePickerRootPart('date', PickerAnchor);
 export const DatePickerPortal = PickerPortal;

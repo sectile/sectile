@@ -41,6 +41,14 @@
       "symbols": ["FormRootSlotProps", "FormRoot default slot", "FormSummary default slot", "FormReset default slot", "FormSubmit default slot"],
       "replacement": { "package": "@sectile/vue", "subpath": "./form" },
       "removalReason": "Use useFormSelector, useFormFieldSelector, FormSelector, or FormFieldSelector for explicit state projections. FormSubmit exposes only valid, submitting, canSubmit, and submissionStatus; FormSummary exposes valid; FormReset has no state projection."
+    },
+    {
+      "id": "WI-036:sectile-positioning-props",
+      "change": "signature-changed",
+      "before": { "subpath": "./popover, ./tooltip, ./select, ./temporal/*-picker" },
+      "symbols": ["middleware", "autoUpdate", "positionChange emits/handlers", "Floating UI Boundary/Padding/Strategy-derived props"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" },
+      "removalReason": "Vue positioned components now accept only Sectile PositionOptions and consume the shared DOM positioning engine projection."
     }
   ]
 }

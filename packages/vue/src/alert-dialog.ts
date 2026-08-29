@@ -18,7 +18,6 @@ const parts = createPopupComponents({
 
 export const AlertDialogRoot = parts.Root;
 export type AlertDialogOpenChangeHandler = PopupFactoryOptions['onOpenChange'];
-export type AlertDialogPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>;
 export type AlertDialogInteractOutsideHandler = NonNullable<PopupFactoryOptions['onInteractOutside']>;
 export const AlertDialogTrigger = parts.Trigger;
 export const AlertDialogPortal = parts.Portal;

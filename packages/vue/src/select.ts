@@ -3,7 +3,13 @@ import {
   shallowRef, watch, type Component, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createSelect, type SelectConnection, type SelectPolicies } from '@sectile/dom/select';
-import type { AutoUpdateOptions, Boundary, ComputePositionReturn, Middleware, Padding, Strategy } from '@sectile/dom/popover';
+import type {
+  PositionBoundary,
+  PositionOptions,
+  PositionPadding,
+  PositionStrategy,
+  PositionTracking,
+} from '@sectile/dom/position';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
@@ -12,7 +18,7 @@ import { usePresence } from './internal/presence.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
-export interface SelectRootProps {
+export interface SelectRootProps extends Omit<PositionOptions, 'arrowPadding'> {
   readonly items: readonly string[];
   readonly modelValue?: string | null;
   readonly defaultValue?: string | null;
@@ -28,16 +34,6 @@ export interface SelectRootProps {
   readonly textValue?: (id: string) => string;
   readonly typeaheadTimeoutMs?: number;
   readonly position?: boolean;
-  readonly side?: 'top' | 'right' | 'bottom' | 'left';
-  readonly align?: 'start' | 'center' | 'end';
-  readonly sideOffset?: number;
-  readonly collisionPadding?: Padding;
-  readonly collisionBoundary?: Boundary;
-  readonly avoidCollisions?: boolean;
-  readonly hideWhenDetached?: boolean;
-  readonly strategy?: Strategy;
-  readonly middleware?: Middleware[];
-  readonly autoUpdate?: boolean | AutoUpdateOptions;
   readonly unmountOnExit?: boolean;
   readonly policies?: SelectPolicies<string>;
   readonly as?: PrimitiveAs;
@@ -55,8 +51,7 @@ interface RootContext {
   readonly state: ComputedRef<SelectRootSlotProps>;
   readonly unmountOnExit: ComputedRef<boolean>;
   readonly position: ComputedRef<boolean>;
-  readonly positioned: ComputedRef<boolean>;
-  readonly strategy: ComputedRef<Strategy>;
+  readonly strategy: ComputedRef<PositionStrategy>;
   readonly label: ComputedRef<string | undefined>;
   readonly textValue: ComputedRef<(id: string) => string>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
@@ -85,10 +80,10 @@ export const SelectRoot = defineComponent({
     position: { type: Boolean, default: true },
     side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
     align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'start' },
-    sideOffset: { type: Number, default: 8 }, collisionPadding: { type: [Number, Object] as PropType<Padding>, default: 8 },
-    collisionBoundary: { type: [String, Object, Array] as PropType<Boundary>, default: undefined }, avoidCollisions: { type: Boolean, default: true },
-    hideWhenDetached: { type: Boolean, default: true }, strategy: { type: String as PropType<Strategy>, default: 'absolute' },
-    middleware: { type: Array as PropType<Middleware[]>, default: undefined }, autoUpdate: { type: [Boolean, Object] as PropType<boolean | AutoUpdateOptions>, default: undefined },
+    sideOffset: { type: Number, default: 8 }, collisionPadding: { type: [Number, Object] as PropType<PositionPadding>, default: 8 },
+    collisionBoundary: { type: [String, Object] as PropType<PositionBoundary>, default: undefined }, avoidCollisions: { type: Boolean, default: true },
+    hideWhenDetached: { type: Boolean, default: true }, strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
+    tracking: { type: String as PropType<PositionTracking>, default: 'events' },
     unmountOnExit: { type: Boolean, default: false },
     policies: { type: Object as PropType<SelectPolicies<string>>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
@@ -97,14 +92,12 @@ export const SelectRoot = defineComponent({
     'update:modelValue': (_value: string | null): boolean => true,
     'update:open': (_value: boolean): boolean => true,
     highlight: (_value: string | null): boolean => true,
-    positionChange: (_position: ComputePositionReturn): boolean => true,
   },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const root = shallowRef<HTMLElement>();
     const trigger = shallowRef<HTMLButtonElement>();
     const popup = shallowRef<HTMLElement>();
-    const positioned = shallowRef(!props.position);
     const submissionElement = ref<HTMLSelectElement | null>(null);
     const participation = useCompositeFormControl({
       root: () => root.value ?? null,
@@ -158,8 +151,8 @@ export const SelectRoot = defineComponent({
         position: props.position, side: props.side, align: props.align, sideOffset: props.sideOffset, collisionPadding: props.collisionPadding,
         ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }), avoidCollisions: props.avoidCollisions,
         hideWhenDetached: props.hideWhenDetached, strategy: props.strategy,
+        tracking: props.tracking,
         manageVisibility: false,
-        ...(props.middleware === undefined ? {} : { middleware: props.middleware }), ...(props.autoUpdate === undefined ? {} : { autoUpdate: props.autoUpdate }),
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(valueControlled ? { value } : { defaultValue: value }),
         defaultHighlightedValue: reconciled.current,
@@ -167,7 +160,7 @@ export const SelectRoot = defineComponent({
         disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }),
         onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); },
         onHighlightedValueChange: (next) => { highlighted.value = next; emit('highlight', next); },
-        onOpenChange: (next) => { localOpen.value = next; emit('update:open', next); }, onPositionChange: (nextPosition) => { positioned.value = true; emit('positionChange', nextPosition); }, onUpdate: refresh,
+        onOpenChange: (next) => { localOpen.value = next; emit('update:open', next); }, onUpdate: refresh,
       });
       refreshItems(); refresh();
     };
@@ -182,7 +175,7 @@ export const SelectRoot = defineComponent({
       });
     };
     provide<RootContext>(rootKey, {
-      state, unmountOnExit, position, positioned: computed(() => positioned.value), strategy, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
+      state, unmountOnExit, position, strategy, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
       disabledItems: computed(() => new Set(props.disabledItems)),
       registerTrigger: (element) => {
         trigger.value = element;
@@ -192,7 +185,6 @@ export const SelectRoot = defineComponent({
         } else scheduleConnect();
       },
       registerPopup: (element) => {
-        if (element !== popup.value) positioned.value = !props.position;
         popup.value = element;
         if (element === undefined) {
           connection.value?.disconnect();
@@ -209,7 +201,7 @@ export const SelectRoot = defineComponent({
     });
     onMounted(() => { mounted = true; connect(); });
     onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); });
-    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.textValue, () => props.typeaheadTimeoutMs, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.middleware, () => props.autoUpdate, () => props.policies], connect);
+    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.textValue, () => props.typeaheadTimeoutMs, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies], connect);
     watch([() => props.modelValue, () => props.open], () => {
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({
@@ -268,7 +260,7 @@ export const SelectContent = defineComponent({
     return h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); },
       id: root.contentID, role: 'listbox', hidden: !present.value, 'aria-label': root.label.value,
-      style: root.position.value ? { position: root.strategy.value, visibility: root.positioned.value ? undefined : 'hidden' } : undefined,
+      style: root.position.value ? { position: root.strategy.value } : undefined,
       'aria-activedescendant': root.state.value.highlightedValue === null ? undefined : root.itemID(root.state.value.highlightedValue),
       'data-scope': 'select', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
     }), { default: () => slots['default']?.(root.state.value) });

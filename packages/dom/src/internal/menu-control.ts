@@ -10,7 +10,7 @@ import {
 import { setInteractionAttributes } from './interaction.js';
 import { horizontalArrow, type ReadingDirection } from './direction.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './layer-binding.js';
-import { createFloatingPosition, type FloatingPositionConnection } from './floating-position.js';
+import { createPosition, type PositionConnection } from './position-connection.js';
 
 export type MenuKind = 'menu' | 'menubar' | 'navigation-menu' | 'menu-button';
 export interface MenuTypeaheadOptions<ID extends StableID> { readonly textValue: (id: ID) => string; readonly timeout?: number; readonly now?: () => number; readonly normalize?: (text: string) => string }
@@ -71,7 +71,7 @@ export function createMenuControl<ID extends StableID>(options: MenuControlOptio
 
 class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   readonly #options: MenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>; readonly #policies: MenuPolicies<ID>; readonly #elements = new Map<ID, HTMLElement>(); readonly #submenus = new Map<ID, HTMLElement>();
-  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined; readonly #popupPosition: FloatingPositionConnection | undefined; readonly #submenuPositions = new Map<ID, FloatingPositionConnection>();
+  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined; readonly #popupPosition: PositionConnection | undefined; readonly #submenuPositions = new Map<ID, PositionConnection>();
   #typeaheadBuffer = ''; #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
   public constructor(options: MenuControlOptions<ID>, tree: Tree<ID>, runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>, policies: MenuPolicies<ID>) {
     this.#options = options; this.#tree = tree; this.#runtime = runtime; this.#policies = policies;
@@ -79,16 +79,12 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
     this.#layer = options.kind === 'menu-button' && options.trigger !== undefined ? createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close-popup'); } }) : undefined;
     this.#popupPosition = options.kind === 'menu-button' && options.trigger !== undefined
-      ? createFloatingPosition({
+      ? createPosition({
         root: options.root,
         reference: options.trigger,
         side: 'bottom',
         align: 'center',
         sideOffset: 8,
-        onPositionChange: (position) => {
-          const side = position.placement.split('-')[0];
-          options.root.dataset['placement'] = `${side}-center`;
-        },
       })
       : undefined;
     this.#keydown = (event) => { if (this.#handleTypeahead(event)) { event.preventDefault(); return; } const semantic = toMenuEvent(event, options.kind, options.direction); if (semantic !== null && this.handleEvent(semantic)) event.preventDefault(); };
@@ -133,9 +129,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
       const open = state.open && state.openPath.includes(parentID);
       submenu.dataset['level'] = String((this.#tree.depthOf(parentID) ?? 0) + 1);
       if (this.#options.kind === 'navigation-menu') submenu.removeAttribute('role'); else submenu.setAttribute('role', 'menu'); submenu.hidden = !open;
-      if (!open) { submenu.removeAttribute('data-placement'); this.#elements.get(parentID)?.removeAttribute('data-submenu-placement'); }
     }
-    if (!state.open) this.#options.root.removeAttribute('data-placement');
     this.#layer?.sync();
     this.#popupPosition?.update();
     for (const position of this.#submenuPositions.values()) position.update();
@@ -145,16 +139,12 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     if (anchor === undefined || submenu === undefined) return;
     this.#submenuPositions.get(parentID)?.disconnect();
     const opensFromMenubar = (this.#options.kind === 'menubar' || this.#options.kind === 'navigation-menu') && this.#tree.parentOf(parentID) === null;
-    const position = createFloatingPosition({
+    const position = createPosition({
       root: submenu,
       reference: anchor,
       side: opensFromMenubar ? 'bottom' : this.#options.direction === 'rtl' ? 'left' : 'right',
       align: 'start',
       sideOffset: 8,
-      onPositionChange: (next) => {
-        submenu.dataset['placement'] = next.placement;
-        anchor.dataset['submenuPlacement'] = next.placement;
-      },
     });
     this.#submenuPositions.set(parentID, position);
   }

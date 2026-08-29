@@ -1,44 +1,22 @@
-import type {
-  AutoUpdateOptions,
-  Boundary,
-  ComputePositionReturn,
-  Middleware,
-  Padding,
-  ReferenceElement,
-  Strategy,
-} from '@floating-ui/dom';
 import {
-  createFloatingPosition,
-  type FloatingAlign,
-  type FloatingPositionConnection,
-  type FloatingSide,
-} from './floating-position.js';
+  createPosition,
+  manualPositionConnection,
+  type PositionConnection,
+} from './position-connection.js';
+import type { PositionOptions } from '../position.js';
 
-export interface PickerPositionOptions {
+export interface PickerPositionOptions extends PositionOptions {
   readonly position?: boolean;
-  readonly anchor?: ReferenceElement;
-  readonly side?: FloatingSide;
-  readonly align?: FloatingAlign;
-  readonly sideOffset?: number;
-  readonly collisionPadding?: Padding;
-  readonly collisionBoundary?: Boundary;
-  readonly avoidCollisions?: boolean;
-  readonly hideWhenDetached?: boolean;
-  readonly strategy?: Strategy;
-  readonly middleware?: Middleware[];
-  readonly autoUpdate?: boolean | AutoUpdateOptions;
-  readonly onPositionChange?: (position: ComputePositionReturn) => void;
+  readonly anchor?: HTMLElement;
 }
-
-const manualPosition = Object.freeze({ update(): void {}, disconnect(): void {} });
 
 export function createPickerPosition(
   root: HTMLElement,
   trigger: HTMLElement,
   options: PickerPositionOptions,
-): FloatingPositionConnection {
-  if (options.position === false) return manualPosition;
-  return createFloatingPosition({
+): PositionConnection {
+  if (options.position === false) return manualPositionConnection;
+  return createPosition({
     root,
     reference: options.anchor ?? trigger,
     side: options.side,
@@ -49,8 +27,6 @@ export function createPickerPosition(
     avoidCollisions: options.avoidCollisions,
     hideWhenDetached: options.hideWhenDetached,
     strategy: options.strategy,
-    middleware: options.middleware,
-    autoUpdate: options.autoUpdate,
-    onPositionChange: options.onPositionChange,
+    tracking: options.tracking,
   });
 }

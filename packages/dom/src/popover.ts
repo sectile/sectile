@@ -1,55 +1,20 @@
 import { applyPopoverEvent, tryCreatePopoverState, type PopoverCommand, type PopoverEvent, type PopoverState } from '@sectile/core/popover';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
-import {
-  type AutoUpdateOptions,
-  type Boundary,
-  type ComputePositionConfig,
-  type ComputePositionReturn,
-  type Padding,
-  type ReferenceElement,
-  type Strategy,
-} from '@floating-ui/dom';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { createFloatingPosition, type FloatingPositionConnection } from './internal/floating-position.js';
+import type { PositionAlign, PositionOptions, PositionSide } from './position.js';
+import { createPosition, type PositionConnection } from './internal/position-connection.js';
 import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
 import type { InteractOutsideHandler } from './interact-outside.js';
 
 export type { InteractOutsideEvent, InteractOutsideHandler } from './interact-outside.js';
 
-export {
-  arrow,
-  autoPlacement,
-  flip,
-  hide,
-  inline,
-  limitShift,
-  offset,
-  shift,
-  size,
-  type ArrowOptions,
-  type AutoUpdateOptions,
-  type AutoPlacementOptions,
-  type Boundary,
-  type ComputePositionReturn,
-  type FlipOptions,
-  type HideOptions,
-  type InlineOptions,
-  type Middleware,
-  type OffsetOptions,
-  type Padding,
-  type ReferenceElement,
-  type ShiftOptions,
-  type SizeOptions,
-  type Strategy,
-} from '@floating-ui/dom';
-
-export type PopoverSide = 'top' | 'right' | 'bottom' | 'left';
-export type PopoverAlign = 'start' | 'center' | 'end';
-export interface PopoverOptions {
+export type PopoverSide = PositionSide;
+export type PopoverAlign = PositionAlign;
+export interface PopoverOptions extends PositionOptions {
   readonly root: HTMLElement;
   readonly trigger?: HTMLElement;
-  readonly anchor?: ReferenceElement;
+  readonly anchor?: HTMLElement;
   readonly arrow?: HTMLElement;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
@@ -65,21 +30,7 @@ export interface PopoverOptions {
   readonly closeOnInteractOutside?: boolean;
   readonly interactOutsideExclusions?: readonly HTMLElement[];
   readonly onInteractOutside?: InteractOutsideHandler;
-  readonly side?: PopoverSide;
-  readonly align?: PopoverAlign;
-  readonly sideOffset?: number;
-  readonly collisionPadding?: Padding;
-  readonly collisionBoundary?: Boundary;
-  readonly avoidCollisions?: boolean;
-  readonly arrowPadding?: Padding;
-  readonly hideWhenDetached?: boolean;
-  readonly strategy?: Strategy;
-  /** Replaces the built-in offset, flip, shift, size, arrow, and hide middleware. */
-  readonly middleware?: ComputePositionConfig['middleware'];
-  /** Set to false to position only when updatePosition is called. */
-  readonly autoUpdate?: boolean | AutoUpdateOptions;
   readonly onOpenChange?: (open: boolean) => void;
-  readonly onPositionChange?: (position: ComputePositionReturn) => void;
   readonly onInitialFocus?: () => void;
   readonly onFocusRestore?: () => void;
   readonly onUpdate?: () => void;
@@ -87,7 +38,6 @@ export interface PopoverOptions {
 }
 
 export type PopoverOpenChangeHandler = NonNullable<PopoverOptions['onOpenChange']>;
-export type PopoverPositionChangeHandler = NonNullable<PopoverOptions['onPositionChange']>;
 export type PopoverInitialFocusHandler = NonNullable<PopoverOptions['onInitialFocus']>;
 export type PopoverFocusRestoreHandler = NonNullable<PopoverOptions['onFocusRestore']>;
 export type PopoverInteractOutsideHandler = NonNullable<PopoverOptions['onInteractOutside']>;
@@ -142,11 +92,11 @@ function tryCreatePopoverConnection(options: PopoverOptions): Result<PopoverConn
 
 class PositionedPopover implements PopoverConnection {
   readonly #popup: DOMPopupConnection<PopoverState, PopoverEvent>;
-  readonly #position: FloatingPositionConnection;
+  readonly #position: PositionConnection;
 
   public constructor(popup: DOMPopupConnection<PopoverState, PopoverEvent>, options: PopoverOptions) {
     this.#popup = popup;
-    this.#position = createFloatingPosition({
+    this.#position = createPosition({
       root: options.root,
       reference: options.anchor ?? options.trigger,
       ...(options.arrow === undefined ? {} : { arrow: options.arrow }),
@@ -159,9 +109,7 @@ class PositionedPopover implements PopoverConnection {
       arrowPadding: options.arrowPadding,
       hideWhenDetached: options.hideWhenDetached,
       strategy: options.strategy,
-      middleware: options.middleware,
-      autoUpdate: options.autoUpdate,
-      onPositionChange: options.onPositionChange,
+      tracking: options.tracking,
     });
   }
   public getSnapshot() { return this.#popup.getSnapshot(); }

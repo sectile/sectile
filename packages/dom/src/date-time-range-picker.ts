@@ -22,7 +22,7 @@ import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createTimeField, type TimeFieldConnection } from './time-field.js';
 import { currentReferenceDate } from './internal/reference-date.js';
 import { createPickerPosition, type PickerPositionOptions } from './internal/picker-position.js';
-import type { FloatingPositionConnection } from './internal/floating-position.js';
+import type { PositionConnection } from './internal/position-connection.js';
 
 export interface DateTimeRangePickerOptions extends PickerPositionOptions {
   readonly root: HTMLElement;
@@ -158,7 +158,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
   readonly #startDateField: FacadeConnection<DateFieldConnection> | null;
   readonly #endDateField: FacadeConnection<DateFieldConnection> | null;
   readonly #layer: DOMLayerBinding;
-  readonly #position: FloatingPositionConnection;
+  readonly #position: PositionConnection;
   #syncingFields = false;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => {

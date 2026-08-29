@@ -33,6 +33,7 @@ export interface PositionEngineOptions {
   readonly collisionPadding?: number | Partial<Insets>;
   readonly collisionBoundary?: 'viewport' | Element;
   readonly avoidCollisions?: boolean;
+  readonly arrowPadding?: number;
   readonly hideWhenDetached?: boolean;
   readonly strategy?: PositionStrategy;
   readonly tracking?: PositionTracking;
@@ -145,6 +146,7 @@ export function selectPositionRoute(options: PositionEngineOptions): PositionRou
     && (!(options.hideWhenDetached ?? true) || capabilities.positionVisibility);
   const semantic = (options.collisionBoundary === undefined || options.collisionBoundary === 'viewport')
     && options.arrow === undefined
+    && options.avoidCollisions === false
     && options.tracking !== 'animation-frame'
     && options.requiresLayoutObservables !== true
     && options.onLayout === undefined;
@@ -237,7 +239,7 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
       flip: options.avoidCollisions ?? true,
       shift: options.avoidCollisions ?? true,
       arrow: measurement.arrow,
-      arrowPadding: 8,
+      arrowPadding: options.arrowPadding ?? 8,
     });
     diagnostics.candidateCount += layout.candidateCount;
     projectJavaScript(options, layout, measurement, ownedStyles, ownedData, diagnostics);
@@ -320,8 +322,24 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
 function assertOptions(options: PositionEngineOptions): void {
   if (options.root.ownerDocument.defaultView === null) throw new TypeError('Positioning requires an attached DOM document with a Window.');
   if (!Number.isFinite(options.sideOffset ?? 8)) throw new TypeError('Position sideOffset must be finite.');
+  if (!Number.isFinite(options.arrowPadding ?? 8) || (options.arrowPadding ?? 8) < 0) throw new TypeError('Position arrowPadding must be a non-negative finite number.');
+  assertPadding(options.collisionPadding);
+  if (options.side !== undefined && options.side !== 'top' && options.side !== 'right' && options.side !== 'bottom' && options.side !== 'left') throw new TypeError('Position side is invalid.');
+  if (options.align !== undefined && options.align !== 'start' && options.align !== 'center' && options.align !== 'end') throw new TypeError('Position alignment is invalid.');
   if (options.strategy !== undefined && options.strategy !== 'absolute' && options.strategy !== 'fixed') throw new TypeError('Position strategy is invalid.');
   if (options.tracking !== undefined && options.tracking !== 'events' && options.tracking !== 'animation-frame') throw new TypeError('Position tracking mode is invalid.');
+}
+
+function assertPadding(value: number | Partial<Insets> | undefined): void {
+  if (value === undefined) return;
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value < 0) throw new TypeError('Position collisionPadding must be non-negative and finite.');
+    return;
+  }
+  for (const side of ['top', 'right', 'bottom', 'left'] as const) {
+    const padding = value[side];
+    if (padding !== undefined && (!Number.isFinite(padding) || padding < 0)) throw new TypeError('Position collisionPadding must be non-negative and finite.');
+  }
 }
 
 function subscribeSource(target: EventTarget, type: 'scroll' | 'resize', callback: () => void): () => void {
@@ -496,9 +514,36 @@ function projectCSS(
   writeStyle(styles, options.root, sideMargin(side), `${options.sideOffset ?? 8}px`, diagnostics);
   writeStyle(styles, options.root, '--sectile-position-anchor-width', 'anchor-size(width)', diagnostics);
   writeStyle(styles, options.root, '--sectile-position-anchor-height', 'anchor-size(height)', diagnostics);
+  const padding = cssPadding(options.collisionPadding);
+  const offset = options.sideOffset ?? 8;
+  const availableWidth = side === 'left'
+    ? `max(0px, calc(anchor(left) - ${padding.left + offset}px))`
+    : side === 'right'
+      ? `max(0px, calc(100vw - anchor(right) - ${padding.right + offset}px))`
+      : `max(0px, calc(100vw - ${padding.left + padding.right}px))`;
+  const availableHeight = side === 'top'
+    ? `max(0px, calc(anchor(top) - ${padding.top + offset}px))`
+    : side === 'bottom'
+      ? `max(0px, calc(100vh - anchor(bottom) - ${padding.bottom + offset}px))`
+      : `max(0px, calc(100vh - ${padding.top + padding.bottom}px))`;
+  writeStyle(styles, options.root, '--sectile-position-available-width', availableWidth, diagnostics);
+  writeStyle(styles, options.root, '--sectile-position-available-height', availableHeight, diagnostics);
   writeData(data, options.root, 'positionRoute', 'css-anchor', diagnostics);
   writeData(data, options.root, 'side', side, diagnostics);
   writeData(data, options.root, 'align', align, diagnostics);
+  writeData(data, options.root, 'referenceHidden', 'false', diagnostics);
+}
+
+function cssPadding(value: number | Partial<Insets> | undefined): Insets {
+  if (typeof value === 'number') {
+    return Object.freeze({ top: value, right: value, bottom: value, left: value });
+  }
+  return Object.freeze({
+    top: value?.top ?? 8,
+    right: value?.right ?? 8,
+    bottom: value?.bottom ?? 8,
+    left: value?.left ?? 8,
+  });
 }
 
 function sideMargin(side: RectSide): string {

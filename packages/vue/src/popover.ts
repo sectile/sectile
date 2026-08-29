@@ -15,7 +15,6 @@ const parts = createPopupComponents({
 
 export const PopoverRoot = parts.Root;
 export type PopoverOpenChangeHandler = PopupFactoryOptions['onOpenChange'];
-export type PopoverPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>;
 export type PopoverInteractOutsideHandler = NonNullable<PopupFactoryOptions['onInteractOutside']>;
 export const PopoverTrigger = parts.Trigger;
 export const PopoverAnchor = parts.Anchor;

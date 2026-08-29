@@ -2,71 +2,27 @@ import { createFacadeConnection, type FacadeConnection } from '@sectile/core/ada
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { applyTooltipEvent, tryCreateTooltipState, type TooltipCommand, type TooltipEvent, type TooltipState } from '@sectile/core/tooltip';
-import type {
-  AutoUpdateOptions,
-  Boundary,
-  ComputePositionConfig,
-  ComputePositionReturn,
-  Padding,
-  ReferenceElement,
-  Strategy,
-} from '@floating-ui/dom';
-import { createFloatingPosition, type FloatingPositionConnection, type FloatingSide, type FloatingAlign } from './internal/floating-position.js';
+import type { PositionAlign, PositionOptions, PositionSide } from './position.js';
+import { createPosition, type PositionConnection } from './internal/position-connection.js';
 import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
 
-export {
-  arrow,
-  autoPlacement,
-  flip,
-  hide,
-  inline,
-  limitShift,
-  offset,
-  shift,
-  size,
-  type ArrowOptions,
-  type AutoPlacementOptions,
-  type FlipOptions,
-  type HideOptions,
-  type InlineOptions,
-  type Middleware,
-  type OffsetOptions,
-  type ShiftOptions,
-  type SizeOptions,
-} from '@floating-ui/dom';
-
-export type TooltipSide = FloatingSide;
-export type TooltipAlign = FloatingAlign;
-export interface TooltipOptions {
+export type TooltipSide = PositionSide;
+export type TooltipAlign = PositionAlign;
+export interface TooltipOptions extends PositionOptions {
   readonly root: HTMLElement;
   readonly trigger?: HTMLElement;
-  readonly anchor?: ReferenceElement;
+  readonly anchor?: HTMLElement;
   readonly arrow?: HTMLElement;
   readonly id?: string;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly disabled?: boolean;
-  readonly side?: TooltipSide;
-  readonly align?: TooltipAlign;
-  readonly sideOffset?: number;
-  readonly collisionPadding?: Padding;
-  readonly collisionBoundary?: Boundary;
-  readonly avoidCollisions?: boolean;
-  readonly arrowPadding?: Padding;
-  readonly hideWhenDetached?: boolean;
-  readonly strategy?: Strategy;
-  /** Replaces the built-in offset, flip, shift, size, arrow, and hide middleware. */
-  readonly middleware?: ComputePositionConfig['middleware'];
-  /** Set to false to position only when updatePosition is called. */
-  readonly autoUpdate?: boolean | AutoUpdateOptions;
   readonly onOpenChange?: (open: boolean) => void;
-  readonly onPositionChange?: (position: ComputePositionReturn) => void;
   readonly onUpdate?: () => void;
   readonly manageVisibility?: boolean;
 }
 
 export type TooltipOpenChangeHandler = NonNullable<TooltipOptions['onOpenChange']>;
-export type TooltipPositionChangeHandler = NonNullable<TooltipOptions['onPositionChange']>;
 export type TooltipUpdateHandler = NonNullable<TooltipOptions['onUpdate']>;
 export interface TooltipConnection extends DOMPopupConnection<TooltipState, TooltipEvent> {
   updatePosition(): void;
@@ -106,11 +62,11 @@ function tryCreateTooltipConnection(o: TooltipOptions): Result<TooltipConnection
 
 class PositionedTooltip implements TooltipConnection {
   readonly #popup: DOMPopupConnection<TooltipState, TooltipEvent>;
-  readonly #position: FloatingPositionConnection;
+  readonly #position: PositionConnection;
 
   public constructor(popup: DOMPopupConnection<TooltipState, TooltipEvent>, options: TooltipOptions) {
     this.#popup = popup;
-    this.#position = createFloatingPosition({
+    this.#position = createPosition({
       root: options.root,
       reference: options.anchor ?? options.trigger,
       ...(options.arrow === undefined ? {} : { arrow: options.arrow }),
@@ -123,9 +79,7 @@ class PositionedTooltip implements TooltipConnection {
       arrowPadding: options.arrowPadding,
       hideWhenDetached: options.hideWhenDetached,
       strategy: options.strategy,
-      middleware: options.middleware,
-      autoUpdate: options.autoUpdate,
-      onPositionChange: options.onPositionChange,
+      tracking: options.tracking,
     });
   }
 
