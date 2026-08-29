@@ -23,6 +23,57 @@
       }
     },
     {
+      "id": "adapter.controlled-component-sync",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": ["VAL-020:controlled-component-sync"],
+      "specificationCeiling": "O(oCreate)",
+      "contract": {
+        "variables": [{ "name": "oCreate", "meaning": "component-specific canonical state construction work", "ceiling": "component state contract" }],
+        "time": { "bound": "O(oCreate)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "O(1)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Controlled sync performs one ownership branch, one component state constructor, and one revision replacement without host projection or domain traversal.",
+        "adversarialWitness": "Controlled and uncontrolled sync at the revision ceiling exercise the only bounded branches.",
+        "fullScan": { "allowed": false, "rationale": "Any collection work belongs to the declared component state constructor." }
+      }
+    },
+    {
+      "id": "adapter.collection-domain-replace",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": ["VAL-020:collection-domain-replace"],
+      "specificationCeiling": "O(nDomain + kState)",
+      "contract": {
+        "variables": [
+          { "name": "nDomain", "meaning": "replacement domain cardinality", "ceiling": "component domain ceiling" },
+          { "name": "kState", "meaning": "canonical state output cardinality", "ceiling": "component state ceiling" }
+        ],
+        "time": { "bound": "O(nDomain + kState)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(1)", "output": "O(kState)", "retained": "O(nDomain + kState)" },
+        "resources": { "allocations": "O(kState)", "cacheEntries": "O(1)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Domain replacement is an explicit boundary that invokes the component's one canonical reconciliation constructor and retains only the new domain and snapshot; identical owner replacement is O(1).",
+        "adversarialWitness": "A disjoint maximum domain forces the component reconciliation to emit its complete canonical state exactly once.",
+        "fullScan": { "allowed": true, "rationale": "A distinct external domain must be validated and reconciled; ordinary handle calls retain the owner." }
+      }
+    },
+    {
+      "id": "adapter.disabled-identities",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": ["VAL-020:disabled-identity-normalization"],
+      "specificationCeiling": "O(nDisabled)",
+      "contract": {
+        "variables": [{ "name": "nDisabled", "meaning": "supplied disabled identity count", "ceiling": "component domain ceiling" }],
+        "time": { "bound": "O(nDisabled)", "kind": "expected", "runtimeState": "external" },
+        "space": { "auxiliary": "O(nDisabled)", "output": "O(1)", "retained": "O(nDisabled)" },
+        "resources": { "allocations": "O(nDisabled)", "cacheEntries": "O(nDisabled)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Construction inserts supplied identities into one Set and performs one expected-O(1) domain membership check per distinct identity.",
+        "adversarialWitness": "Every supplied ID is distinct and the final ID lies outside the domain.",
+        "fullScan": { "allowed": true, "rationale": "External disabled input must be validated exactly once at construction." }
+      }
+    },
+    {
       "id": "adapter.facade-destroy",
       "inherits": "lifecycle-v1",
       "source": "packages/core/src/adapter-runtime.ts",

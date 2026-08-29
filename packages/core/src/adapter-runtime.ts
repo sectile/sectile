@@ -1,4 +1,4 @@
-import type { Result, SectileError } from './shared.js';
+import type { Result, SectileError, StableID } from './shared.js';
 import type { CoreErrorCode } from './error-code.js';
 import {
   tryCreateInteractionState,
@@ -242,6 +242,196 @@ export function createHostAdapter<State, HostInput, Event, Command, HostEffect, 
       ): RevisionResult<State, HostEffect, Code> => controller.value.reject(code, message, details),
     }),
   };
+}
+
+export interface ControlledComponentController<
+  State,
+  Event,
+  Command,
+  Value,
+  Code extends string = CoreErrorCode,
+> {
+  getSnapshot(): RevisionSnapshot<State>;
+  syncControlledValue(value: Value): Result<RevisionSnapshot<State>, CoreErrorCode | Code>;
+  handle(event: Event, expectedRevision?: number): RevisionResult<State, Command, CoreErrorCode | Code>;
+}
+
+export interface ControlledComponentControllerOptions<
+  State,
+  Event,
+  Command,
+  Value,
+  Code extends string = CoreErrorCode,
+> {
+  readonly controlled: boolean;
+  readonly initial: Result<State, Code>;
+  readonly reducer: EventReducer<State, Event, Command, Code>;
+  readonly create: (value: Value, reference: State) => Result<State, Code>;
+  readonly read: (state: State) => Value;
+  readonly onChange?: (value: Value, previous: Value) => void;
+  readonly interaction?: InteractionStateInput;
+  readonly interactionIntent?: (event: Event) => 'navigate' | 'mutate';
+}
+
+export function createControlledComponentController<
+  State,
+  Event,
+  Command extends object,
+  Value,
+  Code extends string = CoreErrorCode,
+>(
+  options: ControlledComponentControllerOptions<State, Event, Command, Value, Code>,
+): Result<ControlledComponentController<State, Event, Command, Value, Code>, CoreErrorCode | Code> {
+  const runtime = createSemanticController<State, Event, Command, Command, Code>({
+    initial: options.initial,
+    reducer: options.reducer,
+    reconcile: (previous, proposed) => options.create(
+      options.controlled ? options.read(previous) : options.read(proposed),
+      proposed,
+    ),
+    notify: (previous, proposed) => {
+      const before = options.read(previous);
+      const after = options.read(proposed);
+      if (!Object.is(before, after)) options.onChange?.(after, before);
+    },
+    toEffect: (command) => command,
+    ...(options.interaction === undefined ? {} : { interaction: options.interaction }),
+    ...(options.interactionIntent === undefined
+      ? {}
+      : { interactionIntent: options.interactionIntent }),
+  });
+  if (!runtime.ok) return runtime;
+  const getSnapshot = (): RevisionSnapshot<State> => runtime.value.getSnapshot();
+  const syncControlledValue = (
+    value: Value,
+  ): Result<RevisionSnapshot<State>, CoreErrorCode | Code> => {
+    if (!options.controlled) {
+      return {
+        ok: false,
+        error: {
+          class: 'construction',
+          code: 'uncontrolled-controller-sync',
+          message: 'An uncontrolled component cannot be synchronized externally.',
+        },
+      };
+    }
+    return runtime.value.replace(options.create(value, getSnapshot().state));
+  };
+  return {
+    ok: true,
+    value: Object.freeze({
+      getSnapshot,
+      syncControlledValue,
+      handle: (event: Event, expectedRevision?: number) => runtime.value.handle(event, expectedRevision),
+    }),
+  };
+}
+
+export interface CollectionComponentController<
+  Domain,
+  State,
+  Event,
+  Command,
+  Code extends string = CoreErrorCode,
+> {
+  getDomain(): Domain;
+  getSnapshot(): RevisionSnapshot<State>;
+  replaceDomain(domain: Domain): Result<RevisionSnapshot<State>, CoreErrorCode | Code>;
+  replaceState(state: Result<State, Code>): Result<RevisionSnapshot<State>, CoreErrorCode | Code>;
+  handle(event: Event, expectedRevision?: number): RevisionResult<State, Command, CoreErrorCode | Code>;
+}
+
+export interface CollectionComponentControllerOptions<
+  Domain,
+  State,
+  Event,
+  Command,
+  Code extends string = CoreErrorCode,
+> {
+  readonly domain: Domain;
+  readonly initial: (domain: Domain) => Result<State, Code>;
+  readonly reducer: (domain: Domain, state: State, event: Event) => Result<{
+    readonly state: State;
+    readonly commands: readonly Command[];
+  }, Code>;
+  readonly reconcile: (domain: Domain, previous: State, proposed: State) => Result<State, Code>;
+  readonly replaceDomain: (domain: Domain, previous: State) => Result<State, Code>;
+  readonly notify?: (previous: State, proposed: State) => void;
+  readonly interaction?: InteractionStateInput;
+  readonly interactionIntent?: (event: Event) => 'navigate' | 'mutate';
+}
+
+export function createCollectionComponentController<
+  Domain,
+  State,
+  Event,
+  Command extends object,
+  Code extends string = CoreErrorCode,
+>(
+  options: CollectionComponentControllerOptions<Domain, State, Event, Command, Code>,
+): Result<CollectionComponentController<Domain, State, Event, Command, Code>, CoreErrorCode | Code> {
+  let domain = options.domain;
+  const runtime = createSemanticController<State, Event, Command, Command, Code>({
+    initial: options.initial(domain),
+    reducer: (state, event) => options.reducer(domain, state, event),
+    reconcile: (previous, proposed) => options.reconcile(domain, previous, proposed),
+    toEffect: (command) => command,
+    ...(options.notify === undefined ? {} : { notify: options.notify }),
+    ...(options.interaction === undefined ? {} : { interaction: options.interaction }),
+    ...(options.interactionIntent === undefined
+      ? {}
+      : { interactionIntent: options.interactionIntent }),
+  });
+  if (!runtime.ok) return runtime;
+  const replaceDomain = (
+    nextDomain: Domain,
+  ): Result<RevisionSnapshot<State>, CoreErrorCode | Code> => {
+    if (Object.is(domain, nextDomain)) return { ok: true, value: runtime.value.getSnapshot() };
+    const previous = runtime.value.getSnapshot().state;
+    const next = options.replaceDomain(nextDomain, previous);
+    if (!next.ok) return next;
+    const replaced = runtime.value.replace(next);
+    if (replaced.ok) {
+      domain = nextDomain;
+      options.notify?.(previous, replaced.value.state);
+    }
+    return replaced;
+  };
+  return {
+    ok: true,
+    value: Object.freeze({
+      getDomain: (): Domain => domain,
+      getSnapshot: (): RevisionSnapshot<State> => runtime.value.getSnapshot(),
+      replaceDomain,
+      replaceState: (state: Result<State, Code>) => runtime.value.replace(state),
+      handle: (event: Event, expectedRevision?: number) => runtime.value.handle(event, expectedRevision),
+    }),
+  };
+}
+
+export interface IdentityDomain<ID extends StableID> {
+  contains(id: ID): boolean;
+}
+
+export function tryCreateDisabledIdentitySet<ID extends StableID>(
+  domain: IdentityDomain<ID>,
+  ids: readonly ID[] = [],
+): Result<ReadonlySet<ID>> {
+  const disabled = new Set(ids);
+  for (const id of disabled) {
+    if (!domain.contains(id)) {
+      return {
+        ok: false,
+        error: {
+          class: 'construction',
+          code: 'disabled-item-outside-domain',
+          message: 'Every disabled item must exist in the component domain.',
+          details: { id },
+        },
+      };
+    }
+  }
+  return { ok: true, value: disabled };
 }
 
 interface SnapshotConnection {
