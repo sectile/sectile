@@ -3,6 +3,7 @@ export {
   clearFormFieldIssues,
   createFormState,
   getFormField,
+  getFormFieldIDsByIssueSource,
   removeFormFieldIssue,
   replaceFormFieldIssues,
   setFormFieldMeta,

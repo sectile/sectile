@@ -208,18 +208,31 @@ function applyIndexChanges<Key, Value>(
 
 class FormDeltaSet<Value> {
   readonly #index: FormDeltaIndex<Value, true>;
+  readonly #size: number;
 
-  private constructor(index: FormDeltaIndex<Value, true>) { this.#index = index; }
+  private constructor(index: FormDeltaIndex<Value, true>, size: number) {
+    this.#index = index;
+    this.#size = size;
+  }
 
   public static from<Value>(values: Iterable<Value>): FormDeltaSet<Value> {
-    return new FormDeltaSet(FormDeltaIndex.from(new Map(Array.from(values, (value) => [value, true]))));
+    const entries = new Map(Array.from(values, (value) => [value, true] as const));
+    return new FormDeltaSet(FormDeltaIndex.from(entries), entries.size);
   }
 
   public update(add: Iterable<Value>, remove: Iterable<Value>): FormDeltaSet<Value> {
     const changes = new Map<Value, true | typeof deletedIndexValue>();
     for (const value of remove) changes.set(value, deletedIndexValue);
     for (const value of add) changes.set(value, true);
-    return changes.size === 0 ? this : new FormDeltaSet(this.#index.update(changes));
+    if (changes.size === 0) return this;
+    let size = this.#size;
+    for (const [value, next] of changes) {
+      const contained = this.#index.has(value);
+      if (contained && next === deletedIndexValue) size -= 1;
+      else if (!contained && next === true) size += 1;
+    }
+    if (size === 0) return FormDeltaSet.from([]);
+    return new FormDeltaSet(this.#index.update(changes), size);
   }
 
   public values(): IterableIterator<Value> { return this.#index.materialize().keys(); }
@@ -544,6 +557,20 @@ export function getFormField<ID extends StableID>(
     return state.fields.find((field) => field.id === id) ?? null;
   }
   return getStoredField(privateState.fields as FormFieldStore<ID>, id) ?? null;
+}
+
+export function getFormFieldIDsByIssueSource<ID extends StableID>(
+  state: FormState<ID>,
+  source: FormIssueSource,
+): readonly ID[] {
+  const privateState = formStatePrivate.get(state);
+  if (privateState === undefined) {
+    return Object.freeze(state.fields
+      .filter((field) => field.issues.some((issue) => issue.source === source))
+      .map((field) => field.id));
+  }
+  const fields = privateState.fields as FormFieldStore<ID>;
+  return Object.freeze(Array.from(fields.fieldIDsBySource.get(source)?.values() ?? []));
 }
 
 export function setFormFieldMeta<ID extends StableID>(

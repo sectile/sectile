@@ -1,10 +1,12 @@
 import {
   applyFormEvent,
   getFormField,
+  getFormFieldIDsByIssueSource,
   tryCreateFormState,
   type FormCommand,
   type FormEvent,
   type FormFieldState,
+  type FormFieldMetaInput,
   type FormIssue,
   type FormIssueSource,
   type FormReinitializeOptions,
@@ -158,8 +160,27 @@ export interface FormSnapshot<ID extends StableID = StableID> {
   readonly state: FormState<ID>;
 }
 
-export type FormSnapshotListener<ID extends StableID = StableID> =
-  (snapshot: FormSnapshot<ID>) => void;
+export interface FormSubscribeOptions<Selected> {
+  readonly equals?: (previous: Selected, next: Selected) => boolean;
+}
+
+export type FormSelector<ID extends StableID, Selected> =
+  (state: FormState<ID>) => Selected;
+
+export type FormFieldSelector<ID extends StableID, Selected> =
+  (field: FormFieldState<ID> | null) => Selected;
+
+export type FormSelectionListener<Selected> =
+  (selected: Selected, previous: Selected) => void;
+
+interface SelectorSubscription<Input> {
+  readonly select: (input: Input) => unknown;
+  readonly listener: (selected: unknown, previous: unknown) => void;
+  readonly equals: (previous: unknown, next: unknown) => boolean;
+  selected: unknown;
+  active: boolean;
+  readonly createdRevision: number;
+}
 
 export interface FormOptions<
   ID extends StableID = StableID,
@@ -180,6 +201,7 @@ export interface FormOptions<
   readonly onAnnounceSummary?: FormAnnounceSummaryHandler<ID>;
   readonly onStateChange?: FormStateChangeHandler<ID>;
   readonly onUpdate?: FormUpdateHandler;
+  readonly onSubscriptionError?: (error: unknown) => void;
 }
 
 export type FormReconfigureOptions<
@@ -199,13 +221,29 @@ export interface FormConnection<
   reconfigure(options: FormReconfigureOptions<ID, Input, Output>): void;
   registerParticipant(participant: FormParticipant<ID>): () => void;
   refreshParticipant(id: ID): boolean;
+  getField(id: ID): FormFieldState<ID> | null;
+  setFieldMeta(id: ID, meta: FormFieldMetaInput): boolean;
+  replaceFieldIssues(id: ID, source: FormIssueSource, issues: readonly FormIssue<ID>[]): boolean;
+  upsertFieldIssue(id: ID, issue: FormIssue<ID>): boolean;
+  removeFieldIssue(id: ID, issueId: StableID): boolean;
+  clearFieldIssues(id: ID, source?: FormIssueSource): boolean;
   replaceIssues(source: FormIssueSource, issues: readonly FormIssue<ID>[]): boolean;
   submitStarted(): number | null;
   submitSucceeded(generation: number): boolean;
   submitFailed(generation: number, issues?: readonly FormIssue<ID>[]): boolean;
   reinitialize(options?: FormReinitializeOptions): void;
   reset(): void;
-  subscribe(listener: FormSnapshotListener<ID>): () => void;
+  subscribeForm<Selected>(
+    selector: FormSelector<ID, Selected>,
+    listener: FormSelectionListener<Selected>,
+    options?: FormSubscribeOptions<Selected>,
+  ): () => void;
+  subscribeField<Selected>(
+    id: ID,
+    selector: FormFieldSelector<ID, Selected>,
+    listener: FormSelectionListener<Selected>,
+    options?: FormSubscribeOptions<Selected>,
+  ): () => void;
   destroy(): void;
 }
 
@@ -237,7 +275,14 @@ export function tryCreateForm<
   const participantObservers = new Map<ID, () => void>();
   const handledParticipantEvents = new WeakSet<Event>();
   const pendingReinitializations = new Map<number, FormReinitializeOptions>();
-  const subscribers = new Set<(snapshot: FormSnapshot<ID>) => void>();
+  const formSubscribers = new Set<SelectorSubscription<FormState<ID>>>();
+  const fieldSubscribers = new Map<ID, Set<SelectorSubscription<FormFieldState<ID> | null>>>();
+  const pendingNotifications: Array<{
+    readonly event: FormEvent<ID>;
+    readonly previous: FormState<ID>;
+    readonly next: FormState<ID>;
+    readonly revision: number;
+  }> = [];
   let state = initial.value;
   let revision = 0;
   let active = true;
@@ -258,6 +303,8 @@ export function tryCreateForm<
   let announceSummaryHandler: FormAnnounceSummaryHandler<ID> | undefined = options.onAnnounceSummary;
   let stateChangeHandler: FormStateChangeHandler<ID> | undefined = options.onStateChange;
   let updateHandler: FormUpdateHandler | undefined = options.onUpdate;
+  let subscriptionErrorHandler: ((error: unknown) => void) | undefined = options.onSubscriptionError;
+  let dispatchingNotifications = false;
 
   options.form.dataset['scope'] = 'form';
   options.form.dataset['part'] = 'root';
@@ -296,6 +343,7 @@ export function tryCreateForm<
     announceSummaryHandler = next.onAnnounceSummary;
     stateChangeHandler = next.onStateChange;
     updateHandler = next.onUpdate;
+    subscriptionErrorHandler = next.onSubscriptionError;
     if (!validationChanged) return;
     validationController?.abort();
     validationController = null;
@@ -306,18 +354,118 @@ export function tryCreateForm<
   };
 
   const snapshot = (): FormSnapshot<ID> => Object.freeze({ revision, state });
-  const notify = (): void => {
+  const reportSubscriptionError = (error: unknown): void => {
+    try { subscriptionErrorHandler?.(error); } catch { /* subscriber failures stay isolated */ }
+  };
+  const dispatchSubscriptions = <Value>(
+    subscriptions: ReadonlySet<SelectorSubscription<Value>> | undefined,
+    value: Value,
+    notificationRevision: number,
+  ): void => {
+    if (subscriptions === undefined || subscriptions.size === 0) return;
+    for (const subscription of [...subscriptions]) {
+      if (!subscription.active || subscription.createdRevision >= notificationRevision) continue;
+      let selected: unknown;
+      try {
+        selected = subscription.select(value);
+      } catch (error) {
+        reportSubscriptionError(error);
+        continue;
+      }
+      let equal: boolean;
+      try {
+        equal = subscription.equals(subscription.selected, selected);
+      } catch (error) {
+        reportSubscriptionError(error);
+        continue;
+      }
+      if (equal) continue;
+      const previous = subscription.selected;
+      subscription.selected = selected;
+      try {
+        subscription.listener(selected, previous);
+      } catch (error) {
+        reportSubscriptionError(error);
+      }
+    }
+  };
+  const affectedFieldIDs = (
+    event: FormEvent<ID>,
+    previous: FormState<ID>,
+    next: FormState<ID>,
+  ): readonly ID[] | null => {
+    if (event === 'reset' || (typeof event !== 'string' && event.type === 'reinitialize')) {
+      return null;
+    }
+    if (typeof event === 'string') return [];
+    if (
+      event.type === 'register-field'
+      || event.type === 'unregister-field'
+      || event.type === 'set-field-meta'
+      || event.type === 'replace-field-issues'
+      || event.type === 'upsert-field-issue'
+      || event.type === 'remove-field-issue'
+      || event.type === 'clear-field-issues'
+    ) return [event.type === 'register-field' ? event.field.id : event.id];
+    const source = event.type === 'replace-issues'
+      ? event.source
+      : event.type === 'submit-failed' || event.type === 'submit-succeeded'
+        || (event.type === 'validation-started' && event.intent === 'submission')
+        ? 'server'
+        : null;
+    if (source === null) return [];
+    return [...new Set([
+      ...getFormFieldIDsByIssueSource(previous, source),
+      ...getFormFieldIDsByIssueSource(next, source),
+    ])];
+  };
+  const notify = (event: FormEvent<ID>, previous: FormState<ID>): void => {
     revision += 1;
-    const next = snapshot();
-    stateChangeHandler?.(state);
-    updateHandler?.();
-    for (const subscriber of subscribers) subscriber(next);
+    pendingNotifications.push({ event, previous, next: state, revision });
+    if (dispatchingNotifications) return;
+    dispatchingNotifications = true;
+    try {
+      for (let index = 0; index < pendingNotifications.length; index += 1) {
+        const notification = pendingNotifications[index]!;
+        stateChangeHandler?.(notification.next);
+        updateHandler?.();
+        dispatchSubscriptions(formSubscribers, notification.next, notification.revision);
+        if (!active) break;
+        const affected = affectedFieldIDs(
+          notification.event,
+          notification.previous,
+          notification.next,
+        );
+        if (affected === null) {
+          for (const [id, subscriptions] of fieldSubscribers) {
+            dispatchSubscriptions(
+              subscriptions,
+              getFormField(notification.next, id),
+              notification.revision,
+            );
+          }
+          continue;
+        }
+        for (const id of affected) {
+          dispatchSubscriptions(
+            fieldSubscribers.get(id),
+            getFormField(notification.next, id),
+            notification.revision,
+          );
+        }
+      }
+    } finally {
+      pendingNotifications.length = 0;
+      dispatchingNotifications = false;
+    }
   };
   const transition = (event: FormEvent<ID>): readonly FormCommand<ID>[] | null => {
+    if (!active) return null;
     const result = applyFormEvent(state, event);
     if (!result.ok) return null;
+    const previous = state;
     state = result.value.state;
-    notify();
+    if (!Object.is(previous, state)) notify(event, previous);
     return result.value.commands;
   };
   const field = (id: ID): FormFieldState<ID> | undefined => (
@@ -904,6 +1052,60 @@ export function tryCreateForm<
 
   for (const participant of options.participants ?? []) registerParticipant(participant);
 
+  const createSelectorSubscription = <Value, Selected>(
+    value: Value,
+    selector: (value: Value) => Selected,
+    listener: FormSelectionListener<Selected>,
+    subscribeOptions: FormSubscribeOptions<Selected> = {},
+  ): SelectorSubscription<Value> => ({
+    select: selector as (value: Value) => unknown,
+    listener: listener as (selected: unknown, previous: unknown) => void,
+    equals: (subscribeOptions.equals ?? Object.is) as (previous: unknown, next: unknown) => boolean,
+    selected: selector(value),
+    active: true,
+    createdRevision: revision,
+  });
+  const subscribeForm = <Selected>(
+    selector: FormSelector<ID, Selected>,
+    listener: FormSelectionListener<Selected>,
+    subscribeOptions?: FormSubscribeOptions<Selected>,
+  ): (() => void) => {
+    if (!active) return () => {};
+    const subscription = createSelectorSubscription(state, selector, listener, subscribeOptions);
+    formSubscribers.add(subscription);
+    return (): void => {
+      if (!subscription.active) return;
+      subscription.active = false;
+      formSubscribers.delete(subscription);
+    };
+  };
+  const subscribeField = <Selected>(
+    id: ID,
+    selector: FormFieldSelector<ID, Selected>,
+    listener: FormSelectionListener<Selected>,
+    subscribeOptions?: FormSubscribeOptions<Selected>,
+  ): (() => void) => {
+    if (!active) return () => {};
+    const subscription = createSelectorSubscription(
+      getFormField(state, id),
+      selector,
+      listener,
+      subscribeOptions,
+    );
+    let channel = fieldSubscribers.get(id);
+    if (channel === undefined) {
+      channel = new Set();
+      fieldSubscribers.set(id, channel);
+    }
+    channel.add(subscription);
+    return (): void => {
+      if (!subscription.active) return;
+      subscription.active = false;
+      channel?.delete(subscription);
+      if (channel?.size === 0) fieldSubscribers.delete(id);
+    };
+  };
+
   const connection: FormConnection<ID, Input, Output> = {
     get state() { return state; },
     getSnapshot: snapshot,
@@ -935,6 +1137,21 @@ export function tryCreateForm<
       if (previousIntent !== null) runValidation('input', previousIntent, id);
       return true;
     },
+    getField: (id) => getFormField(state, id),
+    setFieldMeta: (id, meta) => transition({ type: 'set-field-meta', id, meta }) !== null,
+    replaceFieldIssues: (id, source, issues) => transition({
+      type: 'replace-field-issues',
+      id,
+      source,
+      issues,
+    }) !== null,
+    upsertFieldIssue: (id, issue) => transition({ type: 'upsert-field-issue', id, issue }) !== null,
+    removeFieldIssue: (id, issueId) => transition({ type: 'remove-field-issue', id, issueId }) !== null,
+    clearFieldIssues: (id, source) => transition({
+      type: 'clear-field-issues',
+      id,
+      ...(source === undefined ? {} : { source }),
+    }) !== null,
     replaceIssues: (source, issues) => transition({ type: 'replace-issues', source, issues }) !== null,
     submitStarted: () => {
       const generation = state.submissionGeneration;
@@ -949,13 +1166,12 @@ export function tryCreateForm<
     },
     reinitialize,
     reset: () => options.form.reset(),
-    subscribe: (listener) => {
-      subscribers.add(listener);
-      return (): void => { subscribers.delete(listener); };
-    },
+    subscribeForm,
+    subscribeField,
     destroy: () => {
       if (!active) return;
       active = false;
+      pendingNotifications.length = 0;
       validationController?.abort();
       nativeResume = null;
       options.form.removeEventListener('input', onValueInteraction);
@@ -964,7 +1180,12 @@ export function tryCreateForm<
       options.form.removeEventListener('invalid', onInvalid, true);
       options.form.removeEventListener('submit', onSubmit);
       options.form.removeEventListener('reset', onReset);
-      subscribers.clear();
+      for (const subscription of formSubscribers) subscription.active = false;
+      formSubscribers.clear();
+      for (const channel of fieldSubscribers.values()) {
+        for (const subscription of channel) subscription.active = false;
+      }
+      fieldSubscribers.clear();
       for (const disconnect of participantObservers.values()) disconnect();
       participantObservers.clear();
       participants.clear();

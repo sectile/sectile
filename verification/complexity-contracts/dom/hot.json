@@ -5,6 +5,56 @@
   "kind": "internal-operations",
   "operations": [
     {
+      "id": "form.subscribe",
+      "inherits": "lifecycle-v1",
+      "source": "packages/dom/src/form.ts",
+      "benchmarkIDs": ["VAL-032:dom-form-subscribe-resources"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1) per subscription" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "1" },
+        "proof": "Construction evaluates one selector, retains one record, and inserts it into one form or field Set channel.",
+        "adversarialWitness": "A subscription to an absent field still allocates one field-channel record and no domain projection.",
+        "fullScan": { "allowed": false, "rationale": "Subscription construction cannot inspect registered fields or other subscriptions." }
+      }
+    },
+    {
+      "id": "form.subscription-dispatch",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/form.ts",
+      "benchmarkIDs": ["VAL-032:dom-form-selector-dispatch-work"],
+      "specificationCeiling": "O(sForm + uSource + sAffected)",
+      "contract": {
+        "variables": [
+          { "name": "sForm", "meaning": "active coarse form subscriptions", "ceiling": "connection-owned subscriptions" },
+          { "name": "uSource", "meaning": "field owners affected by a source-wide issue transition", "ceiling": "uSource <= fField" },
+          { "name": "sAffected", "meaning": "subscriptions in affected field channels", "ceiling": "all connection-owned field subscriptions for reset/reinitialize" }
+        ],
+        "time": { "bound": "O(sForm + uSource + sAffected)", "kind": "worst-case", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(sForm + uSource + sAffected)", "output": "O(1)", "retained": "O(sForm + sField)" },
+        "resources": { "allocations": "O(sForm + uSource + sAffected)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "O(sForm + sField)" },
+        "proof": "Dispatch snapshots the coarse channel and only event-routed field channels; source-wide events reuse Form owner indexes and reset/reinitialize explicitly visit every subscribed field channel.",
+        "adversarialWitness": "A source replacement touching one of 10k fields evaluates coarse selectors plus only that field's channel, while reset deliberately evaluates every subscribed field channel.",
+        "fullScan": { "allowed": false, "rationale": "Ordinary single-field updates cannot enumerate unrelated fields or field subscription channels." }
+      }
+    },
+    {
+      "id": "form.unsubscribe",
+      "inherits": "lifecycle-v1",
+      "source": "packages/dom/src/form.ts",
+      "benchmarkIDs": ["VAL-032:dom-form-unsubscribe-work"],
+      "specificationCeiling": "expected O(1)",
+      "contract": {
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "0", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "-1" },
+        "proof": "The idempotent disposer marks one record inactive, deletes it from one Set, and removes an empty field channel from one Map.",
+        "adversarialWitness": "Repeated disposal during active dispatch changes no other channel and retains no subscription.",
+        "fullScan": { "allowed": false, "rationale": "Unsubscribe owns a direct record and channel reference." }
+      }
+    },
+    {
       "id": "position.connect",
       "inherits": "lifecycle-v1",
       "source": "packages/dom/src/internal/positioning/engine.ts",

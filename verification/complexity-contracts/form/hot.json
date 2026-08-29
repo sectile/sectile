@@ -40,6 +40,22 @@
       }
     },
     {
+      "id": "field.ids-by-issue-source",
+      "inherits": "linear-v1",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": ["VAL-032:form-source-owner-query-work"],
+      "specificationCeiling": "O(uSource)",
+      "contract": {
+        "variables": [{ "name": "uSource", "meaning": "fields owning issues from the requested source", "ceiling": "uSource <= fField" }],
+        "time": { "bound": "O(uSource)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(uSource)", "output": "O(uSource)", "retained": "O(fField + iIssue)" },
+        "resources": { "allocations": "O(uSource)", "cacheEntries": "O(fField + iIssue)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The canonical source-owner delta index enumerates only owners of the requested source and materializes the explicit returned snapshot.",
+        "adversarialWitness": "One issue source owned by every registered field emits every owner once without inspecting unrelated issue sources.",
+        "fullScan": { "allowed": false, "rationale": "Canonical queries reuse the retained source-owner index; only forged input falls back to complete validation/projection." }
+      }
+    },
+    {
       "id": "issues.replace-source",
       "inherits": "linear-v1",
       "source": "packages/form/src/internal/form.ts",

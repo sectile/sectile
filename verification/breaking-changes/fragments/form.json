@@ -9,6 +9,13 @@
       "symbols": ["FormEvent update-field", "FormFieldInput.valid"],
       "replacement": { "package": "@sectile/form", "subpath": "./state" },
       "removalReason": "Field validity is derived from issues; use getFormField, setFormFieldMeta, replaceFormFieldIssues, upsertFormFieldIssue, removeFormFieldIssue, and clearFormFieldIssues."
+    },
+    {
+      "id": "WI-028:source-owner-query",
+      "change": "signature-changed",
+      "before": { "subpath": "./state" },
+      "symbols": ["getFormFieldIDsByIssueSource"],
+      "replacement": { "package": "@sectile/form", "subpath": "./state" }
     }
   ]
 }

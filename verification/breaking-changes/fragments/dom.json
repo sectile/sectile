@@ -30,6 +30,14 @@
       "before": { "subpath": "." },
       "symbols": ["GridEditMode", "GridPolicies", "GridState", "GridEvent"],
       "replacement": { "package": "@sectile/dom", "subpath": "." }
+    },
+    {
+      "id": "WI-028:granular-form-subscriptions",
+      "change": "signature-changed",
+      "before": { "subpath": "./form" },
+      "symbols": ["FormConnection.subscribe", "FormConnection field mutation surface"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./form" },
+      "removalReason": "Use subscribeForm or subscribeField and the typed get/set/issue methods; whole-state subscription overloads are removed."
     }
   ]
 }
