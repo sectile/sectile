@@ -7,6 +7,7 @@ import {
   nextTick,
   onBeforeUnmount,
   onMounted,
+  onScopeDispose,
   provide,
   shallowRef,
   watch,
@@ -32,6 +33,7 @@ import {
   type FormReinitializeOptions as DOMFormReinitializeOptions,
   type FormPathSegment,
   type FormSchema as DOMFormSchema,
+  type FormSubscribeOptions as DOMFormSubscribeOptions,
   type FormSubmissionElement,
   type FormSubmitPayload as DOMFormSubmitPayload,
   type FormSubmitResult as DOMFormSubmitResult,
@@ -68,6 +70,11 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostId } from './host-provider.js';
 
 export type FormState = FormConnection<string>['state'];
+export type FormFieldState = NonNullable<ReturnType<FormConnection<string>['getField']>>;
+export type FormFieldMetaInput = Parameters<FormConnection<string>['setFieldMeta']>[1];
+export type FormSubscribeOptions<Selected> = DOMFormSubscribeOptions<Selected>;
+export type FormSelectorFunction<Selected> = (state: FormState) => Selected;
+export type FormFieldSelectorFunction<Selected> = (field: FormFieldState | null) => Selected;
 export type FormIssue = NonNullable<FormOptions<string>['issues']>[number];
 export type FormIssueSource = Parameters<FormConnection<string>['replaceIssues']>[0];
 export type FormValues<Shape extends object = Record<string, unknown>> = DOMFormValues<Shape>;
@@ -157,25 +164,6 @@ export interface FormRootProps<
   readonly mapSubmitError?: FormSubmitErrorMapper;
 }
 
-export interface FormRootSlotProps {
-  readonly state: FormState;
-  readonly validationStatus: FormState['validationStatus'];
-  readonly validationTrigger: FormState['validationTrigger'];
-  readonly validationIntent: FormState['validationIntent'];
-  readonly submissionStatus: FormState['submissionStatus'];
-  readonly valid: boolean;
-  readonly touched: boolean;
-  readonly dirty: boolean;
-  readonly submitted: boolean;
-  readonly submitCount: number;
-  readonly submitStarted: FormSubmitStartedAction;
-  readonly submitSucceeded: FormSubmitSucceededAction;
-  readonly submitFailed: FormSubmitFailedAction;
-  readonly replaceIssues: FormReplaceIssuesAction;
-  readonly reinitialize: FormReinitializeAction;
-  readonly reset: FormResetAction;
-}
-
 export type FormRootPublicProps<
   Input extends object = Record<string, unknown>,
   Output extends object = Input,
@@ -192,7 +180,7 @@ export interface FormRootComponent {
   new <Input extends object = Record<string, unknown>, Output extends object = Input>(props: FormRootPublicProps<Input, Output>): {
     $props: FormRootPublicProps<Input, Output>;
     $slots: {
-      default?: (props: FormRootSlotProps) => VNodeChild;
+      default?: () => VNodeChild;
     };
     submitStarted: FormSubmitStartedAction;
     submitSucceeded: FormSubmitSucceededAction;
@@ -231,6 +219,56 @@ export interface FormFieldSlotProps {
   readonly touched: boolean;
   readonly dirty: boolean;
   readonly issues: readonly FormIssue[];
+  readonly setMeta: (meta: FormFieldMetaInput) => boolean;
+  readonly replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]) => boolean;
+  readonly upsertIssue: (issue: FormIssue) => boolean;
+  readonly removeIssue: (issueId: Parameters<FormConnection<string>['removeFieldIssue']>[1]) => boolean;
+  readonly clearIssues: (source?: FormIssueSource) => boolean;
+}
+
+export interface FormFieldController {
+  readonly state: Readonly<ShallowRef<FormFieldState | null>>;
+  setMeta(meta: FormFieldMetaInput): boolean;
+  replaceIssues(source: FormIssueSource, issues: readonly FormIssue[]): boolean;
+  upsertIssue(issue: FormIssue): boolean;
+  removeIssue(issueId: Parameters<FormConnection<string>['removeFieldIssue']>[1]): boolean;
+  clearIssues(source?: FormIssueSource): boolean;
+}
+
+export interface FormSelectorProps<Selected> {
+  readonly select: FormSelectorFunction<Selected>;
+  readonly equals?: NonNullable<FormSubscribeOptions<Selected>['equals']>;
+}
+
+export interface FormSelectorComponent {
+  new <Selected>(props: FormSelectorProps<Selected>): {
+    $props: FormSelectorProps<Selected>;
+    $slots: { default?: (props: { readonly selected: Selected }) => VNodeChild };
+  };
+}
+
+export interface FormFieldSelectorProps<Selected> {
+  readonly id: string;
+  readonly select: FormFieldSelectorFunction<Selected>;
+  readonly equals?: NonNullable<FormSubscribeOptions<Selected>['equals']>;
+}
+
+export interface FormFieldSelectorComponent {
+  new <Selected>(props: FormFieldSelectorProps<Selected>): {
+    $props: FormFieldSelectorProps<Selected>;
+    $slots: { default?: (props: { readonly selected: Selected }) => VNodeChild };
+  };
+}
+
+export interface FormSummarySlotProps {
+  readonly valid: boolean;
+}
+
+export interface FormSubmitSlotProps {
+  readonly valid: boolean;
+  readonly submitting: boolean;
+  readonly canSubmit: boolean;
+  readonly submissionStatus: FormState['submissionStatus'];
 }
 
 export {
@@ -267,7 +305,6 @@ interface RegisteredParticipant {
 }
 
 interface FormContext {
-  readonly state: ShallowRef<FormState>;
   readonly summary: ShallowRef<HTMLElement | null>;
   readonly register: (participant: FormParticipant<string>) => () => void;
   readonly setFieldDiagnostic: (id: string, issue: FormIssue | null) => void;
@@ -327,20 +364,16 @@ const FormRootImpl = defineComponent({
     reset: (): boolean => true,
     stateChange: (_state: FormState): boolean => true,
   },
-  slots: Object as SlotsType<{ default: (props: FormRootSlotProps) => VNodeChild }>,
+  slots: Object as SlotsType<{ default: () => VNodeChild }>,
   setup(props, { attrs, emit, expose, slots }) {
     const root = shallowRef<HTMLFormElement | null>(null);
     const summary = shallowRef<HTMLElement | null>(null);
-    const state = shallowRef<FormState>(emptyState);
     const connection = shallowRef<FormConnection<string> | null>(null);
     const participants = new Map<string, RegisteredParticipant>();
     const fieldDiagnostics = new Map<string, FormIssue>();
     let syncConfiguredIssues = (): void => {};
     let syncFieldDiagnostics = (): void => {};
 
-    const sync = (): void => {
-      if (connection.value !== null) state.value = connection.value.getSnapshot().state;
-    };
     const register = (participant: FormParticipant<string>): (() => void) => {
       const existing = participants.get(participant.id);
       existing?.unregister?.();
@@ -355,7 +388,6 @@ const FormRootImpl = defineComponent({
         if (participants.get(participant.id) !== registered) return;
         registered.unregister?.();
         participants.delete(participant.id);
-        sync();
         void nextTick(() => {
           syncConfiguredIssues();
           syncFieldDiagnostics();
@@ -422,7 +454,6 @@ const FormRootImpl = defineComponent({
         void nextTick(syncFieldDiagnostics);
       },
       onStateChange: (next: FormState) => {
-        state.value = next;
         emit('stateChange', next);
       },
     });
@@ -446,7 +477,6 @@ const FormRootImpl = defineComponent({
       }
       syncConfiguredIssues();
       syncFieldDiagnostics();
-      sync();
     };
 
     onMounted(() => { void nextTick(mount); });
@@ -472,35 +502,30 @@ const FormRootImpl = defineComponent({
       reinitialize: (options?: FormReinitializeOptions): void => connection.value?.reinitialize(options),
       reset: (): void => connection.value?.reset(),
     };
-    const slotProps = computed<FormRootSlotProps>(() => Object.freeze({
-      state: state.value,
-      validationStatus: state.value.validationStatus,
-      validationTrigger: state.value.validationTrigger,
-      validationIntent: state.value.validationIntent,
-      submissionStatus: state.value.submissionStatus,
-      valid: state.value.valid,
-      touched: state.value.touched,
-      dirty: state.value.dirty,
-      submitted: state.value.submitted,
-      submitCount: state.value.submitCount,
-      ...actions,
-    }));
-    provide<FormContext>(formContextKey, {
-      state,
+    const formContext: FormContext = {
       summary,
       register,
       setFieldDiagnostic,
       connection,
-    });
+    };
+    provide<FormContext>(formContextKey, formContext);
+    const validationStatus = useFormSelectorFromContext(
+      formContext,
+      () => (current) => current.validationStatus,
+    );
+    const submissionStatus = useFormSelectorFromContext(
+      formContext,
+      () => (current) => current.submissionStatus,
+    );
     expose(actions);
 
     return (): VNodeChild => h('form', mergeProps(attrs, {
       ref: (element: unknown) => { root.value = element as HTMLFormElement | null; },
       'data-scope': 'form',
       'data-part': 'root',
-      'data-validation-status': state.value.validationStatus,
-      'data-submission-status': state.value.submissionStatus,
-    }), slots['default']?.(slotProps.value) ?? []);
+      'data-validation-status': validationStatus.value,
+      'data-submission-status': submissionStatus.value,
+    }), slots['default']?.() ?? []);
   },
 });
 
@@ -597,6 +622,158 @@ function submissionErrorIssue(): FormSubmitIssue {
   });
 }
 
+function useFormSelectorFromContext<Selected>(
+  context: FormContext,
+  selectorSource: () => FormSelectorFunction<Selected>,
+  equalsSource: () => NonNullable<FormSubscribeOptions<Selected>['equals']> = () => Object.is,
+): Readonly<ShallowRef<Selected>> {
+  const initialSelector = selectorSource();
+  const selected = shallowRef(
+    initialSelector(context.connection.value?.state ?? emptyState),
+  ) as ShallowRef<Selected>;
+  let unsubscribe: (() => void) | undefined;
+  const stop = watch(
+    [context.connection, selectorSource, equalsSource],
+    ([target, selector, equals]) => {
+      unsubscribe?.();
+      unsubscribe = undefined;
+      const next = selector(target?.state ?? emptyState);
+      if (!equals(selected.value, next)) selected.value = next;
+      if (target !== null) {
+        unsubscribe = target.subscribeForm(selector, (value) => {
+          selected.value = value;
+        }, { equals });
+      }
+    },
+    { immediate: true, flush: 'sync' },
+  );
+  onScopeDispose(() => {
+    unsubscribe?.();
+    stop();
+  });
+  return selected;
+}
+
+function useFormFieldSelectorFromContext<Selected>(
+  context: FormContext,
+  idSource: () => string,
+  selectorSource: () => FormFieldSelectorFunction<Selected>,
+  equalsSource: () => NonNullable<FormSubscribeOptions<Selected>['equals']> = () => Object.is,
+): Readonly<ShallowRef<Selected>> {
+  const initialSelector = selectorSource();
+  const selected = shallowRef(initialSelector(
+    context.connection.value?.getField(idSource()) ?? null,
+  )) as ShallowRef<Selected>;
+  let unsubscribe: (() => void) | undefined;
+  const stop = watch(
+    [context.connection, idSource, selectorSource, equalsSource],
+    ([target, id, selector, equals]) => {
+      unsubscribe?.();
+      unsubscribe = undefined;
+      const next = selector(target?.getField(id) ?? null);
+      if (!equals(selected.value, next)) selected.value = next;
+      if (target !== null) {
+        unsubscribe = target.subscribeField(id, selector, (value) => {
+          selected.value = value;
+        }, { equals });
+      }
+    },
+    { immediate: true, flush: 'sync' },
+  );
+  onScopeDispose(() => {
+    unsubscribe?.();
+    stop();
+  });
+  return selected;
+}
+
+export function useFormSelector<Selected>(
+  selector: FormSelectorFunction<Selected>,
+  options: FormSubscribeOptions<Selected> = {},
+): Readonly<ShallowRef<Selected>> {
+  const context = useFormContext('useFormSelector');
+  return useFormSelectorFromContext(
+    context,
+    () => selector,
+    () => options.equals ?? Object.is,
+  );
+}
+
+export function useFormFieldSelector<Selected>(
+  id: string,
+  selector: FormFieldSelectorFunction<Selected>,
+  options: FormSubscribeOptions<Selected> = {},
+): Readonly<ShallowRef<Selected>> {
+  const context = useFormContext('useFormFieldSelector');
+  return useFormFieldSelectorFromContext(
+    context,
+    () => id,
+    () => selector,
+    () => options.equals ?? Object.is,
+  );
+}
+
+export function useFormFieldController(id: string): FormFieldController {
+  const context = useFormContext('useFormFieldController');
+  const state = useFormFieldSelectorFromContext(context, () => id, () => (field) => field);
+  return Object.freeze({
+    state,
+    setMeta: (meta: FormFieldMetaInput): boolean => (
+      context.connection.value?.setFieldMeta(id, meta) ?? false
+    ),
+    replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]): boolean => (
+      context.connection.value?.replaceFieldIssues(id, source, issues) ?? false
+    ),
+    upsertIssue: (issue: FormIssue): boolean => (
+      context.connection.value?.upsertFieldIssue(id, issue) ?? false
+    ),
+    removeIssue: (issueId: Parameters<FormConnection<string>['removeFieldIssue']>[1]): boolean => (
+      context.connection.value?.removeFieldIssue(id, issueId) ?? false
+    ),
+    clearIssues: (source?: FormIssueSource): boolean => (
+      context.connection.value?.clearFieldIssues(id, source) ?? false
+    ),
+  });
+}
+
+const FormSelectorRuntime = defineComponent({
+  name: 'SectileFormSelector',
+  props: {
+    select: { type: Function as PropType<FormSelectorFunction<unknown>>, required: true },
+    equals: { type: Function as PropType<(previous: unknown, next: unknown) => boolean>, default: Object.is },
+  },
+  slots: Object as SlotsType<{ default: (props: { readonly selected: unknown }) => VNodeChild }>,
+  setup(props, { slots }) {
+    const context = useFormContext('FormSelector');
+    const selected = useFormSelectorFromContext(context, () => props.select, () => props.equals);
+    return (): VNodeChild => slots['default']?.({ selected: selected.value }) ?? [];
+  },
+});
+
+export const FormSelector = FormSelectorRuntime as unknown as FormSelectorComponent;
+
+const FormFieldSelectorRuntime = defineComponent({
+  name: 'SectileFormFieldSelector',
+  props: {
+    id: { type: String, required: true },
+    select: { type: Function as PropType<FormFieldSelectorFunction<unknown>>, required: true },
+    equals: { type: Function as PropType<(previous: unknown, next: unknown) => boolean>, default: Object.is },
+  },
+  slots: Object as SlotsType<{ default: (props: { readonly selected: unknown }) => VNodeChild }>,
+  setup(props, { slots }) {
+    const context = useFormContext('FormFieldSelector');
+    const selected = useFormFieldSelectorFromContext(
+      context,
+      () => props.id,
+      () => props.select,
+      () => props.equals,
+    );
+    return (): VNodeChild => slots['default']?.({ selected: selected.value }) ?? [];
+  },
+});
+
+export const FormFieldSelector = FormFieldSelectorRuntime as unknown as FormFieldSelectorComponent;
+
 export const FormField = defineComponent({
   name: 'SectileFormField',
   inheritAttrs: false,
@@ -645,7 +822,28 @@ export const FormField = defineComponent({
     const effectiveControlId = computed(() => (
       semanticControl()?.getAttribute('id')?.trim() || `${id.value}-control`
     ));
-    const fieldState = computed(() => formContext.state.value.fields.find((field) => field.id === id.value));
+    const fieldState = useFormFieldSelectorFromContext(
+      formContext,
+      () => id.value,
+      () => (field) => field,
+    );
+    const fieldActions = Object.freeze({
+      setMeta: (meta: FormFieldMetaInput): boolean => (
+        formContext.connection.value?.setFieldMeta(id.value, meta) ?? false
+      ),
+      replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]): boolean => (
+        formContext.connection.value?.replaceFieldIssues(id.value, source, issues) ?? false
+      ),
+      upsertIssue: (issue: FormIssue): boolean => (
+        formContext.connection.value?.upsertFieldIssue(id.value, issue) ?? false
+      ),
+      removeIssue: (
+        issueId: Parameters<FormConnection<string>['removeFieldIssue']>[1],
+      ): boolean => formContext.connection.value?.removeFieldIssue(id.value, issueId) ?? false,
+      clearIssues: (source?: FormIssueSource): boolean => (
+        formContext.connection.value?.clearFieldIssues(id.value, source) ?? false
+      ),
+    });
     const slotProps = computed<FormFieldSlotProps>(() => {
       const current = fieldState.value;
       const descriptionId = `${id.value}-description`;
@@ -663,6 +861,7 @@ export const FormField = defineComponent({
         touched: current?.touched ?? false,
         dirty: current?.dirty ?? false,
         issues: current?.issues ?? [],
+        ...fieldActions,
       });
     });
 
@@ -1009,10 +1208,11 @@ export const FormMessage = defineComponent({
 export const FormSummary = defineComponent({
   name: 'SectileFormSummary', inheritAttrs: false,
   props: partProps,
-  slots: Object as SlotsType<{ default: (props: FormRootSlotProps) => VNodeChild }>,
+  slots: Object as SlotsType<{ default: (props: FormSummarySlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const form = useFormContext('FormSummary');
-    const slotProps = useRootSlotProps(form);
+    const valid = useFormSelectorFromContext(form, () => (state) => state.valid);
+    const slotProps = computed<FormSummarySlotProps>(() => Object.freeze({ valid: valid.value }));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as,
       asChild: props.asChild,
@@ -1020,7 +1220,7 @@ export const FormSummary = defineComponent({
       role: 'alert',
       'aria-live': 'polite',
       tabindex: -1,
-      hidden: form.state.value.valid,
+      hidden: valid.value,
       'data-scope': 'form',
       'data-part': 'summary',
     }), { default: () => slots['default']?.(slotProps.value) });
@@ -1031,58 +1231,57 @@ export const FormReset = defineComponent({
   name: 'SectileFormReset', inheritAttrs: false,
   props: { ...partProps, as: { ...partProps.as, default: 'button' } },
   setup(props, { attrs, slots }) {
-    const form = useFormContext('FormReset');
-    const slotProps = useRootSlotProps(form);
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as,
       asChild: props.asChild,
       ...(props.as === 'button' && !props.asChild ? { type: 'reset' } : {}),
       'data-scope': 'form',
       'data-part': 'reset',
-      'data-validation-status': form.state.value.validationStatus,
-      'data-submission-status': form.state.value.submissionStatus,
-    }), { default: () => slots['default']?.(slotProps.value) });
+    }), { default: () => slots['default']?.() });
   },
 });
 
 export const FormSubmit = defineComponent({
   name: 'SectileFormSubmit', inheritAttrs: false,
   props: { ...partProps, as: { ...partProps.as, default: 'button' } },
+  slots: Object as SlotsType<{ default: (props: FormSubmitSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const form = useFormContext('FormSubmit');
-    const slotProps = useRootSlotProps(form);
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+    const valid = useFormSelectorFromContext(form, () => (state) => state.valid);
+    const submissionStatus = useFormSelectorFromContext(
+      form,
+      () => (state) => state.submissionStatus,
+    );
+    const slotProps = computed<FormSubmitSlotProps>(() => {
+      const submitting = submissionStatus.value === 'submitting';
+      return Object.freeze({
+        valid: valid.value,
+        submitting,
+        canSubmit: valid.value && !submitting,
+        submissionStatus: submissionStatus.value,
+      });
+    });
+    const blockPendingSubmit = (event: MouseEvent): void => {
+      if (!slotProps.value.submitting) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+    return (): VNodeChild => h(Primitive, mergeProps({
+      onClickCapture: blockPendingSubmit,
+    }, attrs, {
       as: props.as,
       asChild: props.asChild,
       ...(props.as === 'button' && !props.asChild ? { type: 'submit' } : {}),
+      ...(props.as === 'button' && !props.asChild && slotProps.value.submitting
+        ? { disabled: true }
+        : {}),
+      ...(props.asChild && slotProps.value.submitting ? { 'aria-disabled': 'true' } : {}),
       'data-scope': 'form',
       'data-part': 'submit',
-      'data-validation-status': form.state.value.validationStatus,
-      'data-submission-status': form.state.value.submissionStatus,
+      'data-submission-status': slotProps.value.submissionStatus,
     }), { default: () => slots['default']?.(slotProps.value) });
   },
 });
-
-function useRootSlotProps(form: FormContext): ComputedRef<FormRootSlotProps> {
-  return computed(() => Object.freeze({
-    state: form.state.value,
-    validationStatus: form.state.value.validationStatus,
-    validationTrigger: form.state.value.validationTrigger,
-    validationIntent: form.state.value.validationIntent,
-    submissionStatus: form.state.value.submissionStatus,
-    valid: form.state.value.valid,
-    touched: form.state.value.touched,
-    dirty: form.state.value.dirty,
-    submitted: form.state.value.submitted,
-    submitCount: form.state.value.submitCount,
-    submitStarted: (): number | null => form.connection.value?.submitStarted() ?? null,
-    submitSucceeded: (generation: number): boolean => form.connection.value?.submitSucceeded(generation) ?? false,
-    submitFailed: (generation: number, issues: readonly FormIssue[] = []): boolean => form.connection.value?.submitFailed(generation, issues) ?? false,
-    replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]): boolean => form.connection.value?.replaceIssues(source, issues) ?? false,
-    reinitialize: (options?: FormReinitializeOptions): void => form.connection.value?.reinitialize(options),
-    reset: (): void => form.connection.value?.reset(),
-  }));
-}
 
 function renderFieldPart(
   props: FormPartProps,

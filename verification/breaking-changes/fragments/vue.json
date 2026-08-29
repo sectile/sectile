@@ -33,6 +33,14 @@
       "symbols": ["CheckboxGroupRootProps.items"],
       "replacement": { "package": "@sectile/vue", "subpath": "./checkbox-group" },
       "removalReason": "CheckboxGroupRoot now requires the canonical ordered item domain used for validation, deterministic selection order, and bounded membership."
+    },
+    {
+      "id": "WI-029:granular-form-projection",
+      "change": "signature-changed",
+      "before": { "subpath": "./form" },
+      "symbols": ["FormRootSlotProps", "FormRoot default slot", "FormSummary default slot", "FormReset default slot", "FormSubmit default slot"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./form" },
+      "removalReason": "Use useFormSelector, useFormFieldSelector, FormSelector, or FormFieldSelector for explicit state projections. FormSubmit exposes only valid, submitting, canSubmit, and submissionStatus; FormSummary exposes valid; FormReset has no state projection."
     }
   ]
 }
