@@ -5,7 +5,7 @@ description: Same-condition measurements of display speed, dynamic height handli
 
 # Virtualization benchmark
 
-Seven libraries render the same 100,000 rows. The suite measures initial display, scroll response, and the time required to settle after inserts, moves, removals, and height changes. Change the controls to compare every result in the same chart.
+The lab covers list, flow-grid, masonry, track-grid, and spatial layouts through equivalent public APIs. Within each family, adapters receive the same deterministic 100,000 items and the suite measures initial display, scroll response, and settling after inserts, moves, removals, and size changes.
 
 [Open the benchmark lab →](/benchmarks/virtual)
 
@@ -95,4 +95,4 @@ Observed on 2026-08-27 with Node 24.19.0, Apple Silicon, macOS:
 | masonry, 8 lanes | 16.467 ms |
 | spatial packed tree | 73.927 ms |
 
-The query viewport moves across each domain instead of repeatedly hitting one cached coordinate. Re-run before and after a change on the same machine when evaluating a regression.
+The query viewport moves across each domain instead of repeatedly hitting one cached coordinate. The raw report also includes partitioned track-grid construction, pinned-region queries, and changed-track batches. Re-run before and after a change on the same machine when evaluating a regression.

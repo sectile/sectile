@@ -13,7 +13,13 @@ const sourcePaths = Object.freeze([
   'packages/dom/src/virtual.ts',
   'packages/virtual/src',
   'packages/vue/src/virtual-list.ts',
+  'packages/vue/src/virtual-grid.ts',
+  'packages/vue/src/virtual-masonry.ts',
+  'packages/vue/src/virtual-spatial.ts',
+  'packages/vue/src/virtual-core.ts',
   'packages/vue/src/internal/virtual-core.ts',
+  'packages/vue/src/internal/virtual-collection.ts',
+  'packages/vue/src/internal/virtual-collection-model.ts',
   'packages/vue/src/internal/virtual-list.ts',
   'pnpm-lock.yaml',
 ]);

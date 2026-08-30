@@ -33,6 +33,26 @@ test('merges adaptive shards before reporting p95', async () => {
   }
 });
 
+test('merges distinct layout-family conditions without list result synthesis', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'sectile-layout-merge-'));
+  try {
+    const firstPath = resolve(directory, 'first.json');
+    const secondPath = resolve(directory, 'second.json');
+    const outputPath = resolve(directory, 'merged.json');
+    await writeFile(firstPath, JSON.stringify(layoutReport('first', 'Sectile Virtual', 'fixed')), 'utf8');
+    await writeFile(secondPath, JSON.stringify(layoutReport('second', 'React Virtuoso', 'automatic')), 'utf8');
+
+    await execFileAsync(process.execPath, [mergeScript, outputPath, firstPath, secondPath]);
+    const merged = JSON.parse(await readFile(outputPath, 'utf8'));
+
+    assert.equal(merged.conditions.family, 'flow-grid');
+    assert.equal(merged.layoutResults.length, 2);
+    assert.deepEqual(Object.keys(merged.runs), ['first', 'second']);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 function report(runId, firstSample) {
   const samples = Array.from({ length: 15 }, (_, index) => ({
     sample: index + 1,
@@ -90,6 +110,21 @@ function report(runId, firstSample) {
       earlyStopReason: null,
       samples,
       failures: [],
+    }],
+  };
+}
+
+function layoutReport(runId, library, mode) {
+  return {
+    benchmark: 'sectile-virtual-ecosystem', protocolVersion: 7, environment: 'test',
+    source: { buildFingerprint: 'same-build' }, runs: { [runId]: { id: runId } },
+    conditions: { family: 'flow-grid', itemCount: 100_000, viewport: [720, 480] },
+    capabilities: [], layoutFailures: [], layoutMutationResults: [],
+    layoutResults: [{
+      runIds: [runId], family: 'flow-grid', mode, library, version: 'test', stack: 'test',
+      setupMs: 1, firstItemsMs: 2, stableLayoutMs: 3, scrollMedianMs: 4, scrollP95Ms: 5,
+      scrollMadMs: 1, scrollSampleCount: 20, completedRounds: 1, plannedRounds: 1,
+      renderedItems: 20, domElements: 25,
     }],
   };
 }

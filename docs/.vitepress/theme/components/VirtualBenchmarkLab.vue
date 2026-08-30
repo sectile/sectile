@@ -4,15 +4,20 @@ import { ArrowLeft, Check, Copy, Download, Gauge, Languages, Pencil, Plus, Rotat
 import { withBase } from 'vitepress';
 import { useDocsLocale } from '../locale.js';
 import { summarizeVirtualBenchmarkPlan } from '../virtual-benchmark-plan.js';
+import { persistBenchmarkTargets, restoreBenchmarkTargets } from '../virtual-benchmark-target-storage.js';
 import type {
   BaselineBenchmarkFailure,
   BaselineBenchmarkResult,
+  BenchmarkFamily,
   BenchmarkHeightMode,
   BenchmarkLocation,
   BenchmarkOperation,
   BenchmarkRowProfile,
   BenchmarkRowProfileConditions,
   MutationBenchmarkResult,
+  LayoutBaselineBenchmarkFailure,
+  LayoutBaselineBenchmarkResult,
+  LayoutMutationBenchmarkResult,
 } from '../virtual-benchmark-data.js';
 import DemoPopover from './DemoPopover.vue';
 import DemoProgress from './DemoProgress.vue';
@@ -20,20 +25,23 @@ import type { DemoSelectOption } from './DemoSelect.vue';
 import DemoVirtualList from './DemoVirtualList.vue';
 import DocsButton from './DocsButton.vue';
 import VirtualBenchmarkReport from './VirtualBenchmarkReport.vue';
+import VirtualBenchmarkLayoutReport from './VirtualBenchmarkLayoutReport.vue';
 import VirtualBenchmarkTargetFields from './VirtualBenchmarkTargetFields.vue';
 
 type LabStatus = 'idle' | 'running' | 'complete' | 'cancelled' | 'error';
 type Preset = 'quick' | 'standard' | 'custom';
+type FamilySelection = BenchmarkFamily;
 type ProfileSelection = BenchmarkRowProfile | 'all';
 type PhaseSelection = 'both' | 'baseline' | 'mutations';
 type LibrarySelection = string | 'all';
-type HeightModeSelection = BenchmarkHeightMode | 'all';
-type MutationModeSelection = Exclude<BenchmarkHeightMode, 'fixed'> | 'all';
+type HeightModeSelection = BenchmarkHeightMode | 'positioned' | 'all';
+type MutationModeSelection = BenchmarkHeightMode | 'positioned' | 'all';
 type OperationSelection = BenchmarkOperation | 'all';
 type LocationSelection = BenchmarkLocation | 'all';
 
 interface BenchmarkTarget {
   readonly id: number;
+  readonly family: FamilySelection;
   readonly preset: Preset;
   readonly profile: ProfileSelection;
   readonly phase: PhaseSelection;
@@ -61,6 +69,9 @@ interface BenchmarkResultGroup {
   readonly baselineFailures: readonly BaselineBenchmarkFailure[];
   readonly mutationResults: readonly MutationBenchmarkResult[];
   readonly rowProfileConditions: Readonly<Partial<Record<BenchmarkRowProfile, BenchmarkRowProfileConditions>>>;
+  readonly layoutResults: readonly LayoutBaselineBenchmarkResult[];
+  readonly layoutFailures: readonly LayoutBaselineBenchmarkFailure[];
+  readonly layoutMutationResults: readonly LayoutMutationBenchmarkResult[];
 }
 
 interface RawBenchmarkReport {
@@ -70,6 +81,7 @@ interface RawBenchmarkReport {
   readonly source: Readonly<Record<string, unknown>>;
   readonly runs: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
   readonly conditions: {
+    readonly family?: BenchmarkFamily;
     readonly itemCount: number;
     readonly rowProfile?: BenchmarkRowProfile;
     readonly rowProfiles?: Readonly<Partial<Record<BenchmarkRowProfile, BenchmarkRowProfileConditions>>>;
@@ -85,6 +97,9 @@ interface RawBenchmarkReport {
   readonly baselineSamples?: Readonly<Record<string, readonly Readonly<Record<string, unknown>>[]>>;
   readonly mutationResults?: readonly RawMutationResult[];
   readonly heightModeSupport?: readonly Readonly<Record<string, unknown>>[];
+  readonly layoutResults?: readonly LayoutBaselineBenchmarkResult[];
+  readonly layoutFailures?: readonly LayoutBaselineBenchmarkFailure[];
+  readonly layoutMutationResults?: readonly LayoutMutationBenchmarkResult[];
 }
 
 interface RawBaselineFailure {
@@ -112,6 +127,9 @@ interface RunnerMessage {
   readonly baselineResult?: BaselineBenchmarkResult;
   readonly baselineFailure?: RawBaselineFailure;
   readonly mutationResult?: RawMutationResult;
+  readonly layoutResult?: LayoutBaselineBenchmarkResult;
+  readonly layoutFailure?: LayoutBaselineBenchmarkFailure;
+  readonly layoutMutationResult?: LayoutMutationBenchmarkResult;
   readonly report?: RawBenchmarkReport;
   readonly run?: Readonly<Record<string, unknown>>;
   readonly baselineSampleKey?: string;
@@ -125,8 +143,9 @@ interface BenchmarkCheckpoint {
   readonly completed: number;
   readonly total: number;
   readonly profile: BenchmarkRowProfile;
+  readonly family: BenchmarkFamily;
   readonly library?: string;
-  readonly mode?: BenchmarkHeightMode;
+  readonly mode?: Exclude<HeightModeSelection, 'all'>;
   readonly operation?: BenchmarkOperation;
   readonly location?: BenchmarkLocation;
   readonly samples: number;
@@ -155,6 +174,9 @@ interface RawBenchmarkPartialResults {
   readonly rowProfileConditions?: Readonly<Partial<Record<BenchmarkRowProfile, BenchmarkRowProfileConditions>>>;
   readonly run?: Readonly<Record<string, unknown>>;
   readonly baselineSamples?: Readonly<Record<string, readonly Readonly<Record<string, unknown>>[]>>;
+  readonly layoutResults?: readonly LayoutBaselineBenchmarkResult[];
+  readonly layoutFailures?: readonly LayoutBaselineBenchmarkFailure[];
+  readonly layoutMutationResults?: readonly LayoutMutationBenchmarkResult[];
 }
 
 const libraries = Object.freeze([
@@ -167,6 +189,13 @@ const libraries = Object.freeze([
   'Vue Virtual Scroller',
 ]);
 const automaticLibraries = new Set(['Sectile Virtual', 'React Virtuoso', 'Virtua']);
+const familyLibraries: Readonly<Record<BenchmarkFamily, readonly string[]>> = Object.freeze({
+  list: libraries,
+  'flow-grid': ['Sectile Virtual', 'React Virtuoso'],
+  masonry: ['Sectile Virtual', 'TanStack Virtual'],
+  'track-grid': ['Sectile Virtual', 'react-window', 'Virtua'],
+  spatial: ['Sectile Virtual'],
+});
 
 const { isKorean } = useDocsLocale();
 const status = ref<LabStatus>('idle');
@@ -175,6 +204,7 @@ const editingTargetID = ref<number | null>(null);
 const targets = ref<BenchmarkTarget[]>([]);
 const nextTargetID = ref(1);
 const preset = ref<Preset>('standard');
+const family = ref<FamilySelection>('list');
 const profile = ref<ProfileSelection>('all');
 const phase = ref<PhaseSelection>('both');
 const library = ref<LibrarySelection>('all');
@@ -200,6 +230,9 @@ const reportTargetIDs = ref<(number | null)[]>([]);
 const baselineResults = ref<BaselineBenchmarkResult[]>([]);
 const baselineFailures = ref<BaselineBenchmarkFailure[]>([]);
 const mutationResults = ref<MutationBenchmarkResult[]>([]);
+const layoutResults = ref<LayoutBaselineBenchmarkResult[]>([]);
+const layoutFailures = ref<LayoutBaselineBenchmarkFailure[]>([]);
+const layoutMutationResults = ref<LayoutMutationBenchmarkResult[]>([]);
 const rowProfileConditions = ref<Partial<Record<BenchmarkRowProfile, BenchmarkRowProfileConditions>>>({});
 const feedback = ref('');
 const errorMessage = ref('');
@@ -212,6 +245,7 @@ const latestCheckpoint = ref<BenchmarkCheckpoint>();
 const checkpointHistoryList = ref<DemoVirtualListHandle | null>(null);
 const nextCheckpointID = ref(1);
 let draftBeforeEdit: BenchmarkTarget | null = null;
+let targetStorageReady = false;
 
 const copy = computed(() => isKorean.value ? {
   back: 'Sectile 문서',
@@ -233,6 +267,7 @@ const copy = computed(() => isKorean.value ? {
   targetProgress: (current: number, total: number) => `측정 세트 ${current} / ${total}`,
   noTargets: '측정 세트를 하나 이상 추가하세요.',
   preset: '실행 강도',
+  family: '레이아웃',
   profile: '행 구성',
   phase: '측정 범위',
   library: '라이브러리',
@@ -241,7 +276,9 @@ const copy = computed(() => isKorean.value ? {
   operation: '변경 작업',
   location: '변경 위치',
   rows: '행 수',
+  items: '항목 수',
   rowCount: (count: number) => `${count.toLocaleString()}행`,
+  itemCount: (count: number) => `${count.toLocaleString()}개 항목`,
   decrease: (label: string) => `${label} 줄이기`,
   increase: (label: string) => `${label} 늘리기`,
   help: (label: string) => `${label} 설명`,
@@ -254,6 +291,7 @@ const copy = computed(() => isKorean.value ? {
   mutationRounds: '변경 측정 배치',
   mutationSamples: '배치당 표본',
   rowsHelp: '각 라이브러리가 가상화할 전체 행 수입니다. 행 수가 많을수록 초기화와 스크롤 부하가 커집니다.',
+  itemsHelp: '각 라이브러리가 배치할 전체 항목 수입니다. 항목 수가 많을수록 초기화와 스크롤 부하가 커집니다.',
   baselineRoundsHelp: '같은 초기 렌더 조건을 반복 측정하는 횟수입니다. 늘리면 결과가 안정되지만 실행 시간도 길어집니다.',
   warmupScrollsHelp: '표본을 기록하기 전에 왕복 스크롤하는 횟수입니다. 초기 캐시와 레이아웃 준비 영향을 줄입니다.',
   scrollSamplesHelp: '초기 렌더 라운드마다 기록하는 스크롤 표본 수입니다. 늘리면 중앙값과 p95의 신뢰도가 높아집니다.',
@@ -290,6 +328,7 @@ const copy = computed(() => isKorean.value ? {
   cancelledTitle: '실행 취소됨',
   cancelledMessage: '완료된 측정과 체크포인트까지 보존됨',
   viewResults: '결과 보기',
+  downloadPartial: '중간 보고서 다운로드',
   cancel: '실행 취소',
   progress: '전체 진행률',
   completedBaseline: '초기 렌더 조건',
@@ -309,6 +348,7 @@ const copy = computed(() => isKorean.value ? {
   failed: '벤치마크 실행 실패',
   unsupportedFixed: '고정 높이 초기 렌더는 같은 높이 행에서만 측정할 수 있습니다.',
   unsupportedAutomatic: '선택한 라이브러리는 높이 생략 모드를 지원하지 않습니다.',
+  unsupportedFamilyLibrary: '선택한 레이아웃에서 지원하지 않는 라이브러리입니다.',
   copied: 'JSON을 복사했습니다.',
   imported: 'JSON을 가져왔습니다.',
   option: {
@@ -317,6 +357,7 @@ const copy = computed(() => isKorean.value ? {
     baseline: '초기 렌더와 스크롤', mutations: '목록 변경', fixed: '고정 높이',
     estimated: '예상값 제공', automatic: '높이 생략', insert: '삽입', move: '이동',
     remove: '삭제', resize: '높이 변경', start: '시작', middle: '중간', end: '끝',
+    list: '목록', 'flow-grid': '흐름 그리드', masonry: '메이슨리', 'track-grid': '트랙 그리드', spatial: '공간 배치', positioned: '위치 제공',
   },
 } : {
   back: 'Sectile docs',
@@ -338,6 +379,7 @@ const copy = computed(() => isKorean.value ? {
   targetProgress: (current: number, total: number) => `Benchmark set ${current} / ${total}`,
   noTargets: 'Add at least one benchmark set.',
   preset: 'Run intensity',
+  family: 'Layout',
   profile: 'Row profile',
   phase: 'Measurement scope',
   library: 'Library',
@@ -346,7 +388,9 @@ const copy = computed(() => isKorean.value ? {
   operation: 'Mutation operation',
   location: 'Mutation location',
   rows: 'Rows',
+  items: 'Items',
   rowCount: (count: number) => `${count.toLocaleString()} rows`,
+  itemCount: (count: number) => `${count.toLocaleString()} items`,
   decrease: (label: string) => `Decrease ${label}`,
   increase: (label: string) => `Increase ${label}`,
   help: (label: string) => `About ${label}`,
@@ -359,6 +403,7 @@ const copy = computed(() => isKorean.value ? {
   mutationRounds: 'Mutation batches',
   mutationSamples: 'Samples per batch',
   rowsHelp: 'The total number of rows each library virtualizes. Higher values increase initialization and scrolling load.',
+  itemsHelp: 'The total number of layout items each library virtualizes. Higher values increase initialization and scrolling load.',
   baselineRoundsHelp: 'The number of times the same initial-render condition is measured. More rounds stabilize results but take longer.',
   warmupScrollsHelp: 'The number of round-trip scrolls before samples are recorded. Warm-up reduces the influence of initial caching and layout preparation.',
   scrollSamplesHelp: 'The number of scroll samples recorded in each initial-render round. More samples improve confidence in the median and p95.',
@@ -395,6 +440,7 @@ const copy = computed(() => isKorean.value ? {
   cancelledTitle: 'Run cancelled',
   cancelledMessage: 'Completed measurements and checkpoints were preserved',
   viewResults: 'View results',
+  downloadPartial: 'Download partial report',
   cancel: 'Cancel run',
   progress: 'Overall progress',
   completedBaseline: 'Baseline conditions',
@@ -414,6 +460,7 @@ const copy = computed(() => isKorean.value ? {
   failed: 'Benchmark run failed',
   unsupportedFixed: 'Fixed-height baseline measurement is available only for uniform rows.',
   unsupportedAutomatic: 'The selected library does not support omitted-height measurement.',
+  unsupportedFamilyLibrary: 'The selected library is not supported for this layout.',
   copied: 'JSON copied.',
   imported: 'JSON imported.',
   option: {
@@ -422,23 +469,39 @@ const copy = computed(() => isKorean.value ? {
     baseline: 'Initial render and scrolling', mutations: 'Collection mutations', fixed: 'Fixed height',
     estimated: 'Estimate provided', automatic: 'Height omitted', insert: 'Insert', move: 'Move',
     remove: 'Remove', resize: 'Height change', start: 'Start', middle: 'Middle', end: 'End',
+    list: 'List', 'flow-grid': 'Flow grid', masonry: 'Masonry', 'track-grid': 'Track grid', spatial: 'Spatial', positioned: 'Positioned',
   },
 });
 
 const presetOptions = computed<readonly DemoSelectOption[]>(() => optionList(['quick', 'standard', 'custom']));
+const familyOptions = computed<readonly DemoSelectOption[]>(() => optionList(['list', 'flow-grid', 'masonry', 'track-grid', 'spatial']));
 const profileOptions = computed<readonly DemoSelectOption[]>(() => optionList(['all', 'uniform', 'heterogeneous']));
 const phaseOptions = computed<readonly DemoSelectOption[]>(() => optionList(['both', 'baseline', 'mutations']));
 const libraryOptions = computed<readonly DemoSelectOption[]>(() => [
   { id: 'all', label: copy.value.option.all },
-  ...libraries.map((name) => ({ id: name, label: name })),
+  ...familyLibraries[family.value].map((name) => ({ id: name, label: name })),
 ]);
-const baselineModeOptions = computed<readonly DemoSelectOption[]>(() => optionList(['all', 'fixed', 'estimated', 'automatic']));
-const mutationModeOptions = computed<readonly DemoSelectOption[]>(() => optionList(['all', 'estimated', 'automatic']));
+const baselineModeOptions = computed<readonly DemoSelectOption[]>(() => optionList(
+  family.value === 'spatial' ? ['all', 'positioned'] : ['all', 'fixed', 'estimated', 'automatic'],
+));
+const mutationModeOptions = computed<readonly DemoSelectOption[]>(() => optionList(
+  family.value === 'spatial'
+    ? ['all', 'positioned']
+    : family.value === 'list' ? ['all', 'estimated', 'automatic'] : ['all', 'fixed', 'estimated', 'automatic'],
+));
 const operationOptions = computed<readonly DemoSelectOption[]>(() => optionList(['all', 'insert', 'move', 'remove', 'resize']));
 const locationOptions = computed<readonly DemoSelectOption[]>(() => optionList(['all', 'start', 'middle', 'end']));
 const isRunning = computed(() => status.value === 'running');
 const showRunWorkspace = computed(() => !viewingResults.value
   && (isRunning.value || status.value === 'complete' || status.value === 'cancelled'));
+const hasPartialEvidence = computed(() => reports.value.length > 0
+  || partialRun.value !== null
+  || baselineResults.value.length > 0
+  || baselineFailures.value.length > 0
+  || mutationResults.value.length > 0
+  || layoutResults.value.length > 0
+  || layoutFailures.value.length > 0
+  || layoutMutationResults.value.length > 0);
 const runWorkspaceTitle = computed(() => {
   if (isRunning.value) return copy.value.running;
   return status.value === 'complete' ? copy.value.complete : copy.value.cancelledTitle;
@@ -464,7 +527,7 @@ const libraryTotals = computed<readonly BenchmarkLibraryTotals[]>(() => {
 
   for (const shard of runQueue.value) {
     if (shard.target.library === 'all') {
-      for (const libraryName of libraries) ensure(libraryName);
+      for (const libraryName of familyLibraries[shard.target.family]) ensure(libraryName);
     } else {
       ensure(shard.target.library);
     }
@@ -497,6 +560,31 @@ const libraryTotals = computed<readonly BenchmarkLibraryTotals[]>(() => {
     if (result.failedSamples > 0) total.failures += 1;
   }
 
+  const completedLayout = [
+    ...layoutResults.value,
+    ...reports.value.flatMap((report) => report.layoutResults ?? []),
+  ];
+  for (const result of completedLayout) {
+    const total = ensure(result.library);
+    total.baseline += 1;
+    total.samples += result.scrollSampleCount;
+  }
+  const completedLayoutFailures = [
+    ...layoutFailures.value,
+    ...reports.value.flatMap((report) => report.layoutFailures ?? []),
+  ];
+  for (const failure of completedLayoutFailures) ensure(failure.library).failures += 1;
+  const completedLayoutMutations = [
+    ...layoutMutationResults.value,
+    ...reports.value.flatMap((report) => report.layoutMutationResults ?? []),
+  ];
+  for (const result of completedLayoutMutations) {
+    const total = ensure(result.library);
+    total.mutations += 1;
+    total.samples += result.samples;
+    if (result.failedSamples > 0) total.failures += 1;
+  }
+
   return [...totals].map(([libraryName, total]) => Object.freeze({
     library: libraryName,
     ...total,
@@ -524,7 +612,7 @@ const activeTargetPosition = computed(() => {
 });
 const rawSession = computed(() => ({
   benchmarkSession: 'sectile-virtual-ecosystem',
-  schemaVersion: 2,
+  schemaVersion: 3,
   status: status.value,
   configuration: configurationSnapshot(),
   reports: reports.value,
@@ -536,6 +624,9 @@ const rawSession = computed(() => ({
     rowProfileConditions: rowProfileConditions.value,
     ...(partialRun.value === null ? {} : { run: partialRun.value }),
     baselineSamples: baselineSamples.value,
+    layoutResults: layoutResults.value,
+    layoutFailures: layoutFailures.value,
+    layoutMutationResults: layoutMutationResults.value,
   },
 }));
 const resultGroups = computed<readonly BenchmarkResultGroup[]>(groupReports);
@@ -545,8 +636,26 @@ const rawByteSize = computed(() => new Blob([rawJson.value]).size);
 const docsHref = computed(() => withBase(isKorean.value ? '/ko/' : '/'));
 const localeHref = computed(() => withBase(isKorean.value ? '/benchmarks/virtual' : '/ko/benchmarks/virtual'));
 
-onMounted(() => window.addEventListener('message', receiveRunnerMessage));
+onMounted(() => {
+  try {
+    const restored = restoreBenchmarkTargets(window.localStorage, normalizeBenchmarkTarget);
+    targets.value = [...restored.targets];
+    nextTargetID.value = restored.nextID;
+  } catch {
+    // Benchmarking remains available when browser storage is blocked.
+  }
+  targetStorageReady = true;
+  window.addEventListener('message', receiveRunnerMessage);
+});
 onBeforeUnmount(() => window.removeEventListener('message', receiveRunnerMessage));
+watch(targets, (nextTargets) => {
+  if (!targetStorageReady) return;
+  try {
+    persistBenchmarkTargets(window.localStorage, nextTargets);
+  } catch {
+    // Benchmarking remains available when browser storage is blocked.
+  }
+});
 watch(composerOpen, (open) => {
   if (!open) return;
   if (editingTargetID.value !== null) {
@@ -554,6 +663,16 @@ watch(composerOpen, (open) => {
     restoreCreateDraft();
   }
   targetError.value = '';
+});
+watch(family, (nextFamily) => {
+  if (library.value !== 'all' && !familyLibraries[nextFamily].includes(library.value)) library.value = 'all';
+  if (nextFamily === 'spatial') {
+    baselineMode.value = baselineMode.value === 'positioned' ? 'positioned' : 'all';
+    mutationMode.value = mutationMode.value === 'positioned' ? 'positioned' : 'all';
+  } else {
+    if (baselineMode.value === 'positioned') baselineMode.value = 'all';
+    if (mutationMode.value === 'positioned') mutationMode.value = 'all';
+  }
 });
 
 function formatPlanDuration(seconds: number): string {
@@ -569,6 +688,7 @@ function optionList(ids: readonly string[]): readonly DemoSelectOption[] {
 function targetSnapshot(id = nextTargetID.value): BenchmarkTarget {
   return Object.freeze({
     id,
+    family: family.value,
     preset: preset.value,
     profile: profile.value,
     phase: phase.value,
@@ -587,6 +707,7 @@ function targetSnapshot(id = nextTargetID.value): BenchmarkTarget {
 }
 
 function loadTargetDraft(target: BenchmarkTarget): void {
+  family.value = target.family;
   preset.value = target.preset;
   profile.value = target.profile;
   phase.value = target.phase;
@@ -682,9 +803,9 @@ function startRun(): void {
   nextCheckpointID.value = 1;
   resetPartialResults();
   runQueue.value = targets.value.flatMap((target) => (
-    target.profile === 'all'
+    target.family === 'list' && target.profile === 'all'
       ? [{ target, profile: 'uniform' as const }, { target, profile: 'heterogeneous' as const }]
-      : [{ target, profile: target.profile }]
+      : [{ target, profile: target.profile === 'all' ? 'uniform' as const : target.profile }]
   ));
   shardIndex.value = 0;
   shardProgress.value = 0;
@@ -707,7 +828,8 @@ function runnerUrl({ target, profile: activeProfile }: RunShard): string {
   const url = new URL(withBase('/benchmark-runner/index.html'), window.location.href);
   const params = url.searchParams;
   params.set('embedded', '');
-  params.set('row-profile', activeProfile);
+  params.set('family', target.family);
+  if (target.family === 'list') params.set('row-profile', activeProfile);
   params.set('rows', String(target.rows));
   if (target.phase === 'baseline') params.set('baseline-only', '');
   if (target.phase === 'mutations') params.set('mutations-only', '');
@@ -739,6 +861,9 @@ function receiveRunnerMessage(event: MessageEvent<unknown>): void {
   if (message.baselineResult !== undefined) upsertBaseline(message.baselineResult);
   if (message.baselineFailure !== undefined) upsertBaselineFailure(message.baselineFailure);
   if (message.mutationResult !== undefined) upsertMutation(normalizeMutation(message.mutationResult));
+  if (message.layoutResult !== undefined) upsertLayoutResult(message.layoutResult);
+  if (message.layoutFailure !== undefined) upsertLayoutFailure(message.layoutFailure);
+  if (message.layoutMutationResult !== undefined) upsertLayoutMutationResult(message.layoutMutationResult);
   if (message.type === 'checkpoint') recordCheckpoint(message);
   if (message.type === 'complete' && message.report !== undefined) finishShard(message.report);
   if (message.type === 'error') failRun(message.message ?? copy.value.failed);
@@ -757,9 +882,12 @@ function recordCheckpoint(message: RunnerMessage): void {
   const baseline = message.baselineResult;
   const failure = message.baselineFailure;
   const mutation = message.mutationResult;
+  const layout = message.layoutResult;
+  const layoutFailure = message.layoutFailure;
+  const layoutMutation = message.layoutMutationResult;
   const phase = message.phase === 'mutations' ? 'mutations' : 'baseline';
-  const library = baseline?.library ?? failure?.library ?? mutation?.library;
-  const mode = baseline?.mode ?? failure?.mode ?? mutation?.sizeMode;
+  const library = baseline?.library ?? failure?.library ?? mutation?.library ?? layout?.library ?? layoutFailure?.library ?? layoutMutation?.library;
+  const mode = baseline?.mode ?? failure?.mode ?? mutation?.sizeMode ?? layout?.mode ?? layoutFailure?.mode ?? layoutMutation?.mode;
   const checkpoint: BenchmarkCheckpoint = Object.freeze({
     id: nextCheckpointID.value,
     targetPosition: activeTargetPosition.value,
@@ -767,16 +895,17 @@ function recordCheckpoint(message: RunnerMessage): void {
     completed: message.completed ?? 0,
     total: message.total ?? 0,
     profile: baseline?.rowProfile ?? failure?.rowProfile ?? mutation?.rowProfile ?? activeShard.value?.profile ?? 'uniform',
+    family: activeShard.value?.target.family ?? 'list',
     ...(library === undefined ? {} : { library }),
     ...(mode === undefined ? {} : { mode }),
     ...(mutation?.operation === undefined ? {} : { operation: mutation.operation }),
     ...(mutation?.location === undefined ? {} : { location: mutation.location }),
-    samples: baseline?.scrollSampleCount ?? mutation?.totalSamples ?? message.baselineSamples?.length ?? 0,
-    medianMs: baseline?.scrollMedianMs ?? mutation?.medianMs ?? null,
-    p95Ms: baseline?.scrollP95Ms ?? mutation?.p95Ms ?? null,
-    outcome: failure !== undefined || (mutation?.failedSamples ?? 0) > 0
+    samples: baseline?.scrollSampleCount ?? mutation?.totalSamples ?? layout?.scrollSampleCount ?? layoutMutation?.samples ?? message.baselineSamples?.length ?? 0,
+    medianMs: baseline?.scrollMedianMs ?? mutation?.medianMs ?? layout?.scrollMedianMs ?? layoutMutation?.medianMs ?? null,
+    p95Ms: baseline?.scrollP95Ms ?? mutation?.p95Ms ?? layout?.scrollP95Ms ?? layoutMutation?.p95Ms ?? null,
+    outcome: failure !== undefined || layoutFailure !== undefined || (mutation?.failedSamples ?? 0) > 0
       ? 'failed'
-      : baseline !== undefined || mutation !== undefined ? 'complete' : 'round',
+      : baseline !== undefined || mutation !== undefined || layout !== undefined || layoutMutation !== undefined ? 'complete' : 'round',
   });
   nextCheckpointID.value += 1;
   const previousCheckpoint = latestCheckpoint.value;
@@ -807,9 +936,10 @@ function checkpointHeading(checkpoint: BenchmarkCheckpoint): string {
 function checkpointContext(checkpoint: BenchmarkCheckpoint): string {
   return [
     copy.value.target(checkpoint.targetPosition),
-    selectionLabel(checkpoint.profile),
+    selectionLabel(checkpoint.family),
+    checkpoint.family === 'list' ? selectionLabel(checkpoint.profile) : undefined,
     copy.value.checkpointPosition(checkpoint.completed, checkpoint.total),
-  ].join(' · ');
+  ].filter((value): value is string => value !== undefined).join(' · ');
 }
 
 function checkpointOutcome(checkpoint: BenchmarkCheckpoint): string {
@@ -838,6 +968,22 @@ function finishShard(report: RawBenchmarkReport): void {
 }
 
 function invalidConfiguration(target: BenchmarkTarget): string | null {
+  if (target.library !== 'all' && !familyLibraries[target.family].includes(target.library)) return copy.value.unsupportedFamilyLibrary;
+  if (target.family !== 'list') {
+    if (target.family === 'spatial') {
+      if (target.baselineMode !== 'all' && target.baselineMode !== 'positioned') return copy.value.unsupportedFamilyLibrary;
+      if (target.mutationMode !== 'all' && target.mutationMode !== 'positioned') return copy.value.unsupportedFamilyLibrary;
+    }
+    if (target.library !== 'all') {
+      if (target.phase !== 'mutations' && target.baselineMode !== 'all'
+        && !supportsLayoutMode(target.family, target.library, target.baselineMode)) return copy.value.unsupportedFamilyLibrary;
+      if (target.phase !== 'baseline' && target.mutationMode !== 'all'
+        && !supportsLayoutMode(target.family, target.library, target.mutationMode)) return copy.value.unsupportedFamilyLibrary;
+      if (target.phase !== 'baseline' && target.family === 'track-grid' && target.library === 'Virtua'
+        && (target.operation === 'all' || target.operation === 'resize')) return copy.value.unsupportedFamilyLibrary;
+    }
+    return null;
+  }
   const includesBaseline = target.phase !== 'mutations';
   const includesMutations = target.phase !== 'baseline';
   if (includesBaseline && target.baselineMode === 'fixed' && target.profile !== 'uniform') return copy.value.unsupportedFixed;
@@ -845,6 +991,23 @@ function invalidConfiguration(target: BenchmarkTarget): string | null {
     || (includesMutations && target.mutationMode === 'automatic');
   if (automaticRequested && target.library !== 'all' && !automaticLibraries.has(target.library)) return copy.value.unsupportedAutomatic;
   return null;
+}
+
+function supportsLayoutMode(
+  targetFamily: Exclude<BenchmarkFamily, 'list'>,
+  targetLibrary: string,
+  mode: Exclude<HeightModeSelection, 'all'>,
+): boolean {
+  if (targetFamily === 'flow-grid') return targetLibrary === 'Sectile Virtual'
+    ? mode === 'fixed' || mode === 'estimated' || mode === 'automatic'
+    : targetLibrary === 'React Virtuoso' && mode === 'automatic';
+  if (targetFamily === 'masonry') return targetLibrary === 'Sectile Virtual'
+    ? mode === 'fixed' || mode === 'estimated' || mode === 'automatic'
+    : targetLibrary === 'TanStack Virtual' && mode === 'estimated';
+  if (targetFamily === 'track-grid') return mode === 'fixed'
+    ? targetLibrary === 'Sectile Virtual' || targetLibrary === 'react-window'
+    : mode === 'estimated' && targetLibrary === 'Virtua';
+  return targetLibrary === 'Sectile Virtual' && mode === 'positioned';
 }
 
 function cancelRun(): void {
@@ -865,6 +1028,9 @@ function resetPartialResults(): void {
   baselineResults.value = [];
   baselineFailures.value = [];
   mutationResults.value = [];
+  layoutResults.value = [];
+  layoutFailures.value = [];
+  layoutMutationResults.value = [];
   rowProfileConditions.value = {};
   partialRun.value = null;
   baselineSamples.value = {};
@@ -916,6 +1082,18 @@ function upsertBaselineFailureResult(result: BaselineBenchmarkFailure): void {
 
 function upsertMutation(result: MutationBenchmarkResult): void {
   mutationResults.value = upsert(mutationResults.value, result, mutationKey);
+}
+
+function upsertLayoutResult(result: LayoutBaselineBenchmarkResult): void {
+  layoutResults.value = upsert(layoutResults.value, result, layoutBaselineKey);
+}
+
+function upsertLayoutFailure(failure: LayoutBaselineBenchmarkFailure): void {
+  layoutFailures.value = upsert(layoutFailures.value, failure, layoutBaselineKey);
+}
+
+function upsertLayoutMutationResult(result: LayoutMutationBenchmarkResult): void {
+  layoutMutationResults.value = upsert(layoutMutationResults.value, result, layoutMutationKey);
 }
 
 function normalizeBaselineFailures(report: RawBenchmarkReport): readonly BaselineBenchmarkFailure[] {
@@ -970,6 +1148,14 @@ function mutationKey(result: Pick<MutationBenchmarkResult, 'rowProfile' | 'libra
   return `${result.rowProfile}:${result.library}:${result.sizeMode}:${result.operation}:${result.location}`;
 }
 
+function layoutBaselineKey(result: Pick<LayoutBaselineBenchmarkResult, 'family' | 'mode' | 'library'>): string {
+  return `${result.family}:${result.mode}:${result.library}`;
+}
+
+function layoutMutationKey(result: Pick<LayoutMutationBenchmarkResult, 'family' | 'mode' | 'library' | 'operation' | 'location'>): string {
+  return `${result.family}:${result.mode}:${result.library}:${result.operation}:${result.location}`;
+}
+
 function groupReports(): readonly BenchmarkResultGroup[] {
   const groups: BenchmarkResultGroup[] = [];
   for (const target of targets.value) {
@@ -985,6 +1171,9 @@ function aggregateReports(sourceReports: readonly RawBenchmarkReport[], target: 
   let groupedBaseline: BaselineBenchmarkResult[] = [];
   let groupedFailures: BaselineBenchmarkFailure[] = [];
   let groupedMutations: MutationBenchmarkResult[] = [];
+  let groupedLayoutResults: LayoutBaselineBenchmarkResult[] = [];
+  let groupedLayoutFailures: LayoutBaselineBenchmarkFailure[] = [];
+  let groupedLayoutMutations: LayoutMutationBenchmarkResult[] = [];
   const groupedConditions: Partial<Record<BenchmarkRowProfile, BenchmarkRowProfileConditions>> = {};
   for (const report of sourceReports) {
     for (const result of report.baselineResults ?? []) {
@@ -998,6 +1187,17 @@ function aggregateReports(sourceReports: readonly RawBenchmarkReport[], target: 
     for (const result of report.mutationResults ?? []) {
       groupedMutations = upsert(groupedMutations, normalizeMutation(result), mutationKey);
     }
+    for (const result of report.layoutResults ?? []) {
+      groupedLayoutFailures = groupedLayoutFailures.filter((failure) => layoutBaselineKey(failure) !== layoutBaselineKey(result));
+      groupedLayoutResults = upsert(groupedLayoutResults, result, layoutBaselineKey);
+    }
+    for (const failure of report.layoutFailures ?? []) {
+      groupedLayoutResults = groupedLayoutResults.filter((result) => layoutBaselineKey(result) !== layoutBaselineKey(failure));
+      groupedLayoutFailures = upsert(groupedLayoutFailures, failure, layoutBaselineKey);
+    }
+    for (const result of report.layoutMutationResults ?? []) {
+      groupedLayoutMutations = upsert(groupedLayoutMutations, result, layoutMutationKey);
+    }
     applyRowProfileConditions(report, groupedConditions);
   }
   return {
@@ -1006,6 +1206,9 @@ function aggregateReports(sourceReports: readonly RawBenchmarkReport[], target: 
     baselineFailures: groupedFailures,
     mutationResults: groupedMutations,
     rowProfileConditions: groupedConditions,
+    layoutResults: groupedLayoutResults,
+    layoutFailures: groupedLayoutFailures,
+    layoutMutationResults: groupedLayoutMutations,
   };
 }
 
@@ -1022,7 +1225,8 @@ function targetSummary(target: BenchmarkTarget): string {
   const libraryName = target.library === 'all'
     ? `${copy.value.library} ${copy.value.option.all}`
     : target.library;
-  return `${libraryName} · ${copy.value.rowCount(target.rows)}`;
+  const count = target.family === 'list' ? copy.value.rowCount(target.rows) : copy.value.itemCount(target.rows);
+  return `${selectionLabel(target.family)} · ${libraryName} · ${count}`;
 }
 
 function selectionLabel(value: string): string {
@@ -1074,6 +1278,9 @@ async function importRawJson(event: Event): Promise<void> {
     for (const result of imported.partialResults?.baselineResults ?? []) upsertBaseline(result);
     for (const result of imported.partialResults?.baselineFailures ?? []) upsertBaselineFailureResult(result);
     for (const result of imported.partialResults?.mutationResults ?? []) upsertMutation(result);
+    for (const result of imported.partialResults?.layoutResults ?? []) upsertLayoutResult(result);
+    layoutFailures.value = [...(imported.partialResults?.layoutFailures ?? [])];
+    for (const result of imported.partialResults?.layoutMutationResults ?? []) upsertLayoutMutationResult(result);
     Object.assign(rowProfileConditions.value, imported.partialResults?.rowProfileConditions ?? {});
     status.value = imported.status ?? (imported.partialResults === undefined ? 'complete' : 'cancelled');
     viewingResults.value = true;
@@ -1103,7 +1310,10 @@ function importedPayload(value: unknown): {
     : reports.map(() => null);
   const targets = 'configuration' in value && typeof value.configuration === 'object' && value.configuration !== null
     && 'targets' in value.configuration && Array.isArray(value.configuration.targets)
-    ? value.configuration.targets.filter(isBenchmarkTarget)
+    ? value.configuration.targets.flatMap((target) => {
+      const normalized = normalizeBenchmarkTarget(target);
+      return normalized === null ? [] : [normalized];
+    })
     : [];
   const importedStatus = 'status' in value && (value.status === 'complete' || value.status === 'cancelled')
     ? value.status
@@ -1120,16 +1330,17 @@ function importedPayload(value: unknown): {
   };
 }
 
-function isBenchmarkTarget(value: unknown): value is BenchmarkTarget {
-  if (typeof value !== 'object' || value === null) return false;
+function normalizeBenchmarkTarget(value: unknown): BenchmarkTarget | null {
+  if (typeof value !== 'object' || value === null) return null;
   const target = value as Partial<Record<keyof BenchmarkTarget, unknown>>;
-  return isIntegerWithin(target.id, 1, Number.MAX_SAFE_INTEGER)
+  if (!(isIntegerWithin(target.id, 1, Number.MAX_SAFE_INTEGER)
+    && (target.family === undefined || isAllowed(target.family, ['list', 'flow-grid', 'masonry', 'track-grid', 'spatial']))
     && isAllowed(target.preset, ['quick', 'standard', 'custom'])
     && isAllowed(target.profile, ['all', 'uniform', 'heterogeneous'])
     && isAllowed(target.phase, ['both', 'baseline', 'mutations'])
     && isAllowed(target.library, ['all', ...libraries])
-    && isAllowed(target.baselineMode, ['all', 'fixed', 'estimated', 'automatic'])
-    && isAllowed(target.mutationMode, ['all', 'estimated', 'automatic'])
+    && isAllowed(target.baselineMode, ['all', 'fixed', 'estimated', 'automatic', 'positioned'])
+    && isAllowed(target.mutationMode, ['all', 'fixed', 'estimated', 'automatic', 'positioned'])
     && isAllowed(target.operation, ['all', 'insert', 'move', 'remove', 'resize'])
     && isAllowed(target.location, ['all', 'start', 'middle', 'end'])
     && isIntegerWithin(target.rows, 2, 1_000_000)
@@ -1137,7 +1348,8 @@ function isBenchmarkTarget(value: unknown): value is BenchmarkTarget {
     && isIntegerWithin(target.warmupScrolls, 0, 100)
     && isIntegerWithin(target.scrollSamples, 1, 200)
     && isIntegerWithin(target.mutationRounds, 1, 50)
-    && isIntegerWithin(target.mutationSamples, 1, 50);
+    && isIntegerWithin(target.mutationSamples, 1, 50))) return null;
+  return Object.freeze({ ...target, family: target.family ?? 'list' }) as BenchmarkTarget;
 }
 
 function isAllowed(value: unknown, allowed: readonly string[]): value is string {
@@ -1162,7 +1374,10 @@ function isRawBenchmarkPartialResults(value: unknown): value is RawBenchmarkPart
     && (!('mutationResults' in value) || Array.isArray(value.mutationResults))
     && (!('rowProfileConditions' in value) || (typeof value.rowProfileConditions === 'object' && value.rowProfileConditions !== null))
     && (!('run' in value) || (typeof value.run === 'object' && value.run !== null))
-    && (!('baselineSamples' in value) || (typeof value.baselineSamples === 'object' && value.baselineSamples !== null));
+    && (!('baselineSamples' in value) || (typeof value.baselineSamples === 'object' && value.baselineSamples !== null))
+    && (!('layoutResults' in value) || Array.isArray(value.layoutResults))
+    && (!('layoutFailures' in value) || Array.isArray(value.layoutFailures))
+    && (!('layoutMutationResults' in value) || Array.isArray(value.layoutMutationResults));
 }
 
 function isRunnerMessage(value: unknown): value is RunnerMessage {
@@ -1219,6 +1434,7 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
 
             <VirtualBenchmarkTargetFields
               v-model:preset="preset"
+              v-model:family="family"
               v-model:profile="profile"
               v-model:phase="phase"
               v-model:library="library"
@@ -1234,6 +1450,7 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
               v-model:mutation-samples="mutationSamples"
               :copy="copy"
               :preset-options="presetOptions"
+              :family-options="familyOptions"
               :profile-options="profileOptions"
               :phase-options="phaseOptions"
               :library-options="libraryOptions"
@@ -1252,8 +1469,9 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
               <strong>{{ copy.target(index + 1) }}</strong>
               <p>{{ targetSummary(target) }}</p>
               <dl class="benchmark-target__facets">
+                <div><dt>{{ copy.family }}</dt><dd>{{ selectionLabel(target.family) }}</dd></div>
                 <div><dt>{{ copy.preset }}</dt><dd>{{ selectionLabel(target.preset) }}</dd></div>
-                <div><dt>{{ copy.profile }}</dt><dd>{{ selectionLabel(target.profile) }}</dd></div>
+                <div v-if="target.family === 'list'"><dt>{{ copy.profile }}</dt><dd>{{ selectionLabel(target.profile) }}</dd></div>
                 <div><dt>{{ copy.phase }}</dt><dd>{{ selectionLabel(target.phase) }}</dd></div>
                 <div v-if="target.phase !== 'mutations'"><dt>{{ copy.baselineMode }}</dt><dd>{{ selectionLabel(target.baselineMode) }}</dd></div>
                 <div v-if="target.phase !== 'baseline'"><dt>{{ copy.mutationMode }}</dt><dd>{{ selectionLabel(target.mutationMode) }}</dd></div>
@@ -1281,6 +1499,7 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
 
                 <VirtualBenchmarkTargetFields
                   v-model:preset="preset"
+                  v-model:family="family"
                   v-model:profile="profile"
                   v-model:phase="phase"
                   v-model:library="library"
@@ -1296,6 +1515,7 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
                   v-model:mutation-samples="mutationSamples"
                   :copy="copy"
                   :preset-options="presetOptions"
+                  :family-options="familyOptions"
                   :profile-options="profileOptions"
                   :phase-options="phaseOptions"
                   :library-options="libraryOptions"
@@ -1356,6 +1576,9 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
               <X :size="16" aria-hidden="true" />{{ copy.cancel }}
             </DocsButton>
             <div v-else class="benchmark-running__actions">
+              <DocsButton v-if="status === 'cancelled' && hasPartialEvidence" large @click="downloadRawJson">
+                <Download :size="16" aria-hidden="true" />{{ copy.downloadPartial }}
+              </DocsButton>
               <DocsButton v-if="status === 'cancelled'" large @click="status = 'idle'">
                 <RotateCcw :size="16" aria-hidden="true" />{{ copy.rerun }}
               </DocsButton>
@@ -1418,7 +1641,7 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
               <p>{{ copy.target(latestCheckpoint.targetPosition) }}</p>
               <dl class="benchmark-checkpoint-latest__conditions">
                 <div><dt>{{ copy.phase }}</dt><dd>{{ selectionLabel(latestCheckpoint.phase) }}</dd></div>
-                <div><dt>{{ copy.profile }}</dt><dd>{{ selectionLabel(latestCheckpoint.profile) }}</dd></div>
+                <div v-if="latestCheckpoint.family === 'list'"><dt>{{ copy.profile }}</dt><dd>{{ selectionLabel(latestCheckpoint.profile) }}</dd></div>
                 <div><dt>{{ latestCheckpoint.phase === 'mutations' ? copy.mutationMode : copy.baselineMode }}</dt><dd>{{ latestCheckpoint.mode === undefined ? '—' : selectionLabel(latestCheckpoint.mode) }}</dd></div>
                 <div v-if="latestCheckpoint.operation !== undefined"><dt>{{ copy.operation }}</dt><dd>{{ selectionLabel(latestCheckpoint.operation) }}</dd></div>
                 <div v-if="latestCheckpoint.location !== undefined"><dt>{{ copy.location }}</dt><dd>{{ selectionLabel(latestCheckpoint.location) }}</dd></div>
@@ -1484,7 +1707,14 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
             <strong>{{ copy.target(targets.findIndex((target) => target.id === group.target?.id) + 1) }}</strong>
             <span>{{ targetSummary(group.target) }}</span>
           </header>
+          <VirtualBenchmarkLayoutReport
+            v-if="group.layoutResults.length > 0 || group.layoutFailures.length > 0 || group.layoutMutationResults.length > 0"
+            :baseline-results="group.layoutResults"
+            :baseline-failures="group.layoutFailures"
+            :mutation-results="group.layoutMutationResults"
+          />
           <VirtualBenchmarkReport
+            v-else
             :key="resultSelection(group)"
             :baseline-results="group.baselineResults"
             :baseline-failures="group.baselineFailures"

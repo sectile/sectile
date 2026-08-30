@@ -1,8 +1,8 @@
 # Virtualization ecosystem benchmark
 
-This browser benchmark compares the complete adapter and framework path for seven virtualizers:
+This browser benchmark compares equivalent public framework paths across list, flow-grid, masonry, track-grid, and spatial families. The list family covers seven virtualizers:
 
-- Sectile Virtual 0.7.0 with Vue 3.5.22
+- Sectile Virtual 0.10.0 with Vue 3.5.22
 - TanStack Virtual 3.14.10 with React 19.2.8
 - react-window 2.3.0 with React 19.2.8
 - React Virtuoso 4.18.12 with React 19.2.8
@@ -24,6 +24,8 @@ The runner separates three height-input conditions:
 - `fixed`: the application supplies the exact 72px row height;
 - `estimated`: the application supplies 72px as an initial estimate and the library measures the DOM;
 - `automatic`: the application supplies no height or estimate and the library discovers the size from the DOM.
+
+Non-list families use deterministic two-dimensional fixtures and a family-specific correctness oracle. Flow-grid compares Sectile with React Virtuoso, masonry compares Sectile with TanStack Virtual, track-grid compares Sectile with react-window and Virtua, and spatial currently records Sectile's positioned public API. Unsupported library/mode pairs remain explicit capabilities rather than synthetic adapters.
 
 The uniform profile uses an exact 72px estimate. The heterogeneous profile deliberately keeps the same common 72px estimate even though actual rows differ. This exposes how each library refines an initial estimate from DOM measurements. The automatic path starts without an application estimate.
 
@@ -47,7 +49,13 @@ pnpm --filter @sectile/benchmark-virtual-ecosystem dev
 
 Open the printed URL in Chrome and choose **Run benchmark**. Commit raw results only with the browser version, operating system, viewport, package versions, and conditions emitted by the page.
 
-Protocol 6 records provenance and adaptive stopping with the measurements. Initial rows and a correct initial layout resolve directly from DOM and size observations; animation frames remain only as liveness and stable-failure checks, so successful initial timings are not rounded up to the next frame boundary. Every browser run receives a UUID, start and completion timestamps, and wall-clock duration. Results retain the run IDs that contributed to them, and the report stores the corresponding Git commit, dirty-worktree flag, and SHA-256 fingerprint of the benchmark harness plus the Sectile virtual source used by that build. A partial commit or shard merge rejects reports with missing provenance or a different build fingerprint. This prevents a focused rerun from silently mixing measurements produced by different code.
+Protocol 7 records the benchmark family, capability matrix, provenance, and adaptive stopping with the measurements. Initial items and a correct initial layout resolve directly from DOM and size observations; animation frames remain only as liveness and stable-failure checks, so successful initial timings are not rounded up to the next frame boundary. Every browser run receives a UUID, start and completion timestamps, and wall-clock duration. Results retain the run IDs that contributed to them, and the report stores the corresponding Git commit, dirty-worktree flag, and SHA-256 fingerprint of the benchmark harness plus the Sectile virtual source used by that build. A partial commit or shard merge rejects reports with missing provenance or a different build fingerprint. This prevents a focused rerun from silently mixing measurements produced by different code.
+
+Select a non-list family with `family`, for example:
+
+```text
+?family=masonry&library=Sectile%20Virtual&baseline-only&quick
+```
 
 To rerun one mutation without repeating the full suite, add focused query parameters. This example runs only Sectile's automatic-height resize at the middle of the collection:
 

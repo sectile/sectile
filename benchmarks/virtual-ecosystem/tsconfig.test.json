@@ -13,6 +13,8 @@
     "src/failure-reproduction.test.ts",
     "src/interactive-budget.ts",
     "src/interactive-budget.test.ts",
+    "src/layout-fixtures.ts",
+    "src/layout-fixtures.test.ts",
     "src/react-virtualized-measurement.ts",
     "src/react-virtualized-measurement.test.ts",
     "src/target-position.ts",

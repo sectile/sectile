@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type {
   BenchmarkHeightMode,
+  BenchmarkFamily,
   BenchmarkLocation,
   BenchmarkOperation,
   BenchmarkRowProfile,
@@ -10,16 +11,18 @@ import DemoSelect, { type DemoSelectOption } from './DemoSelect.vue';
 import DemoSpinButton from './DemoSpinButton.vue';
 
 type Preset = 'quick' | 'standard' | 'custom';
+type FamilySelection = BenchmarkFamily;
 type ProfileSelection = BenchmarkRowProfile | 'all';
 type PhaseSelection = 'both' | 'baseline' | 'mutations';
 type LibrarySelection = string | 'all';
-type HeightModeSelection = BenchmarkHeightMode | 'all';
-type MutationModeSelection = Exclude<BenchmarkHeightMode, 'fixed'> | 'all';
+type HeightModeSelection = BenchmarkHeightMode | 'positioned' | 'all';
+type MutationModeSelection = BenchmarkHeightMode | 'positioned' | 'all';
 type OperationSelection = BenchmarkOperation | 'all';
 type LocationSelection = BenchmarkLocation | 'all';
 
 interface BenchmarkTargetFieldCopy {
   readonly preset: string;
+  readonly family: string;
   readonly profile: string;
   readonly phase: string;
   readonly library: string;
@@ -28,12 +31,14 @@ interface BenchmarkTargetFieldCopy {
   readonly operation: string;
   readonly location: string;
   readonly rows: string;
+  readonly items: string;
   readonly baselineRounds: string;
   readonly warmupScrolls: string;
   readonly scrollSamples: string;
   readonly mutationRounds: string;
   readonly mutationSamples: string;
   readonly rowsHelp: string;
+  readonly itemsHelp: string;
   readonly baselineRoundsHelp: string;
   readonly warmupScrollsHelp: string;
   readonly scrollSamplesHelp: string;
@@ -50,6 +55,7 @@ interface BenchmarkTargetFieldCopy {
 defineProps<{
   readonly copy: BenchmarkTargetFieldCopy;
   readonly presetOptions: readonly DemoSelectOption[];
+  readonly familyOptions: readonly DemoSelectOption[];
   readonly profileOptions: readonly DemoSelectOption[];
   readonly phaseOptions: readonly DemoSelectOption[];
   readonly libraryOptions: readonly DemoSelectOption[];
@@ -60,6 +66,7 @@ defineProps<{
 }>();
 
 const preset = defineModel<Preset>('preset', { required: true });
+const family = defineModel<FamilySelection>('family', { required: true });
 const profile = defineModel<ProfileSelection>('profile', { required: true });
 const phase = defineModel<PhaseSelection>('phase', { required: true });
 const library = defineModel<LibrarySelection>('library', { required: true });
@@ -97,10 +104,13 @@ function applyPreset(next: string | null): void {
 
 <template>
   <div class="benchmark-target-fields__grid">
+    <DemoFormField name="family" :label="copy.family">
+      <DemoSelect v-model="family" :options="familyOptions" :label="copy.family" />
+    </DemoFormField>
     <DemoFormField name="preset" :label="copy.preset">
       <DemoSelect :model-value="preset" :options="presetOptions" :label="copy.preset" @update:model-value="applyPreset" />
     </DemoFormField>
-    <DemoFormField name="profile" :label="copy.profile">
+    <DemoFormField v-if="family === 'list'" name="profile" :label="copy.profile">
       <DemoSelect v-model="profile" :options="profileOptions" :label="copy.profile" />
     </DemoFormField>
     <DemoFormField name="phase" :label="copy.phase">
@@ -126,16 +136,16 @@ function applyPreset(next: string | null): void {
   <div class="benchmark-target-fields__numbers">
     <DemoFormField
       name="rows"
-      :label="copy.rows"
-      :hint="copy.rowsHelp"
-      :help-label="copy.help(copy.rows)"
+      :label="family === 'list' ? copy.rows : copy.items"
+      :hint="family === 'list' ? copy.rowsHelp : copy.itemsHelp"
+      :help-label="copy.help(family === 'list' ? copy.rows : copy.items)"
       :minimum="copy.number(2)"
       :maximum="copy.number(1000000)"
       :minimum-label="copy.minimum"
       :maximum-label="copy.maximum"
       :readonly="preset !== 'custom'"
     >
-      <DemoSpinButton v-model="rows" :label="copy.rows" :decrement-label="copy.decrease(copy.rows)" :increment-label="copy.increase(copy.rows)" :min="2" :max="1000000" :readonly="preset !== 'custom'" />
+      <DemoSpinButton v-model="rows" :label="family === 'list' ? copy.rows : copy.items" :decrement-label="copy.decrease(family === 'list' ? copy.rows : copy.items)" :increment-label="copy.increase(family === 'list' ? copy.rows : copy.items)" :min="2" :max="1000000" :readonly="preset !== 'custom'" />
     </DemoFormField>
     <DemoFormField
       v-if="phase !== 'mutations'"

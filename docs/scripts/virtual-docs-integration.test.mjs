@@ -89,8 +89,9 @@ test('Virtual spatial examples use irregular coordinates and variable rectangles
 });
 
 test('Virtual benchmark lab stays isolated and reuses docs controls', async () => {
-  const [lab, report, popover, formField, tooltip, virtualList, button, englishPage, koreanPage, config, runnerPlugin] = await Promise.all([
+  const [lab, targetFields, report, popover, formField, tooltip, virtualList, button, englishPage, koreanPage, config, runnerPlugin] = await Promise.all([
     source('.vitepress/theme/components/VirtualBenchmarkLab.vue'),
+    source('.vitepress/theme/components/VirtualBenchmarkTargetFields.vue'),
     source('.vitepress/theme/components/VirtualBenchmarkReport.vue'),
     source('.vitepress/theme/components/DemoPopover.vue'),
     source('.vitepress/theme/components/DemoFormField.vue'),
@@ -107,10 +108,12 @@ test('Virtual benchmark lab stays isolated and reuses docs controls', async () =
     assert.match(page, /layout: false/u);
     assert.match(page, /<VirtualBenchmarkLab \/>/u);
   }
-  for (const component of ['DemoFormField', 'DemoPopover', 'DemoProgress', 'DemoSpinButton', 'DemoVirtualList', 'DocsButton', 'VirtualBenchmarkReport']) {
+  for (const component of ['DemoPopover', 'DemoProgress', 'DemoVirtualList', 'DocsButton', 'VirtualBenchmarkReport', 'VirtualBenchmarkLayoutReport', 'VirtualBenchmarkTargetFields']) {
     assert.match(lab, new RegExp(`import ${component} from`));
   }
-  assert.match(lab, /import DemoSelect,/u);
+  for (const component of ['DemoFormField', 'DemoSelect', 'DemoSpinButton']) {
+    assert.match(targetFields, new RegExp(`import ${component}(?:,| from)`));
+  }
   assert.match(lab, /both: '전체'/u);
   assert.match(lab, /both: 'All'/u);
   assert.doesNotMatch(lab, /from ['"]@sectile\/vue/u);
@@ -168,9 +171,9 @@ test('Virtual benchmark lab stays isolated and reuses docs controls', async () =
   assert.match(button, /\.docs-button:disabled/u);
   assert.ok(button.indexOf('.docs-button:disabled') > button.indexOf(".docs-button[data-appearance='primary']"));
   assert.doesNotMatch(lab, /benchmark-button/u);
-  assert.match(lab, /:hint="copy\.rowsHelp"/u);
-  assert.match(lab, /:readonly="preset !== 'custom'"/u);
-  assert.doesNotMatch(lab, /v-if="preset === 'custom'/u);
+  assert.match(targetFields, /:hint="family === 'list' \? copy\.rowsHelp : copy\.itemsHelp"/u);
+  assert.match(targetFields, /:readonly="preset !== 'custom'"/u);
+  assert.doesNotMatch(targetFields, /v-if="preset === 'custom'/u);
   assert.match(lab, /const runQueue/u);
   assert.match(lab, /const showRunWorkspace = computed\(\(\) => !viewingResults\.value/u);
   assert.match(lab, /status\.value === 'cancelled'/u);
@@ -195,19 +198,26 @@ test('Virtual benchmark lab stays isolated and reuses docs controls', async () =
   assert.match(runnerPlugin, /'process\.env\.NODE_ENV': JSON\.stringify\('production'\)/u);
 });
 
-test('Virtual benchmark runner reports checkpoints without rendering live result tables', async () => {
-  const [runner, mutationRunner, fixedAdapters, mutableAdapters, viteConfig] = await Promise.all([
+test('Virtual benchmark runner routes each family and reports checkpoints', async () => {
+  const [entry, listRunner, layoutRunner, mutationRunner, fixedAdapters, mutableAdapters, viteConfig] = await Promise.all([
     readFile(new URL('../../benchmarks/virtual-ecosystem/src/main.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../../benchmarks/virtual-ecosystem/src/list-runner.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../../benchmarks/virtual-ecosystem/src/layout-runner.ts', import.meta.url), 'utf8'),
     readFile(new URL('../../benchmarks/virtual-ecosystem/src/mutation-runner.ts', import.meta.url), 'utf8'),
     readFile(new URL('../../benchmarks/virtual-ecosystem/src/adapters.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../../benchmarks/virtual-ecosystem/src/mutable-adapters.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../../benchmarks/virtual-ecosystem/vite.config.ts', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(runner, /const EMBEDDED = search\.has\('embedded'\)/u);
-  assert.match(runner, /publish\('checkpoint'/u);
-  assert.match(runner, /window\.parent\.postMessage/u);
-  assert.match(runner, /baselineSamples: baselineSampleRecords/u);
+  assert.match(entry, /if \(isLayoutBenchmarkFamily\(family\)\) void import\('\.\/layout-runner\.js'\)/u);
+  assert.match(entry, /else void import\('\.\/list-runner\.js'\)/u);
+  assert.match(listRunner, /const EMBEDDED = search\.has\('embedded'\)/u);
+  assert.match(layoutRunner, /const embedded = search\.has\('embedded'\)/u);
+  for (const runner of [listRunner, layoutRunner]) {
+    assert.match(runner, /publish\('checkpoint'/u);
+    assert.match(runner, /window\.parent\.postMessage/u);
+  }
+  assert.match(listRunner, /baselineSamples: baselineSampleRecords/u);
   assert.match(mutationRunner, /onCheckpoint\?\.\(\s*summarizeMutationResult/u);
   assert.match(mutationRunner, /No supported mutation conditions match the selected filters/u);
   assert.match(fixedAdapters, /item\.key\)\)\)\);/u);

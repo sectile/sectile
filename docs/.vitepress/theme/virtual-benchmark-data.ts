@@ -2,6 +2,58 @@ export type BenchmarkOperation = 'insert' | 'move' | 'remove' | 'resize';
 export type BenchmarkLocation = 'start' | 'middle' | 'end';
 export type BenchmarkHeightMode = 'fixed' | 'estimated' | 'automatic';
 export type BenchmarkRowProfile = 'uniform' | 'heterogeneous';
+export type BenchmarkFamily = 'list' | 'flow-grid' | 'masonry' | 'track-grid' | 'spatial';
+export type LayoutBenchmarkMode = BenchmarkHeightMode | 'positioned';
+
+export interface LayoutBaselineBenchmarkResult {
+  readonly runIds: readonly string[];
+  readonly family: Exclude<BenchmarkFamily, 'list'>;
+  readonly mode: LayoutBenchmarkMode;
+  readonly library: string;
+  readonly version: string;
+  readonly stack: string;
+  readonly setupMs: number;
+  readonly firstItemsMs: number;
+  readonly stableLayoutMs: number;
+  readonly scrollMedianMs: number;
+  readonly scrollP95Ms: number;
+  readonly scrollMadMs: number;
+  readonly scrollSampleCount: number;
+  readonly completedRounds: number;
+  readonly plannedRounds: number;
+  readonly renderedItems: number;
+  readonly domElements: number;
+}
+
+export interface LayoutBaselineBenchmarkFailure {
+  readonly runIds: readonly string[];
+  readonly family: Exclude<BenchmarkFamily, 'list'>;
+  readonly mode: LayoutBenchmarkMode;
+  readonly library: string;
+  readonly version: string;
+  readonly stack: string;
+  readonly round: number;
+  readonly message: string;
+}
+
+export interface LayoutMutationBenchmarkResult {
+  readonly runIds: readonly string[];
+  readonly family: Exclude<BenchmarkFamily, 'list'>;
+  readonly mode: LayoutBenchmarkMode;
+  readonly library: string;
+  readonly version: string;
+  readonly stack: string;
+  readonly operation: BenchmarkOperation;
+  readonly location: BenchmarkLocation;
+  readonly medianMs: number | null;
+  readonly p95Ms: number | null;
+  readonly samples: number;
+  readonly failedSamples: number;
+  readonly failureCodes: readonly string[];
+  readonly plannedSamples: number;
+  readonly earlyStopped: boolean;
+  readonly earlyStopReason: 'interactive-budget' | 'reproducible-failure' | 'stable-statistics' | null;
+}
 
 export interface BaselineBenchmarkResult {
   readonly runIds: readonly string[];

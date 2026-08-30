@@ -1,10 +1,11 @@
 export interface VirtualBenchmarkPlanTarget {
+  readonly family: 'list' | 'flow-grid' | 'masonry' | 'track-grid' | 'spatial';
   readonly preset: 'quick' | 'standard' | 'custom';
   readonly profile: 'all' | 'uniform' | 'heterogeneous';
   readonly phase: 'both' | 'baseline' | 'mutations';
   readonly library: string | 'all';
-  readonly baselineMode: 'all' | 'fixed' | 'estimated' | 'automatic';
-  readonly mutationMode: 'all' | 'estimated' | 'automatic';
+  readonly baselineMode: 'all' | 'fixed' | 'estimated' | 'automatic' | 'positioned';
+  readonly mutationMode: 'all' | 'fixed' | 'estimated' | 'automatic' | 'positioned';
   readonly operation: 'all' | 'insert' | 'move' | 'remove' | 'resize';
   readonly location: 'all' | 'start' | 'middle' | 'end';
   readonly rows: number;
@@ -29,8 +30,8 @@ export interface VirtualBenchmarkPlanSummary {
 }
 
 type RowProfile = 'uniform' | 'heterogeneous';
-type BaselineMode = 'fixed' | 'estimated' | 'automatic';
-type MutationMode = 'estimated' | 'automatic';
+type BaselineMode = 'fixed' | 'estimated' | 'automatic' | 'positioned';
+type MutationMode = BaselineMode;
 
 export function summarizeVirtualBenchmarkPlan(
   targets: readonly VirtualBenchmarkPlanTarget[],
@@ -44,9 +45,9 @@ export function summarizeVirtualBenchmarkPlan(
   let maximumDurationSeconds = 0;
 
   for (const target of targets) {
-    const profiles = target.profile === 'all'
+    const profiles = target.family === 'list' && target.profile === 'all'
       ? ['uniform', 'heterogeneous'] as const
-      : [target.profile] as const;
+      : [target.profile === 'all' ? 'uniform' : target.profile] as const;
     const rowScale = Math.max(0.8, Math.min(1.2, 0.8 + Math.log10(target.rows / 10_000) * 0.2));
 
     for (const profile of profiles) {
@@ -55,16 +56,16 @@ export function summarizeVirtualBenchmarkPlan(
       let profileMutationConditions = 0;
 
       if (target.phase !== 'mutations') {
-        for (const mode of baselineModes(target.baselineMode, profile)) {
-          profileBaselineConditions += libraryCount(target.library, mode, options);
+        for (const mode of baselineModes(target, profile)) {
+          profileBaselineConditions += libraryCount(target, mode, options);
         }
       }
 
       if (target.phase !== 'baseline') {
         const operationCount = target.operation === 'all' ? 4 : 1;
         const locationCount = target.location === 'all' ? 3 : 1;
-        for (const mode of mutationModes(target.mutationMode)) {
-          profileMutationConditions += libraryCount(target.library, mode, options)
+        for (const mode of mutationModes(target)) {
+          profileMutationConditions += libraryCount(target, mode, options)
             * operationCount
             * locationCount;
         }
@@ -108,26 +109,44 @@ export function summarizeVirtualBenchmarkPlan(
 }
 
 function baselineModes(
-  selection: VirtualBenchmarkPlanTarget['baselineMode'],
+  target: VirtualBenchmarkPlanTarget,
   profile: RowProfile,
 ): readonly BaselineMode[] {
+  const selection = target.baselineMode;
+  if (target.family === 'spatial') return selection === 'all' || selection === 'positioned' ? ['positioned'] : [];
+  if (target.family !== 'list') return selection === 'all' ? ['fixed', 'estimated', 'automatic'] : selection === 'positioned' ? [] : [selection];
   if (selection !== 'all') return selection === 'fixed' && profile !== 'uniform' ? [] : [selection];
   return profile === 'uniform'
     ? ['fixed', 'estimated', 'automatic']
     : ['estimated', 'automatic'];
 }
 
-function mutationModes(selection: VirtualBenchmarkPlanTarget['mutationMode']): readonly MutationMode[] {
-  return selection === 'all' ? ['estimated', 'automatic'] : [selection];
+function mutationModes(target: VirtualBenchmarkPlanTarget): readonly MutationMode[] {
+  const selection = target.mutationMode;
+  if (target.family === 'spatial') return selection === 'all' || selection === 'positioned' ? ['positioned'] : [];
+  if (target.family !== 'list') return selection === 'all' ? ['fixed', 'estimated', 'automatic'] : selection === 'positioned' ? [] : [selection];
+  return selection === 'all' ? ['estimated', 'automatic'] : selection === 'fixed' || selection === 'positioned' ? [] : [selection];
 }
 
 function libraryCount(
-  selection: VirtualBenchmarkPlanTarget['library'],
+  target: VirtualBenchmarkPlanTarget,
   mode: BaselineMode | MutationMode,
   options: VirtualBenchmarkPlanOptions,
 ): number {
+  const selection = target.library;
+  if (target.family !== 'list') {
+    const supported = layoutModeLibraries(target.family, mode);
+    return selection === 'all' ? supported.length : Number(supported.includes(selection));
+  }
   if (selection !== 'all') return mode !== 'automatic' || options.automaticLibraries.has(selection) ? 1 : 0;
   return mode === 'automatic' ? options.automaticLibraries.size : options.libraries.length;
+}
+
+function layoutModeLibraries(family: Exclude<VirtualBenchmarkPlanTarget['family'], 'list'>, mode: BaselineMode): readonly string[] {
+  if (family === 'flow-grid') return mode === 'automatic' ? ['Sectile Virtual', 'React Virtuoso'] : ['Sectile Virtual'];
+  if (family === 'masonry') return mode === 'estimated' ? ['Sectile Virtual', 'TanStack Virtual'] : mode === 'automatic' || mode === 'fixed' ? ['Sectile Virtual'] : [];
+  if (family === 'track-grid') return mode === 'fixed' ? ['Sectile Virtual', 'react-window'] : mode === 'estimated' ? ['Virtua'] : [];
+  return mode === 'positioned' ? ['Sectile Virtual'] : [];
 }
 
 function mutationSamplesPerCondition(target: VirtualBenchmarkPlanTarget): number {

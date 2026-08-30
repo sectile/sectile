@@ -23,6 +23,8 @@ button:disabled { opacity: 0.55; cursor: wait; }
 .bench-row__tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
 .bench-row__tag { border-radius: 4px; padding: 1px 6px; background: #f0f2f7; color: #626773; font-size: 11px; line-height: 18px; }
 .bench-calibration { position: fixed; left: -20000px; top: 0; visibility: hidden; }
+.bench-item { box-sizing: border-box; min-width: 0; overflow: hidden; border: 1px solid #dfe3ec; padding: 8px; color: #30323a; background: #fff; font: 12px/1.35 system-ui, sans-serif; }
+.bench-flow-grid { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 table { width: 100%; border-collapse: collapse; background: #fff; }
 th, td { border-bottom: 1px solid #e2e5ec; padding: 11px 12px; text-align: right; font-variant-numeric: tabular-nums; }
 th { color: #666b78; font-size: 0.78rem; }

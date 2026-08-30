@@ -8,6 +8,7 @@ const options = {
 };
 
 const standardTarget = {
+  family: 'list',
   preset: 'standard',
   profile: 'all',
   phase: 'both',

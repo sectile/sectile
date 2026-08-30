@@ -15,6 +15,21 @@ for (const report of reports.slice(1)) {
   assertCompatible(reports[0], report);
   assertCompatibleSource(reports[0], report);
 }
+if (reports[0].conditions.family !== undefined && reports[0].conditions.family !== 'list') {
+  const merged = {
+    ...reports[0],
+    environment: reports.at(-1).environment,
+    source: reports[0].source,
+    runs: mergeRuns(...reports),
+    capabilities: mergeUnique(reports.flatMap((report) => report.capabilities ?? []), (entry) => `${entry.family}\u0000${entry.library}`),
+    layoutResults: mergeUnique(reports.flatMap((report) => report.layoutResults ?? []), layoutBaselineKey),
+    layoutFailures: mergeUnique(reports.flatMap((report) => report.layoutFailures ?? []), layoutBaselineKey),
+    layoutMutationResults: mergeUnique(reports.flatMap((report) => report.layoutMutationResults ?? []), layoutMutationKey),
+  };
+  await writeFile(outputPath, `${JSON.stringify(merged, null, 2)}\n`, 'utf8');
+  console.log(`Wrote ${outputPath}`);
+  process.exit(0);
+}
 const mergedBaseline = mergeBaselineReports(reports);
 
 const merged = {
@@ -252,6 +267,7 @@ function assertCompatible(left, right) {
 function compatibilityKey(report) {
   return JSON.stringify({
     protocolVersion: report.protocolVersion,
+    family: report.conditions.family ?? 'list',
     itemCount: report.conditions.itemCount,
     viewport: report.conditions.viewport,
     contentCorpusVersion: report.conditions.contentCorpusVersion,
@@ -264,6 +280,24 @@ function baselineKey(result) {
 
 function mutationKey(result) {
   return `${result.rowProfile}:${result.library}:${result.sizeMode}:${result.operation}:${result.location}`;
+}
+
+function layoutBaselineKey(result) {
+  return `${result.family}\u0000${result.mode}\u0000${result.library}`;
+}
+
+function layoutMutationKey(result) {
+  return `${layoutBaselineKey(result)}\u0000${result.operation}\u0000${result.location}`;
+}
+
+function mergeUnique(values, keyFor) {
+  const merged = new Map();
+  for (const value of values) {
+    const key = keyFor(value);
+    if (merged.has(key)) throw new Error(`Cannot merge duplicate layout condition ${key.replaceAll('\u0000', ':')} without raw samples.`);
+    merged.set(key, value);
+  }
+  return [...merged.values()];
 }
 
 function percentile(sorted, ratio) {

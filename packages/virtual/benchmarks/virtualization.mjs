@@ -3,6 +3,7 @@ import { createSequence, tryApplySequencePatch } from '@sectile/core/sequence';
 import { createExtentIndex } from '@sectile/virtual/extent-index';
 import { applyLinearMeasurements, createLinearLayout, queryLinearLayout, queryLinearWindow } from '@sectile/virtual/linear-layout';
 import { applyMasonryMeasurements, applyMasonryMutation, createMasonryLayout, queryMasonryLayout } from '@sectile/virtual/masonry-layout';
+import { applyPartitionedTrackGridMeasurements, createPartitionedTrackGridLayout, queryPartitionedTrackGridLayout } from '@sectile/virtual/partitioned-track-grid-layout';
 import { applySpatialMeasurements, applySpatialMutation, createSpatialLayout, querySpatialLayout } from '@sectile/virtual/spatial-layout';
 import { applyGridMeasurements, applyTrackGridMutation, createTrackGridLayout, queryTrackGridLayout } from '@sectile/virtual/track-grid-layout';
 
@@ -187,6 +188,52 @@ const gridInsertTrackMs = measureColdMilliseconds(() => applyTrackGridMutation(g
   type: 'splice-tracks', axis: 'row', index: 0, deleteCount: 0, inserted: [exact(28)],
 }).state.generation);
 
+const partitionedRows = Array.from({ length: strategySize }, (_, index) => Object.freeze({
+  id: `partitioned-row-${index}`,
+  partition: index === 0 ? 'start' : index === strategySize - 1 ? 'end' : 'center',
+  extent: estimated(32),
+}));
+const partitionedColumns = Array.from({ length: 64 }, (_, index) => Object.freeze({
+  id: `partitioned-column-${index}`,
+  partition: index === 0 ? 'start' : index === 63 ? 'end' : 'center',
+  extent: exact(96),
+}));
+const partitionedRegions = Array.from({ length: strategySize }, (_, index) => Object.freeze({
+  id: `partitioned-${index}`,
+  row: `partitioned-row-${index}`,
+  column: `partitioned-column-${index & 63}`,
+}));
+const partitionedState = createPartitionedTrackGridLayout(
+  partitionedRows,
+  partitionedColumns,
+  partitionedRegions,
+);
+const partitionedQueryUs = measure(20_000, (iteration) => {
+  const plan = queryPartitionedTrackGridLayout(partitionedState, {
+    viewport: { x: ((iteration * 193) % 6_000), y: ((iteration * 997) % 3_100_000), width: 960, height: 800 },
+    overscan: 320,
+  });
+  sink += plan.placements.length + plan.pinnedStartHeight + plan.pinnedEndWidth;
+});
+const partitionedBuildMs = measureColdMilliseconds(() => createPartitionedTrackGridLayout(
+  partitionedRows,
+  partitionedColumns,
+  partitionedRegions,
+).generation);
+let measuredPartitioned = partitionedState;
+const partitionedMeasurementVariants = [30, 34].map((value) => Array.from({ length: 32 }, (_, index) => ({
+  axis: 'row',
+  id: `partitioned-row-${50_000 + index}`,
+  extent: exact(value),
+})));
+const partitionedMeasurement32Us = measure(2_000, (iteration) => {
+  measuredPartitioned = applyPartitionedTrackGridMeasurements(measuredPartitioned, {
+    generation: measuredPartitioned.generation,
+    measurements: partitionedMeasurementVariants[iteration & 1],
+  }).state;
+  sink += measuredPartitioned.generation;
+});
+
 const strategyDomain = createSequence(Array.from({ length: strategySize }, (_, index) => `strategy-${index}`), { maxItems: strategySize + 1 });
 const strategyExtents = createExtentIndex(Array.from({ length: strategySize }, (_, index) => estimated(24 + (index % 73))));
 const masonryState = createMasonryLayout(strategyDomain, strategyExtents, { laneCount: 8, laneExtent: 160, laneGap: 12, itemGap: 12 });
@@ -272,6 +319,14 @@ const result = {
     idempotentMeasurement32Us,
   },
   trackGrid: { items: strategySize, queryUs: gridQueryUs, changedRowMeasurement32Us: gridMeasurement32Us, insertTrackMs: gridInsertTrackMs, buildMs: gridBuildMs },
+  partitionedTrackGrid: {
+    items: strategySize,
+    pinnedRows: 2,
+    pinnedColumns: 2,
+    queryUs: partitionedQueryUs,
+    changedRowMeasurement32Us: partitionedMeasurement32Us,
+    buildMs: partitionedBuildMs,
+  },
   masonry: {
     items: strategySize,
     lanes: 8,

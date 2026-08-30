@@ -11,7 +11,7 @@ The browser suite and Sectile's internal layout benchmark answer different quest
 
 <VirtualBenchmarkReport />
 
-Every adapter renders the same 100,000 rows in a 720 × 480px viewport. Fixed, estimated, and omitted-height conditions are measured separately. Insert, move, remove, and height-change operations also run at the start, middle, and end of the collection.
+The lab covers list, flow-grid, masonry, track-grid, and spatial families. Every adapter receives the same deterministic items and 720 × 480px viewport within its family. Fixed, estimated, omitted-height, and application-positioned conditions are kept separate. Insert, move, remove, and size-change operations also run at the start, middle, and end of the collection.
 
 Initial render and scrolling rotate library order across five rounds. Each mutation runs ten times. Any incorrect frame—row order, height, total scroll height, or anchor position—is recorded as a failure independently of timing.
 
@@ -59,7 +59,7 @@ Cold construction observations from the same run:
 | masonry, 8 lanes | 16.467 ms |
 | spatial packed tree | 73.927 ms |
 
-The query viewport moves across each domain instead of repeatedly hitting one cached coordinate. The spatial workload returns roughly a viewport-sized cluster from overlapping rectangles, while the grid workload keeps regions sparse.
+The query viewport moves across each domain instead of repeatedly hitting one cached coordinate. The spatial workload returns roughly a viewport-sized cluster from overlapping rectangles, while the grid workload keeps regions sparse. The raw internal report also measures partitioned track-grid construction, pinned-region queries, and changed-track batches; committed numeric tables are updated only after a same-machine observation.
 
 Pretext measures prepared text line layout. Sectile includes persistent geometry lookup, identity-aware placement materialization, measurement generations, and anchor bookkeeping. The operations are not equivalent, so the raw ratio is not presented as a winner.
 
