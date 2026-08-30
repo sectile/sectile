@@ -37,10 +37,10 @@ test('DOM combobox facade owns construction, native text input, ARIA, navigation
   input.emit('input', { inputType: 'insertText' });
   assert.equal(connection.getSnapshot().state.cursor.current, 'a');
   assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown')), true);
-  assert.equal(input.attributes.get('aria-activedescendant'), 'sectile-combobox-c');
+  assert.equal(input.attributes.get('aria-activedescendant'), 'sectile-combobox-s-3Ac');
   const item = new FakeElement();
   connection.setItemAttributes(item, { id: 'c' });
-  assert.equal(item.id, 'sectile-combobox-c');
+  assert.equal(item.id, 'sectile-combobox-s-3Ac');
   assert.equal(item.attributes.get('role'), 'option');
   assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), true);
   assert.deepEqual(accepted, ['c']);

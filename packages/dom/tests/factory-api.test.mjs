@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import packageManifest from '../package.json' with { type: 'json' };
 
-const excludedSubpaths = new Set(['./package.json', './form', './position', './tabular', './virtual']);
+const excludedSubpaths = new Set(['./package.json', './chart', './form', './position', './tabular', './virtual']);
 
 test('every public DOM component exposes direct and fallible factories', async () => {
   const rootModule = await import('../.verification-dist/index.js');
@@ -71,6 +71,24 @@ test('Tabular controls are exposed only through their optional subpath', async (
   assert.match(tabularSource, /\.\/data-table\.js/);
   assert.match(tabularSource, /\.\/data-grid\.js/);
   assert.match(tabularSource, /\.\/data-tree-grid\.js/);
+});
+
+test('Chart rendering is exposed only through its optional subpath', async () => {
+  assert.equal(packageManifest.dependencies?.['@sectile/chart'], undefined);
+  assert.equal(packageManifest.peerDependencies?.['@sectile/chart'], 'workspace:*');
+  assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/chart']?.optional, true);
+
+  const rootModule = await import('../.verification-dist/index.js');
+  assert.equal(rootModule.createDOMChart, undefined);
+  assert.equal(rootModule.createChartRenderer, undefined);
+
+  const chartModule = await import('../.verification-dist/chart.js');
+  assert.equal(typeof chartModule.createDOMChart, 'function');
+  assert.equal(typeof chartModule.tryCreateDOMChart, 'function');
+  assert.equal(typeof chartModule.createChartRenderer, 'function');
+
+  const chartSource = await readFile(new URL('../.verification-dist/internal/chart-connection.js', import.meta.url), 'utf8');
+  assert.match(chartSource, /@sectile\/chart/);
 });
 
 test('temporal controls are exposed only through their optional subpath', async () => {
