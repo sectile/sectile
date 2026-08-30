@@ -51,5 +51,6 @@ const options = { model: () => model.value }
 
 `ChartRoot` accepts exactly one of `options` or an externally owned `controller`. Its default slot receives controller, snapshot, state, and projection. `ChartCanvas` registers the canvas used by the DOM connection. Both expose stable `data-scope="chart"` and `data-part` attributes without prescribing styles.
 
-Setup is SSR-safe because DOM connection and renderer creation wait for mount. Provide the same model and initial controlled values on server and client to keep hydration deterministic.
+With `options`, `v-model`, `v-model:cursor`, and `v-model:view-transform` provide component-level controlled ownership. Do not also provide the matching writable ref inside `options`. An externally owned controller is synchronized by its owner and uses ChartRoot only for hosting and update events.
 
+Setup is SSR-safe because DOM connection and renderer creation wait for mount. Provide the same model and initial controlled values on server and client to keep hydration deterministic.

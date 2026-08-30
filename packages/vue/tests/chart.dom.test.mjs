@@ -20,14 +20,16 @@ Object.assign(globalThis, {
   ResizeObserver: browserWindow.ResizeObserver,
 });
 
-const { createApp, h, nextTick } = await import('vue');
+const { createApp, h, nextTick, shallowRef } = await import('vue');
 const { createChartController } = await import('@sectile/chart/controller');
-const { ChartRoot } = await import('../.verification-dist/chart.js');
+const { ChartCanvas, ChartRoot } = await import('../.verification-dist/chart.js');
+
+const model = { layers: [{ id: 'points', profile: 'point', data: [
+  { id: 1, x: 0, y: 0 }, { id: '1', x: 1, y: 1 },
+] }] };
 
 test('ChartRoot mounts one DOM connection, publishes updates, and preserves borrowed renderer ownership', async () => {
-  const controller = createChartController({ model: { layers: [{ id: 'points', profile: 'point', data: [
-    { id: 1, x: 0, y: 0 }, { id: '1', x: 1, y: 1 },
-  ] }] } });
+  const controller = createChartController({ model });
   const projections = [];
   let disconnected = 0;
   const renderer = {
@@ -57,4 +59,47 @@ test('ChartRoot mounts one DOM connection, publishes updates, and preserves borr
   app.unmount();
   assert.equal(disconnected, 0);
   controller.dispose();
+});
+
+test('ChartRoot options bridge controlled props without duplicating update requests', async () => {
+  const selection = shallowRef({ type: 'points', ids: [1] });
+  const updates = [];
+  let controller;
+  const renderer = {
+    capabilities: { canvas2d: true, webgl2: false, asynchronousGPUTiming: false },
+    render() {},
+    getDiagnostics: () => ({ mode: 'canvas2d', uploadedBytes: 0, drawCalls: 0, liveResources: 0 }),
+    flush() {},
+    disconnect() {},
+  };
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h(ChartRoot, {
+      options: { model },
+      modelValue: selection.value,
+      dom: { renderer },
+      'onUpdate:modelValue': (value) => {
+        updates.push(value);
+        selection.value = value;
+      },
+    }, {
+      default: (slot) => {
+        controller = slot.controller;
+        return h(ChartCanvas);
+      },
+    }),
+  });
+  app.mount(host);
+  await nextTick(); await nextTick();
+  assert.deepEqual(controller.getSnapshot().state.selection, { type: 'points', ids: [1] });
+
+  controller.dispatch({ type: 'set-selection', selection: { type: 'points', ids: ['1'] } });
+  assert.deepEqual(controller.getSnapshot().state.selection, { type: 'points', ids: [1] });
+  assert.deepEqual(updates, [{ type: 'points', ids: ['1'] }]);
+  await nextTick(); await nextTick();
+  assert.deepEqual(controller.getSnapshot().state.selection, { type: 'points', ids: ['1'] });
+
+  app.unmount();
+  host.remove();
 });

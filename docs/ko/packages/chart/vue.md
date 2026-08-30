@@ -51,5 +51,6 @@ const options = { model: () => model.value }
 
 `ChartRoot`는 `options` 또는 외부 소유 `controller` 중 정확히 하나를 받습니다. Default slot은 controller, snapshot, state와 projection을 제공합니다. `ChartCanvas`는 DOM connection이 쓸 canvas를 등록합니다. 두 component 모두 style을 정하지 않고 안정적인 `data-scope="chart"`와 `data-part`를 제공합니다.
 
-DOM connection과 renderer는 mount 이후에만 생성되므로 setup은 SSR-safe합니다. Hydration을 결정적으로 유지하려면 server와 client에 같은 model과 초기 controlled 값을 제공해야 합니다.
+`options`를 쓸 때는 `v-model`, `v-model:cursor`, `v-model:view-transform`으로 component 수준 controlled ownership을 구성할 수 있습니다. 같은 값의 writable ref를 `options`에도 중복 전달하면 안 됩니다. 외부 소유 controller는 그 소유자가 값을 sync하고 ChartRoot는 host와 update event만 제공합니다.
 
+DOM connection과 renderer는 mount 이후에만 생성되므로 setup은 SSR-safe합니다. Hydration을 결정적으로 유지하려면 server와 client에 같은 model과 초기 controlled 값을 제공해야 합니다.

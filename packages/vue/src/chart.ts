@@ -34,12 +34,15 @@ import {
   shallowRef,
   toValue,
   watch,
+  type AllowedComponentProps,
+  type ComponentCustomProps,
   type InjectionKey,
   type MaybeRefOrGetter,
   type PropType,
   type ShallowRef,
   type SlotsType,
   type VNodeChild,
+  type VNodeProps,
 } from 'vue';
 
 export interface ChartWritableRef<T> { value: T }
@@ -112,9 +115,9 @@ export type ChartRootProps<ID extends StableID = StableID> =
   | {
       readonly controller: ChartController<ID>;
       readonly options?: never;
-      readonly modelValue?: ChartSelection<ID>;
-      readonly cursor?: ID | null;
-      readonly viewTransform?: ChartViewTransform;
+      readonly modelValue?: never;
+      readonly cursor?: never;
+      readonly viewTransform?: never;
       readonly dom?: Omit<DOMChartOptions<ID>, 'root' | 'canvas' | 'controller'>;
     }
   | {
@@ -133,6 +136,28 @@ export interface ChartRootSlotProps<ID extends StableID = StableID> {
   readonly projection: ChartProjection<ID> | null;
 }
 
+export type ChartRootPublicProps<ID extends StableID = StableID> = ChartRootProps<ID>
+  & VNodeProps
+  & AllowedComponentProps
+  & ComponentCustomProps
+  & {
+    readonly 'onUpdate:modelValue'?: (value: ChartSelection<ID>) => unknown;
+    readonly 'onUpdate:cursor'?: (value: ID | null) => unknown;
+    readonly 'onUpdate:viewTransform'?: (value: ChartViewTransform) => unknown;
+    readonly onCommand?: (command: ChartCommand<ID>) => unknown;
+  };
+
+export interface ChartRootComponent {
+  new <ID extends StableID = StableID>(props: ChartRootPublicProps<ID>): {
+    $props: ChartRootPublicProps<ID>;
+    $slots: {
+      default?: (props: ChartRootSlotProps<ID>) => VNodeChild;
+    };
+    controller: ChartController<ID>;
+    refresh(): void;
+  };
+}
+
 interface InternalChartContext<ID extends StableID> extends ChartContext<ID> {
   readonly canvas: ShallowRef<HTMLCanvasElement | null>;
 }
@@ -145,7 +170,7 @@ export function useChartContext<ID extends StableID = StableID>(): ChartContext<
   return context as InternalChartContext<ID>;
 }
 
-export const ChartRoot = defineComponent({
+const ChartRootRuntime = defineComponent({
   name: 'SectileChartRoot',
   inheritAttrs: false,
   props: {
@@ -167,6 +192,10 @@ export const ChartRoot = defineComponent({
     if ((props.controller === undefined) === (props.options === undefined)) {
       throw new TypeError('ChartRoot requires exactly one of controller or options.');
     }
+    if (props.controller !== undefined
+      && (props.modelValue !== undefined || props.cursor !== undefined || props.viewTransform !== undefined)) {
+      throw new TypeError('ChartRoot controlled props require options; synchronize an external controller at its owner.');
+    }
     const root = shallowRef<HTMLElement | null>(null);
     const canvas = shallowRef<HTMLCanvasElement | null>(null);
     const callbacks = {
@@ -176,7 +205,7 @@ export const ChartRoot = defineComponent({
       onCommand: (command: ChartCommand): void => emit('command', command),
     };
     const result = props.controller === undefined
-      ? useChart(mergeRootOptions(props.options as UseChartOptions, callbacks))
+      ? useChart(mergeRootOptions(props.options as UseChartOptions, props, callbacks))
       : bindController(props.controller, callbacks, false);
     const context = Object.freeze({ ...result, canvas }) as InternalChartContext<StableID>;
     provide(chartKey, context);
@@ -200,18 +229,6 @@ export const ChartRoot = defineComponent({
       result.connection.value = null;
       if (props.controller !== undefined) result.dispose();
     });
-    watch(() => [props.modelValue, props.cursor, props.viewTransform] as const, () => {
-      if (props.controller === undefined) return;
-      const values: ChartControlledValues = {
-        ...(props.modelValue === undefined ? {} : { selection: props.modelValue }),
-        ...(props.cursor === undefined ? {} : { cursor: props.cursor }),
-        ...(props.viewTransform === undefined ? {} : { viewTransform: props.viewTransform }),
-      };
-      if (Object.keys(values).length > 0) {
-        const synced = props.controller.syncControlledValues(values);
-        if (!synced.ok) throw new TypeError(synced.error.message);
-      }
-    }, { deep: false });
     expose({ controller: result.controller, refresh: () => result.connection.value?.refresh() });
     return (): VNodeChild => h('div', {
       ...attrs,
@@ -226,6 +243,8 @@ export const ChartRoot = defineComponent({
     }) ?? [h(ChartCanvas)]);
   },
 });
+
+export const ChartRoot = ChartRootRuntime as unknown as ChartRootComponent;
 
 export const ChartCanvas = defineComponent({
   name: 'SectileChartCanvas',
@@ -334,14 +353,34 @@ function controlledValues<ID extends StableID>(options: Partial<UseChartOptions<
 
 function mergeRootOptions<ID extends StableID>(
   options: UseChartOptions<ID>,
+  values: {
+    readonly modelValue: ChartSelection<ID> | undefined;
+    readonly cursor: ID | null | undefined;
+    readonly viewTransform: ChartViewTransform | undefined;
+  },
   callbacks: Pick<UseChartOptions<ID>, 'onSelectionChange' | 'onCursorChange' | 'onViewTransformChange' | 'onCommand'>,
 ): UseChartOptions<ID> {
+  if ((values.modelValue !== undefined && options.selection !== undefined)
+    || (values.cursor !== undefined && options.cursor !== undefined)
+    || (values.viewTransform !== undefined && options.viewTransform !== undefined)) {
+    throw new TypeError('ChartRoot controlled props cannot duplicate controlled refs in options.');
+  }
   return {
     ...options,
+    ...(values.modelValue === undefined ? {} : { selection: rootControlledRef(() => values.modelValue as ChartSelection<ID>) }),
+    ...(values.cursor === undefined ? {} : { cursor: rootControlledRef(() => values.cursor as ID | null) }),
+    ...(values.viewTransform === undefined ? {} : { viewTransform: rootControlledRef(() => values.viewTransform as ChartViewTransform) }),
     onSelectionChange(value) { options.onSelectionChange?.(value); callbacks.onSelectionChange?.(value); },
     onCursorChange(value) { options.onCursorChange?.(value); callbacks.onCursorChange?.(value); },
     onViewTransformChange(value) { options.onViewTransformChange?.(value); callbacks.onViewTransformChange?.(value); },
     onCommand(command) { options.onCommand?.(command); callbacks.onCommand?.(command); },
+  };
+}
+
+function rootControlledRef<T>(read: () => T): ChartWritableRef<T> {
+  return {
+    get value(): T { return read(); },
+    set value(_value: T) { /* The prop owner commits through the emitted update. */ },
   };
 }
 
