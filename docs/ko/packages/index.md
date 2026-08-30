@@ -5,7 +5,7 @@ description: 상호작용의 의미와 실행 환경을 맡는 패키지를 구�
 
 # 패키지
 
-Sectile 패키지는 계산할 값과 실행할 환경에 따라 나뉩니다. Core는 상호작용을 계산하고, Form은 접근 가능한 필드 구성과 검증·제출을 연결하며, Temporal은 날짜와 시각을 다룹니다. Tabular는 표 형식 데이터 상호작용을, Virtual은 큰 화면의 배치를 구합니다. DOM, Terminal, Vue 패키지는 이 결과를 실제 입력과 출력에 연결하며 Form은 DOM과 Vue에서 사용할 수 있습니다.
+Sectile 패키지는 계산할 값과 실행할 환경에 따라 나뉩니다. Core는 상호작용을 계산하고, Form은 접근 가능한 필드 구성과 검증·제출을 연결하며, Temporal은 날짜와 시각을 다룹니다. Tabular는 표 형식 데이터 상호작용을, Virtual은 큰 화면의 배치를, Chart는 차트 데이터·투영·상호작용을 계산합니다. DOM, Terminal, Vue 패키지는 이 결과를 실제 입력과 출력에 연결하며 Form과 Chart는 DOM과 Vue에서 사용할 수 있습니다.
 
 <PackageBoundaryMap />
 
@@ -18,8 +18,9 @@ Sectile 패키지는 계산할 값과 실행할 환경에 따라 나뉩니다. C
 | [`@sectile/temporal`](/ko/packages/temporal) | 달력 날짜, 하루 안의 시각, 달력 이동과 선택 계산 | Core · DOM · Vue |
 | [`@sectile/tabular`](/ko/packages/tabular) | 행·열 ID, 데이터 접근, 선택, 그룹화, grid 상호작용 | Core · DOM · Vue |
 | [`@sectile/virtual`](/ko/packages/virtual) | 항목 크기와 화면 영역으로 배치 좌표와 스크롤 보정값 계산 | Core · DOM · Vue |
+| [`@sectile/chart`](/ko/packages/chart) | immutable 차트 데이터, scale, packed geometry, query와 상호작용 계산 | Core · DOM · Vue |
 
-앱이 판단할 값에 따라 패키지를 고릅니다. 달력은 Core의 상호작용 규칙과 Temporal의 날짜 계산을 함께 씁니다. 가상 목록은 Core의 안정적인 ID와 Virtual의 배치 계산을 조합합니다. 화면 출력은 DOM, Terminal, Vue 패키지가 이어받습니다.
+앱이 판단할 값에 따라 패키지를 고릅니다. 달력은 Core의 상호작용 규칙과 Temporal의 날짜 계산을 함께 씁니다. 가상 목록은 Core의 안정적인 ID와 Virtual의 배치 계산을 조합하고, 차트는 Core의 ID·revision 계약과 Chart의 투영을 조합합니다. 화면 출력은 DOM, Terminal, Vue 패키지가 이어받습니다.
 
 ## 실행 환경에 연결하는 패키지
 

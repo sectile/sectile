@@ -9,6 +9,7 @@ Sectile separates interaction rules from presentation. `@sectile/core` defines d
 | Package | Responsibility |
 | --- | --- |
 | `@sectile/core` | Pure structures, interaction state, transitions, and validation |
+| `@sectile/chart` | Immutable chart models, scales, packed projections, queries, and interaction |
 | `@sectile/dom` | DOM input, focus, ARIA, and element bindings |
 | `@sectile/terminal` | Terminal input, Unicode layout, and TTY integration |
 | `@sectile/vue` | Headless Vue compound components backed by DOM projections |

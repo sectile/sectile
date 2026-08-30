@@ -39,7 +39,7 @@ const buildComponentSidebar = (locale: 'en' | 'ko'): DefaultTheme.SidebarItem[] 
 const componentSidebar = buildComponentSidebar('en');
 const koComponentSidebar = buildComponentSidebar('ko');
 
-const packageIds = ['core', 'form', 'temporal', 'virtual', 'tabular', 'dom', 'terminal', 'vue'] as const;
+const packageIds = ['core', 'form', 'temporal', 'virtual', 'tabular', 'chart', 'dom', 'terminal', 'vue'] as const;
 
 const buildPackageNav = (locale: 'en' | 'ko'): DefaultTheme.NavItem => {
   const linkPrefix = locale === 'ko' ? '/ko/packages' : '/packages';
@@ -148,6 +148,19 @@ const packageSidebar: DefaultTheme.SidebarItem[] = [
     ],
   },
   {
+    text: '@sectile/chart',
+    collapsed: false,
+    items: [
+      { text: 'Overview and profiles', link: '/packages/chart' },
+      { text: 'Models and scales', link: '/packages/chart/model' },
+      { text: 'Projection and queries', link: '/packages/chart/projection' },
+      { text: 'Interaction and controller', link: '/packages/chart/interaction' },
+      { text: 'DOM rendering', link: '/packages/chart/dom' },
+      { text: 'Vue composition', link: '/packages/chart/vue' },
+      { text: 'Performance contract', link: '/packages/chart/performance' },
+    ],
+  },
+  {
     text: 'Host adapters',
     items: [
       { text: 'DOM', link: '/packages/dom' },
@@ -222,6 +235,19 @@ const koPackageSidebar: DefaultTheme.SidebarItem[] = [
       { text: 'Vue 구성', link: '/ko/packages/tabular/vue' },
       { text: 'DOM 연결', link: '/ko/packages/tabular/dom' },
       { text: '선택적 가상화', link: '/ko/packages/tabular/virtual' },
+    ],
+  },
+  {
+    text: '@sectile/chart',
+    collapsed: false,
+    items: [
+      { text: '개요와 프로필', link: '/ko/packages/chart' },
+      { text: '모델과 스케일', link: '/ko/packages/chart/model' },
+      { text: '투영과 쿼리', link: '/ko/packages/chart/projection' },
+      { text: '상호작용과 컨트롤러', link: '/ko/packages/chart/interaction' },
+      { text: 'DOM 렌더링', link: '/ko/packages/chart/dom' },
+      { text: 'Vue 구성', link: '/ko/packages/chart/vue' },
+      { text: '성능 계약', link: '/ko/packages/chart/performance' },
     ],
   },
   {

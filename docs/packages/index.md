@@ -5,7 +5,7 @@ description: Choose the semantic domain and host adapter that own each part of a
 
 # Packages
 
-Sectile separates **what an interaction means** from **where it runs**. Core, Form, Temporal, Tabular, and Virtual are renderer-neutral domains. DOM, Terminal, and Vue are host adapters, although Form intentionally integrates only with DOM and Vue.
+Sectile separates **what an interaction means** from **where it runs**. Core, Form, Temporal, Tabular, Virtual, and Chart are renderer-neutral domains. DOM, Terminal, and Vue are host adapters, although Form and Chart intentionally integrate only with DOM and Vue.
 
 <PackageBoundaryMap />
 
@@ -18,8 +18,9 @@ Sectile separates **what an interaction means** from **where it runs**. Core, Fo
 | [`@sectile/temporal`](/packages/temporal) | civil dates, wall-clock time, calendar and picker rules | time zones, formatting, rendering |
 | [`@sectile/tabular`](/packages/tabular) | tabular identity, data access, columns, selection, grouping, grid interaction | transport, rendering, loading/error UI |
 | [`@sectile/virtual`](/packages/virtual) | extents, viewport queries, placements, anchor correction | collection identity, data loading, DOM measurement |
+| [`@sectile/chart`](/packages/chart) | immutable chart data, scales, packed geometry, queries, chart interaction | visual styling, DOM resources, Vue reactivity |
 
-Choose a semantic package from the value your application needs to reason about. A calendar uses Core composition and Temporal date rules. A virtualized list uses Core identity and Virtual geometry. Neither package needs to know how the result is rendered.
+Choose a semantic package from the value your application needs to reason about. A calendar uses Core composition and Temporal date rules. A virtualized list uses Core identity and Virtual geometry. A chart uses Core identity and revision contracts with Chart projection and interaction. None of these packages needs to know how the result is rendered.
 
 ## Host adapters
 
