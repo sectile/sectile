@@ -195,7 +195,12 @@ function referenceEvent<ID extends StableID>(value: unknown): value is TreeViewE
     return ['next', 'previous', 'right', 'left', 'toggle-select'].includes(value);
   }
   return typeof value === 'object' && value !== null && 'type' in value && 'id' in value
-    && typeof value.id === 'string'
+    && isReferenceStableID(value.id)
     && (value.type === 'focus' || value.type === 'toggle-select'
       || (value.type === 'set-expanded' && 'open' in value && typeof value.open === 'boolean'));
+}
+
+function isReferenceStableID(value: unknown): value is StableID {
+  return typeof value === 'string'
+    || (typeof value === 'number' && Number.isSafeInteger(value) && !Object.is(value, -0));
 }

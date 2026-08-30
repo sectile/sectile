@@ -1,0 +1,23 @@
+import { validateStableID } from '@sectile/core/identity';
+import type { StableID } from '@sectile/core';
+
+const MAX_TOKEN_CODE_UNITS = Number.MAX_SAFE_INTEGER;
+
+export function stableIDToken(id: StableID): string {
+  return typeof id === 'number' ? `n:${id}` : `s:${id}`;
+}
+
+export function stableIDElementToken(id: StableID): string {
+  return encodeURIComponent(stableIDToken(id)).replaceAll('%', '-');
+}
+
+export function stableIDFromToken(token: string): StableID | null {
+  const kind = token.slice(0, 2);
+  const payload = token.slice(2);
+  if (kind === 's:') {
+    return validateStableID(payload, MAX_TOKEN_CODE_UNITS) === null ? payload : null;
+  }
+  if (kind !== 'n:' || !/^(?:0|[1-9]\d*|-[1-9]\d*)$/u.test(payload)) return null;
+  const value = Number(payload);
+  return validateStableID(value) === null ? value : null;
+}

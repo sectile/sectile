@@ -2,7 +2,7 @@ import { unwrap } from '../../result.js';
 import type { BoundaryPolicy, Result, SectileError, StableID } from '../../shared.js';
 import type { Sequence } from '../../structures/sequence.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
-import { bindCanonicalState, fail, hasCanonicalState, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, hasCanonicalState, isStableID, ok } from '../kernel/foundation.js';
 import { findEligibleFromEdge } from '../kernel/indexed-sequence.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import {
@@ -436,5 +436,5 @@ function isListboxEvent<ID extends StableID>(value: unknown): value is ListboxEv
   ) : typeof value === 'object' && value !== null
     && 'type' in value && 'id' in value
     && (value.type === 'focus' || value.type === 'toggle' || value.type === 'activate')
-    && typeof value.id === 'string';
+    && isStableID(value.id);
 }

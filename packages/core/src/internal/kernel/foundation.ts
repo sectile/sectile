@@ -121,14 +121,23 @@ export function isWellFormedUTF16(value: string): boolean {
 }
 
 export function validateStableID(
-  id: string,
+  id: unknown,
   maxIDCodeUnits: number = DEFAULT_MAX_ID_CODE_UNITS,
 ): SectileError | null {
+  if (typeof id === 'number') {
+    if (Number.isSafeInteger(id) && !Object.is(id, -0)) return null;
+    return {
+      class: 'construction',
+      code: 'invalid-id-type',
+      message: 'Numeric stable IDs must be safe integers other than negative zero.',
+      details: { id },
+    };
+  }
   if (typeof id !== 'string') {
     return {
       class: 'construction',
       code: 'invalid-id-type',
-      message: 'Stable IDs must be strings.',
+      message: 'Stable IDs must be strings or safe integers.',
       details: { receivedType: typeof id },
     };
   }
@@ -164,6 +173,11 @@ export function validateStableID(
     };
   }
   return null;
+}
+
+export function isStableID(value: unknown): value is StableID {
+  return typeof value === 'string'
+    || (typeof value === 'number' && Number.isSafeInteger(value) && !Object.is(value, -0));
 }
 
 export function validateSafeCeiling(

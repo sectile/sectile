@@ -26,7 +26,8 @@ import {
   type TreeGridState,
 } from '@sectile/core/tree-grid';
 import { applyControllerEvent, synchronizeControllerState } from '@sectile/core/adapter-runtime';
-import { findDelegatedID } from './internal/delegated-event.js';
+import { findDelegatedStableID } from './internal/delegated-event.js';
+import { stableIDToken } from './internal/stable-id-token.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 
 export type {
@@ -338,14 +339,14 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
     this.#handleClick = (event): void => {
-      const disclosureID = findDelegatedID(event.target, this.#root, 'treeGridDisclosureId');
+      const disclosureID = findDelegatedStableID(event.target, this.#root, 'treeGridDisclosureId');
       if (disclosureID !== null) {
         const id = disclosureID as RowID;
         const expanded = this.#controller.getSnapshot().state.expansion.has(id);
         this.handleEvent({ type: 'set-expanded', id, open: !expanded });
         return;
       }
-      const id = findDelegatedID(event.target, this.#root, 'cellId');
+      const id = findDelegatedStableID(event.target, this.#root, 'cellId');
       if (id === null || this.#controller.getSnapshot().state.editMode === 'editing') return;
       const cellID = id as CellID;
       const time = Number.isFinite(event.timeStamp) ? event.timeStamp : Date.now();
@@ -362,7 +363,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
       this.handleEvent({ type: 'select', id: cellID });
     };
     this.#handleDoubleClick = (event): void => {
-      const id = findDelegatedID(event.target, this.#root, 'cellId');
+      const id = findDelegatedStableID(event.target, this.#root, 'cellId');
       const state = this.#controller.getSnapshot().state;
       if (id !== null && !(state.editMode === 'editing' && state.cursor.current === id)) {
         this.handleEvent({ type: 'start-edit', id: id as CellID });
@@ -411,7 +412,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
   ): void {
     const state = this.#controller.getSnapshot().state;
     const current = state.cursor.current === attributes.id;
-    element.dataset['cellId'] = String(attributes.id);
+    element.dataset['cellId'] = stableIDToken(attributes.id);
     element.tabIndex = current ? 0 : -1;
     element.setAttribute('role', 'gridcell');
     element.setAttribute('aria-colindex', String(attributes.columnIndex));
@@ -419,7 +420,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
   }
 
   public setDisclosureAttributes(element: HTMLElement, id: RowID): void {
-    element.dataset['treeGridDisclosureId'] = String(id);
+    element.dataset['treeGridDisclosureId'] = stableIDToken(id);
     element.setAttribute('aria-hidden', 'true');
   }
 
@@ -488,7 +489,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
         return;
       }
       for (const element of this.#root.querySelectorAll<HTMLElement>('[data-cell-id]')) {
-        if (element.dataset['cellId'] !== String(current)) continue;
+        if (element.dataset['cellId'] !== stableIDToken(current)) continue;
         const input = element.querySelector<HTMLInputElement>('input');
         if (input !== null) {
           input.focus();

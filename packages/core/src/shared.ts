@@ -2,7 +2,7 @@
 
 import type { CoreErrorCode } from './error-code.js';
 
-export type StableID = string;
+export type StableID = string | number;
 
 export type ErrorClass =
   | 'construction'

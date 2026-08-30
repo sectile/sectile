@@ -32,7 +32,8 @@ import { toTextEvent, type TextInput } from './text.js';
 import type { TextElement } from './text.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { setInteractionAttributes } from './internal/interaction.js';
-import { findDelegatedID } from './internal/delegated-event.js';
+import { findDelegatedStableID } from './internal/delegated-event.js';
+import { stableIDElementToken, stableIDToken } from './internal/stable-id-token.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 
 export interface KeyboardInput {
@@ -280,7 +281,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
     this.#input = options.input;
     this.#popup = options.popup;
     this.#getItemElementID = options.getItemElementID
-      ?? ((id): string => `sectile-combobox-${String(id)}`);
+      ?? ((id): string => `sectile-combobox-${stableIDElementToken(id)}`);
     this.#onAccept = options.onAccept;
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
@@ -301,7 +302,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
     };
     this.#handleClick = (event): void => {
       if (this.#popup === undefined) return;
-      const id = findDelegatedID(event.target, this.#popup, 'comboboxId');
+      const id = findDelegatedStableID(event.target, this.#popup, 'comboboxId');
       if (id !== null) this.handleEvent({ type: 'accept', id: id as ID });
     };
     this.#input.addEventListener('keydown', this.#handleKeydown);
@@ -357,7 +358,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   ): void {
     const state = this.#controller.getSnapshot().state;
     element.id = this.#getItemElementID(attributes.id);
-    element.dataset['comboboxId'] = String(attributes.id);
+    element.dataset['comboboxId'] = stableIDToken(attributes.id);
     element.setAttribute('role', 'option');
     element.setAttribute('aria-selected', String(state.selection.has(attributes.id)));
     if (attributes.disabled === true) element.setAttribute('aria-disabled', 'true');

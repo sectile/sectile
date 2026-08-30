@@ -11,7 +11,8 @@ import {
   type AccordionPolicies,
   type AccordionState,
 } from '@sectile/core/accordion';
-import { findDelegatedID } from './internal/delegated-event.js';
+import { findDelegatedStableID } from './internal/delegated-event.js';
+import { stableIDToken } from './internal/stable-id-token.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
@@ -228,7 +229,7 @@ export function getAccordionTriggerAttributes<ID extends StableID>(
     'aria-disabled': unavailable ? 'true' : undefined,
     'data-scope': 'accordion',
     'data-part': 'trigger',
-    'data-accordion-id': String(attributes.id),
+    'data-accordion-id': stableIDToken(attributes.id),
     'data-state': open ? 'open' : 'closed',
     'data-disabled': unavailable ? '' : undefined,
     'data-readonly': options.readOnly === true ? '' : undefined,
@@ -332,7 +333,7 @@ class DOMAccordionConnection<ID extends StableID> implements AccordionConnection
       this.handleEvent(semantic);
     };
     this.#click = (event): void => {
-      const id = findDelegatedID(event.target, options.root, 'accordionId');
+      const id = findDelegatedStableID(event.target, options.root, 'accordionId');
       if (id !== null) this.handleEvent({ type: 'toggle', id: id as ID });
     };
     options.root.addEventListener('keydown', this.#keydown);
@@ -367,7 +368,7 @@ class DOMAccordionConnection<ID extends StableID> implements AccordionConnection
     element: HTMLElement,
     attributes: AccordionTriggerAttributes<ID>,
   ): void {
-    element.dataset['accordionId'] = String(attributes.id);
+    element.dataset['accordionId'] = stableIDToken(attributes.id);
     applyAttributes(element, getAccordionTriggerAttributes(
       this.getSnapshot().state,
       attributes,
@@ -441,7 +442,7 @@ function accordionIntent<ID extends StableID>(event: AccordionEvent<ID>): 'navig
 function focusCurrent(root: HTMLElement, id: StableID | null): void {
   if (id === null) return;
   for (const element of root.querySelectorAll<HTMLElement>('[data-accordion-id]')) {
-    if (element.dataset['accordionId'] === String(id)) element.focus();
+    if (element.dataset['accordionId'] === stableIDToken(id)) element.focus();
   }
 }
 

@@ -1,7 +1,7 @@
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type ShallowRef, type SlotsType, type VNodeArrayChildren, type VNodeChild, type VNodeProps } from 'vue';
 import { createSequence, type BoundaryPolicy, type Direction, type MoveResult, type ScanOptions, type Sequence } from '@sectile/core/sequence';
 import { createExtentIndex, createUniformExtentIndex, type Extent, type ExtentIndex } from '@sectile/virtual/extent-index';
-import { linearLayoutStrategy, tryApplyLinearPatch, createLinearLayout, type LinearAxis, type LinearLayoutState, type LinearMeasurement, type LinearPatch } from '@sectile/virtual/linear-layout';
+import { linearLayoutStrategyFor, tryApplyLinearPatch, createLinearLayout, type LinearAxis, type LinearLayoutState, type LinearMeasurement, type LinearPatch } from '@sectile/virtual/linear-layout';
 import { createAxisMeasurementResolver, virtualItemStyle, type VirtualInsets, type VirtualLayoutPlan, type VirtualMeasurementResolver, type VirtualPlacement, type VirtualRect, type VirtualScrollAlignment, type VirtualizerConnection, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
 import { Primitive } from '../primitive.js';
 import { VirtualizerContent, VirtualizerRoot, useVirtualizer, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
@@ -181,7 +181,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       : undefined;
     const virtualizer = useVirtualizer({
       state,
-      strategy: linearLayoutStrategy,
+      strategy: linearLayoutStrategyFor<string>(),
       overscan: () => props.overscan,
       ...(props.initialViewport === undefined
         ? {}

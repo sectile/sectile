@@ -50,6 +50,26 @@ test('DOM listbox facade owns construction, keyboard dispatch, ARIA, and activat
   assert.equal(duplicate.ok, false);
 });
 
+test('DOM listbox host tokens preserve mixed primitive identities', () => {
+  const root = new FakeElement();
+  const connection = createListbox({
+    items: [1, '1', -1, '-1'],
+    root,
+    defaultHighlightedValue: 1,
+  });
+  const numeric = new FakeElement();
+  const textual = new FakeElement();
+  connection.setItemAttributes(numeric, { id: 1 });
+  connection.setItemAttributes(textual, { id: '1' });
+  assert.equal(numeric.dataset.listboxId, 'n:1');
+  assert.equal(textual.dataset.listboxId, 's:1');
+  root.emit('click', { target: textual });
+  assert.equal(connection.getSnapshot().state.cursor.current, '1');
+  root.emit('click', { target: numeric });
+  assert.equal(connection.getSnapshot().state.cursor.current, 1);
+  connection.disconnect();
+});
+
 test('DOM keyboard inputs map onto listbox semantic events', () => {
   assert.equal(toListboxEvent({ key: 'ArrowDown' }), 'next');
   assert.equal(toListboxEvent({ key: 'ArrowUp' }), 'previous');

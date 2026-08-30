@@ -10,6 +10,7 @@ import {
   collectionWindowEventForLinearPlan,
   createLinearLayout,
   linearScrollTarget,
+  linearLayoutStrategyFor,
   queryLinearLayout,
   restoreLinearLayout,
   snapshotLinearLayout,
@@ -68,6 +69,17 @@ test('VRT-01: render placements contain visible placements across axes and flows
     axis: 'horizontal', flow: 'reverse', gap: 2, crossExtent: 40,
   });
   assert.deepEqual(queryLinearLayout(horizontalReverse, { viewport: { x: 0, y: 0, width: 64, height: 40 } }).placements.map(({ index, rect }) => [index, rect.x]), [[0, 54], [1, 32], [2, 0]]);
+});
+
+test('linear layouts preserve mixed primitive identities through the shared strategy', () => {
+  const mixed = createLinearLayout(
+    createSequence([1, '1', -1, '-1']),
+    createExtentIndex(Array(4).fill(exact(10))),
+    { crossExtent: 20 },
+  );
+  const plan = queryLinearLayout(mixed, { viewport: { x: 0, y: 0, width: 20, height: 40 } });
+  assert.deepEqual(plan.placements.map(({ id }) => id), [1, '1', -1, '-1']);
+  assert.equal(linearLayoutStrategyFor(), linearLayoutStrategyFor());
 });
 
 test('VRT-07: serializable snapshots restore every strategy with identical observations', () => {

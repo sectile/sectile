@@ -13,15 +13,30 @@ import {
 } from '../../.verification-dist/result.js';
 
 test('focused identity helpers normalize once and preserve explicit equality semantics', () => {
-  const ids = ['a', 'b', 'c'];
+  const ids = ['a', 1, '1', -1];
   const normalized = unwrap(tryNormalizeStableIDs(ids));
 
   assert.deepEqual(normalized, ids);
   assert.equal(Object.isFrozen(normalized), true);
-  assert.equal(sameStableIDOrder(normalized, ['a', 'b', 'c']), true);
-  assert.equal(sameStableIDOrder(normalized, ['a', 'c', 'b']), false);
+  assert.equal(sameStableIDOrder(normalized, ['a', 1, '1', -1]), true);
+  assert.equal(sameStableIDOrder(normalized, ['a', '1', 1, -1]), false);
   assert.equal(tryNormalizeStableIDs(['a', 'a']).error.code, 'duplicate-id');
   assert.equal(validateStableID('', 16)?.code, 'empty-id');
+});
+
+test('stable identity validation accepts canonical integers and rejects non-canonical numeric values', () => {
+  for (const id of [0, -1, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]) {
+    assert.equal(validateStableID(id), null);
+  }
+  for (const id of [-0, 1.5, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(validateStableID(id)?.code, 'invalid-id-type');
+  }
+  for (const id of [1n, Symbol('id'), true, null, undefined, {}]) {
+    assert.equal(validateStableID(id)?.code, 'invalid-id-type');
+  }
+  const mixed = [1, '1', -1, '-1'];
+  assert.deepEqual(JSON.parse(JSON.stringify(mixed)), mixed);
+  assert.deepEqual(structuredClone(mixed), mixed);
 });
 
 test('Result construction has one foundation implementation and unwrap preserves failures', () => {

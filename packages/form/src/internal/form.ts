@@ -567,7 +567,7 @@ export function tryCreateFormState<ID extends StableID = StableID>(
   const inputFields = input.fields ?? [];
   const fieldIDs = tryNormalizeStableIDs(inputFields.map((field) => field.id));
   if (!fieldIDs.ok) return fieldIdentityError(fieldIDs.error.code);
-  if (fieldIDs.value.some((id) => id.trim().length === 0)) {
+  if (fieldIDs.value.some((id) => typeof id === 'string' && id.trim().length === 0)) {
     return fieldIdentityError('empty-id');
   }
 
@@ -1486,7 +1486,7 @@ function normalizeIssues<ID extends StableID>(
   for (const issue of input) {
     if (
       typeof issue.message !== 'string'
-      || issue.id.trim().length === 0
+      || (typeof issue.id === 'string' && issue.id.trim().length === 0)
       || issue.message.trim().length === 0
       || !isIssueSource(issue.source)
     ) {

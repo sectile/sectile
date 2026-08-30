@@ -189,6 +189,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@sectile/chart':
+        specifier: workspace:*
+        version: link:../chart
       '@sectile/form':
         specifier: workspace:*
         version: link:../form
@@ -279,6 +282,9 @@ importers:
         specifier: workspace:*
         version: link:../dom
     devDependencies:
+      '@sectile/chart':
+        specifier: workspace:*
+        version: link:../chart
       '@sectile/form':
         specifier: workspace:*
         version: link:../form

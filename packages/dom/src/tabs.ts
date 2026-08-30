@@ -11,7 +11,8 @@ import {
   type TabsPolicies,
   type TabsState,
 } from '@sectile/core/tabs';
-import { findDelegatedID } from './internal/delegated-event.js';
+import { findDelegatedStableID } from './internal/delegated-event.js';
+import { stableIDToken } from './internal/stable-id-token.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
@@ -104,7 +105,7 @@ export function getTabsTriggerAttributes<ID extends StableID>(options: TabsTrigg
     'aria-controls': options.panelID,
     'aria-disabled': options.disabled === true ? 'true' : undefined,
     disabled: options.disabled === true ? true : undefined,
-    'data-tabs-id': String(options.id),
+    'data-tabs-id': stableIDToken(options.id),
     'data-scope': 'tabs',
     'data-part': 'trigger',
     'data-state': options.selected ? 'active' : 'inactive',
@@ -271,7 +272,7 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
       this.handleEvent(semantic);
     };
     this.#click = (event): void => {
-      const id = findDelegatedID(event.target, options.root, 'tabsId');
+      const id = findDelegatedStableID(event.target, options.root, 'tabsId');
       if (id !== null) this.handleEvent({ type: 'activate', id: id as ID });
     };
     options.root.addEventListener('keydown', this.#keydown);
@@ -308,7 +309,7 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
     const state = this.#runtime.getSnapshot().state;
     const active = state.selection.has(attributes.id);
     const disabled = this.#options.disabled === true || attributes.disabled === true || this.#disabledItems.has(attributes.id);
-    element.dataset['tabsId'] = String(attributes.id);
+    element.dataset['tabsId'] = stableIDToken(attributes.id);
     applyAttributes(element, getTabsTriggerAttributes({
       id: attributes.id,
       selected: active,
@@ -365,7 +366,7 @@ function selected<ID extends StableID>(value: ID | null): readonly ID[] {
 function focusData(root: HTMLElement, key: string, id: StableID | null): void {
   if (id === null) return;
   for (const element of root.querySelectorAll<HTMLElement>(`[data-${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}]`)) {
-    if (element.dataset[key] === id) element.focus();
+    if (element.dataset[key] === stableIDToken(id)) element.focus();
   }
 }
 

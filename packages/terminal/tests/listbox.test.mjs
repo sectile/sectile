@@ -34,6 +34,17 @@ test('terminal listbox facade owns construction, input dispatch, and activation'
   assert.equal(duplicate.ok, false);
 });
 
+test('terminal listbox preserves mixed primitive identities', () => {
+  const connection = createListbox({
+    items: [1, '1', -1, '-1'],
+    defaultHighlightedValue: 1,
+  });
+  assert.equal(connection.handleEvent({ type: 'focus', id: '1' }), true);
+  assert.equal(connection.getSnapshot().state.cursor.current, '1');
+  assert.equal(connection.handleEvent({ type: 'focus', id: -1 }), true);
+  assert.equal(connection.getSnapshot().state.cursor.current, -1);
+});
+
 test('terminal keys map onto listbox semantic events', () => {
   assert.equal(toListboxEvent({ key: 'down' }), 'next');
   assert.equal(toListboxEvent({ key: 'up' }), 'previous');

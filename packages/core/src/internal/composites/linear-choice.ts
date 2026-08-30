@@ -1,6 +1,6 @@
 import type { BoundaryPolicy, Result, SectileError, StableID } from '../../shared.js';
 import type { Sequence } from '../../structures/sequence.js';
-import { bindCanonicalState, fail, hasCanonicalState, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, hasCanonicalState, isStableID, ok } from '../kernel/foundation.js';
 import { findEligibleFromEdge } from '../kernel/indexed-sequence.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
@@ -263,6 +263,6 @@ function isLinearChoiceEvent(value: unknown): value is LinearChoiceEvent {
       || value === 'activate';
   }
   return typeof value === 'object' && value !== null
-    && 'type' in value && 'id' in value && typeof value.id === 'string'
+    && 'type' in value && 'id' in value && isStableID(value.id)
     && (value.type === 'focus' || value.type === 'select' || value.type === 'activate');
 }

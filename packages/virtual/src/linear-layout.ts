@@ -66,6 +66,10 @@ export const linearLayoutStrategy: VirtualLayoutStrategy<LinearLayoutState, Stab
   tryScrollTarget: (state: LinearLayoutState, id: StableID, viewport: VirtualRect, alignment?: VirtualScrollAlignment) => tryLinearScrollTarget(state, id, viewport, alignment),
 });
 
+export function linearLayoutStrategyFor<ID extends StableID>(): VirtualLayoutStrategy<LinearLayoutState<ID>, ID, LinearMeasurement, LinearPatch<ID>> {
+  return linearLayoutStrategy as VirtualLayoutStrategy<LinearLayoutState<ID>, ID, LinearMeasurement, LinearPatch<ID>>;
+}
+
 export function createLinearLayout<ID extends StableID>(domain: Sequence<ID>, extents: ExtentIndex, input: LinearLayoutInput = {}): LinearLayoutState<ID> {
   return unwrap(tryCreateLinearLayout(domain, extents, input));
 }

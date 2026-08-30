@@ -61,7 +61,7 @@ const packagePipelines = Object.freeze({
     'check:subpaths', 'check:package', 'check:verification',
     'verify:reproducible-build',
   ],
-  '@sectile/chart': ['typecheck', 'test', 'build', 'check:package', 'verify:reproducible-build'],
+  '@sectile/chart': ['typecheck', 'typecheck:public', 'test', 'build', 'check:package', 'verify:reproducible-build'],
   '@sectile/form': [
     'typecheck', 'test', 'build', 'check:laws', 'check:package',
     'check:public-api', 'verify:reproducible-build',

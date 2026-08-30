@@ -25,6 +25,18 @@ test('Vue radio group projects persistent indicators and native form radios', as
   assert.match(html, /data-part="indicator"/);
 });
 
+test('Vue radio group SSR preserves distinct numeric and textual host identities', async () => {
+  const items = [1, '1'];
+  const app = createSSRApp({
+    render: () => h(RadioGroupRoot, { items, defaultValue: 1 }, {
+      default: () => items.map((value) => h(RadioGroupItem, { value }, () => String(value))),
+    }),
+  });
+  const html = await renderToString(app);
+  assert.match(html, /data-radio-group-id="n:1"/);
+  assert.match(html, /data-radio-group-id="s:1"/);
+});
+
 test('Vue radio group follows controlled selection', async () => {
   const renderer = createTestRenderer();
   const value = ref('email');

@@ -405,6 +405,7 @@
     }
   },
   "devDependencies": {
+    "@sectile/chart": "workspace:*",
     "@sectile/form": "workspace:*",
     "@sectile/tabular": "workspace:*",
     "@sectile/temporal": "workspace:*",

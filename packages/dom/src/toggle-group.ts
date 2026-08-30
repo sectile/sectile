@@ -5,6 +5,7 @@ import type { ToggleGroupEvent, ToggleGroupState } from '@sectile/core/toggle-gr
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { tryCreateListbox, type ListboxConnection, type ListboxOptions } from './listbox.js';
 import type { ReadingDirection } from './internal/direction.js';
+import { stableIDToken } from './internal/stable-id-token.js';
 
 export type ToggleGroupOptions<ID extends StableID = StableID> =
   Omit<ListboxOptions<ID>, 'selectionMode' | 'activationMode' | 'clearOnEscape'>
@@ -56,7 +57,7 @@ export function getToggleGroupItemAttributes<ID extends StableID>(options: Toggl
     'aria-pressed': String(options.pressed),
     'aria-disabled': options.disabled === true ? 'true' : undefined,
     disabled: options.disabled === true ? true : undefined,
-    'data-toggle-group-id': String(options.id),
+    'data-toggle-group-id': stableIDToken(options.id),
     'data-scope': 'toggle-group', 'data-part': 'item',
     'data-state': options.pressed ? 'on' : 'off',
     'data-highlighted': options.highlighted ? '' : undefined,
@@ -98,7 +99,7 @@ function wrap<ID extends StableID>(connection: ListboxConnection<ID>, root: HTML
       element.setAttribute('data-scope', 'toggle-group');
       element.setAttribute('data-part', 'item');
       element.setAttribute('data-state', pressed === 'true' ? 'on' : 'off');
-      element.setAttribute('data-toggle-group-id', String(attributes.id));
+      element.setAttribute('data-toggle-group-id', stableIDToken(attributes.id));
       element.removeAttribute('aria-selected');
     },
     handleEvent: (event: ToggleGroupEvent<ID>) => connection.handleEvent(mapEvent(event)),

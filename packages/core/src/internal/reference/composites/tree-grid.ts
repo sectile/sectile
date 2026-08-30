@@ -389,7 +389,12 @@ function referenceEvent<RowID extends StableID, CellID extends StableID>(
     'cancel-edit',
   ].includes(value);
   return typeof value === 'object' && value !== null
-    && 'type' in value && 'id' in value && typeof value.id === 'string'
+    && 'type' in value && 'id' in value && isReferenceStableID(value.id)
     && (value.type === 'focus' || value.type === 'select' || value.type === 'start-edit'
       || (value.type === 'set-expanded' && 'open' in value && typeof value.open === 'boolean'));
+}
+
+function isReferenceStableID(value: unknown): value is StableID {
+  return typeof value === 'string'
+    || (typeof value === 'number' && Number.isSafeInteger(value) && !Object.is(value, -0));
 }

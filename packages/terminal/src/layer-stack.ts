@@ -9,12 +9,12 @@ import {
 import type { Result } from '@sectile/core/result';
 
 export interface TerminalLayerRegistration {
-  readonly layer: LayerInput;
+  readonly layer: LayerInput<string>;
   readonly close: (reason: LayerDismissReason | 'ancestor-closed') => void;
 }
 
 export interface TerminalLayerScope {
-  readonly state: LayerStackState;
+  readonly state: LayerStackState<string>;
   open(registration: TerminalLayerRegistration): boolean;
   close(id: string): boolean;
   dismissTop(reason: LayerDismissReason): boolean;
@@ -30,9 +30,9 @@ export function tryCreateLayerStack(): Result<TerminalLayerScope> {
 }
 
 class ManagedTerminalLayerScope implements TerminalLayerScope {
-  #state = createLayerStackState();
+  #state = createLayerStackState<string>();
   readonly #close = new Map<string, TerminalLayerRegistration['close']>();
-  public get state(): LayerStackState { return this.#state; }
+  public get state(): LayerStackState<string> { return this.#state; }
 
   public open(registration: TerminalLayerRegistration): boolean {
     const result = applyLayerStackEvent(this.#state, {

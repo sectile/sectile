@@ -22,7 +22,8 @@ import {
   type RadioGroupOptions,
 } from './radio-group.js';
 import { createDisabledItems } from './internal/disabled-items.js';
-import { findDelegatedID } from './internal/delegated-event.js';
+import { findDelegatedStableID } from './internal/delegated-event.js';
+import { stableIDToken } from './internal/stable-id-token.js';
 import { horizontalArrow } from './internal/direction.js';
 
 export type RatingOptions<ID extends StableID = StableID> = Omit<
@@ -156,7 +157,7 @@ class DOMRatingConnection<ID extends StableID> implements RatingConnection<ID> {
       this.handleEvent(semantic);
     };
     this.#click = (event): void => {
-      const id = findDelegatedID(event.target, options.root, 'radioGroupId');
+      const id = findDelegatedStableID(event.target, options.root, 'radioGroupId');
       if (id !== null) this.handleEvent({ type: 'set', id: id as ID });
     };
     options.root.addEventListener('keydown', this.#keydown);
@@ -189,7 +190,7 @@ class DOMRatingConnection<ID extends StableID> implements RatingConnection<ID> {
   public setItemAttributes(element: HTMLElement, id: ID, disabled = false): void {
     const state = this.runtime.getSnapshot().state;
     const unavailable = this.options.disabled === true || disabled || this.disabledItems.has(id);
-    element.dataset['radioGroupId'] = String(id);
+    element.dataset['radioGroupId'] = stableIDToken(id);
     applyAttributes(element, {
       ...getRadioGroupItemAttributes({
         id,
@@ -207,7 +208,8 @@ class DOMRatingConnection<ID extends StableID> implements RatingConnection<ID> {
     if (result.ok) queueMicrotask(() => {
       if (!this.#active) return;
       for (const element of this.options.root.querySelectorAll<HTMLElement>('[data-radio-group-id]')) {
-        if (element.dataset['radioGroupId'] === result.snapshot.state.cursor.current) element.focus();
+        const current = result.snapshot.state.cursor.current;
+        if (current !== null && element.dataset['radioGroupId'] === stableIDToken(current)) element.focus();
       }
     });
     if (result.ok) this.options.onUpdate?.();

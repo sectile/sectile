@@ -11,7 +11,7 @@ type CloseLayer = () => void;
 
 export interface DOMLayerRegistration {
   readonly id: string;
-  readonly layer: LayerInput;
+  readonly layer: LayerInput<string>;
   readonly surface: HTMLElement;
   readonly owner: HTMLElement;
   readonly close: CloseLayer;
@@ -42,7 +42,7 @@ export function getDOMLayerManager(root: HTMLElement): DOMLayerManager {
 }
 
 class ManagedDOMLayers implements DOMLayerManager {
-  #state: LayerStackState = createLayerStackState();
+  #state: LayerStackState<string> = createLayerStackState<string>();
   readonly #close = new Map<string, CloseLayer>();
   readonly #surfaces = new Map<string, HTMLElement>();
   readonly #closing = new Set<string>();

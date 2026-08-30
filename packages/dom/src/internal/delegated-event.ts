@@ -1,3 +1,6 @@
+import type { StableID } from '@sectile/core';
+import { stableIDFromToken } from './stable-id-token.js';
+
 export function findDelegatedID(
   target: EventTarget | null,
   root: HTMLElement,
@@ -10,4 +13,13 @@ export function findDelegatedID(
     element = element.parentElement ?? null;
   }
   return root.dataset[key] ?? null;
+}
+
+export function findDelegatedStableID(
+  target: EventTarget | null,
+  root: HTMLElement,
+  key: string,
+): StableID | null {
+  const token = findDelegatedID(target, root, key);
+  return token === null ? null : stableIDFromToken(token);
 }

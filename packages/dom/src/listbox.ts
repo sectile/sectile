@@ -22,7 +22,8 @@ import {
   type RevisionSnapshot,
 } from '@sectile/core/revision';
 import { applyControllerEvent, synchronizeControllerState } from '@sectile/core/adapter-runtime';
-import { findDelegatedID } from './internal/delegated-event.js';
+import { findDelegatedStableID } from './internal/delegated-event.js';
+import { stableIDElementToken, stableIDToken } from './internal/stable-id-token.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
@@ -233,7 +234,7 @@ export function getListboxItemAttributes<ID extends StableID>(
     tabindex: -1,
     'aria-selected': String(selected),
     'aria-disabled': disabled ? 'true' : undefined,
-    'data-listbox-id': String(attributes.id),
+    'data-listbox-id': stableIDToken(attributes.id),
     'data-scope': 'listbox',
     'data-part': 'item',
     'data-state': selected ? 'checked' : 'unchecked',
@@ -340,7 +341,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
     this.#handleClick = (event): void => {
-      const id = findDelegatedID(event.target, this.#root, 'listboxId') as ID | null;
+      const id = findDelegatedStableID(event.target, this.#root, 'listboxId') as ID | null;
       if (id === null || this.#disabledItems.has(id)) return;
       this.handleEvent(this.#selectionMode === 'multiple' || this.#activationMode === 'toggle'
         ? { type: 'toggle', id }
@@ -386,10 +387,10 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     attributes: ListboxItemAttributes<ID>,
   ): void {
     const state = this.#controller.getSnapshot().state;
-    const elementID = element.id || `${this.#baseID}-option-${encodeURIComponent(String(attributes.id)).replaceAll('%', '-')}`;
+    const elementID = element.id || `${this.#baseID}-option-${stableIDElementToken(attributes.id)}`;
     element.id = elementID;
     this.#itemIDs.set(attributes.id, elementID);
-    element.dataset['listboxId'] = String(attributes.id);
+    element.dataset['listboxId'] = stableIDToken(attributes.id);
     const disabled = attributes.disabled === true || this.#disabledItems.has(attributes.id);
     applyAttributes(element, getListboxItemAttributes(state, attributes, { disabled, elementID }));
     if (state.cursor.current === attributes.id) {

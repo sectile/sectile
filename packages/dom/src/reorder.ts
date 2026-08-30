@@ -15,6 +15,7 @@ import type { TreeNodeInput } from '@sectile/core/tree';
 import { unwrap } from '@sectile/core/result';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
+import { stableIDToken } from './internal/stable-id-token.js';
 
 export type ReorderOrientation = 'horizontal' | 'vertical';
 
@@ -295,7 +296,7 @@ class DOMSequenceReorder<ID extends StableID>
     for (const [id, element] of this.elements) {
       const index = ids.indexOf(id);
       if (index < 0) continue;
-      element.dataset['reorderId'] = String(id);
+      element.dataset['reorderId'] = stableIDToken(id);
       element.setAttribute('aria-posinset', String(index + 1));
       element.setAttribute('aria-setsize', String(ids.length));
     }
@@ -364,7 +365,7 @@ class DOMTreeReorder<ID extends StableID>
       const node = nodes.find((candidate) => candidate.id === id);
       if (node === undefined) continue;
       const siblings = nodes.filter((candidate) => candidate.parentID === node.parentID);
-      element.dataset['reorderId'] = String(id);
+      element.dataset['reorderId'] = stableIDToken(id);
       element.setAttribute('aria-level', String(depth(nodes, id) + 1));
       element.setAttribute('aria-posinset', String(siblings.findIndex((candidate) => candidate.id === id) + 1));
       element.setAttribute('aria-setsize', String(siblings.length));

@@ -24,7 +24,8 @@ import {
   type TreeViewState,
 } from '@sectile/core/tree-view';
 import { applyControllerEvent, synchronizeControllerState } from '@sectile/core/adapter-runtime';
-import { findDelegatedID } from './internal/delegated-event.js';
+import { findDelegatedStableID } from './internal/delegated-event.js';
+import { stableIDToken } from './internal/stable-id-token.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 
 export type { TreeNodeInput } from '@sectile/core/tree';
@@ -238,14 +239,14 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
     this.#handleClick = (event): void => {
-      const disclosureID = findDelegatedID(event.target, this.#root, 'treeViewDisclosureId');
+      const disclosureID = findDelegatedStableID(event.target, this.#root, 'treeViewDisclosureId');
       if (disclosureID !== null) {
         const id = disclosureID as ID;
         const expanded = this.#controller.getSnapshot().state.expansion.has(id);
         this.handleEvent({ type: 'set-expanded', id, open: !expanded });
         return;
       }
-      const id = findDelegatedID(event.target, this.#root, 'treeViewId');
+      const id = findDelegatedStableID(event.target, this.#root, 'treeViewId');
       if (id !== null) this.handleEvent({ type: 'toggle-select', id: id as ID });
     };
     this.#root.addEventListener('keydown', this.#handleKeydown);
@@ -283,7 +284,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
     const state = this.#controller.getSnapshot().state;
     const leaf = this.tree.isLeaf(attributes.id);
     const level = (this.tree.depthOf(attributes.id) ?? 0) + 1;
-    element.dataset['treeViewId'] = String(attributes.id);
+    element.dataset['treeViewId'] = stableIDToken(attributes.id);
     element.tabIndex = state.cursor.current === attributes.id ? 0 : -1;
     element.setAttribute('role', 'treeitem');
     element.setAttribute('aria-level', String(level));
@@ -298,7 +299,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
   }
 
   public setDisclosureAttributes(element: HTMLElement, id: ID): void {
-    element.dataset['treeViewDisclosureId'] = String(id);
+    element.dataset['treeViewDisclosureId'] = stableIDToken(id);
     element.setAttribute('aria-hidden', 'true');
   }
 
@@ -333,7 +334,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
         return;
       }
       for (const element of this.#root.querySelectorAll<HTMLElement>('[data-tree-view-id]')) {
-        if (element.dataset['treeViewId'] !== String(current)) continue;
+        if (element.dataset['treeViewId'] !== stableIDToken(current)) continue;
         element.focus();
         return;
       }

@@ -181,7 +181,13 @@ test('sequence construction and scan ceilings use explicit failure classes', () 
   assert.equal(tryCreateSequence(['']).ok, false);
   assert.equal(tryCreateSequence([], { maxIDCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
   assert.equal(tryCreateSequence(['\ud800']).ok, false);
-  assert.equal(tryCreateSequence([1]).error.code, 'invalid-id-type');
+  const mixed = createSequence([1, '1', -1, '-1']);
+  assert.equal(mixed.indexOf(1), 0);
+  assert.equal(mixed.indexOf('1'), 1);
+  assert.equal(mixed.indexOf(-1), 2);
+  assert.equal(mixed.indexOf('-1'), 3);
+  assert.equal(tryCreateSequence([-0]).error.code, 'invalid-id-type');
+  assert.equal(tryCreateSequence([1.5]).error.code, 'invalid-id-type');
   const canonicallyEquivalent = createSequence(['á', 'a\u0301']);
   assert.equal(canonicallyEquivalent.size, 2);
   assert.equal(tryCreateSequence(['a', 'b'], { maxItems: 1 }).error.class, 'resource-rejection');

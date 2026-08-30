@@ -1,6 +1,7 @@
 import type { StableID } from '@sectile/core';
 import type { Tree } from '@sectile/core/tree';
-import { findDelegatedID } from './delegated-event.js';
+import { findDelegatedStableID } from './delegated-event.js';
+import { stableIDToken } from './stable-id-token.js';
 import { setInteractionAttributes } from './interaction.js';
 
 export type DOMCascadeChoiceEvent<ID extends StableID = StableID> =
@@ -80,7 +81,7 @@ class DOMCascadeChoiceBindingImplementation<
       }
     };
     this.#click = (event): void => {
-      const id = findDelegatedID(event.target, options.surface, this.#idDataKey) as ID | null;
+      const id = findDelegatedStableID(event.target, options.surface, this.#idDataKey) as ID | null;
       if (id !== null && !options.disabledItems.has(id)) options.handleEvent({ type: 'select', id } as Event);
     };
     options.root.addEventListener('keydown', this.#keydown);
@@ -92,7 +93,7 @@ class DOMCascadeChoiceBindingImplementation<
     element.setAttribute('aria-orientation', 'vertical');
     element.dataset['scope'] = this.#options.scope;
     element.dataset['part'] = 'column';
-    element.dataset[this.#parentDataKey] = parentID ?? '';
+    element.dataset[this.#parentDataKey] = parentID === null ? '' : stableIDToken(parentID);
     const accessibleName = label ?? this.#options.label;
     if (accessibleName !== undefined) element.setAttribute('aria-label', accessibleName);
     else element.removeAttribute('aria-label');
@@ -105,7 +106,7 @@ class DOMCascadeChoiceBindingImplementation<
     const expanded = state.path.includes(id);
     const branch = this.#options.tree.isLeaf(id) === false;
     const unavailable = disabled || this.#options.disabledItems.has(id) || this.#options.disabled === true;
-    element.dataset[this.#idDataKey] = id;
+    element.dataset[this.#idDataKey] = stableIDToken(id);
     element.dataset['scope'] = this.#options.scope;
     element.dataset['part'] = 'item';
     element.dataset['state'] = selected ? 'checked' : 'unchecked';
@@ -134,7 +135,7 @@ class DOMCascadeChoiceBindingImplementation<
     queueMicrotask(() => {
       if (!this.#active) return;
       for (const element of this.#options.surface.querySelectorAll<HTMLElement>(this.#itemSelector)) {
-        if (element.dataset[this.#idDataKey] === id) element.focus();
+        if (element.dataset[this.#idDataKey] === stableIDToken(id)) element.focus();
       }
     });
   }

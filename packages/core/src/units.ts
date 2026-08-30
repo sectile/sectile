@@ -1,5 +1,5 @@
 import { unwrap } from './result.js';
-import type { Result, StableID } from './shared.js';
+import type { Result } from './shared.js';
 import {
   decimalToString,
   divideDecimal,
@@ -11,7 +11,7 @@ import {
 } from './internal/kernel/decimal.js';
 import { fail, ok, validateSafeCeiling } from './internal/kernel/foundation.js';
 
-export type UnitID = StableID;
+export type UnitID = string;
 export type Dimension = Readonly<Record<string, number>>;
 
 export interface UnitRatio {
@@ -82,12 +82,12 @@ export interface UnitSystemPreferenceDefinition {
 }
 
 export interface UnitSystemDefinition {
-  readonly id: StableID;
+  readonly id: string;
   readonly preferences: readonly UnitSystemPreferenceDefinition[];
 }
 
 export interface UnitSystemProfile {
-  readonly id: StableID;
+  readonly id: string;
   getDefaultUnit(canonicalUnit: UnitID): UnitID | null;
   getUnits(canonicalUnit: UnitID): readonly UnitID[];
 }

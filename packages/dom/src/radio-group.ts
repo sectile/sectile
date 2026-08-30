@@ -11,7 +11,8 @@ import {
   type RadioGroupPolicies,
   type RadioGroupState,
 } from '@sectile/core/radio-group';
-import { findDelegatedID } from './internal/delegated-event.js';
+import { findDelegatedStableID } from './internal/delegated-event.js';
+import { stableIDToken } from './internal/stable-id-token.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import type { KeyboardInput } from './tabs.js';
@@ -105,7 +106,7 @@ export function getRadioGroupItemAttributes<ID extends StableID>(
     'aria-checked': String(options.checked),
     'aria-disabled': options.disabled === true ? 'true' : undefined,
     disabled: options.disabled === true ? true : undefined,
-    'data-radio-group-id': String(options.id),
+    'data-radio-group-id': stableIDToken(options.id),
     'data-scope': 'radio-group',
     'data-part': 'item',
     'data-state': options.checked ? 'checked' : 'unchecked',
@@ -239,7 +240,7 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
       this.handleEvent(semantic);
     };
     this.#click = (event): void => {
-      const id = findDelegatedID(event.target, options.root, 'radioGroupId');
+      const id = findDelegatedStableID(event.target, options.root, 'radioGroupId');
       if (id !== null) this.handleEvent({ type: 'check', id: id as ID });
     };
     options.root.addEventListener('keydown', this.#keydown);
@@ -276,7 +277,7 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
   public setItemAttributes(element: HTMLElement, id: ID, disabled = false): void {
     const state = this.#runtime.getSnapshot().state;
     const unavailable = this.#options.disabled === true || disabled || this.#disabledItems.has(id);
-    element.dataset['radioGroupId'] = String(id);
+    element.dataset['radioGroupId'] = stableIDToken(id);
     applyAttributes(element, getRadioGroupItemAttributes({
       id,
       checked: state.selection.has(id),
@@ -290,7 +291,8 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
     if (result.ok) queueMicrotask(() => {
       if (!this.#active) return;
       for (const element of this.#options.root.querySelectorAll<HTMLElement>('[data-radio-group-id]')) {
-        if (element.dataset['radioGroupId'] === result.snapshot.state.cursor.current) element.focus();
+        const current = result.snapshot.state.cursor.current;
+        if (current !== null && element.dataset['radioGroupId'] === stableIDToken(current)) element.focus();
       }
     });
     if (result.ok) this.#options.onUpdate?.();

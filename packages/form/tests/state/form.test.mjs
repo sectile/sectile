@@ -99,6 +99,18 @@ const requiredIssue = {
   source: 'field',
 };
 
+test('form state preserves numeric and textual field identities independently', () => {
+  const state = createFormState({
+    fields: [
+      { id: 1, name: 'numeric' },
+      { id: '1', name: 'textual' },
+    ],
+  });
+  assert.equal(getFormField(state, 1)?.name, 'numeric');
+  assert.equal(getFormField(state, '1')?.name, 'textual');
+  assert.notEqual(getFormField(state, 1), getFormField(state, '1'));
+});
+
 test('indexed field commands preserve unrelated identity and make equal writes no-ops', () => {
   const initial = createFormState({
     fields: [

@@ -12,7 +12,8 @@ import {
   type ToolbarState,
 } from '@sectile/core/toolbar';
 export type { ToolbarPolicies } from '@sectile/core/toolbar';
-import { findDelegatedID } from './internal/delegated-event.js';
+import { findDelegatedStableID } from './internal/delegated-event.js';
+import { stableIDToken } from './internal/stable-id-token.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
@@ -153,7 +154,7 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
       this.handleEvent(semantic);
     };
     this.#click = (event): void => {
-      const id = findDelegatedID(event.target, options.root, 'toolbarId');
+      const id = findDelegatedStableID(event.target, options.root, 'toolbarId');
       if (id !== null) this.handleEvent({ type: 'invoke', id: id as ID });
     };
     options.root.addEventListener('keydown', this.#keydown);
@@ -173,7 +174,7 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
   }
 
   public setItemAttributes(element: HTMLElement, id: ID, disabled = false): void {
-    element.dataset['toolbarId'] = id;
+    element.dataset['toolbarId'] = stableIDToken(id);
     element.tabIndex = this.#runtime.getSnapshot().state.cursor.current === id ? 0 : -1;
     if (disabled || this.#disabledItems.has(id)) element.setAttribute('aria-disabled', 'true');
     else element.removeAttribute('aria-disabled');
@@ -188,7 +189,8 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
       queueMicrotask(() => {
         if (!this.#active) return;
         for (const element of this.#options.root.querySelectorAll<HTMLElement>('[data-toolbar-id]')) {
-          if (element.dataset['toolbarId'] === result.snapshot.state.cursor.current) element.focus();
+          const current = result.snapshot.state.cursor.current;
+          if (current !== null && element.dataset['toolbarId'] === stableIDToken(current)) element.focus();
         }
       });
     }

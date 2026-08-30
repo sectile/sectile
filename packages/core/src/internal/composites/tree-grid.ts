@@ -9,7 +9,7 @@ import type {
 import type { Grid } from '../../structures/grid.js';
 import type { Sequence } from '../../structures/sequence.js';
 import type { Tree } from '../../structures/tree.js';
-import { bindCanonicalState, fail, freezeArray, hasCanonicalState, memoizeWeakPair, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, freezeArray, hasCanonicalState, isStableID, memoizeWeakPair, ok } from '../kernel/foundation.js';
 import { findEligibleFromEdge, IndexedSequence } from '../kernel/indexed-sequence.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
@@ -550,7 +550,7 @@ function isTreeGridEvent<RowID extends StableID, CellID extends StableID>(
       || value === 'cancel-edit';
   }
   return typeof value === 'object' && value !== null
-    && 'type' in value && 'id' in value && typeof value.id === 'string'
+    && 'type' in value && 'id' in value && isStableID(value.id)
     && (value.type === 'focus' || value.type === 'select' || value.type === 'start-edit'
       || (value.type === 'set-expanded' && 'open' in value && typeof value.open === 'boolean'));
 }

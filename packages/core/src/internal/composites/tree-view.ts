@@ -1,7 +1,7 @@
 import { unwrap } from '../../result.js';
 import type { Result, SectileError, StableID } from '../../shared.js';
 import type { Tree } from '../../structures/tree.js';
-import { bindCanonicalState, fail, hasCanonicalState, memoizeWeakPair, ok } from '../kernel/foundation.js';
+import { bindCanonicalState, fail, hasCanonicalState, isStableID, memoizeWeakPair, ok } from '../kernel/foundation.js';
 import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
 import {
@@ -341,7 +341,7 @@ function isTreeViewEvent<ID extends StableID>(value: unknown): value is TreeView
       || value === 'toggle-select';
   }
   return typeof value === 'object' && value !== null && 'type' in value && 'id' in value
-    && typeof value.id === 'string'
+    && isStableID(value.id)
     && (value.type === 'focus' || value.type === 'toggle-select'
       || (value.type === 'set-expanded' && 'open' in value && typeof value.open === 'boolean'));
 }
