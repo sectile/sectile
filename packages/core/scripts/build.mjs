@@ -2,6 +2,7 @@ import { rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { compactJavaScript } from '../../../scripts/lib/compact-javascript.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const mode = process.argv[2] ?? 'production';
@@ -27,3 +28,4 @@ const result = spawnSync('tsc', ['--project', project, '--pretty', 'false'], {
 });
 if (result.error !== undefined) throw result.error;
 if (result.status !== 0) process.exit(result.status ?? 1);
+if (!verification) await compactJavaScript(output);
