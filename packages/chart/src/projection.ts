@@ -1,11 +1,13 @@
 import type { StableID } from '@sectile/core';
 import { unwrap } from '@sectile/core/result';
-import type { ChartRepresentative } from './contract.js';
+import type { ChartRepresentative, ChartViewState } from './contract.js';
 import type { ChartDefinitionState, ResolvedChartLayer } from './definition.js';
 import {
   readPackedLayerValue,
   selectPackedAggregateFrontier,
   selectPackedOrderedEnvelope,
+  selectPackedVisibleIndices,
+  type PackedSelectionBounds,
 } from './internal/layer-owner.js';
 import { getChartModelData, type ChartModelData, type PackedChartLayer } from './internal/model-store.js';
 import { chartFail, chartOK } from './internal/result.js';
@@ -171,6 +173,7 @@ export interface ChartProjectionInput {
   readonly xScale?: ChartScale<number>;
   readonly yScale?: ChartScale<number>;
   readonly viewTransform?: ChartViewTransform;
+  readonly view?: ChartViewState;
   readonly insets?: ChartPlotInsets;
   readonly previous?: ChartProjection;
 }
@@ -263,10 +266,16 @@ function tryCreateDefinitionProjection<ID extends StableID>(
       ceiling: MAXIMUM_CHART_REPRESENTATIVES,
     });
   }
-  const transform = tryCreateChartViewTransform(input.viewTransform ?? IDENTITY_CHART_VIEW_TRANSFORM);
-  if (!transform.ok) return transform;
+  if (input.viewTransform !== undefined && (input.viewTransform.xScale !== 1 || input.viewTransform.xOffset !== 0
+    || input.viewTransform.yScale !== 1 || input.viewTransform.yOffset !== 0)) {
+    return invalidProjection('Declarative chart projection accepts axis-domain view state instead of a renderer-pixel transform.');
+  }
+  if (source.coordinate.kind === 'radial' && (input.view?.axes.length ?? 0) > 0) {
+    return invalidProjection('Radial chart projection does not accept Cartesian axis view state.');
+  }
+  const transform = IDENTITY_CHART_VIEW_TRANSFORM;
   const layoutResult = source.coordinate.kind === 'cartesian'
-    ? tryCreateChartPlotLayout(source.axes, input.viewport, input.insets)
+    ? tryCreateChartPlotLayout(source.axes, input.viewport, input.insets, input.view as ChartViewState<ID> | undefined)
     : chartOK(undefined);
   if (!layoutResult.ok) return layoutResult;
   const data = getChartModelData<ID>(model);
@@ -275,15 +284,10 @@ function tryCreateDefinitionProjection<ID extends StableID>(
     const semantics = source.layers[index] as ResolvedChartLayer<ID>;
     const layer = data.layers[index] as PackedChartLayer<ID>;
     const quota = quotas[index] as number;
-    const exactOnly = semantics.kind === 'bar'
-      || semantics.kind === 'pie'
-      || semantics.kind === 'donut'
-      || (semantics.kind === 'scatter' && semantics.projection === 'exact')
-      || (semantics.kind === 'heatmap' && semantics.projection === 'exact');
     const radialEmpty = layer.index.kind === 'radial' && layer.index.total === 0;
-    if (exactOnly && !radialEmpty && quota < layer.owner.size) return exactCeiling(semantics.id, layer.owner.size, quota);
-    if (!exactOnly && layer.owner.size > 0 && quota === 0) return exactCeiling(semantics.id, layer.owner.size, quota);
-    if (semantics.kind === 'line' && layer.owner.size > quota && quota < 4) return exactCeiling(semantics.id, layer.owner.size, quota);
+    if ((semantics.kind === 'pie' || semantics.kind === 'donut') && !radialEmpty && quota < layer.owner.size) {
+      return exactCeiling(semantics.id, layer.owner.size, quota);
+    }
   }
   const axisLayouts = new Map<ID, ChartAxisLayout<ID>>();
   if (layoutResult.value !== undefined) for (const axis of layoutResult.value.axes) axisLayouts.set(axis.axis.id, axis);
@@ -299,7 +303,7 @@ function tryCreateDefinitionProjection<ID extends StableID>(
     const layer = data.layers[index] as PackedChartLayer<ID>;
     const quota = quotas[index] as number;
     const projected = projectDefinitionLayer(
-      model, layer, semantics, index, quota, axisLayouts, input.viewport, transform.value,
+      model, layer, semantics, index, quota, axisLayouts, input.viewport, transform,
     );
     if (!projected.ok) return projected;
     if (projected.value.batch !== null) batches.push(projected.value.batch);
@@ -376,6 +380,12 @@ function projectDefinitionLayer<ID extends StableID>(
   if (xAxis === undefined || yAxis === undefined) return invalidProjection('Cartesian layer axes are unavailable in the plot layout.');
   const xScale = geometryScale(xAxis);
   const yScale = geometryScale(yAxis);
+  const cartesianBounds: PackedSelectionBounds = Object.freeze({
+    minimumX: xAxis.descriptor.geometryDomain.minimum,
+    maximumX: xAxis.descriptor.geometryDomain.maximum,
+    minimumY: yAxis.descriptor.geometryDomain.minimum,
+    maximumY: yAxis.descriptor.geometryDomain.maximum,
+  });
   if (semantics.kind === 'line') {
     const domain = geometryDomain(xAxis);
     const selected = selectPackedOrderedEnvelope(layer.owner, domain.minimum, domain.maximum, Math.max(1, Math.floor(xAxis.descriptor.range.end - xAxis.descriptor.range.start)), quota);
@@ -387,14 +397,17 @@ function projectDefinitionLayer<ID extends StableID>(
     return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, lineRevision), representedDatums: selected.indices.length, emittedPrimitives: selected.indices.length, aggregateRepresentatives: 0, visitedIndexNodes: selected.visitedNodes, revision: lineRevision });
   }
   if (semantics.kind === 'scatter' && semantics.projection === 'density') {
-    const selected = selectPackedAggregateFrontier(layer.owner, quota);
+    const selected = selectPackedAggregateFrontier(layer.owner, quota, cartesianBounds);
+    if (selected.overflow) return exactCeiling(semantics.id, selected.visibleDatums, quota);
     const batch = projectAggregateCells(layerIndex, selected.entries, xScale, yScale, transform, 'density');
     const aggregateRevision = batchRevision(layer, selected.entries.length);
     const decorated = Object.freeze({ ...batch, revision: aggregateRevision });
-    return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, aggregateRevision), representedDatums: layer.owner.size, emittedPrimitives: selected.entries.length, aggregateRepresentatives: selected.entries.length, visitedIndexNodes: selected.visitedNodes, revision: aggregateRevision });
+    return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, aggregateRevision), representedDatums: selected.visibleDatums, emittedPrimitives: selected.entries.length, aggregateRepresentatives: selected.entries.length, visitedIndexNodes: selected.visitedNodes, revision: aggregateRevision });
   }
   if (semantics.kind === 'heatmap' && semantics.projection === 'heatmap-aggregate') {
-    const selected = selectPackedAggregateFrontier(layer.owner, quota);
+    const heatBounds = heatmapSelectionBounds(semantics, cartesianBounds);
+    const selected = selectPackedAggregateFrontier(layer.owner, quota, heatBounds);
+    if (selected.overflow) return exactCeiling(semantics.id, selected.visibleDatums, quota);
     const reduction = semantics.reduction ?? 'sum';
     const entries = semantics.heatmap === undefined ? selected.entries : selected.entries.map((entry) => Object.freeze({
       ...entry,
@@ -406,16 +419,39 @@ function projectDefinitionLayer<ID extends StableID>(
     const batch = projectAggregateCells(layerIndex, entries, xScale, yScale, transform, reduction);
     const aggregateRevision = batchRevision(layer, selected.entries.length);
     const decorated = Object.freeze({ ...batch, revision: aggregateRevision });
-    return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, aggregateRevision), representedDatums: layer.owner.size, emittedPrimitives: selected.entries.length, aggregateRepresentatives: selected.entries.length, visitedIndexNodes: selected.visitedNodes, revision: aggregateRevision });
+    return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, aggregateRevision), representedDatums: selected.visibleDatums, emittedPrimitives: selected.entries.length, aggregateRepresentatives: selected.entries.length, visitedIndexNodes: selected.visitedNodes, revision: aggregateRevision });
   }
-  const selected = Uint32Array.from({ length: layer.owner.size }, (_, index) => index);
+  const selectionBounds = semantics.kind === 'heatmap' ? heatmapSelectionBounds(semantics, cartesianBounds) : cartesianBounds;
+  const visible = selectPackedVisibleIndices(layer.owner, selectionBounds, quota);
+  if (visible.overflow) return exactCeiling(semantics.id, visible.visibleDatums, quota);
+  const selected = visible.indices;
   let batch: ChartResult<ChartProjectionBatch>;
   if (semantics.kind === 'scatter') batch = projectPoints(layer, layerIndex, selected, xScale, yScale, transform);
   else if (semantics.kind === 'bar') batch = projectRectangles(layer, layerIndex, selected, xScale, yScale, transform);
   else batch = projectDefinitionCells(layer, semantics, layerIndex, selected, xScale, yScale, transform);
   if (!batch.ok) return batch;
   const decorated = decorateExactBatch(model, batch.value, revision);
-  return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, revision), representedDatums: selected.length, emittedPrimitives: selected.length, aggregateRepresentatives: 0, visitedIndexNodes: selected.length, revision });
+  return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, revision), representedDatums: selected.length, emittedPrimitives: selected.length, aggregateRepresentatives: 0, visitedIndexNodes: visible.visitedNodes, revision });
+}
+
+function heatmapSelectionBounds<ID extends StableID>(
+  semantics: ResolvedChartLayer<ID>,
+  bounds: PackedSelectionBounds,
+): PackedSelectionBounds {
+  if (semantics.heatmap === undefined) return bounds;
+  const x = edgeSlotRange(semantics.heatmap.xEdges, bounds.minimumX, bounds.maximumX);
+  const y = edgeSlotRange(semantics.heatmap.yEdges, bounds.minimumY, bounds.maximumY);
+  return Object.freeze({ minimumX: x.start, maximumX: x.end, minimumY: y.start, maximumY: y.end });
+}
+
+function edgeSlotRange(edges: Float64Array, minimum: number, maximum: number): { readonly start: number; readonly end: number } {
+  let low = 0; let high = edges.length;
+  while (low < high) { const middle = (low + high) >>> 1; if ((edges[middle] as number) <= minimum) low = middle + 1; else high = middle; }
+  const start = Math.max(0, Math.min(edges.length - 1, low - 1));
+  low = 0; high = edges.length;
+  while (low < high) { const middle = (low + high) >>> 1; if ((edges[middle] as number) < maximum) low = middle + 1; else high = middle; }
+  const end = Math.max(start, Math.min(edges.length - 1, low));
+  return { start, end };
 }
 
 function projectDefinitionCells<ID extends StableID>(
@@ -653,13 +689,11 @@ function ordinalBatchColors<ID extends StableID>(
 
 function geometryScale<ID extends StableID>(axis: ChartAxisLayout<ID>): ChartScale<number> {
   if (axis.axis.domain.kind !== 'categorical') return axis.scale as ChartScale<number>;
-  return createLinearScale({ minimum: 0, maximum: axis.axis.domain.values.length }, axis.descriptor.range);
+  return createLinearScale(axis.descriptor.geometryDomain, axis.descriptor.range);
 }
 
 function geometryDomain<ID extends StableID>(axis: ChartAxisLayout<ID>): { readonly minimum: number; readonly maximum: number } {
-  return axis.axis.domain.kind === 'categorical'
-    ? { minimum: 0, maximum: axis.axis.domain.values.length }
-    : { minimum: axis.axis.domain.minimum, maximum: axis.axis.domain.maximum };
+  return axis.descriptor.geometryDomain;
 }
 
 function heatmapColors(cells: Float32Array, minimumInput: number, maximumInput: number): Uint8Array {

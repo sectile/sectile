@@ -58,17 +58,3 @@ test('command subscriptions release exactly once and dispose clears controller r
   assert.equal(controller.dispatch({ type: 'set-active', id: 1 }).error.code, 'chart-controller-disposed');
   assert.equal(controller.project({ viewport: { width: 100, height: 100 } }).error.code, 'chart-controller-disposed');
 });
-
-test('controller projection consumes the canonical interaction view transform', () => {
-  const controller = createChartController(options());
-  const input = { viewport: { width: 100, height: 100 } };
-  const first = controller.project(input).value;
-  assert.equal(controller.project(input).value, first);
-  controller.dispatch({ type: 'set-selection', selection: { type: 'points', ids: [1] } });
-  assert.equal(controller.project(input).value, first);
-  const before = first.batches[0].positions[0];
-  controller.dispatch({ type: 'pan', x: 10, y: 0 });
-  const after = controller.project({ viewport: { width: 100, height: 100 } }).value.batches[0].positions[0];
-  assert.equal(after - before, 10);
-  assert.notEqual(controller.project(input).value, first);
-});

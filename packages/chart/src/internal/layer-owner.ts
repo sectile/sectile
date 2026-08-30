@@ -148,6 +148,22 @@ export interface PackedAggregateSelectionEntry {
 export interface PackedAggregateSelection {
   readonly entries: readonly PackedAggregateSelectionEntry[];
   readonly visitedNodes: number;
+  readonly visibleDatums: number;
+  readonly overflow: boolean;
+}
+
+export interface PackedSelectionBounds {
+  readonly minimumX: number;
+  readonly maximumX: number;
+  readonly minimumY: number;
+  readonly maximumY: number;
+}
+
+export interface PackedVisibleSelection {
+  readonly indices: Uint32Array;
+  readonly visitedNodes: number;
+  readonly visibleDatums: number;
+  readonly overflow: boolean;
 }
 
 export function createPackedChartLayerOwner<ID extends StableID>(
@@ -358,12 +374,23 @@ export function selectPackedOrderedEnvelope(
 export function selectPackedAggregateFrontier(
   owner: PackedChartLayerOwner,
   maximumRepresentatives: number,
+  bounds?: PackedSelectionBounds,
 ): PackedAggregateSelection {
-  if (owner.size === 0 || maximumRepresentatives <= 0) return Object.freeze({ entries: Object.freeze([]), visitedNodes: 0 });
+  if (owner.size === 0) return Object.freeze({ entries: Object.freeze([]), visitedNodes: 0, visibleDatums: 0, overflow: false });
   const hierarchy = owner.index.hierarchy;
   const lookup = new Map<number, Float64Array>();
-  const heap: number[] = [1];
-  let visitedNodes = 1;
+  if (maximumRepresentatives <= 0 && bounds === undefined) {
+    return Object.freeze({ entries: Object.freeze([]), visitedNodes: 1, visibleDatums: owner.size, overflow: true });
+  }
+  const visible = bounds === undefined
+    ? { nodes: [1], visitedNodes: 1, visibleDatums: owner.size, overflow: false }
+    : collectVisibleHierarchyNodes(owner, bounds, maximumRepresentatives, lookup);
+  if (visible.overflow) return Object.freeze({
+    entries: Object.freeze([]), visitedNodes: visible.visitedNodes, visibleDatums: visible.visibleDatums, overflow: true,
+  });
+  const heap: number[] = [];
+  for (const node of visible.nodes) pushHierarchyNode(heap, node, hierarchy, lookup);
+  let visitedNodes = visible.visitedNodes;
   while (heap.length < maximumRepresentatives) {
     const node = popLargestHierarchyNode(heap, hierarchy, lookup);
     if (node === null) break;
@@ -391,7 +418,45 @@ export function selectPackedAggregateFrontier(
       firstIndex: values[8] as number,
     });
   });
-  return Object.freeze({ entries: Object.freeze(entries), visitedNodes });
+  return Object.freeze({ entries: Object.freeze(entries), visitedNodes, visibleDatums: visible.visibleDatums, overflow: false });
+}
+
+export function selectPackedVisibleIndices(
+  owner: PackedChartLayerOwner,
+  bounds: PackedSelectionBounds,
+  maximumRepresentatives: number,
+): PackedVisibleSelection {
+  if (owner.size === 0 || maximumRepresentatives < 0) {
+    return Object.freeze({ indices: new Uint32Array(0), visitedNodes: 0, visibleDatums: 0, overflow: false });
+  }
+  const hierarchy = owner.index.hierarchy;
+  const lookup = new Map<number, Float64Array>();
+  const stack = [1];
+  const indices: number[] = [];
+  let visitedNodes = 0;
+  let visibleDatums = 0;
+  let overflow = false;
+  while (stack.length > 0) {
+    const node = stack.pop() as number;
+    const values = hierarchyNode(hierarchy, lookup, node);
+    visitedNodes += 1;
+    const count = values[7] as number;
+    if (count === 0 || !intersectsSelection(owner.profile, values, bounds)) continue;
+    if (containedBySelection(owner.profile, values, bounds)) {
+      visibleDatums += count;
+      if (indices.length + count > maximumRepresentatives) { overflow = true; continue; }
+      visitedNodes += appendHierarchyLeaves(hierarchy, lookup, node, indices);
+      continue;
+    }
+    if (node >= hierarchy.leafCount) {
+      visibleDatums += 1;
+      if (indices.length < maximumRepresentatives) indices.push(values[8] as number);
+      else overflow = true;
+      continue;
+    }
+    stack.push(node * 2 + 1, node * 2);
+  }
+  return Object.freeze({ indices: Uint32Array.from(indices), visitedNodes, visibleDatums, overflow });
 }
 
 function createPackedValueStore(values: Float64Array, stride: number): PackedValueStore {
@@ -767,6 +832,78 @@ function upperBoundPackedX(owner: PackedChartLayerOwner, value: number): number 
     else high = middle;
   }
   return low;
+}
+
+function collectVisibleHierarchyNodes(
+  owner: PackedChartLayerOwner,
+  bounds: PackedSelectionBounds,
+  maximumNodes: number,
+  lookup: ReadonlyMap<number, Float64Array>,
+): { readonly nodes: number[]; readonly visitedNodes: number; readonly visibleDatums: number; readonly overflow: boolean } {
+  const hierarchy = owner.index.hierarchy;
+  const stack = [1];
+  const nodes: number[] = [];
+  let visitedNodes = 0;
+  let visibleDatums = 0;
+  let overflow = false;
+  while (stack.length > 0) {
+    const node = stack.pop() as number;
+    const values = hierarchyNode(hierarchy, lookup, node);
+    visitedNodes += 1;
+    const count = values[7] as number;
+    if (count === 0 || !intersectsSelection(owner.profile, values, bounds)) continue;
+    if (containedBySelection(owner.profile, values, bounds) || node >= hierarchy.leafCount) {
+      visibleDatums += count;
+      if (nodes.length < maximumNodes) nodes.push(node);
+      else overflow = true;
+      continue;
+    }
+    stack.push(node * 2 + 1, node * 2);
+  }
+  return { nodes, visitedNodes, visibleDatums, overflow };
+}
+
+function intersectsSelection(
+  profile: ChartProfile,
+  values: Float64Array,
+  bounds: PackedSelectionBounds,
+): boolean {
+  if (profile === 'point') {
+    return (values[1] as number) >= bounds.minimumX && (values[0] as number) <= bounds.maximumX
+      && (values[3] as number) >= bounds.minimumY && (values[2] as number) <= bounds.maximumY;
+  }
+  return (values[1] as number) > bounds.minimumX && (values[0] as number) < bounds.maximumX
+    && (values[3] as number) > bounds.minimumY && (values[2] as number) < bounds.maximumY;
+}
+
+function containedBySelection(
+  _profile: ChartProfile,
+  values: Float64Array,
+  bounds: PackedSelectionBounds,
+): boolean {
+  return (values[0] as number) >= bounds.minimumX
+    && (values[1] as number) <= bounds.maximumX
+    && (values[2] as number) >= bounds.minimumY
+    && (values[3] as number) <= bounds.maximumY;
+}
+
+function appendHierarchyLeaves(
+  hierarchy: PackedAggregateHierarchy,
+  lookup: ReadonlyMap<number, Float64Array>,
+  root: number,
+  output: number[],
+): number {
+  const stack = [root];
+  let visitedNodes = 0;
+  while (stack.length > 0) {
+    const node = stack.pop() as number;
+    const values = hierarchyNode(hierarchy, lookup, node);
+    visitedNodes += 1;
+    if ((values[7] as number) === 0) continue;
+    if (node >= hierarchy.leafCount) output.push(values[8] as number);
+    else stack.push(node * 2 + 1, node * 2);
+  }
+  return visitedNodes;
 }
 
 function pushHierarchyNode(

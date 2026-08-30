@@ -224,13 +224,20 @@ export interface ChartCategoricalViewWindow {
 
 export type ChartAxisViewWindow = ChartContinuousViewWindow | ChartCategoricalViewWindow;
 
+export type ChartAxisViewUpdateMode = 'preserve' | 'reset' | 'follow-end';
+
 export interface ChartAxisView<ID extends StableID = StableID> {
   readonly axisID: ID;
+  readonly orientation?: ChartAxisOrientation;
   readonly scale: ChartScaleKind;
   readonly base: ChartAxisViewWindow;
+  readonly initial?: ChartAxisViewWindow;
   readonly visible: ChartAxisViewWindow;
   readonly minimumSpan?: number;
   readonly maximumSpan?: number;
+  readonly update?: ChartAxisViewUpdateMode;
+  readonly followingEnd?: boolean;
+  readonly categories?: readonly ChartCategory[];
   readonly revision: number;
 }
 
@@ -527,31 +534,58 @@ function normalizeAxisDomain(scale: ChartScaleKind, domain: ChartAxisDomainInput
 
 function normalizeAxisView<ID extends StableID>(axis: ChartAxisView<ID>): ChartResult<ChartAxisView<ID>> {
   if (!validScaleKind(axis.scale) || !nonNegativeSafeInteger(axis.revision)) return invalidView('Chart axis view scale or revision is invalid.');
+  if (axis.orientation !== undefined && axis.orientation !== 'x' && axis.orientation !== 'y') return invalidView('Chart axis view orientation is invalid.');
   const categorical = axis.scale === 'categorical';
   if (categorical !== (axis.base.kind === 'categorical') || categorical !== (axis.visible.kind === 'categorical')) {
     return invalidView('Chart axis view windows must match the scale kind.');
   }
-  if (!validViewWindow(axis.base) || !validViewWindow(axis.visible)) return invalidView('Chart axis view windows are invalid.');
+  const initial = axis.initial ?? axis.visible;
+  if (!validViewWindow(axis.base) || !validViewWindow(initial) || !validViewWindow(axis.visible)) return invalidView('Chart axis view windows are invalid.');
   const baseStart = windowStart(axis.base);
   const baseEnd = windowEnd(axis.base);
+  const initialStart = windowStart(initial);
+  const initialEnd = windowEnd(initial);
   const visibleStart = windowStart(axis.visible);
   const visibleEnd = windowEnd(axis.visible);
-  if (visibleStart < baseStart || visibleEnd > baseEnd) return invalidView('Visible chart axis view must remain inside its base window.');
+  if (initialStart < baseStart || initialEnd > baseEnd || visibleStart < baseStart || visibleEnd > baseEnd) {
+    return invalidView('Initial and visible chart axis views must remain inside their base window.');
+  }
   if (axis.scale === 'logarithmic' && baseStart <= 0) return invalidView('Logarithmic chart axis views must be positive.');
-  const minimumSpan = axis.minimumSpan ?? 0;
-  const maximumSpan = axis.maximumSpan ?? baseEnd - baseStart;
-  const visibleSpan = visibleEnd - visibleStart;
+  const baseSpan = axis.scale === 'logarithmic' ? Math.log(baseEnd) - Math.log(baseStart) : baseEnd - baseStart;
+  const minimumSpan = axis.minimumSpan ?? (categorical ? 1 : 0);
+  const maximumSpan = axis.maximumSpan ?? baseSpan;
+  const visibleSpan = axis.scale === 'logarithmic'
+    ? Math.log(visibleEnd) - Math.log(visibleStart)
+    : visibleEnd - visibleStart;
   if (!Number.isFinite(minimumSpan) || minimumSpan < 0 || !Number.isFinite(maximumSpan)
     || maximumSpan < minimumSpan || visibleSpan < minimumSpan || visibleSpan > maximumSpan) {
     return invalidView('Chart axis view span limits are invalid.');
   }
+  const update = axis.update ?? 'preserve';
+  if (update !== 'preserve' && update !== 'reset' && update !== 'follow-end') return invalidView('Chart axis view update mode is invalid.');
+  if (axis.followingEnd !== undefined && typeof axis.followingEnd !== 'boolean') return invalidView('Chart follow-end state must be boolean.');
+  if (categorical && axis.categories !== undefined) {
+    if (!Array.isArray(axis.categories) || axis.categories.length !== baseEnd - baseStart) {
+      return invalidView('Categorical chart axis view categories must match its base slot count.');
+    }
+    const categories = new Set<ChartCategory>();
+    for (const category of axis.categories) {
+      if (!validCategory(category) || categories.has(category)) return invalidView('Categorical chart axis view categories must be unique.');
+      categories.add(category);
+    }
+  } else if (!categorical && axis.categories !== undefined) return invalidView('Continuous chart axis views do not accept categories.');
   return chartOK(Object.freeze({
     axisID: axis.axisID,
+    ...(axis.orientation === undefined ? {} : { orientation: axis.orientation }),
     scale: axis.scale,
     base: freezeViewWindow(axis.base),
+    initial: freezeViewWindow(initial),
     visible: freezeViewWindow(axis.visible),
     minimumSpan,
     maximumSpan,
+    update,
+    followingEnd: axis.followingEnd ?? (update === 'follow-end' && visibleEnd === baseEnd),
+    ...(axis.categories === undefined ? {} : { categories: Object.freeze([...axis.categories]) }),
     revision: axis.revision,
   }));
 }

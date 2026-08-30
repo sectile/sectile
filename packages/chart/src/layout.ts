@@ -4,8 +4,10 @@ import type { UnitID } from '@sectile/core/units';
 import type {
   ChartAxisDomain,
   ChartAxisOrientation,
+  ChartAxisView,
   ChartAxisValue,
   ChartCategory,
+  ChartViewState,
   NormalizedChartAxisDefinition,
   NormalizedChartCartesianCoordinateDefinition,
 } from './contract.js';
@@ -59,6 +61,7 @@ export interface ChartScaleDescriptor<ID extends StableID = StableID> {
   readonly orientation: ChartAxisOrientation;
   readonly kind: ChartScaleKind;
   readonly domain: ResolvedChartAxisDomain;
+  readonly geometryDomain: Readonly<{ minimum: number; maximum: number }>;
   readonly range: ChartRange;
 }
 
@@ -126,22 +129,30 @@ export function createChartPlotLayout<ID extends StableID>(
   axes: readonly ResolvedChartAxis<ID>[],
   viewport: ChartViewport,
   insets: ChartPlotInsets = DEFAULT_CHART_PLOT_INSETS,
+  view?: ChartViewState<ID>,
 ): ChartPlotLayout<ID> {
-  return unwrap(tryCreateChartPlotLayout(axes, viewport, insets));
+  return unwrap(tryCreateChartPlotLayout(axes, viewport, insets, view));
 }
 
 export function tryCreateChartPlotLayout<ID extends StableID>(
   axes: readonly ResolvedChartAxis<ID>[],
   viewport: ChartViewport,
   insets: ChartPlotInsets = DEFAULT_CHART_PLOT_INSETS,
+  view?: ChartViewState<ID>,
 ): ChartResult<ChartPlotLayout<ID>> {
   if (!validViewport(viewport) || !validInsets(insets)) return invalidLayout('Chart layout viewport and insets must be finite and non-negative.');
   const width = viewport.width - insets.left - insets.right;
   const height = viewport.height - insets.top - insets.bottom;
   if (!(width > 0) || !(height > 0)) return invalidLayout('Chart plot insets must leave a positive plot rectangle.');
   const plot = Object.freeze({ x: insets.left, y: insets.top, width, height });
+  const views = new Map(view?.axes.map((axis) => [axis.axisID, axis]) ?? []);
   const layouts: ChartAxisLayout<ID>[] = [];
-  for (const axis of axes) {
+  for (const baseAxis of axes) {
+    const viewAxis = views.get(baseAxis.id);
+    views.delete(baseAxis.id);
+    const resolved = resolveVisibleAxis(baseAxis, viewAxis);
+    if (!resolved.ok) return resolved;
+    const axis = resolved.value;
     const range = axis.orientation === 'x'
       ? Object.freeze({ start: plot.x, end: plot.x + plot.width })
       : Object.freeze({ start: plot.y + plot.height, end: plot.y });
@@ -154,17 +165,65 @@ export function tryCreateChartPlotLayout<ID extends StableID>(
     if (!ticks.ok) return ticks;
     layouts.push(Object.freeze({
       axis,
-      descriptor: Object.freeze({ axisID: axis.id, orientation: axis.orientation, kind: axis.scale, domain: axis.domain, range }),
+      descriptor: Object.freeze({
+        axisID: axis.id,
+        orientation: axis.orientation,
+        kind: axis.scale,
+        domain: axis.domain,
+        geometryDomain: geometryDomain(baseAxis, viewAxis),
+        range,
+      }),
       scale: scale.value,
       ticks: ticks.value,
     }));
   }
+  if (views.size > 0) return invalidLayout('Chart view contains an axis outside the resolved plot.');
   return chartOK(Object.freeze({
     viewport: Object.freeze({ ...viewport }),
     insets: Object.freeze({ ...insets }),
     plot,
     axes: Object.freeze(layouts),
   }));
+}
+
+function resolveVisibleAxis<ID extends StableID>(
+  axis: ResolvedChartAxis<ID>,
+  view: ChartAxisView<ID> | undefined,
+): ChartResult<ResolvedChartAxis<ID>> {
+  if (view === undefined) return chartOK(axis);
+  if (view.scale !== axis.scale || (view.orientation !== undefined && view.orientation !== axis.orientation)) {
+    return invalidLayout('Chart axis view scale or orientation does not match its resolved axis.');
+  }
+  if (axis.domain.kind === 'categorical') {
+    if (view.visible.kind !== 'categorical' || view.base.kind !== 'categorical'
+      || view.base.start !== 0 || view.base.end !== axis.domain.values.length) {
+      return invalidLayout('Categorical chart axis view does not match its resolved base domain.');
+    }
+    return chartOK(Object.freeze({
+      ...axis,
+      domain: Object.freeze({ kind: 'categorical' as const, values: Object.freeze(axis.domain.values.slice(view.visible.start, view.visible.end)) }),
+    }));
+  }
+  if (view.visible.kind !== 'continuous' || view.base.kind !== 'continuous'
+    || view.base.minimum !== axis.domain.minimum || view.base.maximum !== axis.domain.maximum) {
+    return invalidLayout('Continuous chart axis view does not match its resolved base domain.');
+  }
+  return chartOK(Object.freeze({
+    ...axis,
+    domain: Object.freeze({ kind: axis.domain.kind, minimum: view.visible.minimum, maximum: view.visible.maximum }),
+  }));
+}
+
+function geometryDomain<ID extends StableID>(
+  axis: ResolvedChartAxis<ID>,
+  view: ChartAxisView<ID> | undefined,
+): Readonly<{ minimum: number; maximum: number }> {
+  if (view !== undefined) return view.visible.kind === 'categorical'
+    ? Object.freeze({ minimum: view.visible.start, maximum: view.visible.end })
+    : Object.freeze({ minimum: view.visible.minimum, maximum: view.visible.maximum });
+  return axis.domain.kind === 'categorical'
+    ? Object.freeze({ minimum: 0, maximum: axis.domain.values.length })
+    : Object.freeze({ minimum: axis.domain.minimum, maximum: axis.domain.maximum });
 }
 
 function resolveAxisDomain<Datum, ID extends StableID>(

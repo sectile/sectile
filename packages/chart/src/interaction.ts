@@ -1,43 +1,45 @@
 import type { StableID } from '@sectile/core';
 import { unwrap } from '@sectile/core/result';
+import { tryCreateChartViewState, type ChartAxisViewWindow, type ChartViewState } from './contract.js';
 import { chartFail, chartOK } from './internal/result.js';
 import type { ChartModelState } from './model.js';
 import type { ChartResult } from './result.js';
-import {
-  createChartViewTransform,
-  IDENTITY_CHART_VIEW_TRANSFORM,
-  tryCreateChartViewTransform,
-  type ChartViewTransform,
-} from './scale.js';
+import { chartAxisView, reduceChartViewAction, type ChartViewAction, type ChartViewPhase } from './view.js';
 
 export type ChartSelection<ID extends StableID = StableID> =
   | { readonly type: 'points'; readonly ids: readonly ID[] }
-  | { readonly type: 'interval'; readonly start: number; readonly end: number };
+  | { readonly type: 'axis-interval'; readonly axisID: ID; readonly start: number; readonly end: number }
+  | {
+    readonly type: 'domain-region';
+    readonly xAxisID: ID;
+    readonly xStart: number;
+    readonly xEnd: number;
+    readonly yAxisID: ID;
+    readonly yStart: number;
+    readonly yEnd: number;
+  };
 
 export interface ChartState<ID extends StableID = StableID> {
   readonly generation: number;
   readonly activeDatum: ID | null;
   readonly cursor: ID | null;
   readonly selection: ChartSelection<ID>;
-  readonly viewTransform: ChartViewTransform;
+  readonly view: ChartViewState<ID> | null;
 }
 
 export interface ChartControlledValues<ID extends StableID = StableID> {
   readonly activeDatum?: ID | null;
   readonly cursor?: ID | null;
   readonly selection?: ChartSelection<ID>;
-  readonly viewTransform?: ChartViewTransform;
+  readonly view?: ChartViewState<ID> | null;
 }
 
-export type ChartEvent<ID extends StableID = StableID> =
+export type ChartEvent<ID extends StableID = StableID> = ChartViewAction<ID>
   | { readonly type: 'pointer-candidate'; readonly id: ID | null }
   | { readonly type: 'set-active'; readonly id: ID | null }
   | { readonly type: 'set-cursor'; readonly id: ID | null }
   | { readonly type: 'set-selection'; readonly selection: ChartSelection<ID> }
-  | { readonly type: 'move-focus'; readonly direction: 'next' | 'previous' | 'first' | 'last' }
-  | { readonly type: 'pan'; readonly x: number; readonly y: number }
-  | { readonly type: 'zoom'; readonly x: number; readonly y: number; readonly factor: number }
-  | { readonly type: 'reset-view' };
+  | { readonly type: 'move-focus'; readonly direction: 'next' | 'previous' | 'first' | 'last' };
 
 export type ChartCommand<ID extends StableID = StableID> =
   | { readonly type: 'focus-datum'; readonly id: ID }
@@ -45,14 +47,15 @@ export type ChartCommand<ID extends StableID = StableID> =
   | { readonly type: 'active-change-requested'; readonly id: ID | null }
   | { readonly type: 'cursor-change-requested'; readonly id: ID | null }
   | { readonly type: 'selection-change-requested'; readonly selection: ChartSelection<ID> }
-  | { readonly type: 'view-transform-change-requested'; readonly viewTransform: ChartViewTransform }
+  | { readonly type: 'view-change-requested'; readonly view: ChartViewState<ID>; readonly phase: ChartViewPhase }
+  | { readonly type: 'view-phase'; readonly axisID: ID; readonly phase: ChartViewPhase; readonly changed: boolean }
   | { readonly type: 'render-requested'; readonly generation: number };
 
 export interface ChartControlFlags {
   readonly activeDatum?: boolean;
   readonly cursor?: boolean;
   readonly selection?: boolean;
-  readonly viewTransform?: boolean;
+  readonly view?: boolean;
 }
 
 export interface ChartTransition<ID extends StableID = StableID> {
@@ -79,11 +82,11 @@ export function tryCreateChartState<ID extends StableID>(
   if (!active.ok) return active;
   const cursor = validateOptionalDatum(model, controlled.cursor ?? null);
   if (!cursor.ok) return cursor;
-  const selection = normalizeSelection(model, controlled.selection ?? { type: 'points', ids: [] });
+  const view = normalizeView(controlled.view ?? null);
+  if (!view.ok) return view;
+  const selection = normalizeSelection(model, controlled.selection ?? { type: 'points', ids: [] }, view.value);
   if (!selection.ok) return selection;
-  const transform = tryCreateChartViewTransform(controlled.viewTransform ?? IDENTITY_CHART_VIEW_TRANSFORM);
-  if (!transform.ok) return transform;
-  return chartOK(freezeState(model.generation, active.value, cursor.value, selection.value, transform.value));
+  return chartOK(freezeState(model.generation, active.value, cursor.value, selection.value, view.value));
 }
 
 export function reconcileChartState<ID extends StableID>(
@@ -100,13 +103,13 @@ export function reconcileChartState<ID extends StableID>(
     ? validateOptionalDatum(model, controlled.cursor)
     : chartOK(state.cursor !== null && model.indexOf(state.cursor) >= 0 ? state.cursor : null);
   if (!cursor.ok) return cursor;
+  const view = controlled.view === undefined ? chartOK(state.view) : normalizeView(controlled.view);
+  if (!view.ok) return view;
   const selection = controlled.selection === undefined
-    ? reconcileSelection(model, state.selection)
-    : normalizeSelection(model, controlled.selection);
+    ? reconcileSelection(model, state.selection, view.value)
+    : normalizeSelection(model, controlled.selection, view.value);
   if (!selection.ok) return selection;
-  const transform = tryCreateChartViewTransform(controlled.viewTransform ?? state.viewTransform);
-  if (!transform.ok) return transform;
-  const next = freezeState(model.generation, active.value, cursor.value, selection.value, transform.value);
+  const next = freezeState(model.generation, active.value, cursor.value, selection.value, view.value);
   return chartOK(sameState(state, next) ? state : next);
 }
 
@@ -127,7 +130,7 @@ export function reduceChartEvent<ID extends StableID>(
     return candidate.ok ? updateCursor(state, candidate.value, controlled.cursor === true) : candidate;
   }
   if (event.type === 'set-selection') {
-    const selection = normalizeSelection(model, event.selection);
+    const selection = normalizeSelection(model, event.selection, state.view);
     return selection.ok ? updateSelection(state, selection.value, controlled.selection === true) : selection;
   }
   if (event.type === 'move-focus') {
@@ -135,28 +138,17 @@ export function reduceChartEvent<ID extends StableID>(
       && event.direction !== 'first' && event.direction !== 'last') return invalidInteraction('Chart focus direction is invalid.');
     return updateCursor(state, movedCursor(model, state.cursor, event.direction), controlled.cursor === true);
   }
-  if (event.type === 'pan') {
-    if (!finite(event.x) || !finite(event.y)) return invalidInteraction('Chart pan deltas must be finite.');
-    return updateTransform(state, createChartViewTransform({
-      ...state.viewTransform,
-      xOffset: state.viewTransform.xOffset + event.x,
-      yOffset: state.viewTransform.yOffset + event.y,
-    }), controlled.viewTransform === true);
-  }
-  if (event.type === 'zoom') {
-    if (!finite(event.x) || !finite(event.y) || !finite(event.factor) || event.factor <= 0) {
-      return invalidInteraction('Chart zoom anchor and factor must be finite and the factor must be positive.');
-    }
-    const transform = tryCreateChartViewTransform({
-      xScale: state.viewTransform.xScale * event.factor,
-      xOffset: event.x - (event.x - state.viewTransform.xOffset) * event.factor,
-      yScale: state.viewTransform.yScale * event.factor,
-      yOffset: event.y - (event.y - state.viewTransform.yOffset) * event.factor,
-    });
-    return transform.ok ? updateTransform(state, transform.value, controlled.viewTransform === true) : transform;
-  }
-  if (event.type === 'reset-view') {
-    return updateTransform(state, IDENTITY_CHART_VIEW_TRANSFORM, controlled.viewTransform === true);
+  if (event.type === 'set-axis-view' || event.type === 'pan-axis-view' || event.type === 'zoom-axis-view' || event.type === 'reset-axis-view') {
+    if (state.view === null) return invalidInteraction('Chart axis view action requires enabled axis view state.');
+    const reduced = reduceChartViewAction(state.view, event);
+    if (!reduced.ok) return reduced;
+    const phase = Object.freeze({ type: 'view-phase' as const, axisID: event.axisID, phase: reduced.value.phase, changed: reduced.value.changed });
+    if (!reduced.value.changed) return transition(state, [phase], false);
+    if (controlled.view === true) return transition(state, [
+      Object.freeze({ type: 'view-change-requested', view: reduced.value.state, phase: reduced.value.phase }),
+      phase,
+    ], false);
+    return changedState(state, { view: reduced.value.state }, [phase]);
   }
   return invalidInteraction('Chart event type is invalid.');
 }
@@ -184,15 +176,9 @@ function updateSelection<ID extends StableID>(state: ChartState<ID>, selection: 
   return changedState(state, { selection });
 }
 
-function updateTransform<ID extends StableID>(state: ChartState<ID>, viewTransform: ChartViewTransform, controlled: boolean): ChartResult<ChartTransition<ID>> {
-  if (sameTransform(state.viewTransform, viewTransform)) return unchanged(state);
-  if (controlled) return transition(state, [Object.freeze({ type: 'view-transform-change-requested', viewTransform })], false);
-  return changedState(state, { viewTransform });
-}
-
 function changedState<ID extends StableID>(
   state: ChartState<ID>,
-  patch: Partial<Pick<ChartState<ID>, 'activeDatum' | 'cursor' | 'selection' | 'viewTransform'>>,
+  patch: Partial<Pick<ChartState<ID>, 'activeDatum' | 'cursor' | 'selection' | 'view'>>,
   commands: readonly ChartCommand<ID>[] = EMPTY_COMMANDS,
 ): ChartResult<ChartTransition<ID>> {
   const next = freezeState(
@@ -200,7 +186,7 @@ function changedState<ID extends StableID>(
     'activeDatum' in patch ? (patch.activeDatum as ID | null) : state.activeDatum,
     'cursor' in patch ? (patch.cursor as ID | null) : state.cursor,
     patch.selection ?? state.selection,
-    patch.viewTransform ?? state.viewTransform,
+    'view' in patch ? (patch.view as ChartViewState<ID> | null) : state.view,
   );
   return transition(next, [...commands, Object.freeze({ type: 'render-requested', generation: state.generation })], true);
 }
@@ -227,13 +213,27 @@ function movedCursor<ID extends StableID>(
     : model.identityAt(Math.max(0, index - 1));
 }
 
-function normalizeSelection<ID extends StableID>(model: ChartModelState<ID>, selection: ChartSelection<ID>): ChartResult<ChartSelection<ID>> {
+function normalizeSelection<ID extends StableID>(
+  model: ChartModelState<ID>, selection: ChartSelection<ID>, view: ChartViewState<ID> | null,
+): ChartResult<ChartSelection<ID>> {
   if (selection === null || typeof selection !== 'object') return invalidInteraction('Chart selection is invalid.');
-  if (selection.type === 'interval') {
-    if (!finite(selection.start) || !finite(selection.end) || selection.start > selection.end) {
-      return invalidInteraction('Chart selection interval must contain finite ordered bounds.');
+  if (selection.type === 'axis-interval') {
+    const axis = view === null ? null : chartAxisView(view, selection.axisID);
+    if (axis === null || !validSelectionBounds(axis, selection.start, selection.end)) {
+      return invalidInteraction('Chart axis selection must reference an enabled axis and contain finite ordered bounds.');
     }
-    return chartOK(Object.freeze({ type: 'interval', start: selection.start, end: selection.end }));
+    return chartOK(Object.freeze({ type: 'axis-interval', axisID: selection.axisID, start: selection.start, end: selection.end }));
+  }
+  if (selection.type === 'domain-region') {
+    const xAxis = view === null ? null : chartAxisView(view, selection.xAxisID);
+    const yAxis = view === null ? null : chartAxisView(view, selection.yAxisID);
+    if (xAxis === null || yAxis === null || (xAxis.orientation !== undefined && xAxis.orientation !== 'x')
+      || (yAxis.orientation !== undefined && yAxis.orientation !== 'y')
+      || !validSelectionBounds(xAxis, selection.xStart, selection.xEnd)
+      || !validSelectionBounds(yAxis, selection.yStart, selection.yEnd)) {
+      return invalidInteraction('Chart domain region must reference enabled axes and contain finite ordered bounds.');
+    }
+    return chartOK(Object.freeze({ ...selection }));
   }
   if (selection.type !== 'points' || !Array.isArray(selection.ids)) return invalidInteraction('Chart point selection must contain an identity array.');
   const seen = new Set<ID>();
@@ -246,10 +246,18 @@ function normalizeSelection<ID extends StableID>(model: ChartModelState<ID>, sel
   return chartOK(Object.freeze({ type: 'points', ids: Object.freeze(ids) }));
 }
 
+function validSelectionBounds<ID extends StableID>(axis: import('./contract.js').ChartAxisView<ID>, start: number, end: number): boolean {
+  if (!finite(start) || !finite(end) || start > end) return false;
+  const baseStart = axis.base.kind === 'continuous' ? axis.base.minimum : axis.base.start;
+  const baseEnd = axis.base.kind === 'continuous' ? axis.base.maximum : axis.base.end;
+  return start >= baseStart && end <= baseEnd
+    && (axis.scale !== 'categorical' || (Number.isSafeInteger(start) && Number.isSafeInteger(end)));
+}
+
 function reconcileSelection<ID extends StableID>(
-  model: ChartModelState<ID>, selection: ChartSelection<ID>,
+  model: ChartModelState<ID>, selection: ChartSelection<ID>, view: ChartViewState<ID> | null,
 ): ChartResult<ChartSelection<ID>> {
-  if (selection.type === 'interval') return normalizeSelection(model, selection);
+  if (selection.type !== 'points') return normalizeSelection(model, selection, view);
   const ids = selection.ids.filter((id) => model.indexOf(id) >= 0);
   return ids.length === selection.ids.length
     ? chartOK(selection)
@@ -266,27 +274,61 @@ function missingDatum<T>(id: StableID): ChartResult<T> {
 
 function freezeState<ID extends StableID>(
   generation: number, activeDatum: ID | null, cursor: ID | null,
-  selection: ChartSelection<ID>, viewTransform: ChartViewTransform,
+  selection: ChartSelection<ID>, view: ChartViewState<ID> | null,
 ): ChartState<ID> {
-  return Object.freeze({ generation, activeDatum, cursor, selection, viewTransform });
+  return Object.freeze({ generation, activeDatum, cursor, selection, view });
 }
 
 function sameState<ID extends StableID>(left: ChartState<ID>, right: ChartState<ID>): boolean {
   return left.generation === right.generation && left.activeDatum === right.activeDatum && left.cursor === right.cursor
-    && sameSelection(left.selection, right.selection) && sameTransform(left.viewTransform, right.viewTransform);
+    && sameSelection(left.selection, right.selection) && left.view === right.view;
+}
+
+function normalizeView<ID extends StableID>(view: ChartViewState<ID> | null): ChartResult<ChartViewState<ID> | null> {
+  if (view === null) return chartOK(null);
+  const normalized = tryCreateChartViewState(view.axes, view.revision);
+  if (!normalized.ok) return normalized;
+  return chartOK(sameViewState(view, normalized.value) ? view : normalized.value);
+}
+
+function sameViewState<ID extends StableID>(left: ChartViewState<ID>, right: ChartViewState<ID>): boolean {
+  if (left.revision !== right.revision || left.axes.length !== right.axes.length) return false;
+  for (let index = 0; index < left.axes.length; index += 1) {
+    const a = left.axes[index]; const b = right.axes[index];
+    if (a === undefined || b === undefined || a.axisID !== b.axisID || a.orientation !== b.orientation || a.scale !== b.scale || a.revision !== b.revision
+      || a.minimumSpan !== b.minimumSpan || a.maximumSpan !== b.maximumSpan || a.update !== b.update
+      || a.followingEnd !== b.followingEnd || !sameViewWindow(a.base, b.base)
+      || !sameViewWindow(a.initial ?? a.visible, b.initial ?? b.visible) || !sameViewWindow(a.visible, b.visible)) return false;
+    if (a.categories === undefined || b.categories === undefined) {
+      if (a.categories !== b.categories) return false;
+    } else {
+      if (a.categories.length !== b.categories.length) return false;
+      for (let category = 0; category < a.categories.length; category += 1) {
+        if (a.categories[category] !== b.categories[category]) return false;
+      }
+    }
+  }
+  return true;
+}
+
+function sameViewWindow(left: ChartAxisViewWindow, right: ChartAxisViewWindow): boolean {
+  return left.kind === right.kind && (left.kind === 'continuous' && right.kind === 'continuous'
+    ? left.minimum === right.minimum && left.maximum === right.maximum
+    : left.kind === 'categorical' && right.kind === 'categorical' && left.start === right.start && left.end === right.end);
 }
 
 function sameSelection<ID extends StableID>(left: ChartSelection<ID>, right: ChartSelection<ID>): boolean {
   if (left.type !== right.type) return false;
-  if (left.type === 'interval' && right.type === 'interval') return left.start === right.start && left.end === right.end;
+  if (left.type === 'axis-interval' && right.type === 'axis-interval') {
+    return left.axisID === right.axisID && left.start === right.start && left.end === right.end;
+  }
+  if (left.type === 'domain-region' && right.type === 'domain-region') {
+    return left.xAxisID === right.xAxisID && left.xStart === right.xStart && left.xEnd === right.xEnd
+      && left.yAxisID === right.yAxisID && left.yStart === right.yStart && left.yEnd === right.yEnd;
+  }
   if (left.type !== 'points' || right.type !== 'points' || left.ids.length !== right.ids.length) return false;
   for (let index = 0; index < left.ids.length; index += 1) if (left.ids[index] !== right.ids[index]) return false;
   return true;
-}
-
-function sameTransform(left: ChartViewTransform, right: ChartViewTransform): boolean {
-  return left.xScale === right.xScale && left.xOffset === right.xOffset
-    && left.yScale === right.yScale && left.yOffset === right.yOffset;
 }
 
 function invalidInteraction<T>(message: string): ChartResult<T> {

@@ -298,14 +298,61 @@
         },
         "assumptions": [
           "exact bar, pie, donut, raw scatter, and raw heatmap requests reject before partial publication when their quota is insufficient",
-          "line envelopes and explicit density or heatmap aggregates consume retained hierarchy nodes",
+          "Cartesian exact, line envelope, density, and heatmap requests consume retained visible-domain hierarchy nodes",
           "aggregate representatives carry bounds, count, and reduction and never carry a datum identity"
         ],
-        "proof": "Axis layout visits bounded axes and ticks; line selection uses binary search plus retained range aggregates; density and heatmap reductions split a retained frontier; output work follows emitted representatives. Compatible data-space geometry is retained by geometry token and bounded level key.",
+        "proof": "Axis layout visits bounded axes and ticks; exact Cartesian selection and aggregate reductions traverse retained visible-domain hierarchy nodes; line selection uses binary search plus retained range aggregates; output work follows emitted representatives. Compatible data-space geometry is retained by geometry token and bounded level key.",
         "adversarialWitness": "One-million-datum line and density projections emit at most 8,192 representatives while diagnostics report hierarchy visits and zero full-source scans; exact profiles return a resource rejection instead of sampling.",
         "fullScan": {
           "allowed": false,
           "rationale": "When semantic output is bounded below source cardinality, projection must use retained indexes or reject rather than scan the source."
+        }
+      }
+    },
+    {
+      "id": "view.transition.axis-domain",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/view.ts",
+      "benchmarkIDs": [
+        "chart:view:transition"
+      ],
+      "specificationCeiling": "O(1) axis lookup and domain math + O(nAxis) immutable snapshot publication",
+      "contract": {
+        "variables": [
+          {
+            "name": "nAxis",
+            "meaning": "enabled axis view count",
+            "ceiling": "64"
+          }
+        ],
+        "time": {
+          "bound": "O(1) transition decision + O(nAxis) snapshot publication",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(nAxis) immutable axes array",
+          "output": "O(nAxis)",
+          "retained": "O(nAxis) owner-bound identity index"
+        },
+        "resources": {
+          "allocations": "one axis record and one bounded axes array for an accepted transition; no state or axes snapshot allocation for a semantic no-op",
+          "cacheEntries": "one WeakMap entry per live view snapshot sharing the unchanged axis lookup",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "view states originate from the validated Chart construction boundary",
+          "axis identities and order do not change during one input transition",
+          "logarithmic math runs in log space and categorical math runs in integral slot space"
+        ],
+        "proof": "A retained StableID index resolves one axis, scalar scale-specific math produces one window, and accepted transitions replace one axis record in an array bounded by maxAxes. No-op transitions return the prior state identity.",
+        "adversarialWitness": "One million alternating zoom transitions across 64 mixed axes retain one lookup per transition and report bounded scalar math while snapshot publication never exceeds 64 axes.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "One input transition must not scan chart data or search axes linearly."
         }
       }
     },

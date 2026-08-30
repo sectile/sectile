@@ -14,6 +14,7 @@ import { replaceChartLayer, type ChartModel } from '@sectile/chart/model';
 import { createChartDefinition, replaceChartDefinition } from '@sectile/chart/definition';
 import { createChartProjection } from '@sectile/chart/projection';
 import { createContinuousColorScale, createOrdinalColorScale } from '@sectile/chart/scale';
+import { createChartAxisViewState, reduceChartViewAction } from '@sectile/chart/view';
 
 const stringID: StableID = 'datum';
 const numericID: StableID = 1;
@@ -131,7 +132,15 @@ const semanticNext = replaceChartDefinition(semantic, {
   ] },
   layers: [{ id: 'revenue', kind: 'line', xAxis: 'time', yAxis: 2, data: revenue }],
 });
-const semanticProjection = createChartProjection(semanticNext, { viewport: { width: 640, height: 320 } });
+const semanticView = createChartAxisViewState(semantic.axes, [{
+  axisID: 'time',
+  initial: { kind: 'continuous', minimum: semantic.axes[0].domain.kind === 'temporal' ? semantic.axes[0].domain.minimum : 0, maximum: semantic.axes[0].domain.kind === 'temporal' ? semantic.axes[0].domain.maximum : 1 },
+  update: 'follow-end',
+}]);
+const zoomedView = reduceChartViewAction(semanticView, {
+  type: 'zoom-axis-view', axisID: 'time', factor: 2, anchor: 0.5,
+}).value.state;
+const semanticProjection = createChartProjection(semanticNext, { viewport: { width: 640, height: 320 }, view: zoomedView });
 void semanticProjection.dataBatches;
 
 const continuousColor = createContinuousColorScale({ minimum: 0, maximum: 1 }, [

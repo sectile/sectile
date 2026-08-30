@@ -23,6 +23,7 @@ import {
 } from './model.js';
 import { tryCreateChartProjection, type ChartProjection, type ChartProjectionInput } from './projection.js';
 import type { ChartResult } from './result.js';
+import { IDENTITY_CHART_VIEW_TRANSFORM } from './scale.js';
 
 export interface ChartControllerOptions<ID extends StableID = StableID> {
   readonly model: ChartModel<ID>;
@@ -128,9 +129,9 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
       this.#controlledValues = Object.freeze({ ...values });
       return chartOK(this.#snapshot);
     }
-    const transformChanged = next.value.viewTransform !== this.#snapshot.state.viewTransform;
+    const projectionViewChanged = next.value.view !== this.#snapshot.state.view;
     const committed = this.#commitState(next.value, []);
-    if (committed.ok && transformChanged) this.#projectionCache = null;
+    if (committed.ok && projectionViewChanged) this.#projectionCache = null;
     if (committed.ok) this.#controlledValues = Object.freeze({ ...values });
     return committed;
   }
@@ -145,9 +146,9 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     if (!reduced.ok) return reduced;
     if (reduced.value.changed) {
       if (this.#snapshot.revision === Number.MAX_SAFE_INTEGER) return revisionExhausted();
-      const transformChanged = reduced.value.state.viewTransform !== this.#snapshot.state.viewTransform;
+      const projectionViewChanged = reduced.value.state.view !== this.#snapshot.state.view;
       this.#snapshot = createRevisionSnapshot(reduced.value.state, this.#snapshot.revision + 1);
-      if (transformChanged) this.#projectionCache = null;
+      if (projectionViewChanged) this.#projectionCache = null;
     }
     const update = Object.freeze({ snapshot: this.#snapshot, commands: reduced.value.commands });
     this.#emit(reduced.value.commands);
@@ -157,9 +158,11 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
   public project(input: ChartProjectionInput): ChartResult<ChartProjection<ID>> {
     if (this.#disposed) return disposedController();
     if (input === null || typeof input !== 'object') return invalidController('Chart projection input must be an object.');
+    const view = input.view ?? this.#snapshot.state.view ?? undefined;
     const resolved = {
       ...input,
-      viewTransform: input.viewTransform ?? this.#snapshot.state.viewTransform,
+      viewTransform: input.viewTransform ?? IDENTITY_CHART_VIEW_TRANSFORM,
+      ...(view === undefined ? {} : { view }),
     };
     const cacheable = input.xScale === undefined && input.yScale === undefined;
     if (cacheable && this.#projectionCache !== null && sameProjectionRequest(this.#projectionCache, this.#model, resolved)) {
@@ -230,6 +233,7 @@ interface ProjectionCache<ID extends StableID> {
   readonly xOffset: number;
   readonly yScale: number;
   readonly yOffset: number;
+  readonly view: ChartProjectionInput['view'];
   readonly projection: ChartProjection<ID>;
 }
 
@@ -247,6 +251,7 @@ function projectionCache<ID extends StableID>(
     xOffset: transform.xOffset,
     yScale: transform.yScale,
     yOffset: transform.yOffset,
+    view: input.view,
     projection,
   };
 }
@@ -260,7 +265,8 @@ function sameProjectionRequest<ID extends StableID>(
     && cache.devicePixelRatio === input.viewport.devicePixelRatio
     && cache.maximumRepresentatives === input.maximumRepresentatives
     && cache.xScale === transform.xScale && cache.xOffset === transform.xOffset
-    && cache.yScale === transform.yScale && cache.yOffset === transform.yOffset;
+    && cache.yScale === transform.yScale && cache.yOffset === transform.yOffset
+    && cache.view === input.view;
 }
 
 function controlFlags<ID extends StableID>(values: ChartControlledValues<ID>): ChartControlFlags {
@@ -268,7 +274,7 @@ function controlFlags<ID extends StableID>(values: ChartControlledValues<ID>): C
     activeDatum: own(values, 'activeDatum'),
     cursor: own(values, 'cursor'),
     selection: own(values, 'selection'),
-    viewTransform: own(values, 'viewTransform'),
+    view: own(values, 'view'),
   });
 }
 
@@ -276,7 +282,7 @@ function sameControlledShape<ID extends StableID>(values: ChartControlledValues<
   return own(values, 'activeDatum') === flags.activeDatum
     && own(values, 'cursor') === flags.cursor
     && own(values, 'selection') === flags.selection
-    && own(values, 'viewTransform') === flags.viewTransform;
+    && own(values, 'view') === flags.view;
 }
 
 function own(value: object, key: PropertyKey): boolean { return Object.prototype.hasOwnProperty.call(value, key); }

@@ -9,3 +9,4 @@ export type * from './controller.js';
 export type * from './contract.js';
 export type * from './layout.js';
 export type * from './definition.js';
+export type * from './view.js';
