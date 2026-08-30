@@ -370,7 +370,7 @@ function buildInternals<ID extends StableID>(
       const previous = reusable.lanes[lane] ?? [];
       const end = firstIndexAtOrAfter(previous, recomputeStart);
       const prefix = previous.slice(0, end) as LogicalPlacement<ID>[];
-      lanes[lane]!.push(...prefix);
+      lanes[lane] = prefix;
       const last = prefix[prefix.length - 1];
       if (last !== undefined) laneEnds[lane] = last.start + last.extent + state.itemGap;
     }

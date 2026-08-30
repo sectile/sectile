@@ -245,16 +245,18 @@ function createSpatialItemsRange(
   start: number,
   count: number,
 ): readonly SpatialItem<string>[] {
-  return Object.freeze(Array.from({ length: count }, (_unused, localIndex) => {
+  const spatialItems = Array<SpatialItem<string>>(count);
+  for (let localIndex = 0; localIndex < count; localIndex += 1) {
     const index = start + localIndex;
-    return Object.freeze({
+    spatialItems[localIndex] = {
       id: prepared.domain.at(index)!,
-      rect: Object.freeze({ ...props.getRect(items[index], index) }),
+      rect: props.getRect(items[index], index),
       zIndex: typeof props.getZIndex === 'number'
         ? props.getZIndex
         : props.getZIndex(items[index], index),
-    });
-  }));
+    };
+  }
+  return spatialItems;
 }
 
 function preserveSpatialMeasurements(
@@ -263,18 +265,18 @@ function preserveSpatialMeasurements(
   preserve: boolean,
 ): readonly SpatialItem<string>[] {
   if (!preserve) return items;
-  return Object.freeze(items.map((item) => {
+  return items.map((item) => {
     const previousIndex = state.domain.indexOf(item.id);
     const previous = previousIndex === null ? undefined : state.items.at(previousIndex);
     return previous === undefined
       ? item
-      : Object.freeze({
+      : {
           ...item,
-          rect: Object.freeze({
+          rect: {
             ...item.rect,
             width: previous.rect.width,
             height: previous.rect.height,
-          }),
-        });
-  }));
+          },
+        };
+  });
 }

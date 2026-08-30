@@ -7,7 +7,7 @@ import {
   type SequencePatch,
 } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
-import { boundsOfRects, createRect, isFiniteRect } from '@sectile/core/geometry';
+import { createRect, isFiniteRect } from '@sectile/core/geometry';
 import { blockedRepairBound, createBlockedVector, createOwnedBlockedVector, type BlockedVector, useBlockedRepair } from './internal/blocked-vector.js';
 import { fail, ok } from './internal/foundation.js';
 import { recordRepairDiagnostics } from './internal/repair-diagnostics.js';
@@ -449,8 +449,8 @@ function createStateFromVector<ID extends StableID>(
   generation: number,
   baseDomain: Sequence<ID> = domain,
 ): SpatialLayoutState<ID> {
-  const indexed: SpatialTreeItem<ID>[] = [];
-  vector.forEach((value, baseIndex) => { indexed.push(Object.freeze({ value, baseIndex, zIndex: value.zIndex ?? 0 })); });
+  const indexed = Array<SpatialTreeItem<ID>>(vector.size);
+  vector.forEach((value, baseIndex) => { indexed[baseIndex] = { value, baseIndex, zIndex: value.zIndex ?? 0 }; });
   const packed = buildPackedTree(indexed);
   const data: SpatialInternals<ID> = {
     root: packed.root,
@@ -795,10 +795,10 @@ function buildPackedTree<ID extends StableID>(items: readonly SpatialTreeItem<ID
   let level = packedGroups(items, (item) => item.value.rect).map((group, leafIndex): SpatialNode<ID> => {
     for (const item of group) leafIndexByBaseIndex[item.baseIndex] = leafIndex;
     return Object.freeze({
-    bounds: boundsOfRects(group.map((item) => item.value.rect))!,
-    items: Object.freeze(group),
-    children: null,
-    leafCount: 1,
+      bounds: boundsOf(group, (item) => item.value.rect),
+      items: Object.freeze(group),
+      children: null,
+      leafCount: 1,
     });
   });
   while (level.length > 1) {
@@ -806,10 +806,12 @@ function buildPackedTree<ID extends StableID>(items: readonly SpatialTreeItem<ID
     for (let start = 0; start < level.length; start += 2) {
       const children = level.slice(start, start + 2);
       next.push(Object.freeze({
-      bounds: boundsOfRects(children.map((node) => node.bounds))!,
-      items: null,
-      children: Object.freeze(children),
-      leafCount: children.reduce((total, child) => total + child.leafCount, 0),
+        bounds: boundsOf(children, (node) => node.bounds),
+        items: null,
+        children: Object.freeze(children),
+        leafCount: children.length === 1
+          ? children[0]!.leafCount
+          : children[0]!.leafCount + children[1]!.leafCount,
       }));
     }
     level = next;
@@ -829,9 +831,9 @@ function repairSpatialTree<ID extends StableID>(
   if (from === to) return node;
   if (node.items !== null) {
     work.copiedNodes += 1;
-    const repaired = node.items.map((item) => Object.freeze({ ...item, value: items.at(item.baseIndex)! }));
+    const repaired = node.items.map((item) => ({ ...item, value: items.at(item.baseIndex)! }));
     return Object.freeze({
-      bounds: boundsOfRects(repaired.map((item) => item.value.rect))!,
+      bounds: boundsOf(repaired, (item) => item.value.rect),
       items: Object.freeze(repaired),
       children: null,
       leafCount: 1,
@@ -847,7 +849,7 @@ function repairSpatialTree<ID extends StableID>(
   const repairedChildren = right === null ? Object.freeze([left]) : Object.freeze([left, right]);
   work.copiedNodes += 1;
   return Object.freeze({
-    bounds: boundsOfRects(repairedChildren.map((child) => child.bounds))!,
+    bounds: boundsOf(repairedChildren, (child) => child.bounds),
     items: null,
     children: repairedChildren,
     leafCount: node.leafCount,
@@ -881,6 +883,22 @@ function packedGroups<T>(values: readonly T[], rectOf: (value: T) => VirtualRect
     for (let start = 0; start < slab.length; start += LEAF_SIZE) groups.push(slab.slice(start, start + LEAF_SIZE));
   }
   return groups;
+}
+
+function boundsOf<T>(values: readonly T[], rectOf: (value: T) => VirtualRect): VirtualRect {
+  const first = rectOf(values[0]!);
+  let left = first.x;
+  let top = first.y;
+  let right = first.x + first.width;
+  let bottom = first.y + first.height;
+  for (let index = 1; index < values.length; index += 1) {
+    const rect = rectOf(values[index]!);
+    left = Math.min(left, rect.x);
+    top = Math.min(top, rect.y);
+    right = Math.max(right, rect.x + rect.width);
+    bottom = Math.max(bottom, rect.y + rect.height);
+  }
+  return Object.freeze({ x: left, y: top, width: right - left, height: bottom - top });
 }
 
 function center(rect: VirtualRect, axis: 'x' | 'y'): number { return axis === 'x' ? rect.x + rect.width / 2 : rect.y + rect.height / 2; }
