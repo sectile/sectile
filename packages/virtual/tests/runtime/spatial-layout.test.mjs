@@ -160,6 +160,32 @@ test('spatial move and permutation patches preserve geometry without rebuilding 
   );
 });
 
+test('dense spatial patches rebuild a previously reordered domain without geometry divergence', () => {
+  const items = Array.from({ length: 1_024 }, (_, index) => ({
+    id: `item-${index}`,
+    rect: { x: (index % 32) * 11, y: Math.floor(index / 32) * 13, width: 10, height: 12 },
+  }));
+  const moved = applySpatialMutation(createSpatialLayout(items), {
+    type: 'patch',
+    patch: { type: 'move', from: 100, to: 800, count: 50 },
+    inserted: [],
+  }).state;
+  const inserted = Array.from({ length: 17 }, (_, index) => ({
+    id: `inserted-${index}`,
+    rect: { x: index * 5, y: index * 7, width: 4, height: 6 },
+  }));
+  const changed = applySpatialMutation(moved, {
+    type: 'patch',
+    patch: { type: 'splice', index: 400, deleteCount: 20, inserted: inserted.map(({ id }) => id) },
+    inserted,
+  }).state;
+  const rebuilt = createSpatialLayout(changed.items.toArray());
+  const viewport = { x: 0, y: 0, width: 352, height: 416 };
+  assert.equal(readRepairDiagnostics(changed)?.mode, 'rebuild');
+  assert.deepEqual(changed.items.toArray().map(({ id }) => id), changed.domain.ids);
+  assert.deepEqual(querySpatialLayout(changed, { viewport }).placements, querySpatialLayout(rebuilt, { viewport }).placements);
+});
+
 test('spatial structural overlays stay bounded and rebuild on boundary shrink or density', () => {
   const items = Array.from({ length: 4_096 }, (_, index) => ({
     id: `item-${index}`,
@@ -206,13 +232,22 @@ test('spatial structural overlays stay bounded and rebuild on boundary shrink or
     patch: {
       type: 'splice',
       index: 100,
-      deleteCount: 0,
+      deleteCount: 100,
       inserted: denseInserted.map(({ id }) => id),
     },
     inserted: denseInserted,
   }).state;
-  assert.equal(readRepairDiagnostics(dense)?.mode, 'rebuild');
+  const denseWork = readRepairDiagnostics(dense);
+  assert.equal(denseWork?.mode, 'rebuild');
+  assert.equal(denseWork?.changed, 100 + denseInserted.length);
+  assert.equal(denseWork?.copiedEntries, 0);
+  assert.equal(denseWork?.rebuiltItems, dense.items.size);
   assert.deepEqual(dense.items.toArray().map(({ id }) => id), dense.domain.ids);
+  for (const item of denseInserted) assert.deepEqual(spatialRectAt(dense, item.id), item.rect);
+  for (let index = 100; index < 200; index += 1) assert.equal(spatialRectAt(dense, `item-${index}`), null);
+  const rebuilt = createSpatialLayout(dense.items.toArray());
+  const viewport = { x: 0, y: 0, width: 704, height: 832 };
+  assert.deepEqual(querySpatialLayout(dense, { viewport }).placements, querySpatialLayout(rebuilt, { viewport }).placements);
 });
 
 test('spatial value-only patches repair touched blocks without rebuilding the domain', () => {

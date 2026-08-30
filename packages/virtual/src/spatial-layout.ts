@@ -371,29 +371,38 @@ function tryApplySpatialPatch<ID extends StableID>(
       scrollDelta: anchorDelta(before, anchorRect(next, anchor)),
     }));
   }
-  const desired = new Map<ID, SpatialItem<ID> | null>();
-  for (let index = 0; index < patch.deleteCount; index += 1) {
-    const id = state.domain.at(patch.index + index)!;
-    desired.set(id, null);
-  }
-  for (const item of frozenInserted) desired.set(item.id, item);
-  const geometryChanges = new Map<ID, SpatialItem<ID> | null>();
-  for (const [id, item] of desired) {
-    const current = spatialItemByID(data.value, id);
-    if (item === null) {
-      if (!domain.value.contains(id)) geometryChanges.set(id, null);
-    } else if (current === undefined || !sameSpatialItem(current, item)) geometryChanges.set(id, item);
-  }
+  const repairBound = spatialOverlayLimit(domain.value.size);
+  const geometryChanges = analyzeSpatialPatchGeometryChanges(
+    state,
+    data.value,
+    domain.value,
+    patch.index,
+    patch.deleteCount,
+    frozenInserted,
+    repairBound,
+  );
   const before = anchorRect(state, anchor);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const next = geometryChanges.size === 0
+  const next = geometryChanges.changed === 0
     ? createDerivedState(domain.value, state.maxItems, generation.value, data.value)
-    : applySpatialOverlayChanges(state, data.value, domain.value, geometryChanges, generation.value);
-  if (geometryChanges.size === 0) {
+    : geometryChanges.changes === null
+      ? rebuildSpatialPatch(
+          state,
+          data.value,
+          domain.value,
+          patch.index,
+          patch.deleteCount,
+          frozenInserted,
+          generation.value,
+          geometryChanges.changed,
+          repairBound,
+        )
+      : applySpatialOverlayChanges(state, data.value, domain.value, geometryChanges.changes, generation.value);
+  if (geometryChanges.changed === 0) {
     recordRepairDiagnostics(next, {
       mode: 'incremental', changed: patch.deleteCount + frozenInserted.length, touchedBlocks: 0,
-      copiedNodes: 0, copiedEntries: 0, rebuiltItems: 0, repairBound: spatialOverlayLimit(state.items.size),
+      copiedNodes: 0, copiedEntries: 0, rebuiltItems: 0, repairBound,
     });
   }
   return ok(Object.freeze({
@@ -657,6 +666,93 @@ function materializeSpatialItems<ID extends StableID>(
     items[index] = item;
   }
   return items;
+}
+
+function analyzeSpatialPatchGeometryChanges<ID extends StableID>(
+  state: SpatialLayoutState<ID>,
+  data: SpatialInternals<ID>,
+  domain: Sequence<ID>,
+  index: number,
+  deleteCount: number,
+  inserted: readonly SpatialItem<ID>[],
+  repairBound: number,
+): {
+  readonly changed: number;
+  readonly changes: ReadonlyMap<ID, SpatialItem<ID> | null> | null;
+} {
+  let changed = 0;
+  let changes: Map<ID, SpatialItem<ID> | null> | null = new Map();
+  const record = (id: ID, item: SpatialItem<ID> | null): void => {
+    changed += 1;
+    if (changes === null) return;
+    if (changed > repairBound) {
+      changes = null;
+      return;
+    }
+    changes.set(id, item);
+  };
+  for (let offset = 0; offset < deleteCount; offset += 1) {
+    const id = state.domain.at(index + offset)!;
+    if (!domain.contains(id)) record(id, null);
+  }
+  for (const item of inserted) {
+    const current = spatialItemByID(data, item.id);
+    if (current === undefined || !sameSpatialItem(current, item)) record(item.id, item);
+  }
+  return Object.freeze({ changed, changes });
+}
+
+function rebuildSpatialPatch<ID extends StableID>(
+  state: SpatialLayoutState<ID>,
+  data: SpatialInternals<ID>,
+  domain: Sequence<ID>,
+  index: number,
+  deleteCount: number,
+  inserted: readonly SpatialItem<ID>[],
+  generation: number,
+  changed: number,
+  repairBound: number,
+): SpatialLayoutState<ID> {
+  const items = new Array<SpatialItem<ID>>(domain.size);
+  const suffixStart = index + deleteCount;
+  let copiedItems = 0;
+  if (data.overlay.size === 0 && state.domain === data.baseDomain) {
+    data.baseItems.forEach((item, sourceIndex) => {
+      if (sourceIndex < index) {
+        items[sourceIndex] = item;
+        copiedItems += 1;
+      } else if (sourceIndex >= suffixStart) {
+        items[sourceIndex - deleteCount + inserted.length] = item;
+        copiedItems += 1;
+      }
+    });
+  } else {
+    for (let sourceIndex = 0; sourceIndex < index; sourceIndex += 1) {
+      const item = state.items.at(sourceIndex);
+      if (item === undefined) throw new TypeError('Spatial domain and geometry storage diverged.');
+      items[sourceIndex] = item;
+      copiedItems += 1;
+    }
+    for (let sourceIndex = suffixStart; sourceIndex < state.items.size; sourceIndex += 1) {
+      const item = state.items.at(sourceIndex);
+      if (item === undefined) throw new TypeError('Spatial domain and geometry storage diverged.');
+      items[sourceIndex - deleteCount + inserted.length] = item;
+      copiedItems += 1;
+    }
+  }
+  let outputIndex = index;
+  for (const item of inserted) {
+    items[outputIndex] = item;
+    outputIndex += 1;
+  }
+  if (copiedItems + inserted.length !== domain.size) throw new TypeError('Spatial patch and domain size diverged.');
+  const next = createOwnedState(domain, items, state.maxItems, generation);
+  recordRepairDiagnostics(next, {
+    mode: 'rebuild', changed, touchedBlocks: changed,
+    copiedNodes: 0, copiedEntries: 0,
+    rebuiltItems: domain.size, repairBound,
+  });
+  return next;
 }
 
 function spatialOverlayLimit(size: number): number {
