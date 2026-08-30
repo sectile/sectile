@@ -1,4 +1,4 @@
-import { createText, type TextInput } from '../dist/text.js';
+import { createText, type TextInput } from '@sectile/dom/text';
 
 declare const element: HTMLInputElement;
 declare const nativeBeforeInput: InputEvent;

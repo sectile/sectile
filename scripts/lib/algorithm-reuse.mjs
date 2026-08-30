@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { readdir, readFile } from 'node:fs/promises';
 import { relative, resolve, sep } from 'node:path';
+import { publishedPackageDirectories } from './published-packages.mjs';
 
-export const packageNames = Object.freeze(['core', 'dom', 'form', 'tabular', 'temporal', 'terminal', 'virtual', 'vue']);
+export const packageNames = publishedPackageDirectories;
 const classifications = new Set(['reuse', 'result-proportional', 'bounded-small', 'migration-required']);
 
 export async function collectAlgorithmReuseInventory(root, manifest) {
@@ -78,7 +79,7 @@ export function renderAlgorithmReuseInventory(inventory) {
   const lines = [
     '# Algorithm reuse inventory',
     '',
-    '> Generated from `verification/algorithm-reuse/manifest.json` and all eight package source trees.',
+    `> Generated from \`verification/algorithm-reuse/manifest.json\` and all ${inventory.packages.length} package source trees.`,
     '',
     `Findings: ${inventory.findings.length}; migration owners: ${migrations.join(', ')}.`,
     '',

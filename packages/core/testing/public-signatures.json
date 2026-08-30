@@ -283,7 +283,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "8e96167d0539e1d12988dc4bfacb76355def6fa61e27b5548890ffe52663ae67",
+  "fingerprint": "3695ebf2f205b7f3151fd8f8e2045e47d877b836b5f6b6058b416ad9bc8dd1e6",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -431,7 +431,7 @@
     },
     {
       "path": "dist/internal/kernel/foundation.d.ts",
-      "sha256": "48db3149cb8fd86f2c4e50f7838b23a71176a569bb6a3901b3c0a8174e90c1e1"
+      "sha256": "1c1d7a16941f02f5147da0858459382ccf5cb2c359c4867547d25a9f539e93a4"
     },
     {
       "path": "dist/internal/kernel/machine.d.ts",
@@ -551,7 +551,7 @@
     },
     {
       "path": "dist/shared.d.ts",
-      "sha256": "9b4641e086f21c5e396d014555c62f0cda92e184127ee3363468b3fe27c8c513"
+      "sha256": "caa2d84b1bbf8bf7e6361123f2d683b320f8f94d5421e953b90daa997edcfffe"
     },
     {
       "path": "dist/slider.d.ts",
@@ -655,7 +655,7 @@
     },
     {
       "path": "dist/units.d.ts",
-      "sha256": "5373966eca43a488d75709e525518d1e73c9622713ccd1e95b62b0f98b24c452"
+      "sha256": "94a47f5f31b437862d2fcc8442ea88b9557db7915ad18e1ab671000d6f558e96"
     },
     {
       "path": "dist/window-splitter.d.ts",

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 export const COMPLEXITY_SCHEMA_VERSION = 1;
 export const PACKAGE_NAMES = Object.freeze([
   'core',
+  'chart',
   'dom',
   'form',
   'tabular',

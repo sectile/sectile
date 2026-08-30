@@ -3,7 +3,7 @@ import {
   createSpatialLayout,
   type SpatialItem,
   type SpatialLayoutInput,
-} from '../dist/spatial-layout.js';
+} from '@sectile/virtual/spatial-layout';
 
 const items = [
   { id: 'alpha', rect: { x: 0, y: 0, width: 10, height: 10 } },

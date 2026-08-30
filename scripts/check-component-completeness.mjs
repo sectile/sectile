@@ -20,7 +20,7 @@ const supportSubpaths = new Set([
   'form',
   'appearance', 'keyboard', 'layout', 'node', 'screen', 'units',
   'model', 'query', 'source', 'data-table', 'data-grid', 'data-tree-grid',
-  'tabular', 'temporal',
+  'tabular', 'temporal', 'chart',
 ]);
 const vueOnlySubpaths = new Set(['host-provider', 'primitive']);
 const migrationBaselineIDs = new Set([
@@ -118,6 +118,7 @@ for (const family of declaredFamilies) {
 }
 
 const supportHosts = {
+  chart: ['chart', 'dom', 'vue'],
   form: ['form', 'dom', 'vue'],
   'layer-stack': ['core', 'dom', 'terminal', 'vue'],
   reorder: ['core', 'dom', 'terminal', 'vue'],

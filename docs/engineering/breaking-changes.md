@@ -19,8 +19,38 @@
 | WI-002 | @sectile/form | `./path` | `Core Result declaration closure` | @sectile/form/path |
 | WI-002 | @sectile/terminal | `./popover` | `Core Result declaration closure` | @sectile/terminal/popover |
 | WI-002 | @sectile/core | `./result` | `okResult`, `failResult` | @sectile/core/result |
+| WI-002 | @sectile/core | `./accordion` | `StableID declaration closure` | @sectile/core/accordion |
+| WI-002 | @sectile/core | `./alert-dialog` | `StableID declaration closure` | @sectile/core/alert-dialog |
+| WI-002 | @sectile/core | `./carousel` | `StableID declaration closure` | @sectile/core/carousel |
+| WI-002 | @sectile/core | `./checkbox-group` | `StableID declaration closure` | @sectile/core/checkbox-group |
+| WI-002 | @sectile/core | `./combobox` | `StableID declaration closure` | @sectile/core/combobox |
+| WI-002 | @sectile/core | `./dialog` | `StableID declaration closure` | @sectile/core/dialog |
+| WI-002 | @sectile/core | `./drawer` | `StableID declaration closure` | @sectile/core/drawer |
+| WI-002 | @sectile/core | `./interaction` | `StableID declaration closure` | @sectile/core/interaction |
+| WI-002 | @sectile/core | `./listbox` | `StableID declaration closure` | @sectile/core/listbox |
+| WI-002 | @sectile/core | `./number-field` | `StableID declaration closure` | @sectile/core/number-field |
+| WI-002 | @sectile/core | `./pagination` | `StableID declaration closure` | @sectile/core/pagination |
+| WI-002 | @sectile/core | `./pin-input` | `StableID declaration closure` | @sectile/core/pin-input |
+| WI-002 | @sectile/core | `./popover` | `StableID declaration closure` | @sectile/core/popover |
+| WI-002 | @sectile/core | `./quantity-field` | `StableID declaration closure` | @sectile/core/quantity-field |
+| WI-002 | @sectile/core | `./radio-group` | `StableID declaration closure` | @sectile/core/radio-group |
+| WI-002 | @sectile/core | `./rating` | `StableID declaration closure` | @sectile/core/rating |
+| WI-002 | @sectile/core | `./select` | `StableID declaration closure` | @sectile/core/select |
+| WI-002 | @sectile/core | `./selection` | `StableID declaration closure` | @sectile/core/selection |
+| WI-002 | @sectile/core | `./sequence` | `StableID declaration closure` | @sectile/core/sequence |
+| WI-002 | @sectile/core | `./stepper` | `StableID declaration closure` | @sectile/core/stepper |
+| WI-002 | @sectile/core | `./tabs` | `StableID declaration closure` | @sectile/core/tabs |
+| WI-002 | @sectile/core | `./tags-input` | `StableID declaration closure` | @sectile/core/tags-input |
+| WI-002 | @sectile/core | `./text` | `StableID declaration closure` | @sectile/core/text |
+| WI-002 | @sectile/core | `./timer` | `StableID declaration closure` | @sectile/core/timer |
+| WI-002 | @sectile/core | `./toast` | `StableID declaration closure` | @sectile/core/toast |
+| WI-002 | @sectile/core | `./toggle-button` | `StableID declaration closure` | @sectile/core/toggle-button |
+| WI-002 | @sectile/core | `./toggle-group` | `StableID declaration closure` | @sectile/core/toggle-group |
+| WI-002 | @sectile/core | `./toolbar` | `StableID declaration closure` | @sectile/core/toolbar |
+| WI-002 | @sectile/core | `./units` | `StableID declaration closure` | @sectile/core/units |
 | WI-002 | @sectile/core | `./switch` | `Result and machine-update declaration closure` | @sectile/core/switch |
 | WI-002 | @sectile/dom | `./switch` | `Core Result declaration closure` | @sectile/dom/switch |
+| WI-002 | @sectile/terminal | `./layer-stack` | `StableID declaration closure` | @sectile/terminal/layer-stack |
 | WI-002 | @sectile/dom | `./toggle-button` | `Core Result declaration closure` | @sectile/dom/toggle-button |
 | WI-002 | @sectile/core | `./tooltip` | `Result and machine-update declaration closure` | @sectile/core/tooltip |
 | WI-002 | @sectile/terminal | `./tooltip` | `Core Result declaration closure` | @sectile/terminal/tooltip |

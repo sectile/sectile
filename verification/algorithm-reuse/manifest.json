@@ -121,6 +121,22 @@
       "rationale": "Remaining Core scans construct, validate, or return the explicit immutable result and are covered by complexity contracts."
     },
     {
+      "id": "chart-query-index-reuse",
+      "detectors": ["*"],
+      "prefixes": ["packages/chart/src/internal/query-index.ts"],
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Chart query structures retain packed spatial indexes for a complete projection generation and release them with their owner."
+    },
+    {
+      "id": "chart-bounded-projection-work",
+      "detectors": ["*"],
+      "prefixes": ["packages/chart/src/"],
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Chart scans validate explicitly bounded model input or materialize requested projection, interaction, and query results under declared ceilings."
+    },
+    {
       "id": "temporal-bounded-domain",
       "detectors": ["*"],
       "prefixes": ["packages/temporal/src/"],

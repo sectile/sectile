@@ -61,6 +61,7 @@
         "collectionWindowEventForLinearPlan",
         "createLinearLayout",
         "linearLayoutStrategy",
+        "linearLayoutStrategyFor",
         "linearRectAt",
         "linearScrollTarget",
         "queryLinearLayout",

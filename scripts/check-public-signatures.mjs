@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { collectPublicSignatures } from './lib/public-signatures.mjs';
+import { publishedPackageDirectories } from './lib/published-packages.mjs';
 
-const packageDirectories = ['core', 'form', 'tabular', 'temporal', 'virtual', 'dom', 'terminal', 'vue']
+const packageDirectories = publishedPackageDirectories
   .map((name) => resolve('packages', name));
 
 for (const packageDirectory of packageDirectories) {

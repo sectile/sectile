@@ -85,6 +85,7 @@ async function inspectVueInstall(root, packageManager, tarballs) {
   }
   await run(process.execPath, ['--input-type=module', '-e', "await import('@sectile/vue');"], directory);
   const optionalDomains = [
+    { packageName: 'chart', imports: ['@sectile/vue/chart'], removed: [] },
     { packageName: 'form', imports: ['@sectile/vue/form'], removed: [] },
     {
       packageName: 'tabular',

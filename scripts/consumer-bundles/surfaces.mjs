@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const PACKAGE_NAMES = Object.freeze([
-  'core', 'dom', 'form', 'tabular', 'temporal', 'terminal', 'virtual', 'vue',
+  'core', 'chart', 'dom', 'form', 'tabular', 'temporal', 'terminal', 'virtual', 'vue',
 ]);
 
 export async function deriveSurfaceFragment(repoRoot, packageName) {
@@ -98,11 +98,13 @@ function optionalPeer(packageName, subpath) {
     return '@sectile/tabular';
   }
   const optional = new Map([
+    ['dom:./chart', '@sectile/chart'],
     ['dom:./form', '@sectile/form'],
     ['dom:./tabular', '@sectile/tabular'],
     ['dom:./virtual', '@sectile/virtual'],
     ['tabular:./virtual', '@sectile/virtual'],
     ['vue:./form', '@sectile/form'],
+    ['vue:./chart', '@sectile/chart'],
   ]);
   return optional.get(`${packageName}:${subpath}`) ?? null;
 }
@@ -120,6 +122,7 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'core:./anchored-layout',
     'core:./color',
     'core:./color-text',
+    'chart:./projection',
     'dom:./listbox',
     'dom:./popover',
     'form:./form',

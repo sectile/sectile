@@ -3,6 +3,7 @@
   "generated": true,
   "packages": [
     "core",
+    "chart",
     "dom",
     "form",
     "tabular",
@@ -3710,6 +3711,375 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "chart:./controller:createChartController",
+      "package": "chart",
+      "subpath": "./controller",
+      "exportName": "createChartController",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./controller:tryCreateChartController",
+      "package": "chart",
+      "subpath": "./controller",
+      "exportName": "tryCreateChartController",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./interaction:createChartState",
+      "package": "chart",
+      "subpath": "./interaction",
+      "exportName": "createChartState",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./interaction:reconcileChartState",
+      "package": "chart",
+      "subpath": "./interaction",
+      "exportName": "reconcileChartState",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./interaction:reduceChartEvent",
+      "package": "chart",
+      "subpath": "./interaction",
+      "exportName": "reduceChartEvent",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./interaction:tryCreateChartState",
+      "package": "chart",
+      "subpath": "./interaction",
+      "exportName": "tryCreateChartState",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./model:DEFAULT_CHART_LIMITS",
+      "package": "chart",
+      "subpath": "./model",
+      "exportName": "DEFAULT_CHART_LIMITS",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./model:applyChartPatch",
+      "package": "chart",
+      "subpath": "./model",
+      "exportName": "applyChartPatch",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./model:createChartModel",
+      "package": "chart",
+      "subpath": "./model",
+      "exportName": "createChartModel",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./model:replaceChartModel",
+      "package": "chart",
+      "subpath": "./model",
+      "exportName": "replaceChartModel",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./model:tryApplyChartPatch",
+      "package": "chart",
+      "subpath": "./model",
+      "exportName": "tryApplyChartPatch",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./model:tryCreateChartModel",
+      "package": "chart",
+      "subpath": "./model",
+      "exportName": "tryCreateChartModel",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./model:tryReplaceChartModel",
+      "package": "chart",
+      "subpath": "./model",
+      "exportName": "tryReplaceChartModel",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./projection:CHART_ARC_STRIDE",
+      "package": "chart",
+      "subpath": "./projection",
+      "exportName": "CHART_ARC_STRIDE",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "chart:./projection:CHART_CELL_STRIDE",
+      "package": "chart",
+      "subpath": "./projection",
+      "exportName": "CHART_CELL_STRIDE",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "chart:./projection:CHART_POINT_STRIDE",
+      "package": "chart",
+      "subpath": "./projection",
+      "exportName": "CHART_POINT_STRIDE",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "chart:./projection:CHART_RECTANGLE_STRIDE",
+      "package": "chart",
+      "subpath": "./projection",
+      "exportName": "CHART_RECTANGLE_STRIDE",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "chart:./projection:DEFAULT_MAXIMUM_CHART_REPRESENTATIVES",
+      "package": "chart",
+      "subpath": "./projection",
+      "exportName": "DEFAULT_MAXIMUM_CHART_REPRESENTATIVES",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "chart:./projection:MAXIMUM_CHART_REPRESENTATIVES",
+      "package": "chart",
+      "subpath": "./projection",
+      "exportName": "MAXIMUM_CHART_REPRESENTATIVES",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "chart:./projection:createChartProjection",
+      "package": "chart",
+      "subpath": "./projection",
+      "exportName": "createChartProjection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./projection:tryCreateChartProjection",
+      "package": "chart",
+      "subpath": "./projection",
+      "exportName": "tryCreateChartProjection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./query:DEFAULT_CHART_HIT_RADIUS",
+      "package": "chart",
+      "subpath": "./query",
+      "exportName": "DEFAULT_CHART_HIT_RADIUS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "chart:./query:MAXIMUM_CHART_HITS",
+      "package": "chart",
+      "subpath": "./query",
+      "exportName": "MAXIMUM_CHART_HITS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "chart:./query:hitTestChartProjection",
+      "package": "chart",
+      "subpath": "./query",
+      "exportName": "hitTestChartProjection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./query:prepareChartProjectionQueries",
+      "package": "chart",
+      "subpath": "./query",
+      "exportName": "prepareChartProjectionQueries",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./query:tryHitTestChartProjection",
+      "package": "chart",
+      "subpath": "./query",
+      "exportName": "tryHitTestChartProjection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:IDENTITY_CHART_VIEW_TRANSFORM",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "IDENTITY_CHART_VIEW_TRANSFORM",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:MAX_CHART_TICKS",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "MAX_CHART_TICKS",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "chart:./scale:composeChartViewTransforms",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "composeChartViewTransforms",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:createCategoricalScale",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "createCategoricalScale",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:createChartViewTransform",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "createChartViewTransform",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:createLinearScale",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "createLinearScale",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:createLogarithmicScale",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "createLogarithmicScale",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:createTemporalScale",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "createTemporalScale",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:invertChartCoordinate",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "invertChartCoordinate",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:transformChartCoordinate",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "transformChartCoordinate",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:tryCreateCategoricalScale",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "tryCreateCategoricalScale",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:tryCreateChartViewTransform",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "tryCreateChartViewTransform",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:tryCreateLinearScale",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "tryCreateLinearScale",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:tryCreateLogarithmicScale",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "tryCreateLogarithmicScale",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "chart:./scale:tryCreateTemporalScale",
+      "package": "chart",
+      "subpath": "./scale",
+      "exportName": "tryCreateTemporalScale",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "dom:./accordion:connectAccordion",
       "package": "dom",
       "subpath": "./accordion",
@@ -3867,6 +4237,51 @@
       "package": "dom",
       "subpath": "./cascade-select",
       "exportName": "tryCreateCascadeSelect",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./chart:createChartRenderer",
+      "package": "dom",
+      "subpath": "./chart",
+      "exportName": "createChartRenderer",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./chart:createDOMChart",
+      "package": "dom",
+      "subpath": "./chart",
+      "exportName": "createDOMChart",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./chart:detectChartRendererCapabilities",
+      "package": "dom",
+      "subpath": "./chart",
+      "exportName": "detectChartRendererCapabilities",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./chart:tryCreateChartRenderer",
+      "package": "dom",
+      "subpath": "./chart",
+      "exportName": "tryCreateChartRenderer",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./chart:tryCreateDOMChart",
+      "package": "dom",
+      "subpath": "./chart",
+      "exportName": "tryCreateDOMChart",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -12071,6 +12486,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "virtual:./linear-layout:linearLayoutStrategyFor",
+      "package": "virtual",
+      "subpath": "./linear-layout",
+      "exportName": "linearLayoutStrategyFor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "virtual:./linear-layout:linearRectAt",
       "package": "virtual",
       "subpath": "./linear-layout",
@@ -13048,6 +13472,42 @@
       "subpath": "./cascade-select",
       "exportName": "CascadeSelectValue",
       "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./chart:ChartCanvas",
+      "package": "vue",
+      "subpath": "./chart",
+      "exportName": "ChartCanvas",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./chart:ChartRoot",
+      "package": "vue",
+      "subpath": "./chart",
+      "exportName": "ChartRoot",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./chart:useChart",
+      "package": "vue",
+      "subpath": "./chart",
+      "exportName": "useChart",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./chart:useChartContext",
+      "package": "vue",
+      "subpath": "./chart",
+      "exportName": "useChartContext",
+      "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
     },
@@ -22582,6 +23042,340 @@
         "fullScan": {
           "allowed": true,
           "rationale": "Full expansion makes output cardinality equal n."
+        }
+      }
+    },
+    {
+      "package": "chart",
+      "surface": "hot",
+      "id": "controller.project.cached",
+      "source": "packages/chart/src/controller.ts",
+      "benchmarkIDs": [
+        "chart:projection:cached"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "kRepresentative",
+            "meaning": "representatives retained by the cached projection",
+            "ceiling": "maximumRepresentatives"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(kRepresentative)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "1",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "model generation, viewport, representative ceiling, and canonical view transform are unchanged",
+          "caller-supplied scales disable caching"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "The controller compares a fixed scalar cache key and returns the single retained immutable projection.",
+        "adversarialWitness": "Repeated projection reads on a one-million-datum model return one object identity without domain traversal.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "A cache hit cannot visit source data."
+        }
+      }
+    },
+    {
+      "package": "chart",
+      "surface": "hot",
+      "id": "model.normalize",
+      "source": "packages/chart/src/model.ts",
+      "benchmarkIDs": [
+        "chart:model:normalize"
+      ],
+      "specificationCeiling": "O(nDatum + nLayer)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nDatum",
+            "meaning": "input datum count",
+            "ceiling": "maxDatums"
+          },
+          {
+            "name": "nLayer",
+            "meaning": "input layer count",
+            "ceiling": "maxLayers"
+          }
+        ],
+        "time": {
+          "bound": "O(nDatum + nLayer)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nDatum + nLayer)",
+          "output": "O(nDatum + nLayer)",
+          "retained": "O(nDatum + nLayer)"
+        },
+        "resources": {
+          "allocations": "O(nDatum + nLayer)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Normalization validates and packs each layer and datum once while accumulating cartesian bounds in the same pass.",
+        "adversarialWitness": "A maximum-size mixed-profile model emits every packed value and dense identity.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External construction must validate every retained datum."
+        }
+      }
+    },
+    {
+      "package": "chart",
+      "surface": "hot",
+      "id": "projection.create",
+      "source": "packages/chart/src/projection.ts",
+      "benchmarkIDs": [
+        "chart:projection:cold"
+      ],
+      "specificationCeiling": "O(nLayer + kRepresentative)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nLayer",
+            "meaning": "packed layer count",
+            "ceiling": "maxLayers"
+          },
+          {
+            "name": "kRepresentative",
+            "meaning": "emitted representative count",
+            "ceiling": "maximumRepresentatives"
+          }
+        ],
+        "time": {
+          "bound": "O(nLayer + kRepresentative)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(nLayer + kRepresentative)",
+          "output": "O(kRepresentative)",
+          "retained": "O(kRepresentative)"
+        },
+        "resources": {
+          "allocations": "O(nLayer + kRepresentative)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Model construction precomputes bounds; projection allocates layer quotas and visits only selected representative indexes.",
+        "adversarialWitness": "A maximum-size layered model emits the configured representative ceiling.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "When the representative ceiling is below source cardinality, projection must skip unrepresented source datums."
+        }
+      }
+    },
+    {
+      "package": "chart",
+      "surface": "hot",
+      "id": "projection.hit-test.indexed",
+      "source": "packages/chart/src/query.ts",
+      "benchmarkIDs": [
+        "chart:query:hit-test"
+      ],
+      "specificationCeiling": "O(log kRepresentative + cCandidate + h log h)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "kRepresentative",
+            "meaning": "indexed projected primitive count",
+            "ceiling": "maximumRepresentatives"
+          },
+          {
+            "name": "cCandidate",
+            "meaning": "BVH candidates intersecting the query radius",
+            "ceiling": "kRepresentative"
+          },
+          {
+            "name": "h",
+            "meaning": "exact hits",
+            "ceiling": "cCandidate"
+          }
+        ],
+        "time": {
+          "bound": "O(log kRepresentative + cCandidate + h log h)",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(log kRepresentative + h)",
+          "output": "O(h)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(h)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "prepareChartProjectionQueries or an earlier hit test built the immutable projection BVH"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Balanced nodes prune disjoint bounds; leaf candidates receive exact profile-specific geometry checks before bounded output.",
+        "adversarialWitness": "A dense overlap visits every candidate; a narrow query in separated data visits a logarithmic path and bounded leaves.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "A spatially narrow query may not scan unrelated projected primitives."
+        }
+      }
+    },
+    {
+      "package": "chart",
+      "surface": "hot",
+      "id": "projection.query-index.build",
+      "source": "packages/chart/src/query.ts",
+      "benchmarkIDs": [
+        "chart:query:index-build"
+      ],
+      "specificationCeiling": "O(kRepresentative log kRepresentative)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "kRepresentative",
+            "meaning": "projected primitive count",
+            "ceiling": "maximumRepresentatives"
+          }
+        ],
+        "time": {
+          "bound": "O(kRepresentative log kRepresentative)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(kRepresentative)",
+          "output": "O(1)",
+          "retained": "O(kRepresentative)"
+        },
+        "resources": {
+          "allocations": "O(kRepresentative)",
+          "cacheEntries": "1",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Primitive bounds are emitted once, Morton keys are sorted once, and one balanced packed hierarchy is retained per immutable projection.",
+        "adversarialWitness": "Every representative emits one sortable query primitive.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Index construction must include every queryable projected primitive."
         }
       }
     },

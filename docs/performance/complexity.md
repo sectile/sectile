@@ -9,13 +9,14 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
 | core | 381 | 26 | 53 |
-| dom | 414 | 181 | 9 |
+| chart | 41 | 0 | 5 |
+| dom | 419 | 181 | 9 |
 | form | 21 | 0 | 6 |
 | tabular | 32 | 0 | 4 |
 | temporal | 99 | 24 | 2 |
 | terminal | 347 | 177 | 2 |
-| virtual | 89 | 0 | 19 |
-| vue | 704 | 315 | 4 |
+| virtual | 90 | 0 | 19 |
+| vue | 708 | 315 | 4 |
 
 ## Variables
 
@@ -81,6 +82,11 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:tree.subtree-interval | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(n)` | forbidden | VAL-016, VAL-017 |
 | core:tree.views | trusted | `O(n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | VAL-016, VAL-017 |
 | core:tree.visible | external | `O(n + k)` expected | `O(n)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
+| chart:controller.project.cached | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(kRepresentative)` | forbidden | VAL-016, VAL-017 |
+| chart:model.normalize | external | `O(nDatum + nLayer)` worst-case | `O(nDatum + nLayer)` | `O(nDatum + nLayer)` | `O(nDatum + nLayer)` | allowed | VAL-016, VAL-017 |
+| chart:projection.create | trusted | `O(nLayer + kRepresentative)` worst-case | `O(nLayer + kRepresentative)` | `O(kRepresentative)` | `O(kRepresentative)` | forbidden | VAL-016, VAL-017 |
+| chart:projection.hit-test.indexed | trusted | `O(log kRepresentative + cCandidate + h log h)` expected | `O(log kRepresentative + h)` | `O(h)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| chart:projection.query-index.build | trusted | `O(kRepresentative log kRepresentative)` worst-case | `O(kRepresentative)` | `O(1)` | `O(kRepresentative)` | allowed | VAL-016, VAL-017 |
 | dom:form.subscribe | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | dom:form.subscription-dispatch | connected | `O(sForm + uSource + sAffected)` worst-case | `O(sForm + uSource + sAffected)` | `O(1)` | `O(sForm + sField)` | forbidden | VAL-016, VAL-017 |
 | dom:form.unsubscribe | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |

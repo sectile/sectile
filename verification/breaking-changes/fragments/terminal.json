@@ -78,6 +78,13 @@
       "before": { "subpath": "./tooltip" },
       "symbols": ["Core Result declaration closure"],
       "replacement": { "package": "@sectile/terminal", "subpath": "./tooltip" }
+    },
+    {
+      "id": "WI-002:terminal-stable-id-layer-stack",
+      "change": "signature-changed",
+      "before": { "subpath": "./layer-stack" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./layer-stack" }
     }
   ]
 }

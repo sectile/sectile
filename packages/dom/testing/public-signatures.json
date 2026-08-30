@@ -27,6 +27,10 @@
       "types": "dist/cascade-select.d.ts"
     },
     {
+      "subpath": "./chart",
+      "types": "dist/chart.d.ts"
+    },
+    {
       "subpath": "./checkbox",
       "types": "dist/checkbox.d.ts"
     },
@@ -279,7 +283,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "cb341ebd6b25b3ff346e024f46533cb49f69293345bce736f8eb049a676458e2",
+  "fingerprint": "48c8feccedd8476b8779e208936df3b1478705cf60a7792812a32a518f4181ba",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -304,6 +308,10 @@
     {
       "path": "dist/cascade-select.d.ts",
       "sha256": "a8449883929ffffba20cad3f78dc18863a83cf16d235af3b6a27b0facca40a43"
+    },
+    {
+      "path": "dist/chart.d.ts",
+      "sha256": "cf9ebaa60ad356ad9e627bf9900e52f6d37c14eeecb9248b0be160b095250502"
     },
     {
       "path": "dist/checkbox-group.d.ts",

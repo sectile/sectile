@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 3,
+  "package": "@sectile/chart",
+  "exports": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts"
+    },
+    {
+      "subpath": "./controller",
+      "types": "dist/controller.d.ts"
+    },
+    {
+      "subpath": "./interaction",
+      "types": "dist/interaction.d.ts"
+    },
+    {
+      "subpath": "./model",
+      "types": "dist/model.d.ts"
+    },
+    {
+      "subpath": "./projection",
+      "types": "dist/projection.d.ts"
+    },
+    {
+      "subpath": "./query",
+      "types": "dist/query.d.ts"
+    },
+    {
+      "subpath": "./result",
+      "types": "dist/result.d.ts"
+    },
+    {
+      "subpath": "./scale",
+      "types": "dist/scale.d.ts"
+    }
+  ],
+  "fingerprint": "4a8c44643d914803f8b31fde5b090f9c3abe6f65cf161475f9f484186ef24ed0",
+  "files": [
+    {
+      "path": "dist/controller.d.ts",
+      "sha256": "212cdc4b0bd3a0c2392c10f15ba2e3e7ed57f1f16d9721d14c63517f2807261d"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "c62894eef9924918af6e1c9cc12376bc621b3b8a54a00f946b4d96e3caa3e88b"
+    },
+    {
+      "path": "dist/interaction.d.ts",
+      "sha256": "c04f273fc438f6f1c69457fb86c23088b0c3cc5ab36277048dc6cdf87976f1d6"
+    },
+    {
+      "path": "dist/model.d.ts",
+      "sha256": "93e12ea8cc7c0a1592e841f5c82fdd13dbf3b18efd4aef6fab7cce9a8aea2a52"
+    },
+    {
+      "path": "dist/projection.d.ts",
+      "sha256": "94989b5708ea88a497b175e05b286db2d6af0a924fb76db9dc9e9aa9d52083b7"
+    },
+    {
+      "path": "dist/query.d.ts",
+      "sha256": "be8baab2afac49172b07ba7eaad221c6eb372f713bf38be45b2b1a5ebd3ab975"
+    },
+    {
+      "path": "dist/result.d.ts",
+      "sha256": "f5367fc3ae3352d70adfedc0d4219c05e64776dae2eda99fc7ba05c629f01422"
+    },
+    {
+      "path": "dist/scale.d.ts",
+      "sha256": "f21f8e29c75eecd69b4fe495b10108362f77bdddb17d3977d8f752042a6e2d88"
+    }
+  ]
+}

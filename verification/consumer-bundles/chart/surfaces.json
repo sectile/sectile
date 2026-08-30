@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "package": "chart",
+  "surfaces": [
+    {
+      "subpath": ".",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "namespace"
+      ]
+    },
+    {
+      "subpath": "./controller",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createChartController",
+        "tryCreateChartController"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./interaction",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createChartState",
+        "reconcileChartState",
+        "reduceChartEvent",
+        "tryCreateChartState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./model",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_CHART_LIMITS",
+        "applyChartPatch",
+        "createChartModel",
+        "replaceChartModel",
+        "tryApplyChartPatch",
+        "tryCreateChartModel",
+        "tryReplaceChartModel"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./package.json",
+      "classification": "metadata",
+      "platform": "universal",
+      "runtimeExports": [],
+      "typeBearing": false,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./projection",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "CHART_ARC_STRIDE",
+        "CHART_CELL_STRIDE",
+        "CHART_POINT_STRIDE",
+        "CHART_RECTANGLE_STRIDE",
+        "DEFAULT_MAXIMUM_CHART_REPRESENTATIVES",
+        "MAXIMUM_CHART_REPRESENTATIVES",
+        "createChartProjection",
+        "tryCreateChartProjection"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./query",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_CHART_HIT_RADIUS",
+        "MAXIMUM_CHART_HITS",
+        "hitTestChartProjection",
+        "prepareChartProjectionQueries",
+        "tryHitTestChartProjection"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./result",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./scale",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "IDENTITY_CHART_VIEW_TRANSFORM",
+        "MAX_CHART_TICKS",
+        "composeChartViewTransforms",
+        "createCategoricalScale",
+        "createChartViewTransform",
+        "createLinearScale",
+        "createLogarithmicScale",
+        "createTemporalScale",
+        "invertChartCoordinate",
+        "transformChartCoordinate",
+        "tryCreateCategoricalScale",
+        "tryCreateChartViewTransform",
+        "tryCreateLinearScale",
+        "tryCreateLogarithmicScale",
+        "tryCreateTemporalScale"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    }
+  ]
+}

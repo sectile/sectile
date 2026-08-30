@@ -249,6 +249,209 @@
       "before": { "subpath": "./adapter-runtime" },
       "symbols": ["tryReconcileCollectionIdentities"],
       "replacement": { "package": "@sectile/core", "subpath": "./adapter-runtime" }
+    },
+    {
+      "id": "WI-002:stable-id-accordion",
+      "change": "signature-changed",
+      "before": { "subpath": "./accordion" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./accordion" }
+    },
+    {
+      "id": "WI-002:stable-id-alert-dialog",
+      "change": "signature-changed",
+      "before": { "subpath": "./alert-dialog" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./alert-dialog" }
+    },
+    {
+      "id": "WI-002:stable-id-carousel",
+      "change": "signature-changed",
+      "before": { "subpath": "./carousel" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./carousel" }
+    },
+    {
+      "id": "WI-002:stable-id-checkbox-group",
+      "change": "signature-changed",
+      "before": { "subpath": "./checkbox-group" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./checkbox-group" }
+    },
+    {
+      "id": "WI-002:stable-id-combobox",
+      "change": "signature-changed",
+      "before": { "subpath": "./combobox" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./combobox" }
+    },
+    {
+      "id": "WI-002:stable-id-dialog",
+      "change": "signature-changed",
+      "before": { "subpath": "./dialog" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./dialog" }
+    },
+    {
+      "id": "WI-002:stable-id-drawer",
+      "change": "signature-changed",
+      "before": { "subpath": "./drawer" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./drawer" }
+    },
+    {
+      "id": "WI-002:stable-id-interaction",
+      "change": "signature-changed",
+      "before": { "subpath": "./interaction" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./interaction" }
+    },
+    {
+      "id": "WI-002:stable-id-listbox",
+      "change": "signature-changed",
+      "before": { "subpath": "./listbox" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./listbox" }
+    },
+    {
+      "id": "WI-002:stable-id-number-field",
+      "change": "signature-changed",
+      "before": { "subpath": "./number-field" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./number-field" }
+    },
+    {
+      "id": "WI-002:stable-id-pagination",
+      "change": "signature-changed",
+      "before": { "subpath": "./pagination" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./pagination" }
+    },
+    {
+      "id": "WI-002:stable-id-pin-input",
+      "change": "signature-changed",
+      "before": { "subpath": "./pin-input" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./pin-input" }
+    },
+    {
+      "id": "WI-002:stable-id-popover",
+      "change": "signature-changed",
+      "before": { "subpath": "./popover" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./popover" }
+    },
+    {
+      "id": "WI-002:stable-id-quantity-field",
+      "change": "signature-changed",
+      "before": { "subpath": "./quantity-field" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./quantity-field" }
+    },
+    {
+      "id": "WI-002:stable-id-radio-group",
+      "change": "signature-changed",
+      "before": { "subpath": "./radio-group" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./radio-group" }
+    },
+    {
+      "id": "WI-002:stable-id-rating",
+      "change": "signature-changed",
+      "before": { "subpath": "./rating" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./rating" }
+    },
+    {
+      "id": "WI-002:stable-id-select",
+      "change": "signature-changed",
+      "before": { "subpath": "./select" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./select" }
+    },
+    {
+      "id": "WI-002:stable-id-selection",
+      "change": "signature-changed",
+      "before": { "subpath": "./selection" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./selection" }
+    },
+    {
+      "id": "WI-002:stable-id-sequence",
+      "change": "signature-changed",
+      "before": { "subpath": "./sequence" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./sequence" }
+    },
+    {
+      "id": "WI-002:stable-id-stepper",
+      "change": "signature-changed",
+      "before": { "subpath": "./stepper" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./stepper" }
+    },
+    {
+      "id": "WI-002:stable-id-tabs",
+      "change": "signature-changed",
+      "before": { "subpath": "./tabs" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./tabs" }
+    },
+    {
+      "id": "WI-002:stable-id-tags-input",
+      "change": "signature-changed",
+      "before": { "subpath": "./tags-input" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./tags-input" }
+    },
+    {
+      "id": "WI-002:stable-id-text",
+      "change": "signature-changed",
+      "before": { "subpath": "./text" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./text" }
+    },
+    {
+      "id": "WI-002:stable-id-timer",
+      "change": "signature-changed",
+      "before": { "subpath": "./timer" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./timer" }
+    },
+    {
+      "id": "WI-002:stable-id-toast",
+      "change": "signature-changed",
+      "before": { "subpath": "./toast" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./toast" }
+    },
+    {
+      "id": "WI-002:stable-id-toggle-button",
+      "change": "signature-changed",
+      "before": { "subpath": "./toggle-button" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./toggle-button" }
+    },
+    {
+      "id": "WI-002:stable-id-toggle-group",
+      "change": "signature-changed",
+      "before": { "subpath": "./toggle-group" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./toggle-group" }
+    },
+    {
+      "id": "WI-002:stable-id-toolbar",
+      "change": "signature-changed",
+      "before": { "subpath": "./toolbar" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./toolbar" }
+    },
+    {
+      "id": "WI-002:stable-id-units",
+      "change": "signature-changed",
+      "before": { "subpath": "./units" },
+      "symbols": ["StableID declaration closure"],
+      "replacement": { "package": "@sectile/core", "subpath": "./units" }
     }
   ]
 }
