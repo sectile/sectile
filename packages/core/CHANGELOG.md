@@ -1,5 +1,12 @@
 # @sectile/core
 
+## 0.11.0
+
+### Changes
+
+- build(packages): compact published JavaScript (19a4ba7)
+- perf(virtual): retain keyed domains across Vue updates (9771ce8)
+
 ## 0.10.0
 
 ### Changes

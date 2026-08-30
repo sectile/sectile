@@ -1,5 +1,11 @@
 # @sectile/temporal
 
+## 0.11.0
+
+### Changes
+
+- build(packages): compact published JavaScript (19a4ba7)
+
 ## 0.10.0
 
 ### Changes

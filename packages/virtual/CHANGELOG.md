@@ -1,5 +1,15 @@
 # @sectile/virtual
 
+## 0.11.0
+
+### Changes
+
+- perf(virtual): patch spatial geometry incrementally (387ac25)
+- build(packages): compact published JavaScript (19a4ba7)
+- perf(virtual): derive uniform masonry layouts (a19a062)
+- perf(virtual): repair sparse collection updates (04e9142)
+- feat(benchmark): add multi-layout benchmark lab (4a58d2a)
+
 ## 0.10.0
 
 ### Changes

@@ -1,5 +1,12 @@
 # @sectile/form
 
+## 0.11.0
+
+### Changes
+
+- build(packages): compact published JavaScript (19a4ba7)
+- feat(form)!: model submission outcomes and related issues (db8abf1)
+
 ## 0.10.0
 
 ### Changes
