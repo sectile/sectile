@@ -9,12 +9,21 @@ export interface PackedChartLayer<ID extends StableID = StableID> {
   readonly stride: number;
 }
 
+export interface ChartCartesianBounds {
+  readonly hasValues: boolean;
+  readonly minimumX: number;
+  readonly maximumX: number;
+  readonly minimumY: number;
+  readonly maximumY: number;
+}
+
 export interface ChartModelData<ID extends StableID = StableID> {
   readonly limits: Required<ChartLimits>;
   readonly identityIndex: ReadonlyMap<ID, number>;
   readonly layerIndex: ReadonlyMap<ID, number>;
   readonly locations: Uint32Array;
   readonly layers: readonly PackedChartLayer<ID>[];
+  readonly cartesianBounds: ChartCartesianBounds;
 }
 
 const modelData = new WeakMap<object, ChartModelData>();

@@ -1,7 +1,13 @@
 import type { StableID } from '@sectile/core';
 import { validateStableID } from '@sectile/core/identity';
 import { unwrap } from '@sectile/core/result';
-import { bindChartModelData, getChartModelData, type ChartModelData, type PackedChartLayer } from './internal/model-store.js';
+import {
+  bindChartModelData,
+  getChartModelData,
+  type ChartCartesianBounds,
+  type ChartModelData,
+  type PackedChartLayer,
+} from './internal/model-store.js';
 import { chartFail, chartOK } from './internal/result.js';
 import type { ChartResult } from './result.js';
 
@@ -303,6 +309,13 @@ function normalizeChartModel<ID extends StableID>(
   const layerIndex = new Map<ID, number>();
   const locations: number[] = [];
   const packedLayers: PackedChartLayer<ID>[] = [];
+  const cartesianBounds: MutableCartesianBounds = {
+    hasValues: false,
+    minimumX: Number.POSITIVE_INFINITY,
+    maximumX: Number.NEGATIVE_INFINITY,
+    minimumY: Number.POSITIVE_INFINITY,
+    maximumY: Number.NEGATIVE_INFINITY,
+  };
   let datumCount = 0;
   for (let layerPosition = 0; layerPosition < input.layers.length; layerPosition += 1) {
     const layer = input.layers[layerPosition];
@@ -324,7 +337,9 @@ function normalizeChartModel<ID extends StableID>(
         ceiling: limits.value.maxDatums,
       });
     }
-    const normalized = normalizeLayer(layer as ChartLayer<ID>, layerPosition, identities, identityIndex, locations, limits.value);
+    const normalized = normalizeLayer(
+      layer as ChartLayer<ID>, layerPosition, identities, identityIndex, locations, limits.value, cartesianBounds,
+    );
     if (!normalized.ok) return normalized;
     layerIndex.set(layer.id, layerPosition);
     packedLayers.push(normalized.value);
@@ -336,6 +351,7 @@ function normalizeChartModel<ID extends StableID>(
     layerIndex,
     locations: Uint32Array.from(locations),
     layers: Object.freeze(packedLayers),
+    cartesianBounds: freezeCartesianBounds(cartesianBounds),
   };
   return chartOK(new ImmutableChartModel(generation, identities, data));
 }
@@ -347,6 +363,7 @@ function normalizeLayer<ID extends StableID>(
   identityIndex: Map<ID, number>,
   locations: number[],
   limits: Required<ChartLimits>,
+  bounds: MutableCartesianBounds,
 ): ChartResult<PackedChartLayer<ID>> {
   const stride = strideFor(layer.profile);
   const values = new Float64Array(layer.data.length * stride);
@@ -371,6 +388,7 @@ function normalizeLayer<ID extends StableID>(
     const offset = datumPosition * stride;
     const packed = packDatum(layer.profile, datum as ChartDatum<ID>, values, offset);
     if (!packed) return invalidDatum(layerPosition, datumPosition);
+    includeDatumBounds(bounds, layer.profile, values, offset);
     if (layer.profile === 'ordered-series') {
       const x = values[offset] as number;
       if (x < previousX) {
@@ -383,6 +401,46 @@ function normalizeLayer<ID extends StableID>(
     }
   }
   return chartOK({ id: layer.id, profile: layer.profile, identityIndices, values, stride });
+}
+
+interface MutableCartesianBounds {
+  hasValues: boolean;
+  minimumX: number;
+  maximumX: number;
+  minimumY: number;
+  maximumY: number;
+}
+
+function includeDatumBounds(
+  bounds: MutableCartesianBounds,
+  profile: ChartProfile,
+  values: Float64Array,
+  offset: number,
+): void {
+  if (profile === 'radial-segment') return;
+  bounds.hasValues = true;
+  if (profile === 'point' || profile === 'ordered-series') {
+    includeXY(bounds, values[offset] as number, values[offset + 1] as number);
+  } else if (profile === 'cartesian-segment') {
+    includeXY(bounds, values[offset] as number, values[offset + 1] as number);
+    includeXY(bounds, values[offset + 2] as number, values[offset + 3] as number);
+  } else {
+    const column = values[offset] as number;
+    const row = values[offset + 1] as number;
+    includeXY(bounds, column, row);
+    includeXY(bounds, column + 1, row + 1);
+  }
+}
+
+function includeXY(bounds: MutableCartesianBounds, x: number, y: number): void {
+  if (x < bounds.minimumX) bounds.minimumX = x;
+  if (x > bounds.maximumX) bounds.maximumX = x;
+  if (y < bounds.minimumY) bounds.minimumY = y;
+  if (y > bounds.maximumY) bounds.maximumY = y;
+}
+
+function freezeCartesianBounds(bounds: MutableCartesianBounds): ChartCartesianBounds {
+  return Object.freeze({ ...bounds });
 }
 
 function packDatum<ID extends StableID>(

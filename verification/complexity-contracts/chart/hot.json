@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "package": "chart",
+  "surface": "hot",
+  "kind": "internal-operations",
+  "operations": [
+    {
+      "id": "model.normalize",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/model.ts",
+      "benchmarkIDs": ["chart:model:normalize"],
+      "specificationCeiling": "O(nDatum + nLayer)",
+      "contract": {
+        "variables": [
+          { "name": "nDatum", "meaning": "input datum count", "ceiling": "maxDatums" },
+          { "name": "nLayer", "meaning": "input layer count", "ceiling": "maxLayers" }
+        ],
+        "time": { "bound": "O(nDatum + nLayer)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(nDatum + nLayer)", "output": "O(nDatum + nLayer)", "retained": "O(nDatum + nLayer)" },
+        "proof": "Normalization validates and packs each layer and datum once while accumulating cartesian bounds in the same pass.",
+        "adversarialWitness": "A maximum-size mixed-profile model emits every packed value and dense identity.",
+        "fullScan": { "allowed": true, "rationale": "External construction must validate every retained datum." }
+      }
+    },
+    {
+      "id": "projection.create",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/projection.ts",
+      "benchmarkIDs": ["chart:projection:cold"],
+      "specificationCeiling": "O(nLayer + kRepresentative)",
+      "contract": {
+        "variables": [
+          { "name": "nLayer", "meaning": "packed layer count", "ceiling": "maxLayers" },
+          { "name": "kRepresentative", "meaning": "emitted representative count", "ceiling": "maximumRepresentatives" }
+        ],
+        "time": { "bound": "O(nLayer + kRepresentative)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(nLayer + kRepresentative)", "output": "O(kRepresentative)", "retained": "O(kRepresentative)" },
+        "resources": { "allocations": "O(nLayer + kRepresentative)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Model construction precomputes bounds; projection allocates layer quotas and visits only selected representative indexes.",
+        "adversarialWitness": "A maximum-size layered model emits the configured representative ceiling.",
+        "fullScan": { "allowed": false, "rationale": "When the representative ceiling is below source cardinality, projection must skip unrepresented source datums." }
+      }
+    },
+    {
+      "id": "controller.project.cached",
+      "inherits": "constant-v1",
+      "source": "packages/chart/src/controller.ts",
+      "benchmarkIDs": ["chart:projection:cached"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(kRepresentative)" },
+        "resources": { "allocations": "0", "cacheEntries": "1", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["model generation, viewport, representative ceiling, and canonical view transform are unchanged", "caller-supplied scales disable caching"],
+        "proof": "The controller compares a fixed scalar cache key and returns the single retained immutable projection.",
+        "adversarialWitness": "Repeated projection reads on a one-million-datum model return one object identity without domain traversal.",
+        "fullScan": { "allowed": false, "rationale": "A cache hit cannot visit source data." }
+      }
+    }
+  ]
+}

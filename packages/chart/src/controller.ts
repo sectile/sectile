@@ -74,6 +74,7 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
   readonly #controlled: ChartControlFlags;
   #controlledValues: ChartControlledValues<ID>;
   readonly #listeners = new Set<(command: ChartCommand<ID>) => void>();
+  #projectionCache: ProjectionCache<ID> | null = null;
   #disposed = false;
 
   public constructor(
@@ -126,7 +127,9 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
       this.#controlledValues = Object.freeze({ ...values });
       return chartOK(this.#snapshot);
     }
+    const transformChanged = next.value.viewTransform !== this.#snapshot.state.viewTransform;
     const committed = this.#commitState(next.value, []);
+    if (committed.ok && transformChanged) this.#projectionCache = null;
     if (committed.ok) this.#controlledValues = Object.freeze({ ...values });
     return committed;
   }
@@ -141,7 +144,9 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     if (!reduced.ok) return reduced;
     if (reduced.value.changed) {
       if (this.#snapshot.revision === Number.MAX_SAFE_INTEGER) return revisionExhausted();
+      const transformChanged = reduced.value.state.viewTransform !== this.#snapshot.state.viewTransform;
       this.#snapshot = createRevisionSnapshot(reduced.value.state, this.#snapshot.revision + 1);
+      if (transformChanged) this.#projectionCache = null;
     }
     const update = Object.freeze({ snapshot: this.#snapshot, commands: reduced.value.commands });
     this.#emit(reduced.value.commands);
@@ -151,10 +156,17 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
   public project(input: ChartProjectionInput): ChartResult<ChartProjection<ID>> {
     if (this.#disposed) return disposedController();
     if (input === null || typeof input !== 'object') return invalidController('Chart projection input must be an object.');
-    return tryCreateChartProjection(this.#model, {
+    const resolved = {
       ...input,
       viewTransform: input.viewTransform ?? this.#snapshot.state.viewTransform,
-    });
+    };
+    const cacheable = input.xScale === undefined && input.yScale === undefined;
+    if (cacheable && this.#projectionCache !== null && sameProjectionRequest(this.#projectionCache, this.#model, resolved)) {
+      return chartOK(this.#projectionCache.projection);
+    }
+    const projection = tryCreateChartProjection(this.#model, resolved);
+    if (cacheable && projection.ok) this.#projectionCache = projectionCache(this.#model, resolved, projection.value);
+    return projection;
   }
 
   public subscribeCommands(listener: (command: ChartCommand<ID>) => void): () => void {
@@ -172,6 +184,7 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     if (this.#disposed) return;
     this.#disposed = true;
     this.#listeners.clear();
+    this.#projectionCache = null;
   }
 
   #commitModel(model: ChartModelState<ID>): ChartResult<RevisionSnapshot<ChartState<ID>>> {
@@ -179,6 +192,7 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     const state = reconcileChartState(this.#snapshot.state, model, this.#controlledValues);
     if (!state.ok) return state;
     this.#model = model;
+    this.#projectionCache = null;
     return this.#commitState(state.value, [Object.freeze({ type: 'render-requested', generation: model.generation })]);
   }
 
@@ -203,6 +217,49 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
   #emit(commands: readonly ChartCommand<ID>[]): void {
     for (const command of commands) for (const listener of this.#listeners) listener(command);
   }
+}
+
+interface ProjectionCache<ID extends StableID> {
+  readonly generation: number;
+  readonly width: number;
+  readonly height: number;
+  readonly devicePixelRatio: number | undefined;
+  readonly maximumRepresentatives: number | undefined;
+  readonly xScale: number;
+  readonly xOffset: number;
+  readonly yScale: number;
+  readonly yOffset: number;
+  readonly projection: ChartProjection<ID>;
+}
+
+function projectionCache<ID extends StableID>(
+  model: ChartModelState<ID>, input: ChartProjectionInput, projection: ChartProjection<ID>,
+): ProjectionCache<ID> {
+  const transform = input.viewTransform!;
+  return {
+    generation: model.generation,
+    width: input.viewport.width,
+    height: input.viewport.height,
+    devicePixelRatio: input.viewport.devicePixelRatio,
+    maximumRepresentatives: input.maximumRepresentatives,
+    xScale: transform.xScale,
+    xOffset: transform.xOffset,
+    yScale: transform.yScale,
+    yOffset: transform.yOffset,
+    projection,
+  };
+}
+
+function sameProjectionRequest<ID extends StableID>(
+  cache: ProjectionCache<ID>, model: ChartModelState<ID>, input: ChartProjectionInput,
+): boolean {
+  const transform = input.viewTransform!;
+  return cache.generation === model.generation
+    && cache.width === input.viewport.width && cache.height === input.viewport.height
+    && cache.devicePixelRatio === input.viewport.devicePixelRatio
+    && cache.maximumRepresentatives === input.maximumRepresentatives
+    && cache.xScale === transform.xScale && cache.xOffset === transform.xOffset
+    && cache.yScale === transform.yScale && cache.yOffset === transform.yOffset;
 }
 
 function controlFlags<ID extends StableID>(values: ChartControlledValues<ID>): ChartControlFlags {

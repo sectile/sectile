@@ -1,6 +1,6 @@
 import type { StableID } from '@sectile/core';
 import { unwrap } from '@sectile/core/result';
-import { getChartModelData, type PackedChartLayer } from './internal/model-store.js';
+import { getChartModelData, type ChartModelData, type PackedChartLayer } from './internal/model-store.js';
 import { chartFail, chartOK } from './internal/result.js';
 import type { ChartModelState, ChartProfile } from './model.js';
 import type { ChartResult } from './result.js';
@@ -117,7 +117,7 @@ export function tryCreateChartProjection<ID extends StableID>(
   const transformResult = tryCreateChartViewTransform(input.viewTransform ?? IDENTITY_CHART_VIEW_TRANSFORM);
   if (!transformResult.ok) return transformResult;
   const data = getChartModelData<ID>(model);
-  const bounds = cartesianBounds(data.layers);
+  const bounds = projectionBounds(data.cartesianBounds);
   const xScale = input.xScale ?? createLinearScale(bounds.x, { start: 0, end: input.viewport.width });
   const yScale = input.yScale ?? createLinearScale(bounds.y, { start: input.viewport.height, end: 0 });
   const quotas = representativeQuotas(data.layers, model.size, maximum);
@@ -151,39 +151,12 @@ export function tryCreateChartProjection<ID extends StableID>(
 
 interface Bounds { readonly x: { minimum: number; maximum: number }; readonly y: { minimum: number; maximum: number } }
 
-function cartesianBounds(layers: readonly PackedChartLayer[]): Bounds {
-  let minimumX = Number.POSITIVE_INFINITY;
-  let maximumX = Number.NEGATIVE_INFINITY;
-  let minimumY = Number.POSITIVE_INFINITY;
-  let maximumY = Number.NEGATIVE_INFINITY;
-  for (const layer of layers) {
-    const values = layer.values;
-    if (layer.profile === 'point' || layer.profile === 'ordered-series') {
-      for (let offset = 0; offset < values.length; offset += 2) {
-        minimumX = Math.min(minimumX, values[offset] as number);
-        maximumX = Math.max(maximumX, values[offset] as number);
-        minimumY = Math.min(minimumY, values[offset + 1] as number);
-        maximumY = Math.max(maximumY, values[offset + 1] as number);
-      }
-    } else if (layer.profile === 'cartesian-segment') {
-      for (let offset = 0; offset < values.length; offset += 4) {
-        minimumX = Math.min(minimumX, values[offset] as number, values[offset + 2] as number);
-        maximumX = Math.max(maximumX, values[offset] as number, values[offset + 2] as number);
-        minimumY = Math.min(minimumY, values[offset + 1] as number, values[offset + 3] as number);
-        maximumY = Math.max(maximumY, values[offset + 1] as number, values[offset + 3] as number);
-      }
-    } else if (layer.profile === 'grid-cell') {
-      for (let offset = 0; offset < values.length; offset += 3) {
-        const column = values[offset] as number;
-        const row = values[offset + 1] as number;
-        minimumX = Math.min(minimumX, column);
-        maximumX = Math.max(maximumX, column + 1);
-        minimumY = Math.min(minimumY, row);
-        maximumY = Math.max(maximumY, row + 1);
-      }
-    }
-  }
-  if (!Number.isFinite(minimumX)) return { x: { minimum: 0, maximum: 1 }, y: { minimum: 0, maximum: 1 } };
+function projectionBounds(bounds: ChartModelData['cartesianBounds']): Bounds {
+  if (!bounds.hasValues) return { x: { minimum: 0, maximum: 1 }, y: { minimum: 0, maximum: 1 } };
+  let minimumX = bounds.minimumX;
+  let maximumX = bounds.maximumX;
+  let minimumY = bounds.minimumY;
+  let maximumY = bounds.maximumY;
   if (minimumX === maximumX) { minimumX -= 0.5; maximumX += 0.5; }
   if (minimumY === maximumY) { minimumY -= 0.5; maximumY += 0.5; }
   return { x: { minimum: minimumX, maximum: maximumX }, y: { minimum: minimumY, maximum: maximumY } };
