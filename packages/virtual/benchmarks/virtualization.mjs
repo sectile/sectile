@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks';
 import { createSequence, tryApplySequencePatch } from '@sectile/core/sequence';
-import { createExtentIndex } from '@sectile/virtual/extent-index';
+import { createExtentIndex, createUniformExtentIndex } from '@sectile/virtual/extent-index';
 import { applyLinearMeasurements, createLinearLayout, queryLinearLayout, queryLinearWindow } from '@sectile/virtual/linear-layout';
 import { applyMasonryMeasurements, applyMasonryMutation, createMasonryLayout, queryMasonryLayout } from '@sectile/virtual/masonry-layout';
 import { applyPartitionedTrackGridMeasurements, createPartitionedTrackGridLayout, queryPartitionedTrackGridLayout } from '@sectile/virtual/partitioned-track-grid-layout';
@@ -264,6 +264,29 @@ const masonryInsertLateMs = measureColdMilliseconds((sample) => applyMasonryMuta
   patch: { type: 'splice', index: strategySize - 1, deleteCount: 0, inserted: [`masonry-late-${sample}`] },
   insertedExtents: [exact(44)],
 }).state.generation);
+const uniformMasonryExtent = exact(44);
+const uniformMasonryState = createMasonryLayout(
+  strategyDomain,
+  createUniformExtentIndex(strategySize, uniformMasonryExtent, { maxItems: strategySize + 1 }),
+  { laneCount: 8, laneExtent: 160, laneGap: 12, itemGap: 12 },
+);
+const uniformMasonryQueryUs = measure(20_000, (iteration) => {
+  const plan = queryMasonryLayout(uniformMasonryState, {
+    viewport: { x: 0, y: (iteration * 977) % 500_000, width: 1_364, height: 800 },
+    overscan: 320,
+  });
+  sink += plan.placements.length;
+});
+const uniformMasonryBuildMs = measureColdMilliseconds(() => createMasonryLayout(
+  strategyDomain,
+  createUniformExtentIndex(strategySize, uniformMasonryExtent, { maxItems: strategySize + 1 }),
+  { laneCount: 8, laneExtent: 160, laneGap: 12, itemGap: 12 },
+).generation);
+const uniformMasonryInsertEarlyMs = measureColdMilliseconds((sample) => applyMasonryMutation(uniformMasonryState, {
+  type: 'items',
+  patch: { type: 'splice', index: 1, deleteCount: 0, inserted: [`uniform-masonry-${sample}`] },
+  insertedExtents: [uniformMasonryExtent],
+}).state.generation);
 
 const spatialItems = Array.from({ length: strategySize }, (_, index) => ({
   id: `spatial-${index}`,
@@ -336,6 +359,11 @@ const result = {
     changedMeasurement32Ms: masonryMeasurement32Ms,
     insertEarlyMs: masonryInsertEarlyMs,
     insertLateMs: masonryInsertLateMs,
+    uniform: {
+      queryUs: uniformMasonryQueryUs,
+      buildMs: uniformMasonryBuildMs,
+      insertEarlyMs: uniformMasonryInsertEarlyMs,
+    },
   },
   spatial: {
     items: strategySize,

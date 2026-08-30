@@ -18,6 +18,7 @@
     "MRY-02": "tests/runtime/masonry-layout.test.mjs",
     "MRY-03": "tests/runtime/masonry-layout.test.mjs",
     "MRY-04": "tests/runtime/masonry-layout.test.mjs",
+    "MRY-05": "tests/runtime/masonry-layout.test.mjs",
     "SPA-01": "tests/runtime/spatial-layout.test.mjs",
     "SPA-02": "tests/runtime/spatial-layout.test.mjs",
     "SPA-03": "tests/runtime/spatial-layout.test.mjs",

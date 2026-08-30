@@ -1,14 +1,17 @@
-/* Law evidence: MRY-01 MRY-02 MRY-03 MRY-04 */
+/* Law evidence: MRY-01 MRY-02 MRY-03 MRY-04 MRY-05 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSequence } from '@sectile/core/sequence';
-import { createExtentIndex } from '../../.verification-dist/extent-index.js';
+import { createExtentIndex, createUniformExtentIndex } from '../../.verification-dist/extent-index.js';
+import { masonryLayoutWork } from '../../.verification-dist/internal/masonry-internals.js';
 import {
   applyMasonryMeasurements,
   applyMasonryMutation,
   createMasonryLayout,
   masonryRectAt,
   queryMasonryLayout,
+  restoreMasonryLayout,
+  snapshotMasonryLayout,
   tryApplyMasonryMeasurements,
 } from '../../.verification-dist/masonry-layout.js';
 
@@ -164,4 +167,73 @@ test('masonry suffix reuse stays equivalent to a fresh shortest-lane rebuild', (
     rebuiltPlan.placements.map(({ id, index, lane, rect }) => ({ id, index, lane, rect })),
   );
   assert.deepEqual(incrementalPlan.contentSize, rebuiltPlan.contentSize);
+});
+
+test('MRY-05: uniform masonry derives placements without retaining the full layout', () => {
+  const size = 100_000;
+  const shared = Object.freeze(exact(44));
+  const input = {
+    laneCount: 8,
+    laneExtent: 120,
+    laneGap: 4,
+    itemGap: 6,
+    placementPolicy: 'shortest',
+  };
+  const state = createMasonryLayout(
+    domain(size),
+    createUniformExtentIndex(size, shared, { maxItems: size + 4 }),
+    input,
+  );
+  assert.deepEqual(masonryLayoutWork(state), {
+    representation: 'uniform',
+    copiedPlacements: 0,
+    recomputedPlacements: 0,
+    retainedPlacements: 0,
+  });
+
+  const viewport = { x: 100, y: 310_000, width: 520, height: 480 };
+  const plan = queryMasonryLayout(state, { viewport, overscan: 120 });
+  const reference = createMasonryLayout(
+    state.domain,
+    createExtentIndex(Array.from({ length: size }, () => shared), { maxItems: size + 4 }),
+    input,
+  );
+  const referencePlan = queryMasonryLayout(reference, { viewport, overscan: 120 });
+  assert.deepEqual(plan.contentSize, referencePlan.contentSize);
+  assert.deepEqual(
+    plan.placements.map(({ id, index, lane, rect }) => ({ id, index, lane, rect })),
+    referencePlan.placements.map(({ id, index, lane, rect }) => ({ id, index, lane, rect })),
+  );
+
+  const inserted = applyMasonryMutation(state, {
+    type: 'items',
+    patch: { type: 'splice', index: 0, deleteCount: 0, inserted: ['inserted'] },
+    insertedExtents: [shared],
+  }).state;
+  assert.equal(masonryLayoutWork(inserted).representation, 'uniform');
+  assert.equal(masonryLayoutWork(inserted).retainedPlacements, 0);
+  const removed = applyMasonryMutation(inserted, {
+    type: 'items',
+    patch: { type: 'splice', index: 0, deleteCount: 1, inserted: [] },
+  }).state;
+  const moved = applyMasonryMutation(removed, {
+    type: 'items',
+    patch: { type: 'move', from: 1, to: size - 2, count: 1 },
+  }).state;
+  assert.equal(masonryLayoutWork(removed).representation, 'uniform');
+  assert.equal(masonryLayoutWork(moved).representation, 'uniform');
+
+  const restored = restoreMasonryLayout(snapshotMasonryLayout(state));
+  assert.equal(masonryLayoutWork(restored).representation, 'uniform');
+  assert.deepEqual(
+    queryMasonryLayout(restored, { viewport, overscan: 120 }),
+    plan,
+  );
+
+  const measured = applyMasonryMeasurements(state, {
+    generation: state.generation,
+    measurements: [{ index: 0, extent: exact(45) }],
+  }).state;
+  assert.equal(masonryLayoutWork(measured).representation, 'materialized');
+  assert.equal(masonryLayoutWork(measured).recomputedPlacements, size);
 });

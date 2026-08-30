@@ -250,6 +250,135 @@
       }
     },
     {
+      "id": "masonry.formula.derive",
+      "inherits": "constant-v1",
+      "source": "packages/virtual/src/masonry-layout.ts",
+      "benchmarkIDs": [
+        "VAL-017:masonry-uniform-work"
+      ],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "uniform masonry item count",
+            "ceiling": "maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "O(1)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the extent index proves one canonical uniform run",
+          "sequence and extent mutations are owned by their respective indexes"
+        ],
+        "ceilings": [
+          "maxItems",
+          "maxLanes",
+          "safe-integer geometry"
+        ],
+        "deterministicWork": [
+          "zero copied placements",
+          "zero recomputed placements",
+          "zero retained placements"
+        ],
+        "resourceRationale": "Formula geometry retains one shared extent and scalar lane geometry regardless of item count.",
+        "proof": "A uniform extent run derives row count and content extent with scalar arithmetic and stores no per-item masonry placement.",
+        "adversarialWitness": "Derive geometry for a 100,000-item uniform masonry domain and assert that no placement is copied, recomputed, or retained.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Uniform geometry is independent of the mutation position and cannot scan the unchanged domain."
+        }
+      }
+    },
+    {
+      "id": "masonry.formula.query",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/masonry-layout.ts",
+      "benchmarkIDs": [
+        "VAL-017:masonry-uniform-work"
+      ],
+      "specificationCeiling": "O(vLane + cCandidate + kPlacement log kPlacement)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "uniform masonry item count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "vLane",
+            "meaning": "lanes intersecting render bounds",
+            "ceiling": "vLane <= maxLanes"
+          },
+          {
+            "name": "cCandidate",
+            "meaning": "uniform row and lane candidates intersecting scalar query bounds",
+            "ceiling": "cCandidate <= nItem"
+          },
+          {
+            "name": "kPlacement",
+            "meaning": "emitted placements",
+            "ceiling": "kPlacement <= cCandidate"
+          }
+        ],
+        "time": {
+          "bound": "O(vLane + cCandidate + kPlacement log kPlacement)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(kPlacement)",
+          "output": "O(kPlacement)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(cCandidate)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the extent index proves one canonical uniform run",
+          "sequence patch depth is capped at 32"
+        ],
+        "ceilings": [
+          "maxItems",
+          "maxLanes",
+          "render-window output cardinality"
+        ],
+        "deterministicWork": [
+          "one scalar row-bound calculation per visible lane",
+          "visited item indexes equal render candidates",
+          "only emitted placements enter the domain-order sort"
+        ],
+        "resourceRationale": "The query allocates only the render-window placement output and retains no query cache.",
+        "proof": "Closed-form row bounds skip the offscreen domain, each candidate is visited once, and only emitted placements are sorted back into domain order.",
+        "adversarialWitness": "Query a narrow render window near the end of a maximum-size uniform domain and count only emitted placements.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "A bounded render window cannot visit unrelated offscreen items."
+        }
+      }
+    },
+    {
       "id": "masonry.measure",
       "inherits": "linear-v1",
       "source": "packages/virtual/src/masonry-layout.ts",
@@ -609,7 +738,7 @@
         "virtual:spatial:query:10000",
         "virtual:spatial:query:100000"
       ],
-      "specificationCeiling": "O(log nItem + kPlacement)",
+      "specificationCeiling": "O(log nItem + kPlacement log kPlacement)",
       "contract": {
         "variables": [
           {
@@ -624,7 +753,7 @@
           }
         ],
         "time": {
-          "bound": "O(log nItem + kPlacement)",
+          "bound": "O(log nItem + kPlacement log kPlacement)",
           "kind": "expected",
           "runtimeState": "trusted"
         },
@@ -641,7 +770,7 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Packed-tree intersection prunes non-overlapping branches and emits each matching placement once.",
+        "proof": "The packed tree prunes non-overlapping branches, emits intersecting items once, and sorts placements by z-index and declaration order.",
         "adversarialWitness": "A viewport intersecting every overlapping rectangle degrades to result-proportional nItem output.",
         "fullScan": {
           "allowed": false,

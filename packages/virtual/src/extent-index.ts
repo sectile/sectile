@@ -1,6 +1,7 @@
 import { unwrap } from '@sectile/core/result';
 import type { VirtualResult } from './error.js';
 import { fail, ok, validateMaxItems } from './internal/foundation.js';
+import { uniformExtentMetadata } from './internal/extent-index-metadata.js';
 
 export type Extent =
   | { readonly kind: 'exact'; readonly value: number }
@@ -126,7 +127,8 @@ export function tryCreateUniformExtentIndex(
 }
 
 function createIndex(root: Node | null, maxItems: number): ExtentIndex {
-  return Object.freeze({
+  const index = Object.freeze({
+    [uniformExtentMetadata]: root?.kind === 'run' ? valueOf(root.entry) : null,
     size: root?.size ?? 0,
     totalExtent: root?.sum ?? 0,
     maxItems,
@@ -145,6 +147,7 @@ function createIndex(root: Node | null, maxItems: number): ExtentIndex {
       moveIndex(root, maxItems, from, to, count)
     ),
   });
+  return index;
 }
 
 function updateIndex(
@@ -202,6 +205,13 @@ function spliceIndex(
   }
   const validated = validateExtents(inserted);
   if (!validated.ok) return validated;
+  if (
+    root?.kind === 'run'
+    && validated.value.every((extent) => sameExtent(extent, root.entry))
+  ) {
+    const nextSize = size - deleteCount + validated.value.length;
+    return ok(createIndex(nextSize === 0 ? null : run(root.entry, nextSize), maxItems));
+  }
   const [before, remainder] = split(root, start);
   const [, after] = split(remainder, deleteCount);
   return ok(createIndex(join(join(before, build(validated.value)), after), maxItems));

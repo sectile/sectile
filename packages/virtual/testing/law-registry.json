@@ -18,6 +18,7 @@
     { "id": "MRY-02", "theory": "masonry-layout", "statement": "viewport queries equal a full geometry scan and reverse flow reflects forward geometry" },
     { "id": "MRY-03", "theory": "masonry-layout", "statement": "round-robin lane ownership is stable across measurement changes" },
     { "id": "MRY-04", "theory": "masonry-layout", "statement": "measurement and item mutation preserve surviving anchors and reject stale generations" },
+    { "id": "MRY-05", "theory": "masonry-layout", "statement": "uniform extents derive viewport-equivalent masonry geometry without retained per-item placements" },
     { "id": "SPA-01", "theory": "spatial-layout", "statement": "packed spatial queries equal a full rectangle scan" },
     { "id": "SPA-02", "theory": "spatial-layout", "statement": "z-index and declaration order define deterministic paint order" },
     { "id": "SPA-03", "theory": "spatial-layout", "statement": "measurement, update, and removal keep identity indexes consistent" },

@@ -191,56 +191,8 @@ export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialL
   const before = anchorRect(state, batch.anchor);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  if (state.items.size < 1_024 || replacements.size >= state.items.size / 2) {
-    const items = new Array<SpatialItem<ID>>(data.value.items.size);
-    data.value.items.forEach((item, index) => { items[index] = replacements.get(index) ?? item; });
-    const next = createOwnedState(state.domain, items, state.maxItems, generation.value);
-    const blockCeiling = Math.ceil(state.items.size / LEAF_SIZE);
-    const touchedPartitions = Math.min(replacements.size, blockCeiling) * 2;
-    recordRepairDiagnostics(next, {
-      mode: 'rebuild',
-      changed: replacements.size,
-      touchedBlocks: touchedPartitions,
-      copiedNodes: 0,
-      copiedEntries: 0,
-      rebuiltItems: state.items.size,
-      repairBound: blockedRepairBound(replacements.size, state.items.size, touchedPartitions),
-    });
-    return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
-  }
   const changes = [...replacements].sort(([left], [right]) => left - right);
-  const touchedLeaves = [...new Set(changes.map(([index]) => data.value.leafIndexByItemIndex[index]!))].sort((left, right) => left - right);
-  const touchedVectorBlocks = new Set(changes.map(([index]) => Math.floor(index / LEAF_SIZE))).size;
-  const touchedPartitions = touchedVectorBlocks + touchedLeaves.length;
-  const repairBound = blockedRepairBound(changes.length, state.items.size, touchedPartitions);
-  let next: SpatialLayoutState<ID>;
-  if (useBlockedRepair(changes.length, state.items.size, touchedPartitions)) {
-    const vector = data.value.items.updateDetailed(changes);
-    const work = { copiedNodes: vector.copiedNodes };
-    next = createMeasuredState(state, data.value, vector.vector, touchedLeaves, generation.value, work);
-    recordRepairDiagnostics(next, {
-      mode: 'incremental',
-      changed: changes.length,
-      touchedBlocks: touchedPartitions,
-      copiedNodes: work.copiedNodes,
-      copiedEntries: vector.copiedEntries,
-      rebuiltItems: 0,
-      repairBound,
-    });
-  } else {
-    const items = new Array<SpatialItem<ID>>(data.value.items.size);
-    data.value.items.forEach((item, index) => { items[index] = replacements.get(index) ?? item; });
-    next = createOwnedState(state.domain, items, state.maxItems, generation.value);
-    recordRepairDiagnostics(next, {
-      mode: 'rebuild',
-      changed: changes.length,
-      touchedBlocks: touchedPartitions,
-      copiedNodes: 0,
-      copiedEntries: 0,
-      rebuiltItems: state.items.size,
-      repairBound,
-    });
-  }
+  const next = applySpatialChanges(state, data.value, changes, generation.value);
   return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
 }
 
@@ -330,40 +282,7 @@ function tryApplySpatialPatch<ID extends StableID>(
     const before = anchorRect(state, anchor);
     const generation = nextGeneration(state.generation);
     if (!generation.ok) return generation;
-    const touchedLeaves = [...new Set(changes.map(([index]) => data.value.leafIndexByItemIndex[index]!))]
-      .sort((left, right) => left - right);
-    const touchedVectorBlocks = new Set(changes.map(([index]) => Math.floor(index / LEAF_SIZE))).size;
-    const touchedPartitions = touchedVectorBlocks + touchedLeaves.length;
-    const repairBound = blockedRepairBound(changes.length, state.items.size, touchedPartitions);
-    let next: SpatialLayoutState<ID>;
-    if (useBlockedRepair(changes.length, state.items.size, touchedPartitions)) {
-      const vector = data.value.items.updateDetailed(changes);
-      const work = { copiedNodes: vector.copiedNodes };
-      next = createMeasuredState(state, data.value, vector.vector, touchedLeaves, generation.value, work);
-      recordRepairDiagnostics(next, {
-        mode: 'incremental',
-        changed: changes.length,
-        touchedBlocks: touchedPartitions,
-        copiedNodes: work.copiedNodes,
-        copiedEntries: vector.copiedEntries,
-        rebuiltItems: 0,
-        repairBound,
-      });
-    } else {
-      const items = new Array<SpatialItem<ID>>(data.value.items.size);
-      const replacements = new Map(changes);
-      data.value.items.forEach((item, index) => { items[index] = replacements.get(index) ?? item; });
-      next = createOwnedState(state.domain, items, state.maxItems, generation.value);
-      recordRepairDiagnostics(next, {
-        mode: 'rebuild',
-        changed: changes.length,
-        touchedBlocks: touchedPartitions,
-        copiedNodes: 0,
-        copiedEntries: 0,
-        rebuiltItems: state.items.size,
-        repairBound,
-      });
-    }
+    const next = applySpatialChanges(state, data.value, changes, generation.value);
     return ok(Object.freeze({
       state: next,
       scrollDelta: anchorDelta(before, anchorRect(next, anchor)),
@@ -378,7 +297,7 @@ function tryApplySpatialPatch<ID extends StableID>(
   const before = anchorRect(state, anchor);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const next = createState(domain.value, items, state.maxItems, generation.value);
+  const next = createOwnedState(domain.value, items, state.maxItems, generation.value);
   return ok(Object.freeze({
     state: next,
     scrollDelta: anchorDelta(before, anchorRect(next, anchor)),
@@ -453,6 +372,39 @@ function createMeasuredState<ID extends StableID>(
     contentSize: contentSize(root),
   } as SpatialInternals<StableID>);
   return state;
+}
+
+function applySpatialChanges<ID extends StableID>(
+  state: SpatialLayoutState<ID>,
+  data: SpatialInternals<ID>,
+  changes: readonly (readonly [number, SpatialItem<ID>])[],
+  generation: number,
+): SpatialLayoutState<ID> {
+  const touchedLeaves = [...new Set(changes.map(([index]) => data.leafIndexByItemIndex[index]!))]
+    .sort((left, right) => left - right);
+  const touchedPartitions = new Set(changes.map(([index]) => Math.floor(index / LEAF_SIZE))).size
+    + touchedLeaves.length;
+  const repairBound = blockedRepairBound(changes.length, state.items.size, touchedPartitions);
+  if (useBlockedRepair(changes.length, state.items.size, touchedPartitions)) {
+    const vector = data.items.updateDetailed(changes);
+    const work = { copiedNodes: vector.copiedNodes };
+    const next = createMeasuredState(state, data, vector.vector, touchedLeaves, generation, work);
+    recordRepairDiagnostics(next, {
+      mode: 'incremental', changed: changes.length, touchedBlocks: touchedPartitions,
+      copiedNodes: work.copiedNodes, copiedEntries: vector.copiedEntries,
+      rebuiltItems: 0, repairBound,
+    });
+    return next;
+  }
+  const replacements = new Map(changes);
+  const items = new Array<SpatialItem<ID>>(data.items.size);
+  data.items.forEach((item, index) => { items[index] = replacements.get(index) ?? item; });
+  const next = createOwnedState(state.domain, items, state.maxItems, generation);
+  recordRepairDiagnostics(next, {
+    mode: 'rebuild', changed: changes.length, touchedBlocks: touchedPartitions,
+    copiedNodes: 0, copiedEntries: 0, rebuiltItems: state.items.size, repairBound,
+  });
+  return next;
 }
 
 function validateItems<ID extends StableID>(items: readonly SpatialItem<ID>[], maxItems: number): VirtualResult<{ readonly domain: Sequence<ID>; readonly items: readonly SpatialItem<ID>[] }> {

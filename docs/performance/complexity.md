@@ -14,7 +14,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | tabular | 32 | 0 | 4 |
 | temporal | 99 | 24 | 2 |
 | terminal | 347 | 177 | 2 |
-| virtual | 89 | 0 | 16 |
+| virtual | 89 | 0 | 18 |
 | vue | 704 | 315 | 4 |
 
 ## Variables
@@ -109,6 +109,8 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:indexed-view.to-array | trusted | `O(nItem)` worst-case | `O(log nItem)` | `O(nItem)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | virtual:linear.measure | trusted | `O(jChanged log nItem)` worst-case | `O(jChanged log nItem)` | `O(1)` | `O(jChanged log nItem)` | forbidden | VAL-016, VAL-017 |
 | virtual:linear.query | trusted | `O((log nItem)^2 + kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| virtual:masonry.formula.derive | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| virtual:masonry.formula.query | trusted | `O(vLane + cCandidate + kPlacement log kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:masonry.measure | trusted | `O(nItem log lLane + jChanged log nItem)` worst-case | `O(nItem + jChanged log nItem)` | `O(nItem)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
 | virtual:masonry.query | trusted | `O(vLane log nItem + kPlacement log kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:partitioned.measure.incremental | trusted | `O(jChanged log nTrack + rRepair)` worst-case | `O(jChanged + rRepair)` | `O(1)` | `O(rRepair)` | forbidden | VAL-016, VAL-017 |
@@ -116,7 +118,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:partitioned.query | trusted | `O(log nRegion + cCandidate + kPlacement log kPlacement)` expected | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:spatial.measure.incremental | trusted | `O(jChanged log jChanged + rRepair)` worst-case | `O(jChanged + rRepair)` | `O(1)` | `O(rRepair)` | forbidden | VAL-016, VAL-017 |
 | virtual:spatial.measure.rebuild | trusted | `O(nItem log nItem)` worst-case | `O(nItem)` | `O(nItem)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
-| virtual:spatial.query | trusted | `O(log nItem + kPlacement)` expected | `O(log nItem + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| virtual:spatial.query | trusted | `O(log nItem + kPlacement log kPlacement)` expected | `O(log nItem + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.measure | trusted | `O(jChanged log nTrack)` worst-case | `O(jChanged log nTrack)` | `O(1)` | `O(jChanged log nTrack)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.query | trusted | `O(log nRegion + cCandidate + kPlacement log kPlacement)` worst-case | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | vue:collection.external-reconcile | external | `O(nOption + sSelected + dDisabled)` expected | `O(nOption + sSelected + dDisabled)` | `O(sSelected)` | `O(sSelected)` | allowed | VAL-016, VAL-017 |
