@@ -20,7 +20,9 @@ Object.assign(globalThis, {
   ResizeObserver: browserWindow.ResizeObserver,
 });
 
-const { createApp, h, nextTick, shallowRef } = await import('vue');
+const { createApp, createSSRApp, h, nextTick, shallowRef } = await import('vue');
+const { renderToString } = await import('@vue/server-renderer');
+const { createChartController } = await import('@sectile/chart/controller');
 const {
   ChartAxisView,
   ChartCartesian,
@@ -28,6 +30,7 @@ const {
   ChartNavigation,
   ChartPanControl,
   ChartPlot,
+  ChartProvider,
   ChartRenderer,
   ChartResetView,
   ChartRoot,
@@ -35,6 +38,9 @@ const {
   ChartXAxis,
   ChartYAxis,
   ChartZoomControl,
+  useChartAxisSelector,
+  useChartLayerSelector,
+  useChartSelector,
 } = await import('../.verification-dist/chart.js');
 
 const initial = Object.freeze([
@@ -123,5 +129,112 @@ test('direct gestures require a declared visible or external control alternative
   await nextTick();
   assert.equal(errors.length, 1);
   assert.match(String(errors[0]), /ChartViewControls|ChartExternalViewControls/);
+  app.unmount(); host.remove();
+});
+
+test('granular provider selectors publish only their selected changes and release on unmount', async () => {
+  const controller = createChartController({
+    definition: {
+      coordinate: { kind: 'cartesian', axes: [
+        { id: 'x', orientation: 'x', scale: 'linear' },
+        { id: 'y', orientation: 'y', scale: 'linear' },
+      ] },
+      layers: [{ id: 'series', kind: 'line', data: [{ id: 1, x: 0, y: 0 }], xAxis: 'x', yAxis: 'y' }],
+    },
+  });
+  const renders = { cursor: 0, layer: 0, axis: 0 };
+  const CursorProbe = { setup() { const value = useChartSelector((state) => state?.cursor); return () => { renders.cursor += 1; return String(value.value); }; } };
+  const LayerProbe = { setup() { const value = useChartLayerSelector('series', (layer) => layer?.kind); return () => { renders.layer += 1; return String(value.value); }; } };
+  const AxisProbe = { setup() { const value = useChartAxisSelector('x', (axis) => axis?.scale); return () => { renders.axis += 1; return String(value.value); }; } };
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({ render: () => h(ChartProvider, { controller }, () => [h(CursorProbe), h(LayerProbe), h(AxisProbe)]) });
+  app.mount(host);
+  await nextTick();
+  assert.deepEqual(renders, { cursor: 1, layer: 1, axis: 1 });
+  controller.dispatch({ type: 'set-cursor', id: 1 });
+  await nextTick();
+  assert.deepEqual(renders, { cursor: 2, layer: 1, axis: 1 });
+  app.unmount();
+  controller.dispatch({ type: 'set-cursor', id: null });
+  await nextTick();
+  assert.deepEqual(renders, { cursor: 2, layer: 1, axis: 1 });
+  controller.dispose(); host.remove();
+});
+
+test('ChartRoot hydrates deterministic structure before creating renderer resources', async () => {
+  const projections = [];
+  const renderer = mockRenderer(projections);
+  let hydratedController = null;
+  const component = {
+    render: () => h(ChartRoot, { dom: { renderer } }, {
+      default: (slot) => {
+        hydratedController = slot.controller;
+        return [
+          h(ChartCartesian, null, () => [
+            h(ChartXAxis, { id: 'x', scale: 'linear' }),
+            h(ChartYAxis, { id: 'y', scale: 'linear' }),
+            h(ChartLine, { id: 'series', data: [{ id: 1, x: 0, y: 0 }], xAxis: 'x', yAxis: 'y' }),
+          ]),
+          h(ChartPlot, null, () => h(ChartRenderer)),
+        ];
+      },
+    }),
+  };
+  const html = await renderToString(createSSRApp(component));
+  assert.equal(projections.length, 0);
+  assert.match(html, /data-part="root"/);
+  assert.match(html, /data-part="plot"/);
+  assert.match(html, /data-part="renderer"/);
+
+  const host = document.createElement('div');
+  host.innerHTML = html;
+  document.body.append(host);
+  const app = createSSRApp(component);
+  app.mount(host);
+  await nextTick(); await nextTick();
+  assert.ok(hydratedController);
+  assert.ok(projections.length >= 1);
+  app.unmount(); host.remove();
+});
+
+test('two roots synchronize axis-domain views only through consumer-owned controlled state', async () => {
+  const definition = {
+    coordinate: { kind: 'cartesian', axes: [
+      { id: 'x', orientation: 'x', scale: 'linear' },
+      { id: 'y', orientation: 'y', scale: 'linear' },
+    ] },
+    layers: [{ id: 'series', kind: 'line', data: [{ id: 1, x: 0, y: 0 }, { id: 2, x: 10, y: 10 }], xAxis: 'x', yAxis: 'y' }],
+  };
+  const seed = createChartController({ definition, viewCapabilities: [{ axisID: 'x' }] });
+  const view = shallowRef(seed.getSnapshot().state.view);
+  seed.dispose();
+  const controllers = [];
+  const chart = (index) => h(ChartRoot, {
+    view: view.value,
+    'onUpdate:view': (next) => { view.value = next; },
+  }, {
+    default: (slot) => {
+      controllers[index] = slot.controller;
+      return h(ChartCartesian, null, () => [
+        h(ChartXAxis, { id: 'x', scale: 'linear' }, () => h(ChartAxisView)),
+        h(ChartYAxis, { id: 'y', scale: 'linear' }),
+        h(ChartLine, { id: 'series', data: definition.layers[0].data, xAxis: 'x', yAxis: 'y' }),
+      ]);
+    },
+  });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({ render: () => h('div', [chart(0), chart(1)]) });
+  app.mount(host);
+  await nextTick(); await nextTick();
+  controllers[0].dispatch({ type: 'zoom-axis-view', axisID: 'x', factor: 2, phase: 'settled' });
+  await nextTick(); await nextTick();
+  assert.deepEqual(controllers[0].getSnapshot().state.view, view.value);
+  assert.deepEqual(controllers[1].getSnapshot().state.view, view.value);
+  assert.deepEqual(
+    controllers[0].getSnapshot().state.view.axes[0].visible,
+    controllers[1].getSnapshot().state.view.axes[0].visible,
+  );
   app.unmount(); host.remove();
 });

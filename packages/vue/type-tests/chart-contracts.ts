@@ -3,10 +3,16 @@ import type { ChartSelection, ChartViewState } from '@sectile/chart/interaction'
 import type {
   ChartAxisProps,
   ChartCartesianLayerProps,
+  ChartComponents,
   ChartDonutProps,
+  ChartProviderProps,
   ChartRootProps,
   UseChartOptions,
   UseChartResult,
+  createChartComponents,
+  useChartAxisSelector,
+  useChartLayerSelector,
+  useChartSelector,
 } from '../.verification-dist/chart.js';
 import type { VirtualListKeyResolver } from '../.verification-dist/virtual-list.js';
 
@@ -16,11 +22,18 @@ type Datum = { readonly id: 1 | 2; readonly recordedAt: Date | number; readonly 
 declare const options: UseChartOptions<ID>;
 declare const result: UseChartResult<ID>;
 declare const props: ChartRootProps<ID>;
+declare const provider: ChartProviderProps<ID>;
 
 options.cursor?.value satisfies ID | null | undefined;
 result.controller.dispatch({ type: 'set-cursor', id: 1 });
 props.cursor satisfies ID | null | undefined;
 props.view satisfies ChartViewState<ID> | null | undefined;
+provider.controller satisfies UseChartResult<ID>['controller'];
+const components: ChartComponents<ID> = createChartComponents(result.controller);
+components.Root satisfies ChartComponents<ID>['Root'];
+void useChartSelector<ID, ID | null>((state) => state?.cursor ?? null);
+void useChartLayerSelector<ID, string | null>('series', (layer) => layer?.kind ?? null);
+void useChartAxisSelector<ID, string | null>('time', (value) => value?.scale ?? null);
 
 const axis: ChartAxisProps<'time'> = { id: 'time', scale: 'temporal', field: 'recordedAt' };
 const line: ChartCartesianLayerProps<Datum, ID> = {

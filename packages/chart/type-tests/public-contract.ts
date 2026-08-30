@@ -45,6 +45,9 @@ declare const controller: ChartController<1 | '1'>;
 controller.replaceModel(mixedModel);
 controller.dispatch({ type: 'set-cursor', id: 1 });
 controller.dispatch({ type: 'set-cursor', id: '1' });
+controller.subscribeSnapshots((snapshot) => {
+  snapshot.state.cursor satisfies 1 | '1' | null;
+});
 declare const modelState: ReturnType<typeof controller.getModel>;
 replaceChartLayer(modelState, mixedModel.layers[0]!);
 

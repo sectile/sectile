@@ -16,7 +16,7 @@ import type {
   ChartLayerDefinition,
   ChartViewState,
 } from '@sectile/chart/contract';
-import type { ChartDefinition, ChartDefinitionState } from '@sectile/chart/definition';
+import type { ChartDefinition, ChartDefinitionState, ResolvedChartLayer } from '@sectile/chart/definition';
 import type {
   ChartCommand,
   ChartControlledValues,
@@ -29,6 +29,7 @@ import type { ChartProjection } from '@sectile/chart/projection';
 import type { ChartResult } from '@sectile/chart/result';
 import type { ChartScaleKind } from '@sectile/chart/scale';
 import type { ChartAxisViewCapability } from '@sectile/chart/view';
+import type { ResolvedChartAxis } from '@sectile/chart/layout';
 import {
   createDOMChart,
   type DOMChartConnection,
@@ -112,7 +113,12 @@ export interface UseChartResult<ID extends StableID = StableID> {
   dispose(): void;
 }
 
-export interface ChartContext<ID extends StableID = StableID> extends UseChartResult<ID> {}
+export interface ChartContext<ID extends StableID = StableID> {
+  readonly controller: Readonly<ShallowRef<ChartController<ID> | null>>;
+  readonly snapshot: Readonly<ShallowRef<RevisionSnapshot<ChartState<ID>> | null>>;
+  dispatch(event: ChartEvent<ID>): ChartResult<RevisionSnapshot<ChartState<ID>> | null>;
+  applyPatch(patch: ChartPatch<ID>): ChartResult<RevisionSnapshot<ChartState<ID>> | null>;
+}
 
 export function useChart<ID extends StableID>(options: UseChartOptions<ID>): UseChartResult<ID> {
   if (options === null || typeof options !== 'object') throw new TypeError('useChart options must be an object.');
@@ -226,6 +232,7 @@ class ChartDeclarations<ID extends StableID> {
   readonly #publish: (value: AssembledChart<ID>) => void;
   #token = 0;
   #scheduled = false;
+  #active = true;
   #publications = 0;
   #readRecords = 0;
 
@@ -248,6 +255,7 @@ class ChartDeclarations<ID extends StableID> {
   }
 
   public publishNow(): void {
+    if (!this.#active) return;
     this.#scheduled = false;
     this.#publish(this.assemble());
     this.#publications += 1;
@@ -262,7 +270,7 @@ class ChartDeclarations<ID extends StableID> {
   }
 
   public schedule(): void {
-    if (this.#scheduled) return;
+    if (!this.#active || this.#scheduled) return;
     this.#scheduled = true;
     void nextTick(() => { if (this.#scheduled) this.publishNow(); });
   }
@@ -295,6 +303,13 @@ class ChartDeclarations<ID extends StableID> {
       navigation: Object.freeze({ ...(navigation ?? {}), ...(alternative === undefined ? {} : { controlAlternative: alternative }) }),
     });
   }
+
+  public dispose(): void {
+    if (!this.#active) return;
+    this.#active = false;
+    this.#scheduled = false;
+    this.#records.clear();
+  }
 }
 
 interface InternalChartContext<ID extends StableID> {
@@ -304,7 +319,13 @@ interface InternalChartContext<ID extends StableID> {
   dispatch(event: ChartEvent<ID>): void;
 }
 
+interface ChartOwnerContext<ID extends StableID> {
+  readonly controller: Readonly<ShallowRef<ChartController<ID>>>;
+}
+
 const chartKey: InjectionKey<InternalChartContext<StableID>> = Symbol('SectileChart');
+const chartPublicKey: InjectionKey<ChartContext<StableID>> = Symbol('SectileChartPublic');
+const chartOwnerKey: InjectionKey<ChartOwnerContext<StableID>> = Symbol('SectileChartOwner');
 const chartAxisKey: InjectionKey<ShallowRef<StableID>> = Symbol('SectileChartAxis');
 const chartControlAxisKey: InjectionKey<ShallowRef<StableID>> = Symbol('SectileChartControlAxis');
 
@@ -314,8 +335,112 @@ function useInternalChart<ID extends StableID = StableID>(): InternalChartContex
   return context as unknown as InternalChartContext<ID>;
 }
 
-export function useChartContext<ID extends StableID = StableID>(): Pick<InternalChartContext<ID>, 'controller' | 'dispatch'> {
-  return useInternalChart<ID>();
+export function useChartContext<ID extends StableID = StableID>(): ChartContext<ID> {
+  const context = inject(chartPublicKey);
+  if (context === undefined) throw new TypeError('useChartContext must be used inside ChartRoot or ChartProvider.');
+  return context as unknown as ChartContext<ID>;
+}
+
+export interface ChartProviderProps<ID extends StableID = StableID> {
+  readonly controller: ChartController<ID>;
+}
+
+export interface ChartProviderSlotProps<ID extends StableID = StableID> {
+  readonly controller: ChartController<ID>;
+  readonly snapshot: RevisionSnapshot<ChartState<ID>>;
+  readonly state: ChartState<ID>;
+  readonly definition: ChartDefinitionState<ID> | null;
+}
+
+export interface ChartProviderComponent {
+  new <ID extends StableID = StableID>(props: ChartProviderProps<ID>): {
+    $props: ChartProviderProps<ID>;
+    $slots: { default?: (props: ChartProviderSlotProps<ID>) => VNodeChild };
+  };
+}
+
+const ChartProviderRuntime = defineComponent({
+  name: 'SectileChartProvider',
+  props: { controller: { type: Object as PropType<ChartController>, required: true } },
+  setup(props, { slots }) {
+    const controller = shallowRef(props.controller as ChartController<StableID>);
+    const snapshot = shallowRef(controller.value.getSnapshot());
+    const unsubscribe = controller.value.subscribeSnapshots((next) => { snapshot.value = next; });
+    const owner: ChartOwnerContext<StableID> = Object.freeze({ controller });
+    const context: ChartContext<StableID> = Object.freeze({
+      controller,
+      snapshot,
+      dispatch(event: ChartEvent<StableID>): ChartResult<RevisionSnapshot<ChartState<StableID>> | null> {
+        const result = controller.value.dispatch(event);
+        return result.ok ? Object.freeze({ ok: true as const, value: result.value.snapshot }) : result;
+      },
+      applyPatch(patch: ChartPatch<StableID>): ChartResult<RevisionSnapshot<ChartState<StableID>> | null> {
+        return controller.value.applyPatch(patch);
+      },
+    });
+    provide(chartOwnerKey, owner);
+    provide(chartPublicKey, context);
+    onScopeDispose(unsubscribe);
+    return (): VNodeChild => slots['default']?.({
+      controller: controller.value,
+      snapshot: snapshot.value,
+      state: snapshot.value.state,
+      definition: controller.value.getDefinition(),
+    }) ?? null;
+  },
+});
+
+export const ChartProvider = ChartProviderRuntime as unknown as ChartProviderComponent;
+
+export type ChartSelectorFunction<ID extends StableID, Selected> = (state: ChartState<ID> | null) => Selected;
+export type ChartLayerSelectorFunction<ID extends StableID, Selected> = (layer: ResolvedChartLayer<ID> | null) => Selected;
+export type ChartAxisSelectorFunction<ID extends StableID, Selected> = (axis: ResolvedChartAxis<ID> | null) => Selected;
+export interface ChartSelectorOptions<Selected> { readonly equals?: (previous: Selected, next: Selected) => boolean }
+
+export function useChartSelector<ID extends StableID, Selected>(
+  selector: ChartSelectorFunction<ID, Selected>,
+  options: ChartSelectorOptions<Selected> = {},
+): Readonly<ShallowRef<Selected>> {
+  const context = useChartContext<ID>();
+  return useChartContextSelector(context, () => selector(context.snapshot.value?.state ?? null), options.equals);
+}
+
+export function useChartLayerSelector<ID extends StableID, Selected>(
+  id: ID,
+  selector: ChartLayerSelectorFunction<ID, Selected>,
+  options: ChartSelectorOptions<Selected> = {},
+): Readonly<ShallowRef<Selected>> {
+  const context = useChartContext<ID>();
+  return useChartContextSelector(context, () => {
+    const layers = context.controller.value?.getDefinition()?.layers;
+    return selector(layers?.find((layer) => layer.id === id) ?? null);
+  }, options.equals);
+}
+
+export function useChartAxisSelector<ID extends StableID, Selected>(
+  id: ID,
+  selector: ChartAxisSelectorFunction<ID, Selected>,
+  options: ChartSelectorOptions<Selected> = {},
+): Readonly<ShallowRef<Selected>> {
+  const context = useChartContext<ID>();
+  return useChartContextSelector(context, () => {
+    const axes = context.controller.value?.getDefinition()?.axes;
+    return selector(axes?.find((axis) => axis.id === id) ?? null);
+  }, options.equals);
+}
+
+function useChartContextSelector<Selected>(
+  context: ChartContext,
+  read: () => Selected,
+  equals: (previous: Selected, next: Selected) => boolean = Object.is,
+): Readonly<ShallowRef<Selected>> {
+  const selected = shallowRef(read()) as ShallowRef<Selected>;
+  const stop = watch([context.controller, context.snapshot], () => {
+    const next = read();
+    if (!equals(selected.value, next)) selected.value = next;
+  }, { deep: false, flush: 'sync' });
+  onScopeDispose(stop);
+  return selected;
 }
 
 const ChartRootRuntime = defineComponent({
@@ -344,16 +469,20 @@ const ChartRootRuntime = defineComponent({
   },
   setup(props, { attrs, emit, expose, slots }) {
     assertRootControlledDefaults(props);
+    const ownerContext = inject(chartOwnerKey, undefined);
+    const ownsController = ownerContext === undefined;
     const root = shallowRef<HTMLElement | null>(null);
     const canvas = shallowRef<HTMLCanvasElement | null>(null);
-    const controller = shallowRef<ChartController | null>(null);
-    const snapshot = shallowRef<RevisionSnapshot<ChartState> | null>(null);
+    const controller = shallowRef<ChartController | null>(ownerContext?.controller.value ?? null);
+    const snapshot = shallowRef<RevisionSnapshot<ChartState> | null>(controller.value?.getSnapshot() ?? null);
     const projection = shallowRef<ChartProjection | null>(null);
     const connection = shallowRef<DOMChartConnection | null>(null);
     let assembled: AssembledChart<StableID> | null = null;
-    let unsubscribe: (() => void) | null = null;
-    let previousState: ChartState | null = null;
+    let unsubscribeCommands: (() => void) | null = null;
+    let unsubscribeSnapshots: (() => void) | null = null;
+    let previousState: ChartState | null = snapshot.value?.state ?? null;
     let mounted = false;
+    let definitionAccepted = false;
     const controlled = Object.freeze({
       activeDatum: props.activeDatum !== undefined,
       cursor: props.cursor !== undefined,
@@ -407,10 +536,12 @@ const ChartRootRuntime = defineComponent({
     };
     const publishDefinition = (next: AssembledChart<StableID>): void => {
       assembled = next;
+      definitionAccepted = false;
       const owner = controller.value;
-      if (owner === null) return;
+      if (!mounted || owner === null) return;
       const replaced = owner.replaceDefinition(next.definition, next.viewCapabilities);
       if (!replaced.ok) { report(new TypeError(`${replaced.error.code}: ${replaced.error.message}`)); return; }
+      definitionAccepted = true;
       publishSnapshot();
       const navigation = connection.value?.setNavigation(next.navigation);
       if (navigation !== undefined && !navigation.ok) report(new TypeError(`${navigation.error.code}: ${navigation.error.message}`));
@@ -430,6 +561,23 @@ const ChartRootRuntime = defineComponent({
       },
     });
     provide(chartKey, context);
+    const publicContext: ChartContext<StableID> = Object.freeze({
+      controller,
+      snapshot,
+      dispatch(event: ChartEvent<StableID>): ChartResult<RevisionSnapshot<ChartState<StableID>> | null> {
+        const result = controller.value?.dispatch(event);
+        if (result === undefined) return Object.freeze({ ok: true as const, value: null });
+        publishSnapshot();
+        return result.ok ? Object.freeze({ ok: true as const, value: result.value.snapshot }) : result;
+      },
+      applyPatch(patch: ChartPatch<StableID>): ChartResult<RevisionSnapshot<ChartState<StableID>> | null> {
+        const result = controller.value?.applyPatch(patch);
+        if (result === undefined) return Object.freeze({ ok: true as const, value: null });
+        publishSnapshot();
+        return result;
+      },
+    });
+    provide(chartPublicKey, publicContext);
 
     const syncControlled = (): void => {
       const owner = controller.value;
@@ -468,26 +616,40 @@ const ChartRootRuntime = defineComponent({
           ...(!controlled.selection && props.defaultModelValue !== undefined ? { selection: props.defaultModelValue } : {}),
           ...(!controlled.view && props.defaultView !== undefined ? { view: props.defaultView } : {}),
         });
-        controller.value = createChartController({
-          definition: next.definition,
-          viewCapabilities: next.viewCapabilities,
-          ...(props.limits === undefined ? {} : { limits: props.limits }),
-          ...(Object.keys(controlledValues).length === 0 ? {} : { controlled: controlledValues }),
-          ...(Object.keys(initialValues).length === 0 ? {} : { initialValues }),
-        });
+        if (ownerContext === undefined) {
+          controller.value = createChartController({
+            definition: next.definition,
+            viewCapabilities: next.viewCapabilities,
+            ...(props.limits === undefined ? {} : { limits: props.limits }),
+            ...(Object.keys(controlledValues).length === 0 ? {} : { controlled: controlledValues }),
+            ...(Object.keys(initialValues).length === 0 ? {} : { initialValues }),
+          });
+        } else {
+          const borrowed = ownerContext.controller.value;
+          if (!definitionAccepted) return;
+          controller.value = borrowed;
+          if (Object.keys(controlledValues).length !== 0) {
+            const synced = borrowed.syncControlledValues(controlledValues);
+            if (!synced.ok) throw new TypeError(`${synced.error.code}: ${synced.error.message}`);
+          }
+        }
         snapshot.value = controller.value.getSnapshot();
         previousState = snapshot.value.state;
-        unsubscribe = controller.value.subscribeCommands(onCommand);
+        unsubscribeCommands = controller.value.subscribeCommands(onCommand);
+        unsubscribeSnapshots = controller.value.subscribeSnapshots(() => { publishSnapshot(); });
         void nextTick(connect);
       } catch (error) { report(error); }
     });
     onBeforeUnmount(() => {
       mounted = false;
+      declarations.dispose();
       connection.value?.disconnect();
       connection.value = null;
-      unsubscribe?.();
-      unsubscribe = null;
-      controller.value?.dispose();
+      unsubscribeCommands?.();
+      unsubscribeCommands = null;
+      unsubscribeSnapshots?.();
+      unsubscribeSnapshots = null;
+      if (ownsController) controller.value?.dispose();
       controller.value = null;
     });
     expose({
@@ -930,6 +1092,120 @@ export const ChartLegend = semanticMarker('SectileChartLegend', 'legend');
 export const ChartAxisTicks = semanticMarker('SectileChartAxisTicks', 'axis-ticks');
 export const ChartTicks = ChartAxisTicks;
 
+export type ChartBoundProviderPublicProps = VNodeProps & AllowedComponentProps & ComponentCustomProps;
+export interface ChartBoundProviderComponent<ID extends StableID = StableID> {
+  new (props: ChartBoundProviderPublicProps): {
+    $props: ChartBoundProviderPublicProps;
+    $slots: { default?: (props: ChartProviderSlotProps<ID>) => VNodeChild };
+  };
+}
+export interface ChartBoundRootComponent<ID extends StableID = StableID> {
+  new (props: ChartRootPublicProps<ID>): {
+    $props: ChartRootPublicProps<ID>;
+    $slots: { default?: (props: ChartRootSlotProps<ID>) => VNodeChild };
+    readonly controller: ShallowRef<ChartController<ID> | null>;
+    getDeclarationDiagnostics(): ChartDeclarationDiagnostics;
+    refresh(): void;
+  };
+}
+
+export interface ChartComponents<ID extends StableID = StableID> {
+  readonly Provider: ChartBoundProviderComponent<ID>;
+  readonly Root: ChartBoundRootComponent<ID>;
+  readonly Cartesian: typeof ChartCartesian;
+  readonly Radial: typeof ChartRadial;
+  readonly XAxis: typeof ChartXAxis;
+  readonly YAxis: typeof ChartYAxis;
+  readonly AxisView: typeof ChartAxisView;
+  readonly Line: typeof ChartLine;
+  readonly Scatter: typeof ChartScatter;
+  readonly Bar: typeof ChartBar;
+  readonly Bars: typeof ChartBars;
+  readonly Heatmap: typeof ChartHeatmap;
+  readonly Pie: typeof ChartPie;
+  readonly Donut: typeof ChartDonut;
+  readonly Navigation: typeof ChartNavigation;
+  readonly ViewControls: typeof ChartViewControls;
+  readonly ExternalViewControls: typeof ChartExternalViewControls;
+  readonly PanControl: typeof ChartPanControl;
+  readonly ZoomControl: typeof ChartZoomControl;
+  readonly ResetView: typeof ChartResetView;
+  readonly Plot: typeof ChartPlot;
+  readonly Renderer: typeof ChartRenderer;
+  readonly Canvas: typeof ChartCanvas;
+  readonly Grid: typeof ChartGrid;
+  readonly GridLines: typeof ChartGridLines;
+  readonly Legend: typeof ChartLegend;
+  readonly AxisTicks: typeof ChartAxisTicks;
+  readonly Ticks: typeof ChartTicks;
+}
+
+const chartSuiteKey: InjectionKey<object> = Symbol('SectileChartSuite');
+const chartComponentSuites = new WeakMap<object, unknown>();
+
+export function createChartComponents<ID extends StableID>(controller: ChartController<ID>): ChartComponents<ID> {
+  if (controller === null || typeof controller !== 'object') throw new TypeError('createChartComponents requires a Chart controller.');
+  const cached = chartComponentSuites.get(controller);
+  if (cached !== undefined) return cached as ChartComponents<ID>;
+  const token = Object.freeze({ controller });
+  const suite = Object.freeze({
+    Provider: boundChartProvider(controller, token),
+    Root: boundChartRoot<ID>(token),
+    Cartesian: ChartCartesian,
+    Radial: ChartRadial,
+    XAxis: ChartXAxis,
+    YAxis: ChartYAxis,
+    AxisView: ChartAxisView,
+    Line: ChartLine,
+    Scatter: ChartScatter,
+    Bar: ChartBar,
+    Bars: ChartBars,
+    Heatmap: ChartHeatmap,
+    Pie: ChartPie,
+    Donut: ChartDonut,
+    Navigation: ChartNavigation,
+    ViewControls: ChartViewControls,
+    ExternalViewControls: ChartExternalViewControls,
+    PanControl: ChartPanControl,
+    ZoomControl: ChartZoomControl,
+    ResetView: ChartResetView,
+    Plot: ChartPlot,
+    Renderer: ChartRenderer,
+    Canvas: ChartCanvas,
+    Grid: ChartGrid,
+    GridLines: ChartGridLines,
+    Legend: ChartLegend,
+    AxisTicks: ChartAxisTicks,
+    Ticks: ChartTicks,
+  }) as unknown as ChartComponents<ID>;
+  chartComponentSuites.set(controller, suite);
+  return suite;
+}
+
+function boundChartProvider<ID extends StableID>(controller: ChartController<ID>, token: object): ChartBoundProviderComponent<ID> {
+  return defineComponent({
+    name: 'SectileBoundChartProvider',
+    inheritAttrs: false,
+    setup(_props, { attrs, slots }) {
+      provide(chartSuiteKey, token);
+      return (): VNodeChild => h(ChartProviderRuntime, { ...attrs, controller }, slots);
+    },
+  }) as unknown as ChartBoundProviderComponent<ID>;
+}
+
+function boundChartRoot<ID extends StableID>(token: object): ChartBoundRootComponent<ID> {
+  return defineComponent({
+    name: 'SectileBoundChartRoot',
+    inheritAttrs: false,
+    setup(_props, { attrs, slots }) {
+      if (inject(chartSuiteKey, undefined) !== token) {
+        throw new TypeError('Controller-bound Chart.Root requires its matching Chart.Provider.');
+      }
+      return (): VNodeChild => h(ChartRootRuntime, attrs, slots);
+    },
+  }) as unknown as ChartBoundRootComponent<ID>;
+}
+
 function requiredControlAxis(axis: StableID | undefined, inheritedAxis: StableID | undefined): StableID {
   const resolved = axis ?? inheritedAxis;
   if (resolved === undefined) throw new TypeError('Chart view control requires an axis prop or an enclosing axis control scope.');
@@ -962,7 +1238,7 @@ function bindController<ID extends StableID>(
     if (!controlledFlags.selection && current.state.selection !== previous.state.selection) options.onSelectionChange?.(current.state.selection);
     if (!controlledFlags.view && current.state.view !== previous.state.view) options.onViewChange?.(current.state.view);
   };
-  const unsubscribe = controller.subscribeCommands((command) => {
+  const unsubscribeCommands = controller.subscribeCommands((command) => {
     options.onCommand?.(command);
     if (command.type === 'active-change-requested') {
       if (options.activeDatum !== undefined) options.activeDatum.value = command.id;
@@ -979,6 +1255,7 @@ function bindController<ID extends StableID>(
     }
     publish();
   });
+  const unsubscribeSnapshots = controller.subscribeSnapshots(() => { publish(); });
   const result: UseChartResult<ID> = {
     controller, snapshot, projection, connection,
     replaceModel(model, expectedRevision) { const value = controller.replaceModel(model, expectedRevision); publish(); return value; },
@@ -992,7 +1269,8 @@ function bindController<ID extends StableID>(
       if (!active) return;
       active = false;
       connection.value?.disconnect(); connection.value = null;
-      unsubscribe();
+      unsubscribeCommands();
+      unsubscribeSnapshots();
       if (owned) controller.dispose();
     },
   };

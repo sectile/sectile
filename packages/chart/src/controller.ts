@@ -77,6 +77,7 @@ export interface ChartController<ID extends StableID = StableID> {
   syncControlledValues(values: ChartControlledValues<ID>): ChartResult<RevisionSnapshot<ChartState<ID>>>;
   dispatch(event: ChartEvent<ID>, expectedRevision?: number): ChartResult<ChartUpdate<ID>>;
   project(input: ChartProjectionInput): ChartResult<ChartProjection<ID>>;
+  subscribeSnapshots(listener: (snapshot: RevisionSnapshot<ChartState<ID>>) => void): () => void;
   subscribeCommands(listener: (command: ChartCommand<ID>) => void): () => void;
   dispose(): void;
 }
@@ -130,6 +131,7 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
   readonly #controlled: ChartControlFlags;
   #controlledValues: ChartControlledValues<ID>;
   readonly #listeners = new Set<(command: ChartCommand<ID>) => void>();
+  readonly #snapshotListeners = new Set<(snapshot: RevisionSnapshot<ChartState<ID>>) => void>();
   #projectionCache: ProjectionCache<ID> | null = null;
   #disposed = false;
 
@@ -273,10 +275,22 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     };
   }
 
+  public subscribeSnapshots(listener: (snapshot: RevisionSnapshot<ChartState<ID>>) => void): () => void {
+    if (this.#disposed || typeof listener !== 'function') return (): void => undefined;
+    this.#snapshotListeners.add(listener);
+    let active = true;
+    return (): void => {
+      if (!active) return;
+      active = false;
+      this.#snapshotListeners.delete(listener);
+    };
+  }
+
   public dispose(): void {
     if (this.#disposed) return;
     this.#disposed = true;
     this.#listeners.clear();
+    this.#snapshotListeners.clear();
     this.#projectionCache = null;
   }
 
@@ -301,6 +315,7 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
   #commitState(state: ChartState<ID>, commands: readonly ChartCommand<ID>[]): ChartResult<RevisionSnapshot<ChartState<ID>>> {
     if (this.#snapshot.revision === Number.MAX_SAFE_INTEGER) return revisionExhausted();
     this.#snapshot = createRevisionSnapshot(state, this.#snapshot.revision + 1);
+    for (const listener of this.#snapshotListeners) listener(this.#snapshot);
     this.#emit(commands);
     return chartOK(this.#snapshot);
   }

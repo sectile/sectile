@@ -494,6 +494,58 @@
           "rationale": "The one-time index must contain every selected identity; subsequent membership queries cannot scan it."
         }
       }
+    },
+    {
+      "id": "controller.publish",
+      "inherits": "lifecycle-v1",
+      "source": "packages/chart/src/controller.ts",
+      "benchmarkIDs": [
+        "VAL-014:chart-snapshot-subscriptions"
+      ],
+      "specificationCeiling": "O(sSnapshot + cCommand*sCommand)",
+      "contract": {
+        "variables": [
+          {
+            "name": "sSnapshot",
+            "meaning": "active immutable snapshot listeners",
+            "ceiling": "consumer-owned subscription count"
+          },
+          {
+            "name": "sCommand",
+            "meaning": "active command listeners",
+            "ceiling": "consumer-owned subscription count"
+          },
+          {
+            "name": "cCommand",
+            "meaning": "commands emitted by one accepted transition",
+            "ceiling": "bounded Chart transition command count"
+          }
+        ],
+        "time": {
+          "bound": "O(sSnapshot + cCommand*sCommand)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(sSnapshot + sCommand)"
+        },
+        "resources": {
+          "allocations": "0 per listener notification",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(sSnapshot + sCommand)"
+        },
+        "proof": "One committed immutable snapshot is published directly to each snapshot listener before the already-bounded command list is delivered. Unsubscribe and controller disposal remove retained listeners idempotently.",
+        "adversarialWitness": "Every active snapshot and command listener remains mounted while one accepted transition emits its maximum bounded command list.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Publication iterates subscribed listeners only and never inspects chart data."
+        }
+      }
     }
   ]
 }

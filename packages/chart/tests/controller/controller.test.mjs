@@ -59,6 +59,19 @@ test('command subscriptions release exactly once and dispose clears controller r
   assert.equal(controller.project({ viewport: { width: 100, height: 100 } }).error.code, 'chart-controller-disposed');
 });
 
+test('snapshot subscriptions publish committed state once and release idempotently', () => {
+  const controller = createChartController(options());
+  const revisions = [];
+  const unsubscribe = controller.subscribeSnapshots((snapshot) => revisions.push(snapshot.revision));
+  controller.dispatch({ type: 'set-active', id: 1 });
+  controller.dispatch({ type: 'set-active', id: 1 });
+  controller.applyPatch({ operations: [{ type: 'insert', layerID: 'points', index: 2, data: [{ id: 2, x: 2, y: 2 }] }] });
+  assert.deepEqual(revisions, [1, 2]);
+  unsubscribe(); unsubscribe();
+  controller.dispatch({ type: 'set-active', id: '1' });
+  assert.deepEqual(revisions, [1, 2]);
+});
+
 const definition = (data) => ({
   coordinate: { kind: 'cartesian', axes: [
     { id: 7, orientation: 'x', scale: 'temporal', field: 'recordedAt' },
