@@ -5,10 +5,11 @@ import {
   VIEWPORT_HEIGHT,
   VIEWPORT_WIDTH,
   stableVariant,
-} from './constants.js';
-import type { BenchmarkFamily } from './families.js';
+} from './constants.ts';
+import type { BenchmarkFamily } from './families.ts';
 
 export type LayoutBenchmarkFamily = Exclude<BenchmarkFamily, 'list'>;
+export type LayoutFixtureProfile = 'uniform' | 'variable';
 export type LayoutMutationOperation = 'insert' | 'move' | 'remove' | 'resize';
 export type LayoutMutationLocation = 'start' | 'middle' | 'end';
 
@@ -40,6 +41,7 @@ export interface LayoutBenchmarkFixture {
   readonly columnWidths: readonly number[];
   readonly gap: number;
   readonly revision: number;
+  readonly profile: LayoutFixtureProfile;
 }
 
 export interface LayoutMutationScenario {
@@ -48,6 +50,7 @@ export interface LayoutMutationScenario {
   readonly before: LayoutBenchmarkFixture;
   readonly after: LayoutBenchmarkFixture;
   readonly affectedIDs: readonly string[];
+  readonly witnessIDs: readonly string[];
 }
 
 const FLOW_LANES = 4;
@@ -60,19 +63,25 @@ const SPATIAL_CELL_WIDTH = 112;
 const SPATIAL_CELL_HEIGHT = 84;
 const fixtureLanes = new WeakMap<LayoutBenchmarkFixture, readonly (readonly LayoutBenchmarkItem[])[]>();
 const fixtureLaneBounds = new WeakMap<LayoutBenchmarkFixture, readonly { readonly left: number; readonly right: number }[]>();
+const fixtureAdapterItems = new WeakMap<LayoutBenchmarkFixture, readonly LayoutBenchmarkItem[]>();
+
+export function layoutAdapterItems(fixture: LayoutBenchmarkFixture): readonly LayoutBenchmarkItem[] {
+  return fixtureAdapterItems.get(fixture) ?? fixture.items;
+}
 
 export function createLayoutFixture(
   family: LayoutBenchmarkFamily,
   count = ITEM_COUNT,
   revision = 0,
   source?: readonly LayoutBenchmarkItem[],
+  profile: LayoutFixtureProfile = 'variable',
 ): LayoutBenchmarkFixture {
   const boundedCount = Math.max(2, Math.min(1_000_000, count));
   switch (family) {
-    case 'flow-grid': return createFlowGridFixture(boundedCount, revision, source);
-    case 'masonry': return createMasonryFixture(boundedCount, revision, source);
-    case 'track-grid': return createTrackGridFixture(boundedCount, revision, source);
-    case 'spatial': return createSpatialFixture(boundedCount, revision, source);
+    case 'flow-grid': return createFlowGridFixture(boundedCount, revision, source, profile);
+    case 'masonry': return createMasonryFixture(boundedCount, revision, source, profile);
+    case 'track-grid': return createTrackGridFixture(boundedCount, revision, source, profile);
+    case 'spatial': return createSpatialFixture(boundedCount, revision, source, profile);
   }
 }
 
@@ -85,7 +94,10 @@ export function createLayoutMutationScenario(
   const source = [...fixture.items];
   const affectedIDs: string[] = [];
   if (operation === 'insert') {
-    const inserted = baseItem(`inserted-${fixture.revision + 1}-${location}`, index, fixture.revision + 1);
+    const base = baseItem(`inserted-${fixture.revision + 1}-${location}`, index, fixture.revision + 1);
+    const inserted = fixture.family === 'track-grid'
+      ? Object.freeze({ ...base, height: fixture.rowHeight, width: fixture.columnWidth })
+      : base;
     source.splice(index, 0, inserted);
     affectedIDs.push(inserted.id);
   } else if (operation === 'remove') {
@@ -109,8 +121,17 @@ export function createLayoutMutationScenario(
       affectedIDs.push(current.id);
     }
   }
-  const after = createLayoutFixture(fixture.family, source.length, fixture.revision + 1, source);
-  return Object.freeze({ operation, location, before: fixture, after, affectedIDs: Object.freeze(affectedIDs) });
+  const after = createLayoutFixture(fixture.family, source.length, fixture.revision + 1, source, fixture.profile);
+  inheritAdapterItemIdentity(fixture, after);
+  const witness = after.items[Math.min(index, after.items.length - 1)];
+  return Object.freeze({
+    operation,
+    location,
+    before: fixture,
+    after,
+    affectedIDs: Object.freeze(affectedIDs),
+    witnessIDs: Object.freeze(witness === undefined ? [] : [witness.id]),
+  });
 }
 
 export function expectedVisibleItems(
@@ -150,13 +171,16 @@ function createFlowGridFixture(
   count: number,
   revision: number,
   source?: readonly LayoutBenchmarkItem[],
+  profile: LayoutFixtureProfile = 'variable',
 ): LayoutBenchmarkFixture {
   const normalized = normalizeSource(count, revision, source);
   const rowCount = Math.ceil(normalized.length / FLOW_LANES);
   const rowHeights = Array.from({ length: rowCount }, () => ROW_HEIGHT);
-  if (source !== undefined) for (let index = 0; index < normalized.length; index += 1) {
+  if (profile === 'variable') for (let index = 0; index < normalized.length; index += 1) {
     const row = Math.floor(index / FLOW_LANES);
-    rowHeights[row] = Math.max(rowHeights[row]!, normalized[index]!.height);
+    const item = normalized[index]!;
+    const height = source === undefined ? ROW_HEIGHT + (item.contentVariant % 4) * 18 : item.height;
+    rowHeights[row] = Math.max(rowHeights[row]!, height);
   }
   const rowOffsets = new Float64Array(rowCount + 1);
   for (let row = 0; row < rowCount; row += 1) {
@@ -171,7 +195,9 @@ function createFlowGridFixture(
       x: column * (FLOW_ITEM_WIDTH + LANE_GAP),
       y: rowOffsets[row]!,
       width: FLOW_ITEM_WIDTH,
-      height: source === undefined ? ROW_HEIGHT : item.height,
+      height: profile === 'uniform'
+        ? ROW_HEIGHT
+        : source === undefined ? ROW_HEIGHT + (item.contentVariant % 4) * 18 : item.height,
       lane: column,
       row,
       column,
@@ -182,7 +208,7 @@ function createFlowGridFixture(
     contentHeight: rowOffsets[rowCount]!, laneCount: FLOW_LANES,
     rowCount, columnCount: FLOW_LANES, rowHeight: ROW_HEIGHT, columnWidth: FLOW_ITEM_WIDTH,
     rowHeights, columnWidths: Array.from({ length: FLOW_LANES }, () => FLOW_ITEM_WIDTH),
-    gap: LANE_GAP, revision,
+    gap: LANE_GAP, revision, profile,
   });
 }
 
@@ -190,6 +216,7 @@ function createMasonryFixture(
   count: number,
   revision: number,
   source?: readonly LayoutBenchmarkItem[],
+  profile: LayoutFixtureProfile = 'variable',
 ): LayoutBenchmarkFixture {
   const laneEnds = new Float64Array(FLOW_LANES);
   const heightScale = Math.min(1, Math.max(16 / 145, (
@@ -197,9 +224,11 @@ function createMasonryFixture(
   ) / 145));
   const items = normalizeSource(count, revision, source).map((item, index) => {
     const lane = shortestLane(laneEnds);
-    const naturalHeight = source === undefined
-      ? Math.max(16, Math.floor((88 + (item.contentVariant % 7) * 19) * heightScale))
-      : item.height;
+    const naturalHeight = profile === 'uniform'
+      ? ROW_HEIGHT
+      : source === undefined
+        ? Math.max(16, Math.floor((88 + (item.contentVariant % 7) * 19) * heightScale))
+        : item.height;
     const positioned = Object.freeze({
       ...item,
       index,
@@ -219,7 +248,7 @@ function createMasonryFixture(
     contentHeight: Math.max(0, ...laneEnds) - LANE_GAP, laneCount: FLOW_LANES,
     rowCount: items.length, columnCount: FLOW_LANES, rowHeight: ROW_HEIGHT,
     columnWidth: FLOW_ITEM_WIDTH, rowHeights: items.map((item) => item.height),
-    columnWidths: Array.from({ length: FLOW_LANES }, () => FLOW_ITEM_WIDTH), gap: LANE_GAP, revision,
+    columnWidths: Array.from({ length: FLOW_LANES }, () => FLOW_ITEM_WIDTH), gap: LANE_GAP, revision, profile,
   });
 }
 
@@ -227,6 +256,7 @@ function createTrackGridFixture(
   count: number,
   revision: number,
   source?: readonly LayoutBenchmarkItem[],
+  profile: LayoutFixtureProfile = 'variable',
 ): LayoutBenchmarkFixture {
   const columnCount = Math.max(2, Math.ceil(Math.sqrt(count)));
   const rowCount = Math.ceil(count / columnCount);
@@ -260,7 +290,7 @@ function createTrackGridFixture(
     laneCount: columnCount, rowCount, columnCount,
     rowHeight: TRACK_ROW_HEIGHT, columnWidth: TRACK_COLUMN_WIDTH,
     rowHeights, columnWidths: Array.from({ length: columnCount }, () => TRACK_COLUMN_WIDTH),
-    gap: 0, revision,
+    gap: 0, revision, profile,
   });
 }
 
@@ -268,14 +298,17 @@ function createSpatialFixture(
   count: number,
   revision: number,
   source?: readonly LayoutBenchmarkItem[],
+  profile: LayoutFixtureProfile = 'variable',
 ): LayoutBenchmarkFixture {
   const base = normalizeSource(count, revision, source);
+  let contentWidth = 0;
+  let contentHeight = 0;
   const items = base.map((item, index) => {
     const row = Math.floor(index / SPATIAL_COLUMNS);
     const column = index % SPATIAL_COLUMNS;
     const width = source === undefined ? 80 + (item.contentVariant % 3) * 8 : item.width;
     const height = source === undefined ? 54 + (item.contentVariant % 5) * 6 : item.height;
-    return Object.freeze({
+    const positioned = Object.freeze({
       ...item,
       index,
       x: column * SPATIAL_CELL_WIDTH + (item.contentVariant % 5),
@@ -287,17 +320,20 @@ function createSpatialFixture(
       row,
       column,
     });
+    contentWidth = Math.max(contentWidth, positioned.x + positioned.width);
+    contentHeight = Math.max(contentHeight, positioned.y + positioned.height);
+    return positioned;
   });
   const rowCount = Math.ceil(items.length / SPATIAL_COLUMNS);
   return freezeFixture({
     family: 'spatial', items,
-    contentWidth: SPATIAL_COLUMNS * SPATIAL_CELL_WIDTH,
-    contentHeight: rowCount * SPATIAL_CELL_HEIGHT,
+    contentWidth,
+    contentHeight,
     laneCount: SPATIAL_COLUMNS, rowCount, columnCount: SPATIAL_COLUMNS,
     rowHeight: SPATIAL_CELL_HEIGHT, columnWidth: SPATIAL_CELL_WIDTH,
     rowHeights: Array.from({ length: rowCount }, () => SPATIAL_CELL_HEIGHT),
     columnWidths: Array.from({ length: SPATIAL_COLUMNS }, () => SPATIAL_CELL_WIDTH),
-    gap: 0, revision,
+    gap: 0, revision, profile,
   });
 }
 
@@ -334,6 +370,7 @@ function mutationIndex(length: number, location: LayoutMutationLocation): number
 
 function freezeFixture(fixture: LayoutBenchmarkFixture): LayoutBenchmarkFixture {
   const frozen = Object.freeze({ ...fixture, items: Object.freeze(fixture.items) });
+  fixtureAdapterItems.set(frozen, frozen.items);
   const lanes = Array.from({ length: fixture.laneCount }, () => [] as LayoutBenchmarkItem[]);
   for (const item of frozen.items) lanes[item.lane]?.push(item);
   fixtureLanes.set(frozen, Object.freeze(lanes.map((lane) => Object.freeze(lane.sort((left, right) => left.y - right.y)))));
@@ -342,4 +379,35 @@ function freezeFixture(fixture: LayoutBenchmarkFixture): LayoutBenchmarkFixture 
     right: lane.reduce((maximum, item) => Math.max(maximum, item.x + item.width), Number.NEGATIVE_INFINITY),
   }))));
   return frozen;
+}
+
+function inheritAdapterItemIdentity(
+  before: LayoutBenchmarkFixture,
+  after: LayoutBenchmarkFixture,
+): void {
+  const previousByID = new Map(layoutAdapterItems(before).map((item) => [item.id, item]));
+  fixtureAdapterItems.set(after, Object.freeze(after.items.map((item) => {
+    const previous = previousByID.get(item.id);
+    return previous !== undefined && equivalentAdapterInput(after.family, previous, item)
+      ? previous
+      : item;
+  })));
+}
+
+function equivalentAdapterInput(
+  family: LayoutBenchmarkFamily,
+  previous: LayoutBenchmarkItem,
+  next: LayoutBenchmarkItem,
+): boolean {
+  if (
+    previous.id !== next.id
+    || previous.width !== next.width
+    || previous.height !== next.height
+    || previous.contentVariant !== next.contentVariant
+  ) return false;
+  return family !== 'spatial' || (
+    previous.x === next.x
+    && previous.y === next.y
+    && previous.zIndex === next.zIndex
+  );
 }

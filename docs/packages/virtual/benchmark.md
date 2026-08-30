@@ -17,6 +17,8 @@ The uniform profile isolates each library's base cost with identical 72px rows. 
 
 The application does not calculate per-row heights. Each library measures the DOM it renders, while a separate calibration fixture supplies geometry only to the correctness validator. Visible rows are checked for order, overlap, gaps, viewport coverage, and anchor position. Total-height estimation error is reported separately for heterogeneous rows because unseen content has not been measured yet.
 
+For two-dimensional families, exact modes require the full content extent and absolute item geometry. Estimated and DOM-discovered modes instead require the requested data revision, finite provisional extents, correct rendered-item identity and size, and a non-empty viewport. Mutation completion also requires a rendered witness from the changed collection. This keeps unseen-item estimates and implementation-defined masonry lane choices out of the correctness score without accepting an outer framework commit as completed virtualizer work. Fixed flow-grid and masonry conditions use uniform items, and size-change scenarios run only where the public API supports changing item size.
+
 ## Why height input is split into three modes
 
 The suite measures exact heights, estimates, and omitted height input separately. Combining them would hide the cost difference between a fixed-size fast path and DOM measurement.
@@ -53,7 +55,7 @@ Every frame is checked for missing or duplicate IDs, incorrect order or height, 
 
 Both row profiles render 100,000 rows in a 720 × 480px viewport. Text, CSS, input data, and the requested eight-row overscan target are shared. The no-height-input path starts from measured DOM rather than a library-wide numeric fallback.
 
-Library order rotates across three to five rounds. A condition stops after three rounds when its cumulative median and p95 are stable; otherwise it continues through round five. Initial rendering is split into synchronous setup, first row output, and the first state with correct viewport geometry. Uniform rows also require the exact total scroll height. Heterogeneous rows retain total-height estimation error as a separate result.
+Library order rotates across three to five rounds. A condition stops after three rounds when its cumulative median and p95 are stable; otherwise it continues through round five. Initial rendering is split into committed scroller output, first row output, and the first state with correct viewport geometry. This gives synchronously mounted Vue output and scheduled React output the same setup boundary. Uniform rows also require the exact total scroll height. Heterogeneous rows retain total-height estimation error as a separate result.
 
 Each round discards five warm-up scrolls and records the next 20. The harness changes `scrollTop` after a frame boundary. Timing starts when the browser begins delivering the native scroll event and ends immediately after the runner reads the resulting DOM geometry. The exact target row, contiguous row geometry, and viewport coverage are then validated against that snapshot outside the timed interval. Uniform rows also validate total scroll height.
 

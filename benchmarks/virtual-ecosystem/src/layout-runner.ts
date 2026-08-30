@@ -18,14 +18,20 @@ import {
 import {
   createLayoutFixture,
   createLayoutMutationScenario,
-  expectedVisibleItems,
   type LayoutBenchmarkFamily,
   type LayoutBenchmarkFixture,
   type LayoutBenchmarkItem,
+  type LayoutFixtureProfile,
   type LayoutMutationLocation,
   type LayoutMutationOperation,
   type LayoutMutationScenario,
 } from './layout-fixtures.js';
+import {
+  assertLayoutSnapshot,
+  type LayoutSnapshot,
+  type LayoutValidationExpectation,
+  type LayoutValidationMode,
+} from './layout-validation.js';
 import './style.css';
 
 declare const __BENCHMARK_SOURCE__: BenchmarkSource;
@@ -88,26 +94,6 @@ interface RawBaselineRound {
   readonly domElements: number;
 }
 
-interface LayoutSnapshotItem {
-  readonly id: string;
-  readonly index: number;
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
-
-interface LayoutSnapshot {
-  readonly observedAt: number;
-  readonly scrollWidth: number;
-  readonly scrollHeight: number;
-  readonly scrollLeft: number;
-  readonly scrollTop: number;
-  readonly viewportWidth: number;
-  readonly viewportHeight: number;
-  readonly items: readonly LayoutSnapshotItem[];
-}
-
 const search = new URLSearchParams(window.location.search);
 const family = parseBenchmarkFamily(search.get('family')) as LayoutBenchmarkFamily;
 const embedded = search.has('embedded');
@@ -141,7 +127,6 @@ const operations = requestedOperation === undefined
 const locations = requestedLocation === undefined
   ? Object.freeze(['start', 'middle', 'end'] as const)
   : Object.freeze([requestedLocation]);
-const fixture = createLayoutFixture(family, itemCount);
 const timeoutMs = 4_000;
 const mutationTimeoutMs = 750;
 const tolerance = 3;
@@ -183,12 +168,14 @@ async function runAll(): Promise<void> {
   const baselineResults: (LayoutBaselineResult & RunReferences)[] = [];
   const baselineFailures: (LayoutBaselineFailure & RunReferences)[] = [];
   const mutationResults: (LayoutMutationResult & RunReferences)[] = [];
+  const failedBaselineAdapters = new Set<LayoutBenchmarkAdapter>();
   try {
     if (!mutationsOnly && activeAdapters.length === 0) throw new Error('No baseline adapter supports the selected family and mode.');
     if (!baselineOnly && mutationAdapters.length === 0) throw new Error('No mutation adapter supports the selected family and mode.');
     if (!mutationsOnly) {
       for (let adapterIndex = 0; adapterIndex < activeAdapters.length; adapterIndex += 1) {
         const adapter = activeAdapters[adapterIndex]!;
+        const adapterFixture = createLayoutFixture(family, itemCount, 0, undefined, adapter.fixtureProfile);
         const raw: RawBaselineRound[] = [];
         for (let round = 0; round < rounds; round += 1) {
           setStatus(`Round ${round + 1}/${rounds} · ${adapter.mode} · ${adapter.name}…`);
@@ -199,7 +186,7 @@ async function runAll(): Promise<void> {
             run: { id: runId, observedAt, source: __BENCHMARK_SOURCE__, environment: navigator.userAgent },
           });
           try {
-            raw.push(await runBaselineRound(adapter));
+            raw.push(await runBaselineRound(adapter, adapterFixture));
           } catch (error) {
             const failure = Object.freeze({
               runIds: Object.freeze([runId]), family, mode: adapter.mode,
@@ -207,6 +194,7 @@ async function runAll(): Promise<void> {
               round: round + 1, message: errorMessage(error),
             });
             baselineFailures.push(failure);
+            failedBaselineAdapters.add(adapter);
             publish('checkpoint', { phase: 'baseline', message: failure.message, layoutFailure: failure });
             break;
           }
@@ -228,36 +216,41 @@ async function runAll(): Promise<void> {
     }
     if (!baselineOnly) {
       let completed = 0;
-      const total = mutationAdapters.reduce((count, adapter) => (
+      const runnableMutationAdapters = mutationAdapters.filter((adapter) => !failedBaselineAdapters.has(adapter));
+      const total = runnableMutationAdapters.reduce((count, adapter) => (
         count + operations.filter((operation) => adapter.mutationOperations.includes(operation)).length * locations.length
       ), 0);
-      for (const operation of operations) for (const location of locations) {
-        const scenario = createLayoutMutationScenario(fixture, operation, location);
-        for (const adapter of mutationAdapters) {
-          if (!adapter.mutationOperations.includes(operation)) continue;
-          setStatus(`Mutation ${completed + 1}/${total} · ${adapter.name} · ${operation}/${location}…`);
-          publish('progress', {
-            phase: 'mutations', message: currentStatus, completed, total,
-            run: { id: runId, observedAt, source: __BENCHMARK_SOURCE__, environment: navigator.userAgent },
-          });
-          const result = await runMutationCondition(adapter, scenario, (partial, completedBatches) => {
+      for (const [profile, adapters] of groupAdaptersByFixtureProfile(runnableMutationAdapters)) {
+        const initial = createLayoutFixture(family, itemCount, 0, undefined, profile);
+        for (const operation of operations) for (const location of locations) {
+          const active = adapters.filter((adapter) => adapter.mutationOperations.includes(operation));
+          if (active.length === 0) continue;
+          const scenario = createLayoutMutationScenario(initial, operation, location);
+          for (const adapter of active) {
+            setStatus(`Mutation ${completed + 1}/${total} · ${adapter.name} · ${operation}/${location}…`);
             publish('progress', {
-              phase: 'mutations',
-              message: `${currentStatus} · batch ${completedBatches}/${mutationRounds}`,
-              completed: completed + completedBatches / mutationRounds,
-              total,
-              layoutMutationResult: Object.freeze({ runIds: Object.freeze([runId]), ...partial }),
+              phase: 'mutations', message: currentStatus, completed, total,
+              run: { id: runId, observedAt, source: __BENCHMARK_SOURCE__, environment: navigator.userAgent },
             });
-          });
-          const referenced = Object.freeze({ runIds: Object.freeze([runId]), ...result });
-          mutationResults.push(referenced);
-          mutationsBody?.append(renderMutationResult(referenced));
-          completed += 1;
-          publish('checkpoint', {
-            phase: 'mutations', message: currentStatus, completed, total,
-            layoutMutationResult: referenced,
-          });
-          await yieldToBrowser();
+            const result = await runMutationCondition(adapter, scenario, (partial, completedBatches) => {
+              publish('progress', {
+                phase: 'mutations',
+                message: `${currentStatus} · batch ${completedBatches}/${mutationRounds}`,
+                completed: completed + completedBatches / mutationRounds,
+                total,
+                layoutMutationResult: Object.freeze({ runIds: Object.freeze([runId]), ...partial }),
+              });
+            });
+            const referenced = Object.freeze({ runIds: Object.freeze([runId]), ...result });
+            mutationResults.push(referenced);
+            mutationsBody?.append(renderMutationResult(referenced));
+            completed += 1;
+            publish('checkpoint', {
+              phase: 'mutations', message: currentStatus, completed, total,
+              layoutMutationResult: referenced,
+            });
+            await yieldToBrowser();
+          }
         }
       }
     }
@@ -267,11 +260,15 @@ async function runAll(): Promise<void> {
       durationMs: round(performance.now() - startedAt), source: __BENCHMARK_SOURCE__,
     });
     const report = Object.freeze({
-      benchmark: 'sectile-virtual-ecosystem', protocolVersion: 7,
+      benchmark: 'sectile-virtual-ecosystem', protocolVersion: 9,
       environment: navigator.userAgent, source: __BENCHMARK_SOURCE__,
       runs: Object.freeze({ [runId]: run }),
       conditions: Object.freeze({
         family, itemCount, viewport: Object.freeze([VIEWPORT_WIDTH, VIEWPORT_HEIGHT]),
+        validation: Object.freeze({
+          exact: 'exact content extent, absolute item geometry, identity, and viewport coverage',
+          estimated: 'committed revision, finite provisional extent, item identity and size, non-empty viewport coverage, and a rendered mutation witness',
+        }),
         baseline: Object.freeze({ rounds, warmupScrolls, scrollSamples }),
         mutations: Object.freeze({ rounds: mutationRounds, samplesPerRound: mutationSamples, operations, locations }),
       }),
@@ -293,15 +290,19 @@ async function runAll(): Promise<void> {
   }
 }
 
-async function runBaselineRound(adapter: LayoutBenchmarkAdapter): Promise<RawBaselineRound> {
+async function runBaselineRound(
+  adapter: LayoutBenchmarkAdapter,
+  fixture: LayoutBenchmarkFixture,
+): Promise<RawBaselineRound> {
   mountHost.replaceChildren();
   const startedAt = performance.now();
   const mounted = adapter.mount(mountHost, fixture);
   try {
+    await waitForScroller(mountHost);
     const setupMs = performance.now() - startedAt;
     await waitForItems(mountHost);
     const firstItemsMs = performance.now() - startedAt;
-    await waitForCorrectLayout(mounted.scroller, fixture);
+    await waitForCorrectLayout(mounted.scroller, fixture, adapter.validationMode);
     const stableLayoutMs = performance.now() - startedAt;
     const sampleCount = warmupScrolls + scrollSamples;
     const samples: number[] = [];
@@ -309,7 +310,7 @@ async function runBaselineRound(adapter: LayoutBenchmarkAdapter): Promise<RawBas
       const fraction = (((index + 1) * 19) % 47) / 46;
       const left = Math.floor(Math.max(0, mounted.scroller.scrollWidth - mounted.scroller.clientWidth) * fraction);
       const top = Math.floor(Math.max(0, mounted.scroller.scrollHeight - mounted.scroller.clientHeight) * fraction);
-      const elapsed = await measureScroll(mounted.scroller, fixture, left, top);
+      const elapsed = await measureScroll(mounted.scroller, fixture, adapter.validationMode, left, top);
       if (index >= warmupScrolls) samples.push(elapsed);
       if (embedded) await yieldToBrowser();
     }
@@ -345,13 +346,19 @@ async function runMutationCondition(
     try {
       mounted = adapter.mount(mountHost, initial);
       await waitForItems(mountHost);
-      await positionMutation(mounted.scroller, scenario.before, location);
+      await positionMutation(mounted.scroller, scenario.before, location, adapter.validationMode);
       for (let sample = 0; sample < mutationSamples; sample += 1) {
         attemptedSamples += 1;
         try {
           const startedAt = performance.now();
           mounted.update(scenario.after);
-          await waitForCorrectLayout(mounted.scroller, scenario.after, mutationTimeoutMs);
+          await waitForCorrectLayout(
+            mounted.scroller,
+            scenario.after,
+            adapter.validationMode,
+            mutationTimeoutMs,
+            mutationValidationExpectation(scenario),
+          );
           const elapsed = performance.now() - startedAt;
           samples.push(elapsed);
           batchOutcomes.push(Object.freeze({ elapsedMs: elapsed, failures: Object.freeze([]) }));
@@ -366,15 +373,15 @@ async function runMutationCondition(
         if (sample + 1 < mutationSamples) {
           try {
             mounted.update(initial);
-            await waitForCorrectLayout(mounted.scroller, initial, mutationTimeoutMs);
-            await positionMutation(mounted.scroller, initial, location);
+            await waitForCorrectLayout(mounted.scroller, initial, adapter.validationMode, mutationTimeoutMs);
+            await positionMutation(mounted.scroller, initial, location, adapter.validationMode);
           } catch (error) {
             failureCodes.push(`reset-${classifyFailure(error)}`);
             mounted.unmount();
             mountHost.replaceChildren();
             mounted = adapter.mount(mountHost, initial);
             await waitForItems(mountHost);
-            await positionMutation(mounted.scroller, initial, location);
+            await positionMutation(mounted.scroller, initial, location, adapter.validationMode);
           }
         }
         if (embedded) await yieldToBrowser();
@@ -440,16 +447,44 @@ function aggregateLayoutMutation(
   });
 }
 
+function groupAdaptersByFixtureProfile(
+  adapters: readonly LayoutBenchmarkAdapter[],
+): readonly (readonly [LayoutFixtureProfile, readonly LayoutBenchmarkAdapter[]])[] {
+  const groups = new Map<LayoutFixtureProfile, LayoutBenchmarkAdapter[]>();
+  for (const adapter of adapters) {
+    const group = groups.get(adapter.fixtureProfile);
+    if (group === undefined) groups.set(adapter.fixtureProfile, [adapter]);
+    else group.push(adapter);
+  }
+  return Object.freeze(Array.from(groups, ([profile, group]) => (
+    Object.freeze([profile, Object.freeze(group)] as const)
+  )));
+}
+
 async function positionMutation(
   scroller: HTMLElement,
   fixture: LayoutBenchmarkFixture,
   location: LayoutMutationLocation,
+  validationMode: LayoutValidationMode,
 ): Promise<void> {
   const targetIndex = location === 'start' ? 0 : location === 'end' ? fixture.items.length - 1 : Math.floor(fixture.items.length / 2);
   const target = fixture.items[targetIndex]!;
-  scroller.scrollLeft = Math.max(0, target.x - VIEWPORT_WIDTH / 2);
-  scroller.scrollTop = Math.max(0, target.y - VIEWPORT_HEIGHT / 2);
-  await waitForCorrectLayout(scroller, fixture);
+  const expectedScrollWidth = Math.max(1, fixture.contentWidth - VIEWPORT_WIDTH);
+  const expectedScrollHeight = Math.max(1, fixture.contentHeight - VIEWPORT_HEIGHT);
+  const horizontalProgress = Math.max(0, Math.min(1, (target.x - VIEWPORT_WIDTH / 2) / expectedScrollWidth));
+  const verticalProgress = Math.max(0, Math.min(1, (target.y - VIEWPORT_HEIGHT / 2) / expectedScrollHeight));
+  scroller.scrollLeft = Math.round(Math.max(0, scroller.scrollWidth - scroller.clientWidth) * horizontalProgress);
+  scroller.scrollTop = Math.round(Math.max(0, scroller.scrollHeight - scroller.clientHeight) * verticalProgress);
+  await waitForCorrectLayout(scroller, fixture, validationMode, timeoutMs, { requiredItemIDs: [target.id] });
+}
+
+function mutationValidationExpectation(
+  scenario: LayoutMutationScenario,
+): LayoutValidationExpectation {
+  return Object.freeze({
+    requiredItemIDs: scenario.witnessIDs,
+    ...(scenario.operation === 'remove' ? { excludedItemIDs: scenario.affectedIDs } : {}),
+  });
 }
 
 function aggregateBaseline(
@@ -479,6 +514,7 @@ function aggregateBaseline(
 function measureScroll(
   scroller: HTMLElement,
   expected: LayoutBenchmarkFixture,
+  validationMode: LayoutValidationMode,
   left: number,
   top: number,
 ): Promise<number> {
@@ -489,7 +525,7 @@ function measureScroll(
     const owner = createObservationOwner(scroller, () => {
       if (startedAt === undefined) return;
       try {
-        assertCorrectLayout(captureLayout(scroller), expected);
+        assertLayoutSnapshot(captureLayout(scroller), expected, validationMode, tolerance);
         const elapsed = performance.now() - startedAt;
         owner.dispose();
         resolve(elapsed);
@@ -515,12 +551,14 @@ function measureScroll(
 function waitForCorrectLayout(
   scroller: HTMLElement,
   expected: LayoutBenchmarkFixture,
+  validationMode: LayoutValidationMode,
   timeout = timeoutMs,
+  expectation: LayoutValidationExpectation = {},
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const owner = createObservationOwner(scroller, () => {
       try {
-        assertCorrectLayout(captureLayout(scroller), expected);
+        assertLayoutSnapshot(captureLayout(scroller), expected, validationMode, tolerance, expectation);
         owner.dispose();
         resolve();
       } catch (error) {
@@ -598,6 +636,7 @@ function captureLayout(scroller: HTMLElement): LayoutSnapshot {
   });
   return Object.freeze({
     observedAt: performance.now(),
+    revision: Number(scroller.dataset['revision']),
     scrollWidth: scroller.scrollWidth,
     scrollHeight: scroller.scrollHeight,
     scrollLeft: scroller.scrollLeft,
@@ -606,39 +645,6 @@ function captureLayout(scroller: HTMLElement): LayoutSnapshot {
     viewportHeight: scroller.clientHeight,
     items: Object.freeze(items),
   });
-}
-
-function assertCorrectLayout(snapshot: LayoutSnapshot, fixture: LayoutBenchmarkFixture): void {
-  if (Math.abs(snapshot.scrollWidth - fixture.contentWidth) > tolerance) {
-    throw new Error(`content-width:${snapshot.scrollWidth}:${fixture.contentWidth}`);
-  }
-  if (Math.abs(snapshot.scrollHeight - fixture.contentHeight) > tolerance) {
-    throw new Error(`content-height:${snapshot.scrollHeight}:${fixture.contentHeight}`);
-  }
-  const expectedByID = new Map(expectedVisibleItems(
-    fixture,
-    snapshot.scrollLeft,
-    snapshot.scrollTop,
-    0,
-  ).map((item) => [item.id, item]));
-  const seen = new Set<string>();
-  for (const item of snapshot.items) {
-    if (item.id.length === 0 || !Number.isInteger(item.index)) throw new Error('invalid-item-identity');
-    if (seen.has(item.id)) throw new Error(`duplicate-item:${item.id}`);
-    seen.add(item.id);
-    const expected = fixture.items[item.index];
-    if (expected?.id !== item.id) throw new Error(`stale-item:${item.id}:${item.index}`);
-    if (
-      Math.abs(item.x - expected.x) > tolerance
-      || Math.abs(item.y - expected.y) > tolerance
-      || Math.abs(item.width - expected.width) > tolerance
-      || Math.abs(item.height - expected.height) > tolerance
-    ) throw new Error(`geometry:${item.id}`);
-  }
-  for (const expected of expectedByID.values()) {
-    if (!seen.has(expected.id)) throw new Error(`missing-visible-item:${expected.id}`);
-  }
-  if (expectedByID.size > 0 && snapshot.items.length === 0) throw new Error('empty-viewport');
 }
 
 function waitForItems(host: HTMLElement): Promise<void> {
@@ -654,6 +660,23 @@ function waitForItems(host: HTMLElement): Promise<void> {
     const timeout = window.setTimeout(() => {
       observer.disconnect();
       reject(new Error('first-items-timeout'));
+    }, timeoutMs);
+  });
+}
+
+function waitForScroller(host: HTMLElement): Promise<void> {
+  if (host.querySelector('.bench-scroller') !== null) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const observer = new MutationObserver(() => {
+      if (host.querySelector('.bench-scroller') === null) return;
+      observer.disconnect();
+      clearTimeout(timeout);
+      resolve();
+    });
+    observer.observe(host, { childList: true, subtree: true });
+    const timeout = window.setTimeout(() => {
+      observer.disconnect();
+      reject(new Error('scroller-timeout'));
     }, timeoutMs);
   });
 }

@@ -33,11 +33,14 @@ import {
 import { VIEWPORT_HEIGHT, VIEWPORT_WIDTH } from './constants.js';
 import type { BenchmarkCapability } from './families.js';
 import {
+  layoutAdapterItems,
   type LayoutBenchmarkFamily,
   type LayoutBenchmarkFixture,
   type LayoutBenchmarkItem,
+  type LayoutFixtureProfile,
   type LayoutMutationScenario,
 } from './layout-fixtures.js';
+import type { LayoutValidationMode } from './layout-validation.js';
 import { sectileVirtualVersion } from './package-versions.js';
 
 export type LayoutSizeMode = 'fixed' | 'estimated' | 'automatic' | 'positioned';
@@ -54,6 +57,8 @@ export interface LayoutBenchmarkAdapter {
   readonly version: string;
   readonly stack: string;
   readonly mode: LayoutSizeMode;
+  readonly fixtureProfile: LayoutFixtureProfile;
+  readonly validationMode: LayoutValidationMode;
   readonly mutationOperations: readonly LayoutMutationScenario['operation'][];
   mount(host: HTMLElement, fixture: LayoutBenchmarkFixture): MountedLayoutAdapter;
 }
@@ -71,6 +76,7 @@ const ReactVirtuosoGrid = VirtuosoGrid as unknown as ComponentType<Record<string
 const ReactWindowGridComponent = ReactWindowGrid as unknown as ComponentType<Record<string, unknown>>;
 const VirtuaGridComponent = VirtuaGrid as unknown as ComponentType<Record<string, unknown>>;
 const allMutations = Object.freeze(['insert', 'move', 'remove', 'resize'] as const);
+const structuralMutations = Object.freeze(['insert', 'move', 'remove'] as const);
 
 export const layoutAdapters: readonly LayoutBenchmarkAdapter[] = Object.freeze([
   createSectileCollectionAdapter('flow-grid', 'fixed'),
@@ -139,7 +145,9 @@ function createSectileCollectionAdapter(
     version: sectileVirtualVersion,
     stack: 'Vue 3.5.22',
     mode,
-    mutationOperations: allMutations,
+    fixtureProfile: mode === 'fixed' ? 'uniform' : 'variable',
+    validationMode: mode === 'fixed' || mode === 'positioned' ? 'exact' : 'estimated',
+    mutationOperations: mode === 'fixed' ? structuralMutations : allMutations,
     mount(host: HTMLElement, initial: LayoutBenchmarkFixture) {
       const fixture = shallowRef(initial);
       const component = defineComponent({
@@ -150,7 +158,7 @@ function createSectileCollectionAdapter(
               ? SectileMasonry
               : SectileSpatial;
           return () => h(componentType, {
-            items: fixture.value.items,
+            items: layoutAdapterItems(fixture.value),
             getKey: layoutItemKey,
             ...(family === 'spatial'
               ? {
@@ -172,10 +180,13 @@ function createSectileCollectionAdapter(
             maxItems: 1_000_001,
             initialViewport: { x: 0, y: 0, width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
             class: 'bench-scroller',
+            'data-revision': fixture.value.revision,
             style: viewportStyle(),
-            itemAttributes: (item: LayoutBenchmarkItem) => layoutItemAttributes(item),
+            itemAttributes: (_item: LayoutBenchmarkItem, index: number) => (
+              layoutItemAttributes(fixture.value.items[index]!)
+            ),
           }, {
-            default: ({ value }: { value: LayoutBenchmarkItem }) => layoutItemContent(value),
+            default: ({ index }: { index: number }) => layoutItemContent(fixture.value.items[index]!),
           });
         },
       });
@@ -198,32 +209,35 @@ function createReactVirtuosoGridAdapter(): LayoutBenchmarkAdapter {
   });
   function App({ store }: { readonly store: FixtureStore }) {
     const fixture = useFixture(store);
+    const items = layoutAdapterItems(fixture);
     return createElement(ReactVirtuosoGrid, {
       className: 'bench-scroller',
+      'data-revision': fixture.revision,
       style: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
-      data: fixture.items,
+      data: items,
       components,
       computeItemKey: (_index: number, item: LayoutBenchmarkItem) => item.id,
       increaseViewportBy: 288,
-      itemContent: (_index: number, item: LayoutBenchmarkItem) => createElement(
+      itemContent: (index: number) => createElement(
         'div',
-        reactLayoutItemAttributes(item),
-        layoutItemText(item),
+        reactLayoutItemAttributes(fixture.items[index]!),
+        layoutItemText(fixture.items[index]!),
       ),
     });
   }
-  return reactAdapter('flow-grid', 'React Virtuoso', '4.18.12', 'automatic', App);
+  return reactAdapter('flow-grid', 'React Virtuoso', '4.18.12', 'automatic', 'estimated', App);
 }
 
 function createTanStackMasonryAdapter(): LayoutBenchmarkAdapter {
   function App({ store }: { readonly store: FixtureStore }) {
     const fixture = useFixture(store);
+    const items = layoutAdapterItems(fixture);
     const parentRef = useRef<HTMLDivElement>(null);
     const virtualizer = useVirtualizer({
-      count: fixture.items.length,
+      count: items.length,
       getScrollElement: () => parentRef.current,
-      estimateSize: (index) => fixture.items[index]?.height ?? fixture.rowHeight,
-      getItemKey: (index) => fixture.items[index]?.id ?? index,
+      estimateSize: (index) => items[index]?.height ?? fixture.rowHeight,
+      getItemKey: (index) => items[index]?.id ?? index,
       lanes: fixture.laneCount,
       gap: fixture.gap,
       overscan: 4,
@@ -232,6 +246,7 @@ function createTanStackMasonryAdapter(): LayoutBenchmarkAdapter {
     return createElement('div', {
       ref: parentRef,
       className: 'bench-scroller',
+      'data-revision': fixture.revision,
       style: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT, overflow: 'auto' },
     }, createElement('div', {
       style: { position: 'relative', width: '100%', height: virtualizer.getTotalSize() },
@@ -250,7 +265,7 @@ function createTanStackMasonryAdapter(): LayoutBenchmarkAdapter {
       }, layoutItemText(item));
     })));
   }
-  return reactAdapter('masonry', 'TanStack Virtual', '3.14.10', 'estimated', App);
+  return reactAdapter('masonry', 'TanStack Virtual', '3.14.10', 'estimated', 'estimated', App);
 }
 
 function createReactWindowTrackGridAdapter(): LayoutBenchmarkAdapter {
@@ -264,6 +279,7 @@ function createReactWindowTrackGridAdapter(): LayoutBenchmarkAdapter {
     const fixture = useFixture(store);
     return createElement(ReactWindowGridComponent, {
       className: 'bench-scroller',
+      'data-revision': fixture.revision,
       cellComponent: Cell,
       cellProps: { fixture },
       columnCount: fixture.columnCount,
@@ -274,7 +290,7 @@ function createReactWindowTrackGridAdapter(): LayoutBenchmarkAdapter {
       style: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
     });
   }
-  return reactAdapter('track-grid', 'react-window', '2.3.0', 'fixed', App);
+  return reactAdapter('track-grid', 'react-window', '2.3.0', 'fixed', 'exact', App);
 }
 
 function createVirtuaTrackGridAdapter(): LayoutBenchmarkAdapter {
@@ -282,6 +298,7 @@ function createVirtuaTrackGridAdapter(): LayoutBenchmarkAdapter {
     const fixture = useFixture(store);
     return createElement(VirtuaGridComponent, {
       className: 'bench-scroller',
+      'data-revision': fixture.revision,
       style: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
       row: fixture.rowCount,
       col: fixture.columnCount,
@@ -296,7 +313,7 @@ function createVirtuaTrackGridAdapter(): LayoutBenchmarkAdapter {
       },
     });
   }
-  return reactAdapter('track-grid', 'Virtua', '0.50.5', 'estimated', App, Object.freeze(['insert', 'move', 'remove']));
+  return reactAdapter('track-grid', 'Virtua', '0.50.5', 'estimated', 'estimated', App, structuralMutations);
 }
 
 function createSectileTrackGridAdapter(): LayoutBenchmarkAdapter {
@@ -306,6 +323,8 @@ function createSectileTrackGridAdapter(): LayoutBenchmarkAdapter {
     version: sectileVirtualVersion,
     stack: 'Vue 3.5.22',
     mode: 'fixed',
+    fixtureProfile: 'variable',
+    validationMode: 'exact',
     mutationOperations: allMutations,
     mount(host: HTMLElement, initial: LayoutBenchmarkFixture) {
       const fixture = shallowRef(initial);
@@ -331,6 +350,7 @@ function createSectileTrackGridAdapter(): LayoutBenchmarkAdapter {
           return () => h('div', {
             ref: root,
             class: 'bench-scroller',
+            'data-revision': fixture.value.revision,
             style: viewportStyle(),
           }, [h('div', {
             class: 'bench-content',
@@ -374,7 +394,7 @@ function createTrackState(fixture: LayoutBenchmarkFixture) {
   return createDenseTrackGridLayout(
     createExtentIndex(fixture.rowHeights.map((value) => ({ kind: 'exact' as const, value }))),
     createExtentIndex(fixture.columnWidths.map((value) => ({ kind: 'exact' as const, value }))),
-    fixture.items.map((item) => item.id),
+    layoutAdapterItems(fixture).map((item) => item.id),
     { maxRegions: 1_000_001 },
   );
 }
@@ -384,11 +404,13 @@ function reactAdapter(
   name: string,
   version: string,
   mode: LayoutSizeMode,
+  validationMode: LayoutValidationMode,
   component: (props: { readonly store: FixtureStore }) => ReactElement,
   mutationOperations: readonly LayoutMutationScenario['operation'][] = allMutations,
 ): LayoutBenchmarkAdapter {
   return Object.freeze({
     family, name, version, stack: 'React 19.2.8', mode,
+    fixtureProfile: 'variable', validationMode,
     mutationOperations,
     mount(host: HTMLElement, initial: LayoutBenchmarkFixture) {
       const store = createFixtureStore(initial);

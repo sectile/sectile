@@ -482,7 +482,7 @@ async function runAll(): Promise<void> {
     });
     const report = {
       benchmark: 'sectile-virtual-ecosystem',
-      protocolVersion: 7,
+      protocolVersion: 9,
       environment: navigator.userAgent,
       source: __BENCHMARK_SOURCE__,
       runs,
@@ -514,7 +514,7 @@ async function runAll(): Promise<void> {
           stableFailureFrames: STABLE_FAILURE_FRAMES,
           timing: {
             caseWarmup: 'one complete untimed mount per condition before measured rounds',
-            setupMs: 'synchronous adapter and framework setup',
+            setupMs: 'adapter and framework setup through committed scroller output',
             firstRowsMs: 'time until the first benchmark rows exist',
             mountMs: rowProfile === 'uniform'
               ? 'time until total scroll height and viewport geometry are correct'
@@ -631,6 +631,7 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement, oracle: 
   const startedAt = performance.now();
   const mounted = benchmarkCase.mount(host);
   try {
+    await waitForScroller(host);
     const setupMs = performance.now() - startedAt;
     await waitForAnyRows(host);
     const firstRowsMs = performance.now() - startedAt;
@@ -980,6 +981,14 @@ function waitForAnyRows(host: HTMLElement): Promise<void> {
     host,
     () => host.querySelector('.bench-row[data-index]') !== null,
     'the first benchmark rows',
+  );
+}
+
+function waitForScroller(host: HTMLElement): Promise<void> {
+  return waitForDOMCondition(
+    host,
+    () => host.querySelector('.bench-scroller') !== null,
+    'Timed out waiting for the scroller shell.',
   );
 }
 

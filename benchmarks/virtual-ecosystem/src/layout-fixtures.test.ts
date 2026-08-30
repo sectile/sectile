@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { MAXIMUM_SCROLL_HEIGHT } from './constants.js';
+import { MAXIMUM_SCROLL_HEIGHT } from './constants.ts';
 import {
   createLayoutFixture,
   createLayoutMutationScenario,
   expectedVisibleItems,
-} from './layout-fixtures.js';
+  layoutAdapterItems,
+} from './layout-fixtures.ts';
 
 const families = Object.freeze(['flow-grid', 'masonry', 'track-grid', 'spatial'] as const);
 
@@ -32,11 +33,52 @@ test('layout mutations retain stable identities and publish the changed geometry
       const scenario = createLayoutMutationScenario(fixture, operation, 'middle');
       assert.equal(scenario.after.revision, fixture.revision + 1, `${family}:${operation}`);
       assert.equal(new Set(scenario.after.items.map((item) => item.id)).size, scenario.after.items.length);
+      assert.equal(scenario.witnessIDs.length, 1, `${family}:${operation}:witness`);
+      assert.ok(
+        scenario.after.items.some((item) => item.id === scenario.witnessIDs[0]),
+        `${family}:${operation}:witness-present`,
+      );
       if (operation === 'insert') assert.equal(scenario.after.items.length, fixture.items.length + 1);
       if (operation === 'remove') assert.equal(scenario.after.items.length, fixture.items.length - 1);
       if (operation === 'move' || operation === 'resize') assert.equal(scenario.after.items.length, fixture.items.length);
     }
   }
+});
+
+test('collection adapter inputs preserve unchanged value identities across mutations', () => {
+  for (const family of ['flow-grid', 'masonry'] as const) {
+    const fixture = createLayoutFixture(family, 200);
+    const beforeByID = new Map(layoutAdapterItems(fixture).map((item) => [item.id, item]));
+    for (const operation of ['insert', 'move', 'remove', 'resize'] as const) {
+      const scenario = createLayoutMutationScenario(fixture, operation, 'middle');
+      const after = layoutAdapterItems(scenario.after);
+      for (const item of after) {
+        const previous = beforeByID.get(item.id);
+        if (previous === undefined || scenario.affectedIDs.includes(item.id)) continue;
+        assert.equal(item, previous, `${family}:${operation}:${item.id}`);
+      }
+    }
+  }
+});
+
+test('fixed collection fixtures retain uniform item sizes through structural mutations', () => {
+  for (const family of ['flow-grid', 'masonry'] as const) {
+    const fixture = createLayoutFixture(family, 200, 0, undefined, 'uniform');
+    assert.ok(fixture.items.every((item) => item.height === fixture.rowHeight), family);
+    for (const operation of ['insert', 'move', 'remove'] as const) {
+      const scenario = createLayoutMutationScenario(fixture, operation, 'middle');
+      assert.ok(
+        scenario.after.items.every((item) => item.height === fixture.rowHeight),
+        `${family}:${operation}`,
+      );
+    }
+  }
+});
+
+test('spatial content size is the exact occupied item boundary', () => {
+  const fixture = createLayoutFixture('spatial', 10_000);
+  assert.equal(fixture.contentWidth, Math.max(...fixture.items.map((item) => item.x + item.width)));
+  assert.equal(fixture.contentHeight, Math.max(...fixture.items.map((item) => item.y + item.height)));
 });
 
 test('large browser fixtures stay under the scroll-height ceiling', () => {
