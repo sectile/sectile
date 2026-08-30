@@ -65,6 +65,17 @@ export interface ChartTransition<ID extends StableID = StableID> {
 }
 
 const EMPTY_COMMANDS: readonly never[] = Object.freeze([]);
+const pointSelectionIndexes = new WeakMap<object, ReadonlySet<StableID>>();
+
+export function chartSelectionContains<ID extends StableID>(selection: ChartSelection<ID>, id: ID): boolean {
+  if (selection.type !== 'points') return false;
+  let index = pointSelectionIndexes.get(selection);
+  if (index === undefined) {
+    index = new Set(selection.ids);
+    pointSelectionIndexes.set(selection, index);
+  }
+  return index.has(id);
+}
 
 export function createChartState<ID extends StableID>(
   model: ChartModelState<ID>,

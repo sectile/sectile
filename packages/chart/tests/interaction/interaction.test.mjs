@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  chartSelectionContains,
   createChartState,
   reconcileChartState,
   reduceChartEvent,
@@ -43,4 +44,7 @@ test('selection validates membership and reconciles through model generations', 
   const reconciled = reconcileChartState(initial, nextModel).value;
   assert.equal(reconciled.generation, 1);
   assert.deepEqual(reconciled.selection, { type: 'points', ids: ['1'] });
+  assert.equal(chartSelectionContains(initial.selection, 1), true);
+  assert.equal(chartSelectionContains(initial.selection, '1'), true);
+  assert.equal(chartSelectionContains(initial.selection, 2), false);
 });

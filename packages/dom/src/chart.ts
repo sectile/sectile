@@ -1,4 +1,5 @@
 import type { Result, StableID } from '@sectile/core';
+import { tryNormalizeStableIDs } from '@sectile/core/identity';
 import { unwrap } from '@sectile/core/result';
 import type { ChartController } from '@sectile/chart/controller';
 import type { ChartCommand } from '@sectile/chart/interaction';
@@ -8,6 +9,29 @@ import { DOMChart } from './internal/chart-connection.js';
 import { WebGL2ChartRenderer } from './internal/chart-webgl2-renderer.js';
 
 export type ChartRendererMode = 'auto' | 'webgl2' | 'canvas2d';
+export type DOMChartDragMode = 'none' | 'pan' | 'zoom-region' | 'select';
+export type DOMChartWheelMode = 'native' | 'pan' | 'zoom';
+export type DOMChartWheelModifier = 'none' | 'control' | 'meta' | 'alt' | 'shift';
+
+export interface DOMChartNavigation<ID extends StableID = StableID> {
+  readonly axes?: readonly ID[];
+  readonly drag?: DOMChartDragMode;
+  readonly wheel?: DOMChartWheelMode;
+  readonly wheelModifier?: DOMChartWheelModifier;
+  readonly pinch?: boolean;
+  readonly keyboard?: boolean;
+  readonly controlAlternative?: 'built-in' | 'external';
+}
+
+export interface NormalizedDOMChartNavigation<ID extends StableID = StableID> {
+  readonly axes: readonly ID[] | undefined;
+  readonly drag: DOMChartDragMode;
+  readonly wheel: DOMChartWheelMode;
+  readonly wheelModifier: DOMChartWheelModifier;
+  readonly pinch: boolean;
+  readonly keyboard: boolean;
+  readonly controlAlternative: 'built-in' | 'external' | undefined;
+}
 
 export interface ChartRendererCapabilities {
   readonly canvas2d: boolean;
@@ -80,7 +104,7 @@ export function tryCreateChartRenderer(
       try {
         return { ok: true, value: new WebGL2ChartRenderer(canvas, context, style.value) };
       } catch (error) {
-        return invalidRenderer(error instanceof Error ? error.message : 'WebGL2 chart renderer initialization failed.');
+        if (mode === 'webgl2') return invalidRenderer(error instanceof Error ? error.message : 'WebGL2 chart renderer initialization failed.');
       }
     }
     if (mode === 'webgl2') return invalidRenderer('WebGL2 is unavailable for the chart canvas.');
@@ -124,6 +148,16 @@ export interface DOMChartOptions<ID extends StableID = StableID> {
   readonly getAccessibleDatumLabel?: (id: ID, index: number) => string;
   readonly onCommand?: (command: ChartCommand<ID>) => void;
   readonly onProjectionChange?: (projection: ChartProjection<ID>) => void;
+  readonly navigation?: DOMChartNavigation<ID>;
+}
+
+export interface DOMChartLifecycleDiagnostics {
+  readonly listeners: number;
+  readonly observers: number;
+  readonly frames: number;
+  readonly timers: number;
+  readonly subscriptions: number;
+  readonly overlayNodes: number;
 }
 
 export interface DOMChartConnection<ID extends StableID = StableID> {
@@ -131,6 +165,8 @@ export interface DOMChartConnection<ID extends StableID = StableID> {
   getViewport(): ChartViewport;
   getProjection(): ChartProjection<ID> | null;
   getRendererDiagnostics(): ChartRendererDiagnostics | null;
+  getLifecycleDiagnostics(): DOMChartLifecycleDiagnostics;
+  setNavigation(navigation?: DOMChartNavigation<ID>): Result<void>;
   refresh(): void;
   flush(): void;
   disconnect(): void;
@@ -166,11 +202,52 @@ export function tryCreateDOMChart<ID extends StableID>(options: DOMChartOptions<
     return invalidRenderer('DOM Chart accessibility limit must be a safe integer from zero through 10,000.');
   }
   const borrowedRenderer = options.renderer !== undefined && typeof options.renderer === 'object';
+  const navigation = tryNormalizeDOMChartNavigation(options.navigation);
+  if (!navigation.ok) return navigation;
   const renderer = borrowedRenderer
     ? { ok: true as const, value: options.renderer as ChartRenderer }
     : tryCreateChartRenderer(options.canvas, { mode: options.renderer ?? 'auto' });
   if (!renderer.ok) return renderer;
-  return { ok: true, value: new DOMChart(options, renderer.value, !borrowedRenderer, policy.value, accessibilityLimit, view) };
+  return { ok: true, value: new DOMChart(options, renderer.value, !borrowedRenderer, policy.value, accessibilityLimit, view, navigation.value) };
+}
+
+export function normalizeDOMChartNavigation<ID extends StableID>(
+  navigation: DOMChartNavigation<ID> = {},
+): NormalizedDOMChartNavigation<ID> {
+  return unwrap(tryNormalizeDOMChartNavigation(navigation));
+}
+
+export function tryNormalizeDOMChartNavigation<ID extends StableID>(
+  navigation: DOMChartNavigation<ID> = {},
+): Result<NormalizedDOMChartNavigation<ID>> {
+  if (navigation === null || typeof navigation !== 'object') return invalidRenderer('DOM Chart navigation must be an object.');
+  const drag = navigation.drag ?? 'none';
+  const wheel = navigation.wheel ?? 'native';
+  const wheelModifier = navigation.wheelModifier ?? 'none';
+  if (!['none', 'pan', 'zoom-region', 'select'].includes(drag)
+    || !['native', 'pan', 'zoom'].includes(wheel)
+    || !['none', 'control', 'meta', 'alt', 'shift'].includes(wheelModifier)
+    || (navigation.pinch !== undefined && typeof navigation.pinch !== 'boolean')
+    || (navigation.keyboard !== undefined && typeof navigation.keyboard !== 'boolean')
+    || (navigation.controlAlternative !== undefined
+      && navigation.controlAlternative !== 'built-in' && navigation.controlAlternative !== 'external')) {
+    return invalidRenderer('DOM Chart navigation binding is invalid.');
+  }
+  const axes = navigation.axes === undefined ? undefined : tryNormalizeStableIDs(navigation.axes);
+  if (axes !== undefined && !axes.ok) return axes;
+  const pinch = navigation.pinch ?? false;
+  if ((drag !== 'none' || pinch) && navigation.controlAlternative === undefined) {
+    return invalidRenderer('Direct Chart gestures require a built-in or external single-pointer control alternative.');
+  }
+  return { ok: true, value: Object.freeze({
+    axes: axes?.value,
+    drag,
+    wheel,
+    wheelModifier,
+    pinch,
+    keyboard: navigation.keyboard ?? false,
+    controlAlternative: navigation.controlAlternative,
+  }) };
 }
 
 function normalizeRenderPolicy(policy: ChartRenderPolicy = { type: 'fixed' }): Result<NormalizedChartRenderPolicy> {

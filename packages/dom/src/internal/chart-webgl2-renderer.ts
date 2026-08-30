@@ -157,6 +157,7 @@ export class WebGL2ChartRenderer implements ChartRenderer {
   #diagnostics: ChartRendererDiagnostics = Object.freeze({ mode: 'webgl2', uploadedBytes: 0, drawCalls: 0, liveResources: 0 });
   #active = true;
   #lost = false;
+  #lastProjection: ChartProjection | null = null;
 
   readonly #onContextLost = (event: Event): void => {
     event.preventDefault();
@@ -168,6 +169,7 @@ export class WebGL2ChartRenderer implements ChartRenderer {
     if (!this.#active) return;
     this.#lost = false;
     this.#initialize();
+    if (this.#lastProjection !== null) this.render(this.#lastProjection);
   };
 
   public constructor(canvas: HTMLCanvasElement, gl: WebGL2RenderingContext, style: NormalizedChartRenderStyle) {
@@ -186,6 +188,7 @@ export class WebGL2ChartRenderer implements ChartRenderer {
 
   public render(projection: ChartProjection, batches: readonly ChartProjectionBatch[] = projection.batches): void {
     if (!this.#active || this.#lost) return;
+    this.#lastProjection = projection;
     const gl = this.#gl;
     gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
     gl.clearColor(0, 0, 0, 0);
@@ -242,6 +245,7 @@ export class WebGL2ChartRenderer implements ChartRenderer {
     this.#canvas.removeEventListener('webglcontextrestored', this.#onContextRestored);
     if (!this.#lost) this.#deleteResources();
     this.#layers.clear();
+    this.#lastProjection = null;
     this.#diagnostics = Object.freeze({ ...this.#diagnostics, liveResources: 0 });
   }
 

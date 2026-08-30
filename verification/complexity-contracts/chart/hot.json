@@ -452,6 +452,48 @@
           "rationale": "Index construction must include every queryable projected primitive."
         }
       }
+    },
+    {
+      "id": "interaction.selection-contains",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/interaction.ts",
+      "benchmarkIDs": [
+        "VAL-012:chart-selection-index"
+      ],
+      "specificationCeiling": "first lookup O(s), subsequent lookup expected O(1)",
+      "contract": {
+        "variables": [
+          {
+            "name": "s",
+            "meaning": "point-selection identity count",
+            "ceiling": "Chart model datum ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(s)",
+          "kind": "amortized",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(s)",
+          "output": "O(1)",
+          "retained": "O(s) per live immutable point selection"
+        },
+        "resources": {
+          "allocations": "first lookup O(s), subsequent lookup 0",
+          "cacheEntries": "one weak owner entry per queried immutable point selection",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "The first membership query builds one StableID-preserving Set keyed weakly by the immutable selection owner; later DOM accessibility projections reuse expected-constant membership without rescanning the selection.",
+        "adversarialWitness": "A million selected numeric and string identities are queried repeatedly while only a bounded accessibility window is projected.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "The one-time index must contain every selected identity; subsequent membership queries cannot scan it."
+        }
+      }
     }
   ]
 }

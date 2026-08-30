@@ -472,7 +472,7 @@
       "benchmarkIDs": [
         "VAL-012:dom-chart-overlay-bounds"
       ],
-      "specificationCeiling": "O(a + min(t, 512) + min(l, 64))",
+      "specificationCeiling": "O(a + min(t, 512a) + min(l, 64) + k)",
       "contract": {
         "variables": [
           {
@@ -489,31 +489,131 @@
             "name": "l",
             "meaning": "visible layers",
             "ceiling": "64 emitted legend items"
+          },
+          {
+            "name": "k",
+            "meaning": "emitted primitives inspected only while interaction state is visible",
+            "ceiling": "Chart projection representative ceiling; at most 512 overlay markers emitted"
           }
         ],
         "time": {
-          "bound": "O(a + min(t, 512a) + min(l, 64))",
+          "bound": "O(a + min(t, 512a) + min(l, 64) + k)",
           "kind": "worst-case",
           "runtimeState": "connected"
         },
         "space": {
-          "auxiliary": "O(a + min(t, 512a) + min(l, 64))",
-          "output": "O(a + min(t, 512a) + min(l, 64))",
-          "retained": "O(a + min(t, 512a) + min(l, 64))"
+          "auxiliary": "O(a + min(t, 512a) + min(l, 64) + min(k, 512))",
+          "output": "O(a + min(t, 512a) + min(l, 64) + min(k, 512))",
+          "retained": "O(a + min(t, 512a) + min(l, 64) + min(k, 512))"
         },
         "resources": {
-          "allocations": "O(a + min(t, 512a) + min(l, 64))",
+          "allocations": "O(a + min(t, 512a) + min(l, 64) + min(k, 512))",
           "cacheEntries": "0",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "The connection-owned SVG samples each axis to at most 512 ticks and emits at most 64 legend entries before replacing its bounded child set.",
+        "proof": "The connection-owned SVG samples each axis to at most 512 ticks, emits at most 64 legend entries and 512 interaction markers, and otherwise retains no datum nodes. Interaction marking scans the already bounded emitted batches only when active, cursor, or selection state is visible.",
         "adversarialWitness": "Every axis requests the Core tick maximum and the chart declares more than 64 layers.",
         "fullScan": {
           "allowed": false,
           "rationale": "Overlay work is bounded by resolved axes, sampled ticks, and legend ceilings rather than source datums."
+        }
+      }
+    },
+    {
+      "id": "chart.navigation-dispatch",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/internal/chart-navigation.ts",
+      "benchmarkIDs": [
+        "VAL-012:dom-chart-navigation-burst",
+        "VAL-013:dom-chart-navigation-lifecycle"
+      ],
+      "specificationCeiling": "O(a) per browser input, one pending frame and one wheel-settlement timer",
+      "contract": {
+        "variables": [
+          {
+            "name": "a",
+            "meaning": "enabled requested axis views",
+            "ceiling": "Chart axis ceiling"
+          },
+          {
+            "name": "p",
+            "meaning": "active pointer count",
+            "ceiling": "2 for the supported pinch gesture"
+          }
+        ],
+        "time": {
+          "bound": "O(a + p)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(a + p)",
+          "output": "O(a)",
+          "retained": "O(a + p)"
+        },
+        "resources": {
+          "allocations": "O(a + p)",
+          "cacheEntries": "O(p)",
+          "listeners": "0 or 1 wheel plus 0 or 4 pointer listeners",
+          "observers": "0",
+          "timers": "0 or 1 settlement timer",
+          "subscriptions": "0"
+        },
+        "proof": "The adapter filters the bounded projected axis list, dispatches one Chart-owned domain action per enabled axis, retains at most two pointer positions, and replaces one settlement timer. Controller render commands enter the connection's single-frame coalescer.",
+        "adversarialWitness": "Two-axis pinch plus an enabled wheel burst at a domain limit performs bounded axis lookups, releases pointer capture, leaves browser defaults uncancelled when unchanged, and retains one timer and frame.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Browser input cannot inspect source datums, layers, or unrelated axes."
+        }
+      }
+    },
+    {
+      "id": "chart.disconnect",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/internal/chart-connection.ts",
+      "benchmarkIDs": [
+        "VAL-013:dom-chart-disconnect-zero"
+      ],
+      "specificationCeiling": "O(r + u)",
+      "contract": {
+        "variables": [
+          {
+            "name": "r",
+            "meaning": "connection-owned renderer layer resources",
+            "ceiling": "visible chart layer ceiling"
+          },
+          {
+            "name": "u",
+            "meaning": "bounded accessible datum nodes",
+            "ceiling": "configured accessibility limit"
+          }
+        ],
+        "time": {
+          "bound": "O(r + u)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "-O(r + u)",
+          "listeners": "-O(1)",
+          "observers": "-1",
+          "timers": "-O(1)",
+          "subscriptions": "-1"
+        },
+        "proof": "Idempotent disconnect invalidates the owner, cancels its frame and settlement timer, removes stable listeners, disconnects one observer and subscription, releases renderer resources, clears accessible nodes, removes the overlay, and restores borrowed attributes and styles.",
+        "adversarialWitness": "Disconnect during a pending frame, wheel settlement, active captured pinch, and lost WebGL context leaves zero connection lifecycle diagnostics and ignores stale callbacks.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Cleanup visits only connection-owned resources and bounded accessible nodes."
         }
       }
     }

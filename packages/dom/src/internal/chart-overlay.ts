@@ -1,10 +1,12 @@
 import type { StableID } from '@sectile/core';
+import type { ChartState } from '@sectile/chart/interaction';
 import type { ChartAxisLayout } from '@sectile/chart/layout';
 import type { ChartProjection } from '@sectile/chart/projection';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 const MAXIMUM_OVERLAY_TICKS = 512;
 const MAXIMUM_LEGEND_ITEMS = 64;
+const MAXIMUM_INTERACTION_MARKS = 512;
 
 export class ChartOverlay<ID extends StableID> {
   readonly #root: HTMLElement;
@@ -26,7 +28,7 @@ export class ChartOverlay<ID extends StableID> {
     root.append(this.#svg);
   }
 
-  public render(projection: ChartProjection<ID>): void {
+  public render(projection: ChartProjection<ID>, state?: ChartState<ID>): void {
     if (!this.#active) return;
     const { width, height } = projection.viewport;
     this.#svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
@@ -41,6 +43,7 @@ export class ChartOverlay<ID extends StableID> {
       fragment.append(grid, axes);
     }
     appendLegend(fragment, projection, this.#root.ownerDocument, width);
+    if (state !== undefined) appendInteraction(fragment, projection, state, this.#root.ownerDocument);
     this.#svg.replaceChildren(fragment);
   }
 
@@ -50,6 +53,108 @@ export class ChartOverlay<ID extends StableID> {
     this.#svg.remove();
     this.#root.style.position = this.#position;
   }
+}
+
+function appendInteraction<ID extends StableID>(
+  fragment: DocumentFragment,
+  projection: ChartProjection<ID>,
+  state: ChartState<ID>,
+  document: Document,
+): void {
+  const group = svgGroup(document, 'interaction');
+  const selection = state.selection;
+  if (selection.type === 'axis-interval') {
+    const axis = projection.layout?.axes.find((candidate) => candidate.axis.id === selection.axisID);
+    if (axis !== undefined && projection.layout !== undefined) appendInterval(group, axis, selection.start, selection.end, projection.layout.plot, document);
+  } else if (selection.type === 'domain-region') {
+    const x = projection.layout?.axes.find((axis) => axis.axis.id === selection.xAxisID);
+    const y = projection.layout?.axes.find((axis) => axis.axis.id === selection.yAxisID);
+    if (x !== undefined && y !== undefined) {
+      const x1 = x.geometryScale.normalize(selection.xStart); const x2 = x.geometryScale.normalize(selection.xEnd);
+      const y1 = y.geometryScale.normalize(selection.yStart); const y2 = y.geometryScale.normalize(selection.yEnd);
+      if (x1 !== null && x2 !== null && y1 !== null && y2 !== null) group.append(interactionRect(document, Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1), 'selection'));
+    }
+  }
+  const selected = selection.type === 'points'
+    ? new Set(selection.ids.slice(0, MAXIMUM_INTERACTION_MARKS))
+    : new Set<ID>();
+  if (selected.size === 0 && state.activeDatum === null && state.cursor === null) {
+    if (group.childNodes.length > 0) fragment.append(group);
+    return;
+  }
+  let emitted = 0;
+  for (const batch of projection.batches) {
+    for (let index = 0; index < batch.identityIndices.length && emitted < MAXIMUM_INTERACTION_MARKS; index += 1) {
+      const representative = batch.representatives?.[index];
+      const id = representative?.kind === 'datum'
+        ? representative.id as ID
+        : projection.identities[batch.identityIndices[index] as number];
+      if (id === undefined) continue;
+      const kind = id === state.activeDatum ? 'active' : id === state.cursor ? 'cursor' : selected.has(id) ? 'selection' : null;
+      if (kind === null) continue;
+      const point = primitiveCenter(batch, index);
+      if (point === null) continue;
+      const marker = document.createElementNS(SVG_NAMESPACE, 'circle');
+      marker.setAttribute('cx', String(point.x));
+      marker.setAttribute('cy', String(point.y));
+      marker.setAttribute('r', kind === 'selection' ? '5' : '7');
+      marker.setAttribute('fill', 'none');
+      marker.setAttribute('stroke', 'currentColor');
+      marker.setAttribute('stroke-width', kind === 'active' ? '3' : '2');
+      marker.setAttribute('data-chart-overlay', `interaction-${kind}`);
+      group.append(marker);
+      emitted += 1;
+    }
+    if (emitted >= MAXIMUM_INTERACTION_MARKS) break;
+  }
+  if (group.childNodes.length > 0) fragment.append(group);
+}
+
+function appendInterval(
+  group: SVGGElement,
+  axis: ChartAxisLayout,
+  start: number,
+  end: number,
+  plot: { readonly x: number; readonly y: number; readonly width: number; readonly height: number },
+  document: Document,
+): void {
+  const first = axis.geometryScale.normalize(start);
+  const second = axis.geometryScale.normalize(end);
+  if (first === null || second === null) return;
+  if (axis.axis.orientation === 'x') group.append(interactionRect(document, Math.min(first, second), plot.y, Math.abs(second - first), plot.height, 'selection'));
+  else group.append(interactionRect(document, plot.x, Math.min(first, second), plot.width, Math.abs(second - first), 'selection'));
+}
+
+function interactionRect(document: Document, x: number, y: number, width: number, height: number, kind: string): SVGRectElement {
+  const rect = document.createElementNS(SVG_NAMESPACE, 'rect');
+  rect.setAttribute('x', String(x)); rect.setAttribute('y', String(y));
+  rect.setAttribute('width', String(width)); rect.setAttribute('height', String(height));
+  rect.setAttribute('fill', 'currentColor'); rect.setAttribute('fill-opacity', '0.08');
+  rect.setAttribute('stroke', 'currentColor'); rect.setAttribute('stroke-opacity', '0.45');
+  rect.setAttribute('data-chart-overlay', `interaction-${kind}`);
+  return rect;
+}
+
+function primitiveCenter(batch: ChartProjection['batches'][number], index: number): { readonly x: number; readonly y: number } | null {
+  if (batch.type === 'point' || batch.type === 'polyline') return {
+    x: batch.positions[index * 2] as number,
+    y: batch.positions[index * 2 + 1] as number,
+  };
+  if (batch.type === 'rectangle') return {
+    x: (batch.rectangles[index * 4] as number) + (batch.rectangles[index * 4 + 2] as number) / 2,
+    y: (batch.rectangles[index * 4 + 1] as number) + (batch.rectangles[index * 4 + 3] as number) / 2,
+  };
+  if (batch.type === 'cell') return {
+    x: (batch.cells[index * 5] as number) + (batch.cells[index * 5 + 2] as number) / 2,
+    y: (batch.cells[index * 5 + 1] as number) + (batch.cells[index * 5 + 3] as number) / 2,
+  };
+  const offset = index * 6;
+  const angle = ((batch.arcs[offset + 4] as number) + (batch.arcs[offset + 5] as number)) / 2;
+  const radius = ((batch.arcs[offset + 2] as number) + (batch.arcs[offset + 3] as number)) / 2;
+  return {
+    x: (batch.arcs[offset] as number) + Math.cos(angle) * radius,
+    y: (batch.arcs[offset + 1] as number) + Math.sin(angle) * radius,
+  };
 }
 
 function appendAxis(

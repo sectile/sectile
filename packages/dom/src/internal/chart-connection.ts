@@ -1,15 +1,19 @@
-import type { StableID } from '@sectile/core';
-import type { ChartCommand } from '@sectile/chart/interaction';
+import type { Result, StableID } from '@sectile/core';
+import { chartSelectionContains, type ChartCommand, type ChartSelection } from '@sectile/chart/interaction';
 import type { ChartController } from '@sectile/chart/controller';
 import type { ChartProjection, ChartViewport } from '@sectile/chart/projection';
 import { hitTestChartProjection } from '@sectile/chart/query';
 import type {
+  DOMChartLifecycleDiagnostics,
+  DOMChartNavigation,
   ChartRenderer,
   ChartRendererDiagnostics,
   DOMChartConnection,
   DOMChartOptions,
+  NormalizedDOMChartNavigation,
   NormalizedChartRenderPolicy,
 } from '../chart.js';
+import { ChartNavigationAdapter } from './chart-navigation.js';
 import { ChartOverlay } from './chart-overlay.js';
 import { stableIDElementToken } from './stable-id-token.js';
 
@@ -29,6 +33,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   readonly #list: HTMLDivElement;
   readonly #live: HTMLDivElement;
   readonly #overlay: ChartOverlay<ID>;
+  readonly #navigation: ChartNavigationAdapter<ID>;
   readonly #nodes = new Map<ID, HTMLElement>();
   readonly #rootAttributes: AttributeSnapshot;
   readonly #canvasAttributes: AttributeSnapshot;
@@ -37,6 +42,9 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   #viewport: ChartViewport;
   #projection: ChartProjection<ID> | null = null;
   #accessibilityGeneration = -1;
+  #accessibilityActive: ID | null = null;
+  #accessibilityCursor: ID | null = null;
+  #accessibilitySelection: ChartSelection<ID> | null = null;
   #frame = 0;
   #renderScale: number;
   #pendingPointer: { readonly x: number; readonly y: number } | null = null;
@@ -50,6 +58,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     policy: NormalizedChartRenderPolicy,
     accessibilityLimit: number,
     view: ChartWindow,
+    navigation: NormalizedDOMChartNavigation<ID>,
   ) {
     this.#options = options;
     this.controller = options.controller;
@@ -71,6 +80,9 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     options.root.append(this.#list, this.#live);
     this.#overlay = new ChartOverlay(options.root);
     this.#viewport = this.#measureViewport();
+    this.#navigation = new ChartNavigationAdapter(
+      options.root, options.canvas, this.controller, view, navigation, () => this.#projection,
+    );
     this.#unsubscribe = this.controller.subscribeCommands(this.#handleCommand);
     options.canvas.addEventListener('pointermove', this.#handlePointerMove);
     options.canvas.addEventListener('pointerleave', this.#handlePointerLeave);
@@ -87,6 +99,21 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   public getViewport(): ChartViewport { return this.#viewport; }
   public getProjection(): ChartProjection<ID> | null { return this.#projection; }
   public getRendererDiagnostics(): ChartRendererDiagnostics | null { return this.#renderer.getDiagnostics(); }
+  public getLifecycleDiagnostics(): DOMChartLifecycleDiagnostics {
+    if (!this.#active) return Object.freeze({ listeners: 0, observers: 0, frames: 0, timers: 0, subscriptions: 0, overlayNodes: 0 });
+    const navigation = this.#navigation.diagnostics();
+    return Object.freeze({
+      listeners: 4 + navigation.listeners,
+      observers: this.#resizeObserver === null ? 0 : 1,
+      frames: this.#frame === 0 ? 0 : 1,
+      timers: navigation.timers,
+      subscriptions: 1,
+      overlayNodes: 1,
+    });
+  }
+  public setNavigation(navigation?: DOMChartNavigation<ID>): Result<void> {
+    return this.#navigation.setNavigation(navigation);
+  }
 
   public refresh(): void {
     if (!this.#active) return;
@@ -101,7 +128,8 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     if (!projected.ok) return;
     this.#projection = projected.value;
     this.#renderer.render(projected.value);
-    this.#overlay.render(projected.value);
+    this.#overlay.render(projected.value, this.controller.getSnapshot().state);
+    this.#navigation.refreshCapabilities(projected.value);
     this.#options.onProjectionChange?.(projected.value);
     this.#refreshAccessibility();
     const elapsed = this.#view.performance.now() - startedAt;
@@ -123,6 +151,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     this.#pendingPointer = null;
     this.#resizeObserver?.disconnect();
     this.#unsubscribe();
+    this.#navigation.disconnect();
     this.#options.canvas.removeEventListener('pointermove', this.#handlePointerMove);
     this.#options.canvas.removeEventListener('pointerleave', this.#handlePointerLeave);
     this.#options.canvas.removeEventListener('click', this.#handleClick);
@@ -146,11 +175,14 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
       this.#nodes.get(command.id)?.focus({ preventScroll: true });
     } else if (command.type === 'announce-datum') {
       this.#live.textContent = this.#label(command.id, this.controller.getModel().indexOf(command.id));
+    } else if (command.type === 'view-phase' && command.phase === 'settled') {
+      this.#announceView(command.axisID);
     }
   };
 
   readonly #handleResize = (): void => { this.#schedule(); };
   readonly #handlePointerMove = (event: PointerEvent): void => {
+    if (this.#navigation.isPointerGestureActive()) return;
     const rect = this.#options.canvas.getBoundingClientRect();
     this.#pendingPointer = Object.freeze({ x: event.clientX - rect.left, y: event.clientY - rect.top });
     this.#schedule();
@@ -160,12 +192,14 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     this.controller.dispatch({ type: 'pointer-candidate', id: null });
   };
   readonly #handleClick = (event: MouseEvent): void => {
+    if (this.#navigation.consumeClick()) return;
     const hit = this.#hitAt(event.clientX, event.clientY);
     if (hit === null) return;
     this.controller.dispatch({ type: 'set-selection', selection: { type: 'points', ids: [hit] } });
     this.controller.dispatch({ type: 'set-cursor', id: hit });
   };
   readonly #handleKeyDown = (event: KeyboardEvent): void => {
+    if (this.#navigation.handleKeyDown(event)) return;
     const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 'next'
       : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? 'previous'
         : event.key === 'Home' ? 'first' : event.key === 'End' ? 'last' : null;
@@ -222,29 +256,65 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
 
   #refreshAccessibility(): void {
     const model = this.controller.getModel();
-    if (model.generation === this.#accessibilityGeneration) return;
-    this.#accessibilityGeneration = model.generation;
-    this.#nodes.clear();
-    this.#list.replaceChildren();
-    const count = Math.min(model.size, this.#accessibilityLimit);
-    const fragment = this.#options.root.ownerDocument.createDocumentFragment();
-    for (let index = 0; index < count; index += 1) {
-      const id = model.identityAt(index);
-      if (id === null) continue;
-      const option = this.#options.root.ownerDocument.createElement('div');
-      option.id = `${this.#prefix}-${stableIDElementToken(id)}`;
-      option.setAttribute('role', 'option');
-      option.setAttribute('tabindex', '-1');
-      option.textContent = this.#label(id, index);
-      fragment.append(option);
-      this.#nodes.set(id, option);
+    if (model.generation !== this.#accessibilityGeneration) {
+      this.#accessibilityGeneration = model.generation;
+      this.#nodes.clear();
+      this.#list.replaceChildren();
+      const count = Math.min(model.size, this.#accessibilityLimit);
+      const fragment = this.#options.root.ownerDocument.createDocumentFragment();
+      for (let index = 0; index < count; index += 1) {
+        const id = model.identityAt(index);
+        if (id === null) continue;
+        const option = this.#options.root.ownerDocument.createElement('div');
+        option.id = `${this.#prefix}-${stableIDElementToken(id)}`;
+        option.setAttribute('role', 'option');
+        option.setAttribute('tabindex', '-1');
+        option.textContent = this.#label(id, index);
+        fragment.append(option);
+        this.#nodes.set(id, option);
+      }
+      this.#list.append(fragment);
+      this.#list.setAttribute('aria-setsize', String(model.size));
+      this.#accessibilityActive = null;
+      this.#accessibilityCursor = null;
+      this.#accessibilitySelection = null;
     }
-    this.#list.append(fragment);
-    this.#list.setAttribute('aria-setsize', String(model.size));
+    const state = this.controller.getSnapshot().state;
+    if (state.activeDatum !== this.#accessibilityActive) {
+      if (this.#accessibilityActive !== null) this.#nodes.get(this.#accessibilityActive)?.removeAttribute('data-active');
+      if (state.activeDatum !== null) this.#nodes.get(state.activeDatum)?.setAttribute('data-active', '');
+      this.#accessibilityActive = state.activeDatum;
+    }
+    if (state.cursor !== this.#accessibilityCursor) {
+      if (this.#accessibilityCursor !== null) this.#nodes.get(this.#accessibilityCursor)?.removeAttribute('aria-current');
+      const current = state.cursor === null ? undefined : this.#nodes.get(state.cursor);
+      if (current === undefined) this.#list.removeAttribute('aria-activedescendant');
+      else { current.setAttribute('aria-current', 'true'); this.#list.setAttribute('aria-activedescendant', current.id); }
+      this.#accessibilityCursor = state.cursor;
+    }
+    if (state.selection !== this.#accessibilitySelection) {
+      for (const [id, node] of this.#nodes) node.setAttribute('aria-selected', String(chartSelectionContains(state.selection, id)));
+      this.#accessibilitySelection = state.selection;
+    }
   }
 
   #label(id: ID, index: number): string {
     return this.#options.getAccessibleDatumLabel?.(id, index) ?? `Data point ${index + 1}: ${String(id)}`;
+  }
+
+  #announceView(axisID: ID): void {
+    const view = this.controller.getSnapshot().state.view?.axes.find((axis) => axis.axisID === axisID);
+    if (view === undefined) return;
+    const layout = this.#projection?.layout?.axes.find((axis) => axis.axis.id === axisID);
+    const name = layout?.axis.label ?? String(axisID);
+    if (view.visible.kind === 'continuous') {
+      this.#live.textContent = `${name} range ${view.visible.minimum} to ${view.visible.maximum}`;
+      return;
+    }
+    const categories = view.categories?.slice(view.visible.start, view.visible.end);
+    this.#live.textContent = categories === undefined || categories.length === 0
+      ? `${name} items ${view.visible.start + 1} to ${view.visible.end}`
+      : `${name} range ${String(categories[0])} to ${String(categories.at(-1))}`;
   }
 }
 

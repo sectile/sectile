@@ -162,8 +162,43 @@ test('WebGL2 applies a bounded partial upload only when the changed range crosse
   renderer.disconnect();
 });
 
+test('WebGL2 invalidates lost resources, restores the last projection, and ignores callbacks after disconnect', () => {
+  const { calls, canvas } = webglFixture();
+  const renderer = createChartRenderer(canvas, { mode: 'webgl2' });
+  renderer.render(projection());
+  const uploads = calls.filter(([name]) => name === 'bufferData').length;
+  const lost = calls.find(([name, type]) => name === 'addEventListener' && type === 'webglcontextlost')[2];
+  const restored = calls.find(([name, type]) => name === 'addEventListener' && type === 'webglcontextrestored')[2];
+  let prevented = false;
+  lost({ preventDefault: () => { prevented = true; } });
+  assert.equal(prevented, true);
+  assert.equal(renderer.getDiagnostics().liveResources, 0);
+  restored();
+  assert.equal(calls.filter(([name]) => name === 'bufferData').length > uploads, true);
+  assert.equal(renderer.getDiagnostics().liveResources > 5, true);
+  renderer.disconnect();
+  const afterDisconnect = calls.filter(([name]) => name === 'bufferData').length;
+  restored();
+  assert.equal(calls.filter(([name]) => name === 'bufferData').length, afterDisconnect);
+});
+
 test('renderer construction rejects invalid styles and unavailable explicit modes', () => {
   const { canvas } = fixture();
   assert.equal(tryCreateChartRenderer(canvas, { style: { pointRadius: 0 } }).error.code, 'invalid-boundary');
   assert.equal(tryCreateChartRenderer(canvas, { mode: 'webgl2' }).error.code, 'invalid-boundary');
+});
+
+test('automatic renderer falls back to Canvas2D when WebGL2 initialization fails', () => {
+  const { canvas: fallback } = fixture();
+  const canvas = {
+    ...fallback,
+    addEventListener() {}, removeEventListener() {},
+    getContext: (kind) => kind === 'webgl2' ? {
+      getExtension: () => null,
+      createShader: () => null,
+    } : fallback.getContext(kind),
+  };
+  const renderer = createChartRenderer(canvas, { mode: 'auto' });
+  assert.equal(renderer.getDiagnostics().mode, 'canvas2d');
+  renderer.disconnect();
 });
