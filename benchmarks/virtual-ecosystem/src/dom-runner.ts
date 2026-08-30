@@ -1,4 +1,5 @@
 import type { MutationLocation } from './mutations.js';
+export { waitForElement } from './dom-observation.js';
 import {
   correctedTargetScroll,
   initialTargetScroll,
@@ -195,27 +196,6 @@ export async function positionBenchmarkTarget(options: PositionTargetOptions): P
     `Could not position item ${options.targetIndex} in the viewport.`,
     Object.freeze({ trace: Object.freeze(trace) }),
   );
-}
-
-export function waitForElement(
-  root: ParentNode,
-  predicate: () => boolean,
-  label: string,
-  timeoutMs: number,
-): Promise<void> {
-  if (predicate()) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const startedAt = performance.now();
-    const frame = (): void => {
-      if (predicate()) { resolve(); return; }
-      if (performance.now() - startedAt >= timeoutMs) {
-        reject(new Error(`Timed out waiting for ${label}.`));
-        return;
-      }
-      requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-  });
 }
 
 export function nextFrame(): Promise<void> {
