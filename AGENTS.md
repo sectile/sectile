@@ -6,6 +6,14 @@ invariants, runtime cost, allocation and retained memory, consumer bundle and
 install footprint, then compatibility and implementation convenience.
 Compatibility applies only when a task requires it.
 
+Treat these priorities as strong defaults subject to analysis and evidence.
+When analysis or direct evidence identifies an approach that better serves the
+applicable priorities and constraints, adopt it and state the relevant
+tradeoffs. Validate the decision at the rigor appropriate to its risk. When
+validation contradicts an initial assumption, follow the observed result and
+revise the design. When the evidence applies broadly, strengthen this guidance
+so later work benefits from it.
+
 ### Performance rigor
 
 Choose the lowest rigor that fits the change. Base the choice on execution
