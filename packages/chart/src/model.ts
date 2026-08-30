@@ -66,6 +66,7 @@ export interface ChartModel<ID extends StableID = StableID> {
 }
 
 export interface ChartLimits {
+  readonly maxAxes?: number;
   readonly maxLayers?: number;
   readonly maxDatums?: number;
   readonly maxPatchOperations?: number;
@@ -73,6 +74,7 @@ export interface ChartLimits {
 }
 
 export const DEFAULT_CHART_LIMITS: Readonly<Required<ChartLimits>> = Object.freeze({
+  maxAxes: 16,
   maxLayers: 64,
   maxDatums: 1_000_000,
   maxPatchOperations: 100_000,
@@ -537,6 +539,7 @@ function normalizeLimits(input: ChartLimits): ChartResult<Required<ChartLimits>>
     return chartFail('construction', 'chart-model-invalid', 'Chart limits must be an object.');
   }
   const value = {
+    maxAxes: input.maxAxes ?? DEFAULT_CHART_LIMITS.maxAxes,
     maxLayers: input.maxLayers ?? DEFAULT_CHART_LIMITS.maxLayers,
     maxDatums: input.maxDatums ?? DEFAULT_CHART_LIMITS.maxDatums,
     maxPatchOperations: input.maxPatchOperations ?? DEFAULT_CHART_LIMITS.maxPatchOperations,

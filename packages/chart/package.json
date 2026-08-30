@@ -61,6 +61,11 @@
       "import": "./dist/controller.js",
       "default": "./dist/controller.js"
     },
+    "./contract": {
+      "types": "./dist/contract.d.ts",
+      "import": "./dist/contract.js",
+      "default": "./dist/contract.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

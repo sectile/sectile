@@ -6,3 +6,4 @@ export type * from './projection.js';
 export type * from './query.js';
 export type * from './interaction.js';
 export type * from './controller.js';
+export type * from './contract.js';
