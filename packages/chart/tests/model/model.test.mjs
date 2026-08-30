@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createChartModel,
+  replaceChartLayer,
   tryApplyChartPatch,
   tryCreateChartModel,
   tryReplaceChartModel,
@@ -25,10 +26,26 @@ test('normalizes every chart profile into immutable dense identity state', () =>
   assert.deepEqual(state.identities.slice(0, 3), [1, '1', 2]);
   assert.equal(state.indexOf(1), 0);
   assert.equal(state.indexOf('1'), 1);
-  assert.deepEqual(state.layerAt(4), { id: 'radial', profile: 'radial-segment', size: 1 });
+  assert.deepEqual(state.layerAt(4), {
+    id: 'radial', profile: 'radial-segment', size: 1,
+    revisions: { identity: 0, order: 0, value: 0, aggregate: 0 },
+  });
   assert.deepEqual(state.toModel(), allProfiles);
   assert.equal(Object.isFrozen(state), true);
   assert.equal(Object.isFrozen(state.identities), true);
+});
+
+test('reuses unchanged layer owners and bounds changed-layer normalization', () => {
+  const initial = createChartModel(allProfiles);
+  const next = replaceChartLayer(initial, {
+    id: 'points', profile: 'point', data: [{ id: 1, x: 10, y: 20 }],
+  });
+  assert.equal(next.generation, 1);
+  assert.equal(next.diagnostics.normalizedLayers, 1);
+  assert.equal(next.diagnostics.normalizedDatums, 1);
+  assert.equal(next.diagnostics.reusedLayers, 4);
+  assert.deepEqual(next.layerAt(0).revisions, { identity: 0, order: 0, value: 1, aggregate: 1 });
+  assert.deepEqual(next.layerAt(1).revisions, initial.layerAt(1).revisions);
 });
 
 test('enforces identity, profile, datum, order, and resource invariants', () => {
@@ -63,6 +80,10 @@ test('patch and replacement generations reject stale writes and preserve no-ops'
   }).value;
   assert.equal(replaced.generation, 2);
   assert.equal(replaced.toModel().layers[0].data[1].y, 3);
+  assert.equal(replaced.diagnostics.normalizedDatums, 1);
+  assert.equal(replaced.diagnostics.repairedLayers, 1);
+  assert.equal(replaced.diagnostics.copiedValueBlocks, 1);
+  assert.ok(replaced.diagnostics.repairedIndexEntries > 0);
 
   const removed = tryApplyChartPatch(replaced, {
     operations: [{ type: 'remove', layerID: 'points', index: 0, count: 1 }],

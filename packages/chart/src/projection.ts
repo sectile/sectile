@@ -227,7 +227,7 @@ function projectPoints<ID extends StableID>(
     const y = projectedAxis(layer.values[source * 2 + 1] as number, yScale, transform.yScale, transform.yOffset);
     if (x === null || y === null) return invalidProjection('Point cannot be represented by the selected scales.');
     positions[output * 2] = x; positions[output * 2 + 1] = y;
-    identities[output] = layer.identityIndices[source] as number;
+    identities[output] = layer.identityOffset + (layer.identityIndices[source] as number);
   }
   return chartOK({ type: 'point', layerIndex, positions, identityIndices: identities });
 }
@@ -260,7 +260,7 @@ function projectRectangles<ID extends StableID>(
     const target = output * 4;
     rectangles[target] = Math.min(x1, x2); rectangles[target + 1] = Math.min(y1, y2);
     rectangles[target + 2] = Math.abs(x2 - x1); rectangles[target + 3] = Math.abs(y2 - y1);
-    identities[output] = layer.identityIndices[source] as number;
+    identities[output] = layer.identityOffset + (layer.identityIndices[source] as number);
   }
   return chartOK({ type: 'rectangle', layerIndex, rectangles, identityIndices: identities });
 }
@@ -285,7 +285,7 @@ function projectCells<ID extends StableID>(
     cells[target] = Math.min(x1, x2); cells[target + 1] = Math.min(y1, y2);
     cells[target + 2] = Math.abs(x2 - x1); cells[target + 3] = Math.abs(y2 - y1);
     cells[target + 4] = layer.values[offset + 2] as number;
-    identities[output] = layer.identityIndices[source] as number;
+    identities[output] = layer.identityOffset + (layer.identityIndices[source] as number);
   }
   return chartOK({ type: 'cell', layerIndex, cells, identityIndices: identities });
 }
@@ -314,7 +314,7 @@ function projectArcs<ID extends StableID>(
     arcs[target + 3] = (layer.values[offset + 2] as number) * radius * Math.min(transform.xScale, transform.yScale);
     arcs[target + 4] = start;
     arcs[target + 5] = total === 0 ? 0 : cumulative / total * Math.PI * 2;
-    identities[selectedCursor] = layer.identityIndices[source] as number;
+    identities[selectedCursor] = layer.identityOffset + (layer.identityIndices[source] as number);
     selectedCursor += 1;
   }
   return chartOK({ type: 'arc', layerIndex, arcs, identityIndices: identities });

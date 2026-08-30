@@ -1,10 +1,21 @@
 import type { StableID } from '@sectile/core';
 import { validateStableID } from '@sectile/core/identity';
 import { unwrap } from '@sectile/core/result';
+import { applySequencePatch, createSequence, type Sequence } from '@sectile/core/sequence';
+import {
+  createPackedChartLayerOwner,
+  materializePackedLayer,
+  patchPackedChartLayerOwner,
+  readPackedLayerValue,
+  type ChartLayerWork,
+  type PackedChartLayerOwner,
+  type PackedLayerInput,
+} from './internal/layer-owner.js';
 import {
   bindChartModelData,
+  chartCartesianBounds,
+  createPackedChartLayerView,
   getChartModelData,
-  type ChartCartesianBounds,
   type ChartModelData,
   type PackedChartLayer,
 } from './internal/model-store.js';
@@ -99,11 +110,23 @@ export interface ChartLayerSummary<ID extends StableID = StableID> {
   readonly id: ID;
   readonly profile: ChartProfile;
   readonly size: number;
+  readonly revisions: Readonly<{
+    readonly identity: number;
+    readonly order: number;
+    readonly value: number;
+    readonly aggregate: number;
+  }>;
 }
 
 export interface ChartModelDiagnostics {
   readonly normalizedLayers: number;
   readonly normalizedDatums: number;
+  readonly reusedLayers: number;
+  readonly rebuiltLayers: number;
+  readonly repairedLayers: number;
+  readonly copiedValueBlocks: number;
+  readonly repairedIndexEntries: number;
+  readonly rebuiltIndexEntries: number;
 }
 
 export interface ChartModelState<ID extends StableID = StableID> {
@@ -123,30 +146,29 @@ class ImmutableChartModel<ID extends StableID> implements ChartModelState<ID> {
   public readonly generation: number;
   public readonly size: number;
   public readonly layerCount: number;
-  public readonly identities: readonly ID[];
   public readonly limits: Readonly<Required<ChartLimits>>;
   public readonly diagnostics: ChartModelDiagnostics;
 
-  public constructor(generation: number, identities: readonly ID[], data: ChartModelData<ID>) {
+  public constructor(generation: number, data: ChartModelData<ID>, diagnostics: ChartModelDiagnostics) {
     this.generation = generation;
-    this.size = identities.length;
+    this.size = data.identities.size;
     this.layerCount = data.layers.length;
-    this.identities = Object.freeze([...identities]);
     this.limits = data.limits;
-    this.diagnostics = Object.freeze({
-      normalizedLayers: data.layers.length,
-      normalizedDatums: identities.length,
-    });
+    this.diagnostics = Object.freeze(diagnostics);
     bindChartModelData(this, data);
     Object.freeze(this);
   }
 
+  public get identities(): readonly ID[] {
+    return getChartModelData<ID>(this).identities.ids;
+  }
+
   public identityAt(index: number): ID | null {
-    return Number.isSafeInteger(index) && index >= 0 ? this.identities[index] ?? null : null;
+    return getChartModelData<ID>(this).identities.at(index);
   }
 
   public indexOf(id: ID): number {
-    return getChartModelData<ID>(this).identityIndex.get(id) ?? -1;
+    return getChartModelData<ID>(this).identities.indexOf(id) ?? -1;
   }
 
   public layerAt(index: number): ChartLayerSummary<ID> | null {
@@ -156,6 +178,7 @@ class ImmutableChartModel<ID extends StableID> implements ChartModelState<ID> {
       id: layer.id,
       profile: layer.profile,
       size: layer.identityIndices.length,
+      revisions: layer.owner.revisions,
     });
   }
 
@@ -196,9 +219,71 @@ export function tryReplaceChartModel<ID extends StableID>(
   if (state.generation === Number.MAX_SAFE_INTEGER) {
     return chartFail('resource-rejection', 'chart-generation-exhausted', 'Chart generation is exhausted.');
   }
-  const next = normalizeChartModel(input, state.limits, state.generation + 1);
+  const next = normalizeChartModel(input, state.limits, state.generation + 1, state);
   if (!next.ok) return next;
   return sameModel(state, next.value) ? chartOK(state) : next;
+}
+
+export function replaceChartLayer<ID extends StableID>(
+  state: ChartModelState<ID>,
+  layer: ChartLayer<ID>,
+  expectedGeneration?: number,
+): ChartModelState<ID> {
+  return unwrap(tryReplaceChartLayer(state, layer, expectedGeneration));
+}
+
+export function tryReplaceChartLayer<ID extends StableID>(
+  state: ChartModelState<ID>,
+  layer: ChartLayer<ID>,
+  expectedGeneration?: number,
+): ChartResult<ChartModelState<ID>> {
+  const stale = staleGeneration<ChartModelState<ID>>(state.generation, expectedGeneration);
+  if (stale !== null) return stale;
+  if (state.generation === Number.MAX_SAFE_INTEGER) {
+    return chartFail('resource-rejection', 'chart-generation-exhausted', 'Chart generation is exhausted.');
+  }
+  const data = getChartModelData<ID>(state);
+  const layerPosition = data.layerIndex.get(layer.id);
+  if (layerPosition === undefined) {
+    return chartFail('transition-rejection', 'chart-layer-missing', 'Chart layer does not exist.', { layerID: layer.id });
+  }
+  const previous = data.layers[layerPosition] as PackedChartLayer<ID>;
+  const packed = packLayerInput(layer, layerPosition, state.limits);
+  if (!packed.ok) return packed;
+  const nextSize = data.identities.size - previous.owner.size + packed.value.identities.length;
+  if (nextSize > state.limits.maxDatums) {
+    return chartFail('resource-rejection', 'chart-datum-ceiling-exceeded', 'Chart datum count exceeds its ceiling.', {
+      actual: nextSize,
+      ceiling: state.limits.maxDatums,
+    });
+  }
+  for (const id of packed.value.identities) {
+    const existing = data.identities.indexOf(id);
+    if (existing !== null && !previous.owner.identities.contains(id)) {
+      return chartFail('construction', 'chart-datum-duplicate', 'Chart datum identities must be globally unique.', { id });
+    }
+  }
+  const mutation = createPackedChartLayerOwner(
+    packed.value,
+    state.limits.maxDatums,
+    state.limits.maxIDCodeUnits,
+    previous.owner,
+  );
+  if (!mutation.changed) return chartOK(state);
+  const identities = applySequencePatch(data.identities, {
+    type: 'splice',
+    index: previous.identityOffset,
+    deleteCount: previous.owner.size,
+    inserted: packed.value.identities,
+  });
+  const owners = data.layers.map((candidate, index) => index === layerPosition ? mutation.owner : candidate.owner);
+  return chartOK(assembleChartModel(
+    state.generation + 1,
+    owners,
+    identities,
+    state.limits,
+    diagnosticsForMutation(owners.length, mutation.work, 'rebuild'),
+  ));
 }
 
 export function applyChartPatch<ID extends StableID>(
@@ -228,71 +313,127 @@ export function tryApplyChartPatch<ID extends StableID>(
     return chartFail('resource-rejection', 'chart-generation-exhausted', 'Chart generation is exhausted.');
   }
 
-  const model = state.toModel();
-  const layers = model.layers.map((layer) => ({ ...layer, data: [...layer.data] })) as MutableChartLayer<ID>[];
-  const layerIndex = new Map(layers.map((layer, index) => [layer.id, index]));
+  const data = getChartModelData<ID>(state);
+  const owners = data.layers.map((layer) => layer.owner);
+  let identities: Sequence<ID> = data.identities;
   let changed = false;
+  let scannedDatums = 0;
+  let copiedValueBlocks = 0;
+  let repairedIndexEntries = 0;
+  let rebuiltIndexEntries = 0;
+  let repairedLayers = 0;
+  let rebuiltLayers = 0;
   for (const operation of patch.operations) {
     if (operation === null || typeof operation !== 'object' || !('layerID' in operation)) {
       return chartFail('construction', 'chart-patch-invalid', 'Chart patch operation is invalid.');
     }
-    const targetIndex = layerIndex.get(operation.layerID);
+    const targetIndex = data.layerIndex.get(operation.layerID);
     if (targetIndex === undefined) {
       return chartFail('transition-rejection', 'chart-layer-missing', 'Chart patch layer does not exist.', {
         layerID: operation.layerID,
       });
     }
-    const layer = layers[targetIndex] as MutableChartLayer<ID>;
-    if (!Number.isSafeInteger(operation.index) || operation.index < 0 || operation.index > layer.data.length) {
+    const owner = owners[targetIndex] as PackedChartLayerOwner<ID>;
+    if (!Number.isSafeInteger(operation.index) || operation.index < 0 || operation.index > owner.size) {
       return chartFail('construction', 'chart-patch-invalid', 'Chart patch index is outside the target layer.', {
         index: operation.index,
-        size: layer.data.length,
+        size: owner.size,
       });
     }
-    if (operation.type === 'insert') {
-      if (!Array.isArray(operation.data)) return chartFail('construction', 'chart-patch-invalid', 'Inserted chart data must be an array.');
-      if (operation.data.length > 0) {
-        layer.data.splice(operation.index, 0, ...operation.data);
-        changed = true;
-      }
-    } else if (operation.type === 'remove') {
-      if (!Number.isSafeInteger(operation.count) || operation.count < 0 || operation.index + operation.count > layer.data.length) {
-        return chartFail('construction', 'chart-patch-invalid', 'Chart patch removal is outside the target layer.');
-      }
-      if (operation.count > 0) {
-        layer.data.splice(operation.index, operation.count);
-        changed = true;
-      }
-    } else if (operation.type === 'replace') {
-      if (!Array.isArray(operation.data) || operation.index + operation.data.length > layer.data.length) {
+    if (operation.type === 'replace') {
+      if (!Array.isArray(operation.data) || operation.index + operation.data.length > owner.size) {
         return chartFail('construction', 'chart-patch-invalid', 'Chart patch replacement is outside the target layer.');
       }
-      if (!sameDatumSlice(layer.data, operation.index, operation.data)) {
-        layer.data.splice(operation.index, operation.data.length, ...operation.data);
-        changed = operation.data.length > 0 || changed;
+      if (operation.data.length === 0) continue;
+      const packed = packLayerPatch(owner, operation.data, targetIndex, operation.index, state.limits);
+      if (!packed.ok) return packed;
+      const localDuplicate = duplicateOutsideReplacedRange(owner, operation.index, operation.data.length, packed.value.identities);
+      if (localDuplicate !== null) return chartFail('construction', 'chart-datum-duplicate', 'Chart datum identities must be unique within a layer.', { id: localDuplicate });
+      const duplicate = duplicateOutsideLayer(identities, owner.identities, packed.value.identities);
+      if (duplicate !== null) return chartFail('construction', 'chart-datum-duplicate', 'Chart datum identities must be globally unique.', { id: duplicate });
+      const mutation = patchPackedChartLayerOwner(owner, packed.value);
+      if (!mutation.changed) continue;
+      const identityOffset = ownerOffset(owners, targetIndex) + operation.index;
+      identities = applySequencePatch(identities, {
+        type: 'splice', index: identityOffset, deleteCount: operation.data.length, inserted: packed.value.identities,
+      });
+      owners[targetIndex] = mutation.owner;
+      changed = true;
+      repairedLayers += 1;
+      scannedDatums += mutation.work.scannedDatums;
+      copiedValueBlocks += mutation.work.copiedValueBlocks;
+      repairedIndexEntries += mutation.work.repairedIndexEntries;
+      rebuiltIndexEntries += mutation.work.rebuiltIndexEntries;
+      continue;
+    }
+    const datums = materializePackedLayer(owner);
+    if (operation.type === 'insert') {
+      if (!Array.isArray(operation.data)) return chartFail('construction', 'chart-patch-invalid', 'Inserted chart data must be an array.');
+      if (operation.data.length === 0) continue;
+      datums.splice(operation.index, 0, ...operation.data as readonly ChartDatum<ID>[]);
+    } else if (operation.type === 'remove') {
+      if (!Number.isSafeInteger(operation.count) || operation.count < 0 || operation.index + operation.count > owner.size) {
+        return chartFail('construction', 'chart-patch-invalid', 'Chart patch removal is outside the target layer.');
       }
+      if (operation.count === 0) continue;
+      datums.splice(operation.index, operation.count);
     } else {
       return chartFail('construction', 'chart-patch-invalid', 'Chart patch operation type is invalid.');
     }
+    const nextSize = identities.size - owner.size + datums.length;
+    if (nextSize > state.limits.maxDatums) {
+      return chartFail('resource-rejection', 'chart-datum-ceiling-exceeded', 'Chart datum count exceeds its ceiling.', {
+        actual: nextSize,
+        ceiling: state.limits.maxDatums,
+      });
+    }
+    const rebuilt = packLayerInput(
+      { id: owner.id, profile: owner.profile, data: datums } as ChartLayer<ID>,
+      targetIndex,
+      state.limits,
+    );
+    if (!rebuilt.ok) return rebuilt;
+    const duplicate = duplicateOutsideLayer(identities, owner.identities, rebuilt.value.identities);
+    if (duplicate !== null) return chartFail('construction', 'chart-datum-duplicate', 'Chart datum identities must be globally unique.', { id: duplicate });
+    const mutation = createPackedChartLayerOwner(
+      rebuilt.value, state.limits.maxDatums, state.limits.maxIDCodeUnits, owner,
+    );
+    const identityOffset = ownerOffset(owners, targetIndex);
+    identities = applySequencePatch(identities, {
+      type: 'splice', index: identityOffset, deleteCount: owner.size, inserted: rebuilt.value.identities,
+    });
+    owners[targetIndex] = mutation.owner;
+    changed = true;
+    rebuiltLayers += 1;
+    scannedDatums += mutation.work.scannedDatums;
+    copiedValueBlocks += mutation.work.copiedValueBlocks;
+    repairedIndexEntries += mutation.work.repairedIndexEntries;
+    rebuiltIndexEntries += mutation.work.rebuiltIndexEntries;
   }
   if (!changed) return chartOK(state);
-  return normalizeChartModel(
-    { layers: layers as unknown as readonly ChartLayer<ID>[] },
-    state.limits,
+  return chartOK(assembleChartModel(
     state.generation + 1,
-  );
+    owners,
+    identities,
+    state.limits,
+    {
+      normalizedLayers: rebuiltLayers,
+      normalizedDatums: scannedDatums,
+      reusedLayers: owners.length - rebuiltLayers - repairedLayers,
+      rebuiltLayers,
+      repairedLayers,
+      copiedValueBlocks,
+      repairedIndexEntries,
+      rebuiltIndexEntries,
+    },
+  ));
 }
-
-type MutableChartLayer<ID extends StableID> = {
-  id: ID;
-  profile: ChartProfile;
-  data: ChartDatum<ID>[];
-};
 
 function normalizeChartModel<ID extends StableID>(
   input: ChartModel<ID>,
   limitsInput: ChartLimits,
   generation: number,
+  previousState?: ChartModelState<ID>,
 ): ChartResult<ChartModelState<ID>> {
   const limits = normalizeLimits(limitsInput);
   if (!limits.ok) return limits;
@@ -307,30 +448,22 @@ function normalizeChartModel<ID extends StableID>(
   }
 
   const identities: ID[] = [];
-  const identityIndex = new Map<ID, number>();
+  const identitySet = new Set<ID>();
   const layerIndex = new Map<ID, number>();
-  const locations: number[] = [];
-  const packedLayers: PackedChartLayer<ID>[] = [];
-  const cartesianBounds: MutableCartesianBounds = {
-    hasValues: false,
-    minimumX: Number.POSITIVE_INFINITY,
-    maximumX: Number.NEGATIVE_INFINITY,
-    minimumY: Number.POSITIVE_INFINITY,
-    maximumY: Number.NEGATIVE_INFINITY,
-  };
+  const owners: PackedChartLayerOwner<ID>[] = [];
+  const previousData = previousState === undefined ? null : getChartModelData<ID>(previousState);
   let datumCount = 0;
+  let reusedLayers = 0;
+  let rebuiltLayers = 0;
+  let copiedValueBlocks = 0;
+  let rebuiltIndexEntries = 0;
   for (let layerPosition = 0; layerPosition < input.layers.length; layerPosition += 1) {
     const layer = input.layers[layerPosition];
     if (layer === null || typeof layer !== 'object' || !Array.isArray(layer.data)) {
       return chartFail('construction', 'chart-model-invalid', 'Chart layer data must be an array.', { layer: layerPosition });
     }
-    const layerIDError = validateStableID(layer.id, limits.value.maxIDCodeUnits);
-    if (layerIDError !== null) return { ok: false, error: layerIDError };
     if (layerIndex.has(layer.id)) {
       return chartFail('construction', 'chart-layer-duplicate', 'Chart layer identities must be unique.', { id: layer.id });
-    }
-    if (!isChartProfile(layer.profile)) {
-      return chartFail('construction', 'chart-profile-invalid', 'Chart layer profile is invalid.', { profile: layer.profile });
     }
     datumCount += layer.data.length;
     if (datumCount > limits.value.maxDatums) {
@@ -339,37 +472,59 @@ function normalizeChartModel<ID extends StableID>(
         ceiling: limits.value.maxDatums,
       });
     }
-    const normalized = normalizeLayer(
-      layer as ChartLayer<ID>, layerPosition, identities, identityIndex, locations, limits.value, cartesianBounds,
+    const packed = packLayerInput(layer as ChartLayer<ID>, layerPosition, limits.value);
+    if (!packed.ok) return packed;
+    for (const id of packed.value.identities) {
+      if (identitySet.has(id)) return chartFail('construction', 'chart-datum-duplicate', 'Chart datum identities must be globally unique.', { id });
+      identitySet.add(id);
+      identities.push(id);
+    }
+    const previousPosition = previousData?.layerIndex.get(layer.id);
+    const previousOwner = previousPosition === undefined ? undefined : previousData?.layers[previousPosition]?.owner;
+    const mutation = createPackedChartLayerOwner(
+      packed.value,
+      limits.value.maxDatums,
+      limits.value.maxIDCodeUnits,
+      previousOwner,
     );
-    if (!normalized.ok) return normalized;
+    owners.push(mutation.owner);
+    if (mutation.changed) {
+      rebuiltLayers += 1;
+      copiedValueBlocks += mutation.work.copiedValueBlocks;
+      rebuiltIndexEntries += mutation.work.rebuiltIndexEntries;
+    } else reusedLayers += 1;
     layerIndex.set(layer.id, layerPosition);
-    packedLayers.push(normalized.value);
   }
-
-  const data: ChartModelData<ID> = {
-    limits: limits.value,
-    identityIndex,
-    layerIndex,
-    locations: Uint32Array.from(locations),
-    layers: Object.freeze(packedLayers),
-    cartesianBounds: freezeCartesianBounds(cartesianBounds),
-  };
-  return chartOK(new ImmutableChartModel(generation, identities, data));
+  const sequence = createSequence(identities, { maxItems: limits.value.maxDatums, maxIDCodeUnits: limits.value.maxIDCodeUnits });
+  return chartOK(assembleChartModel(generation, owners, sequence, limits.value, {
+    normalizedLayers: rebuiltLayers,
+    normalizedDatums: datumCount,
+    reusedLayers,
+    rebuiltLayers,
+    repairedLayers: 0,
+    copiedValueBlocks,
+    repairedIndexEntries: 0,
+    rebuiltIndexEntries,
+  }));
 }
 
-function normalizeLayer<ID extends StableID>(
+function packLayerInput<ID extends StableID>(
   layer: ChartLayer<ID>,
   layerPosition: number,
-  identities: ID[],
-  identityIndex: Map<ID, number>,
-  locations: number[],
   limits: Required<ChartLimits>,
-  bounds: MutableCartesianBounds,
-): ChartResult<PackedChartLayer<ID>> {
+): ChartResult<PackedLayerInput<ID>> {
+  if (layer === null || typeof layer !== 'object' || !Array.isArray(layer.data)) {
+    return chartFail('construction', 'chart-model-invalid', 'Chart layer data must be an array.', { layer: layerPosition });
+  }
+  const layerIDError = validateStableID(layer.id, limits.maxIDCodeUnits);
+  if (layerIDError !== null) return { ok: false, error: layerIDError };
+  if (!isChartProfile(layer.profile)) {
+    return chartFail('construction', 'chart-profile-invalid', 'Chart layer profile is invalid.', { profile: layer.profile });
+  }
   const stride = strideFor(layer.profile);
   const values = new Float64Array(layer.data.length * stride);
-  const identityIndices = new Uint32Array(layer.data.length);
+  const identities: ID[] = [];
+  const identitySet = new Set<ID>();
   let previousX = -Infinity;
   for (let datumPosition = 0; datumPosition < layer.data.length; datumPosition += 1) {
     const datum = layer.data[datumPosition];
@@ -379,18 +534,12 @@ function normalizeLayer<ID extends StableID>(
     const id = datum.id as ID;
     const idError = validateStableID(id, limits.maxIDCodeUnits);
     if (idError !== null) return { ok: false, error: idError };
-    if (identityIndex.has(id)) {
-      return chartFail('construction', 'chart-datum-duplicate', 'Chart datum identities must be globally unique.', { id });
-    }
-    const denseIndex = identities.length;
+    if (identitySet.has(id)) return chartFail('construction', 'chart-datum-duplicate', 'Chart datum identities must be unique within a layer.', { id });
+    identitySet.add(id);
     identities.push(id);
-    identityIndex.set(id, denseIndex);
-    identityIndices[datumPosition] = denseIndex;
-    locations.push(layerPosition, datumPosition);
     const offset = datumPosition * stride;
     const packed = packDatum(layer.profile, datum as ChartDatum<ID>, values, offset);
     if (!packed) return invalidDatum(layerPosition, datumPosition);
-    includeDatumBounds(bounds, layer.profile, values, offset);
     if (layer.profile === 'ordered-series') {
       const x = values[offset] as number;
       if (x < previousX) {
@@ -402,47 +551,7 @@ function normalizeLayer<ID extends StableID>(
       previousX = x;
     }
   }
-  return chartOK({ id: layer.id, profile: layer.profile, identityIndices, values, stride });
-}
-
-interface MutableCartesianBounds {
-  hasValues: boolean;
-  minimumX: number;
-  maximumX: number;
-  minimumY: number;
-  maximumY: number;
-}
-
-function includeDatumBounds(
-  bounds: MutableCartesianBounds,
-  profile: ChartProfile,
-  values: Float64Array,
-  offset: number,
-): void {
-  if (profile === 'radial-segment') return;
-  bounds.hasValues = true;
-  if (profile === 'point' || profile === 'ordered-series') {
-    includeXY(bounds, values[offset] as number, values[offset + 1] as number);
-  } else if (profile === 'cartesian-segment') {
-    includeXY(bounds, values[offset] as number, values[offset + 1] as number);
-    includeXY(bounds, values[offset + 2] as number, values[offset + 3] as number);
-  } else {
-    const column = values[offset] as number;
-    const row = values[offset + 1] as number;
-    includeXY(bounds, column, row);
-    includeXY(bounds, column + 1, row + 1);
-  }
-}
-
-function includeXY(bounds: MutableCartesianBounds, x: number, y: number): void {
-  if (x < bounds.minimumX) bounds.minimumX = x;
-  if (x > bounds.maximumX) bounds.maximumX = x;
-  if (y < bounds.minimumY) bounds.minimumY = y;
-  if (y > bounds.maximumY) bounds.maximumY = y;
-}
-
-function freezeCartesianBounds(bounds: MutableCartesianBounds): ChartCartesianBounds {
-  return Object.freeze({ ...bounds });
+  return chartOK({ id: layer.id, profile: layer.profile, identities: Object.freeze(identities), values, stride });
 }
 
 function packDatum<ID extends StableID>(
@@ -485,53 +594,124 @@ function packDatum<ID extends StableID>(
 }
 
 function materializeModel<ID extends StableID>(
-  state: ChartModelState<ID>,
+  _state: ChartModelState<ID>,
   data: ChartModelData<ID>,
 ): ChartModel<ID> {
   const layers = data.layers.map((layer) => {
-    const datums: ChartDatum<ID>[] = [];
-    for (let index = 0; index < layer.identityIndices.length; index += 1) {
-      const id = state.identities[layer.identityIndices[index] as number] as ID;
-      const offset = index * layer.stride;
-      datums.push(materializeDatum(layer.profile, id, layer.values, offset));
-    }
+    const datums = materializePackedLayer(layer.owner);
     return Object.freeze({ id: layer.id, profile: layer.profile, data: Object.freeze(datums) }) as ChartLayer<ID>;
   });
   return Object.freeze({ layers: Object.freeze(layers) });
 }
 
-function materializeDatum<ID extends StableID>(
-  profile: ChartProfile,
-  id: ID,
-  values: Float64Array,
-  offset: number,
-): ChartDatum<ID> {
-  if (profile === 'point' || profile === 'ordered-series') {
-    return Object.freeze({ id, x: values[offset] as number, y: values[offset + 1] as number });
+function packLayerPatch<ID extends StableID>(
+  owner: PackedChartLayerOwner<ID>,
+  datums: readonly ChartDatum<ID>[],
+  layerPosition: number,
+  index: number,
+  limits: Required<ChartLimits>,
+): ChartResult<{ readonly index: number; readonly identities: readonly ID[]; readonly values: Float64Array }> {
+  const identities: ID[] = [];
+  const seen = new Set<ID>();
+  const values = new Float64Array(datums.length * owner.stride);
+  let previousX = owner.profile === 'ordered-series' && index > 0
+    ? readPackedLayerValue(owner, index - 1, 0)
+    : Number.NEGATIVE_INFINITY;
+  for (let offset = 0; offset < datums.length; offset += 1) {
+    const datum = datums[offset];
+    if (datum === null || typeof datum !== 'object' || !('id' in datum)) return invalidDatum(layerPosition, index + offset);
+    const id = datum.id as ID;
+    const idError = validateStableID(id, limits.maxIDCodeUnits);
+    if (idError !== null) return { ok: false, error: idError };
+    if (seen.has(id)) return chartFail('construction', 'chart-datum-duplicate', 'Chart patch identities must be unique.', { id });
+    seen.add(id);
+    identities.push(id);
+    const valueOffset = offset * owner.stride;
+    if (!packDatum(owner.profile, datum as ChartDatum<ID>, values, valueOffset)) return invalidDatum(layerPosition, index + offset);
+    if (owner.profile === 'ordered-series') {
+      const x = values[valueOffset] as number;
+      if (x < previousX) return invalidDatum(layerPosition, index + offset);
+      previousX = x;
+    }
   }
-  if (profile === 'cartesian-segment') {
-    return Object.freeze({
-      id,
-      x1: values[offset] as number,
-      y1: values[offset + 1] as number,
-      x2: values[offset + 2] as number,
-      y2: values[offset + 3] as number,
-    });
+  if (owner.profile === 'ordered-series' && index + datums.length < owner.size
+    && previousX > readPackedLayerValue(owner, index + datums.length, 0)) {
+    return invalidDatum(layerPosition, index + datums.length - 1);
   }
-  if (profile === 'grid-cell') {
-    return Object.freeze({
-      id,
-      column: values[offset] as number,
-      row: values[offset + 1] as number,
-      value: values[offset + 2] as number,
-    });
+  return chartOK({ index, identities: Object.freeze(identities), values });
+}
+
+function assembleChartModel<ID extends StableID>(
+  generation: number,
+  owners: readonly PackedChartLayerOwner<ID>[],
+  identities: Sequence<ID>,
+  limits: Required<ChartLimits>,
+  diagnostics: ChartModelDiagnostics,
+): ChartModelState<ID> {
+  const layers: PackedChartLayer<ID>[] = [];
+  const layerIndex = new Map<ID, number>();
+  let identityOffset = 0;
+  for (let index = 0; index < owners.length; index += 1) {
+    const owner = owners[index] as PackedChartLayerOwner<ID>;
+    layers.push(createPackedChartLayerView(owner, identityOffset));
+    layerIndex.set(owner.id, index);
+    identityOffset += owner.size;
   }
-  return Object.freeze({
-    id,
-    value: values[offset] as number,
-    innerRadius: values[offset + 1] as number,
-    outerRadius: values[offset + 2] as number,
-  });
+  const frozenLayers = Object.freeze(layers);
+  const data: ChartModelData<ID> = {
+    limits,
+    identities,
+    layerIndex,
+    layers: frozenLayers,
+    cartesianBounds: chartCartesianBounds(frozenLayers),
+  };
+  return new ImmutableChartModel(generation, data, diagnostics);
+}
+
+function diagnosticsForMutation(
+  layerCount: number,
+  work: ChartLayerWork,
+  kind: 'repair' | 'rebuild',
+): ChartModelDiagnostics {
+  return {
+    normalizedLayers: kind === 'rebuild' ? 1 : 0,
+    normalizedDatums: work.scannedDatums,
+    reusedLayers: layerCount - 1,
+    rebuiltLayers: kind === 'rebuild' ? 1 : 0,
+    repairedLayers: kind === 'repair' ? 1 : 0,
+    copiedValueBlocks: work.copiedValueBlocks,
+    repairedIndexEntries: work.repairedIndexEntries,
+    rebuiltIndexEntries: work.rebuiltIndexEntries,
+  };
+}
+
+function ownerOffset<ID extends StableID>(owners: readonly PackedChartLayerOwner<ID>[], target: number): number {
+  let offset = 0;
+  for (let index = 0; index < target; index += 1) offset += (owners[index] as PackedChartLayerOwner<ID>).size;
+  return offset;
+}
+
+function duplicateOutsideLayer<ID extends StableID>(
+  global: Sequence<ID>,
+  previousLayer: Sequence<ID>,
+  identities: readonly ID[],
+): ID | null {
+  for (const id of identities) if (global.contains(id) && !previousLayer.contains(id)) return id;
+  return null;
+}
+
+function duplicateOutsideReplacedRange<ID extends StableID>(
+  owner: PackedChartLayerOwner<ID>,
+  index: number,
+  count: number,
+  identities: readonly ID[],
+): ID | null {
+  const end = index + count;
+  for (const id of identities) {
+    const previousIndex = owner.identities.indexOf(id);
+    if (previousIndex !== null && (previousIndex < index || previousIndex >= end)) return id;
+  }
+  return null;
 }
 
 function normalizeLimits(input: ChartLimits): ChartResult<Required<ChartLimits>> {
@@ -569,32 +749,10 @@ function sameModel<ID extends StableID>(left: ChartModelState<ID>, right: ChartM
   if (left.size !== right.size || left.layerCount !== right.layerCount) return false;
   const leftData = getChartModelData<ID>(left);
   const rightData = getChartModelData<ID>(right);
-  for (let index = 0; index < left.identities.length; index += 1) {
-    if (left.identities[index] !== right.identities[index]) return false;
-  }
   for (let index = 0; index < leftData.layers.length; index += 1) {
     const a = leftData.layers[index] as PackedChartLayer<ID>;
     const b = rightData.layers[index] as PackedChartLayer<ID>;
-    if (a.id !== b.id || a.profile !== b.profile || a.values.length !== b.values.length) return false;
-    for (let valueIndex = 0; valueIndex < a.values.length; valueIndex += 1) {
-      if (!Object.is(a.values[valueIndex], b.values[valueIndex])) return false;
-    }
-  }
-  return true;
-}
-
-function sameDatumSlice<ID extends StableID>(
-  current: readonly ChartDatum<ID>[],
-  index: number,
-  replacement: readonly ChartDatum<ID>[],
-): boolean {
-  if (replacement.length === 0) return true;
-  for (let offset = 0; offset < replacement.length; offset += 1) {
-    const left = current[index + offset] as unknown as Record<string, unknown> | undefined;
-    const right = replacement[offset] as unknown as Record<string, unknown>;
-    if (left === undefined || left['id'] !== right['id']) return false;
-    const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
-    for (const key of keys) if (!Object.is(left[key], right[key])) return false;
+    if (a.owner !== b.owner) return false;
   }
   return true;
 }

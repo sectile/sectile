@@ -10,7 +10,7 @@ import {
   resolveChartValue,
   type ChartLineLayerDefinition,
 } from '@sectile/chart/contract';
-import type { ChartModel } from '@sectile/chart/model';
+import { replaceChartLayer, type ChartModel } from '@sectile/chart/model';
 
 const stringID: StableID = 'datum';
 const numericID: StableID = 1;
@@ -41,6 +41,8 @@ declare const controller: ChartController<1 | '1'>;
 controller.replaceModel(mixedModel);
 controller.dispatch({ type: 'set-cursor', id: 1 });
 controller.dispatch({ type: 'set-cursor', id: '1' });
+declare const modelState: ReturnType<typeof controller.getModel>;
+replaceChartLayer(modelState, mixedModel.layers[0]!);
 
 interface RevenueDatum {
   readonly id: number;

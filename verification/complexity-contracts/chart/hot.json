@@ -84,11 +84,114 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Normalization validates and packs each layer and datum once while accumulating cartesian bounds in the same pass.",
-        "adversarialWitness": "A maximum-size mixed-profile model emits every packed value and dense identity.",
+        "proof": "Normalization validates and packs each datum once, builds one Core identity sequence, and retains profile indexes whose packed hierarchy and auxiliary entries are linear in their owning layer.",
+        "adversarialWitness": "A maximum-size mixed-profile model emits every packed value and retains fewer than four hierarchy leaves per datum plus profile-specific linear entries.",
         "fullScan": {
           "allowed": true,
           "rationale": "External construction must validate every retained datum."
+        }
+      }
+    },
+    {
+      "id": "model.replace-layer",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/model.ts",
+      "benchmarkIDs": [
+        "chart:model:replace-layer"
+      ],
+      "specificationCeiling": "O(sLayer + nLayer)",
+      "contract": {
+        "variables": [
+          {
+            "name": "sLayer",
+            "meaning": "datums in the replaced layer",
+            "ceiling": "maxDatums"
+          },
+          {
+            "name": "nLayer",
+            "meaning": "model layer count",
+            "ceiling": "maxLayers"
+          }
+        ],
+        "time": {
+          "bound": "O(sLayer + nLayer)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(sLayer + nLayer)",
+          "output": "O(sLayer + nLayer)",
+          "retained": "O(sLayer + nLayer) changed plus structurally shared unchanged owners"
+        },
+        "resources": {
+          "allocations": "O(sLayer + nLayer)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "The replacement validates and indexes one layer, patches the Core identity sequence once, creates at most nLayer lightweight views, and reuses every other immutable owner.",
+        "adversarialWitness": "Replacing one datum layer beside a one-million-datum unchanged layer reports one scanned datum and preserves the unchanged owner identity.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "A changed-layer replacement cannot inspect datum storage owned by unchanged layers."
+        }
+      }
+    },
+    {
+      "id": "model.patch-layer.sparse",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/internal/layer-owner.ts",
+      "benchmarkIDs": [
+        "chart:model:patch-layer-sparse"
+      ],
+      "specificationCeiling": "O(jDatum + bBlock + bIndex)",
+      "contract": {
+        "variables": [
+          {
+            "name": "jDatum",
+            "meaning": "replaced datums",
+            "ceiling": "maxPatchOperations"
+          },
+          {
+            "name": "bBlock",
+            "meaning": "fixed-size packed value blocks touched",
+            "ceiling": "ceil(layerSize / 256)"
+          },
+          {
+            "name": "bIndex",
+            "meaning": "affected hierarchy or prefix entries",
+            "ceiling": "profile index size"
+          }
+        ],
+        "time": {
+          "bound": "O(jDatum + bBlock + bIndex)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(bBlock + bIndex)",
+          "output": "O(1)",
+          "retained": "O(bBlock + bIndex) until the bounded overlay-depth rebuild crossover"
+        },
+        "resources": {
+          "allocations": "O(bBlock + bIndex)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the replace patch preserves layer cardinality",
+          "fixed 256-datum value blocks and hierarchy overlays rebuild at bounded depth 16"
+        ],
+        "proof": "The owner copies only intersecting fixed-size blocks, patches the Core identity sequence, and records only affected leaf-to-root hierarchy paths; radial prefix repair counts its affected suffix as bIndex.",
+        "adversarialWitness": "One replacement in a 4,096-datum ordered layer copies one value block and repairs at most one leaf-to-root hierarchy path.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A complete owner scan is permitted only at the bounded overlay-depth crossover; scannedDatums, bBlock, and bIndex then account for that rebuild explicitly."
         }
       }
     },
