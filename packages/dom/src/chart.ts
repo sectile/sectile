@@ -120,6 +120,7 @@ export interface DOMChartOptions<ID extends StableID = StableID> {
   readonly accessibilityLabel?: string;
   readonly getAccessibleDatumLabel?: (id: ID, index: number) => string;
   readonly onCommand?: (command: ChartCommand<ID>) => void;
+  readonly onProjectionChange?: (projection: ChartProjection<ID>) => void;
 }
 
 export interface DOMChartConnection<ID extends StableID = StableID> {

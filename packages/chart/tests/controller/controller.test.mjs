@@ -37,6 +37,14 @@ test('controlled ownership remains shape-stable and converges only through sync'
   assert.equal(controller.syncControlledValues({}).error.code, 'chart-controller-invalid');
 });
 
+test('initial values seed state without claiming controlled ownership', () => {
+  const controller = createChartController({ ...options(), initialValues: { cursor: 1 } });
+  assert.equal(controller.getSnapshot().state.cursor, 1);
+  const moved = controller.dispatch({ type: 'set-cursor', id: '1' }).value;
+  assert.equal(moved.snapshot.state.cursor, '1');
+  assert.equal(moved.commands.some((command) => command.type === 'cursor-change-requested'), false);
+});
+
 test('command subscriptions release exactly once and dispose clears controller resources', () => {
   const controller = createChartController(options());
   const commands = [];

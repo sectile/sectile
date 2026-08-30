@@ -99,6 +99,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     if (!projected.ok) return;
     this.#projection = projected.value;
     this.#renderer.render(projected.value);
+    this.#options.onProjectionChange?.(projected.value);
     this.#refreshAccessibility();
     const elapsed = this.#view.performance.now() - startedAt;
     if (this.#policy.type === 'adaptive' && this.#adaptScale(elapsed)) this.#schedule();

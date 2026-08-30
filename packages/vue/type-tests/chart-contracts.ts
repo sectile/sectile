@@ -5,7 +5,7 @@ declare const options: UseChartOptions<1 | '1'>;
 declare const result: UseChartResult<1 | '1'>;
 declare const props: ChartRootProps<1 | '1'>;
 
-options.controlled?.cursor satisfies 1 | '1' | null | undefined;
+options.cursor?.value satisfies 1 | '1' | null | undefined;
 result.controller.dispatch({ type: 'set-cursor', id: 1 });
 props.cursor satisfies 1 | '1' | null | undefined;
 

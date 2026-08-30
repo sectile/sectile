@@ -27,6 +27,7 @@ import type { ChartResult } from './result.js';
 export interface ChartControllerOptions<ID extends StableID = StableID> {
   readonly model: ChartModel<ID>;
   readonly limits?: ChartLimits;
+  readonly initialValues?: ChartControlledValues<ID>;
   readonly controlled?: ChartControlledValues<ID>;
 }
 
@@ -58,7 +59,7 @@ export function tryCreateChartController<ID extends StableID>(
   const model = tryCreateChartModel(options.model, options.limits);
   if (!model.ok) return model;
   const controlledValues = options.controlled ?? {};
-  const state = tryCreateChartState(model.value, controlledValues);
+  const state = tryCreateChartState(model.value, { ...(options.initialValues ?? {}), ...controlledValues });
   if (!state.ok) return state;
   return chartOK(new ImmutableChartController(
     model.value,
