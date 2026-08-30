@@ -1,6 +1,6 @@
 {
   "name": "@sectile/vue",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Headless Vue components for Sectile DOM interaction semantics.",
   "license": "MIT",
   "type": "module",

@@ -1,5 +1,11 @@
 # @sectile/vue
 
+## 0.11.1
+
+### Changes
+
+- perf(virtual): reduce layout rebuild allocations (17b45f3)
+
 ## 0.11.0
 
 ### Changes

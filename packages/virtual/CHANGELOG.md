@@ -1,5 +1,12 @@
 # @sectile/virtual
 
+## 0.11.1
+
+### Changes
+
+- perf(virtual): reduce layout rebuild allocations (17b45f3)
+- perf(virtual): streamline dense spatial patches (75c23c8)
+
 ## 0.11.0
 
 ### Changes

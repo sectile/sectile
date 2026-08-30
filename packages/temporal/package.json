@@ -1,6 +1,6 @@
 {
   "name": "@sectile/temporal",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Renderer-neutral date and time field, calendar, and picker semantics for Sectile.",
   "license": "MIT",
   "type": "module",

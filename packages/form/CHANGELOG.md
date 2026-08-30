@@ -1,5 +1,11 @@
 # @sectile/form
 
+## 0.11.1
+
+### Changes
+
+- No package-specific changes.
+
 ## 0.11.0
 
 ### Changes
