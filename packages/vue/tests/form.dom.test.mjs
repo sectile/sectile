@@ -297,7 +297,7 @@ test('Vue Form coordinates native validation, focus, FormData, and reset without
   assert.equal(input.getAttribute('aria-invalid'), 'true');
   assert.equal(summary.hidden, false);
   assert.equal(submissions.length, 0);
-  assert.equal(states.some((state) => state.validationStatus === 'invalid'), true);
+  assert.equal(states.some((state) => state.validation.status === 'invalid'), true);
 
   input.value = 'release@sectile.dev';
   input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -310,8 +310,8 @@ test('Vue Form coordinates native validation, focus, FormData, and reset without
   reset.click();
   await nextTick();
   assert.equal(input.value, 'initial@sectile.dev');
-  assert.equal(states.at(-1).validationStatus, 'idle');
-  assert.equal(states.at(-1).submissionStatus, 'idle');
+  assert.equal(states.at(-1).validation.status, 'idle');
+  assert.equal(states.at(-1).submission.status, 'idle');
 
   app.unmount();
   host.remove();
@@ -601,6 +601,78 @@ test('Vue Form owns async submission success and failure lifecycle', async () =>
   await nextTick();
   assert.equal(form.dataset.submissionStatus, 'failed');
   assert.match(summary.textContent ?? '', /Form submission failed/);
+  assert.equal(state.valid, true);
+  assert.deepEqual(state.submission.failure, { message: 'Form submission failed.' });
+  assert.equal(message.hidden, true);
+  assert.equal(document.activeElement, input);
+
+  app.unmount();
+  host.remove();
+});
+
+test('Vue FormSummary keeps one multi-field issue and exposes related-field ARIA state', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let state;
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onSubmit: () => ({
+        ok: false,
+        issues: [{
+          message: 'Check the order number and email.',
+          relatedPaths: ['orderNumber', 'email'],
+        }],
+      }),
+      onStateChange: (next) => { state = next; },
+    }, {
+      default: () => [
+        h(FormSummary, null, {
+          default: ({ issues, submission, firstIssue }) => h(
+            'span',
+            { 'data-summary-slot': '' },
+            `${submission.status}:${issues.length}:${firstIssue?.message ?? ''}`,
+          ),
+        }),
+        h(FormField, { id: 'order-number', name: 'orderNumber' }, {
+          default: () => h(TextField, { defaultValue: 'A-1' }),
+        }),
+        h(FormField, { id: 'email', name: 'email' }, {
+          default: () => h(TextField, { defaultValue: 'wrong@example.com' }),
+        }),
+        h(FormSubmit, null, { default: () => 'Look up' }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+  const form = host.querySelector('form');
+  const summary = host.querySelector('[data-part="summary"]');
+  const inputs = [...host.querySelectorAll('input')];
+  assert.ok(form instanceof HTMLFormElement);
+  assert.ok(summary instanceof HTMLElement);
+  assert.equal(inputs.length, 2);
+
+  form.requestSubmit();
+  await nextTick();
+
+  assert.equal(state.allIssues.length, 1);
+  assert.equal(state.fields[0].valid, false);
+  assert.equal(state.fields[1].valid, false);
+  assert.equal(summary.textContent, 'failed:1:Check the order number and email.');
+  assert.equal(inputs[0].getAttribute('aria-invalid'), 'true');
+  assert.equal(inputs[1].getAttribute('aria-invalid'), 'true');
+  assert.equal(inputs[0].getAttribute('aria-errormessage'), summary.id);
+  assert.equal(inputs[1].getAttribute('aria-errormessage'), summary.id);
+
+  inputs[1].value = 'correct@example.com';
+  inputs[1].dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+  await nextTick();
+
+  assert.deepEqual(state.allIssues, []);
+  assert.equal(state.submission.status, 'idle');
+  assert.equal(summary.hidden, true);
 
   app.unmount();
   host.remove();

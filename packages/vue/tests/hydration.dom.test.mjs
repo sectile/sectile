@@ -137,7 +137,7 @@ test('[HYD-07] Form hydration registers one participant and preserves controlled
             select: (field) => field?.valid ?? true,
           }, { default: ({ selected }) => h('output', { 'data-field-valid': '' }, String(selected)) }),
           h(FormSelector, {
-            select: (state) => state.submissionStatus,
+            select: (state) => state.submission.status,
           }, { default: ({ selected }) => h('output', { 'data-submit-status': '' }, selected) }),
         ],
       }),

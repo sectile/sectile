@@ -56,11 +56,11 @@ const resetExample = async (reinitialize: () => void) => {
 
 <template>
   <FormRoot
-    v-slot="{ state, dirty, touched, valid, submissionStatus, reinitialize }"
+    v-slot="{ dirty, touched, valid, submission, reinitialize }"
     v-bind="submission"
     autocomplete="off"
   >
-    <FormSummary v-if="state.issues.length > 0" />
+    <FormSummary />
 
     <div :key="controlRevision">
       <FormField :name="['profile', 'displayName']" required>
@@ -100,15 +100,15 @@ const resetExample = async (reinitialize: () => void) => {
     <FormReset @click.prevent="resetExample(reinitialize)">
       ${korean ? '되돌리기' : 'Reset'}
     </FormReset>
-    <FormSubmit :disabled="!dirty || submissionStatus === 'submitting'">
-      {{ submissionStatus === 'submitting' ? '${korean ? '저장 중…' : 'Saving…'}' : '${korean ? '프로필 저장' : 'Save profile'}' }}
+    <FormSubmit :disabled="!dirty || submission.status === 'submitting'">
+      {{ submission.status === 'submitting' ? '${korean ? '저장 중…' : 'Saving…'}' : '${korean ? '프로필 저장' : 'Save profile'}' }}
     </FormSubmit>
 
     <aside aria-live="polite">
       <code>dirty: {{ dirty }}</code>
       <code>touched: {{ touched }}</code>
       <code>valid: {{ valid }}</code>
-      <code>submissionStatus: {{ submissionStatus }}</code>
+      <code>submission.status: {{ submission.status }}</code>
     </aside>
   </FormRoot>
 </template>`;

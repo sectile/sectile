@@ -43,6 +43,11 @@ import {
   type FormValidationResult as DOMFormValidationResult,
   type FormValues as DOMFormValues,
 } from '@sectile/dom/form';
+import {
+  getFormFieldIDByPath,
+  getFormIssuesBySource,
+  type FormSubmissionFailure,
+} from '@sectile/form/state';
 import { tryCreateFormFieldPath } from '@sectile/form/path';
 import type { FormSchemaOutput as DOMFormSchemaOutput } from '@sectile/form/schema';
 import {
@@ -102,12 +107,17 @@ export interface FormIssueInput {
   readonly id?: string;
   readonly message: string;
   readonly path?: FormFieldPath;
+  readonly relatedPaths?: readonly FormFieldPath[];
 }
 export type FormSubmitIssue = FormIssueInput;
 export type FormSubmitResult =
   | void
   | { readonly ok: true }
-  | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] };
+  | {
+      readonly ok: false;
+      readonly failure?: FormSubmissionFailure;
+      readonly issues?: readonly FormSubmitIssue[];
+    };
 export type FormSubmitHandler<Values extends object = Record<string, unknown>> =
   (event: FormSubmitEvent<Values>) => FormSubmitResult | PromiseLike<FormSubmitResult>;
 export interface FormSubmissionDefinition {
@@ -131,7 +141,7 @@ export function defineFormSubmission(
 }
 export type FormSubmitErrorMapper = (
   reason: unknown,
-) => FormSubmitIssue | readonly FormSubmitIssue[] | undefined;
+) => FormSubmissionFailure | undefined;
 export type FormResetHandler = () => void;
 export type FormStateChangeHandler = (state: FormState) => void;
 export type FormValidateContext = DOMFormValidateContext<string>;
@@ -143,7 +153,10 @@ export type FormSubmitStartedAction = () => number | null;
 export type FormSubmitSucceededAction = (generation: number) => boolean;
 export type FormSubmitFailedAction = (
   generation: number,
-  issues?: readonly FormIssue[],
+  result: {
+    readonly failure?: FormSubmissionFailure;
+    readonly issues?: readonly FormIssue[];
+  },
 ) => boolean;
 export type FormReplaceIssuesAction = (
   source: FormIssueSource,
@@ -167,10 +180,8 @@ export interface FormRootProps<
 
 export interface FormRootSlotProps {
   readonly state: FormState;
-  readonly validationStatus: FormState['validationStatus'];
-  readonly validationTrigger: FormState['validationTrigger'];
-  readonly validationIntent: FormState['validationIntent'];
-  readonly submissionStatus: FormState['submissionStatus'];
+  readonly validation: FormState['validation'];
+  readonly submission: FormState['submission'];
   readonly valid: boolean;
   readonly touched: boolean;
   readonly dirty: boolean;
@@ -239,6 +250,7 @@ export interface FormFieldSlotProps {
   readonly touched: boolean;
   readonly dirty: boolean;
   readonly issues: readonly FormIssue[];
+  readonly relatedIssues: readonly FormIssue[];
   readonly setMeta: (meta: FormFieldMetaInput) => boolean;
   readonly replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]) => boolean;
   readonly upsertIssue: (issue: FormIssue) => boolean;
@@ -281,6 +293,11 @@ export interface FormFieldSelectorComponent {
 }
 
 export interface FormSummarySlotProps {
+  readonly validation: FormState['validation'];
+  readonly submission: FormState['submission'];
+  readonly issues: readonly FormIssue[];
+  readonly serverIssues: readonly FormIssue[];
+  readonly firstIssue: FormIssue | null;
   readonly valid: boolean;
 }
 
@@ -288,7 +305,7 @@ export interface FormSubmitSlotProps {
   readonly valid: boolean;
   readonly submitting: boolean;
   readonly canSubmit: boolean;
-  readonly submissionStatus: FormState['submissionStatus'];
+  readonly submission: FormState['submission'];
 }
 
 export {
@@ -326,6 +343,7 @@ interface RegisteredParticipant {
 
 interface FormContext {
   readonly summary: ShallowRef<HTMLElement | null>;
+  readonly summaryId: string;
   readonly register: (participant: FormParticipant<string>) => () => void;
   readonly setFieldDiagnostic: (id: string, issue: FormIssue | null) => void;
   readonly connection: ShallowRef<FormConnection<string> | null>;
@@ -343,19 +361,14 @@ interface FormFieldContext {
 const formContextKey = Symbol('SectileForm');
 const formFieldContextKey = Symbol('SectileFormField');
 const emptyState: FormState = Object.freeze({
-  validationGeneration: 0,
-  validationStatus: 'idle',
-  validationTrigger: null,
-  validationIntent: null,
-  submissionGeneration: 0,
-  submissionStatus: 'idle',
-  submitCount: 0,
-  submitted: false,
+  validation: Object.freeze({ generation: 0, status: 'idle', trigger: null, intent: null }),
+  submission: Object.freeze({ generation: 0, status: 'idle', count: 0, failure: null }),
   touched: false,
   dirty: false,
   valid: true,
   fields: Object.freeze([]),
   issues: Object.freeze([]),
+  allIssues: Object.freeze([]),
 });
 const partProps = {
   as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
@@ -388,6 +401,7 @@ const FormRootImpl = defineComponent({
   setup(props, { attrs, emit, expose, slots }) {
     const root = shallowRef<HTMLFormElement | null>(null);
     const summary = shallowRef<HTMLElement | null>(null);
+    const summaryId = `${useHostId()}-summary`;
     const connection = shallowRef<FormConnection<string> | null>(null);
     const participants = new Map<string, RegisteredParticipant>();
     const fieldDiagnostics = new Map<string, FormIssue>();
@@ -432,31 +446,28 @@ const FormRootImpl = defineComponent({
       } catch (error) {
         return {
           ok: false,
-          issues: resolveIssueInputs(target, 'server', mapSubmissionError(props.mapSubmitError, error)),
+          failure: mapSubmissionError(props.mapSubmitError, error),
         };
       }
-      const settle = (resolved: FormSubmitResult): DOMFormSubmitResult<string> => (
-        typeof resolved === 'object' && resolved !== null && resolved.ok === false
-          ? {
-              ok: false,
-              issues: resolveIssueInputs(
-                target,
-                'server',
-                resolved.issues ?? [submissionErrorIssue()],
-              ),
-            }
-          : { ok: true }
-      );
+      const settle = (resolved: FormSubmitResult): DOMFormSubmitResult<string> => {
+        if (typeof resolved !== 'object' || resolved === null || resolved.ok !== false) {
+          return { ok: true };
+        }
+        const issues = resolveIssueInputs(target, 'server', resolved.issues ?? []);
+        const failure = resolved.failure
+          ?? (issues.length === 0 ? submissionErrorFailure() : undefined);
+        return {
+          ok: false,
+          ...(failure === undefined ? {} : { failure }),
+          ...(issues.length === 0 ? {} : { issues }),
+        };
+      };
       if (isPromiseLike(result)) {
         return Promise.resolve(result).then(
           settle,
           (error: unknown) => ({
             ok: false as const,
-            issues: resolveIssueInputs(
-              target,
-              'server',
-              mapSubmissionError(props.mapSubmitError, error),
-            ),
+            failure: mapSubmissionError(props.mapSubmitError, error),
           }),
         );
       }
@@ -464,6 +475,7 @@ const FormRootImpl = defineComponent({
     };
     const configuration = () => ({
       ...(summary.value === null ? {} : { summary: summary.value }),
+      renderSummaryContent: false,
       ...(props.schema === undefined ? {} : { schema: props.schema }),
       ...(props.validate === undefined ? {} : { validate: props.validate }),
       validateOn: props.validateOn,
@@ -523,51 +535,43 @@ const FormRootImpl = defineComponent({
     const actions = {
       submitStarted: (): number | null => connection.value?.submitStarted() ?? null,
       submitSucceeded: (generation: number): boolean => connection.value?.submitSucceeded(generation) ?? false,
-      submitFailed: (generation: number, issues: readonly FormIssue[] = []): boolean => connection.value?.submitFailed(generation, issues) ?? false,
+      submitFailed: (
+        generation: number,
+        result: { readonly failure?: FormSubmissionFailure; readonly issues?: readonly FormIssue[] },
+      ): boolean => connection.value?.submitFailed(generation, result) ?? false,
       replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]): boolean => connection.value?.replaceIssues(source, issues) ?? false,
       reinitialize: (options?: FormReinitializeOptions): void => connection.value?.reinitialize(options),
       reset: (): void => connection.value?.reset(),
     };
     const formContext: FormContext = {
       summary,
+      summaryId,
       register,
       setFieldDiagnostic,
       connection,
     };
     provide<FormContext>(formContextKey, formContext);
-    const validationStatus = useFormSelectorFromContext(
+    const validation = useFormSelectorFromContext(
       formContext,
-      () => (current) => current.validationStatus,
+      () => (current) => current.validation,
     );
-    const submissionStatus = useFormSelectorFromContext(
+    const submission = useFormSelectorFromContext(
       formContext,
-      () => (current) => current.submissionStatus,
+      () => (current) => current.submission,
     );
     const selectedState = useFormSelectorFromContext(formContext, () => (current) => current);
-    const validationTrigger = useFormSelectorFromContext(
-      formContext,
-      () => (current) => current.validationTrigger,
-    );
-    const validationIntent = useFormSelectorFromContext(
-      formContext,
-      () => (current) => current.validationIntent,
-    );
     const valid = useFormSelectorFromContext(formContext, () => (current) => current.valid);
     const touched = useFormSelectorFromContext(formContext, () => (current) => current.touched);
     const dirty = useFormSelectorFromContext(formContext, () => (current) => current.dirty);
-    const submitted = useFormSelectorFromContext(formContext, () => (current) => current.submitted);
-    const submitCount = useFormSelectorFromContext(formContext, () => (current) => current.submitCount);
     const slotProps: FormRootSlotProps = Object.freeze({
       get state() { return selectedState.value; },
-      get validationStatus() { return validationStatus.value; },
-      get validationTrigger() { return validationTrigger.value; },
-      get validationIntent() { return validationIntent.value; },
-      get submissionStatus() { return submissionStatus.value; },
+      get validation() { return validation.value; },
+      get submission() { return submission.value; },
       get valid() { return valid.value; },
       get touched() { return touched.value; },
       get dirty() { return dirty.value; },
-      get submitted() { return submitted.value; },
-      get submitCount() { return submitCount.value; },
+      get submitted() { return submission.value.count > 0; },
+      get submitCount() { return submission.value.count; },
       ...actions,
     });
     expose(actions);
@@ -576,8 +580,8 @@ const FormRootImpl = defineComponent({
       ref: (element: unknown) => { root.value = element as HTMLFormElement | null; },
       'data-scope': 'form',
       'data-part': 'root',
-      'data-validation-status': validationStatus.value,
-      'data-submission-status': submissionStatus.value,
+      'data-validation-status': validation.value.status,
+      'data-submission-status': submission.value.status,
     }), slots['default']?.(slotProps) ?? []);
   },
 });
@@ -613,15 +617,21 @@ function resolveIssueInputs(
   source: 'form' | 'server',
   input: readonly FormIssueInput[],
 ): readonly FormIssue[] {
-  const fields = target.getSnapshot().state.fields;
+  const state = target.getSnapshot().state;
   return Object.freeze(input.map((issue, index) => {
-    const name = issue.path === undefined ? null : safeEncodeFormFieldPath(issue.path);
-    const owner = name === null ? undefined : findNamedFieldOwner(fields, name);
+    const owner = issue.path === undefined ? null : getFormFieldIDByPath(state, issue.path);
+    const relatedFieldIds = new Set<string>();
+    for (const path of issue.relatedPaths ?? []) {
+      const related = getFormFieldIDByPath(state, path);
+      if (related !== null && related !== owner) relatedFieldIds.add(related);
+    }
+    const related = Object.freeze([...relatedFieldIds]);
     return Object.freeze({
       id: issue.id ?? `form-${source}-issue-${index + 1}`,
       message: issue.message,
       source,
-      ...(owner === undefined ? {} : { fieldId: owner.id }),
+      ...(owner === null ? {} : { fieldId: owner }),
+      ...(related.length === 0 ? {} : { relatedFieldIds: related }),
     });
   }));
 }
@@ -631,46 +641,23 @@ function safeEncodeFormFieldPath(path: FormFieldPath): string | null {
   return result.ok ? encodeFormFieldPath(result.value) : null;
 }
 
-function findNamedFieldOwner(
-  fields: FormState['fields'],
-  issueName: string,
-): FormState['fields'][number] | undefined {
-  let owner: FormState['fields'][number] | undefined;
-  for (const candidate of fields) {
-    if (
-      candidate.name === null
-      || (
-        issueName !== candidate.name
-        && !issueName.startsWith(`${candidate.name}.`)
-        && !issueName.startsWith(`${candidate.name}[`)
-      )
-    ) continue;
-    if (owner === undefined || candidate.name.length > (owner.name?.length ?? 0)) owner = candidate;
-  }
-  return owner;
-}
-
 function mapSubmissionError(
   mapper: FormSubmitErrorMapper | undefined,
   reason: unknown,
-): readonly FormSubmitIssue[] {
+): FormSubmissionFailure {
   if (mapper !== undefined) {
     try {
       const mapped = mapper(reason);
-      if (mapped !== undefined) {
-        const issues = Array.isArray(mapped) ? mapped : [mapped as FormSubmitIssue];
-        if (issues.length > 0) return Object.freeze([...issues]);
-      }
+      if (mapped !== undefined) return Object.freeze({ message: mapped.message });
     } catch {
       // Mapping failures are intentionally replaced by the safe fallback below.
     }
   }
-  return Object.freeze([submissionErrorIssue()]);
+  return submissionErrorFailure();
 }
 
-function submissionErrorIssue(): FormSubmitIssue {
+function submissionErrorFailure(): FormSubmissionFailure {
   return Object.freeze({
-    id: 'form-submit-error',
     message: 'Form submission failed.',
   });
 }
@@ -901,7 +888,10 @@ export const FormField = defineComponent({
       const current = fieldState.value;
       const descriptionId = `${id.value}-description`;
       const messageId = `${id.value}-message`;
-      const describedBy = `${descriptionId} ${messageId}`;
+      const relatedIssues = current?.relatedIssues ?? [];
+      const describedBy = `${descriptionId} ${messageId}${
+        relatedIssues.length === 0 ? '' : ` ${formContext.summaryId}`
+      }`;
       const valid = current?.valid ?? true;
       return Object.freeze({
         id: id.value,
@@ -914,6 +904,7 @@ export const FormField = defineComponent({
         touched: current?.touched ?? false,
         dirty: current?.dirty ?? false,
         issues: current?.issues ?? [],
+        relatedIssues,
         ...fieldActions,
       });
     });
@@ -930,7 +921,14 @@ export const FormField = defineComponent({
       if (capabilities.id === true) assign('id', slotProps.value.controlId);
       if (capabilities.describedBy === true) {
         assign('aria-describedby', slotProps.value.describedBy);
-        assign('aria-errormessage', slotProps.value.messageId);
+        assign(
+          'aria-errormessage',
+          slotProps.value.issues.length > 0
+            ? slotProps.value.messageId
+            : slotProps.value.relatedIssues.length > 0
+              ? formContext.summaryId
+              : slotProps.value.messageId,
+        );
       }
       if (capabilities.invalid === true && !slotProps.value.valid) assign('aria-invalid', 'true');
       if (capabilities.labelledBy === true && labelMode.value === 'labelledby') {
@@ -1269,18 +1267,43 @@ export const FormSummary = defineComponent({
   setup(props, { attrs, slots }) {
     const form = useFormContext('FormSummary');
     const valid = useFormSelectorFromContext(form, () => (state) => state.valid);
-    const slotProps = computed<FormSummarySlotProps>(() => Object.freeze({ valid: valid.value }));
+    const validation = useFormSelectorFromContext(form, () => (state) => state.validation);
+    const submission = useFormSelectorFromContext(form, () => (state) => state.submission);
+    const issues = useFormSelectorFromContext(form, () => (state) => state.allIssues);
+    const serverIssues = useFormSelectorFromContext(
+      form,
+      () => (state) => getFormIssuesBySource(state, 'server'),
+    );
+    const firstIssue = useFormSelectorFromContext(
+      form,
+      () => (state) => state.allIssues[0] ?? null,
+    );
+    const slotProps = computed<FormSummarySlotProps>(() => Object.freeze({
+      validation: validation.value,
+      submission: submission.value,
+      issues: issues.value,
+      serverIssues: serverIssues.value,
+      firstIssue: firstIssue.value,
+      valid: valid.value,
+    }));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as,
       asChild: props.asChild,
+      id: form.summaryId,
       elementRef: (element: unknown) => { form.summary.value = element as HTMLElement | null; },
       role: 'alert',
       'aria-live': 'polite',
       tabindex: -1,
-      hidden: valid.value,
+      hidden: issues.value.length === 0 && submission.value.failure === null,
       'data-scope': 'form',
       'data-part': 'summary',
-    }), { default: () => slots['default']?.(slotProps.value) });
+    }), {
+      default: () => slots['default']?.(slotProps.value)
+        ?? [
+          submission.value.failure?.message,
+          ...issues.value.map((issue) => issue.message),
+        ].filter((message): message is string => message !== undefined).join(' '),
+    });
   },
 });
 
@@ -1305,17 +1328,17 @@ export const FormSubmit = defineComponent({
   setup(props, { attrs, slots }) {
     const form = useFormContext('FormSubmit');
     const valid = useFormSelectorFromContext(form, () => (state) => state.valid);
-    const submissionStatus = useFormSelectorFromContext(
+    const submission = useFormSelectorFromContext(
       form,
-      () => (state) => state.submissionStatus,
+      () => (state) => state.submission,
     );
     const slotProps = computed<FormSubmitSlotProps>(() => {
-      const submitting = submissionStatus.value === 'submitting';
+      const submitting = submission.value.status === 'submitting';
       return Object.freeze({
         valid: valid.value,
         submitting,
         canSubmit: valid.value && !submitting,
-        submissionStatus: submissionStatus.value,
+        submission: submission.value,
       });
     });
     const blockPendingSubmit = (event: MouseEvent): void => {
@@ -1335,7 +1358,7 @@ export const FormSubmit = defineComponent({
       ...(props.asChild && slotProps.value.submitting ? { 'aria-disabled': 'true' } : {}),
       'data-scope': 'form',
       'data-part': 'submit',
-      'data-submission-status': slotProps.value.submissionStatus,
+      'data-submission-status': slotProps.value.submission.status,
     }), { default: () => slots['default']?.(slotProps.value) });
   },
 });

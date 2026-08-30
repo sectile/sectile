@@ -109,9 +109,9 @@ test('DOM Form coordinates native invalid submission and accessible focus recove
     formElement.requestSubmit();
     await Promise.resolve();
 
-    assert.equal(form.state.validationStatus, 'invalid');
-    assert.equal(form.state.submissionStatus, 'idle');
-    assert.equal(form.state.submitCount, 1);
+    assert.equal(form.state.validation.status, 'invalid');
+    assert.equal(form.state.submission.status, 'idle');
+    assert.equal(form.state.submission.count, 1);
     assert.equal(form.state.fields[0].touched, true);
     assert.equal(form.state.fields[0].issues[0].source, 'native');
     assert.equal(document.activeElement, email);
@@ -156,8 +156,8 @@ test('DOM Form reads successful native controls through FormData and observes su
     assert.deepEqual(entries, [['email', 'release@sectile.dev']]);
     assert.equal(values.email, 'release@sectile.dev');
     assert.equal(form.state.fields[0].dirty, true);
-    assert.equal(form.state.validationStatus, 'valid');
-    assert.equal(form.state.submissionStatus, 'succeeded');
+    assert.equal(form.state.validation.status, 'valid');
+    assert.equal(form.state.submission.status, 'succeeded');
   } finally {
     dom.restore();
   }
@@ -188,7 +188,7 @@ test('DOM Form owns async managed submission, duplicate suppression, and server 
     formElement.requestSubmit();
     formElement.requestSubmit();
     assert.equal(submissions, 1);
-    assert.equal(form.state.submissionStatus, 'submitting');
+    assert.equal(form.state.submission.status, 'submitting');
 
     resolveSubmission({
       ok: false,
@@ -201,7 +201,7 @@ test('DOM Form owns async managed submission, duplicate suppression, and server 
     });
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    assert.equal(form.state.submissionStatus, 'failed');
+    assert.equal(form.state.submission.status, 'failed');
     assert.equal(form.state.fields[0].issues[0].source, 'server');
     assert.equal(document.activeElement, email);
   } finally {
@@ -219,17 +219,68 @@ test('DOM Form maps thrown managed submission errors without exposing the reason
     const form = createForm({
       form: formElement,
       onSubmit() { throw new Error('secret service detail'); },
-      mapSubmitError: () => [{
-        id: 'server:unavailable',
-        message: 'Please try again.',
-        source: 'server',
-      }],
+      mapSubmitError: () => ({ message: 'Please try again.' }),
     });
 
     formElement.requestSubmit();
 
-    assert.equal(form.state.submissionStatus, 'failed');
-    assert.deepEqual(form.state.issues.map((issue) => issue.message), ['Please try again.']);
+    assert.equal(form.state.submission.status, 'failed');
+    assert.deepEqual(form.state.submission.failure, { message: 'Please try again.' });
+    assert.equal(form.state.valid, true);
+    assert.deepEqual(form.state.allIssues, []);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form clears one canonical multi-field server issue on related input', () => {
+  const dom = installDOM();
+  try {
+    const { document, Event } = dom.window;
+    const formElement = document.createElement('form');
+    const orderNumber = document.createElement('input');
+    const email = document.createElement('input');
+    const summary = document.createElement('div');
+    orderNumber.name = 'orderNumber';
+    email.name = 'email';
+    orderNumber.value = 'A-1';
+    email.value = 'wrong@example.com';
+    formElement.append(orderNumber, email, summary);
+    document.body.append(formElement);
+
+    const form = createForm({
+      form: formElement,
+      summary,
+      participants: [
+        { id: 'order-number', element: orderNumber },
+        { id: 'email', element: email },
+      ],
+      onSubmit: () => ({
+        ok: false,
+        issues: [{
+          id: 'lookup-mismatch',
+          message: 'Check the order number and email.',
+          source: 'server',
+          relatedFieldIds: ['order-number', 'email'],
+        }],
+      }),
+    });
+
+    formElement.requestSubmit();
+    assert.equal(form.state.allIssues.length, 1);
+    assert.equal(form.state.fields[0].valid, false);
+    assert.equal(form.state.fields[1].valid, false);
+    assert.equal(summary.textContent, 'Check the order number and email.');
+    assert.equal(document.activeElement, orderNumber);
+
+    email.value = 'correct@example.com';
+    email.dispatchEvent(new Event('input', { bubbles: true }));
+
+    assert.deepEqual(form.state.allIssues, []);
+    assert.equal(form.state.fields[0].valid, true);
+    assert.equal(form.state.fields[1].valid, true);
+    assert.equal(form.state.submission.status, 'idle');
+    assert.equal(summary.hidden, true);
   } finally {
     dom.restore();
   }
@@ -255,8 +306,8 @@ test('DOM Form ignores managed submission completion after reset or destroy', as
 
     firstElement.requestSubmit();
     secondElement.requestSubmit();
-    assert.equal(resetForm.state.submissionStatus, 'submitting');
-    assert.equal(destroyedForm.state.submissionStatus, 'submitting');
+    assert.equal(resetForm.state.submission.status, 'submitting');
+    assert.equal(destroyedForm.state.submission.status, 'submitting');
 
     resetForm.reset();
     const destroyedRevision = destroyedForm.getSnapshot().revision;
@@ -265,8 +316,8 @@ test('DOM Form ignores managed submission completion after reset or destroy', as
     resolveDestroyedSubmission({ ok: false });
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    assert.equal(resetForm.state.submissionStatus, 'idle');
-    assert.equal(resetForm.state.submitCount, 0);
+    assert.equal(resetForm.state.submission.status, 'idle');
+    assert.equal(resetForm.state.submission.count, 0);
     assert.equal(destroyedForm.getSnapshot().revision, destroyedRevision);
   } finally {
     dom.restore();
@@ -433,17 +484,17 @@ test('DOM Form defers Standard Schema until submit and revalidates failed submis
 
     code.dispatchEvent(new Event('input', { bubbles: true }));
     assert.equal(validations, 0);
-    assert.equal(form.state.validationStatus, 'idle');
+    assert.equal(form.state.validation.status, 'idle');
 
     formElement.requestSubmit();
     assert.equal(validations, 1);
-    assert.equal(form.state.validationStatus, 'invalid');
+    assert.equal(form.state.validation.status, 'invalid');
     assert.equal(form.state.fields[0].issues[0].source, 'schema');
 
     code.value = '1234567890';
     code.dispatchEvent(new Event('input', { bubbles: true }));
     assert.equal(validations, 2);
-    assert.equal(form.state.validationStatus, 'valid');
+    assert.equal(form.state.validation.status, 'valid');
 
     formElement.requestSubmit();
     assert.equal(validations, 3);
@@ -519,7 +570,7 @@ test('DOM Form focuses the summary when invalid issues have no focusable field o
 
     formElement.requestSubmit();
 
-    assert.equal(form.state.validationStatus, 'invalid');
+    assert.equal(form.state.validation.status, 'invalid');
     assert.equal(document.activeElement, summary);
     assert.equal(summary.textContent, 'Review the entire form.');
   } finally {
@@ -564,11 +615,11 @@ test('DOM Form preserves document order and delegates reset to participants and 
     form.reset();
     assert.equal(first.value, 'initial');
     assert.deepEqual(resets, ['first', 'second']);
-    assert.equal(form.state.validationStatus, 'idle');
-    assert.equal(form.state.submissionStatus, 'idle');
+    assert.equal(form.state.validation.status, 'idle');
+    assert.equal(form.state.submission.status, 'idle');
     assert.equal(form.state.dirty, false);
     assert.equal(form.state.touched, false);
-    assert.equal(form.state.submitCount, 0);
+    assert.equal(form.state.submission.count, 0);
   } finally {
     dom.restore();
   }
@@ -674,7 +725,7 @@ test('submit payload reinitialize commits only after a successful submission', a
     resolveSubmission({ ok: true });
     await Promise.resolve();
     assert.equal(form.state.dirty, false);
-    assert.equal(form.state.submissionStatus, 'idle');
+    assert.equal(form.state.submission.status, 'idle');
   } finally {
     dom.restore();
   }
@@ -726,7 +777,7 @@ test('DOM Form turns malformed value shapes into safe form issues without losing
     formElement.requestSubmit();
 
     assert.equal(submitted, false);
-    assert.equal(form.state.validationStatus, 'invalid');
+    assert.equal(form.state.validation.status, 'invalid');
     assert.equal(form.state.issues.length, 1);
     assert.equal(form.state.issues[0].source, 'validate');
     assert.deepEqual([...form.getFormData().entries()], [
@@ -877,15 +928,15 @@ test('DOM Form resumes one async-gated native submission with the original submi
     formElement.requestSubmit(submitter);
     formElement.requestSubmit(submitter);
     assert.equal(validationCalls, 1);
-    assert.equal(form.state.validationStatus, 'validating');
+    assert.equal(form.state.validation.status, 'validating');
     assert.deepEqual(events.map((event) => event.prevented), [true, true]);
 
     resolveValidation({});
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     assert.equal(validationCalls, 1);
-    assert.equal(form.state.validationStatus, 'valid');
-    assert.equal(form.state.submitCount, 1);
+    assert.equal(form.state.validation.status, 'valid');
+    assert.equal(form.state.submission.count, 1);
     assert.equal(events.length, 3);
     assert.equal(events[2].prevented, false);
     assert.equal(events[2].submitter, submitter);
@@ -928,7 +979,7 @@ test('DOM Form skips native constraints for novalidate submitters but keeps cust
 
     assert.equal(customValidations, 1);
     assert.equal(submissions, 0);
-    assert.equal(form.state.validationStatus, 'invalid');
+    assert.equal(form.state.validation.status, 'invalid');
     assert.deepEqual(form.state.fields[0].issues.map((issue) => issue.source), ['validate']);
   } finally {
     dom.restore();
@@ -950,16 +1001,16 @@ test('DOM Form reset invalidates async validation and prevents native resumption
     formElement.addEventListener('submit', () => { submits += 1; });
 
     formElement.requestSubmit();
-    assert.equal(form.state.validationStatus, 'validating');
+    assert.equal(form.state.validation.status, 'validating');
     form.reset();
     resolveValidation({});
     await Promise.resolve();
     await Promise.resolve();
 
     assert.equal(submits, 1);
-    assert.equal(form.state.validationStatus, 'idle');
-    assert.equal(form.state.submissionStatus, 'idle');
-    assert.equal(form.state.submitCount, 0);
+    assert.equal(form.state.validation.status, 'idle');
+    assert.equal(form.state.submission.status, 'idle');
+    assert.equal(form.state.submission.count, 0);
   } finally {
     dom.restore();
   }

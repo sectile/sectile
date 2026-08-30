@@ -48,25 +48,25 @@
       }
     },
     "form": {
-      "tarballBytes": 24040,
-      "unpackedBytes": 123133,
+      "tarballBytes": 27112,
+      "unpackedBytes": 115870,
       "unpackedFiles": 27,
       "categories": {
         "runtimeJS": {
           "files": 8,
-          "bytes": 52462
+          "bytes": 56421
         },
         "declarations": {
           "files": 8,
-          "bytes": 12675
+          "bytes": 13754
         },
         "sourceMaps": {
           "files": 8,
-          "bytes": 54279
+          "bytes": 41592
         },
         "other": {
           "files": 3,
-          "bytes": 3717
+          "bytes": 4103
         }
       }
     },

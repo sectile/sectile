@@ -63,7 +63,7 @@ test('Form documentation provides a complete task-oriented guide in both locales
     assert.match(source, /defineFormSubmission/u);
     assert.match(source, /<select/u);
     assert.match(source, /<TextField/u);
-    assert.match(source, /submissionStatus/u);
+    assert.match(source, /submission\.status/u);
   }
 
   for (const source of [dom, koDom]) {
@@ -187,7 +187,7 @@ test('Form examples and API are owned by the Form package documentation', async 
   }
   assert.match(example, /<FormRoot[\s\S]+v-bind="submission"/u);
   assert.match(example, /<TextField[\s\S]+<SelectRoot/u);
-  assert.match(example, /dirty[\s\S]+touched[\s\S]+submissionStatus/u);
+  assert.match(example, /dirty[\s\S]+touched[\s\S]+submission\.status/u);
   assert.match(example, /reinitialize/u);
   assert.match(example, /v-model="profile\.displayName"/u);
   assert.match(example, /v-model="profile\.email"/u);

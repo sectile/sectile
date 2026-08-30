@@ -51,9 +51,6 @@
 | WI-025 | @sectile/vue | `./temporal` | `all runtime and type exports` | Replaced by the complete checked @sectile/vue/temporal/* mapping in verification/entrypoint-migrations/WI-025.json. |
 | WI-025 | @sectile/vue | `./virtual` | `all runtime and type exports` | Replaced by the complete checked core/list/grid/masonry/spatial mapping in verification/entrypoint-migrations/WI-025.json. |
 | WI-027 | @sectile/form | `.` | `typed field-state commands`, `local StandardSchema declaration closure` | @sectile/form |
-| WI-027 | @sectile/form | `./state` | `FormEvent update-field`, `FormFieldInput.valid`, `getFormFieldIDsByIssueSource` | @sectile/form/state |
-| WI-028 | @sectile/dom | `./form` | `FormConnection.subscribe`, `FormConnection field mutation surface` | @sectile/dom/form |
-| WI-029 | @sectile/vue | `./form` | `FormRootSlotProps`, `FormRoot default slot`, `FormSummary default slot`, `FormReset default slot`, `FormSubmit default slot` | @sectile/vue/form |
 | WI-030 | @sectile/dom | `./grid` | `GridEditMode`, `GridPolicies`, `GridState`, `GridEvent` | @sectile/dom/grid |
 | WI-030 | @sectile/dom | `.` | `GridEditMode`, `GridPolicies`, `GridState`, `GridEvent`, `TextConnection.handleEvent`, `FacadeConnection<TextConnection>.send` | @sectile/dom |
 | WI-030 | @sectile/core | `./grid` | `applyGridEvent`, `createGridState`, `tryCreateGridState`, `GridCommand`, `GridEditMode`, `GridEvent`, `GridPolicies`, `GridState`, `GridStateInput`, `GridUpdate` | @sectile/core/grid-control |
@@ -96,3 +93,6 @@
 | WI-039 | @sectile/virtual | `./spatial-layout` | `SpatialLayoutState.items readonly array`, `Virtual geometry declaration closure` | @sectile/virtual/spatial-layout |
 | WI-046 | @sectile/dom | `./combobox` | `TextInput declaration closure` | @sectile/dom/combobox |
 | WI-046 | @sectile/dom | `./text` | `TextConnection.handleEvent`, `FacadeConnection<TextConnection>.send` | @sectile/dom/text |
+| WI-047 | @sectile/form | `./state` | `FormEvent update-field`, `FormFieldInput.valid`, `getFormFieldIDsByIssueSource`, `FormState flat validation and submission fields`, `FormStateInput flat validation and submission fields`, `FormIssue`, `FormFieldState`, `FormEvent submit-failed` | @sectile/form/state |
+| WI-047 | @sectile/dom | `./form` | `FormConnection.subscribe`, `FormConnection field mutation surface`, `FormValidationIssue`, `FormSubmitResult`, `FormSubmitErrorMapper`, `FormSubmitFailureResult`, `FormConnection.submitFailed`, `FormAnnounceSummaryHandler` | @sectile/dom/form |
+| WI-047 | @sectile/vue | `./form` | `FormRootSlotProps`, `FormRoot default slot`, `FormSummary default slot`, `FormReset default slot`, `FormSubmit default slot`, `FormSubmitSlotProps.submissionStatus`, `FormFieldSlotProps`, `FormIssueInput`, `FormSubmitResult`, `FormSubmitErrorMapper` | @sectile/vue/form |

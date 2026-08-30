@@ -87,10 +87,15 @@ const form = createForm({
 ```ts
 const unsubscribe = form.subscribe(({ state }) => {
   unsavedBadge.hidden = !state.dirty
+  saveButton.disabled = state.submission.status === 'submitting'
 })
 ```
 
 `dirty`는 하나 이상의 participant 값이 기준값과 다르다는 뜻입니다. 모든 값을 원래대로 돌리면 다시 `false`가 됩니다. `touched`는 조작 여부를 따로 기록하므로 `dirty`가 `false`여도 `true`로 남을 수 있습니다.
+
+생명주기 메타데이터는 `state.validation`(`generation`, `status`, `trigger`, `intent`)과 `state.submission`(`generation`, `status`, `count`, `failure`)으로 묶여 있습니다. 제출 `failure`는 저장 실패를 나타내지만 필드를 무효로 만들지 않습니다. 서버가 값을 거부했다면 validation 채널인 `issues`를 사용합니다.
+
+검증 callback 이슈 하나는 주 `path`와 함께 `relatedPaths`를 가질 수 있습니다. 관리형 제출의 서버 이슈는 participant ID인 `fieldId`와 `relatedFieldIds`를 사용합니다. 두 경우 모두 summary에는 한 번만 나타나지만 일치하는 participant는 모두 무효가 됩니다. 주 participant나 관련 participant의 값이 바뀌면 서버 이슈가 해제되고, 무관한 participant 변경에는 남아 있습니다.
 
 네이티브 input, textarea, select, checkbox, radio, file input은 값을 자동으로 기록합니다. 사용자 정의 participant는 값과 비교 규칙을 직접 제공할 수 있습니다.
 

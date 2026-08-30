@@ -25,8 +25,8 @@ test('Vue defineFormSubmission keeps schema and handler atomic for v-bind', () =
 test('Vue Form renders native semantics and stable compound part boundaries during SSR', async () => {
   const app = createSSRApp({
     render: () => h(FormRoot, { action: '/account', method: 'post' }, {
-      default: ({ status }) => [
-        h(FormSummary, null, { default: () => `Status: ${status}` }),
+      default: ({ validation }) => [
+        h(FormSummary, null, { default: () => `Status: ${validation.status}` }),
         h(FormField, { id: 'email', name: 'email' }, {
           default: () => [
             h(FormLabel, null, { default: () => 'Email address' }),

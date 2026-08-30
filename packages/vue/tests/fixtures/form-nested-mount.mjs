@@ -26,8 +26,8 @@ const FormCase = defineComponent({
   setup() {
     return () => h(FormRoot, null, {
       default: ({ state }) => h('section', {
-        'data-validation-status': state.validationStatus,
-        'data-submission-status': state.submissionStatus,
+        'data-validation-status': state.validation.status,
+        'data-submission-status': state.submission.status,
       }, [
         h(FormField, {
           id: 'profile-name',

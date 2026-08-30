@@ -25,6 +25,38 @@ export type FormSubmissionStatus = 'idle' | 'submitting' | 'succeeded' | 'failed
 export type FormValidationTrigger = 'input' | 'blur' | 'submit';
 export type FormValidationIntent = 'interaction' | 'submission';
 
+export type FormValidationState =
+  | {
+      readonly generation: number;
+      readonly status: 'idle';
+      readonly trigger: null;
+      readonly intent: null;
+    }
+  | {
+      readonly generation: number;
+      readonly status: Exclude<FormValidationStatus, 'idle'>;
+      readonly trigger: FormValidationTrigger;
+      readonly intent: FormValidationIntent;
+    };
+
+export interface FormSubmissionFailure {
+  readonly message: string;
+}
+
+export type FormSubmissionState =
+  | {
+      readonly generation: number;
+      readonly status: Exclude<FormSubmissionStatus, 'failed'>;
+      readonly count: number;
+      readonly failure: null;
+    }
+  | {
+      readonly generation: number;
+      readonly status: 'failed';
+      readonly count: number;
+      readonly failure: FormSubmissionFailure | null;
+    };
+
 export interface FormReinitializeOptions {
   readonly preserve?: {
     readonly touched?: boolean;
@@ -38,6 +70,7 @@ export interface FormIssue<ID extends StableID = StableID> {
   readonly message: string;
   readonly source: FormIssueSource;
   readonly fieldId?: ID;
+  readonly relatedFieldIds?: readonly ID[];
 }
 
 export interface FormFieldInput<ID extends StableID = StableID> {
@@ -61,22 +94,18 @@ export interface FormFieldState<ID extends StableID = StableID> {
   readonly dirty: boolean;
   readonly valid: boolean;
   readonly issues: readonly FormIssue<ID>[];
+  readonly relatedIssues: readonly FormIssue<ID>[];
 }
 
 export interface FormState<ID extends StableID = StableID> {
-  readonly validationGeneration: number;
-  readonly validationStatus: FormValidationStatus;
-  readonly validationTrigger: FormValidationTrigger | null;
-  readonly validationIntent: FormValidationIntent | null;
-  readonly submissionGeneration: number;
-  readonly submissionStatus: FormSubmissionStatus;
-  readonly submitCount: number;
-  readonly submitted: boolean;
+  readonly validation: FormValidationState;
+  readonly submission: FormSubmissionState;
   readonly touched: boolean;
   readonly dirty: boolean;
   readonly valid: boolean;
   readonly fields: readonly FormFieldState<ID>[];
   readonly issues: readonly FormIssue<ID>[];
+  readonly allIssues: readonly FormIssue<ID>[];
 }
 
 export type FormEvent<ID extends StableID = StableID> =
@@ -103,6 +132,7 @@ export type FormEvent<ID extends StableID = StableID> =
       readonly issues: readonly FormIssue<ID>[];
       readonly generation?: number;
     }
+  | { readonly type: 'field-value-changed'; readonly id: ID }
   | { readonly type: 'validation-invalidated' }
   | {
       readonly type: 'validation-started';
@@ -117,13 +147,19 @@ export type FormEvent<ID extends StableID = StableID> =
     }
   | { readonly type: 'submit-started'; readonly generation: number }
   | { readonly type: 'submit-succeeded'; readonly generation: number }
-  | { readonly type: 'submit-failed'; readonly generation: number; readonly issues?: readonly FormIssue<ID>[] }
+  | {
+      readonly type: 'submit-failed';
+      readonly generation: number;
+      readonly failure?: FormSubmissionFailure | null;
+      readonly issues?: readonly FormIssue<ID>[];
+    }
   | { readonly type: 'reinitialize'; readonly options?: FormReinitializeOptions }
   | 'reset';
 
 export type FormCommand<ID extends StableID = StableID> =
   | { readonly type: 'focus-field'; readonly id: ID }
   | { readonly type: 'announce-summary'; readonly issueIds: readonly StableID[] }
+  | { readonly type: 'announce-submission-failure' }
   | { readonly type: 'submit-requested'; readonly generation: number }
   | { readonly type: 'reset-field'; readonly id: ID };
 
@@ -137,6 +173,7 @@ type CoreFormUpdate<ID extends StableID> = MachineUpdate<FormState<ID>, FormComm
 const FORM_FIELD_CHUNK_SIZE = 64;
 const FORM_INDEX_OVERLAY_LIMIT = 32;
 const deletedIndexValue = Symbol('form-index-deleted');
+const emptyFormIssues = Object.freeze([]) as readonly FormIssue<StableID>[];
 
 class FormDeltaIndex<Key, Value> {
   readonly #base: ReadonlyMap<Key, Value>;
@@ -258,20 +295,19 @@ interface FormIssueStore<ID extends StableID> {
   readonly values: readonly FormIssue<ID>[];
   readonly byID: ReadonlyMap<StableID, FormIssue<ID>>;
   readonly bySource: ReadonlyMap<FormIssueSource, readonly FormIssue<ID>[]>;
+  readonly allValues: readonly FormIssue<ID>[];
+  readonly allByID: FormDeltaIndex<StableID, FormIssue<ID>>;
+  readonly allBySource: ReadonlyMap<FormIssueSource, readonly FormIssue<ID>[]>;
+  readonly relatedIssueIDsByField: ReadonlyMap<ID, readonly StableID[]>;
+  readonly serverIssueIDsByField: ReadonlyMap<ID, readonly StableID[]>;
 }
 
 const formStatePrivate = new WeakMap<object, FormStatePrivate<StableID>>();
 const fieldProjectionCache = new WeakMap<object, readonly FormFieldState<StableID>[]>();
 
 export interface FormStateInput<ID extends StableID = StableID> {
-  readonly validationGeneration?: number;
-  readonly validationStatus?: FormValidationStatus;
-  readonly validationTrigger?: FormValidationTrigger | null;
-  readonly validationIntent?: FormValidationIntent | null;
-  readonly submissionGeneration?: number;
-  readonly submissionStatus?: FormSubmissionStatus;
-  readonly submitCount?: number;
-  readonly submitted?: boolean;
+  readonly validation?: FormValidationState;
+  readonly submission?: FormSubmissionState;
   readonly fields?: readonly FormFieldInput<ID>[];
   readonly issues?: readonly FormIssue<ID>[];
 }
@@ -356,6 +392,12 @@ export function encodeFormFieldPath(path: FormFieldPath): string {
   )).join('');
 }
 
+function ownsIssuePath(fieldName: string, issueName: string): boolean {
+  return issueName === fieldName
+    || issueName.startsWith(`${fieldName}.`)
+    || issueName.startsWith(`${fieldName}[`);
+}
+
 export function createFormValues<Value = unknown>(
   entries: readonly FormValueEntry<Value>[],
 ): FormValues {
@@ -434,13 +476,25 @@ export function createFormState<ID extends StableID = StableID>(
 export function tryCreateFormState<ID extends StableID = StableID>(
   input: FormStateInput<ID> = {},
 ): Result<FormState<ID>> {
-  const validationGeneration = input.validationGeneration ?? 0;
-  const validationStatus = input.validationStatus ?? 'idle';
-  const validationTrigger = input.validationTrigger ?? null;
-  const validationIntent = input.validationIntent ?? null;
-  const submissionGeneration = input.submissionGeneration ?? 0;
-  const submissionStatus = input.submissionStatus ?? 'idle';
-  const submitCount = input.submitCount ?? 0;
+  const validationInput = input.validation ?? {
+    generation: 0,
+    status: 'idle',
+    trigger: null,
+    intent: null,
+  };
+  const submissionInput = input.submission ?? {
+    generation: 0,
+    status: 'idle',
+    count: 0,
+    failure: null,
+  };
+  const validationGeneration = validationInput.generation;
+  const validationStatus = validationInput.status;
+  const validationTrigger = validationInput.trigger;
+  const validationIntent = validationInput.intent;
+  const submissionGeneration = submissionInput.generation;
+  const submissionStatus = submissionInput.status;
+  const submitCount = submissionInput.count;
   if (!Number.isSafeInteger(validationGeneration) || validationGeneration < 0) {
     return fail(
       'construction',
@@ -500,6 +554,15 @@ export function tryCreateFormState<ID extends StableID = StableID>(
       'Form submitCount must be a non-negative safe integer.',
     );
   }
+  const failure = normalizeSubmissionFailure(submissionInput.failure);
+  if (!failure.ok) return failure;
+  if (submissionStatus !== 'failed' && failure.value !== null) {
+    return fail(
+      'construction',
+      'form-submission-failure-context-invalid',
+      'A Form submission failure may be retained only while submission status is failed.',
+    );
+  }
 
   const inputFields = input.fields ?? [];
   const fieldIDs = tryNormalizeStableIDs(inputFields.map((field) => field.id));
@@ -534,18 +597,63 @@ export function tryCreateFormState<ID extends StableID = StableID>(
     );
   }
 
-  return ok(buildState({
+  const registered = new Set(fields.map((field) => field.id));
+  const incomingByField = new Map<ID, FormIssue<ID>[]>();
+  const globalIssues: FormIssue<ID>[] = [];
+  for (const issue of issues.value) {
+    if (issue.fieldId === undefined || !registered.has(issue.fieldId)) {
+      globalIssues.push(issue);
+      continue;
+    }
+    const owned = incomingByField.get(issue.fieldId);
+    if (owned === undefined) incomingByField.set(issue.fieldId, [issue]);
+    else owned.push(issue);
+  }
+  const fieldsWithOwnedIssues = fields.map((field) => {
+    const incoming = incomingByField.get(field.id);
+    return incoming === undefined
+      ? field
+      : fieldWithIssues(field, Object.freeze([...field.issues, ...incoming]));
+  });
+  const projectedFields = projectRelatedIssues(fieldsWithOwnedIssues, globalIssues);
+
+  const validation = createValidationState(
     validationGeneration,
     validationStatus,
     validationTrigger,
     validationIntent,
+  );
+  const submission = createSubmissionState(
     submissionGeneration,
     submissionStatus,
     submitCount,
-    submitted: input.submitted ?? submitCount > 0,
-    fields,
-    issues: issues.value,
-  }));
+    failure.value,
+  );
+  const state = buildState({
+    validation,
+    submission,
+    fields: projectedFields,
+    issues: Object.freeze(globalIssues),
+  });
+  if (validation.status === 'valid' && !state.valid) {
+    return fail(
+      'construction',
+      'form-validation-status-invalid',
+      'A valid validation state requires the Form to have no issues.',
+    );
+  }
+  if (
+    submission.status === 'failed'
+    && submission.failure === null
+    && !state.allIssues.some((issue) => issue.source === 'server')
+  ) {
+    return fail(
+      'construction',
+      'form-submission-failure-context-invalid',
+      'A failed Form submission requires a failure message or server issue.',
+    );
+  }
+  return ok(state);
 }
 
 export function getFormField<ID extends StableID>(
@@ -557,6 +665,42 @@ export function getFormField<ID extends StableID>(
     return state.fields.find((field) => field.id === id) ?? null;
   }
   return getStoredField(privateState.fields as FormFieldStore<ID>, id) ?? null;
+}
+
+export function getFormFieldIDByPath<ID extends StableID>(
+  state: FormState<ID>,
+  path: FormFieldPath,
+): ID | null {
+  const normalized = tryCreateFormFieldPath(path);
+  if (!normalized.ok) return null;
+  const issueName = encodeSegments(normalized.value);
+  let owner: FormFieldState<ID> | undefined;
+  const privateState = formStatePrivate.get(state);
+  const fields = privateState === undefined
+    ? state.fields
+    : materializeFields(privateState.fields as FormFieldStore<ID>);
+  for (const candidate of fields) {
+    if (
+      candidate.name === null
+      || !ownsIssuePath(candidate.name, issueName)
+    ) continue;
+    if (owner === undefined || candidate.name.length > (owner.name?.length ?? 0)) {
+      owner = candidate;
+    }
+  }
+  return owner?.id ?? null;
+}
+
+export function getFormIssuesBySource<ID extends StableID>(
+  state: FormState<ID>,
+  source: FormIssueSource,
+): readonly FormIssue<ID>[] {
+  const store = formStatePrivate.get(state)?.issues as FormIssueStore<ID> | undefined;
+  if (store !== undefined) {
+    return store.allBySource.get(source)
+      ?? emptyFormIssues as readonly FormIssue<ID>[];
+  }
+  return Object.freeze(state.allIssues.filter((issue) => issue.source === source));
 }
 
 export function getFormFieldIDsByIssueSource<ID extends StableID>(
@@ -637,6 +781,7 @@ export function applyFormEvent<ID extends StableID>(
     if (event.type === 'remove-field-issue') return removeFieldIssue(state, event.id, event.issueId);
     if (event.type === 'clear-field-issues') return clearFieldIssues(state, event.id, event.source);
     if (event.type === 'reorder-fields') return reorderFields(state, event.ids);
+    if (event.type === 'field-value-changed') return fieldValueChanged(state, event.id);
     if (event.type === 'replace-issues') {
       if (event.generation !== undefined) {
         const currentGeneration = requireValidationGeneration(state, event.generation);
@@ -653,15 +798,20 @@ export function applyFormEvent<ID extends StableID>(
       return completeValidation(state, event.trigger, event.intent, event.generation);
     }
     if (event.type === 'submit-failed') {
-      return submitFailed(state, event.generation, event.issues ?? []);
+      return submitFailed(
+        state,
+        event.generation,
+        event.failure ?? null,
+        event.issues ?? [],
+      );
     }
     if (event.type === 'submit-started') {
       const currentGeneration = requireSubmissionGeneration(state, event.generation);
       if (!currentGeneration.ok) return currentGeneration;
       if (
-        state.submissionStatus !== 'idle'
-        || state.validationStatus !== 'valid'
-        || state.validationIntent !== 'submission'
+        state.submission.status !== 'idle'
+        || state.validation.status !== 'valid'
+        || state.validation.intent !== 'submission'
       ) {
         return fail(
           'transition-rejection',
@@ -669,12 +819,19 @@ export function applyFormEvent<ID extends StableID>(
           'Form submission can start only after a valid submit request.',
         );
       }
-      return update(deriveState(state, { submissionStatus: 'submitting' }));
+      return update(deriveState(state, {
+        submission: createSubmissionState(
+          state.submission.generation,
+          'submitting',
+          state.submission.count,
+          null,
+        ),
+      }));
     }
     if (event.type === 'submit-succeeded') {
       const currentGeneration = requireSubmissionGeneration(state, event.generation);
       if (!currentGeneration.ok) return currentGeneration;
-      if (state.submissionStatus !== 'submitting') {
+      if (state.submission.status !== 'submitting') {
         return fail(
           'transition-rejection',
           'form-submit-not-pending',
@@ -682,7 +839,14 @@ export function applyFormEvent<ID extends StableID>(
         );
       }
       const cleared = withoutIssueSource(state, 'server');
-      return update(deriveState(cleared, { submissionStatus: 'succeeded' }));
+      return update(deriveState(cleared, {
+        submission: createSubmissionState(
+          cleared.submission.generation,
+          'succeeded',
+          cleared.submission.count,
+          null,
+        ),
+      }));
     }
   }
   return reset(state);
@@ -699,18 +863,21 @@ function registerField<ID extends StableID>(
   const store = fieldStoreOf(state);
   const current = getStoredField(store, input.id);
   if (current !== undefined && sameField(current, normalized.value)) return update(state);
+  const currentFields = materializeFields(store);
   if (current !== undefined) {
-    return update(deriveState(
+    const next = deriveWithIssueProjection(
       state,
-      {},
-      replaceStoredFields(store, new Map([[input.id, normalized.value]])),
-    ));
+      currentFields.map((field) => field.id === input.id ? normalized.value : field),
+      state.issues,
+    );
+    return update(afterIssueMutation(state, next));
   }
-  return update(deriveState(
+  const next = deriveWithIssueProjection(
     state,
-    {},
-    createFieldStore([...materializeFields(store), normalized.value]),
-  ));
+    [...currentFields, normalized.value],
+    state.issues,
+  );
+  return update(afterIssueMutation(state, next));
 }
 
 function unregisterField<ID extends StableID>(
@@ -725,11 +892,12 @@ function unregisterField<ID extends StableID>(
       'The Form field to unregister does not exist.',
     );
   }
-  return update(deriveState(
+  const next = deriveWithIssueProjection(
     state,
-    {},
-    createFieldStore(materializeFields(store).filter((field) => field.id !== id)),
-  ));
+    materializeFields(store).filter((field) => field.id !== id),
+    state.issues,
+  );
+  return update(afterIssueMutation(state, next));
 }
 
 function setFieldMeta<ID extends StableID>(
@@ -758,6 +926,7 @@ function setFieldMeta<ID extends StableID>(
     dirty: meta.dirty ?? current.dirty,
     valid: current.valid,
     issues: current.issues,
+    relatedIssues: current.relatedIssues,
   });
   if (sameField(current, next)) return update(state);
   return update(deriveState(
@@ -864,11 +1033,21 @@ function replaceOneField<ID extends StableID>(
   id: ID,
   field: FormFieldState<ID>,
 ): Result<FormUpdate<ID>> {
-  return update(deriveState(
+  const current = getStoredField(fieldStoreOf(state), id)!;
+  const affected = collectIssueFieldIDs([...current.issues, ...field.issues]);
+  affected.add(id);
+  const allIssues = Object.freeze([
+    ...state.allIssues.filter((issue) => issue.fieldId !== id),
+    ...field.issues,
+  ]);
+  const next = deriveWithIncrementalIssueProjection(
     state,
-    {},
-    replaceStoredFields(fieldStoreOf(state), new Map([[id, field]])),
-  ));
+    new Map([[id, field]]),
+    state.issues,
+    allIssues,
+    affected,
+  );
+  return update(afterIssueMutation(state, next));
 }
 
 function reorderFields<ID extends StableID>(
@@ -893,7 +1072,7 @@ function reorderFields<ID extends StableID>(
   }
   const current = materializeFields(store);
   if (current.every((field, index) => field.id === fields[index]!.id)) return update(state);
-  return update(deriveState(state, {}, createFieldStore(fields)));
+  return update(deriveWithIssueProjection(state, fields, state.issues));
 }
 
 function replaceIssues<ID extends StableID>(
@@ -950,32 +1129,90 @@ function replaceIssues<ID extends StableID>(
     ...issueStore.values.filter((issue) => issue.source !== source),
     ...globalIncoming,
   ]);
-  const nextIssueStore = sameIssues(issueStore.values, globalIssues)
-    ? issueStore
-    : createFormIssueStore(globalIssues);
-  if (replacements.size === 0 && nextIssueStore === issueStore) return update(state);
-  return update(deriveState(
+  if (replacements.size === 0 && sameIssues(issueStore.values, globalIssues)) {
+    return update(state);
+  }
+  const previousSourceIssues = issueStore.allBySource.get(source) ?? emptyFormIssues;
+  const relationAffected = collectIssueFieldIDs([
+    ...previousSourceIssues as readonly FormIssue<ID>[],
+    ...normalized.value,
+  ]);
+  for (const id of affected) relationAffected.add(id);
+  const allIssues = Object.freeze([
+    ...issueStore.allValues.filter((issue) => issue.source !== source),
+    ...normalized.value,
+  ]);
+  const next = deriveWithIncrementalIssueProjection(
     state,
-    {},
-    replaceStoredFields(store, replacements),
-    nextIssueStore,
-  ));
+    replacements,
+    globalIssues,
+    allIssues,
+    relationAffected,
+  );
+  return update(afterIssueMutation(state, next));
 }
 
 function invalidateValidation<ID extends StableID>(
   state: FormState<ID>,
 ): Result<FormUpdate<ID>> {
-  if (state.validationStatus === 'idle' && state.submissionStatus === 'idle') {
-    return update(state);
-  }
+  if (state.validation.status === 'idle') return update(state);
   return update(deriveState(state, {
-    validationStatus: 'idle',
-    validationTrigger: null,
-    validationIntent: null,
-    submissionStatus: state.submissionStatus === 'submitting'
-      ? 'submitting'
-      : 'idle',
+    validation: createValidationState(state.validation.generation, 'idle', null, null),
   }));
+}
+
+function fieldValueChanged<ID extends StableID>(
+  state: FormState<ID>,
+  id: ID,
+): Result<FormUpdate<ID>> {
+  const fields = fieldStoreOf(state);
+  if (!fields.indexByID.has(id)) return missingField();
+  const issueStore = issueStoreOf(state);
+  const relatedIssueIDs = issueStore.serverIssueIDsByField.get(id);
+  if (relatedIssueIDs === undefined || relatedIssueIDs.length === 0) {
+    return invalidateValidation(state);
+  }
+  const removed = new Set(relatedIssueIDs);
+  const affected = new Set<ID>();
+  let removesGlobalIssue = false;
+  for (const issueID of relatedIssueIDs) {
+    const issue = issueStore.allByID.get(issueID);
+    if (issue === undefined) continue;
+    if (issue.fieldId === undefined) removesGlobalIssue = true;
+    else affected.add(issue.fieldId);
+    for (const relatedID of issue.relatedFieldIds ?? []) affected.add(relatedID);
+  }
+  const replacements = new Map<ID, FormFieldState<ID>>();
+  for (const affectedID of affected) {
+    const field = getStoredField(fields, affectedID);
+    if (field === undefined) continue;
+    replacements.set(affectedID, fieldWithIssues(
+      field,
+      Object.freeze(field.issues.filter((issue) => !removed.has(issue.id))),
+      Object.freeze(field.relatedIssues.filter((issue) => !removed.has(issue.id))),
+    ));
+  }
+  const nextFields = replaceStoredFields(fields, replacements);
+  const globalIssues = removesGlobalIssue
+    ? Object.freeze(issueStore.values.filter((issue) => !removed.has(issue.id)))
+    : issueStore.values;
+  const nextIssues = removeFormIssues(issueStore, removed, globalIssues);
+  const submission = state.submission.status === 'failed'
+    && state.submission.failure === null
+    && !nextIssues.allBySource.has('server')
+    ? createSubmissionState(
+        state.submission.generation,
+        'idle',
+        state.submission.count,
+        null,
+      )
+    : state.submission;
+  return update(deriveState(state, {
+    validation: state.validation.status === 'idle'
+      ? state.validation
+      : createValidationState(state.validation.generation, 'idle', null, null),
+    submission,
+  }, nextFields, nextIssues));
 }
 
 function startValidation<ID extends StableID>(
@@ -983,14 +1220,14 @@ function startValidation<ID extends StableID>(
   trigger: FormValidationTrigger,
   intent: FormValidationIntent,
 ): Result<FormUpdate<ID>> {
-  if (state.submissionStatus === 'submitting') {
+  if (state.submission.status === 'submitting') {
     return fail(
       'transition-rejection',
       'form-validation-during-submit',
       'Form validation cannot start while submission is pending.',
     );
   }
-  if (state.validationGeneration === Number.MAX_SAFE_INTEGER) {
+  if (state.validation.generation === Number.MAX_SAFE_INTEGER) {
     return fail(
       'resource-rejection',
       'form-validation-generation-exhausted',
@@ -1000,13 +1237,20 @@ function startValidation<ID extends StableID>(
   const submission = intent === 'submission';
   const current = submission ? withoutIssueSource(state, 'server') : state;
   return update(deriveState(current, {
-    validationGeneration: current.validationGeneration + 1,
-    validationStatus: 'validating',
-    validationTrigger: trigger,
-    validationIntent: intent,
-    submissionStatus: 'idle',
-    submitCount: current.submitCount + (submission ? 1 : 0),
-    submitted: current.submitted || submission,
+    validation: createValidationState(
+      current.validation.generation + 1,
+      'validating',
+      trigger,
+      intent,
+    ),
+    ...(submission ? {
+      submission: createSubmissionState(
+        current.submission.generation,
+        'idle',
+        current.submission.count + 1,
+        null,
+      ),
+    } : {}),
   }));
 }
 
@@ -1019,9 +1263,9 @@ function completeValidation<ID extends StableID>(
   const currentGeneration = requireValidationGeneration(state, generation);
   if (!currentGeneration.ok) return currentGeneration;
   if (
-    state.validationStatus !== 'validating'
-    || state.validationTrigger !== trigger
-    || state.validationIntent !== intent
+    state.validation.status !== 'validating'
+    || state.validation.trigger !== trigger
+    || state.validation.intent !== intent
   ) {
     return fail(
       'transition-rejection',
@@ -1030,26 +1274,38 @@ function completeValidation<ID extends StableID>(
     );
   }
   const completed = deriveState(state, {
-    validationStatus: state.valid ? 'valid' : 'invalid',
+    validation: createValidationState(
+      state.validation.generation,
+      state.valid ? 'valid' : 'invalid',
+      trigger,
+      intent,
+    ),
   });
   if (intent !== 'submission') return update(completed);
 
   if (completed.valid) {
-    if (completed.submissionGeneration === Number.MAX_SAFE_INTEGER) {
+    if (completed.submission.generation === Number.MAX_SAFE_INTEGER) {
       return fail(
         'resource-rejection',
         'form-submission-generation-exhausted',
         'Form submission generation cannot advance beyond the safe-integer ceiling.',
       );
     }
-    const submissionGeneration = completed.submissionGeneration + 1;
+    const submissionGeneration = completed.submission.generation + 1;
     return update(
-      deriveState(completed, { submissionGeneration }),
+      deriveState(completed, {
+        submission: createSubmissionState(
+          submissionGeneration,
+          'idle',
+          completed.submission.count,
+          null,
+        ),
+      }),
       [{ type: 'submit-requested', generation: submissionGeneration }],
     );
   }
   const allIssues = orderedIssues(completed);
-  const firstInvalid = firstInvalidField(fieldStoreOf(completed));
+  const firstInvalid = firstIssueFocusField(fieldStoreOf(completed), allIssues);
   const commands: FormCommand<ID>[] = [];
   if (firstInvalid !== undefined) commands.push({ type: 'focus-field', id: firstInvalid.id });
   if (allIssues.length > 0) {
@@ -1064,11 +1320,13 @@ function completeValidation<ID extends StableID>(
 function submitFailed<ID extends StableID>(
   state: FormState<ID>,
   generation: number,
+  failureInput: FormSubmissionFailure | null,
   issues: readonly FormIssue<ID>[],
 ): Result<FormUpdate<ID>> {
+  const validation = state.validation;
   const currentGeneration = requireSubmissionGeneration(state, generation);
   if (!currentGeneration.ok) return currentGeneration;
-  if (state.submissionStatus !== 'submitting') {
+  if (state.submission.status !== 'submitting') {
     return fail(
       'transition-rejection',
       'form-submit-not-pending',
@@ -1082,11 +1340,36 @@ function submitFailed<ID extends StableID>(
       'Submit failure issues must use the server source.',
     );
   }
+  const failure = normalizeSubmissionFailure(failureInput);
+  if (!failure.ok) return transitionError(failure);
+  if (failure.value === null && issues.length === 0) {
+    return fail(
+      'transition-rejection',
+      'form-submit-failure-empty',
+      'A failed Form submission requires a failure message or server issue.',
+    );
+  }
   const replaced = replaceIssues(state, 'server', issues);
   if (!replaced.ok) return replaced;
-  const failed = deriveState(replaced.value.state, { submissionStatus: 'failed' });
+  const issueState = replaced.value.state;
+  const failed = deriveState(issueState, {
+    ...(issues.length === 0 ? {} : {
+      validation: createValidationState(
+        validation.generation,
+        'invalid',
+        validation.trigger,
+        validation.intent,
+      ),
+    }),
+    submission: createSubmissionState(
+      issueState.submission.generation,
+      'failed',
+      issueState.submission.count,
+      failure.value,
+    ),
+  });
   const ordered = orderedIssues(failed);
-  const firstInvalid = firstInvalidField(fieldStoreOf(failed));
+  const firstInvalid = firstIssueFocusField(fieldStoreOf(failed), ordered);
   const commands: FormCommand<ID>[] = [];
   if (firstInvalid !== undefined) commands.push({ type: 'focus-field', id: firstInvalid.id });
   if (ordered.length > 0) {
@@ -1094,6 +1377,9 @@ function submitFailed<ID extends StableID>(
       type: 'announce-summary',
       issueIds: Object.freeze(ordered.map((issue) => issue.id)),
     });
+  }
+  if (failure.value !== null && ordered.length === 0) {
+    commands.push({ type: 'announce-submission-failure' });
   }
   return update(failed, commands);
 }
@@ -1105,16 +1391,14 @@ function reset<ID extends StableID>(state: FormState<ID>): Result<FormUpdate<ID>
     dirty: false,
     valid: true,
     issues: Object.freeze([]) as readonly FormIssue<ID>[],
+    relatedIssues: Object.freeze([]) as readonly FormIssue<ID>[],
   }));
+  const fieldStore = createFieldStore(fields);
   return update(
     deriveState(state, {
-      validationStatus: 'idle',
-      validationTrigger: null,
-      validationIntent: null,
-      submissionStatus: 'idle',
-      submitCount: 0,
-      submitted: false,
-    }, createFieldStore(fields), createFormIssueStore([])),
+      validation: createValidationState(state.validation.generation, 'idle', null, null),
+      submission: createSubmissionState(state.submission.generation, 'idle', 0, null),
+    }, fieldStore, createFormIssueStore([], fieldStore)),
     fields.map((field) => ({ type: 'reset-field', id: field.id })),
   );
 }
@@ -1133,22 +1417,22 @@ function reinitialize<ID extends StableID>(
   );
   const fields = materializeFields(fieldStoreOf(state)).map((field) => {
     const issues = Object.freeze(field.issues.filter(keepIssue));
-    return Object.freeze({
+    return fieldWithIssues(Object.freeze({
       ...field,
       touched: preserveTouched ? field.touched : false,
       dirty: false,
-      valid: issues.length === 0,
-      issues,
-    });
+    }), issues, Object.freeze([]));
   });
+  const globalIssues = Object.freeze(state.issues.filter(keepIssue));
+  const projectedFields = createFieldStore(projectRelatedIssues(fields, globalIssues));
   return update(deriveState(state, {
-    validationStatus: preserveValidation ? state.validationStatus : 'idle',
-    validationTrigger: preserveValidation ? state.validationTrigger : null,
-    validationIntent: preserveValidation ? state.validationIntent : null,
-    submissionStatus: preserveSubmission ? state.submissionStatus : 'idle',
-    submitCount: preserveSubmission ? state.submitCount : 0,
-    submitted: preserveSubmission ? state.submitted : false,
-  }, createFieldStore(fields), createFormIssueStore(state.issues.filter(keepIssue))));
+    validation: preserveValidation
+      ? state.validation
+      : createValidationState(state.validation.generation, 'idle', null, null),
+    submission: preserveSubmission
+      ? state.submission
+      : createSubmissionState(state.submission.generation, 'idle', 0, null),
+  }, projectedFields, createFormIssueStore(globalIssues, projectedFields)));
 }
 
 function normalizeField<ID extends StableID>(
@@ -1180,6 +1464,7 @@ function normalizeField<ID extends StableID>(
     dirty: input.dirty ?? false,
     valid: issues.value.length === 0,
     issues: issues.value,
+    relatedIssues: Object.freeze([]) as readonly FormIssue<ID>[],
   }));
 }
 
@@ -1218,16 +1503,56 @@ function normalizeIssues<ID extends StableID>(
         'A field issue must reference its owning field.',
       );
     }
+    const owner = fieldId ?? issue.fieldId;
+    const related = tryNormalizeStableIDs(issue.relatedFieldIds ?? []);
+    if (!related.ok) {
+      return fail(
+        'construction',
+        related.error.code === 'duplicate-id'
+          ? 'form-issue-related-field-id-duplicate'
+          : 'form-issue-related-field-id-invalid',
+        related.error.code === 'duplicate-id'
+          ? 'Related Form field identifiers must be unique.'
+          : 'Related Form field identifiers must be valid stable IDs.',
+      );
+    }
+    const relatedFieldIds = Object.freeze(related.value.filter((id) => id !== owner));
     issues.push(Object.freeze({
       id: issue.id,
       message: issue.message.trim(),
       source: issue.source,
-      ...((fieldId ?? issue.fieldId) === undefined
+      ...(owner === undefined
         ? {}
-        : { fieldId: fieldId ?? issue.fieldId }),
+        : { fieldId: owner }),
+      ...(relatedFieldIds.length === 0 ? {} : { relatedFieldIds }),
     }));
   }
   return ok(Object.freeze(issues));
+}
+
+function projectRelatedIssues<ID extends StableID>(
+  fields: readonly FormFieldState<ID>[],
+  globalIssues: readonly FormIssue<ID>[],
+): readonly FormFieldState<ID>[] {
+  const registered = new Set(fields.map((field) => field.id));
+  const relatedByField = new Map<ID, FormIssue<ID>[]>();
+  const allIssues = [
+    ...fields.flatMap((field) => field.issues),
+    ...globalIssues,
+  ];
+  for (const issue of allIssues) {
+    for (const id of issue.relatedFieldIds ?? []) {
+      if (!registered.has(id)) continue;
+      const related = relatedByField.get(id);
+      if (related === undefined) relatedByField.set(id, [issue]);
+      else related.push(issue);
+    }
+  }
+  return Object.freeze(fields.map((field) => {
+    const relatedIssues = Object.freeze(relatedByField.get(field.id) ?? []);
+    if (sameIssues(field.relatedIssues, relatedIssues)) return field;
+    return fieldWithIssues(field, field.issues, relatedIssues);
+  }));
 }
 
 function createFieldStore<ID extends StableID>(
@@ -1248,6 +1573,8 @@ function createFieldStore<ID extends StableID>(
     if (!field.valid) invalidCount += 1;
     for (const issue of field.issues) {
       issueOwnerByID.set(issue.id, field.id);
+    }
+    for (const issue of [...field.issues, ...field.relatedIssues]) {
       let owners = mutableIDsBySource.get(issue.source);
       if (owners === undefined) {
         owners = new Set<ID>();
@@ -1284,6 +1611,8 @@ function issueStoreOf<ID extends StableID>(state: FormState<ID>): FormIssueStore
 
 function createFormIssueStore<ID extends StableID>(
   issues: readonly FormIssue<ID>[],
+  fields: FormFieldStore<ID>,
+  inputAllIssues?: readonly FormIssue<ID>[],
 ): FormIssueStore<ID> {
   const values = Object.freeze([...issues]);
   const byID = new Map<StableID, FormIssue<ID>>();
@@ -1301,7 +1630,130 @@ function createFormIssueStore<ID extends StableID>(
   for (const [source, sourceIssues] of mutableBySource) {
     bySource.set(source, Object.freeze(sourceIssues));
   }
-  return Object.freeze({ values, byID, bySource });
+  const allValues = inputAllIssues === undefined
+    ? Object.freeze([
+        ...materializeFields(fields).flatMap((field) => field.issues),
+        ...values,
+      ])
+    : Object.freeze([...inputAllIssues]);
+  const allByID = new Map<StableID, FormIssue<ID>>();
+  const mutableAllBySource = new Map<FormIssueSource, FormIssue<ID>[]>();
+  const mutableRelatedIssueIDsByField = new Map<ID, StableID[]>();
+  const mutableServerIssueIDsByField = new Map<ID, StableID[]>();
+  for (const issue of allValues) {
+    allByID.set(issue.id, issue);
+    let sourceIssues = mutableAllBySource.get(issue.source);
+    if (sourceIssues === undefined) {
+      sourceIssues = [];
+      mutableAllBySource.set(issue.source, sourceIssues);
+    }
+    sourceIssues.push(issue);
+    const related = issue.relatedFieldIds ?? [];
+    for (const id of related) {
+      if (!fields.indexByID.has(id)) continue;
+      const issueIDs = mutableRelatedIssueIDsByField.get(id);
+      if (issueIDs === undefined) mutableRelatedIssueIDsByField.set(id, [issue.id]);
+      else issueIDs.push(issue.id);
+    }
+    if (issue.source !== 'server') continue;
+    const owners = issue.fieldId === undefined ? related : [issue.fieldId, ...related];
+    for (const id of owners) {
+      if (!fields.indexByID.has(id)) continue;
+      const issueIDs = mutableServerIssueIDsByField.get(id);
+      if (issueIDs === undefined) mutableServerIssueIDsByField.set(id, [issue.id]);
+      else issueIDs.push(issue.id);
+    }
+  }
+  const allBySource = new Map<FormIssueSource, readonly FormIssue<ID>[]>();
+  for (const [source, sourceIssues] of mutableAllBySource) {
+    allBySource.set(source, Object.freeze(sourceIssues));
+  }
+  const relatedIssueIDsByField = new Map<ID, readonly StableID[]>();
+  for (const [id, issueIDs] of mutableRelatedIssueIDsByField) {
+    relatedIssueIDsByField.set(id, Object.freeze(issueIDs));
+  }
+  const serverIssueIDsByField = new Map<ID, readonly StableID[]>();
+  for (const [id, issueIDs] of mutableServerIssueIDsByField) {
+    serverIssueIDsByField.set(id, Object.freeze(issueIDs));
+  }
+  return Object.freeze({
+    values,
+    byID,
+    bySource,
+    allValues,
+    allByID: FormDeltaIndex.from(allByID),
+    allBySource,
+    relatedIssueIDsByField,
+    serverIssueIDsByField,
+  });
+}
+
+function removeFormIssues<ID extends StableID>(
+  previous: FormIssueStore<ID>,
+  removed: ReadonlySet<StableID>,
+  globalIssues: readonly FormIssue<ID>[],
+): FormIssueStore<ID> {
+  const values = globalIssues === previous.values
+    ? previous.values
+    : Object.freeze([...globalIssues]);
+  const byID = values === previous.values
+    ? previous.byID
+    : new Map(values.map((issue) => [issue.id, issue]));
+  const bySource = values === previous.values
+    ? previous.bySource
+    : groupIssuesBySource(values);
+  const allValues = Object.freeze(
+    previous.allValues.filter((issue) => !removed.has(issue.id)),
+  );
+  const allByIDChanges = new Map<StableID, typeof deletedIndexValue>();
+  for (const id of removed) allByIDChanges.set(id, deletedIndexValue);
+  const allBySource = new Map(previous.allBySource);
+  const serverIssues = previous.allBySource.get('server');
+  if (serverIssues !== undefined) {
+    const remaining = Object.freeze(serverIssues.filter((issue) => !removed.has(issue.id)));
+    if (remaining.length === 0) allBySource.delete('server');
+    else allBySource.set('server', remaining);
+  }
+  const serverIssueIDsByField = new Map(previous.serverIssueIDsByField);
+  for (const [id, issueIDs] of previous.serverIssueIDsByField) {
+    if (!issueIDs.some((issueID) => removed.has(issueID))) continue;
+    const remaining = Object.freeze(issueIDs.filter((issueID) => !removed.has(issueID)));
+    if (remaining.length === 0) serverIssueIDsByField.delete(id);
+    else serverIssueIDsByField.set(id, remaining);
+  }
+  const relatedIssueIDsByField = new Map(previous.relatedIssueIDsByField);
+  for (const [id, issueIDs] of previous.relatedIssueIDsByField) {
+    if (!issueIDs.some((issueID) => removed.has(issueID))) continue;
+    const remaining = Object.freeze(issueIDs.filter((issueID) => !removed.has(issueID)));
+    if (remaining.length === 0) relatedIssueIDsByField.delete(id);
+    else relatedIssueIDsByField.set(id, remaining);
+  }
+  return Object.freeze({
+    values,
+    byID,
+    bySource,
+    allValues,
+    allByID: previous.allByID.update(allByIDChanges),
+    allBySource,
+    relatedIssueIDsByField,
+    serverIssueIDsByField,
+  });
+}
+
+function groupIssuesBySource<ID extends StableID>(
+  issues: readonly FormIssue<ID>[],
+): ReadonlyMap<FormIssueSource, readonly FormIssue<ID>[]> {
+  const mutable = new Map<FormIssueSource, FormIssue<ID>[]>();
+  for (const issue of issues) {
+    const sourceIssues = mutable.get(issue.source);
+    if (sourceIssues === undefined) mutable.set(issue.source, [issue]);
+    else sourceIssues.push(issue);
+  }
+  const grouped = new Map<FormIssueSource, readonly FormIssue<ID>[]>();
+  for (const [source, sourceIssues] of mutable) {
+    grouped.set(source, Object.freeze(sourceIssues));
+  }
+  return grouped;
 }
 
 function fieldAt<ID extends StableID>(
@@ -1372,6 +1824,7 @@ function createFieldStoreFromChunks<ID extends StableID>(
       issueOwnerChanges.set(issue.id, deletedIndexValue);
       touchedSources.add(issue.source);
     }
+    for (const issue of current.relatedIssues) touchedSources.add(issue.source);
   }
   for (const [id, next] of replacements) {
     const current = getStoredField(previous, id);
@@ -1380,14 +1833,15 @@ function createFieldStoreFromChunks<ID extends StableID>(
       issueOwnerChanges.set(issue.id, id);
       touchedSources.add(issue.source);
     }
+    for (const issue of next.relatedIssues) touchedSources.add(issue.source);
   }
   for (const source of touchedSources) {
     const add: ID[] = [];
     const remove: ID[] = [];
     for (const [id, next] of replacements) {
       const current = getStoredField(previous, id);
-      if (current?.issues.some((issue) => issue.source === source) === true) remove.push(id);
-      if (next.issues.some((issue) => issue.source === source)) add.push(id);
+      if (current !== undefined && fieldHasIssueSource(current, source)) remove.push(id);
+      if (fieldHasIssueSource(next, source)) add.push(id);
     }
     const current = fieldIDsBySource.get(source) ?? FormDeltaSet.from<ID>([]);
     fieldIDsBySource.set(source, current.update(add, remove));
@@ -1404,22 +1858,25 @@ function createFieldStoreFromChunks<ID extends StableID>(
   });
 }
 
+function fieldHasIssueSource<ID extends StableID>(
+  field: FormFieldState<ID>,
+  source: FormIssueSource,
+): boolean {
+  return field.issues.some((issue) => issue.source === source)
+    || field.relatedIssues.some((issue) => issue.source === source);
+}
+
 function buildState<ID extends StableID>(input: {
-  readonly validationGeneration: number;
-  readonly validationStatus: FormValidationStatus;
-  readonly validationTrigger: FormValidationTrigger | null;
-  readonly validationIntent: FormValidationIntent | null;
-  readonly submissionGeneration: number;
-  readonly submissionStatus: FormSubmissionStatus;
-  readonly submitCount: number;
-  readonly submitted: boolean;
+  readonly validation: FormValidationState;
+  readonly submission: FormSubmissionState;
   readonly fields: readonly FormFieldState<ID>[];
   readonly issues: readonly FormIssue<ID>[];
 }): FormState<ID> {
+  const fields = createFieldStore(input.fields);
   return buildStateFromStores(
     input,
-    createFieldStore(input.fields),
-    createFormIssueStore(input.issues),
+    fields,
+    createFormIssueStore(input.issues, fields),
   );
 }
 
@@ -1433,26 +1890,21 @@ function buildStateFromStores<ID extends StableID>(
     ...input,
     touched: fields.touchedCount > 0,
     dirty: fields.dirtyCount > 0,
-    valid: issues.values.length === 0 && fields.invalidCount === 0,
+    valid: issues.allValues.length === 0,
     get fields(): readonly FormFieldState<ID>[] {
       return materializeFields(fieldStoreOf(state));
     },
     issues: issues.values,
+    allIssues: issues.allValues,
   });
   formStatePrivate.set(state, { fields, issues } as FormStatePrivate<StableID>);
   return state;
 }
 
-type FormStateChanges = Partial<Pick<FormState,
-  | 'validationGeneration'
-  | 'validationStatus'
-  | 'validationTrigger'
-  | 'validationIntent'
-  | 'submissionGeneration'
-  | 'submissionStatus'
-  | 'submitCount'
-  | 'submitted'
->>;
+interface FormStateChanges {
+  readonly validation?: FormValidationState;
+  readonly submission?: FormSubmissionState;
+}
 
 function deriveState<ID extends StableID>(
   state: FormState<ID>,
@@ -1460,20 +1912,91 @@ function deriveState<ID extends StableID>(
   fields: FormFieldStore<ID> = fieldStoreOf(state),
   issues: FormIssueStore<ID> = issueStoreOf(state),
 ): FormState<ID> {
+  const validation = changes.validation ?? state.validation;
+  const submission = changes.submission ?? state.submission;
+  if (
+    validation === state.validation
+    && submission === state.submission
+    && fields === fieldStoreOf(state)
+    && issues === issueStoreOf(state)
+  ) return state;
   return buildStateFromStores({
-    validationGeneration: changes.validationGeneration ?? state.validationGeneration,
-    validationStatus: changes.validationStatus ?? state.validationStatus,
-    validationTrigger: changes.validationTrigger === undefined
-      ? state.validationTrigger
-      : changes.validationTrigger,
-    validationIntent: changes.validationIntent === undefined
-      ? state.validationIntent
-      : changes.validationIntent,
-    submissionGeneration: changes.submissionGeneration ?? state.submissionGeneration,
-    submissionStatus: changes.submissionStatus ?? state.submissionStatus,
-    submitCount: changes.submitCount ?? state.submitCount,
-    submitted: changes.submitted ?? state.submitted,
+    validation,
+    submission,
   }, fields, issues);
+}
+
+function deriveWithIssueProjection<ID extends StableID>(
+  state: FormState<ID>,
+  inputFields: readonly FormFieldState<ID>[],
+  inputGlobalIssues: readonly FormIssue<ID>[],
+  changes: FormStateChanges = {},
+): FormState<ID> {
+  const registered = new Set(inputFields.map((field) => field.id));
+  const incomingByField = new Map<ID, FormIssue<ID>[]>();
+  const globalIssues: FormIssue<ID>[] = [];
+  for (const issue of inputGlobalIssues) {
+    if (issue.fieldId === undefined || !registered.has(issue.fieldId)) {
+      globalIssues.push(issue);
+      continue;
+    }
+    const incoming = incomingByField.get(issue.fieldId);
+    if (incoming === undefined) incomingByField.set(issue.fieldId, [issue]);
+    else incoming.push(issue);
+  }
+  const frozenGlobalIssues = Object.freeze(globalIssues);
+  const directFields = inputFields.map((field) => {
+    const incoming = incomingByField.get(field.id) ?? [];
+    return fieldWithIssues(
+      field,
+      Object.freeze([...field.issues, ...incoming]),
+      Object.freeze([]),
+    );
+  });
+  const fields = createFieldStore(projectRelatedIssues(directFields, frozenGlobalIssues));
+  return deriveState(
+    state,
+    changes,
+    fields,
+    createFormIssueStore(frozenGlobalIssues, fields),
+  );
+}
+
+function deriveWithIncrementalIssueProjection<ID extends StableID>(
+  state: FormState<ID>,
+  directReplacements: ReadonlyMap<ID, FormFieldState<ID>>,
+  globalIssues: readonly FormIssue<ID>[],
+  allIssues: readonly FormIssue<ID>[],
+  affectedFieldIDs: ReadonlySet<ID>,
+): FormState<ID> {
+  let fields = replaceStoredFields(fieldStoreOf(state), directReplacements);
+  const issues = createFormIssueStore(globalIssues, fields, allIssues);
+  const relatedReplacements = new Map<ID, FormFieldState<ID>>();
+  for (const id of affectedFieldIDs) {
+    const field = getStoredField(fields, id);
+    if (field === undefined) continue;
+    const relatedIssues = Object.freeze(
+      (issues.relatedIssueIDsByField.get(id) ?? []).flatMap((issueID) => {
+        const issue = issues.allByID.get(issueID);
+        return issue === undefined ? [] : [issue];
+      }),
+    );
+    const next = fieldWithIssues(field, field.issues, relatedIssues);
+    if (next !== field) relatedReplacements.set(id, next);
+  }
+  fields = replaceStoredFields(fields, relatedReplacements);
+  return deriveState(state, {}, fields, issues);
+}
+
+function collectIssueFieldIDs<ID extends StableID>(
+  issues: readonly FormIssue<ID>[],
+): Set<ID> {
+  const ids = new Set<ID>();
+  for (const issue of issues) {
+    if (issue.fieldId !== undefined) ids.add(issue.fieldId);
+    for (const id of issue.relatedFieldIds ?? []) ids.add(id);
+  }
+  return ids;
 }
 
 function requireValidationGeneration<ID extends StableID>(
@@ -1487,12 +2010,12 @@ function requireValidationGeneration<ID extends StableID>(
       'Validation generation must be a positive safe integer.',
     );
   }
-  if (state.validationStatus !== 'validating' || generation !== state.validationGeneration) {
+  if (state.validation.status !== 'validating' || generation !== state.validation.generation) {
     return fail(
       'transition-rejection',
       'form-validation-generation-stale',
       'Validation result does not belong to the active generation.',
-      { generation, currentGeneration: state.validationGeneration },
+      { generation, currentGeneration: state.validation.generation },
     );
   }
   return ok(true);
@@ -1509,24 +2032,19 @@ function requireSubmissionGeneration<ID extends StableID>(
       'Submission generation must be a positive safe integer.',
     );
   }
-  if (generation !== state.submissionGeneration) {
+  if (generation !== state.submission.generation) {
     return fail(
       'transition-rejection',
       'form-submission-generation-stale',
       'Submission result does not belong to the active generation.',
-      { generation, currentGeneration: state.submissionGeneration },
+      { generation, currentGeneration: state.submission.generation },
     );
   }
   return ok(true);
 }
 
 function orderedIssues<ID extends StableID>(state: FormState<ID>): readonly FormIssue<ID>[] {
-  const issues: FormIssue<ID>[] = [];
-  for (const chunk of fieldStoreOf(state).chunks) {
-    for (const field of chunk) issues.push(...field.issues);
-  }
-  issues.push(...state.issues);
-  return issues;
+  return state.allIssues;
 }
 
 function withoutIssueSource<ID extends StableID>(
@@ -1534,35 +2052,62 @@ function withoutIssueSource<ID extends StableID>(
   source: FormIssueSource,
 ): FormState<ID> {
   const store = fieldStoreOf(state);
-  const replacements = new Map<ID, FormFieldState<ID>>();
-  for (const id of store.fieldIDsBySource.get(source)?.values() ?? []) {
-    const current = getStoredField(store, id);
-    if (current !== undefined) {
-      replacements.set(current.id, fieldWithIssues(
-        current,
-        Object.freeze(current.issues.filter((issue) => issue.source !== source)),
-      ));
-    }
-  }
   const issueStore = issueStoreOf(state);
-  const nextIssues = issueStore.bySource.has(source)
-    ? createFormIssueStore(issueStore.values.filter((issue) => issue.source !== source))
-    : issueStore;
-  if (replacements.size === 0 && nextIssues === issueStore) return state;
-  return deriveState(state, {}, replaceStoredFields(store, replacements), nextIssues);
+  if (!issueStore.allBySource.has(source)) return state;
+  const globalIssues = Object.freeze(
+    issueStore.values.filter((issue) => issue.source !== source),
+  );
+  const directFields = materializeFields(store).map((field) => fieldWithIssues(
+    field,
+    Object.freeze(field.issues.filter((issue) => issue.source !== source)),
+    Object.freeze([]),
+  ));
+  const fields = createFieldStore(projectRelatedIssues(directFields, globalIssues));
+  const next = deriveState(state, {}, fields, createFormIssueStore(globalIssues, fields));
+  return afterIssueMutation(state, next);
+}
+
+function afterIssueMutation<ID extends StableID>(
+  previous: FormState<ID>,
+  next: FormState<ID>,
+): FormState<ID> {
+  if (next === previous) return next;
+  const validation = previous.validation.status === 'idle'
+    || previous.validation.status === 'validating'
+    ? previous.validation
+    : createValidationState(previous.validation.generation, 'idle', null, null);
+  const submission = previous.submission.status === 'failed'
+    && previous.submission.failure === null
+    && !issueStoreOf(next).allBySource.has('server')
+    ? createSubmissionState(
+        previous.submission.generation,
+        'idle',
+        previous.submission.count,
+        null,
+      )
+    : previous.submission;
+  return deriveState(next, { validation, submission });
 }
 
 function fieldWithIssues<ID extends StableID>(
   field: FormFieldState<ID>,
   issues: readonly FormIssue<ID>[],
+  relatedIssues: readonly FormIssue<ID>[] = field.relatedIssues,
 ): FormFieldState<ID> {
+  const valid = issues.length === 0 && relatedIssues.length === 0;
+  if (
+    valid === field.valid
+    && sameIssues(field.issues, issues)
+    && sameIssues(field.relatedIssues, relatedIssues)
+  ) return field;
   return Object.freeze({
     id: field.id,
     name: field.name,
     touched: field.touched,
     dirty: field.dirty,
-    valid: issues.length === 0,
+    valid,
     issues,
+    relatedIssues,
   });
 }
 
@@ -1573,7 +2118,15 @@ function sameIssue<ID extends StableID>(
   return left.id === right.id
     && left.message === right.message
     && left.source === right.source
-    && left.fieldId === right.fieldId;
+    && left.fieldId === right.fieldId
+    && sameIDs(left.relatedFieldIds ?? [], right.relatedFieldIds ?? []);
+}
+
+function sameIDs<ID extends StableID>(left: readonly ID[], right: readonly ID[]): boolean {
+  return left === right || (
+    left.length === right.length
+    && left.every((id, index) => id === right[index])
+  );
 }
 
 function sameIssues<ID extends StableID>(
@@ -1597,6 +2150,7 @@ function sameField<ID extends StableID>(
     && left.dirty === right.dirty
     && left.valid === right.valid
     && sameIssues(left.issues, right.issues)
+    && sameIssues(left.relatedIssues, right.relatedIssues)
   );
 }
 
@@ -1662,6 +2216,30 @@ function firstInvalidField<ID extends StableID>(
     for (const field of chunk) if (!field.valid) return field;
   }
   return undefined;
+}
+
+function firstIssueFocusField<ID extends StableID>(
+  store: FormFieldStore<ID>,
+  issues: readonly FormIssue<ID>[],
+): FormFieldState<ID> | undefined {
+  for (const issue of issues) {
+    if (issue.fieldId === undefined) continue;
+    const primary = getStoredField(store, issue.fieldId);
+    if (primary !== undefined && !primary.valid) return primary;
+  }
+  let relatedIndex = Number.POSITIVE_INFINITY;
+  let relatedField: FormFieldState<ID> | undefined;
+  for (const issue of issues) {
+    for (const id of issue.relatedFieldIds ?? []) {
+      const index = store.indexByID.get(id);
+      if (index === undefined || index >= relatedIndex) continue;
+      const field = getStoredField(store, id);
+      if (field === undefined || field.valid) continue;
+      relatedIndex = index;
+      relatedField = field;
+    }
+  }
+  return relatedField ?? firstInvalidField(store);
 }
 
 function update<ID extends StableID>(
@@ -1734,6 +2312,51 @@ function transitionError<T>(result: Result<T>): Result<never> {
     return fail('internal-invariant', 'form-result-unexpected', 'Expected a failed result.');
   }
   return fail('transition-rejection', result.error.code, result.error.message);
+}
+
+function createValidationState(
+  generation: number,
+  status: FormValidationStatus,
+  trigger: FormValidationTrigger | null,
+  intent: FormValidationIntent | null,
+): FormValidationState {
+  return status === 'idle'
+    ? Object.freeze({ generation, status, trigger: null, intent: null })
+    : Object.freeze({
+        generation,
+        status,
+        trigger: trigger as FormValidationTrigger,
+        intent: intent as FormValidationIntent,
+      });
+}
+
+function createSubmissionState(
+  generation: number,
+  status: FormSubmissionStatus,
+  count: number,
+  failure: FormSubmissionFailure | null,
+): FormSubmissionState {
+  return status === 'failed'
+    ? Object.freeze({ generation, status, count, failure })
+    : Object.freeze({ generation, status, count, failure: null });
+}
+
+function normalizeSubmissionFailure(
+  input: FormSubmissionFailure | null,
+): Result<FormSubmissionFailure | null> {
+  if (input === null) return ok(null);
+  if (
+    typeof input !== 'object'
+    || typeof input.message !== 'string'
+    || input.message.trim().length === 0
+  ) {
+    return fail(
+      'construction',
+      'form-submission-failure-invalid',
+      'A Form submission failure message must not be empty.',
+    );
+  }
+  return ok(Object.freeze({ message: input.message.trim() }));
 }
 
 function isValidationStatus(value: string): value is FormValidationStatus {

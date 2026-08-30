@@ -3,12 +3,12 @@
   "package": "@sectile/form",
   "entries": [
     {
-      "id": "WI-027:typed-field-state-commands",
+      "id": "WI-047:cohesive-form-state",
       "change": "signature-changed",
       "before": { "subpath": "./state" },
-      "symbols": ["FormEvent update-field", "FormFieldInput.valid", "getFormFieldIDsByIssueSource"],
+      "symbols": ["FormEvent update-field", "FormFieldInput.valid", "getFormFieldIDsByIssueSource", "FormState flat validation and submission fields", "FormStateInput flat validation and submission fields", "FormIssue", "FormFieldState", "FormEvent submit-failed"],
       "replacement": { "package": "@sectile/form", "subpath": "./state" },
-      "removalReason": "Field validity is derived from issues; use getFormField, setFormFieldMeta, replaceFormFieldIssues, upsertFormFieldIssue, removeFormFieldIssue, and clearFormFieldIssues."
+      "removalReason": "Field validity is derived from issues. Use the typed field commands, state.validation and state.submission snapshots, submission.failure for save failures, and relatedFieldIds/relatedIssues for one issue that invalidates several fields."
     },
     {
       "id": "WI-027:root-field-command-closure",

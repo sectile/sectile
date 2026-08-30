@@ -49,20 +49,40 @@ const submission = defineFormSubmission({
 
 This is the typed boundary for a submission. `FormRoot` and `FormField` remain ordinary static Vue components.
 
-## Async state
+## Validation and submission state
 
-Read `submissionStatus` from the root slot to present progress and prevent an extra click while a save is running.
+`FormRoot` exposes cohesive `validation` and `submission` snapshots. Read `submission.status` to present progress and prevent an extra click while a save is running.
 
 ```vue
-<FormRoot v-bind="submission" v-slot="{ submissionStatus }">
+<FormRoot v-bind="submission" v-slot="{ submission }">
   <!-- fields -->
-  <FormSubmit :disabled="submissionStatus === 'submitting'">
-    {{ submissionStatus === 'submitting' ? 'Saving…' : 'Save' }}
+  <FormSubmit :disabled="submission.status === 'submitting'">
+    {{ submission.status === 'submitting' ? 'Saving…' : 'Save' }}
   </FormSubmit>
 </FormRoot>
 ```
 
-A failed result can return field or form issues. A successful result may return `{ ok: true }` or no value.
+The public snapshots group the values that must change together:
+
+```ts
+state.validation // { generation, status, trigger, intent }
+state.submission // { generation, status, count, failure }
+```
+
+The root slot also exposes `submitted` and `submitCount` as conveniences derived from `submission.count`. A successful result may return `{ ok: true }` or no value.
+
+## Report a failed save
+
+A failed result separates the save outcome from invalid input:
+
+```ts
+return {
+  ok: false,
+  failure: { message: 'The service is temporarily unavailable.' },
+}
+```
+
+This sets `submission.status` to `failed` and retains the message in `submission.failure`; it does not make a valid form invalid or move focus to a field. Return `issues` when the server rejected specific values. An issue may use `path` plus `relatedPaths` when one message concerns several fields. `FormSummary` renders either kind of failure and exposes both through its slot.
 
 ## Adopt the current values as the new baseline
 
@@ -96,7 +116,7 @@ reinitialize({
 | --- | --- |
 | `touched` | Field interaction history. |
 | `validation` | Browser, callback, and schema validation state and issues. |
-| `submission` | Submission status, attempt count, submitted state, and server issues. |
+| `submission` | Submission generation, status, attempt count, failure, and server issues. |
 
 Configured form and field issues remain in either case. `dirty` always becomes `false` because the current participant values are captured as the new baseline.
 

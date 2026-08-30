@@ -135,7 +135,27 @@ async function missingSubpath(directory, specifier) {
 
 async function typeConsumer(directory) {
   await writeFile(join(directory, 'consumer.ts'), `
-    import { defineFormSubmission } from '@sectile/vue/form';
+    import { createFormState, type FormIssue } from '@sectile/form/state';
+    import { defineFormSubmission, type FormSummarySlotProps } from '@sectile/vue/form';
+    const issue = {
+      id: 'lookup-mismatch',
+      message: 'Check both values.',
+      source: 'server',
+      fieldId: 'order-number',
+      relatedFieldIds: ['email'],
+    } satisfies FormIssue<string>;
+    const state = createFormState({
+      fields: [{ id: 'order-number' }, { id: 'email' }],
+      issues: [issue],
+    });
+    state.validation.status satisfies 'idle' | 'validating' | 'valid' | 'invalid';
+    state.submission.failure satisfies { readonly message: string } | null;
+    state.allIssues satisfies readonly FormIssue<string>[];
+    // @ts-expect-error lifecycle state is grouped under submission
+    state.submissionStatus;
+    declare const summary: FormSummarySlotProps;
+    summary.serverIssues satisfies readonly FormIssue[];
+    summary.firstIssue satisfies FormIssue | null;
     const schema = {
       '~standard': {
         version: 1 as const,
@@ -154,6 +174,17 @@ async function typeConsumer(directory) {
         // @ts-expect-error schema output is not the raw input
         values.email;
       },
+    });
+    defineFormSubmission({
+      onSubmit: () => ({
+        ok: false as const,
+        failure: { message: 'Try again.' },
+        issues: [{
+          path: 'orderNumber',
+          relatedPaths: ['email'],
+          message: 'Check both values.',
+        }],
+      }),
     });
   `);
   await writeFile(join(directory, 'tsconfig.json'), `${JSON.stringify({

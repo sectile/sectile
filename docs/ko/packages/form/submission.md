@@ -49,20 +49,40 @@ const submission = defineFormSubmission({
 
 제출 함수가 타입 경계가 됩니다. `FormRoot`와 `FormField`는 일반적인 정적 Vue 컴포넌트로 유지됩니다.
 
-## 비동기 상태
+## 검증과 제출 상태
 
-`FormRoot` 슬롯의 `submissionStatus`를 읽어 저장 진행 상태를 표시하고 추가 클릭을 막습니다.
+`FormRoot`는 응집된 `validation`과 `submission` 스냅샷을 제공합니다. 저장 진행 상태를 표시하고 추가 클릭을 막으려면 `submission.status`를 읽습니다.
 
 ```vue
-<FormRoot v-bind="submission" v-slot="{ submissionStatus }">
+<FormRoot v-bind="submission" v-slot="{ submission }">
   <!-- fields -->
-  <FormSubmit :disabled="submissionStatus === 'submitting'">
-    {{ submissionStatus === 'submitting' ? '저장 중…' : '저장' }}
+  <FormSubmit :disabled="submission.status === 'submitting'">
+    {{ submission.status === 'submitting' ? '저장 중…' : '저장' }}
   </FormSubmit>
 </FormRoot>
 ```
 
-실패 결과는 필드 또는 폼 오류를 반환할 수 있습니다. 성공 결과는 `{ ok: true }` 또는 반환값 없음으로 표현할 수 있습니다.
+함께 바뀌어야 하는 값은 다음 공개 스냅샷에 묶여 있습니다.
+
+```ts
+state.validation // { generation, status, trigger, intent }
+state.submission // { generation, status, count, failure }
+```
+
+루트 슬롯의 `submitted`와 `submitCount`는 `submission.count`에서 계산한 편의 값입니다. 성공 결과는 `{ ok: true }` 또는 반환값 없음으로 표현할 수 있습니다.
+
+## 저장 실패 알리기
+
+실패 결과는 저장 결과와 잘못된 입력을 구분합니다.
+
+```ts
+return {
+  ok: false,
+  failure: { message: '서비스를 잠시 사용할 수 없습니다.' },
+}
+```
+
+이 결과는 `submission.status`를 `failed`로 바꾸고 메시지를 `submission.failure`에 보관합니다. 유효한 폼을 무효로 만들거나 필드로 포커스를 옮기지는 않습니다. 서버가 특정 값을 거부했다면 `issues`를 반환하세요. 메시지 하나가 여러 필드와 관련됐다면 `path`와 `relatedPaths`를 함께 사용할 수 있습니다. `FormSummary`는 두 실패 유형을 모두 렌더링하고 슬롯에도 각각 노출합니다.
 
 ## 현재 값을 새 기준으로 삼기
 
@@ -96,7 +116,7 @@ reinitialize({
 | --- | --- |
 | `touched` | 필드를 조작한 기록 |
 | `validation` | 브라우저·검증 함수·schema의 검증 상태와 오류 |
-| `submission` | 제출 상태, 시도 횟수, 제출 여부, 서버 오류 |
+| `submission` | 제출 generation, 상태, 시도 횟수, failure, 서버 이슈 |
 
 폼과 필드에 직접 지정한 오류는 옵션과 관계없이 남습니다. `dirty`는 언제나 `false`가 됩니다. 현재 입력값 자체가 새 기준이 되기 때문입니다.
 

@@ -87,10 +87,15 @@ Subscribe when application UI depends on form state:
 ```ts
 const unsubscribe = form.subscribe(({ state }) => {
   unsavedBadge.hidden = !state.dirty
+  saveButton.disabled = state.submission.status === 'submitting'
 })
 ```
 
 `dirty` means that at least one participant's current value differs from its baseline. It returns to `false` when every value returns to that baseline. `touched` records interaction separately and may stay `true` even when `dirty` is `false`.
+
+Lifecycle metadata is grouped as `state.validation` (`generation`, `status`, `trigger`, and `intent`) and `state.submission` (`generation`, `status`, `count`, and `failure`). A submission `failure` reports a failed save without making the fields invalid. Server `issues` remain the validation channel for rejected values.
+
+A validation callback issue may include `relatedPaths` in addition to its primary `path`. A managed-submission server issue uses the participant IDs `fieldId` and `relatedFieldIds`. In either case, the issue appears once in the summary while all matched participants become invalid. Changing the value of a primary or related participant clears a server issue; changing an unrelated participant does not.
 
 Native inputs, textareas, selects, checkboxes, radios, and file inputs are snapshotted automatically. A custom participant can describe its value and equality rules:
 

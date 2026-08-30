@@ -95,17 +95,35 @@ The example deliberately mixes a Sectile text field with a native `<select>`. Bo
 Use the root slot for UI that depends on the whole form. Inputs continue to own their values.
 
 ```vue
-<FormRoot v-bind="submission" v-slot="{ dirty, touched, valid, submissionStatus }">
+<FormRoot v-bind="submission" v-slot="{ dirty, touched, valid, validation, submission }">
   <!-- fields -->
   <p v-if="dirty">You have unsaved changes.</p>
   <p v-if="touched && !dirty">The form was reviewed without changing its values.</p>
-  <FormSubmit :disabled="submissionStatus === 'submitting'">
-    {{ submissionStatus === 'submitting' ? 'Saving…' : 'Save' }}
+  <FormSubmit :disabled="submission.status === 'submitting'">
+    {{ submission.status === 'submitting' ? 'Saving…' : 'Save' }}
   </FormSubmit>
 </FormRoot>
 ```
 
 `dirty` compares the current participant values with the form's baseline. It becomes `true` after a real value change and returns to `false` when the value returns to that baseline. `touched` records interaction independently, so it can remain `true` after `dirty` becomes `false`.
+
+`validation` contains `generation`, `status`, `trigger`, and `intent`. `submission` contains `generation`, `status`, `count`, and `failure`. Read these grouped snapshots when UI depends on a lifecycle; `submitted` and `submitCount` remain root-slot conveniences derived from `submission.count`.
+
+## Compose a custom summary
+
+`FormSummary` renders submission failure and issue messages by default. Its slot exposes the same lifecycle snapshots plus canonical issue projections, so a dialog description or another summary layout can consume Form state directly.
+
+```vue
+<FormSummary v-slot="{ validation, submission, issues, serverIssues, firstIssue, valid }">
+  <p v-if="submission.failure">{{ submission.failure.message }}</p>
+  <p v-else-if="firstIssue">{{ firstIssue.message }}</p>
+  <small v-if="!valid && validation.status === 'invalid'">
+    {{ issues.length }} issue(s), {{ serverIssues.length }} from the server
+  </small>
+</FormSummary>
+```
+
+One issue may name a primary `path` and several `relatedPaths`. It appears once in `issues`; the primary field exposes it through `issues`, while the other invalid fields expose it through `relatedIssues` and reference the summary in their ARIA metadata.
 
 ## Establish a new baseline
 

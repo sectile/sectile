@@ -5,7 +5,9 @@ import {
   clearFormFieldIssues,
   createFormState,
   getFormField,
+  getFormFieldIDByPath,
   getFormFieldIDsByIssueSource,
+  getFormIssuesBySource,
   removeFormFieldIssue,
   replaceFormFieldIssues,
   setFormFieldMeta,
@@ -105,12 +107,16 @@ test('indexed field commands preserve unrelated identity and make equal writes n
     ],
   });
   const profile = getFormField(initial, 'profile');
+  const validation = initial.validation;
+  const submission = initial.submission;
   assert.ok(profile !== null);
 
   const changed = setFormFieldMeta(initial, 'email', { dirty: true });
   assert.equal(changed.ok, true);
   assert.equal(getFormField(changed.value.state, 'profile'), profile);
   assert.equal(getFormField(changed.value.state, 'email')?.dirty, true);
+  assert.equal(changed.value.state.validation, validation);
+  assert.equal(changed.value.state.submission, submission);
 
   const equal = setFormFieldMeta(changed.value.state, 'email', { dirty: true });
   assert.equal(equal.ok, true);
@@ -223,11 +229,11 @@ test('invalid submit focuses the first invalid field and announces its issues', 
     type: 'validation-started', trigger: 'submit', intent: 'submission',
   }).value.state;
   const submitted = applyFormEvent(started, {
-    type: 'validation-completed', trigger: 'submit', intent: 'submission', generation: started.validationGeneration,
+    type: 'validation-completed', trigger: 'submit', intent: 'submission', generation: started.validation.generation,
   }).value;
-  assert.equal(submitted.state.validationStatus, 'invalid');
-  assert.equal(submitted.state.submissionStatus, 'idle');
-  assert.equal(submitted.state.submitCount, 1);
+  assert.equal(submitted.state.validation.status, 'invalid');
+  assert.equal(submitted.state.submission.status, 'idle');
+  assert.equal(submitted.state.submission.count, 1);
   assert.deepEqual(submitted.commands, [
     { type: 'focus-field', id: 'email' },
     {
@@ -243,21 +249,21 @@ test('valid submit has an explicit request, pending, success, and failure lifecy
     type: 'validation-started', trigger: 'submit', intent: 'submission',
   }).value.state;
   const requested = applyFormEvent(state, {
-    type: 'validation-completed', trigger: 'submit', intent: 'submission', generation: state.validationGeneration,
+    type: 'validation-completed', trigger: 'submit', intent: 'submission', generation: state.validation.generation,
   }).value;
-  assert.equal(requested.state.validationStatus, 'valid');
-  assert.equal(requested.state.submissionStatus, 'idle');
+  assert.equal(requested.state.validation.status, 'valid');
+  assert.equal(requested.state.submission.status, 'idle');
   assert.deepEqual(requested.commands, [{ type: 'submit-requested', generation: 1 }]);
 
   state = applyFormEvent(requested.state, { type: 'submit-started', generation: 1 }).value.state;
-  assert.equal(state.submissionStatus, 'submitting');
+  assert.equal(state.submission.status, 'submitting');
 
   const failed = applyFormEvent(state, {
     type: 'submit-failed',
     generation: 1,
     issues: [{ id: 'server-down', message: 'Try again.', source: 'server' }],
   }).value.state;
-  assert.equal(failed.submissionStatus, 'failed');
+  assert.equal(failed.submission.status, 'failed');
   assert.equal(failed.valid, false);
 
   state = applyFormEvent(failed, {
@@ -265,15 +271,17 @@ test('valid submit has an explicit request, pending, success, and failure lifecy
     source: 'server',
     issues: [],
   }).value.state;
+  assert.equal(state.validation.status, 'idle');
+  assert.equal(state.submission.status, 'idle');
   state = applyFormEvent(state, {
     type: 'validation-started', trigger: 'submit', intent: 'submission',
   }).value.state;
   state = applyFormEvent(state, {
-    type: 'validation-completed', trigger: 'submit', intent: 'submission', generation: state.validationGeneration,
+    type: 'validation-completed', trigger: 'submit', intent: 'submission', generation: state.validation.generation,
   }).value.state;
-  state = applyFormEvent(state, { type: 'submit-started', generation: state.submissionGeneration }).value.state;
-  state = applyFormEvent(state, { type: 'submit-succeeded', generation: state.submissionGeneration }).value.state;
-  assert.equal(state.submissionStatus, 'succeeded');
+  state = applyFormEvent(state, { type: 'submit-started', generation: state.submission.generation }).value.state;
+  state = applyFormEvent(state, { type: 'submit-succeeded', generation: state.submission.generation }).value.state;
+  assert.equal(state.submission.status, 'succeeded');
   assert.equal(state.issues.length, 0);
 });
 
@@ -310,14 +318,149 @@ test('issue replacement preserves other sources and unregistered server issues',
   );
 });
 
+test('multi-field server issues stay canonical and clear when a related value changes', () => {
+  const issue = {
+    id: 'lookup-mismatch',
+    message: 'Check the order number and email.',
+    source: 'server',
+    relatedFieldIds: ['order-number', 'email'],
+  };
+  const state = createFormState({
+    validation: { generation: 1, status: 'invalid', trigger: 'submit', intent: 'submission' },
+    submission: { generation: 1, status: 'failed', count: 1, failure: null },
+    fields: [
+      { id: 'order-number', name: 'orderNumber' },
+      { id: 'email', name: 'email' },
+    ],
+    issues: [issue],
+  });
+
+  assert.equal(state.allIssues.length, 1);
+  assert.equal(state.fields[0].relatedIssues[0], state.allIssues[0]);
+  assert.equal(state.fields[1].relatedIssues[0], state.allIssues[0]);
+  assert.equal(state.fields[0].valid, false);
+  assert.equal(state.fields[1].valid, false);
+  assert.deepEqual(getFormIssuesBySource(state, 'server'), state.allIssues);
+  assert.equal(getFormFieldIDByPath(state, 'orderNumber.value'), 'order-number');
+
+  const changed = applyFormEvent(state, {
+    type: 'field-value-changed',
+    id: 'email',
+  }).value.state;
+
+  assert.equal(changed.valid, true);
+  assert.deepEqual(changed.allIssues, []);
+  assert.equal(changed.fields[0].valid, true);
+  assert.equal(changed.fields[1].valid, true);
+  assert.equal(changed.validation.status, 'idle');
+  assert.equal(changed.submission.status, 'idle');
+});
+
+test('multi-field submit issues focus their primary field before earlier related fields', () => {
+  const state = createFormState({
+    validation: { generation: 1, status: 'valid', trigger: 'submit', intent: 'submission' },
+    submission: { generation: 1, status: 'submitting', count: 1, failure: null },
+    fields: [
+      { id: 'order-number', name: 'orderNumber' },
+      { id: 'email', name: 'email' },
+    ],
+  });
+
+  const failed = applyFormEvent(state, {
+    type: 'submit-failed',
+    generation: 1,
+    issues: [{
+      id: 'lookup-mismatch',
+      fieldId: 'email',
+      relatedFieldIds: ['order-number'],
+      message: 'Check the order number and email.',
+      source: 'server',
+    }],
+  }).value;
+
+  assert.equal(failed.state.validation.status, 'invalid');
+  assert.deepEqual(failed.commands[0], { type: 'focus-field', id: 'email' });
+});
+
+test('direct issue mutations invalidate settled validation snapshots', () => {
+  const state = createFormState({
+    validation: { generation: 1, status: 'valid', trigger: 'blur', intent: 'interaction' },
+    fields: [{ id: 'email', name: 'email' }],
+  });
+
+  const changed = applyFormEvent(state, {
+    type: 'replace-field-issues',
+    id: 'email',
+    source: 'field',
+    issues: [{ id: 'required', message: 'Required.', source: 'field' }],
+  }).value.state;
+
+  assert.equal(changed.valid, false);
+  assert.equal(changed.validation.status, 'idle');
+  assert.equal(changed.validation.trigger, null);
+  assert.equal(changed.validation.intent, null);
+});
+
+test('VAL-033: related server issue clearing changes only affected field identities', () => {
+  const fieldCount = 4_096;
+  const fields = Array.from({ length: fieldCount }, (_, index) => ({ id: `field-${index}` }));
+  const state = createFormState({
+    validation: { generation: 1, status: 'invalid', trigger: 'submit', intent: 'submission' },
+    submission: { generation: 1, status: 'failed', count: 1, failure: null },
+    fields,
+    issues: [{
+      id: 'related-server',
+      message: 'Check both fields.',
+      source: 'server',
+      relatedFieldIds: ['field-0', 'field-1'],
+    }],
+  });
+
+  const changed = applyFormEvent(state, {
+    type: 'field-value-changed',
+    id: 'field-1',
+  }).value.state;
+  const changedFieldIdentities = changed.fields.reduce(
+    (count, field, index) => count + Number(field !== state.fields[index]),
+    0,
+  );
+
+  assert.equal(changedFieldIdentities, 2);
+  assert.equal(changed.allIssues.length, 0);
+});
+
+test('submission failures do not create validation issues or move field focus', () => {
+  let state = createFormState({ fields: [{ id: 'email', name: 'email' }] });
+  state = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'submit', intent: 'submission',
+  }).value.state;
+  const requested = applyFormEvent(state, {
+    type: 'validation-completed',
+    trigger: 'submit',
+    intent: 'submission',
+    generation: state.validation.generation,
+  }).value;
+  state = applyFormEvent(requested.state, {
+    type: 'submit-started',
+    generation: requested.state.submission.generation,
+  }).value.state;
+
+  const failed = applyFormEvent(state, {
+    type: 'submit-failed',
+    generation: state.submission.generation,
+    failure: { message: 'Please try again.' },
+  }).value;
+
+  assert.equal(failed.state.valid, true);
+  assert.deepEqual(failed.state.allIssues, []);
+  assert.deepEqual(failed.state.submission.failure, { message: 'Please try again.' });
+  assert.deepEqual(failed.commands, [{ type: 'announce-submission-failure' }]);
+});
+
 test('reset clears coordinator metadata and emits participant commands in order', () => {
   const state = createFormState({
-    validationStatus: 'invalid',
-    validationTrigger: 'submit',
-    validationIntent: 'submission',
-    submissionStatus: 'failed',
-    submitCount: 2,
-    submitted: true,
+    validation: { generation: 1, status: 'invalid', trigger: 'submit', intent: 'submission' },
+    submission: { generation: 1, status: 'failed', count: 2, failure: null },
     fields: [
       { id: 'email', touched: true, dirty: true, valid: false, issues: [requiredIssue] },
       { id: 'team', touched: true, dirty: true },
@@ -325,10 +468,9 @@ test('reset clears coordinator metadata and emits participant commands in order'
     issues: [{ id: 'server-down', message: 'Try again.', source: 'server' }],
   });
   const reset = applyFormEvent(state, 'reset').value;
-  assert.equal(reset.state.validationStatus, 'idle');
-  assert.equal(reset.state.submissionStatus, 'idle');
-  assert.equal(reset.state.submitCount, 0);
-  assert.equal(reset.state.submitted, false);
+  assert.equal(reset.state.validation.status, 'idle');
+  assert.equal(reset.state.submission.status, 'idle');
+  assert.equal(reset.state.submission.count, 0);
   assert.equal(reset.state.dirty, false);
   assert.equal(reset.state.valid, true);
   assert.deepEqual(reset.commands, [
@@ -339,12 +481,8 @@ test('reset clears coordinator metadata and emits participant commands in order'
 
 test('reinitialize establishes a clean baseline without resetting participant values', () => {
   const state = createFormState({
-    validationStatus: 'invalid',
-    validationTrigger: 'submit',
-    validationIntent: 'submission',
-    submissionStatus: 'failed',
-    submitCount: 2,
-    submitted: true,
+    validation: { generation: 1, status: 'invalid', trigger: 'submit', intent: 'submission' },
+    submission: { generation: 1, status: 'failed', count: 2, failure: null },
     fields: [
       {
         id: 'email',
@@ -364,22 +502,17 @@ test('reinitialize establishes a clean baseline without resetting participant va
 
   assert.equal(result.state.dirty, false);
   assert.equal(result.state.touched, false);
-  assert.equal(result.state.validationStatus, 'idle');
-  assert.equal(result.state.submissionStatus, 'idle');
-  assert.equal(result.state.submitCount, 0);
-  assert.equal(result.state.submitted, false);
+  assert.equal(result.state.validation.status, 'idle');
+  assert.equal(result.state.submission.status, 'idle');
+  assert.equal(result.state.submission.count, 0);
   assert.deepEqual(result.state.fields[0].issues.map((issue) => issue.id), ['email-required']);
   assert.deepEqual(result.commands, []);
 });
 
 test('reinitialize can preserve independent metadata groups while dirty always clears', () => {
   const state = createFormState({
-    validationStatus: 'invalid',
-    validationTrigger: 'submit',
-    validationIntent: 'submission',
-    submissionStatus: 'failed',
-    submitCount: 1,
-    submitted: true,
+    validation: { generation: 1, status: 'invalid', trigger: 'submit', intent: 'submission' },
+    submission: { generation: 1, status: 'failed', count: 1, failure: null },
     fields: [{
       id: 'email',
       touched: true,
@@ -399,10 +532,9 @@ test('reinitialize can preserve independent metadata groups while dirty always c
 
   assert.equal(result.dirty, false);
   assert.equal(result.touched, true);
-  assert.equal(result.validationStatus, 'invalid');
-  assert.equal(result.submissionStatus, 'failed');
-  assert.equal(result.submitCount, 1);
-  assert.equal(result.submitted, true);
+  assert.equal(result.validation.status, 'invalid');
+  assert.equal(result.submission.status, 'failed');
+  assert.equal(result.submission.count, 1);
   assert.deepEqual(result.fields[0].issues.map((issue) => issue.id), ['native', 'server']);
 });
 
@@ -421,7 +553,7 @@ test('FRM-01, FRM-02: form generations reject stale validation and submission re
   state = applyFormEvent(state, {
     type: 'validation-started', trigger: 'input', intent: 'interaction',
   }).value.state;
-  const firstGeneration = state.validationGeneration;
+  const firstGeneration = state.validation.generation;
   state = applyFormEvent(state, {
     type: 'validation-started', trigger: 'input', intent: 'interaction',
   }).value.state;
@@ -438,7 +570,7 @@ test('FRM-01, FRM-02: form generations reject stale validation and submission re
     type: 'validation-completed',
     trigger: 'input',
     intent: 'interaction',
-    generation: state.validationGeneration,
+    generation: state.validation.generation,
   }).value.state;
   state = applyFormEvent(state, {
     type: 'validation-started', trigger: 'submit', intent: 'submission',
@@ -447,14 +579,15 @@ test('FRM-01, FRM-02: form generations reject stale validation and submission re
     type: 'validation-completed',
     trigger: 'submit',
     intent: 'submission',
-    generation: state.validationGeneration,
+    generation: state.validation.generation,
   }).value.state;
-  const firstSubmissionGeneration = state.submissionGeneration;
+  const firstSubmissionGeneration = state.submission.generation;
   state = applyFormEvent(state, {
     type: 'submit-started', generation: firstSubmissionGeneration,
   }).value.state;
   state = applyFormEvent(state, {
     type: 'submit-failed', generation: firstSubmissionGeneration,
+    failure: { message: 'Try again.' },
   }).value.state;
   state = applyFormEvent(state, {
     type: 'validation-started', trigger: 'submit', intent: 'submission',
@@ -463,7 +596,7 @@ test('FRM-01, FRM-02: form generations reject stale validation and submission re
     type: 'validation-completed',
     trigger: 'submit',
     intent: 'submission',
-    generation: state.validationGeneration,
+    generation: state.validation.generation,
   }).value.state;
   const staleSubmission = applyFormEvent(state, {
     type: 'submit-started',

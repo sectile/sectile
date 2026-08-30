@@ -1,6 +1,7 @@
 import {
   applyFormEvent,
   getFormField,
+  getFormFieldIDByPath,
   getFormFieldIDsByIssueSource,
   tryCreateFormState,
   type FormCommand,
@@ -11,6 +12,7 @@ import {
   type FormIssueSource,
   type FormReinitializeOptions,
   type FormState,
+  type FormSubmissionFailure,
   type FormValidationIntent,
   type FormValidationTrigger,
 } from '@sectile/form/state';
@@ -48,6 +50,7 @@ export type { FormReinitializeOptions } from '@sectile/form/state';
 export interface FormValidationIssue {
   readonly message: string;
   readonly path?: FormFieldPath;
+  readonly relatedPaths?: readonly FormFieldPath[];
 }
 
 export interface FormValidationResult {
@@ -74,7 +77,7 @@ export type FormFocusHandler = () => boolean | void;
 export type FormResetHandler = () => void;
 export type FormReinitializeHandler = (options?: FormReinitializeOptions) => void;
 export type FormAnnounceSummaryHandler<ID extends StableID = StableID> =
-  (issues: readonly FormIssue<ID>[]) => void;
+  (issues: readonly FormIssue<ID>[], failure: FormSubmissionFailure | null) => void;
 export type FormStateChangeHandler<ID extends StableID = StableID> =
   (state: FormState<ID>) => void;
 export type FormUpdateHandler = () => void;
@@ -114,7 +117,11 @@ export interface FormSubmitPayload<
 export type FormSubmitResult<ID extends StableID = StableID> =
   | void
   | { readonly ok: true }
-  | { readonly ok: false; readonly issues?: readonly FormIssue<ID>[] };
+  | {
+      readonly ok: false;
+      readonly failure?: FormSubmissionFailure;
+      readonly issues?: readonly FormIssue<ID>[];
+    };
 
 export type FormSubmitHandler<
   ID extends StableID = StableID,
@@ -153,7 +160,12 @@ export function defineFormSubmission(
 
 export type FormSubmitErrorMapper<ID extends StableID = StableID> = (
   reason: unknown,
-) => readonly FormIssue<ID>[];
+) => FormSubmissionFailure;
+
+export interface FormSubmitFailureResult<ID extends StableID = StableID> {
+  readonly failure?: FormSubmissionFailure;
+  readonly issues?: readonly FormIssue<ID>[];
+}
 
 export interface FormSnapshot<ID extends StableID = StableID> {
   readonly revision: number;
@@ -189,6 +201,7 @@ export interface FormOptions<
 > {
   readonly form: HTMLFormElement;
   readonly summary?: HTMLElement;
+  readonly renderSummaryContent?: boolean;
   readonly participants?: readonly FormParticipant<ID>[];
   readonly issues?: readonly FormIssue<ID>[];
   readonly schema?: FormSchema<Input, Output>;
@@ -230,7 +243,7 @@ export interface FormConnection<
   replaceIssues(source: FormIssueSource, issues: readonly FormIssue<ID>[]): boolean;
   submitStarted(): number | null;
   submitSucceeded(generation: number): boolean;
-  submitFailed(generation: number, issues?: readonly FormIssue<ID>[]): boolean;
+  submitFailed(generation: number, result: FormSubmitFailureResult<ID>): boolean;
   reinitialize(options?: FormReinitializeOptions): void;
   reset(): void;
   subscribeForm<Selected>(
@@ -293,6 +306,7 @@ export function tryCreateForm<
   let nativeResume: { readonly token: number; readonly submitter: HTMLElement | null } | null = null;
   let nativeResumeToken = 0;
   let summary: HTMLElement | undefined = options.summary;
+  let renderSummaryContent = options.renderSummaryContent ?? true;
   let schemaOption: FormSchema<Input, Output> | undefined = options.schema;
   let validateOption: FormValidateHandler<ID, Input> | undefined = options.validate;
   let validateOn = new Set<FormInteractionValidationTrigger>(options.validateOn ?? []);
@@ -308,6 +322,13 @@ export function tryCreateForm<
 
   options.form.dataset['scope'] = 'form';
   options.form.dataset['part'] = 'root';
+  const syncSummary = (): void => {
+    if (summary === undefined) return;
+    if (renderSummaryContent) {
+      summary.textContent = summaryMessage(state.allIssues, state.submission.failure);
+    }
+    summary.hidden = state.allIssues.length === 0 && state.submission.failure === null;
+  };
   const configureSummary = (element: HTMLElement | undefined): void => {
     summary = element;
     if (element === undefined) return;
@@ -316,7 +337,7 @@ export function tryCreateForm<
     element.setAttribute('role', 'alert');
     element.setAttribute('aria-live', 'polite');
     element.tabIndex = -1;
-    element.hidden = state.valid;
+    syncSummary();
   };
   configureSummary(summary);
 
@@ -332,6 +353,7 @@ export function tryCreateForm<
       || validateOption !== next.validate
       || !sameTriggers(validateOn, nextValidateOn)
       || !sameTriggers(revalidateOn, nextRevalidateOn);
+    renderSummaryContent = next.renderSummaryContent ?? true;
     configureSummary(next.summary);
     schemaOption = next.schema;
     validateOption = next.validate;
@@ -409,7 +431,8 @@ export function tryCreateForm<
     ) return [event.type === 'register-field' ? event.field.id : event.id];
     const source = event.type === 'replace-issues'
       ? event.source
-      : event.type === 'submit-failed' || event.type === 'submit-succeeded'
+      : event.type === 'field-value-changed'
+        || event.type === 'submit-failed' || event.type === 'submit-succeeded'
         || (event.type === 'validation-started' && event.intent === 'submission')
         ? 'server'
         : null;
@@ -465,7 +488,10 @@ export function tryCreateForm<
     if (!result.ok) return null;
     const previous = state;
     state = result.value.state;
-    if (!Object.is(previous, state)) notify(event, previous);
+    if (!Object.is(previous, state)) {
+      syncSummary();
+      notify(event, previous);
+    }
     return result.value.commands;
   };
   const field = (id: ID): FormFieldState<ID> | undefined => (
@@ -520,14 +546,14 @@ export function tryCreateForm<
     transition({ type: 'reinitialize', options: reinitializeOptions });
     if (summary !== undefined) {
       const remaining = orderedIssues(state);
-      summary.textContent = remaining.map((issue) => issue.message).join(' ');
-      summary.hidden = remaining.length === 0;
+      if (renderSummaryContent) {
+        summary.textContent = summaryMessage(remaining, state.submission.failure);
+      }
+      summary.hidden = remaining.length === 0 && state.submission.failure === null;
     }
   };
   const focusInvalid = (startId: ID): boolean => {
-    const invalid = state.fields.filter(
-      (candidate) => !candidate.valid || candidate.issues.length > 0,
-    );
+    const invalid = state.fields.filter((candidate) => !candidate.valid);
     const start = Math.max(0, invalid.findIndex((candidate) => candidate.id === startId));
     const ordered = [...invalid.slice(start), ...invalid.slice(0, start)];
     for (const candidate of ordered) {
@@ -550,10 +576,21 @@ export function tryCreateForm<
   const announce = (issueIds: readonly StableID[]): void => {
     const issues = orderedIssues(state).filter((issue) => issueIds.includes(issue.id));
     if (summary !== undefined) {
-      summary.textContent = issues.map((issue) => issue.message).join(' ');
-      summary.hidden = issues.length === 0;
+      if (renderSummaryContent) {
+        summary.textContent = summaryMessage(issues, state.submission.failure);
+      }
+      summary.hidden = issues.length === 0 && state.submission.failure === null;
     }
-    announceSummaryHandler?.(issues);
+    announceSummaryHandler?.(issues, state.submission.failure);
+  };
+  const announceFailure = (): void => {
+    const failure = state.submission.failure;
+    if (failure === null) return;
+    if (summary !== undefined) {
+      if (renderSummaryContent) summary.textContent = summaryMessage([], failure);
+      summary.hidden = false;
+    }
+    announceSummaryHandler?.([], failure);
   };
   const execute = (commands: readonly FormCommand<ID>[]): void => {
     let focused = false;
@@ -578,6 +615,7 @@ export function tryCreateForm<
           }
         }
       }
+      if (command.type === 'announce-submission-failure') announceFailure();
       if (command.type === 'reset-field') participants.get(command.id)?.reset?.();
     }
   };
@@ -607,13 +645,14 @@ export function tryCreateForm<
     source: 'validate' | 'schema',
     issues: readonly FormValidationIssue[],
   ): readonly FormIssue<ID>[] => Object.freeze(issues.map((issue, index) => {
-    const name = issue.path === undefined ? null : safeEncodeFormFieldPath(issue.path);
-    const owner = name === null ? undefined : findIssueOwner(state, name);
+    const owner = issue.path === undefined ? null : getFormFieldIDByPath(state, issue.path);
+    const relatedFieldIds = resolveRelatedFieldIDs(state, issue.relatedPaths ?? [], owner);
     return Object.freeze({
-      id: `${source}:${name ?? 'form'}:${index}`,
+      id: `${source}:${owner ?? 'form'}:${index}`,
       message: issue.message,
       source,
-      ...(owner === undefined ? {} : { fieldId: owner.id }),
+      ...(owner === null ? {} : { fieldId: owner }),
+      ...(relatedFieldIds.length === 0 ? {} : { relatedFieldIds }),
     });
   }));
   const finishValidation = (
@@ -673,7 +712,7 @@ export function tryCreateForm<
       return;
     }
     event.preventDefault();
-    const submissionGeneration = state.submissionGeneration;
+    const submissionGeneration = state.submission.generation;
     if (transition({ type: 'submit-started', generation: submissionGeneration }) === null) return;
     const payload: FormSubmitPayload<ID, Output> = Object.freeze({
       event,
@@ -682,7 +721,7 @@ export function tryCreateForm<
       submitter,
       state,
       reinitialize: (reinitializeOptions = {}) => {
-        if (!active || submissionGeneration !== state.submissionGeneration) return;
+        if (!active || submissionGeneration !== state.submission.generation) return;
         pendingReinitializations.set(submissionGeneration, reinitializeOptions);
       },
     });
@@ -706,19 +745,21 @@ export function tryCreateForm<
     generation: number,
     result: FormSubmitResult<ID>,
   ): void => {
-    if (!active || generation !== state.submissionGeneration) return;
+    if (!active || generation !== state.submission.generation) return;
     if (typeof result === 'object' && result !== null && result.ok === false) {
       pendingReinitializations.delete(generation);
       let commands = transition({
         type: 'submit-failed',
         generation,
-        issues: normalizeSubmissionIssues(result.issues ?? [defaultSubmissionIssue(generation)]),
+        failure: result.failure
+          ?? (result.issues === undefined ? defaultSubmissionFailure() : null),
+        issues: normalizeSubmissionIssues(result.issues ?? []),
       });
-      if (commands === null && state.submissionStatus === 'submitting') {
+      if (commands === null && state.submission.status === 'submitting') {
         commands = transition({
           type: 'submit-failed',
           generation,
-          issues: [defaultSubmissionIssue(generation)],
+          failure: defaultSubmissionFailure(),
         });
       }
       if (commands !== null) execute(commands);
@@ -731,14 +772,14 @@ export function tryCreateForm<
     if (requested !== undefined) reinitialize(requested);
   };
   const failManagedSubmission = (generation: number, reason: unknown): void => {
-    if (!active || generation !== state.submissionGeneration) return;
-    let issues: readonly FormIssue<ID>[];
+    if (!active || generation !== state.submission.generation) return;
+    let failure: FormSubmissionFailure;
     try {
-      issues = submitErrorMapper?.(reason) ?? [defaultSubmissionIssue(generation)];
+      failure = submitErrorMapper?.(reason) ?? defaultSubmissionFailure();
     } catch {
-      issues = [defaultSubmissionIssue(generation)];
+      failure = defaultSubmissionFailure();
     }
-    settleManagedSubmission(generation, { ok: false, issues });
+    settleManagedSubmission(generation, { ok: false, failure });
   };
   const normalizeSubmissionIssues = (
     issues: readonly FormIssue<ID>[],
@@ -746,10 +787,8 @@ export function tryCreateForm<
     ...issue,
     source: 'server' as const,
   })));
-  const defaultSubmissionIssue = (generation: number): FormIssue<ID> => Object.freeze({
-    id: `server:submission:${generation}`,
+  const defaultSubmissionFailure = (): FormSubmissionFailure => Object.freeze({
     message: 'Form submission failed.',
-    source: 'server',
   });
   const runValidation = (
     trigger: FormValidationTrigger,
@@ -758,7 +797,7 @@ export function tryCreateForm<
     event: SubmitEvent | null = null,
     submitter: HTMLElement | null = null,
   ): void => {
-    if (state.submissionStatus === 'submitting') {
+    if (state.submission.status === 'submitting') {
       event?.preventDefault();
       return;
     }
@@ -769,7 +808,7 @@ export function tryCreateForm<
     const commands = transition({ type: 'validation-started', trigger, intent });
     if (commands === null) return;
     execute(commands);
-    const generation = state.validationGeneration;
+    const generation = state.validation.generation;
 
     const formData = createNativeFormData(options.form, submitter);
     const values = tryCreateFormValues(
@@ -897,7 +936,7 @@ export function tryCreateForm<
       nativeResume = null;
       return;
     }
-    if (state.validationStatus === 'validating' && state.validationIntent === 'submission') {
+    if (state.validation.status === 'validating' && state.validation.intent === 'submission') {
       event.preventDefault();
       return;
     }
@@ -920,10 +959,10 @@ export function tryCreateForm<
   const invalidateAfterInteraction = (
     trigger: FormInteractionValidationTrigger,
     participant: FormParticipant<ID> | undefined,
+    previousIntent: FormValidationIntent | null = state.validation.status === 'invalid'
+      ? state.validation.intent
+      : null,
   ): void => {
-    const previousIntent = state.validationStatus === 'invalid'
-      ? state.validationIntent
-      : null;
     if (previousIntent !== null && !revalidateOn.has(trigger)) return;
     transition({ type: 'validation-invalidated' });
     const intent = previousIntent ?? (validateOn.has(trigger) ? 'interaction' : null);
@@ -939,12 +978,16 @@ export function tryCreateForm<
       const previous = participantValues.get(participant.id);
       const current = readValue(participant);
       if (valuesEqual(participant, current, previous)) return;
+      const previousIntent = state.validation.status === 'invalid'
+        ? state.validation.intent
+        : null;
       participantValues.set(participant.id, current);
       const baseline = participantBaselines.get(participant.id);
       updateParticipant(participant, {
         dirty: !valuesEqual(participant, current, baseline),
       });
-      invalidateAfterInteraction('input', participant);
+      transition({ type: 'field-value-changed', id: participant.id });
+      invalidateAfterInteraction('input', participant, previousIntent);
     };
     if (event.type === 'input' || event.type === 'change') updateValue();
     else queueMicrotask(updateValue);
@@ -974,7 +1017,7 @@ export function tryCreateForm<
     const commands = transition('reset');
     if (commands !== null) execute(commands);
     if (summary !== undefined) {
-      summary.textContent = '';
+      if (renderSummaryContent) summary.textContent = '';
       summary.hidden = true;
     }
     resetHandler?.();
@@ -1130,10 +1173,10 @@ export function tryCreateForm<
       }
       reorderParticipants(participants, state, transition);
       if (!valueChanged) return true;
-      const previousIntent = state.validationStatus === 'invalid'
-        ? state.validationIntent
+      const previousIntent = state.validation.status === 'invalid'
+        ? state.validation.intent
         : null;
-      transition({ type: 'validation-invalidated' });
+      transition({ type: 'field-value-changed', id });
       if (previousIntent !== null) runValidation('input', previousIntent, id);
       return true;
     },
@@ -1154,12 +1197,17 @@ export function tryCreateForm<
     }) !== null,
     replaceIssues: (source, issues) => transition({ type: 'replace-issues', source, issues }) !== null,
     submitStarted: () => {
-      const generation = state.submissionGeneration;
+      const generation = state.submission.generation;
       return transition({ type: 'submit-started', generation }) === null ? null : generation;
     },
     submitSucceeded: (generation) => transition({ type: 'submit-succeeded', generation }) !== null,
-    submitFailed: (generation, issues = []) => {
-      const commands = transition({ type: 'submit-failed', generation, issues });
+    submitFailed: (generation, result) => {
+      const commands = transition({
+        type: 'submit-failed',
+        generation,
+        failure: result.failure ?? null,
+        issues: normalizeSubmissionIssues(result.issues ?? []),
+      });
       if (commands === null) return false;
       execute(commands);
       return true;
@@ -1325,29 +1373,31 @@ function includeNativeValidation(
   return !form.noValidate && !isFormNoValidateSubmitter(submitter);
 }
 
+function resolveRelatedFieldIDs<ID extends StableID>(
+  state: FormState<ID>,
+  paths: readonly FormFieldPath[],
+  owner: ID | null,
+): readonly ID[] {
+  const ids = new Set<ID>();
+  for (const path of paths) {
+    const id = getFormFieldIDByPath(state, path);
+    if (id !== null && id !== owner) ids.add(id);
+  }
+  return Object.freeze([...ids]);
+}
+
 function safeEncodeFormFieldPath(path: FormFieldPath): string | null {
   const result = tryCreateFormFieldPath(path);
   return result.ok ? encodeFormFieldPath(result.value) : null;
 }
 
-function findIssueOwner<ID extends StableID>(
-  state: FormState<ID>,
-  issueName: string,
-): FormFieldState<ID> | undefined {
-  let owner: FormFieldState<ID> | undefined;
-  for (const candidate of state.fields) {
-    if (candidate.name === null || !ownsIssuePath(candidate.name, issueName)) continue;
-    if (owner === undefined || candidate.name.length > (owner.name?.length ?? 0)) {
-      owner = candidate;
-    }
-  }
-  return owner;
-}
-
-function ownsIssuePath(fieldName: string, issueName: string): boolean {
-  return issueName === fieldName
-    || issueName.startsWith(`${fieldName}.`)
-    || issueName.startsWith(`${fieldName}[`);
+function summaryMessage<ID extends StableID>(
+  issues: readonly FormIssue<ID>[],
+  failure: FormSubmissionFailure | null,
+): string {
+  return [failure?.message, ...issues.map((issue) => issue.message)]
+    .filter((message): message is string => message !== undefined)
+    .join(' ');
 }
 
 function isPromiseLike<T>(value: T | PromiseLike<T> | null): value is PromiseLike<T> {
@@ -1383,7 +1433,7 @@ function standardSchemaPath(
 }
 
 function orderedIssues<ID extends StableID>(state: FormState<ID>): readonly FormIssue<ID>[] {
-  return [...state.fields.flatMap((field) => field.issues), ...state.issues];
+  return state.allIssues;
 }
 
 function reorderParticipants<ID extends StableID>(

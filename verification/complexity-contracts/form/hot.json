@@ -105,7 +105,7 @@
       "benchmarkIDs": [
         "VAL-030:form-field-update-work"
       ],
-      "specificationCeiling": "O(fField/64 + 64 + iFieldIssue)",
+      "specificationCeiling": "O(iIssue + rAffected + aField*(fField/64 + 64 + iFieldIssue))",
       "contract": {
         "variables": [
           {
@@ -122,31 +122,113 @@
             "name": "iIssue",
             "meaning": "all retained form issues",
             "ceiling": "maxIssues"
+          },
+          {
+            "name": "rAffected",
+            "meaning": "primary and related field references touched by the changed issue set",
+            "ceiling": "rAffected <= rRelation"
+          },
+          {
+            "name": "rRelation",
+            "meaning": "all retained primary and related issue-to-field references",
+            "ceiling": "maxIssueFieldRelations"
+          },
+          {
+            "name": "aField",
+            "meaning": "fields receiving a changed direct or related issue projection",
+            "ceiling": "aField <= fField"
           }
         ],
         "time": {
-          "bound": "O(fField/64 + 64 + iFieldIssue)",
+          "bound": "O(iIssue + rAffected + aField*(fField/64 + 64 + iFieldIssue))",
           "kind": "worst-case",
           "runtimeState": "trusted"
         },
         "space": {
-          "auxiliary": "O(fField/64 + 64 + iFieldIssue)",
-          "output": "O(1)",
-          "retained": "O(fField + iIssue)"
+          "auxiliary": "O(iIssue + rAffected + aField + fField/64 + iFieldIssue)",
+          "output": "O(iIssue)",
+          "retained": "O(fField + iIssue + rRelation)"
         },
         "resources": {
-          "allocations": "O(fField/64 + 64 + iFieldIssue)",
-          "cacheEntries": "O(fField + iIssue)",
+          "allocations": "O(iIssue + rAffected + aField + fField/64 + iFieldIssue)",
+          "cacheEntries": "O(fField + iIssue + rRelation)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "The retained ID index resolves one field, then one 64-entry chunk and the outer chunk vector are copied; issue ownership/source indexes are updated only for the changed field's issues.",
-        "adversarialWitness": "One field metadata or issue change in a 10k-field canonical form copies one chunk and the 157-entry chunk vector without visiting unrelated field records.",
+        "proof": "The retained ID and relation indexes resolve the changed issue owner and related fields. Only their 64-entry chunks and the outer chunk vector are copied; the observable allIssues output and its indexes are materialized once.",
+        "adversarialWitness": "One related issue change in a 10k-field canonical form copies only associated field chunks and the canonical issue output without visiting unrelated field records.",
         "fullScan": {
           "allowed": false,
-          "rationale": "Canonical single-field updates use the retained index and chunk path."
+          "rationale": "Canonical single-field updates use retained owner and relation indexes; only the explicit allIssues output scans retained issues."
+        }
+      }
+    },
+    {
+      "id": "issues.clear-related-server",
+      "inherits": "linear-v1",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": [
+        "VAL-033:form-related-server-issue-clear-work"
+      ],
+      "specificationCeiling": "O(iIssue + rAffected + aField*(fField/64 + 64 + iFieldIssue))",
+      "contract": {
+        "variables": [
+          {
+            "name": "iIssue",
+            "meaning": "all retained canonical Form issues copied into the changed allIssues snapshot",
+            "ceiling": "maxIssues"
+          },
+          {
+            "name": "rAffected",
+            "meaning": "primary and related field references owned by removed server issues",
+            "ceiling": "rAffected <= rRelation"
+          },
+          {
+            "name": "rRelation",
+            "meaning": "all retained primary and related issue-to-field references",
+            "ceiling": "maxIssueFieldRelations"
+          },
+          {
+            "name": "aField",
+            "meaning": "fields losing a direct or related server issue",
+            "ceiling": "aField <= fField"
+          },
+          {
+            "name": "fField",
+            "meaning": "registered field count",
+            "ceiling": "maxFields"
+          },
+          {
+            "name": "iFieldIssue",
+            "meaning": "direct and related issues projected onto one affected field",
+            "ceiling": "maxIssues"
+          }
+        ],
+        "time": {
+          "bound": "O(iIssue + rAffected + aField*(fField/64 + 64 + iFieldIssue))",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(iIssue + rAffected + aField + fField/64)",
+          "output": "O(iIssue)",
+          "retained": "O(fField + iIssue + rRelation)"
+        },
+        "resources": {
+          "allocations": "O(iIssue + rAffected + aField + fField/64)",
+          "cacheEntries": "O(fField + iIssue + rRelation)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "The field-to-server-issue inverse index identifies removed issue IDs directly. Only their primary and related fields copy field chunks; the canonical allIssues array is materialized once because its observable full output changes.",
+        "adversarialWitness": "Changing one field in a 10k-field Form with one related server issue updates only associated field chunks and the one canonical issue output without scanning unrelated fields.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "The changed immutable allIssues array is an explicit full output snapshot; registered fields are not scanned."
         }
       }
     },
@@ -157,7 +239,7 @@
       "benchmarkIDs": [
         "VAL-031:form-source-issue-replacement-work"
       ],
-      "specificationCeiling": "O(iIncoming + iRemoved + jField*(fField/64 + 64 + iFieldIssue))",
+      "specificationCeiling": "O(iIssue + iIncoming + iRemoved + rAffected + aField*(fField/64 + 64 + iFieldIssue))",
       "contract": {
         "variables": [
           {
@@ -171,9 +253,19 @@
             "ceiling": "maxIssues"
           },
           {
-            "name": "jField",
-            "meaning": "fields losing or receiving source issues",
-            "ceiling": "jField <= fField"
+            "name": "rAffected",
+            "meaning": "primary and related field references touched by replaced source issues",
+            "ceiling": "rAffected <= rRelation"
+          },
+          {
+            "name": "rRelation",
+            "meaning": "all retained primary and related issue-to-field references",
+            "ceiling": "maxIssueFieldRelations"
+          },
+          {
+            "name": "aField",
+            "meaning": "fields losing or receiving direct or related source issues",
+            "ceiling": "aField <= fField"
           },
           {
             "name": "fField",
@@ -192,28 +284,28 @@
           }
         ],
         "time": {
-          "bound": "O(iIncoming + iRemoved + jField*(fField/64 + 64 + iFieldIssue))",
+          "bound": "O(iIssue + iIncoming + iRemoved + rAffected + aField*(fField/64 + 64 + iFieldIssue))",
           "kind": "worst-case",
           "runtimeState": "trusted"
         },
         "space": {
-          "auxiliary": "O(iIncoming + iRemoved + jField + fField/64)",
-          "output": "O(iIncoming)",
-          "retained": "O(fField + iIssue)"
+          "auxiliary": "O(iIssue + iIncoming + iRemoved + rAffected + aField + fField/64)",
+          "output": "O(iIssue + iIncoming)",
+          "retained": "O(fField + iIssue + rRelation)"
         },
         "resources": {
-          "allocations": "O(iIncoming + iRemoved + jField + fField/64)",
-          "cacheEntries": "O(fField + iIssue)",
+          "allocations": "O(iIssue + iIncoming + iRemoved + rAffected + aField + fField/64)",
+          "cacheEntries": "O(fField + iIssue + rRelation)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Retained source-owner indexes enumerate only affected fields; incoming issues are partitioned once and changed chunks are copied once per batch.",
-        "adversarialWitness": "Replacing one source affecting one field in a 10k-field form does not visit the other 9,999 field records.",
+        "proof": "Retained source-owner and issue-relation indexes enumerate only affected fields; incoming and retained issues rebuild the explicit allIssues output once while changed field chunks are copied by ID.",
+        "adversarialWitness": "Replacing one source affecting two related fields in a 10k-field form rebuilds the issue output and copies only those field chunks without visiting the other 9,998 field records.",
         "fullScan": {
           "allowed": false,
-          "rationale": "Source-wide replacement is proportional to source issues, affected fields, and the bounded chunk path."
+          "rationale": "Source-wide replacement is proportional to retained and incoming issues, affected relations, and bounded chunk paths; registered fields are not scanned."
         }
       }
     },

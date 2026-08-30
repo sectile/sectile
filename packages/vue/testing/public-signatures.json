@@ -311,7 +311,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "09c26a8d6a8d1f0bbc34822889ef4fba1320bd5adff46c93562fbb782960225e",
+  "fingerprint": "6f5e730b11279ad66dda181c42736363eda02fd5a68b916f73ee6c35a50a9842",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -415,7 +415,7 @@
     },
     {
       "path": "dist/form.d.ts",
-      "sha256": "6a8a12827c114c2128de79c01b8661af6fed04ada484d9459309ecc7ec5b7e58"
+      "sha256": "36ea3f12356c8291303a06bf89f91837b7c5b4079d9179d1bd2e0202a5691790"
     },
     {
       "path": "dist/grid.d.ts",
@@ -463,7 +463,7 @@
     },
     {
       "path": "dist/internal/virtual-collection-model.d.ts",
-      "sha256": "db858bf7e49f75f2ebde6a717da78babf49085e44f4b91b58c36cdd3650797f0"
+      "sha256": "580a09cfc2d33da017db9b4be1235c308e2ab1395e21bd04634b9a52470ed536"
     },
     {
       "path": "dist/internal/virtual-collection.d.ts",

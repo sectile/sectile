@@ -21,6 +21,17 @@ const submission = defineFormSubmission({
     values.userId satisfies number;
     values.email satisfies string;
     reinitialize({ preserve: { touched: true } });
+    if (values.userId === 0) {
+      return {
+        ok: false as const,
+        failure: { message: 'Please try again.' },
+        issues: [{
+          message: 'Check the account.',
+          relatedPaths: ['email'],
+        }],
+      };
+    }
+    return { ok: true as const };
   },
 });
 

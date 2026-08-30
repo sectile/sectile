@@ -112,7 +112,7 @@ const resetExample = async (reinitialize: () => void): Promise<void> => {
     :ko-sources="koFormPackageExampleSources"
   >
     <FormRoot
-      v-slot="{ state, dirty, touched, valid, submissionStatus, submitCount, reinitialize }"
+      v-slot="{ dirty, touched, valid, submission, reinitialize }"
       v-bind="submission"
       class="form-workbench"
       autocomplete="off"
@@ -123,12 +123,7 @@ const resetExample = async (reinitialize: () => void): Promise<void> => {
           <p>{{ copy.description }}</p>
         </header>
 
-        <FormSummary
-          v-if="state.issues.length > 0"
-          class="form-workbench__summary"
-        >
-          {{ state.issues.map((issue) => issue.message).join(' ') }}
-        </FormSummary>
+        <FormSummary class="form-workbench__summary" />
 
         <div :key="controlRevision" class="form-workbench__fields">
           <FormField :name="['profile', 'displayName']" required class="form-workbench__field">
@@ -190,9 +185,9 @@ const resetExample = async (reinitialize: () => void): Promise<void> => {
             </FormReset>
             <FormSubmit
               class="form-workbench__submit"
-              :disabled="!dirty || submissionStatus === 'submitting'"
+              :disabled="!dirty || submission.status === 'submitting'"
             >
-              {{ submissionStatus === 'submitting' ? copy.saving : copy.save }}
+              {{ submission.status === 'submitting' ? copy.saving : copy.save }}
             </FormSubmit>
           </div>
         </div>
@@ -217,12 +212,12 @@ const resetExample = async (reinitialize: () => void): Promise<void> => {
             <dd :data-active="valid ? '' : undefined">{{ valid }}</dd>
           </div>
           <div class="form-workbench__state-row--stacked">
-            <dt>submissionStatus</dt>
-            <dd :data-active="submissionStatus !== 'idle' ? '' : undefined">{{ submissionStatus }}</dd>
+            <dt>submission.status</dt>
+            <dd :data-active="submission.status !== 'idle' ? '' : undefined">{{ submission.status }}</dd>
           </div>
           <div>
-            <dt>submitCount</dt>
-            <dd :data-active="submitCount > 0 ? '' : undefined">{{ submitCount }}</dd>
+            <dt>submission.count</dt>
+            <dd :data-active="submission.count > 0 ? '' : undefined">{{ submission.count }}</dd>
           </div>
         </dl>
       </aside>

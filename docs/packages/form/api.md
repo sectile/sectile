@@ -119,14 +119,14 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 <dt><code>mapSubmitError</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormSubmitErrorMapper</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
-<p>Maps a thrown or rejected submission error to safe application-facing issues.</p>
+<p>Maps a thrown or rejected submission error to a safe application-facing failure.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>onSubmit</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormSubmitHandler&lt;Output&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
-<p>Handles a validated native submission and may report asynchronous success or server issues.</p>
+<p>Handles a validated native submission and may report success, a submission failure, or server issues.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -325,17 +325,17 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>submissionStatus</code></dt>
+<dt><code>submission</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['submissionStatus']</code></span></div>
-<p>Current submission lifecycle.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['submission']</code></span></div>
+<p>Current submission lifecycle snapshot.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>submitCount</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
-<p>Number of submission attempts.</p>
+<p>Number of submission attempts derived from submission.count.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -381,24 +381,10 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>validationIntent</code></dt>
+<dt><code>validation</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['validationIntent']</code></span></div>
-<p>Whether current validation uses interaction or submission rules.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>validationStatus</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['validationStatus']</code></span></div>
-<p>Current validation lifecycle.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>validationTrigger</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['validationTrigger']</code></span></div>
-<p>Event that started the current or latest validation run.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['validation']</code></span></div>
+<p>Current validation lifecycle snapshot.</p>
 </dd>
 </div>
 </dl>
@@ -452,7 +438,7 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 <dt><code>issues</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormIssue[]</code></span></div>
-<p>Current validation issues.</p>
+<p>Current canonical validation issues.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -467,6 +453,13 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
 <p>ID assigned to the field error message.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>relatedIssues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormIssue[]</code></span></div>
+<p>Issues owned elsewhere that also make this field invalid.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -517,10 +510,45 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 
 <dl class="component-api-definitions component-api-definitions--slots">
 <div class="component-api-definition">
+<dt><code>firstIssue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormIssue | null</code></span></div>
+<p>First canonical issue, or null.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>issues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormIssue[]</code></span></div>
+<p>Current canonical validation issues.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>serverIssues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormIssue[]</code></span></div>
+<p>Current canonical server issues.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submission</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['submission']</code></span></div>
+<p>Current submission lifecycle snapshot.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>valid</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
 <p>Whether current validation has no issues.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validation</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['validation']</code></span></div>
+<p>Current validation lifecycle snapshot.</p>
 </dd>
 </div>
 </dl>
@@ -536,10 +564,10 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>submissionStatus</code></dt>
+<dt><code>submission</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['submissionStatus']</code></span></div>
-<p>Current submission lifecycle.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['submission']</code></span></div>
+<p>Current submission lifecycle snapshot.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -662,6 +690,7 @@ type FormSchemaOutput<Schema extends FormSchema> = Schema extends DOMFormSchema<
 | `id` | `string` | — |
 | `message` | `string` | Yes |
 | `path` | `FormFieldPath` | — |
+| `relatedPaths` | `readonly FormFieldPath[]` | — |
 
 #### `FormSubmitIssue`
 
@@ -675,7 +704,11 @@ type FormSubmitIssue = FormIssueInput
 type FormSubmitResult =
 | void
   | { readonly ok: true }
-  | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] }
+  | {
+      readonly ok: false;
+      readonly failure?: FormSubmissionFailure;
+      readonly issues?: readonly FormSubmitIssue[];
+    }
 ```
 
 #### `FormSubmitHandler`
@@ -704,7 +737,7 @@ type FormSubmitHandler<Values extends object = Record<string, unknown>> = (event
 type FormSubmitErrorMapper =
 (
   reason: unknown,
-) => FormSubmitIssue | readonly FormSubmitIssue[] | undefined
+) => FormSubmissionFailure | undefined
 ```
 
 #### `FormResetHandler`
@@ -761,7 +794,10 @@ type FormSubmitSucceededAction = (generation: number) => boolean
 type FormSubmitFailedAction =
 (
   generation: number,
-  issues?: readonly FormIssue[],
+  result: {
+    readonly failure?: FormSubmissionFailure;
+    readonly issues?: readonly FormIssue[];
+  },
 ) => boolean
 ```
 

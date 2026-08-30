@@ -33,12 +33,12 @@
       "removalReason": "Programmatic text transitions use handleEvent or send; handleBeforeInput is reserved for observing native beforeinput without cancellation."
     },
     {
-      "id": "WI-028:granular-form-subscriptions",
+      "id": "WI-047:dom-form-outcomes",
       "change": "signature-changed",
       "before": { "subpath": "./form" },
-      "symbols": ["FormConnection.subscribe", "FormConnection field mutation surface"],
+      "symbols": ["FormConnection.subscribe", "FormConnection field mutation surface", "FormValidationIssue", "FormSubmitResult", "FormSubmitErrorMapper", "FormSubmitFailureResult", "FormConnection.submitFailed", "FormAnnounceSummaryHandler"],
       "replacement": { "package": "@sectile/dom", "subpath": "./form" },
-      "removalReason": "Use subscribeForm or subscribeField and the typed get/set/issue methods; whole-state subscription overloads are removed."
+      "removalReason": "Use granular subscriptions and typed field methods, relatedPaths for multi-field validation, failure for submission-level errors, and issues only for invalid input."
     },
     {
       "id": "WI-036:alert-dialog-positioning-surface",

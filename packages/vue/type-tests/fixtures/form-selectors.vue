@@ -5,6 +5,7 @@ import {
   FormRoot,
   FormSelector,
   FormSubmit,
+  FormSummary,
   useFormFieldController,
   useFormFieldSelector,
   useFormSelector,
@@ -33,7 +34,7 @@ email.setMeta({ valid: false });
     <FormField id="email">
       <input>
     </FormField>
-    <FormSelector :select="state => state.submissionStatus" v-slot="{ selected }">
+    <FormSelector :select="state => state.submission.status" v-slot="{ selected }">
       <output>{{ selected.toUpperCase() }}</output>
     </FormSelector>
     <FormFieldSelector id="email" :select="field => field?.issues ?? []" v-slot="{ selected }">
@@ -44,5 +45,12 @@ email.setMeta({ valid: false });
       {{ submitting.valueOf() }}
       {{ canSubmit.valueOf() }}
     </FormSubmit>
+    <FormSummary v-slot="{ validation, submission, issues, serverIssues, firstIssue }">
+      {{ validation.status }}
+      {{ submission.failure?.message }}
+      {{ issues.length }}
+      {{ serverIssues.length }}
+      {{ firstIssue?.message }}
+    </FormSummary>
   </FormRoot>
 </template>

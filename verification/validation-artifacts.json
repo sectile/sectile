@@ -80,6 +80,12 @@
     "WI-040": [
       { "path": "packages/dom/tests/virtual.test.mjs", "contains": "one mutation and publication" },
       { "path": "packages/vue/tests/virtual.dom.test.mjs", "contains": "equalState" }
+    ],
+    "WI-047": [
+      { "path": "packages/form/tests/state/form.test.mjs", "contains": "multi-field server issues stay canonical" },
+      { "path": "packages/dom/tests/form.test.mjs", "contains": "clears one canonical multi-field server issue" },
+      { "path": "packages/vue/tests/form.dom.test.mjs", "contains": "FormSummary keeps one multi-field issue" },
+      { "path": "verification/consumer-install/form.mjs", "contains": "state.submission.failure satisfies" }
     ]
   }
 }

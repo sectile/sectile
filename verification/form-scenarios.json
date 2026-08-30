@@ -177,6 +177,25 @@
         { "file": "verification/consumer-install/form.mjs", "contains": "Form packed consumers passed: direct, optional-peer, DOM, Vue, typing, and Terminal absence" },
         { "file": "packages/terminal/tests/factory-api.test.mjs", "test": "terminal has no Form package surface or dependency edge" }
       ]
+    },
+    {
+      "id": 22,
+      "description": "One canonical issue can invalidate a primary field and related fields, focus the primary owner, and clear after an associated server value changes.",
+      "evidence": [
+        { "file": "packages/form/tests/state/form.test.mjs", "test": "multi-field submit issues focus their primary field before earlier related fields" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form clears one canonical multi-field server issue on related input" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "Vue FormSummary keeps one multi-field issue and exposes related-field ARIA state" }
+      ]
+    },
+    {
+      "id": 23,
+      "description": "Submission failures remain independent from validation issues and Vue exposes cohesive lifecycle and summary projections.",
+      "evidence": [
+        { "file": "packages/form/tests/state/form.test.mjs", "test": "submission failures do not create validation issues or move field focus" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "Vue Form owns async submission success and failure lifecycle" },
+        { "file": "packages/vue/type-tests/fixtures/form-selectors.vue", "contains": "serverIssues" },
+        { "file": "verification/consumer-install/form.mjs", "contains": "state.submission.failure satisfies" }
+      ]
     }
   ]
 }

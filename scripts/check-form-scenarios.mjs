@@ -6,7 +6,7 @@ assert.equal(manifest.schemaVersion, 1, 'Unsupported Form scenario schema.');
 assert.ok(Array.isArray(manifest.scenarios), 'Form scenarios must be an array.');
 assert.deepEqual(
   manifest.scenarios.map(({ id }) => id),
-  Array.from({ length: 21 }, (_, index) => index + 1),
+  Array.from({ length: 23 }, (_, index) => index + 1),
   'Form scenarios must cover the specification exactly once and in order.',
 );
 
@@ -29,4 +29,4 @@ for (const scenario of manifest.scenarios) {
   }
 }
 
-console.log('Form scenario contract: all 21 specification scenarios have executable evidence');
+console.log('Form scenario contract: all 23 specification scenarios have executable evidence');

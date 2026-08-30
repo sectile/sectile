@@ -119,14 +119,14 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 <dt><code>mapSubmitError</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormSubmitErrorMapper</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>제출 중 throw 또는 reject된 오류를 사용자에게 노출해도 되는 이슈로 변환하는 함수입니다.</p>
+<p>제출 중 throw 또는 reject된 오류를 사용자에게 노출해도 되는 failure로 변환하는 함수입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>onSubmit</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormSubmitHandler&lt;Output&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>검증을 통과한 네이티브 제출을 처리하고 비동기 성공 또는 서버 이슈를 반환하는 함수입니다.</p>
+<p>검증을 통과한 네이티브 제출을 처리하고 성공, 제출 failure 또는 서버 이슈를 반환하는 함수입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -325,17 +325,17 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>submissionStatus</code></dt>
+<dt><code>submission</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['submissionStatus']</code></span></div>
-<p>현재 제출 생명주기입니다.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['submission']</code></span></div>
+<p>현재 제출 생명주기 스냅샷입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>submitCount</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span></div>
-<p>제출을 시도한 횟수입니다.</p>
+<p>submission.count에서 계산한 제출 시도 횟수입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -381,24 +381,10 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>validationIntent</code></dt>
+<dt><code>validation</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['validationIntent']</code></span></div>
-<p>현재 검증이 입력 과정용인지 최종 제출용인지 나타냅니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>validationStatus</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['validationStatus']</code></span></div>
-<p>현재 검증 생명주기입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>validationTrigger</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['validationTrigger']</code></span></div>
-<p>현재 또는 최근 검증을 시작한 이벤트입니다.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['validation']</code></span></div>
+<p>현재 검증 생명주기 스냅샷입니다.</p>
 </dd>
 </div>
 </dl>
@@ -452,7 +438,7 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 <dt><code>issues</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormIssue[]</code></span></div>
-<p>현재 검증 이슈입니다.</p>
+<p>현재 canonical 검증 이슈입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -467,6 +453,13 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
 <p>필드 오류 메시지에 지정한 ID입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>relatedIssues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormIssue[]</code></span></div>
+<p>다른 필드가 소유하지만 현재 필드도 무효로 만드는 이슈입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -517,10 +510,45 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 
 <dl class="component-api-definitions component-api-definitions--slots">
 <div class="component-api-definition">
+<dt><code>firstIssue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormIssue | null</code></span></div>
+<p>첫 canonical 이슈이며 없으면 null입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>issues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormIssue[]</code></span></div>
+<p>현재 canonical 검증 이슈입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>serverIssues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormIssue[]</code></span></div>
+<p>현재 canonical 서버 이슈입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submission</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['submission']</code></span></div>
+<p>현재 제출 생명주기 스냅샷입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>valid</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
 <p>현재 입력의 검증 통과 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validation</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['validation']</code></span></div>
+<p>현재 검증 생명주기 스냅샷입니다.</p>
 </dd>
 </div>
 </dl>
@@ -536,10 +564,10 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>submissionStatus</code></dt>
+<dt><code>submission</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['submissionStatus']</code></span></div>
-<p>현재 제출 생명주기입니다.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['submission']</code></span></div>
+<p>현재 제출 생명주기 스냅샷입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -662,6 +690,7 @@ type FormSchemaOutput<Schema extends FormSchema> = Schema extends DOMFormSchema<
 | `id` | `string` | — |
 | `message` | `string` | 필수 |
 | `path` | `FormFieldPath` | — |
+| `relatedPaths` | `readonly FormFieldPath[]` | — |
 
 #### `FormSubmitIssue`
 
@@ -675,7 +704,11 @@ type FormSubmitIssue = FormIssueInput
 type FormSubmitResult =
 | void
   | { readonly ok: true }
-  | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] }
+  | {
+      readonly ok: false;
+      readonly failure?: FormSubmissionFailure;
+      readonly issues?: readonly FormSubmitIssue[];
+    }
 ```
 
 #### `FormSubmitHandler`
@@ -704,7 +737,7 @@ type FormSubmitHandler<Values extends object = Record<string, unknown>> = (event
 type FormSubmitErrorMapper =
 (
   reason: unknown,
-) => FormSubmitIssue | readonly FormSubmitIssue[] | undefined
+) => FormSubmissionFailure | undefined
 ```
 
 #### `FormResetHandler`
@@ -761,7 +794,10 @@ type FormSubmitSucceededAction = (generation: number) => boolean
 type FormSubmitFailedAction =
 (
   generation: number,
-  issues?: readonly FormIssue[],
+  result: {
+    readonly failure?: FormSubmissionFailure;
+    readonly issues?: readonly FormIssue[];
+  },
 ) => boolean
 ```
 

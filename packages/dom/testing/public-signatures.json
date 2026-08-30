@@ -279,7 +279,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "d0c956158772eaf4a1b02eb4ebc1153a754c1e23c3bf2d1a3857aeb24dc34e99",
+  "fingerprint": "cb341ebd6b25b3ff346e024f46533cb49f69293345bce736f8eb049a676458e2",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -383,7 +383,7 @@
     },
     {
       "path": "dist/form.d.ts",
-      "sha256": "ffa4ca90ea8e099b15bf8cabb0f034c118d07d96002ba5dec4a5460b384e9db1"
+      "sha256": "c8976ae697a3c82ea519d823d27b5274ee67d31be61aa0b7b37c44a23014cd90"
     },
     {
       "path": "dist/grid.d.ts",
@@ -551,7 +551,7 @@
     },
     {
       "path": "dist/text.d.ts",
-      "sha256": "8062cd6496dd34b3cfcd3cbcb84e9dba7efedb33a45fd505033695e5af7cba2d"
+      "sha256": "67b435328afc7426cf64694d66296eb28f8c3023317cf585bdf27eb8fec6afdd"
     },
     {
       "path": "dist/time-field.d.ts",
