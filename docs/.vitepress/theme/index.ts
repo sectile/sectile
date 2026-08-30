@@ -9,6 +9,7 @@ import '@xterm/xterm/css/xterm.css';
 
 const docsComponents = {
   BashTerminal: defineAsyncComponent(() => import('./components/BashTerminal.vue')),
+  ChartPackageExample: defineAsyncComponent(() => import('./components/ChartPackageExample.vue')),
   ComponentCatalog: defineAsyncComponent(() => import('./components/ComponentCatalog.vue')),
   ComponentExample: defineAsyncComponent(() => import('./components/ComponentExample.vue')),
   DocsHome: defineAsyncComponent(() => import('./components/DocsHome.vue')),

@@ -108,6 +108,9 @@ importers:
       '@lucide/vue':
         specifier: ^1.33.0
         version: 1.33.0(vue@3.5.41(typescript@6.0.3))
+      '@sectile/chart':
+        specifier: workspace:*
+        version: link:../packages/chart
       '@sectile/core':
         specifier: workspace:*
         version: link:../packages/core

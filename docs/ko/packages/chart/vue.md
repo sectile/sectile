@@ -1,56 +1,98 @@
 ---
 title: Vue Chart 구성
-description: Vue ref로 차트 상태를 소유하고 headless ChartRoot를 DOM 렌더링에 연결합니다.
+description: 반응형 차트를 렌더링하고 모델 변경과 차트 상태를 Vue에서 제어합니다.
 ---
 
-# Vue Chart 구성
+<script setup>
+import ChartPackageExample from '../../../.vitepress/theme/components/ChartPackageExample.vue'
+</script>
 
-Chart subpath를 사용할 때만 Chart를 설치합니다. Chart는 두 host package의 optional peer입니다.
+# Vue 구성
+
+`@sectile/vue/chart`는 headless root, canvas, composable을 제공합니다. Vue 반응성은 framework 경계에서 다루고, 차트 모델과 상호작용 동작은 다른 환경에서도 사용할 수 있게 유지합니다.
+
+<ChartPackageExample kind="line" />
+
+## 설치
 
 ```sh
 pnpm add vue @sectile/chart @sectile/dom @sectile/vue
 ```
 
-## Composable
+Chart는 DOM과 Vue 패키지의 선택적 peer입니다. 이 의존성은 Chart 진입점을 가져오는 애플리케이션에만 필요합니다.
 
-`useChart()`는 ref, getter 또는 일반 model을 받습니다. Controlled 값에는 writable ref를, controller가 소유할 상태에는 `default*` 값을 전달합니다.
-
-```ts
-import { shallowRef } from 'vue'
-import { useChart } from '@sectile/vue/chart'
-
-const selection = shallowRef({ type: 'points' as const, ids: [] })
-const chart = useChart({
-  model: () => props.model,
-  selection,
-  onCommand(command) {
-    audit(command)
-  },
-})
-
-chart.dispatch({ type: 'zoom', x: 320, y: 180, factor: 1.2 })
-```
-
-결과는 controller, revision snapshot, 현재 projection과 DOM connection을 shallow ref로 제공하고 replacement, patch, dispatch, sync, dispose method를 제공합니다. Vue effect scope가 있으면 소유한 controller를 자동으로 dispose합니다.
-
-## Component
+## 차트 렌더링하기
 
 ```vue
 <script setup lang="ts">
-import { ChartRoot, ChartCanvas } from '@sectile/vue/chart'
+import type { ChartModel } from '@sectile/chart/model'
+import { ChartCanvas, ChartRoot } from '@sectile/vue/chart'
 
-const options = { model: () => model.value }
+const model = {
+  layers: [{
+    id: 'revenue',
+    profile: 'ordered-series',
+    data: [
+      { id: 'jan', x: 1, y: 32 },
+      { id: 'feb', x: 2, y: 41 },
+      { id: 'mar', x: 3, y: 38 },
+    ],
+  }],
+} satisfies ChartModel<string>
+
+const options = { model }
 </script>
 
 <template>
-  <ChartRoot :options="options" class="chart">
+  <ChartRoot
+    :options="options"
+    :dom="{ accessibilityLabel: '월별 매출' }"
+    class="chart"
+  >
+    <ChartCanvas />
+  </ChartRoot>
+</template>
+
+<style scoped>
+.chart { position: relative; height: 22rem; }
+.chart canvas { width: 100%; height: 100%; }
+</style>
+```
+
+`options.model`에는 ref, computed 값, getter, 일반 모델을 전달할 수 있습니다. 반응형 값을 교체하면 기존 차트가 갱신되고 선택과 cursor의 ID도 새 데이터에 맞게 정리됩니다.
+
+## 선택과 화면 제어하기
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+
+const selection = ref({ type: 'points' as const, ids: [] as string[] })
+const viewTransform = ref({ xScale: 1, yScale: 1, xOffset: 0, yOffset: 0 })
+</script>
+
+<template>
+  <ChartRoot
+    v-model="selection"
+    v-model:view-transform="viewTransform"
+    :options="options"
+  >
     <ChartCanvas />
   </ChartRoot>
 </template>
 ```
 
-`ChartRoot`는 `options` 또는 외부 소유 `controller` 중 정확히 하나를 받습니다. Default slot은 controller, snapshot, state와 projection을 제공합니다. `ChartCanvas`는 DOM connection이 쓸 canvas를 등록합니다. 두 component 모두 style을 정하지 않고 안정적인 `data-scope="chart"`와 `data-part`를 제공합니다.
+`v-model`은 선택을 제어합니다. `v-model:cursor`와 `v-model:view-transform`은 키보드 focus와 이동·확대를 제어합니다. `options` 안에 같은 값을 위한 writable ref를 함께 전달하면 안 됩니다.
 
-`options`를 쓸 때는 `v-model`, `v-model:cursor`, `v-model:view-transform`으로 component 수준 controlled ownership을 구성할 수 있습니다. 같은 값의 writable ref를 `options`에도 중복 전달하면 안 됩니다. 외부 소유 controller는 그 소유자가 값을 sync하고 ChartRoot는 host와 update event만 제공합니다.
+## Slot에서 차트 상태 읽기
 
-DOM connection과 renderer는 mount 이후에만 생성되므로 setup은 SSR-safe합니다. Hydration을 결정적으로 유지하려면 server와 client에 같은 model과 초기 controlled 값을 제공해야 합니다.
+```vue
+<ChartRoot v-slot="{ state, controller, projection }" :options="options">
+  <ChartCanvas />
+  <output>{{ state.activeDatum }}</output>
+</ChartRoot>
+```
+
+기본 slot은 컨트롤러, revision snapshot, 현재 상태, 최신 투영을 제공합니다. 툴팁, 범례, 상태 문구처럼 차트에 반응하는 화면 요소를 만드는 데 사용할 수 있습니다.
+
+컨트롤러가 component tree 밖에 있어야 한다면 `useChart()`를 사용합니다. Vue effect scope는 composable이 소유한 컨트롤러를 자동으로 정리합니다. `ChartRoot`는 mount 뒤에만 브라우저 리소스를 만들므로 SSR에서 안전합니다. 서버와 클라이언트에는 같은 초기 모델과 controlled 값을 전달하세요.

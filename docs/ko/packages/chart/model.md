@@ -1,50 +1,69 @@
 ---
-title: Chart 모델과 scale
-description: Immutable 차트 generation을 검증하고 domain 값을 viewport 좌표로 변환합니다.
+title: Chart 데이터와 스케일
+description: 차트 레이어를 구성하고 안정적인 ID를 선택하며 데이터와 viewport 변환을 다룹니다.
 ---
 
-# 모델과 scale
+# 데이터와 스케일
 
-모든 layer와 datum은 전역에서 고유한 `StableID`를 가집니다. ID는 비어 있지 않은 문자열 또는 safe integer입니다. 응용 프로그램이 이미 조밀한 숫자 ID를 소유한다면 문자열 할당을 피할 수 있습니다. 교체와 patch 이후에도 같은 데이터를 나타내는 ID는 유지해야 합니다.
+차트 모델은 여러 레이어로 이루어집니다. 각 레이어는 하나의 프로필을 선택하고, 각 데이터에는 같은 대상을 나타내는 동안 바뀌지 않는 ID가 필요합니다.
 
 ```ts
-import { createChartModel, applyChartPatch } from '@sectile/chart/model'
+import type { ChartModel } from '@sectile/chart/model'
 
-let model = createChartModel({
+const model = {
   layers: [{
     id: 'revenue',
     profile: 'ordered-series',
     data: [
-      { id: 101, x: 0, y: 12 },
-      { id: 102, x: 1, y: 18 },
+      { id: '2026-01', x: 1, y: 32 },
+      { id: '2026-02', x: 2, y: 41 },
+      { id: '2026-03', x: 3, y: 38 },
     ],
+  }],
+} satisfies ChartModel<string>
+```
+
+ID에는 비어 있지 않은 문자열이나 안전한 정수를 사용할 수 있습니다. 데이터에 안정적인 숫자 키가 이미 있다면 문자열로 바꿀 필요가 없습니다. 레이어와 데이터는 차트 전체에서 같은 ID 공간을 사용하므로 모든 ID가 서로 달라야 합니다.
+
+## 데이터 갱신하기
+
+애플리케이션이 다음 데이터 전체를 받는다면 모델을 교체하면 됩니다. 삽입, 제거, 교체가 작은 작업 단위로 주어질 때는 patch를 적용할 수 있습니다.
+
+```ts
+const result = controller.applyPatch({
+  operations: [{
+    type: 'replace',
+    layerID: 'revenue',
+    index: 2,
+    data: [{ id: '2026-03', x: 3, y: 46 }],
   }],
 })
 
-model = applyChartPatch(model, {
-  expectedGeneration: model.generation,
-  operations: [{ type: 'replace', layerID: 'revenue', index: 1, data: [{ id: 102, x: 1, y: 21 }] }],
-})
+if (!result.ok) showChartError(result.error)
 ```
 
-생성 과정은 상태를 공개하기 전에 모든 좌표, 값, 프로필과 ID를 검증합니다. 실제 변경이 성공하면 `generation`이 증가하고 no-op이면 같은 객체를 유지합니다. `expectedGeneration`은 오래된 patch writer를 부분 변경 없이 거부합니다.
+갱신은 전부 반영되거나, 일부도 공개하지 않은 채 거부됩니다. 여러 작성자가 경쟁할 수 있다면 현재 모델의 generation을 `expectedGeneration`으로 전달해 오래된 patch를 명확하게 거부할 수 있습니다.
 
-기본 상한은 layer 64개, datum 1,000,000개, patch operation 100,000개, 문자열 ID당 UTF-16 code unit 1,024개입니다. `ChartLimits`로 응용 프로그램에 맞는 상한을 지정할 수 있습니다.
+## 스케일 직접 사용하기
 
-## Scale
-
-`/scale` subpath는 linear, logarithmic, temporal, categorical scale을 제공합니다. 각 scale은 `normalize`, `invert`, 제한된 `ticks`를 지원합니다. Tick 요청 상한은 10,000개입니다.
+DOM과 Vue 연결은 viewport 투영을 자동으로 만듭니다. 사용자 정의 축을 만들거나, pointer 좌표를 도메인 값으로 되돌리거나, 직접 투영 과정을 구성할 때 스케일을 가져와 사용하면 됩니다.
 
 ```ts
-import { createLinearScale, createChartViewTransform } from '@sectile/chart/scale'
+import { createLinearScale } from '@sectile/chart/scale'
 
 const x = createLinearScale(
   { minimum: 0, maximum: 100 },
   { start: 0, end: 800 },
 )
 
-const view = createChartViewTransform({ xScale: 2, xOffset: -120 })
+const pixel = x.normalize(25) // 200
+const value = x.invert(200)   // 25
 ```
 
-Scale은 domain에서 viewport로 가는 mapping이고 `ChartViewTransform`은 그 이후 상호작용으로 발생한 pan과 zoom입니다. 둘 다 renderer에 의존하지 않습니다.
+Chart는 선형, 로그, 시간, 범주형 스케일을 제공합니다. 모든 스케일은 도메인 값을 viewport 좌표로 바꾸고, 좌표를 다시 값으로 되돌리며, 개수가 제한된 tick을 만들 수 있습니다.
 
+## 입력 한도
+
+기본값은 레이어 64개, 데이터 1,000,000개, patch 하나당 작업 100,000개까지 허용합니다. 제품의 최대 규모가 더 작다면 한도를 낮춰 두는 편이 좋습니다. 잘못된 좌표, 중복 ID, 프로필과 맞지 않는 필드, 설정한 한도를 넘는 입력은 차트가 바뀌기 전에 거부됩니다.
+
+애플리케이션이 신뢰하는 데이터에는 예외를 던지는 함수를 사용하면 됩니다. 사용자 입력이나 전송 데이터를 해석하는 과정에서 잘못된 값이 예상된다면 대응하는 `try*` 함수를 사용하세요.

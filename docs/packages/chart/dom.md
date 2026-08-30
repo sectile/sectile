@@ -1,38 +1,94 @@
 ---
 title: DOM chart rendering
-description: Connect chart projection and input to WebGL2 or Canvas2D with bounded browser resources.
+description: Connect chart state to an existing element and canvas with accessible browser input.
 ---
 
-# DOM chart rendering
+<script setup>
+import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageExample.vue'
+</script>
 
-`@sectile/dom/chart` connects an existing root and canvas to a Chart controller. It owns resize observation, pointer and keyboard input, animation-frame scheduling, accessibility projection, renderer resources, and cleanup.
+# DOM rendering
+
+`@sectile/dom/chart` connects a chart controller to an existing root element and canvas. It handles sizing, drawing, pointer and keyboard input, accessibility, and cleanup.
+
+<ChartPackageExample kind="bar" host="dom" />
+
+## Install
 
 ```sh
 pnpm add @sectile/chart @sectile/dom
 ```
 
+## Connect a canvas
+
+```html
+<div data-chart style="position: relative; height: 22rem">
+  <canvas style="width: 100%; height: 100%"></canvas>
+</div>
+```
+
 ```ts
+import { createChartController } from '@sectile/chart/controller'
 import { createDOMChart } from '@sectile/dom/chart'
+
+const root = document.querySelector<HTMLElement>('[data-chart]')!
+const canvas = root.querySelector<HTMLCanvasElement>('canvas')!
+const controller = createChartController({ model })
 
 const chart = createDOMChart({
   root,
   canvas,
   controller,
   renderer: 'auto',
-  renderPolicy: {
-    type: 'adaptive',
-    minimumRenderScale: 0.5,
-    maximumRenderScale: 1,
-    frameBudgetMs: 12,
-    maximumRepresentatives: 100_000,
-  },
-  getAccessibleDatumLabel: id => `Datum ${id}`,
+  accessibilityLabel: 'Orders by weekday',
+  getAccessibleDatumLabel: id => orderLabels[id],
 })
 ```
 
-`auto` prefers WebGL2 and falls back to Canvas2D. WebGL2 uses uploaded typed arrays and instancing for rectangles, cells, and analytic arcs. Canvas2D remains the compatibility and diagnostic backend. Rendering is deliberately limited to data marks; the application owns axes, labels, legends, colors, layout, and animation.
+`auto` uses WebGL2 when available and falls back to Canvas2D. Use `canvas2d` to force the compatibility renderer or `webgl2` when the chart must fail instead of falling back.
 
-The fixed policy keeps one render scale. The adaptive policy changes backing resolution within explicit bounds according to frame cost. Both can cap representatives before GPU upload.
+The root needs a real width and height. The connection observes size changes and updates the canvas backing resolution for the device pixel ratio.
 
-The connection batches renders into animation frames, maps pointer coordinates through the current projection, supports keyboard cursor movement and view reset, and exposes a bounded accessible datum list. `flush()` performs queued work synchronously for integration points and tests. `disconnect()` removes listeners and observers, cancels frames, and releases an internally created renderer. A renderer supplied by the application remains application-owned.
+## Style the marks
 
+Create a renderer when the built-in color, point radius, or line width needs to change.
+
+```ts
+import { createChartRenderer } from '@sectile/dom/chart'
+
+const renderer = createChartRenderer(canvas, {
+  mode: 'auto',
+  style: {
+    color: [0.33, 0.41, 0.92, 1],
+    pointRadius: 4,
+    lineWidth: 2,
+  },
+})
+
+const chart = createDOMChart({ root, canvas, controller, renderer })
+```
+
+The built-in renderer applies one style to its data marks. Add axes, labels, legends, and annotations as normal DOM or SVG content around the canvas. Supply a custom `ChartRenderer` when the drawing itself needs per-series colors, fills, or another graphics API.
+
+## Bound the work
+
+Use a fixed policy for a stable backing resolution. Use an adaptive policy when a dense chart should reduce pixel work to stay within a frame budget.
+
+```ts
+renderPolicy: {
+  type: 'adaptive',
+  minimumRenderScale: 0.5,
+  maximumRenderScale: 1,
+  frameBudgetMs: 12,
+  maximumRepresentatives: 100_000,
+}
+```
+
+## Clean up
+
+```ts
+chart.disconnect()
+controller.dispose()
+```
+
+`disconnect()` removes listeners and observers, cancels pending frames, and releases a renderer created by the connection. If you pass a renderer object, it remains yours; call `renderer.disconnect()` as well.

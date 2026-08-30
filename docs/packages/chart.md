@@ -1,45 +1,57 @@
 ---
 title: Chart
-description: Build large interactive charts from immutable data, packed projections, and host-owned rendering.
+description: Build fast, accessible charts with renderer-neutral state and Canvas rendering.
 ---
+
+<script setup>
+import ChartPackageExample from '../.vitepress/theme/components/ChartPackageExample.vue'
+</script>
 
 # Chart
 
-`@sectile/chart` turns finite chart data into immutable interaction state and packed geometry. It owns chart meaning and bounded computation; `@sectile/dom/chart` owns browser input and Canvas resources, while `@sectile/vue/chart` owns Vue reactivity and component lifecycle.
+Sectile Chart provides the data, interaction, and browser behavior for charts without prescribing a visual system. Use the built-in Canvas renderer for data marks, then add the axes, labels, legend, colors, and layout your product needs.
+
+## Try the chart types
+
+Switch between the five built-in data profiles. Hover or select a mark to see the same chart state that application code receives. Open **Code** for a complete Vue example.
+
+<ChartPackageExample />
+
+## Choose a chart type
+
+| What you want to show | Profile | Common charts |
+| --- | --- | --- |
+| Individual `x` and `y` observations | `point` | Scatter plot, bubble chart, dot plot |
+| A sequence of `x` and `y` values | `ordered-series` | Line chart, area boundary, sparkline |
+| A rectangular span | `cartesian-segment` | Bar, column, range bar, waterfall |
+| A row and column position | `grid-cell` | Heatmap, matrix |
+| A share of a whole | `radial-segment` | Pie, donut, radial proportion |
+
+Combine layers when a chart needs more than one shape. Histograms, stacked charts, candlesticks, box plots, and gauges can be prepared as one or more of these profiles. Chart does not currently provide network graphs, maps, contours, 3D scenes, or an unbounded streaming data source.
+
+## Choose an integration
+
+- Use [Vue composition](./chart/vue) for `ChartRoot`, `ChartCanvas`, reactive models, and `v-model` state.
+- Use [DOM rendering](./chart/dom) to connect an existing element and canvas directly.
+- Use `@sectile/chart` alone when you need chart state, projection, and queries without browser rendering.
 
 ```sh
 pnpm add @sectile/chart
 ```
 
-## Choose a profile
+`@sectile/chart` is an optional peer of the DOM and Vue packages. Install it only in applications that use their Chart entry points.
 
-| Profile | Typical charts | Datum fields | Projection |
-| --- | --- | --- | --- |
-| `point` | scatter, bubble, dot plot | `x`, `y` | points |
-| `ordered-series` | line, area boundary, sparkline | ordered `x`, `y` | polyline |
-| `cartesian-segment` | bar, column, range bar, waterfall segment | `x1`, `y1`, `x2`, `y2` | rectangles |
-| `grid-cell` | heatmap, matrix | `column`, `row`, `value` | cells |
-| `radial-segment` | pie, donut, radial proportion | `value`, optional radii | arcs |
+## Learn by task
 
-Area fills, stacked series, candlesticks, box plots, histograms, gauges, and similar charts can be built by deriving one or more supported layers in application code. Network graphs, geographic projections, contours, 3D scenes, streaming ring buffers, and unbounded data sources require additional domain invariants and are not claimed by this package.
+| Task | Guide |
+| --- | --- |
+| Shape input data, choose IDs, and update values | [Data and scales](./chart/model) |
+| Build tooltips, hit testing, or a custom renderer | [Drawing and hit testing](./chart/projection) |
+| Control hover, selection, keyboard focus, pan, and zoom | [Interaction and state](./chart/interaction) |
+| Connect an existing canvas | [DOM rendering](./chart/dom) |
+| Build a chart in a Vue template | [Vue composition](./chart/vue) |
+| Tune a large chart | [Large datasets](./chart/performance) |
 
-## Responsibility boundary
+## What Chart owns
 
-Chart owns stable identities, validation, generations, scales, representative selection, packed projection, exact hit testing, selection, cursor, pan, zoom, and controlled-value commands. It does not own colors, axes, labels, legends, layout chrome, animation, network loading, or rendering resources.
-
-The root import is type-only. Import runtime functions from focused subpaths so consumers pay only for the behavior they use.
-
-```ts
-import { createChartModel } from '@sectile/chart/model'
-import { createChartController } from '@sectile/chart/controller'
-```
-
-## Continue
-
-- [Models and scales](./chart/model)
-- [Projection and queries](./chart/projection)
-- [Interaction and controller](./chart/interaction)
-- [DOM rendering](./chart/dom)
-- [Vue composition](./chart/vue)
-- [Performance contract](./chart/performance)
-
+Chart owns stable data identity, validation, selection, keyboard cursor, pan, zoom, hit testing, and bounded drawing work. Your application owns data loading, visual design, axes, labels, legends, annotations, layout, and animation.

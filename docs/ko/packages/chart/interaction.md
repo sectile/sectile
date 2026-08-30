@@ -1,29 +1,60 @@
 ---
-title: Chart 상호작용과 controller
-description: Selection, cursor, active datum, pan과 zoom을 명시적인 controlled ownership으로 조합합니다.
+title: Chart 상호작용과 상태
+description: hover, 선택, 키보드 focus, 이동과 확대를 하나의 명시적인 차트 상태로 다룹니다.
 ---
 
-# 상호작용과 controller
+<script setup>
+import ChartPackageExample from '../../../.vitepress/theme/components/ChartPackageExample.vue'
+</script>
 
-Chart state에는 active datum, keyboard cursor, point 또는 interval selection과 view transform이 있습니다. Event는 pointer candidate, focus 이동, selection 변경, pan, zoom과 reset을 표현하는 이식 가능한 데이터입니다. Transition은 immutable state와 host가 실행할 command를 반환합니다.
+# 상호작용과 상태
+
+Chart는 pointer, 키보드, 이동, 확대 입력을 화면 표현과 무관한 하나의 상태로 바꿉니다. DOM과 Vue 연결은 일반적인 브라우저 동작을 자동으로 이어 줍니다. 애플리케이션은 같은 상태를 읽고, 이벤트를 직접 보내거나, 선택된 값을 외부에서 제어할 수 있습니다.
+
+<ChartPackageExample kind="scatter" />
+
+## 기본 브라우저 동작
+
+| 입력 | 결과 |
+| --- | --- |
+| 마크 위로 pointer 이동 | 활성 데이터를 갱신 |
+| 마크 선택 | 해당 데이터를 선택하고 키보드 cursor 이동 |
+| 방향키 | 이전 또는 다음 데이터로 cursor 이동 |
+| Home / End | 첫 번째 또는 마지막 데이터로 이동 |
+| 휠 | 화면 이동 |
+| Ctrl/⌘ + 휠 | pointer 위치를 기준으로 확대·축소 |
+| Escape | 이동과 확대 상태 초기화 |
+
+차트 root는 키보드 focus를 받을 수 있고, 개수가 제한된 데이터 목록을 보조 기술에 제공합니다. ID 대신 의미 있는 설명이 전달되도록 DOM 옵션의 `getAccessibleDatumLabel`을 설정하세요.
+
+## 이벤트 보내기
 
 ```ts
-import { createChartController } from '@sectile/chart/controller'
+const update = controller.dispatch({
+  type: 'set-selection',
+  selection: { type: 'points', ids: ['search'] },
+})
 
+if (update.ok) {
+  console.log(update.value.snapshot.state.selection)
+}
+```
+
+상태에는 활성 데이터, 키보드 cursor, 점 또는 구간 선택, 화면 변환이 들어 있습니다. 이벤트는 다른 차트 상태를 숨기지 않고 필요한 부분만 갱신합니다.
+
+## 애플리케이션에서 상태 제어하기
+
+다른 store가 값을 소유한다면 `activeDatum`, `cursor`, `selection`, `viewTransform`을 controlled 값으로 전달합니다. 그러면 Chart는 해당 값을 직접 확정하지 않고 변경을 요청합니다. 소유자는 `syncControlledValues()`를 호출하거나, Vue에서는 대응하는 `v-model`을 갱신해 새 값을 적용합니다.
+
+Chart가 값을 소유해야 한다면 기본값을 사용합니다.
+
+```ts
 const controller = createChartController({
-  model: input,
+  model,
   initialValues: {
     selection: { type: 'points', ids: [] },
   },
 })
-
-const update = controller.dispatch({ type: 'move-focus', direction: 'first' })
-if (update.ok) console.log(update.value.snapshot.state.cursor)
 ```
 
-`activeDatum`, `cursor`, `selection`, `viewTransform` 중 응용 프로그램이 소유할 값을 `controlled`로 전달합니다. Controlled shape은 controller 수명 동안 고정됩니다. 해당 event는 값을 직접 반영하지 않고 `*-change-requested` command를 내보내며 소유자는 `syncControlledValues()`로 승인한 값을 적용합니다.
-
-Model 교체와 patch는 삭제된 ID를 active, cursor와 point selection에서 정리합니다. Controller method는 expected revision을 받아 오래된 호출을 failure-atomic하게 거부하고 최신 projection을 cache합니다. `dispose()`를 호출하면 command listener와 보관한 projection을 해제합니다.
-
-신뢰하지 않는 사용자·transport 입력을 처리할 때는 `tryCreate*`와 다른 `try*` 함수를 사용합니다. Throwing 함수는 이미 검증된 응용 프로그램 데이터에 적합합니다.
-
+데이터를 교체하면 Chart가 더 이상 존재하지 않는 ID를 활성 데이터, cursor, 점 선택에서 제거합니다. 애플리케이션이 소유한 컨트롤러를 더 사용하지 않을 때는 `dispose()`를 호출하세요.

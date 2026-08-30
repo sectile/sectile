@@ -1,35 +1,54 @@
 ---
-title: Chart projection and queries
-description: Produce bounded packed geometry and query it with an immutable spatial index.
+title: Chart drawing and hit testing
+description: Draw bounded chart marks, find data under a pointer, and prepare custom rendering.
 ---
 
-# Projection and queries
+<script setup>
+import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageExample.vue'
+</script>
 
-`createChartProjection()` converts a model generation into typed-array batches. The five layouts are point positions, polyline positions, rectangles, cells, and arcs. Canvas2D and WebGL2 consume these arrays directly without rebuilding object graphs.
+# Drawing and hit testing
+
+Projection maps chart data into the current viewport. The DOM and Vue integrations do this automatically. Use the projection API directly when you are building a custom renderer, a tooltip layer, an annotation system, or a non-DOM host.
+
+<ChartPackageExample kind="heatmap" host="dom" />
+
+## Create a projection
 
 ```ts
+import { createChartModel } from '@sectile/chart/model'
 import { createChartProjection } from '@sectile/chart/projection'
-import { hitTestChartProjection } from '@sectile/chart/query'
 
-const projection = createChartProjection(model, {
+const state = createChartModel(model)
+const projection = createChartProjection(state, {
   viewport: { width: 800, height: 480, devicePixelRatio: 2 },
   maximumRepresentatives: 50_000,
 })
-
-const [nearest] = hitTestChartProjection(projection, {
-  x: 240,
-  y: 160,
-  radius: 8,
-})
 ```
 
-`maximumRepresentatives` is a deterministic global budget shared proportionally across layers. The default is the smaller of model size and 100,000; the hard ceiling is 1,000,000. The first and last representative of a nontrivial layer are retained by even sampling.
+`maximumRepresentatives` caps how many data items reach drawing and hit testing. When the source is larger, Chart chooses representatives deterministically across all layers. It preserves the model and interaction state; only the detail available in this projection changes.
 
-Projection diagnostics report source datums, represented datums, and emitted primitives. A controller retains only one cache entry for the latest default-scale request.
+## Find data under a pointer
 
-## Hit testing
+```ts
+import { hitTestChartProjection } from '@sectile/chart/query'
 
-Queries lazily build one immutable Morton-ordered bounding-volume hierarchy per projection. Broad-phase bounds reject unrelated primitives, then profile-specific exact tests handle points, polyline segments, rectangles, cells, and arcs. Results are ordered by distance, topmost layer, and primitive order. A query returns at most 256 hits.
+const [hit] = hitTestChartProjection(projection, {
+  x: pointerX,
+  y: pointerY,
+  radius: 8,
+  maximumHits: 1,
+})
 
-Call `prepareChartProjectionQueries(projection)` outside a latency-sensitive input path when the first hit-test build cost should be paid eagerly.
+if (hit) showTooltip(hit.id)
+```
 
+Results are ordered from the nearest visible mark, with the topmost layer winning ties. Point, line, rectangle, cell, and radial profiles use shape-aware hit testing. One query returns no more than 256 results.
+
+The first query prepares the projection for repeated searches. Call `prepareChartProjectionQueries(projection)` earlier when the first pointer interaction must not pay that setup cost.
+
+## Use a custom renderer
+
+A projection exposes public batches for points, polylines, rectangles, cells, and arcs. A custom `ChartRenderer` can use those batches to draw per-series colors, fills, annotations, or a different graphics API while keeping the same model and interaction behavior.
+
+If the built-in Canvas renderer is sufficient, stay with [DOM rendering](./dom) or [Vue composition](./vue). You do not need to inspect projection batches for ordinary charts.

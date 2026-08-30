@@ -1,33 +1,65 @@
 ---
-title: Chart performance contract
-description: Understand chart cardinality ceilings, cost bounds, allocation, and renderer tradeoffs.
+title: Chart large datasets
+description: Keep drawing, interaction, memory, and browser work bounded as chart data grows.
 ---
 
-# Performance contract
+# Large datasets
 
-Performance is part of Chart behavior. All public collection-producing paths have explicit ceilings, immutable generations avoid hidden partial state, and renderers consume packed typed arrays.
+Start with the default renderer and limits. Add a representative cap when the source can grow beyond what every frame should draw, then use adaptive resolution only when pixel work is still the bottleneck.
 
-| Operation | Time | Additional retained space |
-| --- | --- | --- |
-| Build or replace model | `O(n + l)` | `O(n + l)` packed values, IDs, and indexes |
-| Apply patch | `O(n + p)` | `O(n + p)` for the next immutable generation |
-| Project | `O(n + k)` | `O(k + l)` where `k` is representative budget |
-| Repeat identical controller projection | `O(1)` | one retained projection |
-| Build query index | `O(k log k)` | `O(k)` |
-| Hit test after index build | average `O(log k + h)`, worst `O(k)` | bounded result, `h <= 256` |
-| Render | `O(k)` upload/work, draw calls grouped by batches | renderer-owned GPU or Canvas resources |
+## Choose a renderer
 
-`n` is source datum count, `l` layer count, `p` patch size, `k` emitted representatives, and `h` returned hits. The projection budget limits draw and query cardinality; it does not make model normalization sublinear.
+| Situation | Recommended mode |
+| --- | --- |
+| Large or frequently redrawn charts | `auto` or `webgl2` |
+| Smaller charts and broad browser compatibility | `auto` or `canvas2d` |
+| Diagnosing a WebGL-specific issue | `canvas2d` |
+| The application requires WebGL2 and should not fall back | `webgl2` |
 
-Use WebGL2 for high repeated mark counts and Canvas2D for compatibility, debugging, or smaller surfaces. Adaptive resolution protects frame time by reducing pixel work, while representative limits protect CPU projection, upload, query-index, and draw work. Neither policy changes semantic state.
+`auto` prefers WebGL2 and falls back to Canvas2D. Keep it unless the application has a concrete compatibility or diagnostic reason to force a backend.
 
-Run direct package evidence with:
+## Cap visible detail
 
-```sh
-pnpm --filter @sectile/chart test
-pnpm --filter @sectile/chart benchmark
+```ts
+const chart = createDOMChart({
+  root,
+  canvas,
+  controller,
+  renderer: 'auto',
+  renderPolicy: {
+    type: 'fixed',
+    renderScale: 1,
+    maximumRepresentatives: 100_000,
+  },
+})
 ```
 
-Repository close verification also checks complexity witnesses, consumer bundles, optional-peer install cost, source maps, lifecycle retention, and public signatures.
+`maximumRepresentatives` limits the data passed to drawing and hit testing for one projection. Selection and the source model still keep their exact IDs. Pick a value from the maximum useful visual detail for the chart, not only from the source row count.
 
-For a real GPU check, build the DOM package, serve the repository root, and open `packages/dom/verification/chart-webgl2-browser.html`. The fixture rejects software renderers, compiles and draws all five batch types, reads pixels back, uploads 100,000 points, exercises context loss/restoration, and proves zero live renderer resources after disconnect. The latest hardware result is recorded in `packages/dom/verification/chart-webgl2-browser.json`; it covers only the named browser and GPU.
+## Protect the frame budget
+
+```ts
+renderPolicy: {
+  type: 'adaptive',
+  minimumRenderScale: 0.5,
+  maximumRenderScale: 1,
+  frameBudgetMs: 12,
+  maximumRepresentatives: 100_000,
+}
+```
+
+Adaptive rendering lowers the canvas backing resolution within your bounds when drawing exceeds the target. It does not change chart values, selection, pan, zoom, or accessibility state.
+
+## Update intentionally
+
+- Replace the model when a complete next dataset already exists.
+- Apply a patch when the upstream operation is a small insert, removal, or replacement.
+- Keep IDs stable so interaction state can survive updates.
+- Prepare projection queries before the first pointer event when first-hover latency matters.
+- Disconnect DOM charts and dispose application-owned controllers and renderers when a view is removed.
+
+## Know the ceilings
+
+The default model ceiling is 1,000,000 data items across 64 layers. One patch may contain up to 100,000 operations. One hit test returns at most 256 results, and the accessible DOM list defaults to 1,000 items with a configurable maximum of 10,000.
+
+These are safety ceilings, not recommended display counts. Set lower application limits when the product has a smaller known maximum, and test the largest real dataset on the browsers and GPUs you support.
