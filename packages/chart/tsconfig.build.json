@@ -13,5 +13,6 @@
     "inlineSourceMap": false,
     "inlineSources": false
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/internal/reference/**/*.ts"]
 }
