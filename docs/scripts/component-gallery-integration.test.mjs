@@ -27,7 +27,7 @@ test('component gallery previews keep every rendered overlay non-interactive', a
   );
 
   assert.match(preview, /aria-hidden="true"\s+inert/u);
-  assert.match(preview, /<HostProvider :portal-target="portalTarget \?\? undefined">/u);
+  assert.match(preview, /<HostProvider v-if="portalTarget !== null" :portal-target="portalTarget">/u);
   assert.match(preview, /\.component-gallery-preview\s*\{[^}]*pointer-events:\s*none;/u);
   assert.match(card, /\.component-gallery-card\s*\{[^}]*isolation:\s*isolate;/u);
   assert.match(card, /\.component-gallery-card__link\s*\{[^}]*z-index:\s*2;/u);
