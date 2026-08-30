@@ -1,6 +1,8 @@
 import type { CoreErrorCode, Result, SectileError } from '@sectile/core';
 
 export type ChartOwnErrorCode =
+  | 'chart-controller-disposed'
+  | 'chart-controller-invalid'
   | 'chart-datum-ceiling-exceeded'
   | 'chart-datum-duplicate'
   | 'chart-datum-invalid'
