@@ -46,7 +46,9 @@ export interface LayoutMutationBenchmarkResult {
   readonly operation: BenchmarkOperation;
   readonly location: BenchmarkLocation;
   readonly medianMs: number | null;
+  readonly medianLowerBoundMs: number | null;
   readonly p95Ms: number | null;
+  readonly probeMedianMs: number | null;
   readonly samples: number;
   readonly failedSamples: number;
   readonly failureCodes: readonly string[];

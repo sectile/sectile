@@ -82,13 +82,21 @@ interface LayoutMutationResult {
   readonly operation: LayoutMutationOperation;
   readonly location: LayoutMutationLocation;
   readonly medianMs: number | null;
+  readonly medianLowerBoundMs: number | null;
   readonly p95Ms: number | null;
+  readonly probeMedianMs: number | null;
   readonly samples: number;
   readonly failedSamples: number;
   readonly failureCodes: readonly string[];
   readonly plannedSamples: number;
   readonly earlyStopped: boolean;
   readonly earlyStopReason: 'interactive-budget' | 'reproducible-failure' | 'stable-statistics' | null;
+}
+
+interface LayoutMutationMeasurement {
+  readonly elapsedMs: number;
+  readonly lowerBoundMs: number;
+  readonly probeMs: number;
 }
 
 interface RawBaselineRound {
@@ -343,6 +351,8 @@ async function runMutationCondition(
   onBatch: (result: LayoutMutationResult, completedBatches: number) => void,
 ): Promise<LayoutMutationResult> {
   const samples: number[] = [];
+  const lowerBounds: number[] = [];
+  const probeSamples: number[] = [];
   const failureCodes: string[] = [];
   let failedSamples = 0;
   let previousStatistics: ReturnType<typeof distributionSnapshot> = undefined;
@@ -363,15 +373,17 @@ async function runMutationCondition(
         try {
           const startedAt = performance.now();
           mounted.update(scenario.after);
-          const elapsed = await waitForCorrectLayoutMutation(
+          const measurement = await waitForCorrectLayoutMutation(
             mounted.scroller,
             scenario,
             adapter.validationMode,
             startedAt,
           );
-          samples.push(elapsed);
-          batchOutcomes.push(Object.freeze({ elapsedMs: elapsed, failures: Object.freeze([]) }));
-          if (exceedsEmbeddedLongTaskBudget(embedded, elapsed)) earlyStopReason = 'interactive-budget';
+          samples.push(measurement.elapsedMs);
+          lowerBounds.push(measurement.lowerBoundMs);
+          probeSamples.push(measurement.probeMs);
+          batchOutcomes.push(Object.freeze({ elapsedMs: measurement.elapsedMs, failures: Object.freeze([]) }));
+          if (exceedsEmbeddedLongTaskBudget(embedded, measurement.elapsedMs)) earlyStopReason = 'interactive-budget';
         } catch (error) {
           failedSamples += 1;
           const code = classifyFailure(error);
@@ -407,7 +419,16 @@ async function runMutationCondition(
       mounted?.unmount();
       mountHost.replaceChildren();
     }
-    onBatch(aggregateLayoutMutation(adapter, operation, location, samples, failedSamples, failureCodes), batch + 1);
+    onBatch(aggregateLayoutMutation(
+      adapter,
+      operation,
+      location,
+      samples,
+      lowerBounds,
+      probeSamples,
+      failedSamples,
+      failureCodes,
+    ), batch + 1);
     if (earlyStopReason === 'interactive-budget') break;
     failureReproduction = advanceFailureReproduction(
       failureReproduction,
@@ -429,7 +450,17 @@ async function runMutationCondition(
     previousStatistics = currentStatistics;
     await yieldToBrowser();
   }
-  return aggregateLayoutMutation(adapter, operation, location, samples, failedSamples, failureCodes, earlyStopReason);
+  return aggregateLayoutMutation(
+    adapter,
+    operation,
+    location,
+    samples,
+    lowerBounds,
+    probeSamples,
+    failedSamples,
+    failureCodes,
+    earlyStopReason,
+  );
 }
 
 function aggregateLayoutMutation(
@@ -437,16 +468,22 @@ function aggregateLayoutMutation(
   operation: LayoutMutationOperation,
   location: LayoutMutationLocation,
   samples: readonly number[],
+  lowerBounds: readonly number[],
+  probeSamples: readonly number[],
   failedSamples: number,
   failureCodes: readonly string[],
   earlyStopReason: LayoutMutationResult['earlyStopReason'] = null,
 ): LayoutMutationResult {
   const sorted = [...samples].sort(ascending);
+  const sortedLowerBounds = [...lowerBounds].sort(ascending);
+  const sortedProbeSamples = [...probeSamples].sort(ascending);
   return Object.freeze({
     family, mode: adapter.mode, library: adapter.name, version: adapter.version, stack: adapter.stack,
     operation, location,
     medianMs: sorted.length === 0 ? null : round(percentile(sorted, 0.5)),
+    medianLowerBoundMs: sortedLowerBounds.length === 0 ? null : round(percentile(sortedLowerBounds, 0.5)),
     p95Ms: sorted.length < 30 ? null : round(percentile(sorted, 0.95)),
+    probeMedianMs: sortedProbeSamples.length === 0 ? null : round(percentile(sortedProbeSamples, 0.5)),
     samples: samples.length,
     failedSamples,
     failureCodes: Object.freeze([...new Set(failureCodes)].sort()),
@@ -591,38 +628,82 @@ async function waitForCorrectLayoutMutation(
   scenario: LayoutMutationScenario,
   validationMode: LayoutValidationMode,
   startedAt: number,
-): Promise<number> {
-  let observedSnapshot: LayoutSnapshot | undefined;
-  const settlement = await waitForFrameSettlement({
-    startedAt,
-    timeoutMs: mutationTimeoutMs,
-    stableFailureMinMs,
-    stableFailureFrames,
-    observed: () => {
-      observedSnapshot = captureLayout(scroller);
-      return layoutMutationObserved(observedSnapshot, scenario, tolerance);
-    },
-    inspect: () => {
-      const snapshot = observedSnapshot ?? captureLayout(scroller);
-      observedSnapshot = undefined;
-      try {
-        assertLayoutSnapshot(snapshot, scenario.after, validationMode, tolerance);
-        return Object.freeze({ failures: Object.freeze([]), fingerprint: 'correct' });
-      } catch (error) {
-        const failure = error instanceof Error ? error : new Error(String(error));
-        return Object.freeze({
-          failures: Object.freeze([failure]),
-          fingerprint: layoutFailureFingerprint(snapshot, failure),
-        });
-      }
-    },
-    failureKey: (failure) => classifyFailure(failure),
-    timeoutFailure: () => new Error(`mutation-timeout:${mutationTimeoutMs}`),
+): Promise<LayoutMutationMeasurement> {
+  let firstCorrect: Readonly<{ lowerBoundMs: number; probeMs: number }> | undefined;
+  let probeQueued = false;
+  const probe = (): void => {
+    probeQueued = false;
+    if (firstCorrect !== undefined) return;
+    const probeStartedAt = performance.now();
+    const snapshot = captureLayout(scroller);
+    if (!layoutMutationObserved(snapshot, scenario, tolerance)) return;
+    try {
+      assertLayoutSnapshot(snapshot, scenario.after, validationMode, tolerance);
+      firstCorrect = Object.freeze({
+        lowerBoundMs: probeStartedAt - startedAt,
+        probeMs: performance.now() - probeStartedAt,
+      });
+    } catch {
+      // The verified-frame path owns failure classification and timeout handling.
+    }
+  };
+  const scheduleProbe = (): void => {
+    if (firstCorrect !== undefined || probeQueued) return;
+    probeQueued = true;
+    queueMicrotask(probe);
+  };
+  const mutationObserver = new MutationObserver(scheduleProbe);
+  const resizeObserver = new ResizeObserver(scheduleProbe);
+  mutationObserver.observe(scroller, {
+    attributes: true,
+    childList: true,
+    characterData: true,
+    subtree: true,
   });
+  resizeObserver.observe(scroller);
+  scheduleProbe();
+  let observedSnapshot: LayoutSnapshot | undefined;
+  let settlement: Readonly<{ elapsedMs: number | null; failures: readonly Error[] }>;
+  try {
+    settlement = await waitForFrameSettlement({
+      startedAt,
+      timeoutMs: mutationTimeoutMs,
+      stableFailureMinMs,
+      stableFailureFrames,
+      observed: () => {
+        observedSnapshot = captureLayout(scroller);
+        return layoutMutationObserved(observedSnapshot, scenario, tolerance);
+      },
+      inspect: () => {
+        const snapshot = observedSnapshot ?? captureLayout(scroller);
+        observedSnapshot = undefined;
+        try {
+          assertLayoutSnapshot(snapshot, scenario.after, validationMode, tolerance);
+          return Object.freeze({ failures: Object.freeze([]), fingerprint: 'correct' });
+        } catch (error) {
+          const failure = error instanceof Error ? error : new Error(String(error));
+          return Object.freeze({
+            failures: Object.freeze([failure]),
+            fingerprint: layoutFailureFingerprint(snapshot, failure),
+          });
+        }
+      },
+      failureKey: (failure) => classifyFailure(failure),
+      timeoutFailure: () => new Error(`mutation-timeout:${mutationTimeoutMs}`),
+    });
+  } finally {
+    mutationObserver.disconnect();
+    resizeObserver.disconnect();
+  }
   if (settlement.elapsedMs === null) {
     throw settlement.failures[0] ?? new Error(`mutation-timeout:${mutationTimeoutMs}`);
   }
-  return settlement.elapsedMs;
+  const observed = firstCorrect ?? Object.freeze({ lowerBoundMs: settlement.elapsedMs, probeMs: 0 });
+  return Object.freeze({
+    elapsedMs: settlement.elapsedMs,
+    lowerBoundMs: observed.lowerBoundMs,
+    probeMs: observed.probeMs,
+  });
 }
 
 function layoutFailureFingerprint(snapshot: LayoutSnapshot, failure: Error): string {
