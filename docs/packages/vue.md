@@ -319,7 +319,7 @@ const submission = defineFormSubmission({
 </template>
 ```
 
-Native and Sectile controls can be mixed in one form. Start with the [Vue forms guide](/packages/form/vue), then see [fields and controls](/packages/form/fields) for groups, nested names, and externally associated inputs.
+Native and Sectile controls can be mixed in one form. Start with the [Vue forms guide](/packages/form/vue/), then see [fields and controls](/packages/form/vue/fields) for groups, nested names, and externally associated inputs.
 
 ## Styling boundaries
 

@@ -764,6 +764,85 @@ test('native checkbox groups share one FormField path without requiring every ch
   host.remove();
 });
 
+test('fieldset checkbox groups keep group required semantics and focus an enabled control', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h(FormRoot, {
+      schema: {
+        '~standard': {
+          version: 1,
+          vendor: 'test',
+          validate: () => ({
+            issues: [{ path: ['channels'], message: 'Review the channel selection.' }],
+          }),
+        },
+      },
+    }, {
+      default: () => [
+        h(FormSummary),
+        h(FormField, { id: 'channels', name: 'channels', required: true }, {
+          default: () => h('fieldset', null, [
+            h(FormLabel, null, { default: () => 'Channels' }),
+            h('input', { type: 'checkbox', value: 'email', disabled: true }),
+            h('input', { type: 'checkbox', value: 'sms', checked: true }),
+          ]),
+        }),
+      ],
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+
+    const inputs = [...host.querySelectorAll('input[type="checkbox"]')];
+    assert.deepEqual(inputs.map((input) => input.required), [false, false]);
+
+    host.querySelector('form').requestSubmit();
+
+    assert.equal(document.activeElement, inputs[1]);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
+test('fieldset fields retain focus on their first invalid native control', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h(FormRoot, null, {
+      default: () => [
+        h(FormSummary),
+        h(FormField, { id: 'profile', name: 'profile' }, {
+          default: () => h('fieldset', null, [
+            h(FormLabel, null, { default: () => 'Profile' }),
+            h('input', { name: 'profile.first', value: 'ready' }),
+            h('input', { name: 'profile.second', required: true }),
+          ]),
+        }),
+      ],
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+
+    const inputs = [...host.querySelectorAll('input')];
+    host.querySelector('form').requestSubmit();
+    await Promise.resolve();
+
+    assert.equal(document.activeElement, inputs[1]);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
 test('native radio groups share one FormField path and serialize the checked choice', async () => {
   const host = document.createElement('div');
   document.body.append(host);

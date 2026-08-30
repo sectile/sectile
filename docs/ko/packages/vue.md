@@ -319,7 +319,7 @@ const submission = defineFormSubmission({
 </template>
 ```
 
-한 폼에서 네이티브와 Sectile 컨트롤을 섞을 수 있습니다. 먼저 [Vue 폼 안내](/ko/packages/form/vue)를 보고, 그룹·중첩 이름·외부 연결 입력은 [필드와 컨트롤](/ko/packages/form/fields)을 참고하세요.
+한 폼에서 네이티브와 Sectile 컨트롤을 섞을 수 있습니다. 먼저 [Vue 폼 안내](/ko/packages/form/vue/)를 보고, 그룹·중첩 이름·외부 연결 입력은 [필드와 컨트롤](/ko/packages/form/vue/fields)을 참고하세요.
 
 ## 스타일 경계
 

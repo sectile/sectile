@@ -152,7 +152,7 @@ pnpm add @sectile/core @sectile/form @sectile/dom
 import { createForm } from '@sectile/dom/form'
 ```
 
-`createForm()`은 브라우저 폼 동작을 유지하면서 네이티브 입력, Sectile 컨트롤, 두 종류를 섞은 폼에서 사용할 수 있습니다. 전체 예제와 동적 필드, 네이티브 페이지 이동, 정리 방법은 [DOM 폼 안내](/ko/packages/form/dom)를 참고하세요.
+`createForm()`은 브라우저 폼 동작을 유지하면서 네이티브 입력, Sectile 컨트롤, 두 종류를 섞은 폼에서 사용할 수 있습니다. 전체 예제와 동적 필드, 네이티브 페이지 이동, 정리 방법은 [DOM 폼 안내](/ko/packages/form/dom/)를 참고하세요.
 
 ## 가상화 host
 

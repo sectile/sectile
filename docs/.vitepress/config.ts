@@ -60,6 +60,64 @@ const buildPackageNav = (locale: 'en' | 'ko'): DefaultTheme.NavItem => {
 const packageNav = buildPackageNav('en');
 const koPackageNav = buildPackageNav('ko');
 
+const formVueSidebar: DefaultTheme.SidebarItem[] = [
+  { text: 'Form overview', link: '/packages/form' },
+  {
+    text: '@sectile/form · Vue',
+    collapsed: false,
+    items: [
+      { text: 'Vue forms', link: '/packages/form/vue/' },
+      { text: 'Vue API reference', link: '/packages/form/vue/api' },
+      { text: 'Fields and controls', link: '/packages/form/vue/fields' },
+      { text: 'Validation and errors', link: '/packages/form/vue/validation' },
+      { text: 'Submission and reinitialization', link: '/packages/form/vue/submission' },
+      { text: 'Custom controls', link: '/packages/form/vue/custom-controls' },
+      { text: 'SSR and hydration', link: '/packages/form/vue/ssr' },
+    ],
+  },
+];
+
+const formDOMSidebar: DefaultTheme.SidebarItem[] = [
+  { text: 'Form overview', link: '/packages/form' },
+  {
+    text: '@sectile/form · DOM',
+    collapsed: false,
+    items: [
+      { text: 'DOM forms', link: '/packages/form/dom/' },
+      { text: 'DOM API reference', link: '/packages/form/dom/api' },
+    ],
+  },
+];
+
+const koFormVueSidebar: DefaultTheme.SidebarItem[] = [
+  { text: 'Form 개요', link: '/ko/packages/form' },
+  {
+    text: '@sectile/form · Vue',
+    collapsed: false,
+    items: [
+      { text: 'Vue 폼', link: '/ko/packages/form/vue/' },
+      { text: 'Vue API 레퍼런스', link: '/ko/packages/form/vue/api' },
+      { text: '필드와 컨트롤', link: '/ko/packages/form/vue/fields' },
+      { text: '검증과 오류', link: '/ko/packages/form/vue/validation' },
+      { text: '제출과 값 기준 관리', link: '/ko/packages/form/vue/submission' },
+      { text: '사용자 정의 컨트롤', link: '/ko/packages/form/vue/custom-controls' },
+      { text: 'SSR과 hydration', link: '/ko/packages/form/vue/ssr' },
+    ],
+  },
+];
+
+const koFormDOMSidebar: DefaultTheme.SidebarItem[] = [
+  { text: 'Form 개요', link: '/ko/packages/form' },
+  {
+    text: '@sectile/form · DOM',
+    collapsed: false,
+    items: [
+      { text: 'DOM 폼', link: '/ko/packages/form/dom/' },
+      { text: 'DOM API 레퍼런스', link: '/ko/packages/form/dom/api' },
+    ],
+  },
+];
+
 const theorySidebar: DefaultTheme.SidebarItem[] = [
   { text: 'Core theory', link: '/theory/' },
   { text: 'Canonical structures', link: '/theory/structures' },
@@ -97,14 +155,9 @@ const packageSidebar: DefaultTheme.SidebarItem[] = [
     collapsed: false,
     items: [
       { text: 'Overview', link: '/packages/form' },
-      { text: 'API reference', link: '/packages/form/api' },
-      { text: 'Vue forms', link: '/packages/form/vue' },
-      { text: 'DOM forms', link: '/packages/form/dom' },
-      { text: 'Fields and controls', link: '/packages/form/fields' },
-      { text: 'Validation and errors', link: '/packages/form/validation' },
-      { text: 'Submission and reinitialization', link: '/packages/form/submission' },
-      { text: 'Custom controls', link: '/packages/form/custom-controls' },
-      { text: 'SSR and hydration', link: '/packages/form/ssr' },
+      { text: 'Vue forms', link: '/packages/form/vue/' },
+      { text: 'DOM forms', link: '/packages/form/dom/' },
+      { text: 'Choose an API reference', link: '/packages/form/api' },
     ],
   },
   {
@@ -187,14 +240,9 @@ const koPackageSidebar: DefaultTheme.SidebarItem[] = [
     collapsed: false,
     items: [
       { text: '개요', link: '/ko/packages/form' },
-      { text: 'API 레퍼런스', link: '/ko/packages/form/api' },
-      { text: 'Vue 폼', link: '/ko/packages/form/vue' },
-      { text: 'DOM 폼', link: '/ko/packages/form/dom' },
-      { text: '필드와 컨트롤', link: '/ko/packages/form/fields' },
-      { text: '검증과 오류', link: '/ko/packages/form/validation' },
-      { text: '제출과 값 기준 관리', link: '/ko/packages/form/submission' },
-      { text: '사용자 정의 컨트롤', link: '/ko/packages/form/custom-controls' },
-      { text: 'SSR과 hydration', link: '/ko/packages/form/ssr' },
+      { text: 'Vue 폼', link: '/ko/packages/form/vue/' },
+      { text: 'DOM 폼', link: '/ko/packages/form/dom/' },
+      { text: 'API 레퍼런스 선택', link: '/ko/packages/form/api' },
     ],
   },
   {
@@ -269,6 +317,8 @@ const rootLocaleTheme: DefaultTheme.Config = {
     { text: 'Benchmark', link: '/benchmarks/virtual', activeMatch: '^/benchmarks/' },
   ],
   sidebar: {
+    '/packages/form/vue': formVueSidebar,
+    '/packages/form/dom': formDOMSidebar,
     '/guide/': [
       { text: 'Introduction', link: '/guide/introduction' },
       { text: 'Getting started', link: '/guide/getting-started' },
@@ -295,6 +345,8 @@ const koLocaleTheme: DefaultTheme.Config = {
     { text: '벤치마크', link: '/ko/benchmarks/virtual', activeMatch: '^/ko/benchmarks/' },
   ],
   sidebar: {
+    '/ko/packages/form/vue': koFormVueSidebar,
+    '/ko/packages/form/dom': koFormDOMSidebar,
     '/ko/guide/': [
       { text: '소개', link: '/ko/guide/introduction' },
       { text: '시작하기', link: '/ko/guide/getting-started' },

@@ -1,6 +1,6 @@
 ---
 title: Vue 폼
-description: Vue Form 파트로 네이티브 입력과 Sectile 컴포넌트를 함께 구성합니다.
+description: Vue Form API로 네이티브 입력과 Sectile 컴포넌트를 함께 구성합니다.
 ---
 
 # Vue 폼
@@ -26,6 +26,14 @@ import {
   defineFormSubmission,
 } from '@sectile/vue/form'
 ```
+
+## 완성된 Vue 폼 사용해 보기
+
+이름이나 시간대를 바꾸면 폼 상태 값이 바로 달라집니다. 저장이 끝나면 `reinitialize()`가 현재 값을 새 기준으로 삼으므로 `dirty`는 다시 `false`가 됩니다.
+
+<FormPackageExample />
+
+아래 화면은 실제 `FormRoot` 안에서 Sectile `TextField`와 `Select`를 함께 씁니다. 전체 코드는 코드 탭에서 확인할 수 있습니다.
 
 ## 폼 구조부터 만들기
 
@@ -109,9 +117,9 @@ const submission = defineFormSubmission({
 
 `validation`에는 `generation`, `status`, `trigger`, `intent`가 들어 있습니다. `submission`에는 `generation`, `status`, `count`, `failure`가 들어 있습니다. 생명주기에 따라 UI를 바꿀 때는 이 스냅샷을 사용하세요. `submitted`와 `submitCount`는 `submission.count`에서 계산한 루트 슬롯 편의 값입니다.
 
-## 사용자 정의 summary 구성하기
+## 사용자 정의 오류 요약 구성하기
 
-`FormSummary`는 제출 failure와 이슈 메시지를 기본으로 렌더링합니다. 슬롯에는 같은 생명주기 스냅샷과 canonical 이슈 projection이 제공되므로, dialog description이나 별도 summary 레이아웃도 Form 상태를 직접 사용할 수 있습니다.
+`FormSummary`는 제출 실패와 이슈 메시지를 기본으로 렌더링합니다. 슬롯에는 같은 생명주기 상태와 현재 이슈 목록이 제공되므로, 대화상자 설명이나 별도 오류 요약에서도 Form 상태를 직접 사용할 수 있습니다.
 
 ```vue
 <FormSummary v-slot="{ validation, submission, issues, serverIssues, firstIssue, valid }">
@@ -123,7 +131,7 @@ const submission = defineFormSubmission({
 </FormSummary>
 ```
 
-하나의 이슈는 주 `path`와 여러 `relatedPaths`를 가질 수 있습니다. `issues`에는 한 번만 나타나고, 주 필드는 `issues`, 나머지 무효 필드는 `relatedIssues`로 이슈를 노출하면서 ARIA 메타데이터에서 summary를 참조합니다.
+하나의 이슈는 주 `path`와 여러 `relatedPaths`를 가질 수 있습니다. 오류 요약의 `issues` 목록에는 한 번만 나타납니다. 주 필드는 자체 `issues` 목록으로, 관련 필드는 `relatedIssues`로 이슈를 제공하며 ARIA 메타데이터에서는 오류 요약을 참조합니다.
 
 ## 현재 값을 새 기준으로 삼기
 

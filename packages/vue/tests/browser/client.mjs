@@ -53,6 +53,7 @@ const coordinatedForm = document.querySelector('#browser-form');
 const nativeInput = document.querySelector('#browser-native-input');
 const sectileInput = document.querySelector('#browser-sectile-input');
 let formInvalidFocus = false;
+let fieldsetInvalidFocus = false;
 await nextTick();
 await nextTick();
 const externalInput = document.querySelector('#browser-external-input');
@@ -105,6 +106,12 @@ if (nativeInput instanceof HTMLInputElement
     failures.push('managed Form submission');
   }
 }
+const fieldsetInvalidInput = document.querySelector('#browser-fieldset-invalid');
+document.querySelector('#browser-fieldset-submit')?.click();
+await new Promise((resolveFrame) => requestAnimationFrame(() => resolveFrame()));
+fieldsetInvalidFocus = fieldsetInvalidInput instanceof HTMLInputElement
+  && document.activeElement === fieldsetInvalidInput;
+if (!fieldsetInvalidFocus) failures.push('fieldset first invalid Form focus');
 if (document.querySelector('#reference-date')?.textContent !== '2026-8-26') failures.push('reference date');
 const meter = document.querySelector('[role="meter"][aria-label="Browser meter"]');
 const progress = document.querySelector('[role="progressbar"][aria-label="Browser progress"]');
@@ -155,6 +162,7 @@ const result = Object.freeze({
       : Object.freeze([]),
     teleported: externalInput instanceof HTMLInputElement && externalInput.form === coordinatedForm,
     invalidFocus: formInvalidFocus,
+    fieldsetInvalidFocus,
     submission: document.querySelector('#browser-form-submission')?.textContent ?? '',
   }),
   text: Object.freeze({

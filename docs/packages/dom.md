@@ -152,7 +152,7 @@ pnpm add @sectile/core @sectile/form @sectile/dom
 import { createForm } from '@sectile/dom/form'
 ```
 
-`createForm()` works with native inputs, Sectile controls, and both together while preserving browser form behavior. Follow the [DOM forms guide](/packages/form/dom) for a complete example, dynamic fields, native navigation, and cleanup.
+`createForm()` works with native inputs, Sectile controls, and both together while preserving browser form behavior. Follow the [DOM forms guide](/packages/form/dom/) for a complete example, dynamic fields, native navigation, and cleanup.
 
 ## Virtualization host
 

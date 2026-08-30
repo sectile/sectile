@@ -147,7 +147,7 @@ form.reinitialize({
 })
 ```
 
-컨트롤을 기본값으로 되돌리려면 `reset()`, 화면의 현재 값을 유지한 채 저장된 상태로 확정하려면 `reinitialize()`를 사용하세요. 전체 상태 계약은 [제출과 값 기준 관리](./submission)에서 설명합니다.
+컨트롤을 기본값으로 되돌리려면 `reset()`, 화면의 현재 값을 유지한 채 저장된 상태로 확정하려면 `reinitialize()`를 사용하세요. 유지 옵션과 관련 상태는 [`FormConnection` API](./api#formconnection)에서 확인할 수 있습니다.
 
 ## 동적 컨트롤
 
@@ -163,4 +163,4 @@ const unregister = form.registerParticipant({
 unregister()
 ```
 
-검증 함수는 [검증과 오류](./validation), 비동기 결과와 서버 오류는 [제출과 값 기준 관리](./submission)에서 이어서 설명합니다.
+검증 옵션, 관리형 제출 결과 타입, selector와 전체 `FormConnection` 계약은 [DOM Form API](./api)에서 확인할 수 있습니다.

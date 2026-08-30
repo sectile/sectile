@@ -504,6 +504,50 @@ test('DOM Form defers Standard Schema until submit and revalidates failed submis
   }
 });
 
+test('DOM Form focuses invalid schema fields in document order', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const firstField = document.createElement('div');
+    const firstInput = document.createElement('input');
+    const secondField = document.createElement('div');
+    const secondInput = document.createElement('input');
+    firstInput.name = 'first';
+    secondInput.name = 'second';
+    firstField.append(firstInput);
+    secondField.append(secondInput);
+    formElement.append(firstField, secondField);
+    document.body.append(formElement);
+
+    createForm({
+      form: formElement,
+      participants: [
+        { id: 'first', element: firstField, focusTarget: firstInput, name: 'first' },
+        { id: 'second', element: secondField, focusTarget: secondInput, name: 'second' },
+      ],
+      schema: {
+        '~standard': {
+          version: 1,
+          vendor: 'test',
+          validate: () => ({
+            issues: [
+              { path: ['second'], message: 'Check the second value.' },
+              { path: ['first'], message: 'Check the first value.' },
+            ],
+          }),
+        },
+      },
+    });
+
+    formElement.requestSubmit();
+
+    assert.equal(document.activeElement, firstInput);
+  } finally {
+    dom.restore();
+  }
+});
+
 test('DOM Form keeps field, semantic, focus, validation, and submission targets distinct', async () => {
   const dom = installDOM();
   try {

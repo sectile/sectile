@@ -138,6 +138,18 @@ export function createHydrationFixture() {
             h('output', { id: 'browser-form-submission' }, submitted.value),
           ],
         }),
+        h(FormRoot, { id: 'browser-fieldset-form' }, {
+          default: () => [
+            h(FormField, { id: 'browser-fieldset', name: 'fieldset' }, {
+              default: () => h('fieldset', null, [
+                h(FormLabel, null, { default: () => 'Fieldset value' }),
+                h('input', { id: 'browser-fieldset-valid', value: 'ready' }),
+                h('input', { id: 'browser-fieldset-invalid', required: true }),
+              ]),
+            }),
+            h(FormSubmit, { id: 'browser-fieldset-submit' }, { default: () => 'Submit fieldset' }),
+          ],
+        }),
         h(CalendarRoot, { referenceDate }, {
           default: ({ highlightedValue }) => h(
             'output',

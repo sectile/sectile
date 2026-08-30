@@ -21,6 +21,13 @@ const vueConfig = ts.getParsedCommandLineOfConfigFile(vueConfigPath, {}, ts.sys)
 assert.ok(vueConfig, `Unable to read ${vueConfigPath}`);
 const vueProgram = ts.createProgram(vueConfig.fileNames, vueConfig.options);
 const vueChecker = vueProgram.getTypeChecker();
+const domConfigPath = resolve(root, '..', 'packages', 'dom', 'tsconfig.json');
+const domConfig = ts.getParsedCommandLineOfConfigFile(domConfigPath, {}, ts.sys);
+assert.ok(domConfig, `Unable to read ${domConfigPath}`);
+const domProgram = ts.createProgram(domConfig.fileNames, domConfig.options);
+const domChecker = domProgram.getTypeChecker();
+const domFormSourceFile = domProgram.getSourceFile(resolve(root, '..', 'packages', 'dom', 'src', 'form.ts'));
+assert.ok(domFormSourceFile, 'Missing @sectile/dom source module: form');
 const vueSourceFiles = Object.fromEntries([...generated, ...apiPackages].map((component) => {
   const path = resolve(root, '..', 'packages', 'vue', 'src', `${component.id}.ts`);
   const sourceFile = vueProgram.getSourceFile(path);
@@ -518,6 +525,36 @@ ${values.map((value) => `  <li><code class="component-api-token">${value}</code>
   return `${heading}\n\n${introduction}\n\n${groups}`;
 }
 
+function domFormApiSection(korean = false) {
+  const {
+    values,
+    types,
+    functions,
+    contracts,
+    functionSignatures,
+    typeDefinitions,
+  } = publicDomFormApi();
+  const functionSet = new Set(functions);
+  const otherValues = values.filter((value) => !functionSet.has(value));
+  const tokenList = (entries, kind) => `<div class="component-api-group">
+<strong class="component-api-label">${kind}</strong>
+<ul class="component-api-list">
+${entries.map((value) => `  <li><code class="component-api-token">${value}</code></li>`).join('\n')}
+</ul>
+</div>`;
+  const groups = [
+    otherValues.length === 0
+      ? undefined
+      : tokenList(otherValues, korean ? '값' : 'Values'),
+    apiFunctionGroup(functions, functionSignatures, korean),
+    apiTypeGroup(types, contracts, typeDefinitions, korean ? '타입' : 'Types', korean),
+  ].filter(Boolean).join('\n\n');
+  const introduction = korean
+    ? 'DOM 패키지: `@sectile/dom/form`'
+    : 'DOM package: `@sectile/dom/form`';
+  return `## API\n\n${introduction}\n\n${groups}`;
+}
+
 function apiComponentEventGroup(componentEvents, korean) {
   const entries = Object.entries(componentEvents).filter(([, events]) => events.length > 0);
   if (entries.length === 0) return undefined;
@@ -722,11 +759,9 @@ function publicVueApi(component) {
       const publicType = vueChecker.getDeclaredTypeOfSymbol(
         exportedSymbol.flags & ts.SymbolFlags.Alias ? symbol : exportedSymbol,
       );
-      const resolveContractPropertyTypes = component === 'form'
-        && ['FormReinitializeOptions', 'FormSubmitEvent'].includes(name);
+      const resolveContractPropertyTypes = component === 'form';
       const exposesProperties = name.endsWith('Props')
-        || declarations.some(ts.isInterfaceDeclaration)
-        || resolveContractPropertyTypes;
+        || declarations.some(ts.isInterfaceDeclaration);
       contracts[name] = exposesProperties
         ? vueChecker.getPropertiesOfType(publicType).map((property) => {
             const declaration = property.valueDeclaration ?? property.declarations?.[0];
@@ -774,6 +809,73 @@ function publicVueApi(component) {
   assert.ok(values.length > 0, `${component} requires a public Vue value export`);
   assert.ok(types.length > 0, `${component} requires a public Vue type export`);
   return { values, types, functions, componentEvents, contracts, defaults, functionSignatures, typeDefinitions };
+}
+
+function publicDomFormApi() {
+  const moduleSymbol = domChecker.getSymbolAtLocation(domFormSourceFile);
+  assert.ok(moduleSymbol, 'Missing @sectile/dom form module symbol');
+  const values = [];
+  const types = [];
+  const functions = [];
+  const contracts = {};
+  const functionSignatures = {};
+  const typeDefinitions = {};
+
+  for (const exportedSymbol of domChecker.getExportsOfModule(moduleSymbol)) {
+    const name = exportedSymbol.name;
+    const symbol = exportedSymbol.flags & ts.SymbolFlags.Alias
+      ? domChecker.getAliasedSymbol(exportedSymbol)
+      : exportedSymbol;
+    const declarations = symbol.declarations ?? [];
+    const isValue = (symbol.flags & ts.SymbolFlags.Value) !== 0;
+    const isType = (symbol.flags & ts.SymbolFlags.Type) !== 0;
+
+    if (isValue) {
+      values.push(name);
+      const functionDeclarations = declarations.filter(ts.isFunctionDeclaration);
+      if (functionDeclarations.length > 0) {
+        functions.push(name);
+        const overloads = functionDeclarations.filter((declaration) => declaration.body === undefined);
+        const signatures = overloads.length > 0 ? overloads : [functionDeclarations[0]];
+        functionSignatures[name] = [...new Set(signatures.map((declaration) => functionSignature(name, declaration)))].join('\n');
+      }
+    }
+
+    if (isType) {
+      types.push(name);
+      const publicType = domChecker.getDeclaredTypeOfSymbol(
+        exportedSymbol.flags & ts.SymbolFlags.Alias ? symbol : exportedSymbol,
+      );
+      const exposesProperties = declarations.some(ts.isInterfaceDeclaration);
+      contracts[name] = exposesProperties
+        ? domChecker.getPropertiesOfType(publicType).map((property) => {
+            const declaration = property.valueDeclaration ?? property.declarations?.[0];
+            return {
+              name: property.name,
+              type: declaration === undefined
+                ? 'unknown'
+                : domChecker.typeToString(
+                    domChecker.getTypeOfSymbolAtLocation(property, declaration),
+                    declaration,
+                    ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope,
+                  ),
+              optional: (property.flags & ts.SymbolFlags.Optional) !== 0,
+            };
+          })
+        : [];
+      const declaration = declarations.find(ts.isTypeAliasDeclaration);
+      if (declaration !== undefined) {
+        const parameters = declaration.typeParameters === undefined
+          ? ''
+          : `<${declaration.typeParameters.map((parameter) => parameter.getText(declaration.getSourceFile())).join(', ')}>`;
+        const body = declaration.type.getText(declaration.getSourceFile());
+        const separator = body.includes('\n') || /^[|&]/u.test(body) ? '\n' : ' ';
+        typeDefinitions[name] = `type ${name}${parameters} =${separator}${body}`;
+      }
+    }
+  }
+
+  return { values, types, functions, contracts, functionSignatures, typeDefinitions };
 }
 
 function componentPropDefaults(sourceFile) {
@@ -1167,7 +1269,7 @@ function koDescription(component) {
 }
 
 function formApiPage(korean = false) {
-  const title = korean ? 'Form API' : 'Form API';
+  const title = korean ? 'Vue Form API' : 'Vue Form API';
   const description = korean
     ? 'Form의 Vue 컴포넌트, prop, slot, 이벤트, 함수와 공개 타입을 확인합니다.'
     : 'Reference every Form Vue component, prop, slot, event, function, and public type.';
@@ -1175,8 +1277,8 @@ function formApiPage(korean = false) {
     ? '<!-- scripts/generate-component-pages.mjs에서 생성함. -->'
     : '<!-- Generated by scripts/generate-component-pages.mjs. -->';
   const backLink = korean
-    ? '[Form 개요로 돌아가기](/ko/packages/form)'
-    : '[Back to the Form overview](/packages/form)';
+    ? '[Vue 폼 안내로 돌아가기](/ko/packages/form/vue/)'
+    : '[Back to the Vue forms guide](/packages/form/vue/)';
   return `---
 title: ${title}
 description: ${description}
@@ -1189,6 +1291,32 @@ ${description}
 ${backLink}
 
 ${apiSection(formPackage, korean)}
+`;
+}
+
+function domFormApiPage(korean = false) {
+  const title = 'DOM Form API';
+  const description = korean
+    ? 'DOM Form 연결 함수, 옵션, participant, 제출 결과와 공개 타입을 확인합니다.'
+    : 'Reference DOM Form connection functions, options, participants, submission results, and public types.';
+  const generatedComment = korean
+    ? '<!-- scripts/generate-component-pages.mjs에서 생성함. -->'
+    : '<!-- Generated by scripts/generate-component-pages.mjs. -->';
+  const backLink = korean
+    ? '[DOM 폼 안내로 돌아가기](/ko/packages/form/dom/)'
+    : '[Back to the DOM forms guide](/packages/form/dom/)';
+  return `---
+title: ${title}
+description: ${description}
+---
+${generatedComment}
+# ${title}
+
+${description}
+
+${backLink}
+
+${domFormApiSection(korean)}
 `;
 }
 
@@ -1211,18 +1339,28 @@ for (const component of generated) {
 }
 
 await syncGeneratedPage(
-  resolve(root, 'packages', 'form', 'api.md'),
+  resolve(root, 'packages', 'form', 'vue', 'api.md'),
   formApiPage(),
-  'packages/form/api.md is stale; run pnpm generate',
+  'packages/form/vue/api.md is stale; run pnpm generate',
 );
 await syncGeneratedPage(
-  resolve(root, 'ko', 'packages', 'form', 'api.md'),
+  resolve(root, 'ko', 'packages', 'form', 'vue', 'api.md'),
   formApiPage(true),
-  'ko/packages/form/api.md is stale; run pnpm generate',
+  'ko/packages/form/vue/api.md is stale; run pnpm generate',
+);
+await syncGeneratedPage(
+  resolve(root, 'packages', 'form', 'dom', 'api.md'),
+  domFormApiPage(),
+  'packages/form/dom/api.md is stale; run pnpm generate',
+);
+await syncGeneratedPage(
+  resolve(root, 'ko', 'packages', 'form', 'dom', 'api.md'),
+  domFormApiPage(true),
+  'ko/packages/form/dom/api.md is stale; run pnpm generate',
 );
 
 console.log(JSON.stringify({
   status: check ? 'current' : 'generated',
   componentPages: generated.length,
-  packagePages: apiPackages.length,
+  packagePages: apiPackages.length + 1,
 }, null, 2));

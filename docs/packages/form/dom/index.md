@@ -147,7 +147,7 @@ form.reinitialize({
 })
 ```
 
-Use `reset()` when controls should return to their defaults. Use `reinitialize()` when the current values should stay on screen and count as saved. See [submission, reset, and reinitialization](./submission) for the full state contract.
+Use `reset()` when controls should return to their defaults. Use `reinitialize()` when the current values should stay on screen and count as saved. The [`FormConnection` API](./api#formconnection) lists the preservation options and related state.
 
 ## Dynamic controls
 
@@ -163,4 +163,4 @@ const unregister = form.registerParticipant({
 unregister()
 ```
 
-See [validation and errors](./validation) for validation callbacks and [submission, reset, and reinitialization](./submission) for async outcomes and server errors.
+See the [DOM Form API](./api) for validation options, managed-submission result types, selectors, and the complete `FormConnection` contract.

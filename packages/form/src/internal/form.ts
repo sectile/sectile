@@ -2222,11 +2222,18 @@ function firstIssueFocusField<ID extends StableID>(
   store: FormFieldStore<ID>,
   issues: readonly FormIssue<ID>[],
 ): FormFieldState<ID> | undefined {
+  let primaryIndex = Number.POSITIVE_INFINITY;
+  let primaryField: FormFieldState<ID> | undefined;
   for (const issue of issues) {
     if (issue.fieldId === undefined) continue;
+    const index = store.indexByID.get(issue.fieldId);
+    if (index === undefined || index >= primaryIndex) continue;
     const primary = getStoredField(store, issue.fieldId);
-    if (primary !== undefined && !primary.valid) return primary;
+    if (primary === undefined || primary.valid) continue;
+    primaryIndex = index;
+    primaryField = primary;
   }
+  if (primaryField !== undefined) return primaryField;
   let relatedIndex = Number.POSITIVE_INFINITY;
   let relatedField: FormFieldState<ID> | undefined;
   for (const issue of issues) {

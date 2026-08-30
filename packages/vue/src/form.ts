@@ -21,35 +21,35 @@ import {
   type VNodeProps,
 } from 'vue';
 import {
-  appendFormFieldPath,
   createForm,
-  encodeFormFieldPath,
   type FormConnection,
-  type FormFieldPath,
-  type FormInteractionValidationTrigger,
-  type FormOptions,
   type FormParticipant,
-  type FormRelativePath,
-  type FormReinitializeOptions as DOMFormReinitializeOptions,
-  type FormPathSegment,
-  type FormSchema as DOMFormSchema,
-  type FormSubscribeOptions as DOMFormSubscribeOptions,
   type FormSubmissionElement,
   type FormSubmitPayload as DOMFormSubmitPayload,
   type FormSubmitResult as DOMFormSubmitResult,
-  type FormValidateContext as DOMFormValidateContext,
-  type FormValidateHandler as DOMFormValidateHandler,
-  type FormValidationIssue as DOMFormValidationIssue,
-  type FormValidationResult as DOMFormValidationResult,
-  type FormValues as DOMFormValues,
 } from '@sectile/dom/form';
 import {
   getFormFieldIDByPath,
   getFormIssuesBySource,
+  type FormFieldMetaInput as DomainFormFieldMetaInput,
+  type FormFieldState as DomainFormFieldState,
+  type FormIssue as DomainFormIssue,
+  type FormIssueSource,
+  type FormReinitializeOptions,
+  type FormState as DomainFormState,
   type FormSubmissionFailure,
+  type FormValidationIntent,
+  type FormValidationTrigger,
 } from '@sectile/form/state';
-import { tryCreateFormFieldPath } from '@sectile/form/path';
-import type { FormSchemaOutput as DOMFormSchemaOutput } from '@sectile/form/schema';
+import {
+  appendFormFieldPath,
+  encodeFormFieldPath,
+  tryCreateFormFieldPath,
+  type FormFieldPath,
+  type FormRelativePath,
+  type FormPathSegment,
+} from '@sectile/form/path';
+import type { StandardSchemaV1 } from '@sectile/form/schema';
 import {
   compositeControlCapabilities,
   hiddenInputSubmissionCapabilities,
@@ -75,34 +75,37 @@ import { useNextTickTask } from './internal/scheduled-task.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostId } from './host-provider.js';
 
-export type FormState = FormConnection<string>['state'];
-export type FormFieldState = NonNullable<ReturnType<FormConnection<string>['getField']>>;
-export type FormFieldMetaInput = Parameters<FormConnection<string>['setFieldMeta']>[1];
-export type FormSubscribeOptions<Selected> = DOMFormSubscribeOptions<Selected>;
+export interface FormState extends DomainFormState<string> {}
+export interface FormFieldState extends DomainFormFieldState<string> {}
+export interface FormFieldMetaInput extends DomainFormFieldMetaInput {}
+export interface FormSubscribeOptions<Selected> {
+  readonly equals?: (previous: Selected, next: Selected) => boolean;
+}
 export type FormSelectorFunction<Selected> = (state: FormState) => Selected;
 export type FormFieldSelectorFunction<Selected> = (field: FormFieldState | null) => Selected;
-export type FormIssue = NonNullable<FormOptions<string>['issues']>[number];
-export type FormIssueSource = Parameters<FormConnection<string>['replaceIssues']>[0];
-export type FormValues<Shape extends object = Record<string, unknown>> = DOMFormValues<Shape>;
-export type FormReinitializeOptions = DOMFormReinitializeOptions;
+export interface FormIssue extends DomainFormIssue<string> {}
+export type { FormIssueSource, FormReinitializeOptions };
+export type FormValues<Shape extends object = Record<string, unknown>> = Readonly<Shape>;
 export type FormSchema<
   Input extends object = Record<string, unknown>,
   Output extends object = Input,
-> = DOMFormSchema<FormValues<Input>, FormValues<Output>>;
-export type FormSchemaInput<Schema extends FormSchema> =
-  Schema extends DOMFormSchema<infer Input extends object, object> ? Input : never;
-export type FormSchemaOutput<Schema extends FormSchema> =
-  Schema extends DOMFormSchema<object, infer Output extends object> ? Output : never;
-export type FormSubmitEvent<Values extends object = Record<string, unknown>> = Omit<
-  DOMFormSubmitPayload<string, FormValues<Values>>,
-  'event'
-> & {
+> = StandardSchemaV1<FormValues<Input>, FormValues<Output>>;
+export type FormSchemaInput<Schema extends StandardSchemaV1> =
+  StandardSchemaV1.InferInput<Schema>;
+export type FormSchemaOutput<Schema extends StandardSchemaV1> =
+  StandardSchemaV1.InferOutput<Schema>;
+export interface FormSubmitEvent<Values extends object = Record<string, unknown>> {
+  readonly formData: FormData;
+  readonly values: FormValues<Values>;
+  readonly submitter: HTMLElement | null;
+  readonly state: FormState;
+  readonly reinitialize: (options?: FormReinitializeOptions) => void;
   readonly nativeEvent: SubmitEvent;
   readonly defaultPrevented: boolean;
   preventDefault(): void;
   stopPropagation(): void;
   stopImmediatePropagation(): void;
-};
+}
 export interface FormIssueInput {
   readonly id?: string;
   readonly message: string;
@@ -126,7 +129,7 @@ export interface FormSubmissionDefinition {
 }
 export interface FormSchemaSubmissionDefinition<Schema extends FormSchema<object, object>> {
   readonly schema: Schema;
-  readonly onSubmit: FormSubmitHandler<DOMFormSchemaOutput<Schema>>;
+  readonly onSubmit: FormSubmitHandler<FormSchemaOutput<Schema>>;
 }
 export function defineFormSubmission<const Schema extends FormSchema<object, object>>(
   definition: FormSchemaSubmissionDefinition<Schema>,
@@ -144,11 +147,25 @@ export type FormSubmitErrorMapper = (
 ) => FormSubmissionFailure | undefined;
 export type FormResetHandler = () => void;
 export type FormStateChangeHandler = (state: FormState) => void;
-export type FormValidateContext = DOMFormValidateContext<string>;
-export type FormValidationIssue = DOMFormValidationIssue;
-export type FormValidationResult = DOMFormValidationResult;
-export type FormValidateHandler<Values extends object = Record<string, unknown>> =
-  DOMFormValidateHandler<string, FormValues<Values>>;
+export type FormInteractionValidationTrigger = Exclude<FormValidationTrigger, 'submit'>;
+export interface FormValidateContext {
+  readonly trigger: FormValidationTrigger;
+  readonly intent: FormValidationIntent;
+  readonly changedFieldId: string | null;
+  readonly signal: AbortSignal;
+}
+export interface FormValidationIssue {
+  readonly message: string;
+  readonly path?: FormFieldPath;
+  readonly relatedPaths?: readonly FormFieldPath[];
+}
+export interface FormValidationResult {
+  readonly issues?: readonly FormValidationIssue[];
+}
+export type FormValidateHandler<Values extends object = Record<string, unknown>> = (
+  values: FormValues<Values>,
+  context: FormValidateContext,
+) => FormValidationResult | PromiseLike<FormValidationResult>;
 export type FormSubmitStartedAction = () => number | null;
 export type FormSubmitSucceededAction = (generation: number) => boolean;
 export type FormSubmitFailedAction = (
@@ -254,7 +271,7 @@ export interface FormFieldSlotProps {
   readonly setMeta: (meta: FormFieldMetaInput) => boolean;
   readonly replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]) => boolean;
   readonly upsertIssue: (issue: FormIssue) => boolean;
-  readonly removeIssue: (issueId: Parameters<FormConnection<string>['removeFieldIssue']>[1]) => boolean;
+  readonly removeIssue: (issueId: string | number) => boolean;
   readonly clearIssues: (source?: FormIssueSource) => boolean;
 }
 
@@ -263,7 +280,7 @@ export interface FormFieldController {
   setMeta(meta: FormFieldMetaInput): boolean;
   replaceIssues(source: FormIssueSource, issues: readonly FormIssue[]): boolean;
   upsertIssue(issue: FormIssue): boolean;
-  removeIssue(issueId: Parameters<FormConnection<string>['removeFieldIssue']>[1]): boolean;
+  removeIssue(issueId: string | number): boolean;
   clearIssues(source?: FormIssueSource): boolean;
 }
 
@@ -767,7 +784,7 @@ export function useFormFieldController(id: string): FormFieldController {
     upsertIssue: (issue: FormIssue): boolean => (
       context.connection.value?.upsertFieldIssue(id, issue) ?? false
     ),
-    removeIssue: (issueId: Parameters<FormConnection<string>['removeFieldIssue']>[1]): boolean => (
+    removeIssue: (issueId: string | number): boolean => (
       context.connection.value?.removeFieldIssue(id, issueId) ?? false
     ),
     clearIssues: (source?: FormIssueSource): boolean => (
@@ -878,7 +895,7 @@ export const FormField = defineComponent({
         formContext.connection.value?.upsertFieldIssue(id.value, issue) ?? false
       ),
       removeIssue: (
-        issueId: Parameters<FormConnection<string>['removeFieldIssue']>[1],
+        issueId: string | number,
       ): boolean => formContext.connection.value?.removeFieldIssue(id.value, issueId) ?? false,
       clearIssues: (source?: FormIssueSource): boolean => (
         formContext.connection.value?.clearFieldIssues(id.value, source) ?? false
@@ -1449,7 +1466,7 @@ function createNativeFallbackRegistration(
   const fieldset = visible.find((candidate) => candidate.tagName === 'FIELDSET');
   if (fieldset !== undefined) {
     return {
-      registration: nativeFallbackForElement(fieldset, submissions),
+      registration: nativeFallbackForFieldset(fieldset, submissions),
       problem: null,
     };
   }
@@ -1486,6 +1503,48 @@ function createNativeFallbackRegistration(
     registration: null,
     problem: 'FormField contains multiple unrelated native controls. Use a fieldset or one composite registration.',
   };
+}
+
+function nativeFallbackForFieldset(
+  fieldset: HTMLElement,
+  submissions: readonly FormSubmissionElement[],
+): FormControlRegistration {
+  const visibleSubmissions = submissions.filter((element) => !isHiddenInput(element));
+  const checkboxGroup = isNativeCheckedGroup(visibleSubmissions)
+    && visibleSubmissions[0]?.tagName === 'INPUT'
+    && (visibleSubmissions[0] as HTMLInputElement).type.toLowerCase() === 'checkbox';
+  return {
+    element: () => fieldset,
+    semanticControl: () => fieldset,
+    focusTarget: () => fieldsetFocusTarget(submissions) ?? fieldset,
+    validationTarget: () => fieldset,
+    submissions: submissions.map((element) => ({
+      element: () => element,
+      capabilities: Object.freeze({
+        ...nativeSubmissionCapabilities(element),
+        ...(checkboxGroup ? { required: false } : {}),
+      }),
+    })),
+    labelMode: 'legend',
+    capabilities: nativeControlCapabilities(fieldset),
+  };
+}
+
+function fieldsetFocusTarget(
+  submissions: readonly FormSubmissionElement[],
+): FormSubmissionElement | undefined {
+  const enabled = submissions.filter((element) => (
+    !isHiddenInput(element)
+    && !element.disabled
+    && !element.matches(':disabled')
+  ));
+  const invalid = enabled.find((element) => element.willValidate && !element.validity.valid);
+  if (invalid !== undefined) return invalid;
+  return enabled.find((element) => (
+    element.tagName === 'INPUT'
+    && (element as HTMLInputElement).type.toLowerCase() === 'radio'
+    && (element as HTMLInputElement).checked
+  )) ?? enabled[0];
 }
 
 function nativeFallbackForElement(

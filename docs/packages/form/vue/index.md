@@ -1,6 +1,6 @@
 ---
 title: Vue forms
-description: Compose native inputs and Sectile components with the Vue Form parts.
+description: Compose native inputs and Sectile components with the Vue Form API.
 ---
 
 # Vue forms
@@ -26,6 +26,14 @@ import {
   defineFormSubmission,
 } from '@sectile/vue/form'
 ```
+
+## Try a complete Vue form
+
+Edit a field and watch the form-level state change. A successful save calls `reinitialize()`, so the values on screen become the new baseline and `dirty` returns to `false`.
+
+<FormPackageExample />
+
+This is a real `FormRoot` using Sectile `TextField` and `Select` components. Open the Code tab for a complete Vue example you can copy.
 
 ## Start with the form structure
 
@@ -105,13 +113,13 @@ Use the root slot for UI that depends on the whole form. Inputs continue to own 
 </FormRoot>
 ```
 
-`dirty` compares the current participant values with the form's baseline. It becomes `true` after a real value change and returns to `false` when the value returns to that baseline. `touched` records interaction independently, so it can remain `true` after `dirty` becomes `false`.
+`dirty` compares the values of registered fields and controls with the form's baseline. It becomes `true` after a real value change and returns to `false` when the value returns to that baseline. `touched` records interaction independently, so it can remain `true` after `dirty` becomes `false`.
 
 `validation` contains `generation`, `status`, `trigger`, and `intent`. `submission` contains `generation`, `status`, `count`, and `failure`. Read these grouped snapshots when UI depends on a lifecycle; `submitted` and `submitCount` remain root-slot conveniences derived from `submission.count`.
 
 ## Compose a custom summary
 
-`FormSummary` renders submission failure and issue messages by default. Its slot exposes the same lifecycle snapshots plus canonical issue projections, so a dialog description or another summary layout can consume Form state directly.
+`FormSummary` renders submission failure and issue messages by default. Its slot exposes the same lifecycle snapshots and current issue lists, so a dialog description or another summary layout can consume Form state directly.
 
 ```vue
 <FormSummary v-slot="{ validation, submission, issues, serverIssues, firstIssue, valid }">
@@ -123,7 +131,7 @@ Use the root slot for UI that depends on the whole form. Inputs continue to own 
 </FormSummary>
 ```
 
-One issue may name a primary `path` and several `relatedPaths`. It appears once in `issues`; the primary field exposes it through `issues`, while the other invalid fields expose it through `relatedIssues` and reference the summary in their ARIA metadata.
+One issue may name a primary `path` and several `relatedPaths`. It appears once in the summary's `issues` list. The primary field exposes it through its own `issues` list, while the related fields expose it through `relatedIssues` and reference the summary in their ARIA metadata.
 
 ## Establish a new baseline
 

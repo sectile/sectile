@@ -9,22 +9,27 @@ const readRepository = (path) => readFile(new URL(path, repositoryRoot), 'utf8')
 
 const guideNames = [
   'form.md',
-  'form/vue.md',
-  'form/dom.md',
-  'form/fields.md',
-  'form/validation.md',
-  'form/submission.md',
-  'form/custom-controls.md',
-  'form/ssr.md',
+  'form/vue/index.md',
+  'form/dom/index.md',
+  'form/vue/fields.md',
+  'form/vue/validation.md',
+  'form/vue/submission.md',
+  'form/vue/custom-controls.md',
+  'form/vue/ssr.md',
 ];
 
 test('Form documentation provides a complete task-oriented guide in both locales', async () => {
-  const [englishSources, koreanSources, api, koApi, config] = await Promise.all([
+  const [englishSources, koreanSources, apiChooser, koApiChooser, vueApi, koVueApi, domApi, koDomApi, config, hostSelector] = await Promise.all([
     Promise.all(guideNames.map((name) => readDocs(`packages/${name}`))),
     Promise.all(guideNames.map((name) => readDocs(`ko/packages/${name}`))),
     readDocs('packages/form/api.md'),
     readDocs('ko/packages/form/api.md'),
+    readDocs('packages/form/vue/api.md'),
+    readDocs('ko/packages/form/vue/api.md'),
+    readDocs('packages/form/dom/api.md'),
+    readDocs('ko/packages/form/dom/api.md'),
     readDocs('.vitepress/config.ts'),
+    readDocs('.vitepress/theme/components/HostSelector.vue'),
   ]);
 
   const [overview, vue, dom, fields, validation, submission, customControls, ssr] = englishSources;
@@ -32,34 +37,50 @@ test('Form documentation provides a complete task-oriented guide in both locales
 
   for (const source of [overview, koOverview]) {
     assert.match(source, /pnpm add [^\n`]*@sectile\/form/u);
-    assert.match(source, /<FormPackageExample/u);
     assert.match(source, /\.\/form\/api/u);
+    assert.doesNotMatch(source, /<FormPackageExample/u);
+    assert.doesNotMatch(source, /`FormRoot`|`FormField`|`FormConnection`|`createForm`/u);
   }
 
-  for (const source of [api, koApi]) {
+  for (const source of [apiChooser, koApiChooser]) {
+    assert.match(source, /\.\/vue\/api/u);
+    assert.match(source, /\.\/dom\/api/u);
+    assert.doesNotMatch(source, /Generated|생성함/u);
+  }
+
+  for (const source of [vueApi, koVueApi]) {
     assert.match(source, /Generated|생성함/u);
     assert.match(source, /FormRoot/u);
     assert.match(source, /defineFormSubmission/u);
+    assert.doesNotMatch(source, /FormConnection|DOMForm|createForm|registerParticipant|@sectile\/dom\/form/u);
+  }
+
+  for (const source of [domApi, koDomApi]) {
+    assert.match(source, /Generated|생성함/u);
+    assert.match(source, /createForm/u);
+    assert.match(source, /FormConnection/u);
+    assert.doesNotMatch(source, /FormRoot|useCompositeFormControl|@sectile\/vue\/form/u);
   }
 
   assert.match(overview, /\.\/form\/vue/u);
   assert.match(overview, /\.\/form\/dom/u);
-  assert.match(overview, /\.\/form\/custom-controls/u);
-  assert.match(overview, /- \[Vue\]\(\.\/form\/vue\)/u);
-  assert.match(overview, /- \[Direct DOM\]\(\.\/form\/dom\)/u);
+  assert.match(overview, /\.\/form\/vue\/custom-controls/u);
+  assert.match(overview, /- \[Vue\]\(\.\/form\/vue\/\)/u);
+  assert.match(overview, /- \[Direct DOM\]\(\.\/form\/dom\/\)/u);
   assert.doesNotMatch(overview, /form-integration-table/u);
   assert.doesNotMatch(overview, /Browser without Vue/u);
   assert.match(koOverview, /\.\/form\/vue/u);
   assert.match(koOverview, /\.\/form\/dom/u);
-  assert.match(koOverview, /\.\/form\/custom-controls/u);
+  assert.match(koOverview, /\.\/form\/vue\/custom-controls/u);
   assert.match(koOverview, /## 연결 방식 선택/u);
-  assert.match(koOverview, /- \[Vue\]\(\.\/form\/vue\)/u);
-  assert.match(koOverview, /- \[DOM 직접 연결\]\(\.\/form\/dom\)/u);
+  assert.match(koOverview, /- \[Vue\]\(\.\/form\/vue\/\)/u);
+  assert.match(koOverview, /- \[DOM 직접 연결\]\(\.\/form\/dom\/\)/u);
   assert.doesNotMatch(koOverview, /form-integration-table/u);
   assert.doesNotMatch(koOverview, /Vue를 쓰지 않는/u);
 
   for (const source of [vue, koVue]) {
     assert.match(source, /@sectile\/vue\/form/u);
+    assert.match(source, /<FormPackageExample/u);
     assert.match(source, /defineFormSubmission/u);
     assert.match(source, /<select/u);
     assert.match(source, /<TextField/u);
@@ -116,24 +137,30 @@ test('Form documentation provides a complete task-oriented guide in both locales
 
   for (const path of [
     '/packages/form/vue',
-    '/packages/form/api',
+    '/packages/form/vue/api',
+    '/packages/form/vue/fields',
+    '/packages/form/vue/validation',
+    '/packages/form/vue/submission',
+    '/packages/form/vue/custom-controls',
+    '/packages/form/vue/ssr',
     '/packages/form/dom',
-    '/packages/form/fields',
-    '/packages/form/validation',
-    '/packages/form/submission',
-    '/packages/form/custom-controls',
-    '/packages/form/ssr',
+    '/packages/form/dom/api',
     '/ko/packages/form/vue',
-    '/ko/packages/form/api',
+    '/ko/packages/form/vue/api',
+    '/ko/packages/form/vue/fields',
+    '/ko/packages/form/vue/validation',
+    '/ko/packages/form/vue/submission',
+    '/ko/packages/form/vue/custom-controls',
+    '/ko/packages/form/vue/ssr',
     '/ko/packages/form/dom',
-    '/ko/packages/form/fields',
-    '/ko/packages/form/validation',
-    '/ko/packages/form/submission',
-    '/ko/packages/form/custom-controls',
-    '/ko/packages/form/ssr',
+    '/ko/packages/form/dom/api',
   ]) {
     assert.match(config, new RegExp(path.replaceAll('/', '\\/'), 'u'));
   }
+
+  assert.match(hostSelector, /formHosts = \['dom', 'vue'\]/u);
+  assert.match(hostSelector, /router\.go\(withBase\(formTarget/u);
+  assert.match(hostSelector, /path\.match\([\s\S]*\(dom\|vue\)/u);
 });
 
 test('Form public documentation stays consumer-facing', async () => {
@@ -209,7 +236,8 @@ test('Form examples and API are owned by the Form package documentation', async 
   assert.equal(JSON.parse(componentData).components.some((component) => component.id === 'form'), false);
   assert.equal(JSON.parse(packageData).id, 'form');
   assert.doesNotMatch(sections, /['"]form['"]/u);
-  assert.match(generator, /form-package\.json[\s\S]+packages', 'form', 'api\.md'/u);
+  assert.match(generator, /packages', 'form', 'vue', 'api\.md'/u);
+  assert.match(generator, /packages', 'form', 'dom', 'api\.md'/u);
 
   await assert.rejects(readDocs('components/form.md'), { code: 'ENOENT' });
   await assert.rejects(readDocs('ko/components/form.md'), { code: 'ENOENT' });
