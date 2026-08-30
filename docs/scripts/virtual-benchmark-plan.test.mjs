@@ -35,6 +35,26 @@ test('benchmark plan expands profiles and supported condition combinations', () 
   assert.ok(summary.maximumDurationSeconds > summary.minimumDurationSeconds);
 });
 
+test('layout plan matches every declared library, mode, and operation capability', () => {
+  const families = ['flow-grid', 'masonry', 'track-grid', 'spatial'];
+  const targets = families.map((family) => ({
+    ...standardTarget,
+    family,
+    profile: 'all',
+  }));
+
+  const allLibraries = summarizeVirtualBenchmarkPlan(targets, options);
+  assert.equal(allLibraries.baselineConditions, 13);
+  assert.equal(allLibraries.mutationConditions, 147);
+
+  const sectileOnly = summarizeVirtualBenchmarkPlan(
+    targets.map((target) => ({ ...target, library: 'Sectile Virtual' })),
+    options,
+  );
+  assert.equal(sectileOnly.baselineConditions, 9);
+  assert.equal(sectileOnly.mutationConditions, 102);
+});
+
 test('benchmark plan respects single-condition custom targets', () => {
   const summary = summarizeVirtualBenchmarkPlan([{
     ...standardTarget,

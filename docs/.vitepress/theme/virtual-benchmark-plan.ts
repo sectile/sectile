@@ -62,12 +62,15 @@ export function summarizeVirtualBenchmarkPlan(
       }
 
       if (target.phase !== 'baseline') {
-        const operationCount = target.operation === 'all' ? 4 : 1;
+        const operations = target.operation === 'all'
+          ? ['insert', 'move', 'remove', 'resize'] as const
+          : [target.operation] as const;
         const locationCount = target.location === 'all' ? 3 : 1;
         for (const mode of mutationModes(target)) {
-          profileMutationConditions += libraryCount(target, mode, options)
-            * operationCount
-            * locationCount;
+          for (const operation of operations) {
+            profileMutationConditions += mutationLibraryCount(target, mode, operation, options)
+              * locationCount;
+          }
         }
       }
 
@@ -145,8 +148,25 @@ function libraryCount(
 function layoutModeLibraries(family: Exclude<VirtualBenchmarkPlanTarget['family'], 'list'>, mode: BaselineMode): readonly string[] {
   if (family === 'flow-grid') return mode === 'automatic' ? ['Sectile Virtual', 'React Virtuoso'] : ['Sectile Virtual'];
   if (family === 'masonry') return mode === 'estimated' ? ['Sectile Virtual', 'TanStack Virtual'] : mode === 'automatic' || mode === 'fixed' ? ['Sectile Virtual'] : [];
-  if (family === 'track-grid') return mode === 'fixed' ? ['Sectile Virtual', 'react-window'] : mode === 'estimated' ? ['Virtua'] : [];
+  if (family === 'track-grid') return mode === 'fixed' ? ['Sectile Virtual', 'react-window'] : mode === 'estimated' ? ['Sectile Virtual', 'Virtua'] : [];
   return mode === 'positioned' ? ['Sectile Virtual'] : [];
+}
+
+function mutationLibraryCount(
+  target: VirtualBenchmarkPlanTarget,
+  mode: MutationMode,
+  operation: Exclude<VirtualBenchmarkPlanTarget['operation'], 'all'>,
+  options: VirtualBenchmarkPlanOptions,
+): number {
+  if (target.family === 'list') return libraryCount(target, mode, options);
+  const supported = layoutModeLibraries(target.family, mode).filter((library) => {
+    if (operation !== 'resize') return true;
+    if ((target.family === 'flow-grid' || target.family === 'masonry') && mode === 'fixed') {
+      return library !== 'Sectile Virtual';
+    }
+    return !(target.family === 'track-grid' && mode === 'estimated' && library === 'Virtua');
+  });
+  return target.library === 'all' ? supported.length : Number(supported.includes(target.library));
 }
 
 function mutationSamplesPerCondition(target: VirtualBenchmarkPlanTarget): number {
