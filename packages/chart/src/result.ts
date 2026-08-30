@@ -18,6 +18,7 @@ export type ChartOwnErrorCode =
   | 'chart-profile-invalid'
   | 'chart-projection-ceiling-exceeded'
   | 'chart-projection-invalid'
+  | 'chart-query-invalid'
   | 'chart-scale-invalid'
   | 'chart-tick-ceiling-exceeded'
   | 'chart-view-transform-invalid'

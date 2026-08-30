@@ -1,5 +1,6 @@
 import { performance } from 'node:perf_hooks';
 import { createChartController } from '@sectile/chart/controller';
+import { prepareChartProjectionQueries, hitTestChartProjection } from '@sectile/chart/query';
 
 let sink = 0;
 
@@ -39,7 +40,20 @@ for (const size of [10_000, 100_000, 1_000_000]) {
     sink += controller.project(input).value.batches.length;
   }
   const cachedMicroseconds = Number((((performance.now() - cacheStartedAt) * 1_000) / cachedIterations).toFixed(3));
-  results[size] = { coldMs, cachedMicroseconds };
+  const projection = controller.project(input).value;
+  const indexStartedAt = performance.now();
+  prepareChartProjectionQueries(projection);
+  const indexBuildMs = Number((performance.now() - indexStartedAt).toFixed(3));
+  const queryIterations = 10_000;
+  const queryStartedAt = performance.now();
+  for (let iteration = 0; iteration < queryIterations; iteration += 1) {
+    sink += hitTestChartProjection(projection, {
+      x: (iteration * 104_729) % input.viewport.width,
+      y: (iteration * 130_363) % input.viewport.height,
+    }).length;
+  }
+  const hitTestMicroseconds = Number((((performance.now() - queryStartedAt) * 1_000) / queryIterations).toFixed(3));
+  results[size] = { coldMs, cachedMicroseconds, indexBuildMs, hitTestMicroseconds };
   controller.dispose();
 }
 

@@ -46,6 +46,11 @@
       "import": "./dist/projection.js",
       "default": "./dist/projection.js"
     },
+    "./query": {
+      "types": "./dist/query.d.ts",
+      "import": "./dist/query.js",
+      "default": "./dist/query.js"
+    },
     "./interaction": {
       "types": "./dist/interaction.d.ts",
       "import": "./dist/interaction.js",

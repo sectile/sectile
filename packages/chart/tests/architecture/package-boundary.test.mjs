@@ -8,6 +8,6 @@ test('Chart has one renderer-neutral workspace dependency and focused exports', 
   assert.equal(manifest.sideEffects, false);
   assert.deepEqual(
     Object.keys(manifest.exports),
-    ['.', './model', './result', './scale', './projection', './interaction', './controller', './package.json'],
+  ['.', './model', './result', './scale', './projection', './query', './interaction', './controller', './package.json'],
   );
 });
