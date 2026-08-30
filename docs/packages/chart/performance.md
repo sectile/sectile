@@ -30,3 +30,4 @@ pnpm --filter @sectile/chart benchmark
 
 Repository close verification also checks complexity witnesses, consumer bundles, optional-peer install cost, source maps, lifecycle retention, and public signatures.
 
+For a real GPU check, build the DOM package, serve the repository root, and open `packages/dom/verification/chart-webgl2-browser.html`. The fixture rejects software renderers, compiles and draws all five batch types, reads pixels back, uploads 100,000 points, exercises context loss/restoration, and proves zero live renderer resources after disconnect. The latest hardware result is recorded in `packages/dom/verification/chart-webgl2-browser.json`; it covers only the named browser and GPU.

@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/dom",
+  "status": "passed",
+  "browser": "Codex In-app Browser",
+  "url": "http://127.0.0.1:8766/packages/dom/verification/chart-webgl2-browser.html",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "vendor": "Google Inc. (Apple)",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2 Pro, Unspecified Version)",
+    "debugRendererInfo": true,
+    "softwareRenderer": false,
+    "drawingBuffer": { "width": 200, "height": 150 },
+    "maxTextureSize": 16384,
+    "maxVertexAttributes": 16
+  },
+  "capabilities": {
+    "canvas2d": true,
+    "webgl2": true,
+    "asynchronousGPUTiming": true
+  },
+  "scenarios": {
+    "hardwareContext": true,
+    "shaderPrograms": true,
+    "fiveBatchTypes": true,
+    "pixelReadback": true,
+    "noRenderError": true,
+    "stressUpload": true,
+    "contextLifecycle": true,
+    "resourceCleanup": true
+  },
+  "representativeDiagnostics": {
+    "mode": "webgl2",
+    "uploadedBytes": 84,
+    "drawCalls": 5,
+    "liveResources": 6
+  },
+  "stress": {
+    "datums": 100000,
+    "renderMs": 0.2,
+    "diagnostics": {
+      "mode": "webgl2",
+      "uploadedBytes": 800000,
+      "drawCalls": 1,
+      "liveResources": 6
+    }
+  },
+  "contextLifecycle": {
+    "supported": true,
+    "passed": true,
+    "lostObserved": true,
+    "restoredObserved": true,
+    "lostResources": 0,
+    "restoredResources": 6,
+    "restoredError": 0
+  },
+  "disconnectedDiagnostics": {
+    "mode": "webgl2",
+    "uploadedBytes": 84,
+    "drawCalls": 5,
+    "liveResources": 0
+  },
+  "errors": { "render": 0, "stress": 0 },
+  "consoleWarningsOrErrors": []
+}

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sectile Chart WebGL2 Browser Verification</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@sectile/chart/query": "/packages/chart/dist/query.js",
+          "@sectile/core/identity": "/packages/core/dist/identity.js",
+          "@sectile/core/result": "/packages/core/dist/result.js"
+        }
+      }
+    </script>
+    <style>
+      body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; }
+      canvas { border: 1px solid #aaa; width: 400px; height: 300px; image-rendering: pixelated; }
+      pre { background: #111; color: #eee; padding: 16px; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <h1>Chart WebGL2 hardware verification</h1>
+    <canvas id="chart" width="200" height="150"></canvas>
+    <pre id="result">running</pre>
+    <script type="module" src="./chart-webgl2-browser.mjs"></script>
+  </body>
+</html>

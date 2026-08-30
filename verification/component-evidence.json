@@ -30,7 +30,11 @@
         "packages/chart/tests/interaction/interaction.algebra.test.mjs",
         "packages/chart/tests/controller/controller.test.mjs"
       ],
-      "dom": ["packages/dom/tests/chart-renderer.test.mjs", "packages/dom/tests/chart-connection.test.mjs"],
+      "dom": [
+        "packages/dom/tests/chart-renderer.test.mjs",
+        "packages/dom/tests/chart-connection.test.mjs",
+        "packages/dom/verification/chart-webgl2-browser.mjs"
+      ],
       "vue": ["packages/vue/tests/chart.test.mjs", "packages/vue/tests/chart.dom.test.mjs"]
     },
     "form": {

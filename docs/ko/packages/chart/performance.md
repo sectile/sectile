@@ -30,3 +30,4 @@ pnpm --filter @sectile/chart benchmark
 
 Repository close 검증은 complexity witness, consumer bundle, optional peer install cost, source map, lifecycle retention과 public signature도 확인합니다.
 
+실제 GPU 검증은 DOM 패키지를 build하고 저장소 root를 serve한 다음 `packages/dom/verification/chart-webgl2-browser.html`을 엽니다. Fixture는 software renderer를 거부하고 다섯 batch type의 shader compile·draw와 pixel readback, 10만 point upload, context loss·restore, disconnect 후 live renderer resource 0을 확인합니다. 최신 하드웨어 결과는 `packages/dom/verification/chart-webgl2-browser.json`에 기록하며, 명시된 browser와 GPU에만 해당합니다.
