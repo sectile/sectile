@@ -22,6 +22,7 @@ const docsComponents = {
   TheoryContractDiagram: defineAsyncComponent(() => import('./components/TheoryContractDiagram.vue')),
   TheoryOverview: defineAsyncComponent(() => import('./components/TheoryOverview.vue')),
   VirtualBenchmarkReport: defineAsyncComponent(() => import('./components/VirtualBenchmarkReport.vue')),
+  VirtualBenchmarkSuiteReport: defineAsyncComponent(() => import('./components/VirtualBenchmarkSuiteReport.vue')),
   VirtualBenchmarkLab: defineAsyncComponent(() => import('./components/VirtualBenchmarkLab.vue')),
   VirtualExample: defineAsyncComponent(() => import('./components/VirtualExample.vue')),
   VirtualInstall: defineAsyncComponent(() => import('./components/VirtualInstall.vue')),

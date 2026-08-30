@@ -52,6 +52,7 @@ const copy = computed(() => isKorean.value ? {
   rounds: (count: number) => `${count}라운드`,
   samples: (actual: number, planned: number) => `표본 ${actual}/${planned}`,
   unsupported: '이 조건을 지원하지 않거나 측정값이 없습니다.',
+  missing: '지원 조건의 측정값이 없습니다.',
   failure: '초기 렌더 오류',
   failedSamples: (failed: number) => `${failed}개 표본 실패`,
   stopped: '조기 종료',
@@ -76,6 +77,7 @@ const copy = computed(() => isKorean.value ? {
   rounds: (count: number) => `${count} rounds`,
   samples: (actual: number, planned: number) => `n=${actual}/${planned}`,
   unsupported: 'This condition is unsupported or has no measurement.',
+  missing: 'This supported condition has no measurement.',
   failure: 'Initial-render failure',
   failedSamples: (failed: number) => `${failed} failed samples`,
   stopped: 'Stopped early',
@@ -168,9 +170,11 @@ function resultFor(metadata: { readonly library: string; readonly version: strin
     return {
       ...metadata,
       values: [null, null, null],
-      state: failure === undefined ? copy.value.unsupported : `${copy.value.failure} · ${failure.message}`,
+      state: failure === undefined
+        ? metadata.library === 'Sectile Virtual' ? copy.value.missing : copy.value.unsupported
+        : `${copy.value.failure} · ${failure.message}`,
       notice: null,
-      failed: failure !== undefined,
+      failed: failure !== undefined || metadata.library === 'Sectile Virtual',
       evidence: null,
     };
   }
@@ -179,11 +183,16 @@ function resultFor(metadata: { readonly library: string; readonly version: strin
     && entry.operation === scenario.value
     && entry.location === location.value);
   if (result === undefined) return {
-    ...metadata, values: [null, null, null], state: copy.value.unsupported, notice: null, failed: false, evidence: null,
+    ...metadata,
+    values: [null, null, null],
+    state: metadata.library === 'Sectile Virtual' ? copy.value.missing : copy.value.unsupported,
+    notice: null,
+    failed: metadata.library === 'Sectile Virtual',
+    evidence: null,
   };
   const notices = [
     result.failedSamples > 0 ? copy.value.failedSamples(result.failedSamples) : null,
-    result.earlyStopped ? copy.value.stopped : null,
+    result.earlyStopReason !== null && result.earlyStopReason !== 'stable-statistics' ? copy.value.stopped : null,
   ].filter((value): value is string => value !== null);
   return {
     ...metadata,

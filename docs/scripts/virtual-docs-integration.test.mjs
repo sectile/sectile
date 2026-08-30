@@ -227,3 +227,25 @@ test('Virtual benchmark runner routes each family and reports checkpoints', asyn
   assert.match(viteConfig, /__VUE_PROD_DEVTOOLS__:\s*false/u);
   assert.match(viteConfig, /__VUE_PROD_HYDRATION_MISMATCH_DETAILS__:\s*false/u);
 });
+
+test('Committed benchmark pages expose list through spatial from one suite report', async () => {
+  const [suite, theme, data, englishPackage, koreanPackage, englishPerformance, koreanPerformance] = await Promise.all([
+    source('.vitepress/theme/components/VirtualBenchmarkSuiteReport.vue'),
+    source('.vitepress/theme/index.ts'),
+    source('.vitepress/theme/virtual-benchmark-data.ts'),
+    source('packages/virtual/benchmark.md'),
+    source('ko/packages/virtual/benchmark.md'),
+    source('performance/virtualization.md'),
+    source('ko/performance/virtualization.md'),
+  ]);
+
+  assert.match(suite, /\['flow-grid', 'masonry', 'track-grid', 'spatial'\]/u);
+  assert.match(suite, /<VirtualBenchmarkReport :show-heading="false" \/>/u);
+  assert.match(suite, /<VirtualBenchmarkLayoutReport/u);
+  assert.match(theme, /VirtualBenchmarkSuiteReport/u);
+  assert.match(data, /export const layoutBaselineBenchmarkResults/u);
+  assert.match(data, /export const layoutMutationBenchmarkResults/u);
+  for (const page of [englishPackage, koreanPackage, englishPerformance, koreanPerformance]) {
+    assert.match(page, /<VirtualBenchmarkSuiteReport \/>/u);
+  }
+});

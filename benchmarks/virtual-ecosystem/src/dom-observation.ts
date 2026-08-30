@@ -29,3 +29,11 @@ export function waitForElement(
     complete();
   });
 }
+
+export function waitForPresentationBoundary(
+  requestFrame: (callback: FrameRequestCallback) => number = requestAnimationFrame,
+): Promise<void> {
+  return new Promise((resolve) => {
+    requestFrame(() => resolve());
+  });
+}

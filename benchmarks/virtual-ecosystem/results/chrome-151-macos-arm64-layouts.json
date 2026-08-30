@@ -1,0 +1,3456 @@
+{
+  "benchmarkSession": "sectile-virtual-ecosystem-layouts",
+  "schemaVersion": 3,
+  "status": "complete",
+  "configuration": {
+    "targets": [
+      {
+        "id": 1,
+        "family": "flow-grid",
+        "preset": "standard",
+        "profile": "all",
+        "phase": "both",
+        "library": "all",
+        "baselineMode": "all",
+        "mutationMode": "all",
+        "operation": "all",
+        "location": "all",
+        "rows": 100000,
+        "baselineRounds": 5,
+        "warmupScrolls": 5,
+        "scrollSamples": 20,
+        "mutationRounds": 5,
+        "mutationSamples": 10
+      },
+      {
+        "id": 2,
+        "family": "masonry",
+        "preset": "standard",
+        "profile": "all",
+        "phase": "both",
+        "library": "all",
+        "baselineMode": "all",
+        "mutationMode": "all",
+        "operation": "all",
+        "location": "all",
+        "rows": 100000,
+        "baselineRounds": 5,
+        "warmupScrolls": 5,
+        "scrollSamples": 20,
+        "mutationRounds": 5,
+        "mutationSamples": 10
+      },
+      {
+        "id": 3,
+        "family": "track-grid",
+        "preset": "standard",
+        "profile": "all",
+        "phase": "both",
+        "library": "all",
+        "baselineMode": "all",
+        "mutationMode": "all",
+        "operation": "all",
+        "location": "all",
+        "rows": 100000,
+        "baselineRounds": 5,
+        "warmupScrolls": 5,
+        "scrollSamples": 20,
+        "mutationRounds": 5,
+        "mutationSamples": 10
+      },
+      {
+        "id": 4,
+        "family": "spatial",
+        "preset": "standard",
+        "profile": "all",
+        "phase": "both",
+        "library": "all",
+        "baselineMode": "all",
+        "mutationMode": "all",
+        "operation": "all",
+        "location": "all",
+        "rows": 100000,
+        "baselineRounds": 5,
+        "warmupScrolls": 5,
+        "scrollSamples": 20,
+        "mutationRounds": 5,
+        "mutationSamples": 10
+      }
+    ]
+  },
+  "reportTargetIDs": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "reports": [
+    {
+      "benchmark": "sectile-virtual-ecosystem",
+      "protocolVersion": 10,
+      "environment": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "source": {
+        "gitCommit": "ce84a7b1f4b9fb2e0468d86f2b3c81b0d8ba06ec",
+        "gitDirty": false,
+        "buildFingerprint": "4788170244f819e40c13402fd3b2365325217708d11cc6e93753ae12119a130c"
+      },
+      "runs": {
+        "d020616f-2ce8-4a79-b21e-de94007bb1ba": {
+          "id": "d020616f-2ce8-4a79-b21e-de94007bb1ba",
+          "observedAt": "2026-08-30T16:03:50.343Z",
+          "completedAt": "2026-08-30T16:04:38.737Z",
+          "durationMs": 48384.9,
+          "source": {
+            "gitCommit": "ce84a7b1f4b9fb2e0468d86f2b3c81b0d8ba06ec",
+            "gitDirty": false,
+            "buildFingerprint": "4788170244f819e40c13402fd3b2365325217708d11cc6e93753ae12119a130c"
+          }
+        }
+      },
+      "conditions": {
+        "family": "flow-grid",
+        "itemCount": 100000,
+        "viewport": [
+          720,
+          480
+        ],
+        "validation": {
+          "exact": "exact content extent, absolute item geometry, identity, and viewport coverage",
+          "exactGeometry": "finite provisional extent plus exact absolute item geometry, identity, and viewport coverage",
+          "estimated": "committed revision, finite provisional extent, item identity and size, non-empty viewport coverage, and an observable affected-item mutation"
+        },
+        "baseline": {
+          "rounds": 5,
+          "warmupScrolls": 5,
+          "scrollSamples": 20
+        },
+        "mutations": {
+          "rounds": 5,
+          "samplesPerRound": 10,
+          "operations": [
+            "insert",
+            "move",
+            "remove",
+            "resize"
+          ],
+          "locations": [
+            "start",
+            "middle",
+            "end"
+          ]
+        }
+      },
+      "capabilities": [
+        {
+          "family": "flow-grid",
+          "library": "Sectile Virtual",
+          "baseline": true,
+          "mutations": true,
+          "modes": [
+            "fixed",
+            "estimated",
+            "automatic"
+          ],
+          "note": "VirtualGrid supports exact, estimated, and DOM-discovered item heights."
+        },
+        {
+          "family": "flow-grid",
+          "library": "React Virtuoso",
+          "baseline": true,
+          "mutations": true,
+          "modes": [
+            "automatic"
+          ],
+          "note": "VirtuosoGrid derives responsive grid geometry from rendered items."
+        }
+      ],
+      "layoutResults": [
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "setupMs": 19.2,
+          "firstItemsMs": 19.2,
+          "stableLayoutMs": 19.5,
+          "scrollMedianMs": 3,
+          "scrollP95Ms": 4,
+          "scrollMadMs": 0.3,
+          "scrollSampleCount": 100,
+          "completedRounds": 5,
+          "plannedRounds": 5,
+          "renderedItems": 52,
+          "domElements": 106
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "setupMs": 14.6,
+          "firstItemsMs": 14.6,
+          "stableLayoutMs": 14.8,
+          "scrollMedianMs": 2.8,
+          "scrollP95Ms": 3.6,
+          "scrollMadMs": 0.2,
+          "scrollSampleCount": 100,
+          "completedRounds": 5,
+          "plannedRounds": 5,
+          "renderedItems": 52,
+          "domElements": 106
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "setupMs": 16.3,
+          "firstItemsMs": 16.3,
+          "stableLayoutMs": 16.5,
+          "scrollMedianMs": 1.9,
+          "scrollP95Ms": 2.4,
+          "scrollMadMs": 0.2,
+          "scrollSampleCount": 100,
+          "completedRounds": 5,
+          "plannedRounds": 5,
+          "renderedItems": 36,
+          "domElements": 74
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "setupMs": 0.9,
+          "firstItemsMs": 11.9,
+          "stableLayoutMs": 12,
+          "scrollMedianMs": 0.5,
+          "scrollP95Ms": 0.7,
+          "scrollMadMs": 0.1,
+          "scrollSampleCount": 100,
+          "completedRounds": 5,
+          "plannedRounds": 5,
+          "renderedItems": 36,
+          "domElements": 75
+        }
+      ],
+      "layoutFailures": [],
+      "layoutMutationResults": [
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "start",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3.6,
+          "p95Ms": 9.1,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "middle",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3.8,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3,
+          "p95Ms": 9.1,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "start",
+          "medianMs": 8,
+          "medianLowerBoundMs": 3.1,
+          "p95Ms": 9.1,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "middle",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3.2,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "end",
+          "medianMs": 8,
+          "medianLowerBoundMs": 2.8,
+          "p95Ms": 9,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "start",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3.4,
+          "p95Ms": 9,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "middle",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3.5,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.4,
+          "samples": 50,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 2.6,
+          "p95Ms": 9.1,
+          "probeMedianMs": 0.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "start",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 2.5,
+          "p95Ms": 9.3,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "start",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 2.8,
+          "p95Ms": 9.1,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "insert",
+          "location": "start",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 0.4,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "middle",
+          "medianMs": 7.9,
+          "medianLowerBoundMs": 3,
+          "p95Ms": 8.3,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "middle",
+          "medianMs": 8,
+          "medianLowerBoundMs": 3,
+          "p95Ms": 8.9,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "insert",
+          "location": "middle",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 0.5,
+          "p95Ms": 8.8,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 2.6,
+          "p95Ms": 9.1,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 2.3,
+          "p95Ms": 8.5,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "insert",
+          "location": "end",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 0.3,
+          "p95Ms": 9.1,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "start",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 2.6,
+          "p95Ms": 9,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "start",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 2.6,
+          "p95Ms": 8.3,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "move",
+          "location": "start",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 0.3,
+          "p95Ms": 9.1,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "middle",
+          "medianMs": 8,
+          "medianLowerBoundMs": 2.8,
+          "p95Ms": 8.9,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "middle",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 2.7,
+          "p95Ms": 9,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "move",
+          "location": "middle",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 0.4,
+          "p95Ms": 9.1,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 2.6,
+          "p95Ms": 9,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 2.4,
+          "p95Ms": 9,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "move",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 0.3,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "start",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 2.9,
+          "p95Ms": 8.4,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "start",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 2.8,
+          "p95Ms": 8.3,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "remove",
+          "location": "start",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 0.4,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "middle",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3,
+          "p95Ms": 8.8,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "middle",
+          "medianMs": 8,
+          "medianLowerBoundMs": 3.3,
+          "p95Ms": 8.4,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "remove",
+          "location": "middle",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 0.4,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 2.3,
+          "p95Ms": 8.9,
+          "probeMedianMs": 0.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 2.1,
+          "p95Ms": 8.3,
+          "probeMedianMs": 0.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "remove",
+          "location": "end",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 0.3,
+          "p95Ms": 8.9,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "start",
+          "medianMs": 8,
+          "medianLowerBoundMs": 2,
+          "p95Ms": 8.8,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "start",
+          "medianMs": 7.7,
+          "medianLowerBoundMs": 2,
+          "p95Ms": 9.3,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "resize",
+          "location": "start",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 0.2,
+          "p95Ms": 9.3,
+          "probeMedianMs": 0.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "middle",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 2.3,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "middle",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 2.4,
+          "p95Ms": 8.6,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "resize",
+          "location": "middle",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 0.3,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 1.8,
+          "p95Ms": 8.3,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "end",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 1.8,
+          "p95Ms": 8.3,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "d020616f-2ce8-4a79-b21e-de94007bb1ba"
+          ],
+          "family": "flow-grid",
+          "mode": "automatic",
+          "library": "React Virtuoso",
+          "version": "4.18.12",
+          "stack": "React 19.2.8",
+          "operation": "resize",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 0.3,
+          "p95Ms": 8.7,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        }
+      ]
+    },
+    {
+      "benchmark": "sectile-virtual-ecosystem",
+      "protocolVersion": 10,
+      "environment": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "source": {
+        "gitCommit": "ce84a7b1f4b9fb2e0468d86f2b3c81b0d8ba06ec",
+        "gitDirty": false,
+        "buildFingerprint": "4788170244f819e40c13402fd3b2365325217708d11cc6e93753ae12119a130c"
+      },
+      "runs": {
+        "e5426464-d1b6-4d46-b037-d185d20a8d91": {
+          "id": "e5426464-d1b6-4d46-b037-d185d20a8d91",
+          "observedAt": "2026-08-30T16:04:59.134Z",
+          "completedAt": "2026-08-30T16:06:27.998Z",
+          "durationMs": 88864.4,
+          "source": {
+            "gitCommit": "ce84a7b1f4b9fb2e0468d86f2b3c81b0d8ba06ec",
+            "gitDirty": false,
+            "buildFingerprint": "4788170244f819e40c13402fd3b2365325217708d11cc6e93753ae12119a130c"
+          }
+        }
+      },
+      "conditions": {
+        "family": "masonry",
+        "itemCount": 100000,
+        "viewport": [
+          720,
+          480
+        ],
+        "validation": {
+          "exact": "exact content extent, absolute item geometry, identity, and viewport coverage",
+          "exactGeometry": "finite provisional extent plus exact absolute item geometry, identity, and viewport coverage",
+          "estimated": "committed revision, finite provisional extent, item identity and size, non-empty viewport coverage, and an observable affected-item mutation"
+        },
+        "baseline": {
+          "rounds": 5,
+          "warmupScrolls": 5,
+          "scrollSamples": 20
+        },
+        "mutations": {
+          "rounds": 5,
+          "samplesPerRound": 10,
+          "operations": [
+            "insert",
+            "move",
+            "remove",
+            "resize"
+          ],
+          "locations": [
+            "start",
+            "middle",
+            "end"
+          ]
+        }
+      },
+      "capabilities": [
+        {
+          "family": "masonry",
+          "library": "Sectile Virtual",
+          "baseline": true,
+          "mutations": true,
+          "modes": [
+            "fixed",
+            "estimated",
+            "automatic"
+          ],
+          "note": "VirtualMasonry supports exact, estimated, and DOM-discovered item heights."
+        },
+        {
+          "family": "masonry",
+          "library": "TanStack Virtual",
+          "baseline": true,
+          "mutations": true,
+          "modes": [
+            "estimated"
+          ],
+          "note": "The public lanes API requires estimateSize."
+        }
+      ],
+      "layoutResults": [
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "setupMs": 15.2,
+          "firstItemsMs": 15.2,
+          "stableLayoutMs": 15.4,
+          "scrollMedianMs": 2.8,
+          "scrollP95Ms": 3.5,
+          "scrollMadMs": 0.2,
+          "scrollSampleCount": 100,
+          "completedRounds": 5,
+          "plannedRounds": 5,
+          "renderedItems": 52,
+          "domElements": 106
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "setupMs": 9.6,
+          "firstItemsMs": 9.6,
+          "stableLayoutMs": 9.9,
+          "scrollMedianMs": 6.4,
+          "scrollP95Ms": 8.9,
+          "scrollMadMs": 0.5,
+          "scrollSampleCount": 100,
+          "completedRounds": 5,
+          "plannedRounds": 5,
+          "renderedItems": 54,
+          "domElements": 110
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "setupMs": 15.8,
+          "firstItemsMs": 15.8,
+          "stableLayoutMs": 16.1,
+          "scrollMedianMs": 6.1,
+          "scrollP95Ms": 21,
+          "scrollMadMs": 0.8,
+          "scrollSampleCount": 100,
+          "completedRounds": 5,
+          "plannedRounds": 5,
+          "renderedItems": 35,
+          "domElements": 72
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "setupMs": 18,
+          "firstItemsMs": 18,
+          "stableLayoutMs": 18.2,
+          "scrollMedianMs": 0.4,
+          "scrollP95Ms": 0.6,
+          "scrollMadMs": 0.1,
+          "scrollSampleCount": 100,
+          "completedRounds": 5,
+          "plannedRounds": 5,
+          "renderedItems": 28,
+          "domElements": 30
+        }
+      ],
+      "layoutFailures": [],
+      "layoutMutationResults": [
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "start",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3.7,
+          "p95Ms": 8.3,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "middle",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 3.7,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3,
+          "p95Ms": 9,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "start",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3.1,
+          "p95Ms": 8.9,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "middle",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3,
+          "p95Ms": 9.1,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3.1,
+          "p95Ms": 9.1,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "start",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 3.4,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "middle",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3.5,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "end",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 3,
+          "p95Ms": 8.2,
+          "probeMedianMs": 0.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "start",
+          "medianMs": 81.4,
+          "medianLowerBoundMs": 80.8,
+          "p95Ms": 134,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "start",
+          "medianMs": 68.4,
+          "medianLowerBoundMs": 67.8,
+          "p95Ms": 138.9,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "insert",
+          "location": "start",
+          "medianMs": 8.3,
+          "medianLowerBoundMs": 5.7,
+          "p95Ms": 9.6,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "middle",
+          "medianMs": 43.2,
+          "medianLowerBoundMs": 42.7,
+          "p95Ms": 74.8,
+          "probeMedianMs": 0.3,
+          "samples": 40,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "middle",
+          "medianMs": 51.1,
+          "medianLowerBoundMs": 50.4,
+          "p95Ms": 85.3,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "insert",
+          "location": "middle",
+          "medianMs": 8.6,
+          "medianLowerBoundMs": 6.3,
+          "p95Ms": 11.1,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "end",
+          "medianMs": 7,
+          "medianLowerBoundMs": 6.6,
+          "p95Ms": 7.8,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "end",
+          "medianMs": 6.8,
+          "medianLowerBoundMs": 6.5,
+          "p95Ms": 7.3,
+          "probeMedianMs": 0.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "insert",
+          "location": "end",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 5.7,
+          "p95Ms": 9.7,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "start",
+          "medianMs": 68.3,
+          "medianLowerBoundMs": 67.7,
+          "p95Ms": 136.1,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "start",
+          "medianMs": 67.8,
+          "medianLowerBoundMs": 67.3,
+          "p95Ms": 136.2,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "move",
+          "location": "start",
+          "medianMs": 8.3,
+          "medianLowerBoundMs": 5.7,
+          "p95Ms": 9.8,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "middle",
+          "medianMs": 37.8,
+          "medianLowerBoundMs": 37.3,
+          "p95Ms": 72.7,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "middle",
+          "medianMs": 38.9,
+          "medianLowerBoundMs": 38.6,
+          "p95Ms": 72.7,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "move",
+          "location": "middle",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 5.6,
+          "p95Ms": 10.3,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "end",
+          "medianMs": 6.9,
+          "medianLowerBoundMs": 6.6,
+          "p95Ms": 8.6,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "end",
+          "medianMs": 6.8,
+          "medianLowerBoundMs": 6.4,
+          "p95Ms": 7.2,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "move",
+          "location": "end",
+          "medianMs": 8.3,
+          "medianLowerBoundMs": 5.5,
+          "p95Ms": 9.3,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "start",
+          "medianMs": 73.6,
+          "medianLowerBoundMs": 73,
+          "p95Ms": 136.7,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "start",
+          "medianMs": 71.9,
+          "medianLowerBoundMs": 71.4,
+          "p95Ms": 141.3,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "remove",
+          "location": "start",
+          "medianMs": 8.3,
+          "medianLowerBoundMs": 5.4,
+          "p95Ms": 10.2,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "middle",
+          "medianMs": 40.4,
+          "medianLowerBoundMs": 39.8,
+          "p95Ms": 76.5,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "middle",
+          "medianMs": 40.1,
+          "medianLowerBoundMs": 39.6,
+          "p95Ms": 71.6,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "remove",
+          "location": "middle",
+          "medianMs": 8.3,
+          "medianLowerBoundMs": 5.5,
+          "p95Ms": 9.3,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "end",
+          "medianMs": 6.4,
+          "medianLowerBoundMs": 6.2,
+          "p95Ms": 6.8,
+          "probeMedianMs": 0.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "end",
+          "medianMs": 6.6,
+          "medianLowerBoundMs": 6.1,
+          "p95Ms": 7.2,
+          "probeMedianMs": 0.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "remove",
+          "location": "end",
+          "medianMs": 8.3,
+          "medianLowerBoundMs": 5.6,
+          "p95Ms": 9.3,
+          "probeMedianMs": 0.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "start",
+          "medianMs": 3.1,
+          "medianLowerBoundMs": 1.8,
+          "p95Ms": 4.4,
+          "probeMedianMs": 0.2,
+          "samples": 40,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "start",
+          "medianMs": 3.2,
+          "medianLowerBoundMs": 1.8,
+          "p95Ms": 3.7,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "resize",
+          "location": "start",
+          "medianMs": 8.3,
+          "medianLowerBoundMs": 5.6,
+          "p95Ms": 9.6,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "middle",
+          "medianMs": 3.1,
+          "medianLowerBoundMs": 2,
+          "p95Ms": 3.4,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "middle",
+          "medianMs": 3,
+          "medianLowerBoundMs": 2,
+          "p95Ms": 5.9,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "resize",
+          "location": "middle",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 5.4,
+          "p95Ms": 9.3,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "end",
+          "medianMs": 3.2,
+          "medianLowerBoundMs": 1.6,
+          "p95Ms": 4.3,
+          "probeMedianMs": 0.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "automatic",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "end",
+          "medianMs": 3.1,
+          "medianLowerBoundMs": 1.6,
+          "p95Ms": 4.2,
+          "probeMedianMs": 0.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "e5426464-d1b6-4d46-b037-d185d20a8d91"
+          ],
+          "family": "masonry",
+          "mode": "estimated",
+          "library": "TanStack Virtual",
+          "version": "3.14.10",
+          "stack": "React 19.2.8",
+          "operation": "resize",
+          "location": "end",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 5.6,
+          "p95Ms": 10.2,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        }
+      ]
+    },
+    {
+      "benchmark": "sectile-virtual-ecosystem",
+      "protocolVersion": 10,
+      "environment": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "source": {
+        "gitCommit": "ce84a7b1f4b9fb2e0468d86f2b3c81b0d8ba06ec",
+        "gitDirty": false,
+        "buildFingerprint": "4788170244f819e40c13402fd3b2365325217708d11cc6e93753ae12119a130c"
+      },
+      "runs": {
+        "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c": {
+          "id": "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c",
+          "observedAt": "2026-08-30T16:06:44.757Z",
+          "completedAt": "2026-08-30T16:07:15.153Z",
+          "durationMs": 30396,
+          "source": {
+            "gitCommit": "ce84a7b1f4b9fb2e0468d86f2b3c81b0d8ba06ec",
+            "gitDirty": false,
+            "buildFingerprint": "4788170244f819e40c13402fd3b2365325217708d11cc6e93753ae12119a130c"
+          }
+        }
+      },
+      "conditions": {
+        "family": "track-grid",
+        "itemCount": 100000,
+        "viewport": [
+          720,
+          480
+        ],
+        "validation": {
+          "exact": "exact content extent, absolute item geometry, identity, and viewport coverage",
+          "exactGeometry": "finite provisional extent plus exact absolute item geometry, identity, and viewport coverage",
+          "estimated": "committed revision, finite provisional extent, item identity and size, non-empty viewport coverage, and an observable affected-item mutation"
+        },
+        "baseline": {
+          "rounds": 5,
+          "warmupScrolls": 5,
+          "scrollSamples": 20
+        },
+        "mutations": {
+          "rounds": 5,
+          "samplesPerRound": 10,
+          "operations": [
+            "insert",
+            "move",
+            "remove",
+            "resize"
+          ],
+          "locations": [
+            "start",
+            "middle",
+            "end"
+          ]
+        }
+      },
+      "capabilities": [
+        {
+          "family": "track-grid",
+          "library": "Sectile Virtual",
+          "baseline": true,
+          "mutations": true,
+          "modes": [
+            "fixed"
+          ],
+          "note": "VirtualizerRoot uses trackGridLayoutStrategy with independent row and column tracks."
+        },
+        {
+          "family": "track-grid",
+          "library": "react-window",
+          "baseline": true,
+          "mutations": true,
+          "modes": [
+            "fixed"
+          ],
+          "note": "Grid requires row and column sizes and lazily derives the aggregate extent for function sizes."
+        },
+        {
+          "family": "track-grid",
+          "library": "Virtua",
+          "baseline": true,
+          "mutations": true,
+          "modes": [
+            "estimated"
+          ],
+          "note": "experimental_VGrid receives row and column size hints."
+        }
+      ],
+      "layoutResults": [
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "setupMs": 12.6,
+          "firstItemsMs": 12.6,
+          "stableLayoutMs": 13.2,
+          "scrollMedianMs": 8.7,
+          "scrollP95Ms": 13.5,
+          "scrollMadMs": 0.8,
+          "scrollSampleCount": 100,
+          "completedRounds": 5,
+          "plannedRounds": 5,
+          "renderedItems": 372,
+          "domElements": 746
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "setupMs": 2.7,
+          "firstItemsMs": 2.7,
+          "stableLayoutMs": 3.5,
+          "scrollMedianMs": 8,
+          "scrollP95Ms": 9.5,
+          "scrollMadMs": 0.5,
+          "scrollSampleCount": 100,
+          "completedRounds": 5,
+          "plannedRounds": 5,
+          "renderedItems": 345,
+          "domElements": 370
+        }
+      ],
+      "layoutFailures": [
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "estimated",
+          "library": "Virtua",
+          "version": "0.50.5",
+          "stack": "React 19.2.8",
+          "round": 1,
+          "message": "geometry:item-37215"
+        }
+      ],
+      "layoutMutationResults": [
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "start",
+          "medianMs": 11.4,
+          "medianLowerBoundMs": 8.9,
+          "p95Ms": 16.6,
+          "probeMedianMs": 1.8,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "insert",
+          "location": "start",
+          "medianMs": 7.9,
+          "medianLowerBoundMs": 1.3,
+          "p95Ms": 8.3,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "middle",
+          "medianMs": 12.4,
+          "medianLowerBoundMs": 9.5,
+          "p95Ms": 17.6,
+          "probeMedianMs": 2.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "insert",
+          "location": "middle",
+          "medianMs": 7.7,
+          "medianLowerBoundMs": 1.7,
+          "p95Ms": 8,
+          "probeMedianMs": 0.7,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "end",
+          "medianMs": 9.7,
+          "medianLowerBoundMs": 8.7,
+          "p95Ms": 14.3,
+          "probeMedianMs": 0.8,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "insert",
+          "location": "end",
+          "medianMs": 7.5,
+          "medianLowerBoundMs": 1.1,
+          "p95Ms": 8.4,
+          "probeMedianMs": 0.6,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "start",
+          "medianMs": 9.1,
+          "medianLowerBoundMs": 8.2,
+          "p95Ms": 13.9,
+          "probeMedianMs": 0.6,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "move",
+          "location": "start",
+          "medianMs": 7.8,
+          "medianLowerBoundMs": 0.7,
+          "p95Ms": 8.8,
+          "probeMedianMs": 0.5,
+          "samples": 50,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "middle",
+          "medianMs": 10.1,
+          "medianLowerBoundMs": 8.7,
+          "p95Ms": 15.6,
+          "probeMedianMs": 1.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "move",
+          "location": "middle",
+          "medianMs": 7.5,
+          "medianLowerBoundMs": 1,
+          "p95Ms": 7.9,
+          "probeMedianMs": 0.7,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "end",
+          "medianMs": 10.2,
+          "medianLowerBoundMs": 8.8,
+          "p95Ms": 15.6,
+          "probeMedianMs": 0.9,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "move",
+          "location": "end",
+          "medianMs": 7.5,
+          "medianLowerBoundMs": 0.9,
+          "p95Ms": 10.9,
+          "probeMedianMs": 0.5,
+          "samples": 50,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "start",
+          "medianMs": 11.3,
+          "medianLowerBoundMs": 8.7,
+          "p95Ms": 16.6,
+          "probeMedianMs": 1.8,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "remove",
+          "location": "start",
+          "medianMs": 7.9,
+          "medianLowerBoundMs": 1.3,
+          "p95Ms": 8.2,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "middle",
+          "medianMs": 12.4,
+          "medianLowerBoundMs": 9.5,
+          "p95Ms": 18.8,
+          "probeMedianMs": 2.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "remove",
+          "location": "middle",
+          "medianMs": 7.4,
+          "medianLowerBoundMs": 1.9,
+          "p95Ms": 8.3,
+          "probeMedianMs": 0.7,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "end",
+          "medianMs": 10.2,
+          "medianLowerBoundMs": 9,
+          "p95Ms": 15.5,
+          "probeMedianMs": 0.9,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "remove",
+          "location": "end",
+          "medianMs": 7.5,
+          "medianLowerBoundMs": 0.9,
+          "p95Ms": 8.7,
+          "probeMedianMs": 0.5,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "start",
+          "medianMs": 9.6,
+          "medianLowerBoundMs": 8.3,
+          "p95Ms": 14.6,
+          "probeMedianMs": 0.9,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "resize",
+          "location": "start",
+          "medianMs": 7.9,
+          "medianLowerBoundMs": 1,
+          "p95Ms": 8.8,
+          "probeMedianMs": 0.7,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "middle",
+          "medianMs": 10.7,
+          "medianLowerBoundMs": 9.1,
+          "p95Ms": 16.1,
+          "probeMedianMs": 1.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "resize",
+          "location": "middle",
+          "medianMs": 7.5,
+          "medianLowerBoundMs": 1.6,
+          "p95Ms": 8.3,
+          "probeMedianMs": 1.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "end",
+          "medianMs": 9.5,
+          "medianLowerBoundMs": 8.6,
+          "p95Ms": 14.5,
+          "probeMedianMs": 0.8,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "10ee1635-cf70-4dd6-9108-7f2ec3cbc87c"
+          ],
+          "family": "track-grid",
+          "mode": "fixed",
+          "library": "react-window",
+          "version": "2.3.0",
+          "stack": "React 19.2.8",
+          "operation": "resize",
+          "location": "end",
+          "medianMs": 7.5,
+          "medianLowerBoundMs": 1.1,
+          "p95Ms": 8.4,
+          "probeMedianMs": 0.6,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        }
+      ]
+    },
+    {
+      "benchmark": "sectile-virtual-ecosystem",
+      "protocolVersion": 10,
+      "environment": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "source": {
+        "gitCommit": "ce84a7b1f4b9fb2e0468d86f2b3c81b0d8ba06ec",
+        "gitDirty": false,
+        "buildFingerprint": "4788170244f819e40c13402fd3b2365325217708d11cc6e93753ae12119a130c"
+      },
+      "runs": {
+        "068467ac-e069-4d87-9c9d-713e24fb7cfc": {
+          "id": "068467ac-e069-4d87-9c9d-713e24fb7cfc",
+          "observedAt": "2026-08-30T16:08:04.199Z",
+          "completedAt": "2026-08-30T16:08:51.167Z",
+          "durationMs": 46968.3,
+          "source": {
+            "gitCommit": "ce84a7b1f4b9fb2e0468d86f2b3c81b0d8ba06ec",
+            "gitDirty": false,
+            "buildFingerprint": "4788170244f819e40c13402fd3b2365325217708d11cc6e93753ae12119a130c"
+          }
+        }
+      },
+      "conditions": {
+        "family": "spatial",
+        "itemCount": 100000,
+        "viewport": [
+          720,
+          480
+        ],
+        "validation": {
+          "exact": "exact content extent, absolute item geometry, identity, and viewport coverage",
+          "exactGeometry": "finite provisional extent plus exact absolute item geometry, identity, and viewport coverage",
+          "estimated": "committed revision, finite provisional extent, item identity and size, non-empty viewport coverage, and an observable affected-item mutation"
+        },
+        "baseline": {
+          "rounds": 5,
+          "warmupScrolls": 5,
+          "scrollSamples": 20
+        },
+        "mutations": {
+          "rounds": 5,
+          "samplesPerRound": 10,
+          "operations": [
+            "insert",
+            "move",
+            "remove",
+            "resize"
+          ],
+          "locations": [
+            "start",
+            "middle",
+            "end"
+          ]
+        }
+      },
+      "capabilities": [
+        {
+          "family": "spatial",
+          "library": "Sectile Virtual",
+          "baseline": true,
+          "mutations": true,
+          "modes": [
+            "positioned"
+          ],
+          "note": "VirtualSpatial consumes application-owned rectangles and z-order."
+        },
+        {
+          "family": "spatial",
+          "library": "react-virtualized",
+          "baseline": true,
+          "mutations": false,
+          "modes": [
+            "positioned"
+          ],
+          "note": "Collection is excluded until its application positioner can be isolated from timed library work."
+        }
+      ],
+      "layoutResults": [
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "setupMs": 90,
+          "firstItemsMs": 90,
+          "stableLayoutMs": 90.4,
+          "scrollMedianMs": 7.2,
+          "scrollP95Ms": 12,
+          "scrollMadMs": 0.6,
+          "scrollSampleCount": 100,
+          "completedRounds": 5,
+          "plannedRounds": 5,
+          "renderedItems": 164,
+          "domElements": 330
+        }
+      ],
+      "layoutFailures": [],
+      "layoutMutationResults": [
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "start",
+          "medianMs": 141,
+          "medianLowerBoundMs": 139.5,
+          "p95Ms": 168.5,
+          "probeMedianMs": 1.1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "middle",
+          "medianMs": 100.9,
+          "medianLowerBoundMs": 99.6,
+          "p95Ms": 130.8,
+          "probeMedianMs": 0.9,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "insert",
+          "location": "end",
+          "medianMs": 8.2,
+          "medianLowerBoundMs": 4.2,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "start",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 4.8,
+          "p95Ms": 9.2,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "middle",
+          "medianMs": 8,
+          "medianLowerBoundMs": 5.5,
+          "p95Ms": 9,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "move",
+          "location": "end",
+          "medianMs": 8,
+          "medianLowerBoundMs": 4.2,
+          "p95Ms": 9.5,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "start",
+          "medianMs": 139.5,
+          "medianLowerBoundMs": 138,
+          "p95Ms": 161.7,
+          "probeMedianMs": 1,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "middle",
+          "medianMs": 98.9,
+          "medianLowerBoundMs": 97.4,
+          "p95Ms": 130.7,
+          "probeMedianMs": 0.9,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "remove",
+          "location": "end",
+          "medianMs": 8,
+          "medianLowerBoundMs": 4.3,
+          "p95Ms": 8.5,
+          "probeMedianMs": 0.2,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "start",
+          "medianMs": 8.1,
+          "medianLowerBoundMs": 4.4,
+          "p95Ms": 9,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "middle",
+          "medianMs": 8,
+          "medianLowerBoundMs": 5.1,
+          "p95Ms": 9,
+          "probeMedianMs": 0.4,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        },
+        {
+          "runIds": [
+            "068467ac-e069-4d87-9c9d-713e24fb7cfc"
+          ],
+          "family": "spatial",
+          "mode": "positioned",
+          "library": "Sectile Virtual",
+          "version": "0.11.1",
+          "stack": "Vue 3.5.22",
+          "operation": "resize",
+          "location": "end",
+          "medianMs": 8,
+          "medianLowerBoundMs": 4,
+          "p95Ms": 8.6,
+          "probeMedianMs": 0.3,
+          "samples": 30,
+          "failedSamples": 0,
+          "failureCodes": [],
+          "plannedSamples": 50,
+          "earlyStopped": true,
+          "earlyStopReason": "stable-statistics"
+        }
+      ]
+    }
+  ],
+  "source": {
+    "gitCommit": "ce84a7b1f4b9fb2e0468d86f2b3c81b0d8ba06ec",
+    "gitDirty": false,
+    "buildFingerprint": "4788170244f819e40c13402fd3b2365325217708d11cc6e93753ae12119a130c"
+  }
+}

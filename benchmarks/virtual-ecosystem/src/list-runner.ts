@@ -2,6 +2,7 @@ import { fixedAdapters, type BenchmarkAdapter, type MountedAdapter } from './ada
 import { ITEM_COUNT, items, ROW_HEIGHT, VIEWPORT_HEIGHT, type RowProfile } from './constants.js';
 import { createHeightOracle, type ExpectedLayout, type HeightOracle } from './fixture.js';
 import { requiresExactTotalHeight } from './baseline-policy.js';
+import { waitForElement, waitForPresentationBoundary } from './dom-observation.js';
 import {
   EMBEDDED_LONG_TASK_BUDGET_MS,
   exceedsEmbeddedLongTaskBudget,
@@ -62,6 +63,10 @@ interface BenchmarkResult {
   readonly library: string;
   readonly version: string;
   readonly stack: string;
+  readonly firstInstanceSetupMs: number;
+  readonly firstInstanceFirstRowsMs: number;
+  readonly firstInstanceLayoutReadyMs: number;
+  readonly firstInstancePresentationReadyMs: number;
   readonly setupMs: number;
   readonly firstRowsMs: number;
   readonly mountMs: number;
@@ -82,6 +87,13 @@ interface BenchmarkResult {
   readonly completedRounds: number;
   readonly plannedRounds: number;
   readonly earlyStopReason: 'stable-statistics' | null;
+}
+
+interface FirstInstanceTiming {
+  readonly setupMs: number;
+  readonly firstRowsMs: number;
+  readonly layoutReadyMs: number;
+  readonly presentationReadyMs: number;
 }
 
 interface BaselineBenchmarkFailure {
@@ -109,6 +121,10 @@ interface BaselineSample extends ScrollMeasurement {
 }
 
 interface RawBenchmarkResult extends Omit<BenchmarkResult,
+  | 'firstInstanceSetupMs'
+  | 'firstInstanceFirstRowsMs'
+  | 'firstInstanceLayoutReadyMs'
+  | 'firstInstancePresentationReadyMs'
   | 'setupMs'
   | 'firstRowsMs'
   | 'mountMs'
@@ -174,6 +190,8 @@ declare global {
 
 const search = new URLSearchParams(window.location.search);
 const EMBEDDED = search.has('embedded');
+const FIRST_INSTANCE_WORKER = search.has('first-instance-worker');
+const FIRST_INSTANCE_CHANNEL = 'sectile-virtual-first-instance';
 const QUICK_RUN = search.has('quick');
 const requestedBaselineRounds = positiveInteger(search.get('baseline-rounds'));
 const ADAPTIVE_BASELINE = !QUICK_RUN && requestedBaselineRounds === undefined;
@@ -238,7 +256,7 @@ const root = document.querySelector<HTMLElement>('#app');
 if (root === null) throw new Error('Missing benchmark root.');
 document.documentElement.style.setProperty('--benchmark-row-height', `${ROW_HEIGHT}px`);
 
-root.innerHTML = EMBEDDED ? `
+root.innerHTML = EMBEDDED || FIRST_INSTANCE_WORKER ? `
   <div id="mount" aria-hidden="true"></div>
 ` : `
   <header>
@@ -251,7 +269,7 @@ root.innerHTML = EMBEDDED ? `
     <div id="mount"></div>
     <h2>Initial render and scrolling</h2>
     <table>
-      <thead><tr><th>Row profile</th><th>Height input</th><th>Library</th><th>Stack</th><th>Setup</th><th>First rows</th><th>Stable layout</th><th>Scroll median</th><th>Scroll p95</th></tr></thead>
+      <thead><tr><th>Row profile</th><th>Height input</th><th>Library</th><th>Stack</th><th>First layout</th><th>First presentation</th><th>Warm setup</th><th>Warm first rows</th><th>Warm layout</th><th>Scroll median</th><th>Scroll p95</th></tr></thead>
       <tbody id="results"></tbody>
     </table>
     <h2>Height input support</h2>
@@ -277,7 +295,7 @@ const mutationResultsBody = document.querySelector<HTMLElement>('#mutation-resul
 const json = document.querySelector<HTMLElement>('#json');
 if (mountHost === null) throw new Error('Benchmark mount host is missing.');
 const benchmarkMountHost: HTMLElement = mountHost;
-if (!EMBEDDED && (
+if (!EMBEDDED && !FIRST_INSTANCE_WORKER && (
   runButton === null
   || status === null
   || resultsBody === null
@@ -286,9 +304,11 @@ if (!EMBEDDED && (
   || json === null
 )) throw new Error('Benchmark UI is incomplete.');
 
-if (supportResultsBody !== null) for (const support of heightModeSupport) supportResultsBody.append(renderSupport(support));
-runButton?.addEventListener('click', () => { void runAll(); });
-if (EMBEDDED) queueMicrotask(() => { void runAll(); });
+if (!FIRST_INSTANCE_WORKER) {
+  if (supportResultsBody !== null) for (const support of heightModeSupport) supportResultsBody.append(renderSupport(support));
+  runButton?.addEventListener('click', () => { void runAll(); });
+  if (EMBEDDED) queueMicrotask(() => { void runAll(); });
+} else queueMicrotask(() => { void runFirstInstanceWorker(); });
 
 let currentStatus = 'Ready.';
 
@@ -311,6 +331,7 @@ async function runAll(): Promise<void> {
   mutationResultsBody?.replaceChildren();
   if (json !== null) json.textContent = '';
   const raw = new Map<string, RawBenchmarkResult[]>();
+  const firstInstanceTimings = new Map<string, FirstInstanceTiming>();
   const baselineFailures: BaselineBenchmarkFailure[] = [];
   const baselineFailedCases = new Set<string>();
   const baselineEarlyStops = new Set<string>();
@@ -332,6 +353,12 @@ async function runAll(): Promise<void> {
     });
     const oracle = await createHeightOracle(rowProfile);
     if (!MUTATIONS_ONLY) {
+      for (let index = 0; index < activeCases.length; index += 1) {
+        const benchmarkCase = activeCases[index]!;
+        setStatus(`First instance ${index + 1}/${activeCases.length} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`);
+        publish('progress', { phase: 'first-instance', message: currentStatus, completed: index, total: activeCases.length });
+        firstInstanceTimings.set(caseKey(benchmarkCase), await measureIsolatedFirstInstance(benchmarkCase));
+      }
       for (let index = 0; index < activeCases.length; index += 1) {
         const benchmarkCase = activeCases[index]!;
         setStatus(`Warming ${index + 1}/${activeCases.length} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`);
@@ -419,7 +446,7 @@ async function runAll(): Promise<void> {
           completed: baselineResolved,
           total: baselineTotal,
           ...(samples.length >= MINIMUM_BASELINE_ROUNDS
-            ? { baselineResult: aggregate(benchmarkCase, samples, baselineEarlyStops.has(key)) }
+            ? { baselineResult: aggregate(benchmarkCase, samples, baselineEarlyStops.has(key), firstInstanceTimings.get(key)) }
             : {}),
           baselineSampleKey: key,
           baselineSamples: baselineSampleRecords(runId, samples),
@@ -432,7 +459,9 @@ async function runAll(): Promise<void> {
       const rounds = raw.get(caseKey(entry)) ?? [];
       const failed = baselineFailures.some((failure) => baselineFailureKey(failure) === caseKey(entry));
       const complete = baselineEarlyStops.has(caseKey(entry)) || rounds.length === ROUNDS;
-      return !failed && complete ? [aggregate(entry, rounds, baselineEarlyStops.has(caseKey(entry)))] : [];
+      return !failed && complete
+        ? [aggregate(entry, rounds, baselineEarlyStops.has(caseKey(entry)), firstInstanceTimings.get(caseKey(entry)))]
+        : [];
     });
     const baselineSamples = Object.freeze(Object.fromEntries(baselineCases.map((entry) => [
       caseKey(entry),
@@ -482,7 +511,7 @@ async function runAll(): Promise<void> {
     });
     const report = {
       benchmark: 'sectile-virtual-ecosystem',
-      protocolVersion: 10,
+      protocolVersion: 11,
       environment: navigator.userAgent,
       source: __BENCHMARK_SOURCE__,
       runs,
@@ -513,9 +542,10 @@ async function runAll(): Promise<void> {
           stableFailureMinMs: STABLE_FAILURE_MIN_MS,
           stableFailureFrames: STABLE_FAILURE_FRAMES,
           timing: {
-            caseWarmup: 'one complete untimed mount per condition before measured rounds',
-            setupMs: 'adapter and framework setup through committed scroller output',
-            firstRowsMs: 'time until the first benchmark rows exist',
+            firstInstance: 'one fresh same-origin browsing context per condition; recorded separately and excluded from warm medians',
+            firstInstancePresentationReadyMs: 'time until the first correct layout reaches the next browser presentation opportunity',
+            setupMs: 'warm median for adapter and framework setup through committed scroller output',
+            firstRowsMs: 'warm median until the first benchmark rows exist',
             mountMs: rowProfile === 'uniform'
               ? 'time until total scroll height and viewport geometry are correct'
               : 'time until the initial viewport geometry is correct; total-height estimate error is recorded separately',
@@ -603,6 +633,41 @@ function dynamicCase(adapter: MutableBenchmarkAdapter, profile: RowProfile): Ben
   });
 }
 
+async function measureFirstInstance(
+  benchmarkCase: BenchmarkCase,
+  host: HTMLElement,
+  oracle: HeightOracle,
+): Promise<FirstInstanceTiming> {
+  host.replaceChildren();
+  const startedAt = performance.now();
+  const mounted = benchmarkCase.mount(host);
+  try {
+    await waitForScroller(host);
+    const setupMs = performance.now() - startedAt;
+    await waitForAnyRows(host);
+    const firstRowsMs = performance.now() - startedAt;
+    const expectedLayout = oracle.layout(items);
+    const strictTotalHeight = requiresExactTotalHeight(benchmarkCase.rowProfile);
+    await waitForBaselineLayout(
+      mounted.scroller,
+      strictTotalHeight ? 0 : undefined,
+      expectedLayout,
+      strictTotalHeight,
+    );
+    const layoutReadyMs = performance.now() - startedAt;
+    await waitForPresentationBoundary();
+    return Object.freeze({
+      setupMs,
+      firstRowsMs,
+      layoutReadyMs,
+      presentationReadyMs: performance.now() - startedAt,
+    });
+  } finally {
+    mounted.unmount();
+    host.replaceChildren();
+  }
+}
+
 async function warmCase(
   benchmarkCase: BenchmarkCase,
   host: HTMLElement,
@@ -624,6 +689,73 @@ async function warmCase(
     mounted.unmount();
     host.replaceChildren();
   }
+}
+
+function measureIsolatedFirstInstance(benchmarkCase: BenchmarkCase): Promise<FirstInstanceTiming> {
+  const source = new URL(window.location.href);
+  source.searchParams.delete('embedded');
+  source.searchParams.set('first-instance-worker', '');
+  source.searchParams.set('row-profile', benchmarkCase.rowProfile);
+  source.searchParams.set('library', benchmarkCase.name);
+  source.searchParams.set('baseline-mode', benchmarkCase.mode);
+  source.hash = '';
+  const frame = document.createElement('iframe');
+  frame.src = source.href;
+  frame.tabIndex = -1;
+  frame.setAttribute('aria-hidden', 'true');
+  frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:800px;height:600px;opacity:0;pointer-events:none;border:0';
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = (): void => {
+      window.removeEventListener('message', receive);
+      clearTimeout(timeoutID);
+      frame.remove();
+    };
+    const finish = (callback: () => void): void => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      callback();
+    };
+    const receive = (event: MessageEvent): void => {
+      if (event.origin !== window.location.origin || event.source !== frame.contentWindow) return;
+      const message = event.data as Readonly<Record<string, unknown>> | null;
+      if (message?.['channel'] !== FIRST_INSTANCE_CHANNEL) return;
+      const timing = message['timing'];
+      if (message['type'] === 'complete' && isFirstInstanceTiming(timing)) {
+        finish(() => resolve(timing));
+      } else if (message['type'] === 'error') {
+        finish(() => reject(new Error(String(message['message'] ?? 'First-instance worker failed.'))));
+      }
+    };
+    const timeoutID = window.setTimeout(() => {
+      finish(() => reject(new Error(`Timed out measuring the first ${benchmarkCase.name} (${benchmarkCase.mode}) instance.`)));
+    }, FRAME_TIMEOUT_MS * 3);
+    window.addEventListener('message', receive);
+    document.body.append(frame);
+  });
+}
+
+async function runFirstInstanceWorker(): Promise<void> {
+  try {
+    if (activeCases.length !== 1) throw new Error(`Expected one first-instance condition, received ${activeCases.length}.`);
+    const oracle = await createHeightOracle(rowProfile);
+    const timing = await measureFirstInstance(activeCases[0]!, benchmarkMountHost, oracle);
+    window.parent.postMessage({ channel: FIRST_INSTANCE_CHANNEL, type: 'complete', timing }, window.location.origin);
+  } catch (error) {
+    window.parent.postMessage({
+      channel: FIRST_INSTANCE_CHANNEL,
+      type: 'error',
+      message: error instanceof Error ? error.message : String(error),
+    }, window.location.origin);
+  }
+}
+
+function isFirstInstanceTiming(value: unknown): value is FirstInstanceTiming {
+  if (typeof value !== 'object' || value === null) return false;
+  const timing = value as Readonly<Record<string, unknown>>;
+  return ['setupMs', 'firstRowsMs', 'layoutReadyMs', 'presentationReadyMs']
+    .every((key) => typeof timing[key] === 'number' && Number.isFinite(timing[key]));
 }
 
 async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement, oracle: HeightOracle): Promise<RawBenchmarkResult> {
@@ -684,9 +816,13 @@ function aggregate(
   benchmarkCase: BenchmarkCase,
   rounds: readonly RawBenchmarkResult[],
   stableStatistics: boolean,
+  firstInstanceTiming: FirstInstanceTiming | undefined,
 ): BenchmarkResult {
   if (rounds.length < MINIMUM_BASELINE_ROUNDS) {
     throw new Error(`${benchmarkCase.name} (${benchmarkCase.mode}) produced ${rounds.length}/${MINIMUM_BASELINE_ROUNDS} required rounds.`);
+  }
+  if (firstInstanceTiming === undefined) {
+    throw new Error(`${benchmarkCase.name} (${benchmarkCase.mode}) is missing its first-instance timing.`);
   }
   const setups = rounds.map((round) => round.setupMs).sort(ascending);
   const firstRows = rounds.map((round) => round.firstRowsMs).sort(ascending);
@@ -709,6 +845,10 @@ function aggregate(
     library: benchmarkCase.name,
     version: benchmarkCase.version,
     stack: benchmarkCase.stack,
+    firstInstanceSetupMs: round(firstInstanceTiming.setupMs),
+    firstInstanceFirstRowsMs: round(firstInstanceTiming.firstRowsMs),
+    firstInstanceLayoutReadyMs: round(firstInstanceTiming.layoutReadyMs),
+    firstInstancePresentationReadyMs: round(firstInstanceTiming.presentationReadyMs),
     setupMs: round(percentile(setups, 0.5)),
     firstRowsMs: round(percentile(firstRows, 0.5)),
     mountMs: round(percentile(mounts, 0.5)),
@@ -977,53 +1117,21 @@ function assertBaselineSnapshot(
 }
 
 function waitForAnyRows(host: HTMLElement): Promise<void> {
-  return waitForDOMCondition(
+  return waitForElement(
     host,
     () => host.querySelector('.bench-row[data-index]') !== null,
     'the first benchmark rows',
+    FRAME_TIMEOUT_MS,
   );
 }
 
 function waitForScroller(host: HTMLElement): Promise<void> {
-  return waitForDOMCondition(
+  return waitForElement(
     host,
     () => host.querySelector('.bench-scroller') !== null,
-    'Timed out waiting for the scroller shell.',
+    'the scroller shell',
+    FRAME_TIMEOUT_MS,
   );
-}
-
-function waitForDOMCondition(
-  root: Node,
-  predicate: () => boolean,
-  label: string,
-): Promise<void> {
-  if (predicate()) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    const observer = new MutationObserver(() => {
-      if (!predicate()) return;
-      settled = true;
-      observer.disconnect();
-      clearTimeout(timeoutID);
-      resolve();
-    });
-    const timeoutID = window.setTimeout(() => {
-      if (settled) return;
-      observer.disconnect();
-      reject(new Error(`Timed out waiting for ${label}.`));
-    }, FRAME_TIMEOUT_MS);
-    observer.observe(root, {
-      attributes: true,
-      childList: true,
-      subtree: true,
-    });
-    if (predicate()) {
-      settled = true;
-      observer.disconnect();
-      clearTimeout(timeoutID);
-      resolve();
-    };
-  });
 }
 
 function renderResult(result: BenchmarkResult): HTMLTableRowElement {
@@ -1032,6 +1140,8 @@ function renderResult(result: BenchmarkResult): HTMLTableRowElement {
     result.mode,
     `${result.library} ${result.version}`,
     result.stack,
+    `${result.firstInstanceLayoutReadyMs.toFixed(2)} ms`,
+    `${result.firstInstancePresentationReadyMs.toFixed(2)} ms`,
     `${result.setupMs.toFixed(2)} ms`,
     `${result.firstRowsMs.toFixed(2)} ms`,
     `${result.mountMs.toFixed(2)} ms`,
@@ -1051,6 +1161,8 @@ function renderBaselineFailure(benchmarkCase: BenchmarkCase, reason: string): HT
     benchmarkCase.mode,
     `${benchmarkCase.name} ${benchmarkCase.version}`,
     benchmarkCase.stack,
+    'failed',
+    'failed',
     'failed',
     'failed',
     reason,

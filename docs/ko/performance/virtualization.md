@@ -9,7 +9,7 @@ description: 주요 가상화 라이브러리의 브라우저 실행 결과와 S
 
 ## 브라우저 비교 결과
 
-<VirtualBenchmarkReport />
+<VirtualBenchmarkSuiteReport />
 
 랩은 목록, 흐름 격자, 메이슨리, 트랙 격자, 자유 좌표 배치를 다룹니다. 같은 family 안에서는 모든 어댑터에 동일한 결정적 항목과 720 × 480px 화면을 제공합니다. 고정값, 예상값, 높이 생략, 위치 제공 조건을 분리하고 삽입·이동·삭제·크기 변경도 시작·중간·끝에서 각각 실행합니다.
 
@@ -17,7 +17,7 @@ description: 주요 가상화 라이브러리의 브라우저 실행 결과와 S
 
 스크롤 시간은 브라우저가 스크롤 이벤트를 전달하기 시작한 순간부터 DOM 좌표를 모두 읽은 순간까지 잽니다. 그래프에는 좌표 읽기 비용까지 포함한 상한을 씁니다. 원본 결과에는 좌표를 읽기 전의 하한, 좌표 읽기 비용, 검사 횟수, 중앙값 절대 편차, 라운드별 범위도 기록했습니다.
 
-2026년 8월 27일, Chrome 151, Apple Silicon, macOS에서 얻은 결과입니다. 프레임워크와 연결 코드의 처리 시간도 포함되므로 배치 알고리즘만 떼어 낸 수치로 읽으면 안 됩니다.
+2026년 8월 31일, Chrome 151, Apple Silicon, macOS에서 커밋 `ce84a7b`의 clean production build로 얻은 결과입니다. 목록부터 자유 좌표 배치까지 Sectile correctness 오류는 없었습니다. 프레임워크와 연결 코드의 처리 시간도 포함되므로 배치 알고리즘만 떼어 낸 수치로 읽으면 안 됩니다.
 
 비교 대상은 [TanStack Virtual](https://www.npmjs.com/package/%40tanstack/react-virtual), [react-window](https://www.npmjs.com/package/react-window), [React Virtuoso](https://www.npmjs.com/package/react-virtuoso), [react-virtualized](https://www.npmjs.com/package/react-virtualized), [Virtua](https://www.npmjs.com/package/virtua), [Vue Virtual Scroller](https://www.npmjs.com/package/vue-virtual-scroller)입니다. 실행 코드와 원본 JSON은 `benchmarks/virtual-ecosystem`에 있습니다.
 

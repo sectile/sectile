@@ -78,7 +78,11 @@ export function assertLayoutSnapshot(
         Math.abs(item.x - expected.x) > tolerance
         || Math.abs(item.y - expected.y) > tolerance
       ))
-    ) throw new Error(`geometry:${item.id}`);
+    ) throw new Error([
+      `geometry:${item.id}`,
+      `actual=${formatRect(item)}`,
+      `expected=${formatRect(expected)}`,
+    ].join(':'));
     if (rectanglesIntersectViewport(item, snapshot, tolerance)) intersectsViewport = true;
   }
   if (expectedByID !== undefined) {
@@ -95,6 +99,10 @@ export function assertLayoutSnapshot(
   for (const id of expectation.excludedItemIDs ?? []) {
     if (seen.has(id)) throw new Error(`excluded-item:${id}`);
   }
+}
+
+function formatRect(rect: Readonly<{ x: number; y: number; width: number; height: number }>): string {
+  return `${rect.x},${rect.y},${rect.width},${rect.height}`;
 }
 
 export function layoutMutationObserved(

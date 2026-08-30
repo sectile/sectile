@@ -12,6 +12,7 @@ const mergeMutations = args.includes('--merge-mutations');
 const inputPath = resolve(args.find((argument) => !argument.startsWith('--')) ?? '/tmp/sectile-virtual-benchmark.json');
 const fullRawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64.json');
 const baselineRawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64-baseline.json');
+const layoutRawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64-layouts.json');
 const docsOutputPath = resolve(repoRoot, 'docs/.vitepress/theme/virtual-benchmark-data.ts');
 const incomingReport = JSON.parse(await readFile(inputPath, 'utf8'));
 if ([baselineOnly, mergeBaseline, mergeMutations].filter(Boolean).length > 1) {
@@ -80,6 +81,13 @@ const rawReport = {
   ...report,
   conditions,
 };
+const layoutBundle = await readJsonIfExists(layoutRawOutputPath);
+const layoutReports = layoutBundle?.reports ?? [];
+for (const layoutReport of layoutReports) assertCompatibleSource(rawReport, layoutReport);
+const layoutBaselineResults = layoutReports.flatMap((layoutReport) => layoutReport.layoutResults ?? []);
+const layoutBaselineFailures = layoutReports.flatMap((layoutReport) => layoutReport.layoutFailures ?? []);
+const layoutMutationResults = layoutReports.flatMap((layoutReport) => layoutReport.layoutMutationResults ?? []);
+const benchmarkRuns = mergeRuns(report, ...layoutReports);
 
 const baselineResults = report.baselineResults.map((result) => ({
   runIds: result.runIds,
@@ -88,6 +96,10 @@ const baselineResults = report.baselineResults.map((result) => ({
   library: result.library,
   version: result.version,
   stack: result.stack,
+  firstInstanceSetupMs: result.firstInstanceSetupMs,
+  firstInstanceFirstRowsMs: result.firstInstanceFirstRowsMs,
+  firstInstanceLayoutReadyMs: result.firstInstanceLayoutReadyMs,
+  firstInstancePresentationReadyMs: result.firstInstancePresentationReadyMs,
   setupMs: result.setupMs,
   firstRowsMs: result.firstRowsMs,
   mountMs: result.mountMs,
@@ -162,6 +174,60 @@ const docsModule = `export type BenchmarkOperation = 'insert' | 'move' | 'remove
 export type BenchmarkLocation = 'start' | 'middle' | 'end';
 export type BenchmarkHeightMode = 'fixed' | 'estimated' | 'automatic';
 export type BenchmarkRowProfile = 'uniform' | 'heterogeneous';
+export type BenchmarkFamily = 'list' | 'flow-grid' | 'masonry' | 'track-grid' | 'spatial';
+export type LayoutBenchmarkMode = BenchmarkHeightMode | 'positioned';
+
+export interface LayoutBaselineBenchmarkResult {
+  readonly runIds: readonly string[];
+  readonly family: Exclude<BenchmarkFamily, 'list'>;
+  readonly mode: LayoutBenchmarkMode;
+  readonly library: string;
+  readonly version: string;
+  readonly stack: string;
+  readonly setupMs: number;
+  readonly firstItemsMs: number;
+  readonly stableLayoutMs: number;
+  readonly scrollMedianMs: number;
+  readonly scrollP95Ms: number;
+  readonly scrollMadMs: number;
+  readonly scrollSampleCount: number;
+  readonly completedRounds: number;
+  readonly plannedRounds: number;
+  readonly renderedItems: number;
+  readonly domElements: number;
+}
+
+export interface LayoutBaselineBenchmarkFailure {
+  readonly runIds: readonly string[];
+  readonly family: Exclude<BenchmarkFamily, 'list'>;
+  readonly mode: LayoutBenchmarkMode;
+  readonly library: string;
+  readonly version: string;
+  readonly stack: string;
+  readonly round: number;
+  readonly message: string;
+}
+
+export interface LayoutMutationBenchmarkResult {
+  readonly runIds: readonly string[];
+  readonly family: Exclude<BenchmarkFamily, 'list'>;
+  readonly mode: LayoutBenchmarkMode;
+  readonly library: string;
+  readonly version: string;
+  readonly stack: string;
+  readonly operation: BenchmarkOperation;
+  readonly location: BenchmarkLocation;
+  readonly medianMs: number | null;
+  readonly medianLowerBoundMs: number | null;
+  readonly p95Ms: number | null;
+  readonly probeMedianMs: number | null;
+  readonly samples: number;
+  readonly failedSamples: number;
+  readonly failureCodes: readonly string[];
+  readonly plannedSamples: number;
+  readonly earlyStopped: boolean;
+  readonly earlyStopReason: 'interactive-budget' | 'reproducible-failure' | 'stable-statistics' | null;
+}
 
 export interface BaselineBenchmarkResult {
   readonly runIds: readonly string[];
@@ -170,6 +236,10 @@ export interface BaselineBenchmarkResult {
   readonly library: string;
   readonly version: string;
   readonly stack: string;
+  readonly firstInstanceSetupMs?: number;
+  readonly firstInstanceFirstRowsMs?: number;
+  readonly firstInstanceLayoutReadyMs?: number;
+  readonly firstInstancePresentationReadyMs?: number;
   readonly setupMs: number;
   readonly firstRowsMs: number;
   readonly mountMs: number;
@@ -275,13 +345,19 @@ export const baselineBenchmarkFailures: readonly BaselineBenchmarkFailure[] = Ob
 
 export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Object.freeze(${JSON.stringify(mutationResults, null, 2)});
 
+export const layoutBaselineBenchmarkResults: readonly LayoutBaselineBenchmarkResult[] = Object.freeze(${JSON.stringify(layoutBaselineResults, null, 2)});
+
+export const layoutBaselineBenchmarkFailures: readonly LayoutBaselineBenchmarkFailure[] = Object.freeze(${JSON.stringify(layoutBaselineFailures, null, 2)});
+
+export const layoutMutationBenchmarkResults: readonly LayoutMutationBenchmarkResult[] = Object.freeze(${JSON.stringify(layoutMutationResults, null, 2)});
+
 export const heightModeSupport: readonly HeightModeSupport[] = Object.freeze(${JSON.stringify(report.heightModeSupport, null, 2)});
 
 export const benchmarkRowProfiles: Readonly<Partial<Record<BenchmarkRowProfile, BenchmarkRowProfileConditions>>> = Object.freeze(${JSON.stringify(report.conditions.rowProfiles, null, 2)});
 
 export const benchmarkSource: BenchmarkSource = Object.freeze(${JSON.stringify(report.source, null, 2)});
 
-export const benchmarkRuns: Readonly<Record<string, BenchmarkRunMetadata>> = Object.freeze(${JSON.stringify(report.runs, null, 2)});
+export const benchmarkRuns: Readonly<Record<string, BenchmarkRunMetadata>> = Object.freeze(${JSON.stringify(benchmarkRuns, null, 2)});
 `;
 
 await Promise.all([
@@ -379,5 +455,14 @@ function assertCompleteBaselineReport(report) {
   ]);
   if (!profiles.has('uniform') || !profiles.has('heterogeneous')) {
     throw new Error('A committed baseline report must contain both row profiles. Merge both baseline shards first.');
+  }
+}
+
+async function readJsonIfExists(path) {
+  try {
+    return JSON.parse(await readFile(path, 'utf8'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') return undefined;
+    throw error;
   }
 }

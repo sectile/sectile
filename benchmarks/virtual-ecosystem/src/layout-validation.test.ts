@@ -53,7 +53,9 @@ test('estimated validation still rejects stale identities, incorrect sizes, and 
   }), fixture, 'estimated', 3), /stale-item/);
   assert.throws(() => assertLayoutSnapshot(snapshot({
     items: [{ ...snapshot().items[0]!, height: first.height + 10 }],
-  }), fixture, 'estimated', 3), /geometry/);
+  }), fixture, 'estimated', 3), new RegExp(
+    `geometry:${first.id}:actual=[^:]*,${first.height + 10}:expected=[^:]*,${first.height}`,
+  ));
   assert.throws(() => assertLayoutSnapshot(snapshot({ items: [] }), fixture, 'estimated', 3), /empty-viewport/);
 });
 

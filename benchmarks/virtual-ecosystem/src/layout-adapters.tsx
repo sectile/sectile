@@ -87,7 +87,8 @@ export const layoutAdapters: readonly LayoutBenchmarkAdapter[] = Object.freeze([
   createSectileCollectionAdapter('masonry', 'estimated'),
   createSectileCollectionAdapter('masonry', 'automatic'),
   createTanStackMasonryAdapter(),
-  createSectileTrackGridAdapter(),
+  createSectileTrackGridAdapter('fixed'),
+  createSectileTrackGridAdapter('estimated'),
   createReactWindowTrackGridAdapter(),
   createVirtuaTrackGridAdapter(),
   createSectileCollectionAdapter('spatial', 'positioned'),
@@ -98,7 +99,7 @@ export const layoutCapabilities: readonly BenchmarkCapability[] = Object.freeze(
   capability('flow-grid', 'React Virtuoso', true, ['automatic'], 'VirtuosoGrid derives responsive grid geometry from rendered items.'),
   capability('masonry', 'Sectile Virtual', true, ['fixed', 'estimated', 'automatic'], 'VirtualMasonry supports exact, estimated, and DOM-discovered item heights.'),
   capability('masonry', 'TanStack Virtual', true, ['estimated'], 'The public lanes API requires estimateSize.'),
-  capability('track-grid', 'Sectile Virtual', true, ['fixed'], 'VirtualizerRoot uses trackGridLayoutStrategy with independent row and column tracks.'),
+  capability('track-grid', 'Sectile Virtual', true, ['fixed', 'estimated'], 'VirtualizerRoot uses trackGridLayoutStrategy with exact or estimated independent row tracks and exact column tracks.'),
   capability('track-grid', 'react-window', true, ['fixed'], 'Grid requires row and column sizes and lazily derives the aggregate extent for function sizes.'),
   capability('track-grid', 'Virtua', true, ['estimated'], 'experimental_VGrid receives row and column size hints.'),
   capability('spatial', 'Sectile Virtual', true, ['positioned'], 'VirtualSpatial consumes application-owned rectangles and z-order.'),
@@ -316,21 +317,21 @@ function createVirtuaTrackGridAdapter(): LayoutBenchmarkAdapter {
   return reactAdapter('track-grid', 'Virtua', '0.50.5', 'estimated', 'estimated', App, structuralMutations);
 }
 
-function createSectileTrackGridAdapter(): LayoutBenchmarkAdapter {
+function createSectileTrackGridAdapter(mode: Extract<LayoutSizeMode, 'fixed' | 'estimated'>): LayoutBenchmarkAdapter {
   return Object.freeze({
     family: 'track-grid',
     name: 'Sectile Virtual',
     version: sectileVirtualVersion,
     stack: 'Vue 3.5.22',
-    mode: 'fixed',
+    mode,
     fixtureProfile: 'variable',
-    validationMode: 'exact',
+    validationMode: mode === 'fixed' ? 'exact' : 'estimated',
     mutationOperations: allMutations,
     mount(host: HTMLElement, initial: LayoutBenchmarkFixture) {
       const fixture = shallowRef(initial);
       const component = defineComponent({
         setup() {
-          const state = shallowRef(createTrackState(fixture.value));
+          const state = shallowRef(createTrackState(fixture.value, mode));
           const root = shallowRef<HTMLElement | null>(null);
           const virtualizer = useVueVirtualizer({
             // The harness pins Vue 3.5.22 while the workspace package builds against its current Vue peer.
@@ -343,7 +344,7 @@ function createSectileTrackGridAdapter(): LayoutBenchmarkAdapter {
           });
           const update = (next: LayoutBenchmarkFixture): void => {
             fixture.value = next;
-            state.value = createTrackState(next);
+            state.value = createTrackState(next, mode);
           };
           (component as unknown as { update?: (next: LayoutBenchmarkFixture) => void }).update = update;
           onBeforeUnmount(() => { root.value = null; });
@@ -390,9 +391,13 @@ function createSectileTrackGridAdapter(): LayoutBenchmarkAdapter {
   });
 }
 
-function createTrackState(fixture: LayoutBenchmarkFixture) {
+function createTrackState(
+  fixture: LayoutBenchmarkFixture,
+  mode: Extract<LayoutSizeMode, 'fixed' | 'estimated'>,
+) {
+  const rowKind = mode === 'fixed' ? 'exact' as const : 'estimated' as const;
   return createDenseTrackGridLayout(
-    createExtentIndex(fixture.rowHeights.map((value) => ({ kind: 'exact' as const, value }))),
+    createExtentIndex(fixture.rowHeights.map((value) => ({ kind: rowKind, value }))),
     createExtentIndex(fixture.columnWidths.map((value) => ({ kind: 'exact' as const, value }))),
     layoutAdapterItems(fixture).map((item) => item.id),
     { maxRegions: 1_000_001 },
@@ -445,7 +450,7 @@ function reactLayoutItemAttributes(item: LayoutBenchmarkItem): Record<string, un
     className: 'bench-item',
     'data-id': item.id,
     'data-index': item.index,
-    style: { width: '100%', height: item.height } satisfies CSSProperties,
+    style: { width: item.width, height: item.height } satisfies CSSProperties,
   };
 }
 

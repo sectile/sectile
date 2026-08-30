@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { waitForElement } from './dom-observation.ts';
+import { waitForElement, waitForPresentationBoundary } from './dom-observation.ts';
 
 test('element readiness resolves from mutation delivery without frame polling', async () => {
   const original = Object.getOwnPropertyDescriptor(globalThis, 'MutationObserver');
@@ -27,4 +27,17 @@ test('element readiness resolves from mutation delivery without frame polling', 
     if (original === undefined) delete (globalThis as { MutationObserver?: unknown }).MutationObserver;
     else Object.defineProperty(globalThis, 'MutationObserver', original);
   }
+});
+
+test('presentation readiness records the next frame separately from DOM readiness', async () => {
+  const callbacks: FrameRequestCallback[] = [];
+  const pending = waitForPresentationBoundary((callback) => {
+    callbacks.push(callback);
+    return callbacks.length;
+  });
+
+  assert.equal(callbacks.length, 1);
+  callbacks.shift()?.(16);
+  await pending;
+  assert.equal(callbacks.length, 0);
 });

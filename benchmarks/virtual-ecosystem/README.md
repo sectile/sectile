@@ -2,7 +2,7 @@
 
 This browser benchmark compares equivalent public framework paths across list, flow-grid, masonry, track-grid, and spatial families. The list family covers seven virtualizers:
 
-- Sectile Virtual 0.10.0 with Vue 3.5.22
+- Sectile Virtual 0.11.1 with Vue 3.5.22
 - TanStack Virtual 3.14.10 with React 19.2.8
 - react-window 2.3.0 with React 19.2.8
 - React Virtuoso 4.18.12 with React 19.2.8
@@ -33,9 +33,9 @@ The uniform profile uses an exact 72px estimate. The heterogeneous profile delib
 
 The automatic condition includes only libraries whose public API can start without application-provided size information. Unsupported libraries remain listed in the result metadata with the required input.
 
-Before measured rounds, the runner completes one untimed mount for every active condition so framework initialization and compilation do not belong to whichever condition happens to run first. It then rotates library order with a step that is coprime to the active condition count, including focused three-condition runs. Each round performs five warm-up scrolls followed by 20 recorded scrolls across the full collection. After three rounds, a condition stops when its cumulative median changes by no more than 5% and its p95 by no more than 10%. Unstable conditions continue through all five rounds. The harness changes `scrollTop` after a frame boundary, then starts timing when the browser begins delivering the native scroll event. It reads row geometry and records the time immediately after those DOM reads. Correctness validation runs against that snapshot outside the timed interval.
+Before measured rounds, the runner measures one first instance for every active condition in a fresh same-origin browsing context. It records DOM and layout readiness separately from the next browser presentation opportunity, then excludes that instance from warm medians. The main runner completes one additional untimed mount per condition before rotating library order with a step that is coprime to the active condition count, including focused three-condition runs. Each round performs five warm-up scrolls followed by 20 recorded scrolls across the full collection. After three rounds, a condition stops when its cumulative median changes by no more than 5% and its p95 by no more than 10%. Unstable conditions continue through all five rounds. The harness changes `scrollTop` after a frame boundary, then starts timing when the browser begins delivering the native scroll event. It reads row geometry and records the time immediately after those DOM reads. Correctness validation runs against that snapshot outside the timed interval.
 
-Each raw scroll sample retains its round and sample number, a lower bound taken before geometry reads, a conservative upper bound taken after those reads, the probe cost between both bounds, and the number of correctness checks. The reported median and p95 use the conservative upper bound. MAD and per-round ranges remain in the result so a slow round is not hidden by the pooled median. Initial rendering reports the committed scroller shell, first row output, and the first correct viewport layout, so synchronously mounted Vue output and scheduled React output share the same setup boundary.
+Each raw scroll sample retains its round and sample number, a lower bound taken before geometry reads, a conservative upper bound taken after those reads, the probe cost between both bounds, and the number of correctness checks. The reported median and p95 use the conservative upper bound. MAD and per-round ranges remain in the result so a slow round is not hidden by the pooled median. Warm initial rendering reports the committed scroller shell, first row output, and the first correct viewport layout. First-instance presentation is a separate diagnostic and is never pooled into that warm score.
 
 The reported values include framework and adapter work. They are not isolated layout-algorithm timings. Raw results retain rendered-row and DOM-element counts as diagnostics; the documentation chart does not use them as performance scores.
 
@@ -51,7 +51,7 @@ pnpm --filter @sectile/benchmark-virtual-ecosystem dev
 
 Open the printed URL in Chrome and choose **Run benchmark**. Commit raw results only with the browser version, operating system, viewport, package versions, and conditions emitted by the page.
 
-Protocol 10 records the shared DOM-runner settlement contract together with the benchmark family, capability matrix, validation contract, provenance, and adaptive stopping. Initial items and a correct initial layout resolve directly from DOM and size observations; animation frames remain only as liveness and stable-failure checks, so successful initial timings are not rounded up to the next frame boundary. Every browser run receives a UUID, start and completion timestamps, and wall-clock duration. Results retain the run IDs that contributed to them, and the report stores the corresponding Git commit, dirty-worktree flag, and SHA-256 fingerprint of the benchmark harness plus the Sectile virtual source used by that build. A partial commit or shard merge rejects reports with missing provenance or a different build fingerprint. This prevents a focused rerun from silently mixing measurements produced by different code.
+List protocol 11 separates a fresh-context first-instance presentation boundary from warm layout readiness. Successful warm timings still resolve directly from DOM and size observations without an animation-frame floor. Protocol versions are part of shard compatibility, so protocol 10 and 11 results cannot be merged. Every browser run receives a UUID, start and completion timestamps, and wall-clock duration. Results retain the run IDs that contributed to them, and the report stores the corresponding Git commit, dirty-worktree flag, and SHA-256 fingerprint of the benchmark harness plus the Sectile virtual source used by that build. A partial commit or shard merge rejects reports with missing provenance or a different build fingerprint. This prevents a focused rerun from silently mixing measurements produced by different code.
 
 Select a non-list family with `family`, for example:
 
@@ -95,6 +95,18 @@ node benchmarks/virtual-ecosystem/scripts/commit-results.mjs \
 ```
 
 The current baseline is stored in `results/chrome-151-macos-arm64-baseline.json`. Mutation observations remain in the full-suite result file, so updating initial-render measurements never rewrites them with a different source build.
+
+Commit the four completed non-list sessions together. The command rejects missing families, mixed source fingerprints, non-standard item counts, and any Sectile correctness failure:
+
+```sh
+pnpm --filter @sectile/benchmark-virtual-ecosystem commit-layout-results \
+  /tmp/sectile-flow-grid-session.json \
+  /tmp/sectile-masonry-session.json \
+  /tmp/sectile-track-grid-session.json \
+  /tmp/sectile-spatial-session.json
+```
+
+The layout bundle is stored in `results/chrome-151-macos-arm64-layouts.json`. `commit-results.mjs` reads that bundle when generating the documentation data and rejects it when its source fingerprint differs from the list result.
 
 If one baseline library exceeds the browser session limit, keep all 40 recorded scrolls and split only its independent rounds. Merge the five one-round reports afterward:
 

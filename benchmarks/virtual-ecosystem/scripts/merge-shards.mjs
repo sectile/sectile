@@ -145,6 +145,10 @@ function aggregateBaselineResults(results, samples) {
   return {
     ...template,
     runIds: unique(results.flatMap((result) => result.runIds ?? [])),
+    firstInstanceSetupMs: round(percentile(results.map((result) => result.firstInstanceSetupMs).sort((left, right) => left - right), 0.5)),
+    firstInstanceFirstRowsMs: round(percentile(results.map((result) => result.firstInstanceFirstRowsMs).sort((left, right) => left - right), 0.5)),
+    firstInstanceLayoutReadyMs: round(percentile(results.map((result) => result.firstInstanceLayoutReadyMs).sort((left, right) => left - right), 0.5)),
+    firstInstancePresentationReadyMs: round(percentile(results.map((result) => result.firstInstancePresentationReadyMs).sort((left, right) => left - right), 0.5)),
     setupMs: round(percentile(results.map((result) => result.setupMs).sort((left, right) => left - right), 0.5)),
     firstRowsMs: round(percentile(results.map((result) => result.firstRowsMs).sort((left, right) => left - right), 0.5)),
     mountMs: round(percentile(results.map((result) => result.mountMs).sort((left, right) => left - right), 0.5)),

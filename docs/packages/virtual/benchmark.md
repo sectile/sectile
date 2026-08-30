@@ -9,7 +9,7 @@ The lab covers list, flow-grid, masonry, track-grid, and spatial layouts through
 
 [Open the benchmark lab →](/benchmarks/virtual)
 
-<VirtualBenchmarkReport />
+<VirtualBenchmarkSuiteReport />
 
 ## Row profiles
 
@@ -41,9 +41,9 @@ Insert, move, remove, and height-change operations run at three collection posit
 - middle: row 50,000 aligned with the viewport start;
 - end: the final row visible at the bottom boundary.
 
-Insert, remove, and height change affect one row at that position. Move swaps it with the adjacent row. Every sample starts from the same 100,000-row collection, and each scenario runs 50 times.
+Insert, remove, and height change affect one row at that position. Move swaps it with the adjacent row. Every sample starts from the same 100,000-row collection, and each scenario runs up to 50 times.
 
-Timing starts with the update request and ends on the first frame where DOM order, row heights, total scroll height, and anchor position are all correct. Five independent instances contribute ten samples each. Between samples, the runner restores and verifies the original collection; a failed restore discards that instance and mounts a fresh one. Clean and recovered samples are counted separately. A recovered sample retains both its recovery time and every observed correctness failure.
+Timing starts with the update request and ends on the first frame where DOM order, row heights, total scroll height, and anchor position are all correct. Independent instances contribute batches of 5, 5, 10, 10, 10, and 10 samples; a stable median and p95 can stop a condition after 30 samples. Between samples, the runner restores and verifies the original collection; a failed restore discards that instance and mounts a fresh one. Clean and recovered samples are counted separately. A recovered sample retains both its recovery time and every observed correctness failure.
 
 The settle bars cover every sample that reached a correct screen. Recovery bars use only samples that showed an incorrect screen before recovering. A failed condition is shown instead of a timing bar.
 
@@ -55,13 +55,13 @@ Every frame is checked for missing or duplicate IDs, incorrect order or height, 
 
 Both row profiles render 100,000 rows in a 720 × 480px viewport. Text, CSS, input data, and the requested eight-row overscan target are shared. The no-height-input path starts from measured DOM rather than a library-wide numeric fallback.
 
-Library order rotates across three to five rounds. A condition stops after three rounds when its cumulative median and p95 are stable; otherwise it continues through round five. Initial rendering is split into committed scroller output, first row output, and the first state with correct viewport geometry. This gives synchronously mounted Vue output and scheduled React output the same setup boundary. Uniform rows also require the exact total scroll height. Heterogeneous rows retain total-height estimation error as a separate result.
+Each condition first runs once in a fresh same-origin browsing context. That diagnostic records the first correct layout and the next browser presentation opportunity. It is excluded from the warm score. The main runner then completes an untimed warm-up mount and rotates library order across three to five measured rounds. Warm rendering is split into committed scroller output, first row output, and the first state with correct viewport geometry. A condition stops after three rounds when its cumulative median and p95 are stable; otherwise it continues through round five. Uniform rows also require the exact total scroll height. Heterogeneous rows retain total-height estimation error as a separate result.
 
 Each round discards five warm-up scrolls and records the next 20. The harness changes `scrollTop` after a frame boundary. Timing starts when the browser begins delivering the native scroll event and ends immediately after the runner reads the resulting DOM geometry. The exact target row, contiguous row geometry, and viewport coverage are then validated against that snapshot outside the timed interval. Uniform rows also validate total scroll height.
 
 The chart uses the conservative upper bound taken after geometry reads. Raw samples also retain the lower bound before those reads, probe cost, correctness-check count, round and sample number, MAD, and per-round ranges. This keeps validation work out of the score without hiding measurement uncertainty or a slow round.
 
-The initial-render and scroll observation was recorded on 2026-08-28 in Chrome 151 on Apple Silicon macOS after removing Sectile's numeric automatic-height fallback. All 27 supported profile and height-input conditions completed; the uniform automatic condition reported 0% total-height error, and the heterogeneous automatic condition reported 3.967% initial total-height error. Absolute timings vary by machine and browser state; compare relative results together with correctness and height-error data.
+The list-through-spatial observation was recorded on 2026-08-31 in Chrome 151 on Apple Silicon macOS from the clean production build of commit `ce84a7b`. Sectile completed every supported initial-render and mutation condition without a correctness failure. Absolute timings vary by machine and browser state; compare relative results together with correctness data.
 
 The suite covers [TanStack Virtual](https://www.npmjs.com/package/%40tanstack/react-virtual), [react-window](https://www.npmjs.com/package/react-window), [React Virtuoso](https://www.npmjs.com/package/react-virtuoso), [react-virtualized](https://www.npmjs.com/package/react-virtualized), [Virtua](https://www.npmjs.com/package/virtua), and [Vue Virtual Scroller](https://www.npmjs.com/package/vue-virtual-scroller). Runner code and committed JSON live in `benchmarks/virtual-ecosystem`.
 

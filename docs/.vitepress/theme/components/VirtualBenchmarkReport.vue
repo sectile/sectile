@@ -18,7 +18,7 @@ import {
   type MutationBenchmarkResult,
 } from '../virtual-benchmark-data.js';
 
-type BaselineScenario = 'mount' | 'scroll';
+type BaselineScenario = 'first-mount' | 'mount' | 'scroll';
 type Scenario = BaselineScenario | BenchmarkOperation;
 type ChartResult = {
   readonly library: string;
@@ -52,24 +52,33 @@ const props = withDefaults(defineProps<{
 });
 
 const { isKorean } = useDocsLocale();
-const baselineScenarios: readonly BaselineScenario[] = Object.freeze(['mount', 'scroll']);
-const scenarios: readonly Scenario[] = Object.freeze([...baselineScenarios, 'insert', 'move', 'remove', 'resize']);
+const baselineScenarios: readonly BaselineScenario[] = Object.freeze(['first-mount', 'mount', 'scroll']);
+const mutationScenarios: readonly BenchmarkOperation[] = Object.freeze(['insert', 'move', 'remove', 'resize']);
 const rowProfiles: readonly BenchmarkRowProfile[] = Object.freeze(['uniform', 'heterogeneous']);
-const cascadeNodes = Object.freeze([
-  ...rowProfiles.map((profile) => ({ id: `profile:${profile}`, parentID: null })),
-  ...rowProfiles.flatMap((profile) => scenarios.map((item) => ({ id: `${profile}:${item}`, parentID: `profile:${profile}` }))),
-  ...rowProfiles.flatMap((profile) => baselineScenarios.flatMap((baselineScenario) => (
-    (profile === 'uniform' ? ['fixed', 'estimated', 'automatic'] as const : ['estimated', 'automatic'] as const)
-      .map((mode) => ({ id: `${profile}:${baselineScenario}:${mode}`, parentID: `${profile}:${baselineScenario}` }))
-  ))),
-  ...rowProfiles.flatMap((profile) => (['insert', 'move', 'remove', 'resize'] as const).flatMap((operation) => [
-    ...(['estimated', 'automatic'] as const).map((mode) => ({ id: `${profile}:${operation}:${mode}`, parentID: `${profile}:${operation}` })),
-    ...(['estimated', 'automatic'] as const).flatMap((mode) => (['start', 'middle', 'end'] as const).map((itemLocation) => ({
-      id: `${profile}:${operation}:${mode}:${itemLocation}`,
-      parentID: `${profile}:${operation}:${mode}`,
-    }))),
-  ])),
-]);
+const hasFirstInstanceTiming = computed(() => props.baselineResults.some((result) => (
+  typeof result.firstInstancePresentationReadyMs === 'number'
+)));
+const cascadeNodes = computed(() => {
+  const visibleBaselineScenarios = hasFirstInstanceTiming.value
+    ? baselineScenarios
+    : baselineScenarios.filter((scenario) => scenario !== 'first-mount');
+  const scenarios: readonly Scenario[] = [...visibleBaselineScenarios, ...mutationScenarios];
+  return Object.freeze([
+    ...rowProfiles.map((profile) => ({ id: `profile:${profile}`, parentID: null })),
+    ...rowProfiles.flatMap((profile) => scenarios.map((item) => ({ id: `${profile}:${item}`, parentID: `profile:${profile}` }))),
+    ...rowProfiles.flatMap((profile) => visibleBaselineScenarios.flatMap((baselineScenario) => (
+      (profile === 'uniform' ? ['fixed', 'estimated', 'automatic'] as const : ['estimated', 'automatic'] as const)
+        .map((mode) => ({ id: `${profile}:${baselineScenario}:${mode}`, parentID: `${profile}:${baselineScenario}` }))
+    ))),
+    ...rowProfiles.flatMap((profile) => mutationScenarios.flatMap((operation) => [
+      ...(['estimated', 'automatic'] as const).map((mode) => ({ id: `${profile}:${operation}:${mode}`, parentID: `${profile}:${operation}` })),
+      ...(['estimated', 'automatic'] as const).flatMap((mode) => (['start', 'middle', 'end'] as const).map((itemLocation) => ({
+        id: `${profile}:${operation}:${mode}:${itemLocation}`,
+        parentID: `${profile}:${operation}:${mode}`,
+      }))),
+    ])),
+  ]);
+});
 const cascadeValue = ref<string | null>(props.defaultSelection);
 
 const copy = computed(() => isKorean.value ? {
@@ -78,14 +87,15 @@ const copy = computed(() => isKorean.value ? {
   conditionLabel: '비교 조건',
   columnLabel: ['행 구성', '측정 항목', '높이 입력', '변경 위치'],
   profile: { uniform: '같은 높이', heterogeneous: '서로 다른 높이' } as Record<BenchmarkRowProfile, string>,
-  scenario: { mount: '초기 렌더', scroll: '스크롤', insert: '삽입', move: '이동', remove: '삭제', resize: '높이 변경' } as Record<Scenario, string>,
+  scenario: { 'first-mount': '첫 인스턴스 표시', mount: '웜 레이아웃 준비', scroll: '스크롤', insert: '삽입', move: '이동', remove: '삭제', resize: '높이 변경' } as Record<Scenario, string>,
   mode: { fixed: '고정 높이', estimated: '예상값 제공', automatic: '높이 생략' } as Record<BenchmarkHeightMode, string>,
   location: { start: '시작', middle: '중간', end: '끝' } as Record<BenchmarkLocation, string>,
-  mountLegend: ['초기 렌더', null, null, null],
+  firstMountLegend: ['첫 인스턴스 표시 경계', null, null, null],
+  mountLegend: ['웜 레이아웃 준비', null, null, null],
   scrollLegend: ['스크롤 중앙값', '느린 5% 경계', null, null],
   mutationLegend: ['안정화 중앙값', '느린 5% 경계', '복구 중앙값', '복구 느린 5% 경계'],
   tailLegend: 'p95 초과 표본',
-  initialRenderLabel: '초기 렌더',
+  initialRenderLabel: '웜 레이아웃',
   unsupported: '초기 높이값이 필요한 API입니다.',
   stableFailure: '정상 화면에 도달하지 못했습니다.',
   baselineFailure: (failed: number, total: number) => `${total}회 중 ${failed}회에서 올바른 초기 화면을 만들지 못했습니다.`,
@@ -95,6 +105,7 @@ const copy = computed(() => isKorean.value ? {
     : `${total}회 중 ${failed}회는 ${failures} 오류로 정상 화면에 도달하지 못했습니다.`,
   earlyStop: (actual: number, planned: number) => `동일 오류가 재현되어 ${planned}회 중 ${actual}회에서 종료했습니다.`,
   mountEvidence: (rounds: number) => `${rounds}라운드`,
+  firstMountEvidence: '첫 인스턴스 1회 · 웜 중앙값에서 제외',
   scrollEvidence: (samples: number, rounds: number, range: readonly [number, number]) => `표본 ${samples} · ${rounds}라운드 · 중앙값 범위 ${range[0].toFixed(1)}–${range[1].toFixed(1)} ms`,
   mutationEvidence: (samples: number, planned: number) => `표본 ${samples}/${planned}`,
   failureCode: { exception: '실행', 'target-position': '대상 행 배치', 'scroll-anchor': '기준 행 이동', 'row-overlap': '행 겹침', 'scroll-height': '전체 높이 오차', 'blank-viewport': '빈 화면', timeout: '안정화 실패', 'row-gap': '행 사이 빈틈', 'row-height': '행 높이 오차', 'row-order': '행 순서 오류', 'duplicate-id': 'ID 중복', 'unexpected-id': '잘못된 ID' } as Record<string, string>,
@@ -121,16 +132,19 @@ const copy = computed(() => isKorean.value ? {
       automatic: '라이브러리 기본값 뒤 DOM 실측',
     } as Record<BenchmarkHeightMode, string>,
     repeat: {
-      mount: '라이브러리 순서를 바꿔 5회',
-      scroll: '5회 · 준비 5번 뒤 40번 기록',
-      mutation: '5개 독립 인스턴스 · 인스턴스마다 10회',
+      firstMount: '조건별 첫 인스턴스 1회',
+      mount: '라이브러리 순서를 바꿔 3–5회',
+      scroll: '3–5회 · 준비 5번 뒤 라운드마다 20번 기록',
+      mutation: '최대 6개 독립 인스턴스 · 5/5/10/10/10/10회',
     },
     completion: {
+      firstMount: '화면 배치가 맞은 뒤 다음 브라우저 표시 기회',
       mount: '전체 높이와 화면 배치가 모두 맞은 시점',
       scroll: '목표 행·전체 높이·화면 배치 좌표를 모두 읽은 시점',
       mutation: '순서·높이·전체 높이·기준 위치가 모두 맞은 첫 프레임',
     },
     completionHeterogeneous: {
+      firstMount: '처음 보이는 행의 배치가 맞은 뒤 다음 브라우저 표시 기회',
       mount: '처음 보이는 행의 높이·순서·화면 채움이 맞은 시점',
       scroll: '보이는 행의 높이·순서·화면 채움을 모두 읽은 시점',
       mutation: '순서·높이·화면 채움·기준 위치가 모두 맞은 첫 프레임',
@@ -149,14 +163,15 @@ const copy = computed(() => isKorean.value ? {
   conditionLabel: 'Comparison conditions',
   columnLabel: ['Row profile', 'Scenario', 'Height input', 'Mutation position'],
   profile: { uniform: 'Uniform heights', heterogeneous: 'Mixed natural heights' } as Record<BenchmarkRowProfile, string>,
-  scenario: { mount: 'Initial render', scroll: 'Scroll', insert: 'Insert', move: 'Move', remove: 'Remove', resize: 'Height change' } as Record<Scenario, string>,
+  scenario: { 'first-mount': 'First-instance presentation', mount: 'Warm layout readiness', scroll: 'Scroll', insert: 'Insert', move: 'Move', remove: 'Remove', resize: 'Height change' } as Record<Scenario, string>,
   mode: { fixed: 'Fixed height', estimated: 'Estimate provided', automatic: 'Height omitted' } as Record<BenchmarkHeightMode, string>,
   location: { start: 'Start', middle: 'Middle', end: 'End' } as Record<BenchmarkLocation, string>,
-  mountLegend: ['Initial render', null, null, null],
+  firstMountLegend: ['First-instance presentation boundary', null, null, null],
+  mountLegend: ['Warm layout readiness', null, null, null],
   scrollLegend: ['Scroll median', 'Slower 5% boundary', null, null],
   mutationLegend: ['Settle median', 'Slower 5% boundary', 'Recovery median', 'Recovery slower 5% boundary'],
   tailLegend: 'Samples above p95',
-  initialRenderLabel: 'Initial render',
+  initialRenderLabel: 'Warm layout',
   unsupported: 'This API requires an initial height value.',
   stableFailure: 'The screen did not reach a correct stable state.',
   baselineFailure: (failed: number, total: number) => `${failed} of ${total} rounds failed to produce a correct initial screen.`,
@@ -166,6 +181,7 @@ const copy = computed(() => isKorean.value ? {
     : `${failed} of ${total} runs failed to reach a correct screen due to ${failures}.`,
   earlyStop: (actual: number, planned: number) => `The repeated error stopped the run after ${actual} of ${planned} samples.`,
   mountEvidence: (rounds: number) => `${rounds} rounds`,
+  firstMountEvidence: '1 first instance · excluded from warm medians',
   scrollEvidence: (samples: number, rounds: number, range: readonly [number, number]) => `n=${samples} · ${rounds} rounds · median range ${range[0].toFixed(1)}–${range[1].toFixed(1)} ms`,
   mutationEvidence: (samples: number, planned: number) => `n=${samples}/${planned}`,
   failureCode: { exception: 'an execution error', 'target-position': 'target-row positioning', 'scroll-anchor': 'anchor movement', 'row-overlap': 'row overlap', 'scroll-height': 'a scroll-height error', 'blank-viewport': 'a blank viewport', timeout: 'a settle timeout', 'row-gap': 'a row gap', 'row-height': 'a row-height error', 'row-order': 'a row-order error', 'duplicate-id': 'a duplicate ID', 'unexpected-id': 'an unexpected ID' } as Record<string, string>,
@@ -192,16 +208,19 @@ const copy = computed(() => isKorean.value ? {
       automatic: 'Library fallback, then DOM measurement',
     } as Record<BenchmarkHeightMode, string>,
     repeat: {
-      mount: '5 rounds with rotated library order',
-      scroll: '5 rounds · 5 warm-ups, then 40 samples',
-      mutation: '5 independent instances · 10 samples each',
+      firstMount: '1 first instance per condition',
+      mount: '3–5 rounds with rotated library order',
+      scroll: '3–5 rounds · 5 warm-ups, then 20 samples per round',
+      mutation: 'Up to 6 independent instances · 5/5/10/10/10/10 samples',
     },
     completion: {
+      firstMount: 'Correct viewport geometry, then the next browser presentation opportunity',
       mount: 'Correct total height and viewport geometry',
       scroll: 'Target row, total height, and viewport geometry have been read',
       mutation: 'Correct order, geometry, total height, and anchor',
     },
     completionHeterogeneous: {
+      firstMount: 'Correct initial viewport geometry, then the next browser presentation opportunity',
       mount: 'Correct height, order, and coverage for the initial viewport',
       scroll: 'Visible row height, order, and viewport coverage have been read',
       mutation: 'Correct order, geometry, viewport coverage, and anchor',
@@ -224,6 +243,7 @@ const mutationMode = computed<Exclude<BenchmarkHeightMode, 'fixed'>>(() => (sele
 const location = computed<BenchmarkLocation>(() => (selectionParts.value[3] ?? 'start') as BenchmarkLocation);
 const logarithmic = computed(() => !isBaselineScenario(scenario.value));
 const legendSlots = computed<readonly (string | null)[]>(() => {
+  if (scenario.value === 'first-mount') return copy.value.firstMountLegend;
   if (scenario.value === 'mount') return copy.value.mountLegend;
   if (scenario.value === 'scroll') return copy.value.scrollLegend;
   return copy.value.mutationLegend;
@@ -307,7 +327,9 @@ const totalHeightCriterion = computed(() => {
 
 const benchmarkCriteria = computed(() => {
   const mode = isBaselineScenario(scenario.value) ? baselineMode.value : mutationMode.value;
-  const phase = scenario.value === 'mount' ? 'mount' : scenario.value === 'scroll' ? 'scroll' : 'mutation';
+  const phase = scenario.value === 'first-mount'
+    ? 'firstMount'
+    : scenario.value === 'mount' ? 'mount' : scenario.value === 'scroll' ? 'scroll' : 'mutation';
   return [
     { label: copy.value.criteriaLabel.data, value: copy.value.criteriaValue.data[rowProfile.value] },
     { label: copy.value.criteriaLabel.viewport, value: copy.value.criteriaValue.viewport },
@@ -340,9 +362,11 @@ function baselineResult(metadata: { readonly library: string; readonly version: 
       evidence: null,
     };
   }
-  const values = scenario.value === 'mount'
-    ? [result.mountMs, null, null]
-    : [result.scrollMedianMs, result.scrollP95Ms, null];
+  const values = scenario.value === 'first-mount'
+    ? [result.firstInstancePresentationReadyMs ?? null, null, null]
+    : scenario.value === 'mount'
+      ? [result.mountMs, null, null]
+      : [result.scrollMedianMs, result.scrollP95Ms, null];
   return {
     ...metadata,
     values,
@@ -351,9 +375,11 @@ function baselineResult(metadata: { readonly library: string; readonly version: 
     state: null,
     notice: null,
     failed: false,
-    evidence: scenario.value === 'mount'
-      ? copy.value.mountEvidence(result.completedRounds)
-      : copy.value.scrollEvidence(result.scrollSampleCount, result.completedRounds, result.scrollRoundMedianRangeMs),
+    evidence: scenario.value === 'first-mount'
+      ? copy.value.firstMountEvidence
+      : scenario.value === 'mount'
+        ? copy.value.mountEvidence(result.completedRounds)
+        : copy.value.scrollEvidence(result.scrollSampleCount, result.completedRounds, result.scrollRoundMedianRangeMs),
   };
 }
 
@@ -465,7 +491,7 @@ function nodeLabel(id: string): string {
 }
 
 function isBaselineScenario(value: Scenario): value is BaselineScenario {
-  return value === 'mount' || value === 'scroll';
+  return value === 'first-mount' || value === 'mount' || value === 'scroll';
 }
 
 function failureLabel(result: MutationBenchmarkResult): string {
