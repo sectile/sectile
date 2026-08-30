@@ -107,6 +107,31 @@ test('spatial splice patches preserve declaration order and validate inserted id
   }), /inserted items must match/);
 });
 
+test('spatial value-only patches repair touched blocks without rebuilding the domain', () => {
+  const items = Array.from({ length: 4_096 }, (_, index) => ({
+    id: `item-${index}`,
+    rect: { x: (index % 64) * 11, y: Math.floor(index / 64) * 13, width: 10, height: 12 },
+  }));
+  const state = createSpatialLayout(items);
+  const changedItem = {
+    ...items[2_048],
+    rect: { ...items[2_048].rect, width: 19 },
+  };
+  const changed = applySpatialMutation(state, {
+    type: 'patch',
+    patch: { type: 'splice', index: 2_048, deleteCount: 1, inserted: [changedItem.id] },
+    inserted: [changedItem],
+  }).state;
+  const work = readRepairDiagnostics(changed);
+  assert.equal(changed.domain, state.domain);
+  assert.equal(work?.mode, 'incremental');
+  assert.equal(work?.changed, 1);
+  assert.equal(work?.rebuiltItems, 0);
+  assert.ok(work.copiedEntries <= work.repairBound);
+  assert.ok(work.copiedNodes <= work.repairBound);
+  assert.deepEqual(spatialRectAt(changed, changedItem.id), changedItem.rect);
+});
+
 test('SPA-04: boundaries, zero-size rectangles, anchors, and stale generations are explicit', () => {
   const state = createSpatialLayout([
     { id: 'anchor', rect: { x: 10, y: 10, width: 20, height: 20 } },

@@ -21,12 +21,18 @@ export interface PreparedVirtualList {
   readonly domain: Sequence<string>;
   readonly getKey: VirtualListKeyResolver<unknown>;
   readonly change: PreparedVirtualListChange | null;
+  readonly valueChange: PreparedVirtualListValueChange | null;
 }
 
 export interface PreparedVirtualListChange {
   readonly index: number;
   readonly deleteCount: number;
   readonly inserted: readonly string[];
+}
+
+export interface PreparedVirtualListValueChange {
+  readonly index: number;
+  readonly count: number;
 }
 
 export function prepareVirtualList(
@@ -64,6 +70,7 @@ export function prepareVirtualList(
     domain: createIndexedVirtualListSequence(frozenIDs, indexByID, maxItems),
     getKey,
     change: null,
+    valueChange: null,
   });
 }
 
@@ -89,11 +96,13 @@ export function updatePreparedVirtualList(
         === prepared.domain.at(prepared.domain.size - suffix - 1)
     ) suffix += 1;
     if (prefix === previous.domain.size && prefix === prepared.domain.size) {
+      const valueChange = changedVirtualListValues(previous.items, items);
       return Object.freeze({
         items,
         domain: previous.domain,
         getKey,
         change: null,
+        valueChange,
       });
     }
     const inserted = Object.freeze(prepared.domain.ids.slice(prefix, prepared.domain.size - suffix));
@@ -104,6 +113,7 @@ export function updatePreparedVirtualList(
         deleteCount: previous.domain.size - prefix - suffix,
         inserted,
       }),
+      valueChange: null,
     });
   }
   let prefix = 0;
@@ -127,6 +137,7 @@ export function updatePreparedVirtualList(
       domain: previous.domain,
       getKey,
       change: null,
+      valueChange: null,
     });
   }
   const changedEnd = items.length - suffix;
@@ -144,6 +155,7 @@ export function updatePreparedVirtualList(
         domain: previous.domain,
         getKey,
         change: null,
+        valueChange: Object.freeze({ index: prefix, count: changedEnd - prefix }),
       });
     }
   }
@@ -168,7 +180,23 @@ export function updatePreparedVirtualList(
     domain: applySequencePatch(previous.domain, Object.freeze({ type: 'splice', ...change })),
     getKey,
     change,
+    valueChange: null,
   });
+}
+
+function changedVirtualListValues(
+  previous: readonly unknown[],
+  next: readonly unknown[],
+): PreparedVirtualListValueChange | null {
+  let prefix = 0;
+  while (prefix < previous.length && Object.is(previous[prefix], next[prefix])) prefix += 1;
+  if (prefix === previous.length) return null;
+  let suffix = 0;
+  while (
+    suffix < previous.length - prefix
+    && Object.is(previous[previous.length - suffix - 1], next[next.length - suffix - 1])
+  ) suffix += 1;
+  return Object.freeze({ index: prefix, count: next.length - prefix - suffix });
 }
 
 export function validateVirtualListKey(id: string): string {

@@ -555,11 +555,13 @@ test('VirtualGrid derives responsive columns and reconciles declarative items', 
     assert.equal(grid.value.state.columns.size, 4);
     assert.equal(grid.value.state.rows.size, 3);
 
+    const retainedRowExtent = grid.value.state.rows.extentAt(1);
     items.value = [{ id: 'grid-new' }, ...items.value];
     await settle();
     assert.equal(grid.value.state.regions.size, 13);
     assert.equal(grid.value.state.regions.at(0).id, 'grid-new');
     assert.equal(grid.value.state.regions.at(4).row, 1);
+    assert.equal(grid.value.state.rows.extentAt(1), retainedRowExtent);
   } finally {
     app.unmount();
     host.remove();
@@ -692,6 +694,7 @@ test('declarative virtual collections resolve only the changed keyed window', as
     y: Math.floor(index / 100),
   }));
   const items = ref(source);
+  const spatial = ref();
   const keyCalls = { list: 0, grid: 0, masonry: 0, spatial: 0 };
   let rectCalls = 0;
   const key = (scope) => (value) => {
@@ -731,6 +734,7 @@ test('declarative virtual collections resolve only the changed keyed window', as
         initialViewport: { x: 0, y: 0, width: 40, height: 20 },
       }, { default: ({ key: id }) => id }),
       h(VirtualSpatial, {
+        ref: spatial,
         items: items.value,
         getKey: keys.spatial,
         getRect,
@@ -749,6 +753,17 @@ test('declarative virtual collections resolve only the changed keyed window', as
     await settle();
     assert.deepEqual(keyCalls, { list: 1, grid: 1, masonry: 1, spatial: 1 });
     assert.equal(rectCalls, 1);
+
+    Object.keys(keyCalls).forEach((scope) => { keyCalls[scope] = 0; });
+    rectCalls = 0;
+    const changed = [...items.value];
+    changed[501] = { ...changed[501], x: 777, y: 888 };
+    items.value = changed;
+    await settle();
+    assert.deepEqual(keyCalls, { list: 1, grid: 1, masonry: 1, spatial: 1 });
+    assert.equal(rectCalls, 1);
+    assert.equal(spatial.value.state.items.at(501).rect.x, 777);
+    assert.equal(spatial.value.state.items.at(501).rect.y, 888);
   } finally {
     app.unmount();
     host.remove();

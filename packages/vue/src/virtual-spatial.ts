@@ -111,7 +111,18 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
         const next = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
         const state = exposed.state as SpatialLayoutState<string>;
         const resolverChanged = current[2] !== previous[2] || current[3] !== previous[3];
-        const result = resolverChanged || next.change === null
+        const valuePatch = next.valueChange === null
+          ? null
+          : Object.freeze({
+              index: next.valueChange.index,
+              deleteCount: next.valueChange.count,
+              inserted: Object.freeze(next.domain.ids.slice(
+                next.valueChange.index,
+                next.valueChange.index + next.valueChange.count,
+              )),
+            });
+        const collectionPatch = next.change ?? valuePatch;
+        const result = resolverChanged || collectionPatch === null
           ? resolverChanged
             ? exposed.mutate(Object.freeze({
                 type: 'replace',
@@ -126,17 +137,17 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
               type: 'patch',
               patch: Object.freeze({
                 type: 'splice',
-                index: next.change.index,
-                deleteCount: next.change.deleteCount,
-                inserted: next.change.inserted,
+                index: collectionPatch.index,
+                deleteCount: collectionPatch.deleteCount,
+                inserted: collectionPatch.inserted,
               }),
               inserted: preserveSpatialMeasurements(
                 createSpatialItemsRange(
                   next,
                   props.items,
                   props,
-                  next.change.index,
-                  next.change.inserted.length,
+                  collectionPatch.index,
+                  collectionPatch.inserted.length,
                 ),
                 state,
                 props.measureSize,

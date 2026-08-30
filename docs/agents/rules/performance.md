@@ -23,6 +23,7 @@ proofs instead of repeated full-state validation.
 | Repeated hot ID lookup | Owner-retained `Map<ID, index/value>` built once |
 | One lookup or small bounded collection | Simple linear scan |
 | Sparse update where `j << n` | Structural sharing or bounded incremental repair |
+| Stable keys/order with changed values | Track identity and value deltas separately; repair value-dependent projections over `j` |
 | Changed density above measured crossover | Packed/full rebuild |
 | Internal indexed access | Explicit `size`, `at`, `iterate` operations |
 | Consumer requires a full array | One explicit `toArray` or snapshot boundary |
@@ -52,6 +53,10 @@ crossover evidence. Account for index construction and retained memory.
 - Bound caches by immutable-owner lifetime. Default multi-entry LRUs and
   unbounded memoization are not allowed.
 - Materialize the same logical full output at most once.
+- Unchanged keys or sequence order prove only identity stability. When values
+  feed geometry, measurements, indexes, or other projections, propagate the
+  bounded value delta instead of treating the update as a semantic no-op or
+  rebuilding the full derived structure.
 
 ### Representation evidence
 

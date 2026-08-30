@@ -387,8 +387,10 @@ function createGridRowExtents(
     estimateSize: VirtualListEstimate<unknown> | undefined;
   }>,
   automaticEstimate?: number,
+  startRow = 0,
 ): readonly Extent[] {
-  return Object.freeze(Array.from({ length: rowCount }, (_unused, row) => {
+  return Object.freeze(Array.from({ length: rowCount }, (_unused, localRow) => {
+    const row = startRow + localRow;
     if (props.itemSize !== undefined) return exactExtent(props.itemSize);
     const estimate = requireAutomaticEstimate(props.estimateSize ?? automaticEstimate);
     let value = typeof estimate === 'number' ? estimate : 0;
@@ -448,9 +450,8 @@ function syncVirtualGrid(
   const itemEstimatesChanged = props.itemSize === undefined
     && typeof props.estimateSize === 'function'
     && previous.items !== items;
-  if (
+  const geometryUnchanged = (
     state.regions.size === prepared.domain.size
-    && prepared.change === null
     && state.rows.size === rowCount
     && state.columns.size === geometry.count
     && state.rowGap === props.rowGap
@@ -458,7 +459,50 @@ function syncVirtualGrid(
     && currentColumn?.kind === 'exact'
     && nearlyEqual(currentColumn.value, geometry.extent)
     && !itemEstimatesChanged
-  ) return true;
+  );
+  if (geometryUnchanged && prepared.change === null) return true;
+  const structuralGeometryUnchanged = (
+    prepared.change !== null
+    && state.columns.size === geometry.count
+    && state.rowGap === props.rowGap
+    && state.columnGap === props.laneGap
+    && currentColumn?.kind === 'exact'
+    && nearlyEqual(currentColumn.value, geometry.extent)
+    && !itemEstimatesChanged
+  );
+  if (structuralGeometryUnchanged) {
+    const rowPatch = rowCount === state.rows.size
+      ? undefined
+      : rowCount < state.rows.size
+        ? Object.freeze({
+            index: rowCount,
+            deleteCount: state.rows.size - rowCount,
+            inserted: Object.freeze([]),
+          })
+        : Object.freeze({
+            index: state.rows.size,
+            deleteCount: 0,
+            inserted: createGridRowExtents(
+              rowCount - state.rows.size,
+              geometry.count,
+              items,
+              props,
+              automaticEstimate,
+              state.rows.size,
+            ),
+          });
+    const result = exposed.mutate(Object.freeze({
+      type: 'reconfigure-dense',
+      ...(rowPatch === undefined ? {} : { rowPatch }),
+      regionPatch: Object.freeze({
+        type: 'splice',
+        index: prepared.change!.index,
+        deleteCount: prepared.change!.deleteCount,
+        inserted: prepared.change!.inserted,
+      }),
+    }) satisfies TrackGridMutation<string>);
+    return result.ok;
+  }
   const rowExtents = createGridRowExtents(rowCount, geometry.count, items, props, automaticEstimate).map((extent, row) => {
     if (props.itemSize !== undefined) return extent;
     const measuredHeight = gridMeasuredRowHeight(

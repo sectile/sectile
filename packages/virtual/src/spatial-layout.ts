@@ -316,6 +316,59 @@ function tryApplySpatialPatch<ID extends StableID>(
   if (!domain.ok) return domain;
   const data = getInternals(state);
   if (!data.ok) return data;
+  const valueOnly = patch.deleteCount === frozenInserted.length
+    && frozenInserted.every((item, index) => state.domain.at(patch.index + index) === item.id);
+  if (valueOnly) {
+    const changes: (readonly [number, SpatialItem<ID>])[] = [];
+    for (let index = 0; index < frozenInserted.length; index += 1) {
+      const itemIndex = patch.index + index;
+      const current = data.value.items.at(itemIndex)!;
+      const inserted = frozenInserted[index]!;
+      if (!sameSpatialItem(current, inserted)) changes.push(Object.freeze([itemIndex, inserted] as const));
+    }
+    if (changes.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+    const before = anchorRect(state, anchor);
+    const generation = nextGeneration(state.generation);
+    if (!generation.ok) return generation;
+    const touchedLeaves = [...new Set(changes.map(([index]) => data.value.leafIndexByItemIndex[index]!))]
+      .sort((left, right) => left - right);
+    const touchedVectorBlocks = new Set(changes.map(([index]) => Math.floor(index / LEAF_SIZE))).size;
+    const touchedPartitions = touchedVectorBlocks + touchedLeaves.length;
+    const repairBound = blockedRepairBound(changes.length, state.items.size, touchedPartitions);
+    let next: SpatialLayoutState<ID>;
+    if (useBlockedRepair(changes.length, state.items.size, touchedPartitions)) {
+      const vector = data.value.items.updateDetailed(changes);
+      const work = { copiedNodes: vector.copiedNodes };
+      next = createMeasuredState(state, data.value, vector.vector, touchedLeaves, generation.value, work);
+      recordRepairDiagnostics(next, {
+        mode: 'incremental',
+        changed: changes.length,
+        touchedBlocks: touchedPartitions,
+        copiedNodes: work.copiedNodes,
+        copiedEntries: vector.copiedEntries,
+        rebuiltItems: 0,
+        repairBound,
+      });
+    } else {
+      const items = new Array<SpatialItem<ID>>(data.value.items.size);
+      const replacements = new Map(changes);
+      data.value.items.forEach((item, index) => { items[index] = replacements.get(index) ?? item; });
+      next = createOwnedState(state.domain, items, state.maxItems, generation.value);
+      recordRepairDiagnostics(next, {
+        mode: 'rebuild',
+        changed: changes.length,
+        touchedBlocks: touchedPartitions,
+        copiedNodes: 0,
+        copiedEntries: 0,
+        rebuiltItems: state.items.size,
+        repairBound,
+      });
+    }
+    return ok(Object.freeze({
+      state: next,
+      scrollDelta: anchorDelta(before, anchorRect(next, anchor)),
+    }));
+  }
   const items = Array.from(data.value.items.iterate());
   items.splice(
     patch.index,
@@ -513,6 +566,9 @@ function packedGroups<T>(values: readonly T[], rectOf: (value: T) => VirtualRect
 
 function center(rect: VirtualRect, axis: 'x' | 'y'): number { return axis === 'x' ? rect.x + rect.width / 2 : rect.y + rect.height / 2; }
 function sameRect(left: VirtualRect, right: VirtualRect): boolean { return left.x === right.x && left.y === right.y && left.width === right.width && left.height === right.height; }
+function sameSpatialItem<ID extends StableID>(left: SpatialItem<ID>, right: SpatialItem<ID>): boolean {
+  return left.id === right.id && (left.zIndex ?? 0) === (right.zIndex ?? 0) && sameRect(left.rect, right.rect);
+}
 function validRect(rect: VirtualRect): boolean { return isFiniteRect(rect) && rect.x >= 0 && rect.y >= 0; }
 function anchorRect<ID extends StableID>(state: SpatialLayoutState<ID>, anchor: VirtualAnchor<ID> | null | undefined): VirtualRect | null { return anchor === null || anchor === undefined ? null : spatialRectAt(state, anchor.id); }
 function getInternals<ID extends StableID>(state: SpatialLayoutState<ID>): VirtualResult<SpatialInternals<ID>> { const value = internals.get(state as SpatialLayoutState); return value === undefined ? fail('construction', 'virtual-layout-domain-mismatch', 'Spatial state must be created by createSpatialLayout().') : ok(value as SpatialInternals<ID>); }
