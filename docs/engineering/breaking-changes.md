@@ -90,7 +90,7 @@
 | WI-038 | @sectile/form | `./schema` | `StandardSchemaV1 structural declaration` | @sectile/form/schema |
 | WI-039 | @sectile/virtual | `./track-grid-layout` | `TrackGridLayoutState.regions readonly array`, `Virtual geometry declaration closure` | @sectile/virtual/track-grid-layout |
 | WI-039 | @sectile/virtual | `./partitioned-track-grid-layout` | `PartitionedTrackGridLayoutState.rows and columns readonly arrays`, `Virtual geometry declaration closure` | @sectile/virtual/partitioned-track-grid-layout |
-| WI-039 | @sectile/virtual | `./spatial-layout` | `SpatialLayoutState.items readonly array`, `Virtual geometry declaration closure` | @sectile/virtual/spatial-layout |
+| WI-039 | @sectile/virtual | `./spatial-layout` | `SpatialLayoutState.items readonly array`, `SpatialLayoutInput.domain`, `Virtual geometry declaration closure` | @sectile/virtual/spatial-layout |
 | WI-046 | @sectile/dom | `./combobox` | `TextInput declaration closure` | @sectile/dom/combobox |
 | WI-046 | @sectile/dom | `./text` | `TextConnection.handleEvent`, `FacadeConnection<TextConnection>.send` | @sectile/dom/text |
 | WI-047 | @sectile/form | `./state` | `FormEvent update-field`, `FormFieldInput.valid`, `getFormFieldIDsByIssueSource`, `FormState flat validation and submission fields`, `FormStateInput flat validation and submission fields`, `FormIssue`, `FormFieldState`, `FormEvent submit-failed` | @sectile/form/state |

@@ -75,6 +75,9 @@
     ],
     "WI-039": [
       { "path": "packages/virtual/tests/runtime/spatial-layout.test.mjs", "contains": "sparse measurements path-copy bounded blocks" },
+      { "path": "packages/virtual/tests/runtime/spatial-layout.test.mjs", "contains": "move and permutation patches preserve geometry without rebuilding" },
+      { "path": "packages/virtual/tests/runtime/spatial-layout.test.mjs", "contains": "structural overlays stay bounded" },
+      { "path": "packages/virtual/type-tests/spatial-layout.ts", "contains": "satisfies SpatialLayoutInput<'alpha' | 'beta'>" },
       { "path": "packages/virtual/tests/runtime/partitioned-track-grid-layout.test.mjs", "contains": "mixed-axis sparse batches commit once" }
     ],
     "WI-040": [

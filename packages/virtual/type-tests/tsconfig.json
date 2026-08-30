@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "isolatedDeclarations": false,
+    "noEmit": true
+  },
+  "include": ["spatial-layout.ts"]
+}

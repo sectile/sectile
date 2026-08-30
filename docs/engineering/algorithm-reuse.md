@@ -2,14 +2,14 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all eight package source trees.
 
-Findings: 399; migration owners: WI-020, WI-027, WI-040.
+Findings: 401; migration owners: WI-020, WI-027, WI-040.
 
 ## Classifications
 
 | Classification | Count |
 |---|---:|
 | bounded-small | 10 |
-| migration-required | 66 |
+| migration-required | 68 |
 | result-proportional | 151 |
 | reuse | 172 |
 
@@ -17,7 +17,7 @@ Findings: 399; migration owners: WI-020, WI-027, WI-040.
 
 | Category | Count |
 |---|---:|
-| controller-connection-rebuild | 34 |
+| controller-connection-rebuild | 36 |
 | discarded-canonical-index | 40 |
 | measurement-authority | 21 |
 | private-algorithm-bypass | 4 |
@@ -57,7 +57,7 @@ Findings: 399; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/carousel.ts:131` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/cascade-list.ts:203` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/cascade-select.ts:114` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/checkbox.ts:142` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/checkbox.ts:141` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/color-picker.ts:82` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:142` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:145` | controller-rebuild |
@@ -67,12 +67,12 @@ Findings: 399; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/date-picker.ts:412` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/native-field.ts:120` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:298` | controller-rebuild |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-collection-model.ts:52` | serialization-signature |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-collection-model.ts:154` | serialization-signature |
+| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-collection-model.ts:62` | serialization-signature |
+| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-collection-model.ts:167` | serialization-signature |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:207` | controller-rebuild |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-list.ts:244` | geometry-measurement |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-list.ts:486` | geometry-measurement |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:222` | controller-rebuild |
+| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-list.ts:302` | geometry-measurement |
+| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-list.ts:571` | geometry-measurement |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:221` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:148` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/multi-thumb-slider.ts:153` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/pagination.ts:137` | controller-rebuild |
@@ -81,7 +81,9 @@ Findings: 399; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/reorder.ts:118` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/reorder.ts:197` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/select.ts:204` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/switch.ts:123` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/slider.ts:236` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/spin-button.ts:170` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/switch.ts:122` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tabs.ts:122` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tags-input.ts:134` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/toast.ts:143` | controller-rebuild |

@@ -293,6 +293,7 @@ const spatialItems = Array.from({ length: strategySize }, (_, index) => ({
   rect: { x: (index % 1_000) * 24, y: Math.floor(index / 1_000) * 24, width: 28, height: 28 },
   zIndex: index % 7,
 }));
+const spatialDomain = createSequence(spatialItems.map(({ id }) => id), { maxItems: strategySize });
 const spatialState = createSpatialLayout(spatialItems);
 const spatialQueryUs = measure(5_000, (iteration) => {
   const plan = querySpatialLayout(spatialState, {
@@ -302,6 +303,9 @@ const spatialQueryUs = measure(5_000, (iteration) => {
   sink += plan.placements.length;
 });
 const spatialBuildMs = measureColdMilliseconds(() => createSpatialLayout(spatialItems).generation);
+const spatialPreparedBuildMs = measureColdMilliseconds(() => createSpatialLayout(spatialItems, {
+  domain: spatialDomain,
+}).generation);
 const spatialMeasurement1Ms = measureColdMilliseconds((sample) => applySpatialMeasurements(spatialState, {
   generation: spatialState.generation,
   measurements: [{ id: `spatial-${sample & 1 ? 1 : strategySize - 2}`, rect: { x: 12 + sample, y: 18 + sample, width: 30, height: 30 } }],
@@ -321,6 +325,17 @@ const spatialConcentrated32Ms = measureColdMilliseconds(() => applySpatialMeasur
 const spatialDistributed32Ms = measureColdMilliseconds(() => applySpatialMeasurements(spatialState, {
   generation: spatialState.generation,
   measurements: spatialDistributed32,
+}).state.generation);
+const spatialMove32Ms = measureColdMilliseconds(() => applySpatialMutation(spatialState, {
+  type: 'patch',
+  patch: { type: 'move', from: strategySize >>> 2, to: strategySize >>> 1, count: 32 },
+  inserted: [],
+}).state.generation);
+const spatialOverlayItem = { id: 'spatial-overlay', rect: { x: 10, y: 20, width: 30, height: 40 } };
+const spatialInsert1Ms = measureColdMilliseconds(() => applySpatialMutation(spatialState, {
+  type: 'patch',
+  patch: { type: 'splice', index: 1, deleteCount: 0, inserted: [spatialOverlayItem.id] },
+  inserted: [spatialOverlayItem],
 }).state.generation);
 const spatialInsertRemoveMs = measureColdMilliseconds((sample) => applySpatialMutation(spatialState, {
   type: 'update',
@@ -369,9 +384,12 @@ const result = {
     items: strategySize,
     queryUs: spatialQueryUs,
     buildMs: spatialBuildMs,
+    preparedDomainBuildMs: spatialPreparedBuildMs,
     changedMeasurement1Ms: spatialMeasurement1Ms,
     changedMeasurementConcentrated32Ms: spatialConcentrated32Ms,
     changedMeasurementDistributed32Ms: spatialDistributed32Ms,
+    move32Ms: spatialMove32Ms,
+    insert1Ms: spatialInsert1Ms,
     insertRemove1Ms: spatialInsertRemoveMs,
   },
   integration: {

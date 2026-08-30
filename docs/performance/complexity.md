@@ -14,7 +14,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | tabular | 32 | 0 | 4 |
 | temporal | 99 | 24 | 2 |
 | terminal | 347 | 177 | 2 |
-| virtual | 89 | 0 | 18 |
+| virtual | 89 | 0 | 19 |
 | vue | 704 | 315 | 4 |
 
 ## Variables
@@ -119,7 +119,8 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:partitioned.query | trusted | `O(log nRegion + cCandidate + kPlacement log kPlacement)` expected | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:spatial.measure.incremental | trusted | `O(jChanged log jChanged + rRepair)` worst-case | `O(jChanged + rRepair)` | `O(1)` | `O(rRepair)` | forbidden | VAL-016, VAL-017 |
 | virtual:spatial.measure.rebuild | trusted | `O(nItem log nItem)` worst-case | `O(nItem)` | `O(nItem)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
-| virtual:spatial.query | trusted | `O(log nItem + kPlacement log kPlacement)` expected | `O(log nItem + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| virtual:spatial.patch.incremental | trusted | `O((jChanged + pOverlay) * dSequence)` worst-case | `O(jChanged + pOverlay)` | `O(1)` | `O(jChanged + pOverlay + dSequence)` | forbidden | VAL-016, VAL-017 |
+| virtual:spatial.query | trusted | `O(log nItem + (cCandidate + pOverlay) * dSequence + kPlacement log kPlacement)` expected | `O(log nItem + cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.measure | trusted | `O(jChanged log nTrack)` worst-case | `O(jChanged log nTrack)` | `O(1)` | `O(jChanged log nTrack)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.query | trusted | `O(log nRegion + cCandidate + kPlacement log kPlacement)` worst-case | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | vue:collection.external-reconcile | external | `O(nOption + sSelected + dDisabled)` expected | `O(nOption + sSelected + dDisabled)` | `O(sSelected)` | `O(sSelected)` | allowed | VAL-016, VAL-017 |

@@ -34,7 +34,7 @@
       "id": "WI-039:spatial-indexed-view",
       "change": "signature-changed",
       "before": { "subpath": "./spatial-layout" },
-      "symbols": ["SpatialLayoutState.items readonly array", "Virtual geometry declaration closure"],
+      "symbols": ["SpatialLayoutState.items readonly array", "SpatialLayoutInput.domain", "Virtual geometry declaration closure"],
       "replacement": { "package": "@sectile/virtual", "subpath": "./spatial-layout" }
     },
     {

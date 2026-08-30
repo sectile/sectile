@@ -257,7 +257,7 @@
       "detector": "immutable-view-construction",
       "category": "repeated-immutable-view",
       "path": "packages/core/src/internal/kernel/indexed-sequence.ts",
-      "line": 135,
+      "line": 136,
       "evidence": "new IndexedSequence(",
       "rule": "core-residual-reviewed",
       "classification": "result-proportional",
@@ -268,7 +268,7 @@
       "detector": "immutable-view-construction",
       "category": "repeated-immutable-view",
       "path": "packages/core/src/internal/kernel/indexed-sequence.ts",
-      "line": 219,
+      "line": 230,
       "evidence": "new IndexedSequence(",
       "rule": "core-residual-reviewed",
       "classification": "result-proportional",
@@ -3221,7 +3221,7 @@
       "rule": "virtual-incremental-index",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
     },
     {
       "detector": "derived-index-construction",
@@ -3232,7 +3232,7 @@
       "rule": "virtual-incremental-index",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
     },
     {
       "detector": "derived-index-construction",
@@ -3243,62 +3243,62 @@
       "rule": "virtual-incremental-index",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
-    },
-    {
-      "detector": "derived-index-construction",
-      "category": "discarded-canonical-index",
-      "path": "packages/virtual/src/spatial-layout.ts",
-      "line": 212,
-      "evidence": "new Set(changes.map(",
-      "rule": "virtual-incremental-index",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
-    },
-    {
-      "detector": "derived-index-construction",
-      "category": "discarded-canonical-index",
-      "path": "packages/virtual/src/spatial-layout.ts",
-      "line": 213,
-      "evidence": "new Set(changes.map(",
-      "rule": "virtual-incremental-index",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
     },
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
       "path": "packages/virtual/src/spatial-layout.ts",
-      "line": 298,
+      "line": 319,
       "evidence": ".some(",
       "rule": "virtual-incremental-index",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
-    },
-    {
-      "detector": "full-index-rebuild",
-      "category": "discarded-canonical-index",
-      "path": "packages/virtual/src/spatial-layout.ts",
-      "line": 372,
-      "evidence": "buildPackedTree(",
-      "rule": "virtual-incremental-index",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
     },
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
       "path": "packages/virtual/src/spatial-layout.ts",
-      "line": 375,
-      "evidence": "new Map(indexed.map(",
+      "line": 366,
+      "evidence": "new Map(changes.map(",
       "rule": "virtual-incremental-index",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
+    },
+    {
+      "detector": "full-index-rebuild",
+      "category": "discarded-canonical-index",
+      "path": "packages/virtual/src/spatial-layout.ts",
+      "line": 445,
+      "evidence": "buildPackedTree(",
+      "rule": "virtual-incremental-index",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
+    },
+    {
+      "detector": "derived-index-construction",
+      "category": "discarded-canonical-index",
+      "path": "packages/virtual/src/spatial-layout.ts",
+      "line": 482,
+      "evidence": "new Set(changes.map(",
+      "rule": "virtual-incremental-index",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
+    },
+    {
+      "detector": "derived-index-construction",
+      "category": "discarded-canonical-index",
+      "path": "packages/virtual/src/spatial-layout.ts",
+      "line": 484,
+      "evidence": "new Set(changes.map(",
+      "rule": "virtual-incremental-index",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
     },
     {
       "detector": "derived-index-construction",
@@ -3309,7 +3309,7 @@
       "rule": "virtual-incremental-index",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
     },
     {
       "detector": "full-index-rebuild",
@@ -3320,7 +3320,7 @@
       "rule": "virtual-incremental-index",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
     },
     {
       "detector": "full-index-rebuild",
@@ -3331,7 +3331,7 @@
       "rule": "virtual-incremental-index",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
     },
     {
       "detector": "full-index-rebuild",
@@ -3342,7 +3342,7 @@
       "rule": "virtual-incremental-index",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Virtual measurements reuse retained identity, prefix, region, leaf, and blocked-vector indexes; deterministic crossover bounds select path-copy repair or one packed rebuild."
+      "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."
     },
     {
       "detector": "controller-rebuild",
@@ -3513,7 +3513,7 @@
       "detector": "controller-rebuild",
       "category": "controller-connection-rebuild",
       "path": "packages/vue/src/checkbox.ts",
-      "line": 142,
+      "line": 141,
       "evidence": "watch( [() => props.disabled, () => props.readonly], rebuild",
       "rule": "vue-controller-reconfiguration",
       "classification": "migration-required",
@@ -3788,7 +3788,7 @@
       "detector": "serialization-signature",
       "category": "private-algorithm-bypass",
       "path": "packages/vue/src/internal/virtual-collection-model.ts",
-      "line": 52,
+      "line": 62,
       "evidence": "JSON.stringify(",
       "rule": "vue-virtual-measurement-and-batching",
       "classification": "migration-required",
@@ -3799,7 +3799,7 @@
       "detector": "serialization-signature",
       "category": "private-algorithm-bypass",
       "path": "packages/vue/src/internal/virtual-collection-model.ts",
-      "line": 154,
+      "line": 167,
       "evidence": "JSON.stringify(",
       "rule": "vue-virtual-measurement-and-batching",
       "classification": "migration-required",
@@ -3821,7 +3821,7 @@
       "detector": "geometry-measurement",
       "category": "measurement-authority",
       "path": "packages/vue/src/internal/virtual-list.ts",
-      "line": 244,
+      "line": 302,
       "evidence": "getBoundingClientRect(",
       "rule": "vue-virtual-measurement-and-batching",
       "classification": "migration-required",
@@ -3832,7 +3832,7 @@
       "detector": "geometry-measurement",
       "category": "measurement-authority",
       "path": "packages/vue/src/internal/virtual-list.ts",
-      "line": 486,
+      "line": 571,
       "evidence": "getBoundingClientRect(",
       "rule": "vue-virtual-measurement-and-batching",
       "classification": "migration-required",
@@ -3843,7 +3843,7 @@
       "detector": "controller-rebuild",
       "category": "controller-connection-rebuild",
       "path": "packages/vue/src/listbox.ts",
-      "line": 222,
+      "line": 221,
       "evidence": "watch( [() => props.items, () => props.selectionMode, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.orientation, () => prop",
       "rule": "vue-controller-reconfiguration",
       "classification": "migration-required",
@@ -3854,7 +3854,7 @@
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
       "path": "packages/vue/src/listbox.ts",
-      "line": 423,
+      "line": 422,
       "evidence": ".find(",
       "rule": "vue-host-residual-reviewed",
       "classification": "reuse",
@@ -4106,8 +4106,30 @@
     {
       "detector": "controller-rebuild",
       "category": "controller-connection-rebuild",
+      "path": "packages/vue/src/slider.ts",
+      "line": 236,
+      "evidence": "watch(root.controller, connect",
+      "rule": "vue-controller-reconfiguration",
+      "classification": "migration-required",
+      "owner": "WI-040",
+      "rationale": "Equal canonical owners and normalized options must retain controllers and connections."
+    },
+    {
+      "detector": "controller-rebuild",
+      "category": "controller-connection-rebuild",
+      "path": "packages/vue/src/spin-button.ts",
+      "line": 170,
+      "evidence": "watch([() => props.disabled, () => props.readonly], () => { if (inputElement.value !== undefined) connect",
+      "rule": "vue-controller-reconfiguration",
+      "classification": "migration-required",
+      "owner": "WI-040",
+      "rationale": "Equal canonical owners and normalized options must retain controllers and connections."
+    },
+    {
+      "detector": "controller-rebuild",
+      "category": "controller-connection-rebuild",
       "path": "packages/vue/src/switch.ts",
-      "line": 123,
+      "line": 122,
       "evidence": "watch([() => props.disabled, () => props.readonly], rebuild",
       "rule": "vue-controller-reconfiguration",
       "classification": "migration-required",

@@ -24,6 +24,8 @@ proofs instead of repeated full-state validation.
 | One lookup or small bounded collection | Simple linear scan |
 | Sparse update where `j << n` | Structural sharing or bounded incremental repair |
 | Stable keys/order with changed values | Track identity and value deltas separately; repair value-dependent projections over `j` |
+| Stable geometry with changed declaration order | Keep the geometry index keyed by stable identity; patch the order owner separately and resolve current indexes only for candidates/output |
+| Sparse structural geometry over a packed index | Use an owner-bound delta overlay with tombstones; rebuild when its measured query bound or an exact aggregate boundary cannot be preserved |
 | Changed density above measured crossover | Packed/full rebuild |
 | Internal indexed access | Explicit `size`, `at`, `iterate` operations |
 | Consumer requires a full array | One explicit `toArray` or snapshot boundary |

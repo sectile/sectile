@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "workItem": "WI-018",
-  "fingerprint": "fnv1a32:89be214b",
+  "fingerprint": "fnv1a32:d5a19334",
   "decisions": [
     {
       "id": "sequence",
@@ -299,10 +299,11 @@
       ],
       "parameters": {
         "blockSize": 64,
-        "repairBound": "repairBound(j,n)=(touchedVectorBlocks+touchedSpatialLeaves)*(64+ceil(log2(ceil(n/64)+1)))+j"
+        "repairBound": "repairBound(j,n)=(touchedVectorBlocks+touchedSpatialLeaves)*(64+ceil(log2(ceil(n/64)+1)))+j",
+        "structuralOverlayBound": "p<=min(256,ceil(n/64))"
       },
-      "rule": "incremental iff n>=1024 and repairBound(j,n)<n/2; otherwise abandon repair storage and perform one packed full rebuild.",
-      "rationale": "Sixty-four-item vector blocks and spatial leaves are counted independently before the conservative copy bound; the input-derived half-rebuild ceiling prevents adversarial sparse updates from paying repair plus an uncontrolled rebuild.",
+      "rule": "incremental iff n>=1024 and measurement repairBound(j,n)<n/2 or structural p<=min(256,ceil(n/64)); order-only patches retain geometry; otherwise perform one packed full rebuild.",
+      "rationale": "Sixty-four-item vector blocks and spatial leaves bound measurement repair, while a fixed structural overlay separates declaration order from geometry without unbounded query or retained cost; both paths fall back before dense work approaches a packed rebuild.",
       "rejected": [
         {
           "candidate": "packed-full-rebuild",

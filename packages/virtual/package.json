@@ -67,6 +67,7 @@
     "build": "node scripts/build.mjs production",
     "build:verification": "node scripts/build.mjs verification",
     "typecheck": "tsc --project tsconfig.json --pretty false",
+    "typecheck:public": "tsc --project type-tests/tsconfig.json --pretty false",
     "test": "pnpm --silent run build:verification && node --test --test-concurrency=1 tests/*/*.test.mjs",
     "benchmark": "pnpm --silent run build && node benchmarks/virtualization.mjs",
     "check:laws": "node scripts/check-laws.mjs",
@@ -78,7 +79,6 @@
   },
   "devDependencies": {
     "@chenglou/pretext": "0.0.8",
-    "esbuild": "0.21.5",
     "typescript": "7.0.2"
   }
 }

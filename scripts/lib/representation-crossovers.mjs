@@ -70,6 +70,11 @@ export function validateCrossoverDecisions(manifest, baseline) {
     assert.ok(/^repairBound\(/u.test(decision.parameters.repairBound), `${id}: input-derived repair bound missing`);
     assert.ok(/^incremental iff /u.test(decision.rule), `${id}: fallback threshold must be explicit`);
   }
+  assert.equal(
+    virtual.get('virtual-spatial').parameters.structuralOverlayBound,
+    'p<=min(256,ceil(n/64))',
+    'virtual-spatial: structural overlay bound drifted',
+  );
   return Object.freeze({ decisions: manifest.decisions.length, metrics: baseline.metrics.length });
 }
 

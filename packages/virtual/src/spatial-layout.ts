@@ -42,7 +42,10 @@ export interface SpatialLayoutSnapshot<ID extends StableID = StableID> {
   readonly generation: number;
 }
 
-export interface SpatialLayoutInput { readonly maxItems?: number; }
+export interface SpatialLayoutInput<ID extends StableID = StableID> {
+  readonly maxItems?: number;
+  readonly domain?: Sequence<ID>;
+}
 export interface SpatialMeasurement<ID extends StableID = StableID> { readonly id: ID; readonly rect: VirtualRect; }
 
 export type SpatialMutation<ID extends StableID = StableID> =
@@ -63,18 +66,25 @@ interface IndexedSpatialItem<ID extends StableID> {
   readonly zIndex: number;
 }
 
+interface SpatialTreeItem<ID extends StableID> {
+  readonly value: SpatialItem<ID>;
+  readonly baseIndex: number;
+  readonly zIndex: number;
+}
+
 interface SpatialNode<ID extends StableID> {
   readonly bounds: VirtualRect;
-  readonly items: readonly IndexedSpatialItem<ID>[] | null;
+  readonly items: readonly SpatialTreeItem<ID>[] | null;
   readonly children: readonly SpatialNode<ID>[] | null;
   readonly leafCount: number;
 }
 
 interface SpatialInternals<ID extends StableID> {
   readonly root: SpatialNode<ID> | null;
-  readonly byID: ReadonlyMap<ID, number>;
-  readonly items: BlockedVector<SpatialItem<ID>>;
-  readonly leafIndexByItemIndex: readonly number[];
+  readonly baseDomain: Sequence<ID>;
+  readonly baseItems: BlockedVector<SpatialItem<ID>>;
+  readonly overlay: ReadonlyMap<ID, SpatialItem<ID> | null>;
+  readonly leafIndexByBaseIndex: readonly number[];
   readonly contentSize: { readonly width: number; readonly height: number };
 }
 
@@ -89,14 +99,14 @@ export const spatialLayoutStrategy: VirtualLayoutStrategy<SpatialLayoutState, St
   tryScrollTarget: (state: SpatialLayoutState, id: StableID, viewport: VirtualRect, alignment?: VirtualScrollAlignment) => trySpatialScrollTarget(state, id, viewport, alignment),
 });
 
-export function createSpatialLayout<ID extends StableID>(items: readonly SpatialItem<ID>[], input: SpatialLayoutInput = {}): SpatialLayoutState<ID> {
+export function createSpatialLayout<ID extends StableID>(items: readonly SpatialItem<ID>[], input: SpatialLayoutInput<ID> = {}): SpatialLayoutState<ID> {
   return unwrap(tryCreateSpatialLayout(items, input));
 }
 
-export function tryCreateSpatialLayout<ID extends StableID>(items: readonly SpatialItem<ID>[], input: SpatialLayoutInput = {}): VirtualResult<SpatialLayoutState<ID>> {
+export function tryCreateSpatialLayout<ID extends StableID>(items: readonly SpatialItem<ID>[], input: SpatialLayoutInput<ID> = {}): VirtualResult<SpatialLayoutState<ID>> {
   const maxItems = input.maxItems ?? 1_000_000;
   if (!Number.isSafeInteger(maxItems) || maxItems < 0) return fail('construction', 'invalid-max-items', 'maxItems must be a non-negative safe integer.', { maxItems });
-  const validated = validateItems(items, maxItems);
+  const validated = validateItems(items, maxItems, input.domain);
   if (!validated.ok) return validated;
   return ok(createState(validated.value.domain, validated.value.items, maxItems, 0));
 }
@@ -150,16 +160,41 @@ export function tryQuerySpatialLayout<ID extends StableID>(state: SpatialLayoutS
   if (!normalized.ok) return normalized;
   const data = getInternals(state);
   if (!data.ok) return data;
-  const candidates: IndexedSpatialItem<ID>[] = [];
-  queryNode(data.value.root, normalized.value.renderBounds, candidates);
-  candidates.sort((left, right) => left.zIndex - right.zIndex || left.index - right.index);
-  const placements = Object.freeze(candidates.map((candidate): SpatialPlacement<ID> => Object.freeze({
-    id: candidate.value.id,
-    index: candidate.index,
-    zIndex: candidate.zIndex,
-    rect: candidate.value.rect,
-    visible: rectanglesIntersect(candidate.value.rect, normalized.value.viewport),
-  })));
+  const treeCandidates: SpatialTreeItem<ID>[] = [];
+  queryNode(data.value.root, normalized.value.renderBounds, treeCandidates);
+  let placements: readonly SpatialPlacement<ID>[];
+  if (state.domain === data.value.baseDomain && data.value.overlay.size === 0) {
+    treeCandidates.sort((left, right) => left.zIndex - right.zIndex || left.baseIndex - right.baseIndex);
+    placements = Object.freeze(treeCandidates.map((candidate): SpatialPlacement<ID> => Object.freeze({
+      id: candidate.value.id,
+      index: candidate.baseIndex,
+      zIndex: candidate.zIndex,
+      rect: candidate.value.rect,
+      visible: rectanglesIntersect(candidate.value.rect, normalized.value.viewport),
+    })));
+  } else {
+    const candidates: IndexedSpatialItem<ID>[] = [];
+    for (const candidate of treeCandidates) {
+      if (data.value.overlay.has(candidate.value.id)) continue;
+      const index = state.domain.indexOf(candidate.value.id);
+      if (index === null) continue;
+      candidates.push({ value: candidate.value, index, zIndex: candidate.zIndex });
+    }
+    for (const item of data.value.overlay.values()) {
+      if (item === null || !rectanglesIntersect(item.rect, normalized.value.renderBounds)) continue;
+      const index = state.domain.indexOf(item.id);
+      if (index === null) continue;
+      candidates.push({ value: item, index, zIndex: item.zIndex ?? 0 });
+    }
+    candidates.sort((left, right) => left.zIndex - right.zIndex || left.index - right.index);
+    placements = Object.freeze(candidates.map((candidate): SpatialPlacement<ID> => Object.freeze({
+      id: candidate.value.id,
+      index: candidate.index,
+      zIndex: candidate.zIndex,
+      rect: candidate.value.rect,
+      visible: rectanglesIntersect(candidate.value.rect, normalized.value.viewport),
+    })));
+  }
   return ok(Object.freeze({
     generation: state.generation,
     contentSize: data.value.contentSize,
@@ -179,20 +214,35 @@ export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialL
   if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
   const data = getInternals(state);
   if (!data.ok) return data;
-  const replacements = new Map<number, SpatialItem<ID>>();
+  const replacements = new Map<ID, SpatialItem<ID>>();
   for (const measurement of batch.measurements) {
-    const index = data.value.byID.get(measurement.id);
-    if (index === undefined || replacements.has(index) || !validRect(measurement.rect)) return fail('transition-rejection', 'virtual-layout-measurement-invalid', 'Spatial measurements require unique existing IDs and valid rectangles.', { measurement });
-    const current = data.value.items.at(index)!;
+    const current = state.domain.contains(measurement.id)
+      ? spatialItemByID(data.value, measurement.id)
+      : undefined;
+    if (current === undefined || replacements.has(measurement.id) || !validRect(measurement.rect)) return fail('transition-rejection', 'virtual-layout-measurement-invalid', 'Spatial measurements require unique existing IDs and valid rectangles.', { measurement });
     const rect = createRect(measurement.rect);
-    if (!sameRect(current.rect, rect)) replacements.set(index, Object.freeze({ ...current, rect }));
+    if (!sameRect(current.rect, rect)) replacements.set(measurement.id, Object.freeze({ ...current, rect }));
   }
   if (replacements.size === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
   const before = anchorRect(state, batch.anchor);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const changes = [...replacements].sort(([left], [right]) => left - right);
-  const next = applySpatialChanges(state, data.value, changes, generation.value);
+  const baseChanges: (readonly [number, SpatialItem<ID>])[] = [];
+  if (data.value.overlay.size === 0) {
+    for (const [id, item] of replacements) {
+      const baseIndex = data.value.baseDomain.indexOf(id);
+      if (baseIndex === null) break;
+      baseChanges.push(Object.freeze([baseIndex, item] as const));
+    }
+  }
+  const next = baseChanges.length === replacements.size
+    ? applySpatialBaseChanges(
+        state,
+        data.value,
+        baseChanges.sort(([left], [right]) => left - right),
+        generation.value,
+      )
+    : applySpatialOverlayChanges(state, data.value, state.domain, replacements, generation.value);
   return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
 }
 
@@ -241,10 +291,29 @@ function tryApplySpatialPatch<ID extends StableID>(
   mutation: Extract<SpatialMutation<ID>, { readonly type: 'patch' }>,
   anchor: VirtualAnchor<ID> | null,
 ): VirtualResult<VirtualLayoutMutation<SpatialLayoutState<ID>>> {
-  if (mutation.patch.type !== 'splice') {
-    return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial item patches must use splice semantics.');
-  }
   const patch = mutation.patch;
+  if (patch.type === 'move') {
+    if (mutation.inserted.length !== 0) {
+      return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial move patches do not accept inserted items.');
+    }
+    const domain = tryApplySequencePatch(state.domain, patch, { maxItems: state.maxItems });
+    if (!domain.ok) return domain;
+    if (domain.value === state.domain) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+    const data = getInternals(state);
+    if (!data.ok) return data;
+    const before = anchorRect(state, anchor);
+    const generation = nextGeneration(state.generation);
+    if (!generation.ok) return generation;
+    const next = createDerivedState(domain.value, state.maxItems, generation.value, data.value);
+    recordRepairDiagnostics(next, {
+      mode: 'incremental', changed: patch.count, touchedBlocks: 0,
+      copiedNodes: 0, copiedEntries: 0, rebuiltItems: 0, repairBound: spatialOverlayLimit(state.items.size),
+    });
+    return ok(Object.freeze({
+      state: next,
+      scrollDelta: anchorDelta(before, anchorRect(next, anchor)),
+    }));
+  }
   if (
     patch.inserted.length !== mutation.inserted.length
     || mutation.inserted.some((item, index) => item.id !== patch.inserted[index])
@@ -274,7 +343,7 @@ function tryApplySpatialPatch<ID extends StableID>(
     const changes: (readonly [number, SpatialItem<ID>])[] = [];
     for (let index = 0; index < frozenInserted.length; index += 1) {
       const itemIndex = patch.index + index;
-      const current = data.value.items.at(itemIndex)!;
+      const current = state.items.at(itemIndex)!;
       const inserted = frozenInserted[index]!;
       if (!sameSpatialItem(current, inserted)) changes.push(Object.freeze([itemIndex, inserted] as const));
     }
@@ -282,22 +351,51 @@ function tryApplySpatialPatch<ID extends StableID>(
     const before = anchorRect(state, anchor);
     const generation = nextGeneration(state.generation);
     if (!generation.ok) return generation;
-    const next = applySpatialChanges(state, data.value, changes, generation.value);
+    const baseChanges = data.value.overlay.size === 0
+      ? changes.map(([, item]) => Object.freeze([
+          data.value.baseDomain.indexOf(item.id)!,
+          item,
+        ] as const)).sort(([left], [right]) => left - right)
+      : [];
+    const next = baseChanges.length === changes.length
+      ? applySpatialBaseChanges(state, data.value, baseChanges, generation.value)
+      : applySpatialOverlayChanges(
+          state,
+          data.value,
+          state.domain,
+          new Map(changes.map(([index, item]) => [state.domain.at(index)!, item])),
+          generation.value,
+        );
     return ok(Object.freeze({
       state: next,
       scrollDelta: anchorDelta(before, anchorRect(next, anchor)),
     }));
   }
-  const items = Array.from(data.value.items.iterate());
-  items.splice(
-    patch.index,
-    patch.deleteCount,
-    ...frozenInserted,
-  );
+  const desired = new Map<ID, SpatialItem<ID> | null>();
+  for (let index = 0; index < patch.deleteCount; index += 1) {
+    const id = state.domain.at(patch.index + index)!;
+    desired.set(id, null);
+  }
+  for (const item of frozenInserted) desired.set(item.id, item);
+  const geometryChanges = new Map<ID, SpatialItem<ID> | null>();
+  for (const [id, item] of desired) {
+    const current = spatialItemByID(data.value, id);
+    if (item === null) {
+      if (!domain.value.contains(id)) geometryChanges.set(id, null);
+    } else if (current === undefined || !sameSpatialItem(current, item)) geometryChanges.set(id, item);
+  }
   const before = anchorRect(state, anchor);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const next = createOwnedState(domain.value, items, state.maxItems, generation.value);
+  const next = geometryChanges.size === 0
+    ? createDerivedState(domain.value, state.maxItems, generation.value, data.value)
+    : applySpatialOverlayChanges(state, data.value, domain.value, geometryChanges, generation.value);
+  if (geometryChanges.size === 0) {
+    recordRepairDiagnostics(next, {
+      mode: 'incremental', changed: patch.deleteCount + frozenInserted.length, touchedBlocks: 0,
+      copiedNodes: 0, copiedEntries: 0, rebuiltItems: 0, repairBound: spatialOverlayLimit(state.items.size),
+    });
+  }
   return ok(Object.freeze({
     state: next,
     scrollDelta: anchorDelta(before, anchorRect(next, anchor)),
@@ -311,8 +409,7 @@ export function spatialScrollTarget<ID extends StableID>(state: SpatialLayoutSta
 export function trySpatialScrollTarget<ID extends StableID>(state: SpatialLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualResult<VirtualPoint> {
   const data = getInternals(state);
   if (!data.ok) return data;
-  const index = data.value.byID.get(id);
-  const item = index === undefined ? undefined : data.value.items.at(index);
+  const item = state.domain.contains(id) ? spatialItemByID(data.value, id) : undefined;
   if (item === undefined) return fail('transition-rejection', 'virtual-layout-scroll-target-invalid', 'Scroll target must exist in the spatial domain.', { id });
   return ok(Object.freeze({
     x: alignedScrollOffset(item.rect.x, item.rect.width, viewport.x, viewport.width, data.value.contentSize.width, alignment),
@@ -322,8 +419,9 @@ export function trySpatialScrollTarget<ID extends StableID>(state: SpatialLayout
 
 export function spatialRectAt<ID extends StableID>(state: SpatialLayoutState<ID>, id: ID): VirtualRect | null {
   const data = internals.get(state as SpatialLayoutState);
-  const index = data?.byID.get(id);
-  return index === undefined ? null : data?.items.at(index)?.rect ?? null;
+  return data === undefined || !state.domain.contains(id)
+    ? null
+    : spatialItemByID(data as SpatialInternals<ID>, id)?.rect ?? null;
 }
 
 function createState<ID extends StableID>(domain: Sequence<ID>, items: readonly SpatialItem<ID>[], maxItems: number, generation: number): SpatialLayoutState<ID> {
@@ -335,21 +433,25 @@ function createOwnedState<ID extends StableID>(domain: Sequence<ID>, items: Spat
   return createStateFromVector(domain, createOwnedBlockedVector(items), maxItems, generation);
 }
 
-function createStateFromVector<ID extends StableID>(domain: Sequence<ID>, vector: BlockedVector<SpatialItem<ID>>, maxItems: number, generation: number): SpatialLayoutState<ID> {
-  const mutable = { domain, items: vector.view, maxItems, generation };
-  Object.defineProperty(mutable, spatialLayoutStateBrand, { value: true });
-  const state = Object.freeze(mutable) as SpatialLayoutState<ID>;
-  const indexed: IndexedSpatialItem<ID>[] = [];
-  vector.forEach((value, index) => { indexed.push(Object.freeze({ value, index, zIndex: value.zIndex ?? 0 })); });
+function createStateFromVector<ID extends StableID>(
+  domain: Sequence<ID>,
+  vector: BlockedVector<SpatialItem<ID>>,
+  maxItems: number,
+  generation: number,
+  baseDomain: Sequence<ID> = domain,
+): SpatialLayoutState<ID> {
+  const indexed: SpatialTreeItem<ID>[] = [];
+  vector.forEach((value, baseIndex) => { indexed.push(Object.freeze({ value, baseIndex, zIndex: value.zIndex ?? 0 })); });
   const packed = buildPackedTree(indexed);
-  internals.set(state, {
+  const data: SpatialInternals<ID> = {
     root: packed.root,
-    byID: new Map(indexed.map((item) => [item.value.id, item.index])),
-    items: vector,
-    leafIndexByItemIndex: packed.leafIndexByItemIndex,
+    baseDomain,
+    baseItems: vector,
+    overlay: new Map(),
+    leafIndexByBaseIndex: packed.leafIndexByBaseIndex,
     contentSize: contentSize(packed.root),
-  } as SpatialInternals<StableID>);
-  return state;
+  };
+  return createDerivedState(domain, maxItems, generation, data);
 }
 
 function createMeasuredState<ID extends StableID>(
@@ -361,32 +463,29 @@ function createMeasuredState<ID extends StableID>(
   work: { copiedNodes: number },
 ): SpatialLayoutState<ID> {
   const root = data.root === null ? null : repairSpatialTree(data.root, 0, touchedLeaves, 0, touchedLeaves.length, items, work);
-  const mutable = { domain: previous.domain, items: items.view, maxItems: previous.maxItems, generation };
-  Object.defineProperty(mutable, spatialLayoutStateBrand, { value: true });
-  const state = Object.freeze(mutable) as SpatialLayoutState<ID>;
-  internals.set(state, {
+  return createDerivedState(previous.domain, previous.maxItems, generation, {
     root,
-    byID: data.byID,
-    items,
-    leafIndexByItemIndex: data.leafIndexByItemIndex,
+    baseDomain: data.baseDomain,
+    baseItems: items,
+    overlay: data.overlay,
+    leafIndexByBaseIndex: data.leafIndexByBaseIndex,
     contentSize: contentSize(root),
-  } as SpatialInternals<StableID>);
-  return state;
+  });
 }
 
-function applySpatialChanges<ID extends StableID>(
+function applySpatialBaseChanges<ID extends StableID>(
   state: SpatialLayoutState<ID>,
   data: SpatialInternals<ID>,
   changes: readonly (readonly [number, SpatialItem<ID>])[],
   generation: number,
 ): SpatialLayoutState<ID> {
-  const touchedLeaves = [...new Set(changes.map(([index]) => data.leafIndexByItemIndex[index]!))]
+  const touchedLeaves = [...new Set(changes.map(([index]) => data.leafIndexByBaseIndex[index]!))]
     .sort((left, right) => left - right);
   const touchedPartitions = new Set(changes.map(([index]) => Math.floor(index / LEAF_SIZE))).size
     + touchedLeaves.length;
-  const repairBound = blockedRepairBound(changes.length, state.items.size, touchedPartitions);
-  if (useBlockedRepair(changes.length, state.items.size, touchedPartitions)) {
-    const vector = data.items.updateDetailed(changes);
+  const repairBound = blockedRepairBound(changes.length, data.baseItems.size, touchedPartitions);
+  if (useBlockedRepair(changes.length, data.baseItems.size, touchedPartitions)) {
+    const vector = data.baseItems.updateDetailed(changes);
     const work = { copiedNodes: vector.copiedNodes };
     const next = createMeasuredState(state, data, vector.vector, touchedLeaves, generation, work);
     recordRepairDiagnostics(next, {
@@ -397,36 +496,208 @@ function applySpatialChanges<ID extends StableID>(
     return next;
   }
   const replacements = new Map(changes);
-  const items = new Array<SpatialItem<ID>>(data.items.size);
-  data.items.forEach((item, index) => { items[index] = replacements.get(index) ?? item; });
-  const next = createOwnedState(state.domain, items, state.maxItems, generation);
+  const items = new Array<SpatialItem<ID>>(data.baseItems.size);
+  data.baseItems.forEach((item, index) => { items[index] = replacements.get(index) ?? item; });
+  const next = createStateFromVector(
+    state.domain,
+    createOwnedBlockedVector(items),
+    state.maxItems,
+    generation,
+    data.baseDomain,
+  );
   recordRepairDiagnostics(next, {
     mode: 'rebuild', changed: changes.length, touchedBlocks: touchedPartitions,
-    copiedNodes: 0, copiedEntries: 0, rebuiltItems: state.items.size, repairBound,
+    copiedNodes: 0, copiedEntries: 0, rebuiltItems: data.baseItems.size, repairBound,
   });
   return next;
 }
 
-function validateItems<ID extends StableID>(items: readonly SpatialItem<ID>[], maxItems: number): VirtualResult<{ readonly domain: Sequence<ID>; readonly items: readonly SpatialItem<ID>[] }> {
+function applySpatialOverlayChanges<ID extends StableID>(
+  state: SpatialLayoutState<ID>,
+  data: SpatialInternals<ID>,
+  domain: Sequence<ID>,
+  changes: ReadonlyMap<ID, SpatialItem<ID> | null>,
+  generation: number,
+): SpatialLayoutState<ID> {
+  const overlay = new Map(data.overlay);
+  let width = data.contentSize.width;
+  let height = data.contentSize.height;
+  let requiresRebuild = false;
+  for (const [id, next] of changes) {
+    const current = spatialItemByID(data, id);
+    if (current !== undefined) {
+      const currentRight = current.rect.x + current.rect.width;
+      const currentBottom = current.rect.y + current.rect.height;
+      const nextRight = next === null ? 0 : next.rect.x + next.rect.width;
+      const nextBottom = next === null ? 0 : next.rect.y + next.rect.height;
+      if (currentRight === width && nextRight < currentRight) requiresRebuild = true;
+      if (currentBottom === height && nextBottom < currentBottom) requiresRebuild = true;
+    }
+    writeSpatialOverlay(data, overlay, id, next);
+    if (next !== null) {
+      width = Math.max(width, next.rect.x + next.rect.width);
+      height = Math.max(height, next.rect.y + next.rect.height);
+    }
+  }
+  const repairBound = spatialOverlayLimit(domain.size);
+  if (requiresRebuild || overlay.size > repairBound) {
+    const items = materializeSpatialItems(domain, data, overlay);
+    const next = createOwnedState(domain, items, state.maxItems, generation);
+    recordRepairDiagnostics(next, {
+      mode: 'rebuild', changed: changes.size, touchedBlocks: overlay.size,
+      copiedNodes: 0, copiedEntries: overlay.size,
+      rebuiltItems: domain.size, repairBound,
+    });
+    return next;
+  }
+  const next = createDerivedState(domain, state.maxItems, generation, {
+    root: data.root,
+    baseDomain: data.baseDomain,
+    baseItems: data.baseItems,
+    overlay,
+    leafIndexByBaseIndex: data.leafIndexByBaseIndex,
+    contentSize: Object.freeze({ width, height }),
+  });
+  recordRepairDiagnostics(next, {
+    mode: 'incremental', changed: changes.size, touchedBlocks: overlay.size,
+    copiedNodes: 0, copiedEntries: overlay.size,
+    rebuiltItems: 0, repairBound,
+  });
+  return next;
+}
+
+function createDerivedState<ID extends StableID>(
+  domain: Sequence<ID>,
+  maxItems: number,
+  generation: number,
+  data: SpatialInternals<ID>,
+): SpatialLayoutState<ID> {
+  const mutable = {
+    domain,
+    items: createOrderedSpatialView(domain, (id) => spatialItemByID(data, id)),
+    maxItems,
+    generation,
+  };
+  Object.defineProperty(mutable, spatialLayoutStateBrand, { value: true });
+  const state = Object.freeze(mutable) as SpatialLayoutState<ID>;
+  internals.set(state, data as SpatialInternals<StableID>);
+  return state;
+}
+
+function createOrderedSpatialView<ID extends StableID>(
+  domain: Sequence<ID>,
+  getItem: (id: ID) => SpatialItem<ID> | undefined,
+): VirtualIndexedView<SpatialItem<ID>> {
+  const at = (index: number): SpatialItem<ID> | undefined => {
+    const id = domain.at(index);
+    return id === null ? undefined : getItem(id);
+  };
+  function* iterate(): IterableIterator<SpatialItem<ID>> {
+    for (let index = 0; index < domain.size; index += 1) {
+      const item = at(index);
+      if (item !== undefined) yield item;
+    }
+  }
+  const forEach = (callback: (value: SpatialItem<ID>, index: number) => void): void => {
+    for (let index = 0; index < domain.size; index += 1) {
+      const item = at(index);
+      if (item !== undefined) callback(item, index);
+    }
+  };
+  return Object.freeze({
+    size: domain.size,
+    at,
+    iterate,
+    forEach,
+    toArray: (): readonly SpatialItem<ID>[] => {
+      const items: SpatialItem<ID>[] = [];
+      forEach((item) => items.push(item));
+      return Object.freeze(items);
+    },
+  });
+}
+
+function spatialItemByID<ID extends StableID>(
+  data: SpatialInternals<ID>,
+  id: ID,
+): SpatialItem<ID> | undefined {
+  if (data.overlay.has(id)) return data.overlay.get(id) ?? undefined;
+  const baseIndex = data.baseDomain.indexOf(id);
+  return baseIndex === null ? undefined : data.baseItems.at(baseIndex);
+}
+
+function writeSpatialOverlay<ID extends StableID>(
+  data: SpatialInternals<ID>,
+  overlay: Map<ID, SpatialItem<ID> | null>,
+  id: ID,
+  item: SpatialItem<ID> | null,
+): void {
+  const baseIndex = data.baseDomain.indexOf(id);
+  if (item === null) {
+    if (baseIndex === null) overlay.delete(id);
+    else overlay.set(id, null);
+    return;
+  }
+  const base = baseIndex === null ? undefined : data.baseItems.at(baseIndex);
+  if (base !== undefined && sameSpatialItem(base, item)) overlay.delete(id);
+  else overlay.set(id, item);
+}
+
+function materializeSpatialItems<ID extends StableID>(
+  domain: Sequence<ID>,
+  data: SpatialInternals<ID>,
+  overlay: ReadonlyMap<ID, SpatialItem<ID> | null>,
+): SpatialItem<ID>[] {
+  const nextData = { ...data, overlay };
+  const items = new Array<SpatialItem<ID>>(domain.size);
+  for (let index = 0; index < domain.size; index += 1) {
+    const id = domain.at(index)!;
+    const item = spatialItemByID(nextData, id);
+    if (item === undefined) throw new TypeError('Spatial domain and geometry storage diverged.');
+    items[index] = item;
+  }
+  return items;
+}
+
+function spatialOverlayLimit(size: number): number {
+  return size < 1_024 ? 0 : Math.min(256, Math.ceil(size / LEAF_SIZE));
+}
+
+function validateItems<ID extends StableID>(
+  items: readonly SpatialItem<ID>[],
+  maxItems: number,
+  existingDomain?: Sequence<ID>,
+): VirtualResult<{ readonly domain: Sequence<ID>; readonly items: readonly SpatialItem<ID>[] }> {
   if (items.length > maxItems) return fail('resource-rejection', 'item-ceiling-exceeded', 'Spatial items exceed maxItems.', { size: items.length, maxItems });
-  const domain = tryCreateSequence(items.map(({ id }) => id), { maxItems: Math.max(1, maxItems) });
-  if (!domain.ok) return domain;
+  if (existingDomain !== undefined && existingDomain.size !== items.length) {
+    return fail('construction', 'virtual-layout-domain-mismatch', 'Spatial domain and items must have the same size.', { domainSize: existingDomain.size, itemSize: items.length });
+  }
+  const ids: ID[] = [];
   const frozen: SpatialItem<ID>[] = [];
-  for (const item of items) {
+  for (let index = 0; index < items.length; index += 1) {
+    const item = items[index]!;
+    if (existingDomain !== undefined && existingDomain.at(index) !== item.id) {
+      return fail('construction', 'virtual-layout-domain-mismatch', 'Spatial domain identities must align with item declaration order.', { index, id: item.id });
+    }
     if (!validRect(item.rect) || (item.zIndex !== undefined && (!Number.isSafeInteger(item.zIndex)))) return fail('construction', 'virtual-layout-geometry-invalid', 'Spatial items require finite non-negative rectangles and safe-integer z-indices.', { item });
+    if (existingDomain === undefined) ids.push(item.id);
     frozen.push(Object.freeze({ id: item.id, rect: createRect(item.rect), ...(item.zIndex === undefined || item.zIndex === 0 ? {} : { zIndex: item.zIndex }) }));
   }
+  const domain = existingDomain === undefined
+    ? tryCreateSequence(ids, { maxItems: Math.max(1, maxItems) })
+    : ok(existingDomain);
+  if (!domain.ok) return domain;
   return ok(Object.freeze({ domain: domain.value, items: Object.freeze(frozen) }));
 }
 
-function buildPackedTree<ID extends StableID>(items: readonly IndexedSpatialItem<ID>[]): {
+function buildPackedTree<ID extends StableID>(items: readonly SpatialTreeItem<ID>[]): {
   readonly root: SpatialNode<ID> | null;
-  readonly leafIndexByItemIndex: readonly number[];
+  readonly leafIndexByBaseIndex: readonly number[];
 } {
-  if (items.length === 0) return Object.freeze({ root: null, leafIndexByItemIndex: Object.freeze([]) });
-  const leafIndexByItemIndex: number[] = [];
+  if (items.length === 0) return Object.freeze({ root: null, leafIndexByBaseIndex: Object.freeze([]) });
+  const leafIndexByBaseIndex: number[] = [];
   let level = packedGroups(items, (item) => item.value.rect).map((group, leafIndex): SpatialNode<ID> => {
-    for (const item of group) leafIndexByItemIndex[item.index] = leafIndex;
+    for (const item of group) leafIndexByBaseIndex[item.baseIndex] = leafIndex;
     return Object.freeze({
     bounds: boundsOfRects(group.map((item) => item.value.rect))!,
     items: Object.freeze(group),
@@ -447,7 +718,7 @@ function buildPackedTree<ID extends StableID>(items: readonly IndexedSpatialItem
     }
     level = next;
   }
-  return Object.freeze({ root: level[0]!, leafIndexByItemIndex: Object.freeze(leafIndexByItemIndex) });
+  return Object.freeze({ root: level[0]!, leafIndexByBaseIndex: Object.freeze(leafIndexByBaseIndex) });
 }
 
 function repairSpatialTree<ID extends StableID>(
@@ -462,7 +733,7 @@ function repairSpatialTree<ID extends StableID>(
   if (from === to) return node;
   if (node.items !== null) {
     work.copiedNodes += 1;
-    const repaired = node.items.map((item) => Object.freeze({ ...item, value: items.at(item.index)! }));
+    const repaired = node.items.map((item) => Object.freeze({ ...item, value: items.at(item.baseIndex)! }));
     return Object.freeze({
       bounds: boundsOfRects(repaired.map((item) => item.value.rect))!,
       items: Object.freeze(repaired),
@@ -493,7 +764,7 @@ function contentSize<ID extends StableID>(root: SpatialNode<ID> | null): { reado
     : Object.freeze({ width: root.bounds.x + root.bounds.width, height: root.bounds.y + root.bounds.height });
 }
 
-function queryNode<ID extends StableID>(node: SpatialNode<ID> | null, bounds: VirtualRect, output: IndexedSpatialItem<ID>[]): void {
+function queryNode<ID extends StableID>(node: SpatialNode<ID> | null, bounds: VirtualRect, output: SpatialTreeItem<ID>[]): void {
   if (node === null || !rectanglesIntersect(node.bounds, bounds)) return;
   if (node.items !== null) {
     for (const item of node.items) if (rectanglesIntersect(item.value.rect, bounds)) output.push(item);

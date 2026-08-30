@@ -721,11 +721,68 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "When the deterministic repair bound reaches half the item count, one STR sort and packed-tree rebuild replaces the owner.",
-        "adversarialWitness": "A dense measurement changes every rectangle and forces the selected rebuild branch.",
+        "proof": "When the deterministic measurement repair bound or structural overlay bound is crossed, one STR sort and packed-tree rebuild replaces the owner.",
+        "adversarialWitness": "A dense measurement, a boundary-shrinking removal, or a saturated structural overlay forces the selected rebuild branch.",
         "fullScan": {
           "allowed": true,
           "rationale": "The crossover explicitly selects one full packed rebuild for dense changes."
+        }
+      }
+    },
+    {
+      "id": "spatial.patch.incremental",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/spatial-layout.ts",
+      "benchmarkIDs": [
+        "VAL-017:spatial-structural-patch-work"
+      ],
+      "specificationCeiling": "O((jChanged + pOverlay) * dSequence)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "spatial item count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "changed declaration or geometry count",
+            "ceiling": "jChanged <= nItem"
+          },
+          {
+            "name": "pOverlay",
+            "meaning": "retained structural geometry delta",
+            "ceiling": "pOverlay <= min(256, ceil(nItem / 64))"
+          },
+          {
+            "name": "dSequence",
+            "meaning": "bounded Sequence patch depth",
+            "ceiling": "dSequence <= 32"
+          }
+        ],
+        "time": {
+          "bound": "O((jChanged + pOverlay) * dSequence)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(jChanged + pOverlay)",
+          "output": "O(1)",
+          "retained": "O(jChanged + pOverlay + dSequence)"
+        },
+        "resources": {
+          "allocations": "O(jChanged + pOverlay + dSequence)",
+          "cacheEntries": "O(pOverlay)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Declaration order is retained by the bounded Sequence patch chain while changed geometry is copied into a bounded owner-local overlay; order-only patches retain the packed tree unchanged.",
+        "adversarialWitness": "Repeated structural geometry changes fill the overlay bound and force one packed rebuild instead of extending retained or query work.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Incremental structural patches may visit only changed identities and the bounded overlay."
         }
       }
     },
@@ -738,7 +795,7 @@
         "virtual:spatial:query:10000",
         "virtual:spatial:query:100000"
       ],
-      "specificationCeiling": "O(log nItem + kPlacement log kPlacement)",
+      "specificationCeiling": "O(log nItem + (cCandidate + pOverlay) * dSequence + kPlacement log kPlacement)",
       "contract": {
         "variables": [
           {
@@ -747,31 +804,46 @@
             "ceiling": "maxItems"
           },
           {
+            "name": "cCandidate",
+            "meaning": "packed-tree rectangle candidates",
+            "ceiling": "cCandidate <= nItem"
+          },
+          {
+            "name": "pOverlay",
+            "meaning": "bounded structural geometry delta",
+            "ceiling": "pOverlay <= min(256, ceil(nItem / 64))"
+          },
+          {
+            "name": "dSequence",
+            "meaning": "bounded declaration-order patch depth",
+            "ceiling": "dSequence <= 32"
+          },
+          {
             "name": "kPlacement",
             "meaning": "viewport result count",
             "ceiling": "kPlacement <= nItem"
           }
         ],
         "time": {
-          "bound": "O(log nItem + kPlacement log kPlacement)",
+          "bound": "O(log nItem + (cCandidate + pOverlay) * dSequence + kPlacement log kPlacement)",
           "kind": "expected",
           "runtimeState": "trusted"
         },
         "space": {
-          "auxiliary": "O(log nItem + kPlacement)",
+          "auxiliary": "O(log nItem + cCandidate + kPlacement)",
           "output": "O(kPlacement)",
           "retained": "O(1)"
         },
         "resources": {
-          "allocations": "O(log nItem + kPlacement)",
+          "allocations": "O(cCandidate + kPlacement)",
           "cacheEntries": "0",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "The packed tree prunes non-overlapping branches, emits intersecting items once, and sorts placements by z-index and declaration order.",
-        "adversarialWitness": "A viewport intersecting every overlapping rectangle degrades to result-proportional nItem output.",
+        "proof": "The packed tree prunes non-overlapping branches, filters overlaid identities, scans the bounded structural delta, resolves current declaration indexes, and sorts placements by z-index and declaration order.",
+        "adversarialWitness": "A viewport intersects every packed candidate while the structural overlay is at its fixed bound.",
         "fullScan": {
           "allowed": false,
           "rationale": "A full visit is permitted only when kPlacement itself equals nItem."

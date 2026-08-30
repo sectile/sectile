@@ -217,7 +217,10 @@ function createVirtualSpatialState(
     maxItems: number;
   }>,
 ): SpatialLayoutState<string> {
-  return createSpatialLayout(createSpatialItems(prepared, items, props), { maxItems: props.maxItems });
+  return createSpatialLayout(createSpatialItems(prepared, items, props), {
+    maxItems: props.maxItems,
+    domain: prepared.domain,
+  });
 }
 
 

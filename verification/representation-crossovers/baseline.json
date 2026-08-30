@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "workItem": "WI-018",
-  "fingerprint": "fnv1a32:89be214b",
+  "fingerprint": "fnv1a32:d5a19334",
   "processCount": 9,
   "runtime": {
     "node": "v24.19.0",
@@ -20,11 +20,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 45778.4598214,
-        "p95": 46901.2853975,
-        "relativeMAD": 0.00483232898282,
-        "minimum": 45183.3686636,
-        "maximum": 47237.6909091
+        "median": 45124.4419643,
+        "p95": 45297.9836551,
+        "relativeMAD": 0.00250377520955,
+        "minimum": 44533.0276498,
+        "maximum": 45338.3571429
       },
       "work": 20000,
       "allocationUnits": 0,
@@ -42,11 +42,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 210556.173913,
-        "p95": 221083.220595,
-        "relativeMAD": 0.0206194540817,
-        "minimum": 203326.086957,
-        "maximum": 222393.086957
+        "median": 205393.130435,
+        "p95": 208052.904348,
+        "relativeMAD": 0.00498344426214,
+        "minimum": 202835.130435,
+        "maximum": 208836.956522
       },
       "work": 240000,
       "allocationUnits": 0,
@@ -64,11 +64,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 6408.73015872,
-        "p95": 7038.32642938,
-        "relativeMAD": 0.0250425151519,
-        "minimum": 6143.98019801,
-        "maximum": 7160.89230767
+        "median": 6227.6119403,
+        "p95": 6543.27694777,
+        "relativeMAD": 0.0102845378194,
+        "minimum": 6157.57042253,
+        "maximum": 6623.62637363
       },
       "work": 20000,
       "allocationUnits": 0,
@@ -85,11 +85,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 631799.058823,
-        "p95": 654400.525,
-        "relativeMAD": 0.00753423960303,
-        "minimum": 626779.411765,
-        "maximum": 655471.375
+        "median": 618806.352941,
+        "p95": 624268.559216,
+        "relativeMAD": 0.0046537666888,
+        "minimum": 613117.1875,
+        "maximum": 625990.176471
       },
       "work": 50000,
       "allocationUnits": 0,
@@ -106,16 +106,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 3471833.5,
-        "p95": 3522620.9,
-        "relativeMAD": 0.00812783792787,
-        "minimum": 3372916.5,
-        "maximum": 3534764
+        "median": 3376208.25,
+        "p95": 3395620.85,
+        "relativeMAD": 0.00350800339419,
+        "minimum": 3325208.25,
+        "maximum": 3400666.75
       },
       "work": 50000,
       "allocationUnits": 100000,
       "retainedBytes": 0,
-      "heapDeltaBytes": 5317424,
+      "heapDeltaBytes": 5209088,
       "sourceBytes": 306
     },
     {
@@ -127,16 +127,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 2567125,
-        "p95": 2668516.6,
-        "relativeMAD": 0.00856989823243,
-        "minimum": 2545125,
-        "maximum": 2675638.66667
+        "median": 2520187.5,
+        "p95": 2549233.35,
+        "relativeMAD": 0.00833687969649,
+        "minimum": 2471947.75,
+        "maximum": 2552645.75
       },
       "work": 50000,
       "allocationUnits": 50000,
       "retainedBytes": 0,
-      "heapDeltaBytes": 5362920,
+      "heapDeltaBytes": 5292584,
       "sourceBytes": 303
     },
     {
@@ -148,11 +148,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 149914.215686,
-        "p95": 166230.897139,
-        "relativeMAD": 0.012389292519,
-        "minimum": 148056.884615,
-        "maximum": 171663.793103
+        "median": 149347.490566,
+        "p95": 152183.509502,
+        "relativeMAD": 0.00269417727274,
+        "minimum": 148945.121951,
+        "maximum": 152709.156863
       },
       "work": 24576,
       "allocationUnits": 0,
@@ -169,11 +169,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 417389.478261,
-        "p95": 426550.961265,
-        "relativeMAD": 0.0189974789473,
-        "minimum": 405817,
-        "maximum": 430451.086957
+        "median": 405276.041667,
+        "p95": 409966.279545,
+        "relativeMAD": 0.0077727138373,
+        "minimum": 400426.136364,
+        "maximum": 410993.041667
       },
       "work": 26624,
       "allocationUnits": 2048,
@@ -191,16 +191,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 15890125,
-        "p95": 16416033.8,
-        "relativeMAD": 0.0145557067676,
-        "minimum": 15141292,
-        "maximum": 16428667
+        "median": 15379833,
+        "p95": 15640825,
+        "relativeMAD": 0.00717394005513,
+        "minimum": 15218125,
+        "maximum": 15665875
       },
       "work": 240000,
       "allocationUnits": 260000,
       "retainedBytes": 0,
-      "heapDeltaBytes": 35609616,
+      "heapDeltaBytes": 35606064,
       "sourceBytes": 320
     },
     {
@@ -213,11 +213,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 122301.22973,
-        "p95": 126924.066501,
-        "relativeMAD": 0.00729997172693,
-        "minimum": 120900.891892,
-        "maximum": 127995.065789
+        "median": 120101.666667,
+        "p95": 128993.577478,
+        "relativeMAD": 0.00570798458138,
+        "minimum": 119314.44,
+        "maximum": 134008.776316
       },
       "work": 240000,
       "allocationUnits": 0,
@@ -235,11 +235,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 52731.4153846,
-        "p95": 60684.8214286,
-        "relativeMAD": 0.0273852953516,
-        "minimum": 49909.7272727,
-        "maximum": 62058.0357143
+        "median": 49956.754717,
+        "p95": 52737.9913876,
+        "relativeMAD": 0.0163274616676,
+        "minimum": 47795.3382353,
+        "maximum": 53904.2280702
       },
       "work": 10158.86851277919,
       "allocationUnits": 2312,
@@ -257,11 +257,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 237507.545455,
-        "p95": 266389.105051,
-        "relativeMAD": 0.0361271137926,
-        "minimum": 223281.25,
-        "maximum": 271401.545455
+        "median": 233515.090909,
+        "p95": 239422.9,
+        "relativeMAD": 0.0232208079992,
+        "minimum": 215968.75,
+        "maximum": 239746.5
       },
       "work": 28379.325867793603,
       "allocationUnits": 10300,
@@ -279,11 +279,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 3972305.66667,
-        "p95": 4160461.06667,
-        "relativeMAD": 0.0184926185187,
-        "minimum": 3843180.66667,
-        "maximum": 4173333.33333
+        "median": 3834875,
+        "p95": 4946990.23333,
+        "relativeMAD": 0.0200282060476,
+        "minimum": 3689916.66667,
+        "maximum": 5408437.5
       },
       "work": 373166.2366811197,
       "allocationUnits": 100172,
@@ -301,11 +301,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 8754812.5,
-        "p95": 8947671.1,
-        "relativeMAD": 0.0145705576219,
-        "minimum": 8477812.5,
-        "maximum": 8987062.5
+        "median": 8446562.5,
+        "p95": 8923316.5,
+        "relativeMAD": 0.0120685189981,
+        "minimum": 8201250,
+        "maximum": 9222541.5
       },
       "work": 837685.4018761062,
       "allocationUnits": 200028,
@@ -323,11 +323,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 27037.771028,
-        "p95": 50822.1533333,
-        "relativeMAD": 0.14370859712,
-        "minimum": 18836.6935484,
-        "maximum": 55796.875
+        "median": 23187.5,
+        "p95": 27024.2956523,
+        "relativeMAD": 0.020268141562,
+        "minimum": 18106.2881356,
+        "maximum": 29342.1929134
       },
       "work": 101878,
       "allocationUnits": 1,
@@ -345,11 +345,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 23000,
-        "p95": 25145.427957,
-        "relativeMAD": 0.0348896940419,
-        "minimum": 22061.7678571,
-        "maximum": 25486.1111111
+        "median": 21298.625,
+        "p95": 27954.3623333,
+        "relativeMAD": 0.0223306135318,
+        "minimum": 19518,
+        "maximum": 30853.34
       },
       "work": 105872,
       "allocationUnits": 1,
@@ -367,11 +367,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 95005.8411215,
-        "p95": 98141.501368,
-        "relativeMAD": 0.00722302280247,
-        "minimum": 93538.2268041,
-        "maximum": 98677.6960784
+        "median": 93728.1553398,
+        "p95": 98232.4344156,
+        "relativeMAD": 0.0137830223821,
+        "minimum": 91368.0555556,
+        "maximum": 99874.5119048
       },
       "work": 150808,
       "allocationUnits": 1,
@@ -389,11 +389,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 172725.763636,
-        "p95": 188395.023077,
-        "relativeMAD": 0.0155439177596,
-        "minimum": 166486.87037,
-        "maximum": 193652.5
+        "median": 171035.714286,
+        "p95": 256719.606112,
+        "relativeMAD": 0.00849603257465,
+        "minimum": 168033.333333,
+        "maximum": 311950.361702
       },
       "work": 200736,
       "allocationUnits": 1,
@@ -410,11 +410,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 55056.9444444,
-        "p95": 62249.2641144,
-        "relativeMAD": 0.01478854111,
-        "minimum": 53424.4020619,
-        "maximum": 65463.2772277
+        "median": 54558.627907,
+        "p95": 56619.3511111,
+        "relativeMAD": 0.0157109223857,
+        "minimum": 52185.9354839,
+        "maximum": 57196.7555556
       },
       "work": 13606.617476658635,
       "allocationUnits": 10000,
@@ -431,11 +431,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 87612.8541667,
-        "p95": 104462.592908,
-        "relativeMAD": 0.039572229644,
-        "minimum": 84145.8181818,
-        "maximum": 109173.765957
+        "median": 87607.2765957,
+        "p95": 90100.324439,
+        "relativeMAD": 0.0214518187563,
+        "minimum": 83462.5714286,
+        "maximum": 90327.5348837
       },
       "work": 23606.617476658634,
       "allocationUnits": 10000,
@@ -454,11 +454,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 370206.933333,
-        "p95": 382039.857143,
-        "relativeMAD": 0.0053069618562,
-        "minimum": 366293.545455,
-        "maximum": 384995
+        "median": 363311.793103,
+        "p95": 365703.462381,
+        "relativeMAD": 0.00325140440154,
+        "minimum": 358680.533333,
+        "maximum": 366510.392857
       },
       "work": 163840,
       "allocationUnits": 800,
@@ -477,11 +477,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 3665375,
-        "p95": 3779425.06667,
-        "relativeMAD": 0.0164603894554,
-        "minimum": 3600778,
-        "maximum": 3779430.66667
+        "median": 3550944.33333,
+        "p95": 3624702.6,
+        "relativeMAD": 0.00484218611138,
+        "minimum": 3531375,
+        "maximum": 3627763.66667
       },
       "work": 2129920,
       "allocationUnits": 1280,
@@ -500,11 +500,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 161624.33871,
-        "p95": 177986.50086,
-        "relativeMAD": 0.0155905558907,
-        "minimum": 158280.138462,
-        "maximum": 184973.790323
+        "median": 156972.65625,
+        "p95": 160209.05323,
+        "relativeMAD": 0.00798272118437,
+        "minimum": 154497.469697,
+        "maximum": 160784.147541
       },
       "work": 20480,
       "allocationUnits": 800,
@@ -523,11 +523,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 342208.333333,
-        "p95": 350965.933871,
-        "relativeMAD": 0.00691586509196,
-        "minimum": 337197.9375,
-        "maximum": 351057.806452
+        "median": 336924.741935,
+        "p95": 343287.5,
+        "relativeMAD": 0.0067064334637,
+        "minimum": 331377.709677,
+        "maximum": 345234.375
       },
       "work": 266240,
       "allocationUnits": 1280,
@@ -546,16 +546,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 9096083.5,
-        "p95": 9683979.3,
-        "relativeMAD": 0.00974776671743,
-        "minimum": 8905437.5,
-        "maximum": 9731229.5
+        "median": 8935979.5,
+        "p95": 10070208.1,
+        "relativeMAD": 0.0115287305662,
+        "minimum": 8797062.5,
+        "maximum": 10746791.5
       },
       "work": 2883584,
       "allocationUnits": 12320,
       "retainedBytes": 655360,
-      "heapDeltaBytes": 8617480,
+      "heapDeltaBytes": 8578976,
       "sourceBytes": 361
     },
     {
@@ -569,16 +569,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 62914417,
-        "p95": 65861616.8,
-        "relativeMAD": 0.0148197510914,
-        "minimum": 61232375,
-        "maximum": 66046500
+        "median": 62040458,
+        "p95": 62847650.2,
+        "relativeMAD": 0.017126582141,
+        "minimum": 60798209,
+        "maximum": 63127167
       },
       "work": 34340864,
       "allocationUnits": 12800,
       "retainedBytes": 655360,
-      "heapDeltaBytes": 9266704,
+      "heapDeltaBytes": 9272416,
       "sourceBytes": 361
     },
     {
@@ -592,16 +592,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 5438729,
-        "p95": 5677679.3,
-        "relativeMAD": 0.0175132829749,
-        "minimum": 5165305.66667,
-        "maximum": 5695187.5
+        "median": 5233833.33333,
+        "p95": 5338379,
+        "relativeMAD": 0.0121086520396,
+        "minimum": 5129291.66667,
+        "maximum": 5342229
       },
       "work": 360448,
       "allocationUnits": 12320,
       "retainedBytes": 196608,
-      "heapDeltaBytes": 8579536,
+      "heapDeltaBytes": 8562376,
       "sourceBytes": 361
     },
     {
@@ -615,16 +615,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 5646292,
-        "p95": 5832325,
-        "relativeMAD": 0.00889601529643,
-        "minimum": 5500687.5,
-        "maximum": 5843500
+        "median": 5555916.5,
+        "p95": 5619987.7,
+        "relativeMAD": 0.00532459406112,
+        "minimum": 5469979.5,
+        "maximum": 5642479.5
       },
       "work": 4292608,
       "allocationUnits": 12800,
       "retainedBytes": 196608,
-      "heapDeltaBytes": 9003016,
+      "heapDeltaBytes": 8997176,
       "sourceBytes": 361
     },
     {
@@ -638,11 +638,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 183411.764706,
-        "p95": 200470.934091,
-        "relativeMAD": 0.00691835425637,
-        "minimum": 181090.909091,
-        "maximum": 201633.848485
+        "median": 180021.454545,
+        "p95": 183907.090702,
+        "relativeMAD": 0.00939079988449,
+        "minimum": 177828.571429,
+        "maximum": 184993.882353
       },
       "work": 131072,
       "allocationUnits": 1,
@@ -661,16 +661,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 3348968.75,
-        "p95": 3438981.15,
-        "relativeMAD": 0.0138444857092,
-        "minimum": 3285697.75,
-        "maximum": 3464010.25
+        "median": 3252625,
+        "p95": 3272033.35,
+        "relativeMAD": 0.00392629030401,
+        "minimum": 3227854,
+        "maximum": 3274041.75
       },
       "work": 2097152,
       "allocationUnits": 1,
       "retainedBytes": 32768,
-      "heapDeltaBytes": 1232792,
+      "heapDeltaBytes": 1148648,
       "sourceBytes": 432
     },
     {
@@ -684,11 +684,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 18907.5520833,
-        "p95": 22845.0500602,
-        "relativeMAD": 0.00959170462485,
-        "minimum": 18642.3956044,
-        "maximum": 23128.5425532
+        "median": 18606.9245283,
+        "p95": 20323.3983217,
+        "relativeMAD": 0.0197993021133,
+        "minimum": 18024.7395833,
+        "maximum": 21001.6153846
       },
       "work": 16384,
       "allocationUnits": 1,
@@ -707,11 +707,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 630875,
-        "p95": 659014.8,
-        "relativeMAD": 0.0196228342469,
-        "minimum": 618189.777778,
-        "maximum": 659222.222222
+        "median": 618220.9,
+        "p95": 634630.8,
+        "relativeMAD": 0.00776421502422,
+        "minimum": 610004.2,
+        "maximum": 641945.8
       },
       "work": 262144,
       "allocationUnits": 1,
@@ -730,16 +730,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 3264270.75,
-        "p95": 3577770.6,
-        "relativeMAD": 0.0187861255076,
-        "minimum": 3184323,
-        "maximum": 3637645.5
+        "median": 3174250,
+        "p95": 3299201.95,
+        "relativeMAD": 0.0141175080728,
+        "minimum": 3111708.5,
+        "maximum": 3331260.25
       },
       "work": 2097152,
       "allocationUnits": 1,
       "retainedBytes": 524288,
-      "heapDeltaBytes": 1033304,
+      "heapDeltaBytes": 987944,
       "sourceBytes": 432
     },
     {
@@ -753,16 +753,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 46795958,
-        "p95": 48257400.2,
-        "relativeMAD": 0.00750686629815,
-        "minimum": 46247334,
-        "maximum": 48762667
+        "median": 46195459,
+        "p95": 46736117.2,
+        "relativeMAD": 0.00533513478026,
+        "minimum": 45509000,
+        "maximum": 46748834
       },
       "work": 33554432,
       "allocationUnits": 1,
       "retainedBytes": 524288,
-      "heapDeltaBytes": 1182472,
+      "heapDeltaBytes": 1089272,
       "sourceBytes": 432
     },
     {
@@ -776,11 +776,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 584576,
-        "p95": 605575.01,
-        "relativeMAD": 0.0261497221919,
-        "minimum": 563141.7,
-        "maximum": 609383.35
+        "median": 568612.5,
+        "p95": 604137.1,
+        "relativeMAD": 0.007247114687,
+        "minimum": 554770.8,
+        "maximum": 623464.6
       },
       "work": 262144,
       "allocationUnits": 1,
@@ -799,16 +799,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 9362041.5,
-        "p95": 9663025.2,
-        "relativeMAD": 0.0184143063241,
-        "minimum": 9189646,
-        "maximum": 9681667
+        "median": 9201646,
+        "p95": 9348762.3,
+        "relativeMAD": 0.00575755685451,
+        "minimum": 9091812.5,
+        "maximum": 9411520.5
       },
       "work": 4194304,
       "allocationUnits": 1,
       "retainedBytes": 65536,
-      "heapDeltaBytes": 2682696,
+      "heapDeltaBytes": 2428488,
       "sourceBytes": 432
     },
     {
@@ -822,11 +822,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 184029.9375,
-        "p95": 191990.729228,
-        "relativeMAD": 0.00377861714207,
-        "minimum": 182705.942857,
-        "maximum": 192134.387097
+        "median": 181800,
+        "p95": 185581.693712,
+        "relativeMAD": 0.00818528995764,
+        "minimum": 179670.454545,
+        "maximum": 186360.294118
       },
       "work": 131328,
       "allocationUnits": 288,
@@ -845,11 +845,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2959635.5,
-        "p95": 3076716.8,
-        "relativeMAD": 0.0113857770662,
-        "minimum": 2880875,
-        "maximum": 3125458.5
+        "median": 2862312.5,
+        "p95": 2916731.3,
+        "relativeMAD": 0.00795536825566,
+        "minimum": 2815146,
+        "maximum": 2918760.5
       },
       "work": 2097408,
       "allocationUnits": 288,
@@ -868,11 +868,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 22068.4029851,
-        "p95": 22557.377217,
-        "relativeMAD": 0.0123927148725,
-        "minimum": 21508.4303797,
-        "maximum": 22701.0350877
+        "median": 21507.1428571,
+        "p95": 23893.6674286,
+        "relativeMAD": 0.0117600681559,
+        "minimum": 21101.7205882,
+        "maximum": 25117.2266667
       },
       "work": 16640,
       "allocationUnits": 288,
@@ -891,11 +891,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 613687.5,
-        "p95": 677906.763889,
-        "relativeMAD": 0.00810609815434,
-        "minimum": 603850,
-        "maximum": 704005.125
+        "median": 602187.5,
+        "p95": 606673.133333,
+        "relativeMAD": 0.00349420515491,
+        "minimum": 597247.529412,
+        "maximum": 606875
       },
       "work": 262400,
       "allocationUnits": 288,
@@ -914,11 +914,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2957448,
-        "p95": 3032022.95,
-        "relativeMAD": 0.0105664579732,
-        "minimum": 2920062.5,
-        "maximum": 3039906.25
+        "median": 2904031.25,
+        "p95": 3247180.65,
+        "relativeMAD": 0.0054019735497,
+        "minimum": 2886972.33333,
+        "maximum": 3454041.75
       },
       "work": 2101248,
       "allocationUnits": 4128,
@@ -937,11 +937,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 45535416,
-        "p95": 46174183.2,
-        "relativeMAD": 0.00625335233567,
-        "minimum": 45213250,
-        "maximum": 46216750
+        "median": 45013917,
+        "p95": 45640733.4,
+        "relativeMAD": 0.00278156197782,
+        "minimum": 44305833,
+        "maximum": 45672417
       },
       "work": 33558528,
       "allocationUnits": 4128,
@@ -960,11 +960,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 662400,
-        "p95": 682511.12,
-        "relativeMAD": 0.0191056092324,
-        "minimum": 633317.307692,
-        "maximum": 686100
+        "median": 647875,
+        "p95": 670252.380952,
+        "relativeMAD": 0.0101871502991,
+        "minimum": 633519.466667,
+        "maximum": 679944.444445
       },
       "work": 266240,
       "allocationUnits": 4128,
@@ -983,11 +983,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 8957750,
-        "p95": 9228853.8,
-        "relativeMAD": 0.00303273701539,
-        "minimum": 8923437.5,
-        "maximum": 9256229
+        "median": 8996229,
+        "p95": 9127191.6,
+        "relativeMAD": 0.012713660357,
+        "minimum": 8813208,
+        "maximum": 9138250
       },
       "work": 4198400,
       "allocationUnits": 4128,
@@ -1004,11 +1004,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 5904854,
-        "p95": 6377870.8,
-        "relativeMAD": 0.0178277904924,
-        "minimum": 5695854.5,
-        "maximum": 6467521
+        "median": 5721041.5,
+        "p95": 6142091.7,
+        "relativeMAD": 0.0182732462262,
+        "minimum": 5584333.5,
+        "maximum": 6170083.5
       },
       "work": 300000,
       "allocationUnits": 300000,
@@ -1025,11 +1025,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 115013.635514,
-        "p95": 138298.957685,
-        "relativeMAD": 0.0751233590801,
-        "minimum": 102142.1875,
-        "maximum": 138310.134021
+        "median": 109602.855856,
+        "p95": 122900.405901,
+        "relativeMAD": 0.0651846769598,
+        "minimum": 96205.5084746,
+        "maximum": 127002.488095
       },
       "work": 100000,
       "allocationUnits": 100000,
@@ -1047,11 +1047,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2706385.25,
-        "p95": 2822999.9,
-        "relativeMAD": 0.0091951062769,
-        "minimum": 2587593.75,
-        "maximum": 2826354
+        "median": 2674885.5,
+        "p95": 2764047.9,
+        "relativeMAD": 0.0201410490281,
+        "minimum": 2606375,
+        "maximum": 2775135.5
       },
       "work": 32768,
       "allocationUnits": 4097,
@@ -1069,11 +1069,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 33896417,
-        "p95": 35719633.6,
-        "relativeMAD": 0.0162898043177,
-        "minimum": 32289125,
-        "maximum": 36362084
+        "median": 32736250,
+        "p95": 33650100,
+        "relativeMAD": 0.00270599106494,
+        "minimum": 32494459,
+        "maximum": 33987500
       },
       "work": 400000,
       "allocationUnits": 50001,
@@ -1091,11 +1091,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 4645472,
-        "p95": 4702936,
-        "relativeMAD": 0.0083175617031,
-        "minimum": 4458569.33333,
-        "maximum": 4715486
+        "median": 4573722.33333,
+        "p95": 4939216.66667,
+        "relativeMAD": 0.00433942681406,
+        "minimum": 4520250,
+        "maximum": 5021000
       },
       "work": 393216,
       "allocationUnits": 4096,
@@ -1113,11 +1113,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 74569750,
-        "p95": 75489758.4,
-        "relativeMAD": 0.0113612825576,
-        "minimum": 72396917,
-        "maximum": 75538292
+        "median": 72157666,
+        "p95": 72964933,
+        "relativeMAD": 0.00273649372196,
+        "minimum": 71619041,
+        "maximum": 73113833
       },
       "work": 6243856.189774725,
       "allocationUnits": 50000,
@@ -1135,11 +1135,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2608.23036187,
-        "p95": 3522.65261261,
-        "relativeMAD": 0.0944886968805,
-        "minimum": 2361.78207381,
-        "maximum": 3659.19141631
+        "median": 2540.89806678,
+        "p95": 3110.6344108,
+        "relativeMAD": 0.0992145197231,
+        "minimum": 2288.80408542,
+        "maximum": 3120.91263441
       },
       "work": 3225,
       "allocationUnits": 2,
@@ -1157,11 +1157,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 4207.06818182,
-        "p95": 4424.75650058,
-        "relativeMAD": 0.0397736289679,
-        "minimum": 3802.29530201,
-        "maximum": 4458.32846715
+        "median": 4044.16666667,
+        "p95": 4727.25243836,
+        "relativeMAD": 0.0283010153691,
+        "minimum": 3268.93939394,
+        "maximum": 4818.06
       },
       "work": 4125,
       "allocationUnits": 2,
@@ -1179,11 +1179,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 15555,
-        "p95": 15929.7364717,
-        "relativeMAD": 0.0285385192328,
-        "minimum": 14893.32,
-        "maximum": 16021.516129
+        "median": 16437.3961353,
+        "p95": 18022.1632941,
+        "relativeMAD": 0.0132257039666,
+        "minimum": 14908,
+        "maximum": 18848.0588235
       },
       "work": 9375,
       "allocationUnits": 2,
@@ -1201,11 +1201,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 104036.938144,
-        "p95": 110770.242903,
-        "relativeMAD": 0.0107639298846,
-        "minimum": 102403.37234,
-        "maximum": 112077.05
+        "median": 102919.736842,
+        "p95": 106263.420553,
+        "relativeMAD": 0.0111547372978,
+        "minimum": 101120.701031,
+        "maximum": 106912.454545
       },
       "work": 53125,
       "allocationUnits": 2,
@@ -1223,11 +1223,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 1697.87597656,
-        "p95": 1721.58301039,
-        "relativeMAD": 0.0116846684039,
-        "minimum": 1588.33837891,
-        "maximum": 1724.16162109
+        "median": 1655.17138672,
+        "p95": 1692.89951172,
+        "relativeMAD": 0.0134719220152,
+        "minimum": 1609.78173828,
+        "maximum": 1701.23291016
       },
       "work": 100,
       "allocationUnits": 101,
@@ -1245,11 +1245,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 20108.869469,
-        "p95": 20910.4004386,
-        "relativeMAD": 0.0135835694318,
-        "minimum": 19729.7734628,
-        "maximum": 21063.875
+        "median": 19345.4258873,
+        "p95": 20523.1073967,
+        "relativeMAD": 0.0194742664481,
+        "minimum": 18576.8251748,
+        "maximum": 20582.0135747
       },
       "work": 1000,
       "allocationUnits": 1001,
@@ -1267,11 +1267,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 194959.090909,
-        "p95": 205431.740705,
-        "relativeMAD": 0.0267460135065,
-        "minimum": 184253.8,
-        "maximum": 207263.020833
+        "median": 190306.333333,
+        "p95": 205208.202754,
+        "relativeMAD": 0.0167648394687,
+        "minimum": 185758.327273,
+        "maximum": 212568.702703
       },
       "work": 6250,
       "allocationUnits": 6251,
@@ -1289,11 +1289,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 1824200,
-        "p95": 1927867.99,
-        "relativeMAD": 0.0117494792238,
-        "minimum": 1782650,
-        "maximum": 1935052.25
+        "median": 1808516.6,
+        "p95": 1873896.72,
+        "relativeMAD": 0.0180764721761,
+        "minimum": 1741341.8,
+        "maximum": 1886166.8
       },
       "work": 50000,
       "allocationUnits": 50001,
@@ -1311,11 +1311,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 251.424316406,
-        "p95": 324.410058594,
-        "relativeMAD": 0.0208790931354,
-        "minimum": 243.448730469,
-        "maximum": 356.384277344
+        "median": 255.228515625,
+        "p95": 272.110742187,
+        "relativeMAD": 0.0298120556793,
+        "minimum": 243.957519531,
+        "maximum": 277.302734375
       },
       "work": 100,
       "allocationUnits": 101,
@@ -1333,11 +1333,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 1568.54248047,
-        "p95": 1874.12128906,
-        "relativeMAD": 0.029158177361,
-        "minimum": 1500.73242188,
-        "maximum": 2046.671875
+        "median": 1487.203125,
+        "p95": 1503.47900391,
+        "relativeMAD": 0.00864602704321,
+        "minimum": 1459.43164063,
+        "maximum": 1503.72314453
       },
       "work": 1000,
       "allocationUnits": 1001,
@@ -1355,11 +1355,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 8103.26470588,
-        "p95": 8370.4311085,
-        "relativeMAD": 0.0186038823985,
-        "minimum": 7792.60086207,
-        "maximum": 8448.04058782
+        "median": 7837.16811594,
+        "p95": 8367.03536869,
+        "relativeMAD": 0.00542932747814,
+        "minimum": 7741.05124341,
+        "maximum": 8689.87175793
       },
       "work": 6250,
       "allocationUnits": 6251,
@@ -1377,11 +1377,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 138902.230769,
-        "p95": 163681.879313,
-        "relativeMAD": 0.0296064880819,
-        "minimum": 132246.428571,
-        "maximum": 171796.301587
+        "median": 137898.666667,
+        "p95": 142542.682927,
+        "relativeMAD": 0.0144059230142,
+        "minimum": 134549.804878,
+        "maximum": 143541.666667
       },
       "work": 50000,
       "allocationUnits": 50001,
@@ -1400,11 +1400,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 984.509868421,
-        "p95": 1041.0129259,
-        "relativeMAD": 0.0188277062125,
-        "minimum": 964.042944785,
-        "maximum": 1045.97565923
+        "median": 989.211243611,
+        "p95": 1065.20293241,
+        "relativeMAD": 0.0285000122823,
+        "minimum": 957.330661323,
+        "maximum": 1096.79878049
       },
       "work": 257,
       "allocationUnits": 2,
@@ -1423,11 +1423,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 28.9916992188,
-        "p95": 58.7078125,
-        "relativeMAD": 0.0315789473691,
-        "minimum": 28.076171875,
-        "maximum": 71.1669921875
+        "median": 29.3784179687,
+        "p95": 35.5100585938,
+        "relativeMAD": 0.0179999002775,
+        "minimum": 28.80859375,
+        "maximum": 36.5190429688
       },
       "work": 5,
       "allocationUnits": 2,
@@ -1446,11 +1446,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 9598.10416667,
-        "p95": 10084.4098701,
-        "relativeMAD": 0.0161768197531,
-        "minimum": 9395.1875,
-        "maximum": 10114.4285714
+        "median": 9614.10769231,
+        "p95": 10316.1567362,
+        "relativeMAD": 0.0115253654893,
+        "minimum": 9503.3015873,
+        "maximum": 10504.0784314
       },
       "work": 8224,
       "allocationUnits": 64,
@@ -1469,11 +1469,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 164.252272727,
-        "p95": 168.538476563,
-        "relativeMAD": 0.0223799029868,
-        "minimum": 151.834960938,
-        "maximum": 168.9453125
+        "median": 161.112304687,
+        "p95": 184.615234375,
+        "relativeMAD": 0.0145230605109,
+        "minimum": 153.584472656,
+        "maximum": 186.299804687
       },
       "work": 160,
       "allocationUnits": 64,
@@ -1492,11 +1492,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 18712.4622642,
-        "p95": 19694.2597038,
-        "relativeMAD": 0.0151856264738,
-        "minimum": 17936.7905983,
-        "maximum": 20008.1085973
+        "median": 18700.9819005,
+        "p95": 19007.4693807,
+        "relativeMAD": 0.00348422191885,
+        "minimum": 18417.9473684,
+        "maximum": 19145.2614679
       },
       "work": 16448,
       "allocationUnits": 128,
@@ -1515,11 +1515,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 311.823992134,
-        "p95": 343.275204386,
-        "relativeMAD": 0.0247726216512,
-        "minimum": 304.099294355,
-        "maximum": 356.366881507
+        "median": 312.179970253,
+        "p95": 336.200366389,
+        "relativeMAD": 0.034696921631,
+        "minimum": 298.597278226,
+        "maximum": 341.190389294
       },
       "work": 320,
       "allocationUnits": 128,
@@ -1538,11 +1538,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 3012.36969697,
-        "p95": 5492.81847861,
-        "relativeMAD": 0.0160497694206,
-        "minimum": 2930.55376344,
-        "maximum": 6867.20879121
+        "median": 3011.77173913,
+        "p95": 3317.03573554,
+        "relativeMAD": 0.0318857144537,
+        "minimum": 2900.43604651,
+        "maximum": 3347.83977901
       },
       "work": 2056,
       "allocationUnits": 16,
@@ -1561,11 +1561,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 56.4780273438,
-        "p95": 58.5411132813,
-        "relativeMAD": 0.00972619675449,
-        "minimum": 50.2524414063,
-        "maximum": 59.5502929688
+        "median": 56.8642578125,
+        "p95": 80.58671875,
+        "relativeMAD": 0.0067921482427,
+        "minimum": 56.2744140625,
+        "maximum": 95.1943359375
       },
       "work": 40,
       "allocationUnits": 16,
@@ -1584,16 +1584,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 1271.66377816,
-        "p95": 1676.39563279,
-        "relativeMAD": 0.0275022688041,
-        "minimum": 1206.88760331,
-        "maximum": 1768.45357143
+        "median": 1276.72759227,
+        "p95": 1703.76964067,
+        "relativeMAD": 0.0530283179085,
+        "minimum": 1193.04297521,
+        "maximum": 1938.27013423
       },
       "work": 903,
       "allocationUnits": 647,
       "retainedBytes": 803128,
-      "heapDeltaBytes": 7984,
+      "heapDeltaBytes": 7744,
       "sourceBytes": 440
     },
     {
@@ -1607,11 +1607,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 551.89822294,
-        "p95": 979.862562274,
-        "relativeMAD": 0.253609087583,
-        "minimum": 411.931818182,
-        "maximum": 1001.93048128
+        "median": 454.184647303,
+        "p95": 719.073976242,
+        "relativeMAD": 0.0468944544672,
+        "minimum": 405.574430823,
+        "maximum": 847.171328671
       },
       "work": 651,
       "allocationUnits": 647,
@@ -1630,11 +1630,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 11320.8541667,
-        "p95": 13040.1162701,
-        "relativeMAD": 0.0651470047735,
-        "minimum": 10583.3344262,
-        "maximum": 13185.3035144
+        "median": 11187.4189723,
+        "p95": 11820.5452161,
+        "relativeMAD": 0.0148098593987,
+        "minimum": 10700.6880734,
+        "maximum": 11838.1147541
       },
       "work": 8839,
       "allocationUnits": 8583,
@@ -1653,11 +1653,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 10411.6803279,
-        "p95": 10690.9007117,
-        "relativeMAD": 0.00831753241724,
-        "minimum": 9432.23920266,
-        "maximum": 10819.3146417
+        "median": 10185.4062969,
+        "p95": 10688.784159,
+        "relativeMAD": 0.0103393999085,
+        "minimum": 9883.18181818,
+        "maximum": 10920.5192604
       },
       "work": 8587,
       "allocationUnits": 8583,
@@ -1676,11 +1676,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 21857.6725664,
-        "p95": 24192.7729124,
-        "relativeMAD": 0.00791891796098,
-        "minimum": 19302.7761905,
-        "maximum": 25549.6231156
+        "median": 20892.7777778,
+        "p95": 22153.9683684,
+        "relativeMAD": 0.0108136363191,
+        "minimum": 20184.079602,
+        "maximum": 22308.9005236
       },
       "work": 17031,
       "allocationUnits": 16775,
@@ -1699,11 +1699,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 20281.7902736,
-        "p95": 22596.5636542,
-        "relativeMAD": 0.0386616219103,
-        "minimum": 18895.0296736,
-        "maximum": 23207.0610169
+        "median": 20176.504918,
+        "p95": 20967.4044162,
+        "relativeMAD": 0.0152586979129,
+        "minimum": 19868.6377246,
+        "maximum": 21086.3295455
       },
       "work": 16779,
       "allocationUnits": 16775,
@@ -1722,11 +1722,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2947.52475248,
-        "p95": 3389.35398641,
-        "relativeMAD": 0.0282163251596,
-        "minimum": 2860.62156863,
-        "maximum": 3476.87007874
+        "median": 2876.08932462,
+        "p95": 3754.00969815,
+        "relativeMAD": 0.0442086124656,
+        "minimum": 2723.397463,
+        "maximum": 4162.94642857
       },
       "work": 2695,
       "allocationUnits": 2439,
@@ -1745,11 +1745,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2561.46240234,
-        "p95": 2923.75488281,
-        "relativeMAD": 0.0379503895918,
-        "minimum": 2461.22216797,
-        "maximum": 3040.52734375
+        "median": 2508.52441406,
+        "p95": 3128.82080078,
+        "relativeMAD": 0.0287108916511,
+        "minimum": 2433.41064453,
+        "maximum": 3276.06201172
       },
       "work": 2443,
       "allocationUnits": 2439,
@@ -1768,11 +1768,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 218830.240741,
-        "p95": 244448.184851,
-        "relativeMAD": 0.0411630595101,
-        "minimum": 206755,
-        "maximum": 247396.634615
+        "median": 211150.634615,
+        "p95": 322594.857143,
+        "relativeMAD": 0.0107278995459,
+        "minimum": 205003.711111,
+        "maximum": 386986.095238
       },
       "work": 100256,
       "allocationUnits": 100000,
@@ -1791,11 +1791,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 207442.12963,
-        "p95": 221760.358102,
-        "relativeMAD": 0.0306608694004,
-        "minimum": 197337.872727,
-        "maximum": 225653.32
+        "median": 205775.333333,
+        "p95": 218174.830118,
+        "relativeMAD": 0.0283733727231,
+        "minimum": 196204.854167,
+        "maximum": 220417.490196
       },
       "work": 100004,
       "allocationUnits": 100000,
@@ -1814,11 +1814,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 3012770.75,
-        "p95": 3531102.66667,
-        "relativeMAD": 0.050569479938,
-        "minimum": 2726697.75,
-        "maximum": 3601736
+        "median": 3193264,
+        "p95": 3462266.7,
+        "relativeMAD": 0.0564360635388,
+        "minimum": 2968014,
+        "maximum": 3491625
       },
       "work": 3200256,
       "allocationUnits": 3200000,
@@ -1837,11 +1837,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2997208.33333,
-        "p95": 3369813.98333,
-        "relativeMAD": 0.0495228615517,
-        "minimum": 2746052.25,
-        "maximum": 3461041.75
+        "median": 3185427,
+        "p95": 3954900,
+        "relativeMAD": 0.0463667822242,
+        "minimum": 2902562.5,
+        "maximum": 4369416.66667
       },
       "work": 3200004,
       "allocationUnits": 3200000,
@@ -1860,11 +1860,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 6002979,
-        "p95": 6767812.3,
-        "relativeMAD": 0.0346528781793,
-        "minimum": 5369514,
-        "maximum": 6979270.5
+        "median": 6006562.5,
+        "p95": 6388475.1,
+        "relativeMAD": 0.0259542791738,
+        "minimum": 5517375,
+        "maximum": 6530458.5
       },
       "work": 6400256,
       "allocationUnits": 6400000,
@@ -1883,11 +1883,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 5879250,
-        "p95": 6260687.7,
-        "relativeMAD": 0.0262008759621,
-        "minimum": 5342986,
-        "maximum": 6285729.5
+        "median": 5822270.5,
+        "p95": 6728945.8,
+        "relativeMAD": 0.0417791478427,
+        "minimum": 5436166,
+        "maximum": 6933354
       },
       "work": 6400004,
       "allocationUnits": 6400000,
@@ -1906,16 +1906,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 852590.333333,
-        "p95": 983060.714286,
-        "relativeMAD": 0.033215835194,
-        "minimum": 770328.666667,
-        "maximum": 1044017.85714
+        "median": 855847.166667,
+        "p95": 1082785.73,
+        "relativeMAD": 0.0318818994746,
+        "minimum": 814156.25,
+        "maximum": 1160770.75
       },
       "work": 800256,
       "allocationUnits": 800000,
       "retainedBytes": 800000,
-      "heapDeltaBytes": 7202344,
+      "heapDeltaBytes": 7210536,
       "sourceBytes": 254
     },
     {
@@ -1929,11 +1929,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 847453.777778,
-        "p95": 963659.288889,
-        "relativeMAD": 0.0411651902138,
-        "minimum": 778515.181818,
-        "maximum": 1023981.55556
+        "median": 873310.545455,
+        "p95": 1223481.02222,
+        "relativeMAD": 0.0153271417769,
+        "minimum": 828762.5,
+        "maximum": 1429882
       },
       "work": 800004,
       "allocationUnits": 800000,
@@ -1951,11 +1951,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 1877375,
-        "p95": 1942827.8,
-        "relativeMAD": 0.00627729320643,
-        "minimum": 1850090.33333,
-        "maximum": 1968500
+        "median": 1816784.66667,
+        "p95": 1841498.66667,
+        "relativeMAD": 0.00525965836348,
+        "minimum": 1778208.33333,
+        "maximum": 1845798.66667
       },
       "work": 571516.495181978,
       "allocationUnits": 40000,
@@ -1974,11 +1974,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 7438812.5,
-        "p95": 7787929.2,
-        "relativeMAD": 0.0154174473413,
-        "minimum": 7306166.5,
-        "maximum": 7813646
+        "median": 7214666.5,
+        "p95": 7365745.9,
+        "relativeMAD": 0.00901808836207,
+        "minimum": 7021250,
+        "maximum": 7370729.5
       },
       "work": 2286033.980727912,
       "allocationUnits": 160000,
@@ -1996,11 +1996,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 7454708.5,
-        "p95": 7677741.7,
-        "relativeMAD": 0.00634665996663,
-        "minimum": 7287833.5,
-        "maximum": 7687458.5
+        "median": 7243437.5,
+        "p95": 7385637.3,
+        "relativeMAD": 0.00767073644249,
+        "minimum": 7165542,
+        "maximum": 7443395.5
       },
       "work": 2286033.980727912,
       "allocationUnits": 160000,
@@ -2019,11 +2019,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 7350625,
-        "p95": 7529391.9,
-        "relativeMAD": 0.00577046169536,
-        "minimum": 7254375,
-        "maximum": 7575083.5
+        "median": 7187541.5,
+        "p95": 7338187.6,
+        "relativeMAD": 0.00850715088049,
+        "minimum": 7125937.5,
+        "maximum": 7353521
       },
       "work": 2286033.980727912,
       "allocationUnits": 160000,
@@ -2041,11 +2041,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 939125,
-        "p95": 978596.413636,
-        "relativeMAD": 0.010792404277,
-        "minimum": 908177.083333,
-        "maximum": 989468.75
+        "median": 904409.666667,
+        "p95": 928754.85,
+        "relativeMAD": 0.0110339930762,
+        "minimum": 889243,
+        "maximum": 928822.916667
       },
       "work": 285762.247590989,
       "allocationUnits": 20000,
@@ -2064,11 +2064,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 7414687.5,
-        "p95": 7654404.2,
-        "relativeMAD": 0.0128096430227,
-        "minimum": 7136146,
-        "maximum": 7666229
+        "median": 7199125,
+        "p95": 7286304,
+        "relativeMAD": 0.00234403486532,
+        "minimum": 7019646,
+        "maximum": 7310354
       },
       "work": 2286033.980727912,
       "allocationUnits": 160000,
@@ -2085,11 +2085,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 248509.514286,
-        "p95": 275642.723077,
-        "relativeMAD": 0.0184909540996,
-        "minimum": 243846.5,
-        "maximum": 289098.282051
+        "median": 247331.081081,
+        "p95": 257080.21141,
+        "relativeMAD": 0.00941375586219,
+        "minimum": 244137.75,
+        "maximum": 259147.925
       },
       "work": 100000,
       "allocationUnits": 0,
@@ -2106,11 +2106,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 15.8896484377,
-        "p95": 30.5297851563,
-        "relativeMAD": 0.0422530883108,
-        "minimum": 14.404296875,
-        "maximum": 38.7573242189
+        "median": 16.7236328126,
+        "p95": 24.0640625,
+        "relativeMAD": 0.0291970802978,
+        "minimum": 15.5029296873,
+        "maximum": 28.4423828125
       },
       "work": 2,
       "allocationUnits": 0,
@@ -2129,11 +2129,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 14465.7258065,
-        "p95": 14943.3925994,
-        "relativeMAD": 0.0188897075088,
-        "minimum": 13853.2820513,
-        "maximum": 14964.9840426
+        "median": 14314.2040816,
+        "p95": 14850.5989744,
+        "relativeMAD": 0.0164824589379,
+        "minimum": 13857.0512821,
+        "maximum": 14983.3333333
       },
       "work": 20064,
       "allocationUnits": 1,
@@ -2152,11 +2152,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 14869.1940299,
-        "p95": 16666.8377361,
-        "relativeMAD": 0.0494931144177,
-        "minimum": 14093.124424,
-        "maximum": 16790.9196429
+        "median": 14477.3706897,
+        "p95": 15175.6146173,
+        "relativeMAD": 0.0164100772426,
+        "minimum": 14069.2567568,
+        "maximum": 15345.5789474
       },
       "work": 20064,
       "allocationUnits": 1,
@@ -2175,11 +2175,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 1064545.8,
-        "p95": 1170462.10909,
-        "relativeMAD": 0.035977341015,
-        "minimum": 1026246.27273,
-        "maximum": 1181500
+        "median": 1023059,
+        "p95": 1081086.34667,
+        "relativeMAD": 0.0134977552614,
+        "minimum": 971726.888889,
+        "maximum": 1082058.3
       },
       "work": 1280000,
       "allocationUnits": 1280000,
@@ -2198,11 +2198,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 966287.909091,
-        "p95": 1068659.12727,
-        "relativeMAD": 0.0372503215811,
-        "minimum": 916412,
-        "maximum": 1082644
+        "median": 1019270.83333,
+        "p95": 1128275.43333,
+        "relativeMAD": 0.0272978417801,
+        "minimum": 898972.25,
+        "maximum": 1169187.5
       },
       "work": 1280000,
       "allocationUnits": 1280000,
@@ -2221,11 +2221,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 543.029785156,
-        "p95": 636.498938802,
-        "relativeMAD": 0.0458581544353,
-        "minimum": 509.175292969,
-        "maximum": 648.742675781
+        "median": 507.222167968,
+        "p95": 529.264257812,
+        "relativeMAD": 0.0296816202671,
+        "minimum": 462.341308594,
+        "maximum": 532.836914062
       },
       "work": 129,
       "allocationUnits": 2,
@@ -2244,11 +2244,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 714093.75,
-        "p95": 774363.046667,
-        "relativeMAD": 0.0294108208247,
-        "minimum": 651139.928571,
-        "maximum": 800645.833333
+        "median": 647670.454546,
+        "p95": 692179.005882,
+        "relativeMAD": 0.0333948214082,
+        "minimum": 626041.615385,
+        "maximum": 697440.5
       },
       "work": 112596,
       "allocationUnits": 3126,
@@ -2267,11 +2267,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 19073.0440098,
-        "p95": 24530.9182692,
-        "relativeMAD": 0.0319297028791,
-        "minimum": 18464.0473815,
-        "maximum": 24558.875
+        "median": 18226.9372093,
+        "p95": 21019.7486343,
+        "relativeMAD": 0.0362930970266,
+        "minimum": 15825.9259259,
+        "maximum": 21068.3411215
       },
       "work": 4224,
       "allocationUnits": 128,
@@ -2290,11 +2290,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2358.00083264,
-        "p95": 2936.6670123,
-        "relativeMAD": 0.0471061766729,
-        "minimum": 2189.57674051,
-        "maximum": 2954.19247986
+        "median": 2298.63986874,
+        "p95": 2770.84403013,
+        "relativeMAD": 0.0704122456655,
+        "minimum": 2136.78747361,
+        "maximum": 2873.83839213
       },
       "work": 584,
       "allocationUnits": 16,
@@ -2313,11 +2313,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 407849.384615,
-        "p95": 442490.064286,
-        "relativeMAD": 0.0322469687357,
-        "minimum": 394697.478261,
-        "maximum": 443182.52381
+        "median": 396123.384615,
+        "p95": 404430.020364,
+        "relativeMAD": 0.00678793757283,
+        "minimum": 386126.826087,
+        "maximum": 405711.64
       },
       "work": 100065,
       "allocationUnits": 1,
@@ -2336,11 +2336,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 472275,
-        "p95": 486858.066165,
-        "relativeMAD": 0.0173135076856,
-        "minimum": 449925,
-        "maximum": 491128.952381
+        "median": 450644.809524,
+        "p95": 461722.163529,
+        "relativeMAD": 0.0069415190361,
+        "minimum": 441755.952381,
+        "maximum": 462072.9
       },
       "work": 112564,
       "allocationUnits": 1,
@@ -2359,11 +2359,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 403891.68,
-        "p95": 417955.992,
-        "relativeMAD": 0.00925854484223,
-        "minimum": 400152.230769,
-        "maximum": 420943.32
+        "median": 394881.185185,
+        "p95": 398566.427556,
+        "relativeMAD": 0.00176588513435,
+        "minimum": 391260.814815,
+        "maximum": 398859.592593
       },
       "work": 100128,
       "allocationUnits": 1,
@@ -2382,11 +2382,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 401307.692308,
-        "p95": 424013.016,
-        "relativeMAD": 0.0128306497987,
-        "minimum": 396158.653846,
-        "maximum": 427988.36
+        "median": 394828.36,
+        "p95": 406791.774074,
+        "relativeMAD": 0.00936006536932,
+        "minimum": 388842.592593,
+        "maximum": 406862.833333
       },
       "work": 100072,
       "allocationUnits": 1,
@@ -2405,16 +2405,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 558356.5,
-        "p95": 574010.985965,
-        "relativeMAD": 0.01547629422,
-        "minimum": 547883.35,
-        "maximum": 575129.421053
+        "median": 551212.5,
+        "p95": 559208.305263,
+        "relativeMAD": 0.00417642923554,
+        "minimum": 543310.166667,
+        "maximum": 560831.105263
       },
       "work": 11079.626630838393,
       "allocationUnits": 10016.609640474437,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1079120,
+      "heapDeltaBytes": 1071344,
       "sourceBytes": 409
     },
     {
@@ -2428,16 +2428,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 2130683.4,
-        "p95": 2192418.32,
-        "relativeMAD": 0.0141308652425,
-        "minimum": 2050325,
-        "maximum": 2195291.6
+        "median": 2106875,
+        "p95": 2132673.4,
+        "relativeMAD": 0.00584590922581,
+        "minimum": 2088300,
+        "maximum": 2139733.4
       },
       "work": 218683.5229208241,
       "allocationUnits": 217620.50593046015,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 2793824,
+      "heapDeltaBytes": 2797072,
       "sourceBytes": 409
     },
     {
@@ -2451,16 +2451,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 562982.421053,
-        "p95": 610891.969591,
-        "relativeMAD": 0.00867859200243,
-        "minimum": 555648.166667,
-        "maximum": 618074.578947
+        "median": 554008.736842,
+        "p95": 562392.980186,
+        "relativeMAD": 0.00628994450596,
+        "minimum": 544456,
+        "maximum": 565659.352941
       },
       "work": 12126.033980727912,
       "allocationUnits": 11063.016990363956,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1087016,
+      "heapDeltaBytes": 1070392,
       "sourceBytes": 409
     },
     {
@@ -2474,16 +2474,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 553184.210526,
-        "p95": 574457.094737,
-        "relativeMAD": 0.0064905332763,
-        "minimum": 547392.526316,
-        "maximum": 575695.157895
+        "median": 541489.052632,
+        "p95": 553260.616842,
+        "relativeMAD": 0.0073457576825,
+        "minimum": 536366.7,
+        "maximum": 557964.894737
       },
       "work": 11195.894114159451,
       "allocationUnits": 10132.877123795495,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1078248,
+      "heapDeltaBytes": 1068072,
       "sourceBytes": 409
     },
     {
@@ -2497,11 +2497,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 570.993502978,
-        "p95": 595.322539063,
-        "relativeMAD": 0.0253145445663,
-        "minimum": 488.76953125,
-        "maximum": 602.257291667
+        "median": 515.66631412,
+        "p95": 585.791502559,
+        "relativeMAD": 0.0202016117744,
+        "minimum": 487.735632185,
+        "maximum": 612.393767705
       },
       "work": 129,
       "allocationUnits": 2,
@@ -2520,11 +2520,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 678223,
-        "p95": 712554.4,
-        "relativeMAD": 0.0214109518551,
-        "minimum": 617044.4,
-        "maximum": 725761.066667
+        "median": 643354.166667,
+        "p95": 679373.866667,
+        "relativeMAD": 0.0213590004894,
+        "minimum": 619335.9375,
+        "maximum": 680247.2
       },
       "work": 112596,
       "allocationUnits": 3126,
@@ -2543,11 +2543,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 18548.594132,
-        "p95": 21237.5454418,
-        "relativeMAD": 0.0871686542988,
-        "minimum": 16617.0504386,
-        "maximum": 21547.8187919
+        "median": 17340.1985019,
+        "p95": 19036.887638,
+        "relativeMAD": 0.00937506129674,
+        "minimum": 17024.8015873,
+        "maximum": 19083.4453333
       },
       "work": 4224,
       "allocationUnits": 128,
@@ -2566,11 +2566,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2404.77881844,
-        "p95": 2902.5702355,
-        "relativeMAD": 0.0682801099904,
-        "minimum": 2193.58313445,
-        "maximum": 2978.87540279
+        "median": 2306.55459057,
+        "p95": 2809.97252251,
+        "relativeMAD": 0.0609771100973,
+        "minimum": 2049.1095176,
+        "maximum": 2831.48967552
       },
       "work": 584,
       "allocationUnits": 16,
@@ -2589,11 +2589,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 402941.68,
-        "p95": 416363.726812,
-        "relativeMAD": 0.00812772706957,
-        "minimum": 396508.708333,
-        "maximum": 419896.73913
+        "median": 396492,
+        "p95": 403724.176923,
+        "relativeMAD": 0.00928828518421,
+        "minimum": 390306.115385,
+        "maximum": 404913.166667
       },
       "work": 100065,
       "allocationUnits": 1,
@@ -2612,11 +2612,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 460729.181818,
-        "p95": 473873.464069,
-        "relativeMAD": 0.0130767019316,
-        "minimum": 453907.181818,
-        "maximum": 477498.090909
+        "median": 447109.818182,
+        "p95": 455307.56996,
+        "relativeMAD": 0.00966225909934,
+        "minimum": 440439.833333,
+        "maximum": 456318.181818
       },
       "work": 112564,
       "allocationUnits": 1,
@@ -2635,11 +2635,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 406660.269231,
-        "p95": 414710.735178,
-        "relativeMAD": 0.0160705869868,
-        "minimum": 396434.307692,
-        "maximum": 415634.043478
+        "median": 393913.32,
+        "p95": 398947.160889,
+        "relativeMAD": 0.00300606156781,
+        "minimum": 390437.5,
+        "maximum": 400260.814815
       },
       "work": 100128,
       "allocationUnits": 1,
@@ -2658,11 +2658,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 400883,
-        "p95": 411312.293217,
-        "relativeMAD": 0.00207465097711,
-        "minimum": 393535.269231,
-        "maximum": 416061.608696
+        "median": 393158.36,
+        "p95": 400141.969231,
+        "relativeMAD": 0.0052207735562,
+        "minimum": 389591.285714,
+        "maximum": 401133
       },
       "work": 100072,
       "allocationUnits": 1,
@@ -2681,16 +2681,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 550956.25,
-        "p95": 564515.687368,
-        "relativeMAD": 0.00611436933518,
-        "minimum": 547587.5,
-        "maximum": 565495.578947
+        "median": 542535.4,
+        "p95": 548138.411111,
+        "relativeMAD": 0.0064703611968,
+        "minimum": 535985.4,
+        "maximum": 549048.611111
       },
       "work": 11079.626630838393,
       "allocationUnits": 10016.609640474437,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1067120,
+      "heapDeltaBytes": 1064720,
       "sourceBytes": 409
     },
     {
@@ -2704,16 +2704,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 2143400,
-        "p95": 2214863.32,
-        "relativeMAD": 0.00677279089293,
-        "minimum": 2113500,
-        "maximum": 2226566.6
+        "median": 2102883.4,
+        "p95": 2133263.36,
+        "relativeMAD": 0.00684774058325,
+        "minimum": 2087358.4,
+        "maximum": 2133516.8
       },
       "work": 218683.5229208241,
       "allocationUnits": 217620.50593046015,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 2796424,
+      "heapDeltaBytes": 2795728,
       "sourceBytes": 409
     },
     {
@@ -2727,16 +2727,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 562493.055556,
-        "p95": 567882.884211,
-        "relativeMAD": 0.00888964841016,
-        "minimum": 554423.611111,
-        "maximum": 568142.526316
+        "median": 550506.25,
+        "p95": 557924.696491,
+        "relativeMAD": 0.00720554943745,
+        "minimum": 543093.75,
+        "maximum": 558615.722222
       },
       "work": 12126.033980727912,
       "allocationUnits": 11063.016990363956,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1081912,
+      "heapDeltaBytes": 1070104,
       "sourceBytes": 409
     },
     {
@@ -2750,16 +2750,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 553929.842105,
-        "p95": 568075.431579,
-        "relativeMAD": 0.00463587113961,
-        "minimum": 550429.2,
-        "maximum": 570815.789474
+        "median": 542681.25,
+        "p95": 551323.3,
+        "relativeMAD": 0.00736693961697,
+        "minimum": 535675.421053,
+        "maximum": 553583.3
       },
       "work": 11195.894114159451,
       "allocationUnits": 10132.877123795495,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1073736,
+      "heapDeltaBytes": 1063176,
       "sourceBytes": 409
     }
   ]

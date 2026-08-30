@@ -1,6 +1,7 @@
 /* Law evidence: SPA-01 SPA-02 SPA-03 SPA-04 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createSequence } from '@sectile/core/sequence';
 import {
   applySpatialMeasurements,
   applySpatialMutation,
@@ -40,6 +41,20 @@ test('SPA-01: packed spatial queries equal a full rectangle scan', () => {
     const viewport = { x: (step * 97) % 950, y: (step * 61) % 850, width: 113, height: 127 };
     assert.deepEqual(querySpatialLayout(state, { viewport }).placements.map(({ id }) => id), referenceQuery(items, viewport));
   }
+});
+
+test('spatial construction reuses an aligned canonical domain', () => {
+  const items = [
+    { id: 'a', rect: { x: 0, y: 0, width: 10, height: 10 } },
+    { id: 'b', rect: { x: 20, y: 0, width: 10, height: 10 } },
+  ];
+  const domain = createSequence(items.map(({ id }) => id));
+  const state = createSpatialLayout(items, { domain });
+  assert.equal(state.domain, domain);
+  assert.throws(
+    () => createSpatialLayout(items, { domain: createSequence(['b', 'a']) }),
+    /identities must align/u,
+  );
 });
 
 test('SPA-02: z-index and declaration order produce deterministic paint order', () => {
@@ -105,6 +120,99 @@ test('spatial splice patches preserve declaration order and validate inserted id
     patch: { type: 'splice', index: 0, deleteCount: 0, inserted: ['wrong'] },
     inserted: [{ id: 'different', rect: rect(0) }],
   }), /inserted items must match/);
+});
+
+test('spatial move and permutation patches preserve geometry without rebuilding the packed tree', () => {
+  const items = Array.from({ length: 4_096 }, (_, index) => ({
+    id: `item-${index}`,
+    rect: { x: (index % 64) * 11, y: Math.floor(index / 64) * 13, width: 10, height: 12 },
+  }));
+  const state = createSpatialLayout(items);
+  const moved = applySpatialMutation(state, {
+    type: 'patch',
+    patch: { type: 'move', from: 1_000, to: 2_000, count: 1 },
+    inserted: [],
+  }).state;
+  assert.equal(readRepairDiagnostics(moved)?.rebuiltItems, 0);
+  assert.equal(moved.domain.at(2_000), 'item-1000');
+  assert.deepEqual(spatialRectAt(moved, 'item-1000'), items[1_000].rect);
+
+  const replacement = [moved.items.at(1_501), moved.items.at(1_500)];
+  const permuted = applySpatialMutation(moved, {
+    type: 'patch',
+    patch: {
+      type: 'splice',
+      index: 1_500,
+      deleteCount: 2,
+      inserted: replacement.map(({ id }) => id),
+    },
+    inserted: replacement,
+  }).state;
+  assert.equal(readRepairDiagnostics(permuted)?.rebuiltItems, 0);
+  assert.deepEqual(
+    permuted.items.toArray().map(({ id }) => id),
+    permuted.domain.ids,
+  );
+  const viewport = { x: 0, y: 0, width: 704, height: 832 };
+  assert.deepEqual(
+    querySpatialLayout(permuted, { viewport }).placements.map(({ id, index }) => [id, index]),
+    referenceQuery(permuted.items.toArray(), viewport).map((id) => [id, permuted.domain.indexOf(id)]),
+  );
+});
+
+test('spatial structural overlays stay bounded and rebuild on boundary shrink or density', () => {
+  const items = Array.from({ length: 4_096 }, (_, index) => ({
+    id: `item-${index}`,
+    rect: { x: (index % 64) * 11, y: Math.floor(index / 64) * 13, width: 10, height: 12 },
+  }));
+  const state = createSpatialLayout(items);
+  const inserted = { id: 'inserted', rect: { x: 5, y: 5, width: 3, height: 3 } };
+  const sparse = applySpatialMutation(state, {
+    type: 'patch',
+    patch: { type: 'splice', index: 10, deleteCount: 0, inserted: [inserted.id] },
+    inserted: [inserted],
+  }).state;
+  const sparseWork = readRepairDiagnostics(sparse);
+  assert.equal(sparseWork?.mode, 'incremental');
+  assert.equal(sparseWork?.rebuiltItems, 0);
+  assert.ok(sparseWork.copiedEntries <= sparseWork.repairBound);
+  assert.deepEqual(spatialRectAt(sparse, inserted.id), inserted.rect);
+  assert.deepEqual(
+    querySpatialLayout(sparse, { viewport: { x: 0, y: 0, width: 20, height: 20 } })
+      .placements.find(({ id }) => id === inserted.id),
+    {
+      id: inserted.id,
+      index: 10,
+      zIndex: 0,
+      rect: inserted.rect,
+      visible: true,
+    },
+  );
+
+  const boundary = applySpatialMutation(sparse, {
+    type: 'patch',
+    patch: { type: 'splice', index: sparse.domain.indexOf('item-4095'), deleteCount: 1, inserted: [] },
+    inserted: [],
+  }).state;
+  assert.equal(readRepairDiagnostics(boundary)?.mode, 'rebuild');
+  assert.equal(spatialRectAt(boundary, 'item-4095'), null);
+
+  const denseInserted = Array.from({ length: 67 }, (_, index) => ({
+    id: `added-${index}`,
+    rect: { x: index, y: index, width: 1, height: 1 },
+  }));
+  const dense = applySpatialMutation(state, {
+    type: 'patch',
+    patch: {
+      type: 'splice',
+      index: 100,
+      deleteCount: 0,
+      inserted: denseInserted.map(({ id }) => id),
+    },
+    inserted: denseInserted,
+  }).state;
+  assert.equal(readRepairDiagnostics(dense)?.mode, 'rebuild');
+  assert.deepEqual(dense.items.toArray().map(({ id }) => id), dense.domain.ids);
 });
 
 test('spatial value-only patches repair touched blocks without rebuilding the domain', () => {
