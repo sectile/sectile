@@ -1,5 +1,6 @@
 import type { StableID } from '@sectile/core';
 import { unwrap } from '@sectile/core/result';
+import type { ChartAggregateRepresentative } from './contract.js';
 import { projectionQueryIndex, type ProjectionQueryIndex, type QueryNode } from './internal/query-index.js';
 import { chartFail, chartOK } from './internal/result.js';
 import type { ChartProjection, ChartProjectionBatch } from './projection.js';
@@ -12,14 +13,28 @@ export interface ChartHitTestInput {
   readonly maximumHits?: number;
 }
 
-export interface ChartHit<ID extends StableID = StableID> {
-  readonly id: ID;
-  readonly identityIndex: number;
+interface ChartHitBase {
+  readonly kind: 'datum' | 'aggregate';
   readonly layerIndex: number;
   readonly batchIndex: number;
   readonly primitiveIndex: number;
   readonly distanceSquared: number;
 }
+
+export interface ChartDatumHit<ID extends StableID = StableID> extends ChartHitBase {
+  readonly kind: 'datum';
+  readonly id: ID;
+  readonly identityIndex: number;
+}
+
+export interface ChartAggregateHit extends ChartHitBase {
+  readonly kind: 'aggregate';
+  readonly id?: never;
+  readonly identityIndex?: never;
+  readonly representative: ChartAggregateRepresentative;
+}
+
+export type ChartHit<ID extends StableID = StableID> = ChartDatumHit<ID> | ChartAggregateHit;
 
 export const DEFAULT_CHART_HIT_RADIUS = 8;
 export const MAXIMUM_CHART_HITS = 256;
@@ -77,10 +92,15 @@ function queryNode<ID extends StableID>(
     const batch = projection.batches[batchIndex] as ChartProjectionBatch;
     const exact = exactHit(batch, primitiveIndex, x, y, radius);
     if (exact === null) continue;
+    const representative = batch.representatives?.[primitiveIndex];
+    if (representative?.kind === 'aggregate') {
+      hits.push({ kind: 'aggregate', representative, layerIndex: batch.layerIndex, batchIndex, primitiveIndex, distanceSquared: exact.distanceSquared });
+      continue;
+    }
     const identityIndex = identityFor(batch, primitiveIndex, exact.endpoint);
-    const id = projection.identities[identityIndex];
+    const id = representative?.kind === 'datum' ? representative.id as ID : projection.identities[identityIndex];
     if (id === undefined) continue;
-    hits.push({ id, identityIndex, layerIndex: batch.layerIndex, batchIndex, primitiveIndex, distanceSquared: exact.distanceSquared });
+    hits.push({ kind: 'datum', id, identityIndex, layerIndex: batch.layerIndex, batchIndex, primitiveIndex, distanceSquared: exact.distanceSquared });
   }
 }
 

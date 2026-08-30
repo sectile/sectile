@@ -243,6 +243,73 @@
       }
     },
     {
+      "id": "projection.create.semantic",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/projection.ts",
+      "benchmarkIDs": [
+        "chart:projection:semantic-bounded"
+      ],
+      "specificationCeiling": "O(nLayer + nAxis + nTick + log nDatum + qIndex + kRepresentative)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nLayer",
+            "meaning": "resolved layer count",
+            "ceiling": "maxLayers"
+          },
+          {
+            "name": "nAxis",
+            "meaning": "resolved axis count",
+            "ceiling": "maxAxes"
+          },
+          {
+            "name": "nTick",
+            "meaning": "emitted tick count",
+            "ceiling": "sum of bounded axis tick maxima"
+          },
+          {
+            "name": "qIndex",
+            "meaning": "retained hierarchy nodes visited",
+            "ceiling": "reported adversarial fallback bound"
+          },
+          {
+            "name": "kRepresentative",
+            "meaning": "emitted exact or aggregate representatives",
+            "ceiling": "maximumRepresentatives"
+          }
+        ],
+        "time": {
+          "bound": "O(nLayer + nAxis + nTick + log nDatum + qIndex + kRepresentative)",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(nLayer + nAxis + nTick + kRepresentative)",
+          "output": "O(nAxis + nTick + kRepresentative)",
+          "retained": "O(kRepresentative) across at most eight data-geometry levels per live owner"
+        },
+        "resources": {
+          "allocations": "O(nLayer + nAxis + nTick + kRepresentative)",
+          "cacheEntries": "at most 8 per live geometry owner",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "exact bar, pie, donut, raw scatter, and raw heatmap requests reject before partial publication when their quota is insufficient",
+          "line envelopes and explicit density or heatmap aggregates consume retained hierarchy nodes",
+          "aggregate representatives carry bounds, count, and reduction and never carry a datum identity"
+        ],
+        "proof": "Axis layout visits bounded axes and ticks; line selection uses binary search plus retained range aggregates; density and heatmap reductions split a retained frontier; output work follows emitted representatives. Compatible data-space geometry is retained by geometry token and bounded level key.",
+        "adversarialWitness": "One-million-datum line and density projections emit at most 8,192 representatives while diagnostics report hierarchy visits and zero full-source scans; exact profiles return a resource rejection instead of sampling.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "When semantic output is bounded below source cardinality, projection must use retained indexes or reject rather than scan the source."
+        }
+      }
+    },
+    {
       "id": "projection.hit-test.indexed",
       "inherits": "linear-v1",
       "source": "packages/chart/src/query.ts",

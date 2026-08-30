@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   composeChartViewTransforms,
+  createContinuousColorScale,
   createCategoricalScale,
   createChartViewTransform,
   createLinearScale,
   createLogarithmicScale,
+  createOrdinalColorScale,
   createTemporalScale,
   invertChartCoordinate,
   MAX_CHART_TICKS,
@@ -25,6 +27,19 @@ test('linear and temporal scales invert finite positions with bounded ticks', ()
     assert.equal(Object.isFrozen(scale.ticks(2)), true);
     assert.equal(scale.tryTicks(MAX_CHART_TICKS + 1).error.code, 'chart-tick-ceiling-exceeded');
   }
+});
+
+test('projects continuous and stable ordinal renderer-neutral colors', () => {
+  const continuous = createContinuousColorScale({ minimum: 0, maximum: 10 }, [
+    { offset: 0, color: [0, 0, 0, 1] },
+    { offset: 1, color: [1, 1, 1, 1] },
+  ]);
+  assert.deepEqual(continuous.color(5), [0.5, 0.5, 0.5, 1]);
+  const ordinal = createOrdinalColorScale([[1, 0, 0, 1], [0, 0, 1, 1]]);
+  assert.deepEqual(ordinal.color('series'), ordinal.color('series'));
+  const categories = createCategoricalScale({ values: [1, '1'] }, { start: 0, end: 100 });
+  assert.equal(categories.normalize(1), 25);
+  assert.equal(categories.normalize('1'), 75);
 });
 
 test('logarithmic scale maps powers and rejects non-positive domains', () => {

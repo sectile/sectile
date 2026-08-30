@@ -5,13 +5,15 @@ import type { ChartDatum, ChartProfile } from '../model.js';
 const VALUE_BLOCK_DATUMS = 256;
 const MAX_VALUE_PATCH_DEPTH = 16;
 const MAX_HIERARCHY_PATCH_DEPTH = 16;
-const HIERARCHY_STRIDE = 10;
+const HIERARCHY_STRIDE = 12;
 
 export interface ChartLayerRevisions {
   readonly identity: number;
   readonly order: number;
   readonly value: number;
+  readonly geometry: number;
   readonly aggregate: number;
+  readonly style: number;
 }
 
 export interface ChartLayerBounds {
@@ -36,12 +38,16 @@ export interface OrderedProfileIndex {
 
 export interface SpatialProfileIndex {
   readonly kind: 'spatial';
+  readonly order: Uint32Array;
+  readonly positions: Uint32Array;
   readonly hierarchy: PackedAggregateHierarchy;
 }
 
 export interface HeatmapProfileIndex {
   readonly kind: 'heatmap';
   readonly representation: 'dense' | 'sparse';
+  readonly order: Uint32Array;
+  readonly positions: Uint32Array;
   readonly rowValues: Float64Array;
   readonly rowOffsets: Uint32Array;
   readonly datumIndices: Uint32Array;
@@ -78,6 +84,8 @@ export interface PackedChartLayerOwner<ID extends StableID = StableID> {
   readonly index: ChartProfileIndex;
   readonly bounds: ChartLayerBounds;
   readonly revisions: ChartLayerRevisions;
+  readonly geometryToken: object;
+  readonly styleToken: object;
 }
 
 export interface PackedLayerInput<ID extends StableID = StableID> {
@@ -118,6 +126,30 @@ export interface PackedAggregateHierarchy {
   readonly overrides: ReadonlyMap<number, Float64Array>;
 }
 
+export interface PackedOrderedEnvelopeSelection {
+  readonly indices: Uint32Array;
+  readonly visitedNodes: number;
+  readonly visibleDatums: number;
+  readonly aggregated: boolean;
+}
+
+export interface PackedAggregateSelectionEntry {
+  readonly minimumX: number;
+  readonly maximumX: number;
+  readonly minimumY: number;
+  readonly maximumY: number;
+  readonly minimumValue: number;
+  readonly maximumValue: number;
+  readonly sum: number;
+  readonly count: number;
+  readonly firstIndex: number;
+}
+
+export interface PackedAggregateSelection {
+  readonly entries: readonly PackedAggregateSelectionEntry[];
+  readonly visitedNodes: number;
+}
+
 export function createPackedChartLayerOwner<ID extends StableID>(
   input: PackedLayerInput<ID>,
   maxDatums: number,
@@ -131,13 +163,17 @@ export function createPackedChartLayerOwner<ID extends StableID>(
   }
   const identityChanged = previous === undefined || !sameIdentitySet(previous.identities, identities);
   const orderChanged = previous === undefined || !sameIdentityOrder(previous.identities, identities);
-  const valueChanged = previous === undefined || !samePackedValues(previous.values, input.values);
+  const valueChanged = previous === undefined || !sameSemanticValues(previous, input);
+  const geometryChanged = previous === undefined || !sameGeometryValues(previous, input);
+  const aggregateChanged = previous === undefined || !sameAggregateValues(previous, input);
   const index = createProfileIndex(input.profile, values, input.identities.length);
   const revisions = Object.freeze({
     identity: previous === undefined ? 0 : previous.revisions.identity + (identityChanged ? 1 : 0),
     order: previous === undefined ? 0 : previous.revisions.order + (orderChanged ? 1 : 0),
     value: previous === undefined ? 0 : previous.revisions.value + (valueChanged ? 1 : 0),
-    aggregate: previous === undefined ? 0 : previous.revisions.aggregate + (valueChanged || orderChanged ? 1 : 0),
+    geometry: previous === undefined ? 0 : previous.revisions.geometry + (geometryChanged ? 1 : 0),
+    aggregate: previous === undefined ? 0 : previous.revisions.aggregate + (aggregateChanged || orderChanged ? 1 : 0),
+    style: previous?.revisions.style ?? 0,
   });
   const owner = freezeOwner({
     id: input.id,
@@ -149,6 +185,8 @@ export function createPackedChartLayerOwner<ID extends StableID>(
     index,
     bounds: boundsForIndex(index),
     revisions,
+    geometryToken: previous !== undefined && !geometryChanged ? previous.geometryToken : Object.freeze({}),
+    styleToken: previous?.styleToken ?? Object.freeze({}),
   });
   return {
     owner,
@@ -168,7 +206,10 @@ export function patchPackedChartLayerOwner<ID extends StableID>(
 ): PackedLayerMutation<ID> {
   if (patch.identities.length === 0) return { owner: previous, changed: false, work: emptyWork(0) };
   let changed = false;
+  let packedChanged = false;
   let valueChanged = false;
+  let geometryChanged = false;
+  let aggregateChanged = false;
   let orderChanged = false;
   let identityChanged = false;
   for (let offset = 0; offset < patch.identities.length; offset += 1) {
@@ -185,8 +226,10 @@ export function patchPackedChartLayerOwner<ID extends StableID>(
     for (let component = 0; component < previous.stride; component += 1) {
       if (!Object.is(readPackedValue(previous.values, previousOffset + component), patch.values[valueOffset + component])) {
         changed = true;
-        valueChanged = true;
-        break;
+        packedChanged = true;
+        if (isValueComponent(previous.profile, component)) valueChanged = true;
+        if (isGeometryComponent(previous.profile, component)) geometryChanged = true;
+        if (isAggregateComponent(previous.profile, component)) aggregateChanged = true;
       }
     }
   }
@@ -198,10 +241,10 @@ export function patchPackedChartLayerOwner<ID extends StableID>(
     deleteCount: patch.identities.length,
     inserted: patch.identities,
   });
-  const valuePatch = valueChanged
+  const valuePatch = packedChanged
     ? patchPackedValueStore(previous.values, patch.index, patch.values)
     : { store: previous.values, copiedBlocks: 0, materializedDatums: 0 };
-  const indexRepair = valueChanged
+  const indexRepair = packedChanged
     ? repairProfileIndex(
       previous.index,
       previous.profile,
@@ -215,7 +258,9 @@ export function patchPackedChartLayerOwner<ID extends StableID>(
     identity: previous.revisions.identity + (identityChanged ? 1 : 0),
     order: previous.revisions.order + (orderChanged ? 1 : 0),
     value: previous.revisions.value + (valueChanged ? 1 : 0),
-    aggregate: previous.revisions.aggregate + (valueChanged ? 1 : 0),
+    geometry: previous.revisions.geometry + (geometryChanged ? 1 : 0),
+    aggregate: previous.revisions.aggregate + (aggregateChanged ? 1 : 0),
+    style: previous.revisions.style,
   });
   const owner = freezeOwner({
     id: previous.id,
@@ -227,6 +272,8 @@ export function patchPackedChartLayerOwner<ID extends StableID>(
     index: indexRepair.index,
     bounds: boundsForIndex(indexRepair.index),
     revisions,
+    geometryToken: geometryChanged ? Object.freeze({}) : previous.geometryToken,
+    styleToken: previous.styleToken,
   });
   return {
     owner,
@@ -256,6 +303,95 @@ export function materializePackedLayer<ID extends StableID>(owner: PackedChartLa
 
 export function readPackedLayerValue(owner: PackedChartLayerOwner, datumIndex: number, component: number): number {
   return readPackedValue(owner.values, datumIndex * owner.stride + component);
+}
+
+export function selectPackedOrderedEnvelope(
+  owner: PackedChartLayerOwner,
+  minimumX: number,
+  maximumX: number,
+  pixelColumns: number,
+  maximumRepresentatives: number,
+): PackedOrderedEnvelopeSelection {
+  if (owner.profile !== 'ordered-series' || maximumRepresentatives <= 0 || owner.size === 0 || maximumX < minimumX) {
+    return Object.freeze({ indices: new Uint32Array(0), visitedNodes: 0, visibleDatums: 0, aggregated: false });
+  }
+  let start = lowerBoundPackedX(owner, minimumX);
+  let end = upperBoundPackedX(owner, maximumX);
+  if (start > 0) start -= 1;
+  if (end < owner.size) end += 1;
+  const visibleDatums = Math.max(0, end - start);
+  if (visibleDatums <= maximumRepresentatives) {
+    return Object.freeze({
+      indices: Uint32Array.from({ length: visibleDatums }, (_, index) => start + index),
+      visitedNodes: Math.ceil(Math.log2(Math.max(1, owner.size))) * 2,
+      visibleDatums,
+      aggregated: false,
+    });
+  }
+  if (maximumRepresentatives < 4) {
+    return Object.freeze({ indices: new Uint32Array(0), visitedNodes: 0, visibleDatums, aggregated: true });
+  }
+  const columns = Math.max(1, pixelColumns);
+  const selected = new Set<number>();
+  let visitedNodes = 0;
+  const span = maximumX - minimumX;
+  for (let column = 0; column < columns; column += 1) {
+    const left = span === 0 ? minimumX : minimumX + span * column / columns;
+    const right = span === 0 ? maximumX : minimumX + span * (column + 1) / columns;
+    const rangeStart = column === 0 ? start : Math.max(start, lowerBoundPackedX(owner, left));
+    const rangeEnd = Math.min(end, column === columns - 1 ? upperBoundPackedX(owner, right) : lowerBoundPackedX(owner, right));
+    if (rangeStart >= rangeEnd) continue;
+    const aggregate = queryHierarchyRange(owner.index.hierarchy, rangeStart, rangeEnd);
+    visitedNodes += aggregate.visitedNodes;
+    if (aggregate.first >= 0) selected.add(aggregate.first);
+    if (aggregate.minimum >= 0) selected.add(aggregate.minimum);
+    if (aggregate.maximum >= 0) selected.add(aggregate.maximum);
+    if (aggregate.last >= 0) selected.add(aggregate.last);
+  }
+  const ordered = [...selected].sort((left, right) => left - right);
+  if (ordered.length > maximumRepresentatives) {
+    return Object.freeze({ indices: new Uint32Array(0), visitedNodes, visibleDatums, aggregated: true });
+  }
+  return Object.freeze({ indices: Uint32Array.from(ordered), visitedNodes, visibleDatums, aggregated: true });
+}
+
+export function selectPackedAggregateFrontier(
+  owner: PackedChartLayerOwner,
+  maximumRepresentatives: number,
+): PackedAggregateSelection {
+  if (owner.size === 0 || maximumRepresentatives <= 0) return Object.freeze({ entries: Object.freeze([]), visitedNodes: 0 });
+  const hierarchy = owner.index.hierarchy;
+  const lookup = new Map<number, Float64Array>();
+  const heap: number[] = [1];
+  let visitedNodes = 1;
+  while (heap.length < maximumRepresentatives) {
+    const node = popLargestHierarchyNode(heap, hierarchy, lookup);
+    if (node === null) break;
+    if (node >= hierarchy.leafCount) { pushHierarchyNode(heap, node, hierarchy, lookup); break; }
+    const left = node * 2;
+    const right = left + 1;
+    const leftValues = hierarchyNode(hierarchy, lookup, left);
+    const rightValues = hierarchyNode(hierarchy, lookup, right);
+    visitedNodes += 2;
+    if ((leftValues[7] as number) > 0) pushHierarchyNode(heap, left, hierarchy, lookup);
+    if ((rightValues[7] as number) > 0) pushHierarchyNode(heap, right, hierarchy, lookup);
+  }
+  heap.sort((left, right) => (hierarchyNode(hierarchy, lookup, left)[8] as number) - (hierarchyNode(hierarchy, lookup, right)[8] as number));
+  const entries = heap.map((node): PackedAggregateSelectionEntry => {
+    const values = hierarchyNode(hierarchy, lookup, node);
+    return Object.freeze({
+      minimumX: values[0] as number,
+      maximumX: values[1] as number,
+      minimumY: values[2] as number,
+      maximumY: values[3] as number,
+      minimumValue: values[4] as number,
+      maximumValue: values[5] as number,
+      sum: values[6] as number,
+      count: values[7] as number,
+      firstIndex: values[8] as number,
+    });
+  });
+  return Object.freeze({ entries: Object.freeze(entries), visitedNodes });
 }
 
 function createPackedValueStore(values: Float64Array, stride: number): PackedValueStore {
@@ -337,11 +473,69 @@ function materializePackedValueStore(store: PackedValueStore): Float64Array {
   return values;
 }
 
+function createSpatialOrder(values: PackedValueStore, size: number): Uint32Array {
+  let minimumX = Number.POSITIVE_INFINITY;
+  let maximumX = Number.NEGATIVE_INFINITY;
+  let minimumY = Number.POSITIVE_INFINITY;
+  let maximumY = Number.NEGATIVE_INFINITY;
+  for (let index = 0; index < size; index += 1) {
+    const x = readPackedValue(values, index * values.stride);
+    const y = readPackedValue(values, index * values.stride + 1);
+    minimumX = Math.min(minimumX, x); maximumX = Math.max(maximumX, x);
+    minimumY = Math.min(minimumY, y); maximumY = Math.max(maximumY, y);
+  }
+  const spanX = maximumX - minimumX || 1;
+  const spanY = maximumY - minimumY || 1;
+  const keys = new Uint32Array(size);
+  let order = Uint32Array.from({ length: size }, (_, index) => index);
+  let output = new Uint32Array(size);
+  for (let index = 0; index < size; index += 1) {
+    const x = Math.max(0, Math.min(65_535, Math.floor((readPackedValue(values, index * values.stride) - minimumX) / spanX * 65_535)));
+    const y = Math.max(0, Math.min(65_535, Math.floor((readPackedValue(values, index * values.stride + 1) - minimumY) / spanY * 65_535)));
+    keys[index] = interleaveSpatial16(x) | (interleaveSpatial16(y) << 1);
+  }
+  for (let shift = 0; shift < 32; shift += 8) {
+    const counts = new Uint32Array(256);
+    for (const datum of order) {
+      const bucket = ((keys[datum] as number) >>> shift) & 0xff;
+      counts[bucket] = (counts[bucket] as number) + 1;
+    }
+    let cursor = 0;
+    for (let bucket = 0; bucket < counts.length; bucket += 1) {
+      const count = counts[bucket] as number;
+      counts[bucket] = cursor;
+      cursor += count;
+    }
+    for (const datum of order) {
+      const bucket = ((keys[datum] as number) >>> shift) & 0xff;
+      output[counts[bucket] as number] = datum;
+      counts[bucket] = (counts[bucket] as number) + 1;
+    }
+    const temporary = order; order = output; output = temporary;
+  }
+  return order;
+}
+
+function interleaveSpatial16(input: number): number {
+  let value = input & 0xffff;
+  value = (value | (value << 8)) & 0x00ff00ff;
+  value = (value | (value << 4)) & 0x0f0f0f0f;
+  value = (value | (value << 2)) & 0x33333333;
+  value = (value | (value << 1)) & 0x55555555;
+  return value;
+}
+
 function createProfileIndex(profile: ChartProfile, values: PackedValueStore, size: number): ChartProfileIndex {
+  if (profile === 'point' || profile === 'grid-cell') {
+    const order = createSpatialOrder(values, size);
+    const positions = new Uint32Array(size);
+    for (let position = 0; position < order.length; position += 1) positions[order[position] as number] = position;
+    const hierarchy = buildHierarchy(profile, values, size, order);
+    if (profile === 'point') return Object.freeze({ kind: 'spatial', order, positions, hierarchy });
+    return createHeatmapIndex(values, size, hierarchy, order, positions);
+  }
   const hierarchy = buildHierarchy(profile, values, size);
   if (profile === 'ordered-series') return Object.freeze({ kind: 'ordered', hierarchy });
-  if (profile === 'point') return Object.freeze({ kind: 'spatial', hierarchy });
-  if (profile === 'grid-cell') return createHeatmapIndex(values, size, hierarchy);
   if (profile === 'cartesian-segment') {
     const slots = new Float64Array(size * 2);
     for (let index = 0; index < size; index += 1) {
@@ -361,9 +555,27 @@ function repairProfileIndex(
   index: number,
   count: number,
 ): { readonly index: ChartProfileIndex; readonly repairedEntries: number; readonly rebuiltEntries: number } {
-  const repaired = repairHierarchy(previous.hierarchy, profile, values, index, count);
+  if ((previous.kind === 'spatial' || previous.kind === 'heatmap')
+    && previous.hierarchy.depth >= MAX_HIERARCHY_PATCH_DEPTH) {
+    const rebuilt = createProfileIndex(profile, values, values.size);
+    return { index: rebuilt, repairedEntries: 0, rebuiltEntries: indexEntryCount(rebuilt) };
+  }
+  const positions = previous.kind === 'spatial' || previous.kind === 'heatmap' ? previous.positions : undefined;
+  const repaired = repairHierarchy(
+    previous.hierarchy,
+    profile,
+    values,
+    index,
+    count,
+    positions,
+    previous.kind === 'spatial' || previous.kind === 'heatmap' ? previous.order : undefined,
+  );
   if (previous.kind === 'ordered') return { index: Object.freeze({ kind: 'ordered', hierarchy: repaired.hierarchy }), repairedEntries: repaired.entries, rebuiltEntries: repaired.rebuiltEntries };
-  if (previous.kind === 'spatial') return { index: Object.freeze({ kind: 'spatial', hierarchy: repaired.hierarchy }), repairedEntries: repaired.entries, rebuiltEntries: repaired.rebuiltEntries };
+  if (previous.kind === 'spatial') return {
+    index: Object.freeze({ kind: 'spatial', order: previous.order, positions: previous.positions, hierarchy: repaired.hierarchy }),
+    repairedEntries: repaired.entries,
+    rebuiltEntries: repaired.rebuiltEntries,
+  };
   if (previous.kind === 'heatmap') {
     let geometryChanged = false;
     for (let datum = index; datum < index + count; datum += 1) {
@@ -403,12 +615,17 @@ function repairProfileIndex(
   };
 }
 
-function buildHierarchy(profile: ChartProfile, values: PackedValueStore, size: number): PackedAggregateHierarchy {
+function buildHierarchy(
+  profile: ChartProfile,
+  values: PackedValueStore,
+  size: number,
+  order?: Uint32Array,
+): PackedAggregateHierarchy {
   let leafCount = 1;
   while (leafCount < Math.max(1, size)) leafCount *= 2;
   const data = new Float64Array(leafCount * 2 * HIERARCHY_STRIDE);
   fillEmptyNodes(data);
-  for (let index = 0; index < size; index += 1) writeLeaf(data, leafCount + index, profile, values, index);
+  for (let index = 0; index < size; index += 1) writeLeaf(data, leafCount + index, profile, values, order?.[index] ?? index);
   for (let node = leafCount - 1; node > 0; node -= 1) mergeNodes(data, node, data, node * 2, data, node * 2 + 1);
   return Object.freeze({ size, leafCount, depth: 0, base: data, parent: null, overrides: new Map<number, Float64Array>() });
 }
@@ -419,6 +636,8 @@ function repairHierarchy(
   values: PackedValueStore,
   index: number,
   count: number,
+  positions?: Uint32Array,
+  order?: Uint32Array,
 ): { readonly hierarchy: PackedAggregateHierarchy; readonly entries: number; readonly rebuiltEntries: number } {
   const materialized = previousInput.depth >= MAX_HIERARCHY_PATCH_DEPTH;
   const previous = materialized
@@ -426,7 +645,7 @@ function repairHierarchy(
     : previousInput;
   const levels: Set<number>[] = [];
   for (let datum = index; datum < index + count; datum += 1) {
-    let node = previous.leafCount + datum;
+    let node = previous.leafCount + (positions?.[datum] ?? datum);
     let level = 0;
     while (node > 0) {
       let nodes = levels[level];
@@ -445,7 +664,9 @@ function repairHierarchy(
       const data = new Float64Array(HIERARCHY_STRIDE);
       fillEmptyNode(data, 0);
       if (node >= previous.leafCount) {
-        writeLeaf(data, 0, profile, values, node - previous.leafCount);
+        const leafPosition = node - previous.leafCount;
+        const datumIndex = order?.[leafPosition] ?? leafPosition;
+        writeLeaf(data, 0, profile, values, datumIndex);
       } else {
         mergeNodeValues(data, 0, hierarchyNode(previous, overrides, node * 2), hierarchyNode(previous, overrides, node * 2 + 1));
       }
@@ -483,13 +704,140 @@ function hierarchyNode(
   throw new Error('Chart hierarchy node is unavailable.');
 }
 
+interface HierarchyRangeResult {
+  readonly first: number;
+  readonly last: number;
+  readonly minimum: number;
+  readonly maximum: number;
+  readonly minimumValue: number;
+  readonly maximumValue: number;
+  readonly visitedNodes: number;
+}
+
+function queryHierarchyRange(
+  hierarchy: PackedAggregateHierarchy,
+  start: number,
+  end: number,
+): HierarchyRangeResult {
+  let first = -1;
+  let last = -1;
+  let minimum = -1;
+  let maximum = -1;
+  let minimumValue = Number.POSITIVE_INFINITY;
+  let maximumValue = Number.NEGATIVE_INFINITY;
+  let visitedNodes = 0;
+  const overrides = new Map<number, Float64Array>();
+  const visit = (node: number, nodeStart: number, nodeEnd: number): void => {
+    visitedNodes += 1;
+    if (nodeEnd <= start || nodeStart >= end) return;
+    if (start <= nodeStart && nodeEnd <= end) {
+      const values = hierarchyNode(hierarchy, overrides, node);
+      if ((values[7] as number) === 0) return;
+      if (first < 0) first = values[8] as number;
+      last = values[9] as number;
+      if ((values[4] as number) < minimumValue) { minimumValue = values[4] as number; minimum = values[10] as number; }
+      if ((values[5] as number) > maximumValue) { maximumValue = values[5] as number; maximum = values[11] as number; }
+      return;
+    }
+    const middle = (nodeStart + nodeEnd) >>> 1;
+    visit(node * 2, nodeStart, middle);
+    visit(node * 2 + 1, middle, nodeEnd);
+  };
+  visit(1, 0, hierarchy.leafCount);
+  return { first, last, minimum, maximum, minimumValue, maximumValue, visitedNodes };
+}
+
+function lowerBoundPackedX(owner: PackedChartLayerOwner, value: number): number {
+  let low = 0;
+  let high = owner.size;
+  while (low < high) {
+    const middle = (low + high) >>> 1;
+    if (readPackedLayerValue(owner, middle, 0) < value) low = middle + 1;
+    else high = middle;
+  }
+  return low;
+}
+
+function upperBoundPackedX(owner: PackedChartLayerOwner, value: number): number {
+  let low = 0;
+  let high = owner.size;
+  while (low < high) {
+    const middle = (low + high) >>> 1;
+    if (readPackedLayerValue(owner, middle, 0) <= value) low = middle + 1;
+    else high = middle;
+  }
+  return low;
+}
+
+function pushHierarchyNode(
+  heap: number[],
+  node: number,
+  hierarchy: PackedAggregateHierarchy,
+  lookup: ReadonlyMap<number, Float64Array>,
+): void {
+  heap.push(node);
+  let index = heap.length - 1;
+  while (index > 0) {
+    const parent = (index - 1) >>> 1;
+    if (compareHierarchyPriority(heap[parent] as number, node, hierarchy, lookup) >= 0) break;
+    heap[index] = heap[parent] as number;
+    index = parent;
+  }
+  heap[index] = node;
+}
+
+function popLargestHierarchyNode(
+  heap: number[],
+  hierarchy: PackedAggregateHierarchy,
+  lookup: ReadonlyMap<number, Float64Array>,
+): number | null {
+  if (heap.length === 0) return null;
+  const root = heap[0] as number;
+  const tail = heap.pop() as number;
+  if (heap.length > 0) {
+    let index = 0;
+    while (true) {
+      const left = index * 2 + 1;
+      if (left >= heap.length) break;
+      const right = left + 1;
+      const child = right < heap.length
+        && compareHierarchyPriority(heap[right] as number, heap[left] as number, hierarchy, lookup) > 0 ? right : left;
+      if (compareHierarchyPriority(tail, heap[child] as number, hierarchy, lookup) >= 0) break;
+      heap[index] = heap[child] as number;
+      index = child;
+    }
+    heap[index] = tail;
+  }
+  return root;
+}
+
+function compareHierarchyPriority(
+  left: number,
+  right: number,
+  hierarchy: PackedAggregateHierarchy,
+  lookup: ReadonlyMap<number, Float64Array>,
+): number {
+  const leftCount = hierarchyNode(hierarchy, lookup, left)[7] as number;
+  const rightCount = hierarchyNode(hierarchy, lookup, right)[7] as number;
+  return leftCount - rightCount
+    || Number(left < hierarchy.leafCount) - Number(right < hierarchy.leafCount)
+    || right - left;
+}
+
 function materializeHierarchy(hierarchy: PackedAggregateHierarchy): PackedAggregateHierarchy {
   const data = new Float64Array(hierarchy.leafCount * 2 * HIERARCHY_STRIDE);
-  for (let node = 0; node < hierarchy.leafCount * 2; node += 1) data.set(hierarchyNode(hierarchy, new Map(), node), node * HIERARCHY_STRIDE);
+  const overrides = new Map<number, Float64Array>();
+  for (let node = 0; node < hierarchy.leafCount * 2; node += 1) data.set(hierarchyNode(hierarchy, overrides, node), node * HIERARCHY_STRIDE);
   return Object.freeze({ size: hierarchy.size, leafCount: hierarchy.leafCount, depth: 0, base: data, parent: null, overrides: new Map<number, Float64Array>() });
 }
 
-function createHeatmapIndex(values: PackedValueStore, size: number, hierarchy: PackedAggregateHierarchy): HeatmapProfileIndex {
+function createHeatmapIndex(
+  values: PackedValueStore,
+  size: number,
+  hierarchy: PackedAggregateHierarchy,
+  order: Uint32Array,
+  positions: Uint32Array,
+): HeatmapProfileIndex {
   const rows = new Map<number, number[]>();
   let minimumRow = Number.POSITIVE_INFINITY;
   let maximumRow = Number.NEGATIVE_INFINITY;
@@ -524,7 +872,10 @@ function createHeatmapIndex(values: PackedValueStore, size: number, hierarchy: P
   rowOffsets[rowValues.length] = cursor;
   const area = size === 0 ? 0 : (maximumRow - minimumRow + 1) * (maximumColumn - minimumColumn + 1);
   const dense = Number.isSafeInteger(area) && area === size && [...occupied.values()].every((columns) => columns.size === maximumColumn - minimumColumn + 1);
-  return Object.freeze({ kind: 'heatmap', representation: dense ? 'dense' : 'sparse', rowValues, rowOffsets, datumIndices, hierarchy });
+  return Object.freeze({
+    kind: 'heatmap', representation: dense ? 'dense' : 'sparse', order, positions,
+    rowValues, rowOffsets, datumIndices, hierarchy,
+  });
 }
 
 function createRadialIndex(values: PackedValueStore, size: number, hierarchy: PackedAggregateHierarchy): RadialProfileIndex {
@@ -586,6 +937,8 @@ function writeLeaf(
   target[offset + 7] = 1;
   target[offset + 8] = datumIndex;
   target[offset + 9] = datumIndex;
+  target[offset + 10] = datumIndex;
+  target[offset + 11] = datumIndex;
 }
 
 function mergeNodes(target: Float64Array, targetNode: number, left: Float64Array, leftNode: number, right: Float64Array, rightNode: number): void {
@@ -612,6 +965,8 @@ function mergeNodeValues(target: Float64Array, offset: number, left: Float64Arra
   target[offset + 7] = leftCount + rightCount;
   target[offset + 8] = left[8] as number;
   target[offset + 9] = right[9] as number;
+  target[offset + 10] = (left[4] as number) <= (right[4] as number) ? left[10] as number : right[10] as number;
+  target[offset + 11] = (left[5] as number) >= (right[5] as number) ? left[11] as number : right[11] as number;
 }
 
 function fillEmptyNodes(data: Float64Array): void {
@@ -629,6 +984,8 @@ function fillEmptyNode(data: Float64Array, offset: number): void {
   data[offset + 7] = 0;
   data[offset + 8] = -1;
   data[offset + 9] = -1;
+  data[offset + 10] = -1;
+  data[offset + 11] = -1;
 }
 
 function boundsForIndex(index: ChartProfileIndex): ChartLayerBounds {
@@ -644,7 +1001,10 @@ function boundsForIndex(index: ChartProfileIndex): ChartLayerBounds {
 
 function indexEntryCount(index: ChartProfileIndex): number {
   const hierarchyEntries = index.hierarchy.leafCount * 2;
-  if (index.kind === 'heatmap') return hierarchyEntries + index.rowOffsets.length + index.datumIndices.length;
+  if (index.kind === 'spatial') return hierarchyEntries + index.order.length + index.positions.length;
+  if (index.kind === 'heatmap') {
+    return hierarchyEntries + index.order.length + index.positions.length + index.rowOffsets.length + index.datumIndices.length;
+  }
   if (index.kind === 'categorical') return hierarchyEntries + index.slots.length / 2;
   if (index.kind === 'radial') return hierarchyEntries + index.prefix.length;
   return hierarchyEntries;
@@ -682,6 +1042,49 @@ function samePackedValues(store: PackedValueStore, values: Float64Array): boolea
   if (store.size * store.stride !== values.length) return false;
   for (let index = 0; index < values.length; index += 1) if (!Object.is(readPackedValue(store, index), values[index])) return false;
   return true;
+}
+
+function sameSemanticValues<ID extends StableID>(owner: PackedChartLayerOwner<ID>, input: PackedLayerInput<ID>): boolean {
+  return sameSelectedValues(owner, input, isValueComponent);
+}
+
+function sameGeometryValues<ID extends StableID>(owner: PackedChartLayerOwner<ID>, input: PackedLayerInput<ID>): boolean {
+  return sameSelectedValues(owner, input, isGeometryComponent);
+}
+
+function sameAggregateValues<ID extends StableID>(owner: PackedChartLayerOwner<ID>, input: PackedLayerInput<ID>): boolean {
+  return sameSelectedValues(owner, input, isAggregateComponent);
+}
+
+function sameSelectedValues<ID extends StableID>(
+  owner: PackedChartLayerOwner<ID>,
+  input: PackedLayerInput<ID>,
+  selected: (profile: ChartProfile, component: number) => boolean,
+): boolean {
+  if (owner.profile !== input.profile || owner.stride !== input.stride || owner.size * owner.stride !== input.values.length) return false;
+  for (let scalar = 0; scalar < input.values.length; scalar += 1) {
+    const component = scalar % owner.stride;
+    if (selected(owner.profile, component) && !Object.is(readPackedValue(owner.values, scalar), input.values[scalar])) return false;
+  }
+  return true;
+}
+
+function isValueComponent(profile: ChartProfile, component: number): boolean {
+  if (profile === 'point' || profile === 'ordered-series') return component === 1;
+  if (profile === 'cartesian-segment') return component === 1 || component === 3;
+  if (profile === 'grid-cell') return component === 2;
+  return component === 0;
+}
+
+function isGeometryComponent(profile: ChartProfile, component: number): boolean {
+  return profile !== 'grid-cell' || component < 2;
+}
+
+function isAggregateComponent(profile: ChartProfile, component: number): boolean {
+  if (profile === 'point' || profile === 'ordered-series') return component === 1;
+  if (profile === 'cartesian-segment') return component === 3;
+  if (profile === 'grid-cell') return component === 2;
+  return component === 0;
 }
 
 function freezeOwner<ID extends StableID>(owner: PackedChartLayerOwner<ID>): PackedChartLayerOwner<ID> {

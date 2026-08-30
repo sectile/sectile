@@ -28,7 +28,7 @@ test('normalizes every chart profile into immutable dense identity state', () =>
   assert.equal(state.indexOf('1'), 1);
   assert.deepEqual(state.layerAt(4), {
     id: 'radial', profile: 'radial-segment', size: 1,
-    revisions: { identity: 0, order: 0, value: 0, aggregate: 0 },
+    revisions: { identity: 0, order: 0, value: 0, geometry: 0, aggregate: 0, style: 0 },
   });
   assert.deepEqual(state.toModel(), allProfiles);
   assert.equal(Object.isFrozen(state), true);
@@ -44,7 +44,9 @@ test('reuses unchanged layer owners and bounds changed-layer normalization', () 
   assert.equal(next.diagnostics.normalizedLayers, 1);
   assert.equal(next.diagnostics.normalizedDatums, 1);
   assert.equal(next.diagnostics.reusedLayers, 4);
-  assert.deepEqual(next.layerAt(0).revisions, { identity: 0, order: 0, value: 1, aggregate: 1 });
+  assert.deepEqual(next.layerAt(0).revisions, {
+    identity: 0, order: 0, value: 1, geometry: 1, aggregate: 1, style: 0,
+  });
   assert.deepEqual(next.layerAt(1).revisions, initial.layerAt(1).revisions);
 });
 

@@ -114,7 +114,9 @@ export interface ChartLayerSummary<ID extends StableID = StableID> {
     readonly identity: number;
     readonly order: number;
     readonly value: number;
+    readonly geometry: number;
     readonly aggregate: number;
+    readonly style: number;
   }>;
 }
 

@@ -11,6 +11,9 @@ import {
   type ChartLineLayerDefinition,
 } from '@sectile/chart/contract';
 import { replaceChartLayer, type ChartModel } from '@sectile/chart/model';
+import { createChartDefinition, replaceChartDefinition } from '@sectile/chart/definition';
+import { createChartProjection } from '@sectile/chart/projection';
+import { createContinuousColorScale, createOrdinalColorScale } from '@sectile/chart/scale';
 
 const stringID: StableID = 'datum';
 const numericID: StableID = 1;
@@ -113,6 +116,31 @@ const view = createChartViewState<number | string>([
   },
 ]);
 void view;
+
+const semantic = createChartDefinition({
+  coordinate: { kind: 'cartesian', axes: [
+    { id: 'time', orientation: 'x', scale: 'temporal', field: 'observedAt' },
+    { id: 2, orientation: 'y', scale: 'linear', getValue: (datum: RevenueDatum) => datum.metrics.revenue },
+  ] },
+  layers: [{ id: 'revenue', kind: 'line', xAxis: 'time', yAxis: 2, data: revenue }],
+});
+const semanticNext = replaceChartDefinition(semantic, {
+  coordinate: { kind: 'cartesian', axes: [
+    { id: 'time', orientation: 'x', scale: 'temporal', field: 'observedAt' },
+    { id: 2, orientation: 'y', scale: 'linear', getValue: (datum: RevenueDatum) => datum.metrics.revenue },
+  ] },
+  layers: [{ id: 'revenue', kind: 'line', xAxis: 'time', yAxis: 2, data: revenue }],
+});
+const semanticProjection = createChartProjection(semanticNext, { viewport: { width: 640, height: 320 } });
+void semanticProjection.dataBatches;
+
+const continuousColor = createContinuousColorScale({ minimum: 0, maximum: 1 }, [
+  { offset: 0, color: [0, 0, 0, 1] }, { offset: 1, color: [1, 1, 1, 1] },
+]);
+const ordinalColor = createOrdinalColorScale<number | string>([[1, 0, 0, 1], [0, 0, 1, 1]]);
+void continuousColor.color(0.5);
+void ordinalColor.color(1);
+void ordinalColor.color('1');
 
 // @ts-expect-error Temporal strings are intentionally outside the public temporal input contract.
 normalizeChartTemporalValue('2026-01-01');

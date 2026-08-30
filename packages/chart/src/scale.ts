@@ -9,8 +9,8 @@ export interface ChartNumericDomain {
   readonly maximum: number;
 }
 
-export interface ChartCategoricalDomain {
-  readonly values: readonly string[];
+export interface ChartCategoricalDomain<Value extends number | string = number | string> {
+  readonly values: readonly Value[];
 }
 
 export interface ChartRange {
@@ -42,6 +42,26 @@ export interface ChartScale<Value extends number | string = number | string> {
   invert(position: number): Value | null;
   ticks(maximum: number): readonly ChartTick<Value>[];
   tryTicks(maximum: number): ChartResult<readonly ChartTick<Value>[]>;
+}
+
+export type ChartColor = readonly [red: number, green: number, blue: number, alpha: number];
+
+export interface ChartColorStop {
+  readonly offset: number;
+  readonly color: ChartColor;
+}
+
+export interface ChartContinuousColorScale {
+  readonly kind: 'continuous';
+  readonly domain: ChartNumericDomain;
+  readonly stops: readonly ChartColorStop[];
+  color(value: number): ChartColor | null;
+}
+
+export interface ChartOrdinalColorScale<Value extends number | string = number | string> {
+  readonly kind: 'ordinal';
+  readonly palette: readonly ChartColor[];
+  color(value: Value): ChartColor;
 }
 
 export const MAX_CHART_TICKS = 10_000;
@@ -94,61 +114,138 @@ export function tryCreateLogarithmicScale(
   );
 }
 
-export function createCategoricalScale(domain: ChartCategoricalDomain, range: ChartRange): ChartScale<string> {
+export function createCategoricalScale<Value extends number | string>(
+  domain: ChartCategoricalDomain<Value>,
+  range: ChartRange,
+): ChartScale<Value> {
   return unwrap(tryCreateCategoricalScale(domain, range));
 }
 
-export function tryCreateCategoricalScale(
-  domain: ChartCategoricalDomain,
+export function tryCreateCategoricalScale<Value extends number | string>(
+  domain: ChartCategoricalDomain<Value>,
   range: ChartRange,
-): ChartResult<ChartScale<string>> {
+): ChartResult<ChartScale<Value>> {
   if (!validRange(range)) return invalidScale('Chart scale range must contain finite distinct endpoints.');
   if (domain === null || typeof domain !== 'object' || !Array.isArray(domain.values) || domain.values.length === 0) {
     return invalidScale('Categorical scale domain must contain at least one value.');
   }
-  const values: string[] = [];
-  const indices = new Map<string, number>();
+  const values: Value[] = [];
+  const indices = new Map<Value, number>();
   for (const value of domain.values) {
-    if (typeof value !== 'string' || value.length === 0 || indices.has(value)) {
-      return invalidScale('Categorical scale values must be unique non-empty strings.');
+    const category = value as Value;
+    if (!validCategory(category) || indices.has(category)) {
+      return invalidScale('Categorical scale values must be unique finite numbers or non-empty strings.');
     }
-    indices.set(value, values.length);
-    values.push(value);
+    indices.set(category, values.length);
+    values.push(category);
   }
   const frozenRange = freezeRange(range);
   const frozenValues = Object.freeze(values);
   const span = frozenRange.end - frozenRange.start;
-  const scale: ChartScale<string> = {
+  const scale: ChartScale<Value> = {
     kind: 'categorical',
     range: frozenRange,
-    normalize(value: string): number | null {
+    normalize(value: Value): number | null {
       const index = indices.get(value);
       return index === undefined ? null : frozenRange.start + ((index + 0.5) / frozenValues.length) * span;
     },
-    invert(position: number): string | null {
+    invert(position: number): Value | null {
       if (!finite(position)) return null;
       const ratio = (position - frozenRange.start) / span;
       if (ratio < 0 || ratio > 1) return null;
       const index = Math.min(frozenValues.length - 1, Math.floor(ratio * frozenValues.length));
       return frozenValues[index] ?? null;
     },
-    ticks(maximum: number): readonly ChartTick<string>[] {
+    ticks(maximum: number): readonly ChartTick<Value>[] {
       return unwrap(this.tryTicks(maximum));
     },
-    tryTicks(maximum: number): ChartResult<readonly ChartTick<string>[]> {
+    tryTicks(maximum: number): ChartResult<readonly ChartTick<Value>[]> {
       const checked = validateTickMaximum(maximum);
       if (!checked.ok) return checked;
       if (maximum === 0) return chartOK(Object.freeze([]));
       const step = Math.max(1, Math.ceil(frozenValues.length / maximum));
-      const ticks: ChartTick<string>[] = [];
+      const ticks: ChartTick<Value>[] = [];
       for (let index = 0; index < frozenValues.length && ticks.length < maximum; index += step) {
-        const value = frozenValues[index] as string;
+        const value = frozenValues[index] as Value;
         ticks.push(Object.freeze({ value, position: frozenRange.start + ((index + 0.5) / frozenValues.length) * span }));
       }
       return chartOK(Object.freeze(ticks));
     },
   };
   return chartOK(Object.freeze(scale));
+}
+
+export function createContinuousColorScale(
+  domain: ChartNumericDomain,
+  stops: readonly ChartColorStop[],
+): ChartContinuousColorScale {
+  return unwrap(tryCreateContinuousColorScale(domain, stops));
+}
+
+export function tryCreateContinuousColorScale(
+  domain: ChartNumericDomain,
+  stops: readonly ChartColorStop[],
+): ChartResult<ChartContinuousColorScale> {
+  if (!validNumericDomain(domain) || !Array.isArray(stops) || stops.length < 2) {
+    return invalidScale('Continuous color scales require an increasing domain and at least two stops.');
+  }
+  const normalized: ChartColorStop[] = [];
+  let previousOffset = -1;
+  for (const stop of stops) {
+    if (stop === null || typeof stop !== 'object' || !finite(stop.offset) || stop.offset < 0 || stop.offset > 1
+      || stop.offset <= previousOffset || !validColor(stop.color)) {
+      return invalidScale('Continuous color stops require increasing offsets from zero to one and normalized RGBA colors.');
+    }
+    previousOffset = stop.offset;
+    normalized.push(Object.freeze({ offset: stop.offset, color: freezeColor(stop.color) }));
+  }
+  if (normalized[0]?.offset !== 0 || normalized.at(-1)?.offset !== 1) {
+    return invalidScale('Continuous color stops must include offsets zero and one.');
+  }
+  const frozenDomain = Object.freeze({ minimum: domain.minimum, maximum: domain.maximum });
+  const frozenStops = Object.freeze(normalized);
+  return chartOK(Object.freeze({
+    kind: 'continuous' as const,
+    domain: frozenDomain,
+    stops: frozenStops,
+    color(value: number): ChartColor | null {
+      if (!finite(value)) return null;
+      const ratio = Math.max(0, Math.min(1, (value - frozenDomain.minimum) / (frozenDomain.maximum - frozenDomain.minimum)));
+      let upper = 1;
+      while (upper < frozenStops.length - 1 && ratio > (frozenStops[upper] as ChartColorStop).offset) upper += 1;
+      const left = frozenStops[upper - 1] as ChartColorStop;
+      const right = frozenStops[upper] as ChartColorStop;
+      const local = right.offset === left.offset ? 0 : (ratio - left.offset) / (right.offset - left.offset);
+      return Object.freeze([
+        interpolate(left.color[0], right.color[0], local),
+        interpolate(left.color[1], right.color[1], local),
+        interpolate(left.color[2], right.color[2], local),
+        interpolate(left.color[3], right.color[3], local),
+      ]) as ChartColor;
+    },
+  }));
+}
+
+export function createOrdinalColorScale<Value extends number | string>(
+  palette: readonly ChartColor[],
+): ChartOrdinalColorScale<Value> {
+  return unwrap(tryCreateOrdinalColorScale<Value>(palette));
+}
+
+export function tryCreateOrdinalColorScale<Value extends number | string>(
+  palette: readonly ChartColor[],
+): ChartResult<ChartOrdinalColorScale<Value>> {
+  if (!Array.isArray(palette) || palette.length === 0 || palette.some((color) => !validColor(color))) {
+    return invalidScale('Ordinal color scales require at least one normalized RGBA color.');
+  }
+  const frozenPalette = Object.freeze(palette.map(freezeColor));
+  return chartOK(Object.freeze({
+    kind: 'ordinal' as const,
+    palette: frozenPalette,
+    color(value: Value): ChartColor {
+      return frozenPalette[stableColorHash(value) % frozenPalette.length] as ChartColor;
+    },
+  }));
 }
 
 export function createChartViewTransform(input: Partial<ChartViewTransform> = {}): ChartViewTransform {
@@ -329,6 +426,32 @@ function invalidScale<T>(message: string): ChartResult<T> {
 
 function invalidTransform<T>(message: string): ChartResult<T> {
   return chartFail('construction', 'chart-view-transform-invalid', message);
+}
+
+function validColor(value: unknown): value is ChartColor {
+  return Array.isArray(value) && value.length === 4 && value.every((channel) => finite(channel) && channel >= 0 && channel <= 1);
+}
+
+function freezeColor(color: ChartColor): ChartColor {
+  return Object.freeze([color[0], color[1], color[2], color[3]]) as ChartColor;
+}
+
+function stableColorHash(value: number | string): number {
+  const text = typeof value === 'number' ? `n:${Object.is(value, -0) ? 0 : value}` : `s:${value}`;
+  let hash = 2_166_136_261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16_777_619);
+  }
+  return hash >>> 0;
+}
+
+function interpolate(start: number, end: number, ratio: number): number {
+  return start + (end - start) * ratio;
+}
+
+function validCategory(value: unknown): value is number | string {
+  return typeof value === 'string' ? value.length > 0 : finite(value);
 }
 
 function identity(value: number): number { return value; }

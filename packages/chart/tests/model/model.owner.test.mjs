@@ -71,6 +71,23 @@ test('tracks identity order and packed values with independent revisions', () =>
     identity: 0,
     order: 1,
     value: 0,
+    geometry: 0,
     aggregate: 0,
+    style: 0,
+  });
+});
+
+test('preserves heatmap geometry ownership across value-only repair', () => {
+  const initial = createChartModel({ layers: [{
+    id: 'heat', profile: 'grid-cell', data: [{ id: 'cell', column: 2, row: 3, value: 4 }],
+  }] });
+  const before = getChartModelData(initial).layers[0].owner;
+  const next = tryApplyChartPatch(initial, {
+    operations: [{ type: 'replace', layerID: 'heat', index: 0, data: [{ id: 'cell', column: 2, row: 3, value: 9 }] }],
+  }).value;
+  const after = getChartModelData(next).layers[0].owner;
+  assert.equal(after.geometryToken, before.geometryToken);
+  assert.deepEqual(after.revisions, {
+    identity: 0, order: 0, value: 1, geometry: 0, aggregate: 1, style: 0,
   });
 });

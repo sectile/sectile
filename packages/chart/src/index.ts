@@ -7,3 +7,5 @@ export type * from './query.js';
 export type * from './interaction.js';
 export type * from './controller.js';
 export type * from './contract.js';
+export type * from './layout.js';
+export type * from './definition.js';
