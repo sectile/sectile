@@ -430,6 +430,7 @@
     "@sectile/dom": "workspace:*"
   },
   "peerDependencies": {
+    "@sectile/chart": "workspace:*",
     "@sectile/form": "workspace:*",
     "@sectile/tabular": "workspace:*",
     "@sectile/virtual": "workspace:*",
@@ -437,6 +438,9 @@
     "@sectile/temporal": "workspace:*"
   },
   "peerDependenciesMeta": {
+    "@sectile/chart": {
+      "optional": true
+    },
     "@sectile/form": {
       "optional": true
     },

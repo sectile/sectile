@@ -269,6 +269,25 @@
       ]
     },
     {
+      "subpath": "./chart",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createChartRenderer",
+        "createDOMChart",
+        "detectChartRendererCapabilities",
+        "tryCreateChartRenderer",
+        "tryCreateDOMChart"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/chart",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./checkbox",
       "classification": "named-subpath",
       "platform": "browser",
