@@ -69,6 +69,7 @@ export interface ChartAxisLayout<ID extends StableID = StableID> {
   readonly axis: ResolvedChartAxis<ID>;
   readonly descriptor: ChartScaleDescriptor<ID>;
   readonly scale: ChartScale;
+  readonly geometryScale: ChartScale<number>;
   readonly ticks: readonly ChartTick[];
 }
 
@@ -163,6 +164,10 @@ export function tryCreateChartPlotLayout<ID extends StableID>(
       : axis.ticks;
     const ticks = scale.value.tryTicks(maximumTicks);
     if (!ticks.ok) return ticks;
+    const axisGeometryDomain = geometryDomain(baseAxis, viewAxis);
+    const geometryScale = axis.domain.kind === 'categorical'
+      ? createLinearScale(axisGeometryDomain, range)
+      : scale.value as ChartScale<number>;
     layouts.push(Object.freeze({
       axis,
       descriptor: Object.freeze({
@@ -170,10 +175,11 @@ export function tryCreateChartPlotLayout<ID extends StableID>(
         orientation: axis.orientation,
         kind: axis.scale,
         domain: axis.domain,
-        geometryDomain: geometryDomain(baseAxis, viewAxis),
+        geometryDomain: axisGeometryDomain,
         range,
       }),
       scale: scale.value,
+      geometryScale,
       ticks: ticks.value,
     }));
   }

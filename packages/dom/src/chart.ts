@@ -24,6 +24,9 @@ export interface ChartRendererDiagnostics {
   readonly uploadedBytes: number;
   readonly drawCalls: number;
   readonly liveResources: number;
+  readonly fullUploads?: number;
+  readonly partialUploads?: number;
+  readonly reusedGeometryBuffers?: number;
 }
 
 export type ChartRGBA = readonly [red: number, green: number, blue: number, alpha: number];

@@ -10,6 +10,7 @@ import type {
   DOMChartOptions,
   NormalizedChartRenderPolicy,
 } from '../chart.js';
+import { ChartOverlay } from './chart-overlay.js';
 import { stableIDElementToken } from './stable-id-token.js';
 
 let connectionID = 0;
@@ -27,6 +28,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   readonly #prefix = `sectile-chart-${++connectionID}`;
   readonly #list: HTMLDivElement;
   readonly #live: HTMLDivElement;
+  readonly #overlay: ChartOverlay<ID>;
   readonly #nodes = new Map<ID, HTMLElement>();
   readonly #rootAttributes: AttributeSnapshot;
   readonly #canvasAttributes: AttributeSnapshot;
@@ -67,12 +69,12 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     this.#live = createAssistiveContainer(options.root.ownerDocument, `${this.#prefix}-live`, 'status');
     this.#live.setAttribute('aria-live', 'polite');
     options.root.append(this.#list, this.#live);
+    this.#overlay = new ChartOverlay(options.root);
     this.#viewport = this.#measureViewport();
     this.#unsubscribe = this.controller.subscribeCommands(this.#handleCommand);
     options.canvas.addEventListener('pointermove', this.#handlePointerMove);
     options.canvas.addEventListener('pointerleave', this.#handlePointerLeave);
     options.canvas.addEventListener('click', this.#handleClick);
-    options.canvas.addEventListener('wheel', this.#handleWheel, { passive: false });
     options.root.addEventListener('keydown', this.#handleKeyDown);
     if (typeof view.ResizeObserver === 'function') {
       const observer = new view.ResizeObserver(this.#handleResize);
@@ -99,6 +101,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     if (!projected.ok) return;
     this.#projection = projected.value;
     this.#renderer.render(projected.value);
+    this.#overlay.render(projected.value);
     this.#options.onProjectionChange?.(projected.value);
     this.#refreshAccessibility();
     const elapsed = this.#view.performance.now() - startedAt;
@@ -123,13 +126,13 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     this.#options.canvas.removeEventListener('pointermove', this.#handlePointerMove);
     this.#options.canvas.removeEventListener('pointerleave', this.#handlePointerLeave);
     this.#options.canvas.removeEventListener('click', this.#handleClick);
-    this.#options.canvas.removeEventListener('wheel', this.#handleWheel);
     this.#options.root.removeEventListener('keydown', this.#handleKeyDown);
     if (this.#ownsRenderer) this.#renderer.disconnect();
     this.#nodes.clear();
     this.#projection = null;
     this.#list.remove();
     this.#live.remove();
+    this.#overlay.disconnect();
     restoreAttributes(this.#options.root, this.#rootAttributes);
     restoreAttributes(this.#options.canvas, this.#canvasAttributes);
   }
@@ -162,16 +165,6 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     this.controller.dispatch({ type: 'set-selection', selection: { type: 'points', ids: [hit] } });
     this.controller.dispatch({ type: 'set-cursor', id: hit });
   };
-  readonly #handleWheel = (event: WheelEvent): void => {
-    event.preventDefault();
-    const rect = this.#options.canvas.getBoundingClientRect();
-    if (event.ctrlKey || event.metaKey) {
-      this.controller.dispatch({
-        type: 'zoom', x: event.clientX - rect.left, y: event.clientY - rect.top,
-        factor: Math.exp(-event.deltaY * 0.002),
-      });
-    } else this.controller.dispatch({ type: 'pan', x: -event.deltaX, y: -event.deltaY });
-  };
   readonly #handleKeyDown = (event: KeyboardEvent): void => {
     const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 'next'
       : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? 'previous'
@@ -179,9 +172,6 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     if (direction !== null) {
       event.preventDefault();
       this.controller.dispatch({ type: 'move-focus', direction });
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      this.controller.dispatch({ type: 'reset-view' });
     }
   };
 
@@ -196,7 +186,8 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     this.#inFrame = true;
     if (this.#pendingPointer !== null && this.#projection !== null) {
       const hits = hitTestChartProjection(this.#projection, { ...this.#pendingPointer, maximumHits: 1 });
-      this.controller.dispatch({ type: 'pointer-candidate', id: hits[0]?.id ?? null });
+      const hit = hits[0];
+      this.controller.dispatch({ type: 'pointer-candidate', id: hit?.kind === 'datum' ? hit.id : null });
       this.#pendingPointer = null;
     }
     this.refresh();
@@ -206,7 +197,8 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   #hitAt(clientX: number, clientY: number): ID | null {
     if (this.#projection === null) return null;
     const rect = this.#options.canvas.getBoundingClientRect();
-    return hitTestChartProjection(this.#projection, { x: clientX - rect.left, y: clientY - rect.top, maximumHits: 1 })[0]?.id ?? null;
+    const hit = hitTestChartProjection(this.#projection, { x: clientX - rect.left, y: clientY - rect.top, maximumHits: 1 })[0];
+    return hit?.kind === 'datum' ? hit.id : null;
   }
 
   #measureViewport(): ChartViewport {

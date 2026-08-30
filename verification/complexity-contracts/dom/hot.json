@@ -375,6 +375,147 @@
           "rationale": "Autocomplete, history, and selectionless input types expose the resulting value but not a trustworthy changed range, so exact reconciliation may inspect the complete owned value."
         }
       }
+    },
+    {
+      "id": "chart.canvas2d-render",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/internal/chart-canvas-renderer.ts",
+      "benchmarkIDs": [
+        "VAL-012:dom-chart-canvas-data-space"
+      ],
+      "specificationCeiling": "O(k)",
+      "contract": {
+        "variables": [
+          {
+            "name": "k",
+            "meaning": "emitted visible primitives and polyline vertices",
+            "ceiling": "Chart projection representative ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(k)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(a)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(a + k)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Canvas2D visits each packed data-space primitive once, projects it through its two retained axis scales, and retains no geometry copy.",
+        "adversarialWitness": "Every visible primitive has a distinct color and both axes use non-identity ranges.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Rasterizing one invalidated frame must consume every emitted primitive exactly once."
+        }
+      }
+    },
+    {
+      "id": "chart.webgl2-render",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/internal/chart-webgl2-renderer.ts",
+      "benchmarkIDs": [
+        "VAL-012:dom-chart-webgl2-retained-upload"
+      ],
+      "specificationCeiling": "view O(l), changed geometry O(l + k)",
+      "contract": {
+        "variables": [
+          {
+            "name": "l",
+            "meaning": "emitted chart layers",
+            "ceiling": "Chart layer ceiling"
+          },
+          {
+            "name": "k",
+            "meaning": "values in changed packed geometry",
+            "ceiling": "Chart projection representative ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(l + k)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(k)",
+          "output": "O(1)",
+          "retained": "O(k)"
+        },
+        "resources": {
+          "allocations": "view O(l), changed geometry O(k)",
+          "cacheEntries": "O(l)",
+          "listeners": "2",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Each layer owns one geometry buffer and at most one color buffer. Compatible views update uniforms only; changed immutable geometry is converted once and uses a bounded changed-range upload when the calibrated gate admits it.",
+        "adversarialWitness": "One value changes near each end of a large layer, forcing a full upload, while every unchanged layer retains buffer identity.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A new immutable geometry owner may require one equality-range scan before selecting full versus partial upload; compatible views never inspect its values."
+        }
+      }
+    },
+    {
+      "id": "chart.overlay-render",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/internal/chart-overlay.ts",
+      "benchmarkIDs": [
+        "VAL-012:dom-chart-overlay-bounds"
+      ],
+      "specificationCeiling": "O(a + min(t, 512) + min(l, 64))",
+      "contract": {
+        "variables": [
+          {
+            "name": "a",
+            "meaning": "visible axes",
+            "ceiling": "Chart axis ceiling"
+          },
+          {
+            "name": "t",
+            "meaning": "resolved ticks across axes",
+            "ceiling": "512 emitted overlay ticks per axis"
+          },
+          {
+            "name": "l",
+            "meaning": "visible layers",
+            "ceiling": "64 emitted legend items"
+          }
+        ],
+        "time": {
+          "bound": "O(a + min(t, 512a) + min(l, 64))",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(a + min(t, 512a) + min(l, 64))",
+          "output": "O(a + min(t, 512a) + min(l, 64))",
+          "retained": "O(a + min(t, 512a) + min(l, 64))"
+        },
+        "resources": {
+          "allocations": "O(a + min(t, 512a) + min(l, 64))",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "The connection-owned SVG samples each axis to at most 512 ticks and emits at most 64 legend entries before replacing its bounded child set.",
+        "adversarialWitness": "Every axis requests the Core tick maximum and the chart declares more than 64 layers.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Overlay work is bounded by resolved axes, sampled ticks, and legend ceilings rather than source datums."
+        }
+      }
     }
   ]
 }

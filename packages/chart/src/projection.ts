@@ -115,6 +115,8 @@ export type ChartDataGeometry = ChartDataPointGeometry | ChartDataRectangleGeome
 export interface ChartDataBatch {
   readonly type: ChartProjectionBatch['type'];
   readonly layerIndex: number;
+  readonly xAxisID?: StableID;
+  readonly yAxisID?: StableID;
   readonly geometry: ChartDataGeometry;
   readonly values?: Float64Array;
   readonly identityIndices: Uint32Array;
@@ -553,6 +555,8 @@ function createDataBatch<ID extends StableID>(
   return Object.freeze({
     type: batch.type,
     layerIndex: batch.layerIndex,
+    ...(semantics.xAxis === undefined ? {} : { xAxisID: semantics.xAxis }),
+    ...(semantics.yAxis === undefined ? {} : { yAxisID: semantics.yAxis }),
     geometry,
     ...(values === undefined ? {} : { values }),
     identityIndices: batch.identityIndices,
@@ -688,8 +692,7 @@ function ordinalBatchColors<ID extends StableID>(
 }
 
 function geometryScale<ID extends StableID>(axis: ChartAxisLayout<ID>): ChartScale<number> {
-  if (axis.axis.domain.kind !== 'categorical') return axis.scale as ChartScale<number>;
-  return createLinearScale(axis.descriptor.geometryDomain, axis.descriptor.range);
+  return axis.geometryScale;
 }
 
 function geometryDomain<ID extends StableID>(axis: ChartAxisLayout<ID>): { readonly minimum: number; readonly maximum: number } {
