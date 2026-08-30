@@ -116,7 +116,7 @@ function report(runId, firstSample) {
 
 function layoutReport(runId, library, mode) {
   return {
-    benchmark: 'sectile-virtual-ecosystem', protocolVersion: 9, environment: 'test',
+    benchmark: 'sectile-virtual-ecosystem', protocolVersion: 10, environment: 'test',
     source: { buildFingerprint: 'same-build' }, runs: { [runId]: { id: runId } },
     conditions: { family: 'flow-grid', itemCount: 100_000, viewport: [720, 480] },
     capabilities: [], layoutFailures: [], layoutMutationResults: [],

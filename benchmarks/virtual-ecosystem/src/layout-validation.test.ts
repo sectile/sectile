@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createLayoutFixture, expectedVisibleItems } from './layout-fixtures.ts';
+import { createLayoutFixture, createLayoutMutationScenario, expectedVisibleItems } from './layout-fixtures.ts';
 import {
   assertLayoutSnapshot,
+  layoutMutationObserved,
   type LayoutSnapshot,
 } from './layout-validation.ts';
 
@@ -56,19 +57,23 @@ test('estimated validation still rejects stale identities, incorrect sizes, and 
   assert.throws(() => assertLayoutSnapshot(snapshot({ items: [] }), fixture, 'estimated', 3), /empty-viewport/);
 });
 
-test('mutation validation requires its rendered witness and removed-item absence', () => {
-  assert.doesNotThrow(() => assertLayoutSnapshot(
-    snapshot(), fixture, 'estimated', 3,
-    { requiredItemIDs: [first.id], excludedItemIDs: ['removed'] },
-  ));
-  assert.throws(() => assertLayoutSnapshot(
-    snapshot(), fixture, 'estimated', 3,
-    { requiredItemIDs: ['missing'] },
-  ), /missing-required-item/);
-  assert.throws(() => assertLayoutSnapshot(
-    snapshot(), fixture, 'estimated', 3,
-    { excludedItemIDs: [first.id] },
-  ), /excluded-item/);
+test('mutation observation requires the changed DOM state rather than an unrelated witness', () => {
+  for (const operation of ['insert', 'move', 'remove', 'resize'] as const) {
+    const scenario = createLayoutMutationScenario(fixture, operation, 'middle');
+    const affected = scenario.after.items
+      .filter((item) => scenario.affectedIDs.includes(item.id))
+      .map((item) => ({
+        id: item.id,
+        index: item.index,
+        x: item.x,
+        y: item.y,
+        width: item.width,
+        height: item.height,
+      }));
+    const observed = snapshot({ revision: scenario.after.revision, items: affected });
+    assert.equal(layoutMutationObserved(observed, scenario, 3), true, operation);
+    assert.equal(layoutMutationObserved(snapshot({ items: affected }), scenario, 3), false, `${operation}:stale`);
+  }
 });
 
 test('exact validation retains total extent and absolute geometry checks', () => {
@@ -87,4 +92,22 @@ test('exact validation retains total extent and absolute geometry checks', () =>
   assert.throws(() => assertLayoutSnapshot(snapshot({
     items: [{ ...snapshot().items[0]!, y: first.y + 10 }],
   }), fixture, 'exact', 3), /geometry/);
+});
+
+test('exact-geometry validation permits a provisional extent without weakening item placement', () => {
+  const visibleItems = expectedVisibleItems(fixture, 0, 0, 0).map((item) => ({
+    id: item.id,
+    index: item.index,
+    x: item.x,
+    y: item.y,
+    width: item.width,
+    height: item.height,
+  }));
+  assert.doesNotThrow(() => assertLayoutSnapshot(snapshot({
+    scrollHeight: fixture.contentHeight + 500,
+    items: visibleItems,
+  }), fixture, 'exact-geometry', 3));
+  assert.throws(() => assertLayoutSnapshot(snapshot({
+    items: [{ ...snapshot().items[0]!, y: first.y + 10 }],
+  }), fixture, 'exact-geometry', 3), /geometry/);
 });

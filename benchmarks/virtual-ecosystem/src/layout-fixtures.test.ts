@@ -33,14 +33,15 @@ test('layout mutations retain stable identities and publish the changed geometry
       const scenario = createLayoutMutationScenario(fixture, operation, 'middle');
       assert.equal(scenario.after.revision, fixture.revision + 1, `${family}:${operation}`);
       assert.equal(new Set(scenario.after.items.map((item) => item.id)).size, scenario.after.items.length);
-      assert.equal(scenario.witnessIDs.length, 1, `${family}:${operation}:witness`);
-      assert.ok(
-        scenario.after.items.some((item) => item.id === scenario.witnessIDs[0]),
-        `${family}:${operation}:witness-present`,
-      );
       if (operation === 'insert') assert.equal(scenario.after.items.length, fixture.items.length + 1);
       if (operation === 'remove') assert.equal(scenario.after.items.length, fixture.items.length - 1);
-      if (operation === 'move' || operation === 'resize') assert.equal(scenario.after.items.length, fixture.items.length);
+      if (operation === 'move') {
+        assert.equal(scenario.after.items.length, fixture.items.length);
+        assert.equal(scenario.affectedIDs.length, 2, `${family}:move:affected`);
+        const indices = scenario.affectedIDs.map((id) => scenario.after.items.findIndex((item) => item.id === id));
+        assert.equal(Math.abs(indices[0]! - indices[1]!), 1, `${family}:move:adjacent`);
+      }
+      if (operation === 'resize') assert.equal(scenario.after.items.length, fixture.items.length);
     }
   }
 });

@@ -33,13 +33,12 @@ import {
   type MutationScenario,
 } from './mutations.js';
 import {
-  correctedTargetScroll,
-  initialTargetScroll,
-  intersectsViewportGeometry,
-  sameTargetPositionGeometry,
-  targetViewportOffset,
-  type TargetPositionGeometry,
-} from './target-position.js';
+  nextFrame,
+  positionBenchmarkTarget,
+  TargetPositionError,
+  waitForElement as waitForDOMElement,
+  waitForFrameSettlement,
+} from './dom-runner.js';
 
 export interface MutationFailure {
   readonly severity: 'failure' | 'fatal';
@@ -139,14 +138,6 @@ interface RawScenarioResult {
 interface SampleOutcome {
   readonly elapsedMs: number | null;
   readonly failures: readonly MutationFailure[];
-}
-
-class MutationPreparationError extends Error {
-  readonly code = 'target-position' as const;
-
-  constructor(message: string, readonly details: Readonly<Record<string, unknown>>) {
-    super(message);
-  }
 }
 
 const mutationSearch = new URLSearchParams(window.location.search);
@@ -508,13 +499,13 @@ async function runMountedMutationSample(
       didMutate,
       outcome: Object.freeze({ elapsedMs: null, failures: [Object.freeze({
         severity: adapter.name === 'Sectile Virtual' ? 'fatal' : 'failure',
-        code: error instanceof MutationPreparationError ? error.code : 'exception',
+        code: error instanceof TargetPositionError ? error.code : 'exception',
         message: error instanceof Error ? error.message : String(error),
         sample,
         scrollTop: scroller.scrollTop,
         details: Object.freeze({
           stack: error instanceof Error ? error.stack : undefined,
-          ...(error instanceof MutationPreparationError ? error.details : {}),
+          ...(error instanceof TargetPositionError ? error.details : {}),
         }),
       })] }),
     });
@@ -534,58 +525,40 @@ interface WaitOptions {
 }
 
 function waitForCorrectMutation(options: WaitOptions): Promise<SampleOutcome> {
-  return new Promise((resolve) => {
-    let lastInspection: LayoutInspection | undefined;
-    let lastFailureFingerprint: string | undefined;
-    let stableFailureFrames = 0;
-    const observedFailures = new Map<FailureCode, MutationFailure>();
-    const frame = (): void => {
-      const elapsed = performance.now() - options.startedAt;
-      const observed = mutationObserved(options.host, options.scenario, options.nextIndex);
-      if (observed) {
-        const inspection = inspectLayout(
-          options.scroller,
-          options.nextIndex,
-          options.scenario.nextLayout,
-          options.expectedScrollHeight,
-          options.anchor,
-          options.scenario.rowProfile === 'uniform' && options.adapter.sizeMode !== 'automatic',
-        );
-        lastInspection = inspection;
-        if (inspection.failures.length === 0) {
-          resolve(Object.freeze({ elapsedMs: round(elapsed), failures: Object.freeze([...observedFailures.values()]) }));
-          return;
-        }
-        const fingerprint = failureFingerprint(inspection, options.scroller);
-        if (fingerprint === lastFailureFingerprint) stableFailureFrames += 1;
-        else {
-          lastFailureFingerprint = fingerprint;
-          stableFailureFrames = 1;
-        }
-        for (const failure of inspection.failures) {
-          if (!observedFailures.has(failure.code)) {
-            observedFailures.set(failure.code, makeFailure(options.adapter, options.sample, options.scroller, failure));
-          }
-        }
-        if (elapsed >= STABLE_FAILURE_MIN_MS && stableFailureFrames >= STABLE_FAILURE_FRAMES) {
-          resolve(Object.freeze({ elapsedMs: null, failures: Object.freeze([...observedFailures.values()]) }));
-          return;
-        }
-      }
-      if (elapsed >= FRAME_TIMEOUT_MS) {
-        const details = lastInspection?.failures[0]?.details ?? describeRows(options.host);
-        observedFailures.set('timeout', makeFailure(options.adapter, options.sample, options.scroller, {
-          code: 'timeout',
-          message: `Mutation did not reach an observable correct DOM state within ${FRAME_TIMEOUT_MS}ms.`,
-          details,
-        }));
-        resolve(Object.freeze({ elapsedMs: null, failures: Object.freeze([...observedFailures.values()]) }));
-        return;
-      }
-      requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-  });
+  let lastInspection: LayoutInspection | undefined;
+  return waitForFrameSettlement({
+    startedAt: options.startedAt,
+    timeoutMs: FRAME_TIMEOUT_MS,
+    stableFailureMinMs: STABLE_FAILURE_MIN_MS,
+    stableFailureFrames: STABLE_FAILURE_FRAMES,
+    observed: () => mutationObserved(options.host, options.scenario, options.nextIndex),
+    inspect: () => {
+      const inspection = inspectLayout(
+        options.scroller,
+        options.nextIndex,
+        options.scenario.nextLayout,
+        options.expectedScrollHeight,
+        options.anchor,
+        options.scenario.rowProfile === 'uniform' && options.adapter.sizeMode !== 'automatic',
+      );
+      lastInspection = inspection;
+      return Object.freeze({
+        failures: Object.freeze(inspection.failures.map((failure) => (
+          makeFailure(options.adapter, options.sample, options.scroller, failure)
+        ))),
+        fingerprint: failureFingerprint(inspection, options.scroller),
+      });
+    },
+    failureKey: (failure) => failure.code,
+    timeoutFailure: () => makeFailure(options.adapter, options.sample, options.scroller, {
+      code: 'timeout',
+      message: `Mutation did not reach an observable correct DOM state within ${FRAME_TIMEOUT_MS}ms.`,
+      details: lastInspection?.failures[0]?.details ?? describeRows(options.host),
+    }),
+  }).then((settlement) => Object.freeze({
+    elapsedMs: settlement.elapsedMs === null ? null : round(settlement.elapsedMs),
+    failures: settlement.failures,
+  }));
 }
 
 function waitForInitialLayout(
@@ -594,11 +567,12 @@ function waitForInitialLayout(
   strictTotalHeight: boolean,
 ): Promise<boolean> {
   const expectedIndex = indexByID(scenario.initialItems);
-  return new Promise((resolve) => {
-    const startedAt = performance.now();
-    let lastFingerprint: string | undefined;
-    let stableFrames = 0;
-    const frame = (): void => {
+  return waitForFrameSettlement({
+    startedAt: performance.now(),
+    timeoutMs: FRAME_TIMEOUT_MS,
+    stableFailureMinMs: STABLE_FAILURE_MIN_MS,
+    stableFailureFrames: STABLE_FAILURE_FRAMES,
+    inspect: () => {
       const inspection = inspectLayout(
         scroller,
         expectedIndex,
@@ -607,28 +581,18 @@ function waitForInitialLayout(
         undefined,
         strictTotalHeight,
       );
-      if (inspection.failures.length === 0) {
-        resolve(true);
-        return;
-      }
-      const fingerprint = failureFingerprint(inspection, scroller);
-      if (fingerprint === lastFingerprint) stableFrames += 1;
-      else {
-        lastFingerprint = fingerprint;
-        stableFrames = 1;
-      }
-      const elapsed = performance.now() - startedAt;
-      if (
-        (elapsed >= STABLE_FAILURE_MIN_MS && stableFrames >= STABLE_FAILURE_FRAMES)
-        || elapsed >= FRAME_TIMEOUT_MS
-      ) {
-        resolve(false);
-        return;
-      }
-      requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-  });
+      return Object.freeze({
+        failures: inspection.failures,
+        fingerprint: failureFingerprint(inspection, scroller),
+      });
+    },
+    failureKey: (failure) => failure.code,
+    timeoutFailure: () => Object.freeze({
+      code: 'timeout' as const,
+      message: `Initial layout did not settle within ${FRAME_TIMEOUT_MS}ms.`,
+      details: describeRows(scroller),
+    }),
+  }).then((settlement) => settlement.elapsedMs !== null);
 }
 
 function failureFingerprint(inspection: LayoutInspection, scroller: HTMLElement): string {
@@ -789,155 +753,33 @@ function captureAnchor(
 }
 
 async function positionScenario(scroller: HTMLElement, scenario: MutationScenario, host: HTMLElement): Promise<void> {
-  const targetID = scenario.initialItems[scenario.index]!.id;
-  const layout = scenario.initialLayout;
-  const desiredViewportTop = targetViewportOffset(
-    layout.heightAt(scenario.index),
-    scenario.location,
-    scroller.clientHeight,
-  );
-  const scrollGeometry = () => ({
+  await positionBenchmarkTarget({
+    scroller,
+    root: host,
+    itemSelector: '.bench-row[data-index]',
+    targetID: scenario.initialItems[scenario.index]!.id,
     targetIndex: scenario.index,
     itemCount: scenario.initialItems.length,
-    scrollHeight: scroller.scrollHeight,
-    targetHeight: layout.heightAt(scenario.index),
+    targetWidth: scroller.clientWidth,
+    targetHeight: scenario.initialLayout.heightAt(scenario.index),
     location: scenario.location,
-    viewportHeight: scroller.clientHeight,
+    tolerance: GEOMETRY_TOLERANCE_PX,
+    maximumFrames: POSITION_MAX_FRAMES,
+    stableFrames: POSITION_STABLE_FRAMES,
   });
-  let offset = initialTargetScroll(scrollGeometry());
-  const trace: Array<Readonly<Record<string, unknown>>> = [];
-  let previousGeometry: TargetPositionGeometry | undefined;
-  let stableFrames = 0;
-  for (let attempt = 0; attempt < POSITION_MAX_FRAMES; attempt += 1) {
-    scroller.scrollTop = offset;
-    scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
-    await nextFrame();
-    const target = Array.from(host.querySelectorAll<HTMLElement>(`.bench-row[data-id="${targetID}"]`))
-      .find((candidate) => intersectsViewport(candidate, scroller));
-    if (target !== undefined) {
-      const targetRect = target.getBoundingClientRect();
-      const viewport = scroller.getBoundingClientRect();
-      const targetViewportTop = targetRect.top - viewport.top;
-      if (Math.abs(targetViewportTop - desiredViewportTop) <= GEOMETRY_TOLERANCE_PX) {
-        const geometry = Object.freeze({
-          scrollTop: scroller.scrollTop,
-          scrollHeight: scroller.scrollHeight,
-          targetViewportTop,
-          targetHeight: targetRect.height,
-        });
-        stableFrames = previousGeometry !== undefined
-          && sameTargetPositionGeometry(previousGeometry, geometry, GEOMETRY_TOLERANCE_PX)
-          ? stableFrames + 1
-          : 1;
-        previousGeometry = geometry;
-        if (stableFrames >= POSITION_STABLE_FRAMES) return;
-        trace.push(Object.freeze({
-          attempt,
-          requestedScrollTop: Math.round(offset),
-          actualScrollTop: Math.round(scroller.scrollTop),
-          scrollHeight: scroller.scrollHeight,
-          targetViewportTop: Math.round(targetViewportTop),
-          targetHeight: Math.round(targetRect.height),
-          desiredViewportTop: Math.round(desiredViewportTop),
-          stableFrames,
-        }));
-        if (trace.length > 8) trace.shift();
-        offset = scroller.scrollTop;
-        continue;
-      }
-      previousGeometry = undefined;
-      stableFrames = 0;
-      trace.push(Object.freeze({
-        attempt,
-        requestedScrollTop: Math.round(offset),
-        actualScrollTop: Math.round(scroller.scrollTop),
-        scrollHeight: scroller.scrollHeight,
-        targetViewportTop: Math.round(targetViewportTop),
-        desiredViewportTop: Math.round(desiredViewportTop),
-      }));
-      if (trace.length > 8) trace.shift();
-      offset = correctedTargetScroll({
-        ...scrollGeometry(),
-        referenceIndex: scenario.index,
-        referenceViewportTop: targetViewportTop,
-        currentScrollTop: scroller.scrollTop,
-        location: scenario.location,
-        viewportHeight: scroller.clientHeight,
-      });
-      continue;
-    }
-    previousGeometry = undefined;
-    stableFrames = 0;
-    const viewport = scroller.getBoundingClientRect();
-    const visibleRows = Array.from(host.querySelectorAll<HTMLElement>('.bench-row[data-index]'))
-      .map((row) => ({ row, index: Number(row.dataset['index']) }))
-      .filter((entry) => Number.isInteger(entry.index) && intersectsViewport(entry.row, scroller));
-    trace.push(Object.freeze({
-      attempt,
-      requestedScrollTop: Math.round(offset),
-      actualScrollTop: Math.round(scroller.scrollTop),
-      scrollHeight: scroller.scrollHeight,
-      minimumIndex: visibleRows.length === 0 ? null : Math.min(...visibleRows.map((entry) => entry.index)),
-      maximumIndex: visibleRows.length === 0 ? null : Math.max(...visibleRows.map((entry) => entry.index)),
-      targetID,
-      visibleRows: visibleRows.map((entry) => Object.freeze({
-        id: entry.row.dataset['id'] ?? null,
-        index: entry.index,
-      })),
-    }));
-    if (trace.length > 8) trace.shift();
-    const reference = visibleRows
-      .sort((left, right) => Math.abs(left.index - scenario.index) - Math.abs(right.index - scenario.index))[0];
-    if (reference === undefined) {
-      offset = initialTargetScroll(scrollGeometry());
-      continue;
-    }
-    offset = correctedTargetScroll({
-      ...scrollGeometry(),
-      referenceIndex: reference.index,
-      referenceViewportTop: reference.row.getBoundingClientRect().top - viewport.top,
-      currentScrollTop: scroller.scrollTop,
-      location: scenario.location,
-      viewportHeight: scroller.clientHeight,
-    });
-  }
-  throw new MutationPreparationError(
-    `Could not position row ${scenario.index} in the viewport.`,
-    Object.freeze({ trace: Object.freeze(trace) }),
-  );
-}
-
-function intersectsViewport(row: HTMLElement, scroller: HTMLElement): boolean {
-  const rect = row.getBoundingClientRect();
-  const viewport = scroller.getBoundingClientRect();
-  return intersectsViewportGeometry(
-    rect.top,
-    rect.bottom,
-    viewport.top,
-    viewport.bottom,
-    GEOMETRY_TOLERANCE_PX,
-  );
 }
 
 function waitForRows(host: HTMLElement): Promise<void> {
-  return waitUntil(() => host.querySelector('.bench-row[data-id]') !== null, 'initial rows');
+  return waitForDOMElement(
+    host,
+    () => host.querySelector('.bench-row[data-id]') !== null,
+    'initial rows',
+    FRAME_TIMEOUT_MS,
+  );
 }
 
 function waitForElement(host: HTMLElement, selector: string): Promise<void> {
-  return waitUntil(() => host.querySelector(selector) !== null, selector);
-}
-
-function waitUntil(predicate: () => boolean, label: string): Promise<void> {
-  if (predicate()) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const startedAt = performance.now();
-    const frame = (): void => {
-      if (predicate()) { resolve(); return; }
-      if (performance.now() - startedAt >= FRAME_TIMEOUT_MS) { reject(new Error(`Timed out waiting for ${label}.`)); return; }
-      requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-  });
+  return waitForDOMElement(host, () => host.querySelector(selector) !== null, selector, FRAME_TIMEOUT_MS);
 }
 
 function makeFailure(
@@ -994,7 +836,6 @@ function percentile(sorted: readonly number[], ratio: number): number {
 }
 
 function round(value: number): number { return Number(value.toFixed(3)); }
-function nextFrame(): Promise<void> { return new Promise((resolve) => requestAnimationFrame(() => resolve())); }
 function yieldToBrowser(): Promise<void> { return new Promise((resolve) => setTimeout(resolve, 0)); }
 function positiveInteger(value: string | null): number | undefined {
   if (value === null) return undefined;

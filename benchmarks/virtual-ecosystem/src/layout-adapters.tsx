@@ -99,7 +99,7 @@ export const layoutCapabilities: readonly BenchmarkCapability[] = Object.freeze(
   capability('masonry', 'Sectile Virtual', true, ['fixed', 'estimated', 'automatic'], 'VirtualMasonry supports exact, estimated, and DOM-discovered item heights.'),
   capability('masonry', 'TanStack Virtual', true, ['estimated'], 'The public lanes API requires estimateSize.'),
   capability('track-grid', 'Sectile Virtual', true, ['fixed'], 'VirtualizerRoot uses trackGridLayoutStrategy with independent row and column tracks.'),
-  capability('track-grid', 'react-window', true, ['fixed'], 'Grid requires row and column sizes.'),
+  capability('track-grid', 'react-window', true, ['fixed'], 'Grid requires row and column sizes and lazily derives the aggregate extent for function sizes.'),
   capability('track-grid', 'Virtua', true, ['estimated'], 'experimental_VGrid receives row and column size hints.'),
   capability('spatial', 'Sectile Virtual', true, ['positioned'], 'VirtualSpatial consumes application-owned rectangles and z-order.'),
   capability('spatial', 'react-virtualized', false, ['positioned'], 'Collection is excluded until its application positioner can be isolated from timed library work.'),
@@ -290,7 +290,7 @@ function createReactWindowTrackGridAdapter(): LayoutBenchmarkAdapter {
       style: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
     });
   }
-  return reactAdapter('track-grid', 'react-window', '2.3.0', 'fixed', 'exact', App);
+  return reactAdapter('track-grid', 'react-window', '2.3.0', 'fixed', 'exact-geometry', App);
 }
 
 function createVirtuaTrackGridAdapter(): LayoutBenchmarkAdapter {
@@ -445,7 +445,7 @@ function reactLayoutItemAttributes(item: LayoutBenchmarkItem): Record<string, un
     className: 'bench-item',
     'data-id': item.id,
     'data-index': item.index,
-    style: { height: item.height } satisfies CSSProperties,
+    style: { width: '100%', height: item.height } satisfies CSSProperties,
   };
 }
 

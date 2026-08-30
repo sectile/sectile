@@ -14,6 +14,9 @@ export interface TargetPositionGeometry {
   readonly scrollHeight: number;
   readonly targetViewportTop: number;
   readonly targetHeight: number;
+  readonly scrollLeft?: number;
+  readonly targetViewportLeft?: number;
+  readonly targetWidth?: number;
 }
 
 export function initialTargetScroll(geometry: TargetScrollGeometry): number {
@@ -69,7 +72,10 @@ export function sameTargetPositionGeometry(
   return Math.abs(previous.scrollTop - current.scrollTop) <= tolerance
     && Math.abs(previous.scrollHeight - current.scrollHeight) <= tolerance
     && Math.abs(previous.targetViewportTop - current.targetViewportTop) <= tolerance
-    && Math.abs(previous.targetHeight - current.targetHeight) <= tolerance;
+    && Math.abs(previous.targetHeight - current.targetHeight) <= tolerance
+    && Math.abs((previous.scrollLeft ?? 0) - (current.scrollLeft ?? 0)) <= tolerance
+    && Math.abs((previous.targetViewportLeft ?? 0) - (current.targetViewportLeft ?? 0)) <= tolerance
+    && Math.abs((previous.targetWidth ?? 0) - (current.targetWidth ?? 0)) <= tolerance;
 }
 
 function estimatedAbsoluteTop(geometry: TargetScrollGeometry, index: number): number {

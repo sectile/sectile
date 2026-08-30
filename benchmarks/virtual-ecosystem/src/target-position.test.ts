@@ -40,6 +40,9 @@ test('requires scroll and target geometry to settle together', () => {
     scrollHeight: 12_477_500,
     targetViewportTop: 389,
     targetHeight: 91,
+    scrollLeft: 2_400,
+    targetViewportLeft: 312,
+    targetWidth: 96,
   } as const;
   assert.equal(sameTargetPositionGeometry(settled, {
     ...settled,
@@ -53,5 +56,9 @@ test('requires scroll and target geometry to settle together', () => {
   assert.equal(sameTargetPositionGeometry(settled, {
     ...settled,
     targetHeight: settled.targetHeight + 34,
+  }, 2), false);
+  assert.equal(sameTargetPositionGeometry(settled, {
+    ...settled,
+    targetViewportLeft: settled.targetViewportLeft + 34,
   }, 2), false);
 });

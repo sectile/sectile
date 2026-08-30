@@ -50,7 +50,6 @@ export interface LayoutMutationScenario {
   readonly before: LayoutBenchmarkFixture;
   readonly after: LayoutBenchmarkFixture;
   readonly affectedIDs: readonly string[];
-  readonly witnessIDs: readonly string[];
 }
 
 const FLOW_LANES = 4;
@@ -104,11 +103,13 @@ export function createLayoutMutationScenario(
     const removed = source.splice(index, 1)[0];
     if (removed !== undefined) affectedIDs.push(removed.id);
   } else if (operation === 'move') {
-    const moved = source.splice(index, 1)[0];
-    if (moved !== undefined) {
-      const target = location === 'start' ? source.length - 1 : location === 'end' ? 0 : Math.min(source.length, index + 17);
-      source.splice(target, 0, moved);
-      affectedIDs.push(moved.id);
+    const adjacentIndex = index === source.length - 1 ? index - 1 : index + 1;
+    const moved = source[index];
+    const adjacent = source[adjacentIndex];
+    if (moved !== undefined && adjacent !== undefined) {
+      source[index] = adjacent;
+      source[adjacentIndex] = moved;
+      affectedIDs.push(moved.id, adjacent.id);
     }
   } else {
     const current = source[index];
@@ -123,14 +124,12 @@ export function createLayoutMutationScenario(
   }
   const after = createLayoutFixture(fixture.family, source.length, fixture.revision + 1, source, fixture.profile);
   inheritAdapterItemIdentity(fixture, after);
-  const witness = after.items[Math.min(index, after.items.length - 1)];
   return Object.freeze({
     operation,
     location,
     before: fixture,
     after,
     affectedIDs: Object.freeze(affectedIDs),
-    witnessIDs: Object.freeze(witness === undefined ? [] : [witness.id]),
   });
 }
 

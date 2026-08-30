@@ -482,7 +482,7 @@ async function runAll(): Promise<void> {
     });
     const report = {
       benchmark: 'sectile-virtual-ecosystem',
-      protocolVersion: 9,
+      protocolVersion: 10,
       environment: navigator.userAgent,
       source: __BENCHMARK_SOURCE__,
       runs,

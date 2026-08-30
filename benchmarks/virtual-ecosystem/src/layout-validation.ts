@@ -1,9 +1,10 @@
 import {
   expectedVisibleItems,
   type LayoutBenchmarkFixture,
+  type LayoutMutationScenario,
 } from './layout-fixtures.ts';
 
-export type LayoutValidationMode = 'exact' | 'estimated';
+export type LayoutValidationMode = 'exact' | 'exact-geometry' | 'estimated';
 
 export interface LayoutSnapshotItem {
   readonly id: string;
@@ -52,7 +53,8 @@ export function assertLayoutSnapshot(
     }
   }
 
-  const expectedByID = mode === 'exact'
+  const exactGeometry = mode !== 'estimated';
+  const expectedByID = exactGeometry
     ? new Map(expectedVisibleItems(
         fixture,
         snapshot.scrollLeft,
@@ -72,7 +74,7 @@ export function assertLayoutSnapshot(
     if (
       Math.abs(item.width - expected.width) > tolerance
       || Math.abs(item.height - expected.height) > tolerance
-      || (mode === 'exact' && (
+      || (exactGeometry && (
         Math.abs(item.x - expected.x) > tolerance
         || Math.abs(item.y - expected.y) > tolerance
       ))
@@ -93,6 +95,36 @@ export function assertLayoutSnapshot(
   for (const id of expectation.excludedItemIDs ?? []) {
     if (seen.has(id)) throw new Error(`excluded-item:${id}`);
   }
+}
+
+export function layoutMutationObserved(
+  snapshot: LayoutSnapshot,
+  scenario: LayoutMutationScenario,
+  tolerance: number,
+): boolean {
+  if (snapshot.revision !== scenario.after.revision) return false;
+  const rendered = new Map(snapshot.items.map((item) => [item.id, item]));
+  if (scenario.operation === 'remove') {
+    return scenario.affectedIDs.every((id) => !rendered.has(id));
+  }
+  if (scenario.operation === 'insert') {
+    return scenario.affectedIDs.every((id) => rendered.has(id));
+  }
+  if (scenario.operation === 'resize') {
+    return scenario.affectedIDs.every((id) => {
+      const actual = rendered.get(id);
+      const expected = actual === undefined ? undefined : scenario.after.items[actual.index];
+      return actual !== undefined
+        && expected !== undefined
+        && expected.id === id
+        && Math.abs(actual.width - expected.width) <= tolerance
+        && Math.abs(actual.height - expected.height) <= tolerance;
+    });
+  }
+  return scenario.affectedIDs.length === 2 && scenario.affectedIDs.every((id) => {
+    const actual = rendered.get(id);
+    return actual !== undefined && scenario.after.items[actual.index]?.id === id;
+  });
 }
 
 function assertFiniteExtent(name: string, value: number, viewport: number): void {
