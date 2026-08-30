@@ -1,12 +1,11 @@
 import { computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onScopeDispose, provide, shallowRef, toValue, watch, type ComputedRef, type MaybeRefOrGetter, type PropType, type Ref, type ShallowRef, type SlotsType, type VNodeChild } from 'vue';
-import type { LinearLayoutState, LinearPatch } from '@sectile/virtual/linear-layout';
-import type { Extent } from '@sectile/virtual/extent-index';
+import type { StableID } from '@sectile/core';
 import { createAxisMeasurementResolver, createVirtualizer, virtualContentStyle, virtualItemStyle, type VirtualInsets, type VirtualItemStyleOptions, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualPlacement, type VirtualRect, type VirtualScrollAlignment, type VirtualScrollWriter, type VirtualViewportReader, type VirtualizerConnection, type VirtualizerEnvironment, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 
 export interface UseVirtualizerOptions<
   State,
-  ID extends string,
+  ID extends StableID,
   Measurement,
   Mutation,
 > {
@@ -28,7 +27,7 @@ export interface UseVirtualizerOptions<
 
 export interface UseVirtualizerReturn<
   State,
-  ID extends string,
+  ID extends StableID,
   Measurement,
   Mutation,
 > {
@@ -55,14 +54,6 @@ export interface UseVirtualizerReturn<
     VirtualizerConnection<State, ID, Measurement, Mutation>['scrollTo']
   >;
   refresh(): void;
-  flush(): ReturnType<
-    VirtualizerConnection<
-      LinearLayoutState<string>,
-      string,
-      { readonly index: number; readonly extent: Extent },
-      LinearPatch<string>
-    >['flush']
-  >;
   flush(): ReturnType<
     VirtualizerConnection<State, ID, Measurement, Mutation>['flush']
   >;
@@ -130,7 +121,7 @@ interface VirtualizerContext {
 
 const virtualizerContextKey = Symbol('SectileVirtualizerRoot');
 
-export function useVirtualizer<State, ID extends string, Measurement, Mutation>(
+export function useVirtualizer<State, ID extends StableID, Measurement, Mutation>(
   options: UseVirtualizerOptions<State, ID, Measurement, Mutation>,
 ): UseVirtualizerReturn<State, ID, Measurement, Mutation> {
   const root = options.root ?? shallowRef<HTMLElement | null>(null);

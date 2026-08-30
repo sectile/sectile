@@ -6,5 +6,5 @@
     "isolatedDeclarations": false,
     "noEmit": true
   },
-  "include": ["chart-contracts.ts", "component-contracts.ts", "tabular-components.ts"]
+  "include": ["chart-contracts.ts", "component-contracts.ts", "tabular-components.ts", "virtual-core-contracts.ts"]
 }
