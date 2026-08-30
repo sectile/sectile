@@ -63,7 +63,7 @@ test('Vue Stepper actions move across enabled steps and focus the activated step
   await nextTick();
   await nextTick();
 
-  const reviewStep = host.querySelector('[data-part="step"][data-tabs-id="review"]');
+  const reviewStep = host.querySelector('[data-part="step"][data-tabs-id="s:review"]');
   assert.equal(updates.at(-1), 'review');
   assert.equal(reviewStep?.getAttribute('aria-selected'), 'true');
   assert.equal(document.activeElement, reviewStep);
@@ -74,7 +74,7 @@ test('Vue Stepper actions move across enabled steps and focus the activated step
   await nextTick();
   await nextTick();
 
-  const accountStep = host.querySelector('[data-part="step"][data-tabs-id="account"]');
+  const accountStep = host.querySelector('[data-part="step"][data-tabs-id="s:account"]');
   assert.equal(updates.at(-1), 'account');
   assert.equal(document.activeElement, accountStep);
 

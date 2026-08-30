@@ -274,5 +274,12 @@ function applyEffects(effects: readonly ListboxEffect<string>[], emit: (event: '
 }
 function focusTrigger(root: HTMLElement, id: string | null): void {
   if (id === null) return;
-  for (const item of root.querySelectorAll<HTMLElement>('[data-tabs-id]')) if (item.dataset['tabsId'] === id) item.focus();
+  const token = getTabsTriggerAttributes({
+    id,
+    selected: false,
+    highlighted: false,
+  })['data-tabs-id'];
+  for (const item of root.querySelectorAll<HTMLElement>('[data-tabs-id]')) {
+    if (item.dataset['tabsId'] === token) item.focus();
+  }
 }
