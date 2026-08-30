@@ -43,8 +43,11 @@ for (const { directory, manifest } of manifests.values()) {
       if (specifier.startsWith('.')) {
         const target = resolve(dirname(path), specifier);
         const escape = relative(directory, target);
+        const repositoryBuildUtility = relative(root, path).split(sep).join('/').match(
+          /^packages\/[^/]+\/scripts\/build\.mjs$/u,
+        ) !== null && specifier === '../../../scripts/lib/compact-javascript.mjs';
         assert.equal(
-          escape === '..' || escape.startsWith(`..${sep}`),
+          (escape === '..' || escape.startsWith(`..${sep}`)) && !repositoryBuildUtility,
           false,
           `${relative(root, path)} imports outside ${manifest.name}: ${specifier}`,
         );

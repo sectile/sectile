@@ -1,5 +1,5 @@
-import type { ChartRootProps, UseChartOptions, UseChartResult } from '@sectile/vue/chart';
-import type { VirtualListKeyResolver } from '@sectile/vue/virtual/list';
+import type { ChartRootProps, UseChartOptions, UseChartResult } from '../.verification-dist/chart.js';
+import type { VirtualListKeyResolver } from '../.verification-dist/virtual-list.js';
 
 declare const options: UseChartOptions<1 | '1'>;
 declare const result: UseChartResult<1 | '1'>;

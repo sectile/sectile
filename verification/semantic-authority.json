@@ -63,9 +63,9 @@
     { "name": "@sectile/temporal", "manifest": "packages/temporal/package.json", "semanticDependencies": ["@sectile/core"] },
     { "name": "@sectile/virtual", "manifest": "packages/virtual/package.json", "semanticDependencies": ["@sectile/core"] },
     { "name": "@sectile/tabular", "manifest": "packages/tabular/package.json", "semanticDependencies": ["@sectile/core", "@sectile/virtual"] },
-    { "name": "@sectile/dom", "manifest": "packages/dom/package.json", "semanticDependencies": ["@sectile/core", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] },
+    { "name": "@sectile/dom", "manifest": "packages/dom/package.json", "semanticDependencies": ["@sectile/chart", "@sectile/core", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] },
     { "name": "@sectile/terminal", "manifest": "packages/terminal/package.json", "semanticDependencies": ["@sectile/core", "@sectile/temporal"] },
-    { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "semanticDependencies": ["@sectile/core", "@sectile/dom", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] }
+    { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "semanticDependencies": ["@sectile/chart", "@sectile/core", "@sectile/dom", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] }
   ],
   "migrationExceptions": [
     { "id": "vue-virtual-projection", "owner": "WI-040", "scope": "Vue Virtual measurement and collection projection ownership" }

@@ -69,7 +69,7 @@ async function collectRuntimeImports(entry) {
     if (visited.has(path)) return;
     visited.add(path);
     const source = await readFile(path, 'utf8');
-    const specifiers = [...source.matchAll(/(?:from\s+|import\s*)['"]([^'"]+)['"]/gu)].map((match) => match[1]);
+    const specifiers = [...source.matchAll(/(?:from\s*|import\s*)['"]([^'"]+)['"]/gu)].map((match) => match[1]);
     for (const specifier of specifiers) {
       if (!specifier.startsWith('.')) {
         external.add(specifier);

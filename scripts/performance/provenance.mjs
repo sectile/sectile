@@ -2,27 +2,16 @@ import { createHash } from 'node:crypto';
 import { cpus, platform, arch, release } from 'node:os';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
+import { publishedPackageDirectories } from '../lib/published-packages.mjs';
 
 const FINGERPRINT_INPUTS = Object.freeze([
   'package.json',
   'pnpm-lock.yaml',
   'scripts/performance',
-  'packages/core/package.json',
-  'packages/core/dist',
-  'packages/dom/package.json',
-  'packages/dom/dist',
-  'packages/form/package.json',
-  'packages/form/dist',
-  'packages/tabular/package.json',
-  'packages/tabular/dist',
-  'packages/temporal/package.json',
-  'packages/temporal/dist',
-  'packages/terminal/package.json',
-  'packages/terminal/dist',
-  'packages/virtual/package.json',
-  'packages/virtual/dist',
-  'packages/vue/package.json',
-  'packages/vue/dist',
+  ...publishedPackageDirectories.flatMap((packageName) => [
+    `packages/${packageName}/package.json`,
+    `packages/${packageName}/dist`,
+  ]),
 ]);
 
 export async function collectProvenance(repoRoot, workloadFingerprint) {
@@ -44,7 +33,7 @@ export async function collectProvenance(repoRoot, workloadFingerprint) {
 
 async function packageFootprint(repoRoot) {
   const result = {};
-  for (const packageName of ['core', 'dom', 'form', 'tabular', 'temporal', 'terminal', 'virtual', 'vue']) {
+  for (const packageName of publishedPackageDirectories) {
     result[packageName] = await directoryBytes(resolve(repoRoot, `packages/${packageName}/dist`));
   }
   return Object.freeze(result);

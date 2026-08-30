@@ -34,7 +34,7 @@ the repository gate for a controlled runner; portable CI must not replace it
 with a noisy single sample or compare against mismatched hardware metadata.
 
 Reports include the workload fingerprint, implementation/build fingerprint,
-Node/V8/OS/architecture/CPU/flag metadata, all eight built-package footprints,
+Node/V8/OS/architecture/CPU/flag metadata, all nine built-package footprints,
 process resource usage, and registered browser-only Vue counters. Comparison
 refuses a workload, runtime, hardware, or flag mismatch. Build fingerprints may
 differ because comparison is specifically intended to evaluate code changes.

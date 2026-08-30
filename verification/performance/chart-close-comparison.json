@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "chartWorkBase": "81e46e99",
+  "previousBaselineCommit": "08fd5634",
+  "previousBaselineBuildFingerprint": "cb97d22d6e947d1863f78e541596b74cfc60a6b2beecd87ffba29bb260272fb1",
+  "comparedBuildFingerprint": "5afc26523f04b5e500d679b581a7d0ff620c8f583a7626d0cc7595ab7f7e175a",
+  "runnerBand": 0.05297995063290001,
+  "scopeEvidence": {
+    "unchangedSinceChartWorkBase": [
+      "packages/tabular/src",
+      "packages/virtual/src",
+      "scripts/performance"
+    ],
+    "baselinePredates": [
+      "04e91424 perf(virtual): repair sparse collection updates",
+      "387ac257 perf(virtual): patch spatial geometry incrementally",
+      "75c23c87 perf(virtual): streamline dense spatial patches",
+      "17b45f37 perf(virtual): reduce layout rebuild allocations"
+    ]
+  },
+  "regressions": [
+    {
+      "id": "tabular:resolve:warm:1000",
+      "medianRatio": 1.16839941826,
+      "p95Ratio": 1.17064938704,
+      "timingFloorRatio": 1.08264327097
+    },
+    {
+      "id": "virtual:linear:measure:1000:1",
+      "medianRatio": 1.83525670034,
+      "p95Ratio": 1.39583443507,
+      "timingFloorRatio": 1.18310804099
+    },
+    {
+      "id": "virtual:spatial:measure:100000:100000",
+      "medianRatio": 1.52770646255,
+      "p95Ratio": 1.56160317658,
+      "timingFloorRatio": 1.32600711648,
+      "allocationRatio": 0.5417766245
+    },
+    {
+      "id": "virtual:spatial:measure:10000:10000",
+      "medianRatio": 1.26001048304,
+      "p95Ratio": 1.28774709617,
+      "timingFloorRatio": 1.15955292258,
+      "allocationRatio": 1.56033866717
+    },
+    {
+      "id": "virtual:spatial:measure:1000:1000",
+      "medianRatio": 1.53995652383,
+      "p95Ratio": 1.81989278775,
+      "timingFloorRatio": 1.30944268192,
+      "allocationRatio": 1.63536483189
+    }
+  ],
+  "packageFootprintRatios": {
+    "core": 0.729526297171,
+    "dom": 0.741521444543,
+    "form": 0.936658404234,
+    "tabular": 0.720738225396,
+    "temporal": 0.739079701462,
+    "terminal": 0.733707398325,
+    "virtual": 0.784316668568,
+    "vue": 0.773004012029
+  },
+  "decision": "Retain this pre-baseline comparison as evidence. The flagged workload sources were unchanged by the Chart workstream; refresh the release baseline only after adding Chart to provenance and preserve these ratios for later Virtual and Tabular optimization work."
+}

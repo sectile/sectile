@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "bd15591cd758ad185bf56df185a226a3496dd6d944286e6cfd830d16f33fdf5e",
+    "publicSignatureFingerprint": "f1762e6b6409d388255b7849c5201e77466a23e5f584db7bda55b679be65e5d0",
     "subpaths": [
       ".",
       "./accordion",
@@ -520,6 +520,6 @@
   ],
   "acceptance": {
     "classification": "type-change-reviewed",
-    "reason": "WI-002_result_helper_declaration_owner_move_preserves_consumer_signatures"
+    "reason": "StableID intentionally widens from string to string-or-safe-integer; public declaration closure was reviewed and breaking migration entries were recorded."
   }
 }
