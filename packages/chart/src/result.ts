@@ -12,6 +12,9 @@ export type ChartOwnErrorCode =
   | 'chart-patch-ceiling-exceeded'
   | 'chart-patch-invalid'
   | 'chart-profile-invalid'
+  | 'chart-scale-invalid'
+  | 'chart-tick-ceiling-exceeded'
+  | 'chart-view-transform-invalid'
   | 'chart-stale-generation';
 
 export type ChartErrorCode = CoreErrorCode | ChartOwnErrorCode;
