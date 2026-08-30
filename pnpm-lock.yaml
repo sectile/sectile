@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@sectile/chart':
+        specifier: workspace:*
+        version: link:packages/chart
       '@sectile/core':
         specifier: workspace:*
         version: link:packages/core
@@ -163,6 +166,16 @@ importers:
       vue-tsc:
         specifier: ^3.0.6
         version: 3.3.11(typescript@6.0.3)
+
+  packages/chart:
+    dependencies:
+      '@sectile/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
 
   packages/core:
     devDependencies:

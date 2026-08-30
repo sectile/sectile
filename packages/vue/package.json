@@ -301,6 +301,11 @@
       "import": "./dist/host-provider.js",
       "default": "./dist/host-provider.js"
     },
+    "./chart": {
+      "types": "./dist/chart.d.ts",
+      "import": "./dist/chart.js",
+      "default": "./dist/chart.js"
+    },
     "./virtual/core": {
       "types": "./dist/virtual-core.d.ts",
       "import": "./dist/virtual-core.js",

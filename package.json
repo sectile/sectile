@@ -61,6 +61,7 @@
     "publish:packages:local": "node scripts/publish-packages.mjs"
   },
   "devDependencies": {
+    "@sectile/chart": "workspace:*",
     "@sectile/core": "workspace:*",
     "@sectile/dom": "workspace:*",
     "@sectile/form": "workspace:*",

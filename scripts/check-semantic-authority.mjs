@@ -84,6 +84,24 @@ for (const domain of manifest.domainAuthority) {
   }
 }
 
+for (const focused of manifest.focusedDomainProjections) {
+  assert.ok(packageExports.has(focused.domain), `${focused.domain}: focused domain owner is missing.`);
+  assertUnique(focused.projections.map(({ name }) => name), `${focused.domain} focused projection hosts`);
+  for (const projection of focused.projections) {
+    const pkg = await readJSON(projection.manifest);
+    assert.ok(pkg.exports?.[projection.subpath] !== undefined,
+      `${focused.domain}: ${projection.name} is missing focused subpath ${projection.subpath}.`);
+  }
+  assertUnique(focused.excludedHosts, `${focused.domain} excluded hosts`);
+  for (const name of focused.excludedHosts) {
+    const host = manifest.componentAuthority.hostProjections.find((entry) => entry.name === name);
+    assert.notEqual(host, undefined, `${focused.domain}: unknown excluded host ${name}.`);
+    const graphEntry = manifest.dependencyGraph.find((entry) => entry.name === name);
+    const pkg = await readJSON(graphEntry.manifest);
+    assert.equal(pkg.exports?.['./chart'], undefined, `${focused.domain}: ${name} must not expose ./chart.`);
+  }
+}
+
 for (const projection of manifest.componentAuthority.hostProjections) {
   assert.equal(projection.classification, 'platform-only', `${projection.name}: hosts are projections.`);
   if (projection.migrationException !== undefined) {

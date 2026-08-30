@@ -76,6 +76,11 @@
       "import": "./dist/tabular.js",
       "default": "./dist/tabular.js"
     },
+    "./chart": {
+      "types": "./dist/chart.d.ts",
+      "import": "./dist/chart.js",
+      "default": "./dist/chart.js"
+    },
     "./tabs": {
       "types": "./dist/tabs.d.ts",
       "import": "./dist/tabs.js",

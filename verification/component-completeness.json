@@ -12,6 +12,18 @@
     "cross-host-parity"
   ],
   "migrationGaps": {},
+  "chartProfiles": [
+    { "id": "point", "capabilities": ["unstructured-points", "bounded-representatives", "stable-hit-candidates"] },
+    { "id": "ordered-series", "capabilities": ["ordered-samples", "extrema-preservation", "visible-domain-projection"] },
+    { "id": "cartesian-segment", "capabilities": ["finite-segments", "visible-domain-culling", "layer-order"] },
+    { "id": "grid-cell", "capabilities": ["two-dimensional-cells", "direct-addressing", "tile-projection"] },
+    { "id": "radial-segment", "capabilities": ["finite-angular-segments", "radial-bounds", "angular-hit-candidates"] }
+  ],
+  "chartHostSupport": {
+    "owner": "@sectile/chart",
+    "projections": { "dom": "@sectile/dom/chart", "vue": "@sectile/vue/chart" },
+    "excluded": ["terminal"]
+  },
   "tabularProfiles": [
     { "id": "data-table", "standard": "docs/packages/tabular.md#datatable", "capabilities": ["semantic-table-projection", "row-selection", "sorting-filtering-grouping", "native-form-coordination"] },
     { "id": "data-grid", "standard": "docs/packages/tabular.md#datagrid", "capabilities": ["two-dimensional-cursor", "cell-editing", "row-selection", "column-coordination"] },

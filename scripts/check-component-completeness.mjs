@@ -246,4 +246,34 @@ for (const entry of tabularProfiles) {
   }
 }
 
-console.log(`component completeness contract: ${canonical.length} public components, ${tabularProfiles.length} Tabular profiles, ${declaredFamilies.length} evidence families, ${Object.keys(gaps).length} migration entries`);
+const chartProfiles = manifest.chartProfiles;
+assert.ok(Array.isArray(chartProfiles), 'Chart profiles must be declared.');
+assert.deepEqual(
+  chartProfiles.map((entry) => entry.id).sort(),
+  ['cartesian-segment', 'grid-cell', 'ordered-series', 'point', 'radial-segment'],
+  'Chart profiles must be exact.',
+);
+for (const entry of chartProfiles) {
+  assert.match(entry.id, /^[a-z]+(?:-[a-z]+)*$/u, `${entry.id}: invalid Chart profile ID.`);
+  assert.ok(Array.isArray(entry.capabilities) && entry.capabilities.length >= 2,
+    `${entry.id}: declare Chart profile capabilities.`);
+  assert.equal(new Set(entry.capabilities).size, entry.capabilities.length,
+    `${entry.id}: Chart capabilities must be unique.`);
+}
+assert.deepEqual(manifest.chartHostSupport, {
+  owner: '@sectile/chart',
+  projections: { dom: '@sectile/dom/chart', vue: '@sectile/vue/chart' },
+  excluded: ['terminal'],
+}, 'Chart host support must remain focused and omit Terminal parity.');
+for (const [packageName, subpath] of [
+  ['dom', './chart'],
+  ['vue', './chart'],
+]) {
+  const pkg = JSON.parse(await readFile(`packages/${packageName}/package.json`, 'utf8'));
+  assert.ok(pkg.exports?.[subpath] !== undefined, `@sectile/${packageName}/chart subpath missing.`);
+}
+const terminalPackage = JSON.parse(await readFile('packages/terminal/package.json', 'utf8'));
+assert.equal(terminalPackage.exports?.['./chart'], undefined,
+  'Terminal Chart projection is intentionally unsupported.');
+
+console.log(`component completeness contract: ${canonical.length} public components, ${tabularProfiles.length} Tabular profiles, ${chartProfiles.length} Chart profiles, ${declaredFamilies.length} evidence families, ${Object.keys(gaps).length} migration entries`);

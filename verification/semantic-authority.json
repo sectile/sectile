@@ -23,10 +23,21 @@
     ]
   },
   "domainAuthority": [
+    { "name": "@sectile/chart", "manifest": "packages/chart/package.json", "classification": "canonical" },
     { "name": "@sectile/form", "manifest": "packages/form/package.json", "classification": "canonical" },
     { "name": "@sectile/temporal", "manifest": "packages/temporal/package.json", "classification": "canonical" },
     { "name": "@sectile/tabular", "manifest": "packages/tabular/package.json", "classification": "canonical" },
     { "name": "@sectile/virtual", "manifest": "packages/virtual/package.json", "classification": "canonical" }
+  ],
+  "focusedDomainProjections": [
+    {
+      "domain": "@sectile/chart",
+      "projections": [
+        { "name": "@sectile/dom", "manifest": "packages/dom/package.json", "subpath": "./chart" },
+        { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "subpath": "./chart" }
+      ],
+      "excludedHosts": ["@sectile/terminal"]
+    }
   ],
   "hostHelperRoots": [
     {
@@ -47,6 +58,7 @@
   ],
   "dependencyGraph": [
     { "name": "@sectile/core", "manifest": "packages/core/package.json", "semanticDependencies": [] },
+    { "name": "@sectile/chart", "manifest": "packages/chart/package.json", "semanticDependencies": ["@sectile/core"] },
     { "name": "@sectile/form", "manifest": "packages/form/package.json", "semanticDependencies": ["@sectile/core"] },
     { "name": "@sectile/temporal", "manifest": "packages/temporal/package.json", "semanticDependencies": ["@sectile/core"] },
     { "name": "@sectile/virtual", "manifest": "packages/virtual/package.json", "semanticDependencies": ["@sectile/core"] },
