@@ -21,85 +21,107 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, shallowRef } = await import('vue');
-const { createChartController } = await import('@sectile/chart/controller');
-const { ChartCanvas, ChartRoot } = await import('../.verification-dist/chart.js');
+const {
+  ChartAxisView,
+  ChartCartesian,
+  ChartLine,
+  ChartNavigation,
+  ChartPanControl,
+  ChartPlot,
+  ChartRenderer,
+  ChartResetView,
+  ChartRoot,
+  ChartViewControls,
+  ChartXAxis,
+  ChartYAxis,
+  ChartZoomControl,
+} = await import('../.verification-dist/chart.js');
 
-const model = { layers: [{ id: 'points', profile: 'point', data: [
-  { id: 1, x: 0, y: 0 }, { id: '1', x: 1, y: 1 },
-] }] };
+const initial = Object.freeze([
+  Object.freeze({ id: 1, month: new Date(0), revenue: 12 }),
+  Object.freeze({ id: '2', month: 1_000, revenue: 18 }),
+]);
 
-test('ChartRoot mounts one DOM connection, publishes updates, and preserves borrowed renderer ownership', async () => {
-  const controller = createChartController({ model });
-  const projections = [];
-  let disconnected = 0;
-  const renderer = {
+function mockRenderer(projections) {
+  return {
     capabilities: { canvas2d: true, webgl2: false, asynchronousGPUTiming: false },
     render: (projection) => projections.push(projection),
     getDiagnostics: () => ({ mode: 'canvas2d', uploadedBytes: 0, drawCalls: 1, liveResources: 1 }),
     flush() {},
-    disconnect: () => { disconnected += 1; },
-  };
-  const selections = [];
-  const host = document.createElement('div');
-  document.body.append(host);
-  const app = createApp({
-    render: () => h(ChartRoot, {
-      controller,
-      dom: { renderer },
-      'onUpdate:modelValue': (value) => selections.push(value),
-    }),
-  });
-  app.mount(host);
-  await nextTick(); await nextTick();
-  assert.ok(host.querySelector('canvas') instanceof HTMLCanvasElement);
-  assert.equal(projections.length, 1);
-  assert.equal(host.querySelectorAll('[role="option"]').length, 2);
-  controller.dispatch({ type: 'set-selection', selection: { type: 'points', ids: ['1'] } });
-  assert.deepEqual(selections, [{ type: 'points', ids: ['1'] }]);
-  app.unmount();
-  assert.equal(disconnected, 0);
-  controller.dispose();
-});
-
-test('ChartRoot options bridge controlled props without duplicating update requests', async () => {
-  const selection = shallowRef({ type: 'points', ids: [1] });
-  const updates = [];
-  let controller;
-  const renderer = {
-    capabilities: { canvas2d: true, webgl2: false, asynchronousGPUTiming: false },
-    render() {},
-    getDiagnostics: () => ({ mode: 'canvas2d', uploadedBytes: 0, drawCalls: 0, liveResources: 0 }),
-    flush() {},
     disconnect() {},
   };
+}
+
+test('declarative ChartRoot batches layer replacement and inherits axis scope for controls', async () => {
+  const data = shallowRef(initial);
+  const projections = [];
+  let controller = null;
+  let rootComponent = null;
   const host = document.createElement('div');
   document.body.append(host);
   const app = createApp({
-    render: () => h(ChartRoot, {
-      options: { model },
-      modelValue: selection.value,
-      dom: { renderer },
-      'onUpdate:modelValue': (value) => {
-        updates.push(value);
-        selection.value = value;
-      },
-    }, {
+    render: () => h(ChartRoot, { ref: (value) => { rootComponent = value; }, dom: { renderer: mockRenderer(projections) } }, {
       default: (slot) => {
         controller = slot.controller;
-        return h(ChartCanvas);
+        return [
+          h(ChartCartesian, null, () => [
+            h(ChartXAxis, { id: 7, scale: 'temporal', field: 'month', label: 'Month' }, () => [
+              h(ChartAxisView, { update: 'follow-end' }),
+              h(ChartViewControls, null, () => [
+                h(ChartPanControl, { direction: 'backward' }, () => 'Earlier'),
+                h(ChartZoomControl, { direction: 'in' }, () => 'Zoom in'),
+                h(ChartResetView, { to: 'latest' }, () => 'Latest'),
+              ]),
+            ]),
+            h(ChartYAxis, { id: 'revenue', field: 'revenue', label: 'Revenue' }),
+            h(ChartLine, { id: 'sales', data: data.value, xAxis: 7, yAxis: 'revenue' }),
+            h(ChartNavigation, { axes: [7], drag: 'pan', wheel: 'native', keyboard: true }),
+          ]),
+          h(ChartPlot, null, () => h(ChartRenderer)),
+        ];
       },
     }),
   });
   app.mount(host);
   await nextTick(); await nextTick();
-  assert.deepEqual(controller.getSnapshot().state.selection, { type: 'points', ids: [1] });
+  assert.ok(controller);
+  assert.equal(controller.getDefinition().axes[0].id, 7);
+  assert.equal(controller.getSnapshot().state.view.axes[0].axisID, 7);
+  assert.ok(host.querySelector('canvas') instanceof HTMLCanvasElement);
+  assert.ok(host.querySelector('[data-chart-overlay="axes"]'));
+  const priorGeneration = controller.getModel().generation;
+  const priorDiagnostics = rootComponent.getDeclarationDiagnostics();
+  assert.equal(priorDiagnostics.registeredRecords, 7);
 
-  controller.dispatch({ type: 'set-selection', selection: { type: 'points', ids: ['1'] } });
-  assert.deepEqual(controller.getSnapshot().state.selection, { type: 'points', ids: [1] });
-  assert.deepEqual(updates, [{ type: 'points', ids: ['1'] }]);
+  data.value = Object.freeze([...initial, Object.freeze({ id: 3, month: 2_000, revenue: 24 })]);
   await nextTick(); await nextTick();
-  assert.deepEqual(controller.getSnapshot().state.selection, { type: 'points', ids: ['1'] });
+  assert.equal(controller.getModel().generation, priorGeneration + 1);
+  assert.equal(controller.getDefinition().diagnostics.resolvedDatums, 3);
+  const nextDiagnostics = rootComponent.getDeclarationDiagnostics();
+  assert.equal(nextDiagnostics.publications, priorDiagnostics.publications + 1);
+  assert.equal(nextDiagnostics.readRecords, 7);
+  assert.ok(projections.length >= 1);
+  app.unmount(); host.remove();
+});
 
-  app.unmount();
-  host.remove();
+test('direct gestures require a declared visible or external control alternative', async () => {
+  const errors = [];
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h(ChartRoot, { onError: (error) => errors.push(error) }, () => [
+      h(ChartCartesian, null, () => [
+        h(ChartXAxis, { id: 'x', scale: 'linear' }),
+        h(ChartYAxis, { id: 'y', scale: 'linear' }),
+        h(ChartLine, { id: 'series', data: [{ id: 1, x: 0, y: 0 }], xAxis: 'x', yAxis: 'y' }),
+        h(ChartNavigation, { drag: 'pan' }),
+      ]),
+      h(ChartPlot, null, () => h(ChartRenderer)),
+    ]),
+  });
+  app.mount(host);
+  await nextTick();
+  assert.equal(errors.length, 1);
+  assert.match(String(errors[0]), /ChartViewControls|ChartExternalViewControls/);
+  app.unmount(); host.remove();
 });

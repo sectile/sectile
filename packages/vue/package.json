@@ -417,6 +417,7 @@
     "build": "node scripts/build.mjs production",
     "build:verification": "node scripts/build.mjs verification",
     "benchmark:collections": "pnpm --silent run build && node benchmarks/collection-reconciliation.mjs",
+    "benchmark:chart": "pnpm --silent run build && node benchmarks/chart-reconciliation.mjs",
     "check:controlled-reconciliation": "node scripts/check-controlled-reconciliation.mjs",
     "check:hydration-contract": "node scripts/check-hydration-contract.mjs",
     "serve:browser-verification": "pnpm --silent run build && node scripts/serve-browser-verification.mjs",

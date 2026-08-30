@@ -1,55 +1,94 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { renderToString } from '@vue/server-renderer';
-import { createSSRApp, effectScope, h, nextTick, ref, shallowRef } from 'vue';
-import { ChartRoot, useChart } from '../.verification-dist/chart.js';
+import { effectScope, nextTick, shallowRef } from 'vue';
+import { useChart } from '../.verification-dist/chart.js';
 
-const model = { layers: [{ id: 'points', profile: 'point', data: [
-  { id: 1, x: 0, y: 0 }, { id: '1', x: 1, y: 1 },
-] }] };
+const series = Object.freeze([
+  Object.freeze({ id: 1, recordedAt: new Date(0), amount: 12, value: 1 }),
+  Object.freeze({ id: '2', recordedAt: 1_000, amount: 18, value: 2 }),
+]);
+const layerSeries = (prefix) => Object.freeze(series.map((datum) => Object.freeze({ ...datum, id: `${prefix}-${String(datum.id)}` })));
+const scatterSeries = layerSeries('scatter');
+const barSeries = layerSeries('bar');
+const heatmapSeries = layerSeries('heatmap');
 
-test('useChart synchronizes controlled refs and publishes semantic snapshots', async () => {
+const cartesianDefinition = (data = series) => ({
+  coordinate: { kind: 'cartesian', axes: [
+    { id: 10, orientation: 'x', scale: 'temporal', field: 'recordedAt' },
+    { id: 'amount', orientation: 'y', scale: 'linear', field: 'amount' },
+  ] },
+  layers: [
+    { id: 'line', kind: 'line', data, xAxis: 10, yAxis: 'amount' },
+    { id: 'scatter', kind: 'scatter', data: scatterSeries, xAxis: 10, yAxis: 'amount', projection: 'density' },
+    { id: 'bar', kind: 'bar', data: barSeries, xAxis: 10, yAxis: 'amount' },
+    { id: 'heatmap', kind: 'heatmap', data: heatmapSeries, xAxis: 10, yAxis: 'amount' },
+  ],
+});
+
+const radialDefinition = {
+  coordinate: { kind: 'radial' },
+  layers: [
+    { id: 20, kind: 'pie', data: layerSeries('pie') },
+    { id: 'donut', kind: 'donut', data: layerSeries('donut'), innerRadius: 0.6 },
+  ],
+};
+
+test('useChart resolves all six declarative profiles without coercing numeric identities', () => {
+  const cartesian = useChart({
+    definition: cartesianDefinition(),
+    viewCapabilities: [{ axisID: 10, minimumSpan: 1 }],
+  });
+  assert.deepEqual(cartesian.controller.getDefinition().layers.map((layer) => layer.kind), ['line', 'scatter', 'bar', 'heatmap']);
+  assert.equal(cartesian.controller.getDefinition().axes[0].id, 10);
+  assert.equal(cartesian.controller.getModel().identityAt(0), 1);
+  assert.equal(cartesian.controller.getModel().identityAt(1), '2');
+  assert.equal(cartesian.snapshot.value.state.view.axes[0].axisID, 10);
+
+  const radial = useChart({ definition: radialDefinition });
+  assert.deepEqual(radial.controller.getDefinition().layers.map((layer) => layer.kind), ['pie', 'donut']);
+  assert.equal(radial.snapshot.value.state.view, null);
+  cartesian.dispose(); radial.dispose();
+});
+
+test('one shallow definition replacement reconciles after one Vue flush', async () => {
   const scope = effectScope();
-  const cursor = ref(1);
-  const modelSource = shallowRef(model);
-  const cursorChanges = [];
-  const chart = scope.run(() => useChart({
-    model: modelSource,
-    cursor,
-    onCursorChange: (value) => cursorChanges.push(value),
-  }));
-  chart.dispatch({ type: 'set-cursor', id: '1' });
-  assert.equal(cursor.value, '1');
-  assert.deepEqual(cursorChanges, ['1']);
+  const source = shallowRef(cartesianDefinition());
+  const chart = scope.run(() => useChart({ definition: source, viewCapabilities: [{ axisID: 10 }] }));
+  const priorGeneration = chart.controller.getModel().generation;
+  source.value = cartesianDefinition(Object.freeze([
+    ...series,
+    Object.freeze({ id: 3, recordedAt: 2_000, amount: 24, value: 3 }),
+  ]));
   await nextTick();
-  assert.equal(chart.snapshot.value.state.cursor, '1');
-
-  modelSource.value = { layers: [{ id: 'points', profile: 'point', data: [{ id: '1', x: 2, y: 2 }] }] };
-  await nextTick();
-  assert.equal(chart.snapshot.value.state.generation, 1);
-  assert.equal(chart.controller.getModel().size, 1);
+  assert.equal(chart.controller.getModel().generation, priorGeneration + 1);
+  assert.equal(chart.controller.getDefinition().diagnostics.resolvedDatums, 9);
   scope.stop();
 });
 
-test('useChart keeps default values uncontrolled and reports direct interaction', () => {
-  const selections = [];
+test('controlled view publishes requests while defaultView remains controller-owned', () => {
+  const seed = useChart({ definition: cartesianDefinition(), viewCapabilities: [{ axisID: 10 }] });
+  const initialView = seed.snapshot.value.state.view;
+  const controlled = shallowRef(initialView);
+  const requested = [];
   const chart = useChart({
-    model,
-    defaultSelection: { type: 'points', ids: [1] },
-    onSelectionChange: (value) => selections.push(value),
+    definition: cartesianDefinition(),
+    viewCapabilities: [{ axisID: 10 }],
+    view: controlled,
+    onViewChange: (value) => requested.push(value),
   });
-  chart.dispatch({ type: 'set-selection', selection: { type: 'points', ids: ['1'] } });
-  assert.deepEqual(chart.snapshot.value.state.selection, { type: 'points', ids: ['1'] });
-  assert.deepEqual(selections, [{ type: 'points', ids: ['1'] }]);
-  chart.dispose(); chart.dispose();
-});
+  chart.dispatch({ type: 'zoom-axis-view', axisID: 10, factor: 2, phase: 'settled' });
+  assert.equal(requested.length, 1);
+  assert.equal(controlled.value.revision, initialView.revision + 1);
 
-test('ChartRoot SSR output is deterministic and defers host resources until mount', async () => {
-  const html = await renderToString(createSSRApp({
-    render: () => h(ChartRoot, { options: { model } }),
-  }));
-  assert.match(html, /data-scope="chart"/);
-  assert.match(html, /data-part="root"/);
-  assert.match(html, /data-part="canvas"/);
-  assert.doesNotMatch(html, /role="listbox"/);
+  const uncontrolled = useChart({
+    definition: cartesianDefinition(),
+    viewCapabilities: [{ axisID: 10 }],
+    defaultView: initialView,
+  });
+  uncontrolled.dispatch({ type: 'pan-axis-view', axisID: 10, fraction: 0.1, phase: 'settled' });
+  assert.notEqual(uncontrolled.snapshot.value.state.view, initialView);
+  assert.throws(() => useChart({
+    definition: cartesianDefinition(), viewCapabilities: [{ axisID: 10 }], view: controlled, defaultView: initialView,
+  }), /mutually exclusive/);
+  seed.dispose(); chart.dispose(); uncontrolled.dispose();
 });

@@ -3,6 +3,12 @@ import { unwrap } from '@sectile/core/result';
 import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/core/revision';
 import { chartFail, chartOK } from './internal/result.js';
 import {
+  tryCreateChartDefinition,
+  tryReplaceChartDefinition,
+  type ChartDefinition,
+  type ChartDefinitionState,
+} from './definition.js';
+import {
   reconcileChartState,
   reduceChartEvent,
   tryCreateChartState,
@@ -24,13 +30,33 @@ import {
 import { tryCreateChartProjection, type ChartProjection, type ChartProjectionInput } from './projection.js';
 import type { ChartResult } from './result.js';
 import { IDENTITY_CHART_VIEW_TRANSFORM } from './scale.js';
+import {
+  tryCreateChartAxisViewState,
+  reconcileChartAxisViewState,
+  type ChartAxisViewCapability,
+} from './view.js';
 
-export interface ChartControllerOptions<ID extends StableID = StableID> {
-  readonly model: ChartModel<ID>;
+interface ChartControllerOptionsBase<ID extends StableID> {
   readonly limits?: ChartLimits;
   readonly initialValues?: ChartControlledValues<ID>;
   readonly controlled?: ChartControlledValues<ID>;
 }
+
+export interface ChartModelControllerOptions<ID extends StableID = StableID> extends ChartControllerOptionsBase<ID> {
+  readonly model: ChartModel<ID>;
+  readonly definition?: never;
+  readonly viewCapabilities?: never;
+}
+
+export interface ChartDefinitionControllerOptions<ID extends StableID = StableID> extends ChartControllerOptionsBase<ID> {
+  readonly model?: never;
+  readonly definition: ChartDefinition<any, ID>;
+  readonly viewCapabilities?: readonly ChartAxisViewCapability<ID>[];
+}
+
+export type ChartControllerOptions<ID extends StableID = StableID> =
+  | ChartModelControllerOptions<ID>
+  | ChartDefinitionControllerOptions<ID>;
 
 export interface ChartUpdate<ID extends StableID = StableID> {
   readonly snapshot: RevisionSnapshot<ChartState<ID>>;
@@ -39,8 +65,14 @@ export interface ChartUpdate<ID extends StableID = StableID> {
 
 export interface ChartController<ID extends StableID = StableID> {
   getModel(): ChartModelState<ID>;
+  getDefinition(): ChartDefinitionState<ID> | null;
   getSnapshot(): RevisionSnapshot<ChartState<ID>>;
   replaceModel(model: ChartModel<ID>, expectedRevision?: number): ChartResult<RevisionSnapshot<ChartState<ID>>>;
+  replaceDefinition<Datum>(
+    definition: ChartDefinition<Datum, ID>,
+    viewCapabilities?: readonly ChartAxisViewCapability<ID>[],
+    expectedRevision?: number,
+  ): ChartResult<RevisionSnapshot<ChartState<ID>>>;
   applyPatch(patch: ChartPatch<ID>, expectedRevision?: number): ChartResult<RevisionSnapshot<ChartState<ID>>>;
   syncControlledValues(values: ChartControlledValues<ID>): ChartResult<RevisionSnapshot<ChartState<ID>>>;
   dispatch(event: ChartEvent<ID>, expectedRevision?: number): ChartResult<ChartUpdate<ID>>;
@@ -57,13 +89,33 @@ export function tryCreateChartController<ID extends StableID>(
   options: ChartControllerOptions<ID>,
 ): ChartResult<ChartController<ID>> {
   if (options === null || typeof options !== 'object') return invalidController('Chart controller options must be an object.');
-  const model = tryCreateChartModel(options.model, options.limits);
+  if ((options.model === undefined) === (options.definition === undefined)) {
+    return invalidController('Chart controller requires exactly one model or declarative definition.');
+  }
+  const definition = options.definition === undefined
+    ? chartOK(null)
+    : tryCreateChartDefinition(options.definition, options.limits);
+  if (!definition.ok) return definition;
+  const model = definition.value === null
+    ? tryCreateChartModel(options.model as ChartModel<ID>, options.limits)
+    : chartOK(definition.value.model);
   if (!model.ok) return model;
   const controlledValues = options.controlled ?? {};
-  const state = tryCreateChartState(model.value, { ...(options.initialValues ?? {}), ...controlledValues });
+  const capabilities = options.definition === undefined ? Object.freeze([]) : Object.freeze([...(options.viewCapabilities ?? [])]);
+  const defaultView = definition.value === null || capabilities.length === 0
+    ? chartOK(undefined)
+    : tryCreateChartAxisViewState(definition.value.axes, capabilities);
+  if (!defaultView.ok) return defaultView;
+  const state = tryCreateChartState(model.value, {
+    ...(defaultView.value === undefined ? {} : { view: defaultView.value }),
+    ...(options.initialValues ?? {}),
+    ...controlledValues,
+  });
   if (!state.ok) return state;
   return chartOK(new ImmutableChartController(
     model.value,
+    definition.value,
+    capabilities,
     createRevisionSnapshot(state.value),
     controlFlags(controlledValues),
     Object.freeze({ ...controlledValues }),
@@ -72,6 +124,8 @@ export function tryCreateChartController<ID extends StableID>(
 
 class ImmutableChartController<ID extends StableID> implements ChartController<ID> {
   #model: ChartModelState<ID>;
+  #definition: ChartDefinitionState<ID> | null;
+  #viewCapabilities: readonly ChartAxisViewCapability<ID>[];
   #snapshot: RevisionSnapshot<ChartState<ID>>;
   readonly #controlled: ChartControlFlags;
   #controlledValues: ChartControlledValues<ID>;
@@ -81,17 +135,22 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
 
   public constructor(
     model: ChartModelState<ID>,
+    definition: ChartDefinitionState<ID> | null,
+    viewCapabilities: readonly ChartAxisViewCapability<ID>[],
     snapshot: RevisionSnapshot<ChartState<ID>>,
     controlled: ChartControlFlags,
     controlledValues: ChartControlledValues<ID>,
   ) {
     this.#model = model;
+    this.#definition = definition;
+    this.#viewCapabilities = viewCapabilities;
     this.#snapshot = snapshot;
     this.#controlled = controlled;
     this.#controlledValues = controlledValues;
   }
 
   public getModel(): ChartModelState<ID> { return this.#model; }
+  public getDefinition(): ChartDefinitionState<ID> | null { return this.#definition; }
   public getSnapshot(): RevisionSnapshot<ChartState<ID>> { return this.#snapshot; }
 
   public replaceModel(
@@ -102,8 +161,37 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     if (!ready.ok) return ready;
     const nextModel = tryReplaceChartModel(this.#model, input);
     if (!nextModel.ok) return nextModel;
-    if (nextModel.value === this.#model) return chartOK(this.#snapshot);
-    return this.#commitModel(nextModel.value);
+    if (nextModel.value === this.#model && this.#definition === null) return chartOK(this.#snapshot);
+    return this.#commitModel(nextModel.value, null, null, Object.freeze([]));
+  }
+
+  public replaceDefinition<Datum>(
+    input: ChartDefinition<Datum, ID>,
+    viewCapabilities: readonly ChartAxisViewCapability<ID>[] = this.#viewCapabilities,
+    expectedRevision: number = this.#snapshot.revision,
+  ): ChartResult<RevisionSnapshot<ChartState<ID>>> {
+    const ready = this.#ready(expectedRevision);
+    if (!ready.ok) return ready;
+    const next = this.#definition === null
+      ? tryCreateChartDefinition(input, this.#model.limits)
+      : tryReplaceChartDefinition(this.#definition, input, this.#model.limits);
+    if (!next.ok) return next;
+    const capabilities = Object.freeze([...viewCapabilities]);
+    let view = this.#snapshot.state.view;
+    if (capabilities.length === 0) view = null;
+    else if (view === null) {
+      const created = tryCreateChartAxisViewState(next.value.axes, capabilities);
+      if (!created.ok) return created;
+      view = created.value;
+    }
+    else {
+      const reconciled = reconcileChartAxisViewState(view, next.value.axes, capabilities);
+      if (!reconciled.ok) return reconciled;
+      view = reconciled.value;
+    }
+    if (next.value === this.#definition && view === this.#snapshot.state.view
+      && sameCapabilities(capabilities, this.#viewCapabilities)) return chartOK(this.#snapshot);
+    return this.#commitModel(next.value.model, view, next.value, capabilities);
   }
 
   public applyPatch(
@@ -115,7 +203,8 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     const nextModel = tryApplyChartPatch(this.#model, patch);
     if (!nextModel.ok) return nextModel;
     if (nextModel.value === this.#model) return chartOK(this.#snapshot);
-    return this.#commitModel(nextModel.value);
+    const definition = this.#definition === null ? null : Object.freeze({ ...this.#definition, model: nextModel.value });
+    return this.#commitModel(nextModel.value, this.#snapshot.state.view, definition, this.#viewCapabilities);
   }
 
   public syncControlledValues(values: ChartControlledValues<ID>): ChartResult<RevisionSnapshot<ChartState<ID>>> {
@@ -168,7 +257,7 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     if (cacheable && this.#projectionCache !== null && sameProjectionRequest(this.#projectionCache, this.#model, resolved)) {
       return chartOK(this.#projectionCache.projection);
     }
-    const projection = tryCreateChartProjection(this.#model, resolved);
+    const projection = tryCreateChartProjection(this.#definition ?? this.#model, resolved);
     if (cacheable && projection.ok) this.#projectionCache = projectionCache(this.#model, resolved, projection.value);
     return projection;
   }
@@ -191,11 +280,20 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     this.#projectionCache = null;
   }
 
-  #commitModel(model: ChartModelState<ID>): ChartResult<RevisionSnapshot<ChartState<ID>>> {
+  #commitModel(
+    model: ChartModelState<ID>,
+    view: ChartState<ID>['view'] = this.#snapshot.state.view,
+    definition: ChartDefinitionState<ID> | null = this.#definition,
+    capabilities: readonly ChartAxisViewCapability<ID>[] = this.#viewCapabilities,
+  ): ChartResult<RevisionSnapshot<ChartState<ID>>> {
     if (this.#snapshot.revision === Number.MAX_SAFE_INTEGER) return revisionExhausted();
-    const state = reconcileChartState(this.#snapshot.state, model, this.#controlledValues);
+    const state = reconcileChartState(this.#snapshot.state, model, this.#controlled.view === true
+      ? this.#controlledValues
+      : { ...this.#controlledValues, view });
     if (!state.ok) return state;
     this.#model = model;
+    this.#definition = definition;
+    this.#viewCapabilities = capabilities;
     this.#projectionCache = null;
     return this.#commitState(state.value, [Object.freeze({ type: 'render-requested', generation: model.generation })]);
   }
@@ -221,6 +319,29 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
   #emit(commands: readonly ChartCommand<ID>[]): void {
     for (const command of commands) for (const listener of this.#listeners) listener(command);
   }
+}
+
+function sameCapabilities<ID extends StableID>(
+  left: readonly ChartAxisViewCapability<ID>[],
+  right: readonly ChartAxisViewCapability<ID>[],
+): boolean {
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index += 1) {
+    const a = left[index]; const b = right[index];
+    if (a === undefined || b === undefined || a.axisID !== b.axisID || !sameCapabilityWindow(a.initial, b.initial)
+      || a.minimumSpan !== b.minimumSpan || a.maximumSpan !== b.maximumSpan || a.update !== b.update) return false;
+  }
+  return true;
+}
+
+function sameCapabilityWindow(
+  left: ChartAxisViewCapability['initial'],
+  right: ChartAxisViewCapability['initial'],
+): boolean {
+  if (left === undefined || right === undefined) return left === right;
+  return left.kind === right.kind && (left.kind === 'continuous' && right.kind === 'continuous'
+    ? left.minimum === right.minimum && left.maximum === right.maximum
+    : left.kind === 'categorical' && right.kind === 'categorical' && left.start === right.start && left.end === right.end);
 }
 
 interface ProjectionCache<ID extends StableID> {

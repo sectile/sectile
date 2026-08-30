@@ -204,6 +204,58 @@
           "rationale": "Measurement may visit the mounted render window but cannot inspect unmounted collection items."
         }
       }
+    },
+    {
+      "id": "chart.declaration-reconcile",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/chart.ts",
+      "benchmarkIDs": [
+        "VAL-007:vue-chart-shallow-reconciliation"
+      ],
+      "specificationCeiling": "O(aAxis + lLayer + nDatum)",
+      "contract": {
+        "variables": [
+          {
+            "name": "aAxis",
+            "meaning": "declarative axis and axis-view record count",
+            "ceiling": "Chart maxAxes"
+          },
+          {
+            "name": "lLayer",
+            "meaning": "declarative layer record count",
+            "ceiling": "Chart maxLayers"
+          },
+          {
+            "name": "nDatum",
+            "meaning": "datums inspected by the Chart-owned definition reconciliation",
+            "ceiling": "Chart maxDatums"
+          }
+        ],
+        "time": {
+          "bound": "O(aAxis + lLayer + nDatum)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(aAxis + lLayer + nDatum)",
+          "output": "O(1)",
+          "retained": "O(aAxis + lLayer + nDatum)"
+        },
+        "resources": {
+          "allocations": "O(aAxis + lLayer + nDatum)",
+          "cacheEntries": "O(aAxis + lLayer)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(aAxis + lLayer)"
+        },
+        "proof": "Vue retains one record per low-cardinality coordinate, axis, layer, view, navigation, or control declaration and coalesces all touches in one nextTick publication. High-cardinality arrays remain opaque props; Chart owns datum validation and model reconciliation.",
+        "adversarialWitness": "Replacing a maximum-size layer array causes one declaration publication, a record scan bounded by axes plus layers, and no datum-sized Vue registry.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Chart may inspect submitted datums to validate identity, resolve automatic domains, and reconcile packed owners; the Vue bridge does not traverse them."
+        }
+      }
     }
   ]
 }

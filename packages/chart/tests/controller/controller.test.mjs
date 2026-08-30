@@ -58,3 +58,46 @@ test('command subscriptions release exactly once and dispose clears controller r
   assert.equal(controller.dispatch({ type: 'set-active', id: 1 }).error.code, 'chart-controller-disposed');
   assert.equal(controller.project({ viewport: { width: 100, height: 100 } }).error.code, 'chart-controller-disposed');
 });
+
+const definition = (data) => ({
+  coordinate: { kind: 'cartesian', axes: [
+    { id: 7, orientation: 'x', scale: 'temporal', field: 'recordedAt' },
+    { id: 'value', orientation: 'y', scale: 'linear', field: 'amount' },
+  ] },
+  layers: [{ kind: 'line', id: 'series', data, xAxis: 7, yAxis: 'value' }],
+});
+
+test('controller owns declarative definitions and axis-domain view capabilities', () => {
+  const controller = createChartController({
+    definition: definition([
+      { id: 1, recordedAt: new Date(0), amount: 4 },
+      { id: '2', recordedAt: 1_000, amount: 8 },
+    ]),
+    viewCapabilities: [{ axisID: 7, minimumSpan: 1 }],
+  });
+  assert.equal(controller.getDefinition().axes[0].id, 7);
+  assert.deepEqual(controller.getModel().identities, [1, '2']);
+  assert.equal(controller.getSnapshot().state.view.axes[0].axisID, 7);
+
+  const projection = controller.project({ viewport: { width: 320, height: 180 } }).value;
+  assert.equal(projection.layers[0].layerID, 'series');
+});
+
+test('declarative replacement repairs only changed layers and reconciles the retained view', () => {
+  const initialData = [
+    { id: 1, recordedAt: 0, amount: 4 },
+    { id: 2, recordedAt: 1_000, amount: 8 },
+  ];
+  const controller = createChartController({
+    definition: definition(initialData),
+    viewCapabilities: [{ axisID: 7, update: 'preserve' }],
+  });
+  const priorLayer = controller.getModel().layerAt(0);
+  const replaced = controller.replaceDefinition(definition([
+    initialData[0], initialData[1], { id: 3, recordedAt: 2_000, amount: 12 },
+  ])).value;
+  assert.equal(replaced.state.generation, 1);
+  assert.notEqual(controller.getModel().layerAt(0), priorLayer);
+  assert.equal(controller.getDefinition().diagnostics.resolvedDatums, 3);
+  assert.equal(replaced.state.view.axes[0].base.maximum, 2_000);
+});
