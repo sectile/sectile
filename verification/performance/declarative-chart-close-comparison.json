@@ -32,5 +32,36 @@
       "rationale": "The workstream adds retained Canvas2D and WebGL2 renderers, overlays, navigation translation, and lifecycle ownership. Consumer bundle and install gates verify optional Chart isolation."
     }
   ],
-  "decision": "Record a new release baseline only after the valid five-process comparison reports no timing, allocation, or retained-heap regressions. Preserve this comparison as the evidence for the intentional Chart and DOM install-footprint expansion."
+  "releaseValidation": {
+    "status": "pending-controlled-windows-11-run",
+    "runnerCommit": "e46ce1b4",
+    "requiredProcessCount": 10,
+    "baselinePreserved": true,
+    "macOSAttempts": [
+      {
+        "result": "invalid",
+        "completedProcesses": 10,
+        "requiredCalibrationBand": 0.1517,
+        "validityCeiling": 0.1,
+        "reason": "The desktop host was under material Codex, ChatGPT, browser-renderer, WindowServer, and OrbStack load. The runner rejected the sample and did not replace the baseline."
+      },
+      {
+        "result": "interrupted",
+        "completedProcesses": 2,
+        "reason": "The user stopped the retry before completion. The runner did not replace the baseline."
+      }
+    ],
+    "handoff": {
+      "platform": "Windows 11",
+      "requiredState": "Use commit e46ce1b4 or a descendant with unchanged production and performance inputs, an exact lockfile install, a fixed Node runtime, AC power, and no competing build, browser, update, indexing, antivirus-scan, or benchmark workload.",
+      "commands": [
+        "pnpm install --frozen-lockfile",
+        "pnpm performance:record",
+        "node scripts/performance/run.mjs check --output .tasks/aux/VAL17-final-performance.json",
+        "pnpm verify"
+      ],
+      "acceptance": "The ten-process record and check must each remain within the 10% calibration validity ceiling, report zero timing, allocation, retained-heap, and unaccepted footprint regressions, and leave the full verification suite passing."
+    }
+  },
+  "decision": "Preserve the valid five-process zero-regression comparison as change evidence, require ten isolated processes for release sampling, and defer the new release baseline plus final check to a controlled Windows 11 session. Do not accept or record calibration-invalid samples."
 }
