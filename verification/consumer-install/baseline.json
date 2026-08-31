@@ -2,100 +2,100 @@
   "schemaVersion": 2,
   "packages": {
     "core": {
-      "tarballBytes": 180616,
-      "unpackedBytes": 833053,
+      "tarballBytes": 180811,
+      "unpackedBytes": 832868,
       "unpackedFiles": 291,
       "categories": {
         "runtimeJS": {
           "files": 96,
-          "bytes": 376493
+          "bytes": 376408
         },
         "declarations": {
           "files": 96,
-          "bytes": 165568
+          "bytes": 165120
         },
         "sourceMaps": {
           "files": 96,
-          "bytes": 276101
+          "bytes": 276114
         },
         "other": {
           "files": 3,
-          "bytes": 14891
+          "bytes": 15226
         }
       }
     },
     "chart": {
-      "tarballBytes": 81896,
-      "unpackedBytes": 381115,
+      "tarballBytes": 85400,
+      "unpackedBytes": 398245,
       "unpackedFiles": 51,
       "categories": {
         "runtimeJS": {
           "files": 16,
-          "bytes": 183317
+          "bytes": 192559
         },
         "declarations": {
           "files": 16,
-          "bytes": 53375
+          "bytes": 54081
         },
         "sourceMaps": {
           "files": 16,
-          "bytes": 139256
+          "bytes": 146400
         },
         "other": {
           "files": 3,
-          "bytes": 5167
+          "bytes": 5205
         }
       }
     },
     "form": {
-      "tarballBytes": 27186,
-      "unpackedBytes": 116329,
+      "tarballBytes": 29652,
+      "unpackedBytes": 129124,
       "unpackedFiles": 27,
       "categories": {
         "runtimeJS": {
           "files": 8,
-          "bytes": 56703
+          "bytes": 63906
         },
         "declarations": {
           "files": 8,
-          "bytes": 13754
+          "bytes": 14747
         },
         "sourceMaps": {
           "files": 8,
-          "bytes": 41769
+          "bytes": 46312
         },
         "other": {
           "files": 3,
-          "bytes": 4103
+          "bytes": 4159
         }
       }
     },
     "tabular": {
-      "tarballBytes": 51824,
-      "unpackedBytes": 241418,
-      "unpackedFiles": 42,
+      "tarballBytes": 61069,
+      "unpackedBytes": 282668,
+      "unpackedFiles": 48,
       "categories": {
         "runtimeJS": {
-          "files": 13,
-          "bytes": 113796
+          "files": 15,
+          "bytes": 137126
         },
         "declarations": {
-          "files": 13,
-          "bytes": 39338
+          "files": 15,
+          "bytes": 41244
         },
         "sourceMaps": {
-          "files": 13,
-          "bytes": 83524
+          "files": 15,
+          "bytes": 99511
         },
         "other": {
           "files": 3,
-          "bytes": 4760
+          "bytes": 4787
         }
       }
     },
     "temporal": {
-      "tarballBytes": 31802,
-      "unpackedBytes": 170196,
+      "tarballBytes": 31825,
+      "unpackedBytes": 170230,
       "unpackedFiles": 60,
       "categories": {
         "runtimeJS": {
@@ -112,13 +112,13 @@
         },
         "other": {
           "files": 3,
-          "bytes": 5515
+          "bytes": 5549
         }
       }
     },
     "virtual": {
-      "tarballBytes": 54675,
-      "unpackedBytes": 266083,
+      "tarballBytes": 54692,
+      "unpackedBytes": 266120,
       "unpackedFiles": 48,
       "categories": {
         "runtimeJS": {
@@ -135,76 +135,76 @@
         },
         "other": {
           "files": 3,
-          "bytes": 4813
+          "bytes": 4850
         }
       }
     },
     "dom": {
-      "tarballBytes": 258187,
-      "unpackedBytes": 1298761,
+      "tarballBytes": 257739,
+      "unpackedBytes": 1298028,
       "unpackedFiles": 309,
       "categories": {
         "runtimeJS": {
           "files": 102,
-          "bytes": 596923
+          "bytes": 595676
         },
         "declarations": {
           "files": 102,
-          "bytes": 260533
+          "bytes": 260937
         },
         "sourceMaps": {
           "files": 102,
-          "bytes": 425917
+          "bytes": 425974
         },
         "other": {
           "files": 3,
-          "bytes": 15388
+          "bytes": 15441
         }
       }
     },
     "terminal": {
-      "tarballBytes": 110202,
-      "unpackedBytes": 609375,
+      "tarballBytes": 109109,
+      "unpackedBytes": 603704,
       "unpackedFiles": 243,
       "categories": {
         "runtimeJS": {
           "files": 80,
-          "bytes": 254267
+          "bytes": 250426
         },
         "declarations": {
           "files": 80,
-          "bytes": 164605
+          "bytes": 164585
         },
         "sourceMaps": {
           "files": 80,
-          "bytes": 176230
+          "bytes": 174369
         },
         "other": {
           "files": 3,
-          "bytes": 14273
+          "bytes": 14324
         }
       }
     },
     "vue": {
-      "tarballBytes": 262765,
-      "unpackedBytes": 1683500,
-      "unpackedFiles": 300,
+      "tarballBytes": 267580,
+      "unpackedBytes": 1699304,
+      "unpackedFiles": 333,
       "categories": {
         "runtimeJS": {
-          "files": 99,
-          "bytes": 574651
+          "files": 110,
+          "bytes": 582488
         },
         "declarations": {
-          "files": 99,
-          "bytes": 648210
+          "files": 110,
+          "bytes": 651277
         },
         "sourceMaps": {
-          "files": 99,
-          "bytes": 443924
+          "files": 110,
+          "bytes": 448783
         },
         "other": {
           "files": 3,
-          "bytes": 16715
+          "bytes": 16756
         }
       }
     }
@@ -212,8 +212,8 @@
   "installs": [
     {
       "packageManager": "npm",
-      "installedBytes": 20763570,
-      "installedFiles": 1498,
+      "installedBytes": 20781289,
+      "installedFiles": 1537,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -251,12 +251,12 @@
       "dependencyTree": [
         {
           "name": "@sectile/core",
-          "version": "0.11.1",
+          "version": "0.12.0",
           "dependencies": []
         },
         {
           "name": "@sectile/dom",
-          "version": "0.11.1",
+          "version": "0.12.0",
           "dependencies": [
             {
               "name": "@sectile/chart",
@@ -265,7 +265,7 @@
             },
             {
               "name": "@sectile/core",
-              "version": "0.11.1",
+              "version": "0.12.0",
               "dependencies": []
             },
             {
@@ -292,7 +292,7 @@
         },
         {
           "name": "@sectile/vue",
-          "version": "0.11.1",
+          "version": "0.12.0",
           "dependencies": [
             {
               "name": "@sectile/chart",
@@ -301,12 +301,12 @@
             },
             {
               "name": "@sectile/core",
-              "version": "0.11.1",
+              "version": "0.12.0",
               "dependencies": []
             },
             {
               "name": "@sectile/dom",
-              "version": "0.11.1",
+              "version": "0.12.0",
               "dependencies": []
             },
             {
@@ -564,8 +564,8 @@
     },
     {
       "packageManager": "pnpm",
-      "installedBytes": 20792050,
-      "installedFiles": 1508,
+      "installedBytes": 20825183,
+      "installedFiles": 1555,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -597,32 +597,32 @@
       "dependencyTree": [
         {
           "name": "@sectile/core",
-          "version": "0.11.1",
+          "version": "0.12.0",
           "dependencies": []
         },
         {
           "name": "@sectile/dom",
-          "version": "0.11.1",
+          "version": "0.12.0",
           "dependencies": [
             {
               "name": "@sectile/core",
-              "version": "0.11.1",
+              "version": "0.12.0",
               "dependencies": []
             }
           ]
         },
         {
           "name": "@sectile/vue",
-          "version": "0.11.1",
+          "version": "0.12.0",
           "dependencies": [
             {
               "name": "@sectile/core",
-              "version": "0.11.1",
+              "version": "0.12.0",
               "dependencies": []
             },
             {
               "name": "@sectile/dom",
-              "version": "0.11.1",
+              "version": "0.12.0",
               "dependencies": []
             },
             {

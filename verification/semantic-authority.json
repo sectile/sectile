@@ -1,6 +1,9 @@
 {
   "schemaVersion": 1,
   "classifications": ["canonical", "declared-alias", "platform-only"],
+  "rootPackageInventory": {
+    "documents": ["README.md", "PRODUCT.md"]
+  },
   "componentAuthority": {
     "catalog": "verification/component-completeness.json",
     "canonicalPackages": [
@@ -67,7 +70,5 @@
     { "name": "@sectile/terminal", "manifest": "packages/terminal/package.json", "semanticDependencies": ["@sectile/core", "@sectile/temporal"] },
     { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "semanticDependencies": ["@sectile/chart", "@sectile/core", "@sectile/dom", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] }
   ],
-  "migrationExceptions": [
-    { "id": "vue-virtual-projection", "owner": "WI-040", "scope": "Vue Virtual measurement and collection projection ownership" }
-  ]
+  "migrationExceptions": []
 }

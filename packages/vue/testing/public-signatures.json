@@ -315,7 +315,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "1c6884f5d40d5e85427516859f3540fb8ae5c111317f24cde2580fa5eac5279b",
+  "fingerprint": "6c719ce66e667b92aa2954886500ab6e00c456df709b3a86ba5946c2eac2cd45",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -363,7 +363,7 @@
     },
     {
       "path": "dist/data-grid.d.ts",
-      "sha256": "fd56d1edadbd60eb23c270a2185ba440db72b1ad4610063ed434f90a6822256c"
+      "sha256": "1aa2cfdc97124980ee5d21ac409281b6ae9f4d238f30e8709f1694af47e71ce2"
     },
     {
       "path": "dist/data-table.d.ts",
@@ -371,7 +371,7 @@
     },
     {
       "path": "dist/data-tree-grid.d.ts",
-      "sha256": "89db378ae3e77f49f4eaecb47333a04e0f9d365cd8f4d0326035f4de35cb63f8"
+      "sha256": "8316a447c57e23e8eb51e619f366bb86d8200c8cc38dae21e929f22df336dd93"
     },
     {
       "path": "dist/date-field.d.ts",
@@ -443,7 +443,7 @@
     },
     {
       "path": "dist/internal/date-picker.d.ts",
-      "sha256": "45044c2dc1050f7072d6e2b779fc24fac72306b2e7f43e5de55d130e0ae5f6c6"
+      "sha256": "de4dbfc6142d203f375389eb0658f9395b027561f693c4a508b7731f75ab5d90"
     },
     {
       "path": "dist/internal/form-control.d.ts",
@@ -452,6 +452,10 @@
     {
       "path": "dist/internal/native-field.d.ts",
       "sha256": "41155d817552cc7de7a3063a91df5c10bb25f4dffe4c1d40678ee0e639a81d73"
+    },
+    {
+      "path": "dist/internal/picker-capability.d.ts",
+      "sha256": "9c61927b0a7f3569395e0eb3c2e6cdab5847f659af4fe8b53b2bfe0dc82ab950"
     },
     {
       "path": "dist/internal/popup.d.ts",
@@ -463,11 +467,11 @@
     },
     {
       "path": "dist/internal/tabular-parts.d.ts",
-      "sha256": "f9d2d2ab37b311d4693d3316118352d8202ab18eb9e074e2f692dc3ec500016e"
+      "sha256": "132ff3dda99b99d02e4406d7a61c9afb8c1c3f58809c6fc477acaf259e06e9e6"
     },
     {
       "path": "dist/internal/tabular-profile.d.ts",
-      "sha256": "ed4280a4cc6cd7ff955f2923aebee31293e379424805d2d17651adc12ac93b29"
+      "sha256": "780f8b291a67b7c8191182e637a1dd4a459512d6df1fe59cdefa048877e4c17e"
     },
     {
       "path": "dist/internal/virtual-collection-model.d.ts",

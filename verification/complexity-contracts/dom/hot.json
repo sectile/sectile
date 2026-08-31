@@ -576,6 +576,53 @@
       }
     },
     {
+      "id": "tabular.header-metrics",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/internal/tabular-dom.ts",
+      "benchmarkIDs": [
+        "VAL-034:dom-tabular-header-metrics"
+      ],
+      "specificationCeiling": "O(c + h)",
+      "contract": {
+        "variables": [
+          {
+            "name": "c",
+            "meaning": "visible projected column count",
+            "ceiling": "Tabular maxColumns"
+          },
+          {
+            "name": "h",
+            "meaning": "canonical header node count",
+            "ceiling": "Tabular header topology ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(c + h)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(c + h)",
+          "output": "O(h)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(c + h)",
+          "cacheEntries": "0 retained entries",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "One logical pin-order index is built for visible columns, then each canonical header node contributes once to a descendant interval and metric.",
+        "adversarialWitness": "A deep grouped header tree with hidden leaves and all three pin regions produces exact start and span values without any descendant column lookup scan.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Refreshing header attributes projects the current complete canonical header topology once."
+        }
+      }
+    },
+    {
       "id": "text.native-reconcile",
       "inherits": "linear-v1",
       "source": "packages/dom/src/internal/text-element.ts",

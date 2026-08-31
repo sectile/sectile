@@ -2,23 +2,23 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all 9 package source trees.
 
-Findings: 450; migration owners: WI-020, WI-027, WI-040.
+Findings: 453; migration owners: WI-020, WI-027, WI-040.
 
 ## Classifications
 
 | Classification | Count |
 |---|---:|
 | bounded-small | 10 |
-| migration-required | 68 |
-| result-proportional | 170 |
-| reuse | 202 |
+| migration-required | 60 |
+| result-proportional | 171 |
+| reuse | 212 |
 
 ## Categories
 
 | Category | Count |
 |---|---:|
 | controller-connection-rebuild | 36 |
-| discarded-canonical-index | 55 |
+| discarded-canonical-index | 58 |
 | measurement-authority | 25 |
 | private-algorithm-bypass | 4 |
 | raw-full-domain-scan | 286 |
@@ -32,27 +32,27 @@ Findings: 450; migration owners: WI-020, WI-027, WI-040.
 | WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/cascade-choice.ts:249` | raw-identity-lookup |
 | WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/menu.ts:22` | raw-identity-lookup |
 | WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/tree-grid.ts:434` | immutable-view-construction |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:570` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:600` | derived-index-construction |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:648` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:665` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:713` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:948` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:957` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:957` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:982` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1008` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1083` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1336` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1537` | derived-index-construction |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1701` | derived-index-construction |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1719` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1726` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1865` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1866` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1935` | derived-index-construction |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2187` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2424` | linear-membership |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:737` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:767` | derived-index-construction |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:815` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:832` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:880` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1120` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1129` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1129` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1154` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1180` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1255` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1508` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1721` | derived-index-construction |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1885` | derived-index-construction |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1903` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1910` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2049` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2050` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2119` | derived-index-construction |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2371` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2611` | linear-membership |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/accordion.ts:158` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/carousel.ts:131` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/cascade-list.ts:203` | controller-rebuild |
@@ -64,14 +64,10 @@ Findings: 450; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/disclosure.ts:110` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/feed.ts:68` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/grid.ts:130` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/date-picker.ts:412` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/date-picker.ts:401` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/native-field.ts:120` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:298` | controller-rebuild |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-collection-model.ts:62` | serialization-signature |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-collection-model.ts:167` | serialization-signature |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:198` | controller-rebuild |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-list.ts:302` | geometry-measurement |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-list.ts:571` | geometry-measurement |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:221` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:148` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/multi-thumb-slider.ts:153` | controller-rebuild |
@@ -93,7 +89,3 @@ Findings: 450; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/toolbar.ts:62` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tree-grid.ts:172` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tree-view.ts:159` | controller-rebuild |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/virtual-grid.ts:134` | geometry-measurement |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/virtual-grid.ts:168` | geometry-measurement |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/virtual-masonry.ts:131` | geometry-measurement |
-| WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/virtual-spatial.ts:86` | geometry-measurement |

@@ -70,6 +70,7 @@
       "platform": "browser",
       "runtimeExports": [
         "applyTabularEvent",
+        "canonicalizeTabularStateQuery",
         "createTabularModel",
         "encodeTabularCellID",
         "reconcileTabularState",

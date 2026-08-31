@@ -35,7 +35,6 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
-        "applyControllerEvent",
         "controlledFieldError",
         "createCollectionComponentController",
         "createControlledComponentController",

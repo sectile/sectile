@@ -12,12 +12,12 @@
 | WI-002 | @sectile/core | `./disclosure` | `Result and machine-update declaration closure` | @sectile/core/disclosure |
 | WI-002 | @sectile/terminal | `./drawer` | `Core Result declaration closure` | @sectile/terminal/drawer |
 | WI-002 | @sectile/core | `./editable` | `Result and machine-update declaration closure` | @sectile/core/editable |
-| WI-002 | @sectile/form | `./error` | `Core Result declaration closure` | @sectile/form/error |
 | WI-002 | @sectile/core | `./feed` | `Result and revision declaration closure` | @sectile/core/feed |
 | WI-002 | @sectile/core | `./layer-stack` | `Result declaration closure` | @sectile/core/layer-stack |
 | WI-002 | @sectile/core | `./revision` | `createMachineUpdate` | @sectile/core/revision |
 | WI-002 | @sectile/form | `./path` | `Core Result declaration closure` | @sectile/form/path |
 | WI-002 | @sectile/terminal | `./popover` | `Core Result declaration closure` | @sectile/terminal/popover |
+| WI-002 | @sectile/tabular | `./query` | `Tabular query declaration closure` | @sectile/tabular/query |
 | WI-002 | @sectile/core | `./result` | `okResult`, `failResult` | @sectile/core/result |
 | WI-002 | @sectile/core | `./accordion` | `StableID declaration closure` | @sectile/core/accordion |
 | WI-002 | @sectile/core | `./alert-dialog` | `StableID declaration closure` | @sectile/core/alert-dialog |
@@ -55,10 +55,21 @@
 | WI-002 | @sectile/core | `./tooltip` | `Result and machine-update declaration closure` | @sectile/core/tooltip |
 | WI-002 | @sectile/terminal | `./tooltip` | `Core Result declaration closure` | @sectile/terminal/tooltip |
 | WI-002 | @sectile/form | `./values` | `Core Result declaration closure` | @sectile/form/values |
+| WI-008 | @sectile/terminal | `./combobox` | `Combobox controller declaration closure` | @sectile/terminal/combobox |
+| WI-008 | @sectile/dom | `./slider` | `Slider controller declaration closure` | @sectile/dom/slider |
+| WI-008 | @sectile/terminal | `./slider` | `Slider controller declaration closure` | @sectile/terminal/slider |
+| WI-008 | @sectile/dom | `./tree-grid` | `TreeGrid controller declaration closure` | @sectile/dom/tree-grid |
+| WI-008 | @sectile/terminal | `./tree-grid` | `TreeGrid controller declaration closure` | @sectile/terminal/tree-grid |
+| WI-008 | @sectile/dom | `./tree-view` | `TreeView controller declaration closure` | @sectile/dom/tree-view |
+| WI-008 | @sectile/terminal | `./tree-view` | `TreeView controller declaration closure` | @sectile/terminal/tree-view |
+| WI-008 | @sectile/dom | `./window-splitter` | `WindowSplitter controller declaration closure` | @sectile/dom/window-splitter |
+| WI-008 | @sectile/terminal | `./window-splitter` | `WindowSplitter controller declaration closure` | @sectile/terminal/window-splitter |
 | WI-009 | @sectile/vue | `./cascade-list` | `stable item-domain reconciliation declaration closure` | @sectile/vue/cascade-list |
 | WI-009 | @sectile/vue | `./cascade-select` | `stable item-domain reconciliation declaration closure` | @sectile/vue/cascade-select |
 | WI-009 | @sectile/vue | `./checkbox-group` | `CheckboxGroupRootProps.items` | @sectile/vue/checkbox-group |
 | WI-009 | @sectile/core | `./adapter-runtime` | `tryReconcileCollectionIdentities` | @sectile/core/adapter-runtime |
+| WI-009 | @sectile/form | `./error` | `FormErrorCode form-event-invalid`, `Core Result declaration closure` | @sectile/form/error |
+| WI-009 | @sectile/form | `.` | `FormErrorCode form-event-invalid`, `typed field-state commands`, `local StandardSchema declaration closure` | @sectile/form |
 | WI-013 | @sectile/terminal | `./checkbox` | `Checkbox controller declaration closure` | @sectile/terminal/checkbox |
 | WI-013 | @sectile/dom | `./rating` | `Rating controller declaration closure` | @sectile/dom/rating |
 | WI-013 | @sectile/terminal | `./rating` | `Rating controller declaration closure` | @sectile/terminal/rating |
@@ -69,18 +80,22 @@
 | WI-014 | @sectile/core | `./menu-button` | `Tree declaration closure` | @sectile/core/menu-button |
 | WI-014 | @sectile/core | `./menu` | `Tree declaration closure` | @sectile/core/menu |
 | WI-014 | @sectile/core | `./menubar` | `Tree declaration closure` | @sectile/core/menubar |
+| WI-014 | @sectile/tabular | `./model` | `TabularLimits.maxLiveRequestGenerations`, `TabularLimitErrorCode.live-request-generation-ceiling-exceeded` | @sectile/tabular/model |
 | WI-014 | @sectile/core | `./navigation-menu` | `Tree declaration closure` | @sectile/core/navigation-menu |
 | WI-014 | @sectile/core | `./reorder` | `Grid declaration closure` | @sectile/core/reorder |
+| WI-014 | @sectile/tabular | `.` | `TabularLimits.maxLiveRequestGenerations`, `TabularLimitErrorCode.live-request-generation-ceiling-exceeded`, `TabularRowSelection declaration closure` | @sectile/tabular |
 | WI-014 | @sectile/core | `.` | `Grid.domain`, `Tree.subtreeIntervalOf`, `TreeSubtreeInterval` | @sectile/core |
+| WI-014 | @sectile/tabular | `./source` | `Partial<TabularLimits>.maxLiveRequestGenerations` | @sectile/tabular/source |
 | WI-014 | @sectile/core | `./tree` | `Tree.subtreeIntervalOf`, `TreeSubtreeInterval` | @sectile/core/tree |
 | WI-014 | @sectile/core | `./tree-view` | `Tree declaration closure` | @sectile/core/tree-view |
+| WI-015 | @sectile/tabular | `./virtual` | `TabularVirtualErrorCode.extent-policy-failed`, `TabularRowSelection declaration closure` | @sectile/tabular/virtual |
+| WI-017 | @sectile/dom | `./tabular` | `Tabular DOM activation declaration closure` | @sectile/dom/tabular |
 | WI-025 | @sectile/dom | `./virtual` | `module side-effect import @sectile/virtual` | @sectile/dom/virtual |
 | WI-025 | @sectile/vue | `.` | `tabular, temporal, and virtual aggregate declaration closures` | @sectile/vue |
 | WI-025 | @sectile/vue | `./tabular` | `all runtime and type exports` | Replaced by the checked data-table, data-grid, and data-tree-grid mapping in verification/entrypoint-migrations/WI-025.json. |
 | WI-025 | @sectile/dom | `./temporal` | `all runtime and type exports` | Replaced by the complete checked @sectile/dom/temporal/* mapping in verification/entrypoint-migrations/WI-025.json. |
 | WI-025 | @sectile/vue | `./temporal` | `all runtime and type exports` | Replaced by the complete checked @sectile/vue/temporal/* mapping in verification/entrypoint-migrations/WI-025.json. |
 | WI-025 | @sectile/vue | `./virtual` | `all runtime and type exports` | Replaced by the complete checked core/list/grid/masonry/spatial mapping in verification/entrypoint-migrations/WI-025.json. |
-| WI-027 | @sectile/form | `.` | `typed field-state commands`, `local StandardSchema declaration closure` | @sectile/form |
 | WI-030 | @sectile/dom | `./grid` | `GridEditMode`, `GridPolicies`, `GridState`, `GridEvent` | @sectile/dom/grid |
 | WI-030 | @sectile/dom | `.` | `GridEditMode`, `GridPolicies`, `GridState`, `GridEvent`, `TextConnection.handleEvent`, `FacadeConnection<TextConnection>.send` | @sectile/dom |
 | WI-030 | @sectile/core | `./grid` | `applyGridEvent`, `createGridState`, `tryCreateGridState`, `GridCommand`, `GridEditMode`, `GridEvent`, `GridPolicies`, `GridState`, `GridStateInput`, `GridUpdate` | @sectile/core/grid-control |
@@ -98,8 +113,6 @@
 | WI-032 | @sectile/tabular | `./data-grid` | `TabularRowSelection declaration closure` | @sectile/tabular/data-grid |
 | WI-032 | @sectile/tabular | `./data-table` | `rowSelectionContains`, `TabularRowSelection declaration closure` | @sectile/tabular/data-table |
 | WI-032 | @sectile/tabular | `./data-tree-grid` | `TabularRowSelection declaration closure` | @sectile/tabular/data-tree-grid |
-| WI-032 | @sectile/tabular | `.` | `TabularRowSelection declaration closure` | @sectile/tabular |
-| WI-032 | @sectile/tabular | `./virtual` | `TabularRowSelection declaration closure` | @sectile/tabular/virtual |
 | WI-034 | @sectile/virtual | `./layout` | `VirtualPoint, VirtualSize, VirtualRect, and VirtualInsets declaration closure` | @sectile/virtual/layout |
 | WI-034 | @sectile/virtual | `./linear-layout` | `Virtual geometry declaration closure` | @sectile/virtual/linear-layout |
 | WI-034 | @sectile/virtual | `./masonry-layout` | `Virtual geometry declaration closure` | @sectile/virtual/masonry-layout |

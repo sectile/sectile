@@ -8,11 +8,11 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 381 | 26 | 53 |
+| core | 380 | 26 | 53 |
 | chart | 79 | 0 | 11 |
-| dom | 421 | 181 | 14 |
-| form | 21 | 0 | 6 |
-| tabular | 32 | 0 | 4 |
+| dom | 421 | 181 | 15 |
+| form | 21 | 0 | 7 |
+| tabular | 33 | 0 | 8 |
 | temporal | 99 | 24 | 2 |
 | terminal | 347 | 177 | 2 |
 | virtual | 90 | 0 | 19 |
@@ -106,6 +106,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:position.discovery | connected | `O(aDom)` worst-case | `O(aDom)` | `O(aDom)` | `O(aDom)` | allowed | VAL-016, VAL-017 |
 | dom:position.schedule | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | dom:position.update | connected | `O(aDom + cAnchor)` worst-case | `O(aDom + cAnchor)` | `O(1)` | `O(aDom)` | forbidden | VAL-016, VAL-017 |
+| dom:tabular.header-metrics | trusted | `O(c + h)` worst-case | `O(c + h)` | `O(h)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | dom:text.native-reconcile | connected | `O(n)` worst-case | `O(1)` | `O(n)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | form:field.get | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(fField)` | forbidden | VAL-016, VAL-017 |
 | form:field.ids-by-issue-source | trusted | `O(uSource)` worst-case | `O(uSource)` | `O(uSource)` | `O(fField + iIssue)` | forbidden | VAL-016, VAL-017 |
@@ -113,10 +114,15 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | form:issues.clear-related-server | trusted | `O(iIssue + rAffected + aField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIssue + rAffected + aField + fField/64)` | `O(iIssue)` | `O(fField + iIssue + rRelation)` | allowed | VAL-016, VAL-017 |
 | form:issues.replace-source | trusted | `O(iIssue + iIncoming + iRemoved + rAffected + aField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIssue + iIncoming + iRemoved + rAffected + aField + fField/64)` | `O(iIssue + iIncoming)` | `O(fField + iIssue + rRelation)` | forbidden | VAL-016, VAL-017 |
 | form:state.construct | external | `O(fField + uID + iIssue)` worst-case | `O(fField)` | `O(fField)` | `O(fField)` | allowed | VAL-016, VAL-017 |
+| form:values.construct | external | `O(eEntry + pSegment + oNode)` worst-case | `O(pSegment + oNode)` | `O(oNode)` | `O(oNode)` | allowed | VAL-016, VAL-017 |
+| tabular:data-table.changed-slice | external | `O(sChanged)` worst-case | `O(sChanged)` | `O(sChanged)` | `O(sChanged + sOther)` | forbidden | VAL-016, VAL-017 |
 | tabular:grid-profile.move | trusted | `O(sAxis)` worst-case | `O(1)` | `O(1)` | `O(nCell)` | forbidden | VAL-016, VAL-017 |
+| tabular:header.projection-validation | external | `O(c + h)` worst-case | `O(c + h)` | `O(c)` | `O(c)` | allowed | VAL-016, VAL-017 |
 | tabular:source.resolve-cold | external | `O(nRecord log nRecord + kRow)` worst-case | `O(nRecord)` | `O(kRow)` | `O(nRecord)` | allowed | VAL-016, VAL-017 |
 | tabular:source.resolve-invalidation | external | `O(nRecord log nRecord + kRow)` worst-case | `O(nRecord)` | `O(kRow)` | `O(nRecord)` | allowed | VAL-016, VAL-017 |
 | tabular:source.resolve-warm | trusted | `O(kRow)` worst-case | `O(kRow)` | `O(kRow)` | `O(nRecord)` | forbidden | VAL-016, VAL-017 |
+| tabular:virtual.locate | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(nRow + nColumn)` | forbidden | VAL-016, VAL-017 |
+| tabular:virtual.reconcile-table | trusted | `O(nRow + j)` worst-case | `O(nRow)` | `O(nRow + j)` | `O(nRow)` | allowed | VAL-016, VAL-017 |
 | temporal:calendar.transition | trusted | `O(cCalendar)` worst-case | `O(cCalendar)` | `O(cCalendar)` | `O(cCalendar)` | allowed | VAL-016, VAL-017 |
 | temporal:field.transition | external | `O(sSegment)` worst-case | `O(sSegment)` | `O(sSegment)` | `O(sSegment)` | allowed | VAL-016, VAL-017 |
 | terminal:component.dispatch | trusted | `O(nDomain + cCommand)` worst-case | `O(nDomain + cCommand)` | `O(cCommand)` | `O(nDomain)` | allowed | VAL-016, VAL-017 |

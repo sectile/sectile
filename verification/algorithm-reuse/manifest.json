@@ -100,9 +100,9 @@
         "packages/vue/src/virtual-masonry.ts",
         "packages/vue/src/virtual-spatial.ts"
       ],
-      "classification": "migration-required",
-      "owner": "WI-040",
-      "rationale": "DOM observer measurement, one logical domain batch, indexed membership, and stable connections must be authoritative."
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Vue owns reactive scheduling and DOM measurement, while portable identity, patch, extent, layout, and connection behavior delegates to Core Sequence, Virtual layouts, and DOM Virtualizer APIs. JSON serialization occurs only in rejected-key diagnostics."
     },
     {
       "id": "vue-controller-reconfiguration",

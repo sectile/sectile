@@ -356,18 +356,18 @@
             "meaning": "resolved axis count",
             "ceiling": "maxAxes"
           },
-      {
-        "name": "nTick",
-        "meaning": "emitted tick count",
-        "ceiling": "sum of bounded axis tick maxima"
-      },
-      {
-        "name": "nDatum",
-        "meaning": "datums retained by the queried layer indexes",
-        "ceiling": "maxDatums"
-      },
-      {
-        "name": "qIndex",
+          {
+            "name": "nTick",
+            "meaning": "emitted tick count",
+            "ceiling": "sum of bounded axis tick maxima"
+          },
+          {
+            "name": "nDatum",
+            "meaning": "datums retained by the queried layer indexes",
+            "ceiling": "maxDatums"
+          },
+          {
+            "name": "qIndex",
             "meaning": "retained hierarchy nodes visited",
             "ceiling": "reported adversarial fallback bound"
           },

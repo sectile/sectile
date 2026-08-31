@@ -133,6 +133,20 @@ for (const helperRoot of manifest.hostHelperRoots) {
 
 const graph = new Map(manifest.dependencyGraph.map((entry) => [entry.name, entry]));
 assertUnique([...graph.keys()], 'Semantic dependency packages');
+const workspacePackageNames = [];
+for (const entry of await readdir(new URL('packages/', root), { withFileTypes: true })) {
+  if (!entry.isDirectory()) continue;
+  const packageURL = new URL(`packages/${entry.name}/package.json`, root);
+  try { workspacePackageNames.push((await readJSON(`packages/${entry.name}/package.json`)).name); }
+  catch (error) { if (error?.code !== 'ENOENT') throw error; }
+}
+assert.deepEqual([...workspacePackageNames].sort(), [...graph.keys()].sort(),
+  'Semantic authority package inventory must cover every workspace package.');
+assertUnique(manifest.rootPackageInventory.documents, 'Root package inventory documents');
+for (const path of manifest.rootPackageInventory.documents) {
+  const document = await readFile(new URL(path, root), 'utf8');
+  for (const name of graph.keys()) assert.ok(document.includes(`\`${name}\``), `${path}: missing package inventory entry ${name}.`);
+}
 for (const entry of graph.values()) {
   const pkg = await readJSON(entry.manifest);
   const actual = Object.keys({ ...pkg.dependencies, ...pkg.peerDependencies })

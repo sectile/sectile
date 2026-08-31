@@ -309,15 +309,6 @@
       "inherits": "public-callable-v1"
     },
     {
-      "key": "core:./adapter-runtime:applyControllerEvent",
-      "package": "core",
-      "subpath": "./adapter-runtime",
-      "exportName": "applyControllerEvent",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
       "key": "core:./adapter-runtime:controlledFieldError",
       "package": "core",
       "subpath": "./adapter-runtime",
@@ -8494,6 +8485,15 @@
       "package": "tabular",
       "subpath": "./model",
       "exportName": "applyTabularEvent",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "tabular:./model:canonicalizeTabularStateQuery",
+      "package": "tabular",
+      "subpath": "./model",
+      "exportName": "canonicalizeTabularStateQuery",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -25331,6 +25331,74 @@
     {
       "package": "dom",
       "surface": "hot",
+      "id": "tabular.header-metrics",
+      "source": "packages/dom/src/internal/tabular-dom.ts",
+      "benchmarkIDs": [
+        "VAL-034:dom-tabular-header-metrics"
+      ],
+      "specificationCeiling": "O(c + h)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "c",
+            "meaning": "visible projected column count",
+            "ceiling": "Tabular maxColumns"
+          },
+          {
+            "name": "h",
+            "meaning": "canonical header node count",
+            "ceiling": "Tabular header topology ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(c + h)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(c + h)",
+          "output": "O(h)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(c + h)",
+          "cacheEntries": "0 retained entries",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "One logical pin-order index is built for visible columns, then each canonical header node contributes once to a descendant interval and metric.",
+        "adversarialWitness": "A deep grouped header tree with hidden leaves and all three pin regions produces exact start and span values without any descendant column lookup scan.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Refreshing header attributes projects the current complete canonical header topology once."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
       "id": "text.native-reconcile",
       "source": "packages/dom/src/internal/text-element.ts",
       "benchmarkIDs": [
@@ -25879,6 +25947,147 @@
       }
     },
     {
+      "package": "form",
+      "surface": "hot",
+      "id": "values.construct",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": [
+        "VAL-030:form-values-construct-work"
+      ],
+      "specificationCeiling": "O(eEntry + pSegment + oNode)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "eEntry",
+            "meaning": "Form value entry count",
+            "ceiling": "maxEntries"
+          },
+          {
+            "name": "pSegment",
+            "meaning": "total canonical path segments visited",
+            "ceiling": "entry and maxPathSegments ceilings"
+          },
+          {
+            "name": "oNode",
+            "meaning": "library-owned branch, wrapper, and output reference nodes",
+            "ceiling": "maxOutputNodes"
+          }
+        ],
+        "time": {
+          "bound": "O(eEntry + pSegment + oNode)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(pSegment + oNode)",
+          "output": "O(oNode)",
+          "retained": "O(oNode)"
+        },
+        "resources": {
+          "allocations": "O(pSegment + oNode)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Construction validates each bounded entry and path once, allocates each library-owned output node once, then freezes owned branches with an iterative stack.",
+        "adversarialWitness": "A maximum-depth path and maximum entry set reaches every declared ceiling without recursive traversal or freezing caller-owned leaf containers.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External construction must validate every supplied entry and freeze every library-owned output node exactly once."
+        }
+      }
+    },
+    {
+      "package": "tabular",
+      "surface": "hot",
+      "id": "data-table.changed-slice",
+      "source": "packages/tabular/src/data-table.ts",
+      "benchmarkIDs": [
+        "VAL-030:data-table-changed-slice-work"
+      ],
+      "specificationCeiling": "O(sChanged)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "sChanged",
+            "meaning": "externally supplied changed query, selection, column, access, or expansion slice cardinality",
+            "ceiling": "the matching Tabular slice resource ceiling"
+          },
+          {
+            "name": "sOther",
+            "meaning": "all unchanged canonical Tabular slice cardinality",
+            "ceiling": "Tabular state resource ceilings"
+          }
+        ],
+        "time": {
+          "bound": "O(sChanged)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(sChanged)",
+          "output": "O(sChanged)",
+          "retained": "O(sChanged + sOther)"
+        },
+        "resources": {
+          "allocations": "O(sChanged)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Each DataTable event and controlled synchronization dispatches to exactly one owner-local canonicalizer; unchanged canonical slices are reused by identity and are not traversed.",
+        "adversarialWitness": "A one-ID expansion update beside maximum-size canonical query, selection, and column slices visits the expansion only.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Ordinary slice updates may validate their external slice but cannot rescan unrelated canonical state."
+        }
+      }
+    },
+    {
       "package": "tabular",
       "surface": "hot",
       "id": "grid-profile.move",
@@ -25945,6 +26154,74 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Canonical movement is bounded to one axis; whole-domain recovery is a separate reconciliation fallback."
+        }
+      }
+    },
+    {
+      "package": "tabular",
+      "surface": "hot",
+      "id": "header.projection-validation",
+      "source": "packages/tabular/src/internal/columns.ts",
+      "benchmarkIDs": [
+        "VAL-034:tabular-header-projection-validation"
+      ],
+      "specificationCeiling": "O(c + h)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "c",
+            "meaning": "model column count",
+            "ceiling": "maxColumns"
+          },
+          {
+            "name": "h",
+            "meaning": "canonical header node count",
+            "ceiling": "column and group-depth ceilings"
+          }
+        ],
+        "time": {
+          "bound": "O(c + h)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(c + h)",
+          "output": "O(c)",
+          "retained": "O(c)"
+        },
+        "resources": {
+          "allocations": "O(c + h)",
+          "cacheEntries": "O(c)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Column partitions and one projected index are built once; each header node contributes to one descendant interval exactly once.",
+        "adversarialWitness": "A maximum-depth header tree with hidden and pinned leaves is visited once and rejects the first non-contiguous group without per-group column scans.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "An external column-state replacement must establish the complete header topology invariant once."
         }
       }
     },
@@ -26149,6 +26426,144 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Warm resolution is output-sensitive and cannot rescan the retained source or projection."
+        }
+      }
+    },
+    {
+      "package": "tabular",
+      "surface": "hot",
+      "id": "virtual.locate",
+      "source": "packages/tabular/src/virtual.ts",
+      "benchmarkIDs": [
+        "VAL-033:tabular-virtual-locate-work"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nRow",
+            "meaning": "projected row cardinality",
+            "ceiling": "nRow <= maxProjectedCells"
+          },
+          {
+            "name": "nColumn",
+            "meaning": "projected column cardinality",
+            "ceiling": "nColumn <= maxColumns"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(nRow + nColumn)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "O(nRow + nColumn)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Table lookup delegates to the Core Sequence index. Grid lookup combines retained row and column indexes into a row-major coordinate.",
+        "adversarialWitness": "Repeated last-row and last-column lookup on a large projection performs no Array.indexOf call and retains no cell-ID map.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Locator calls are hot-path identity lookups and must not scan rows, columns, or cells."
+        }
+      }
+    },
+    {
+      "package": "tabular",
+      "surface": "hot",
+      "id": "virtual.reconcile-table",
+      "source": "packages/tabular/src/virtual.ts",
+      "benchmarkIDs": [
+        "tabular:virtual-reconcile:reverse:100000",
+        "tabular:virtual-reconcile:rotation:100000",
+        "tabular:virtual-reconcile:large-filter:100000",
+        "tabular:virtual-reconcile:mixed:100000"
+      ],
+      "specificationCeiling": "O(nRow + j)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nRow",
+            "meaning": "current and next projected row cardinality",
+            "ceiling": "maxProjectedCells"
+          },
+          {
+            "name": "j",
+            "meaning": "identity edits required by the bounded sparse repair",
+            "ceiling": "32 before bulk replacement"
+          }
+        ],
+        "time": {
+          "bound": "O(nRow + j)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(nRow)",
+          "output": "O(nRow + j)",
+          "retained": "O(nRow)"
+        },
+        "resources": {
+          "allocations": "O(nRow + j)",
+          "cacheEntries": "0 additional retained entries",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "A fixed 32-patch planner bounds incremental array and persistent-layout work. Larger diffs use one splice, reuse stable-ID extents from the current indexed domain, and call the extent policy only for new IDs.",
+        "adversarialWitness": "Reverse order, a large filter, and mixed insertion/removal at 100k rows each produce one bulk mutation; a pure rotation produces one move mutation.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Reconciliation must compare the next identity domain once; it cannot repeatedly scan it per unbounded edit."
         }
       }
     },
