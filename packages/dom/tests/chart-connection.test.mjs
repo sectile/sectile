@@ -208,6 +208,10 @@ test('opt-in axis navigation derives touch action, conditionally cancels wheel, 
   assert.equal(connection.getLifecycleDiagnostics().listeners, 9);
 
   const wheel = new value.window.WheelEvent('wheel', { clientX: 50, clientY: 50, deltaY: -100, cancelable: true });
+  Object.defineProperties(wheel, {
+    clientX: { value: 50 },
+    clientY: { value: 50 },
+  });
   value.canvas.dispatchEvent(wheel);
   assert.equal(wheel.defaultPrevented, true);
   assert.equal(connection.getLifecycleDiagnostics().timers, 1);
@@ -215,6 +219,11 @@ test('opt-in axis navigation derives touch action, conditionally cancels wheel, 
   assert.equal(afterWheel.maximum - afterWheel.minimum < 60, true);
 
   const browserZoom = new value.window.WheelEvent('wheel', { clientX: 50, clientY: 50, deltaY: -100, ctrlKey: true, cancelable: true });
+  Object.defineProperties(browserZoom, {
+    clientX: { value: 50 },
+    clientY: { value: 50 },
+    ctrlKey: { value: true },
+  });
   value.canvas.dispatchEvent(browserZoom);
   assert.equal(browserZoom.defaultPrevented, false);
 

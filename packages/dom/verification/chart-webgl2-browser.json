@@ -27,14 +27,35 @@
     "pixelReadback": true,
     "noRenderError": true,
     "stressUpload": true,
+    "canvas2dFallback": true,
+    "domConnection": true,
     "contextLifecycle": true,
     "resourceCleanup": true
   },
   "representativeDiagnostics": {
     "mode": "webgl2",
-    "uploadedBytes": 84,
+    "uploadedBytes": 72,
     "drawCalls": 5,
-    "liveResources": 6
+    "liveResources": 10,
+    "fullUploads": 5,
+    "partialUploads": 0,
+    "reusedGeometryBuffers": 0
+  },
+  "pixels": {
+    "background": [0, 0, 0, 0],
+    "point": [31, 87, 235, 255],
+    "polyline": [16, 44, 118, 128],
+    "rectangle": [31, 87, 235, 255],
+    "cell": [31, 87, 235, 255],
+    "arc": [31, 87, 235, 255]
+  },
+  "pixelChecks": {
+    "background": true,
+    "point": true,
+    "polyline": true,
+    "rectangle": true,
+    "cell": true,
+    "arc": true
   },
   "stress": {
     "datums": 100000,
@@ -43,7 +64,66 @@
       "mode": "webgl2",
       "uploadedBytes": 800000,
       "drawCalls": 1,
-      "liveResources": 6
+      "liveResources": 6,
+      "fullUploads": 1,
+      "partialUploads": 0,
+      "reusedGeometryBuffers": 1
+    }
+  },
+  "canvasFallback": {
+    "passed": true,
+    "rendered": {
+      "mode": "canvas2d",
+      "uploadedBytes": 92,
+      "drawCalls": 5,
+      "liveResources": 1
+    },
+    "disconnected": {
+      "mode": "canvas2d",
+      "uploadedBytes": 92,
+      "drawCalls": 5,
+      "liveResources": 0
+    },
+    "webgl2Unavailable": true
+  },
+  "domConnection": {
+    "passed": true,
+    "observed": {
+      "role": "region",
+      "label": "Quarterly revenue",
+      "axes": 2,
+      "options": 3,
+      "keyboardPrevented": true,
+      "viewChanged": true,
+      "ordinaryWheelNative": true
+    },
+    "rendered": {
+      "mode": "canvas2d",
+      "uploadedBytes": 68,
+      "drawCalls": 1,
+      "liveResources": 1
+    },
+    "connectedLifecycle": {
+      "listeners": 4,
+      "observers": 1,
+      "frames": 0,
+      "timers": 0,
+      "subscriptions": 1,
+      "overlayNodes": 1
+    },
+    "disconnectedLifecycle": {
+      "listeners": 0,
+      "observers": 0,
+      "frames": 0,
+      "timers": 0,
+      "subscriptions": 0,
+      "overlayNodes": 0
+    },
+    "disconnectedRenderer": {
+      "mode": "canvas2d",
+      "uploadedBytes": 68,
+      "drawCalls": 1,
+      "liveResources": 0
     }
   },
   "contextLifecycle": {
@@ -52,14 +132,17 @@
     "lostObserved": true,
     "restoredObserved": true,
     "lostResources": 0,
-    "restoredResources": 6,
+    "restoredResources": 10,
     "restoredError": 0
   },
   "disconnectedDiagnostics": {
     "mode": "webgl2",
-    "uploadedBytes": 84,
+    "uploadedBytes": 72,
     "drawCalls": 5,
-    "liveResources": 0
+    "liveResources": 0,
+    "fullUploads": 5,
+    "partialUploads": 0,
+    "reusedGeometryBuffers": 1
   },
   "errors": { "render": 0, "stress": 0 },
   "consoleWarningsOrErrors": []

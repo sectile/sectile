@@ -1,7 +1,9 @@
 import {
+  createDOMChart,
   detectChartRendererCapabilities,
   tryCreateChartRenderer,
 } from '../dist/chart.js';
+import { createChartController } from '@sectile/chart/controller';
 
 const canvas = document.querySelector('#chart');
 const output = document.querySelector('#result');
@@ -57,7 +59,7 @@ async function verify(renderer, canvasElement, detectedCapabilities) {
     polyline: readPixel(gl, 120, 40),
     rectangle: readPixel(gl, 30, 110),
     cell: readPixel(gl, 80, 110),
-    arc: readPixel(gl, 175, 110),
+    arc: readPixel(gl, 100, 95),
   };
   const pixelChecks = {
     background: pixels.background[3] < 8,
@@ -78,20 +80,31 @@ async function verify(renderer, canvasElement, detectedCapabilities) {
   const stressError = gl.getError();
   const stressDiagnostics = renderer.getDiagnostics();
 
-  const contextLifecycle = await verifyContextLifecycle(canvasElement, gl, renderer, projection);
+  const canvasFallback = verifyCanvasFallback(projection);
+  const domConnection = verifyDOMConnection();
+
+  const contextLifecycle = await verifyContextLifecycle(
+    canvasElement,
+    gl,
+    renderer,
+    projection,
+    representativeDiagnostics.liveResources,
+  );
   renderer.disconnect();
   renderer.disconnect();
   const disconnectedDiagnostics = renderer.getDiagnostics();
 
   const scenarios = {
     hardwareContext: detectedCapabilities.webgl2 && !softwareRenderer,
-    shaderPrograms: representativeDiagnostics.liveResources === 6,
+    shaderPrograms: representativeDiagnostics.liveResources === 5 + projection.batches.length,
     fiveBatchTypes: representativeDiagnostics.drawCalls === 5,
     pixelReadback: Object.values(pixelChecks).every(Boolean),
     noRenderError: renderError === gl.NO_ERROR,
     stressUpload: stressError === gl.NO_ERROR
       && stressDiagnostics.uploadedBytes === stress.batches[0].positions.byteLength
       && stressDiagnostics.drawCalls === 1,
+    canvas2dFallback: canvasFallback.passed,
+    domConnection: domConnection.passed,
     contextLifecycle: contextLifecycle.supported ? contextLifecycle.passed : true,
     resourceCleanup: disconnectedDiagnostics.liveResources === 0,
   };
@@ -110,9 +123,106 @@ async function verify(renderer, canvasElement, detectedCapabilities) {
       renderMs: Number(stressRenderMs.toFixed(3)),
       diagnostics: stressDiagnostics,
     },
+    canvasFallback,
+    domConnection,
     contextLifecycle,
     disconnectedDiagnostics,
     errors: { render: renderError, stress: stressError },
+  };
+}
+
+function verifyCanvasFallback(projection) {
+  const fallbackCanvas = document.createElement('canvas');
+  fallbackCanvas.width = 200;
+  fallbackCanvas.height = 150;
+  const getContext = fallbackCanvas.getContext.bind(fallbackCanvas);
+  Object.defineProperty(fallbackCanvas, 'getContext', {
+    value: (kind, options) => kind === 'webgl2' ? null : getContext(kind, options),
+  });
+  const created = tryCreateChartRenderer(fallbackCanvas, { mode: 'auto' });
+  if (!created.ok) return { passed: false, error: created.error };
+  created.value.render(projection);
+  created.value.flush();
+  const rendered = created.value.getDiagnostics();
+  created.value.disconnect();
+  const disconnected = created.value.getDiagnostics();
+  return {
+    passed: rendered.mode === 'canvas2d' && rendered.drawCalls === 5
+      && disconnected.liveResources === 0,
+    rendered,
+    disconnected,
+    webgl2Unavailable: true,
+  };
+}
+
+function verifyDOMConnection() {
+  const root = document.querySelector('#interaction');
+  const canvas = document.querySelector('#interaction-chart');
+  const controller = createChartController({
+    definition: {
+      coordinate: { kind: 'cartesian', axes: [
+        { id: 'x', orientation: 'x', scale: 'linear', label: 'Quarter' },
+        { id: 'y', orientation: 'y', scale: 'linear', label: 'Revenue' },
+      ] },
+      layers: [{
+        id: 'revenue', kind: 'line', xAxis: 'x', yAxis: 'y',
+        data: [
+          { id: 1, x: 0, y: 10 },
+          { id: 2, x: 1, y: 18 },
+          { id: 3, x: 2, y: 14 },
+        ],
+      }],
+    },
+    viewCapabilities: [{
+      axisID: 'x',
+      initial: { kind: 'continuous', minimum: 0, maximum: 1 },
+    }],
+  });
+  const connection = createDOMChart({
+    root,
+    canvas,
+    controller,
+    renderer: 'canvas2d',
+    accessibilityLabel: 'Quarterly revenue',
+    navigation: { axes: ['x'], keyboard: true },
+  });
+  const before = controller.getSnapshot().state.view;
+  const keyboard = new KeyboardEvent('keydown', {
+    key: 'ArrowRight', shiftKey: true, bubbles: true, cancelable: true,
+  });
+  root.dispatchEvent(keyboard);
+  connection.flush();
+  const after = controller.getSnapshot().state.view;
+  const ordinaryWheel = new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true });
+  canvas.dispatchEvent(ordinaryWheel);
+  const rendered = connection.getRendererDiagnostics();
+  const connectedLifecycle = connection.getLifecycleDiagnostics();
+  const observed = {
+    role: root.getAttribute('role'),
+    label: root.getAttribute('aria-label'),
+    axes: root.querySelectorAll('[data-chart-overlay="axis-baseline"]').length,
+    options: root.querySelectorAll('[role="option"]').length,
+    keyboardPrevented: keyboard.defaultPrevented,
+    viewChanged: after !== before,
+    ordinaryWheelNative: !ordinaryWheel.defaultPrevented,
+  };
+  connection.disconnect();
+  const disconnectedLifecycle = connection.getLifecycleDiagnostics();
+  const disconnectedRenderer = connection.getRendererDiagnostics();
+  controller.dispose();
+  return {
+    passed: rendered?.mode === 'canvas2d' && observed.role === 'region'
+      && observed.label === 'Quarterly revenue' && observed.axes === 2
+      && observed.options === 3 && observed.keyboardPrevented
+      && observed.viewChanged && observed.ordinaryWheelNative
+      && disconnectedLifecycle.listeners === 0
+      && disconnectedLifecycle.subscriptions === 0
+      && disconnectedRenderer?.liveResources === 0,
+    observed,
+    rendered,
+    connectedLifecycle,
+    disconnectedLifecycle,
+    disconnectedRenderer,
   };
 }
 
@@ -151,7 +261,7 @@ function stressProjection(size) {
   };
 }
 
-async function verifyContextLifecycle(canvasElement, gl, renderer, projection) {
+async function verifyContextLifecycle(canvasElement, gl, renderer, projection, expectedResources) {
   const extension = gl.getExtension('WEBGL_lose_context');
   if (extension === null) return { supported: false, passed: false };
   const lost = eventOnce(canvasElement, 'webglcontextlost');
@@ -170,7 +280,7 @@ async function verifyContextLifecycle(canvasElement, gl, renderer, projection) {
   return {
     supported: true,
     passed: lostObserved && restoredObserved && lostResources === 0
-      && restoredResources === 6 && restoredError === gl.NO_ERROR,
+      && restoredResources === expectedResources && restoredError === gl.NO_ERROR,
     lostObserved,
     restoredObserved,
     lostResources,

@@ -7,22 +7,30 @@
     <script type="importmap">
       {
         "imports": {
+          "@sectile/chart/interaction": "/packages/chart/dist/interaction.js",
+          "@sectile/chart/controller": "/packages/chart/dist/controller.js",
           "@sectile/chart/query": "/packages/chart/dist/query.js",
           "@sectile/core/identity": "/packages/core/dist/identity.js",
-          "@sectile/core/result": "/packages/core/dist/result.js"
+          "@sectile/core/result": "/packages/core/dist/result.js",
+          "@sectile/core/revision": "/packages/core/dist/revision.js",
+          "@sectile/core/sequence": "/packages/core/dist/structures/sequence.js"
         }
       }
     </script>
     <style>
       body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; }
       canvas { border: 1px solid #aaa; width: 400px; height: 300px; image-rendering: pixelated; }
+      #interaction { position: relative; width: 400px; height: 300px; }
       pre { background: #111; color: #eee; padding: 16px; white-space: pre-wrap; }
     </style>
   </head>
   <body>
     <h1>Chart WebGL2 hardware verification</h1>
     <canvas id="chart" width="200" height="150"></canvas>
+    <div id="interaction">
+      <canvas id="interaction-chart" width="400" height="300"></canvas>
+    </div>
     <pre id="result">running</pre>
-    <script type="module" src="./chart-webgl2-browser.mjs"></script>
+    <script type="module" src="./chart-webgl2-browser.mjs?schema=4"></script>
   </body>
 </html>
