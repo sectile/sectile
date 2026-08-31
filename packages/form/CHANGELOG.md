@@ -1,5 +1,11 @@
 # @sectile/form
 
+## 0.13.1
+
+### Changes
+
+- fix(form): preserve focus during input revalidation (77c84e3f)
+
 ## 0.13.0
 
 ### Changes

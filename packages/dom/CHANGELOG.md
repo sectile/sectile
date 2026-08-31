@@ -1,5 +1,11 @@
 # @sectile/dom
 
+## 0.13.1
+
+### Changes
+
+- No package-specific changes.
+
 ## 0.13.0
 
 ### Changes
