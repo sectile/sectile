@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readdir, readFile, rm, rmdir } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,6 +7,7 @@ import {
   inspectPackedPackage,
 } from './lib/packed-package-contract.mjs';
 import { completeNpmWebAuth, parseNpmWebAuthChallenge } from './lib/npm-publish-auth.mjs';
+import { execFileSyncPortable, spawnSyncPortable } from './lib/portable-process.mjs';
 import { discoverPublishedPackageDirectories } from './lib/published-packages.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -47,7 +47,7 @@ assert.equal(
 );
 
 function run(command, args, options = {}) {
-  return execFileSync(command, args, {
+  return execFileSyncPortable(command, args, {
     cwd: options.cwd ?? root,
     encoding: 'utf8',
     stdio: options.capture ? 'pipe' : 'inherit',
@@ -63,7 +63,7 @@ function assertSupportedNpm() {
 }
 
 function registryContains(specifier, environment) {
-  const result = spawnSync('npm', ['view', specifier, 'name', '--json', '--registry', registry], {
+  const result = spawnSyncPortable('npm', ['view', specifier, 'name', '--json', '--registry', registry], {
     cwd: root,
     encoding: 'utf8',
     env: environment,
@@ -87,7 +87,7 @@ const versions = new Set(packages.map(({ manifest }) => manifest.version));
 assert.equal(versions.size, 1, 'package versions must be synchronized');
 const version = packages[0].manifest.version;
 if (!packOnly) assert.notEqual(version, '0.0.0', 'prepare the initial package version before publishing');
-run('node', ['scripts/check-release.mjs', `v${version}`]);
+run(process.execPath, ['scripts/check-release.mjs', `v${version}`]);
 if (tarballDirectory === undefined) {
   run('pnpm', [
     '--recursive',
@@ -163,7 +163,7 @@ async function publishTarball(tarball, environment) {
     return;
   }
 
-  const result = spawnSync('npm', [...arguments_, '--json'], {
+  const result = spawnSyncPortable('npm', [...arguments_, '--json'], {
     cwd: root,
     encoding: 'utf8',
     env: environment,

@@ -96,8 +96,8 @@ if (write) {
   await writeFile(aggregatePath, aggregateSource, 'utf8');
   await writeFile(documentationPath, documentationSource, 'utf8');
 } else {
-  assert.equal(await readFile(aggregatePath, 'utf8'), aggregateSource, 'Complexity aggregate is stale; run pnpm update:complexity.');
-  assert.equal(await readFile(documentationPath, 'utf8'), documentationSource, 'Complexity documentation is stale; run pnpm update:complexity.');
+  assert.equal(normalizeText(await readFile(aggregatePath, 'utf8')), aggregateSource, 'Complexity aggregate is stale; run pnpm update:complexity.');
+  assert.equal(normalizeText(await readFile(documentationPath, 'utf8')), documentationSource, 'Complexity documentation is stale; run pnpm update:complexity.');
 }
 
 console.log(JSON.stringify({
@@ -226,4 +226,8 @@ function subpathOrder(left, right) {
 
 async function readJSON(path) {
   return JSON.parse(await readFile(path, 'utf8'));
+}
+
+function normalizeText(value) {
+  return value.replaceAll('\r\n', '\n');
 }

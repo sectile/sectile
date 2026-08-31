@@ -10,6 +10,8 @@ const result = spawnSync(process.execPath, [
   'node_modules/typescript/lib/tsc.js',
   '--project',
   mode === 'verification' ? 'tsconfig.verify-build.json' : 'tsconfig.build.json',
+  '--newLine',
+  'lf',
   '--pretty',
   'false',
 ], {

@@ -1,9 +1,9 @@
-import { spawnSync } from 'node:child_process';
-import { readdirSync, rmSync } from 'node:fs';
+import { mkdirSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { withArtifactSession } from './lib/artifact-session.mjs';
 import { boundedFailureOutput } from './lib/compact-process.mjs';
+import { spawnSyncPortable } from './lib/portable-process.mjs';
 import { loadPublishedPackageGraph } from './lib/workspace-graph.mjs';
 import { runVerificationSteps } from './lib/verification-runner.mjs';
 
@@ -192,6 +192,24 @@ function commandStep(label, command, args) {
 
 function runVerification() {
   const verificationStartedAt = performance.now();
+  const startedAt = new Date().toISOString();
+  const runID = `${startedAt.replaceAll(':', '-').replaceAll('.', '-')}-${process.pid}`;
+  const commands = [];
+  const report = (status, completedAt = null) => ({
+    schemaVersion: 1,
+    runID,
+    mode: modeLabel,
+    target: targetLabel,
+    startedAt,
+    completedAt,
+    status,
+    stageCount: steps.length,
+    commandCount: commands.length,
+    failureCount: commands.filter((command) => command.status === 'failed').length,
+    commands,
+    performanceComparison: fullVerification ? '.tasks/performance/latest-comparison.json' : null,
+  });
+  writeVerificationReport(report('running'));
   if (verbose) console.log(`verification: ${modeLabel} (${targetLabel}) on ${process.version}`);
   cleanGeneratedOutputs();
 
@@ -204,14 +222,30 @@ function runVerification() {
     },
     run: ({ detail, command, args }) => {
       if (verbose) console.log(`  ${detail}`);
-      return spawnSync(command, args, {
+      const commandStartedAt = performance.now();
+      const result = spawnSyncPortable(command, args, {
         cwd: root,
         encoding: 'utf8',
         maxBuffer: 32 * 1_024 * 1_024,
         stdio: verbose ? 'inherit' : ['ignore', 'pipe', 'pipe'],
       });
+      commands.push({
+        detail,
+        command,
+        args,
+        status: result.error === undefined && result.status === 0 ? 'passed' : 'failed',
+        exitCode: result.status ?? null,
+        signal: result.signal ?? null,
+        elapsedSeconds: elapsedNumber(commandStartedAt),
+        error: result.error?.message ?? null,
+        stdout: result.status === 0 ? null : boundedFailureOutput(result.stdout),
+        stderr: result.status === 0 ? null : boundedFailureOutput(result.stderr),
+      });
+      writeVerificationReport(report('running'));
+      return result;
     },
   });
+  writeVerificationReport(report(result.status === 0 ? 'passed' : 'failed', new Date().toISOString()));
   if (result.status !== 0) {
     console.error(`verification failed: ${result.failures.length} command(s) across ${steps.length} stages (${elapsedSeconds(verificationStartedAt)}s)`);
     return result.status;
@@ -219,6 +253,21 @@ function runVerification() {
 
   console.log(`verification passed: ${steps.length} stages (${elapsedSeconds(verificationStartedAt)}s)`);
   return 0;
+}
+
+function writeVerificationReport(report) {
+  const directory = join(root, '.tasks', 'verification');
+  const runsDirectory = join(directory, 'runs');
+  const output = `${JSON.stringify(report, null, 2)}\n`;
+  mkdirSync(runsDirectory, { recursive: true });
+  writeReport(join(runsDirectory, `${report.runID}.json`), output);
+  writeReport(join(directory, 'latest.json'), output);
+}
+
+function writeReport(path, output) {
+  const temporary = `${path}.tmp-${process.pid}`;
+  writeFileSync(temporary, output, 'utf8');
+  renameSync(temporary, path);
 }
 
 function cleanGeneratedOutputs() {
@@ -245,4 +294,8 @@ function writeFailureChannel(name, value) {
 
 function elapsedSeconds(startedAt) {
   return ((performance.now() - startedAt) / 1_000).toFixed(1);
+}
+
+function elapsedNumber(startedAt) {
+  return Number(((performance.now() - startedAt) / 1_000).toFixed(3));
 }

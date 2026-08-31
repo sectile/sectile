@@ -3,9 +3,11 @@ import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
+import { fileURLToPath } from 'node:url';
 import { artifactSessionEnvironment } from './lib/artifact-session.mjs';
 
 const worker = new URL('./fixtures/artifact-session-worker.mjs', import.meta.url);
+const workerPath = fileURLToPath(worker);
 
 test('artifact sessions serialize separate verification processes', async (context) => {
   const scope = `serialize-${randomUUID()}`;
@@ -47,7 +49,7 @@ test('artifact sessions recover when the owner process exits', async (context) =
 function startWorker(label, holdMilliseconds, scope) {
   const env = { ...process.env, SECTILE_ARTIFACT_LOCK_SCOPE: scope };
   delete env[artifactSessionEnvironment];
-  return spawn(process.execPath, [worker.pathname, label, String(holdMilliseconds)], {
+  return spawn(process.execPath, [workerPath, label, String(holdMilliseconds)], {
     env,
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
   });

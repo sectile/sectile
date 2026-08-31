@@ -107,7 +107,7 @@ export function renderAlgorithmReuseInventory(inventory) {
 
 export function validateGeneratedAlgorithmReuse(inventory, storedInventory, storedDocumentation) {
   assert.deepEqual(storedInventory, inventory, 'algorithm-reuse inventory drifted; review and run pnpm update:algorithm-reuse');
-  assert.equal(storedDocumentation, renderAlgorithmReuseInventory(inventory), 'algorithm-reuse documentation drifted; run pnpm update:algorithm-reuse');
+  assert.equal(normalizeText(storedDocumentation), renderAlgorithmReuseInventory(inventory), 'algorithm-reuse documentation drifted; run pnpm update:algorithm-reuse');
 }
 
 function matchesRule(finding, rule) {
@@ -147,4 +147,8 @@ function oneLine(value) {
 
 function normalize(path) {
   return path.split(sep).join('/');
+}
+
+function normalizeText(value) {
+  return value.replaceAll('\r\n', '\n');
 }

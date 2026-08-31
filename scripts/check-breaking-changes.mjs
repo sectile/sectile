@@ -29,7 +29,7 @@ if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(resolve(p
     changes += differences.length;
   }
   assert.equal(
-    await readFile(resolve('docs/engineering/breaking-changes.md'), 'utf8'),
+    normalizeText(await readFile(resolve('docs/engineering/breaking-changes.md'), 'utf8')),
     renderBreakingDocumentation(fragments),
     'breaking-change migration documentation drifted; run pnpm update:breaking-documentation',
   );
@@ -112,4 +112,8 @@ export async function validateReplacement(entry) {
 
 async function readJSON(path) {
   return JSON.parse(await readFile(path, 'utf8'));
+}
+
+function normalizeText(value) {
+  return value.replaceAll('\r\n', '\n');
 }

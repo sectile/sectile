@@ -140,7 +140,7 @@ function formatBytes(value) { return `${Number((value / 1024).toPrecision(4)).to
 
 export function stableCrossoverFingerprint(workerSource, manifestWithoutFingerprint) {
   let hash = 2_166_136_261;
-  const source = `${workerSource}\n${JSON.stringify(manifestWithoutFingerprint)}`;
+  const source = `${workerSource.replaceAll('\r\n', '\n')}\n${JSON.stringify(manifestWithoutFingerprint)}`;
   for (let index = 0; index < source.length; index += 1) {
     hash ^= source.charCodeAt(index);
     hash = Math.imul(hash, 16_777_619) >>> 0;

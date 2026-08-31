@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { spawnSyncPortable } from '../../../scripts/lib/portable-process.mjs';
 
-const first = spawnSync('pnpm', ['--silent', 'run', 'test:model'], { stdio: 'inherit' });
+const first = spawnSyncPortable('pnpm', ['--silent', 'run', 'test:model'], { stdio: 'inherit' });
 assert.equal(first.status, 0);
 const firstEvidence = await readFile('verification/model.json');
-const second = spawnSync('pnpm', ['--silent', 'run', 'test:model'], { stdio: 'inherit' });
+const second = spawnSyncPortable('pnpm', ['--silent', 'run', 'test:model'], { stdio: 'inherit' });
 assert.equal(second.status, 0);
 const secondEvidence = await readFile('verification/model.json');
 assert.deepEqual(secondEvidence, firstEvidence);

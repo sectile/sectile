@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 
 const first = buildAndFingerprint();
 const second = buildAndFingerprint();
@@ -18,7 +18,7 @@ function buildAndFingerprint() {
 function fingerprint(directory) {
   const hash = createHash('sha256');
   for (const path of files(directory)) {
-    hash.update(relative(directory, path));
+    hash.update(relative(directory, path).split(sep).join('/'));
     hash.update('\0');
     hash.update(readFileSync(path));
     hash.update('\0');

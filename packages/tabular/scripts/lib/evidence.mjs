@@ -89,5 +89,5 @@ export async function writeGroupEvidence(group, paths) {
 }
 
 function hash(value) {
-  return createHash('sha256').update(value).digest('hex');
+  return createHash('sha256').update(value.toString().replaceAll('\r\n', '\n')).digest('hex');
 }

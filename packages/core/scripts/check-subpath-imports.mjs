@@ -5,10 +5,11 @@ import { resolve, join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 const directory = await mkdtemp(join(tmpdir(), 'sectile-subpaths-'));
+const typescriptCLI = resolve('node_modules/typescript/lib/tsc.js');
 try {
   const scope = join(directory, 'node_modules', '@sectile');
   await mkdir(scope, { recursive: true });
-  await symlink(resolve('.'), join(scope, 'core'), 'dir');
+  await symlink(resolve('.'), join(scope, 'core'), process.platform === 'win32' ? 'junction' : 'dir');
   await writeFile(join(directory, 'consumer.mjs'), `
     import * as root from '@sectile/core';
     import { createSequence } from '@sectile/core/sequence';
@@ -107,7 +108,7 @@ try {
     },
     files: ['consumer.ts'],
   }));
-  const typecheck = spawnSync('tsc', ['--project', 'tsconfig.json', '--pretty', 'false'], {
+  const typecheck = spawnSync(process.execPath, [typescriptCLI, '--project', 'tsconfig.json', '--pretty', 'false'], {
     cwd: directory,
     encoding: 'utf8',
   });

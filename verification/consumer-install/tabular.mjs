@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, relative, resolve } from 'node:path';
+import { spawnSyncPortable } from '../../scripts/lib/portable-process.mjs';
 import { packInstalledDependencyClosure } from './local-dependency-closure.mjs';
 
 const root = resolve(import.meta.dirname, '..', '..');
@@ -318,7 +319,7 @@ async function declarationFiles(directory) {
 }
 
 function run(command, args, cwd) {
-  const result = spawnSync(command, args, { cwd, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+  const result = spawnSyncPortable(command, args, { cwd, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
   if (result.error !== undefined) throw result.error;
   assert.equal(result.status, 0, `${command} ${args.map((value) => basename(value)).join(' ')}\n${result.stdout}\n${result.stderr}`);
   return result.stdout;

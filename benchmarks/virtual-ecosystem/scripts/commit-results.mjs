@@ -1,4 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { normalizeMutationResult } from './result-normalization.mjs';
 import { assertCompatibleSource, mergeRuns } from './source-metadata.mjs';
@@ -9,7 +10,7 @@ const args = process.argv.slice(2);
 const baselineOnly = args.includes('--baseline-only');
 const mergeBaseline = args.includes('--merge-baseline');
 const mergeMutations = args.includes('--merge-mutations');
-const inputPath = resolve(args.find((argument) => !argument.startsWith('--')) ?? '/tmp/sectile-virtual-benchmark.json');
+const inputPath = resolve(args.find((argument) => !argument.startsWith('--')) ?? resolve(tmpdir(), 'sectile-virtual-benchmark.json'));
 const fullRawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64.json');
 const baselineRawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64-baseline.json');
 const layoutRawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64-layouts.json');

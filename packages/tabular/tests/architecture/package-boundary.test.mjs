@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 
 const manifest = JSON.parse(await readFile('package.json', 'utf8'));
 
@@ -15,12 +15,13 @@ test('base Tabular remains renderer-neutral and Virtual stays an optional peer',
     'vue', 'react', 'solid-js', 'svelte',
   ];
   for (const path of await sourceFiles('src')) {
-    if (path === 'src/virtual.ts') continue;
+    const portablePath = path.split(sep).join('/');
+    if (portablePath === 'src/virtual.ts') continue;
     const source = await readFile(path, 'utf8');
-    assert.equal(source.includes('@sectile/virtual'), false, `${path} imports Virtual from the base graph`);
+    assert.equal(source.includes('@sectile/virtual'), false, `${portablePath} imports Virtual from the base graph`);
     for (const specifier of forbiddenImports) {
       assert.equal(source.includes(`'${specifier}`) || source.includes(`"${specifier}`), false,
-        `${path} imports forbidden platform dependency ${specifier}`);
+        `${portablePath} imports forbidden platform dependency ${specifier}`);
     }
   }
 });

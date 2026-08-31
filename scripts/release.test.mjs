@@ -34,14 +34,15 @@ test('includes every public workspace package in releases', () => {
 });
 
 test('release retries prepare tagged artifacts and load the complete current publication tool closure', () => {
-  const workflow = readFileSync(join(root, '.github/workflows/release.yml'), 'utf8');
-  const localRelease = readFileSync(join(root, 'scripts/release.mjs'), 'utf8');
-  const publication = readFileSync(join(root, 'scripts/publish-packages.mjs'), 'utf8');
+  const workflow = readText(join(root, '.github/workflows/release.yml'));
+  const localRelease = readText(join(root, 'scripts/release.mjs'));
+  const publication = readText(join(root, 'scripts/publish-packages.mjs'));
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   for (const path of [
     'scripts/publish-packages.mjs',
     'scripts/lib/npm-publish-auth.mjs',
     'scripts/lib/packed-package-contract.mjs',
+    'scripts/lib/portable-process.mjs',
     'scripts/lib/published-packages.mjs',
     'scripts/lib/source-map-policy.mjs',
   ]) assert.ok(workflow.includes(path), `${path} is absent from publication tooling restore`);
@@ -61,6 +62,10 @@ test('release retries prepare tagged artifacts and load the complete current pub
   assert.match(localRelease, /\['add', '--', 'packages', 'pnpm-lock\.yaml'\]/u);
   assert.match(manifest.scripts['publish:packages'], /--verbose package-publication/u);
 });
+
+function readText(path) {
+  return readFileSync(path, 'utf8').replaceAll('\r\n', '\n');
+}
 
 test('allows synchronized and fast-forwardable local release branches', () => {
   assert.equal(classifyReleaseBranch('same', 'same', true), 'synchronized');

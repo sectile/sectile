@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtemp, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
+import { spawnSyncPortable } from '../../scripts/lib/portable-process.mjs';
 import { packInstalledDependencyClosure } from './local-dependency-closure.mjs';
 
 const root = resolve(import.meta.dirname, '..', '..');
@@ -208,7 +209,7 @@ async function typeConsumer(directory) {
 }
 
 function run(command, args, cwd) {
-  const result = spawnSync(command, args, {
+  const result = spawnSyncPortable(command, args, {
     cwd,
     encoding: 'utf8',
     maxBuffer: 32 * 1024 * 1024,

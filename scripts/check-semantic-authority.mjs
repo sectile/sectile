@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const root = new URL('..', import.meta.url);
+const rootPath = fileURLToPath(root);
 const manifest = await readJSON('verification/semantic-authority.json');
 const baseline = await readJSON('verification/semantic-authority-exception-baseline.json');
 
@@ -193,17 +195,18 @@ function dependencyCycle(start, entries) {
 
 async function sourceFiles(directory) {
   const absolute = new URL(`${directory}/`, root);
+  const absolutePath = fileURLToPath(absolute);
   const result = [];
   const visit = async (current) => {
     for (const entry of await readdir(current, { withFileTypes: true })) {
       const path = join(current, entry.name);
       if (entry.isDirectory()) await visit(path);
       else if (entry.isFile() && entry.name.endsWith('.ts')) {
-        result.push(relative(new URL('.', root).pathname, path));
+        result.push(relative(rootPath, path).split(sep).join('/'));
       }
     }
   };
-  await visit(absolute.pathname);
+  await visit(absolutePath);
   return result.sort();
 }
 

@@ -82,6 +82,10 @@ if (mode === 'record') {
   assert.equal(manifest.fingerprint, fingerprint, 'crossover source or decisions changed; re-record required');
   const baseline = JSON.parse(await readFile(baselinePath, 'utf8'));
   const report = validateCrossoverDecisions(manifest, baseline);
-  assert.equal(await readFile(documentationPath, 'utf8'), renderCrossoverDocumentation(manifest, baseline), 'crossover documentation drifted');
+  assert.equal(normalizeText(await readFile(documentationPath, 'utf8')), renderCrossoverDocumentation(manifest, baseline), 'crossover documentation drifted');
   console.log(JSON.stringify({ status: 'passed', ...report, processCount: baseline.processCount }));
+}
+
+function normalizeText(value) {
+  return value.replaceAll('\r\n', '\n');
 }

@@ -24,6 +24,7 @@ const sourceManifestFields = Object.freeze([
 
 export async function inspectPackedPackage(tarball, options = {}) {
   const entries = execFileSync('tar', ['-tzf', tarball], { encoding: 'utf8' })
+    .replaceAll('\r\n', '\n')
     .split('\n')
     .filter(Boolean);
   validateTarballEntries(entries);

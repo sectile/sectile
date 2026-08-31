@@ -1,11 +1,11 @@
-import { spawnSync } from 'node:child_process';
+import { spawnSyncPortable } from './portable-process.mjs';
 
 const failureOutputLimit = 24 * 1_024;
 
 export function runCompact({ args = [], command, cwd, env = process.env, label, verbose = false }) {
   const startedAt = performance.now();
   console.log(`→ ${label}`);
-  const result = spawnSync(command, args, {
+  const result = spawnSyncPortable(command, args, {
     cwd,
     encoding: 'utf8',
     env,

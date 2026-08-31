@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import { publishedPackageDirectories } from './published-packages.mjs';
+import { execFileSyncPortable } from './portable-process.mjs';
 
 export const packageNames = publishedPackageDirectories;
 
@@ -91,7 +91,7 @@ export function validateSourceMapBudget(current, baseline) {
 async function dryRunPack(packageRoot, distPaths) {
   const cache = await mkdtemp(join(tmpdir(), 'sectile-source-map-pack-'));
   try {
-    const output = execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts', '--cache', cache], {
+    const output = execFileSyncPortable('npm', ['pack', '--dry-run', '--json', '--ignore-scripts', '--cache', cache], {
       cwd: packageRoot,
       encoding: 'utf8',
       env: { ...process.env, NPM_CONFIG_UPDATE_NOTIFIER: 'false' },

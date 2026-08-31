@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { validateCrossoverDecisions } from './lib/representation-crossovers.mjs';
+import { stableCrossoverFingerprint, validateCrossoverDecisions } from './lib/representation-crossovers.mjs';
 
 const load = async () => Promise.all([
   readFile('verification/representation-crossovers/decisions.json', 'utf8').then(JSON.parse),
@@ -11,6 +11,14 @@ const load = async () => Promise.all([
 test('frozen representation decisions have complete measured evidence', async () => {
   const [manifest, baseline] = await load();
   assert.deepEqual(validateCrossoverDecisions(manifest, baseline), { decisions: 16, metrics: baseline.metrics.length });
+});
+
+test('crossover fingerprints are stable across LF and CRLF hosts', () => {
+  const manifest = { schemaVersion: 1, decisions: [] };
+  assert.equal(
+    stableCrossoverFingerprint('worker\nsource\n', manifest),
+    stableCrossoverFingerprint('worker\r\nsource\r\n', manifest),
+  );
 });
 
 test('missing decisions, candidate evidence, and Virtual repair bounds fail', async () => {

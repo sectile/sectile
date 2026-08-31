@@ -21,11 +21,16 @@ const changes = classifySemanticAPIChanges(contract.baseline, current);
 const failures = describeSemanticAPIChanges(changes);
 
 for (const entry of contract.defaults) {
-  const source = await readFile(entry.source, 'utf8');
-  const occurrences = source.split(entry.evidence).length - 1;
+  const source = normalizeLineEndings(await readFile(entry.source, 'utf8'));
+  const evidence = normalizeLineEndings(entry.evidence);
+  const occurrences = source.split(evidence).length - 1;
   if (occurrences !== entry.occurrences) {
     failures.push(`default changed: ${entry.id} => semantic breaking (${occurrences}/${entry.occurrences} evidence matches)`);
   }
+}
+
+function normalizeLineEndings(value) {
+  return value.replaceAll('\r\n', '\n');
 }
 
 if (failures.length > 0) {

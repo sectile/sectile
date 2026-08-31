@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 async function files(directory) {
   const result = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
@@ -15,7 +15,7 @@ async function files(directory) {
 async function fingerprint() {
   const hash = createHash('sha256');
   for (const path of await files('dist')) {
-    hash.update(relative('dist', path));
+    hash.update(relative('dist', path).split(sep).join('/'));
     hash.update('\0');
     hash.update(await readFile(path));
     hash.update('\0');

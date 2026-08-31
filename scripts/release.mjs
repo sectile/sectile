@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
@@ -19,6 +19,7 @@ import {
   releaseBumpChoices,
 } from './lib/release.mjs';
 import { publishedPackageDirectories } from './lib/published-packages.mjs';
+import { execFileSyncPortable } from './lib/portable-process.mjs';
 import {
   createReleaseWorktree,
   fastForwardReleaseWorktree,
@@ -41,12 +42,12 @@ function releasePackages(root) {
 }
 
 function run(root, command, args, options = {}) {
-  return execFileSync(command, args, {
+  return execFileSyncPortable(command, args, {
     cwd: root,
     encoding: 'utf8',
     input: options.input,
     stdio: options.capture || options.input !== undefined ? ['pipe', 'pipe', 'pipe'] : 'inherit',
-  })?.trim();
+  })?.replaceAll('\r\n', '\n').trim();
 }
 
 function isAncestor(root, ancestor, descendant) {

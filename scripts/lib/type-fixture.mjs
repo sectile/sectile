@@ -1,7 +1,10 @@
 import { spawnSync } from 'node:child_process';
+import { resolve } from 'node:path';
 
 export function runTypeFixture(tsconfig, options = {}) {
-  const result = spawnSync('tsc', ['--project', tsconfig, '--pretty', 'false'], {
+  const typescriptCLI = options.typescriptCLI
+    ?? resolve(options.cwd ?? '.', 'node_modules/typescript/lib/tsc.js');
+  const result = spawnSync(process.execPath, [typescriptCLI, '--project', tsconfig, '--pretty', 'false'], {
     cwd: options.cwd,
     encoding: 'utf8',
   });

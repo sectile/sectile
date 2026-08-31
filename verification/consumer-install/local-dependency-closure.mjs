@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { mkdir, readFile, readdir, realpath } from 'node:fs/promises';
 import { basename, dirname, join, parse } from 'node:path';
+import { spawnSyncPortable } from '../../scripts/lib/portable-process.mjs';
 
 export async function packInstalledDependencyClosure(entryManifestPath, destination) {
   const entry = await loadManifest(await realpath(entryManifestPath));
@@ -87,7 +87,7 @@ async function loadManifest(path) {
 }
 
 function run(command, args, cwd, env, detail) {
-  const result = spawnSync(command, args, {
+  const result = spawnSyncPortable(command, args, {
     cwd,
     encoding: 'utf8',
     env,

@@ -6,9 +6,12 @@ const mode = process.argv[2] ?? 'production';
 if (mode !== 'production' && mode !== 'verification') throw new Error(`Unknown build mode: ${mode}`);
 const output = mode === 'verification' ? '.verification-dist' : 'dist';
 await rm(output, { recursive: true, force: true });
-const result = spawnSync('tsc', [
+const result = spawnSync(process.execPath, [
+  'node_modules/typescript/lib/tsc.js',
   '--project',
   mode === 'verification' ? 'tsconfig.verify-build.json' : 'tsconfig.build.json',
+  '--newLine',
+  'lf',
   '--pretty',
   'false',
 ], {

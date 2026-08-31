@@ -59,10 +59,10 @@ test('verifies a release in a detached worktree and only stashes during final sy
 
     assert.equal(git(root, ['rev-parse', 'HEAD']), releaseCommit);
     assert.equal(releaseWorktreeStatus(root), originalStatus);
-    assert.equal(readFileSync(join(root, 'tracked.txt'), 'utf8'), 'unstaged\n');
-    assert.equal(readFileSync(join(root, 'staged.txt'), 'utf8'), 'staged\n');
-    assert.equal(readFileSync(join(root, 'untracked.txt'), 'utf8'), 'untracked\n');
-    assert.equal(readFileSync(join(root, 'release.txt'), 'utf8'), 'released\n');
+    assert.equal(readText(join(root, 'tracked.txt')), 'unstaged\n');
+    assert.equal(readText(join(root, 'staged.txt')), 'staged\n');
+    assert.equal(readText(join(root, 'untracked.txt')), 'untracked\n');
+    assert.equal(readText(join(root, 'release.txt')), 'released\n');
     assert.equal(git(root, ['stash', 'list']), '');
   } finally {
     if (worktree !== undefined) removeReleaseWorktree(root, worktree);
@@ -88,7 +88,7 @@ test('detects a restore conflict before advancing main', () => {
     assert.equal(git(root, ['rev-parse', 'HEAD']), originalHead);
     assert.equal(restoreReleaseWorktree(root, temporary.stash), true);
     assert.equal(releaseWorktreeStatus(root), originalStatus);
-    assert.equal(readFileSync(join(root, 'release.txt'), 'utf8'), 'local work\n');
+    assert.equal(readText(join(root, 'release.txt')), 'local work\n');
   } finally {
     if (worktree !== undefined) removeReleaseWorktree(root, worktree);
     rmSync(root, { force: true, recursive: true });
@@ -110,10 +110,14 @@ test('preserves generated files revealed when dirty ignore rules are stashed', (
     assert.equal(restoreReleaseWorktree(root, temporary.stash), true);
 
     assert.equal(releaseWorktreeStatus(root), originalStatus);
-    assert.equal(readFileSync(join(root, 'tracked.txt'), 'utf8'), 'local work\n');
-    assert.equal(readFileSync(join(root, 'generated', 'asset.js'), 'utf8'), 'generated output\n');
+    assert.equal(readText(join(root, 'tracked.txt')), 'local work\n');
+    assert.equal(readText(join(root, 'generated', 'asset.js')), 'generated output\n');
     assert.equal(git(root, ['stash', 'list']), '');
   } finally {
     rmSync(root, { force: true, recursive: true });
   }
 });
+
+function readText(path) {
+  return readFileSync(path, 'utf8').replaceAll('\r\n', '\n');
+}

@@ -81,6 +81,7 @@ jobs:
             scripts/publish-packages.mjs \
             scripts/lib/npm-publish-auth.mjs \
             scripts/lib/packed-package-contract.mjs \
+            scripts/lib/portable-process.mjs \
             scripts/lib/published-packages.mjs \
             scripts/lib/source-map-policy.mjs
       - name: Publish npm packages with OIDC

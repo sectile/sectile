@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { relative, resolve } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 
 const benchmarkRoot = resolve(import.meta.dirname, '..');
 const repoRoot = resolve(benchmarkRoot, '../..');
@@ -30,9 +30,9 @@ export function benchmarkSourceMetadata() {
     .sort((left, right) => left.localeCompare(right));
   const hash = createHash('sha256');
   for (const file of files) {
-    hash.update(relative(repoRoot, file));
+    hash.update(relative(repoRoot, file).split(sep).join('/'));
     hash.update('\0');
-    hash.update(readFileSync(file));
+    hash.update(readFileSync(file, 'utf8').replaceAll('\r\n', '\n'));
     hash.update('\0');
   }
   const gitCommit = git(['rev-parse', 'HEAD']);

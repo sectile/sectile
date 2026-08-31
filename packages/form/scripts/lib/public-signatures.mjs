@@ -10,6 +10,7 @@ export async function collectPublicSignatures(packageRoot = process.cwd()) {
   const files = [];
   for (const path of paths) {
     const content = (await readFile(resolve(packageRoot, path), 'utf8'))
+      .replaceAll('\r\n', '\n')
       .replace(/^\/\/# sourceMappingURL=.*$/gmu, '')
       .trim();
     files.push({ path, sha256: hash(content), content });

@@ -13,7 +13,10 @@ export async function collectPublicSignatures() {
   const paths = await collectDeclarationClosure(publicDeclarationFiles);
   const files = [];
   for (const path of paths) {
-    const content = (await readFile(path, 'utf8')).replace(/^\/\/# sourceMappingURL=.*$/gmu, '').trim();
+    const content = (await readFile(path, 'utf8'))
+      .replaceAll('\r\n', '\n')
+      .replace(/^\/\/# sourceMappingURL=.*$/gmu, '')
+      .trim();
     files.push({ path, sha256: hash(content), content });
   }
   const fingerprint = hash(files.map(({ path, content }) => `${path}\n${content}\n`).join('\n'));

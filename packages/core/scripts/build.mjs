@@ -21,7 +21,15 @@ const project = resolve(
     ? 'tsconfig.verify-build.json'
     : 'tsconfig.build.json',
 );
-const result = spawnSync('tsc', ['--project', project, '--pretty', 'false'], {
+const result = spawnSync(process.execPath, [
+  resolve(root, 'node_modules/typescript/lib/tsc.js'),
+  '--project',
+  project,
+  '--newLine',
+  'lf',
+  '--pretty',
+  'false',
+], {
   cwd: root,
   encoding: 'utf8',
   stdio: 'inherit',

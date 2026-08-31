@@ -1,4 +1,5 @@
 .DS_Store
+._*
 *.tsbuildinfo
 node_modules/
 .pnpm-store/

@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { execFile as execFileCallback } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { promisify } from 'node:util';
 import { validateInstallBaseline } from './check.mjs';
 import { inspectPackedPackageDirectory } from '../lib/packed-package-contract.mjs';
+import { execFilePortable } from '../lib/portable-process.mjs';
 import { publishedPackageDirectories } from '../lib/published-packages.mjs';
 
-const execFile = promisify(execFileCallback);
 const repoRoot = resolve('.');
 const mode = process.argv[2] ?? 'check';
 assert.ok(mode === 'record' || mode === 'check', 'Usage: run.mjs <record|check>');
@@ -223,7 +221,7 @@ async function exists(path) {
 }
 
 async function run(command, arguments_, cwd) {
-  const result = await execFile(command, arguments_, { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const result = await execFilePortable(command, arguments_, { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   return result;
 }
 

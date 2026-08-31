@@ -9,7 +9,7 @@ function git(root, args, capture = false) {
     cwd: root,
     encoding: 'utf8',
     stdio: capture ? ['ignore', 'pipe', 'pipe'] : 'inherit',
-  })?.trim();
+  })?.replaceAll('\r\n', '\n').trim();
 }
 
 export function releaseWorktreeStatus(root) {

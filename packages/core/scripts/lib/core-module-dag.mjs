@@ -174,7 +174,7 @@ export function renderCoreModuleDAG(graph) {
 export function validateGeneratedArtifacts(graph, storedGraph, storedDocumentation) {
   assert.deepEqual(storedGraph, graph, 'Core module DAG drifted; run pnpm --filter @sectile/core update:module-dag');
   assert.equal(
-    storedDocumentation,
+    normalizeText(storedDocumentation),
     renderCoreModuleDAG(graph),
     'Core module DAG documentation drifted; run pnpm --filter @sectile/core update:module-dag',
   );
@@ -234,4 +234,8 @@ function compareEdge(left, right) {
 
 function normalize(path) {
   return path.split(sep).join('/');
+}
+
+function normalizeText(value) {
+  return value.replaceAll('\r\n', '\n');
 }
