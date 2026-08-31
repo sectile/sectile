@@ -35,6 +35,27 @@ test('Form is exposed only through its optional subpath', async () => {
   assert.equal(typeof formModule.useFormControl, 'function');
 });
 
+test('Chart is exposed only through its optional subpath', async () => {
+  const vuePackage = await readPackage('../package.json');
+  assert.equal(vuePackage.dependencies?.['@sectile/chart'], undefined);
+  assert.equal(vuePackage.peerDependencies?.['@sectile/chart'], 'workspace:*');
+  assert.equal(vuePackage.peerDependenciesMeta?.['@sectile/chart']?.optional, true);
+
+  const rootModule = await import('../.verification-dist/index.js');
+  assert.equal(rootModule.ChartRoot, undefined);
+  assert.equal(rootModule.useChart, undefined);
+  assert.equal(rootModule.createChartComponents, undefined);
+
+  const chartModule = await import('../.verification-dist/chart.js');
+  assert.equal(typeof chartModule.ChartRoot, 'object');
+  assert.equal(typeof chartModule.ChartLine, 'object');
+  assert.equal(typeof chartModule.useChart, 'function');
+  assert.equal(typeof chartModule.createChartComponents, 'function');
+  const chartSource = await readFile(new URL('../.verification-dist/chart.js', import.meta.url), 'utf8');
+  assert.match(chartSource, /@sectile\/chart/);
+  assert.match(chartSource, /@sectile\/dom\/chart/);
+});
+
 test('Tabular is exposed only through its optional subpath', async () => {
   const vuePackage = await readPackage('../package.json');
   assert.equal(vuePackage.dependencies?.['@sectile/tabular'], undefined);

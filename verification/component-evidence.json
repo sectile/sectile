@@ -22,7 +22,7 @@
   },
   "support": {
     "chart": {
-      "hostInputs": { "dom": ["keyboard", "pointer", "focus", "resize"] },
+      "hostInputs": { "dom": ["keyboard", "pointer", "wheel", "touch", "focus", "resize"] },
       "chart": [
         "packages/chart/tests/model/model.reference-law.test.mjs",
         "packages/chart/tests/projection/projection.test.mjs",
@@ -35,7 +35,7 @@
         "packages/dom/tests/chart-connection.test.mjs",
         "packages/dom/verification/chart-webgl2-browser.mjs"
       ],
-      "vue": ["packages/vue/tests/chart.test.mjs", "packages/vue/tests/chart.dom.test.mjs"]
+      "vue": ["packages/vue/tests/chart.test.mjs", "packages/vue/tests/chart-provider.test.mjs", "packages/vue/tests/chart.dom.test.mjs"]
     },
     "form": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus", "ime", "native-form"] },

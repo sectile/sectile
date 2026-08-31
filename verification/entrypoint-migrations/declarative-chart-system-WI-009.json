@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "workItem": "declarative-chart-system:WI-009",
+  "changes": [
+    {
+      "package": "@sectile/chart",
+      "subpath": "./controller",
+      "before": [
+        "ChartControllerOptions.model-only construction",
+        "ChartController without declarative definition or snapshot subscriptions"
+      ],
+      "replacement": [
+        "ChartModelControllerOptions for packed low-level models",
+        "ChartDefinitionControllerOptions for coordinate-aware definitions",
+        "ChartController.replaceDefinition",
+        "ChartController.getDefinition",
+        "ChartController.subscribeSnapshots"
+      ]
+    },
+    {
+      "package": "@sectile/chart",
+      "subpath": "./interaction",
+      "before": [
+        "ChartState.viewTransform",
+        "set-view-transform",
+        "pan-view",
+        "zoom-view"
+      ],
+      "replacement": [
+        "ChartState.view",
+        "set-axis-view",
+        "pan-axis-view",
+        "zoom-axis-view",
+        "reset-axis-view"
+      ]
+    },
+    {
+      "package": "@sectile/chart",
+      "subpath": "./projection",
+      "before": [
+        "ChartProjection built only from ChartModelState",
+        "pixel-transformed geometry batches without semantic layer revisions"
+      ],
+      "replacement": [
+        "ChartProjectionSource accepts ChartModelState or ChartDefinitionState",
+        "data-space ChartDataBatch geometry",
+        "ChartProjectionLayerRevision and ChartProjectionDelta",
+        "explicit exact, density, and heatmap aggregate representatives"
+      ]
+    },
+    {
+      "package": "@sectile/chart",
+      "subpath": "./query",
+      "before": [
+        "ChartHit with an unconditional datum id"
+      ],
+      "replacement": [
+        "ChartDatumHit for exact identities",
+        "ChartAggregateHit for density and heatmap aggregates",
+        "ChartHit discriminated union"
+      ]
+    },
+    {
+      "package": "@sectile/chart",
+      "subpath": "./scale",
+      "before": [
+        "string-only categorical scale values"
+      ],
+      "replacement": [
+        "Stable numeric or string categorical values",
+        "continuous and ordinal Chart color scales"
+      ]
+    },
+    {
+      "package": "@sectile/chart",
+      "subpath": "./contract, ./definition, ./layout, ./view",
+      "before": [
+        "renderer-pixel chart semantics assembled by consumers"
+      ],
+      "replacement": [
+        "ChartCoordinateDefinition and ChartLayerDefinition",
+        "ChartDefinition",
+        "resolved axes and plot layout",
+        "immutable axis-domain ChartViewState"
+      ]
+    },
+    {
+      "package": "@sectile/dom",
+      "subpath": "./chart",
+      "before": [
+        "unconditional wheel pan and modifier-wheel zoom",
+        "DOMChartConnection without navigation reconfiguration",
+        "renderer diagnostics without retained-buffer upload detail"
+      ],
+      "replacement": [
+        "DOMChartNavigation with native wheel default",
+        "normalizeDOMChartNavigation",
+        "DOMChartConnection.setNavigation",
+        "axis-domain pointer, wheel, pinch, keyboard, and selection translation",
+        "data-space Canvas2D and retained WebGL2 layer buffers with context recovery"
+      ]
+    },
+    {
+      "package": "@sectile/vue",
+      "subpath": "./chart",
+      "before": [
+        "UseChartOptions.viewTransform/defaultViewTransform/onViewTransformChange",
+        "ChartRoot controller or options prop construction",
+        "ChartRoot update:viewTransform",
+        "ChartRootSlotProps with eagerly non-null controller and state"
+      ],
+      "replacement": [
+        "UseChartOptions.view/defaultView/onViewChange",
+        "ChartRoot declarative coordinate, axis, layer, plot, and renderer children",
+        "ChartRoot update:view",
+        "ChartProvider or createChartComponents for external controller ownership",
+        "nullable pre-mount ChartRoot slot state"
+      ]
+    },
+    {
+      "package": "@sectile/vue",
+      "subpath": "./chart",
+      "before": [
+        "object-model-only ChartRoot primary interface"
+      ],
+      "replacement": [
+        "ChartCartesian, ChartRadial, ChartXAxis, ChartYAxis",
+        "ChartLine, ChartScatter, ChartBar, ChartHeatmap, ChartPie, ChartDonut",
+        "ChartAxisView, ChartNavigation, ChartViewControls",
+        "ChartPlot and ChartRenderer",
+        "useChartSelector, useChartLayerSelector, useChartAxisSelector"
+      ]
+    }
+  ]
+}

@@ -15,6 +15,35 @@
       ]
     },
     {
+      "subpath": "./contract",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_MAXIMUM_CHART_AXES",
+        "MAXIMUM_CHART_AXES",
+        "createChartViewState",
+        "normalizeChartCoordinate",
+        "normalizeChartRepresentative",
+        "normalizeChartTemporalValue",
+        "resolveChartIdentity",
+        "resolveChartValue",
+        "tryCreateChartViewState",
+        "tryNormalizeChartCoordinate",
+        "tryNormalizeChartRepresentative",
+        "tryNormalizeChartTemporalValue",
+        "tryResolveChartIdentity",
+        "tryResolveChartValue",
+        "tryValidateChartLayerCoordinate",
+        "validateChartLayerCoordinate"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
       "subpath": "./controller",
       "classification": "named-subpath",
       "platform": "browser",
@@ -30,14 +59,50 @@
       ]
     },
     {
+      "subpath": "./definition",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createChartDefinition",
+        "replaceChartDefinition",
+        "tryCreateChartDefinition",
+        "tryReplaceChartDefinition"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
       "subpath": "./interaction",
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
+        "chartSelectionContains",
         "createChartState",
         "reconcileChartState",
         "reduceChartEvent",
         "tryCreateChartState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./layout",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_CHART_PLOT_INSETS",
+        "createChartPlotLayout",
+        "resolveChartAxes",
+        "tryCreateChartPlotLayout",
+        "tryResolveChartAxes"
       ],
       "typeBearing": true,
       "optionalPeer": null,
@@ -54,9 +119,11 @@
         "DEFAULT_CHART_LIMITS",
         "applyChartPatch",
         "createChartModel",
+        "replaceChartLayer",
         "replaceChartModel",
         "tryApplyChartPatch",
         "tryCreateChartModel",
+        "tryReplaceChartLayer",
         "tryReplaceChartModel"
       ],
       "typeBearing": true,
@@ -134,16 +201,38 @@
         "composeChartViewTransforms",
         "createCategoricalScale",
         "createChartViewTransform",
+        "createContinuousColorScale",
         "createLinearScale",
         "createLogarithmicScale",
+        "createOrdinalColorScale",
         "createTemporalScale",
         "invertChartCoordinate",
         "transformChartCoordinate",
         "tryCreateCategoricalScale",
         "tryCreateChartViewTransform",
+        "tryCreateContinuousColorScale",
         "tryCreateLinearScale",
         "tryCreateLogarithmicScale",
+        "tryCreateOrdinalColorScale",
         "tryCreateTemporalScale"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./view",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "chartAxisView",
+        "createChartAxisViewState",
+        "reconcileChartAxisViewState",
+        "reduceChartViewAction",
+        "tryCreateChartAxisViewState"
       ],
       "typeBearing": true,
       "optionalPeer": null,

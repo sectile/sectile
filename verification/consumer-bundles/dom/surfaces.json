@@ -276,8 +276,10 @@
         "createChartRenderer",
         "createDOMChart",
         "detectChartRendererCapabilities",
+        "normalizeDOMChartNavigation",
         "tryCreateChartRenderer",
-        "tryCreateDOMChart"
+        "tryCreateDOMChart",
+        "tryNormalizeDOMChartNavigation"
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/chart",
