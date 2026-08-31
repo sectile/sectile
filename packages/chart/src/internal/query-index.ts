@@ -6,6 +6,8 @@ export interface ProjectionQueryIndex {
   readonly batchIndices: Uint16Array;
   readonly primitiveIndices: Uint32Array;
   readonly kinds: Uint8Array;
+  readonly verticalBarOrder: Uint32Array;
+  readonly horizontalBarOrder: Uint32Array;
   readonly nodes: readonly QueryNode[];
   readonly root: number;
 }
@@ -19,6 +21,7 @@ export interface QueryNode {
   readonly right: number;
   readonly start: number;
   readonly count: number;
+  readonly kindMask: number;
 }
 
 const indexes = new WeakMap<object, ProjectionQueryIndex>();
@@ -38,15 +41,21 @@ function buildProjectionQueryIndex(projection: ChartProjection): ProjectionQuery
   const batchIndices = new Uint16Array(count);
   const primitiveIndices = new Uint32Array(count);
   const kinds = new Uint8Array(count);
+  const verticalBars: number[] = [];
+  const horizontalBars: number[] = [];
+  const barAxes = categoricalBarAxes(projection);
   let cursor = 0;
   for (let batchIndex = 0; batchIndex < projection.batches.length; batchIndex += 1) {
     const batch = projection.batches[batchIndex] as ChartProjectionBatch;
     const batchCount = batchPrimitiveCount(batch);
+    const barAxis = batch.type === 'rectangle' ? barAxes.get(batch.layerIndex) : undefined;
     for (let primitiveIndex = 0; primitiveIndex < batchCount; primitiveIndex += 1) {
       writePrimitiveBounds(batch, primitiveIndex, bounds, cursor * 4);
       batchIndices[cursor] = batchIndex;
       primitiveIndices[cursor] = primitiveIndex;
       kinds[cursor] = kindOf(batch);
+      if (barAxis === 'x') verticalBars.push(cursor);
+      else if (barAxis === 'y') horizontalBars.push(cursor);
       cursor += 1;
     }
   }
@@ -56,29 +65,61 @@ function buildProjectionQueryIndex(projection: ChartProjection): ProjectionQuery
   sortable.sort((left, right) => mortonFor(bounds, left, width, height) - mortonFor(bounds, right, width, height));
   const order = Uint32Array.from(sortable);
   const nodes: QueryNode[] = [];
-  const root = count === 0 ? -1 : buildNode(order, bounds, nodes, 0, count);
-  return { order, bounds, batchIndices, primitiveIndices, kinds, nodes: Object.freeze(nodes), root };
+  const root = count === 0 ? -1 : buildNode(order, bounds, kinds, nodes, 0, count);
+  verticalBars.sort((left, right) => center(bounds, left, 0) - center(bounds, right, 0) || left - right);
+  horizontalBars.sort((left, right) => center(bounds, left, 1) - center(bounds, right, 1) || left - right);
+  return {
+    order, bounds, batchIndices, primitiveIndices, kinds,
+    verticalBarOrder: Uint32Array.from(verticalBars),
+    horizontalBarOrder: Uint32Array.from(horizontalBars),
+    nodes: Object.freeze(nodes), root,
+  };
 }
 
-function buildNode(order: Uint32Array, bounds: Float32Array, nodes: QueryNode[], start: number, count: number): number {
+function categoricalBarAxes(projection: ChartProjection): ReadonlyMap<number, 'x' | 'y'> {
+  if (projection.dataBatches === undefined || projection.layout === undefined) return new Map();
+  const axisKinds = new Map(projection.layout.axes.map(({ axis, descriptor }) => [axis.id, descriptor.kind]));
+  const result = new Map<number, 'x' | 'y'>();
+  for (const batch of projection.dataBatches) {
+    if (batch.type !== 'rectangle' || batch.xAxisID === undefined || batch.yAxisID === undefined) continue;
+    const xKind = axisKinds.get(batch.xAxisID);
+    const yKind = axisKinds.get(batch.yAxisID);
+    if (xKind === 'categorical' && yKind !== undefined && yKind !== 'categorical') result.set(batch.layerIndex, 'x');
+    else if (yKind === 'categorical' && xKind !== undefined && xKind !== 'categorical') result.set(batch.layerIndex, 'y');
+  }
+  return result;
+}
+
+function center(bounds: Float32Array, record: number, axisOffset: 0 | 1): number {
+  const offset = record * 4 + axisOffset;
+  return ((bounds[offset] as number) + (bounds[offset + 2] as number)) * 0.5;
+}
+
+function buildNode(
+  order: Uint32Array, bounds: Float32Array, kinds: Uint8Array,
+  nodes: QueryNode[], start: number, count: number,
+): number {
   let minimumX = Number.POSITIVE_INFINITY;
   let minimumY = Number.POSITIVE_INFINITY;
   let maximumX = Number.NEGATIVE_INFINITY;
   let maximumY = Number.NEGATIVE_INFINITY;
+  let kindMask = 0;
   for (let position = start; position < start + count; position += 1) {
-    const offset = (order[position] as number) * 4;
+    const record = order[position] as number;
+    const offset = record * 4;
     minimumX = Math.min(minimumX, bounds[offset] as number);
     minimumY = Math.min(minimumY, bounds[offset + 1] as number);
     maximumX = Math.max(maximumX, bounds[offset + 2] as number);
     maximumY = Math.max(maximumY, bounds[offset + 3] as number);
+    kindMask |= 1 << (kinds[record] as number);
   }
   const nodeIndex = nodes.length;
-  nodes.push({ minimumX, minimumY, maximumX, maximumY, left: -1, right: -1, start, count });
+  nodes.push({ minimumX, minimumY, maximumX, maximumY, left: -1, right: -1, start, count, kindMask });
   if (count > LEAF_SIZE) {
     const leftCount = count >>> 1;
-    const left = buildNode(order, bounds, nodes, start, leftCount);
-    const right = buildNode(order, bounds, nodes, start + leftCount, count - leftCount);
-    nodes[nodeIndex] = { minimumX, minimumY, maximumX, maximumY, left, right, start: 0, count: 0 };
+    const left = buildNode(order, bounds, kinds, nodes, start, leftCount);
+    const right = buildNode(order, bounds, kinds, nodes, start + leftCount, count - leftCount);
+    nodes[nodeIndex] = { minimumX, minimumY, maximumX, maximumY, left, right, start: 0, count: 0, kindMask };
   }
   return nodeIndex;
 }

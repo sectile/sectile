@@ -9,7 +9,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
 | core | 381 | 26 | 53 |
-| chart | 78 | 0 | 11 |
+| chart | 79 | 0 | 11 |
 | dom | 421 | 181 | 14 |
 | form | 21 | 0 | 6 |
 | tabular | 32 | 0 | 4 |
@@ -90,7 +90,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | chart:model.replace-layer | external | `O(sLayer + nLayer)` worst-case | `O(sLayer + nLayer)` | `O(sLayer + nLayer)` | `O(sLayer + nLayer)` | forbidden | VAL-016, VAL-017 |
 | chart:projection.create | trusted | `O(nLayer + kRepresentative)` worst-case | `O(nLayer + kRepresentative)` | `O(kRepresentative)` | `O(kRepresentative)` | forbidden | VAL-016, VAL-017 |
 | chart:projection.create.semantic | trusted | `O(nLayer + nAxis + nTick + log nDatum + qIndex + kRepresentative)` expected | `O(nLayer + nAxis + nTick + kRepresentative)` | `O(nAxis + nTick + kRepresentative)` | `O(kRepresentative)` | forbidden | VAL-016, VAL-017 |
-| chart:projection.hit-test.indexed | trusted | `O(log kRepresentative + cCandidate + h log h)` expected | `O(log kRepresentative + h)` | `O(h)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| chart:projection.hit-test.indexed | trusted | `O(log kRepresentative + cCandidate + lLine log mLine + h log h)` expected | `O(log kRepresentative + h)` | `O(h)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | chart:projection.query-index.build | trusted | `O(kRepresentative log kRepresentative)` worst-case | `O(kRepresentative)` | `O(1)` | `O(kRepresentative)` | allowed | VAL-016, VAL-017 |
 | chart:view.transition.axis-domain | trusted | `O(nAxis)` worst-case | `O(nAxis)` | `O(nAxis)` | `O(nAxis)` | forbidden | VAL-016, VAL-017 |
 | dom:chart.canvas2d-render | connected | `O(a + k)` worst-case | `O(a)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |

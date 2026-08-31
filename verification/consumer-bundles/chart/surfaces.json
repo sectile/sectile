@@ -168,9 +168,10 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
-        "DEFAULT_CHART_HIT_RADIUS",
+        "DEFAULT_CHART_NEAREST_RADIUS",
         "MAXIMUM_CHART_HITS",
         "hitTestChartProjection",
+        "inspectChartProjectionHitTest",
         "prepareChartProjectionQueries",
         "tryHitTestChartProjection"
       ],

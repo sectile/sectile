@@ -4,7 +4,7 @@ import { Window } from 'happy-dom';
 import { createChartController } from '@sectile/chart/controller';
 import { createDOMChart, tryCreateDOMChart } from '../.verification-dist/chart.js';
 
-function fixture() {
+function fixture(profile = 'point') {
   const window = new Window({ url: 'https://sectile.dev/chart' });
   const root = window.document.createElement('div');
   const canvas = window.document.createElement('canvas');
@@ -21,7 +21,7 @@ function fixture() {
     flush() {},
     disconnect: () => { disconnected += 1; },
   };
-  const controller = createChartController({ model: { layers: [{ id: 'points', profile: 'point', data: [
+  const controller = createChartController({ model: { layers: [{ id: 'points', profile, data: [
     { id: 1, x: 0, y: 0 }, { id: '1', x: 1, y: 1 },
   ] }] } });
   return { window, root, canvas, renderer, controller, renders, disconnected: () => disconnected };
@@ -52,7 +52,7 @@ test('DOM Chart projects synchronously and exposes a bounded mixed-ID accessibil
   assert.equal(value.disconnected(), 0, 'borrowed renderer remains caller-owned');
 });
 
-test('pointer, click, and keyboard input translate while ordinary wheel remains native', () => {
+test('pointer and click use bounded nearest regions while ordinary wheel remains native', () => {
   const value = fixture();
   const commands = [];
   const connection = createDOMChart({
@@ -62,12 +62,12 @@ test('pointer, click, and keyboard input translate while ordinary wheel remains 
     renderer: value.renderer,
     onCommand: (command) => commands.push(command.type),
   });
-  value.canvas.dispatchEvent(new value.window.PointerEvent('pointermove', { clientX: 0, clientY: 100 }));
+  value.canvas.dispatchEvent(new value.window.PointerEvent('pointermove', { clientX: 24, clientY: 100 }));
   connection.flush();
   assert.equal(value.controller.getSnapshot().state.activeDatum, 1);
   assert.equal(value.root.querySelectorAll('[role="option"]')[0].hasAttribute('data-active'), true);
 
-  value.canvas.dispatchEvent(new value.window.MouseEvent('click', { clientX: 100, clientY: 0 }));
+  value.canvas.dispatchEvent(new value.window.MouseEvent('click', { clientX: 76, clientY: 0 }));
   connection.flush();
   assert.deepEqual(value.controller.getSnapshot().state.selection, { type: 'points', ids: ['1'] });
   assert.equal(value.controller.getSnapshot().state.cursor, '1');
@@ -83,6 +83,24 @@ test('pointer, click, and keyboard input translate while ordinary wheel remains 
   assert.equal(value.controller.getSnapshot(), beforeWheel);
   assert.equal(commands.includes('render-requested'), true);
   connection.disconnect(); connection.disconnect();
+});
+
+test('line pointer and click interaction use nearest X regions across the plot height', () => {
+  const value = fixture('ordered-series');
+  const connection = createDOMChart({
+    root: value.root,
+    canvas: value.canvas,
+    controller: value.controller,
+    renderer: value.renderer,
+  });
+  value.canvas.dispatchEvent(new value.window.PointerEvent('pointermove', { clientX: 25, clientY: 0 }));
+  connection.flush();
+  assert.equal(value.controller.getSnapshot().state.activeDatum, 1);
+
+  value.canvas.dispatchEvent(new value.window.MouseEvent('click', { clientX: 75, clientY: 100 }));
+  connection.flush();
+  assert.deepEqual(value.controller.getSnapshot().state.selection, { type: 'points', ids: ['1'] });
+  connection.disconnect();
 });
 
 test('connection-owned overlay renders bounded axes, grid, values, labels, units, and legend', () => {

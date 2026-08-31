@@ -415,7 +415,7 @@
       "benchmarkIDs": [
         "chart:query:hit-test"
       ],
-      "specificationCeiling": "O(log kRepresentative + cCandidate + h log h)",
+      "specificationCeiling": "O(log kRepresentative + cCandidate + lLine log mLine + h log h)",
       "contract": {
         "variables": [
           {
@@ -425,7 +425,17 @@
           },
           {
             "name": "cCandidate",
-            "meaning": "BVH candidates intersecting the query radius",
+            "meaning": "BVH, equal-X, or equal-category candidates examined by the selected profile policy",
+            "ceiling": "kRepresentative"
+          },
+          {
+            "name": "lLine",
+            "meaning": "projected polyline batch count",
+            "ceiling": "maxLayers"
+          },
+          {
+            "name": "mLine",
+            "meaning": "maximum represented points in one ordered line batch",
             "ceiling": "kRepresentative"
           },
           {
@@ -435,7 +445,7 @@
           }
         ],
         "time": {
-          "bound": "O(log kRepresentative + cCandidate + h log h)",
+          "bound": "O(log kRepresentative + cCandidate + lLine log mLine + h log h)",
           "kind": "expected",
           "runtimeState": "trusted"
         },
@@ -453,13 +463,14 @@
           "subscriptions": "0"
         },
         "assumptions": [
-          "prepareChartProjectionQueries or an earlier hit test built the immutable projection BVH"
+          "prepareChartProjectionQueries or an earlier hit test built the immutable projection BVH and categorical bar orders",
+          "ordered-series projected X coordinates remain nondecreasing"
         ],
-        "proof": "Balanced nodes prune disjoint bounds; leaf candidates receive exact profile-specific geometry checks before bounded output.",
-        "adversarialWitness": "A dense overlap visits every candidate; a narrow query in separated data visits a logarithmic path and bounded leaves.",
+        "proof": "Filled areas use exact BVH candidates; ordered lines use one binary search per bounded layer plus equal-X candidates; categorical bars use retained center orders; scatter points use the bounded-radius BVH. Deterministic diagnostics count visited nodes, tested primitives, and searched line or bar partitions.",
+        "adversarialWitness": "Dense overlapping geometry or repeated X/category coordinates visits every tied candidate; separated points, lines, and categories retain logarithmic lookup plus bounded leaves.",
         "fullScan": {
           "allowed": false,
-          "rationale": "A spatially narrow query may not scan unrelated projected primitives."
+          "rationale": "Pointer queries use retained spatial, ordered-X, or categorical-center indexes instead of scanning unrelated projected primitives."
         }
       }
     },
@@ -497,8 +508,8 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Primitive bounds are emitted once, Morton keys are sorted once, and one balanced packed hierarchy is retained per immutable projection.",
-        "adversarialWitness": "Every representative emits one sortable query primitive.",
+        "proof": "Primitive bounds are emitted once, Morton keys are sorted once, categorical bar records are sorted once by their dominant-axis centers, and one balanced packed hierarchy plus two packed bar orders is retained per immutable projection.",
+        "adversarialWitness": "Every representative emits one sortable query primitive; every categorical bar additionally enters exactly one dominant-axis order.",
         "fullScan": {
           "allowed": true,
           "rationale": "Index construction must include every queryable projected primitive."

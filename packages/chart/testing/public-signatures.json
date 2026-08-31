@@ -51,7 +51,7 @@
       "types": "dist/view.d.ts"
     }
   ],
-  "fingerprint": "fd8b8ed85d86e975be2efa0989005c3e247ca3e8cf4511f473c5ecc3b30be39b",
+  "fingerprint": "745398a66d3362748e9937769a351635c6834e9d91582fda182d551253168195",
   "files": [
     {
       "path": "dist/contract.d.ts",
@@ -87,7 +87,7 @@
     },
     {
       "path": "dist/query.d.ts",
-      "sha256": "86973f52feb31d4b3bc9af8871eb0e720ec97e64bc1add49e5241b877a5dae32"
+      "sha256": "36149395a2e728d9931d16933129c49a6a4ff30cf48c8d410993ad5590d2e4fd"
     },
     {
       "path": "dist/result.d.ts",

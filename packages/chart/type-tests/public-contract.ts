@@ -13,6 +13,7 @@ import {
 import { replaceChartLayer, type ChartModel } from '@sectile/chart/model';
 import { createChartDefinition, replaceChartDefinition } from '@sectile/chart/definition';
 import { createChartProjection } from '@sectile/chart/projection';
+import { hitTestChartProjection, inspectChartProjectionHitTest } from '@sectile/chart/query';
 import { createContinuousColorScale, createOrdinalColorScale } from '@sectile/chart/scale';
 import { createChartAxisViewState, reduceChartViewAction } from '@sectile/chart/view';
 
@@ -148,6 +149,10 @@ if (!zoomed.ok) throw new TypeError(zoomed.error.message);
 const zoomedView = zoomed.value.state;
 const semanticProjection = createChartProjection(semanticNext, { viewport: { width: 640, height: 320 }, view: zoomedView });
 void semanticProjection.dataBatches;
+const semanticHits = hitTestChartProjection(semanticProjection, { x: 100, y: 100, radius: 40, maximumHits: 1 });
+semanticHits[0]?.kind satisfies 'datum' | 'aggregate' | undefined;
+const inspectedHits = inspectChartProjectionHitTest(semanticProjection, { x: 100, y: 100 });
+inspectedHits.diagnostics.visitedIndexNodes satisfies number;
 
 const continuousColor = createContinuousColorScale({ minimum: 0, maximum: 1 }, [
   { offset: 0, color: [0, 0, 0, 1] }, { offset: 1, color: [1, 1, 1, 1] },
