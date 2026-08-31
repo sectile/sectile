@@ -4,8 +4,8 @@ import { effectScope, nextTick, shallowRef } from 'vue';
 import { useChart } from '../.verification-dist/chart.js';
 
 const series = Object.freeze([
-  Object.freeze({ id: 1, recordedAt: new Date(0), amount: 12, value: 1 }),
-  Object.freeze({ id: '2', recordedAt: 1_000, amount: 18, value: 2 }),
+  Object.freeze({ id: 1, recordedAt: new Date(0), category: 'first', amount: 12, value: 1 }),
+  Object.freeze({ id: '2', recordedAt: 1_000, category: 'second', amount: 18, value: 2 }),
 ]);
 const layerSeries = (prefix) => Object.freeze(series.map((datum) => Object.freeze({ ...datum, id: `${prefix}-${String(datum.id)}` })));
 const scatterSeries = layerSeries('scatter');
@@ -15,12 +15,13 @@ const heatmapSeries = layerSeries('heatmap');
 const cartesianDefinition = (data = series) => ({
   coordinate: { kind: 'cartesian', axes: [
     { id: 10, orientation: 'x', scale: 'temporal', field: 'recordedAt' },
+    { id: 'category', orientation: 'x', scale: 'categorical', field: 'category' },
     { id: 'amount', orientation: 'y', scale: 'linear', field: 'amount' },
   ] },
   layers: [
     { id: 'line', kind: 'line', data, xAxis: 10, yAxis: 'amount' },
     { id: 'scatter', kind: 'scatter', data: scatterSeries, xAxis: 10, yAxis: 'amount', projection: 'density' },
-    { id: 'bar', kind: 'bar', data: barSeries, xAxis: 10, yAxis: 'amount' },
+    { id: 'bar', kind: 'bar', data: barSeries, xAxis: 'category', yAxis: 'amount' },
     { id: 'heatmap', kind: 'heatmap', data: heatmapSeries, xAxis: 10, yAxis: 'amount' },
   ],
 });
@@ -57,7 +58,7 @@ test('one shallow definition replacement reconciles after one Vue flush', async 
   const priorGeneration = chart.controller.getModel().generation;
   source.value = cartesianDefinition(Object.freeze([
     ...series,
-    Object.freeze({ id: 3, recordedAt: 2_000, amount: 24, value: 3 }),
+    Object.freeze({ id: 3, recordedAt: 2_000, category: 'third', amount: 24, value: 3 }),
   ]));
   await nextTick();
   assert.equal(chart.controller.getModel().generation, priorGeneration + 1);
@@ -85,7 +86,7 @@ test('controlled view publishes requests while defaultView remains controller-ow
     viewCapabilities: [{ axisID: 10 }],
     defaultView: initialView,
   });
-  uncontrolled.dispatch({ type: 'pan-axis-view', axisID: 10, fraction: 0.1, phase: 'settled' });
+  uncontrolled.dispatch({ type: 'zoom-axis-view', axisID: 10, factor: 2, phase: 'settled' });
   assert.notEqual(uncontrolled.snapshot.value.state.view, initialView);
   assert.throws(() => useChart({
     definition: cartesianDefinition(), viewCapabilities: [{ axisID: 10 }], view: controlled, defaultView: initialView,

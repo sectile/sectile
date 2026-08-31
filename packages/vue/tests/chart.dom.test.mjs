@@ -19,6 +19,10 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
   ResizeObserver: browserWindow.ResizeObserver,
 });
+browserWindow.HTMLElement.prototype.getBoundingClientRect = () => ({
+  x: 0, y: 0, left: 0, top: 0, right: 400, bottom: 300,
+  width: 400, height: 300, toJSON() {},
+});
 
 const { createApp, createSSRApp, h, nextTick, shallowRef } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');

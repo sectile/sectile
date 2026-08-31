@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { ChartSelection, ChartViewState } from '@sectile/chart/interaction';
+import type { ChartViewState } from '@sectile/chart/contract';
+import type { ChartSelection } from '@sectile/chart/interaction';
 import { ref } from 'vue';
 import {
   ChartAxisView,
@@ -40,7 +41,7 @@ const shares = [
   { id: 102, label: 'SMB', value: 28 },
 ] as const;
 const channelShares = shares.map((datum) => ({ ...datum, id: datum.id + 100 }));
-const selection = ref<ChartSelection<ID>>({ type: 'none' });
+const selection = ref<ChartSelection<ID>>({ type: 'points', ids: [] });
 const view = ref<ChartViewState<ID> | null>(null);
 </script>
 

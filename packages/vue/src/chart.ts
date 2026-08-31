@@ -962,7 +962,9 @@ export const ChartNavigation = defineComponent({
     const value = shallowRef(navigationDefinition(props));
     const record = context.declarations.register('navigation', () => value.value);
     watch(() => [props.axes, props.drag, props.wheel, props.wheelModifier, props.pinch, props.keyboard] as const, () => {
-      value.value = navigationDefinition(props); record.touch();
+      const next = navigationDefinition(props);
+      if (sameNavigation(value.value, next)) return;
+      value.value = next; record.touch();
     }, { deep: false, flush: 'post' });
     onBeforeUnmount(record.dispose);
     return (): null => null;
@@ -974,6 +976,22 @@ function navigationDefinition(props: Record<string, unknown>): DOMChartNavigatio
     axes: props['axes'], drag: props['drag'], wheel: props['wheel'], wheelModifier: props['wheelModifier'],
     pinch: props['pinch'], keyboard: props['keyboard'],
   })) as DOMChartNavigation;
+}
+
+function sameNavigation(left: DOMChartNavigation, right: DOMChartNavigation): boolean {
+  return sameStableIDs(left.axes, right.axes)
+    && left.drag === right.drag
+    && left.wheel === right.wheel
+    && left.wheelModifier === right.wheelModifier
+    && left.pinch === right.pinch
+    && left.keyboard === right.keyboard;
+}
+
+function sameStableIDs(left: readonly StableID[] | undefined, right: readonly StableID[] | undefined): boolean {
+  if (left === right) return true;
+  if (left === undefined || right === undefined || left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index += 1) if (left[index] !== right[index]) return false;
+  return true;
 }
 
 export const ChartViewControls = defineComponent({

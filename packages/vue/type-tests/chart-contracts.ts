@@ -1,5 +1,12 @@
 import type { ChartDefinition } from '@sectile/chart/definition';
-import type { ChartSelection, ChartViewState } from '@sectile/chart/interaction';
+import type { ChartSelection } from '@sectile/chart/interaction';
+import type { ChartViewState } from '@sectile/chart/contract';
+import {
+  createChartComponents,
+  useChartAxisSelector,
+  useChartLayerSelector,
+  useChartSelector,
+} from '../.verification-dist/chart.js';
 import type {
   ChartAxisProps,
   ChartCartesianLayerProps,
@@ -9,10 +16,6 @@ import type {
   ChartRootProps,
   UseChartOptions,
   UseChartResult,
-  createChartComponents,
-  useChartAxisSelector,
-  useChartLayerSelector,
-  useChartSelector,
 } from '../.verification-dist/chart.js';
 import type { VirtualListKeyResolver } from '../.verification-dist/virtual-list.js';
 
@@ -51,7 +54,7 @@ const definition = {
   ] },
   layers: [{ kind: 'line', id: 'series', data: line.data, xAxis: 'time', yAxis: 'value' }],
 } satisfies ChartDefinition<Datum, ID>;
-const headless: UseChartOptions<ID> = { definition, defaultSelection: { type: 'none' } };
+const headless: UseChartOptions<ID> = { definition, defaultSelection: { type: 'points', ids: [] } };
 void headless;
 
 declare const selection: ChartSelection<ID>;
