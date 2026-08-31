@@ -1,5 +1,11 @@
 # @sectile/temporal
 
+## 0.12.0
+
+### Changes
+
+- fix(tooling): make verification cross-platform (90ffec27)
+
 ## 0.11.1
 
 ### Changes

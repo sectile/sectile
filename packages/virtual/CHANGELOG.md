@@ -1,5 +1,13 @@
 # @sectile/virtual
 
+## 0.12.0
+
+### Changes
+
+- fix(tooling): make verification cross-platform (90ffec27)
+- test(chart): integrate release verification gates (3d793f0a)
+- feat(identity)!: support numeric stable identities (bceed9af)
+
 ## 0.11.1
 
 ### Changes

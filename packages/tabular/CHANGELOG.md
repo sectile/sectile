@@ -1,5 +1,12 @@
 # @sectile/tabular
 
+## 0.12.0
+
+### Changes
+
+- fix(tooling): make verification cross-platform (90ffec27)
+- test(chart): close release performance gates (b3a791be)
+
 ## 0.11.1
 
 ### Changes

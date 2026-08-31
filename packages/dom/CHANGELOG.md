@@ -1,5 +1,29 @@
 # @sectile/dom
 
+## 0.12.0
+
+### Changes
+
+- feat(chart)!: use profile-aware hit regions (dfa9b943)
+- fix(tooling): make verification cross-platform (90ffec27)
+- test(dom): verify chart interaction matrix (8d04f26d)
+- docs(chart): verify production examples (2bbd5023)
+- chore(chart): refresh package verification baselines (3d244928)
+- test(dom): verify chart rendering in browser (8927aacd)
+- chore(chart): wire public package contracts (70f28c32)
+- feat(dom): translate chart navigation input (d29fdf2a)
+- feat(dom): retain chart rendering resources (d6d860de)
+- fix(form): preserve focus and host API boundaries (84eb62c9)
+- test(dom): verify WebGL2 on real hardware (6c08d42f)
+- test(chart): integrate release verification gates (3d793f0a)
+- test(dom): cover chart peer isolation (d26a485f)
+- feat(vue): add reactive chart composition (2289b723)
+- chore(chart): isolate adapter peer boundaries (744bb793)
+- feat(dom): connect interactive chart surfaces (b4a1fe0d)
+- feat(dom): add chart rendering backends (12e4e4f4)
+- feat(identity)!: support numeric stable identities (bceed9af)
+- feat(chart): establish package topology (8194706d)
+
 ## 0.11.1
 
 ### Changes

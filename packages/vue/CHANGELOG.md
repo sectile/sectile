@@ -1,5 +1,28 @@
 # @sectile/vue
 
+## 0.12.0
+
+### Changes
+
+- fix(tooling): make verification cross-platform (90ffec27)
+- fix(vue): commit controlled IME input once (cd7d124c)
+- docs(chart): verify production examples (2bbd5023)
+- chore(chart): refresh package verification baselines (3d244928)
+- fix(vue): preserve equal chart navigation declarations (fae13324)
+- chore(chart): wire public package contracts (70f28c32)
+- feat(vue): compose chart controller ownership (fa35b948)
+- feat(vue): declare chart composition (26ed00b0)
+- fix(form): preserve focus and host API boundaries (84eb62c9)
+- fix(vue): accept stable IDs in virtualizer (521d815e)
+- test(chart): close release performance gates (b3a791be)
+- test(chart): integrate release verification gates (3d793f0a)
+- fix(vue): preserve typed chart ownership (4afc6f7c)
+- fix(vue): focus tokenized tab identities (d92ccfca)
+- feat(vue): add reactive chart composition (2289b723)
+- chore(chart): isolate adapter peer boundaries (744bb793)
+- feat(identity)!: support numeric stable identities (bceed9af)
+- feat(chart): establish package topology (8194706d)
+
 ## 0.11.1
 
 ### Changes

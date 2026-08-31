@@ -1,5 +1,16 @@
 # @sectile/core
 
+## 0.12.0
+
+### Changes
+
+- fix(tooling): make verification cross-platform (90ffec27)
+- perf(core): restore small sequence patch fast path (5365f53c)
+- test(chart): calibrate close performance evidence (4bf794a6)
+- test(chart): close release performance gates (b3a791be)
+- test(chart): integrate release verification gates (3d793f0a)
+- feat(identity)!: support numeric stable identities (bceed9af)
+
 ## 0.11.1
 
 ### Changes

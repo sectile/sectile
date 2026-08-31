@@ -1,5 +1,14 @@
 # @sectile/form
 
+## 0.12.0
+
+### Changes
+
+- fix(tooling): make verification cross-platform (90ffec27)
+- fix(form): preserve focus and host API boundaries (84eb62c9)
+- test(chart): close release performance gates (b3a791be)
+- feat(identity)!: support numeric stable identities (bceed9af)
+
 ## 0.11.1
 
 ### Changes
