@@ -1,6 +1,6 @@
 ---
 title: Chart drawing and hit testing
-description: Draw bounded chart marks, find data under a pointer, and prepare custom rendering.
+description: Project chart semantics into bounded public batches and distinguish exact datum hits from aggregate hits.
 ---
 
 <script setup>
@@ -9,46 +9,55 @@ import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageE
 
 # Drawing and hit testing
 
-Projection maps chart data into the current viewport. The DOM and Vue integrations do this automatically. Use the projection API directly when you are building a custom renderer, a tooltip layer, an annotation system, or a non-DOM host.
+DOM and Vue project automatically. Use this API directly for custom graphics, tooltips, annotations, export, or another host.
 
 <ChartPackageExample kind="heatmap" host="dom" />
 
-## Create a projection
+## Project a declarative chart
 
 ```ts
-import { createChartModel } from '@sectile/chart/model'
-import { createChartProjection } from '@sectile/chart/projection'
+import { createChartController } from '@sectile/chart/controller'
 
-const state = createChartModel(model)
-const projection = createChartProjection(state, {
-  viewport: { width: 800, height: 480, devicePixelRatio: 2 },
+const controller = createChartController({ definition })
+const projection = controller.project({
+  viewport: { width: 960, height: 540, devicePixelRatio: 2 },
   maximumRepresentatives: 50_000,
 })
+
+if (!projection.ok) showChartError(projection.error)
 ```
 
-`maximumRepresentatives` caps how many data items reach drawing and hit testing. When the source is larger, Chart chooses representatives deterministically across all layers. It preserves the model and interaction state; only the detail available in this projection changes.
+A successful projection exposes bounded point, polyline, rectangle, cell, or arc batches. It also retains data-space geometry and layer revisions so a custom renderer can reuse unchanged geometry when only the viewport changes.
 
-## Find data under a pointer
+`maximumRepresentatives` is a correctness boundary, not silent sampling. Line layers may emit an extrema-preserving viewport envelope. Scatter density and heatmap aggregation emit explicit aggregate representatives. Exact scatter, bar, raw heatmap, pie, and donut reject a cap that cannot represent all visible marks.
+
+## Handle both hit kinds
 
 ```ts
 import { hitTestChartProjection } from '@sectile/chart/query'
 
-const [hit] = hitTestChartProjection(projection, {
+const [hit] = hitTestChartProjection(projection.value, {
   x: pointerX,
   y: pointerY,
   radius: 8,
   maximumHits: 1,
 })
 
-if (hit) showTooltip(hit.id)
+if (hit?.kind === 'datum') {
+  showDatumTooltip(hit.id)
+} else if (hit?.kind === 'aggregate') {
+  showAggregateTooltip({
+    count: hit.representative.count,
+    bounds: hit.representative.bounds,
+    reduction: hit.representative.reduction,
+  })
+}
 ```
 
-Results are ordered from the nearest visible mark, with the topmost layer winning ties. Point, line, rectangle, cell, and radial profiles use shape-aware hit testing. One query returns no more than 256 results.
+An aggregate has no fabricated datum ID. Its count, data-space bounds, and reduction are the truthful interaction result. Results are nearest-first with later layers winning ties, and one query returns at most 256 hits.
 
-The first query prepares the projection for repeated searches. Call `prepareChartProjectionQueries(projection)` earlier when the first pointer interaction must not pay that setup cost.
+The first query lazily prepares an immutable spatial index. Call `prepareChartProjectionQueries(projection)` after projection when first-hover latency matters.
 
-## Use a custom renderer
+## Supply a custom renderer only when needed
 
-A projection exposes public batches for points, polylines, rectangles, cells, and arcs. A custom `ChartRenderer` can use those batches to draw per-series colors, fills, annotations, or a different graphics API while keeping the same model and interaction behavior.
-
-If the built-in Canvas renderer is sufficient, stay with [DOM rendering](./dom) or [Vue composition](./vue). You do not need to inspect projection batches for ordinary charts.
+Implement the public `ChartRenderer` contract when one built-in mark style is insufficient or another graphics API is required. Consume public batches and revision metadata; do not depend on packed internal storage. For ordinary axes, legends, accessible interaction, and Canvas drawing, stay with [DOM rendering](./dom) or [Vue composition](./vue).

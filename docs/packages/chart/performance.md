@@ -1,24 +1,44 @@
 ---
 title: Chart large datasets
-description: Keep drawing, interaction, memory, and browser work bounded as chart data grows.
+description: Select exact or aggregate semantics, cap drawing work honestly, and validate the largest supported browser case.
 ---
 
 # Large datasets
 
-Start with the default renderer and limits. Add a representative cap when the source can grow beyond what every frame should draw, then use adaptive resolution only when pixel work is still the bottleneck.
+Performance starts with a truthful chart contract. Decide whether every visible mark must retain a datum identity or whether the product can interact with a named aggregate. Then set a representative cap and renderer policy from the largest useful viewport.
 
-## Choose a renderer
+## Choose exact or aggregate semantics
 
-| Situation | Recommended mode |
-| --- | --- |
-| Large or frequently redrawn charts | `auto` or `webgl2` |
-| Smaller charts and broad browser compatibility | `auto` or `canvas2d` |
-| Diagnosing a WebGL-specific issue | `canvas2d` |
-| The application requires WebGL2 and should not fall back | `webgl2` |
+| Chart | Default | Scalable option | Result under an insufficient cap |
+| --- | --- | --- | --- |
+| Line | Extrema-preserving viewport envelope with datum representatives | Built in | Rejects only when even the envelope cannot fit |
+| Scatter | `projection="raw"` | `projection="density"` | Raw rejects; density emits aggregate cells |
+| Bar | Exact visible bars | None | Rejects |
+| Heatmap | `projection="raw"` | `{ kind: 'aggregate', reduction }` | Raw rejects; aggregate emits reduced cells |
+| Pie | Exact slices | None | Rejects |
+| Donut | Exact slices | None | Rejects |
 
-`auto` prefers WebGL2 and falls back to Canvas2D. Keep it unless the application has a concrete compatibility or diagnostic reason to force a backend.
+Heatmap reductions are `sum`, `mean`, `minimum`, and `maximum`. Aggregate hits return their count, bounds, and reduction instead of pretending to be a source datum.
 
-## Cap visible detail
+```vue
+<ChartScatter
+  id="requests"
+  :data="requests"
+  x-axis="latency"
+  y-axis="payload"
+  projection="density"
+/>
+
+<ChartHeatmap
+  id="traffic"
+  :data="traffic"
+  x-axis="day"
+  y-axis="hour"
+  :projection="{ kind: 'aggregate', reduction: 'mean' }"
+/>
+```
+
+## Cap visible work
 
 ```ts
 const chart = createDOMChart({
@@ -34,9 +54,11 @@ const chart = createDOMChart({
 })
 ```
 
-`maximumRepresentatives` limits the data passed to drawing and hit testing for one projection. Selection and the source model still keep their exact IDs. Pick a value from the maximum useful visual detail for the chart, not only from the source row count.
+Set `maximumRepresentatives` from useful screen detail and interaction semantics, not only source row count. Axis-domain views exclude off-screen Cartesian data before projection. Exact visible data beyond the cap fails explicitly.
 
-## Protect the frame budget
+## Protect pixel and upload cost
+
+`auto` prefers WebGL2 and falls back to Canvas2D. The WebGL2 renderer can retain unchanged geometry and upload only changed batches; Canvas2D remains the compatibility path. Adaptive rendering lowers backing resolution within declared bounds when measured frame cost exceeds the budget.
 
 ```ts
 renderPolicy: {
@@ -48,18 +70,14 @@ renderPolicy: {
 }
 ```
 
-Adaptive rendering lowers the canvas backing resolution within your bounds when drawing exceeds the target. It does not change chart values, selection, pan, zoom, or accessibility state.
+Adaptive scale never changes values, identities, selection, accessible state, or axis domains.
 
-## Update intentionally
+## Update and retain intentionally
 
-- Replace the model when a complete next dataset already exists.
-- Apply a patch when the upstream operation is a small insert, removal, or replacement.
-- Keep IDs stable so interaction state can survive updates.
-- Prepare projection queries before the first pointer event when first-hover latency matters.
-- Disconnect DOM charts and dispose application-owned controllers and renderers when a view is removed.
+- Replace declarative arrays when query results change; keep unchanged layer arrays referentially stable.
+- Keep datum IDs stable so selection and cursor survive replacement.
+- Use low-level patches only when the producer already owns small profile operations and axis domains do not need reassembly.
+- Prepare hit-test queries before the first pointer event when first-hover latency matters.
+- Disconnect DOM connections and dispose application-owned controllers and renderers.
 
-## Know the ceilings
-
-The default model ceiling is 1,000,000 data items across 64 layers. One patch may contain up to 100,000 operations. One hit test returns at most 256 results, and the accessible DOM list defaults to 1,000 items with a configurable maximum of 10,000.
-
-These are safety ceilings, not recommended display counts. Set lower application limits when the product has a smaller known maximum, and test the largest real dataset on the browsers and GPUs you support.
+Default safety ceilings allow 64 layers and 1,000,000 data items; a projection allows up to 1,000,000 representatives. These are rejection limits, not performance promises. Benchmark the maximum real cardinality, update rate, viewport, device-pixel ratio, supported browsers, and representative GPU classes before setting production budgets.

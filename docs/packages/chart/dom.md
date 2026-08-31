@@ -1,6 +1,6 @@
 ---
 title: DOM chart rendering
-description: Connect chart state to an existing element and canvas with accessible browser input.
+description: Connect declarative chart state to existing elements with accessible, page-safe Canvas rendering.
 ---
 
 <script setup>
@@ -9,7 +9,7 @@ import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageE
 
 # DOM rendering
 
-`@sectile/dom/chart` connects a chart controller to an existing root element and canvas. It handles sizing, drawing, pointer and keyboard input, accessibility, and cleanup.
+`@sectile/dom/chart` measures an existing root, projects its controller, renders data marks, exposes axes and accessibility overlays, translates browser input, and owns browser resource cleanup.
 
 <ChartPackageExample kind="bar" host="dom" />
 
@@ -19,11 +19,11 @@ import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageE
 pnpm add @sectile/chart @sectile/dom
 ```
 
-## Connect a canvas
+## Connect existing elements
 
 ```html
-<div data-chart style="position: relative; height: 22rem">
-  <canvas style="width: 100%; height: 100%"></canvas>
+<div data-chart>
+  <canvas></canvas>
 </div>
 ```
 
@@ -33,25 +33,27 @@ import { createDOMChart } from '@sectile/dom/chart'
 
 const root = document.querySelector<HTMLElement>('[data-chart]')!
 const canvas = root.querySelector<HTMLCanvasElement>('canvas')!
-const controller = createChartController({ model })
+const controller = createChartController({
+  definition,
+  viewCapabilities: [{ axisID: 'date', minimumSpan: 86_400_000 }],
+})
 
 const chart = createDOMChart({
   root,
   canvas,
   controller,
   renderer: 'auto',
-  accessibilityLabel: 'Orders by weekday',
-  getAccessibleDatumLabel: id => orderLabels[id],
+  accessibilityLabel: 'Weekly revenue',
+  getAccessibleDatumLabel: id => revenueLabels.get(id) ?? String(id),
+  navigation: { wheel: 'native', keyboard: true },
 })
 ```
 
-`auto` uses WebGL2 when available and falls back to Canvas2D. Use `canvas2d` to force the compatibility renderer or `webgl2` when the chart must fail instead of falling back.
+Give the root a real layout size and make the canvas fill it in application CSS. The connection observes root size and device-pixel-ratio changes; displayed examples omit that product styling so the integration contract stays visible.
 
-The root needs a real width and height. The connection observes size changes and updates the canvas backing resolution for the device pixel ratio.
+## Choose a renderer
 
-## Style the marks
-
-Create a renderer when the built-in color, point radius, or line width needs to change.
+`auto` uses WebGL2 when available and falls back to Canvas2D. Choose `canvas2d` for compatibility diagnosis, or `webgl2` when missing acceleration must be an explicit failure.
 
 ```ts
 import { createChartRenderer } from '@sectile/dom/chart'
@@ -59,20 +61,20 @@ import { createChartRenderer } from '@sectile/dom/chart'
 const renderer = createChartRenderer(canvas, {
   mode: 'auto',
   style: {
-    color: [0.33, 0.41, 0.92, 1],
+    color: [0.18, 0.42, 0.86, 1],
     pointRadius: 4,
     lineWidth: 2,
   },
 })
-
-const chart = createDOMChart({ root, canvas, controller, renderer })
 ```
 
-The built-in renderer applies one style to its data marks. Add axes, labels, legends, and annotations as normal DOM or SVG content around the canvas. Supply a custom `ChartRenderer` when the drawing itself needs per-series colors, fills, or another graphics API.
+Pass the renderer object to `createDOMChart` when using it. A borrowed renderer remains application-owned; a renderer created from a mode string is connection-owned.
 
-## Bound the work
+## Keep page input predictable
 
-Use a fixed policy for a stable backing resolution. Use an adaptive policy when a dense chart should reduce pixel work to stay within a frame budget.
+Native wheel behavior, no drag, no pinch, and no keyboard navigation are the defaults. Opt into each binding. Direct drag or pinch requires `controlAlternative: 'built-in'` or `'external'`; wire the corresponding buttons to controller view events when using an external alternative.
+
+## Bound frame work
 
 ```ts
 renderPolicy: {
@@ -84,11 +86,14 @@ renderPolicy: {
 }
 ```
 
-## Clean up
+The representative cap follows the exact/aggregate contract described in [Large datasets](./performance). Adaptive scale changes backing-pixel cost only; it never changes data, selection, or view domains.
+
+## Disconnect ownership
 
 ```ts
 chart.disconnect()
 controller.dispose()
+renderer.disconnect() // only for an application-owned renderer
 ```
 
-`disconnect()` removes listeners and observers, cancels pending frames, and releases a renderer created by the connection. If you pass a renderer object, it remains yours; call `renderer.disconnect()` as well.
+`disconnect()` removes listeners and observers, cancels pending frames, drops overlay nodes, and releases connection-owned graphics resources. It is idempotent.

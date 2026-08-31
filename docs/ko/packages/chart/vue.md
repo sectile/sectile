@@ -1,6 +1,6 @@
 ---
 title: Vue Chart 구성
-description: 반응형 차트를 렌더링하고 모델 변경과 차트 상태를 Vue에서 제어합니다.
+description: 잠재적으로 많은 datum만 배열에 두고 차트 의미는 Vue template에서 선언합니다.
 ---
 
 <script setup>
@@ -9,7 +9,7 @@ import ChartPackageExample from '../../../.vitepress/theme/components/ChartPacka
 
 # Vue 구성
 
-`@sectile/vue/chart`는 headless root, canvas, composable을 제공합니다. Vue 반응성은 framework 경계에서 다루고, 차트 모델과 상호작용 동작은 다른 환경에서도 사용할 수 있게 유지합니다.
+`@sectile/vue/chart`는 수가 적은 의미 구조인 coordinate, axis, layer, view capability, control, renderer를 compound component로 표현합니다. 수가 크게 늘 수 있는 datum collection만 배열로 전달합니다.
 
 <ChartPackageExample kind="line" />
 
@@ -19,80 +19,83 @@ import ChartPackageExample from '../../../.vitepress/theme/components/ChartPacka
 pnpm add vue @sectile/chart @sectile/dom @sectile/vue
 ```
 
-Chart는 DOM과 Vue 패키지의 선택적 peer입니다. 이 의존성은 Chart 진입점을 가져오는 애플리케이션에만 필요합니다.
+Chart와 DOM은 Vue의 optional peer이며 `@sectile/vue/chart`를 import할 때만 필요합니다.
 
-## 차트 렌더링하기
-
-```vue
-<script setup lang="ts">
-import type { ChartModel } from '@sectile/chart/model'
-import { ChartCanvas, ChartRoot } from '@sectile/vue/chart'
-
-const model = {
-  layers: [{
-    id: 'revenue',
-    profile: 'ordered-series',
-    data: [
-      { id: 'jan', x: 1, y: 32 },
-      { id: 'feb', x: 2, y: 41 },
-      { id: 'mar', x: 3, y: 38 },
-    ],
-  }],
-} satisfies ChartModel<string>
-
-const options = { model }
-</script>
-
-<template>
-  <ChartRoot
-    :options="options"
-    :dom="{ accessibilityLabel: '월별 매출' }"
-    class="chart"
-  >
-    <ChartCanvas />
-  </ChartRoot>
-</template>
-
-<style scoped>
-.chart { position: relative; height: 22rem; }
-.chart canvas { width: 100%; height: 100%; }
-</style>
-```
-
-`options.model`에는 ref, computed 값, getter, 일반 모델을 전달할 수 있습니다. 반응형 값을 교체하면 기존 차트가 갱신되고 선택과 cursor의 ID도 새 데이터에 맞게 정리됩니다.
-
-## 선택과 화면 제어하기
+## 프로덕션형 차트 선언하기
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue'
+import {
+  ChartAxisView, ChartCartesian, ChartLine, ChartNavigation,
+  ChartPanControl, ChartPlot, ChartRenderer, ChartResetView, ChartRoot,
+  ChartViewControls, ChartXAxis, ChartYAxis, ChartZoomControl,
+} from '@sectile/vue/chart'
+import { shallowRef } from 'vue'
 
-const selection = ref({ type: 'points' as const, ids: [] as string[] })
-const viewTransform = ref({ xScale: 1, yScale: 1, xOffset: 0, yOffset: 0 })
+const revenue = shallowRef([
+  { id: 271, date: new Date('2026-07-06'), amount: 128_000 },
+  { id: 272, date: new Date('2026-07-13'), amount: 142_000 },
+  { id: 273, date: new Date('2026-07-20'), amount: 137_000 },
+])
 </script>
 
 <template>
-  <ChartRoot
-    v-model="selection"
-    v-model:view-transform="viewTransform"
-    :options="options"
-  >
-    <ChartCanvas />
+  <ChartRoot :dom="{ renderer: 'auto', accessibilityLabel: '주간 매출' }">
+    <ChartCartesian>
+      <ChartXAxis id="date" scale="temporal" field="date" label="주">
+        <ChartAxisView :minimum-span="86_400_000" update="follow-end" />
+      </ChartXAxis>
+      <ChartYAxis id="amount" scale="linear" field="amount" label="매출" />
+      <ChartLine
+        id="weekly-revenue"
+        :data="revenue"
+        x-axis="date"
+        y-axis="amount"
+        label="매출"
+      />
+      <ChartNavigation keyboard />
+      <ChartViewControls axis="date">
+        <ChartPanControl direction="backward">이전</ChartPanControl>
+        <ChartZoomControl direction="in">확대</ChartZoomControl>
+        <ChartZoomControl direction="out">축소</ChartZoomControl>
+        <ChartResetView>초기화</ChartResetView>
+      </ChartViewControls>
+    </ChartCartesian>
+    <ChartPlot><ChartRenderer /></ChartPlot>
   </ChartRoot>
 </template>
 ```
 
-`v-model`은 선택을 제어합니다. `v-model:cursor`와 `v-model:view-transform`은 키보드 focus와 이동·확대를 제어합니다. `options` 안에 같은 값을 위한 writable ref를 함께 전달하면 안 됩니다.
+Axis의 `field`가 이미 `date`와 `amount`를 읽는 방법을 설명하므로 `ChartLine`에서 `getX`와 `getY`를 반복하지 않습니다. Canonical `id` 필드가 있어 `getId`도 필요하지 않습니다. Nested 또는 computed 값에만 accessor를 전달합니다.
 
-## Slot에서 차트 상태 읽기
+새 record를 발행하려면 `revenue.value`를 교체합니다. Declaration registry는 shallow prop identity를 관찰하며 datum마다 Vue component, watcher, registry record를 만들지 않습니다.
+
+## Coordinate에 맞게 구성하기
 
 ```vue
-<ChartRoot v-slot="{ state, controller, projection }" :options="options">
-  <ChartCanvas />
-  <output>{{ state.activeDatum }}</output>
+<ChartRoot :dom="{ accessibilityLabel: '예산 배분' }">
+  <ChartRadial>
+    <ChartPie id="budget" :data="budget" label="예산" />
+  </ChartRadial>
+  <ChartPlot><ChartRenderer /></ChartPlot>
 </ChartRoot>
 ```
 
-기본 slot은 컨트롤러, revision snapshot, 현재 상태, 최신 투영을 제공합니다. 툴팁, 범례, 상태 문구처럼 차트에 반응하는 화면 요소를 만드는 데 사용할 수 있습니다.
+Canonical `id`, `value`, `label` 필드가 있는 record는 accessor가 필요 없습니다. Pie와 Donut에는 `ChartXAxis`, `ChartYAxis`, `ChartAxisView`, 직교 navigation control을 넣지 않습니다.
 
-컨트롤러가 component tree 밖에 있어야 한다면 `useChart()`를 사용합니다. Vue effect scope는 composable이 소유한 컨트롤러를 자동으로 정리합니다. `ChartRoot`는 mount 뒤에만 브라우저 리소스를 만들므로 SSR에서 안전합니다. 서버와 클라이언트에는 같은 초기 모델과 controlled 값을 전달하세요.
+## 상태 제어하고 공유하기
+
+```vue
+<ChartRoot
+  v-model="selection"
+  v-model:view="sharedView"
+  v-model:cursor="cursor"
+  @command="persistChartCommand"
+>
+  <!-- declarations -->
+</ChartRoot>
+```
+
+가까운 tooltip이나 상태 표시는 root slot의 `state`, `projection`, resolved `definition`을 사용합니다. 먼 consumer에는 `useChartSelector`, `useChartLayerSelector`, `useChartAxisSelector`로 필요한 값만 발행합니다. 하나의 애플리케이션 소유 controller를 여러 root 또는 component subtree에서 쓸 때는 `ChartProvider`나 `createChartComponents(controller)`를 사용합니다.
+
+`ChartRoot`는 mount 전에는 DOM resource를 만들지 않고 SSR에서 semantic state를 렌더링합니다. 서버와 첫 client render에 같은 declaration과 controlled 값을 전달합니다. 브라우저 측정과 Canvas 연결은 hydration 뒤 시작합니다.

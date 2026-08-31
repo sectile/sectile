@@ -1,6 +1,6 @@
 ---
 title: Vue chart composition
-description: Render a responsive chart, react to model changes, and control chart state from Vue.
+description: Declare chart semantics in a Vue template while keeping only high-cardinality records in arrays.
 ---
 
 <script setup>
@@ -9,7 +9,7 @@ import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageE
 
 # Vue composition
 
-`@sectile/vue/chart` provides a headless root, canvas, and composable. It keeps Vue reactivity at the framework boundary while the chart model and interaction behavior stay portable.
+`@sectile/vue/chart` uses compound components for the small semantic structure—coordinate, axes, layers, view capabilities, controls, and renderer. Only potentially large datum collections remain arrays.
 
 <ChartPackageExample kind="line" />
 
@@ -19,80 +19,83 @@ import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageE
 pnpm add vue @sectile/chart @sectile/dom @sectile/vue
 ```
 
-Chart is an optional peer of the DOM and Vue packages. These dependencies are needed only when the Chart entry point is imported.
+Chart and DOM are optional peers of Vue and are needed only when importing `@sectile/vue/chart`.
 
-## Render a chart
-
-```vue
-<script setup lang="ts">
-import type { ChartModel } from '@sectile/chart/model'
-import { ChartCanvas, ChartRoot } from '@sectile/vue/chart'
-
-const model = {
-  layers: [{
-    id: 'revenue',
-    profile: 'ordered-series',
-    data: [
-      { id: 'jan', x: 1, y: 32 },
-      { id: 'feb', x: 2, y: 41 },
-      { id: 'mar', x: 3, y: 38 },
-    ],
-  }],
-} satisfies ChartModel<string>
-
-const options = { model }
-</script>
-
-<template>
-  <ChartRoot
-    :options="options"
-    :dom="{ accessibilityLabel: 'Monthly revenue' }"
-    class="chart"
-  >
-    <ChartCanvas />
-  </ChartRoot>
-</template>
-
-<style scoped>
-.chart { position: relative; height: 22rem; }
-.chart canvas { width: 100%; height: 100%; }
-</style>
-```
-
-Pass a ref, computed value, getter, or plain model through `options.model`. Replacing the reactive value updates the existing chart and reconciles selection and cursor IDs.
-
-## Control selection and view
+## Declare a production-shaped chart
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue'
+import {
+  ChartAxisView, ChartCartesian, ChartLine, ChartNavigation,
+  ChartPanControl, ChartPlot, ChartRenderer, ChartResetView, ChartRoot,
+  ChartViewControls, ChartXAxis, ChartYAxis, ChartZoomControl,
+} from '@sectile/vue/chart'
+import { shallowRef } from 'vue'
 
-const selection = ref({ type: 'points' as const, ids: [] as string[] })
-const viewTransform = ref({ xScale: 1, yScale: 1, xOffset: 0, yOffset: 0 })
+const revenue = shallowRef([
+  { id: 271, date: new Date('2026-07-06'), amount: 128_000 },
+  { id: 272, date: new Date('2026-07-13'), amount: 142_000 },
+  { id: 273, date: new Date('2026-07-20'), amount: 137_000 },
+])
 </script>
 
 <template>
-  <ChartRoot
-    v-model="selection"
-    v-model:view-transform="viewTransform"
-    :options="options"
-  >
-    <ChartCanvas />
+  <ChartRoot :dom="{ renderer: 'auto', accessibilityLabel: 'Weekly revenue' }">
+    <ChartCartesian>
+      <ChartXAxis id="date" scale="temporal" field="date" label="Week">
+        <ChartAxisView :minimum-span="86_400_000" update="follow-end" />
+      </ChartXAxis>
+      <ChartYAxis id="amount" scale="linear" field="amount" label="Revenue" />
+      <ChartLine
+        id="weekly-revenue"
+        :data="revenue"
+        x-axis="date"
+        y-axis="amount"
+        label="Revenue"
+      />
+      <ChartNavigation keyboard />
+      <ChartViewControls axis="date">
+        <ChartPanControl direction="backward">Previous</ChartPanControl>
+        <ChartZoomControl direction="in">Zoom in</ChartZoomControl>
+        <ChartZoomControl direction="out">Zoom out</ChartZoomControl>
+        <ChartResetView>Reset</ChartResetView>
+      </ChartViewControls>
+    </ChartCartesian>
+    <ChartPlot><ChartRenderer /></ChartPlot>
   </ChartRoot>
 </template>
 ```
 
-`v-model` controls selection. `v-model:cursor` and `v-model:view-transform` control keyboard focus and pan/zoom. Do not also pass a writable ref for the same value inside `options`.
+The axis `field` props already describe how to read `date` and `amount`; `ChartLine` does not repeat `getX` or `getY`. The canonical `id` field also makes `getId` unnecessary. Pass accessors only for nested or computed values.
 
-## Read chart state in a slot
+Replace `revenue.value` to publish new records. The declaration registry observes shallow prop identity and does not create one Vue component, watcher, or registry record per datum.
+
+## Match composition to the coordinate
 
 ```vue
-<ChartRoot v-slot="{ state, controller, projection }" :options="options">
-  <ChartCanvas />
-  <output>{{ state.activeDatum }}</output>
+<ChartRoot :dom="{ accessibilityLabel: 'Budget allocation' }">
+  <ChartRadial>
+    <ChartPie id="budget" :data="budget" label="Budget" />
+  </ChartRadial>
+  <ChartPlot><ChartRenderer /></ChartPlot>
 </ChartRoot>
 ```
 
-The default slot exposes the controller, revision snapshot, current state, and latest projection. Use it for tooltips, legends, status text, or other presentation that reacts to the chart.
+Records with canonical `id`, `value`, and `label` fields need no accessors. Pie and donut do not contain `ChartXAxis`, `ChartYAxis`, `ChartAxisView`, or Cartesian navigation controls.
 
-Use `useChart()` when the controller must live outside the component tree. A Vue effect scope disposes a composable-owned controller automatically. `ChartRoot` is SSR-safe because it creates browser resources only after mount; provide the same initial model and controlled values on server and client.
+## Control and share state
+
+```vue
+<ChartRoot
+  v-model="selection"
+  v-model:view="sharedView"
+  v-model:cursor="cursor"
+  @command="persistChartCommand"
+>
+  <!-- declarations -->
+</ChartRoot>
+```
+
+Use the root slot for a nearby tooltip or status that needs the current `state`, `projection`, or resolved `definition`. For distant consumers, `useChartSelector`, `useChartLayerSelector`, and `useChartAxisSelector` publish only selected values. Use `ChartProvider` or `createChartComponents(controller)` when one application-owned controller must span multiple roots or component subtrees.
+
+`ChartRoot` delays DOM resources until mount and renders semantic state during SSR. Provide identical declaration and controlled values on server and first client render; browser measurement and Canvas connection begin after hydration.

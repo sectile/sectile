@@ -1,6 +1,6 @@
 ---
 title: Chart
-description: Build fast, accessible charts with renderer-neutral state and Canvas rendering.
+description: Build fast Cartesian and radial charts with declarative semantics, bounded projection, and optional browser rendering.
 ---
 
 <script setup>
@@ -9,49 +9,50 @@ import ChartPackageExample from '../.vitepress/theme/components/ChartPackageExam
 
 # Chart
 
-Sectile Chart provides the data, interaction, and browser behavior for charts without prescribing a visual system. Use the built-in Canvas renderer for data marks, then add the axes, labels, legend, colors, and layout your product needs.
+Sectile Chart turns application data into explicit coordinates, axes, layers, interaction state, and bounded drawing work. Core stays renderer-neutral; DOM and Vue add accessible Canvas rendering without becoming required dependencies.
 
-## Try the chart types
+## Try every built-in chart
 
-Switch between the five built-in data profiles. Hover or select a mark to see the same chart state that application code receives. Open **Code** for a complete Vue example.
+The example uses realistic business fields, real axes, selectable marks, and visible view controls. Open **Code** to compare the declarative Vue interface with the equivalent DOM setup.
 
 <ChartPackageExample />
 
-## Choose a chart type
+## Choose a chart
 
-| What you want to show | Profile | Common charts |
-| --- | --- | --- |
-| Individual `x` and `y` observations | `point` | Scatter plot, bubble chart, dot plot |
-| A sequence of `x` and `y` values | `ordered-series` | Line chart, area boundary, sparkline |
-| A rectangular span | `cartesian-segment` | Bar, column, range bar, waterfall |
-| A row and column position | `grid-cell` | Heatmap, matrix |
-| A share of a whole | `radial-segment` | Pie, donut, radial proportion |
+| Question | Choose | Coordinate | Large-data behavior |
+| --- | --- | --- | --- |
+| How does a measure change over an ordered or temporal domain? | Line | Cartesian | Keeps an extrema-preserving viewport envelope |
+| How are two measures related? | Scatter | Cartesian | Exact points or explicit density aggregates |
+| How do categories compare from a common baseline? | Bar | Cartesian | Exact visible bars; rejects an undersized detail cap |
+| Where is intensity concentrated across two dimensions? | Heatmap | Cartesian | Exact cells or an explicit aggregate reduction |
+| How is one total divided into a few parts? | Pie | Radial | Exact slices; rejects an undersized detail cap |
+| How is one total divided when the center carries another label? | Donut | Radial | Exact slices; rejects an undersized detail cap |
 
-Combine layers when a chart needs more than one shape. Histograms, stacked charts, candlesticks, box plots, and gauges can be prepared as one or more of these profiles. Chart does not currently provide network graphs, maps, contours, 3D scenes, or an unbounded streaming data source.
+Cartesian charts declare `ChartXAxis` and `ChartYAxis`. Pie and donut declare `ChartRadial` and do not invent irrelevant axes, pan, or zoom.
+
+Histograms, stacked bars, area fills, candlesticks, box plots, gauges, maps, networks, contours, and 3D scenes are not built-in chart contracts. Some can be prepared as current primitives or drawn through a custom renderer, but Sectile does not label an approximation as a first-class chart type.
 
 ## Choose an integration
 
-- Use [Vue composition](./chart/vue) for `ChartRoot`, `ChartCanvas`, reactive models, and `v-model` state.
-- Use [DOM rendering](./chart/dom) to connect an existing element and canvas directly.
-- Use `@sectile/chart` alone when you need chart state, projection, and queries without browser rendering.
+| Needed scope | Install | Start with |
+| --- | --- | --- |
+| Definitions, immutable state, projection, and hit testing | `@sectile/chart` | `createChartController` |
+| Existing elements and Canvas rendering | `@sectile/chart @sectile/dom` | `createDOMChart` |
+| Declarative Vue composition | `vue @sectile/chart @sectile/dom @sectile/vue` | `ChartRoot` |
 
-```sh
-pnpm add @sectile/chart
-```
+Chart is an optional peer of DOM and Vue. Applications that never import their `/chart` subpaths do not need to install it.
 
-`@sectile/chart` is an optional peer of the DOM and Vue packages. Install it only in applications that use their Chart entry points.
-
-## Learn by task
+## Continue by task
 
 | Task | Guide |
 | --- | --- |
-| Shape input data, choose IDs, and update values | [Data and scales](./chart/model) |
-| Build tooltips, hit testing, or a custom renderer | [Drawing and hit testing](./chart/projection) |
-| Control hover, selection, keyboard focus, pan, and zoom | [Interaction and state](./chart/interaction) |
-| Connect an existing canvas | [DOM rendering](./chart/dom) |
-| Build a chart in a Vue template | [Vue composition](./chart/vue) |
-| Tune a large chart | [Large datasets](./chart/performance) |
+| Shape records, axes, IDs, and updates | [Data and scales](./chart/model) |
+| Build a custom renderer, tooltip, or hit test | [Drawing and hit testing](./chart/projection) |
+| Design selection, keyboard access, pan, and zoom | [Interaction and state](./chart/interaction) |
+| Connect existing browser elements | [DOM rendering](./chart/dom) |
+| Compose a chart in a Vue template | [Vue composition](./chart/vue) |
+| Select an exact or aggregate strategy | [Large datasets](./chart/performance) |
 
-## What Chart owns
+## Responsibility boundary
 
-Chart owns stable data identity, validation, selection, keyboard cursor, pan, zoom, hit testing, and bounded drawing work. Your application owns data loading, visual design, axes, labels, legends, annotations, layout, and animation.
+Chart owns portable coordinates, axes, identity, validation, view domains, selection, projection, and queries. DOM owns browser input, responsive measurement, accessibility overlays, Canvas2D/WebGL2 resources, and cleanup. Vue owns declarative composition and reactive synchronization. The application owns data loading, product styling, annotations, formatting policy, and persistence.

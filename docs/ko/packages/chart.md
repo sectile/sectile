@@ -1,6 +1,6 @@
 ---
 title: Chart
-description: 화면 표현과 분리된 상태 모델과 Canvas 렌더링으로 빠르고 접근 가능한 차트를 만듭니다.
+description: 선언형 의미, 제한된 projection, 선택적 브라우저 렌더링으로 빠른 직교·방사형 차트를 만듭니다.
 ---
 
 <script setup>
@@ -9,49 +9,50 @@ import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageE
 
 # Chart
 
-Sectile Chart는 특정 디자인을 강제하지 않으면서 차트의 데이터, 상호작용, 브라우저 동작을 제공합니다. 기본 Canvas 렌더러로 데이터 마크를 그리고, 제품에 필요한 축, 레이블, 범례, 색상과 레이아웃을 더할 수 있습니다.
+Sectile Chart는 애플리케이션 데이터를 명시적인 좌표, 축, 레이어, 상호작용 상태와 제한된 그리기 작업으로 바꿉니다. Core는 렌더러와 무관하며, DOM과 Vue는 필수 의존성이 되지 않으면서 접근 가능한 Canvas 렌더링을 더합니다.
 
-## 차트 종류 살펴보기
+## 모든 기본 차트 체험하기
 
-다섯 가지 데이터 프로필을 바꿔 가며 확인해 보세요. 마크를 가리키거나 선택하면 애플리케이션이 받는 차트 상태도 함께 바뀝니다. **코드** 탭에는 바로 사용할 수 있는 Vue 예제가 있습니다.
+아래 예시는 실제 업무형 필드, 축, 선택 가능한 마크, 눈에 보이는 view control을 사용합니다. **Code**에서 선언형 Vue interface와 같은 의미의 DOM 구성을 비교할 수 있습니다.
 
 <ChartPackageExample />
 
-## 차트 종류 선택하기
+## 차트 선택하기
 
-| 표현하려는 데이터 | 프로필 | 대표적인 차트 |
+| 질문 | 선택 | 좌표 | 대규모 데이터 동작 |
+| --- | --- | --- | --- |
+| 순서 또는 시간에 따라 측정값이 어떻게 바뀌는가? | Line | 직교 | 극값을 보존하는 viewport envelope |
+| 두 측정값은 어떤 관계인가? | Scatter | 직교 | 정확한 점 또는 명시적 density aggregate |
+| 범주를 같은 기준선에서 어떻게 비교하는가? | Bar | 직교 | 보이는 막대를 정확히 유지하고 부족한 제한은 거부 |
+| 두 차원에서 강도가 어디에 집중되는가? | Heatmap | 직교 | 정확한 cell 또는 명시적 aggregate reduction |
+| 하나의 전체가 소수 항목에 어떻게 나뉘는가? | Pie | 방사형 | 정확한 slice를 유지하고 부족한 제한은 거부 |
+| 중앙에 다른 정보를 둘 전체 비중이 필요한가? | Donut | 방사형 | 정확한 slice를 유지하고 부족한 제한은 거부 |
+
+직교 차트는 `ChartXAxis`와 `ChartYAxis`를 선언합니다. Pie와 Donut은 `ChartRadial`을 선언하며 불필요한 축, pan, zoom을 만들지 않습니다.
+
+Histogram, stacked bar, area fill, candlestick, box plot, gauge, map, network, contour, 3D scene은 기본 차트 계약이 아닙니다. 일부는 현재 primitive로 준비하거나 custom renderer로 그릴 수 있지만, Sectile은 근사 구현을 일급 차트 종류로 부르지 않습니다.
+
+## 통합 계층 선택하기
+
+| 필요한 범위 | 설치 | 시작 API |
 | --- | --- | --- |
-| 개별 `x`, `y` 관측값 | `point` | 산점도, 버블 차트, 점 도표 |
-| 순서가 있는 `x`, `y` 값 | `ordered-series` | 선 차트, 영역 경계, 스파크라인 |
-| 직사각형 구간 | `cartesian-segment` | 막대, 세로 막대, 범위 막대, 워터폴 |
-| 행과 열의 위치 | `grid-cell` | 히트맵, 행렬 |
-| 전체에서 차지하는 비중 | `radial-segment` | 파이, 도넛, 방사형 비율 차트 |
+| 정의, 불변 상태, projection, hit testing | `@sectile/chart` | `createChartController` |
+| 기존 element와 Canvas 렌더링 | `@sectile/chart @sectile/dom` | `createDOMChart` |
+| 선언형 Vue 구성 | `vue @sectile/chart @sectile/dom @sectile/vue` | `ChartRoot` |
 
-한 화면에 여러 형태가 필요하면 레이어를 조합하면 됩니다. 히스토그램, 누적 차트, 캔들스틱, 상자 수염 그림, 게이지도 하나 이상의 프로필로 데이터를 준비해 만들 수 있습니다. 네트워크 그래프, 지도, 등고선, 3D 장면, 크기가 제한되지 않은 스트리밍 데이터는 현재 지원 범위가 아닙니다.
-
-## 연결 방식 선택하기
-
-- Vue에서는 [Vue 구성](./chart/vue)의 `ChartRoot`, `ChartCanvas`, 반응형 모델과 `v-model` 상태를 사용합니다.
-- 기존 요소와 canvas를 직접 연결하려면 [DOM 렌더링](./chart/dom)을 사용합니다.
-- 브라우저 렌더링 없이 차트 상태, 투영, 쿼리만 필요하면 `@sectile/chart`를 단독으로 사용합니다.
-
-```sh
-pnpm add @sectile/chart
-```
-
-`@sectile/chart`는 DOM과 Vue 패키지의 선택적 peer입니다. Chart 진입점을 사용하는 애플리케이션에만 설치하면 됩니다.
+Chart는 DOM과 Vue의 optional peer입니다. `/chart` subpath를 import하지 않는 애플리케이션은 설치할 필요가 없습니다.
 
 ## 작업별 안내
 
-| 하려는 작업 | 문서 |
+| 작업 | 안내 |
 | --- | --- |
-| 입력 데이터 구성, ID 선택, 값 갱신 | [데이터와 스케일](./chart/model) |
-| 툴팁, hit testing, 사용자 정의 렌더러 구현 | [그리기와 hit testing](./chart/projection) |
-| hover, 선택, 키보드 focus, 이동과 확대 제어 | [상호작용과 상태](./chart/interaction) |
-| 기존 canvas 연결 | [DOM 렌더링](./chart/dom) |
-| Vue 템플릿에서 차트 구성 | [Vue 구성](./chart/vue) |
-| 대규모 차트 조정 | [대규모 데이터](./chart/performance) |
+| record, 축, ID, 갱신 정의 | [데이터와 스케일](./chart/model) |
+| custom renderer, tooltip, hit test 작성 | [그리기와 hit testing](./chart/projection) |
+| 선택, 키보드, pan, zoom 설계 | [상호작용과 상태](./chart/interaction) |
+| 기존 브라우저 element 연결 | [DOM 렌더링](./chart/dom) |
+| Vue template에서 차트 구성 | [Vue 구성](./chart/vue) |
+| exact 또는 aggregate 전략 선택 | [대규모 데이터](./chart/performance) |
 
-## Chart가 담당하는 범위
+## 책임 경계
 
-Chart는 안정적인 데이터 ID, 입력 검증, 선택, 키보드 cursor, 이동, 확대, hit testing과 제한된 그리기 작업을 담당합니다. 데이터 로딩, 시각 디자인, 축, 레이블, 범례, 주석, 레이아웃과 애니메이션은 애플리케이션이 담당합니다.
+Chart는 이식 가능한 좌표, 축, ID, 검증, view domain, 선택, projection, query를 소유합니다. DOM은 브라우저 입력, 반응형 측정, 접근성 overlay, Canvas2D/WebGL2 resource와 정리를 소유합니다. Vue는 선언형 구성과 반응형 동기화를 소유합니다. 애플리케이션은 데이터 로딩, 제품 스타일, annotation, formatting 정책, 영속화를 소유합니다.

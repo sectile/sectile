@@ -1,7 +1,28 @@
 <script setup lang="ts">
-import type { ChartModel } from '@sectile/chart/model';
-import { ChartCanvas, ChartRoot } from '@sectile/vue/chart';
-import { Activity, BarChart3, ChartNoAxesCombined, CircleDot, Grid3X3 } from '@lucide/vue';
+import {
+  ChartAxisTicks,
+  ChartAxisView,
+  ChartBar,
+  ChartCartesian,
+  ChartDonut,
+  ChartGrid,
+  ChartHeatmap,
+  ChartLegend,
+  ChartLine,
+  ChartNavigation,
+  ChartPanControl,
+  ChartPie,
+  ChartPlot,
+  ChartRenderer,
+  ChartResetView,
+  ChartRoot,
+  ChartScatter,
+  ChartViewControls,
+  ChartXAxis,
+  ChartYAxis,
+  ChartZoomControl,
+} from '@sectile/vue/chart';
+import { Activity, BarChart3, ChartNoAxesCombined, CircleDot, Grid3X3, PieChart } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import {
   chartExampleSources,
@@ -22,71 +43,79 @@ watch(() => props.kind, (kind) => {
   if (kind !== undefined) selectedKind.value = kind;
 });
 
-const chartKinds = ['line', 'scatter', 'bar', 'heatmap', 'donut'] as const;
+const chartKinds = ['line', 'scatter', 'bar', 'heatmap', 'pie', 'donut'] as const;
 const copy = computed(() => isKorean.value ? {
-  labels: { line: '선', scatter: '산점도', bar: '막대', heatmap: '히트맵', donut: '도넛' },
+  labels: { line: '선', scatter: '산점도', bar: '막대', heatmap: '히트맵', pie: '파이', donut: '도넛' },
   title: {
-    line: '월별 매출 흐름', scatter: '배포 빈도와 안정성', bar: '요일별 주문량', heatmap: '시간대별 활동', donut: '유입 채널 비중',
+    line: '주간 매출 추이', scatter: '배포 빈도와 안정성', bar: '지역별 주문', heatmap: '요일·시간대별 활동', pie: '예산 배분', donut: '유입 채널 비중',
   },
   description: {
     line: '순서가 있는 값의 변화를 하나의 선으로 표시합니다.',
     scatter: '두 값의 관계를 개별 점으로 비교합니다.',
     bar: '범주별 크기를 같은 기준선에서 비교합니다.',
     heatmap: '행과 열에 놓인 관측값을 셀로 표시합니다.',
+    pie: '한 예산에서 각 부문이 차지하는 비중을 비교합니다.',
     donut: '전체에서 각 항목이 차지하는 비중을 원형 구간으로 표시합니다.',
   },
-  active: '가리킨 항목', selected: '선택한 항목', none: '없음', separator: '구간 구분선',
-  help: '마크를 가리키거나 선택하세요. 방향키로 항목을 이동하고, 휠로 이동하며, Ctrl/⌘+휠로 확대할 수 있습니다.',
+  active: '가리킨 항목', selected: '선택한 항목', none: '없음',
+  help: '마크를 가리키거나 선택하세요. 직교 차트는 버튼으로 수평 범위를 이동·확대·초기화할 수 있습니다.',
+  back: '이전', zoomIn: '확대', zoomOut: '축소', reset: '초기화',
   selector: '차트 종류', chart: '인터랙티브 차트 예시',
 } : {
-  labels: { line: 'Line', scatter: 'Scatter', bar: 'Bar', heatmap: 'Heatmap', donut: 'Donut' },
+  labels: { line: 'Line', scatter: 'Scatter', bar: 'Bar', heatmap: 'Heatmap', pie: 'Pie', donut: 'Donut' },
   title: {
-    line: 'Monthly revenue trend', scatter: 'Deployment frequency and stability', bar: 'Orders by weekday', heatmap: 'Activity by time', donut: 'Acquisition channels',
+    line: 'Weekly revenue trend', scatter: 'Deployment frequency and stability', bar: 'Orders by region', heatmap: 'Activity by day and hour', pie: 'Budget allocation', donut: 'Acquisition channels',
   },
   description: {
     line: 'Show change across ordered values as a continuous line.',
     scatter: 'Compare the relationship between two values as individual points.',
     bar: 'Compare category magnitudes from a common baseline.',
     heatmap: 'Place observations into rows and columns as cells.',
+    pie: 'Compare how one budget is allocated across departments.',
     donut: 'Show each category as a share of the whole.',
   },
-  active: 'Hovered datum', selected: 'Selected datum', none: 'None', separator: 'Slice separator',
-  help: 'Hover or select a mark. Use arrow keys to move between data, the wheel to pan, and Ctrl/⌘+wheel to zoom.',
+  active: 'Hovered datum', selected: 'Selected datum', none: 'None',
+  help: 'Hover or select a mark. Cartesian charts expose buttons to pan, zoom, and reset the horizontal domain.',
+  back: 'Previous', zoomIn: 'Zoom in', zoomOut: 'Zoom out', reset: 'Reset',
   selector: 'Chart type', chart: 'Interactive chart example',
 });
 
-const models: Readonly<Record<ChartExampleKind, ChartModel<string>>> = Object.freeze({
-  line: { layers: [{ id: 'revenue', profile: 'ordered-series', data: [
-    { id: 'jan', x: 1, y: 32 }, { id: 'feb', x: 2, y: 41 }, { id: 'mar', x: 3, y: 38 },
-    { id: 'apr', x: 4, y: 54 }, { id: 'may', x: 5, y: 61 }, { id: 'jun', x: 6, y: 73 },
-  ] }] },
-  scatter: { layers: [{ id: 'deployments', profile: 'point', data: [
-    { id: 'api', x: 18, y: 82 }, { id: 'worker', x: 28, y: 66 }, { id: 'web', x: 42, y: 74 },
-    { id: 'billing', x: 51, y: 48 }, { id: 'search', x: 67, y: 57 }, { id: 'analytics', x: 79, y: 31 },
-    { id: 'edge', x: 87, y: 46 }, { id: 'storage', x: 35, y: 39 }, { id: 'identity', x: 60, y: 78 },
-  ] }] },
-  bar: { layers: [{ id: 'orders', profile: 'cartesian-segment', data: [
-    { id: 'mon', x1: 0, y1: 0, x2: 0.72, y2: 48 }, { id: 'tue', x1: 1, y1: 0, x2: 1.72, y2: 64 },
-    { id: 'wed', x1: 2, y1: 0, x2: 2.72, y2: 52 }, { id: 'thu', x1: 3, y1: 0, x2: 3.72, y2: 79 },
-    { id: 'fri', x1: 4, y1: 0, x2: 4.72, y2: 71 },
-  ] }] },
-  heatmap: { layers: [{ id: 'activity', profile: 'grid-cell', data: Array.from({ length: 35 }, (_, index) => ({
-    id: `${index % 7}-${Math.floor(index / 7)}`,
-    column: index % 7,
-    row: Math.floor(index / 7),
+const series = Object.freeze({
+  line: [
+    { id: 'week-27', date: new Date('2026-07-06'), revenue: 128 },
+    { id: 'week-28', date: new Date('2026-07-13'), revenue: 142 },
+    { id: 'week-29', date: new Date('2026-07-20'), revenue: 137 },
+    { id: 'week-30', date: new Date('2026-07-27'), revenue: 163 },
+    { id: 'week-31', date: new Date('2026-08-03'), revenue: 181 },
+    { id: 'week-32', date: new Date('2026-08-10'), revenue: 194 },
+  ],
+  scatter: [
+    { id: 'api', deploys: 18, stability: 82 }, { id: 'worker', deploys: 28, stability: 66 },
+    { id: 'web', deploys: 42, stability: 74 }, { id: 'billing', deploys: 51, stability: 48 },
+    { id: 'search', deploys: 67, stability: 57 }, { id: 'identity', deploys: 60, stability: 78 },
+  ],
+  bar: [
+    { id: 'seoul', region: 'Seoul', orders: 812 }, { id: 'busan', region: 'Busan', orders: 594 },
+    { id: 'daegu', region: 'Daegu', orders: 436 }, { id: 'incheon', region: 'Incheon', orders: 521 },
+    { id: 'daejeon', region: 'Daejeon', orders: 377 },
+  ],
+  heatmap: Array.from({ length: 35 }, (_, index) => ({
+    id: `activity-${index}`,
+    day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index % 7]!,
+    hour: ['08', '11', '14', '17', '20'][Math.floor(index / 7)]!,
     value: ((index * 7) % 11) + 1,
-  })).filter((_, index) => index % 6 !== 0) }] },
-  donut: { layers: [{ id: 'channels', profile: 'radial-segment', data: [
-    { id: 'direct', value: 42, innerRadius: 0.5, outerRadius: 0.82 },
-    { id: 'gap-1', value: 1, innerRadius: 0, outerRadius: 0 },
-    { id: 'search', value: 31, innerRadius: 0.5, outerRadius: 0.82 },
-    { id: 'gap-2', value: 1, innerRadius: 0, outerRadius: 0 },
-    { id: 'referral', value: 25, innerRadius: 0.5, outerRadius: 0.82 },
-  ] }] },
+  })),
+  pie: [
+    { id: 'product', label: 'Product', value: 38 }, { id: 'sales', label: 'Sales', value: 27 },
+    { id: 'operations', label: 'Operations', value: 21 }, { id: 'research', label: 'Research', value: 14 },
+  ],
+  donut: [
+    { id: 'direct', label: 'Direct', value: 42 }, { id: 'search', label: 'Search', value: 33 },
+    { id: 'referral', label: 'Referral', value: 16 }, { id: 'campaign', label: 'Campaign', value: 9 },
+  ],
 });
 
-const model = computed(() => models[selectedKind.value]);
-const options = { model };
+const isRadial = computed(() => selectedKind.value === 'pie' || selectedKind.value === 'donut');
 const sources = computed(() => chartExampleSources(selectedKind.value));
 const koSources = computed(() => chartExampleSources(selectedKind.value, true));
 const icon = (kind: ChartExampleKind) => ({
@@ -94,10 +123,11 @@ const icon = (kind: ChartExampleKind) => ({
   scatter: CircleDot,
   bar: BarChart3,
   heatmap: Grid3X3,
+  pie: PieChart,
   donut: Activity,
 })[kind];
 
-const datumLabel = (id: string): string => id.startsWith('gap-') ? copy.value.separator : id.replaceAll('-', ' ');
+const datumLabel = (id: string | number): string => String(id).replaceAll('-', ' ');
 </script>
 
 <template>
@@ -128,7 +158,6 @@ const datumLabel = (id: string): string => id.startsWith('gap-') ? copy.value.se
 
       <ChartRoot
         v-slot="{ state }"
-        :options="options"
         :dom="{
           renderer: 'auto',
           accessibilityLabel: copy.title[selectedKind],
@@ -136,16 +165,47 @@ const datumLabel = (id: string): string => id.startsWith('gap-') ? copy.value.se
         }"
         class="chart-workbench__chart"
       >
-        <div class="chart-workbench__grid" aria-hidden="true" />
-        <ChartCanvas />
+        <ChartCartesian v-if="!isRadial">
+          <ChartXAxis
+            id="x"
+            :scale="selectedKind === 'line' ? 'temporal' : selectedKind === 'bar' || selectedKind === 'heatmap' ? 'categorical' : 'linear'"
+            :field="selectedKind === 'line' ? 'date' : selectedKind === 'scatter' ? 'deploys' : selectedKind === 'bar' ? 'region' : 'day'"
+          >
+            <ChartAxisView :minimum-span="selectedKind === 'line' ? 86_400_000 : 1" />
+          </ChartXAxis>
+          <ChartYAxis
+            id="y"
+            :scale="selectedKind === 'heatmap' ? 'categorical' : 'linear'"
+            :field="selectedKind === 'line' ? 'revenue' : selectedKind === 'scatter' ? 'stability' : selectedKind === 'bar' ? 'orders' : 'hour'"
+          />
+          <ChartLine v-if="selectedKind === 'line'" id="revenue" :data="series.line" x-axis="x" y-axis="y" label="Revenue" />
+          <ChartScatter v-else-if="selectedKind === 'scatter'" id="deployments" :data="series.scatter" x-axis="x" y-axis="y" label="Services" />
+          <ChartBar v-else-if="selectedKind === 'bar'" id="orders" :data="series.bar" x-axis="x" y-axis="y" label="Orders" />
+          <ChartHeatmap v-else id="activity" :data="series.heatmap" x-axis="x" y-axis="y" label="Sessions" />
+          <ChartNavigation keyboard />
+          <ChartViewControls axis="x" class="chart-workbench__controls">
+            <ChartPanControl direction="backward" :label="copy.back">←</ChartPanControl>
+            <ChartZoomControl direction="in" :label="copy.zoomIn">+</ChartZoomControl>
+            <ChartZoomControl direction="out" :label="copy.zoomOut">−</ChartZoomControl>
+            <ChartResetView :label="copy.reset">↺</ChartResetView>
+          </ChartViewControls>
+        </ChartCartesian>
+        <ChartRadial v-else>
+          <ChartPie v-if="selectedKind === 'pie'" id="budget" :data="series.pie" label="Budget" />
+          <ChartDonut v-else id="channels" :data="series.donut" label="Channels" />
+        </ChartRadial>
+        <ChartGrid />
+        <ChartAxisTicks />
+        <ChartLegend />
+        <ChartPlot><ChartRenderer /></ChartPlot>
         <dl class="chart-workbench__state" aria-live="polite">
           <div>
             <dt>{{ copy.active }}</dt>
-            <dd>{{ state.activeDatum === null ? copy.none : datumLabel(String(state.activeDatum)) }}</dd>
+            <dd>{{ state?.activeDatum == null ? copy.none : datumLabel(state.activeDatum) }}</dd>
           </div>
           <div>
             <dt>{{ copy.selected }}</dt>
-            <dd>{{ state.selection.type === 'points' && state.selection.ids[0] !== undefined ? datumLabel(String(state.selection.ids[0])) : copy.none }}</dd>
+            <dd>{{ state?.selection.type === 'points' && state.selection.ids[0] !== undefined ? datumLabel(state.selection.ids[0]) : copy.none }}</dd>
           </div>
         </dl>
       </ChartRoot>
@@ -211,15 +271,7 @@ const datumLabel = (id: string): string => id.startsWith('gap-') ? copy.value.se
   isolation: isolate;
 }
 
-.chart-workbench__grid {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--vp-c-divider) 68%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--vp-c-divider) 68%, transparent) 1px, transparent 1px);
-  background-size: 12.5% 25%;
-}
+.chart-workbench__chart [data-part="plot"] { height: 100%; }
 
 .chart-workbench__chart canvas {
   display: block;
@@ -245,6 +297,25 @@ const datumLabel = (id: string): string => id.startsWith('gap-') ? copy.value.se
 .chart-workbench__state div + div { border-top: 1px solid var(--vp-c-divider); }
 .chart-workbench__state dt { color: var(--vp-c-text-2); font-size: 0.66rem; }
 .chart-workbench__state dd { margin: 0; color: var(--vp-c-brand-1); font-family: var(--vp-font-family-mono); font-size: 0.68rem; font-weight: 650; text-transform: capitalize; }
+
+.chart-workbench__controls {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  z-index: 2;
+  display: flex;
+  gap: 0.3rem;
+}
+
+.chart-workbench__controls button {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 0.45rem;
+  color: var(--vp-c-text-1);
+  background: color-mix(in srgb, var(--vp-c-bg) 94%, transparent);
+  cursor: pointer;
+}
 
 .chart-workbench footer {
   padding: 0.7rem 1.1rem;

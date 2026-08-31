@@ -35,7 +35,8 @@
         "packages/dom/tests/chart-connection.test.mjs",
         "packages/dom/verification/chart-webgl2-browser.mjs"
       ],
-      "vue": ["packages/vue/tests/chart.test.mjs", "packages/vue/tests/chart-provider.test.mjs", "packages/vue/tests/chart.dom.test.mjs"]
+      "vue": ["packages/vue/tests/chart.test.mjs", "packages/vue/tests/chart-provider.test.mjs", "packages/vue/tests/chart.dom.test.mjs"],
+      "docs": { "en": "docs/packages/chart.md", "ko": "docs/ko/packages/chart.md" }
     },
     "form": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus", "ime", "native-form"] },

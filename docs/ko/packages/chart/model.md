@@ -1,69 +1,79 @@
 ---
 title: Chart 데이터와 스케일
-description: 차트 레이어를 구성하고 안정적인 ID를 선택하며 데이터와 viewport 변환을 다룹니다.
+description: 좌표와 축을 선언하고, 업무 필드를 읽고, ID를 보존하며, 불변 데이터를 교체합니다.
 ---
 
 # 데이터와 스케일
 
-차트 모델은 여러 레이어로 이루어집니다. 각 레이어는 하나의 프로필을 선택하고, 각 데이터에는 같은 대상을 나타내는 동안 바뀌지 않는 ID가 필요합니다.
+선언형 definition부터 시작합니다. 좌표계와 각 축, 데이터 레이어가 뜻하는 차트 종류를 함께 이름 붙입니다.
 
 ```ts
-import type { ChartModel } from '@sectile/chart/model'
+import type { ChartDefinition } from '@sectile/chart/definition'
 
-const model = {
+const revenue = [
+  { id: 271, date: new Date('2026-07-06'), amount: 128_000 },
+  { id: 272, date: new Date('2026-07-13'), amount: 142_000 },
+  { id: 273, date: new Date('2026-07-20'), amount: 137_000 },
+]
+
+const definition = {
+  coordinate: { kind: 'cartesian', axes: [
+    { id: 'date', orientation: 'x', scale: 'temporal', field: 'date', label: '주' },
+    { id: 'amount', orientation: 'y', scale: 'linear', field: 'amount', label: '매출' },
+  ] },
   layers: [{
-    id: 'revenue',
-    profile: 'ordered-series',
-    data: [
-      { id: '2026-01', x: 1, y: 32 },
-      { id: '2026-02', x: 2, y: 41 },
-      { id: '2026-03', x: 3, y: 38 },
-    ],
+    kind: 'line', id: 'weekly-revenue', data: revenue,
+    xAxis: 'date', yAxis: 'amount', label: '매출',
   }],
-} satisfies ChartModel<string>
+} satisfies ChartDefinition<(typeof revenue)[number]>
 ```
 
-ID에는 비어 있지 않은 문자열이나 안전한 정수를 사용할 수 있습니다. 데이터에 안정적인 숫자 키가 이미 있다면 문자열로 바꿀 필요가 없습니다. 레이어와 데이터는 차트 전체에서 같은 ID 공간을 사용하므로 모든 ID가 서로 달라야 합니다.
+유효한 `Date`와 유한한 epoch millisecond 숫자가 temporal 입력입니다. 날짜 문자열은 거부하므로 parsing과 시간대 정책이 애플리케이션 코드에 드러납니다.
 
-## 데이터 갱신하기
+## 관례적인 record는 단순하게 두기
 
-애플리케이션이 다음 데이터 전체를 받는다면 모델을 교체하면 됩니다. 삽입, 제거, 교체가 작은 작업 단위로 주어질 때는 patch를 적용할 수 있습니다.
+각 datum에는 안정적인 문자열 또는 safe integer ID가 필요합니다. Sectile은 `getId`, canonical `id` 필드 순서로 값을 찾습니다. 기존 숫자형 DB key를 문자열로 변환할 필요가 없습니다.
+
+직교 값은 layer `getX`/`getY`, axis `getValue`, axis `field`, canonical `x`/`y` 순서로 찾습니다. 방사형 값은 `getValue`, `valueField`, `value` 순서이며 label은 `getLabel`, `labelField`, `label` 순서입니다. record 자체로 관계를 표현할 수 없을 때만 accessor를 사용합니다.
 
 ```ts
-const result = controller.applyPatch({
-  operations: [{
-    type: 'replace',
-    layerID: 'revenue',
-    index: 2,
-    data: [{ id: '2026-03', x: 3, y: 46 }],
-  }],
-})
-
-if (!result.ok) showChartError(result.error)
+const layer = {
+  kind: 'scatter',
+  id: 'service-health',
+  data: services,
+  getId: service => service.key,
+  getX: service => service.deployments.last30Days,
+  getY: service => service.slo.successRate,
+  xAxis: 'deployments',
+  yAxis: 'stability',
+} as const
 ```
 
-갱신은 전부 반영되거나, 일부도 공개하지 않은 채 거부됩니다. 여러 작성자가 경쟁할 수 있다면 현재 모델의 generation을 `expectedGeneration`으로 전달해 오래된 patch를 명확하게 거부할 수 있습니다.
+Axis ID는 coordinate 안에서 고유해야 합니다. Layer와 datum ID는 compile된 chart generation을 공유하므로 모든 layer에서 고유하게 유지하고, 실세계 항목이 같은 동안 datum ID도 보존합니다.
 
-## 스케일 직접 사용하기
+## Domain에 맞는 scale 선택하기
 
-DOM과 Vue 연결은 viewport 투영을 자동으로 만듭니다. 사용자 정의 축을 만들거나, pointer 좌표를 도메인 값으로 되돌리거나, 직접 투영 과정을 구성할 때 스케일을 가져와 사용하면 됩니다.
+| Scale | 입력 | Domain |
+| --- | --- | --- |
+| `linear` | 유한한 숫자 | 자동 또는 명시적 최솟값/최댓값 |
+| `logarithmic` | 양의 유한한 숫자 | 자동 또는 명시적 양의 최솟값/최댓값 |
+| `temporal` | `Date` 또는 epoch millisecond | 자동 또는 명시적 temporal 범위 |
+| `categorical` | 문자열 또는 숫자 | 최초 등장 순서 또는 명시적 값 목록 |
+
+자동 domain은 선언된 layer 값에서 구합니다. Bar의 measure axis에는 0 기준선이 포함됩니다. 여러 차트를 같은 기준으로 비교하려면 explicit domain을 사용합니다.
+
+## 반응형 데이터는 불변 교체하기
+
+데이터 배열 하나를 shallow reactive boundary로 봅니다. 새 query 결과를 받으면 배열을 교체합니다. Record를 제자리에서 바꾸고 Chart가 deep change를 찾을 것이라 기대하지 않습니다.
 
 ```ts
-import { createLinearScale } from '@sectile/chart/scale'
-
-const x = createLinearScale(
-  { minimum: 0, maximum: 100 },
-  { start: 0, end: 800 },
-)
-
-const pixel = x.normalize(25) // 200
-const value = x.invert(200)   // 25
+revenue.value = response.points
 ```
 
-Chart는 선형, 로그, 시간, 범주형 스케일을 제공합니다. 모든 스케일은 도메인 값을 viewport 좌표로 바꾸고, 좌표를 다시 값으로 되돌리며, 개수가 제한된 tick을 만들 수 있습니다.
+Vue는 shallow 입력이 바뀐 선언만 다시 발행합니다. Core는 ID와 값이 허용하는 범위에서 바뀌지 않은 layer ownership을 재사용하고 selection, cursor, axis view를 조정합니다.
 
-## 입력 한도
+저수준 `ChartModel`과 `ChartPatch`는 이미 packed profile operation을 만드는 pipeline에 남아 있습니다. 선언형 field와 자동 domain 조립을 우회하므로 axis 관측값이 바뀔 수 있다면 `replaceDefinition()`을 사용합니다.
 
-기본값은 레이어 64개, 데이터 1,000,000개, patch 하나당 작업 100,000개까지 허용합니다. 제품의 최대 규모가 더 작다면 한도를 낮춰 두는 편이 좋습니다. 잘못된 좌표, 중복 ID, 프로필과 맞지 않는 필드, 설정한 한도를 넘는 입력은 차트가 바뀌기 전에 거부됩니다.
+## 경계에서 잘못된 데이터 거부하기
 
-애플리케이션이 신뢰하는 데이터에는 예외를 던지는 함수를 사용하면 됩니다. 사용자 입력이나 전송 데이터를 해석하는 과정에서 잘못된 값이 예상된다면 대응하는 `try*` 함수를 사용하세요.
+생성과 교체는 원자적입니다. 중복 ID, 호환되지 않는 좌표, 잘못된 temporal 값, 유한하지 않은 숫자, 초과한 제한은 아무 상태도 발행하지 않습니다. 신뢰하는 애플리케이션 데이터에는 throwing API를, transport나 사용자 입력 경계에는 대응하는 `try*` API를 사용합니다.

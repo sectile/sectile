@@ -1,6 +1,6 @@
 ---
 title: Chart interaction and state
-description: Control hover, selection, keyboard focus, pan, and zoom with one explicit chart state.
+description: Keep selection, cursor, and immutable axis-domain views explicit while preserving page-safe browser input.
 ---
 
 <script setup>
@@ -9,52 +9,64 @@ import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageE
 
 # Interaction and state
 
-Chart turns pointer, keyboard, pan, and zoom input into one renderer-neutral state. The DOM and Vue integrations wire the common browser behavior. Application code can read the same state, dispatch events directly, or control selected values from outside.
+Selection answers “which data matters?” while an axis view answers “which part of this domain is visible?” Both are renderer-neutral immutable values. DOM translates browser input into the same Core events.
 
 <ChartPackageExample kind="scatter" />
 
-## Built-in browser behavior
+## Enable capabilities separately from browser gestures
 
-| Input | Result |
-| --- | --- |
-| Move the pointer over a mark | Updates the active datum |
-| Select a mark | Selects it and moves the keyboard cursor |
-| Arrow keys | Moves the cursor to the previous or next datum |
-| Home / End | Moves to the first or last datum |
-| Wheel | Pans the view |
-| Ctrl/⌘ + wheel | Zooms around the pointer |
-| Escape | Resets pan and zoom |
-
-The chart root is keyboard focusable and exposes a bounded accessible list of data items. Supply `getAccessibleDatumLabel` in the DOM options so assistive technology receives a useful label instead of only an ID.
-
-## Dispatch an event
-
-```ts
-const update = controller.dispatch({
-  type: 'set-selection',
-  selection: { type: 'points', ids: ['search'] },
-})
-
-if (update.ok) {
-  console.log(update.value.snapshot.state.selection)
-}
-```
-
-State includes the active datum, keyboard cursor, point or interval selection, and view transform. Events can update one part without hiding the rest of the chart state.
-
-## Control state from the application
-
-Pass `activeDatum`, `cursor`, `selection`, or `viewTransform` as controlled values when another store owns them. Chart then requests a change instead of committing that part itself. The owner applies the new value with `syncControlledValues()` or, in Vue, by updating the matching `v-model`.
-
-Use defaults when Chart should own the value:
+An axis becomes navigable only when it has a view capability. The browser binding is a second, explicit choice.
 
 ```ts
 const controller = createChartController({
-  model,
-  initialValues: {
-    selection: { type: 'points', ids: [] },
+  definition,
+  viewCapabilities: [{
+    axisID: 'date',
+    minimumSpan: 86_400_000,
+    update: 'follow-end',
+  }],
+})
+
+const chart = createDOMChart({
+  root,
+  canvas,
+  controller,
+  navigation: {
+    wheel: 'native',
+    keyboard: true,
   },
 })
 ```
 
-When data is replaced, Chart removes missing IDs from active, cursor, and point selection state. Call `dispose()` when an application-owned controller is no longer used.
+`wheel: 'native'` is the default: scrolling over a chart continues to scroll the page. Opt into `pan` or `zoom` only for charts where direct wheel navigation is expected. Drag or pinch navigation also requires a built-in or external single-pointer control alternative, so the same operation remains available without a precision gesture.
+
+| Input binding | Recommended use |
+| --- | --- |
+| Visible pan/zoom/reset controls | Default for discoverability and accessibility |
+| Keyboard | Focused chart navigation |
+| Drag pan | Dense Cartesian exploration with visible alternatives |
+| Modified wheel zoom | Desktop analytical tools; choose the modifier explicitly |
+| Pinch | Touch exploration with visible alternatives |
+| Radial navigation | Not applicable to pie and donut |
+
+## Dispatch domain events directly
+
+```ts
+controller.dispatch({
+  type: 'zoom-axis-view',
+  axisID: 'date',
+  factor: 1.5,
+  anchor: 0.75,
+  phase: 'settled',
+})
+```
+
+Continuous views store numeric minimum and maximum values. Categorical views store a start/end window over stable category order. Pan and zoom therefore remain meaningful after resize and across different renderers; they are not mutable pixel transforms.
+
+## Control state from the application
+
+Selection, cursor, active datum, and the complete `ChartViewState` can be controlled. A controlled event emits a command; the owner applies the requested immutable value. In Vue, use `v-model`, `v-model:cursor`, `v-model:active-datum`, and `v-model:view`.
+
+A single controlled `view` can synchronize multiple chart roots with matching axis IDs. Use `update: 'preserve'` to retain the visible domain after data replacement, `reset` to return to the new initial domain, or `follow-end` for a live time window that remains attached to the latest values.
+
+When data disappears, Chart reconciles missing active, cursor, and point-selection IDs. Dispose application-owned controllers when their lifetime ends.

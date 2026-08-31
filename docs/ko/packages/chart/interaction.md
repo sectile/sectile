@@ -1,6 +1,6 @@
 ---
 title: Chart 상호작용과 상태
-description: hover, 선택, 키보드 focus, 이동과 확대를 하나의 명시적인 차트 상태로 다룹니다.
+description: 페이지 스크롤을 보존하면서 선택, cursor, immutable axis-domain view를 명시적으로 관리합니다.
 ---
 
 <script setup>
@@ -9,52 +9,61 @@ import ChartPackageExample from '../../../.vitepress/theme/components/ChartPacka
 
 # 상호작용과 상태
 
-Chart는 pointer, 키보드, 이동, 확대 입력을 화면 표현과 무관한 하나의 상태로 바꿉니다. DOM과 Vue 연결은 일반적인 브라우저 동작을 자동으로 이어 줍니다. 애플리케이션은 같은 상태를 읽고, 이벤트를 직접 보내거나, 선택된 값을 외부에서 제어할 수 있습니다.
+Selection은 “어떤 데이터가 중요한가?”에 답하고 axis view는 “domain의 어느 부분이 보이는가?”에 답합니다. 둘 다 renderer-neutral immutable 값입니다. DOM은 브라우저 입력을 같은 Core event로 번역합니다.
 
 <ChartPackageExample kind="scatter" />
 
-## 기본 브라우저 동작
+## Capability와 브라우저 gesture를 따로 켜기
 
-| 입력 | 결과 |
-| --- | --- |
-| 마크 위로 pointer 이동 | 활성 데이터를 갱신 |
-| 마크 선택 | 해당 데이터를 선택하고 키보드 cursor 이동 |
-| 방향키 | 이전 또는 다음 데이터로 cursor 이동 |
-| Home / End | 첫 번째 또는 마지막 데이터로 이동 |
-| 휠 | 화면 이동 |
-| Ctrl/⌘ + 휠 | pointer 위치를 기준으로 확대·축소 |
-| Escape | 이동과 확대 상태 초기화 |
-
-차트 root는 키보드 focus를 받을 수 있고, 개수가 제한된 데이터 목록을 보조 기술에 제공합니다. ID 대신 의미 있는 설명이 전달되도록 DOM 옵션의 `getAccessibleDatumLabel`을 설정하세요.
-
-## 이벤트 보내기
-
-```ts
-const update = controller.dispatch({
-  type: 'set-selection',
-  selection: { type: 'points', ids: ['search'] },
-})
-
-if (update.ok) {
-  console.log(update.value.snapshot.state.selection)
-}
-```
-
-상태에는 활성 데이터, 키보드 cursor, 점 또는 구간 선택, 화면 변환이 들어 있습니다. 이벤트는 다른 차트 상태를 숨기지 않고 필요한 부분만 갱신합니다.
-
-## 애플리케이션에서 상태 제어하기
-
-다른 store가 값을 소유한다면 `activeDatum`, `cursor`, `selection`, `viewTransform`을 controlled 값으로 전달합니다. 그러면 Chart는 해당 값을 직접 확정하지 않고 변경을 요청합니다. 소유자는 `syncControlledValues()`를 호출하거나, Vue에서는 대응하는 `v-model`을 갱신해 새 값을 적용합니다.
-
-Chart가 값을 소유해야 한다면 기본값을 사용합니다.
+Axis에 view capability가 있어야 탐색할 수 있습니다. 브라우저 binding은 그다음에 명시적으로 선택합니다.
 
 ```ts
 const controller = createChartController({
-  model,
-  initialValues: {
-    selection: { type: 'points', ids: [] },
-  },
+  definition,
+  viewCapabilities: [{
+    axisID: 'date',
+    minimumSpan: 86_400_000,
+    update: 'follow-end',
+  }],
+})
+
+const chart = createDOMChart({
+  root,
+  canvas,
+  controller,
+  navigation: { wheel: 'native', keyboard: true },
 })
 ```
 
-데이터를 교체하면 Chart가 더 이상 존재하지 않는 ID를 활성 데이터, cursor, 점 선택에서 제거합니다. 애플리케이션이 소유한 컨트롤러를 더 사용하지 않을 때는 `dispose()`를 호출하세요.
+기본값인 `wheel: 'native'`에서는 차트 위에서도 페이지가 계속 스크롤됩니다. 직접 wheel 탐색을 기대하는 차트에만 `pan` 또는 `zoom`을 선택합니다. Drag나 pinch에는 built-in 또는 external single-pointer control alternative도 필요하므로 정밀 gesture 없이 같은 작업을 수행할 수 있습니다.
+
+| 입력 binding | 권장 용도 |
+| --- | --- |
+| 보이는 pan/zoom/reset control | 발견 가능성과 접근성을 위한 기본 선택 |
+| Keyboard | focus된 차트 탐색 |
+| Drag pan | 보이는 대안이 있는 고밀도 직교 탐색 |
+| Modifier wheel zoom | modifier를 명시한 desktop 분석 도구 |
+| Pinch | 보이는 대안이 있는 touch 탐색 |
+| Radial 탐색 | Pie와 Donut에는 적용하지 않음 |
+
+## Domain event 직접 보내기
+
+```ts
+controller.dispatch({
+  type: 'zoom-axis-view',
+  axisID: 'date',
+  factor: 1.5,
+  anchor: 0.75,
+  phase: 'settled',
+})
+```
+
+Continuous view는 numeric minimum/maximum을 저장합니다. Categorical view는 안정적인 category 순서의 start/end window를 저장합니다. 따라서 pan과 zoom은 resize 뒤나 다른 renderer에서도 의미가 유지되며 mutable pixel transform이 아닙니다.
+
+## 애플리케이션에서 상태 제어하기
+
+Selection, cursor, active datum, 전체 `ChartViewState`를 controlled 값으로 둘 수 있습니다. Controlled event는 command를 발행하고 owner가 요청된 immutable 값을 적용합니다. Vue에서는 `v-model`, `v-model:cursor`, `v-model:active-datum`, `v-model:view`를 사용합니다.
+
+Axis ID가 같은 여러 root에 하나의 controlled `view`를 전달하면 탐색 범위를 동기화할 수 있습니다. 데이터 교체 후 보이는 domain을 유지하려면 `update: 'preserve'`, 새 initial domain으로 돌아가려면 `reset`, 최신 값에 붙은 live time window에는 `follow-end`를 사용합니다.
+
+데이터가 사라지면 Chart는 존재하지 않는 active, cursor, point-selection ID를 정리합니다. 애플리케이션이 소유한 controller는 수명이 끝날 때 dispose합니다.
