@@ -97,18 +97,26 @@ function updatePackages(root, packages, version, commits) {
       .split('\n')
       .filter(Boolean),
   ]));
-  for (const { manifestPath, changelogPath } of packages) {
+  const updates = packages.map(({ manifestPath, changelogPath }) => {
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
     manifest.version = version;
-    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
     const changelog = readFileSync(changelogPath, 'utf8');
     const directory = basename(dirname(manifestPath));
-    writeFileSync(changelogPath, prependChangelog(
-      changelog,
-      manifest.name,
-      version,
-      filterPackageCommits(commits, directory, changedPathsByHash),
-    ));
+    return {
+      changelog: prependChangelog(
+        changelog,
+        manifest.name,
+        version,
+        filterPackageCommits(commits, directory, changedPathsByHash),
+      ),
+      changelogPath,
+      manifest: `${JSON.stringify(manifest, null, 2)}\n`,
+      manifestPath,
+    };
+  });
+  for (const update of updates) {
+    writeFileSync(update.manifestPath, update.manifest);
+    writeFileSync(update.changelogPath, update.changelog);
   }
 }
 

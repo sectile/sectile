@@ -123,5 +123,6 @@ export function prependChangelog(document, packageName, version, commits) {
   const rest = document.slice(heading.length).trimStart();
   const changes = commits.length === 0 ? '- No package-specific changes.' : formatCommitList(commits);
   const entry = `## ${version}\n\n### Changes\n\n${changes}`;
-  return `${heading}\n\n${entry}\n\n${rest.trimEnd()}\n`;
+  const history = rest.trimEnd();
+  return history === '' ? `${heading}\n\n${entry}\n` : `${heading}\n\n${entry}\n\n${history}\n`;
 }

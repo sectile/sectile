@@ -21,7 +21,7 @@ import { publishedPackageDirectories } from './lib/published-packages.mjs';
 const commit = (subject, body = '') => ({ hash: 'abcdef123456', shortHash: 'abcdef1', subject, body });
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-test('includes every public workspace package in releases', () => {
+test('includes release metadata for every public workspace package', () => {
   const publicDirectories = readdirSync(join(root, 'packages'), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
@@ -31,6 +31,11 @@ test('includes every public workspace package in releases', () => {
     })
     .sort();
   assert.deepEqual([...publishedPackageDirectories].sort(), publicDirectories);
+  for (const directory of publicDirectories) {
+    const manifest = JSON.parse(readFileSync(join(root, 'packages', directory, 'package.json'), 'utf8'));
+    const changelog = readText(join(root, 'packages', directory, 'CHANGELOG.md'));
+    assert.equal(changelog.startsWith(`# ${manifest.name}\n`), true, `${manifest.name} requires a package changelog`);
+  }
 });
 
 test('release retries prepare tagged artifacts and load the complete current publication tool closure', () => {
@@ -145,6 +150,13 @@ test('prepends the same commit list to a package changelog', () => {
   assert.equal(
     prependChangelog(changelog, '@sectile/core', '0.2.0', [commit('feat: add field')]),
     '# @sectile/core\n\n## 0.2.0\n\n### Changes\n\n- feat: add field (abcdef1)\n\n## 0.1.0\n\n- Initial release.\n',
+  );
+});
+
+test('creates the first release entry from a seeded package changelog', () => {
+  assert.equal(
+    prependChangelog('# @sectile/chart\n', '@sectile/chart', '0.12.0', [commit('feat(chart): add plots')]),
+    '# @sectile/chart\n\n## 0.12.0\n\n### Changes\n\n- feat(chart): add plots (abcdef1)\n',
   );
 });
 
