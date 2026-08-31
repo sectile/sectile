@@ -256,6 +256,38 @@ test('invalid submit focuses the first invalid field and announces its issues', 
   ]);
 });
 
+test('invalid input revalidation preserves focus while announcing submission issues', () => {
+  const state = createFormState({
+    fields: [
+      { id: 'current-password' },
+      {
+        id: 'new-password',
+        valid: false,
+        issues: [{
+          id: 'new-password-required',
+          fieldId: 'new-password',
+          message: 'Enter a new password.',
+          source: 'field',
+        }],
+      },
+    ],
+  });
+  const started = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'input', intent: 'submission',
+  }).value.state;
+  const revalidated = applyFormEvent(started, {
+    type: 'validation-completed',
+    trigger: 'input',
+    intent: 'submission',
+    generation: started.validation.generation,
+  }).value;
+
+  assert.deepEqual(revalidated.commands, [{
+    type: 'announce-summary',
+    issueIds: ['new-password-required'],
+  }]);
+});
+
 test('valid submit has an explicit request, pending, success, and failure lifecycle', () => {
   let state = createFormState({ fields: [{ id: 'email', name: 'email' }] });
   state = applyFormEvent(state, {

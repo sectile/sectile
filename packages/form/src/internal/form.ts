@@ -1479,7 +1479,9 @@ function completeValidation<ID extends StableID>(
   const allIssues = orderedIssues(completed);
   const firstInvalid = firstIssueFocusField(fieldStoreOf(completed), allIssues);
   const commands: FormCommand<ID>[] = [];
-  if (firstInvalid !== undefined) commands.push({ type: 'focus-field', id: firstInvalid.id });
+  if (trigger === 'submit' && firstInvalid !== undefined) {
+    commands.push({ type: 'focus-field', id: firstInvalid.id });
+  }
   if (allIssues.length > 0) {
     commands.push({
       type: 'announce-summary',
