@@ -11,6 +11,7 @@ import { koScenarioDescriptions, scenarioDescriptions } from '../data/scenario-d
 import { vueApiDefault } from '../data/vue-api-defaults.mjs';
 import { vueApiDescription } from '../data/vue-api-descriptions.mjs';
 import { anatomyPartContract, componentAnatomy } from '../.vitepress/theme/component-anatomy.ts';
+import { normalizeGeneratedPageText } from './generated-page-text.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const check = process.argv.includes('--check');
@@ -1325,8 +1326,9 @@ ${domFormApiSection(korean)}
 
 async function syncGeneratedPage(path, expected, staleMessage) {
   if (check) {
-    const actual = await readFile(path, 'utf8');
-    assert.equal(actual, expected, staleMessage);
+    const actual = normalizeGeneratedPageText(await readFile(path, 'utf8'));
+    const normalizedExpected = normalizeGeneratedPageText(expected);
+    assert.equal(actual, normalizedExpected, staleMessage);
   } else {
     await writeFile(path, expected);
   }
