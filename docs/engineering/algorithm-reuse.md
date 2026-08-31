@@ -2,7 +2,7 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all 9 package source trees.
 
-Findings: 410; migration owners: WI-020, WI-027, WI-040.
+Findings: 450; migration owners: WI-020, WI-027, WI-040.
 
 ## Classifications
 
@@ -10,18 +10,18 @@ Findings: 410; migration owners: WI-020, WI-027, WI-040.
 |---|---:|
 | bounded-small | 10 |
 | migration-required | 68 |
-| result-proportional | 154 |
-| reuse | 178 |
+| result-proportional | 170 |
+| reuse | 202 |
 
 ## Categories
 
 | Category | Count |
 |---|---:|
 | controller-connection-rebuild | 36 |
-| discarded-canonical-index | 43 |
+| discarded-canonical-index | 55 |
 | measurement-authority | 25 |
 | private-algorithm-bypass | 4 |
-| raw-full-domain-scan | 258 |
+| raw-full-domain-scan | 286 |
 | repeated-immutable-view | 13 |
 | whole-domain-validation | 31 |
 
@@ -52,7 +52,7 @@ Findings: 410; migration owners: WI-020, WI-027, WI-040.
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1866` | raw-identity-lookup |
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1935` | derived-index-construction |
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2187` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2417` | linear-membership |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2424` | linear-membership |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/accordion.ts:158` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/carousel.ts:131` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/cascade-list.ts:203` | controller-rebuild |
@@ -69,7 +69,7 @@ Findings: 410; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:298` | controller-rebuild |
 | WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-collection-model.ts:62` | serialization-signature |
 | WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-collection-model.ts:167` | serialization-signature |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:207` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:198` | controller-rebuild |
 | WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-list.ts:302` | geometry-measurement |
 | WI-040 | vue-virtual-measurement-and-batching | `packages/vue/src/internal/virtual-list.ts:571` | geometry-measurement |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:221` | controller-rebuild |
