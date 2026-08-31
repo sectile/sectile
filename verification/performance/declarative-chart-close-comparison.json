@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "workstream": "declarative-chart-system",
+  "workBase": "84eb62c9",
+  "previousBaselineCommit": "b3a791be",
+  "previousBaselineBuildFingerprint": "9536d428fab92f8a7a3becfb248e44b8f20c5d8a3ff6c6bc124bafb94aa5b39b",
+  "comparedBuildFingerprint": "2e54a9832221cfc36224716de96542bae8b44aad29db46b7413de86b765c8a00",
+  "runnerBand": 0.05,
+  "runtimeRegressions": [],
+  "correctedRegression": {
+    "commit": "5365f53c",
+    "scope": "Core sequence patch materialization",
+    "decision": "Use native splice for at most 4096 moved or inserted items and retain the argument-safe linear copy path above the crossover."
+  },
+  "acceptedFootprintChanges": [
+    {
+      "package": "chart",
+      "baselineBytes": 127567,
+      "currentBytes": 375948,
+      "ratio": 2.94706311193,
+      "tarballBytes": 81896,
+      "runtimeJSBytes": 183317,
+      "rationale": "The workstream adds the declared model, layout, scale, projection, query, view, and controller runtime. Consumer bundle and install gates verify that the expanded package remains tree-shakeable and peer-isolated."
+    },
+    {
+      "package": "dom",
+      "baselineBytes": 1212065,
+      "currentBytes": 1284308,
+      "ratio": 1.0596032391,
+      "tarballBytes": 258187,
+      "runtimeJSBytes": 596923,
+      "rationale": "The workstream adds retained Canvas2D and WebGL2 renderers, overlays, navigation translation, and lifecycle ownership. Consumer bundle and install gates verify optional Chart isolation."
+    }
+  ],
+  "decision": "Record a new release baseline only after the valid five-process comparison reports no timing, allocation, or retained-heap regressions. Preserve this comparison as the evidence for the intentional Chart and DOM install-footprint expansion."
+}
