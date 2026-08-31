@@ -3,14 +3,6 @@
   "package": "@sectile/vue",
   "entries": [
     {
-      "id": "WI-009:chart-declarative-surface",
-      "change": "signature-changed",
-      "before": { "subpath": "./chart" },
-      "symbols": ["UseChartOptions", "ChartRootProps", "ChartRootSlotProps", "ChartRoot", "ChartContext", "declarative Chart components and selectors"],
-      "replacement": { "package": "@sectile/vue", "subpath": "./chart" },
-      "removalReason": "Use declarative coordinate, axis, layer, plot, and renderer children; use ChartProvider or createChartComponents for external controller ownership and axis-domain view props for controlled navigation."
-    },
-    {
       "id": "WI-025:tabular-aggregate-removal",
       "change": "removed",
       "before": { "subpath": "./tabular" },

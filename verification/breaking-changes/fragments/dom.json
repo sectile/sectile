@@ -3,14 +3,6 @@
   "package": "@sectile/dom",
   "entries": [
     {
-      "id": "WI-009:chart-navigation-surface",
-      "change": "signature-changed",
-      "before": { "subpath": "./chart" },
-      "symbols": ["DOMChartOptions", "DOMChartConnection", "DOMChartNavigation", "normalizeDOMChartNavigation", "tryNormalizeDOMChartNavigation"],
-      "replacement": { "package": "@sectile/dom", "subpath": "./chart" },
-      "removalReason": "Configure axis-domain navigation explicitly; ordinary wheel input now remains native unless an enabled binding accepts it."
-    },
-    {
       "id": "WI-025:temporal-aggregate-removal",
       "change": "removed",
       "before": { "subpath": "./temporal" },

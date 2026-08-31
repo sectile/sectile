@@ -2,21 +2,21 @@
   "schemaVersion": 2,
   "packages": {
     "core": {
-      "tarballBytes": 180221,
-      "unpackedBytes": 831549,
+      "tarballBytes": 180616,
+      "unpackedBytes": 833053,
       "unpackedFiles": 291,
       "categories": {
         "runtimeJS": {
           "files": 96,
-          "bytes": 375816
+          "bytes": 376493
         },
         "declarations": {
           "files": 96,
-          "bytes": 165293
+          "bytes": 165568
         },
         "sourceMaps": {
           "files": 96,
-          "bytes": 275549
+          "bytes": 276101
         },
         "other": {
           "files": 3,
@@ -25,36 +25,36 @@
       }
     },
     "chart": {
-      "tarballBytes": 30703,
-      "unpackedBytes": 131784,
-      "unpackedFiles": 36,
+      "tarballBytes": 81896,
+      "unpackedBytes": 381115,
+      "unpackedFiles": 51,
       "categories": {
         "runtimeJS": {
-          "files": 11,
-          "bytes": 60651
+          "files": 16,
+          "bytes": 183317
         },
         "declarations": {
-          "files": 11,
-          "bytes": 20097
+          "files": 16,
+          "bytes": 53375
         },
         "sourceMaps": {
-          "files": 11,
-          "bytes": 46819
+          "files": 16,
+          "bytes": 139256
         },
         "other": {
           "files": 3,
-          "bytes": 4217
+          "bytes": 5167
         }
       }
     },
     "form": {
-      "tarballBytes": 27127,
-      "unpackedBytes": 115955,
+      "tarballBytes": 27186,
+      "unpackedBytes": 116329,
       "unpackedFiles": 27,
       "categories": {
         "runtimeJS": {
           "files": 8,
-          "bytes": 56471
+          "bytes": 56703
         },
         "declarations": {
           "files": 8,
@@ -62,7 +62,7 @@
         },
         "sourceMaps": {
           "files": 8,
-          "bytes": 41627
+          "bytes": 41769
         },
         "other": {
           "files": 3,
@@ -140,21 +140,21 @@
       }
     },
     "dom": {
-      "tarballBytes": 241613,
-      "unpackedBytes": 1227453,
-      "unpackedFiles": 303,
+      "tarballBytes": 258187,
+      "unpackedBytes": 1298761,
+      "unpackedFiles": 309,
       "categories": {
         "runtimeJS": {
-          "files": 100,
-          "bytes": 559216
+          "files": 102,
+          "bytes": 596923
         },
         "declarations": {
-          "files": 100,
-          "bytes": 257055
+          "files": 102,
+          "bytes": 260533
         },
         "sourceMaps": {
-          "files": 100,
-          "bytes": 395794
+          "files": 102,
+          "bytes": 425917
         },
         "other": {
           "files": 3,
@@ -186,25 +186,25 @@
       }
     },
     "vue": {
-      "tarballBytes": 250729,
-      "unpackedBytes": 1618300,
+      "tarballBytes": 262765,
+      "unpackedBytes": 1683500,
       "unpackedFiles": 300,
       "categories": {
         "runtimeJS": {
           "files": 99,
-          "bytes": 549807
+          "bytes": 574651
         },
         "declarations": {
           "files": 99,
-          "bytes": 627586
+          "bytes": 648210
         },
         "sourceMaps": {
           "files": 99,
-          "bytes": 424286
+          "bytes": 443924
         },
         "other": {
           "files": 3,
-          "bytes": 16621
+          "bytes": 16715
         }
       }
     }
@@ -212,8 +212,8 @@
   "installs": [
     {
       "packageManager": "npm",
-      "installedBytes": 20625558,
-      "installedFiles": 1492,
+      "installedBytes": 20763570,
+      "installedFiles": 1498,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -564,8 +564,8 @@
     },
     {
       "packageManager": "pnpm",
-      "installedBytes": 20654038,
-      "installedFiles": 1502,
+      "installedBytes": 20792050,
+      "installedFiles": 1508,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",

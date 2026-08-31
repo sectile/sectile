@@ -39,7 +39,7 @@ const isSupportSubpath = (subpath) => (
 const manifest = JSON.parse(await readFile('verification/component-completeness.json', 'utf8'));
 const evidence = JSON.parse(await readFile('verification/component-evidence.json', 'utf8'));
 const allowedHostInputs = {
-  dom: new Set(['focus', 'ime', 'keyboard', 'measurement', 'native-form', 'pointer', 'resize', 'scroll', 'text', 'timer']),
+  dom: new Set(['focus', 'ime', 'keyboard', 'measurement', 'native-form', 'pointer', 'resize', 'scroll', 'text', 'timer', 'touch', 'wheel']),
   terminal: new Set(['keyboard', 'text', 'timer']),
 };
 assert.equal(manifest.schemaVersion, 1, 'Unsupported component completeness schema.');

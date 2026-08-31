@@ -315,7 +315,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "ea27f0557688c5900563150a9bae492100a6f81abc0c7fe8656ec48c3bc26449",
+  "fingerprint": "1c6884f5d40d5e85427516859f3540fb8ae5c111317f24cde2580fa5eac5279b",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -343,7 +343,7 @@
     },
     {
       "path": "dist/chart.d.ts",
-      "sha256": "a910d86ea4dfeca55701b4cc038644798ee3d6982907b033196bae22175d1ffe"
+      "sha256": "1597304d5d4ddce73f578f9b007d6deca6c8968940e52141efab7a62756cff57"
     },
     {
       "path": "dist/checkbox-group.d.ts",
@@ -423,7 +423,7 @@
     },
     {
       "path": "dist/form.d.ts",
-      "sha256": "36ea3f12356c8291303a06bf89f91837b7c5b4079d9179d1bd2e0202a5691790"
+      "sha256": "c4ad2e2032aac55ab9c0409907c720ee3f14b5dbdb44134e2acd4e394a6638f4"
     },
     {
       "path": "dist/grid.d.ts",
@@ -479,7 +479,7 @@
     },
     {
       "path": "dist/internal/virtual-core.d.ts",
-      "sha256": "a5888b0a99cd558c732919ad2fe96b703f30b2de87c118cdc971e9874af699b0"
+      "sha256": "a67f87011271af59027f1fa08d3587cb41c7bb33254995c31b91343209520b34"
     },
     {
       "path": "dist/internal/virtual-list.d.ts",
