@@ -275,3 +275,24 @@ test('patch overlays compact when cumulative changed cardinality exceeds one eig
   assert.equal(sequence.at(146), 'compacting-change');
   assert.equal(sequence.indexOf('base-127'), 127);
 });
+
+test('materialized patches support cardinalities above the engine argument limit', () => {
+  const size = 150_000;
+  const ids = Array.from({ length: size }, (_, index) => index);
+  const sequence = createSequence(ids, { maxItems: size });
+  const reversed = Array.from({ length: size }, (_, index) => size - index - 1);
+  const replaced = applySequencePatch(sequence, {
+    type: 'splice', index: 0, deleteCount: size, inserted: reversed,
+  });
+  assert.equal(replaced.size, size);
+  assert.equal(replaced.at(0), size - 1);
+  assert.equal(replaced.at(size - 1), 0);
+  assert.equal(replaced.indexOf(0), size - 1);
+
+  const moved = applySequencePatch(replaced, {
+    type: 'move', from: 0, to: size / 2, count: size / 2,
+  });
+  assert.equal(moved.at(0), size / 2 - 1);
+  assert.equal(moved.at(size / 2), size - 1);
+  assert.equal(moved.indexOf(size - 1), size / 2);
+});

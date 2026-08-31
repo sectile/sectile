@@ -5,6 +5,120 @@
   "kind": "internal-operations",
   "operations": [
     {
+      "id": "chart.declaration-reconcile",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/chart.ts",
+      "benchmarkIDs": [
+        "VAL-007:vue-chart-shallow-reconciliation"
+      ],
+      "specificationCeiling": "O(aAxis + lLayer + nDatum)",
+      "contract": {
+        "variables": [
+          {
+            "name": "aAxis",
+            "meaning": "declarative axis and axis-view record count",
+            "ceiling": "Chart maxAxes"
+          },
+          {
+            "name": "lLayer",
+            "meaning": "declarative layer record count",
+            "ceiling": "Chart maxLayers"
+          },
+          {
+            "name": "nDatum",
+            "meaning": "datums inspected by the Chart-owned definition reconciliation",
+            "ceiling": "Chart maxDatums"
+          }
+        ],
+        "time": {
+          "bound": "O(aAxis + lLayer + nDatum)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(aAxis + lLayer + nDatum)",
+          "output": "O(1)",
+          "retained": "O(aAxis + lLayer + nDatum)"
+        },
+        "resources": {
+          "allocations": "O(aAxis + lLayer + nDatum)",
+          "cacheEntries": "O(aAxis + lLayer)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(aAxis + lLayer)"
+        },
+        "proof": "Vue retains one record per low-cardinality coordinate, axis, layer, view, navigation, or control declaration and coalesces all touches in one nextTick publication. High-cardinality arrays remain opaque props; Chart owns datum validation and model reconciliation.",
+        "adversarialWitness": "Replacing a maximum-size layer array causes one declaration publication, a record scan bounded by axes plus layers, and no datum-sized Vue registry.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Chart may inspect submitted datums to validate identity, resolve automatic domains, and reconcile packed owners; the Vue bridge does not traverse them."
+        }
+      }
+    },
+    {
+      "id": "chart.selector-bridge",
+      "inherits": "lifecycle-v1",
+      "source": "packages/vue/src/chart.ts",
+      "benchmarkIDs": [
+        "VAL-014:vue-chart-selectors"
+      ],
+      "specificationCeiling": "O(sState + sLayer*lLayer + sAxis*aAxis)",
+      "contract": {
+        "variables": [
+          {
+            "name": "sState",
+            "meaning": "mounted whole-state selector count",
+            "ceiling": "mounted Chart selector count"
+          },
+          {
+            "name": "sLayer",
+            "meaning": "mounted resolved-layer selector count",
+            "ceiling": "mounted Chart selector count"
+          },
+          {
+            "name": "sAxis",
+            "meaning": "mounted resolved-axis selector count",
+            "ceiling": "mounted Chart selector count"
+          },
+          {
+            "name": "lLayer",
+            "meaning": "resolved layer count",
+            "ceiling": "Chart maxLayers"
+          },
+          {
+            "name": "aAxis",
+            "meaning": "resolved axis count",
+            "ceiling": "Chart maxAxes"
+          }
+        ],
+        "time": {
+          "bound": "O(sState + sLayer*lLayer + sAxis*aAxis)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(sState + sLayer + sAxis)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(1 + sState + sLayer + sAxis)"
+        },
+        "proof": "Provider and Root each retain one controller snapshot subscription. Selector composables derive shallow values from that snapshot and publish only when their equality predicate changes; layer and axis scans are bounded by the public Chart ceilings.",
+        "adversarialWitness": "A model replacement changes every selected layer and axis while every mounted selector uses a comparator that reports inequality.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Selectors may scan bounded definition metadata but cannot inspect datum arrays or materialize model data."
+        }
+      }
+    },
+    {
       "id": "collection.external-reconcile",
       "inherits": "linear-v1",
       "source": "packages/vue/src/internal/collection.ts",
@@ -202,120 +316,6 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Measurement may visit the mounted render window but cannot inspect unmounted collection items."
-        }
-      }
-    },
-    {
-      "id": "chart.declaration-reconcile",
-      "inherits": "linear-v1",
-      "source": "packages/vue/src/chart.ts",
-      "benchmarkIDs": [
-        "VAL-007:vue-chart-shallow-reconciliation"
-      ],
-      "specificationCeiling": "O(aAxis + lLayer + nDatum)",
-      "contract": {
-        "variables": [
-          {
-            "name": "aAxis",
-            "meaning": "declarative axis and axis-view record count",
-            "ceiling": "Chart maxAxes"
-          },
-          {
-            "name": "lLayer",
-            "meaning": "declarative layer record count",
-            "ceiling": "Chart maxLayers"
-          },
-          {
-            "name": "nDatum",
-            "meaning": "datums inspected by the Chart-owned definition reconciliation",
-            "ceiling": "Chart maxDatums"
-          }
-        ],
-        "time": {
-          "bound": "O(aAxis + lLayer + nDatum)",
-          "kind": "worst-case",
-          "runtimeState": "mounted"
-        },
-        "space": {
-          "auxiliary": "O(aAxis + lLayer + nDatum)",
-          "output": "O(1)",
-          "retained": "O(aAxis + lLayer + nDatum)"
-        },
-        "resources": {
-          "allocations": "O(aAxis + lLayer + nDatum)",
-          "cacheEntries": "O(aAxis + lLayer)",
-          "listeners": "0",
-          "observers": "0",
-          "timers": "0",
-          "subscriptions": "O(aAxis + lLayer)"
-        },
-        "proof": "Vue retains one record per low-cardinality coordinate, axis, layer, view, navigation, or control declaration and coalesces all touches in one nextTick publication. High-cardinality arrays remain opaque props; Chart owns datum validation and model reconciliation.",
-        "adversarialWitness": "Replacing a maximum-size layer array causes one declaration publication, a record scan bounded by axes plus layers, and no datum-sized Vue registry.",
-        "fullScan": {
-          "allowed": true,
-          "rationale": "Chart may inspect submitted datums to validate identity, resolve automatic domains, and reconcile packed owners; the Vue bridge does not traverse them."
-        }
-      }
-    },
-    {
-      "id": "chart.selector-bridge",
-      "inherits": "lifecycle-v1",
-      "source": "packages/vue/src/chart.ts",
-      "benchmarkIDs": [
-        "VAL-014:vue-chart-selectors"
-      ],
-      "specificationCeiling": "O(sState + sLayer*lLayer + sAxis*aAxis)",
-      "contract": {
-        "variables": [
-          {
-            "name": "sState",
-            "meaning": "mounted whole-state selector count",
-            "ceiling": "mounted Chart selector count"
-          },
-          {
-            "name": "sLayer",
-            "meaning": "mounted resolved-layer selector count",
-            "ceiling": "mounted Chart selector count"
-          },
-          {
-            "name": "sAxis",
-            "meaning": "mounted resolved-axis selector count",
-            "ceiling": "mounted Chart selector count"
-          },
-          {
-            "name": "lLayer",
-            "meaning": "resolved layer count",
-            "ceiling": "Chart maxLayers"
-          },
-          {
-            "name": "aAxis",
-            "meaning": "resolved axis count",
-            "ceiling": "Chart maxAxes"
-          }
-        ],
-        "time": {
-          "bound": "O(sState + sLayer*lLayer + sAxis*aAxis)",
-          "kind": "worst-case",
-          "runtimeState": "mounted"
-        },
-        "space": {
-          "auxiliary": "O(1)",
-          "output": "O(1)",
-          "retained": "O(sState + sLayer + sAxis)"
-        },
-        "resources": {
-          "allocations": "O(1) per selector evaluation",
-          "cacheEntries": "0",
-          "listeners": "0",
-          "observers": "0",
-          "timers": "0",
-          "subscriptions": "O(sState + sLayer + sAxis) Vue watchers plus one controller snapshot subscription per provider or root"
-        },
-        "proof": "Provider and Root each retain one controller snapshot subscription. Selector composables derive shallow values from that snapshot and publish only when their equality predicate changes; layer and axis scans are bounded by the public Chart ceilings.",
-        "adversarialWitness": "A model replacement changes every selected layer and axis while every mounted selector uses a comparator that reports inequality.",
-        "fullScan": {
-          "allowed": false,
-          "rationale": "Selectors may scan bounded definition metadata but cannot inspect datum arrays or materialize model data."
         }
       }
     }

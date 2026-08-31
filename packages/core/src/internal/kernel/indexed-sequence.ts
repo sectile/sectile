@@ -175,14 +175,13 @@ export class PatchedSequence<ID extends StableID> implements SequenceView<ID> {
       patches.push(base.#patch);
       base = base.#parent;
     }
-    const ids = [...base.ids];
+    let ids = [...base.ids];
     for (let index = patches.length - 1; index >= 0; index -= 1) {
       const patch = patches[index];
       if (patch?.type === 'splice') {
-        ids.splice(patch.index, patch.deleteCount, ...patch.inserted);
+        ids = spliceSequenceArray(ids, patch.index, patch.deleteCount, patch.inserted);
       } else if (patch !== undefined && patch.count > 0 && patch.from !== patch.to) {
-        const moved = ids.splice(patch.from, patch.count);
-        ids.splice(patch.to, 0, ...moved);
+        moveSequenceArray(ids, patch.from, patch.to, patch.count);
       }
     }
     return ids;
@@ -242,6 +241,36 @@ export class PatchedSequence<ID extends StableID> implements SequenceView<ID> {
   ): MoveResult<ID> {
     return moveInSequence(this, current, direction, boundary, options);
   }
+}
+
+export function spliceSequenceArray<ID extends StableID>(
+  ids: readonly ID[],
+  index: number,
+  deleteCount: number,
+  inserted: readonly ID[],
+): ID[] {
+  const next = new Array<ID>(ids.length - deleteCount + inserted.length);
+  let write = 0;
+  for (; write < index; write += 1) next[write] = ids[write]!;
+  for (let source = 0; source < inserted.length; source += 1, write += 1) {
+    next[write] = inserted[source]!;
+  }
+  for (let source = index + deleteCount; source < ids.length; source += 1, write += 1) {
+    next[write] = ids[source]!;
+  }
+  return next;
+}
+
+export function moveSequenceArray<ID extends StableID>(
+  ids: ID[],
+  from: number,
+  to: number,
+  count: number,
+): void {
+  const moved = ids.slice(from, from + count);
+  if (to < from) ids.copyWithin(to + count, to, from);
+  else ids.copyWithin(from, from + count, to + count);
+  for (let index = 0; index < moved.length; index += 1) ids[to + index] = moved[index]!;
 }
 
 function parentIndexForMove<ID extends StableID>(

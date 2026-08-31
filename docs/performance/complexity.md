@@ -9,14 +9,14 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
 | core | 381 | 26 | 53 |
-| chart | 41 | 0 | 5 |
-| dom | 419 | 181 | 9 |
+| chart | 78 | 0 | 11 |
+| dom | 421 | 181 | 14 |
 | form | 21 | 0 | 6 |
 | tabular | 32 | 0 | 4 |
 | temporal | 99 | 24 | 2 |
 | terminal | 347 | 177 | 2 |
 | virtual | 90 | 0 | 19 |
-| vue | 708 | 315 | 4 |
+| vue | 738 | 319 | 6 |
 
 ## Variables
 
@@ -83,10 +83,21 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:tree.views | trusted | `O(n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | VAL-016, VAL-017 |
 | core:tree.visible | external | `O(n + k)` expected | `O(n)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
 | chart:controller.project.cached | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(kRepresentative)` | forbidden | VAL-016, VAL-017 |
+| chart:controller.publish | mounted | `O(sSnapshot + cCommand*sCommand)` worst-case | `O(1)` | `O(1)` | `O(sSnapshot + sCommand)` | forbidden | VAL-016, VAL-017 |
+| chart:interaction.selection-contains | trusted | `O(s)` amortized | `O(s)` | `O(1)` | `O(s)` | allowed | VAL-016, VAL-017 |
 | chart:model.normalize | external | `O(nDatum + nLayer)` worst-case | `O(nDatum + nLayer)` | `O(nDatum + nLayer)` | `O(nDatum + nLayer)` | allowed | VAL-016, VAL-017 |
+| chart:model.patch-layer.sparse | trusted | `O(jDatum + bBlock + bIndex)` worst-case | `O(bBlock + bIndex)` | `O(1)` | `O(bBlock + bIndex)` | allowed | VAL-016, VAL-017 |
+| chart:model.replace-layer | external | `O(sLayer + nLayer)` worst-case | `O(sLayer + nLayer)` | `O(sLayer + nLayer)` | `O(sLayer + nLayer)` | forbidden | VAL-016, VAL-017 |
 | chart:projection.create | trusted | `O(nLayer + kRepresentative)` worst-case | `O(nLayer + kRepresentative)` | `O(kRepresentative)` | `O(kRepresentative)` | forbidden | VAL-016, VAL-017 |
+| chart:projection.create.semantic | trusted | `O(nLayer + nAxis + nTick + log nDatum + qIndex + kRepresentative)` expected | `O(nLayer + nAxis + nTick + kRepresentative)` | `O(nAxis + nTick + kRepresentative)` | `O(kRepresentative)` | forbidden | VAL-016, VAL-017 |
 | chart:projection.hit-test.indexed | trusted | `O(log kRepresentative + cCandidate + h log h)` expected | `O(log kRepresentative + h)` | `O(h)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | chart:projection.query-index.build | trusted | `O(kRepresentative log kRepresentative)` worst-case | `O(kRepresentative)` | `O(1)` | `O(kRepresentative)` | allowed | VAL-016, VAL-017 |
+| chart:view.transition.axis-domain | trusted | `O(nAxis)` worst-case | `O(nAxis)` | `O(nAxis)` | `O(nAxis)` | forbidden | VAL-016, VAL-017 |
+| dom:chart.canvas2d-render | connected | `O(a + k)` worst-case | `O(a)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
+| dom:chart.disconnect | connected | `O(r + u)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| dom:chart.navigation-dispatch | connected | `O(a + p)` worst-case | `O(a + p)` | `O(a)` | `O(a + p)` | forbidden | VAL-016, VAL-017 |
+| dom:chart.overlay-render | connected | `O(a + t + l + k)` worst-case | `O(a + t + l + k)` | `O(a + t + l + k)` | `O(a + t + l + k)` | forbidden | VAL-016, VAL-017 |
+| dom:chart.webgl2-render | connected | `O(l + k)` worst-case | `O(k)` | `O(1)` | `O(k)` | allowed | VAL-016, VAL-017 |
 | dom:form.subscribe | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | dom:form.subscription-dispatch | connected | `O(sForm + uSource + sAffected)` worst-case | `O(sForm + uSource + sAffected)` | `O(1)` | `O(sForm + sField)` | forbidden | VAL-016, VAL-017 |
 | dom:form.unsubscribe | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
@@ -129,6 +140,8 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:spatial.query | trusted | `O(log nItem + (cCandidate + pOverlay) * dSequence + kPlacement log kPlacement)` expected | `O(log nItem + cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.measure | trusted | `O(jChanged log nTrack)` worst-case | `O(jChanged log nTrack)` | `O(1)` | `O(jChanged log nTrack)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.query | trusted | `O(log nRegion + cCandidate + kPlacement log kPlacement)` worst-case | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| vue:chart.declaration-reconcile | mounted | `O(aAxis + lLayer + nDatum)` worst-case | `O(aAxis + lLayer + nDatum)` | `O(1)` | `O(aAxis + lLayer + nDatum)` | allowed | VAL-016, VAL-017 |
+| vue:chart.selector-bridge | mounted | `O(sState + sLayer*lLayer + sAxis*aAxis)` worst-case | `O(1)` | `O(1)` | `O(sState + sLayer + sAxis)` | forbidden | VAL-016, VAL-017 |
 | vue:collection.external-reconcile | external | `O(nOption + sSelected + dDisabled)` expected | `O(nOption + sSelected + dDisabled)` | `O(sSelected)` | `O(sSelected)` | allowed | VAL-016, VAL-017 |
 | vue:form.selector-bridge | mounted | `O(sForm + sField)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | vue:projection.reconfigure | mounted | `O(nItem + jChanged)` worst-case | `O(jChanged)` | `O(jChanged)` | `O(nItem + jChanged)` | allowed | VAL-016, VAL-017 |

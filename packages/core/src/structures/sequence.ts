@@ -12,7 +12,9 @@ import {
 import { fail, ok, validateSafeCeiling, validateUniqueIDs } from '../internal/kernel/foundation.js';
 import {
   IndexedSequence,
+  moveSequenceArray,
   PatchedSequence,
+  spliceSequenceArray,
   type SequenceView,
 } from '../internal/kernel/indexed-sequence.js';
 
@@ -207,7 +209,7 @@ function applyMaterializedSequencePatch<ID extends StableID>(
   maxItems: number,
   maxIDCodeUnits: number,
 ): Result<Sequence<ID>> {
-  const ids = sequence instanceof PatchedSequence
+  let ids = sequence instanceof PatchedSequence
     ? sequence.copyIDs()
     : [...sequence.ids];
   if (patch.type === 'splice') {
@@ -219,7 +221,7 @@ function applyMaterializedSequencePatch<ID extends StableID>(
       || patch.index > ids.length
       || patch.deleteCount > ids.length - patch.index
     ) return invalidPatch(patch, ids.length);
-    ids.splice(patch.index, patch.deleteCount, ...patch.inserted);
+    ids = spliceSequenceArray(ids, patch.index, patch.deleteCount, patch.inserted);
   } else {
     if (
       !Number.isSafeInteger(patch.from)
@@ -233,8 +235,7 @@ function applyMaterializedSequencePatch<ID extends StableID>(
       || patch.to > ids.length - patch.count
     ) return invalidPatch(patch, ids.length);
     if (patch.count === 0 || patch.from === patch.to) return ok(sequence);
-    const moved = ids.splice(patch.from, patch.count);
-    ids.splice(patch.to, 0, ...moved);
+    moveSequenceArray(ids, patch.from, patch.to, patch.count);
   }
   const result = tryCreateSequence(ids, { maxItems, maxIDCodeUnits });
   if (result.ok) return result;

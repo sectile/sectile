@@ -1,7 +1,7 @@
 import { performance } from 'node:perf_hooks';
 import { createChartAxisViewState, reduceChartViewAction } from '@sectile/chart/view';
 
-const axes = Array.from({ length: 64 }, (_, index) => ({
+const axes = Array.from({ length: 16 }, (_, index) => ({
   id: index,
   orientation: index % 2 === 0 ? 'x' : 'y',
   scale: index % 4 === 0 ? 'logarithmic' : 'linear',
@@ -19,7 +19,7 @@ const iterations = 1_000_000;
 const startedAt = performance.now();
 for (let iteration = 0; iteration < iterations; iteration += 1) {
   const transition = reduceChartViewAction(state, {
-    type: 'zoom-axis-view', axisID: iteration & 63, factor: iteration % 2 === 0 ? 1.0001 : 0.9999, anchor: 0.5,
+    type: 'zoom-axis-view', axisID: iteration & 15, factor: iteration % 2 === 0 ? 1.0001 : 0.9999, anchor: 0.5,
   }).value;
   state = transition.state;
   work += transition.work.axisLookups + transition.work.mathOperations;

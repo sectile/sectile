@@ -46,6 +46,100 @@
       }
     },
     {
+      "id": "controller.publish",
+      "inherits": "lifecycle-v1",
+      "source": "packages/chart/src/controller.ts",
+      "benchmarkIDs": [
+        "VAL-014:chart-snapshot-subscriptions"
+      ],
+      "specificationCeiling": "O(sSnapshot + cCommand*sCommand)",
+      "contract": {
+        "variables": [
+          {
+            "name": "sSnapshot",
+            "meaning": "active immutable snapshot listeners",
+            "ceiling": "consumer-owned subscription count"
+          },
+          {
+            "name": "sCommand",
+            "meaning": "active command listeners",
+            "ceiling": "consumer-owned subscription count"
+          },
+          {
+            "name": "cCommand",
+            "meaning": "commands emitted by one accepted transition",
+            "ceiling": "bounded Chart transition command count"
+          }
+        ],
+        "time": {
+          "bound": "O(sSnapshot + cCommand*sCommand)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(sSnapshot + sCommand)"
+        },
+        "resources": {
+          "allocations": "0 per listener notification",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(sSnapshot + sCommand)"
+        },
+        "proof": "One committed immutable snapshot is published directly to each snapshot listener before the already-bounded command list is delivered. Unsubscribe and controller disposal remove retained listeners idempotently.",
+        "adversarialWitness": "Every active snapshot and command listener remains mounted while one accepted transition emits its maximum bounded command list.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Publication iterates subscribed listeners only and never inspects chart data."
+        }
+      }
+    },
+    {
+      "id": "interaction.selection-contains",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/interaction.ts",
+      "benchmarkIDs": [
+        "VAL-012:chart-selection-index"
+      ],
+      "specificationCeiling": "first lookup O(s), subsequent lookup expected O(1)",
+      "contract": {
+        "variables": [
+          {
+            "name": "s",
+            "meaning": "point-selection identity count",
+            "ceiling": "Chart model datum ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(s)",
+          "kind": "amortized",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(s)",
+          "output": "O(1)",
+          "retained": "O(s)"
+        },
+        "resources": {
+          "allocations": "first lookup O(s), subsequent lookup 0",
+          "cacheEntries": "one weak owner entry per queried immutable point selection",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "The first membership query builds one StableID-preserving Set keyed weakly by the immutable selection owner; later DOM accessibility projections reuse expected-constant membership without rescanning the selection.",
+        "adversarialWitness": "A million selected numeric and string identities are queried repeatedly while only a bounded accessibility window is projected.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "The one-time index must contain every selected identity; subsequent membership queries cannot scan it."
+        }
+      }
+    },
+    {
       "id": "model.normalize",
       "inherits": "linear-v1",
       "source": "packages/chart/src/model.ts",
@@ -93,53 +187,6 @@
       }
     },
     {
-      "id": "model.replace-layer",
-      "inherits": "linear-v1",
-      "source": "packages/chart/src/model.ts",
-      "benchmarkIDs": [
-        "chart:model:replace-layer"
-      ],
-      "specificationCeiling": "O(sLayer + nLayer)",
-      "contract": {
-        "variables": [
-          {
-            "name": "sLayer",
-            "meaning": "datums in the replaced layer",
-            "ceiling": "maxDatums"
-          },
-          {
-            "name": "nLayer",
-            "meaning": "model layer count",
-            "ceiling": "maxLayers"
-          }
-        ],
-        "time": {
-          "bound": "O(sLayer + nLayer)",
-          "kind": "worst-case",
-          "runtimeState": "external"
-        },
-        "space": {
-          "auxiliary": "O(sLayer + nLayer)",
-          "output": "O(sLayer + nLayer)",
-          "retained": "O(sLayer + nLayer) changed plus structurally shared unchanged owners"
-        },
-        "resources": {
-          "allocations": "O(sLayer + nLayer)",
-          "cacheEntries": "0",
-          "listeners": "0",
-          "observers": "0",
-          "timers": "0",
-          "subscriptions": "0"
-        },
-        "proof": "The replacement validates and indexes one layer, patches the Core identity sequence once, creates at most nLayer lightweight views, and reuses every other immutable owner.",
-        "adversarialWitness": "Replacing one datum layer beside a one-million-datum unchanged layer reports one scanned datum and preserves the unchanged owner identity.",
-        "fullScan": {
-          "allowed": false,
-          "rationale": "A changed-layer replacement cannot inspect datum storage owned by unchanged layers."
-        }
-      }
-    },
-    {
       "id": "model.patch-layer.sparse",
       "inherits": "linear-v1",
       "source": "packages/chart/src/internal/layer-owner.ts",
@@ -173,7 +220,7 @@
         "space": {
           "auxiliary": "O(bBlock + bIndex)",
           "output": "O(1)",
-          "retained": "O(bBlock + bIndex) until the bounded overlay-depth rebuild crossover"
+          "retained": "O(bBlock + bIndex)"
         },
         "resources": {
           "allocations": "O(bBlock + bIndex)",
@@ -192,6 +239,53 @@
         "fullScan": {
           "allowed": true,
           "rationale": "A complete owner scan is permitted only at the bounded overlay-depth crossover; scannedDatums, bBlock, and bIndex then account for that rebuild explicitly."
+        }
+      }
+    },
+    {
+      "id": "model.replace-layer",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/model.ts",
+      "benchmarkIDs": [
+        "chart:model:replace-layer"
+      ],
+      "specificationCeiling": "O(sLayer + nLayer)",
+      "contract": {
+        "variables": [
+          {
+            "name": "sLayer",
+            "meaning": "datums in the replaced layer",
+            "ceiling": "maxDatums"
+          },
+          {
+            "name": "nLayer",
+            "meaning": "model layer count",
+            "ceiling": "maxLayers"
+          }
+        ],
+        "time": {
+          "bound": "O(sLayer + nLayer)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(sLayer + nLayer)",
+          "output": "O(sLayer + nLayer)",
+          "retained": "O(sLayer + nLayer)"
+        },
+        "resources": {
+          "allocations": "O(sLayer + nLayer)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "The replacement validates and indexes one layer, patches the Core identity sequence once, creates at most nLayer lightweight views, and reuses every other immutable owner.",
+        "adversarialWitness": "Replacing one datum layer beside a one-million-datum unchanged layer reports one scanned datum and preserves the unchanged owner identity.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "A changed-layer replacement cannot inspect datum storage owned by unchanged layers."
         }
       }
     },
@@ -262,13 +356,18 @@
             "meaning": "resolved axis count",
             "ceiling": "maxAxes"
           },
-          {
-            "name": "nTick",
-            "meaning": "emitted tick count",
-            "ceiling": "sum of bounded axis tick maxima"
-          },
-          {
-            "name": "qIndex",
+      {
+        "name": "nTick",
+        "meaning": "emitted tick count",
+        "ceiling": "sum of bounded axis tick maxima"
+      },
+      {
+        "name": "nDatum",
+        "meaning": "datums retained by the queried layer indexes",
+        "ceiling": "maxDatums"
+      },
+      {
+        "name": "qIndex",
             "meaning": "retained hierarchy nodes visited",
             "ceiling": "reported adversarial fallback bound"
           },
@@ -286,7 +385,7 @@
         "space": {
           "auxiliary": "O(nLayer + nAxis + nTick + kRepresentative)",
           "output": "O(nAxis + nTick + kRepresentative)",
-          "retained": "O(kRepresentative) across at most eight data-geometry levels per live owner"
+          "retained": "O(kRepresentative)"
         },
         "resources": {
           "allocations": "O(nLayer + nAxis + nTick + kRepresentative)",
@@ -306,53 +405,6 @@
         "fullScan": {
           "allowed": false,
           "rationale": "When semantic output is bounded below source cardinality, projection must use retained indexes or reject rather than scan the source."
-        }
-      }
-    },
-    {
-      "id": "view.transition.axis-domain",
-      "inherits": "linear-v1",
-      "source": "packages/chart/src/view.ts",
-      "benchmarkIDs": [
-        "chart:view:transition"
-      ],
-      "specificationCeiling": "O(1) axis lookup and domain math + O(nAxis) immutable snapshot publication",
-      "contract": {
-        "variables": [
-          {
-            "name": "nAxis",
-            "meaning": "enabled axis view count",
-            "ceiling": "64"
-          }
-        ],
-        "time": {
-          "bound": "O(1) transition decision + O(nAxis) snapshot publication",
-          "kind": "worst-case",
-          "runtimeState": "trusted"
-        },
-        "space": {
-          "auxiliary": "O(nAxis) immutable axes array",
-          "output": "O(nAxis)",
-          "retained": "O(nAxis) owner-bound identity index"
-        },
-        "resources": {
-          "allocations": "one axis record and one bounded axes array for an accepted transition; no state or axes snapshot allocation for a semantic no-op",
-          "cacheEntries": "one WeakMap entry per live view snapshot sharing the unchanged axis lookup",
-          "listeners": "0",
-          "observers": "0",
-          "timers": "0",
-          "subscriptions": "0"
-        },
-        "assumptions": [
-          "view states originate from the validated Chart construction boundary",
-          "axis identities and order do not change during one input transition",
-          "logarithmic math runs in log space and categorical math runs in integral slot space"
-        ],
-        "proof": "A retained StableID index resolves one axis, scalar scale-specific math produces one window, and accepted transitions replace one axis record in an array bounded by maxAxes. No-op transitions return the prior state identity.",
-        "adversarialWitness": "One million alternating zoom transitions across 64 mixed axes retain one lookup per transition and report bounded scalar math while snapshot publication never exceeds 64 axes.",
-        "fullScan": {
-          "allowed": false,
-          "rationale": "One input transition must not scan chart data or search axes linearly."
         }
       }
     },
@@ -454,96 +506,49 @@
       }
     },
     {
-      "id": "interaction.selection-contains",
+      "id": "view.transition.axis-domain",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/interaction.ts",
+      "source": "packages/chart/src/view.ts",
       "benchmarkIDs": [
-        "VAL-012:chart-selection-index"
+        "chart:view:transition"
       ],
-      "specificationCeiling": "first lookup O(s), subsequent lookup expected O(1)",
+      "specificationCeiling": "O(nAxis)",
       "contract": {
         "variables": [
           {
-            "name": "s",
-            "meaning": "point-selection identity count",
-            "ceiling": "Chart model datum ceiling"
+            "name": "nAxis",
+            "meaning": "enabled axis view count",
+            "ceiling": "16"
           }
         ],
         "time": {
-          "bound": "O(s)",
-          "kind": "amortized",
+          "bound": "O(nAxis)",
+          "kind": "worst-case",
           "runtimeState": "trusted"
         },
         "space": {
-          "auxiliary": "O(s)",
-          "output": "O(1)",
-          "retained": "O(s) per live immutable point selection"
+          "auxiliary": "O(nAxis)",
+          "output": "O(nAxis)",
+          "retained": "O(nAxis)"
         },
         "resources": {
-          "allocations": "first lookup O(s), subsequent lookup 0",
-          "cacheEntries": "one weak owner entry per queried immutable point selection",
+          "allocations": "one axis record and one bounded axes array for an accepted transition; no state or axes snapshot allocation for a semantic no-op",
+          "cacheEntries": "one WeakMap entry per live view snapshot sharing the unchanged axis lookup",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "The first membership query builds one StableID-preserving Set keyed weakly by the immutable selection owner; later DOM accessibility projections reuse expected-constant membership without rescanning the selection.",
-        "adversarialWitness": "A million selected numeric and string identities are queried repeatedly while only a bounded accessibility window is projected.",
-        "fullScan": {
-          "allowed": true,
-          "rationale": "The one-time index must contain every selected identity; subsequent membership queries cannot scan it."
-        }
-      }
-    },
-    {
-      "id": "controller.publish",
-      "inherits": "lifecycle-v1",
-      "source": "packages/chart/src/controller.ts",
-      "benchmarkIDs": [
-        "VAL-014:chart-snapshot-subscriptions"
-      ],
-      "specificationCeiling": "O(sSnapshot + cCommand*sCommand)",
-      "contract": {
-        "variables": [
-          {
-            "name": "sSnapshot",
-            "meaning": "active immutable snapshot listeners",
-            "ceiling": "consumer-owned subscription count"
-          },
-          {
-            "name": "sCommand",
-            "meaning": "active command listeners",
-            "ceiling": "consumer-owned subscription count"
-          },
-          {
-            "name": "cCommand",
-            "meaning": "commands emitted by one accepted transition",
-            "ceiling": "bounded Chart transition command count"
-          }
+        "assumptions": [
+          "view states originate from the validated Chart construction boundary",
+          "axis identities and order do not change during one input transition",
+          "logarithmic math runs in log space and categorical math runs in integral slot space"
         ],
-        "time": {
-          "bound": "O(sSnapshot + cCommand*sCommand)",
-          "kind": "worst-case",
-          "runtimeState": "mounted"
-        },
-        "space": {
-          "auxiliary": "O(1)",
-          "output": "O(1)",
-          "retained": "O(sSnapshot + sCommand)"
-        },
-        "resources": {
-          "allocations": "0 per listener notification",
-          "cacheEntries": "0",
-          "listeners": "0",
-          "observers": "0",
-          "timers": "0",
-          "subscriptions": "O(sSnapshot + sCommand)"
-        },
-        "proof": "One committed immutable snapshot is published directly to each snapshot listener before the already-bounded command list is delivered. Unsubscribe and controller disposal remove retained listeners idempotently.",
-        "adversarialWitness": "Every active snapshot and command listener remains mounted while one accepted transition emits its maximum bounded command list.",
+        "proof": "A retained StableID index resolves one axis, scalar scale-specific math produces one window, and accepted transitions replace one axis record in an array bounded by maxAxes. No-op transitions return the prior state identity.",
+        "adversarialWitness": "One million alternating zoom transitions across 16 mixed axes retain one lookup per transition and report bounded scalar math while snapshot publication never exceeds the hard 16-axis ceiling.",
         "fullScan": {
           "allowed": false,
-          "rationale": "Publication iterates subscribed listeners only and never inspects chart data."
+          "rationale": "One input transition must not scan chart data or search axes linearly."
         }
       }
     }
