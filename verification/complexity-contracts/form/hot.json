@@ -360,6 +360,58 @@
           "rationale": "External construction must validate and index every supplied field and issue exactly once per declared layer."
         }
       }
+    },
+    {
+      "id": "values.construct",
+      "inherits": "linear-v1",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": [
+        "VAL-030:form-values-construct-work"
+      ],
+      "specificationCeiling": "O(eEntry + pSegment + oNode)",
+      "contract": {
+        "variables": [
+          {
+            "name": "eEntry",
+            "meaning": "Form value entry count",
+            "ceiling": "maxEntries"
+          },
+          {
+            "name": "pSegment",
+            "meaning": "total canonical path segments visited",
+            "ceiling": "entry and maxPathSegments ceilings"
+          },
+          {
+            "name": "oNode",
+            "meaning": "library-owned branch, wrapper, and output reference nodes",
+            "ceiling": "maxOutputNodes"
+          }
+        ],
+        "time": {
+          "bound": "O(eEntry + pSegment + oNode)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(pSegment + oNode)",
+          "output": "O(oNode)",
+          "retained": "O(oNode)"
+        },
+        "resources": {
+          "allocations": "O(pSegment + oNode)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Construction validates each bounded entry and path once, allocates each library-owned output node once, then freezes owned branches with an iterative stack.",
+        "adversarialWitness": "A maximum-depth path and maximum entry set reaches every declared ceiling without recursive traversal or freezing caller-owned leaf containers.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External construction must validate every supplied entry and freeze every library-owned output node exactly once."
+        }
+      }
     }
   ]
 }

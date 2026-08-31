@@ -20,6 +20,7 @@ import {
   createFormRelativePath,
   encodeFormFieldPath,
   tryCreateFormFieldPath,
+  tryCreateFormRelativePath,
 } from '../../.verification-dist/path.js';
 import {
   createFormValues,
@@ -489,6 +490,85 @@ test('reset clears coordinator metadata and emits participant commands in order'
     { type: 'reset-field', id: 'email' },
     { type: 'reset-field', id: 'team' },
   ]);
+});
+
+test('FRM-04: malformed path, value, and state construction returns typed failures', () => {
+  const cases = [
+    [tryCreateFormFieldPath(null), 'form-field-path-root-invalid'],
+    [tryCreateFormRelativePath(null), 'form-relative-path-invalid'],
+    [tryCreateFormValues(null), 'form-value-entry-invalid'],
+    [tryCreateFormValues([null]), 'form-value-entry-invalid'],
+    [tryCreateFormState(null), 'form-state-input-invalid'],
+    [tryCreateFormState({ fields: null }), 'form-state-input-invalid'],
+    [tryCreateFormState({ fields: [null] }), 'form-state-input-invalid'],
+  ];
+  for (const [result, code] of cases) {
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, code);
+  }
+});
+
+test('FRM-05: construction ceilings fail before unbounded output and deep paths stay iterative', () => {
+  const ceilingCases = [
+    [tryCreateFormFieldPath('abcd', { maxPathCodeUnits: 3 }), 'form-path-code-unit-ceiling-exceeded'],
+    [tryCreateFormFieldPath(['root', 'nested'], { maxPathSegments: 1 }), 'form-path-segment-ceiling-exceeded'],
+    [tryCreateFormFieldPath(['items', 2], { maxArrayIndex: 1 }), 'form-array-index-ceiling-exceeded'],
+    [tryCreateFormValues([{ path: 'a', value: 1 }, { path: 'b', value: 2 }], { maxEntries: 1 }), 'form-entry-ceiling-exceeded'],
+    [tryCreateFormValues([{ path: 'a.b', value: 1 }], { maxOutputNodes: 2 }), 'form-output-node-ceiling-exceeded'],
+    [tryCreateFormState({ fields: [{ id: 'a' }, { id: 'b' }] }, { maxEntries: 1 }), 'form-entry-ceiling-exceeded'],
+  ];
+  for (const [result, code] of ceilingCases) {
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, code);
+  }
+
+  const deepPath = ['root', ...Array.from({ length: 1_200 }, (_, index) => `p${index}`)];
+  const deep = tryCreateFormValues([{ path: deepPath, value: 'leaf' }], {
+    maxPathSegments: 1_500,
+    maxOutputNodes: 1_500,
+    maxPathCodeUnits: 20_000,
+  });
+  assert.equal(deep.ok, true);
+  assert.equal(Object.isFrozen(deep.value), true);
+});
+
+test('FRM-06: only library-owned branches and repeated wrappers are frozen', () => {
+  const callerArray = [];
+  const callerObject = { mutable: true };
+  const values = createFormValues([
+    { path: 'single.array', value: callerArray },
+    { path: 'single.object', value: callerObject },
+    { path: 'repeated', value: callerArray },
+    { path: 'repeated', value: callerObject },
+  ]);
+  assert.equal(values.single.array, callerArray);
+  assert.equal(values.single.object, callerObject);
+  assert.deepEqual(values.repeated, [callerArray, callerObject]);
+  assert.equal(Object.isFrozen(values.single), true);
+  assert.equal(Object.isFrozen(values.repeated), true);
+  assert.equal(Object.isFrozen(callerArray), false);
+  assert.equal(Object.isFrozen(callerObject), false);
+  callerArray.push('still mutable');
+  callerObject.mutable = false;
+  assert.deepEqual(callerArray, ['still mutable']);
+  assert.equal(callerObject.mutable, false);
+});
+
+test('FRM-03: unknown form events reject atomically without resetting state', () => {
+  const state = createFormState({
+    validation: { generation: 1, status: 'invalid', trigger: 'submit', intent: 'submission' },
+    submission: { generation: 1, status: 'failed', count: 2, failure: { message: 'Submission failed.' } },
+    fields: [{ id: 'email', touched: true, dirty: true, valid: false, issues: [requiredIssue] }],
+  });
+  const before = structuredClone(state);
+
+  for (const event of ['unknown', { type: 'unknown' }, null, 1, true, undefined]) {
+    const result = applyFormEvent(state, event);
+    assert.equal(result.ok, false);
+    assert.equal(result.error.class, 'transition-rejection');
+    assert.equal(result.error.code, 'form-event-invalid');
+    assert.deepEqual(state, before);
+  }
 });
 
 test('reinitialize establishes a clean baseline without resetting participant values', () => {

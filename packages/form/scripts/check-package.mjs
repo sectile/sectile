@@ -35,7 +35,7 @@ for (const path of await files('dist')) {
   else if (path.endsWith('.d.ts')) declarationBytes += size;
   else if (path.endsWith('.js')) javascriptBytes += size;
 }
-assert.ok(javascriptBytes < 58_000, `JavaScript footprint ${javascriptBytes} exceeds ceiling`);
+assert.ok(javascriptBytes < 65_000, `JavaScript footprint ${javascriptBytes} exceeds ceiling`);
 assert.ok(declarationBytes < 35_000, `declaration footprint ${declarationBytes} exceeds ceiling`);
 assert.ok(sourceMapBytes < 80_000, `source map footprint ${sourceMapBytes} exceeds ceiling`);
 

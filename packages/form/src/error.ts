@@ -7,6 +7,13 @@ export type FormErrorCode =
   | 'form-field-id-missing'
   | 'form-field-meta-invalid'
   | 'form-field-order-invalid'
+  | 'form-limit-invalid'
+  | 'form-event-invalid'
+  | 'form-entry-ceiling-exceeded'
+  | 'form-path-segment-ceiling-exceeded'
+  | 'form-array-index-ceiling-exceeded'
+  | 'form-output-node-ceiling-exceeded'
+  | 'form-path-code-unit-ceiling-exceeded'
   | 'form-field-path-empty'
   | 'form-field-path-index-invalid'
   | 'form-field-path-root-invalid'
@@ -19,6 +26,7 @@ export type FormErrorCode =
   | 'form-issue-related-field-id-invalid'
   | 'form-issue-source-mismatch'
   | 'form-relative-path-empty'
+  | 'form-relative-path-invalid'
   | 'form-result-unexpected'
   | 'form-submission-generation-exhausted'
   | 'form-submission-generation-invalid'
@@ -40,6 +48,8 @@ export type FormErrorCode =
   | 'form-validation-not-pending'
   | 'form-validation-status-invalid'
   | 'form-validation-trigger-invalid'
+  | 'form-value-entry-invalid'
+  | 'form-state-input-invalid'
   | 'form-value-path-collision';
 
 export interface FormError<Code extends string = FormErrorCode> {

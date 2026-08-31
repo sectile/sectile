@@ -196,6 +196,15 @@
         { "file": "packages/vue/type-tests/fixtures/form-selectors.vue", "contains": "serverIssues" },
         { "file": "verification/consumer-install/form.mjs", "contains": "state.submission.failure satisfies" }
       ]
+    },
+    {
+      "id": 24,
+      "description": "Renderer-neutral Form construction is total, bounded, iterative, and preserves caller-owned leaf containers.",
+      "evidence": [
+        { "file": "packages/form/tests/state/form.test.mjs", "test": "FRM-04: malformed path, value, and state construction returns typed failures" },
+        { "file": "packages/form/tests/state/form.test.mjs", "test": "FRM-05: construction ceilings fail before unbounded output and deep paths stay iterative" },
+        { "file": "packages/form/tests/state/form.test.mjs", "test": "FRM-06: only library-owned branches and repeated wrappers are frozen" }
+      ]
     }
   ]
 }

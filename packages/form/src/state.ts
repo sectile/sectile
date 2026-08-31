@@ -11,6 +11,7 @@ export {
   setFormFieldMeta,
   tryCreateFormState,
   upsertFormFieldIssue,
+  type FormConstructionLimits,
   type FormCommand,
   type FormEvent,
   type FormFieldInput,

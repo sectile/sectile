@@ -312,30 +312,68 @@ export interface FormStateInput<ID extends StableID = StableID> {
   readonly issues?: readonly FormIssue<ID>[];
 }
 
-export function createFormFieldPath(path: FormFieldPath): readonly FormPathSegment[] {
-  return unwrap(tryCreateFormFieldPath(path));
+export interface FormConstructionLimits {
+  readonly maxEntries: number;
+  readonly maxPathSegments: number;
+  readonly maxArrayIndex: number;
+  readonly maxOutputNodes: number;
+  readonly maxPathCodeUnits: number;
+}
+
+const DEFAULT_FORM_CONSTRUCTION_LIMITS: FormConstructionLimits = Object.freeze({
+  maxEntries: 100_000,
+  maxPathSegments: 1_024,
+  maxArrayIndex: 100_000,
+  maxOutputNodes: 200_000,
+  maxPathCodeUnits: 1_048_576,
+});
+
+export function createFormFieldPath(
+  path: FormFieldPath,
+  limits?: Partial<FormConstructionLimits>,
+): readonly FormPathSegment[] {
+  return unwrap(tryCreateFormFieldPath(path, limits));
 }
 
 export function tryCreateFormFieldPath(
   path: FormFieldPath,
+  limitsInput?: Partial<FormConstructionLimits>,
 ): Result<readonly FormPathSegment[]> {
-  const segments = typeof path === 'string' ? parsePath(path) : ok([...path]);
+  const limits = normalizeFormConstructionLimits(limitsInput);
+  if (!limits.ok) return limits;
+  if (typeof path !== 'string' && !Array.isArray(path)) {
+    return fail('construction', 'form-field-path-root-invalid', 'A Form field path must be a string or segment array.');
+  }
+  const ceiling = preflightPath(path, limits.value);
+  if (ceiling !== null) return ceiling;
+  const segments = typeof path === 'string' ? parsePath(path, limits.value) : ok([...path]);
   if (!segments.ok) return segments;
-  return validatePathSegments(segments.value, true);
+  return validatePathSegments(segments.value, true, limits.value);
 }
 
-export function createFormRelativePath(path: FormRelativePath): readonly FormPathSegment[] {
-  return unwrap(tryCreateFormRelativePath(path));
+export function createFormRelativePath(
+  path: FormRelativePath,
+  limits?: Partial<FormConstructionLimits>,
+): readonly FormPathSegment[] {
+  return unwrap(tryCreateFormRelativePath(path, limits));
 }
 
 export function tryCreateFormRelativePath(
   path: FormRelativePath,
+  limitsInput?: Partial<FormConstructionLimits>,
 ): Result<readonly FormPathSegment[]> {
+  const limits = normalizeFormConstructionLimits(limitsInput);
+  if (!limits.ok) return limits;
+  if (typeof path !== 'string' && typeof path !== 'number' && !Array.isArray(path)) {
+    return fail('construction', 'form-relative-path-invalid', 'A relative Form path must be a segment or segment array.');
+  }
+  const ceiling = preflightPath(path, limits.value);
+  if (ceiling !== null) return ceiling;
   const segments = typeof path === 'string'
-    ? parsePath(path)
+    ? parsePath(path, limits.value)
     : ok(typeof path === 'number' ? [path] : [...path]);
   if (!segments.ok) return segments;
-  return validatePathSegments(segments.value, false);
+  return validatePathSegments(segments.value, false, limits.value);
 }
 
 export function appendFormFieldPath(
@@ -351,7 +389,11 @@ export function appendFormFieldPath(
 function validatePathSegments(
   segments: readonly FormPathSegment[],
   requireStringRoot: boolean,
+  limits: FormConstructionLimits,
 ): Result<readonly FormPathSegment[]> {
+  if (segments.length > limits.maxPathSegments) {
+    return formCeiling('form-path-segment-ceiling-exceeded', segments.length, limits.maxPathSegments);
+  }
   if (segments.length === 0 || (requireStringRoot && typeof segments[0] !== 'string')) {
     return fail(
       'construction',
@@ -370,7 +412,13 @@ function validatePathSegments(
           'Form field path indices must be non-negative safe integers.',
         );
       }
+      if (segment > limits.maxArrayIndex) {
+        return formCeiling('form-array-index-ceiling-exceeded', segment, limits.maxArrayIndex);
+      }
       continue;
+    }
+    if (typeof segment !== 'string') {
+      return fail('construction', 'form-field-path-segment-invalid', 'Form field path segments must be strings or numbers.');
     }
     if (segment.length === 0 || /[.\[\]]/u.test(segment)) {
       return fail(
@@ -380,7 +428,50 @@ function validatePathSegments(
       );
     }
   }
+  const codeUnits = encodeSegments(segments).length;
+  if (codeUnits > limits.maxPathCodeUnits) {
+    return formCeiling('form-path-code-unit-ceiling-exceeded', codeUnits, limits.maxPathCodeUnits);
+  }
   return ok(Object.freeze([...segments]));
+}
+
+function preflightPath(
+  path: FormFieldPath | FormRelativePath,
+  limits: FormConstructionLimits,
+): Result<never> | null {
+  if (typeof path === 'string' && path.length > limits.maxPathCodeUnits) {
+    return formCeiling('form-path-code-unit-ceiling-exceeded', path.length, limits.maxPathCodeUnits);
+  }
+  if (Array.isArray(path) && path.length > limits.maxPathSegments) {
+    return formCeiling('form-path-segment-ceiling-exceeded', path.length, limits.maxPathSegments);
+  }
+  if (typeof path === 'number' && Number.isSafeInteger(path) && path > limits.maxArrayIndex) {
+    return formCeiling('form-array-index-ceiling-exceeded', path, limits.maxArrayIndex);
+  }
+  return null;
+}
+
+function normalizeFormConstructionLimits(
+  input: Partial<FormConstructionLimits> | undefined,
+): Result<FormConstructionLimits> {
+  if (input !== undefined && (input === null || typeof input !== 'object' || Array.isArray(input))) {
+    return fail('construction', 'form-limit-invalid', 'Form construction limits must be an object.');
+  }
+  const limits = { ...DEFAULT_FORM_CONSTRUCTION_LIMITS, ...input };
+  for (const [key, value] of Object.entries(limits)) {
+    if (!Number.isSafeInteger(value) || value <= 0) {
+      return fail('construction', 'form-limit-invalid', 'Form construction limits must be positive safe integers.', { key, value });
+    }
+  }
+  return ok(Object.freeze(limits));
+}
+
+function formCeiling<T>(
+  code: Extract<FormErrorCode, `${string}-ceiling-exceeded`>,
+  actual: number,
+  ceiling: number,
+): Result<T> {
+  return fail('resource-rejection', code, 'Form construction input exceeds its configured ceiling.', { actual, ceiling });
 }
 
 export function encodeFormFieldPath(path: FormFieldPath): string {
@@ -400,22 +491,54 @@ function ownsIssuePath(fieldName: string, issueName: string): boolean {
 
 export function createFormValues<Value = unknown>(
   entries: readonly FormValueEntry<Value>[],
+  limits?: Partial<FormConstructionLimits>,
 ): FormValues {
-  return unwrap(tryCreateFormValues(entries));
+  return unwrap(tryCreateFormValues(entries, limits));
 }
 
 export function tryCreateFormValues<Value = unknown>(
   entries: readonly FormValueEntry<Value>[],
+  limitsInput?: Partial<FormConstructionLimits>,
 ): Result<FormValues> {
+  const limits = normalizeFormConstructionLimits(limitsInput);
+  if (!limits.ok) return limits;
+  if (!Array.isArray(entries)) {
+    return fail('construction', 'form-value-entry-invalid', 'Form value entries must be an array.');
+  }
+  if (entries.length > limits.value.maxEntries) {
+    return formCeiling('form-entry-ceiling-exceeded', entries.length, limits.value.maxEntries);
+  }
   const root: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
   const branches = new WeakSet<object>();
   const repeated = new Map<string, unknown[]>();
   branches.add(root);
+  let outputNodes = 1;
+  let pathCodeUnits = 0;
+  const reserveNodes = (count: number): Result<never> | null => {
+    if (outputNodes > limits.value.maxOutputNodes - count) {
+      return formCeiling('form-output-node-ceiling-exceeded', outputNodes + count, limits.value.maxOutputNodes);
+    }
+    outputNodes += count;
+    return null;
+  };
 
   for (const entry of entries) {
-    const path = tryCreateFormFieldPath(entry.path);
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
+      return fail('construction', 'form-value-entry-invalid', 'Every Form value entry must be an object.');
+    }
+    const descriptors = Object.getOwnPropertyDescriptors(entry);
+    if (descriptors['path'] === undefined || !('value' in descriptors['path'])
+      || descriptors['value'] === undefined || !('value' in descriptors['value'])) {
+      return fail('construction', 'form-value-entry-invalid', 'Form value entries require data path and value properties.');
+    }
+    const path = tryCreateFormFieldPath(descriptors['path'].value as FormFieldPath, limits.value);
     if (!path.ok) return path;
     const canonical = encodeSegments(path.value);
+    pathCodeUnits += canonical.length;
+    if (pathCodeUnits > limits.value.maxPathCodeUnits) {
+      return formCeiling('form-path-code-unit-ceiling-exceeded', pathCodeUnits, limits.value.maxPathCodeUnits);
+    }
+    const entryValue = descriptors['value'].value as Value;
     let container: Record<string, unknown> | unknown[] = root;
 
     for (let index = 0; index < path.value.length - 1; index += 1) {
@@ -425,6 +548,8 @@ export function tryCreateFormValues<Value = unknown>(
       const needsArray = typeof nextSegment === 'number';
 
       if (!hasContainer(container, segment)) {
+        const reserved = reserveNodes(1);
+        if (reserved !== null) return reserved;
         const branch: Record<string, unknown> | unknown[] = needsArray
           ? []
           : Object.create(null) as Record<string, unknown>;
@@ -447,7 +572,9 @@ export function tryCreateFormValues<Value = unknown>(
     const leaf = path.value[path.value.length - 1]!;
     const existing = readContainer(container, leaf);
     if (!hasContainer(container, leaf)) {
-      writeContainer(container, leaf, entry.value);
+      const reserved = reserveNodes(1);
+      if (reserved !== null) return reserved;
+      writeContainer(container, leaf, entryValue);
       continue;
     }
     if (typeof existing === 'object' && existing !== null && branches.has(existing)) {
@@ -455,11 +582,16 @@ export function tryCreateFormValues<Value = unknown>(
     }
     const values = repeated.get(canonical);
     if (values === undefined) {
-      const next = [existing, entry.value];
+      const reserved = reserveNodes(2);
+      if (reserved !== null) return reserved;
+      const next = [existing, entryValue];
+      branches.add(next);
       repeated.set(canonical, next);
       writeContainer(container, leaf, next);
     } else {
-      values.push(entry.value);
+      const reserved = reserveNodes(1);
+      if (reserved !== null) return reserved;
+      values.push(entryValue);
     }
   }
 
@@ -469,25 +601,36 @@ export function tryCreateFormValues<Value = unknown>(
 
 export function createFormState<ID extends StableID = StableID>(
   input: FormStateInput<ID> = {},
+  limits?: Partial<FormConstructionLimits>,
 ): FormState<ID> {
-  return unwrap(tryCreateFormState(input));
+  return unwrap(tryCreateFormState(input, limits));
 }
 
 export function tryCreateFormState<ID extends StableID = StableID>(
   input: FormStateInput<ID> = {},
+  limitsInput?: Partial<FormConstructionLimits>,
 ): Result<FormState<ID>> {
-  const validationInput = input.validation ?? {
+  const limits = normalizeFormConstructionLimits(limitsInput);
+  if (!limits.ok) return limits;
+  if (input === null || typeof input !== 'object' || Array.isArray(input)) {
+    return fail('construction', 'form-state-input-invalid', 'Form state input must be an object.');
+  }
+  const validationInput = input.validation === undefined ? {
     generation: 0,
     status: 'idle',
     trigger: null,
     intent: null,
-  };
-  const submissionInput = input.submission ?? {
+  } : input.validation;
+  const submissionInput = input.submission === undefined ? {
     generation: 0,
     status: 'idle',
     count: 0,
     failure: null,
-  };
+  } : input.submission;
+  if (validationInput === null || typeof validationInput !== 'object' || Array.isArray(validationInput)
+    || submissionInput === null || typeof submissionInput !== 'object' || Array.isArray(submissionInput)) {
+    return fail('construction', 'form-state-input-invalid', 'Form validation and submission inputs must be objects.');
+  }
   const validationGeneration = validationInput.generation;
   const validationStatus = validationInput.status;
   const validationTrigger = validationInput.trigger;
@@ -564,21 +707,45 @@ export function tryCreateFormState<ID extends StableID = StableID>(
     );
   }
 
-  const inputFields = input.fields ?? [];
-  const fieldIDs = tryNormalizeStableIDs(inputFields.map((field) => field.id));
+  const inputFields = input.fields === undefined ? [] : input.fields;
+  const inputIssues = input.issues === undefined ? [] : input.issues;
+  if (!Array.isArray(inputFields) || !Array.isArray(inputIssues)) {
+    return fail('construction', 'form-state-input-invalid', 'Form fields and issues must be arrays.');
+  }
+  const checkedFields = inputFields as readonly FormFieldInput<ID>[];
+  const checkedIssues = inputIssues as readonly FormIssue<ID>[];
+  let stateEntries = inputFields.length + inputIssues.length;
+  for (const field of checkedFields) {
+    if (field === null || typeof field !== 'object' || Array.isArray(field)) {
+      return fail('construction', 'form-state-input-invalid', 'Every Form field input must be an object.');
+    }
+    if (field.issues !== undefined) {
+      if (!Array.isArray(field.issues)) {
+        return fail('construction', 'form-state-input-invalid', 'Form field issues must be an array.');
+      }
+      stateEntries += field.issues.length;
+    }
+  }
+  if (stateEntries > limits.value.maxEntries) {
+    return formCeiling('form-entry-ceiling-exceeded', stateEntries, limits.value.maxEntries);
+  }
+  if (stateEntries > limits.value.maxOutputNodes) {
+    return formCeiling('form-output-node-ceiling-exceeded', stateEntries, limits.value.maxOutputNodes);
+  }
+  const fieldIDs = tryNormalizeStableIDs<ID>(checkedFields.map((field) => field.id));
   if (!fieldIDs.ok) return fieldIdentityError(fieldIDs.error.code);
   if (fieldIDs.value.some((id) => typeof id === 'string' && id.trim().length === 0)) {
     return fieldIdentityError('empty-id');
   }
 
   const fields: FormFieldState<ID>[] = [];
-  for (const inputField of inputFields) {
-    const field = normalizeField(inputField, false);
+  for (const inputField of checkedFields) {
+    const field = normalizeField<ID>(inputField, false);
     if (!field.ok) return field;
     fields.push(field.value);
   }
 
-  const issues = normalizeIssues(input.issues ?? [], undefined);
+  const issues = normalizeIssues<ID>(checkedIssues, undefined);
   if (!issues.ok) return issues;
   const issueIds = [
     ...issues.value.map((issue) => issue.id),
@@ -770,7 +937,8 @@ export function applyFormEvent<ID extends StableID>(
     state = current.value;
   }
 
-  if (typeof event !== 'string') {
+  if (event === 'reset') return reset(state);
+  if (typeof event === 'object' && event !== null) {
     if (event.type === 'register-field') return registerField(state, event.field);
     if (event.type === 'unregister-field') return unregisterField(state, event.id);
     if (event.type === 'set-field-meta') return setFieldMeta(state, event.id, event.meta);
@@ -849,7 +1017,11 @@ export function applyFormEvent<ID extends StableID>(
       }));
     }
   }
-  return reset(state);
+  return fail(
+    'transition-rejection',
+    'form-event-invalid',
+    'Form event must be reset or a recognized event object.',
+  );
 }
 
 function registerField<ID extends StableID>(
@@ -1439,6 +1611,9 @@ function normalizeField<ID extends StableID>(
   input: FormFieldInput<ID>,
   validateID = true,
 ): Result<FormFieldState<ID>> {
+  if (input === null || typeof input !== 'object' || Array.isArray(input)) {
+    return fail('construction', 'form-state-input-invalid', 'Every Form field input must be an object.');
+  }
   if (validateID) {
     const identity = validateFormFieldID(input.id);
     if (!identity.ok) return identity;
@@ -1472,7 +1647,16 @@ function normalizeIssues<ID extends StableID>(
   input: readonly FormIssue<ID>[],
   fieldId: ID | undefined,
 ): Result<readonly FormIssue<ID>[]> {
-  const ids = tryNormalizeStableIDs(input.map((issue) => issue.id));
+  if (!Array.isArray(input)) {
+    return fail('construction', 'form-state-input-invalid', 'Form issues must be an array.');
+  }
+  const issueInput = input as readonly FormIssue<ID>[];
+  for (const issue of issueInput) {
+    if (issue === null || typeof issue !== 'object' || Array.isArray(issue)) {
+      return fail('construction', 'form-issue-invalid', 'Every Form issue must be an object.');
+    }
+  }
+  const ids = tryNormalizeStableIDs(issueInput.map((issue) => issue.id));
   if (!ids.ok) {
     return ids.error.code === 'duplicate-id'
       ? fail('construction', 'form-issue-id-duplicate', 'Form issue identifiers must be unique.')
@@ -1483,7 +1667,7 @@ function normalizeIssues<ID extends StableID>(
       );
   }
   const issues: FormIssue<ID>[] = [];
-  for (const issue of input) {
+  for (const issue of issueInput) {
     if (
       typeof issue.message !== 'string'
       || (typeof issue.id === 'string' && issue.id.trim().length === 0)
@@ -1504,7 +1688,7 @@ function normalizeIssues<ID extends StableID>(
       );
     }
     const owner = fieldId ?? issue.fieldId;
-    const related = tryNormalizeStableIDs(issue.relatedFieldIds ?? []);
+    const related = tryNormalizeStableIDs<ID>(issue.relatedFieldIds ?? []);
     if (!related.ok) {
       return fail(
         'construction',
@@ -2397,7 +2581,10 @@ function isIssueSource(value: string): value is FormIssueSource {
     || value === 'server';
 }
 
-function parsePath(path: string): Result<readonly FormPathSegment[]> {
+function parsePath(
+  path: string,
+  limits: FormConstructionLimits,
+): Result<readonly FormPathSegment[]> {
   if (path.length === 0) {
     return fail(
       'construction',
@@ -2422,7 +2609,14 @@ function parsePath(path: string): Result<readonly FormPathSegment[]> {
       if (close < 0) return pathSyntaxError(path, index);
       const value = path.slice(index + 1, close);
       if (value.length === 0 || value.includes('[')) return pathSyntaxError(path, index);
-      segments.push(/^\d+$/u.test(value) ? Number(value) : value);
+      const segment = /^\d+$/u.test(value) ? Number(value) : value;
+      if (typeof segment === 'number' && Number.isSafeInteger(segment) && segment > limits.maxArrayIndex) {
+        return formCeiling('form-array-index-ceiling-exceeded', segment, limits.maxArrayIndex);
+      }
+      segments.push(segment);
+      if (segments.length > limits.maxPathSegments) {
+        return formCeiling('form-path-segment-ceiling-exceeded', segments.length, limits.maxPathSegments);
+      }
       index = close + 1;
       expectSegment = false;
       if (index < path.length && path[index] !== '.' && path[index] !== '[') {
@@ -2438,6 +2632,9 @@ function parsePath(path: string): Result<readonly FormPathSegment[]> {
     }
     if (!expectSegment || start === index) return pathSyntaxError(path, start);
     segments.push(path.slice(start, index));
+    if (segments.length > limits.maxPathSegments) {
+      return formCeiling('form-path-segment-ceiling-exceeded', segments.length, limits.maxPathSegments);
+    }
     expectSegment = false;
   }
 
@@ -2499,12 +2696,17 @@ function writeContainer(
 }
 
 function freezeBranches(value: object, branches: WeakSet<object>): void {
-  for (const child of Object.values(value)) {
-    if (typeof child === 'object' && child !== null && branches.has(child)) {
-      freezeBranches(child, branches);
-    } else if (Array.isArray(child)) {
-      Object.freeze(child);
+  const pending = [value];
+  const visited = new WeakSet<object>();
+  while (pending.length > 0) {
+    const current = pending.pop()!;
+    if (visited.has(current)) continue;
+    visited.add(current);
+    for (const child of Object.values(current)) {
+      if (typeof child === 'object' && child !== null && branches.has(child)) {
+        pending.push(child);
+      }
     }
+    Object.freeze(current);
   }
-  Object.freeze(value);
 }

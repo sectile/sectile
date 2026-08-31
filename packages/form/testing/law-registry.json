@@ -10,6 +10,26 @@
       "id": "FRM-02",
       "theory": "form",
       "statement": "submission results identify the active submission generation"
+    },
+    {
+      "id": "FRM-03",
+      "theory": "form",
+      "statement": "unknown events reject atomically instead of resetting form state"
+    },
+    {
+      "id": "FRM-04",
+      "theory": "form",
+      "statement": "malformed construction input returns typed failures"
+    },
+    {
+      "id": "FRM-05",
+      "theory": "form",
+      "statement": "construction ceilings bound iterative path and output work"
+    },
+    {
+      "id": "FRM-06",
+      "theory": "form",
+      "statement": "library-owned branches freeze without mutating caller leaves"
     }
   ]
 }

@@ -2,6 +2,10 @@
   "schemaVersion": 1,
   "evidence": {
     "FRM-01": "tests/state/form.test.mjs",
-    "FRM-02": "tests/state/form.test.mjs"
+    "FRM-02": "tests/state/form.test.mjs",
+    "FRM-03": "tests/state/form.test.mjs",
+    "FRM-04": "tests/state/form.test.mjs",
+    "FRM-05": "tests/state/form.test.mjs",
+    "FRM-06": "tests/state/form.test.mjs"
   }
 }

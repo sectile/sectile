@@ -5,6 +5,7 @@ export {
   encodeFormFieldPath,
   tryCreateFormFieldPath,
   tryCreateFormRelativePath,
+  type FormConstructionLimits,
   type FormFieldPath,
   type FormPathSegment,
   type FormRelativePath,
