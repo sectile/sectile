@@ -25,11 +25,11 @@ Let the parent own the current value and apply accepted changes back to the comp
 
 ## Examples
 
-### Ime
+### IME
 
 Keep composition text separate until an IME commit produces the accepted query.
 
-<ComponentExample component="combobox" scenario="ime" title="Ime" description="Keep composition text separate until an IME commit produces the accepted query." :index="3" />
+<ComponentExample component="combobox" scenario="ime" title="IME" description="Keep composition text separate until an IME commit produces the accepted query." :index="3" />
 
 ## API
 

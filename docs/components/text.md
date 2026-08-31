@@ -25,11 +25,11 @@ Let the parent own the current value and apply accepted changes back to the comp
 
 ## Examples
 
-### Ime mixed
+### Controlled IME
 
-Edit Korean, Latin text, and emoji without splitting an active composition.
+Type Korean text in a parent-controlled field, then press Tab during the final composition. The committed value updates once without duplicating the last syllable.
 
-<ComponentExample component="text" scenario="ime-mixed" title="Ime mixed" description="Edit Korean, Latin text, and emoji without splitting an active composition." :index="3" />
+<ComponentExample component="text" scenario="ime-mixed" title="Controlled IME" description="Type Korean text in a parent-controlled field, then press Tab during the final composition. The committed value updates once without duplicating the last syllable." :index="3" />
 
 ## API
 

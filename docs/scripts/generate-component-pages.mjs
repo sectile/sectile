@@ -1086,6 +1086,8 @@ function koScenarioDescription(component, scenario) {
 }
 
 function scenarioTitle(component, scenario) {
+  if (component.id === 'text' && scenario === 'ime-mixed') return 'Controlled IME';
+  if (scenario === 'ime') return 'IME';
   if (component.id === 'meter' && scenario === 'threshold-zones') return 'Threshold zones';
   if (component.id === 'meter' && scenario === 'exact-decimal') return 'Exact decimal';
   if (component.id === 'meter' && scenario === 'degenerate-range') return 'Equal bounds';
@@ -1120,6 +1122,7 @@ function scenarioTitle(component, scenario) {
 }
 
 function koScenarioTitle(component, scenario) {
+  if (component.id === 'text' && scenario === 'ime-mixed') return '부모가 관리하는 IME 입력';
   if (component.id === 'meter' && scenario === 'threshold-zones') return '임계 구간';
   if (component.id === 'meter' && scenario === 'exact-decimal') return '정확한 소수';
   if (component.id === 'meter' && scenario === 'degenerate-range') return '같은 최솟값과 최댓값';

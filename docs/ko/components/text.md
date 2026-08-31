@@ -25,11 +25,11 @@
 
 ## 예시
 
-### 한글 조합 입력 일부 선택
+### 부모가 관리하는 IME 입력
 
-한글, 영문, 그림 문자를 함께 편집하면서 조합 중인 글자를 온전히 유지합니다.
+부모가 값을 관리하는 입력란에서 한글을 입력한 뒤 마지막 글자를 조합하는 중 Tab을 누릅니다. 마지막 음절이 중복되지 않고 확정값이 한 번만 반영됩니다.
 
-<ComponentExample component="text" scenario="ime-mixed" title="한글 조합 입력 일부 선택" description="한글, 영문, 그림 문자를 함께 편집하면서 조합 중인 글자를 온전히 유지합니다." :index="3" />
+<ComponentExample component="text" scenario="ime-mixed" title="부모가 관리하는 IME 입력" description="부모가 값을 관리하는 입력란에서 한글을 입력한 뒤 마지막 글자를 조합하는 중 Tab을 누릅니다. 마지막 음절이 중복되지 않고 확정값이 한 번만 반영됩니다." :index="3" />
 
 ## API
 

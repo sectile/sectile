@@ -611,7 +611,7 @@ const items = ['production', 'staging', 'development']
 
 function textSource(scenario: string): string {
   const multiline = scenario === 'multiline';
-  const initial = scenario === 'unicode-selection' ? '한글과 emoji 👋' : 'Sectile';
+  const initial = scenario === 'unicode-selection' ? '한글과 emoji 👋' : scenario === 'ime-mixed' ? '' : 'Sectile';
   return `<script setup lang="ts">
 import { ref } from 'vue'
 import { TextField } from '@sectile/vue/text'

@@ -68,7 +68,8 @@ function specialized(component: Component, options: Readonly<Record<string, unkn
 }
 
 function resolveExample(): ResolvedExample {
-  const controlled = props.scenario.includes('controlled');
+  const controlled = props.scenario.includes('controlled')
+    || (props.component === 'text' && props.scenario === 'ime-mixed');
   const initialOn = ['on', 'open', 'initially-open'].includes(props.scenario) || controlled;
   switch (props.component) {
     case 'checkbox': return specialized(CheckedControlCase, { kind: 'checkbox', label: 'Include analytics', initialValue: props.scenario === 'mixed' ? 'indeterminate' : controlled, controlled, preview: props.preview });
@@ -76,7 +77,7 @@ function resolveExample(): ResolvedExample {
     case 'toggle-button': return specialized(CheckedControlCase, { kind: 'toggle-button', label: props.scenario === 'alert' ? 'Watch alerts' : 'Bold', initialValue: initialOn, controlled, preview: props.preview });
     case 'accordion': return specialized(AccordionCase, { type: props.scenario === 'multiple' ? 'multiple' : 'single', initialValue: props.preview ? 'general' : props.scenario === 'required' ? 'deployments' : '', collapsible: props.scenario !== 'required', controlled });
     case 'disclosure': return specialized(DisclosureCase, { label: 'Advanced deployment options', initialValue: initialOn, controlled, preview: props.preview });
-    case 'text': return specialized(TextCase, { initialValue: props.scenario === 'unicode-selection' ? '한글과 emoji 👋' : 'Sectile', multiline: props.scenario === 'multiline', controlled, preview: props.preview });
+    case 'text': return specialized(TextCase, { initialValue: props.scenario === 'unicode-selection' ? '한글과 emoji 👋' : props.scenario === 'ime-mixed' ? '' : 'Sectile', multiline: props.scenario === 'multiline', controlled, preview: props.preview });
     case 'editable': return specialized(EditableCase, { initialValue: 'release-candidate', validated: props.scenario === 'validated', controlled });
     case 'feed': return specialized(FeedCase, { scenario: props.scenario });
     case 'tree-grid': return specialized(TreeGridCase, { scenario: props.scenario });
