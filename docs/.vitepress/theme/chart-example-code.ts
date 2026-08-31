@@ -43,19 +43,19 @@ const dataSource: Readonly<Record<ChartExampleKind, string>> = Object.freeze({
 const cartesian = Object.freeze({
   line: {
     data: 'revenue', xScale: 'temporal', xField: 'date', yScale: 'linear', yField: 'revenue',
-    component: 'ChartLine', layerID: 'revenue-series', label: 'Revenue',
+    component: 'ChartLine', layerID: 'revenue-series', label: 'Revenue', xLabel: 'Week', yLabel: 'Revenue', yUnit: 'USD thousands',
   },
   scatter: {
     data: 'services', xScale: 'linear', xField: 'deploys', yScale: 'linear', yField: 'stability',
-    component: 'ChartScatter', layerID: 'service-health', label: 'Services',
+    component: 'ChartScatter', layerID: 'service-health', label: 'Services', xLabel: 'Monthly deployments', yLabel: 'Stability', yUnit: '%',
   },
   bar: {
     data: 'orders', xScale: 'categorical', xField: 'region', yScale: 'linear', yField: 'orders',
-    component: 'ChartBar', layerID: 'regional-orders', label: 'Orders',
+    component: 'ChartBar', layerID: 'regional-orders', label: 'Orders', xLabel: 'Region', yLabel: 'Order volume', yUnit: 'orders',
   },
   heatmap: {
     data: 'activity', xScale: 'categorical', xField: 'day', yScale: 'categorical', yField: 'hour',
-    component: 'ChartHeatmap', layerID: 'activity-grid', label: 'Sessions',
+    component: 'ChartHeatmap', layerID: 'activity-grid', label: 'Sessions', xLabel: 'Day', yLabel: 'Hour', yUnit: undefined,
   },
 });
 
@@ -92,10 +92,10 @@ ${dataSource[kind]}
 <template>
   <ChartRoot :dom="{ renderer: 'auto', accessibilityLabel: '${korean ? '업무 차트' : 'Business chart'}' }">
     <ChartCartesian>
-      <ChartXAxis id="x" scale="${chart.xScale}" field="${chart.xField}">
+      <ChartXAxis id="x" scale="${chart.xScale}" field="${chart.xField}" label="${chart.xLabel}">
         <ChartAxisView :minimum-span="1" />
       </ChartXAxis>
-      <ChartYAxis id="y" scale="${chart.yScale}" field="${chart.yField}" />
+      <ChartYAxis id="y" scale="${chart.yScale}" field="${chart.yField}" label="${chart.yLabel}"${chart.yUnit === undefined ? '' : ` unit="${chart.yUnit}"`} />
       <${chart.component} id="${chart.layerID}" :data="${chart.data}" x-axis="x" y-axis="y" label="${chart.label}" />
       <ChartNavigation keyboard />
       <ChartViewControls axis="x">
@@ -121,8 +121,8 @@ function definitionSource(kind: ChartExampleKind): string {
   const chart = cartesian[kind];
   return `const definition = {
   coordinate: { kind: 'cartesian', axes: [
-    { id: 'x', orientation: 'x', scale: '${chart.xScale}', field: '${chart.xField}' },
-    { id: 'y', orientation: 'y', scale: '${chart.yScale}', field: '${chart.yField}' },
+    { id: 'x', orientation: 'x', scale: '${chart.xScale}', field: '${chart.xField}', label: '${chart.xLabel}' },
+    { id: 'y', orientation: 'y', scale: '${chart.yScale}', field: '${chart.yField}', label: '${chart.yLabel}'${chart.yUnit === undefined ? '' : `, unit: '${chart.yUnit}'`} },
   ] },
   layers: [{
     kind: '${kind}', id: '${chart.layerID}', data: ${chart.data},

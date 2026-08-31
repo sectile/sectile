@@ -189,7 +189,7 @@ function appendAxis(
       horizontal ? plot.y + plot.height + 4 : position,
       'axis-tick',
     ));
-    const value = svgText(document, String(tick.value), 'axis-value');
+    const value = svgText(document, formatAxisTickValue(axis, tick.value), 'axis-value');
     value.setAttribute('x', String(horizontal ? position : plot.x - 8));
     value.setAttribute('y', String(horizontal ? plot.y + plot.height + 16 : position + 4));
     value.setAttribute('text-anchor', horizontal ? 'middle' : 'end');
@@ -210,6 +210,11 @@ function appendAxis(
   }
   label.setAttribute('text-anchor', 'middle');
   axes.append(label);
+}
+
+function formatAxisTickValue(axis: ChartAxisLayout, value: number | string): string {
+  if (axis.axis.scale !== 'temporal' || typeof value !== 'number') return String(value);
+  return new Date(value).toISOString().slice(0, 10);
 }
 
 function appendLegend<ID extends StableID>(

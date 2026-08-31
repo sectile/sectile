@@ -40,6 +40,8 @@ test('DOM Chart projects synchronously and exposes a bounded mixed-ID accessibil
   assert.deepEqual(connection.getViewport(), { width: 100, height: 100, devicePixelRatio: 1 });
   assert.equal(value.root.getAttribute('role'), 'region');
   assert.equal(value.root.getAttribute('aria-label'), 'Revenue chart');
+  connection.setAccessibilityLabel('Quarterly revenue chart');
+  assert.equal(value.root.getAttribute('aria-label'), 'Quarterly revenue chart');
   const options = [...value.root.querySelectorAll('[role="option"]')];
   assert.equal(options.length, 2);
   assert.notEqual(options[0].id, options[1].id);
@@ -87,7 +89,9 @@ test('connection-owned overlay renders bounded axes, grid, values, labels, units
   const value = fixture();
   value.controller.dispatch({ type: 'set-active', id: 1 });
   value.controller.dispatch({ type: 'set-selection', selection: { type: 'points', ids: ['1'] } });
-  const xScale = { normalize: (datum) => 40 + datum * 4 };
+  const january = Date.UTC(2026, 0, 1);
+  const february = Date.UTC(2026, 1, 1);
+  const xScale = { normalize: (datum) => 40 + ((datum - january) / (february - january)) * 50 };
   const yScale = { normalize: (datum) => 70 - datum * 5 };
   const semanticProjection = {
     generation: 0,
@@ -104,7 +108,7 @@ test('connection-owned overlay renders bounded axes, grid, values, labels, units
       insets: { top: 10, right: 10, bottom: 30, left: 40 },
       plot: { x: 40, y: 10, width: 50, height: 60 },
       axes: [
-        { axis: { id: 'month', orientation: 'x', scale: 'linear', domain: { kind: 'linear', minimum: 0, maximum: 10 }, ticks: 2, label: 'Month' }, descriptor: { axisID: 'month', orientation: 'x', kind: 'linear', domain: { kind: 'linear', minimum: 0, maximum: 10 }, geometryDomain: { minimum: 0, maximum: 10 }, range: { start: 40, end: 90 } }, scale: xScale, geometryScale: xScale, ticks: [{ value: 0, position: 40 }, { value: 10, position: 90 }] },
+        { axis: { id: 'month', orientation: 'x', scale: 'temporal', domain: { kind: 'temporal', minimum: january, maximum: february }, ticks: 2, label: 'Month' }, descriptor: { axisID: 'month', orientation: 'x', kind: 'temporal', domain: { kind: 'temporal', minimum: january, maximum: february }, geometryDomain: { minimum: january, maximum: february }, range: { start: 40, end: 90 } }, scale: xScale, geometryScale: xScale, ticks: [{ value: january, position: 40 }, { value: february, position: 90 }] },
         { axis: { id: 'revenue', orientation: 'y', scale: 'linear', domain: { kind: 'linear', minimum: 0, maximum: 10 }, ticks: 2, label: 'Revenue', unit: 'USD' }, descriptor: { axisID: 'revenue', orientation: 'y', kind: 'linear', domain: { kind: 'linear', minimum: 0, maximum: 10 }, geometryDomain: { minimum: 0, maximum: 10 }, range: { start: 70, end: 10 } }, scale: yScale, geometryScale: yScale, ticks: [{ value: 0, position: 70 }, { value: 10, position: 10 }] },
       ],
     },
@@ -118,6 +122,7 @@ test('connection-owned overlay renders bounded axes, grid, values, labels, units
   });
   const connection = createDOMChart({ root: value.root, canvas: value.canvas, controller, renderer: value.renderer });
   assert.equal(value.root.querySelectorAll('[data-chart-overlay="grid-line"]').length, 4);
+  assert.deepEqual([...value.root.querySelectorAll('[data-chart-overlay="axis-value"]')].map((node) => node.textContent), ['2026-01-01', '2026-02-01', '0', '10']);
   assert.deepEqual([...value.root.querySelectorAll('[data-chart-overlay="axis-label"]')].map((node) => node.textContent), ['Month', 'Revenue (USD)']);
   assert.equal(value.root.querySelector('[data-chart-overlay="legend-label"]').textContent, 'revenue');
   assert.equal(value.root.querySelectorAll('[data-chart-overlay="interaction-active"]').length, 1);

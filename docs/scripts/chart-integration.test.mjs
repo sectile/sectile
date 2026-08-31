@@ -23,8 +23,8 @@ test('Chart documentation is task-oriented and visual in both locales', async ()
 
   for (const source of [english[0], korean[0]]) {
     assert.match(source, /<ChartPackageExample \/>/u);
-    for (const profile of ['point', 'ordered-series', 'cartesian-segment', 'grid-cell', 'radial-segment']) {
-      assert.match(source, new RegExp(`\\b${profile}\\b`, 'u'));
+    for (const kind of ['line', 'scatter', 'bar', 'heatmap', 'pie', 'donut']) {
+      assert.match(source, new RegExp(`\\b${kind}\\b`, 'iu'));
     }
     assert.match(source, /@sectile\/chart/u);
     assert.match(source, /optional|선택적/iu);
@@ -47,24 +47,32 @@ test('Chart documentation is task-oriented and visual in both locales', async ()
 });
 
 test('Chart examples use public APIs and cover every built-in profile', async () => {
-  const [component, sources, theme, packageJSON] = await Promise.all([
+  const [component, sources, theme, packageJSON, englishVue, koreanVue] = await Promise.all([
     read('.vitepress/theme/components/ChartPackageExample.vue'),
     read('.vitepress/theme/chart-example-code.ts'),
     read('.vitepress/theme/index.ts'),
     read('package.json').then(JSON.parse),
+    read('packages/chart/vue.md'),
+    read('ko/packages/chart/vue.md'),
   ]);
 
   assert.match(theme, /ChartPackageExample/u);
   assert.equal(packageJSON.dependencies['@sectile/chart'], 'workspace:*');
+  assert.match(component, /@sectile\/vue\/chart/u);
+  assert.match(component, /import \{[\s\S]*ChartRadial[\s\S]*\} from '@sectile\/vue\/chart'/u);
+  assert.match(sources, /@sectile\/chart\/controller/u);
+  assert.match(sources, /@sectile\/dom\/chart/u);
+  for (const kind of ['Line', 'Scatter', 'Bar', 'Heatmap', 'Pie', 'Donut']) {
+    assert.match(component, new RegExp(`Chart${kind}`, 'u'));
+    assert.match(sources, new RegExp(`Chart${kind}|kind === '${kind.toLowerCase()}'`, 'u'));
+  }
   for (const source of [component, sources]) {
-    assert.match(source, /@sectile\/chart\/model/u);
-    assert.match(source, /@sectile\/vue\/chart|@sectile\/dom\/chart/u);
-    for (const profile of ['point', 'ordered-series', 'cartesian-segment', 'grid-cell', 'radial-segment']) {
-      assert.match(source, new RegExp(`profile: '${profile}'`, 'u'));
-    }
     assert.doesNotMatch(source, /\/internal\/|\.verification-dist|verification\/chart/u);
   }
   assert.match(component, /getAccessibleDatumLabel/u);
+  assert.doesNotMatch(component, /host:\s*'vue'/u);
+  assert.match(englishVue, /host="vue"/u);
+  assert.match(koreanVue, /host="vue"/u);
   assert.match(component, /prefers-reduced-motion/u);
   assert.match(sources, /vue: vueSource/u);
   assert.match(sources, /dom: domSource/u);

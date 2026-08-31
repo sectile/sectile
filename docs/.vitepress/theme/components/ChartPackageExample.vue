@@ -13,6 +13,7 @@ import {
   ChartPanControl,
   ChartPie,
   ChartPlot,
+  ChartRadial,
   ChartRenderer,
   ChartResetView,
   ChartRoot,
@@ -32,10 +33,10 @@ import {
 import { useDocsLocale } from '../locale.js';
 import ExampleFrame from './ExampleFrame.vue';
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
   kind?: ChartExampleKind;
   host?: ChartExampleHost;
-}>(), { host: 'vue' });
+}>();
 
 const { isKorean } = useDocsLocale();
 const selectedKind = ref<ChartExampleKind>(props.kind ?? 'line');
@@ -57,6 +58,9 @@ const copy = computed(() => isKorean.value ? {
     pie: '한 예산에서 각 부문이 차지하는 비중을 비교합니다.',
     donut: '전체에서 각 항목이 차지하는 비중을 원형 구간으로 표시합니다.',
   },
+  xLabel: { line: '주', scatter: '월간 배포', bar: '지역', heatmap: '요일', pie: '', donut: '' },
+  yLabel: { line: '매출', scatter: '안정성', bar: '주문량', heatmap: '시간', pie: '', donut: '' },
+  yUnit: { line: '천 달러', scatter: '%', bar: '건', heatmap: undefined, pie: undefined, donut: undefined },
   active: '가리킨 항목', selected: '선택한 항목', none: '없음',
   help: '마크를 가리키거나 선택하세요. 직교 차트는 버튼으로 수평 범위를 이동·확대·초기화할 수 있습니다.',
   back: '이전', zoomIn: '확대', zoomOut: '축소', reset: '초기화',
@@ -74,6 +78,9 @@ const copy = computed(() => isKorean.value ? {
     pie: 'Compare how one budget is allocated across departments.',
     donut: 'Show each category as a share of the whole.',
   },
+  xLabel: { line: 'Week', scatter: 'Monthly deployments', bar: 'Region', heatmap: 'Day', pie: '', donut: '' },
+  yLabel: { line: 'Revenue', scatter: 'Stability', bar: 'Order volume', heatmap: 'Hour', pie: '', donut: '' },
+  yUnit: { line: 'USD thousands', scatter: '%', bar: 'orders', heatmap: undefined, pie: undefined, donut: undefined },
   active: 'Hovered datum', selected: 'Selected datum', none: 'None',
   help: 'Hover or select a mark. Cartesian charts expose buttons to pan, zoom, and reset the horizontal domain.',
   back: 'Previous', zoomIn: 'Zoom in', zoomOut: 'Zoom out', reset: 'Reset',
@@ -116,8 +123,13 @@ const series = Object.freeze({
 });
 
 const isRadial = computed(() => selectedKind.value === 'pie' || selectedKind.value === 'donut');
+const yUnitProps = computed(() => {
+  const unit = copy.value.yUnit[selectedKind.value];
+  return unit === undefined ? {} : { unit };
+});
 const sources = computed(() => chartExampleSources(selectedKind.value));
 const koSources = computed(() => chartExampleSources(selectedKind.value, true));
+const frameHostProps = computed(() => props.host === undefined ? {} : { fixedHost: props.host });
 const icon = (kind: ChartExampleKind) => ({
   line: ChartNoAxesCombined,
   scatter: CircleDot,
@@ -132,7 +144,7 @@ const datumLabel = (id: string | number): string => String(id).replaceAll('-', '
 
 <template>
   <ExampleFrame
-    :fixed-host="host"
+    v-bind="frameHostProps"
     :sources="sources"
     :ko-sources="koSources"
   >
@@ -157,6 +169,8 @@ const datumLabel = (id: string | number): string => String(id).replaceAll('-', '
       </header>
 
       <ChartRoot
+        v-if="!isRadial"
+        key="cartesian"
         v-slot="{ state }"
         :dom="{
           renderer: 'auto',
@@ -165,18 +179,21 @@ const datumLabel = (id: string | number): string => String(id).replaceAll('-', '
         }"
         class="chart-workbench__chart"
       >
-        <ChartCartesian v-if="!isRadial">
+        <ChartCartesian>
           <ChartXAxis
             id="x"
             :scale="selectedKind === 'line' ? 'temporal' : selectedKind === 'bar' || selectedKind === 'heatmap' ? 'categorical' : 'linear'"
             :field="selectedKind === 'line' ? 'date' : selectedKind === 'scatter' ? 'deploys' : selectedKind === 'bar' ? 'region' : 'day'"
+            :label="copy.xLabel[selectedKind]"
           >
             <ChartAxisView :minimum-span="selectedKind === 'line' ? 86_400_000 : 1" />
           </ChartXAxis>
           <ChartYAxis
+            v-bind="yUnitProps"
             id="y"
             :scale="selectedKind === 'heatmap' ? 'categorical' : 'linear'"
             :field="selectedKind === 'line' ? 'revenue' : selectedKind === 'scatter' ? 'stability' : selectedKind === 'bar' ? 'orders' : 'hour'"
+            :label="copy.yLabel[selectedKind]"
           />
           <ChartLine v-if="selectedKind === 'line'" id="revenue" :data="series.line" x-axis="x" y-axis="y" label="Revenue" />
           <ChartScatter v-else-if="selectedKind === 'scatter'" id="deployments" :data="series.scatter" x-axis="x" y-axis="y" label="Services" />
@@ -190,12 +207,36 @@ const datumLabel = (id: string | number): string => String(id).replaceAll('-', '
             <ChartResetView :label="copy.reset">↺</ChartResetView>
           </ChartViewControls>
         </ChartCartesian>
-        <ChartRadial v-else>
+        <ChartGrid />
+        <ChartAxisTicks />
+        <ChartLegend />
+        <ChartPlot><ChartRenderer /></ChartPlot>
+        <dl class="chart-workbench__state" aria-live="polite">
+          <div>
+            <dt>{{ copy.active }}</dt>
+            <dd>{{ state?.activeDatum == null ? copy.none : datumLabel(state.activeDatum) }}</dd>
+          </div>
+          <div>
+            <dt>{{ copy.selected }}</dt>
+            <dd>{{ state?.selection.type === 'points' && state.selection.ids[0] !== undefined ? datumLabel(state.selection.ids[0]) : copy.none }}</dd>
+          </div>
+        </dl>
+      </ChartRoot>
+      <ChartRoot
+        v-else
+        key="radial"
+        v-slot="{ state }"
+        :dom="{
+          renderer: 'auto',
+          accessibilityLabel: copy.title[selectedKind],
+          getAccessibleDatumLabel: datumLabel,
+        }"
+        class="chart-workbench__chart"
+      >
+        <ChartRadial>
           <ChartPie v-if="selectedKind === 'pie'" id="budget" :data="series.pie" label="Budget" />
           <ChartDonut v-else id="channels" :data="series.donut" label="Channels" />
         </ChartRadial>
-        <ChartGrid />
-        <ChartAxisTicks />
         <ChartLegend />
         <ChartPlot><ChartRenderer /></ChartPlot>
         <dl class="chart-workbench__state" aria-live="polite">

@@ -11,7 +11,7 @@ import ChartPackageExample from '../../../.vitepress/theme/components/ChartPacka
 
 `@sectile/vue/chart`는 수가 적은 의미 구조인 coordinate, axis, layer, view capability, control, renderer를 compound component로 표현합니다. 수가 크게 늘 수 있는 datum collection만 배열로 전달합니다.
 
-<ChartPackageExample kind="line" />
+<ChartPackageExample kind="line" host="vue" />
 
 ## 설치
 

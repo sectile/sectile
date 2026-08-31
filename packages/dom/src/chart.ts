@@ -166,6 +166,7 @@ export interface DOMChartConnection<ID extends StableID = StableID> {
   getProjection(): ChartProjection<ID> | null;
   getRendererDiagnostics(): ChartRendererDiagnostics | null;
   getLifecycleDiagnostics(): DOMChartLifecycleDiagnostics;
+  setAccessibilityLabel(label?: string): void;
   setNavigation(navigation?: DOMChartNavigation<ID>): Result<void>;
   refresh(): void;
   flush(): void;

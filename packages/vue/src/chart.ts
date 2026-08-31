@@ -598,6 +598,9 @@ const ChartRootRuntime = defineComponent({
       if (!result.ok) report(new TypeError(`${result.error.code}: ${result.error.message}`));
       publishSnapshot();
     }, { deep: false });
+    watch(() => props.dom?.accessibilityLabel, (label) => {
+      connection.value?.setAccessibilityLabel(label);
+    }, { flush: 'post' });
 
     onMounted(() => {
       mounted = true;

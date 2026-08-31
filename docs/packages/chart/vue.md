@@ -11,7 +11,7 @@ import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageE
 
 `@sectile/vue/chart` uses compound components for the small semantic structure—coordinate, axes, layers, view capabilities, controls, and renderer. Only potentially large datum collections remain arrays.
 
-<ChartPackageExample kind="line" />
+<ChartPackageExample kind="line" host="vue" />
 
 ## Install
 

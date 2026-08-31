@@ -64,13 +64,14 @@ function mockRenderer(projections) {
 
 test('declarative ChartRoot batches layer replacement and inherits axis scope for controls', async () => {
   const data = shallowRef(initial);
+  const accessibilityLabel = shallowRef('Revenue chart');
   const projections = [];
   let controller = null;
   let rootComponent = null;
   const host = document.createElement('div');
   document.body.append(host);
   const app = createApp({
-    render: () => h(ChartRoot, { ref: (value) => { rootComponent = value; }, dom: { renderer: mockRenderer(projections) } }, {
+    render: () => h(ChartRoot, { ref: (value) => { rootComponent = value; }, dom: { renderer: mockRenderer(projections), accessibilityLabel: accessibilityLabel.value } }, {
       default: (slot) => {
         controller = slot.controller;
         return [
@@ -98,6 +99,7 @@ test('declarative ChartRoot batches layer replacement and inherits axis scope fo
   assert.equal(controller.getDefinition().axes[0].id, 7);
   assert.equal(controller.getSnapshot().state.view.axes[0].axisID, 7);
   assert.ok(host.querySelector('canvas') instanceof HTMLCanvasElement);
+  assert.equal(host.querySelector('[data-part="root"]').getAttribute('aria-label'), 'Revenue chart');
   assert.ok(host.querySelector('[data-chart-overlay="axes"]'));
   const priorGeneration = controller.getModel().generation;
   const priorDiagnostics = rootComponent.getDeclarationDiagnostics();
@@ -111,6 +113,9 @@ test('declarative ChartRoot batches layer replacement and inherits axis scope fo
   assert.equal(nextDiagnostics.publications, priorDiagnostics.publications + 1);
   assert.equal(nextDiagnostics.readRecords, 7);
   assert.ok(projections.length >= 1);
+  accessibilityLabel.value = 'Quarterly revenue chart';
+  await nextTick();
+  assert.equal(host.querySelector('[data-part="root"]').getAttribute('aria-label'), 'Quarterly revenue chart');
   app.unmount(); host.remove();
 });
 

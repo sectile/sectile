@@ -111,6 +111,10 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
       overlayNodes: 1,
     });
   }
+  public setAccessibilityLabel(label?: string): void {
+    if (!this.#active) return;
+    this.#options.root.setAttribute('aria-label', label ?? 'Chart');
+  }
   public setNavigation(navigation?: DOMChartNavigation<ID>): Result<void> {
     return this.#navigation.setNavigation(navigation);
   }

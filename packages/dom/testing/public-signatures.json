@@ -283,7 +283,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "6d07639474c6b8ddcf4a7445c8e96072f7c81804be66463de66da741bd7d9638",
+  "fingerprint": "7a7656f80a328364dd1dacdc980a956fd85a8746f05c7ffec853a544269b55c5",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -311,7 +311,7 @@
     },
     {
       "path": "dist/chart.d.ts",
-      "sha256": "e0771e279cb9b045a8391c3a6749a258ac02e632fcc10558053eda234c4cbd2a"
+      "sha256": "981acc12d40e06c203707e9b4269e744ef3148e0353bb56dcb12f6bd7e510042"
     },
     {
       "path": "dist/checkbox-group.d.ts",
