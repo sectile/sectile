@@ -1,5 +1,11 @@
 # @sectile/tabular
 
+## 0.13.0
+
+### Changes
+
+- fix(tabular): canonicalize state and resource bounds (54465180)
+
 ## 0.12.0
 
 ### Changes

@@ -1,5 +1,13 @@
 # @sectile/vue
 
+## 0.13.0
+
+### Changes
+
+- test(verification): close package contract evidence (cc8747ff)
+- fix(tabular): canonicalize state and resource bounds (54465180)
+- perf(vue): split temporal picker capabilities (dc6da1e3)
+
 ## 0.12.0
 
 ### Changes

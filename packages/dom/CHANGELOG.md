@@ -1,5 +1,12 @@
 # @sectile/dom
 
+## 0.13.0
+
+### Changes
+
+- refactor(adapters): use semantic controllers (c90683b4)
+- fix(tabular): canonicalize state and resource bounds (54465180)
+
 ## 0.12.0
 
 ### Changes

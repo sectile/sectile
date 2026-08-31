@@ -1,5 +1,11 @@
 # @sectile/core
 
+## 0.13.0
+
+### Changes
+
+- refactor(adapters): use semantic controllers (c90683b4)
+
 ## 0.12.0
 
 ### Changes

@@ -1,5 +1,11 @@
 # @sectile/form
 
+## 0.13.0
+
+### Changes
+
+- fix(form): bound construction and reject invalid events (50b07c21)
+
 ## 0.12.0
 
 ### Changes
