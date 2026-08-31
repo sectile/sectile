@@ -1,7 +1,6 @@
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createFacadeConnection, createSemanticController, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError } from '@sectile/core';
-import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
   tryCreateBoundedRange,
   type BoundedRangeInput,
@@ -14,13 +13,7 @@ import {
   type SliderEvent,
   type SliderState,
 } from '@sectile/core/slider';
-import {
-  tryCreateRevisionSnapshot,
-  rejectRevisionInput,
-  type RevisionResult,
-  type RevisionSnapshot,
-} from '@sectile/core/revision';
-import { applyControllerEvent, synchronizeControllerState } from '@sectile/core/adapter-runtime';
+import type { RevisionResult, RevisionSnapshot } from '@sectile/core/revision';
 import { setInteractionAttributes } from './internal/interaction.js';
 
 export interface KeyboardInput {
@@ -149,11 +142,22 @@ export function createSliderController(
 ): Result<SliderController> {
   const initial = tryCreateSliderState(options.range, options.value ?? options.defaultValue ?? 0);
   if (!initial.ok) return initial;
-  const snapshot = tryCreateRevisionSnapshot(initial.value);
-  if (!snapshot.ok) return snapshot;
-  const interaction = tryCreateInteractionState(options);
-  if (!interaction.ok) return interaction;
-  return { ok: true, value: new DOMSliderController(options, interaction.value, snapshot.value) };
+  const controlled = options.value !== undefined;
+  const page = options.page ?? 2;
+  const runtime = createSemanticController<SliderState, SliderEvent, SliderCommand, SliderEffect>({
+    initial,
+    reducer: (state, event) => applySliderEvent(options.range, state, event, page),
+    reconcile: (previous, proposed) => tryCreateSliderState(options.range, controlled ? previous.tick : proposed.tick),
+    notify: (previous, proposed) => {
+      if (previous.tick !== proposed.tick) {
+        options.onValueChange?.(Object.freeze({ value: proposed.tick, previousValue: previous.tick }));
+      }
+    },
+    toEffect: toSliderEffect,
+    interaction: options,
+    interactionIntent: () => 'mutate',
+  });
+  return runtime.ok ? { ok: true, value: new DOMSliderController(options, runtime.value) } : runtime;
 }
 
 export function createSliderControllerFromRange(options: SliderRangeControllerOptions): Result<SliderController> {
@@ -412,28 +416,21 @@ function toVerticalSplitterEvent(input: KeyboardInput): SliderEvent | null {
 class DOMSliderController implements SliderController {
   public readonly range: QuantizedRange;
   readonly #range: QuantizedRange;
-  readonly #page: number;
   readonly #controlled: boolean;
-  readonly #interaction: InteractionState;
-  readonly #onValueChange: ((change: SliderValueChangeDetails) => void) | undefined;
-  #snapshot: RevisionSnapshot<SliderState>;
+  readonly #runtime: SemanticController<SliderState, SliderEvent, SliderEffect>;
 
   public constructor(
     options: SliderControllerOptions,
-    interaction: InteractionState,
-    snapshot: RevisionSnapshot<SliderState>,
+    runtime: SemanticController<SliderState, SliderEvent, SliderEffect>,
   ) {
     this.range = options.range;
     this.#range = options.range;
-    this.#page = options.page ?? 2;
     this.#controlled = options.value !== undefined;
-    this.#interaction = interaction;
-    this.#onValueChange = options.onValueChange;
-    this.#snapshot = snapshot;
+    this.#runtime = runtime;
   }
 
   public getSnapshot(): RevisionSnapshot<SliderState> {
-    return this.#snapshot;
+    return this.#runtime.getSnapshot();
   }
 
   public syncControlledValues(
@@ -441,63 +438,25 @@ class DOMSliderController implements SliderController {
   ): Result<RevisionSnapshot<SliderState>> {
     const error = controlledInputError(this.#controlled, values);
     if (error !== null) return { ok: false, error };
-    const snapshot = synchronizeControllerState(
-      this.#snapshot,
-      tryCreateSliderState(this.#range, values.value),
-    );
-    if (!snapshot.ok) return snapshot;
-    this.#snapshot = snapshot.value;
-    return snapshot;
+    return this.#runtime.replace(tryCreateSliderState(this.#range, values.value));
   }
 
   public handleKeyboardInput(
     input: KeyboardInput,
-    expectedRevision = this.#snapshot.revision,
+    expectedRevision = this.#runtime.getSnapshot().revision,
   ): RevisionResult<SliderState, SliderEffect> {
     const event = toSliderEvent(input);
     if (event === null) {
-      return rejectRevisionInput(this.#snapshot, {
-        class: 'transition-rejection',
-        code: 'unsupported-dom-key',
-        message: 'DOM keyboard input does not map to a slider semantic event.',
-        details: { key: input.key },
-      });
+      return this.#runtime.reject('unsupported-dom-key', 'DOM keyboard input does not map to a slider semantic event.', { key: input.key });
     }
     return this.handleEvent(event, expectedRevision);
   }
 
   public handleEvent(
     event: SliderEvent,
-    expectedRevision = this.#snapshot.revision,
+    expectedRevision = this.#runtime.getSnapshot().revision,
   ): RevisionResult<SliderState, SliderEffect> {
-    const permitted = requireInteraction(this.#interaction, 'mutate');
-    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
-    const result = applyControllerEvent(
-      this.#snapshot,
-      expectedRevision,
-      event,
-      (state, semanticEvent) => applySliderEvent(
-        this.#range,
-        state,
-        semanticEvent,
-        this.#page,
-      ),
-      (previous, proposed) => tryCreateSliderState(
-        this.#range,
-        this.#controlled ? previous.tick : proposed.tick,
-      ),
-      (previous, proposed) => {
-        if (previous.tick !== proposed.tick) {
-          this.#onValueChange?.(Object.freeze({
-            value: proposed.tick,
-            previousValue: previous.tick,
-          }));
-        }
-      },
-      toSliderEffect,
-    );
-    if (result.ok) this.#snapshot = result.snapshot;
-    return result;
+    return this.#runtime.handle(event, expectedRevision);
   }
 }
 

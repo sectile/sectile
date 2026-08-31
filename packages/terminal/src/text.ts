@@ -1,10 +1,7 @@
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createFacadeConnection, createSemanticController, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError } from '@sectile/core';
-import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
-  tryCreateRevisionSnapshot,
-  rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
 } from '@sectile/core/revision';
@@ -18,10 +15,6 @@ import {
   type TextEvent,
   type TextSelectionInput,
 } from '@sectile/core/text';
-import {
-  applyControllerEvent,
-  synchronizeControllerState,
-} from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { toTerminalTextInput } from './internal/text-input.js';
 
@@ -103,11 +96,23 @@ export function createTextController(options: TextControllerOptions = {}): Resul
     ? tryCreateTextEditingState()
     : normalizeTextEditingState(requested);
   if (!initial.ok) return initial;
-  const snapshot = tryCreateRevisionSnapshot(initial.value);
-  if (!snapshot.ok) return snapshot;
-  const interaction = tryCreateInteractionState(options);
-  if (!interaction.ok) return interaction;
-  return { ok: true, value: new TerminalTextController(options, interaction.value, snapshot.value) };
+  const controlled = options.value !== undefined;
+  const runtime = createSemanticController<TextEditingState, TextEvent, never, never>({
+    initial,
+    reducer: applyTextEvent,
+    reconcile: (previous, proposed) => normalizeTextEditingState(controlled ? previous : proposed),
+    notify: (previous, proposed) => {
+      if (!sameTextEditingState(previous, proposed)) {
+        options.onValueChange?.(Object.freeze({ value: proposed, previousValue: previous }));
+      }
+    },
+    toEffect: impossibleEffect,
+    interaction: options,
+    interactionIntent: () => 'mutate',
+  });
+  return runtime.ok
+    ? { ok: true, value: new TerminalTextController(options, runtime.value) }
+    : runtime;
 }
 
 export function createText(options: TextOptions = {}): FacadeConnection<TextConnection> {
@@ -180,23 +185,18 @@ class TerminalTextConnection implements TextConnection {
 
 class TerminalTextController implements TextController {
   readonly #controlled: boolean;
-  readonly #interaction: InteractionState;
-  readonly #onValueChange: ((change: TextValueChangeDetails) => void) | undefined;
-  #snapshot: RevisionSnapshot<TextEditingState>;
+  readonly #runtime: SemanticController<TextEditingState, TextEvent, never>;
 
   public constructor(
     options: TextControllerOptions,
-    interaction: InteractionState,
-    snapshot: RevisionSnapshot<TextEditingState>,
+    runtime: SemanticController<TextEditingState, TextEvent, never>,
   ) {
     this.#controlled = options.value !== undefined;
-    this.#interaction = interaction;
-    this.#onValueChange = options.onValueChange;
-    this.#snapshot = snapshot;
+    this.#runtime = runtime;
   }
 
   public getSnapshot(): RevisionSnapshot<TextEditingState> {
-    return this.#snapshot;
+    return this.#runtime.getSnapshot();
   }
 
   public syncControlledValues(
@@ -204,46 +204,18 @@ class TerminalTextController implements TextController {
   ): Result<RevisionSnapshot<TextEditingState>> {
     const error = controlledInputError(this.#controlled);
     if (error !== null) return { ok: false, error };
-    const snapshot = synchronizeControllerState(
-      this.#snapshot,
-      normalizeTextEditingState(values.value),
-    );
-    if (!snapshot.ok) return snapshot;
-    this.#snapshot = snapshot.value;
-    return snapshot;
+    return this.#runtime.replace(normalizeTextEditingState(values.value));
   }
 
   public handleTextInput(
     input: TextInput,
-    expectedRevision = this.#snapshot.revision,
+    expectedRevision = this.#runtime.getSnapshot().revision,
   ): RevisionResult<TextEditingState, never> {
-    const permitted = requireInteraction(this.#interaction, 'mutate');
-    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const event = toTextEvent(input);
     if (event === null) {
-      return rejectRevisionInput(this.#snapshot, {
-        class: 'transition-rejection',
-        code: 'unsupported-terminal-text-input',
-        message: 'Terminal text input does not map to a semantic text event.',
-      });
+      return this.#runtime.reject('unsupported-terminal-text-input', 'Terminal text input does not map to a semantic text event.');
     }
-    const result = applyControllerEvent(
-      this.#snapshot,
-      expectedRevision,
-      event,
-      applyTextEvent,
-      (previous, proposed) => normalizeTextEditingState(
-        this.#controlled ? previous : proposed,
-      ),
-      (previous, proposed) => {
-        if (!sameTextEditingState(previous, proposed)) {
-          this.#onValueChange?.(Object.freeze({ value: proposed, previousValue: previous }));
-        }
-      },
-      impossibleEffect,
-    );
-    if (result.ok) this.#snapshot = result.snapshot;
-    return result;
+    return this.#runtime.handle(event, expectedRevision);
   }
 }
 

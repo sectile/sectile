@@ -287,7 +287,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "e731b6db816ebee96f43c8c2fddc23d85637c309b061c915914b877311281423",
+  "fingerprint": "5ba24cb903bb72233b8d86e9763c0cb37877c465473c3456b32ecf957ce1c7b7",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -331,7 +331,7 @@
     },
     {
       "path": "dist/combobox.d.ts",
-      "sha256": "854810026e6674878fe33210c0368316b5943ad65d9e7f8e0760d51e0d57cc25"
+      "sha256": "03d0dc845f32049e91a1e7288c38ddb95e3d1a31c7be6d6ad616b729ac47e9d0"
     },
     {
       "path": "dist/date-field.d.ts",
@@ -511,7 +511,7 @@
     },
     {
       "path": "dist/slider.d.ts",
-      "sha256": "5b2f526adfe64cde60fefeba4bf72897df5af1d939b1e88f0d937dde4ba29826"
+      "sha256": "969726681d9d4031d9601af93a70a74754630395c040595c1040bab1aad47948"
     },
     {
       "path": "dist/spin-button.d.ts",
@@ -571,11 +571,11 @@
     },
     {
       "path": "dist/tree-grid.d.ts",
-      "sha256": "1d260d619960ba4b40842a88c7e413ddcc5a0badfe91890e3672f7b12954d4c0"
+      "sha256": "309eda86fff65778f3240044aab1e0e127ab050c9396a0954ef622c79abbdb3b"
     },
     {
       "path": "dist/tree-view.d.ts",
-      "sha256": "43b272fe49c5d9cb9f0b81443e75feaf3f3f4abd6db809384bb862f6fec31552"
+      "sha256": "adf7893f55eb665ce763c201500cb010837d9af19a8b5f9c8e076c2c7463ca47"
     },
     {
       "path": "dist/window-splitter.d.ts",

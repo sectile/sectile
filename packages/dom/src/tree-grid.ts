@@ -1,18 +1,8 @@
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createFacadeConnection, createSemanticController, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
 import { controlledFieldError as fieldError } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
-import {
-  tryCreateInteractionState,
-  requireInteraction,
-  type InteractionState,
-} from '@sectile/core/interaction';
-import {
-  tryCreateRevisionSnapshot,
-  rejectRevisionInput,
-  type RevisionResult,
-  type RevisionSnapshot,
-} from '@sectile/core/revision';
+import type { RevisionResult, RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyTreeGridEvent,
   tryCreateTreeGridModelFromRows,
@@ -25,7 +15,6 @@ import {
   type TreeGridRowInput,
   type TreeGridState,
 } from '@sectile/core/tree-grid';
-import { applyControllerEvent, synchronizeControllerState } from '@sectile/core/adapter-runtime';
 import { findDelegatedStableID } from './internal/delegated-event.js';
 import { stableIDToken } from './internal/stable-id-token.js';
 import { setInteractionAttributes } from './internal/interaction.js';
@@ -216,11 +205,33 @@ export function createTreeGridController<
     editMode: options.editMode ?? options.defaultEditMode ?? 'navigation',
   });
   if (!initial.ok) return initial;
-  const snapshot = tryCreateRevisionSnapshot(initial.value);
-  if (!snapshot.ok) return snapshot;
-  const interaction = tryCreateInteractionState(options);
-  if (!interaction.ok) return interaction;
-  return { ok: true, value: new DOMTreeGridController(options, snapshot.value, interaction.value) };
+  const valueControlled = options.value !== undefined;
+  const expandedControlled = options.expandedValue !== undefined;
+  const highlightControlled = options.highlightedValue !== undefined;
+  const editModeControlled = options.editMode !== undefined;
+  const runtime = createSemanticController<
+    TreeGridState<RowID, CellID>,
+    TreeGridEvent<RowID, CellID>,
+    TreeGridCommand<CellID>,
+    TreeGridEffect<CellID>
+  >({
+    initial,
+    reducer: (state, event) => applyTreeGridEvent(options.model, state, event, options.policies ?? {}),
+    reconcile: (previous, proposed) => controlledState(
+      options.model,
+      previous,
+      proposed,
+      valueControlled,
+      expandedControlled,
+      highlightControlled,
+      editModeControlled,
+    ),
+    notify: (previous, proposed) => notifyTreeGridChange(options, previous, proposed),
+    toEffect: toTreeGridEffect,
+    interaction: options,
+    interactionIntent: treeGridIntent,
+  });
+  return runtime.ok ? { ok: true, value: new DOMTreeGridController(options, runtime.value) } : runtime;
 }
 
 export function createTreeGrid<RowID extends StableID, CellID extends StableID>(
@@ -559,47 +570,26 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
 class DOMTreeGridController<RowID extends StableID, CellID extends StableID>
   implements TreeGridController<RowID, CellID> {
   public readonly model: TreeGridModel<RowID, CellID>;
-  readonly #policies: TreeGridPolicies<CellID>;
   readonly #valueControlled: boolean;
   readonly #expandedControlled: boolean;
   readonly #highlightControlled: boolean;
   readonly #editModeControlled: boolean;
-  readonly #onValueChange:
-    | ((change: TreeGridValueChangeDetails<CellID>) => void)
-    | undefined;
-  readonly #onExpandedValueChange:
-    | ((change: TreeGridExpandedChangeDetails<RowID>) => void)
-    | undefined;
-  readonly #onHighlightedValueChange:
-    | ((change: TreeGridHighlightChangeDetails<CellID>) => void)
-    | undefined;
-  readonly #onEditModeChange:
-    | ((change: TreeGridEditModeChangeDetails) => void)
-    | undefined;
-  readonly #interaction: InteractionState;
-  #snapshot: RevisionSnapshot<TreeGridState<RowID, CellID>>;
+  readonly #runtime: SemanticController<TreeGridState<RowID, CellID>, TreeGridEvent<RowID, CellID>, TreeGridEffect<CellID>>;
 
   public constructor(
     options: TreeGridControllerOptions<RowID, CellID>,
-    snapshot: RevisionSnapshot<TreeGridState<RowID, CellID>>,
-    interaction: InteractionState,
+    runtime: SemanticController<TreeGridState<RowID, CellID>, TreeGridEvent<RowID, CellID>, TreeGridEffect<CellID>>,
   ) {
     this.model = options.model;
-    this.#policies = options.policies ?? {};
     this.#valueControlled = options.value !== undefined;
     this.#expandedControlled = options.expandedValue !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
     this.#editModeControlled = options.editMode !== undefined;
-    this.#onValueChange = options.onValueChange;
-    this.#onExpandedValueChange = options.onExpandedValueChange;
-    this.#onHighlightedValueChange = options.onHighlightedValueChange;
-    this.#onEditModeChange = options.onEditModeChange;
-    this.#interaction = interaction;
-    this.#snapshot = snapshot;
+    this.#runtime = runtime;
   }
 
   public getSnapshot(): RevisionSnapshot<TreeGridState<RowID, CellID>> {
-    return this.#snapshot;
+    return this.#runtime.getSnapshot();
   }
 
   public syncControlledValues(
@@ -615,101 +605,58 @@ class DOMTreeGridController<RowID extends StableID, CellID extends StableID>
     if (error !== null) return { ok: false, error };
     const selected = this.#valueControlled
       ? (values.value as CellID | null)
-      : selectedValue(this.#snapshot.state);
+      : selectedValue(this.#runtime.getSnapshot().state);
     const state = tryCreateTreeGridState(this.model, {
       selected: selected === null ? [] : [selected],
-      anchor: this.#valueControlled ? selected : this.#snapshot.state.selection.anchor,
+      anchor: this.#valueControlled ? selected : this.#runtime.getSnapshot().state.selection.anchor,
       expanded: this.#expandedControlled
         ? (values.expandedValue as readonly RowID[])
-        : this.#snapshot.state.expansion.ids,
+        : this.#runtime.getSnapshot().state.expansion.ids,
       current: this.#highlightControlled
         ? (values.highlightedValue as CellID | null)
-        : this.#snapshot.state.cursor.current,
+        : this.#runtime.getSnapshot().state.cursor.current,
       editMode: this.#editModeControlled
         ? (values.editMode as TreeGridEditMode)
-        : this.#snapshot.state.editMode,
+        : this.#runtime.getSnapshot().state.editMode,
     });
-    const snapshot = synchronizeControllerState(this.#snapshot, state);
-    if (!snapshot.ok) return snapshot;
-    this.#snapshot = snapshot.value;
-    return snapshot;
+    return this.#runtime.replace(state);
   }
 
   public handleKeyboardInput(
     input: KeyboardInput,
-    expectedRevision = this.#snapshot.revision,
+    expectedRevision = this.#runtime.getSnapshot().revision,
   ): RevisionResult<TreeGridState<RowID, CellID>, TreeGridEffect<CellID>> {
-    const event = toTreeGridEvent<RowID, CellID>(input, this.#snapshot.state.editMode);
+    const event = toTreeGridEvent<RowID, CellID>(input, this.#runtime.getSnapshot().state.editMode);
     if (event === null) {
-      return rejectRevisionInput(this.#snapshot, {
-        class: 'transition-rejection',
-        code: 'unsupported-dom-key',
-        message: 'DOM keyboard input does not map to a tree-grid semantic event.',
-        details: { key: input.key },
-      });
+      return this.#runtime.reject('unsupported-dom-key', 'DOM keyboard input does not map to a tree-grid semantic event.', { key: input.key });
     }
     return this.handleEvent(event, expectedRevision);
   }
 
   public handleEvent(
     event: TreeGridEvent<RowID, CellID>,
-    expectedRevision = this.#snapshot.revision,
+    expectedRevision = this.#runtime.getSnapshot().revision,
   ): RevisionResult<TreeGridState<RowID, CellID>, TreeGridEffect<CellID>> {
-    const permitted = requireInteraction(this.#interaction, treeGridIntent(event));
-    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
-    const result = applyControllerEvent(
-      this.#snapshot,
-      expectedRevision,
-      event,
-      (state, semanticEvent) => applyTreeGridEvent(
-        this.model,
-        state,
-        semanticEvent,
-        this.#policies,
-      ),
-      (previous, proposed) => controlledState(
-        this.model,
-        previous,
-        proposed,
-        this.#valueControlled,
-        this.#expandedControlled,
-        this.#highlightControlled,
-        this.#editModeControlled,
-      ),
-      (previous, proposed) => this.#notify(previous, proposed),
-      toTreeGridEffect,
-    );
-    if (result.ok) this.#snapshot = result.snapshot;
-    return result;
+    return this.#runtime.handle(event, expectedRevision);
   }
+}
 
-  #notify(
-    previous: TreeGridState<RowID, CellID>,
-    proposed: TreeGridState<RowID, CellID>,
-  ): void {
-    const previousValue = selectedValue(previous);
-    const value = selectedValue(proposed);
-    if (previousValue !== value) {
-      this.#onValueChange?.(Object.freeze({ value, previousValue }));
-    }
-    if (!sameIDs(previous.expansion.ids, proposed.expansion.ids)) {
-      this.#onExpandedValueChange?.(Object.freeze({
-        value: proposed.expansion.ids,
-        previousValue: previous.expansion.ids,
-      }));
-    }
-    if (previous.cursor.current !== proposed.cursor.current) {
-      this.#onHighlightedValueChange?.(Object.freeze({
-        value: proposed.cursor.current,
-        previousValue: previous.cursor.current,
-      }));
-    }
-    if (previous.editMode !== proposed.editMode) {
-      this.#onEditModeChange?.(Object.freeze({
-        value: proposed.editMode,
-        previousValue: previous.editMode,
-      }));
-    }
+function notifyTreeGridChange<RowID extends StableID, CellID extends StableID>(
+  options: TreeGridControllerOptions<RowID, CellID>,
+  previous: TreeGridState<RowID, CellID>,
+  proposed: TreeGridState<RowID, CellID>,
+): void {
+  const previousValue = selectedValue(previous);
+  const value = selectedValue(proposed);
+  if (previousValue !== value) options.onValueChange?.(Object.freeze({ value, previousValue }));
+  if (!sameIDs(previous.expansion.ids, proposed.expansion.ids)) {
+    options.onExpandedValueChange?.(Object.freeze({ value: proposed.expansion.ids, previousValue: previous.expansion.ids }));
+  }
+  if (previous.cursor.current !== proposed.cursor.current) {
+    options.onHighlightedValueChange?.(Object.freeze({ value: proposed.cursor.current, previousValue: previous.cursor.current }));
+  }
+  if (previous.editMode !== proposed.editMode) {
+    options.onEditModeChange?.(Object.freeze({ value: proposed.editMode, previousValue: previous.editMode }));
   }
 }
 

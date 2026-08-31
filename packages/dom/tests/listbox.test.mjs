@@ -238,6 +238,30 @@ test('controlled DOM values emit proposals and change only after sync', () => {
   assert.equal(synchronized.state.cursor.current, 'b');
 });
 
+test('controlled DOM callback synchronization and nested events preserve the latest live revision', () => {
+  const domain = createSequence(['a', 'b', 'c']);
+  let controller;
+  let callbackCount = 0;
+  controller = unwrap(createListboxController({
+    domain,
+    highlightedValue: 'a',
+    onHighlightedValueChange(change) {
+      callbackCount += 1;
+      unwrap(controller.syncControlledValues({ highlightedValue: change.value }));
+      if (callbackCount === 1) {
+        assert.equal(controller.handleEvent({ type: 'focus', id: 'c' }).ok, true);
+      }
+    },
+  }));
+
+  const outer = controller.handleEvent({ type: 'focus', id: 'b' });
+  assert.equal(outer.ok, true);
+  assert.equal(outer.snapshot.revision, 1);
+  assert.equal(callbackCount, 2);
+  assert.equal(controller.getSnapshot().revision, 4);
+  assert.equal(controller.getSnapshot().state.cursor.current, 'c');
+});
+
 test('controlled null highlight overrides defaults and uncontrolled controllers reject sync', () => {
   const domain = createSequence(['a']);
   const controlled = unwrap(createListboxController({

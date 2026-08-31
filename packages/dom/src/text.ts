@@ -1,10 +1,7 @@
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createFacadeConnection, createSemanticController, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError } from '@sectile/core';
-import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
-  tryCreateRevisionSnapshot,
-  rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
 } from '@sectile/core/revision';
@@ -18,10 +15,6 @@ import {
   type TextEvent,
   type TextSelectionInput,
 } from '@sectile/core/text';
-import {
-  applyControllerEvent,
-  synchronizeControllerState,
-} from '@sectile/core/adapter-runtime';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 
@@ -135,11 +128,19 @@ export function createTextController(options: TextControllerOptions = {}): Resul
     ? tryCreateTextEditingState()
     : normalizeTextEditingState(requested);
   if (!initial.ok) return initial;
-  const snapshot = tryCreateRevisionSnapshot(initial.value);
-  if (!snapshot.ok) return snapshot;
-  const interaction = tryCreateInteractionState(options);
-  if (!interaction.ok) return interaction;
-  return { ok: true, value: new DOMTextController(options, interaction.value, snapshot.value) };
+  let controller: DOMTextController;
+  const runtime = createSemanticController<TextEditingState, TextEvent, never, never>({
+    initial,
+    reducer: (state, event) => controller.reduce(state, event),
+    reconcile: (previous, proposed) => controller.reconcile(previous, proposed),
+    notify: (previous, proposed) => controller.notify(previous, proposed),
+    toEffect: impossibleEffect,
+    interaction: options,
+    interactionIntent: () => 'mutate',
+  });
+  if (!runtime.ok) return runtime;
+  controller = new DOMTextController(options, runtime.value);
+  return { ok: true, value: controller };
 }
 
 export function createText(options: TextOptions): FacadeConnection<TextConnection> {
@@ -277,24 +278,21 @@ class DOMTextConnection implements TextConnection {
 
 class DOMTextController implements TextController {
   readonly #controlled: boolean;
-  readonly #interaction: InteractionState;
   readonly #onValueChange: ((change: TextValueChangeDetails) => void) | undefined;
-  #snapshot: RevisionSnapshot<TextEditingState>;
+  readonly #runtime: SemanticController<TextEditingState, TextEvent, never>;
   #pendingComposition: TextEditingState | null = null;
 
   public constructor(
     options: TextControllerOptions,
-    interaction: InteractionState,
-    snapshot: RevisionSnapshot<TextEditingState>,
+    runtime: SemanticController<TextEditingState, TextEvent, never>,
   ) {
     this.#controlled = options.value !== undefined;
-    this.#interaction = interaction;
     this.#onValueChange = options.onValueChange;
-    this.#snapshot = snapshot;
+    this.#runtime = runtime;
   }
 
   public getSnapshot(): RevisionSnapshot<TextEditingState> {
-    return this.#snapshot;
+    return this.#runtime.getSnapshot();
   }
 
   public syncControlledValues(
@@ -302,12 +300,8 @@ class DOMTextController implements TextController {
   ): Result<RevisionSnapshot<TextEditingState>> {
     const error = controlledInputError(this.#controlled);
     if (error !== null) return { ok: false, error };
-    const snapshot = synchronizeControllerState(
-      this.#snapshot,
-      normalizeTextEditingState(values.value),
-    );
+    const snapshot = this.#runtime.replace(normalizeTextEditingState(values.value));
     if (!snapshot.ok) return snapshot;
-    this.#snapshot = snapshot.value;
     this.#pendingComposition = snapshot.value.state.composition === null
       ? null
       : snapshot.value.state;
@@ -316,46 +310,28 @@ class DOMTextController implements TextController {
 
   public handleTextInput(
     input: TextInput,
-    expectedRevision = this.#snapshot.revision,
+    expectedRevision = this.#runtime.getSnapshot().revision,
   ): RevisionResult<TextEditingState, never> {
-    const permitted = requireInteraction(this.#interaction, 'mutate');
-    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const event = toTextEvent(input);
     if (event === null) {
-      return rejectRevisionInput(this.#snapshot, {
-        class: 'transition-rejection',
-        code: 'unsupported-dom-text-input',
-        message: 'DOM text input does not map to a semantic text event.',
-      });
+      return this.#runtime.reject('unsupported-dom-text-input', 'DOM text input does not map to a semantic text event.');
     }
-    const current = this.#snapshot;
-    const base = this.#controlled && this.#pendingComposition !== null
-      ? Object.freeze({ revision: current.revision, state: this.#pendingComposition })
-      : current;
-    const proposal: { value: TextEditingState | null } = { value: null };
-    const result = applyControllerEvent(
-      base,
-      expectedRevision,
-      event,
-      applyTextEvent,
-      (_previous, proposed) => {
-        proposal.value = proposed;
-        return normalizeTextEditingState(this.#controlled ? current.state : proposed);
-      },
-      (_previous, proposed) => {
-        if (!sameTextEditingState(current.state, proposed)) {
-          this.#onValueChange?.(Object.freeze({ value: proposed, previousValue: current.state }));
-        }
-      },
-      impossibleEffect,
-    );
-    if (result.ok) {
-      this.#snapshot = result.snapshot;
-      if (this.#controlled) {
-        this.#pendingComposition = proposal.value?.composition === null ? null : proposal.value;
-      }
+    return this.#runtime.handle(event, expectedRevision);
+  }
+
+  public reduce(state: TextEditingState, event: TextEvent) {
+    return applyTextEvent(this.#controlled && this.#pendingComposition !== null ? this.#pendingComposition : state, event);
+  }
+
+  public reconcile(previous: TextEditingState, proposed: TextEditingState): Result<TextEditingState> {
+    if (this.#controlled) this.#pendingComposition = proposed.composition === null ? null : proposed;
+    return normalizeTextEditingState(this.#controlled ? previous : proposed);
+  }
+
+  public notify(previous: TextEditingState, proposed: TextEditingState): void {
+    if (!sameTextEditingState(previous, proposed)) {
+      this.#onValueChange?.(Object.freeze({ value: proposed, previousValue: previous }));
     }
-    return result;
   }
 }
 

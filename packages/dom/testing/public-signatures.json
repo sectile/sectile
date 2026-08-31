@@ -283,7 +283,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "7a7656f80a328364dd1dacdc980a956fd85a8746f05c7ffec853a544269b55c5",
+  "fingerprint": "a2e8d45f27b4a9f393799e7aff43b62e89218530a1f8ce4e901a00113a2f28cc",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -327,7 +327,7 @@
     },
     {
       "path": "dist/combobox.d.ts",
-      "sha256": "566c215b386ddea0d295205778e94e450b39448c4bd9faca6e52ca82e049c450"
+      "sha256": "6c2bd06bde26ad4959d39d88d7092f893963d503f458a4608618fbb2712e8645"
     },
     {
       "path": "dist/data-grid.d.ts",
@@ -435,7 +435,7 @@
     },
     {
       "path": "dist/internal/tabular-dom.d.ts",
-      "sha256": "ec12e7c689bb695d0432a195effaa9a737f77ef0e91d4f6554399e4db47b065d"
+      "sha256": "94ae1a7348139a88248086cb4cdaab578b5674e14b9eb4b8ccbef255a286fd19"
     },
     {
       "path": "dist/internal/tabular-grid-dom.d.ts",
@@ -531,7 +531,7 @@
     },
     {
       "path": "dist/slider.d.ts",
-      "sha256": "0b60b3dccf3a0acaf25e9937d5de84322a0ed8f981ef6fca193d7cd7152f70f3"
+      "sha256": "67225724b65ce506a576b7ecb675dab028d56ec5b26e3119e609f2f202fa796a"
     },
     {
       "path": "dist/spin-button.d.ts",
@@ -595,11 +595,11 @@
     },
     {
       "path": "dist/tree-grid.d.ts",
-      "sha256": "6cf276213f62741ba945b48dc1e2a501482e8349bb225dd9d1fc0c14b2ec67ba"
+      "sha256": "770d5e0e0385a617532bb498687df19c8f59468126b85f2ddc9ae9bd26896227"
     },
     {
       "path": "dist/tree-view.d.ts",
-      "sha256": "49505af794aac5c28227e80923458a916e389eeedddb12612557e3aeb3b06ee2"
+      "sha256": "484171808888ba1f288ba5f6628df14fde5f409ef6c0350a035d81543e06cc24"
     },
     {
       "path": "dist/virtual.d.ts",

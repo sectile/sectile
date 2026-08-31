@@ -85,6 +85,41 @@
       "before": { "subpath": "./layer-stack" },
       "symbols": ["StableID declaration closure"],
       "replacement": { "package": "@sectile/terminal", "subpath": "./layer-stack" }
+    },
+    {
+      "id": "WI-008:combobox-semantic-controller-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./combobox" },
+      "symbols": ["Combobox controller declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./combobox" }
+    },
+    {
+      "id": "WI-008:slider-semantic-controller-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./slider" },
+      "symbols": ["Slider controller declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./slider" }
+    },
+    {
+      "id": "WI-008:tree-grid-semantic-controller-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./tree-grid" },
+      "symbols": ["TreeGrid controller declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./tree-grid" }
+    },
+    {
+      "id": "WI-008:tree-view-semantic-controller-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./tree-view" },
+      "symbols": ["TreeView controller declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./tree-view" }
+    },
+    {
+      "id": "WI-008:window-splitter-semantic-controller-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./window-splitter" },
+      "symbols": ["WindowSplitter controller declaration closure"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./window-splitter" }
     }
   ]
 }

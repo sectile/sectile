@@ -17,28 +17,6 @@ import {
   type RevisionSnapshot,
 } from './revision.js';
 
-export function applyControllerEvent<State, Event, Command, Effect, Code extends string>(
-  current: RevisionSnapshot<State>,
-  expectedRevision: number,
-  event: Event,
-  reducer: EventReducer<State, Event, Command, Code>,
-  reconcile: (previous: State, proposed: State) => Result<State, Code>,
-  notify: (previous: State, proposed: State) => void,
-  toEffect: (command: Command) => Effect,
-): RevisionResult<State, Effect, CoreErrorCode | Code> {
-  const prepared = prepareControllerEvent(
-    current,
-    expectedRevision,
-    event,
-    reducer,
-    reconcile,
-    toEffect,
-  );
-  if (!prepared.result.ok) return prepared.result;
-  notify(current.state, prepared.proposed);
-  return prepared.result;
-}
-
 function prepareControllerEvent<State, Event, Command, Effect, Code extends string>(
   current: RevisionSnapshot<State>,
   expectedRevision: number,

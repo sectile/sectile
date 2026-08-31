@@ -1,18 +1,8 @@
-import { createFacadeConnection, tryCreateDisabledIdentitySet, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createFacadeConnection, createSemanticController, tryCreateDisabledIdentitySet, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
 import { controlledFieldError as fieldError } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
-import {
-  tryCreateInteractionState,
-  requireInteraction,
-  type InteractionState,
-} from '@sectile/core/interaction';
-import {
-  tryCreateRevisionSnapshot,
-  rejectRevisionInput,
-  type RevisionResult,
-  type RevisionSnapshot,
-} from '@sectile/core/revision';
+import type { RevisionResult, RevisionSnapshot } from '@sectile/core/revision';
 import { tryCreateTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
 import {
   applyTreeViewEvent,
@@ -23,7 +13,6 @@ import {
   type TreeViewSelectionMode,
   type TreeViewState,
 } from '@sectile/core/tree-view';
-import { applyControllerEvent, synchronizeControllerState } from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export type KeyboardInput = TerminalKeyboardInput;
@@ -129,11 +118,30 @@ export function createTreeViewController<ID extends StableID>(
       : options.defaultHighlightedValue ?? null,
   }, selectionMode);
   if (!initial.ok) return initial;
-  const snapshot = tryCreateRevisionSnapshot(initial.value);
-  if (!snapshot.ok) return snapshot;
-  const interaction = tryCreateInteractionState(options);
-  if (!interaction.ok) return interaction;
-  return { ok: true, value: new TerminalTreeViewController({ ...options, selectionMode }, snapshot.value, interaction.value) };
+  const valueControlled = options.value !== undefined;
+  const expandedControlled = options.expandedValues !== undefined;
+  const highlightControlled = options.highlightedValue !== undefined;
+  const policies: TreeViewPolicies<ID> = { ...options.policies, selectionMode };
+  const runtime = createSemanticController<TreeViewState<ID>, TreeViewEvent<ID>, TreeViewCommand<ID>, TreeViewEffect<ID>>({
+    initial,
+    reducer: (state, event) => applyTreeViewEvent(options.tree, state, event, policies),
+    reconcile: (previous, proposed) => controlledState(
+      options.tree,
+      previous,
+      proposed,
+      valueControlled,
+      expandedControlled,
+      highlightControlled,
+      selectionMode,
+    ),
+    notify: (previous, proposed) => notifyTreeViewChange(options, previous, proposed),
+    toEffect: toTreeViewEffect,
+    interaction: options,
+    interactionIntent: () => 'navigate',
+  });
+  return runtime.ok
+    ? { ok: true, value: new TerminalTreeViewController({ ...options, selectionMode }, runtime.value) }
+    : runtime;
 }
 
 export function createTreeView<ID extends StableID>(
@@ -228,41 +236,26 @@ class TerminalTreeViewController<ID extends StableID> implements TreeViewControl
   public readonly tree: Tree<ID>;
   public readonly selectionMode: TreeViewSelectionMode;
   readonly #tree: Tree<ID>;
-  readonly #policies: TreeViewPolicies<ID>;
   readonly #valueControlled: boolean;
   readonly #expandedControlled: boolean;
   readonly #highlightControlled: boolean;
-  readonly #onValueChange: ((change: TreeViewValueChangeDetails<ID>) => void) | undefined;
-  readonly #onExpandedValuesChange:
-    | ((change: TreeViewExpandedValuesChangeDetails<ID>) => void)
-    | undefined;
-  readonly #onHighlightedValueChange:
-    | ((change: TreeViewHighlightChangeDetails<ID>) => void)
-    | undefined;
-  readonly #interaction: InteractionState;
-  #snapshot: RevisionSnapshot<TreeViewState<ID>>;
+  readonly #runtime: SemanticController<TreeViewState<ID>, TreeViewEvent<ID>, TreeViewEffect<ID>>;
 
   public constructor(
     options: TreeViewControllerOptions<ID>,
-    snapshot: RevisionSnapshot<TreeViewState<ID>>,
-    interaction: InteractionState,
+    runtime: SemanticController<TreeViewState<ID>, TreeViewEvent<ID>, TreeViewEffect<ID>>,
   ) {
     this.tree = options.tree;
     this.selectionMode = options.selectionMode ?? options.policies?.selectionMode ?? 'single';
     this.#tree = options.tree;
-    this.#policies = { ...options.policies, selectionMode: this.selectionMode };
     this.#valueControlled = options.value !== undefined;
     this.#expandedControlled = options.expandedValues !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
-    this.#onValueChange = options.onValueChange;
-    this.#onExpandedValuesChange = options.onExpandedValuesChange;
-    this.#onHighlightedValueChange = options.onHighlightedValueChange;
-    this.#interaction = interaction;
-    this.#snapshot = snapshot;
+    this.#runtime = runtime;
   }
 
   public getSnapshot(): RevisionSnapshot<TreeViewState<ID>> {
-    return this.#snapshot;
+    return this.#runtime.getSnapshot();
   }
 
   public syncControlledValues(
@@ -278,76 +271,43 @@ class TerminalTreeViewController<ID extends StableID> implements TreeViewControl
     const state = tryCreateTreeViewState(this.#tree, {
       selected: this.#valueControlled
         ? (values.value as readonly ID[])
-        : this.#snapshot.state.selection.selected,
-      anchor: this.#snapshot.state.selection.anchor,
+        : this.#runtime.getSnapshot().state.selection.selected,
+      anchor: this.#runtime.getSnapshot().state.selection.anchor,
       expanded: this.#expandedControlled
         ? (values.expandedValues as readonly ID[])
-        : this.#snapshot.state.expansion.ids,
+        : this.#runtime.getSnapshot().state.expansion.ids,
       current: this.#highlightControlled
         ? (values.highlightedValue as ID | null)
-        : this.#snapshot.state.cursor.current,
+        : this.#runtime.getSnapshot().state.cursor.current,
     }, this.selectionMode);
-    const snapshot = synchronizeControllerState(this.#snapshot, state);
-    if (!snapshot.ok) return snapshot;
-    this.#snapshot = snapshot.value;
-    return snapshot;
+    return this.#runtime.replace(state);
   }
 
   public handleKeyboardInput(
     input: KeyboardInput,
-    expectedRevision = this.#snapshot.revision,
+    expectedRevision = this.#runtime.getSnapshot().revision,
   ): RevisionResult<TreeViewState<ID>, TreeViewEffect<ID>> {
-    const permitted = requireInteraction(this.#interaction, 'navigate');
-    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const event = toTreeViewEvent<ID>(input);
     if (event === null) {
-      return rejectRevisionInput(this.#snapshot, {
-        class: 'transition-rejection',
-        code: 'unsupported-terminal-key',
-        message: 'Terminal keyboard input does not map to a tree-view semantic event.',
-        details: { key: input.key },
-      });
+      return this.#runtime.reject('unsupported-terminal-key', 'Terminal keyboard input does not map to a tree-view semantic event.', { key: input.key });
     }
-    const result = applyControllerEvent(
-      this.#snapshot,
-      expectedRevision,
-      event,
-      (state, semanticEvent) => applyTreeViewEvent(this.#tree, state, semanticEvent, this.#policies),
-      (previous, proposed) => controlledState(
-        this.#tree,
-        previous,
-        proposed,
-        this.#valueControlled,
-        this.#expandedControlled,
-        this.#highlightControlled,
-        this.selectionMode,
-      ),
-      (previous, proposed) => this.#notify(previous, proposed),
-      toTreeViewEffect,
-    );
-    if (result.ok) this.#snapshot = result.snapshot;
-    return result;
+    return this.#runtime.handle(event, expectedRevision);
   }
+}
 
-  #notify(previous: TreeViewState<ID>, proposed: TreeViewState<ID>): void {
-    if (!sameIDs(previous.selection.selected, proposed.selection.selected)) {
-      this.#onValueChange?.(Object.freeze({
-        value: proposed.selection.selected,
-        previousValue: previous.selection.selected,
-      }));
-    }
-    if (!sameIDs(previous.expansion.ids, proposed.expansion.ids)) {
-      this.#onExpandedValuesChange?.(Object.freeze({
-        value: proposed.expansion.ids,
-        previousValue: previous.expansion.ids,
-      }));
-    }
-    if (previous.cursor.current !== proposed.cursor.current) {
-      this.#onHighlightedValueChange?.(Object.freeze({
-        value: proposed.cursor.current,
-        previousValue: previous.cursor.current,
-      }));
-    }
+function notifyTreeViewChange<ID extends StableID>(
+  options: TreeViewControllerOptions<ID>,
+  previous: TreeViewState<ID>,
+  proposed: TreeViewState<ID>,
+): void {
+  if (!sameIDs(previous.selection.selected, proposed.selection.selected)) {
+    options.onValueChange?.(Object.freeze({ value: proposed.selection.selected, previousValue: previous.selection.selected }));
+  }
+  if (!sameIDs(previous.expansion.ids, proposed.expansion.ids)) {
+    options.onExpandedValuesChange?.(Object.freeze({ value: proposed.expansion.ids, previousValue: previous.expansion.ids }));
+  }
+  if (previous.cursor.current !== proposed.cursor.current) {
+    options.onHighlightedValueChange?.(Object.freeze({ value: proposed.cursor.current, previousValue: previous.cursor.current }));
   }
 }
 

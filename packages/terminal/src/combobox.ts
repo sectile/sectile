@@ -1,8 +1,7 @@
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createFacadeConnection, createSemanticController, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
 import { controlledFieldError as fieldError } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
-import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
   applyComboboxEvent,
   tryCreateComboboxState,
@@ -11,22 +10,13 @@ import {
   type ComboboxPolicies,
   type ComboboxState,
 } from '@sectile/core/combobox';
-import {
-  tryCreateRevisionSnapshot,
-  rejectRevisionInput,
-  type RevisionResult,
-  type RevisionSnapshot,
-} from '@sectile/core/revision';
+import type { RevisionResult, RevisionSnapshot } from '@sectile/core/revision';
 import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import {
   sameTextEditingState,
   tryCreateTextEditingState,
   type TextEditingState,
 } from '@sectile/core/text';
-import {
-  applyControllerEvent,
-  synchronizeControllerState,
-} from '@sectile/core/adapter-runtime';
 import { toTextEvent, type TextInput } from './text.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { toTerminalTextInput } from './internal/text-input.js';
@@ -166,11 +156,28 @@ export function createComboboxController<ID extends StableID>(
     anchor: value,
   });
   if (!initial.ok) return initial;
-  const snapshot = tryCreateRevisionSnapshot(initial.value);
-  if (!snapshot.ok) return snapshot;
-  const interaction = tryCreateInteractionState(options);
-  if (!interaction.ok) return interaction;
-  return { ok: true, value: new TerminalComboboxController(options, interaction.value, snapshot.value) };
+  const valueControlled = options.value !== undefined;
+  const inputStateControlled = options.inputState !== undefined;
+  const openControlled = options.open !== undefined;
+  const highlightControlled = options.highlightedValue !== undefined;
+  const runtime = createSemanticController<ComboboxState<ID>, ComboboxEvent<ID>, ComboboxCommand<ID>, ComboboxEffect<ID>>({
+    initial,
+    reducer: (state, event) => applyComboboxEvent(options.domain, options.labels, state, event, options.policies ?? {}),
+    reconcile: (previous, proposed) => controlledState(
+      options.domain,
+      previous,
+      proposed,
+      valueControlled,
+      inputStateControlled,
+      openControlled,
+      highlightControlled,
+    ),
+    notify: (previous, proposed) => notifyComboboxChange(options, previous, proposed),
+    toEffect: toComboboxEffect,
+    interaction: options,
+    interactionIntent: comboboxIntent,
+  });
+  return runtime.ok ? { ok: true, value: new TerminalComboboxController(options, runtime.value) } : runtime;
 }
 
 export function createCombobox<ID extends StableID>(
@@ -290,47 +297,28 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
   public readonly domain: Sequence<ID>;
   public readonly labels: ReadonlyMap<ID, string>;
   readonly #domain: Sequence<ID>;
-  readonly #labels: ReadonlyMap<ID, string>;
-  readonly #policies: ComboboxPolicies<ID>;
-  readonly #interaction: InteractionState;
   readonly #valueControlled: boolean;
   readonly #inputStateControlled: boolean;
   readonly #openControlled: boolean;
   readonly #highlightControlled: boolean;
-  readonly #onValueChange: ((change: ComboboxValueChangeDetails<ID>) => void) | undefined;
-  readonly #onInputStateChange:
-    | ((change: ComboboxInputStateChangeDetails) => void)
-    | undefined;
-  readonly #onOpenChange: ((change: ComboboxOpenChangeDetails) => void) | undefined;
-  readonly #onHighlightedValueChange:
-    | ((change: ComboboxHighlightChangeDetails<ID>) => void)
-    | undefined;
-  #snapshot: RevisionSnapshot<ComboboxState<ID>>;
+  readonly #runtime: SemanticController<ComboboxState<ID>, ComboboxEvent<ID>, ComboboxEffect<ID>>;
 
   public constructor(
     options: ComboboxControllerOptions<ID>,
-    interaction: InteractionState,
-    snapshot: RevisionSnapshot<ComboboxState<ID>>,
+    runtime: SemanticController<ComboboxState<ID>, ComboboxEvent<ID>, ComboboxEffect<ID>>,
   ) {
     this.domain = options.domain;
     this.labels = options.labels;
     this.#domain = options.domain;
-    this.#labels = options.labels;
-    this.#policies = options.policies ?? {};
-    this.#interaction = interaction;
     this.#valueControlled = options.value !== undefined;
     this.#inputStateControlled = options.inputState !== undefined;
     this.#openControlled = options.open !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
-    this.#onValueChange = options.onValueChange;
-    this.#onInputStateChange = options.onInputStateChange;
-    this.#onOpenChange = options.onOpenChange;
-    this.#onHighlightedValueChange = options.onHighlightedValueChange;
-    this.#snapshot = snapshot;
+    this.#runtime = runtime;
   }
 
   public getSnapshot(): RevisionSnapshot<ComboboxState<ID>> {
-    return this.#snapshot;
+    return this.#runtime.getSnapshot();
   }
 
   public syncControlledValues(
@@ -346,52 +334,40 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
     if (error !== null) return { ok: false, error };
     const selected = this.#valueControlled
       ? (values.value as ID | null)
-      : selectedValue(this.#snapshot.state);
+      : selectedValue(this.#runtime.getSnapshot().state);
     const state = tryCreateComboboxState(this.#domain, {
       text: this.#inputStateControlled
         ? values.inputState as TextEditingState
-        : this.#snapshot.state.text,
+        : this.#runtime.getSnapshot().state.text,
       popupOpen: this.#openControlled
         ? values.open as boolean
-        : this.#snapshot.state.popupOpen,
+        : this.#runtime.getSnapshot().state.popupOpen,
       current: this.#highlightControlled
         ? values.highlightedValue as ID | null
-        : this.#snapshot.state.cursor.current,
+        : this.#runtime.getSnapshot().state.cursor.current,
       selected: selected === null ? [] : [selected],
-      anchor: this.#valueControlled ? selected : this.#snapshot.state.selection.anchor,
+      anchor: this.#valueControlled ? selected : this.#runtime.getSnapshot().state.selection.anchor,
     });
-    const snapshot = synchronizeControllerState(this.#snapshot, state);
-    if (!snapshot.ok) return snapshot;
-    this.#snapshot = snapshot.value;
-    return snapshot;
+    return this.#runtime.replace(state);
   }
 
   public handleKeyboardInput(
     input: KeyboardInput,
-    expectedRevision = this.#snapshot.revision,
+    expectedRevision = this.#runtime.getSnapshot().revision,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
     const event = toComboboxEvent<ID>(input);
     return event === null
-      ? rejectRevisionInput(this.#snapshot, {
-          class: 'transition-rejection',
-          code: 'unsupported-terminal-key',
-          message: 'Terminal keyboard input does not map to a combobox semantic event.',
-          details: { key: input.key },
-        })
+      ? this.#runtime.reject('unsupported-terminal-key', 'Terminal keyboard input does not map to a combobox semantic event.', { key: input.key })
       : this.#applyEvent(event, expectedRevision);
   }
 
   public handleTextInput(
     input: TextInput,
-    expectedRevision = this.#snapshot.revision,
+    expectedRevision = this.#runtime.getSnapshot().revision,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
     const event = toComboboxTextEvent<ID>(input);
     return event === null
-      ? rejectRevisionInput(this.#snapshot, {
-          class: 'transition-rejection',
-          code: 'unsupported-terminal-text-input',
-          message: 'Terminal text input does not map to a combobox semantic event.',
-        })
+      ? this.#runtime.reject('unsupported-terminal-text-input', 'Terminal text input does not map to a combobox semantic event.')
       : this.#applyEvent(event, expectedRevision);
   }
 
@@ -399,57 +375,26 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
     event: ComboboxEvent<ID>,
     expectedRevision: number,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
-    const permitted = requireInteraction(this.#interaction, comboboxIntent(event));
-    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
-    const result = applyControllerEvent(
-      this.#snapshot,
-      expectedRevision,
-      event,
-      (state, semanticEvent) => applyComboboxEvent(
-        this.#domain,
-        this.#labels,
-        state,
-        semanticEvent,
-        this.#policies,
-      ),
-      (previous, proposed) => controlledState(
-        this.#domain,
-        previous,
-        proposed,
-        this.#valueControlled,
-        this.#inputStateControlled,
-        this.#openControlled,
-        this.#highlightControlled,
-      ),
-      (previous, proposed) => this.#notify(previous, proposed),
-      toComboboxEffect,
-    );
-    if (result.ok) this.#snapshot = result.snapshot;
-    return result;
+    return this.#runtime.handle(event, expectedRevision);
   }
+}
 
-  #notify(previous: ComboboxState<ID>, proposed: ComboboxState<ID>): void {
-    const previousValue = selectedValue(previous);
-    const value = selectedValue(proposed);
-    if (previousValue !== value) this.#onValueChange?.(Object.freeze({ value, previousValue }));
-    if (!sameTextEditingState(previous.text, proposed.text)) {
-      this.#onInputStateChange?.(Object.freeze({
-        value: proposed.text,
-        previousValue: previous.text,
-      }));
-    }
-    if (previous.popupOpen !== proposed.popupOpen) {
-      this.#onOpenChange?.(Object.freeze({
-        value: proposed.popupOpen,
-        previousValue: previous.popupOpen,
-      }));
-    }
-    if (previous.cursor.current !== proposed.cursor.current) {
-      this.#onHighlightedValueChange?.(Object.freeze({
-        value: proposed.cursor.current,
-        previousValue: previous.cursor.current,
-      }));
-    }
+function notifyComboboxChange<ID extends StableID>(
+  options: ComboboxControllerOptions<ID>,
+  previous: ComboboxState<ID>,
+  proposed: ComboboxState<ID>,
+): void {
+  const previousValue = selectedValue(previous);
+  const value = selectedValue(proposed);
+  if (previousValue !== value) options.onValueChange?.(Object.freeze({ value, previousValue }));
+  if (!sameTextEditingState(previous.text, proposed.text)) {
+    options.onInputStateChange?.(Object.freeze({ value: proposed.text, previousValue: previous.text }));
+  }
+  if (previous.popupOpen !== proposed.popupOpen) {
+    options.onOpenChange?.(Object.freeze({ value: proposed.popupOpen, previousValue: previous.popupOpen }));
+  }
+  if (previous.cursor.current !== proposed.cursor.current) {
+    options.onHighlightedValueChange?.(Object.freeze({ value: proposed.cursor.current, previousValue: previous.cursor.current }));
   }
 }
 

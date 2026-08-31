@@ -125,6 +125,41 @@
       "symbols": ["TextInput declaration closure"],
       "replacement": { "package": "@sectile/dom", "subpath": "./combobox" },
       "removalReason": "Combobox text transitions retain the same TextInput union while their declaration closure adopts the native-owned Text connection surface."
+    },
+    {
+      "id": "WI-008:slider-semantic-controller-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./slider" },
+      "symbols": ["Slider controller declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./slider" }
+    },
+    {
+      "id": "WI-017:tabular-activation-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./tabular" },
+      "symbols": ["Tabular DOM activation declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./tabular" }
+    },
+    {
+      "id": "WI-008:tree-grid-semantic-controller-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./tree-grid" },
+      "symbols": ["TreeGrid controller declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./tree-grid" }
+    },
+    {
+      "id": "WI-008:tree-view-semantic-controller-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./tree-view" },
+      "symbols": ["TreeView controller declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./tree-view" }
+    },
+    {
+      "id": "WI-008:window-splitter-semantic-controller-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./window-splitter" },
+      "symbols": ["WindowSplitter controller declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./window-splitter" }
     }
   ]
 }

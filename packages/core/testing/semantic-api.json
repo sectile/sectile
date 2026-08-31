@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "f1762e6b6409d388255b7849c5201e77466a23e5f584db7bda55b679be65e5d0",
+    "publicSignatureFingerprint": "87145b7fb0319dce82d0181748d5c0524e7a952c6771977a9ab711f8fd783de6",
     "subpaths": [
       ".",
       "./accordion",
@@ -519,7 +519,7 @@
     }
   ],
   "acceptance": {
-    "classification": "type-change-reviewed",
-    "reason": "StableID intentionally widens from string to string-or-safe-integer; public declaration closure was reviewed and breaking migration entries were recorded."
+    "classification": "breaking",
+    "reason": "WI-008-removes-applyControllerEvent-in-favor-of-createSemanticController"
   }
 }
