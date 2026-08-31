@@ -1,22 +1,30 @@
 # Introduction
 
-Sectile models interaction behavior independently from its renderer. The same component semantics can drive a browser interface, a terminal application, or a framework binding without moving host details into core state.
+Sectile is a system for specifying and verifying interaction behavior. It represents the current facts as state, expresses input as semantic events, and calculates the next state with ordered work.
 
-## What Sectile owns
+The same model applies to navigation, selection, expansion, text editing, forms, civil dates, tabular data, charts, and virtualized collections. Each domain defines its valid values, operations, results, failures, and cost bounds through a public contract.
 
-- State transitions and controlled or uncontrolled ownership.
-- Eligibility, navigation, selection, expansion, editing, and range rules.
-- Explicit effects such as focus requests, announcements, and activation commands.
-- Host projections for DOM and terminal input.
+## How a transition works
 
-## What Sectile leaves to you
+1. A model defines the valid structure and values.
+2. State records facts such as the current item, selection, expansion, or text.
+3. An event expresses an action such as move, select, insert, validate, or submit.
+4. A policy supplies choices such as eligibility and boundary behavior.
+5. The transition returns a new immutable state and ordered commands together.
 
-- Visual design, layout, spacing, and animation.
-- Application data fetching and persistence.
-- Product-specific validation and policy when a component exposes an extension point.
+A rejected event returns a typed error while preserving the previous state and command list. This failure-atomic rule lets a caller inspect every outcome without observing a partial update.
 
-## Package layers
+## Domain ownership
 
-`@sectile/core` defines renderer-neutral semantics. `@sectile/dom` and `@sectile/terminal` translate native input and output. Framework packages such as `@sectile/vue` compose those host contracts into headless components.
+- **Core:** sequence, range, grid, tree, state, transition, and command foundations.
+- **Form:** field paths, values, validation, errors, submission, and reset.
+- **Temporal:** civil dates, wall-clock time, ranges, and calendar rules.
+- **Tabular:** columns, row access, grouping, selection, and data queries.
+- **Virtual:** collection extents, layout, measurement, and anchor correction.
+- **Chart:** immutable chart models, scales, projections, and queries.
 
-The [Theory](/theory/) section describes the structures, state models, transition laws, and component compositions that stay consistent across those packages.
+The [package map](/packages/) shows the public boundary of each domain. [Core theory](/theory/) explains the common structures, laws, failure semantics, and composition model.
+
+## Start using it
+
+Choose the domain that owns the problem, then open [Getting started](/guide/getting-started) for installation and the first public API.

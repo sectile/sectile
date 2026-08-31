@@ -43,13 +43,13 @@ function appendFormFieldPath(base: FormFieldPath, relative: FormRelativePath): r
 #### `createFormFieldPath`
 
 ```ts
-function createFormFieldPath(path: FormFieldPath): readonly FormPathSegment[]
+function createFormFieldPath(path: FormFieldPath, limits?: Partial<FormConstructionLimits>): readonly FormPathSegment[]
 ```
 
 #### `createFormRelativePath`
 
 ```ts
-function createFormRelativePath(path: FormRelativePath): readonly FormPathSegment[]
+function createFormRelativePath(path: FormRelativePath, limits?: Partial<FormConstructionLimits>): readonly FormPathSegment[]
 ```
 
 #### `encodeFormFieldPath`

@@ -2,7 +2,7 @@
 
 ## Product
 
-Sectile is a renderer-neutral interaction system. It defines semantic state machines in `@sectile/core`, then projects host behavior through DOM, terminal, and framework packages.
+Sectile is a renderer-neutral interaction system. `@sectile/core`, `@sectile/chart`, `@sectile/form`, `@sectile/temporal`, `@sectile/tabular`, and `@sectile/virtual` own semantic domains. `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue` project supported domain behavior into their platforms.
 
 ## Users
 
@@ -12,12 +12,14 @@ Library authors and application engineers who need predictable interaction behav
 
 - Explicit state, laws, failures, and costs instead of hidden widget behavior.
 - Native host behavior where a platform already defines the interaction.
-- Equivalent semantics across hosts, with host-specific projection kept at the boundary.
+- Equivalent semantics across supported host projections, with platform behavior kept at the boundary.
 - Headless framework components that accept normal attributes, classes, slots, and child composition.
 
 ## Package status
 
-- `@sectile/core`, `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue`: published packages.
+- Semantic domains: `@sectile/core`, `@sectile/chart`, `@sectile/form`, `@sectile/temporal`, `@sectile/tabular`, and `@sectile/virtual`.
+- Host adapters: `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue`.
+- Core and Temporal support DOM, Terminal, and Vue projections. Chart, Form, Tabular, and Virtual support DOM and Vue projections and intentionally have no Terminal projection. Vue uses the corresponding DOM projection.
 - Playgrounds: development witnesses, not end-user documentation.
 - Documentation: end-user learning and API reference surface.
 

@@ -5,7 +5,7 @@ description: Renderer-neutral interaction state, transitions, structures, and co
 
 # Core
 
-`@sectile/core` answers one question: **given this state and event, what state and ordered commands come next?** It contains no dates, layout geometry, DOM, framework lifecycle, or styling.
+`@sectile/core` answers one question: **given this state and event, what state and ordered commands come next?** It contains no dates, collection layout state, platform measurement, DOM, framework lifecycle, or styling.
 
 ```sh
 pnpm add @sectile/core
@@ -22,9 +22,10 @@ import * as sequence from '@sectile/core/sequence'
 - independent state: cursor, selection, expansion, text editing
 - deterministic transitions and ordered commands
 - stable string identity, revisions, typed failures, resource ceilings
+- bounded geometry values and operations, anchored placement, and a generic metric index
 - composed component semantics such as Listbox, Combobox, Slider, and Tree Grid
 
-Date arithmetic and picker calendars belong to [`@sectile/temporal`](/packages/temporal). Viewport geometry and dynamic measurement belong to [`@sectile/virtual`](/packages/virtual).
+Core geometry provides reusable calculations over explicit bounded values. Collection extents, viewport queries, dynamic measurement state, layout strategies, and virtual repair belong to [`@sectile/virtual`](/packages/virtual). Actual element or terminal measurement belongs to the selected host adapter. Date arithmetic and picker calendars belong to [`@sectile/temporal`](/packages/temporal).
 
 ## Learning path
 

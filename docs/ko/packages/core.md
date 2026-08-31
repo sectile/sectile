@@ -22,9 +22,10 @@ import * as sequence from '@sectile/core/sequence'
 - 현재 위치, 선택, 펼침, 텍스트 편집 상태
 - 입력 사건에 따른 결정적인 상태 전이와 순서가 있는 명령
 - 안정적인 문자열 ID, 변경 차수, 형식이 정해진 실패, 자원 한도
+- 한도가 분명한 지오메트리 연산, 기준점 배치, 범용 거리 인덱스
 - 목록 상자, 콤보박스, 슬라이더, 계층 격자 같은 컴포넌트 규칙
 
-날짜 계산과 날짜 선택기 달력은 [`@sectile/temporal`](/ko/packages/temporal), 화면 영역과 동적 크기 측정은 [`@sectile/virtual`](/ko/packages/virtual)이 맡습니다.
+Core의 지오메트리는 주어진 값만 계산하는 공통 도구입니다. 항목별 크기, viewport 조회, 동적 측정 상태, 배치 전략, 가상화 보정은 [`@sectile/virtual`](/ko/packages/virtual)이 맡습니다. 실제 DOM 요소나 터미널 셀의 크기를 읽는 일은 해당 host adapter의 책임입니다. 날짜 계산과 날짜 선택기 달력은 [`@sectile/temporal`](/ko/packages/temporal)이 맡습니다.
 
 ## 읽는 순서
 
@@ -32,4 +33,4 @@ import * as sequence from '@sectile/core/sequence'
 2. [구조와 상태](core/structures.md): 순서, 범위, 격자, 계층, 선택 상태.
 3. [상태 전이와 조합](core/transitions.md): 사건, 불변 갱신, 명령, 외부 상태 관리.
 
-Core에서 상호작용 계약을 정한 뒤 DOM, 터미널, Vue 연결 패키지가 실제 입력과 화면 출력을 이어 줍니다. 날짜 계산은 Temporal이, 큰 화면 영역의 배치와 측정은 Virtual이 맡습니다.
+Core에서 상호작용 계약을 정한 뒤 DOM, 터미널, Vue 연결 패키지가 실제 입력과 화면 출력을 이어 줍니다. 날짜 계산은 Temporal이, 큰 collection의 배치 상태와 측정 반영은 Virtual이 맡습니다.

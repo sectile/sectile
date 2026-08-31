@@ -1,6 +1,6 @@
 # Getting started
 
-Pick the package you want to use. The install command and code examples below follow that choice.
+If you are building a Vue interface, keep the default **Vue** selection below. Choose DOM for existing browser markup, Terminal for a terminal application, or Core only when you are building a custom renderer or testing interaction rules without a host.
 
 ## Install the selected package
 
@@ -10,12 +10,12 @@ Sectile packages require Node.js 24 or newer for development, SSR, and Node term
 
 ## Import one component
 
-Every component is available from a public subpath. Importing that subpath shows which behavior the application uses and keeps the bundle boundary explicit.
+Every component has a public subpath. The default example imports the Vue Checkbox parts; changing the package choice above shows the corresponding host import.
 
 <PackageImport component="checkbox" />
 
 ## Next steps
 
-- Read [State ownership](/guide/state-ownership) before deciding who manages state.
-- Read [Styling](/guide/styling) when you are ready to shape the component for your interface.
-- Open [Checkbox](/components/checkbox) for a complete example and API reference.
+- Open [Checkbox](/components/checkbox) to copy a complete working example and see its API.
+- Read [Styling](/guide/styling) to apply your product's CSS.
+- Read [State ownership](/guide/state-ownership) when a value must be controlled by application state.

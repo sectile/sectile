@@ -13,11 +13,11 @@ Sectile separates **what an interaction means** from **where it runs**. Core, Fo
 
 | Package | Owns | Does not own |
 | --- | --- | --- |
-| [`@sectile/core`](/packages/core) | interaction state, transitions, identity, commands | dates, layout geometry, rendering |
+| [`@sectile/core`](/packages/core) | interaction state, transitions, identity, commands, bounded geometry algebra | dates, collection layout state, platform measurement, rendering |
 | [`@sectile/form`](/packages/form) | accessible field composition, errors, validation, submission, and reset | control values, visual styling, Terminal forms |
 | [`@sectile/temporal`](/packages/temporal) | civil dates, wall-clock time, calendar and picker rules | time zones, formatting, rendering |
 | [`@sectile/tabular`](/packages/tabular) | tabular identity, data access, columns, selection, grouping, grid interaction | transport, rendering, loading/error UI |
-| [`@sectile/virtual`](/packages/virtual) | extents, viewport queries, placements, anchor correction | collection identity, data loading, DOM measurement |
+| [`@sectile/virtual`](/packages/virtual) | collection extents, viewport queries, dynamic measurement state, placements, virtual repair, anchor correction | collection identity, data loading, platform measurement |
 | [`@sectile/chart`](/packages/chart) | immutable chart data, scales, packed geometry, queries, chart interaction | visual styling, DOM resources, Vue reactivity |
 
 Choose a semantic package from the value your application needs to reason about. A calendar uses Core composition and Temporal date rules. A virtualized list uses Core identity and Virtual geometry. A chart uses Core identity and revision contracts with Chart projection and interaction. None of these packages needs to know how the result is rendered.
@@ -31,3 +31,5 @@ Choose a semantic package from the value your application needs to reason about.
 | [`@sectile/vue`](/packages/vue) | Vue ownership, reactivity, slots, headless parts |
 
 Packages communicate only through public exports. Application code should keep the same boundary: domain state in semantic packages, platform effects at the host edge, visual styling in the application.
+
+Geometry follows the same boundary. Core supplies bounded geometry values, anchored placement, and a generic metric index. Virtual turns collection extents and viewport state into layouts and applies measurement evidence. DOM, Terminal, or another host obtains the real platform measurements.

@@ -18,10 +18,20 @@ const guideNames = [
   'form/vue/ssr.md',
 ];
 
+const sharedGuideNames = [
+  'form/fields.md',
+  'form/validation.md',
+  'form/submission.md',
+  'form/custom-controls.md',
+  'form/ssr.md',
+];
+
 test('Form documentation provides a complete task-oriented guide in both locales', async () => {
-  const [englishSources, koreanSources, apiChooser, koApiChooser, vueApi, koVueApi, domApi, koDomApi, config, hostSelector] = await Promise.all([
+  const [englishSources, koreanSources, sharedSources, koSharedSources, apiChooser, koApiChooser, vueApi, koVueApi, domApi, koDomApi, config, hostSelector] = await Promise.all([
     Promise.all(guideNames.map((name) => readDocs(`packages/${name}`))),
     Promise.all(guideNames.map((name) => readDocs(`ko/packages/${name}`))),
+    Promise.all(sharedGuideNames.map((name) => readDocs(`packages/${name}`))),
+    Promise.all(sharedGuideNames.map((name) => readDocs(`ko/packages/${name}`))),
     readDocs('packages/form/api.md'),
     readDocs('ko/packages/form/api.md'),
     readDocs('packages/form/vue/api.md'),
@@ -64,19 +74,45 @@ test('Form documentation provides a complete task-oriented guide in both locales
 
   assert.match(overview, /\.\/form\/vue/u);
   assert.match(overview, /\.\/form\/dom/u);
-  assert.match(overview, /\.\/form\/vue\/custom-controls/u);
+  assert.match(overview, /\.\/form\/custom-controls/u);
+  assert.match(overview, /\.\/form\/fields/u);
+  assert.match(overview, /\.\/form\/validation/u);
+  assert.match(overview, /\.\/form\/submission/u);
   assert.match(overview, /- \[Vue\]\(\.\/form\/vue\/\)/u);
   assert.match(overview, /- \[Direct DOM\]\(\.\/form\/dom\/\)/u);
   assert.doesNotMatch(overview, /form-integration-table/u);
   assert.doesNotMatch(overview, /Browser without Vue/u);
   assert.match(koOverview, /\.\/form\/vue/u);
   assert.match(koOverview, /\.\/form\/dom/u);
-  assert.match(koOverview, /\.\/form\/vue\/custom-controls/u);
-  assert.match(koOverview, /## 연결 방식 선택/u);
+  assert.match(koOverview, /\.\/form\/custom-controls/u);
+  assert.match(koOverview, /\.\/form\/fields/u);
+  assert.match(koOverview, /\.\/form\/validation/u);
+  assert.match(koOverview, /\.\/form\/submission/u);
+  assert.match(koOverview, /## 애플리케이션에 연결하기/u);
   assert.match(koOverview, /- \[Vue\]\(\.\/form\/vue\/\)/u);
   assert.match(koOverview, /- \[DOM 직접 연결\]\(\.\/form\/dom\/\)/u);
   assert.doesNotMatch(koOverview, /form-integration-table/u);
   assert.doesNotMatch(koOverview, /Vue를 쓰지 않는/u);
+
+  for (const source of [...sharedSources, ...koSharedSources]) {
+    assert.doesNotMatch(source, /guide has moved|새 경로를 안내/u);
+    assert.match(source, /\.\/vue|\.\/dom/u);
+  }
+
+  for (const path of [
+    '/packages/form/fields',
+    '/packages/form/validation',
+    '/packages/form/submission',
+    '/packages/form/custom-controls',
+    '/packages/form/ssr',
+    '/ko/packages/form/fields',
+    '/ko/packages/form/validation',
+    '/ko/packages/form/submission',
+    '/ko/packages/form/custom-controls',
+    '/ko/packages/form/ssr',
+  ]) {
+    assert.match(config, new RegExp(path.replaceAll('/', '\\/'), 'u'));
+  }
 
   for (const source of [vue, koVue]) {
     assert.match(source, /@sectile\/vue\/form/u);
@@ -137,23 +173,9 @@ test('Form documentation provides a complete task-oriented guide in both locales
 
   for (const path of [
     '/packages/form/vue',
-    '/packages/form/vue/api',
-    '/packages/form/vue/fields',
-    '/packages/form/vue/validation',
-    '/packages/form/vue/submission',
-    '/packages/form/vue/custom-controls',
-    '/packages/form/vue/ssr',
     '/packages/form/dom',
-    '/packages/form/dom/api',
     '/ko/packages/form/vue',
-    '/ko/packages/form/vue/api',
-    '/ko/packages/form/vue/fields',
-    '/ko/packages/form/vue/validation',
-    '/ko/packages/form/vue/submission',
-    '/ko/packages/form/vue/custom-controls',
-    '/ko/packages/form/vue/ssr',
     '/ko/packages/form/dom',
-    '/ko/packages/form/dom/api',
   ]) {
     assert.match(config, new RegExp(path.replaceAll('/', '\\/'), 'u'));
   }
