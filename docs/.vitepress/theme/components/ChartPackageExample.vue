@@ -341,7 +341,7 @@ const datumLabel = (id: string | number): string => String(id).replaceAll('-', '
 
 .chart-workbench__controls {
   position: absolute;
-  bottom: 0.75rem;
+  top: 0.75rem;
   left: 0.75rem;
   z-index: 2;
   display: flex;

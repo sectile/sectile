@@ -173,7 +173,10 @@ function appendAxis(
     'axis-baseline',
   );
   axes.append(baseline);
-  for (const tick of sampledTicks(axis.ticks, MAXIMUM_OVERLAY_TICKS)) {
+  const ticks = sampledTicks(axis.ticks, MAXIMUM_OVERLAY_TICKS);
+  for (let tickIndex = 0; tickIndex < ticks.length; tickIndex += 1) {
+    const tick = ticks[tickIndex];
+    if (tick === undefined) continue;
     const position = tick.position;
     grid.append(svgLine(document,
       horizontal ? position : plot.x,
@@ -192,7 +195,9 @@ function appendAxis(
     const value = svgText(document, formatAxisTickValue(axis, tick.value), 'axis-value');
     value.setAttribute('x', String(horizontal ? position : plot.x - 8));
     value.setAttribute('y', String(horizontal ? plot.y + plot.height + 16 : position + 4));
-    value.setAttribute('text-anchor', horizontal ? 'middle' : 'end');
+    value.setAttribute('text-anchor', horizontal
+      ? tickIndex === 0 ? 'start' : tickIndex === ticks.length - 1 ? 'end' : 'middle'
+      : 'end');
     axes.append(value);
   }
   const labelText = axisLabel(axis);

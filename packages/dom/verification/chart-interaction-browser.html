@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sectile Chart Interaction Browser Verification</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@sectile/chart/interaction": "/packages/chart/dist/interaction.js",
+          "@sectile/chart/controller": "/packages/chart/dist/controller.js",
+          "@sectile/chart/query": "/packages/chart/dist/query.js",
+          "@sectile/core/identity": "/packages/core/dist/identity.js",
+          "@sectile/core/result": "/packages/core/dist/result.js",
+          "@sectile/core/revision": "/packages/core/dist/revision.js",
+          "@sectile/core/sequence": "/packages/core/dist/structures/sequence.js"
+        }
+      }
+    </script>
+    <style>
+      body { min-width: 320px; margin: 0; font: 14px/1.5 system-ui, sans-serif; }
+      header, main, footer { max-width: 960px; margin: 0 auto; padding: 24px; }
+      header, footer { min-height: 45vh; }
+      .matrix { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+      .chart { position: relative; min-width: 0; }
+      canvas { display: block; width: 100%; height: 220px; border: 1px solid #888; }
+      .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 8px; }
+      button { min-width: 24px; min-height: 24px; }
+      output { display: block; overflow-wrap: anywhere; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Chart interaction matrix</h1>
+      <p>Scroll through this page to verify that native wheel behavior remains available outside explicit bindings.</p>
+    </header>
+    <main>
+      <button id="run-matrix" type="button">Run synthetic interaction matrix</button>
+      <div class="matrix">
+        <section><h2>Native wheel</h2><div id="native" class="chart"></div></section>
+        <section><h2>X axis</h2><div id="x" class="chart"></div></section>
+        <section><h2>Y axis</h2><div id="y" class="chart"></div></section>
+        <section><h2>XY axes</h2><div id="xy" class="chart"></div></section>
+      </div>
+      <pre id="verification-result">not run</pre>
+    </main>
+    <footer>End of the native page-scroll surface.</footer>
+    <script type="module" src="./chart-interaction-browser.mjs"></script>
+  </body>
+</html>

@@ -123,6 +123,7 @@ test('connection-owned overlay renders bounded axes, grid, values, labels, units
   const connection = createDOMChart({ root: value.root, canvas: value.canvas, controller, renderer: value.renderer });
   assert.equal(value.root.querySelectorAll('[data-chart-overlay="grid-line"]').length, 4);
   assert.deepEqual([...value.root.querySelectorAll('[data-chart-overlay="axis-value"]')].map((node) => node.textContent), ['2026-01-01', '2026-02-01', '0', '10']);
+  assert.deepEqual([...value.root.querySelectorAll('[data-chart-overlay="axis-value"]')].map((node) => node.getAttribute('text-anchor')), ['start', 'end', 'end', 'end']);
   assert.deepEqual([...value.root.querySelectorAll('[data-chart-overlay="axis-label"]')].map((node) => node.textContent), ['Month', 'Revenue (USD)']);
   assert.equal(value.root.querySelector('[data-chart-overlay="legend-label"]').textContent, 'revenue');
   assert.equal(value.root.querySelectorAll('[data-chart-overlay="interaction-active"]').length, 1);
