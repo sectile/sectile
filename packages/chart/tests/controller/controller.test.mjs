@@ -93,7 +93,7 @@ test('controller owns declarative definitions and axis-domain view capabilities'
   assert.equal(controller.getSnapshot().state.view.axes[0].axisID, 7);
 
   const projection = controller.project({ viewport: { width: 320, height: 180 } }).value;
-  assert.equal(projection.layers[0].layerID, 'series');
+  assert.equal(projection.layerRevisions[0].layerID, 'series');
 });
 
 test('declarative replacement repairs only changed layers and reconciles the retained view', () => {

@@ -84,8 +84,8 @@ void coordinate;
 
 const temporalFromDate: number = normalizeChartTemporalValue(new Date(1));
 const temporalFromEpoch: number = normalizeChartTemporalValue(1);
-const inferredID: number = resolveChartIdentity(revenue[0]);
-const nestedValue = resolveChartValue(revenue[0], {
+const inferredID: number = resolveChartIdentity(revenue[0]!);
+const nestedValue = resolveChartValue(revenue[0]!, {
   kind: 'numeric',
   canonicalField: 'y',
   getValue: (datum) => datum.metrics.revenue,
@@ -121,28 +121,31 @@ const view = createChartViewState<number | string>([
 ]);
 void view;
 
-const semantic = createChartDefinition({
+const semantic = createChartDefinition<RevenueDatum, StableID>({
   coordinate: { kind: 'cartesian', axes: [
     { id: 'time', orientation: 'x', scale: 'temporal', field: 'observedAt' },
     { id: 2, orientation: 'y', scale: 'linear', getValue: (datum: RevenueDatum) => datum.metrics.revenue },
   ] },
   layers: [{ id: 'revenue', kind: 'line', xAxis: 'time', yAxis: 2, data: revenue }],
 });
-const semanticNext = replaceChartDefinition(semantic, {
+const semanticNext = replaceChartDefinition<RevenueDatum, StableID>(semantic, {
   coordinate: { kind: 'cartesian', axes: [
     { id: 'time', orientation: 'x', scale: 'temporal', field: 'observedAt' },
     { id: 2, orientation: 'y', scale: 'linear', getValue: (datum: RevenueDatum) => datum.metrics.revenue },
   ] },
   layers: [{ id: 'revenue', kind: 'line', xAxis: 'time', yAxis: 2, data: revenue }],
 });
-const semanticView = createChartAxisViewState(semantic.axes, [{
+const temporalAxis = semantic.axes[0]!;
+const semanticView = createChartAxisViewState<StableID>(semantic.axes, [{
   axisID: 'time',
-  initial: { kind: 'continuous', minimum: semantic.axes[0].domain.kind === 'temporal' ? semantic.axes[0].domain.minimum : 0, maximum: semantic.axes[0].domain.kind === 'temporal' ? semantic.axes[0].domain.maximum : 1 },
+  initial: { kind: 'continuous', minimum: temporalAxis.domain.kind === 'temporal' ? temporalAxis.domain.minimum : 0, maximum: temporalAxis.domain.kind === 'temporal' ? temporalAxis.domain.maximum : 1 },
   update: 'follow-end',
 }]);
-const zoomedView = reduceChartViewAction(semanticView, {
+const zoomed = reduceChartViewAction(semanticView, {
   type: 'zoom-axis-view', axisID: 'time', factor: 2, anchor: 0.5,
-}).value.state;
+});
+if (!zoomed.ok) throw new TypeError(zoomed.error.message);
+const zoomedView = zoomed.value.state;
 const semanticProjection = createChartProjection(semanticNext, { viewport: { width: 640, height: 320 }, view: zoomedView });
 void semanticProjection.dataBatches;
 

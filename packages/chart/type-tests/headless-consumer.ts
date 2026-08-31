@@ -1,8 +1,11 @@
 import { createChartController } from '@sectile/chart/controller';
-import { createChartDefinition } from '@sectile/chart/definition';
+import { createChartDefinition, type ChartDefinition } from '@sectile/chart/definition';
+import type { StableID } from '@sectile/core';
 import { hitTestChartProjection } from '@sectile/chart/query';
 
-const definition = {
+type Datum = { id: number; time: Date; value: number } | { id: string; time: number; value: number };
+
+const definition: ChartDefinition<Datum, StableID> = {
   coordinate: { kind: 'cartesian' as const, axes: [
     { id: 'time', orientation: 'x' as const, scale: 'temporal' as const, field: 'time' },
     { id: 2, orientation: 'y' as const, scale: 'linear' as const, field: 'value' },
@@ -13,8 +16,8 @@ const definition = {
   }],
 };
 
-const normalized = createChartDefinition(definition);
-const controller = createChartController({ definition, viewCapabilities: [{ axisID: 'time' }] });
+const normalized = createChartDefinition<Datum, StableID>(definition);
+const controller = createChartController<StableID>({ definition, viewCapabilities: [{ axisID: 'time' }] });
 controller.applyPatch({ operations: [] });
 controller.dispatch({ type: 'zoom-axis-view', axisID: 'time', factor: 2 });
 const projection = controller.project({ viewport: { width: 640, height: 320 } });

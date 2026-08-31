@@ -240,6 +240,7 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
       const projectionViewChanged = reduced.value.state.view !== this.#snapshot.state.view;
       this.#snapshot = createRevisionSnapshot(reduced.value.state, this.#snapshot.revision + 1);
       if (projectionViewChanged) this.#projectionCache = null;
+      for (const listener of this.#snapshotListeners) listener(this.#snapshot);
     }
     const update = Object.freeze({ snapshot: this.#snapshot, commands: reduced.value.commands });
     this.#emit(reduced.value.commands);
