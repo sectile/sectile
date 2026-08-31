@@ -4,6 +4,7 @@ import {
   PickerCell, PickerContent, PickerGrid, createPickerMove, createPickerRoot, specializePickerRootPart,
   type PickerCellSlotProps, type PickerPartProps, type PickerRootSlotProps,
 } from './internal/date-picker.js';
+import { rangeCalendarCapability } from './internal/range-calendar-capability.js';
 
 export interface RangeCalendarRootProps extends PickerPartProps {
   readonly modelValue?: DateRange | null;
@@ -20,7 +21,7 @@ export interface RangeCalendarRootProps extends PickerPartProps {
   readonly policies?: DateRangePickerOptions['policies'];
 }
 
-export const RangeCalendarRoot = createPickerRoot('date-range', 'SectileRangeCalendarRoot', {
+export const RangeCalendarRoot = createPickerRoot(rangeCalendarCapability, 'SectileRangeCalendarRoot', {
   scope: 'range-calendar',
   defaultOpen: true,
   defaultView: 'month',

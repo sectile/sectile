@@ -27,6 +27,7 @@ import {
   type PickerPartProps,
   type PickerRootSlotProps,
 } from './internal/date-picker.js';
+import { calendarCapability } from './internal/calendar-capability.js';
 
 export interface CalendarRootProps {
   readonly modelValue?: DateValue | null;
@@ -53,7 +54,7 @@ export interface CalendarMonthCellProps extends PickerPartProps {
   readonly value: CalendarMonthValue;
 }
 
-const CalendarProviderRoot = /* @__PURE__ */ createPickerRoot('calendar', 'SectileCalendarProviderRoot', {
+const CalendarProviderRoot = /* @__PURE__ */ createPickerRoot(calendarCapability, 'SectileCalendarProviderRoot', {
   scope: 'calendar',
   defaultOpen: true,
   defaultView: 'month',

@@ -4,14 +4,14 @@ import {
   type ComponentCustomProps, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
   type VNodeProps,
 } from 'vue';
-import { createCalendar, type CalendarPolicies } from '@sectile/dom/temporal/calendar';
-import { createDatePicker, createCalendarMonth, createCalendarYear, isCalendarValueAvailable, type DatePickerConnection, type DatePickerOptions, type PickerPositionOptions, type CalendarMonthValue, type CalendarViewMode } from '@sectile/dom/temporal/date-picker';
-import { createDateRangePicker, type DateRangePickerOptions } from '@sectile/dom/temporal/date-range-picker';
-import { createDateTimePicker, type DateTimePickerOptions } from '@sectile/dom/temporal/date-time-picker';
-import { createDateTimeRangePicker, type DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time-range-picker';
+import type { CalendarPolicies } from '@sectile/dom/temporal/calendar';
+import type { DatePickerOptions, PickerPositionOptions, CalendarMonthValue, CalendarViewMode } from '@sectile/dom/temporal/date-picker';
+import type { DateRangePickerOptions } from '@sectile/dom/temporal/date-range-picker';
+import type { DateTimePickerOptions } from '@sectile/dom/temporal/date-time-picker';
+import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time-range-picker';
 import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
-import { formatDateTimeValue, type DateTimeRange, type DateTimeValue } from '@sectile/dom/temporal/date-time-field';
-import { formatTimeValue, type TimeValue } from '@sectile/dom/temporal/time-field';
+import type { DateTimeRange, DateTimeValue } from '@sectile/dom/temporal/date-time-field';
+import { createCalendarMonth, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
 import type { FormSubmissionRegistration } from './form-control.js';
 import {
   hiddenInputSubmissionCapabilities,
@@ -21,6 +21,7 @@ import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from './controlled-state.js';
 import { useHostPortalTarget } from '../host-provider.js';
 import { useTemporalReferenceDate } from '../temporal-provider.js';
+import type { PickerCapabilityConnection, PickerFamilyCapability } from './picker-capability.js';
 
 export type PickerKind = 'calendar' | 'date' | 'date-range' | 'date-time' | 'date-time-range';
 export type PickerValue = DateValue | DateRange | DateTimeValue | DateTimeRange | null;
@@ -150,22 +151,13 @@ export function specializePickerRootPart<Kind extends PickerKind>(
   return component as unknown as PickerRootPartComponent<Kind>;
 }
 
-interface PickerConnection {
-  getSnapshot(): { readonly state: unknown };
-  getMonth(): readonly (readonly DateValue[])[];
-  getWeek(): readonly DateValue[];
-  getYear(): readonly (readonly CalendarMonthValue[])[];
-  syncControlledValues(values: Record<string, unknown>): { readonly ok: boolean; readonly error?: { readonly message: string } };
-  setCellAttributes(element: HTMLElement, value: DateValue): void;
-  handleEvent(event: unknown): boolean;
-  refresh(): void;
-  disconnect(): void;
-}
+type PickerConnection = PickerCapabilityConnection;
 interface Context {
   readonly kind: PickerKind;
   readonly scope: string;
   readonly granularity: 'day' | 'month' | 'year';
   readonly inline: boolean;
+  readonly formatInput: PickerFamilyCapability<PickerKind>['formatInput'];
   readonly position: ComputedRef<boolean>;
   readonly strategy: ComputedRef<NonNullable<PickerPositionOptions['strategy']>>;
   readonly state: ComputedRef<PickerRootSlotProps>;
@@ -183,7 +175,8 @@ const key = Symbol('SectileDatePickerRoot');
 const noPendingPickerValue = Symbol('no-pending-picker-value');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
 
-export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: string, config: PickerRootConfig = {}): PickerRootComponent<Kind> {
+export function createPickerRoot<Kind extends PickerKind>(capability: PickerFamilyCapability<Kind>, name: string, config: PickerRootConfig = {}): PickerRootComponent<Kind> {
+  const kind = capability.kind;
   const scope = config.scope ?? kind;
   const granularity = config.granularity ?? 'day';
   const defaultView = config.defaultView ?? (granularity === 'day' ? 'month' : 'year');
@@ -317,11 +310,7 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
             if (element !== undefined) base[toDOMInputKey(part)] = element;
           }
         }
-        const created = kind === 'calendar' ? createCalendar(base as never)
-          : kind === 'date' ? createDatePicker(base as never)
-          : kind === 'date-range' ? createDateRangePicker(base as never)
-            : kind === 'date-time' ? createDateTimePicker(base as never) : createDateTimeRangePicker(base as never);
-        connection.value = created as unknown as PickerConnection;
+        connection.value = capability.connect(base);
         if (runtimeProps.defaultView !== 'month') connection.value.handleEvent({ type: 'set-view-mode', value: runtimeProps.defaultView });
         refreshCells(); refresh();
       };
@@ -353,7 +342,7 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         refresh();
       };
       provide<Context>(key, {
-        kind, scope, granularity, inline, state, periodAvailable,
+        kind, scope, granularity, inline, state, periodAvailable, formatInput: capability.formatInput,
         position: computed(() => runtimeProps.position), strategy: computed(() => runtimeProps.strategy),
         register: (part, element) => {
           if (elements.get(part) === element || (element === undefined && !elements.has(part))) return;
@@ -581,7 +570,7 @@ export function createPickerInput(part: PickerInputPart, name: string, type: 'te
       elementRef: (node: unknown) => root.register(part, node instanceof HTMLInputElement ? node : undefined),
       type, name: props.name, form: props.form, disabled: root.state.value.disabled,
       readOnly: root.granularity !== 'day' || root.state.value.readonly || part === 'start-input' || part === 'end-input' || part === 'start-date-time-input' || part === 'end-date-time-input',
-      required: false, value: inputValue(root.kind, root.granularity, part, root.state.value.value),
+      required: false, value: root.state.value.value === null ? '' : root.formatInput(root.granularity, part, root.state.value.value),
       'data-scope': root.scope, 'data-part': part,
     })); },
   });
@@ -714,22 +703,6 @@ function cellState(kind: PickerKind, state: PickerRootSlotProps, value: DateValu
     inRange = compare(start, value) <= 0 && compare(value, end) <= 0; selected = compare(start, value) === 0 || compare(end, value) === 0;
   }
   return { value, selected, inRange, highlighted: compare(state.highlightedValue, value) === 0, disabled: state.disabled, outsideMonth: value.month !== state.view.month || value.year !== state.view.year };
-}
-function inputValue(kind: PickerKind, granularity: Context['granularity'], part: PickerInputPart, value: PickerValue): string {
-  if (value === null) return '';
-  const formatPeriod = (date: DateValue): string => granularity === 'year'
-    ? String(date.year)
-    : granularity === 'month'
-      ? `${String(date.year).padStart(4, '0')}-${String(date.month).padStart(2, '0')}`
-      : formatDateValue(date);
-  if (kind === 'calendar' || kind === 'date') return formatPeriod(value as DateValue);
-  if (kind === 'date-time') {
-    const dateTime = value as DateTimeValue;
-    return part === 'time-input' ? formatTimeValue(dateTime.time) : part === 'date-input' ? formatDateValue(dateTime.date) : formatDateTimeValue(dateTime);
-  }
-  const range = value as DateRange | DateTimeRange; const endpoint = part.startsWith('start') ? range.start : range.end;
-  if ('date' in endpoint) return part.endsWith('time-input') && !part.includes('date-time') ? formatTimeValue(endpoint.time) : part.endsWith('date-input') ? formatDateValue(endpoint.date) : formatDateTimeValue(endpoint);
-  return formatPeriod(endpoint);
 }
 function monthContainsValue(value: PickerValue, month: CalendarMonthValue): boolean { const date = dateOf(value); return date !== null && date.year === month.year && date.month === month.month; }
 function yearContainsValue(value: PickerValue, year: PickerYearValue): boolean { const date = dateOf(value); return date !== null && date.year === year.year; }

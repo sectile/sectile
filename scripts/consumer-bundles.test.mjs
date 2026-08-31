@@ -10,6 +10,13 @@ test('intentional uncovered public subpath changes fixture coverage', () => {
   assert.deepEqual(deriveFixtures(fragments).map(({ id }) => id), ['core:./new:side-effect']);
 });
 
+test('Vue Temporal picker fixtures select the principal root component', () => {
+  const fragments = [{ package: 'vue', surfaces: [{
+    subpath: './temporal/year-picker', platform: 'browser', runtimeExports: ['YearPickerCell', 'YearPickerRoot'], fixtureModes: ['named'],
+  }] }];
+  assert.equal(deriveFixtures(fragments)[0].exportName, 'YearPickerRoot');
+});
+
 test('intentional side-effect and unrelated root closure regressions fail', () => {
   const fixtures = [
     { id: 'core:./sequence:side-effect', mode: 'side-effect' },
@@ -48,6 +55,12 @@ test('intentional temporal and virtual sibling closures fail', () => {
   assert.throws(() => validateGranularClosures([
     fixtureResult('vue:./temporal/calendar:named', 'named', ['@sectile/vue/dist/date-picker.js'], 1),
   ]), /retained unrelated temporal/u);
+  assert.throws(() => validateGranularClosures([
+    fixtureResult('vue:./temporal/month-picker:named', 'named', ['@sectile/vue/dist/year-picker.js'], 1),
+  ]), /retained sibling Vue/u);
+  assert.throws(() => validateGranularClosures([
+    fixtureResult('vue:./temporal/year-picker:named', 'named', ['@sectile/dom/dist/date-time-picker.js'], 1),
+  ]), /retained sibling DOM/u);
 });
 
 function fixtureResult(id, mode, modules, raw, dependencies = []) {

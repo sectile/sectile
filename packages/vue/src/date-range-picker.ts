@@ -4,6 +4,7 @@ import {
   PickerAnchor, PickerCell, PickerContent, PickerGrid, PickerMonthCell, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerViewTrigger, specializePickerRootPart,
   createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
 } from './internal/date-picker.js';
+import { dateRangePickerCapability } from './internal/date-range-picker-capability.js';
 
 export interface DateRangePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateRange | null; readonly defaultValue?: DateRange | null;
@@ -12,7 +13,7 @@ export interface DateRangePickerRootProps extends PickerPartProps, PickerPositio
   readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly?: boolean;
   readonly required?: boolean; readonly label?: string; readonly policies?: DateRangePickerOptions['policies'];
 }
-export const DateRangePickerRoot = createPickerRoot('date-range', 'SectileDateRangePickerRoot');
+export const DateRangePickerRoot = createPickerRoot(dateRangePickerCapability, 'SectileDateRangePickerRoot');
 export type DateRangePickerRootSlotProps = PickerRootSlotProps<DateRange | null>;
 export type DateRangePickerValueChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:modelValue']>;
 export type DateRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:open']>;

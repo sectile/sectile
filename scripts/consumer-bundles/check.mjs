@@ -71,6 +71,23 @@ export function validateGranularClosures(results) {
         `${result.bundler}:${result.id}: retained unrelated temporal family`,
       );
     }
+    const isolatedPicker = /^vue:\.\/temporal\/(date|month|year)-picker:named$/u.exec(result.id);
+    if (isolatedPicker !== null) {
+      const selected = `${isolatedPicker[1]}-picker`;
+      const siblingVue = ['date-picker', 'month-picker', 'year-picker', 'date-range-picker', 'month-range-picker', 'year-range-picker', 'date-time-picker', 'date-time-range-picker']
+        .filter((family) => family !== selected);
+      const allowedDOM = new Set([selected, ...(selected === 'month-picker' || selected === 'year-picker' ? ['date-picker'] : [])]);
+      const siblingDOM = ['date-picker', 'month-picker', 'year-picker', 'date-range-picker', 'month-range-picker', 'year-range-picker', 'date-time-picker', 'date-time-range-picker']
+        .filter((family) => !allowedDOM.has(family));
+      for (const family of siblingVue) {
+        assert.ok(!result.modules.some((path) => path.endsWith(`@sectile/vue/dist/${family}.js`)),
+          `${result.bundler}:${result.id}: retained sibling Vue ${family}`);
+      }
+      for (const family of siblingDOM) {
+        assert.ok(!result.modules.some((path) => path.endsWith(`@sectile/dom/dist/${family}.js`)),
+          `${result.bundler}:${result.id}: retained sibling DOM ${family}`);
+      }
+    }
   }
 }
 

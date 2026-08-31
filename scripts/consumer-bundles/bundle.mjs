@@ -74,6 +74,14 @@ function representativeNamedExport(packageName, subpath, surface) {
     assert.ok(surface.runtimeExports.includes(preferred), `${packageName}:${subpath}: representative export missing`);
     return preferred;
   }
+  const temporalPicker = packageName === 'vue'
+    ? /^\.\/temporal\/(calendar|range-calendar|(?:date|date-range|date-time|date-time-range|month|month-range|year|year-range)-picker)$/u.exec(subpath)
+    : null;
+  if (temporalPicker !== null) {
+    const principal = `${temporalPicker[1].split('-').map((part) => `${part[0].toUpperCase()}${part.slice(1)}`).join('')}Root`;
+    assert.ok(surface.runtimeExports.includes(principal), `${packageName}:${subpath}: principal root export missing`);
+    return principal;
+  }
   return surface.rootEquivalentExport ?? surface.runtimeExports[0];
 }
 
