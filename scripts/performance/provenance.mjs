@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { cpus, platform, arch, release } from 'node:os';
 import { readFile, readdir, stat } from 'node:fs/promises';
-import { relative, resolve } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 import { publishedPackageDirectories } from '../lib/published-packages.mjs';
 
 const FINGERPRINT_INPUTS = Object.freeze([
@@ -64,9 +64,9 @@ async function fingerprintPaths(repoRoot, paths) {
   for (const input of paths) {
     const absolute = resolve(repoRoot, input);
     for (const file of await filesUnder(absolute)) {
-      hash.update(relative(repoRoot, file));
+      hash.update(relative(repoRoot, file).split(sep).join('/'));
       hash.update('\0');
-      hash.update(await readFile(file));
+      hash.update((await readFile(file, 'utf8')).replaceAll('\r\n', '\n'));
       hash.update('\0');
     }
   }

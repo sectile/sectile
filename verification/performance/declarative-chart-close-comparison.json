@@ -34,7 +34,8 @@
   ],
   "releaseValidation": {
     "status": "pending-controlled-windows-11-run",
-    "runnerCommit": "e46ce1b4",
+    "runnerCommit": null,
+    "runnerState": "Windows portability and retained-session runner changes are present in the current working tree and require a commit after validation.",
     "requiredProcessCount": 10,
     "baselinePreserved": true,
     "macOSAttempts": [
@@ -53,15 +54,14 @@
     ],
     "handoff": {
       "platform": "Windows 11",
-      "requiredState": "Use commit e46ce1b4 or a descendant with unchanged production and performance inputs, an exact lockfile install, a fixed Node runtime, AC power, and no competing build, browser, update, indexing, antivirus-scan, or benchmark workload.",
+      "requiredState": "Use the current working tree with the Windows portability and retained-session runner changes, an exact lockfile install, a fixed Node runtime, AC power, and no competing build, browser, update, indexing, antivirus-scan, or benchmark workload. Do not change production or performance inputs between record and verify.",
       "commands": [
         "pnpm install --frozen-lockfile",
         "pnpm performance:record",
-        "node scripts/performance/run.mjs check --output .tasks/aux/VAL17-final-performance.json",
         "pnpm verify"
       ],
-      "acceptance": "The ten-process record and check must each remain within the 10% calibration validity ceiling, report zero timing, allocation, retained-heap, and unaccepted footprint regressions, and leave the full verification suite passing."
+      "acceptance": "The ten-process recorded baseline and the independent check retained by pnpm verify must each remain within the 10% calibration validity ceiling. The final .tasks/performance/latest-comparison.json must report zero timing, allocation, retained-heap, and unaccepted footprint regressions, and .tasks/verification/latest.json must report a passed full verification suite."
     }
   },
-  "decision": "Preserve the valid five-process zero-regression comparison as change evidence, require ten isolated processes for release sampling, and defer the new release baseline plus final check to a controlled Windows 11 session. Do not accept or record calibration-invalid samples."
+  "decision": "Preserve the valid five-process zero-regression comparison as change evidence, require ten isolated processes for release sampling, and defer the new release baseline plus final check to a controlled Windows 11 session. Retain calibration-invalid sessions for diagnosis but never record them as the canonical baseline."
 }

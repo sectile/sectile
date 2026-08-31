@@ -13,11 +13,24 @@ pnpm performance:check
 pnpm verify:performance
 ```
 
-`record` replaces `baseline.json` atomically. `compare` reports differences
-without enforcing the gate. `check` fails when a calibrated median regression
-is corroborated by p95 and the current isolated-process distribution clears the
-baseline distribution, or when allocation/retained-heap evidence satisfies the
-same three checks.
+Every command that measures performance creates a retained session under
+`.tasks/performance/runs/<run-id>/`. The progress manifest is written before
+the first worker starts, each isolated worker report is immutable once written,
+and complete runs add `report.json`. Interrupted runs therefore retain their
+last completed process count instead of disappearing. Invalid calibration,
+comparison failures, and regressions retain their reports and terminal status.
+
+`record` validates one non-quick run and atomically replaces `baseline.json`.
+The previous baseline and update metadata remain inside the run session, so no
+separate promotion command is required. Run IDs are generated automatically.
+Raw sessions are intentionally Git-ignored because every run retains all
+process reports; approved comparison summaries and the recorded baseline remain
+the repository evidence.
+
+`compare` reports differences without enforcing the gate. `check` fails when a
+calibrated median regression is corroborated by p95 and the current
+isolated-process distribution clears the baseline distribution, or when
+allocation/retained-heap evidence satisfies the same three checks.
 This prevents a bimodal process split from turning a stable tail into a false
 regression while still rejecting uniform slowdowns.
 
@@ -29,9 +42,14 @@ package-footprint comparisons:
 pnpm performance:check -- --work-item WI-013 --output .tasks/aux/WI-013-performance.json
 ```
 
-The work-item flag is rejected without an output path. `verify:performance` is
-the repository gate for a controlled runner; portable CI must not replace it
-with a noisy single sample or compare against mismatched hardware metadata.
+`compare` and `check` always retain their current run and `comparison.json` in
+the session directory. They also replace
+`.tasks/performance/latest-comparison.json`, giving the latest result a stable
+path. `--output` additionally copies that comparison to the requested task
+path. The work-item flag is rejected without an output path.
+`verify:performance` is the repository gate for a controlled runner; portable
+CI must not replace it with a noisy single sample or compare against mismatched
+hardware metadata.
 
 Reports include the workload fingerprint, implementation/build fingerprint,
 Node/V8/OS/architecture/CPU/flag metadata, all nine built-package footprints,

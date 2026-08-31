@@ -1,6 +1,17 @@
 import assert from 'node:assert/strict';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 import { assertComparable, compareReports, validateRunnerReport } from './performance/check.mjs';
+import {
+  appendPerformanceProcess,
+  createPerformanceSession,
+  finalizePerformanceSession,
+  recordPerformanceBaseline,
+  validatePerformanceRunID,
+  writePerformanceReport,
+} from './performance/session-log.mjs';
 import { median, percentile, relativeMAD, summarize } from './performance/statistics.mjs';
 import { PERFORMANCE_SCHEMA_VERSION } from './performance/config.mjs';
 import { WORKLOAD_SCHEMA, createWorkloads } from './performance/workloads.mjs';
@@ -90,6 +101,79 @@ test('workload schema covers required scales, patch depth, density, domains, and
   assert.equal(workloads.some(({ id }) => id === 'core:text:replace:1000'), true);
   assert.equal(workloads.some(({ id }) => id === 'core:sequence-reorder:move:1000'), true);
   assert.equal(workloads.some(({ id }) => id === 'core:tree-reorder:move:1000'), true);
+});
+
+test('performance sessions retain completed workers and reject run ID reuse', async (context) => {
+  const root = await mkdtemp(join(tmpdir(), 'sectile-performance-session-'));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const handle = await createPerformanceSession({
+    runsRoot: root,
+    runID: 'windows-release-candidate',
+    mode: 'record',
+    processCount: 10,
+    baseline: 'baseline.json',
+  });
+  await appendPerformanceProcess(handle, 0, { process: 0 });
+  const running = JSON.parse(await readFile(handle.manifestPath, 'utf8'));
+  assert.equal(running.status, 'running');
+  assert.equal(running.completedProcesses, 1);
+  assert.deepEqual(running.processReports, ['process-001.json']);
+  assert.deepEqual(JSON.parse(await readFile(join(handle.directory, 'process-001.json'), 'utf8')), { process: 0 });
+  await assert.rejects(
+    createPerformanceSession({
+      runsRoot: root,
+      runID: 'windows-release-candidate',
+      mode: 'record',
+      processCount: 10,
+      baseline: 'baseline.json',
+    }),
+    (error) => error?.code === 'EEXIST',
+  );
+  assert.throws(() => validatePerformanceRunID('../escape'), /portable path segment/u);
+});
+
+test('baseline recording preserves the previous baseline and update audit', async (context) => {
+  const root = await mkdtemp(join(tmpdir(), 'sectile-performance-record-'));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const baselinePath = join(root, 'baseline.json');
+  const previous = fixture();
+  previous.provenance.buildFingerprint = 'previous-build';
+  await writeFile(baselinePath, `${JSON.stringify(previous, null, 2)}\n`, 'utf8');
+  const candidate = fixture();
+  candidate.provenance.buildFingerprint = 'candidate-build';
+  candidate.runner.quick = false;
+  const handle = await createPerformanceSession({
+    runsRoot: join(root, 'runs'),
+    runID: 'candidate',
+    mode: 'record',
+    processCount: 10,
+    baseline: baselinePath,
+  });
+  await writePerformanceReport(handle, candidate);
+  const baselineUpdate = await recordPerformanceBaseline(handle, baselinePath, candidate);
+  await finalizePerformanceSession(handle, 'recorded');
+
+  assert.deepEqual(JSON.parse(await readFile(baselinePath, 'utf8')), candidate);
+  assert.deepEqual(JSON.parse(await readFile(join(handle.directory, 'previous-baseline.json'), 'utf8')), previous);
+  assert.equal(baselineUpdate.previousBuildFingerprint, 'previous-build');
+  assert.equal(baselineUpdate.recordedBuildFingerprint, 'candidate-build');
+  const session = JSON.parse(await readFile(handle.manifestPath, 'utf8'));
+  assert.equal(session.baselineUpdate, 'baseline-update.json');
+
+  const quick = structuredClone(candidate);
+  quick.runner.quick = true;
+  const quickHandle = await createPerformanceSession({
+    runsRoot: join(root, 'runs'),
+    runID: 'quick-candidate',
+    mode: 'record',
+    processCount: 10,
+    baseline: baselinePath,
+  });
+  await writePerformanceReport(quickHandle, quick);
+  await assert.rejects(
+    recordPerformanceBaseline(quickHandle, baselinePath, quick),
+    /quick performance runs cannot become an authoritative baseline/u,
+  );
 });
 
 function fixture() {
