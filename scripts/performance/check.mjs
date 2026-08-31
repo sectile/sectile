@@ -9,7 +9,10 @@ import { compatibilityMetadata } from './provenance.mjs';
 
 export function validateRunnerReport(report) {
   assert.equal(report.schemaVersion, PERFORMANCE_SCHEMA_VERSION, 'performance schema mismatch');
-  assert.ok(report.runner.processCount >= MINIMUM_PROCESS_COUNT, 'performance checks require at least five isolated processes');
+  assert.ok(
+    report.runner.processCount >= MINIMUM_PROCESS_COUNT,
+    `performance checks require at least ${MINIMUM_PROCESS_COUNT} isolated processes`,
+  );
   const calibration = report.metrics['runner:calibration'];
   assert.ok(calibration, 'runner calibration metric is missing');
   const requiredBand = Math.max(MINIMUM_REGRESSION_BAND, calibration.timing.relativeMAD * 3);

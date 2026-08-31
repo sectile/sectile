@@ -1,7 +1,7 @@
 # Performance verification
 
 The repository performance runner executes the same workload schema in at
-least five sequential, isolated Node processes. Each worker warms operations,
+least ten sequential, isolated Node processes. Each worker warms operations,
 uses a result sink, measures repeated batches, records isolated-process
 median/p95/relative MAD plus the pooled batch distribution,
 and captures peak allocation pressure plus post-GC retained heap.

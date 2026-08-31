@@ -100,7 +100,7 @@ function fixture() {
       cpuModel: 'test', cpuCount: 1, execArgv: [], workloadFingerprint: 'schema', buildFingerprint: 'build',
       packageFootprint: { core: 100 },
     },
-    runner: { processCount: 5 },
+    runner: { processCount: 10 },
     metrics: {
       'runner:calibration': metric(10, 0.01),
       'core:case': metric(100, 0.01),
