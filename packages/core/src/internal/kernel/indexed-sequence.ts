@@ -42,6 +42,7 @@ export type IndexedSequencePatch<ID extends StableID> =
     };
 
 const MAX_PATCH_DEPTH = 32;
+const MAX_NATIVE_SPLICE_ITEMS = 4_096;
 
 export class IndexedSequence<ID extends StableID> implements SequenceView<ID> {
   public readonly ids: readonly ID[];
@@ -244,11 +245,15 @@ export class PatchedSequence<ID extends StableID> implements SequenceView<ID> {
 }
 
 export function spliceSequenceArray<ID extends StableID>(
-  ids: readonly ID[],
+  ids: ID[],
   index: number,
   deleteCount: number,
   inserted: readonly ID[],
 ): ID[] {
+  if (inserted.length <= MAX_NATIVE_SPLICE_ITEMS) {
+    ids.splice(index, deleteCount, ...inserted);
+    return ids;
+  }
   const next = new Array<ID>(ids.length - deleteCount + inserted.length);
   let write = 0;
   for (; write < index; write += 1) next[write] = ids[write]!;
@@ -267,6 +272,11 @@ export function moveSequenceArray<ID extends StableID>(
   to: number,
   count: number,
 ): void {
+  if (count <= MAX_NATIVE_SPLICE_ITEMS) {
+    const moved = ids.splice(from, count);
+    ids.splice(to, 0, ...moved);
+    return;
+  }
   const moved = ids.slice(from, from + count);
   if (to < from) ids.copyWithin(to + count, to, from);
   else ids.copyWithin(from, from + count, to + count);
