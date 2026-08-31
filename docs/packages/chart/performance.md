@@ -1,24 +1,24 @@
 ---
 title: Chart large datasets
-description: Select exact or aggregate semantics, cap drawing work honestly, and validate the largest supported browser case.
+description: Choose how much detail to draw, limit frame cost, and test the largest data set your application supports.
 ---
 
 # Large datasets
 
-Performance starts with a truthful chart contract. Decide whether every visible mark must retain a datum identity or whether the product can interact with a named aggregate. Then set a representative cap and renderer policy from the largest useful viewport.
+Before setting a limit, decide what users must be able to inspect. An exact chart keeps a separate mark and ID for every visible record. An aggregated chart combines nearby records into a summary cell with a count and value range. Aggregation handles more records, but users can no longer select one source record from that cell.
 
-## Choose exact or aggregate semantics
+## Choose exact marks or summary cells
 
-| Chart | Default | Scalable option | Result under an insufficient cap |
+| Chart | Default detail | Option for more data | When the limit is too small |
 | --- | --- | --- | --- |
-| Line | Extrema-preserving viewport envelope with datum representatives | Built in | Rejects only when even the envelope cannot fit |
-| Scatter | `projection="raw"` | `projection="density"` | Raw rejects; density emits aggregate cells |
-| Bar | Exact visible bars | None | Rejects |
-| Heatmap | `projection="raw"` | `{ kind: 'aggregate', reduction }` | Raw rejects; aggregate emits reduced cells |
-| Pie | Exact slices | None | Rejects |
-| Donut | Exact slices | None | Rejects |
+| Line | Keeps visible high and low points while reducing line detail | Automatic | Returns an error only when the reduced line still does not fit |
+| Scatter | One point per visible record | `projection="density"` | Exact mode returns an error; density mode returns summary cells |
+| Bar | One bar per visible record | None | Returns an error |
+| Heatmap | One cell per visible record | `{ kind: 'aggregate', reduction }` | Exact mode returns an error; aggregate mode returns summary cells |
+| Pie | One slice per record | None | Returns an error |
+| Donut | One slice per record | None | Returns an error |
 
-Heatmap reductions are `sum`, `mean`, `minimum`, and `maximum`. Aggregate hits return their count, bounds, and reduction instead of pretending to be a source datum.
+For a heatmap summary, choose `sum`, `mean`, `minimum`, or `maximum` to calculate the displayed value. Hovering a summary returns its count, source-value bounds, and chosen calculation instead of a record ID.
 
 ```vue
 <ChartScatter
@@ -38,7 +38,7 @@ Heatmap reductions are `sum`, `mean`, `minimum`, and `maximum`. Aggregate hits r
 />
 ```
 
-## Cap visible work
+## Limit the number of drawn items
 
 ```ts
 const chart = createDOMChart({
@@ -54,11 +54,11 @@ const chart = createDOMChart({
 })
 ```
 
-Set `maximumRepresentatives` from useful screen detail and interaction semantics, not only source row count. Axis-domain views exclude off-screen Cartesian data before projection. Exact visible data beyond the cap fails explicitly.
+`maximumRepresentatives` is the maximum number of draw-ready items for the current view. Choose it from the amount of detail users can read and interact with, not only from the number of source rows. Records outside the visible x- and y-axis ranges do not count. If exact visible marks exceed the limit, the chart reports an error instead of dropping data silently.
 
-## Protect pixel and upload cost
+## Limit Canvas resolution when frames are slow
 
-`auto` prefers WebGL2 and falls back to Canvas2D. The WebGL2 renderer can retain unchanged geometry and upload only changed batches; Canvas2D remains the compatibility path. Adaptive rendering lowers backing resolution within declared bounds when measured frame cost exceeds the budget.
+`auto` prefers WebGL2 and falls back to Canvas2D. WebGL2 can reuse unchanged drawing data between updates. Adaptive rendering lowers the Canvas backing resolution within the range you provide when measured frame time exceeds the budget.
 
 ```ts
 renderPolicy: {
@@ -70,14 +70,16 @@ renderPolicy: {
 }
 ```
 
-Adaptive scale never changes values, identities, selection, accessible state, or axis domains.
+Lowering the backing resolution may make the image less sharp. It does not change values, record IDs, selection, accessible labels, or visible axis ranges.
 
-## Update and retain intentionally
+## Keep updates predictable
 
-- Replace declarative arrays when query results change; keep unchanged layer arrays referentially stable.
-- Keep datum IDs stable so selection and cursor survive replacement.
-- Use low-level patches only when the producer already owns small profile operations and axis domains do not need reassembly.
-- Prepare hit-test queries before the first pointer event when first-hover latency matters.
-- Disconnect DOM connections and dispose application-owned controllers and renderers.
+- Replace a layer's array when its query result changes; keep the same array for unchanged layers.
+- Keep record IDs stable so selection and cursor survive replacement.
+- Use low-level patches only when your data source already emits incremental chart operations and axis ranges do not need recalculation.
+- Prepare hit-test queries before the first pointer event when the first hover must have no setup delay.
+- Disconnect DOM charts and dispose controllers and renderers created by your application.
 
-Default safety ceilings allow 64 layers and 1,000,000 data items; a projection allows up to 1,000,000 representatives. These are rejection limits, not performance promises. Benchmark the maximum real cardinality, update rate, viewport, device-pixel ratio, supported browsers, and representative GPU classes before setting production budgets.
+Built-in safety ceilings allow up to 64 layers, 1,000,000 source records, and 1,000,000 drawn items. These values only reject larger input; they do not promise that every device can render that much data smoothly.
+
+Before choosing application limits, measure the largest expected record count and update rate at the largest supported chart size. Test each supported browser, high device-pixel ratios, and the slowest GPU class you intend to support.

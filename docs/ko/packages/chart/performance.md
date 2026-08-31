@@ -1,24 +1,24 @@
 ---
 title: Chart 대규모 데이터
-description: Exact 또는 aggregate 의미를 선택하고, 그리기 작업을 정직하게 제한하며, 가장 큰 브라우저 사례를 검증합니다.
+description: 화면에 그릴 상세도를 정하고, 프레임 비용을 제한하며, 앱이 지원할 가장 큰 데이터를 시험합니다.
 ---
 
 # 대규모 데이터
 
-성능은 정직한 차트 계약에서 시작합니다. 보이는 모든 mark가 datum ID를 유지해야 하는지, 제품이 이름 붙은 aggregate와 상호작용해도 되는지 먼저 정합니다. 그다음 유용한 최대 viewport에 맞춰 representative 제한과 renderer 정책을 설정합니다.
+한도를 정하기 전에 사용자가 무엇을 확인할 수 있어야 하는지 결정하세요. 정확한 방식은 화면에 보이는 데이터마다 별도 표시와 ID를 유지합니다. 집계 방식은 가까운 데이터를 개수와 값 범위를 가진 요약 셀로 합칩니다. 집계하면 더 많은 데이터를 다룰 수 있지만, 그 셀에서 원본 데이터 하나를 선택할 수는 없습니다.
 
-## Exact 또는 aggregate 의미 선택하기
+## 개별 표시와 요약 셀 중 고르기
 
-| 차트 | 기본값 | 확장 옵션 | 제한이 부족할 때 |
+| 차트 | 기본 상세도 | 더 많은 데이터를 위한 옵션 | 한도가 부족할 때 |
 | --- | --- | --- | --- |
-| Line | datum representative를 가진 극값 보존 viewport envelope | 기본 제공 | Envelope도 담지 못할 때만 거부 |
-| Scatter | `projection="raw"` | `projection="density"` | Raw는 거부, density는 aggregate cell 발행 |
-| Bar | 보이는 막대 exact | 없음 | 거부 |
-| Heatmap | `projection="raw"` | `{ kind: 'aggregate', reduction }` | Raw는 거부, aggregate는 reduced cell 발행 |
-| Pie | slice exact | 없음 | 거부 |
-| Donut | slice exact | 없음 | 거부 |
+| 선 | 높고 낮은 값은 보존하면서 선의 점 수를 자동으로 줄임 | 기본 제공 | 줄인 선도 담지 못할 때 오류 반환 |
+| 산점도 | 보이는 데이터마다 점 하나 | `projection="density"` | 개별 표시에서는 오류, 밀도 모드에서는 요약 셀 반환 |
+| 막대 | 보이는 데이터마다 막대 하나 | 없음 | 오류 반환 |
+| 히트맵 | 보이는 데이터마다 셀 하나 | `{ kind: 'aggregate', reduction }` | 개별 표시에서는 오류, 집계 모드에서는 요약 셀 반환 |
+| 파이 | 데이터마다 조각 하나 | 없음 | 오류 반환 |
+| 도넛 | 데이터마다 조각 하나 | 없음 | 오류 반환 |
 
-Heatmap reduction은 `sum`, `mean`, `minimum`, `maximum`입니다. Aggregate hit는 source datum인 척하지 않고 count, bounds, reduction을 반환합니다.
+히트맵 요약 셀의 표시 값은 `sum`, `mean`, `minimum`, `maximum` 중 하나로 계산합니다. 요약 셀을 가리키면 데이터 ID 대신 개수, 원본 값 범위, 선택한 계산 방법을 받습니다.
 
 ```vue
 <ChartScatter
@@ -38,7 +38,7 @@ Heatmap reduction은 `sum`, `mean`, `minimum`, `maximum`입니다. Aggregate hit
 />
 ```
 
-## 보이는 작업 제한하기
+## 화면에 그릴 항목 수 제한하기
 
 ```ts
 const chart = createDOMChart({
@@ -54,11 +54,11 @@ const chart = createDOMChart({
 })
 ```
 
-`maximumRepresentatives`는 source row 수만이 아니라 화면에서 유용한 세부 정도와 상호작용 의미를 기준으로 정합니다. Axis-domain view는 projection 전에 화면 밖의 직교 데이터를 제외합니다. Exact visible data가 제한을 넘으면 명시적으로 실패합니다.
+`maximumRepresentatives`는 현재 화면에 만들 수 있는 그리기 항목의 최댓값입니다. 원본 행 개수만 보지 말고 사용자가 읽고 조작할 수 있는 상세도를 기준으로 정하세요. x축과 y축의 표시 범위 밖에 있는 데이터는 세지 않습니다. 개별 표시가 한도를 넘으면 데이터를 몰래 버리지 않고 오류를 반환합니다.
 
-## Pixel과 upload cost 제한하기
+## 프레임이 느릴 때 Canvas 해상도 낮추기
 
-`auto`는 WebGL2를 우선하고 Canvas2D로 fallback합니다. WebGL2 renderer는 바뀌지 않은 geometry를 유지하고 변경된 batch만 upload할 수 있습니다. Canvas2D는 호환성 경로입니다. Adaptive rendering은 측정한 frame cost가 budget을 넘으면 선언된 범위 안에서 backing resolution을 낮춥니다.
+`auto`는 WebGL2를 우선 사용하고 Canvas2D로 전환할 수 있습니다. WebGL2는 갱신 사이에 바뀌지 않은 그리기 데이터를 재사용할 수 있습니다. 적응형 렌더링은 측정한 프레임 시간이 예산을 넘으면 지정한 범위 안에서 Canvas 내부 해상도를 낮춥니다.
 
 ```ts
 renderPolicy: {
@@ -70,14 +70,16 @@ renderPolicy: {
 }
 ```
 
-Adaptive scale은 값, ID, selection, accessible state, axis domain을 바꾸지 않습니다.
+내부 해상도를 낮추면 그림이 덜 선명해질 수 있습니다. 값, 데이터 ID, 선택, 접근성 이름, 축의 표시 범위는 바뀌지 않습니다.
 
-## 갱신과 retained state 의도하기
+## 갱신 비용 예측 가능하게 유지하기
 
-- Query 결과가 바뀌면 선언형 배열을 교체하고, 바뀌지 않은 layer 배열은 같은 참조로 유지합니다.
-- Datum ID를 유지해 selection과 cursor가 교체 뒤에도 살아 있게 합니다.
-- Producer가 작은 profile operation을 이미 소유하고 axis domain을 다시 조립할 필요가 없을 때만 저수준 patch를 사용합니다.
-- 첫 hover latency가 중요하면 첫 pointer event 전에 hit-test query를 준비합니다.
-- DOM connection을 disconnect하고 애플리케이션 소유 controller와 renderer를 dispose합니다.
+- 조회 결과가 바뀐 레이어의 배열만 교체하고, 바뀌지 않은 레이어는 같은 배열을 유지합니다.
+- 같은 데이터의 ID를 유지해 선택과 가리키기 상태가 갱신 뒤에도 남게 합니다.
+- 데이터 원본이 이미 차트용 증분 작업을 만들고 축 범위를 다시 계산할 필요가 없을 때만 저수준 패치를 사용합니다.
+- 첫 가리키기부터 준비 지연이 없어야 한다면 첫 포인터 입력 전에 위치 찾기 자료 구조를 준비합니다.
+- DOM 차트 연결을 끊고 앱에서 만든 컨트롤러와 렌더러를 정리합니다.
 
-기본 safety ceiling은 64개 layer와 1,000,000개 datum이며 projection은 최대 1,000,000 representative를 허용합니다. 이는 거부 한계이지 성능 약속이 아닙니다. Production budget을 정하기 전에 최대 실제 cardinality, update rate, viewport, device pixel ratio, 지원 browser와 대표 GPU 등급을 benchmark합니다.
+기본 안전 한도는 레이어 64개, 원본 데이터 1,000,000개, 그리기 항목 1,000,000개입니다. 이 값은 더 큰 입력을 거부할 뿐, 모든 기기에서 이만큼을 부드럽게 그릴 수 있다는 뜻은 아닙니다.
+
+앱의 한도를 정하기 전에 예상하는 최대 데이터 수와 갱신 빈도를 가장 큰 차트 크기에서 측정하세요. 지원할 브라우저, 높은 기기 픽셀 비율, 지원 대상 중 가장 느린 GPU 등급도 포함해야 합니다.

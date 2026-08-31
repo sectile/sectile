@@ -1,11 +1,11 @@
 ---
 title: Chart data and scales
-description: Declare coordinates and axes, resolve business fields, preserve identity, and replace immutable data.
+description: Map application records to chart axes, choose scales, keep IDs stable, and update data safely.
 ---
 
 # Data and scales
 
-Start with a declarative definition. It names the coordinate system, each axis, and the chart-specific meaning of every data layer.
+A chart definition tells Sectile which records to draw and which fields belong on each axis. This example plots weekly revenue from the `date` and `amount` fields.
 
 ```ts
 import type { ChartDefinition } from '@sectile/chart/definition'
@@ -28,13 +28,13 @@ const definition = {
 } satisfies ChartDefinition<(typeof revenue)[number]>
 ```
 
-`Date` and finite epoch-millisecond numbers are valid temporal inputs. Date strings are rejected so parsing and time-zone policy remain visible in application code.
+The `field` values refer to properties on each record. The line layer then names the two axes it uses. For a temporal axis, pass a valid `Date` or a finite epoch-millisecond number. Parse date strings in your application so its time-zone rules stay explicit.
 
-## Let conventional records stay simple
+## Give each record a stable ID
 
-Every datum needs a stable string or safe-integer ID. Sectile resolves it from `getId`, then the canonical `id` field. Converting existing numeric database keys to strings is unnecessary.
+Every plotted record needs a string or safe-integer ID. When a record already has an `id` field, Sectile uses it automatically. Keep that value unchanged while the record represents the same real item; selection and hover state can then survive a data refresh.
 
-Cartesian values resolve in this order: layer `getX` or `getY`, axis `getValue`, axis `field`, then canonical `x` or `y`. Radial values use `getValue`, `valueField`, then `value`; labels use `getLabel`, `labelField`, then `label`. Use accessors only when the record cannot express the mapping declaratively.
+Use `getId`, `getX`, or `getY` only when the required value is nested or computed. For example:
 
 ```ts
 const layer = {
@@ -49,31 +49,37 @@ const layer = {
 } as const
 ```
 
-Axis IDs must be unique within the coordinate. Layer and datum IDs share the compiled chart generation, so keep them unique across all layers and preserve datum IDs while the real-world item remains the same.
+Axis IDs must be unique within one chart. Layer IDs and record IDs must also be unique across all layers in that chart.
 
-## Choose the scale from the domain
+For radial charts, records with `id`, `value`, and `label` fields work without accessors. Use `valueField` and `labelField` when your property names differ.
 
-| Scale | Input | Domain |
+## Choose a scale for the field
+
+| Scale | Accepted values | Use it for |
 | --- | --- | --- |
-| `linear` | Finite numbers | Automatic or explicit numeric minimum/maximum |
-| `logarithmic` | Positive finite numbers | Automatic or explicit positive minimum/maximum |
-| `temporal` | `Date` or epoch milliseconds | Automatic or explicit temporal minimum/maximum |
-| `categorical` | Strings or numbers | Automatic first-seen order or explicit values |
+| `linear` | Finite numbers | Amounts, counts, percentages, and other numeric ranges |
+| `logarithmic` | Positive finite numbers | Positive values spread across several orders of magnitude |
+| `temporal` | `Date` or epoch milliseconds | Dates and times |
+| `categorical` | Strings or numbers | Named groups in a fixed order |
 
-Automatic domains are derived from declared layer values. Bar charts include the zero baseline on their measure axis. Explicit domains are useful when multiple charts must remain comparable.
+By default, Sectile finds the minimum and maximum from the plotted records. This range is called the axis domain. Bar charts also include zero on the value axis. Set a domain yourself when several charts must use the same range for a fair comparison.
 
-## Replace reactive data immutably
+## Replace the array when data changes
 
-Treat a data array as one shallow reactive boundary. Replace it when new query results arrive; do not mutate records in place and expect Chart to discover deep changes.
+Sectile watches the array reference, not every property on every record. Replace the array when a request or subscription returns new values.
 
 ```ts
 revenue.value = response.points
 ```
 
-Vue republishes only declarations whose shallow inputs changed. Core reuses unchanged layer ownership where identity and values permit it, then reconciles selection, cursor, and axis views.
+In Vue, keep large record collections in a `shallowRef`. If a chart has several layers, preserve the array reference for layers whose data did not change.
 
-Low-level `ChartModel` and `ChartPatch` APIs remain available for pipelines that already produce packed profile operations. They bypass declarative field and automatic-domain assembly; prefer `replaceDefinition()` when axis observations may change.
+Outside Vue, call `controller.replaceDefinition(nextDefinition)` after replacing a layer's data. The method returns a result so the application can keep the previous chart when the new data is invalid.
 
-## Reject invalid data at the boundary
+`ChartModel` and `ChartPatch` are advanced APIs for systems that already produce incremental chart operations. Most applications should use definitions so Sectile can recalculate axes when values change.
 
-Construction and replacement are atomic: duplicate IDs, incompatible coordinates, invalid temporal values, non-finite numbers, and exceeded limits publish nothing. Use throwing constructors for trusted application data and matching `try*` functions at transport or user-input boundaries.
+## Handle invalid data before showing it
+
+Sectile rejects duplicate IDs, incompatible axes, invalid dates, non-finite numbers, and data above configured limits. A failed replacement leaves the current chart unchanged.
+
+Use `createChartController` when invalid input is a programming error. Use `tryCreateChartController` or inspect the result from `replaceDefinition` when data came from a network or user-controlled source and the application needs to show an error.

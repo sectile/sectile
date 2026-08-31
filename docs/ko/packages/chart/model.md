@@ -1,11 +1,11 @@
 ---
 title: Chart 데이터와 스케일
-description: 좌표와 축을 선언하고, 업무 필드를 읽고, ID를 보존하며, 불변 데이터를 교체합니다.
+description: 앱의 데이터 필드를 차트 축에 연결하고, 알맞은 스케일을 고르며, 데이터를 안전하게 갱신합니다.
 ---
 
 # 데이터와 스케일
 
-선언형 definition부터 시작합니다. 좌표계와 각 축, 데이터 레이어가 뜻하는 차트 종류를 함께 이름 붙입니다.
+차트 정의에는 어떤 데이터를 그리고 각 축에서 어떤 필드를 읽을지 적습니다. 다음 예제는 `date`와 `amount` 필드로 주간 매출을 그립니다.
 
 ```ts
 import type { ChartDefinition } from '@sectile/chart/definition'
@@ -28,13 +28,13 @@ const definition = {
 } satisfies ChartDefinition<(typeof revenue)[number]>
 ```
 
-유효한 `Date`와 유한한 epoch millisecond 숫자가 temporal 입력입니다. 날짜 문자열은 거부하므로 parsing과 시간대 정책이 애플리케이션 코드에 드러납니다.
+`field`에는 각 데이터 객체의 속성 이름을 적습니다. 선 레이어는 자신이 쓸 두 축을 ID로 가리킵니다. 시간 축에는 유효한 `Date`나 밀리초 단위의 유한한 숫자를 전달하세요. 날짜 문자열은 앱에서 먼저 변환해야 시간대 처리 방식을 분명하게 유지할 수 있습니다.
 
-## 관례적인 record는 단순하게 두기
+## 각 데이터에 안정적인 ID 붙이기
 
-각 datum에는 안정적인 문자열 또는 safe integer ID가 필요합니다. Sectile은 `getId`, canonical `id` 필드 순서로 값을 찾습니다. 기존 숫자형 DB key를 문자열로 변환할 필요가 없습니다.
+화면에 그리는 데이터마다 문자열 또는 안전한 정수 ID가 필요합니다. 객체에 `id` 필드가 있으면 Sectile이 자동으로 사용합니다. 같은 실제 항목을 나타내는 동안 ID를 바꾸지 않으면 데이터를 새로 받아도 선택과 가리키기 상태를 유지할 수 있습니다.
 
-직교 값은 layer `getX`/`getY`, axis `getValue`, axis `field`, canonical `x`/`y` 순서로 찾습니다. 방사형 값은 `getValue`, `valueField`, `value` 순서이며 label은 `getLabel`, `labelField`, `label` 순서입니다. record 자체로 관계를 표현할 수 없을 때만 accessor를 사용합니다.
+필요한 값이 객체 안쪽에 있거나 계산해야 할 때만 `getId`, `getX`, `getY` 같은 함수를 전달합니다.
 
 ```ts
 const layer = {
@@ -49,31 +49,37 @@ const layer = {
 } as const
 ```
 
-Axis ID는 coordinate 안에서 고유해야 합니다. Layer와 datum ID는 compile된 chart generation을 공유하므로 모든 layer에서 고유하게 유지하고, 실세계 항목이 같은 동안 datum ID도 보존합니다.
+축 ID는 차트 안에서 겹치면 안 됩니다. 레이어 ID와 데이터 ID도 차트의 모든 레이어를 통틀어 고유해야 합니다.
 
-## Domain에 맞는 scale 선택하기
+파이와 도넛에서는 `id`, `value`, `label` 필드가 있는 데이터를 바로 쓸 수 있습니다. 속성 이름이 다르면 `valueField`와 `labelField`로 연결하세요.
 
-| Scale | 입력 | Domain |
+## 필드에 맞는 스케일 고르기
+
+| 스케일 | 받을 수 있는 값 | 알맞은 데이터 |
 | --- | --- | --- |
-| `linear` | 유한한 숫자 | 자동 또는 명시적 최솟값/최댓값 |
-| `logarithmic` | 양의 유한한 숫자 | 자동 또는 명시적 양의 최솟값/최댓값 |
-| `temporal` | `Date` 또는 epoch millisecond | 자동 또는 명시적 temporal 범위 |
-| `categorical` | 문자열 또는 숫자 | 최초 등장 순서 또는 명시적 값 목록 |
+| `linear` | 유한한 숫자 | 금액, 개수, 비율 등 일반적인 숫자 범위 |
+| `logarithmic` | 0보다 큰 유한한 숫자 | 자릿수 차이가 큰 양수 값 |
+| `temporal` | `Date` 또는 밀리초 숫자 | 날짜와 시간 |
+| `categorical` | 문자열 또는 숫자 | 정해진 순서의 이름 있는 항목 |
 
-자동 domain은 선언된 layer 값에서 구합니다. Bar의 measure axis에는 0 기준선이 포함됩니다. 여러 차트를 같은 기준으로 비교하려면 explicit domain을 사용합니다.
+기본값에서는 데이터의 최솟값과 최댓값으로 축의 표시 범위를 정합니다. 이 범위를 축 도메인이라고 합니다. 막대 차트의 값 축에는 0도 포함됩니다. 여러 차트를 같은 기준으로 비교해야 한다면 표시 범위를 직접 지정하세요.
 
-## 반응형 데이터는 불변 교체하기
+## 데이터가 바뀌면 배열 교체하기
 
-데이터 배열 하나를 shallow reactive boundary로 봅니다. 새 query 결과를 받으면 배열을 교체합니다. Record를 제자리에서 바꾸고 Chart가 deep change를 찾을 것이라 기대하지 않습니다.
+Sectile은 데이터 객체의 모든 속성을 계속 감시하지 않고 배열 참조가 바뀌었는지 확인합니다. 요청이나 구독으로 새 값을 받으면 배열을 통째로 교체하세요.
 
 ```ts
 revenue.value = response.points
 ```
 
-Vue는 shallow 입력이 바뀐 선언만 다시 발행합니다. Core는 ID와 값이 허용하는 범위에서 바뀌지 않은 layer ownership을 재사용하고 selection, cursor, axis view를 조정합니다.
+Vue에서는 큰 데이터 배열을 `shallowRef`에 두는 편이 알맞습니다. 레이어가 여러 개라면 데이터가 바뀌지 않은 레이어의 배열은 같은 참조로 유지하세요.
 
-저수준 `ChartModel`과 `ChartPatch`는 이미 packed profile operation을 만드는 pipeline에 남아 있습니다. 선언형 field와 자동 domain 조립을 우회하므로 axis 관측값이 바뀔 수 있다면 `replaceDefinition()`을 사용합니다.
+Vue를 쓰지 않는다면 레이어의 데이터를 바꾼 뒤 `controller.replaceDefinition(nextDefinition)`을 호출합니다. 이 메서드는 결과 객체를 반환하므로 새 데이터가 잘못됐을 때 기존 차트를 그대로 유지할 수 있습니다.
 
-## 경계에서 잘못된 데이터 거부하기
+`ChartModel`과 `ChartPatch`는 데이터 원본이 이미 차트용 증분 작업을 만드는 경우를 위한 고급 API입니다. 대부분의 앱은 축 범위까지 다시 계산해 주는 정의 방식을 쓰면 됩니다.
 
-생성과 교체는 원자적입니다. 중복 ID, 호환되지 않는 좌표, 잘못된 temporal 값, 유한하지 않은 숫자, 초과한 제한은 아무 상태도 발행하지 않습니다. 신뢰하는 애플리케이션 데이터에는 throwing API를, transport나 사용자 입력 경계에는 대응하는 `try*` API를 사용합니다.
+## 잘못된 데이터 처리하기
+
+Sectile은 중복 ID, 맞지 않는 축, 잘못된 날짜, 유한하지 않은 숫자, 설정한 한도를 넘는 데이터를 거부합니다. 데이터 교체에 실패하면 현재 차트는 바뀌지 않습니다.
+
+잘못된 입력을 개발 중 오류로 처리해도 되는 곳에서는 `createChartController`를 쓰세요. 네트워크나 사용자 입력에서 온 데이터를 다룰 때는 `tryCreateChartController` 또는 `replaceDefinition`의 결과를 확인해 앱의 오류 화면으로 연결하세요.

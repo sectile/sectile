@@ -1,15 +1,15 @@
 ---
-title: Vue chart composition
-description: Declare chart semantics in a Vue template while keeping only high-cardinality records in arrays.
+title: Vue charts
+description: Build accessible Sectile charts with Vue components and reactive data.
 ---
 
 <script setup>
 import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageExample.vue'
 </script>
 
-# Vue composition
+# Vue charts
 
-`@sectile/vue/chart` uses compound components for the small semantic structure—coordinate, axes, layers, view capabilities, controls, and renderer. Only potentially large datum collections remain arrays.
+`@sectile/vue/chart` provides components for the chart, axes, data layers, controls, and Canvas renderer. Records remain in arrays, so a large data set does not create one Vue component or watcher per record.
 
 <ChartPackageExample kind="line" host="vue" />
 
@@ -19,28 +19,42 @@ import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageE
 pnpm add vue @sectile/chart @sectile/dom @sectile/vue
 ```
 
-Chart and DOM are optional peers of Vue and are needed only when importing `@sectile/vue/chart`.
+These packages are needed only for the chart entry point. Other `@sectile/vue` components do not require them.
 
-## Declare a production-shaped chart
+## Build a weekly revenue chart
+
+This example includes a time axis, a numeric axis, keyboard navigation, visible range controls, accessible record labels, and a responsive plot area.
 
 ```vue
 <script setup lang="ts">
 import {
-  ChartAxisView, ChartCartesian, ChartLine, ChartNavigation,
-  ChartPanControl, ChartPlot, ChartRenderer, ChartResetView, ChartRoot,
-  ChartViewControls, ChartXAxis, ChartYAxis, ChartZoomControl,
+  ChartAxisTicks, ChartAxisView, ChartCartesian, ChartGrid, ChartLegend,
+  ChartLine, ChartNavigation, ChartPanControl, ChartPlot, ChartRenderer,
+  ChartResetView, ChartRoot, ChartViewControls, ChartXAxis, ChartYAxis,
+  ChartZoomControl,
 } from '@sectile/vue/chart'
-import { shallowRef } from 'vue'
+import { computed, shallowRef } from 'vue'
 
 const revenue = shallowRef([
   { id: 271, date: new Date('2026-07-06'), amount: 128_000 },
   { id: 272, date: new Date('2026-07-13'), amount: 142_000 },
   { id: 273, date: new Date('2026-07-20'), amount: 137_000 },
 ])
+
+const revenueLabels = computed(() => new Map(revenue.value.map(point => [
+  point.id,
+  `${point.date.toLocaleDateString()}: ${point.amount.toLocaleString()}`,
+])))
+
+const dom = {
+  renderer: 'auto',
+  accessibilityLabel: 'Weekly revenue',
+  getAccessibleDatumLabel: (id: number) => revenueLabels.value.get(id) ?? String(id),
+} as const
 </script>
 
 <template>
-  <ChartRoot :dom="{ renderer: 'auto', accessibilityLabel: 'Weekly revenue' }">
+  <ChartRoot :dom="dom" class="revenue-chart">
     <ChartCartesian>
       <ChartXAxis id="date" scale="temporal" field="date" label="Week">
         <ChartAxisView :minimum-span="86_400_000" update="follow-end" />
@@ -61,16 +75,32 @@ const revenue = shallowRef([
         <ChartResetView>Reset</ChartResetView>
       </ChartViewControls>
     </ChartCartesian>
+    <ChartGrid />
+    <ChartAxisTicks />
+    <ChartLegend />
     <ChartPlot><ChartRenderer /></ChartPlot>
   </ChartRoot>
 </template>
+
+<style scoped>
+.revenue-chart {
+  position: relative;
+  height: 24rem;
+}
+
+.revenue-chart :deep([data-part='plot']),
+.revenue-chart :deep(canvas) {
+  width: 100%;
+  height: 100%;
+}
+</style>
 ```
 
-The axis `field` props already describe how to read `date` and `amount`; `ChartLine` does not repeat `getX` or `getY`. The canonical `id` field also makes `getId` unnecessary. Pass accessors only for nested or computed values.
+The `field` props tell the chart where to read the date and amount, and the `id` property identifies each record. Accessor functions are needed only for nested or computed values.
 
-Replace `revenue.value` to publish new records. The declaration registry observes shallow prop identity and does not create one Vue component, watcher, or registry record per datum.
+Replace `revenue.value` when new records arrive. Keep the same ID for the same week so selection can survive the update. `ChartRoot` releases its controller, event listeners, observers, and graphics resources when Vue unmounts it.
 
-## Match composition to the coordinate
+## Build a pie or donut chart
 
 ```vue
 <ChartRoot :dom="{ accessibilityLabel: 'Budget allocation' }">
@@ -81,7 +111,7 @@ Replace `revenue.value` to publish new records. The declaration registry observe
 </ChartRoot>
 ```
 
-Records with canonical `id`, `value`, and `label` fields need no accessors. Pie and donut do not contain `ChartXAxis`, `ChartYAxis`, `ChartAxisView`, or Cartesian navigation controls.
+Records with `id`, `value`, and `label` fields need no additional mapping. Pie and donut charts do not use x-axes, y-axes, panning, or zooming.
 
 ## Control and share state
 
@@ -96,6 +126,8 @@ Records with canonical `id`, `value`, and `label` fields need no accessors. Pie 
 </ChartRoot>
 ```
 
-Use the root slot for a nearby tooltip or status that needs the current `state`, `projection`, or resolved `definition`. For distant consumers, `useChartSelector`, `useChartLayerSelector`, and `useChartAxisSelector` publish only selected values. Use `ChartProvider` or `createChartComponents(controller)` when one application-owned controller must span multiple roots or component subtrees.
+The default slot exposes current `state`, `projection`, and `definition` values for a tooltip or nearby status. Components elsewhere in the page can read only the value they need with `useChartSelector`, `useChartLayerSelector`, or `useChartAxisSelector`.
 
-`ChartRoot` delays DOM resources until mount and renders semantic state during SSR. Provide identical declaration and controlled values on server and first client render; browser measurement and Canvas connection begin after hydration.
+Use `ChartProvider` or `createChartComponents(controller)` only when one controller must be shared across several chart roots or component subtrees.
+
+During server rendering, `ChartRoot` does not create browser resources. Pass the same chart components and controlled values on the server and the first client render. Measurement and Canvas drawing start after hydration.

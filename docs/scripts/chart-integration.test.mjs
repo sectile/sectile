@@ -23,11 +23,15 @@ test('Chart documentation is task-oriented and visual in both locales', async ()
 
   for (const source of [english[0], korean[0]]) {
     assert.match(source, /<ChartPackageExample \/>/u);
-    for (const kind of ['line', 'scatter', 'bar', 'heatmap', 'pie', 'donut']) {
-      assert.match(source, new RegExp(`\\b${kind}\\b`, 'iu'));
-    }
     assert.match(source, /@sectile\/chart/u);
-    assert.match(source, /optional|선택적/iu);
+  }
+  assert.match(english[0], /needed only when you import the chart entry points/iu);
+  assert.match(korean[0], /차트 진입점을 가져올 때만 .*필요/u);
+  for (const kind of ['line', 'scatter', 'bar', 'heatmap', 'pie', 'donut']) {
+    assert.match(english[0], new RegExp(`\\b${kind}\\b`, 'iu'));
+  }
+  for (const name of ['선', '산점도', '막대', '히트맵', '파이', '도넛']) {
+    assert.match(korean[0], new RegExp(name, 'u'));
   }
 
   for (const index of [2, 3, 4, 5]) {
@@ -70,6 +74,9 @@ test('Chart examples use public APIs and cover every built-in profile', async ()
     assert.doesNotMatch(source, /\/internal\/|\.verification-dist|verification\/chart/u);
   }
   assert.match(component, /getAccessibleDatumLabel/u);
+  assert.match(sources, /getAccessibleDatumLabel/u);
+  assert.match(sources, /instanceof HTMLElement/u);
+  assert.match(sources, /chart\.disconnect\(\)[\s\S]*controller\.dispose\(\)/u);
   assert.doesNotMatch(component, /host:\s*'vue'/u);
   assert.match(englishVue, /host="vue"/u);
   assert.match(koreanVue, /host="vue"/u);

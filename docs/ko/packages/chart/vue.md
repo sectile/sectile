@@ -1,15 +1,15 @@
 ---
-title: Vue Chart 구성
-description: 잠재적으로 많은 datum만 배열에 두고 차트 의미는 Vue template에서 선언합니다.
+title: Vue Chart
+description: Vue 컴포넌트와 반응형 데이터로 접근 가능한 Sectile 차트를 만듭니다.
 ---
 
 <script setup>
 import ChartPackageExample from '../../../.vitepress/theme/components/ChartPackageExample.vue'
 </script>
 
-# Vue 구성
+# Vue 차트
 
-`@sectile/vue/chart`는 수가 적은 의미 구조인 coordinate, axis, layer, view capability, control, renderer를 compound component로 표현합니다. 수가 크게 늘 수 있는 datum collection만 배열로 전달합니다.
+`@sectile/vue/chart`는 차트, 축, 데이터 레이어, 조작 버튼, Canvas 렌더러를 위한 컴포넌트를 제공합니다. 데이터는 배열로 남기 때문에 데이터 하나마다 Vue 컴포넌트나 감시자가 생기지 않습니다.
 
 <ChartPackageExample kind="line" host="vue" />
 
@@ -19,28 +19,42 @@ import ChartPackageExample from '../../../.vitepress/theme/components/ChartPacka
 pnpm add vue @sectile/chart @sectile/dom @sectile/vue
 ```
 
-Chart와 DOM은 Vue의 optional peer이며 `@sectile/vue/chart`를 import할 때만 필요합니다.
+이 패키지들은 차트 진입점에만 필요합니다. 다른 `@sectile/vue` 컴포넌트에는 추가되지 않습니다.
 
-## 프로덕션형 차트 선언하기
+## 주간 매출 차트 만들기
+
+다음 예제에는 시간 축, 숫자 축, 키보드 탐색, 눈에 보이는 범위 조작 버튼, 데이터별 접근성 이름, 반응형 차트 영역이 들어 있습니다.
 
 ```vue
 <script setup lang="ts">
 import {
-  ChartAxisView, ChartCartesian, ChartLine, ChartNavigation,
-  ChartPanControl, ChartPlot, ChartRenderer, ChartResetView, ChartRoot,
-  ChartViewControls, ChartXAxis, ChartYAxis, ChartZoomControl,
+  ChartAxisTicks, ChartAxisView, ChartCartesian, ChartGrid, ChartLegend,
+  ChartLine, ChartNavigation, ChartPanControl, ChartPlot, ChartRenderer,
+  ChartResetView, ChartRoot, ChartViewControls, ChartXAxis, ChartYAxis,
+  ChartZoomControl,
 } from '@sectile/vue/chart'
-import { shallowRef } from 'vue'
+import { computed, shallowRef } from 'vue'
 
 const revenue = shallowRef([
   { id: 271, date: new Date('2026-07-06'), amount: 128_000 },
   { id: 272, date: new Date('2026-07-13'), amount: 142_000 },
   { id: 273, date: new Date('2026-07-20'), amount: 137_000 },
 ])
+
+const revenueLabels = computed(() => new Map(revenue.value.map(point => [
+  point.id,
+  `${point.date.toLocaleDateString()}: ${point.amount.toLocaleString()}`,
+])))
+
+const dom = {
+  renderer: 'auto',
+  accessibilityLabel: '주간 매출',
+  getAccessibleDatumLabel: (id: number) => revenueLabels.value.get(id) ?? String(id),
+} as const
 </script>
 
 <template>
-  <ChartRoot :dom="{ renderer: 'auto', accessibilityLabel: '주간 매출' }">
+  <ChartRoot :dom="dom" class="revenue-chart">
     <ChartCartesian>
       <ChartXAxis id="date" scale="temporal" field="date" label="주">
         <ChartAxisView :minimum-span="86_400_000" update="follow-end" />
@@ -61,16 +75,32 @@ const revenue = shallowRef([
         <ChartResetView>초기화</ChartResetView>
       </ChartViewControls>
     </ChartCartesian>
+    <ChartGrid />
+    <ChartAxisTicks />
+    <ChartLegend />
     <ChartPlot><ChartRenderer /></ChartPlot>
   </ChartRoot>
 </template>
+
+<style scoped>
+.revenue-chart {
+  position: relative;
+  height: 24rem;
+}
+
+.revenue-chart :deep([data-part='plot']),
+.revenue-chart :deep(canvas) {
+  width: 100%;
+  height: 100%;
+}
+</style>
 ```
 
-Axis의 `field`가 이미 `date`와 `amount`를 읽는 방법을 설명하므로 `ChartLine`에서 `getX`와 `getY`를 반복하지 않습니다. Canonical `id` 필드가 있어 `getId`도 필요하지 않습니다. Nested 또는 computed 값에만 accessor를 전달합니다.
+축의 `field`가 `date`와 `amount`를 읽고, `id` 속성이 각 데이터를 구분합니다. 값이 객체 안쪽에 있거나 계산해야 할 때만 별도 함수를 전달하면 됩니다.
 
-새 record를 발행하려면 `revenue.value`를 교체합니다. Declaration registry는 shallow prop identity를 관찰하며 datum마다 Vue component, watcher, registry record를 만들지 않습니다.
+새 데이터를 받으면 `revenue.value`를 교체하세요. 같은 주간 데이터에는 같은 ID를 유지해야 갱신 뒤에도 선택 상태가 남습니다. `ChartRoot`가 제거되면 컨트롤러, 이벤트 리스너, 크기 관찰자, 그래픽 자원도 함께 정리됩니다.
 
-## Coordinate에 맞게 구성하기
+## 파이 또는 도넛 차트 만들기
 
 ```vue
 <ChartRoot :dom="{ accessibilityLabel: '예산 배분' }">
@@ -81,7 +111,7 @@ Axis의 `field`가 이미 `date`와 `amount`를 읽는 방법을 설명하므로
 </ChartRoot>
 ```
 
-Canonical `id`, `value`, `label` 필드가 있는 record는 accessor가 필요 없습니다. Pie와 Donut에는 `ChartXAxis`, `ChartYAxis`, `ChartAxisView`, 직교 navigation control을 넣지 않습니다.
+`id`, `value`, `label` 필드가 있는 데이터는 별도 연결 함수 없이 쓸 수 있습니다. 파이와 도넛에는 x축, y축, 이동, 확대·축소 기능을 넣지 않습니다.
 
 ## 상태 제어하고 공유하기
 
@@ -96,6 +126,8 @@ Canonical `id`, `value`, `label` 필드가 있는 record는 accessor가 필요 �
 </ChartRoot>
 ```
 
-가까운 tooltip이나 상태 표시는 root slot의 `state`, `projection`, resolved `definition`을 사용합니다. 먼 consumer에는 `useChartSelector`, `useChartLayerSelector`, `useChartAxisSelector`로 필요한 값만 발행합니다. 하나의 애플리케이션 소유 controller를 여러 root 또는 component subtree에서 쓸 때는 `ChartProvider`나 `createChartComponents(controller)`를 사용합니다.
+기본 슬롯은 현재 `state`, `projection`, `definition` 값을 제공합니다. 차트 가까이에 툴팁이나 상태 표시를 만들 때 사용하세요. 페이지의 다른 컴포넌트에서는 `useChartSelector`, `useChartLayerSelector`, `useChartAxisSelector`로 필요한 값만 읽을 수 있습니다.
 
-`ChartRoot`는 mount 전에는 DOM resource를 만들지 않고 SSR에서 semantic state를 렌더링합니다. 서버와 첫 client render에 같은 declaration과 controlled 값을 전달합니다. 브라우저 측정과 Canvas 연결은 hydration 뒤 시작합니다.
+여러 차트 영역이나 컴포넌트 트리에서 하나의 컨트롤러를 공유해야 할 때만 `ChartProvider`나 `createChartComponents(controller)`를 사용하세요.
+
+서버 렌더링 중에는 `ChartRoot`가 브라우저 자원을 만들지 않습니다. 서버와 첫 클라이언트 렌더링에 같은 차트 구성과 제어 상태를 전달하세요. 크기 측정과 Canvas 그리기는 하이드레이션 뒤 시작합니다.

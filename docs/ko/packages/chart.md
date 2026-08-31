@@ -1,6 +1,6 @@
 ---
 title: Chart
-description: 선언형 의미, 제한된 projection, 선택적 브라우저 렌더링으로 빠른 직교·방사형 차트를 만듭니다.
+description: Vue 앱이나 브라우저 페이지에 선, 산점도, 막대, 히트맵, 파이, 도넛 차트를 추가합니다.
 ---
 
 <script setup>
@@ -9,50 +9,54 @@ import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageE
 
 # Chart
 
-Sectile Chart는 애플리케이션 데이터를 명시적인 좌표, 축, 레이어, 상호작용 상태와 제한된 그리기 작업으로 바꿉니다. Core는 렌더러와 무관하며, DOM과 Vue는 필수 의존성이 되지 않으면서 접근 가능한 Canvas 렌더링을 더합니다.
+Sectile Chart는 선, 산점도, 막대, 히트맵, 파이, 도넛 차트를 그립니다. Vue 앱에서는 Vue 컴포넌트를 쓰고, 기존 HTML에는 DOM API를 연결할 수 있습니다. 직접 그리거나 브라우저 밖에서 쓸 때는 렌더링 기능을 뺀 패키지만 선택하면 됩니다.
 
-## 모든 기본 차트 체험하기
+데이터는 평범한 배열로 전달합니다. 어떤 필드가 ID와 축의 값인지 정하면 스케일, 선택, 이동, 확대·축소, 위치 찾기, Canvas 렌더링은 Sectile이 처리합니다.
 
-아래 예시는 실제 업무형 필드, 축, 선택 가능한 마크, 눈에 보이는 view control을 사용합니다. **Code**에서 선언형 Vue interface와 같은 의미의 DOM 구성을 비교할 수 있습니다.
+## 기본 차트 체험하기
+
+아래에서 여섯 가지 차트를 바꿔 볼 수 있습니다. 데이터 표시를 가리키거나 선택해 보고, x축과 y축이 있는 차트에서는 버튼으로 가로 범위를 옮기거나 확대해 보세요. **Code**를 열면 그대로 응용할 수 있는 Vue와 DOM 예제가 나옵니다.
 
 <ChartPackageExample />
 
 ## 차트 선택하기
 
-| 질문 | 선택 | 좌표 | 대규모 데이터 동작 |
-| --- | --- | --- | --- |
-| 순서 또는 시간에 따라 측정값이 어떻게 바뀌는가? | Line | 직교 | 극값을 보존하는 viewport envelope |
-| 두 측정값은 어떤 관계인가? | Scatter | 직교 | 정확한 점 또는 명시적 density aggregate |
-| 범주를 같은 기준선에서 어떻게 비교하는가? | Bar | 직교 | 보이는 막대를 정확히 유지하고 부족한 제한은 거부 |
-| 두 차원에서 강도가 어디에 집중되는가? | Heatmap | 직교 | 정확한 cell 또는 명시적 aggregate reduction |
-| 하나의 전체가 소수 항목에 어떻게 나뉘는가? | Pie | 방사형 | 정확한 slice를 유지하고 부족한 제한은 거부 |
-| 중앙에 다른 정보를 둘 전체 비중이 필요한가? | Donut | 방사형 | 정확한 slice를 유지하고 부족한 제한은 거부 |
+| 보여 주려는 내용 | 차트 |
+| --- | --- |
+| 시간이나 순서에 따른 변화 | 선 |
+| 두 숫자 값의 관계 | 산점도 |
+| 항목별 크기 비교 | 막대 |
+| 두 기준이 만나는 지점의 값 분포 | 히트맵 |
+| 전체를 이루는 몇 가지 항목의 비율 | 파이 |
+| 가운데에 별도 정보를 둘 전체 비율 | 도넛 |
 
-직교 차트는 `ChartXAxis`와 `ChartYAxis`를 선언합니다. Pie와 Donut은 `ChartRadial`을 선언하며 불필요한 축, pan, zoom을 만들지 않습니다.
+x축과 y축을 쓰는 선, 산점도, 막대, 히트맵에는 `ChartXAxis`와 `ChartYAxis`를 둡니다. 파이와 도넛에는 `ChartRadial`을 쓰며 이동이나 확대·축소 기능은 넣지 않습니다.
 
-Histogram, stacked bar, area fill, candlestick, box plot, gauge, map, network, contour, 3D scene은 기본 차트 계약이 아닙니다. 일부는 현재 primitive로 준비하거나 custom renderer로 그릴 수 있지만, Sectile은 근사 구현을 일급 차트 종류로 부르지 않습니다.
+히스토그램, 누적 막대, 영역, 캔들스틱, 상자 수염, 게이지, 지도, 네트워크, 등고선, 3D 차트는 아직 전용 컴포넌트를 제공하지 않습니다. 일부는 사용자 정의 렌더러로 만들 수 있지만 기본 차트보다 구현할 일이 많습니다.
 
-## 통합 계층 선택하기
+## 앱에 맞는 사용 방법 고르기
 
-| 필요한 범위 | 설치 | 시작 API |
+| 앱 환경 | 설치 | 시작 문서 |
 | --- | --- | --- |
-| 정의, 불변 상태, projection, hit testing | `@sectile/chart` | `createChartController` |
-| 기존 element와 Canvas 렌더링 | `@sectile/chart @sectile/dom` | `createDOMChart` |
-| 선언형 Vue 구성 | `vue @sectile/chart @sectile/dom @sectile/vue` | `ChartRoot` |
+| Vue | `vue @sectile/chart @sectile/dom @sectile/vue` | [`ChartRoot`](./chart/vue) |
+| 기존 HTML과 TypeScript | `@sectile/chart @sectile/dom` | [`createDOMChart`](./chart/dom) |
+| 사용자 정의 렌더러 또는 브라우저 밖 환경 | `@sectile/chart` | [`createChartController`](./chart/projection) |
 
-Chart는 DOM과 Vue의 optional peer입니다. `/chart` subpath를 import하지 않는 애플리케이션은 설치할 필요가 없습니다.
+`@sectile/dom`이나 `@sectile/vue`의 차트 진입점을 가져올 때만 `@sectile/chart`가 필요합니다. 다른 DOM·Vue 기능에는 이 패키지가 추가되지 않습니다.
 
 ## 작업별 안내
 
 | 작업 | 안내 |
 | --- | --- |
-| record, 축, ID, 갱신 정의 | [데이터와 스케일](./chart/model) |
-| custom renderer, tooltip, hit test 작성 | [그리기와 hit testing](./chart/projection) |
-| 선택, 키보드, pan, zoom 설계 | [상호작용과 상태](./chart/interaction) |
-| 기존 브라우저 element 연결 | [DOM 렌더링](./chart/dom) |
-| Vue template에서 차트 구성 | [Vue 구성](./chart/vue) |
-| exact 또는 aggregate 전략 선택 | [대규모 데이터](./chart/performance) |
+| 데이터 필드와 축 연결, 데이터 갱신 | [데이터와 스케일](./chart/model) |
+| 사용자 정의 렌더러, 툴팁, 위치 찾기 | [그리기와 위치 찾기](./chart/projection) |
+| 선택, 키보드, 이동, 확대·축소 | [상호작용과 상태](./chart/interaction) |
+| 기존 브라우저 요소 연결 | [DOM 렌더링](./chart/dom) |
+| Vue 템플릿에서 차트 구성 | [Vue 차트](./chart/vue) |
+| 큰 데이터의 상세도 결정 | [대규모 데이터](./chart/performance) |
 
-## 책임 경계
+## 앱에서 준비할 것
 
-Chart는 이식 가능한 좌표, 축, ID, 검증, view domain, 선택, projection, query를 소유합니다. DOM은 브라우저 입력, 반응형 측정, 접근성 overlay, Canvas2D/WebGL2 resource와 정리를 소유합니다. Vue는 선언형 구성과 반응형 동기화를 소유합니다. 애플리케이션은 데이터 로딩, 제품 스타일, annotation, formatting 정책, 영속화를 소유합니다.
+Sectile은 전달받은 데이터를 읽고 검사하지만 직접 불러오거나 표시 형식을 정하지는 않습니다. 로딩·오류 화면, 색과 배치, 숫자·날짜 형식, 주석, 선택 상태나 표시 범위의 저장은 앱에서 맡습니다.
+
+DOM과 Vue 연동 기능은 차트 크기를 재고 Canvas에 그리며 접근성 정보를 만듭니다. 연결을 끊거나 컴포넌트를 제거하면 사용하던 브라우저 자원도 정리합니다.

@@ -1,6 +1,6 @@
 ---
 title: Chart
-description: Build fast Cartesian and radial charts with declarative semantics, bounded projection, and optional browser rendering.
+description: Add line, scatter, bar, heatmap, pie, and donut charts to Vue or a browser page.
 ---
 
 <script setup>
@@ -9,50 +9,54 @@ import ChartPackageExample from '../.vitepress/theme/components/ChartPackageExam
 
 # Chart
 
-Sectile Chart turns application data into explicit coordinates, axes, layers, interaction state, and bounded drawing work. Core stays renderer-neutral; DOM and Vue add accessible Canvas rendering without becoming required dependencies.
+Sectile Chart draws line, scatter, bar, heatmap, pie, and donut charts. Use the Vue components for a Vue application, connect it to existing HTML with the DOM API, or use the renderer-independent package when you need to draw the result yourself.
+
+Your records stay in ordinary arrays. You choose which fields supply the ID and plotted values, and Sectile handles scales, selection, panning, zooming, hit testing, and Canvas rendering.
 
 ## Try every built-in chart
 
-The example uses realistic business fields, real axes, selectable marks, and visible view controls. Open **Code** to compare the declarative Vue interface with the equivalent DOM setup.
+Switch between the six chart types below. Hover or select a mark, then use the visible controls on Cartesian charts to move or resize the horizontal range. Open **Code** for a complete Vue or DOM example you can adapt.
 
 <ChartPackageExample />
 
 ## Choose a chart
 
-| Question | Choose | Coordinate | Large-data behavior |
-| --- | --- | --- | --- |
-| How does a measure change over an ordered or temporal domain? | Line | Cartesian | Keeps an extrema-preserving viewport envelope |
-| How are two measures related? | Scatter | Cartesian | Exact points or explicit density aggregates |
-| How do categories compare from a common baseline? | Bar | Cartesian | Exact visible bars; rejects an undersized detail cap |
-| Where is intensity concentrated across two dimensions? | Heatmap | Cartesian | Exact cells or an explicit aggregate reduction |
-| How is one total divided into a few parts? | Pie | Radial | Exact slices; rejects an undersized detail cap |
-| How is one total divided when the center carries another label? | Donut | Radial | Exact slices; rejects an undersized detail cap |
+| What you want to show | Chart |
+| --- | --- |
+| Change over time or another ordered value | Line |
+| Relationship between two numeric values | Scatter |
+| Comparison between categories | Bar |
+| Concentration across two dimensions | Heatmap |
+| A few parts of one total | Pie |
+| Parts of a total with room for a center label | Donut |
 
-Cartesian charts declare `ChartXAxis` and `ChartYAxis`. Pie and donut declare `ChartRadial` and do not invent irrelevant axes, pan, or zoom.
+Line, scatter, bar, and heatmap charts use an x-axis and y-axis. Pie and donut charts use a radial coordinate and do not have pan or zoom controls.
 
-Histograms, stacked bars, area fills, candlesticks, box plots, gauges, maps, networks, contours, and 3D scenes are not built-in chart contracts. Some can be prepared as current primitives or drawn through a custom renderer, but Sectile does not label an approximation as a first-class chart type.
+Sectile does not currently provide first-class histogram, stacked-bar, area, candlestick, box-plot, gauge, map, network, contour, or 3D chart components. A custom renderer can cover some of these cases, but it requires more work than the built-in chart types.
 
 ## Choose an integration
 
-| Needed scope | Install | Start with |
+| Your application | Install | Start with |
 | --- | --- | --- |
-| Definitions, immutable state, projection, and hit testing | `@sectile/chart` | `createChartController` |
-| Existing elements and Canvas rendering | `@sectile/chart @sectile/dom` | `createDOMChart` |
-| Declarative Vue composition | `vue @sectile/chart @sectile/dom @sectile/vue` | `ChartRoot` |
+| Vue | `vue @sectile/chart @sectile/dom @sectile/vue` | [`ChartRoot`](./chart/vue) |
+| Existing HTML and TypeScript | `@sectile/chart @sectile/dom` | [`createDOMChart`](./chart/dom) |
+| Custom renderer or non-browser host | `@sectile/chart` | [`createChartController`](./chart/projection) |
 
-Chart is an optional peer of DOM and Vue. Applications that never import their `/chart` subpaths do not need to install it.
+`@sectile/chart` is needed only when you import the chart entry points from `@sectile/dom` or `@sectile/vue`. Other DOM and Vue features do not pull it into your application.
 
 ## Continue by task
 
 | Task | Guide |
 | --- | --- |
-| Shape records, axes, IDs, and updates | [Data and scales](./chart/model) |
+| Map records to axes and update data | [Data and scales](./chart/model) |
 | Build a custom renderer, tooltip, or hit test | [Drawing and hit testing](./chart/projection) |
-| Design selection, keyboard access, pan, and zoom | [Interaction and state](./chart/interaction) |
+| Add selection, keyboard access, pan, and zoom | [Interaction and state](./chart/interaction) |
 | Connect existing browser elements | [DOM rendering](./chart/dom) |
 | Compose a chart in a Vue template | [Vue composition](./chart/vue) |
-| Select an exact or aggregate strategy | [Large datasets](./chart/performance) |
+| Choose how much detail to keep with large data | [Large datasets](./chart/performance) |
 
-## Responsibility boundary
+## What your application still provides
 
-Chart owns portable coordinates, axes, identity, validation, view domains, selection, projection, and queries. DOM owns browser input, responsive measurement, accessibility overlays, Canvas2D/WebGL2 resources, and cleanup. Vue owns declarative composition and reactive synchronization. The application owns data loading, product styling, annotations, formatting policy, and persistence.
+Sectile reads and validates data you provide, but it does not fetch that data or decide how values should be formatted. Your application still supplies loading and error states, colors and layout, number and date formatting, annotations, and any saved selection or visible range.
+
+The DOM and Vue integrations measure the chart, render it with Canvas, expose accessible labels, and remove their browser resources when disconnected or unmounted.

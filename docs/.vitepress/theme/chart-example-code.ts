@@ -40,6 +40,45 @@ const dataSource: Readonly<Record<ChartExampleKind, string>> = Object.freeze({
 ]`,
 });
 
+const datumLabelSource: Readonly<Record<ChartExampleKind, string>> = Object.freeze({
+  line: `const datumLabels = new Map(revenue.map(point => [point.id, point.date.toLocaleDateString()]))`,
+  scatter: `const datumLabels = new Map(services.map(service => [service.id, service.id]))`,
+  bar: `const datumLabels = new Map(orders.map(order => [order.id, order.region]))`,
+  heatmap: `const datumLabels = new Map(activity.map(cell => [cell.id, [cell.day, cell.hour, cell.value].join(' ')]))`,
+  pie: `const datumLabels = new Map(budget.map(item => [item.id, item.label]))`,
+  donut: `const datumLabels = new Map(channels.map(item => [item.id, item.label]))`,
+});
+
+const titles = Object.freeze({
+  en: {
+    line: 'Weekly revenue trend', scatter: 'Deployment frequency and stability',
+    bar: 'Orders by region', heatmap: 'Activity by day and hour',
+    pie: 'Budget allocation', donut: 'Acquisition channels',
+  },
+  ko: {
+    line: '주간 매출 추이', scatter: '배포 빈도와 안정성',
+    bar: '지역별 주문', heatmap: '요일·시간대별 활동',
+    pie: '예산 배분', donut: '유입 채널 비중',
+  },
+});
+
+const chartTitle = (kind: ChartExampleKind, korean: boolean): string => (
+  korean ? titles.ko[kind] : titles.en[kind]
+);
+
+const vueStyle = `<style scoped>
+.chart {
+  position: relative;
+  height: 24rem;
+}
+
+.chart :deep([data-part='plot']),
+.chart :deep(canvas) {
+  width: 100%;
+  height: 100%;
+}
+</style>`;
+
 const cartesian = Object.freeze({
   line: {
     data: 'revenue', xScale: 'temporal', xField: 'date', yScale: 'linear', yField: 'revenue',
@@ -60,6 +99,7 @@ const cartesian = Object.freeze({
 });
 
 function vueSource(kind: ChartExampleKind, korean: boolean): string {
+  const title = chartTitle(kind, korean);
   if (kind === 'pie' || kind === 'donut') {
     const component = kind === 'pie' ? 'ChartPie' : 'ChartDonut';
     const data = kind === 'pie' ? 'budget' : 'channels';
@@ -67,16 +107,25 @@ function vueSource(kind: ChartExampleKind, korean: boolean): string {
 import { ${component}, ChartPlot, ChartRadial, ChartRenderer, ChartRoot } from '@sectile/vue/chart'
 
 ${dataSource[kind]}
+${datumLabelSource[kind]}
+
+const dom = {
+  renderer: 'auto',
+  accessibilityLabel: '${title}',
+  getAccessibleDatumLabel: (id: string | number) => datumLabels.get(String(id)) ?? String(id),
+} as const
 </script>
 
 <template>
-  <ChartRoot :dom="{ renderer: 'auto', accessibilityLabel: '${korean ? (kind === 'pie' ? '예산 배분' : '유입 채널') : (kind === 'pie' ? 'Budget allocation' : 'Acquisition channels')}' }">
+  <ChartRoot :dom="dom" class="chart">
     <ChartRadial>
       <${component} id="${kind}" :data="${data}" label="${kind === 'pie' ? 'Budget' : 'Channels'}" />
     </ChartRadial>
     <ChartPlot><ChartRenderer /></ChartPlot>
   </ChartRoot>
-</template>`;
+</template>
+
+${vueStyle}`;
   }
   const chart = cartesian[kind];
   return `<script setup lang="ts">
@@ -87,10 +136,17 @@ import {
 } from '@sectile/vue/chart'
 
 ${dataSource[kind]}
+${datumLabelSource[kind]}
+
+const dom = {
+  renderer: 'auto',
+  accessibilityLabel: '${title}',
+  getAccessibleDatumLabel: (id: string | number) => datumLabels.get(String(id)) ?? String(id),
+} as const
 </script>
 
 <template>
-  <ChartRoot :dom="{ renderer: 'auto', accessibilityLabel: '${korean ? '업무 차트' : 'Business chart'}' }">
+  <ChartRoot :dom="dom" class="chart">
     <ChartCartesian>
       <ChartXAxis id="x" scale="${chart.xScale}" field="${chart.xField}" label="${chart.xLabel}">
         <ChartAxisView :minimum-span="1" />
@@ -107,7 +163,9 @@ ${dataSource[kind]}
     </ChartCartesian>
     <ChartPlot><ChartRenderer /></ChartPlot>
   </ChartRoot>
-</template>`;
+</template>
+
+${vueStyle}`;
 }
 
 function definitionSource(kind: ChartExampleKind): string {
@@ -133,14 +191,23 @@ function definitionSource(kind: ChartExampleKind): string {
 
 function domSource(kind: ChartExampleKind, korean: boolean): string {
   const radial = kind === 'pie' || kind === 'donut';
-  return `import { createChartController } from '@sectile/chart/controller'
+  const title = chartTitle(kind, korean);
+  return `// HTML: <div data-chart><canvas></canvas></div>
+// Give the container a height and make the canvas fill it with CSS.
+import { createChartController } from '@sectile/chart/controller'
 import { createDOMChart } from '@sectile/dom/chart'
 
 ${dataSource[kind]}
+${datumLabelSource[kind]}
 ${definitionSource(kind)}
 
-const root = document.querySelector<HTMLElement>('[data-chart]')!
-const canvas = root.querySelector<HTMLCanvasElement>('canvas')!
+const root = document.querySelector('[data-chart]')
+const canvas = root?.querySelector('canvas')
+
+if (!(root instanceof HTMLElement) || !(canvas instanceof HTMLCanvasElement)) {
+  throw new Error('${korean ? '차트 영역을 찾을 수 없습니다' : 'Chart container is missing'}')
+}
+
 const controller = createChartController({
   definition,
   ${radial ? '' : "viewCapabilities: [{ axisID: 'x', minimumSpan: 1 }],\n"}})
@@ -149,7 +216,8 @@ const chart = createDOMChart({
   canvas,
   controller,
   renderer: 'auto',
-  accessibilityLabel: '${korean ? '업무 차트' : 'Business chart'}',
+  accessibilityLabel: '${title}',
+  getAccessibleDatumLabel: id => datumLabels.get(String(id)) ?? String(id),
   ${radial ? '' : "navigation: { wheel: 'native', keyboard: true },\n"}})
 
 window.addEventListener('pagehide', () => {

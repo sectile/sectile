@@ -1,6 +1,6 @@
 ---
 title: DOM Chart 렌더링
-description: 기존 element를 접근 가능하고 페이지 입력을 방해하지 않는 Canvas 차트에 연결합니다.
+description: 기존 HTML에 차트를 그리고, 접근성 이름을 붙이며, 사용한 자원을 안전하게 정리합니다.
 ---
 
 <script setup>
@@ -9,7 +9,7 @@ import ChartPackageExample from '../../../.vitepress/theme/components/ChartPacka
 
 # DOM 렌더링
 
-`@sectile/dom/chart`는 기존 root를 측정하고 controller를 project하며 data mark와 축·접근성 overlay를 만들고, 브라우저 입력과 resource 정리를 담당합니다.
+Vue 컴포넌트 없이 앱이 직접 HTML을 관리한다면 `@sectile/dom/chart`를 사용하세요. 차트 영역의 크기를 재고 Canvas에 그리며, 크기 변경에 맞춰 갱신하고, 키보드와 화면 읽기 프로그램에 필요한 요소도 만듭니다.
 
 <ChartPackageExample kind="bar" host="dom" />
 
@@ -19,7 +19,9 @@ import ChartPackageExample from '../../../.vitepress/theme/components/ChartPacka
 pnpm add @sectile/chart @sectile/dom
 ```
 
-## 기존 element 연결하기
+## 기존 HTML 요소 연결하기
+
+[데이터와 스케일](./model)의 `definition`과 `revenue` 데이터를 이어서 사용합니다. 차트 영역에는 높이를 지정하고 Canvas가 그 안을 채우게 합니다.
 
 ```html
 <div data-chart>
@@ -27,16 +29,38 @@ pnpm add @sectile/chart @sectile/dom
 </div>
 ```
 
+```css
+[data-chart] {
+  position: relative;
+  height: 24rem;
+}
+
+[data-chart] canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+```
+
 ```ts
 import { createChartController } from '@sectile/chart/controller'
 import { createDOMChart } from '@sectile/dom/chart'
 
-const root = document.querySelector<HTMLElement>('[data-chart]')!
-const canvas = root.querySelector<HTMLCanvasElement>('canvas')!
+const root = document.querySelector('[data-chart]')
+const canvas = root?.querySelector('canvas')
+
+if (!(root instanceof HTMLElement) || !(canvas instanceof HTMLCanvasElement)) {
+  throw new Error('차트 영역을 찾을 수 없습니다')
+}
+
 const controller = createChartController({
   definition,
   viewCapabilities: [{ axisID: 'date', minimumSpan: 86_400_000 }],
 })
+const revenueLabels = new Map(revenue.map(point => [
+  point.id,
+  `${point.date.toLocaleDateString()}: ${point.amount.toLocaleString()}`,
+]))
 
 const chart = createDOMChart({
   root,
@@ -47,13 +71,18 @@ const chart = createDOMChart({
   getAccessibleDatumLabel: id => revenueLabels.get(id) ?? String(id),
   navigation: { wheel: 'native', keyboard: true },
 })
+
+window.addEventListener('pagehide', () => {
+  chart.disconnect()
+  controller.dispose()
+}, { once: true })
 ```
 
-애플리케이션 CSS에서 root에 실제 layout size를 주고 canvas가 이를 채우게 합니다. Connection은 root 크기와 device pixel ratio 변경을 관찰합니다. 표시되는 예제 코드는 통합 계약이 잘 보이도록 제품 스타일을 제외합니다.
+단일 페이지 앱에서는 `pagehide`를 기다리지 말고, 이 화면이나 컴포넌트를 제거할 때 같은 두 정리 함수를 호출하세요.
 
-## Renderer 선택하기
+## 렌더러 선택하기
 
-`auto`는 가능한 경우 WebGL2를 쓰고 Canvas2D로 fallback합니다. 호환성 진단에는 `canvas2d`, 가속 불가를 명시적 실패로 다뤄야 하면 `webgl2`를 선택합니다.
+`auto`는 WebGL2를 쓸 수 있으면 사용하고, 그렇지 않으면 Canvas2D로 전환합니다. 대부분의 앱에는 이 기본값이 알맞습니다. 호환성 문제를 확인할 때는 `canvas2d`, 그래픽 가속을 쓸 수 없으면 앱이 실패해야 할 때는 `webgl2`를 선택하세요.
 
 ```ts
 import { createChartRenderer } from '@sectile/dom/chart'
@@ -68,13 +97,13 @@ const renderer = createChartRenderer(canvas, {
 })
 ```
 
-사용할 때 renderer object를 `createDOMChart`에 전달합니다. 빌린 renderer는 애플리케이션 소유이며 mode 문자열로 만든 renderer는 connection 소유입니다.
+직접 만든 렌더러는 `createDOMChart`의 `renderer` 옵션으로 전달하고, 더 이상 쓰지 않을 때 `renderer.disconnect()`도 직접 호출합니다. 대신 `'auto'`, `'canvas2d'`, `'webgl2'` 문자열을 전달하면 차트 연결이 렌더러 생성과 정리를 맡습니다.
 
 ## 페이지 입력을 예측 가능하게 두기
 
-기본값은 native wheel, drag 없음, pinch 없음, keyboard navigation 없음입니다. 각 binding을 따로 켭니다. 직접 drag 또는 pinch에는 `controlAlternative: 'built-in'`이나 `'external'`이 필요합니다. External 대안은 버튼을 controller view event에 연결합니다.
+기본값에서는 휠 입력을 페이지 스크롤에 남겨 두고 드래그, 두 손가락 확대·축소, 키보드 탐색을 끕니다. 차트에 필요한 입력만 켜세요. 드래그나 두 손가락 조작을 켤 때는 `controlAlternative: 'built-in'` 또는 `'external'`로 같은 동작을 수행할 수 있는 버튼도 제공해야 합니다.
 
-## Frame 작업 제한하기
+## 프레임마다 그릴 양 제한하기
 
 ```ts
 renderPolicy: {
@@ -86,14 +115,14 @@ renderPolicy: {
 }
 ```
 
-Representative 제한은 [대규모 데이터](./performance)의 exact/aggregate 계약을 따릅니다. Adaptive scale은 backing pixel cost만 바꾸며 데이터, selection, view domain은 바꾸지 않습니다.
+그리기 항목 수는 [대규모 데이터](./performance)에 설명한 상세도 규칙을 따릅니다. 적응형 렌더링은 프레임 예산을 맞추려고 Canvas 해상도를 낮출 수 있지만 값, ID, 선택, 축의 표시 범위는 바꾸지 않습니다.
 
-## 소유 resource 정리하기
+## 사용한 자원 정리하기
 
 ```ts
 chart.disconnect()
 controller.dispose()
-renderer.disconnect() // 애플리케이션 소유 renderer일 때만
+renderer.disconnect() // 앱에서 직접 만든 renderer일 때만
 ```
 
-`disconnect()`는 listener와 observer를 제거하고 대기 중인 frame을 취소하며 overlay node와 connection 소유 graphics resource를 해제합니다. 여러 번 호출해도 안전합니다.
+`chart.disconnect()`는 이벤트 리스너와 크기 관찰자를 제거하고, 대기 중인 프레임을 취소하고, 접근성 요소와 차트 연결이 만든 그래픽 자원을 해제합니다. 여러 번 호출해도 안전합니다.

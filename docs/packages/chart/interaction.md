@@ -1,6 +1,6 @@
 ---
 title: Chart interaction and state
-description: Keep selection, cursor, and immutable axis-domain views explicit while preserving page-safe browser input.
+description: Add selection, keyboard controls, panning, and zooming without trapping normal page input.
 ---
 
 <script setup>
@@ -9,13 +9,13 @@ import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageE
 
 # Interaction and state
 
-Selection answers “which data matters?” while an axis view answers “which part of this domain is visible?” Both are renderer-neutral immutable values. DOM translates browser input into the same Core events.
+A chart can track selected records, the record under the pointer, and the visible range of each axis. You can let Sectile manage these values or bind them to application state.
 
 <ChartPackageExample kind="scatter" />
 
-## Enable capabilities separately from browser gestures
+## Enable a visible range before adding controls
 
-An axis becomes navigable only when it has a view capability. The browser binding is a second, explicit choice.
+To pan or zoom an axis, first add a view capability for that axis. It defines how far the user may zoom and what should happen when data changes. Browser and keyboard controls are then enabled separately.
 
 ```ts
 const controller = createChartController({
@@ -38,18 +38,18 @@ const chart = createDOMChart({
 })
 ```
 
-`wheel: 'native'` is the default: scrolling over a chart continues to scroll the page. Opt into `pan` or `zoom` only for charts where direct wheel navigation is expected. Drag or pinch navigation also requires a built-in or external single-pointer control alternative, so the same operation remains available without a precision gesture.
+`wheel: 'native'` is the default, so scrolling over the chart still scrolls the page. Choose wheel panning or zooming only when users will expect the chart to capture that input. Drag and pinch also require visible buttons or another single-pointer control that performs the same action.
 
-| Input binding | Recommended use |
+| Input method | Recommended use |
 | --- | --- |
-| Visible pan/zoom/reset controls | Default for discoverability and accessibility |
+| Visible pan, zoom, and reset buttons | Good default for discovery and accessibility |
 | Keyboard | Focused chart navigation |
 | Drag pan | Dense Cartesian exploration with visible alternatives |
-| Modified wheel zoom | Desktop analytical tools; choose the modifier explicitly |
+| Modified wheel zoom | Desktop analysis tools; choose the modifier explicitly |
 | Pinch | Touch exploration with visible alternatives |
 | Radial navigation | Not applicable to pie and donut |
 
-## Dispatch domain events directly
+## Trigger the same action from application code
 
 ```ts
 controller.dispatch({
@@ -61,12 +61,12 @@ controller.dispatch({
 })
 ```
 
-Continuous views store numeric minimum and maximum values. Categorical views store a start/end window over stable category order. Pan and zoom therefore remain meaningful after resize and across different renderers; they are not mutable pixel transforms.
+`factor: 1.5` makes the current range 1.5 times smaller, while `anchor: 0.75` keeps the point three quarters across the range in place. Numeric and temporal axes store visible minimum and maximum values. Categorical axes store the first and last visible category. The visible range therefore remains valid after resize.
 
 ## Control state from the application
 
-Selection, cursor, active datum, and the complete `ChartViewState` can be controlled. A controlled event emits a command; the owner applies the requested immutable value. In Vue, use `v-model`, `v-model:cursor`, `v-model:active-datum`, and `v-model:view`.
+Selection, cursor, active record, and all visible axis ranges can be controlled by the application. When a controlled value would change, Sectile emits a command and waits for the owner to pass the new value back. In Vue, use `v-model`, `v-model:cursor`, `v-model:active-datum`, and `v-model:view`.
 
-A single controlled `view` can synchronize multiple chart roots with matching axis IDs. Use `update: 'preserve'` to retain the visible domain after data replacement, `reset` to return to the new initial domain, or `follow-end` for a live time window that remains attached to the latest values.
+A shared `view` value keeps several charts with matching axis IDs on the same range. When data changes, `update: 'preserve'` keeps the current range, `reset` returns to the new full range, and `follow-end` keeps a live time window attached to the newest values.
 
-When data disappears, Chart reconciles missing active, cursor, and point-selection IDs. Dispose application-owned controllers when their lifetime ends.
+If a selected or active record disappears after an update, Sectile removes its ID from the interaction state. Call `controller.dispose()` when an application-created controller is no longer used.
