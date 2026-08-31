@@ -1,6 +1,8 @@
 import { createPaginationModel, tryCreatePaginationState } from '@sectile/core/pagination';
 import { unwrap } from '@sectile/core/result';
-import { projectTabularColumnPartitions, reconcileTabularColumns } from './internal/columns.js';
+import { canonicalizeTabularColumnState, projectTabularColumnPartitions, reconcileTabularColumns } from './internal/columns.js';
+import { canonicalizeTabularAccessState } from './internal/access.js';
+import { canonicalizeTabularExpansion } from './internal/expansion.js';
 import { fail, ok } from './internal/foundation.js';
 import {
   canonicalizeRowSelection,
@@ -11,8 +13,7 @@ import {
   setVisibleRowSelectionRange,
   toggleExplicitRowSelection,
 } from './internal/selection.js';
-import { tryCreateTabularModel, tryCreateTabularState } from './model.js';
-import { tryCreateTabularQuery } from './query.js';
+import { canonicalizeTabularStateQuery, tryCreateTabularModel, tryCreateTabularState } from './model.js';
 import { synchronizeTabularView } from './source.js';
 import type {
   TabularAccessState,
@@ -159,7 +160,7 @@ class DataTableRuntime implements DataTableController {
   }
 
   public dispatch(event: DataTableEvent, expectedRevision: number = this.#snapshot.revision): TabularResult<DataTableUpdate> {
-    if (this.#disposed) return fail('transition-rejection', 'invalid-controlled-shape', 'Disposed DataTable controller cannot dispatch.');
+    if (this.#disposed) return dataTableDisposed('dispatch events');
     const proposed = applyDataTableEvent(this.#model, this.#snapshot, event, expectedRevision);
     if (!proposed.ok) return proposed;
     const before = this.#snapshot.state;
@@ -169,7 +170,7 @@ class DataTableRuntime implements DataTableController {
       || (this.#model.controlled.accessState && proposedState.accessState !== before.accessState)
       || (this.#model.controlled.expansion && proposedState.expansion !== before.expansion)
     );
-    const reconciled = this.#reconcileControlled(proposed.value.snapshot.state);
+    const reconciled = this.#reconcileControlled(before, proposed.value.snapshot.state);
     if (!reconciled.ok) return reconciled;
     const committedState = controlledRequestProposal
       ? Object.freeze({
@@ -185,26 +186,36 @@ class DataTableRuntime implements DataTableController {
             : {}),
         })
       : reconciled.value;
-    const commands = controlledRequestProposal
+    const candidateCommands = controlledRequestProposal
       ? proposed.value.commands.filter((command) => command.type !== 'request-view')
       : proposed.value.commands;
-    const update = Object.freeze({
-      snapshot: Object.freeze({ revision: proposed.value.snapshot.revision, state: committedState }),
-      commands: Object.freeze(commands),
-    });
-    this.#snapshot = update.snapshot;
-    this.#emit(update.commands);
+    const snapshot = Object.freeze({ revision: proposed.value.snapshot.revision, state: committedState });
+    this.#snapshot = snapshot;
+    this.#notifyControlled(before, proposedState);
+    const commands = Object.freeze(candidateCommands.filter((command) => (
+      command.type !== 'request-view'
+      || this.#snapshot.state.requestState.pendingRequest?.requestID === command.request.requestID
+    )));
+    const update = Object.freeze({ snapshot, commands });
+    this.#emit(commands);
     return ok(update);
   }
 
   public synchronizeView(response: TabularViewResponse): TabularResult<TabularSnapshot> {
+    if (this.#disposed) return dataTableDisposed('synchronize view responses');
     const pending = this.#snapshot.state.requestState.pendingRequest;
     if (pending === null) return fail('transition-rejection', 'stale-request', 'No request is pending for this response.');
     const currentView = this.#snapshot.state.acceptedViewState.kind === 'none' ? null : this.#snapshot.state.acceptedViewState.view;
     const view = synchronizeTabularView(pending, response, currentView, this.#model.limits);
     if (!view.ok) return view;
     const previousColumns = currentView?.columnSchema.columns ?? this.#model.columns;
-    const columnState = reconcileTabularColumns(previousColumns, this.#snapshot.state.columnState, view.value.columnSchema.columns, this.#model.limits);
+    const columnState = reconcileTabularColumns(
+      previousColumns,
+      this.#snapshot.state.columnState,
+      view.value.columnSchema.columns,
+      this.#model.limits,
+      view.value.columnSchema.headers,
+    );
     if (!columnState.ok) return columnState;
     const accessState = synchronizeAccess(this.#snapshot.state.accessState, view.value);
     if (!accessState.ok) return accessState;
@@ -225,6 +236,7 @@ class DataTableRuntime implements DataTableController {
   }
 
   public syncControlledValues(values: TabularControlledValues): TabularResult<TabularSnapshot> {
+    if (this.#disposed) return dataTableDisposed('synchronize controlled values');
     const current = this.#snapshot.state;
     for (const key of ['query', 'rowSelection', 'columnState', 'accessState', 'expansion'] as const) {
       if ((values[key] !== undefined) !== this.#model.controlled[key]) {
@@ -234,23 +246,39 @@ class DataTableRuntime implements DataTableController {
     let next = current;
     let requestNeeded = false;
     if (values.query !== undefined && values.query !== current.query) {
-      const query = tryCreateTabularQuery(values.query, this.#model.limits);
+      const query = canonicalizeTabularStateQuery(this.#model, values.query);
       if (!query.ok) return query;
       next = Object.freeze({ ...next, query: query.value, queryRevision: next.queryRevision + 1,
         rowSelection: reconcileRowSelectionBinding(next.rowSelection, next.sourceGeneration, next.queryRevision + 1, false) });
       requestNeeded = true;
     }
-    if (values.rowSelection !== undefined) next = Object.freeze({ ...next, rowSelection: values.rowSelection });
-    if (values.columnState !== undefined) next = Object.freeze({
+    if (values.rowSelection !== undefined) {
+      const selection = canonicalizeRowSelection(values.rowSelection, this.#model.limits);
+      if (!selection.ok) return selection;
+      next = Object.freeze({ ...next, rowSelection: selection.value });
+    }
+    if (values.columnState !== undefined) {
+      const schema = activeColumnSchema(this.#model, current);
+      const columnState = canonicalizeTabularColumnState(values.columnState, schema.columns, schema.headers);
+      if (!columnState.ok) return columnState;
+      next = Object.freeze({
       ...next,
-      columnState: values.columnState,
-      projectionGeneration: sameColumnProjection(current.columnState, values.columnState)
+      columnState: columnState.value,
+      projectionGeneration: sameColumnProjection(current.columnState, columnState.value)
         ? next.projectionGeneration
         : next.projectionGeneration + 1,
-    });
-    if (values.accessState !== undefined && values.accessState !== current.accessState) { next = Object.freeze({ ...next, accessState: values.accessState }); requestNeeded = true; }
+      });
+    }
+    if (values.accessState !== undefined && values.accessState !== current.accessState) {
+      const accessState = canonicalizeTabularAccessState(values.accessState);
+      if (!accessState.ok) return accessState;
+      next = Object.freeze({ ...next, accessState: accessState.value });
+      requestNeeded = true;
+    }
     if (values.expansion !== undefined && values.expansion !== current.expansion) {
-      next = Object.freeze({ ...next, expansion: Object.freeze([...values.expansion]), expansionRevision: next.expansionRevision + 1 });
+      const expansion = canonicalizeTabularExpansion(values.expansion, this.#model.limits);
+      if (!expansion.ok) return expansion;
+      next = Object.freeze({ ...next, expansion: expansion.value, expansionRevision: next.expansionRevision + 1 });
       requestNeeded = true;
     }
     if (requestNeeded) {
@@ -269,6 +297,7 @@ class DataTableRuntime implements DataTableController {
   }
 
   public abandonRequest(requestID: number): TabularResult<TabularSnapshot> {
+    if (this.#disposed) return dataTableDisposed('abandon requests');
     const state = this.#snapshot.state;
     if (state.requestState.pendingRequest?.requestID !== requestID) return fail('transition-rejection', 'stale-request', 'Request ID does not identify the active request.');
     const ready = state.acceptedViewState.kind === 'current';
@@ -287,10 +316,18 @@ class DataTableRuntime implements DataTableController {
   }
 
   public attachRequestExecutor(listener: (command: Extract<DataTableCommand, { readonly type: 'request-view' }>) => void): TabularResult<() => void> {
+    if (this.#disposed) return dataTableDisposed('attach request executors');
     if (this.#executor !== null) return fail('construction', 'duplicate-source-executor', 'Only one request executor may attach to a DataTable controller.');
     this.#executor = listener;
     const pending = this.#snapshot.state.requestState.pendingRequest;
-    if (pending !== null) listener(Object.freeze({ type: 'request-view', request: pending }));
+    if (pending !== null) {
+      try {
+        listener(Object.freeze({ type: 'request-view', request: pending }));
+      } catch (error) {
+        if (this.#executor === listener) this.#executor = null;
+        throw error;
+      }
+    }
     let active = true;
     return ok(() => { if (active) { active = false; if (this.#executor === listener) this.#executor = null; } });
   }
@@ -308,8 +345,15 @@ class DataTableRuntime implements DataTableController {
     return ok(this.#snapshot);
   }
 
-  #reconcileControlled(proposed: TabularState): TabularResult<TabularState> {
-    const current = this.#snapshot.state;
+  #reconcileControlled(current: TabularState, proposed: TabularState): TabularResult<TabularState> {
+    let reconciled = proposed;
+    for (const key of ['query', 'rowSelection', 'columnState', 'accessState', 'expansion'] as const) {
+      if (this.#model.controlled[key]) reconciled = Object.freeze({ ...reconciled, [key]: current[key] });
+    }
+    return ok(reconciled);
+  }
+
+  #notifyControlled(previous: TabularState, proposed: TabularState): void {
     const callbacks = {
       query: this.#options.onQueryChange,
       rowSelection: this.#options.onRowSelectionChange,
@@ -317,20 +361,38 @@ class DataTableRuntime implements DataTableController {
       accessState: this.#options.onAccessStateChange,
       expansion: this.#options.onExpansionChange,
     };
-    let reconciled = proposed;
     for (const key of ['query', 'rowSelection', 'columnState', 'accessState', 'expansion'] as const) {
-      if (proposed[key] !== current[key]) callbacks[key]?.(proposed[key] as never);
-      if (this.#model.controlled[key]) reconciled = Object.freeze({ ...reconciled, [key]: current[key] });
+      if (proposed[key] !== previous[key]) callbacks[key]?.(proposed[key] as never);
     }
-    return ok(reconciled);
   }
 
   #emit(commands: readonly DataTableCommand[]): void {
+    const listeners = [...this.#listeners];
+    const executor = this.#executor;
+    let firstError: unknown;
+    let failed = false;
     for (const command of commands) {
-      for (const listener of this.#listeners) listener(command);
-      if (command.type === 'request-view') this.#executor?.(command);
+      for (const listener of listeners) {
+        try {
+          listener(command);
+        } catch (error) {
+          if (!failed) { failed = true; firstError = error; }
+        }
+      }
+      if (command.type === 'request-view' && executor !== null) {
+        try {
+          executor(command);
+        } catch (error) {
+          if (!failed) { failed = true; firstError = error; }
+        }
+      }
     }
+    if (failed) throw firstError;
   }
+}
+
+function dataTableDisposed<T>(operation: string): TabularResult<T> {
+  return fail('transition-rejection', 'controller-disposed', `Disposed DataTable controller cannot ${operation}.`);
 }
 
 function reduceDataTableEvent(
@@ -338,6 +400,9 @@ function reduceDataTableEvent(
   state: TabularState,
   event: DataTableEvent,
 ): TabularResult<{ readonly state: TabularState; readonly commands: readonly DataTableCommand[] }> {
+  if (typeof event !== 'object' || event === null) {
+    return fail('transition-rejection', 'invalid-data-table-event', 'DataTable event must be a recognized event object.');
+  }
   if (event.type === 'request-value-commit') return ok(Object.freeze({ state, commands: Object.freeze([event]) }));
   if (event.type === 'request-group-leaf-selection') {
     const target = createGroupLeafSelectionTarget(state.rowSelection, event.groupID, state.sourceGeneration, state.queryRevision, model.limits);
@@ -370,19 +435,27 @@ function reduceDataTableEvent(
     const selection = selectAllMatchingRows(state.sourceGeneration, state.queryRevision, model.limits);
     return selection.ok ? ok(Object.freeze({ state: Object.freeze({ ...state, rowSelection: selection.value }), commands: Object.freeze([]) })) : selection;
   }
-  if (event.type === 'set-column-state') return ok(Object.freeze({
-    state: Object.freeze({
-      ...state,
-      columnState: event.columnState,
-      projectionGeneration: sameColumnProjection(state.columnState, event.columnState)
-        ? state.projectionGeneration
-        : state.projectionGeneration + 1,
-    }),
-    commands: Object.freeze([]),
-  }));
-  if (event.type === 'set-access') return requestAfter(Object.freeze({ ...state, accessState: event.accessState }));
+  if (event.type === 'set-column-state') {
+    const schema = activeColumnSchema(model, state);
+    const columnState = canonicalizeTabularColumnState(event.columnState, schema.columns, schema.headers);
+    if (!columnState.ok) return columnState;
+    return ok(Object.freeze({
+      state: Object.freeze({
+        ...state,
+        columnState: columnState.value,
+        projectionGeneration: sameColumnProjection(state.columnState, columnState.value)
+          ? state.projectionGeneration
+          : state.projectionGeneration + 1,
+      }),
+      commands: Object.freeze([]),
+    }));
+  }
+  if (event.type === 'set-access') {
+    const accessState = canonicalizeTabularAccessState(event.accessState);
+    return accessState.ok ? requestAfter(Object.freeze({ ...state, accessState: accessState.value })) : accessState;
+  }
   if (event.type === 'set-query') {
-    const query = tryCreateTabularQuery(event.query, model.limits);
+    const query = canonicalizeTabularStateQuery(model, event.query);
     if (!query.ok) return query;
     const queryRevision = state.queryRevision + 1;
     return requestAfter(Object.freeze({
@@ -393,7 +466,12 @@ function reduceDataTableEvent(
       accessState: state.accessState.kind === 'page' ? Object.freeze({ ...state.accessState, page: 1, visibleRowCount: null, pagination: null }) : state.accessState,
     }));
   }
-  if (event.type === 'set-expansion') return requestAfter(Object.freeze({ ...state, expansion: Object.freeze([...event.expansion]), expansionRevision: state.expansionRevision + 1 }));
+  if (event.type === 'set-expansion') {
+    const expansion = canonicalizeTabularExpansion(event.expansion, model.limits);
+    return expansion.ok
+      ? requestAfter(Object.freeze({ ...state, expansion: expansion.value, expansionRevision: state.expansionRevision + 1 }))
+      : expansion;
+  }
   if (event.type === 'replace-source') return requestAfter(Object.freeze({
     ...state,
     sourceGeneration: state.sourceGeneration + 1,
@@ -406,7 +484,14 @@ function reduceDataTableEvent(
     const initial = tryCreateTabularState(model);
     return initial.ok ? requestAfter(initial.value) : initial;
   }
-  return requestAfter(state);
+  if (event.type === 'request-view') return requestAfter(state);
+  return fail('transition-rejection', 'invalid-data-table-event', 'DataTable event type is not recognized.');
+}
+
+function activeColumnSchema(model: TabularModel, state: TabularState): Pick<TabularModel, 'columns' | 'headers'> {
+  return state.acceptedViewState.kind === 'none'
+    ? model
+    : state.acceptedViewState.view.columnSchema;
 }
 
 function requestAfter(state: TabularState): TabularResult<{ readonly state: TabularState; readonly commands: readonly DataTableCommand[] }> {

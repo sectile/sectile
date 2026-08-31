@@ -88,3 +88,66 @@ test('TAB-TGR-04: tree profile emits no renderer reveal commands', () => {
   controller.dispatch({ type: 'begin-edit' });
   assert.equal(observed.some(({ type }) => type.includes('reveal')), false);
 });
+
+test('disposed DataTreeGrid rejects mutation and reconnection without state changes', () => {
+  const controller = createDataTreeGrid({ columns });
+  const before = controller.getSnapshot();
+  controller.dispose();
+  controller.dispose();
+
+  const failures = [
+    controller.dispatch({ type: 'request-view' }),
+    controller.synchronizeView({}),
+    controller.syncControlledValues({}),
+    controller.requestView(),
+    controller.abandonRequest(1),
+    controller.attachRequestExecutor(() => assert.fail('disposed executor attached')),
+  ];
+  for (const result of failures) {
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'controller-disposed');
+    assert.equal(controller.getSnapshot(), before);
+  }
+});
+
+test('controlled DataTreeGrid callback synchronization preserves the latest shared-base revision', () => {
+  const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
+  const next = { ...query, sort: [{ id: 'name', columnID: 'name', direction: 'ascending', comparator: 'text' }] };
+  let controller;
+  controller = createDataTreeGrid({
+    columns,
+    controlled: { query: true },
+    initialValues: { query },
+    onQueryChange(value) {
+      assert.equal(controller.syncControlledValues({ query: value }).ok, true);
+    },
+  });
+  const requests = [];
+  controller.subscribeCommands((command) => {
+    if (command.type === 'request-view') requests.push(command.request);
+  });
+
+  const outer = controller.dispatch({ type: 'set-query', query: next });
+  assert.equal(outer.ok, true);
+  assert.deepEqual(controller.getSnapshot().tabular.state.query, next);
+  assert.notEqual(controller.getSnapshot().tabular.state.query, next);
+  assert.equal(controller.getSnapshot().revision, 1);
+  assert.equal(controller.getSnapshot().tabular.revision, 2);
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].requestID, controller.getSnapshot().tabular.state.requestState.pendingRequest.requestID);
+});
+
+test('TAB-TGR-05: controlled tree-grid owner synchronizes null cursor and navigation edit state', () => {
+  const controller = createDataTreeGrid({
+    columns,
+    controlled: { cursor: true, edit: true },
+    initialValues: { cursor: { current: null }, edit: { kind: 'navigation' } },
+  });
+  assert.equal(controller.synchronizeView(response(controller, rows)).ok, true);
+  const cell = { rowID: 'r1', columnID: 'name' };
+  assert.equal(controller.syncControlledValues({ cursor: { current: cell }, edit: { kind: 'editing', cell } }).ok, true);
+  assert.deepEqual(controller.getSnapshot().edit, { kind: 'editing', cell });
+  assert.equal(controller.syncControlledValues({ cursor: { current: null }, edit: { kind: 'navigation' } }).ok, true);
+  assert.equal(controller.getSnapshot().cursor.current, null);
+  assert.deepEqual(controller.getSnapshot().edit, { kind: 'navigation' });
+});

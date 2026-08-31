@@ -3,6 +3,7 @@ import { connectDataTreeGrid, type DataTreeGridColumnSizeState as DOMDataTreeGri
 import {
   createDataTreeGrid,
   type DataTreeGridCommand as SemanticDataTreeGridCommand,
+  type DataTreeGridControlledValues,
   type DataTreeGridController as SemanticDataTreeGridController,
   type DataTreeGridCursorState,
   type DataTreeGridEditState,
@@ -48,48 +49,45 @@ export interface UseDataTreeGridOptions<Source extends SourceResolver = DataTree
   readonly isCellDisabled?: SemanticDataTreeGridOptions['isCellDisabled'];
 }
 declare const dataTreeGridSchema: unique symbol;
-export interface DataTreeGridController<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> extends VueProfileController<DataTreeGridState, DataTreeGridEvent, SemanticDataTreeGridCommand>, SourceReturn<DataTreeGridSourceResolver<LeafCells, GroupCells>> { readonly [dataTreeGridSchema]?: { readonly leaf: LeafCells; readonly group: GroupCells }; readonly acceptedViewState: ComputedRef<DataTreeGridAcceptedViewState<LeafCells, GroupCells>>; getProjection(): DataTreeGridProjection }
+export interface DataTreeGridController<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> extends VueProfileController<DataTreeGridState, DataTreeGridEvent, SemanticDataTreeGridCommand, DataTreeGridControlledValues>, SourceReturn<DataTreeGridSourceResolver<LeafCells, GroupCells>> { readonly [dataTreeGridSchema]?: { readonly leaf: LeafCells; readonly group: GroupCells }; readonly acceptedViewState: ComputedRef<DataTreeGridAcceptedViewState<LeafCells, GroupCells>>; getProjection(): DataTreeGridProjection }
 interface HostOptions { readonly columnSizes?: Readonly<Record<string, number>>; readonly defaultColumnSizes?: Readonly<Record<string, number>>; readonly onColumnSizesChange?: DataTreeGridColumnSizeChangeHandler }
 const hosts = new WeakMap<object, HostOptions>();
+const activeConnections = new WeakMap<object, HostConnection>();
 export function useDataTreeGrid<const Source extends SourceResolver, LeafCells extends object = DataTableLeafCellsFromSource<Source>, GroupCells extends object = DataTableGroupCellsFromSource<Source>>(options: UseDataTreeGridOptions<Source>): DataTreeGridController<LeafCells, GroupCells> {
   for (const property of ['query', 'rowSelection', 'columnState', 'accessState', 'expansion', 'cursor', 'editState', 'columnSizeState']) assertExclusive(options, property);
   const semantic = createDataTreeGrid({
     columns: options.initialView?.columnSchema.columns ?? [], headers: options.initialView?.columnSchema.headers ?? [], ...(options.limits === undefined ? {} : { limits: options.limits }), ...(options.isCellDisabled === undefined ? {} : { isCellDisabled: options.isCellDisabled }),
-    controlled: { query: options.query !== undefined, rowSelection: options.rowSelection !== undefined, columnState: options.columnState !== undefined, accessState: options.accessState !== undefined, expansion: options.expansion !== undefined },
+    controlled: { query: options.query !== undefined, rowSelection: options.rowSelection !== undefined, columnState: options.columnState !== undefined, accessState: options.accessState !== undefined, expansion: options.expansion !== undefined, cursor: options.cursor !== undefined, edit: options.editState !== undefined },
     initialValues: {
       ...(options.query === undefined && options.defaultQuery === undefined ? {} : { query: options.query?.value ?? options.defaultQuery }),
       ...(options.rowSelection === undefined && options.defaultRowSelection === undefined ? {} : { rowSelection: options.rowSelection?.value ?? options.defaultRowSelection }),
       ...(options.columnState === undefined && options.defaultColumnState === undefined ? {} : { columnState: options.columnState?.value ?? options.defaultColumnState }),
       ...(options.accessState === undefined && options.defaultAccessState === undefined ? {} : { accessState: options.accessState?.value ?? options.defaultAccessState }),
       ...(options.expansion === undefined && options.defaultExpansion === undefined ? {} : { expansion: options.expansion?.value ?? options.defaultExpansion }),
+      ...(options.cursor === undefined && options.defaultCursor === undefined ? {} : { cursor: options.cursor?.value ?? options.defaultCursor }),
+      ...(options.editState === undefined && options.defaultEditState === undefined ? {} : { edit: options.editState?.value ?? options.defaultEditState }),
     },
-    ...(options.onQueryChange === undefined ? {} : { onQueryChange: options.onQueryChange }), ...(options.onRowSelectionChange === undefined ? {} : { onRowSelectionChange: options.onRowSelectionChange }), ...(options.onColumnStateChange === undefined ? {} : { onColumnStateChange: options.onColumnStateChange }), ...(options.onAccessStateChange === undefined ? {} : { onAccessStateChange: options.onAccessStateChange }), ...(options.onExpansionChange === undefined ? {} : { onExpansionChange: options.onExpansionChange }),
+    ...(options.onQueryChange === undefined ? {} : { onQueryChange: options.onQueryChange }), ...(options.onRowSelectionChange === undefined ? {} : { onRowSelectionChange: options.onRowSelectionChange }), ...(options.onColumnStateChange === undefined ? {} : { onColumnStateChange: options.onColumnStateChange }), ...(options.onAccessStateChange === undefined ? {} : { onAccessStateChange: options.onAccessStateChange }), ...(options.onExpansionChange === undefined ? {} : { onExpansionChange: options.onExpansionChange }), ...(options.onCursorChange === undefined ? {} : { onCursorChange: options.onCursorChange }), ...(options.onEditStateChange === undefined ? {} : { onEditStateChange: options.onEditStateChange }),
   });
-  const base = createVueProfileController(semantic); const notify = (before: DataTreeGridState, after: DataTreeGridState): void => { if (before.cursor !== after.cursor) options.onCursorChange?.(after.cursor); if (before.edit !== after.edit) options.onEditStateChange?.(after.edit); };
+  const base = createVueProfileController(semantic);
   const controller = Object.freeze({ ...base,
-    dispatch: (event: DataTreeGridEvent, revision?: number) => { const before = base.getSnapshot(); const result = base.dispatch(event, revision); if (result.ok) notify(before, result.value.snapshot); return result; },
-    synchronizeView: (response: DataTreeGridViewResponse<LeafCells, GroupCells>) => { const before = base.getSnapshot(); const result = base.synchronizeView(response); if (result.ok) notify(before, result.value); return result; },
-    syncControlledValues: (values: Parameters<typeof base.syncControlledValues>[0]) => { const before = base.getSnapshot(); const result = base.syncControlledValues(values); if (result.ok) notify(before, result.value); return result; },
-    requestView: () => { const before = base.getSnapshot(); const result = base.requestView(); if (result.ok) notify(before, result.value); return result; },
-    abandonRequest: (requestID: number) => { const before = base.getSnapshot(); const result = base.abandonRequest(requestID); if (result.ok) notify(before, result.value); return result; },
     getProjection: () => semantic.getProjection(),
   }); aliasVueProfileController(controller, base);
   hosts.set(controller, Object.freeze({ ...(options.columnSizeState === undefined ? {} : { columnSizes: options.columnSizeState.value }), ...(options.defaultColumnSizeState === undefined ? {} : { defaultColumnSizes: options.defaultColumnSizeState }), ...(options.onColumnSizeStateChange === undefined ? {} : { onColumnSizesChange: options.onColumnSizeStateChange }) }));
   if (options.initialView !== undefined) unwrap(controller.synchronizeView(options.initialView as DataTreeGridViewResponse<LeafCells, GroupCells>));
   const source = useProfileSource(controller, options.source, { ...(options.onSourceError === undefined ? {} : { onError: options.onSourceError }), ...(options.onSourceStatusChange === undefined ? {} : { onStatusChange: options.onSourceStatusChange }) });
-  const desiredCursor = options.cursor?.value ?? options.defaultCursor; if (desiredCursor?.current !== null && desiredCursor?.current !== undefined && controller.getProjection().rows.length > 0) unwrap(controller.dispatch({ type: 'focus-cell', cell: desiredCursor.current }));
-  const stops: Array<() => void> = []; const sync = () => unwrap(controller.syncControlledValues(controlledValues(options)));
-  for (const source of [options.query, options.rowSelection, options.columnState, options.accessState, options.expansion]) if (source !== undefined) stops.push(watch(() => source.value, sync));
+  const stops: Array<() => void> = []; const sync = () => unwrap(controller.syncControlledValues(treeGridControlledValues(options)));
+  for (const source of [options.query, options.rowSelection, options.columnState, options.accessState, options.expansion, options.cursor, options.editState]) if (source !== undefined) stops.push(watch(() => source.value, sync));
   if (options.sourceKey !== undefined) stops.push(watch(() => toValue(options.sourceKey!), () => { unwrap(controller.dispatch({ type: 'replace-source' })); }));
-  if (options.cursor !== undefined) stops.push(watch(() => options.cursor!.value, (value) => { if (value.current !== null) unwrap(controller.dispatch({ type: 'focus-cell', cell: value.current })); }));
-  if (options.editState !== undefined) stops.push(watch(() => options.editState!.value, (value) => { unwrap(controller.dispatch(value.kind === 'editing' ? { type: 'begin-edit', cell: value.cell } : { type: 'cancel-edit', reason: 'application' })); }));
-  const rawDispose = controller.dispose; const wrapped = Object.freeze({ ...controller, status: source.status, error: source.error, reload: source.reload, cancel: source.cancel, replaceResolver: (resolver: DataTreeGridSourceResolver<LeafCells, GroupCells>) => source.replaceResolver(resolver as SourceResolver), dispose: () => { for (const stop of stops.splice(0)) stop(); source.dispose(); rawDispose(); } }) as DataTreeGridController<LeafCells, GroupCells>; aliasVueProfileController(wrapped, controller); hosts.set(wrapped, hosts.get(controller) ?? {}); if (getCurrentScope() !== undefined) onScopeDispose(wrapped.dispose); return wrapped;
+  const rawDispose = controller.dispose; const wrapped = Object.freeze({ ...controller, status: source.status, error: source.error, reload: source.reload, cancel: source.cancel, replaceResolver: (resolver: DataTreeGridSourceResolver<LeafCells, GroupCells>) => source.replaceResolver(resolver as SourceResolver), dispose: () => { for (const stop of stops.splice(0)) stop(); source.dispose(); rawDispose(); } }) as DataTreeGridController<LeafCells, GroupCells>; aliasVueProfileController(wrapped, controller); hosts.set(wrapped, hosts.get(controller) ?? {}); if (options.columnSizeState !== undefined) stops.push(watch(() => options.columnSizeState!.value, (value) => { hosts.set(wrapped, Object.freeze({ ...hosts.get(wrapped), columnSizes: value })); const result = activeConnections.get(wrapped)?.syncControlledValues?.({ ...treeGridControlledValues(options), columnSizes: value }); if (result !== undefined && !result.ok) throw new TypeError('Controlled DataTreeGrid column sizes failed to synchronize.'); }, { deep: false })); if (getCurrentScope() !== undefined) onScopeDispose(wrapped.dispose); return wrapped;
 }
 
 export interface DataTreeGridContextValue extends Omit<ProfileContext<DataTreeGridState, DataTreeGridEvent, SemanticDataTreeGridCommand, HostConnection>, 'connection'> {}
 const publicKey: InjectionKey<ProfileContext<DataTreeGridState, DataTreeGridEvent, SemanticDataTreeGridCommand, HostConnection>> = Symbol('SectileDataTreeGrid'); const privateKey: InjectionKey<ProfileContext<DataTreeGridState, DataTreeGridEvent, SemanticDataTreeGridCommand, HostConnection>> = Symbol('SectileDataTreeGridHost');
 export function useDataTreeGridContext(): DataTreeGridContextValue { return useProfile(publicKey, 'useDataTreeGridContext'); }
-const parts = createTabularParts({ profile: 'data-tree-grid', prefix: 'DataTreeGrid', publicKey, privateKey, connect: (element, controller, callbacks) => connectDataTreeGrid({ controller: controller as DataTreeGridController, root: element, ...hosts.get(controller), ...(callbacks.onCommand === undefined ? {} : { onCommand: callbacks.onCommand as DataTreeGridCommandHandler }), onSnapshotChange: callbacks.onSnapshotChange }) as unknown as HostConnection });
+const parts = createTabularParts({ profile: 'data-tree-grid', prefix: 'DataTreeGrid', publicKey, privateKey, connect: (element, controller, callbacks) => connectDataTreeGrid({ controller: controller as DataTreeGridController, root: element, ...hosts.get(controller), ...(callbacks.onCommand === undefined ? {} : { onCommand: callbacks.onCommand as DataTreeGridCommandHandler }), onSnapshotChange: callbacks.onSnapshotChange }) as unknown as HostConnection, connectionChanged: (controller, connection) => { if (connection === null) activeConnections.delete(controller); else activeConnections.set(controller, connection); } });
+
+function treeGridControlledValues(options: UseDataTreeGridOptions): DataTreeGridControlledValues { return Object.freeze({ ...controlledValues(options), ...(options.cursor === undefined ? {} : { cursor: options.cursor.value }), ...(options.editState === undefined ? {} : { edit: options.editState.value }) }); }
 
 export interface DataTreeGridProviderProps {}
 export interface DataTreeGridRootProps { readonly onCommand?: DataTreeGridCommandHandler; readonly onError?: DataTreeGridErrorHandler; readonly as?: PrimitiveAs; readonly asChild?: boolean }

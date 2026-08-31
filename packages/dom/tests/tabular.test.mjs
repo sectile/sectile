@@ -16,10 +16,10 @@ const columns = [
 function clientResponse(controller, records = [
   { id: 'r1', name: 'Alpha', score: 1 },
   { id: 'r2', name: 'Beta', score: 2 },
-]) {
+], columnSchema = { revision: 0, columns, headers: [] }) {
   const source = createClientTabularSource({
     records,
-    columnSchema: { revision: 0, columns, headers: [] },
+    columnSchema,
     getRowID: (record) => record.id,
     getValue: (record, columnID) => record[columnID],
   });
@@ -136,6 +136,51 @@ test('DOM DataTable preserves native structure, form output, and disposable regi
   assert.equal(commands.some((command) => command.type === 'request-view'), false);
 });
 
+test('DOM DataTable header metrics follow contiguous projected intervals after legal reorder hide and pin', () => {
+  const window = new Window();
+  const document = window.document;
+  const table = document.createElement('table');
+  document.body.append(table);
+  const groupedColumns = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+  const headers = [
+    { kind: 'group', id: 'group:ab', children: [
+      { kind: 'column', id: 'header:a', columnID: 'a' },
+      { kind: 'column', id: 'header:b', columnID: 'b' },
+    ] },
+    { kind: 'column', id: 'header:c', columnID: 'c' },
+  ];
+  const connection = createDataTable({ columns: groupedColumns, headers, table });
+  const response = clientResponse(connection.controller, [
+    { id: 'r1', a: 1, b: 2, c: 3 },
+  ], { revision: 0, columns: groupedColumns, headers });
+  assert.equal(connection.synchronizeView(response).ok, true);
+
+  const reordered = connection.controller.dispatch({
+    type: 'set-column-state',
+    columnState: { order: ['b', 'a', 'c'], hidden: [], pinnedStart: [], pinnedEnd: [] },
+  });
+  assert.equal(reordered.ok, true);
+  const group = document.createElement('th');
+  const leafB = document.createElement('th');
+  connection.setHeaderCellAttributes(group, { headerNodeID: 'group:ab' });
+  connection.setHeaderCellAttributes(leafB, { columnID: 'b' });
+  assert.equal(group.colSpan, 2);
+  assert.equal(leafB.id, 'sectile-tabular-header-header%3Ab');
+
+  const projected = connection.controller.dispatch({
+    type: 'set-column-state',
+    columnState: { order: ['b', 'a', 'c'], hidden: ['a'], pinnedStart: ['b'], pinnedEnd: [] },
+  });
+  assert.equal(projected.ok, true);
+  const projectedGroup = document.createElement('th');
+  const projectedC = document.createElement('th');
+  connection.setHeaderCellAttributes(projectedGroup, { headerNodeID: 'group:ab' });
+  connection.setHeaderCellAttributes(projectedC, { columnID: 'c' });
+  assert.equal(projectedGroup.colSpan, 1);
+  assert.equal(projectedC.id, 'sectile-tabular-header-header%3Ac');
+  connection.disconnect();
+});
+
 test('DOM Tabular checkbox controls select and clear visible leaf ranges from one anchor', () => {
   const records = [
     { id: 'r1', name: 'Alpha', score: 1 },
@@ -199,6 +244,35 @@ test('DOM Tabular checkbox controls select and clear visible leaf ranges from on
   shiftClick(treeWindow, lastLeaf);
   assert.deepEqual(tree.getSnapshot().tabular.state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1', 'r2', 'r3'] });
   tree.disconnect();
+});
+
+test('DOM Tabular generic checkbox controls own Space while native controls keep one activation path', () => {
+  const window = new Window();
+  const table = createDataTable({ columns, table: window.document.createElement('table') });
+  assert.equal(table.synchronizeView(clientResponse(table.controller)).ok, true);
+  const generic = window.document.createElement('div');
+  table.bindSelectionControl(generic, { rowID: 'r1', name: 'rows', value: 'r1' });
+  assert.equal(generic.tabIndex, 0);
+  const space = new window.KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+  generic.dispatchEvent(space);
+  assert.equal(space.defaultPrevented, true);
+  assert.deepEqual(table.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1'] });
+
+  const native = window.document.createElement('button');
+  table.bindSelectionControl(native, { rowID: 'r2', name: 'rows', value: 'r2' });
+  const nativeSpace = new window.KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+  native.dispatchEvent(nativeSpace);
+  assert.equal(nativeSpace.defaultPrevented, false);
+  assert.deepEqual(table.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1'] });
+  native.click();
+  assert.deepEqual(table.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1', 'r2'] });
+
+  const bulk = window.document.createElement('div');
+  table.bindBulkSelectionControl(bulk, { target: { kind: 'all-matching' } });
+  assert.equal(bulk.tabIndex, 0);
+  bulk.dispatchEvent(new window.KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+  assert.deepEqual(table.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: [] });
+  table.disconnect();
 });
 
 test('DOM DataGrid projects ARIA, emits one reveal, restores focus, and tears down listeners', async () => {
@@ -316,12 +390,22 @@ test('DOM Tabular column sizes preserve controlled ownership and validate host i
     onColumnSizesChange: (state) => proposals.push(state),
   });
   const handle = window.document.createElement('div');
-  connection.bindColumnResizeHandle(handle, { columnID: 'name', step: 12 });
+  connection.bindColumnResizeHandle(handle, { columnID: 'name', minSize: 50, maxSize: 150, step: 12 });
+  assert.equal(handle.getAttribute('aria-valuemin'), '50');
+  assert.equal(handle.getAttribute('aria-valuemax'), '150');
+  assert.equal(handle.getAttribute('aria-valuenow'), '100');
   handle.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
   assert.equal(connection.getColumnSizeState().values.name, 100);
   assert.equal(proposals.at(-1).values.name, 112);
-  assert.equal(connection.syncControlledValues({ columnSizes: { name: 112 } }).ok, true);
-  assert.equal(connection.getColumnSizeState().values.name, 112);
+  assert.equal(handle.getAttribute('aria-valuenow'), '100');
+  handle.dispatchEvent(new window.PointerEvent('pointerdown', { button: 0, clientX: 10, bubbles: true }));
+  window.dispatchEvent(new window.PointerEvent('pointermove', { clientX: 30 }));
+  window.dispatchEvent(new window.PointerEvent('pointerup'));
+  assert.equal(proposals.at(-1).values.name, 120);
+  assert.equal(handle.getAttribute('aria-valuenow'), '100');
+  assert.equal(connection.syncControlledValues({ columnSizes: { name: 120 } }).ok, true);
+  assert.equal(connection.getColumnSizeState().values.name, 120);
+  assert.equal(handle.getAttribute('aria-valuenow'), '120');
   connection.disconnect();
 });
 

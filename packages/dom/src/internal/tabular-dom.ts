@@ -185,6 +185,7 @@ export function bindColumnResizeHandle(
   element: HTMLElement,
   store: ColumnSizeStore,
   options: TabularDOMColumnResizeHandleOptions,
+  refreshers: Set<() => void>,
   onUpdate: () => void,
 ): () => void {
   const minimum = options.minSize ?? 24;
@@ -194,6 +195,11 @@ export function bindColumnResizeHandle(
   element.setAttribute('aria-orientation', 'vertical');
   element.setAttribute('data-column-id', options.columnID);
   element.tabIndex = 0;
+  const refresh = (): void => {
+    element.setAttribute('aria-valuemin', String(minimum));
+    element.setAttribute('aria-valuemax', String(maximum));
+    element.setAttribute('aria-valuenow', String(store.getState().values[options.columnID] ?? minimum));
+  };
   const propose = (size: number): void => {
     const bounded = Math.min(maximum, Math.max(minimum, size));
     if (store.propose(options.columnID, bounded).ok) onUpdate();
@@ -224,7 +230,9 @@ export function bindColumnResizeHandle(
   };
   const removeKey = bindEvent(scope, element, 'keydown', keydown);
   const removePointer = bindEvent(scope, element, 'pointerdown', pointerdown);
-  return scope.retain(() => { removeKey(); removePointer(); });
+  refreshers.add(refresh);
+  refresh();
+  return scope.retain(() => { removeKey(); removePointer(); refreshers.delete(refresh); });
 }
 
 export function validateRegistrationGeneration(
@@ -260,7 +268,14 @@ export function findProjectedRow(snapshot: TabularSnapshot, rowID: string): Tabu
 export function orderedColumnIDs(snapshot: TabularSnapshot): readonly TabularColumnID[] {
   const state = snapshot.state.columnState;
   const hidden = new Set(state.hidden);
-  return state.order.filter((id) => !hidden.has(id));
+  const start = new Set(state.pinnedStart);
+  const end = new Set(state.pinnedEnd);
+  const visible = state.order.filter((id) => !hidden.has(id));
+  return Object.freeze([
+    ...visible.filter((id) => start.has(id)),
+    ...visible.filter((id) => !start.has(id) && !end.has(id)),
+    ...visible.filter((id) => end.has(id)),
+  ]);
 }
 
 export function columnIndex(snapshot: TabularSnapshot, columnID: TabularColumnID): number {
@@ -309,6 +324,8 @@ export function setRowSelectionControlAttributes(
     input.disabled = disabled;
     return;
   }
+  if (element.tagName === 'BUTTON') (element as HTMLButtonElement).disabled = disabled;
+  else element.tabIndex = disabled ? -1 : 0;
   element.setAttribute('role', 'checkbox');
   element.setAttribute('aria-checked', String(checked));
   element.setAttribute('aria-disabled', String(disabled));
@@ -336,10 +353,54 @@ export function setBulkSelectionControlAttributes(
   state: TabularDOMBulkSelectionState,
   disabled: boolean,
 ): void {
+  if (element.tagName === 'INPUT') {
+    const input = element as HTMLInputElement;
+    input.type = 'checkbox';
+    input.checked = state === 'checked';
+    input.indeterminate = state === 'indeterminate';
+    input.disabled = disabled;
+  } else if (element.tagName === 'BUTTON') {
+    (element as HTMLButtonElement).disabled = disabled;
+  } else {
+    element.tabIndex = disabled ? -1 : 0;
+  }
   element.setAttribute('role', 'checkbox');
   element.setAttribute('aria-checked', state === 'indeterminate' ? 'mixed' : String(state === 'checked'));
   element.setAttribute('aria-disabled', String(disabled));
   element.setAttribute('data-state', state);
+}
+
+export function bindRowSelectionActivation(
+  scope: BindingScope,
+  element: HTMLElement,
+  activate: (shiftKey: boolean) => void,
+): readonly (() => void)[] {
+  return Object.freeze([
+    bindEvent(scope, element, 'click', (event) => activate(event.shiftKey)),
+    bindEvent(scope, element, 'keydown', (event) => {
+      if (event.key !== ' ' || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
+      const native = element.tagName === 'INPUT' || element.tagName === 'BUTTON';
+      if (native && !event.shiftKey) return;
+      activate(event.shiftKey);
+      event.preventDefault();
+    }),
+  ]);
+}
+
+export function bindCheckboxActivation(
+  scope: BindingScope,
+  element: HTMLElement,
+  activate: () => void,
+): readonly (() => void)[] {
+  return Object.freeze([
+    bindEvent(scope, element, 'click', activate),
+    bindEvent(scope, element, 'keydown', (event) => {
+      if (event.key !== ' ' || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
+      if (element.tagName === 'INPUT' || element.tagName === 'BUTTON') return;
+      activate();
+      event.preventDefault();
+    }),
+  ]);
 }
 
 export function queryWithSort(
@@ -371,6 +432,8 @@ export function queryWithFilter(
 export function headerMetrics(snapshot: TabularSnapshot): readonly TabularHeaderMetrics[] {
   const view = currentView(snapshot);
   const columns = orderedColumnIDs(snapshot);
+  const columnIndexes = new Map<TabularColumnID, number>();
+  for (let index = 0; index < columns.length; index += 1) columnIndexes.set(columns[index]!, index + 1);
   const source: readonly TabularHeaderNode[] = view?.columnSchema.headers.length
     ? view.columnSchema.headers
     : (view?.columnSchema.columns ?? []).map((column) => ({
@@ -381,20 +444,28 @@ export function headerMetrics(snapshot: TabularSnapshot): readonly TabularHeader
       }));
   const maximumDepth = Math.max(0, ...source.map(nodeDepth));
   const output: TabularHeaderMetrics[] = [];
-  let logicalColumn = 1;
-  const visit = (node: TabularHeaderNode, depth: number): number => {
+  type Interval = { readonly start: number; readonly end: number; readonly count: number };
+  const visit = (node: TabularHeaderNode, depth: number): Interval | null => {
     if (node.kind === 'column') {
-      const index = columns.indexOf(node.columnID) + 1;
-      if (index < 1) return 0;
+      const index = columnIndexes.get(node.columnID);
+      if (index === undefined) return null;
       output.push(Object.freeze({ headerNodeID: node.id, columnID: node.columnID, columnIndex: index, colSpan: 1, rowSpan: maximumDepth - depth + 1, depth }));
-      logicalColumn = Math.max(logicalColumn, index + 1);
-      return 1;
+      return { start: index, end: index, count: 1 };
     }
-    const start = logicalColumn;
-    let span = 0;
-    for (const child of node.children) span += visit(child, depth + 1);
-    if (span > 0) output.push(Object.freeze({ headerNodeID: node.id, columnID: null, columnIndex: start, colSpan: span, rowSpan: 1, depth }));
-    return span;
+    let start = Number.MAX_SAFE_INTEGER;
+    let end = -1;
+    let count = 0;
+    for (const child of node.children) {
+      const interval = visit(child, depth + 1);
+      if (interval === null) continue;
+      start = Math.min(start, interval.start);
+      end = Math.max(end, interval.end);
+      count += interval.count;
+    }
+    if (count === 0) return null;
+    const span = end - start + 1;
+    output.push(Object.freeze({ headerNodeID: node.id, columnID: null, columnIndex: start, colSpan: span, rowSpan: 1, depth }));
+    return { start, end, count };
   };
   for (const node of source) visit(node, 0);
   return Object.freeze(output);

@@ -18,6 +18,7 @@ export async function runTabularVirtualScenarios() {
     'tabular-virtual-flat': await flatScenario(),
     'tabular-virtual-native': await nativeScenario(),
     'tabular-virtual-pinned': await pinnedScenario(),
+    'tabular-controlled-contracts': await controlledContractScenario(),
   });
 }
 
@@ -114,6 +115,68 @@ async function pinnedScenario() {
     const editingFocus = document.activeElement?.getAttribute('data-part') === 'editor';
     return Object.freeze({ ok: adapter.value.strategy === strategy && pinnedOverlap && measurementSurvived && revealCount > 0 && editingFocus, strategyStable: adapter.value.strategy === strategy, pinnedOverlap, measurementSurvived, revealCount, editingFocus });
   } finally { app.unmount(); host.remove(); }
+}
+
+async function controlledContractScenario() {
+  const host = fixtureHost('controlled-contracts');
+  const cursor = ref({ current: null });
+  const editState = ref({ kind: 'navigation' });
+  const columnSizes = ref({ name: 100 });
+  let controller;
+  const app = createApp({
+    setup() {
+      controller = useDataGrid({
+        source: async (request) => response(request),
+        cursor,
+        editState,
+        columnSizeState: columnSizes,
+        onCursorChange: (value) => { cursor.value = value; },
+        onEditStateChange: (value) => { editState.value = value; },
+        onColumnSizeStateChange: (value) => { columnSizes.value = value.values; },
+      });
+      const request = controller.requestState.value.pendingRequest;
+      if (request === null) throw new Error('missing request');
+      const synchronized = controller.synchronizeView(response(request));
+      if (!synchronized.ok) throw new Error(synchronized.error.message);
+      const DataGrid = createDataGridComponents(controller);
+      return () => h(DataGrid.Provider, null, {
+        default: () => h(DataGrid.Root, { 'aria-label': 'Controlled contract grid' }, {
+          default: () => [
+            h(DataGrid.ColumnResizeHandle, { column: 'name', minSize: 50, maxSize: 150 }),
+            h(DataGrid.RowSelectionControl, { as: 'div', rowID: 'r0', name: 'rows', value: 'r0' }),
+            h(DataGrid.Cell, { rowID: 'r0', column: 'name' }, () => 'Row 0'),
+          ],
+        }),
+      });
+    },
+  });
+  let resizeHandle;
+  try {
+    app.mount(host); await settle();
+    resizeHandle = host.querySelector('[data-part="column-resize-handle"]');
+    const selection = host.querySelector('[data-part="row-selection-control"]');
+    const cell = host.querySelector('[data-part="cell"]');
+    resizeHandle?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+    await settle();
+    selection?.focus();
+    selection?.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+    cell?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await settle();
+    cell?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    await settle();
+    const beforeUnmount = resizeHandle?.getAttribute('aria-valuenow') ?? null;
+    const ok = beforeUnmount === '108'
+      && resizeHandle?.getAttribute('aria-valuemin') === '50'
+      && resizeHandle?.getAttribute('aria-valuemax') === '150'
+      && selection?.getAttribute('aria-checked') === 'true'
+      && selection?.tabIndex === 0
+      && controller.cursor.value.current?.rowID === 'r0'
+      && controller.editState.value.kind === 'editing';
+    app.unmount();
+    columnSizes.value = { name: 132 };
+    await nextTick();
+    return Object.freeze({ ok: ok && resizeHandle?.getAttribute('aria-valuenow') === beforeUnmount, columnSize: beforeUnmount, selection: selection?.getAttribute('aria-checked') ?? null, cursor: controller.cursor.value.current, edit: controller.editState.value.kind, cleanupStable: resizeHandle?.getAttribute('aria-valuenow') === beforeUnmount });
+  } finally { if (host.isConnected) { app.unmount(); host.remove(); } }
 }
 
 function readyTable() { const controller = useDataTable({ source: async (request) => response(request) }); const request = controller.requestState.value.pendingRequest; if (request === null) throw new Error('missing request'); const result = controller.synchronizeView(response(request)); if (!result.ok) throw new Error(result.error.message); return controller; }

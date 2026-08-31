@@ -5,8 +5,8 @@
   "seed": "sectile-tabular-benchmark-v1",
   "environment": {
     "node": "v24.19.0",
-    "platform": "darwin",
-    "architecture": "arm64"
+    "platform": "win32",
+    "architecture": "x64"
   },
   "timingPolicy": "informational-no-threshold",
   "scales": [
@@ -43,11 +43,11 @@
         }
       },
       "timingsMs": {
-        "construct": 0.762,
-        "resolve": 3.662,
-        "warm": 0.078,
-        "queryInvalidation": 2.517,
-        "total": 7.019
+        "construct": 1.02,
+        "resolve": 3.194,
+        "warm": 0.09,
+        "queryInvalidation": 2.293,
+        "total": 6.597
       }
     },
     {
@@ -83,11 +83,11 @@
         }
       },
       "timingsMs": {
-        "construct": 0.116,
-        "resolve": 15.918,
-        "warm": 0.074,
-        "queryInvalidation": 9.243,
-        "total": 25.351
+        "construct": 0.093,
+        "resolve": 13.019,
+        "warm": 0.071,
+        "queryInvalidation": 6.311,
+        "total": 19.494
       }
     },
     {
@@ -123,11 +123,11 @@
         }
       },
       "timingsMs": {
-        "construct": 0.218,
-        "resolve": 174.766,
-        "warm": 0.074,
-        "queryInvalidation": 132.686,
-        "total": 307.744
+        "construct": 0.175,
+        "resolve": 125.72,
+        "warm": 0.07,
+        "queryInvalidation": 79.496,
+        "total": 205.461
       }
     }
   ],
@@ -136,12 +136,113 @@
     "recordsPerGeneration": 64,
     "retainedStages": 1,
     "heapUsedBytes": {
-      "before": 41013760,
-      "middle": 41007944,
-      "after": 41011656
+      "before": 42391840,
+      "middle": 42391072,
+      "after": 42405256
     },
-    "tailGrowthBytes": 3712,
+    "tailGrowthBytes": 14184,
     "ceilingBytes": 8388608,
     "status": "passed"
-  }
+  },
+  "virtualReconciliation": [
+    {
+      "rowCount": 1000,
+      "scenarios": [
+        {
+          "name": "reverse",
+          "durationMs": 2.071,
+          "mutationCount": 1,
+          "extentCallbackCount": 0,
+          "retainedHeapDeltaBytes": 28160
+        },
+        {
+          "name": "rotation",
+          "durationMs": 0.306,
+          "mutationCount": 1,
+          "extentCallbackCount": 0,
+          "retainedHeapDeltaBytes": 0
+        },
+        {
+          "name": "large-filter",
+          "durationMs": 0.284,
+          "mutationCount": 1,
+          "extentCallbackCount": 0,
+          "retainedHeapDeltaBytes": 0
+        },
+        {
+          "name": "mixed",
+          "durationMs": 0.466,
+          "mutationCount": 1,
+          "extentCallbackCount": 2,
+          "retainedHeapDeltaBytes": 28456
+        }
+      ]
+    },
+    {
+      "rowCount": 10000,
+      "scenarios": [
+        {
+          "name": "reverse",
+          "durationMs": 4.873,
+          "mutationCount": 1,
+          "extentCallbackCount": 0,
+          "retainedHeapDeltaBytes": 431160
+        },
+        {
+          "name": "rotation",
+          "durationMs": 1.447,
+          "mutationCount": 1,
+          "extentCallbackCount": 0,
+          "retainedHeapDeltaBytes": 0
+        },
+        {
+          "name": "large-filter",
+          "durationMs": 1.644,
+          "mutationCount": 1,
+          "extentCallbackCount": 0,
+          "retainedHeapDeltaBytes": 0
+        },
+        {
+          "name": "mixed",
+          "durationMs": 4.178,
+          "mutationCount": 1,
+          "extentCallbackCount": 2,
+          "retainedHeapDeltaBytes": 405040
+        }
+      ]
+    },
+    {
+      "rowCount": 100000,
+      "scenarios": [
+        {
+          "name": "reverse",
+          "durationMs": 69.234,
+          "mutationCount": 1,
+          "extentCallbackCount": 0,
+          "retainedHeapDeltaBytes": 4961016
+        },
+        {
+          "name": "rotation",
+          "durationMs": 16.178,
+          "mutationCount": 1,
+          "extentCallbackCount": 0,
+          "retainedHeapDeltaBytes": 0
+        },
+        {
+          "name": "large-filter",
+          "durationMs": 20.375,
+          "mutationCount": 1,
+          "extentCallbackCount": 0,
+          "retainedHeapDeltaBytes": 0
+        },
+        {
+          "name": "mixed",
+          "durationMs": 65.261,
+          "mutationCount": 1,
+          "extentCallbackCount": 2,
+          "retainedHeapDeltaBytes": 3089832
+        }
+      ]
+    }
+  ]
 }

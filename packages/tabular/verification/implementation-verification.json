@@ -6,8 +6,8 @@
   "deterministicEvidence": [
     {
       "group": "model",
-      "tests": 5,
-      "sha256": "77746642774572c2e29727ec723802d4895c6dbe593aa0f861d9001888fa2276"
+      "tests": 7,
+      "sha256": "f0f9b468a2b10735969bf4e1205e37a17ed0980c9a7d44787dbc4cd9a367d9b7"
     },
     {
       "group": "source",
@@ -31,13 +31,13 @@
     },
     {
       "group": "profiles",
-      "tests": 14,
-      "sha256": "314d78e41bd20da5df225de3d355651a8d2d5b5e801ba9b4c5fe9df4278b7aa7"
+      "tests": 17,
+      "sha256": "f55713e1e5e2d9a50af169b4b18db6bf34db130584c27529d12d488b252c3a32"
     },
     {
       "group": "virtual",
-      "tests": 4,
-      "sha256": "f02c97ed36a2c670191a8761a6fe6e4274d877f74d59446fca5f91f93334edf4"
+      "tests": 7,
+      "sha256": "5bef07118512f8e3a4da451b0799b32de051cd50defe03864660ab6824230dc5"
     },
     {
       "group": "virtual-witnesses",
@@ -73,16 +73,16 @@
     "generationChurn": {
       "generations": 10000,
       "retainedStages": 1,
-      "tailGrowthBytes": 3712,
+      "tailGrowthBytes": 14184,
       "ceilingBytes": 8388608
     }
   },
   "footprint": {
-    "javascriptBytes": 113796,
-    "declarationBytes": 39338,
-    "sourceMapBytes": 83524,
+    "javascriptBytes": 137126,
+    "declarationBytes": 41244,
+    "sourceMapBytes": 99511,
     "packedBytes": 55011,
-    "declarationFiles": 13,
+    "declarationFiles": 15,
     "publicSubpaths": 9
   },
   "consumerScenarios": [

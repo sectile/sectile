@@ -42,7 +42,7 @@ const treeRows = [
 const tableSection = document.querySelector('#tabular-native-table');
 const table = tableSection.querySelector('table');
 const form = tableSection.querySelector('form');
-const tableConnection = createDataTable({ columns, table });
+const tableConnection = createDataTable({ columns, table, defaultColumnSizes: { name: 100 } });
 tableConnection.synchronizeView(response(tableConnection.controller, flatRows));
 const tr = document.createElement('tr');
 const td = document.createElement('td');
@@ -53,6 +53,14 @@ tableConnection.registerRow(tr, { rowID: 'r1' });
 tableConnection.registerCell(td, { cell: { rowID: 'r1', columnID: 'name' } });
 tableConnection.bindSelectionControl(selection, { rowID: 'r1', name: 'users', value: 'r1' });
 selection.click();
+const genericSelection = document.createElement('div');
+tableSection.append(genericSelection);
+tableConnection.bindSelectionControl(genericSelection, { rowID: 'r2', name: 'users', value: 'r2' });
+genericSelection.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+const resizeHandle = document.createElement('div');
+tableSection.append(resizeHandle);
+tableConnection.bindColumnResizeHandle(resizeHandle, { columnID: 'name', minSize: 50, maxSize: 150, step: 12 });
+resizeHandle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
 
 const gridSection = document.querySelector('#tabular-grid');
 const gridRoot = gridSection.querySelector('.root');
@@ -80,6 +88,10 @@ const scenarios = {
     noGridRole: !table.hasAttribute('role'),
     formValue: new FormData(form).get('users') === 'r1',
     cellHeaders: td.getAttribute('headers') === 'sectile-tabular-header-header%3Aname',
+    genericCheckboxKeyboard: genericSelection.tabIndex === 0 && genericSelection.getAttribute('aria-checked') === 'true',
+    resizeValueRange: resizeHandle.getAttribute('aria-valuemin') === '50'
+      && resizeHandle.getAttribute('aria-valuemax') === '150'
+      && resizeHandle.getAttribute('aria-valuenow') === '112',
   },
   'tabular-grid': {
     role: gridRoot.getAttribute('role') === 'grid',

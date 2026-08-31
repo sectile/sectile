@@ -113,8 +113,7 @@
     "maxScanRecords": 1000000,
     "maxQueryValueDepth": 32,
     "maxQueryValueCodeUnits": 1048576,
-    "maxQueryValueNodes": 100000,
-    "maxLiveRequestGenerations": 1
+    "maxQueryValueNodes": 100000
   },
   "countermodels": [
     {

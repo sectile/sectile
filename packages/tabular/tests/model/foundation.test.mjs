@@ -34,7 +34,6 @@ test('TAB-MOD-01: canonical limits, immutable columns, and deterministic initial
     maxQueryValueDepth: 32,
     maxQueryValueCodeUnits: 1_048_576,
     maxQueryValueNodes: 100_000,
-    maxLiveRequestGenerations: 1,
   });
   assert.equal(Object.isFrozen(model), true);
   assert.equal(Object.isFrozen(model.columns), true);
@@ -56,7 +55,6 @@ test('TAB-MOD-02: every resource limit is a positive safe integer', () => {
     'maxSortRules', 'maxFilterRules', 'maxGroupDescriptors', 'maxAggregateDescriptors',
     'maxPivotDescriptors', 'maxPivotColumns', 'maxSelectionIDs', 'maxScanRecords',
     'maxQueryValueDepth', 'maxQueryValueCodeUnits', 'maxQueryValueNodes',
-    'maxLiveRequestGenerations',
   ];
   for (const key of keys) {
     for (const value of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
@@ -125,7 +123,7 @@ test('TAB-MOD-05: controlled ownership is fixed and stale revisions reject atomi
   const missing = reconcileTabularState(model, state, {});
   assert.equal(missing.ok, false);
   assert.equal(missing.error.code, 'controlled-value-required');
-  assert.equal(state.query, query);
+  assert.deepEqual(state.query, query);
 
   const illegal = reconcileTabularState(model, state, { query, rowSelection: state.rowSelection });
   assert.equal(illegal.ok, false);
@@ -136,4 +134,104 @@ test('TAB-MOD-05: controlled ownership is fixed and stale revisions reject atomi
   assert.equal(stale.ok, false);
   assert.equal(stale.error.code, 'stale-revision');
   assert.equal(stale.error.details.currentRevision, 2);
+});
+
+test('TAB-MOD-06: every state slice is canonical, bounded, and detached from caller containers', () => {
+  const query = {
+    sort: [],
+    filters: [{ id: 'active', scope: 'column', columnID: 'status', predicate: 'equals', value: ['open'] }],
+    groups: [],
+    aggregates: [],
+    pivots: [],
+  };
+  const rowIDs = ['row-a'];
+  const order = ['name', 'status'];
+  const expansion = ['group-a'];
+  const model = createTabularModel({
+    columns,
+    initialValues: {
+      query,
+      rowSelection: { kind: 'explicit-rows', rowIDs },
+      columnState: { order, hidden: [], pinnedStart: [], pinnedEnd: ['status'] },
+      expansion,
+    },
+  });
+  rowIDs.push('row-b');
+  order.reverse();
+  expansion.push('group-b');
+  query.filters[0].value.push('closed');
+
+  const state = tryCreateTabularState(model).value;
+  assert.deepEqual(state.rowSelection.rowIDs, ['row-a']);
+  assert.deepEqual(state.columnState.order, ['name', 'status']);
+  assert.deepEqual(state.expansion, ['group-a']);
+  assert.deepEqual(state.query.filters[0].value, ['open']);
+  assert.equal(Object.isFrozen(state.query.filters[0].value), true);
+
+  const invalidCases = [
+    [{ query: { sort: [{ id: 'x', columnID: 'missing', direction: 'ascending', comparator: 'text' }], filters: [], groups: [], aggregates: [], pivots: [] } }, 'invalid-query-descriptor'],
+    [{ columnState: { order: ['name', 'missing'], hidden: [], pinnedStart: [], pinnedEnd: [] } }, 'invalid-controlled-shape'],
+    [{ accessState: { kind: 'page', page: 0, itemsPerPage: 25, visibleRowCount: null, pagination: null } }, 'invalid-controlled-shape'],
+    [{ expansion: ['same', 'same'] }, 'duplicate-identity'],
+  ];
+  for (const [initialValues, code] of invalidCases) {
+    const result = tryCreateTabularModel({ columns, initialValues });
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, code);
+  }
+  const bounded = tryCreateTabularModel({
+    columns,
+    limits: { maxSelectionIDs: 1 },
+    initialValues: { expansion: ['one', 'two'] },
+  });
+  assert.equal(bounded.ok, false);
+  assert.equal(bounded.error.code, 'selection-id-ceiling-exceeded');
+});
+
+test('TAB-MOD-07: fallback headers and explicit group topology are complete unique and contiguous', () => {
+  const invalidFallback = tryCreateTabularModel({ columns: [{ id: 'a', headerNodeID: '' }] });
+  assert.equal(invalidFallback.ok, false);
+  assert.equal(invalidFallback.error.code, 'invalid-id');
+
+  const duplicateFallback = tryCreateTabularModel({
+    columns: [{ id: 'a', headerNodeID: 'shared' }, { id: 'b', headerNodeID: 'shared' }],
+  });
+  assert.equal(duplicateFallback.ok, false);
+  assert.equal(duplicateFallback.error.code, 'duplicate-identity');
+
+  const missingLeaf = tryCreateTabularModel({
+    columns: [{ id: 'a' }, { id: 'b' }],
+    headers: [{ kind: 'column', id: 'header:a', columnID: 'a' }],
+  });
+  assert.equal(missingLeaf.ok, false);
+  assert.equal(missingLeaf.error.code, 'invalid-header-node');
+
+  const nonContiguous = tryCreateTabularModel({
+    columns: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+    headers: [
+      { kind: 'group', id: 'group:ac', children: [
+        { kind: 'column', id: 'header:a', columnID: 'a' },
+        { kind: 'column', id: 'header:c', columnID: 'c' },
+      ] },
+      { kind: 'column', id: 'header:b', columnID: 'b' },
+    ],
+  });
+  assert.equal(nonContiguous.ok, false);
+  assert.equal(nonContiguous.error.code, 'invalid-header-node');
+
+  const model = createTabularModel({
+    columns: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+    headers: [
+      { kind: 'group', id: 'group:ab', children: [
+        { kind: 'column', id: 'header:a', columnID: 'a' },
+        { kind: 'column', id: 'header:b', columnID: 'b' },
+      ] },
+      { kind: 'column', id: 'header:c', columnID: 'c' },
+    ],
+  });
+  const invalidState = tryCreateTabularState(model, {
+    columnState: { order: ['a', 'c', 'b'], hidden: [], pinnedStart: [], pinnedEnd: [] },
+  });
+  assert.equal(invalidState.ok, false);
+  assert.equal(invalidState.error.code, 'invalid-header-node');
 });

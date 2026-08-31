@@ -5,6 +5,53 @@
   "kind": "internal-operations",
   "operations": [
     {
+      "id": "data-table.changed-slice",
+      "inherits": "linear-v1",
+      "source": "packages/tabular/src/data-table.ts",
+      "benchmarkIDs": [
+        "VAL-030:data-table-changed-slice-work"
+      ],
+      "specificationCeiling": "O(sChanged)",
+      "contract": {
+        "variables": [
+          {
+            "name": "sChanged",
+            "meaning": "externally supplied changed query, selection, column, access, or expansion slice cardinality",
+            "ceiling": "the matching Tabular slice resource ceiling"
+          },
+          {
+            "name": "sOther",
+            "meaning": "all unchanged canonical Tabular slice cardinality",
+            "ceiling": "Tabular state resource ceilings"
+          }
+        ],
+        "time": {
+          "bound": "O(sChanged)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(sChanged)",
+          "output": "O(sChanged)",
+          "retained": "O(sChanged + sOther)"
+        },
+        "resources": {
+          "allocations": "O(sChanged)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Each DataTable event and controlled synchronization dispatches to exactly one owner-local canonicalizer; unchanged canonical slices are reused by identity and are not traversed.",
+        "adversarialWitness": "A one-ID expansion update beside maximum-size canonical query, selection, and column slices visits the expansion only.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Ordinary slice updates may validate their external slice but cannot rescan unrelated canonical state."
+        }
+      }
+    },
+    {
       "id": "grid-profile.move",
       "inherits": "linear-v1",
       "source": "packages/tabular/src/internal/grid-profile.ts",
@@ -50,6 +97,53 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Canonical movement is bounded to one axis; whole-domain recovery is a separate reconciliation fallback."
+        }
+      }
+    },
+    {
+      "id": "header.projection-validation",
+      "inherits": "linear-v1",
+      "source": "packages/tabular/src/internal/columns.ts",
+      "benchmarkIDs": [
+        "VAL-034:tabular-header-projection-validation"
+      ],
+      "specificationCeiling": "O(c + h)",
+      "contract": {
+        "variables": [
+          {
+            "name": "c",
+            "meaning": "model column count",
+            "ceiling": "maxColumns"
+          },
+          {
+            "name": "h",
+            "meaning": "canonical header node count",
+            "ceiling": "column and group-depth ceilings"
+          }
+        ],
+        "time": {
+          "bound": "O(c + h)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(c + h)",
+          "output": "O(c)",
+          "retained": "O(c)"
+        },
+        "resources": {
+          "allocations": "O(c + h)",
+          "cacheEntries": "O(c)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Column partitions and one projected index are built once; each header node contributes to one descendant interval exactly once.",
+        "adversarialWitness": "A maximum-depth header tree with hidden and pinned leaves is visited once and rejects the first non-contiguous group without per-group column scans.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "An external column-state replacement must establish the complete header topology invariant once."
         }
       }
     },
@@ -191,6 +285,103 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Warm resolution is output-sensitive and cannot rescan the retained source or projection."
+        }
+      }
+    },
+    {
+      "id": "virtual.locate",
+      "inherits": "constant-v1",
+      "source": "packages/tabular/src/virtual.ts",
+      "benchmarkIDs": [
+        "VAL-033:tabular-virtual-locate-work"
+      ],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nRow",
+            "meaning": "projected row cardinality",
+            "ceiling": "nRow <= maxProjectedCells"
+          },
+          {
+            "name": "nColumn",
+            "meaning": "projected column cardinality",
+            "ceiling": "nColumn <= maxColumns"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(nRow + nColumn)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "O(nRow + nColumn)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Table lookup delegates to the Core Sequence index. Grid lookup combines retained row and column indexes into a row-major coordinate.",
+        "adversarialWitness": "Repeated last-row and last-column lookup on a large projection performs no Array.indexOf call and retains no cell-ID map.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Locator calls are hot-path identity lookups and must not scan rows, columns, or cells."
+        }
+      }
+    },
+    {
+      "id": "virtual.reconcile-table",
+      "inherits": "linear-v1",
+      "source": "packages/tabular/src/virtual.ts",
+      "benchmarkIDs": [
+        "tabular:virtual-reconcile:reverse:100000",
+        "tabular:virtual-reconcile:rotation:100000",
+        "tabular:virtual-reconcile:large-filter:100000",
+        "tabular:virtual-reconcile:mixed:100000"
+      ],
+      "specificationCeiling": "O(nRow + j)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nRow",
+            "meaning": "current and next projected row cardinality",
+            "ceiling": "maxProjectedCells"
+          },
+          {
+            "name": "j",
+            "meaning": "identity edits required by the bounded sparse repair",
+            "ceiling": "32 before bulk replacement"
+          }
+        ],
+        "time": {
+          "bound": "O(nRow + j)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(nRow)",
+          "output": "O(nRow + j)",
+          "retained": "O(nRow)"
+        },
+        "resources": {
+          "allocations": "O(nRow + j)",
+          "cacheEntries": "0 additional retained entries",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "A fixed 32-patch planner bounds incremental array and persistent-layout work. Larger diffs use one splice, reuse stable-ID extents from the current indexed domain, and call the extent policy only for new IDs.",
+        "adversarialWitness": "Reverse order, a large filter, and mixed insertion/removal at 100k rows each produce one bulk mutation; a pure rotation produces one move mutation.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Reconciliation must compare the next identity domain once; it cannot repeatedly scan it per unbounded edit."
         }
       }
     }

@@ -3,6 +3,7 @@ import { connectDataGrid, type DataGridColumnSizeState as DOMDataGridColumnSizeS
 import {
   createDataGrid,
   type DataGridCommand as SemanticDataGridCommand,
+  type DataGridControlledValues,
   type DataGridController as SemanticDataGridController,
   type DataGridCursorState,
   type DataGridEditState,
@@ -66,9 +67,10 @@ export interface UseDataGridOptions<Source extends SourceResolver = DataGridSour
   readonly isCellDisabled?: SemanticDataGridOptions['isCellDisabled'];
 }
 declare const dataGridSchema: unique symbol;
-export interface DataGridController<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> extends VueProfileController<DataGridState, DataGridEvent, SemanticDataGridCommand>, SourceReturn<DataGridSourceResolver<LeafCells, GroupCells>> { readonly [dataGridSchema]?: { readonly leaf: LeafCells; readonly group: GroupCells }; readonly acceptedViewState: ComputedRef<DataGridAcceptedViewState<LeafCells, GroupCells>>; getProjection(): DataGridProjection }
+export interface DataGridController<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> extends VueProfileController<DataGridState, DataGridEvent, SemanticDataGridCommand, DataGridControlledValues>, SourceReturn<DataGridSourceResolver<LeafCells, GroupCells>> { readonly [dataGridSchema]?: { readonly leaf: LeafCells; readonly group: GroupCells }; readonly acceptedViewState: ComputedRef<DataGridAcceptedViewState<LeafCells, GroupCells>>; getProjection(): DataGridProjection }
 interface HostOptions { readonly columnSizes?: Readonly<Record<string, number>>; readonly defaultColumnSizes?: Readonly<Record<string, number>>; readonly onColumnSizesChange?: DataGridColumnSizeChangeHandler }
 const hosts = new WeakMap<object, HostOptions>();
+const activeConnections = new WeakMap<object, HostConnection>();
 
 export function useDataGrid<const Source extends SourceResolver, LeafCells extends object = DataTableLeafCellsFromSource<Source>, GroupCells extends object = DataTableGroupCellsFromSource<Source>>(options: UseDataGridOptions<Source>): DataGridController<LeafCells, GroupCells> {
   for (const property of ['query', 'rowSelection', 'columnState', 'accessState', 'cursor', 'editState', 'columnSizeState']) assertExclusive(options, property);
@@ -77,30 +79,25 @@ export function useDataGrid<const Source extends SourceResolver, LeafCells exten
     headers: options.initialView?.columnSchema.headers ?? [],
     ...(options.limits === undefined ? {} : { limits: options.limits }),
     ...(options.isCellDisabled === undefined ? {} : { isCellDisabled: options.isCellDisabled }),
-    controlled: { query: options.query !== undefined, rowSelection: options.rowSelection !== undefined, columnState: options.columnState !== undefined, accessState: options.accessState !== undefined, expansion: false },
+    controlled: { query: options.query !== undefined, rowSelection: options.rowSelection !== undefined, columnState: options.columnState !== undefined, accessState: options.accessState !== undefined, expansion: false, cursor: options.cursor !== undefined, edit: options.editState !== undefined },
     initialValues: {
       ...(options.query === undefined && options.defaultQuery === undefined ? {} : { query: options.query?.value ?? options.defaultQuery }),
       ...(options.rowSelection === undefined && options.defaultRowSelection === undefined ? {} : { rowSelection: options.rowSelection?.value ?? options.defaultRowSelection }),
       ...(options.columnState === undefined && options.defaultColumnState === undefined ? {} : { columnState: options.columnState?.value ?? options.defaultColumnState }),
       ...(options.accessState === undefined && options.defaultAccessState === undefined ? {} : { accessState: options.accessState?.value ?? options.defaultAccessState }),
+      ...(options.cursor === undefined && options.defaultCursor === undefined ? {} : { cursor: options.cursor?.value ?? options.defaultCursor }),
+      ...(options.editState === undefined && options.defaultEditState === undefined ? {} : { edit: options.editState?.value ?? options.defaultEditState }),
     },
     ...(options.onQueryChange === undefined ? {} : { onQueryChange: options.onQueryChange }),
     ...(options.onRowSelectionChange === undefined ? {} : { onRowSelectionChange: options.onRowSelectionChange }),
     ...(options.onColumnStateChange === undefined ? {} : { onColumnStateChange: options.onColumnStateChange }),
     ...(options.onAccessStateChange === undefined ? {} : { onAccessStateChange: options.onAccessStateChange }),
+    ...(options.onCursorChange === undefined ? {} : { onCursorChange: options.onCursorChange }),
+    ...(options.onEditStateChange === undefined ? {} : { onEditStateChange: options.onEditStateChange }),
   });
   const base = createVueProfileController(semantic);
-  const notify = (before: DataGridState, after: DataGridState): void => {
-    if (before.cursor !== after.cursor) options.onCursorChange?.(after.cursor);
-    if (before.edit !== after.edit) options.onEditStateChange?.(after.edit);
-  };
   const controller = Object.freeze({
     ...base,
-    dispatch: (event: DataGridEvent, revision?: number) => { const before = base.getSnapshot(); const result = base.dispatch(event, revision); if (result.ok) notify(before, result.value.snapshot); return result; },
-    synchronizeView: (response: DataGridViewResponse<LeafCells, GroupCells>) => { const before = base.getSnapshot(); const result = base.synchronizeView(response); if (result.ok) notify(before, result.value); return result; },
-    syncControlledValues: (values: Parameters<typeof base.syncControlledValues>[0]) => { const before = base.getSnapshot(); const result = base.syncControlledValues(values); if (result.ok) notify(before, result.value); return result; },
-    requestView: () => { const before = base.getSnapshot(); const result = base.requestView(); if (result.ok) notify(before, result.value); return result; },
-    abandonRequest: (requestID: number) => { const before = base.getSnapshot(); const result = base.abandonRequest(requestID); if (result.ok) notify(before, result.value); return result; },
     getProjection: () => semantic.getProjection(),
   });
   aliasVueProfileController(controller, base);
@@ -110,17 +107,18 @@ export function useDataGrid<const Source extends SourceResolver, LeafCells exten
     ...(options.onSourceError === undefined ? {} : { onError: options.onSourceError }),
     ...(options.onSourceStatusChange === undefined ? {} : { onStatusChange: options.onSourceStatusChange }),
   });
-  const desiredCursor = options.cursor?.value ?? options.defaultCursor;
-  if (desiredCursor?.current !== null && desiredCursor?.current !== undefined && controller.getProjection().rows.length > 0) unwrap(controller.dispatch({ type: 'focus-cell', cell: desiredCursor.current }));
   const stops: Array<() => void> = [];
-  const sync = () => unwrap(controller.syncControlledValues(controlledValues(options)));
-  for (const source of [options.query, options.rowSelection, options.columnState, options.accessState]) if (source !== undefined) stops.push(watch(() => source.value, sync));
+  const sync = () => unwrap(controller.syncControlledValues(gridControlledValues(options)));
+  for (const source of [options.query, options.rowSelection, options.columnState, options.accessState, options.cursor, options.editState]) if (source !== undefined) stops.push(watch(() => source.value, sync));
   if (options.sourceKey !== undefined) stops.push(watch(() => toValue(options.sourceKey!), () => { unwrap(controller.dispatch({ type: 'replace-source' })); }));
-  if (options.cursor !== undefined) stops.push(watch(() => options.cursor!.value, (value) => { if (value.current !== null) unwrap(controller.dispatch({ type: 'focus-cell', cell: value.current })); }));
-  if (options.editState !== undefined) stops.push(watch(() => options.editState!.value, (value) => { unwrap(controller.dispatch(value.kind === 'editing' ? { type: 'begin-edit', cell: value.cell } : { type: 'cancel-edit', reason: 'application' })); }));
   const rawDispose = controller.dispose;
   const wrapped = Object.freeze({ ...controller, status: source.status, error: source.error, reload: source.reload, cancel: source.cancel, replaceResolver: (resolver: DataGridSourceResolver<LeafCells, GroupCells>) => source.replaceResolver(resolver as SourceResolver), dispose: () => { for (const stop of stops.splice(0)) stop(); source.dispose(); rawDispose(); } }) as DataGridController<LeafCells, GroupCells>;
   aliasVueProfileController(wrapped, controller); hosts.set(wrapped, hosts.get(controller) ?? {});
+  if (options.columnSizeState !== undefined) stops.push(watch(() => options.columnSizeState!.value, (value) => {
+    hosts.set(wrapped, Object.freeze({ ...hosts.get(wrapped), columnSizes: value }));
+    const result = activeConnections.get(wrapped)?.syncControlledValues?.({ ...gridControlledValues(options), columnSizes: value });
+    if (result !== undefined && !result.ok) throw new TypeError('Controlled DataGrid column sizes failed to synchronize.');
+  }, { deep: false }));
   if (getCurrentScope() !== undefined) onScopeDispose(wrapped.dispose);
   return wrapped;
 }
@@ -129,7 +127,15 @@ export interface DataGridContextValue extends Omit<ProfileContext<DataGridState,
 const publicKey: InjectionKey<ProfileContext<DataGridState, DataGridEvent, SemanticDataGridCommand, HostConnection>> = Symbol('SectileDataGrid');
 const privateKey: InjectionKey<ProfileContext<DataGridState, DataGridEvent, SemanticDataGridCommand, HostConnection>> = Symbol('SectileDataGridHost');
 export function useDataGridContext(): DataGridContextValue { return useProfile(publicKey, 'useDataGridContext'); }
-const parts = createTabularParts({ profile: 'data-grid', prefix: 'DataGrid', publicKey, privateKey, connect: (element, controller, callbacks) => connectDataGrid({ controller: controller as DataGridController, root: element, ...hosts.get(controller), ...(callbacks.onCommand === undefined ? {} : { onCommand: callbacks.onCommand as DataGridCommandHandler }), onSnapshotChange: callbacks.onSnapshotChange }) as unknown as HostConnection });
+const parts = createTabularParts({ profile: 'data-grid', prefix: 'DataGrid', publicKey, privateKey, connect: (element, controller, callbacks) => connectDataGrid({ controller: controller as DataGridController, root: element, ...hosts.get(controller), ...(callbacks.onCommand === undefined ? {} : { onCommand: callbacks.onCommand as DataGridCommandHandler }), onSnapshotChange: callbacks.onSnapshotChange }) as unknown as HostConnection, connectionChanged: (controller, connection) => { if (connection === null) activeConnections.delete(controller); else activeConnections.set(controller, connection); } });
+
+function gridControlledValues(options: UseDataGridOptions): DataGridControlledValues {
+  return Object.freeze({
+    ...controlledValues(options),
+    ...(options.cursor === undefined ? {} : { cursor: options.cursor.value }),
+    ...(options.editState === undefined ? {} : { edit: options.editState.value }),
+  });
+}
 
 export interface DataGridProviderProps {}
 export interface DataGridRootProps { readonly onCommand?: DataGridCommandHandler; readonly onError?: DataGridErrorHandler; readonly as?: PrimitiveAs; readonly asChild?: boolean }

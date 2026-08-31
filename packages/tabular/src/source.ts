@@ -233,6 +233,14 @@ export function synchronizeTabularView(
   if (!rows.ok) return rows;
   const removed = normalizeIDs(response.removedRowIDs, 'removedRowID', limits);
   if (!removed.ok) return removed;
+  const crossInvariant = validateResponseCrossInvariants(
+    request,
+    rows.value,
+    removed.value,
+    matchingLeafCount.value,
+    visibleRowCount.value,
+  );
+  if (crossInvariant !== null) return crossInvariant;
   return ok(Object.freeze({
     requestID: response.requestID,
     sourceGeneration: response.sourceGeneration,
@@ -254,7 +262,8 @@ function resolveClient<RecordValue>(
 ): TabularResult<TabularViewResponse> {
   const invalid = validateRequestEnvelope(request);
   if (invalid !== null) return invalid;
-  if (request.columnSchemaRevision < source.options.columnSchema.revision) {
+  if (request.columnSchemaRevision !== 0
+    && request.columnSchemaRevision < source.options.columnSchema.revision) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Request column schema revision predates the client source.');
   }
   const projected = source.resolveProjection(request);
@@ -471,7 +480,14 @@ function resolveClientPivots<RecordValue>(
   request: TabularRequest,
 ): TabularResult<{ readonly schema: TabularColumnSchema; readonly pivots: readonly ClientPivotRuntime<RecordValue>[] }> {
   const columns = [...source.options.columnSchema.columns];
-  const headers = [...source.options.columnSchema.headers];
+  const headers = source.options.columnSchema.headers.length > 0
+    ? [...source.options.columnSchema.headers]
+    : columns.map((column) => Object.freeze({
+        kind: 'column' as const,
+        id: column.headerNodeID ?? column.id,
+        columnID: column.id,
+        ...(column.label === undefined ? {} : { label: column.label }),
+      }));
   const columnIDs = new Set(columns.map((column) => column.id));
   const aggregateByID = new Map(query.aggregates.map((aggregate) => [aggregate.id, aggregate]));
   const pivots: ClientPivotRuntime<RecordValue>[] = [];
@@ -932,6 +948,56 @@ function validateCount(count: TabularCount, label: string): TabularResult<Tabula
   if (count?.kind === 'unknown') return ok(Object.freeze({ kind: 'unknown' }));
   if (count?.kind === 'known' && isNonNegativeSafeInteger(count.value)) return ok(Object.freeze({ kind: 'known', value: count.value }));
   return fail('transition-rejection', 'response-envelope-mismatch', `${label} must be a known non-negative safe count or unknown.`);
+}
+
+function validateResponseCrossInvariants(
+  request: TabularRequest,
+  rows: readonly TabularResolvedRow[],
+  removedRowIDs: readonly string[],
+  matchingLeafCount: TabularCount,
+  visibleRowCount: TabularCount,
+): TabularResult<never> | null {
+  const rowIDs = new Set(rows.map((row) => row.id));
+  const overlap = removedRowIDs.find((id) => rowIDs.has(id));
+  if (overlap !== undefined) {
+    return fail('transition-rejection', 'response-envelope-mismatch', 'Returned and removed row identities must be disjoint.', { rowID: overlap });
+  }
+  const observable = rows.filter((row) => row.contextOnly !== true);
+  const leafCount = observable.filter((row) => row.kind === 'leaf').length;
+  if (matchingLeafCount.kind === 'known' && leafCount > matchingLeafCount.value) {
+    return fail('transition-rejection', 'response-envelope-mismatch', 'Returned leaf rows exceed the matching leaf count.', {
+      returnedLeafRows: leafCount,
+      matchingLeafCount: matchingLeafCount.value,
+    });
+  }
+  if (visibleRowCount.kind === 'known' && observable.length > visibleRowCount.value) {
+    return fail('transition-rejection', 'response-envelope-mismatch', 'Returned visible rows exceed the visible row count.', {
+      returnedVisibleRows: observable.length,
+      visibleRowCount: visibleRowCount.value,
+    });
+  }
+  const start = request.access.kind === 'page'
+    ? (request.access.page - 1) * request.access.itemsPerPage
+    : request.access.start;
+  const capacity = request.access.kind === 'page' ? request.access.itemsPerPage : request.access.count;
+  if (!Number.isSafeInteger(start) || observable.length > capacity) {
+    return fail('transition-rejection', 'response-envelope-mismatch', 'Returned rows exceed the requested access range.');
+  }
+  if (visibleRowCount.kind === 'known') {
+    const expected = start <= visibleRowCount.value
+      ? Math.min(capacity, visibleRowCount.value - start)
+      : -1;
+    if (observable.length !== expected) {
+      return fail('transition-rejection', 'response-envelope-mismatch', 'Returned rows do not fill the requested range within the known visible count.', {
+        start,
+        capacity,
+        expected,
+        actual: observable.length,
+        visibleRowCount: visibleRowCount.value,
+      });
+    }
+  }
+  return null;
 }
 
 function sameAccess(left: TabularAccessRange, right: TabularAccessRange): boolean {

@@ -5,6 +5,10 @@ import {
   createClientTabularSource,
   resolveClientTabularRequest,
 } from '../dist/source.js';
+import {
+  createDataTableVirtualAdapter,
+  reconcileDataTableVirtualAdapter,
+} from '../dist/virtual.js';
 
 const seed = 'sectile-tabular-benchmark-v1';
 const scales = [];
@@ -121,6 +125,7 @@ for (const recordCount of [1_000, 10_000, 100_000]) {
 }
 
 const generationChurn = measureGenerationChurn();
+const virtualReconciliation = measureVirtualReconciliation();
 
 const evidence = {
   schemaVersion: 1,
@@ -131,6 +136,7 @@ const evidence = {
   timingPolicy: 'informational-no-threshold',
   scales,
   generationChurn,
+  virtualReconciliation,
 };
 await writeFile('verification/benchmark.json', `${JSON.stringify(evidence, null, 2)}\n`);
 console.log(JSON.stringify(evidence, null, 2));
@@ -185,5 +191,54 @@ function measureGenerationChurn() {
     tailGrowthBytes,
     ceilingBytes: 8 * 1024 * 1024,
     status: 'passed',
+  };
+}
+
+function measureVirtualReconciliation() {
+  const evidence = [];
+  for (const rowCount of [1_000, 10_000, 100_000]) {
+    const ids = Array.from({ length: rowCount }, (_, index) => `virtual-${index}`);
+    const scenarios = [
+      { name: 'reverse', target: [...ids].reverse() },
+      { name: 'rotation', target: [...ids.slice(Math.floor(rowCount / 3)), ...ids.slice(0, Math.floor(rowCount / 3))] },
+      { name: 'large-filter', target: ids.filter((_id, index) => index % 3 === 0) },
+      { name: 'mixed', target: ['virtual-new-a', ...ids.slice(8).reverse(), 'virtual-new-b'] },
+    ];
+    const scenarioEvidence = [];
+    for (const scenario of scenarios) {
+      let extentCalls = 0;
+      const adapter = createDataTableVirtualAdapter({
+        projection: virtualTableProjection(ids),
+        rowExtents: { kind: 'by-id', getExtent: () => { extentCalls += 1; return { kind: 'estimated', value: 24 }; } },
+      });
+      const beforeCalls = extentCalls;
+      globalThis.gc();
+      const beforeHeap = process.memoryUsage().heapUsed;
+      const started = performance.now();
+      const reconciled = reconcileDataTableVirtualAdapter(adapter, adapter.state, virtualTableProjection(scenario.target, 2));
+      const completed = performance.now();
+      assert.equal(reconciled.ok, true);
+      globalThis.gc();
+      const afterHeap = process.memoryUsage().heapUsed;
+      scenarioEvidence.push({
+        name: scenario.name,
+        durationMs: round(completed - started),
+        mutationCount: reconciled.value.mutations.length,
+        extentCallbackCount: extentCalls - beforeCalls,
+        retainedHeapDeltaBytes: Math.max(0, afterHeap - beforeHeap),
+      });
+    }
+    evidence.push({ rowCount, scenarios: scenarioEvidence });
+  }
+  return evidence;
+}
+
+function virtualTableProjection(ids, generation = 1) {
+  return {
+    generation,
+    rows: ids.map((id) => ({ kind: 'leaf', id, cells: { value: id } })),
+    columns: { start: [], center: ['value'], end: [] },
+    rowSelection: { kind: 'explicit-rows', rowIDs: [] },
+    expansion: [],
   };
 }

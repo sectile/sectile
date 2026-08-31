@@ -42,6 +42,7 @@ export interface HostConnection {
   bindRowDisclosure?(element: HTMLElement, options: unknown): () => void;
   bindEditor(element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, options: unknown): () => void;
   bindColumnResizeHandle(element: HTMLElement, options: unknown): () => void;
+  syncControlledValues?(values: Readonly<Record<string, unknown>>): { readonly ok: boolean };
 }
 
 type HeaderReference =
@@ -54,6 +55,7 @@ interface PartConfig<State, Event, Command> {
   readonly publicKey: InjectionKey<ProfileContext<State, Event, Command, HostConnection>>;
   readonly privateKey: InjectionKey<ProfileContext<State, Event, Command, HostConnection>>;
   connect(element: HTMLElement, controller: VueProfileController<State, Event, Command>, callbacks: { readonly onCommand?: (command: unknown) => void; readonly onSnapshotChange: () => void }): HostConnection;
+  connectionChanged?(controller: VueProfileController<State, Event, Command>, connection: HostConnection | null): void;
 }
 
 type TabularAutomaticBodySlotProps = Readonly<Record<string, unknown>> & {
@@ -150,6 +152,7 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
       const context = usePrivate('Root');
       let element: HTMLElement | null = null;
       const connect = (): void => {
+        config.connectionChanged?.(context.controller, null);
         context.connection.value?.disconnect();
         context.connection.value = null;
         if (element === null) return;
@@ -158,13 +161,14 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
             ...(props.onCommand === undefined ? {} : { onCommand: props.onCommand }),
             onSnapshotChange: () => refreshVueProfileController(context.controller),
           });
+          config.connectionChanged?.(context.controller, context.connection.value);
         } catch (error: unknown) {
           props.onError?.(error);
           if (props.onError === undefined) throw error;
         }
       };
       onMounted(connect);
-      onBeforeUnmount(() => { context.connection.value?.disconnect(); context.connection.value = null; });
+      onBeforeUnmount(() => { config.connectionChanged?.(context.controller, null); context.connection.value?.disconnect(); context.connection.value = null; });
       expose({ controller: context.controller, refresh: () => context.connection.value?.refresh() });
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as,

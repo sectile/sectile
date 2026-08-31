@@ -4,6 +4,7 @@ import {
   type GridCursorState,
   type GridEditState,
   type GridProfileCommand,
+  type GridProfileControlledValues,
   type GridProfileController,
   type GridProfileEvent,
   type GridProfileOptions,
@@ -19,6 +20,7 @@ export type DataGridState = GridProfileState;
 export type DataGridProjection = GridProfileProjection;
 export type DataGridEvent = GridProfileEvent;
 export type DataGridCommand = GridProfileCommand;
+export type DataGridControlledValues = GridProfileControlledValues;
 export type DataGridUpdate = GridProfileUpdate;
 export interface DataGridOptions extends GridProfileOptions {}
 export interface DataGridController extends GridProfileController {}

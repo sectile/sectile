@@ -94,12 +94,70 @@ test('TAB-TBL-05: controlled query proposes once and requests only after externa
   const proposed = table.dispatch({ type: 'set-query', query: next });
   assert.equal(proposed.ok, true);
   assert.equal(proposals.length, 1);
-  assert.equal(table.getSnapshot().state.query, query);
+  assert.deepEqual(table.getSnapshot().state.query, query);
   assert.deepEqual(commands, []);
   const synchronized = table.syncControlledValues({ query: next });
   assert.equal(synchronized.ok, true);
   assert.equal(table.getSnapshot().state.query.sort[0].id, 'name');
   assert.deepEqual(commands, ['request-view']);
+});
+
+test('TAB-TBL-07: command delivery snapshots observers, completes channels, and rolls back failed attachment', () => {
+  const rollback = createDataTable({ columns });
+  assert.throws(
+    () => rollback.attachRequestExecutor(() => { throw new Error('initial executor failed'); }),
+    /initial executor failed/,
+  );
+  assert.equal(rollback.attachRequestExecutor(() => undefined).ok, true);
+
+  const table = createDataTable({ columns });
+  const delivered = [];
+  let stopSecond = () => undefined;
+  table.subscribeCommands(() => {
+    delivered.push('first');
+    stopSecond();
+    table.subscribeCommands(() => delivered.push('late'));
+    throw new Error('observer failed');
+  });
+  stopSecond = table.subscribeCommands(() => delivered.push('second'));
+  table.subscribeCommands(() => delivered.push('third'));
+  const attached = table.attachRequestExecutor(() => delivered.push('executor'));
+  assert.equal(attached.ok, true);
+  delivered.length = 0;
+  const beforeRequestID = table.getSnapshot().state.requestState.pendingRequest.requestID;
+
+  assert.throws(() => table.requestView(), /observer failed/);
+  assert.deepEqual(delivered, ['first', 'second', 'third', 'executor']);
+  assert.equal(table.getSnapshot().state.requestState.pendingRequest.requestID, beforeRequestID + 1);
+});
+
+test('controlled DataTable callbacks preserve synchronous owner revisions and active requests', () => {
+  const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
+  const next = { ...query, sort: [{ id: 'name', columnID: 'name', direction: 'ascending', comparator: 'text' }] };
+  let table;
+  const created = tryCreateDataTable({
+    columns,
+    controlled: { query: true },
+    initialValues: { query },
+    onQueryChange(value) {
+      const synchronized = table.syncControlledValues({ query: value });
+      assert.equal(synchronized.ok, true);
+    },
+  });
+  assert.equal(created.ok, true);
+  table = created.value;
+  const requests = [];
+  table.subscribeCommands((command) => {
+    if (command.type === 'request-view') requests.push(command.request);
+  });
+
+  const outer = table.dispatch({ type: 'set-query', query: next });
+  assert.equal(outer.ok, true);
+  assert.deepEqual(outer.value.snapshot.state.query, query);
+  assert.deepEqual(table.getSnapshot().state.query, next);
+  assert.equal(table.getSnapshot().revision, 2);
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].requestID, table.getSnapshot().state.requestState.pendingRequest.requestID);
 });
 
 test('TAB-TBL-06: row range events use accepted leaf order and reject stale endpoints', () => {
@@ -120,4 +178,93 @@ test('TAB-TBL-06: row range events use accepted leaf order and reject stale endp
   assert.equal(rejected.ok, false);
   assert.equal(rejected.error.code, 'invalid-selection-range');
   assert.equal(table.getSnapshot(), before);
+});
+
+test('unknown DataTable events reject without advancing or issuing a request', () => {
+  const table = createDataTable({ columns });
+  const commands = [];
+  table.subscribeCommands((command) => commands.push(command));
+  const before = table.getSnapshot();
+
+  for (const event of [{ type: 'unknown' }, null, 'request-view']) {
+    const result = table.dispatch(event);
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'invalid-data-table-event');
+    assert.equal(table.getSnapshot(), before);
+    assert.deepEqual(commands, []);
+  }
+});
+
+test('TAB-TBL-06: DataTable events and controlled sync share slice canonicalization failures', () => {
+  const valid = {
+    query: { sort: [], filters: [], groups: [], aggregates: [], pivots: [] },
+    rowSelection: { kind: 'explicit-rows', rowIDs: [] },
+    columnState: { order: ['name', 'score'], hidden: [], pinnedStart: [], pinnedEnd: [] },
+    accessState: { kind: 'page', page: 1, itemsPerPage: 25, visibleRowCount: null, pagination: null },
+    expansion: [],
+  };
+  const cases = [
+    ['query', { ...valid.query, sort: [{ id: 'bad', columnID: 'missing', direction: 'ascending', comparator: 'text' }] }, 'set-query', 'invalid-query-descriptor'],
+    ['rowSelection', { kind: 'explicit-rows', rowIDs: ['same', 'same'] }, 'set-row-selection', 'duplicate-identity'],
+    ['columnState', { ...valid.columnState, order: ['name', 'missing'] }, 'set-column-state', 'invalid-controlled-shape'],
+    ['accessState', { ...valid.accessState, page: 0 }, 'set-access', 'invalid-controlled-shape'],
+    ['expansion', ['same', 'same'], 'set-expansion', 'duplicate-identity'],
+  ];
+
+  for (const [key, invalid, eventType, code] of cases) {
+    const uncontrolled = createDataTable({ columns });
+    const before = uncontrolled.getSnapshot();
+    const event = eventType === 'set-row-selection'
+      ? { type: eventType, selection: invalid }
+      : eventType === 'set-column-state'
+        ? { type: eventType, columnState: invalid }
+        : eventType === 'set-access'
+          ? { type: eventType, accessState: invalid }
+          : eventType === 'set-expansion'
+            ? { type: eventType, expansion: invalid }
+            : { type: eventType, query: invalid };
+    const dispatched = uncontrolled.dispatch(event);
+    assert.equal(dispatched.ok, false, `${key} event accepted invalid input`);
+    assert.equal(dispatched.error.code, code);
+    assert.equal(uncontrolled.getSnapshot(), before);
+
+    const controlled = createDataTable({
+      columns,
+      controlled: { [key]: true },
+      initialValues: { [key]: valid[key] },
+    });
+    const synchronized = controlled.syncControlledValues({ [key]: invalid });
+    assert.equal(synchronized.ok, false, `${key} sync accepted invalid input`);
+    assert.equal(synchronized.error.code, code);
+  }
+});
+
+test('disposed DataTable rejects every mutation and attachment path atomically', () => {
+  const table = createDataTable({ columns });
+  const pending = table.getSnapshot().state.requestState.pendingRequest;
+  const response = resolveClientTabularRequest(source, pending);
+  assert.equal(response.ok, true);
+  const attached = table.attachRequestExecutor(() => undefined);
+  assert.equal(attached.ok, true);
+  const before = table.getSnapshot();
+
+  table.dispose();
+  table.dispose();
+  attached.value();
+
+  const failures = [
+    table.dispatch({ type: 'request-view' }),
+    table.synchronizeView(response.value),
+    table.syncControlledValues({}),
+    table.requestView(),
+    table.abandonRequest(pending.requestID),
+    table.attachRequestExecutor(() => assert.fail('disposed executor attached')),
+  ];
+  for (const result of failures) {
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'controller-disposed');
+    assert.equal(table.getSnapshot(), before);
+  }
+  table.subscribeCommands(() => assert.fail('disposed observer attached'))();
+  assert.doesNotThrow(() => table.getProjection());
 });

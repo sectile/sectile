@@ -8,31 +8,43 @@
       "id": "TAB-GRD-01",
       "title": "TAB-GRD-01: direct focus and axis movement skip disabled cells deterministically",
       "file": "tests/profiles/data-grid.test.mjs",
-      "sha256": "84cff536fc4c60910298af4ad3a3f316520329a0d4d09e77681065464d980e9e"
+      "sha256": "3778f72178df75c6958f787251ce7fa5aba553651c1a275b26a7b09f2cce488d"
     },
     {
       "id": "TAB-GRD-02",
       "title": "TAB-GRD-02: edit events emit exact semantic payloads without reveal or native-table commands",
       "file": "tests/profiles/data-grid.test.mjs",
-      "sha256": "84cff536fc4c60910298af4ad3a3f316520329a0d4d09e77681065464d980e9e"
+      "sha256": "3778f72178df75c6958f787251ce7fa5aba553651c1a275b26a7b09f2cce488d"
     },
     {
       "id": "TAB-GRD-03",
       "title": "TAB-GRD-03: hierarchical views reject before changing the flat profile state",
       "file": "tests/profiles/data-grid.test.mjs",
-      "sha256": "84cff536fc4c60910298af4ad3a3f316520329a0d4d09e77681065464d980e9e"
+      "sha256": "3778f72178df75c6958f787251ce7fa5aba553651c1a275b26a7b09f2cce488d"
     },
     {
       "id": "TAB-GRD-04",
       "title": "TAB-GRD-04: removed edit targets cancel before cursor recovery and source reset",
       "file": "tests/profiles/data-grid.test.mjs",
-      "sha256": "84cff536fc4c60910298af4ad3a3f316520329a0d4d09e77681065464d980e9e"
+      "sha256": "3778f72178df75c6958f787251ce7fa5aba553651c1a275b26a7b09f2cce488d"
     },
     {
       "id": "TAB-GRD-05",
       "title": "TAB-GRD-05: request execution remains single-owner and disposable",
       "file": "tests/profiles/data-grid.test.mjs",
-      "sha256": "84cff536fc4c60910298af4ad3a3f316520329a0d4d09e77681065464d980e9e"
+      "sha256": "3778f72178df75c6958f787251ce7fa5aba553651c1a275b26a7b09f2cce488d"
+    },
+    {
+      "id": "TAB-GRD-07",
+      "title": "TAB-GRD-07: controlled cursor and edit proposals wait for owner sync including null and navigation",
+      "file": "tests/profiles/data-grid.test.mjs",
+      "sha256": "3778f72178df75c6958f787251ce7fa5aba553651c1a275b26a7b09f2cce488d"
+    },
+    {
+      "id": "TAB-GRD-08",
+      "title": "TAB-GRD-08: async first-view default cursor is applied exactly once",
+      "file": "tests/profiles/data-grid.test.mjs",
+      "sha256": "3778f72178df75c6958f787251ce7fa5aba553651c1a275b26a7b09f2cce488d"
     },
     {
       "id": "TAB-TBL-01",
@@ -68,25 +80,31 @@
       "id": "TAB-TGR-01",
       "title": "TAB-TGR-01: tree projection derives ordered parentage and navigates visible cells",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "22145c0cdffbb2f3ce53f8cf62e67b10e1e076c809c53b2c3958dede31ef2a28"
+      "sha256": "36234e4c2da8979123a63f417c0e22ba3de1cbc05027eb9a68cf2ecf02e798a3"
     },
     {
       "id": "TAB-TGR-02",
       "title": "TAB-TGR-02: group cells are read-only while leaf edit commands keep exact payloads",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "22145c0cdffbb2f3ce53f8cf62e67b10e1e076c809c53b2c3958dede31ef2a28"
+      "sha256": "36234e4c2da8979123a63f417c0e22ba3de1cbc05027eb9a68cf2ecf02e798a3"
     },
     {
       "id": "TAB-TGR-03",
       "title": "TAB-TGR-03: row expansion is source intent and malformed ancestry rejects atomically",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "22145c0cdffbb2f3ce53f8cf62e67b10e1e076c809c53b2c3958dede31ef2a28"
+      "sha256": "36234e4c2da8979123a63f417c0e22ba3de1cbc05027eb9a68cf2ecf02e798a3"
     },
     {
       "id": "TAB-TGR-04",
       "title": "TAB-TGR-04: tree profile emits no renderer reveal commands",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "22145c0cdffbb2f3ce53f8cf62e67b10e1e076c809c53b2c3958dede31ef2a28"
+      "sha256": "36234e4c2da8979123a63f417c0e22ba3de1cbc05027eb9a68cf2ecf02e798a3"
+    },
+    {
+      "id": "TAB-TGR-05",
+      "title": "TAB-TGR-05: controlled tree-grid owner synchronizes null cursor and navigation edit state",
+      "file": "tests/profiles/data-tree-grid.test.mjs",
+      "sha256": "36234e4c2da8979123a63f417c0e22ba3de1cbc05027eb9a68cf2ecf02e798a3"
     }
   ],
   "expectedFailures": [

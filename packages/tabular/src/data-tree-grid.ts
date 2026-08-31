@@ -5,6 +5,7 @@ import {
   type GridEditState,
   type GridExpansionState,
   type GridProfileCommand,
+  type GridProfileControlledValues,
   type GridProfileController,
   type GridProfileEvent,
   type GridProfileOptions,
@@ -23,6 +24,7 @@ export type DataTreeGridState = GridProfileState;
 export type DataTreeGridProjection = GridProfileProjection;
 export type DataTreeGridEvent = GridProfileEvent;
 export type DataTreeGridCommand = GridProfileCommand;
+export type DataTreeGridControlledValues = GridProfileControlledValues;
 export type DataTreeGridUpdate = GridProfileUpdate;
 export interface DataTreeGridOptions extends GridProfileOptions {}
 export interface DataTreeGridController extends GridProfileController {}

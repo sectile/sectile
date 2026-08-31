@@ -180,6 +180,7 @@ interface HostOptions {
   readonly onColumnSizesChange?: DataTableColumnSizeChangeHandler;
 }
 const hosts = new WeakMap<object, HostOptions>();
+const activeConnections = new WeakMap<object, HostConnection>();
 
 export function useDataTable<
   const Source extends SourceResolver,
@@ -247,6 +248,11 @@ export function useDataTable<
   }) as DataTableController<LeafCells, GroupCells>;
   aliasVueProfileController(wrapped, controller);
   hosts.set(wrapped, hosts.get(controller) ?? {});
+  if (options.columnSizeState !== undefined) stops.push(watch(() => options.columnSizeState!.value, (value) => {
+    hosts.set(wrapped, Object.freeze({ ...hosts.get(wrapped), columnSizes: value }));
+    const result = activeConnections.get(wrapped)?.syncControlledValues?.({ ...controlledValues(options), columnSizes: value });
+    if (result !== undefined && !result.ok) throw new TypeError('Controlled DataTable column sizes failed to synchronize.');
+  }, { deep: false }));
   if (getCurrentScope() !== undefined) onScopeDispose(wrapped.dispose);
   return wrapped;
 }
@@ -265,6 +271,7 @@ const parts = createTabularParts({
     ...(callbacks.onCommand === undefined ? {} : { onCommand: callbacks.onCommand as DataTableCommandHandler }),
     onSnapshotChange: callbacks.onSnapshotChange,
   }) as HostConnection,
+  connectionChanged: (controller, connection) => { if (connection === null) activeConnections.delete(controller); else activeConnections.set(controller, connection); },
 });
 
 export interface DataTableProviderProps {}

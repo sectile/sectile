@@ -14,8 +14,10 @@ import {
   BindingScope,
   ColumnSizeStore,
   allMatchingSelectionState,
+  bindCheckboxActivation,
   bindColumnResizeHandle,
   bindEvent,
+  bindRowSelectionActivation,
   cellKey,
   clearAttributes,
   columnIndex,
@@ -391,14 +393,7 @@ export class DOMTabularGrid<
         if (this.handleEvent(fallback.event as Event)) this.#selectionAnchor = fallback.anchor;
       }
     };
-    const disposers = [
-      bindEvent(this.#scope, element, 'click', (event) => activate(event.shiftKey)),
-      bindEvent(this.#scope, element, 'keydown', (event) => {
-        if (event.key !== ' ' || !event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
-        activate(true);
-        event.preventDefault();
-      }),
-    ];
+    const disposers = bindRowSelectionActivation(this.#scope, element, activate);
     this.#refreshers.add(update);
     update();
     return this.#scope.retain(() => { for (const dispose of disposers) dispose(); this.#refreshers.delete(update); });
@@ -408,12 +403,12 @@ export class DOMTabularGrid<
     element.setAttribute('data-part', 'bulk-selection-control');
     const update = (): void => {
       if (options.target.kind !== 'all-matching') {
-        element.setAttribute('aria-disabled', String(options.disabled === true));
+        setBulkSelectionControlAttributes(element, 'unchecked', options.disabled === true);
         return;
       }
       setBulkSelectionControlAttributes(element, allMatchingSelectionState(this.#semanticSnapshot()), options.disabled === true);
     };
-    const dispose = bindEvent(this.#scope, element, 'click', () => {
+    const activate = (): void => {
       if (options.disabled === true) return;
       const event: BaseGridEvent = options.target.kind === 'all-matching'
         ? allMatchingSelectionState(this.#semanticSnapshot()) === 'checked'
@@ -421,10 +416,11 @@ export class DOMTabularGrid<
           : { type: 'select-all-matching' }
         : { type: 'request-group-leaf-selection', groupID: options.target.groupID };
       this.handleEvent(event as Event);
-    });
+    };
+    const disposers = bindCheckboxActivation(this.#scope, element, activate);
     this.#refreshers.add(update);
     update();
-    return this.#scope.retain(() => { dispose(); this.#refreshers.delete(update); });
+    return this.#scope.retain(() => { for (const dispose of disposers) dispose(); this.#refreshers.delete(update); });
   }
 
   public bindRowDisclosure(element: HTMLElement, options: GridDOMDisclosureOptions): () => void {
@@ -494,7 +490,7 @@ export class DOMTabularGrid<
   }
 
   public bindColumnResizeHandle(element: HTMLElement, options: TabularDOMColumnResizeHandleOptions): () => void {
-    return bindColumnResizeHandle(this.#scope, element, this.#columnSizes, options, () => this.#updated());
+    return bindColumnResizeHandle(this.#scope, element, this.#columnSizes, options, this.#refreshers, () => this.#updated());
   }
 
   public requestRevealCell(cell: TabularCellAddress, expectedProjectionGeneration: number = this.getProjection().generation): boolean {

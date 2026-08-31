@@ -103,7 +103,6 @@ export interface TabularLimits {
   readonly maxQueryValueDepth: number;
   readonly maxQueryValueCodeUnits: number;
   readonly maxQueryValueNodes: number;
-  readonly maxLiveRequestGenerations: number;
 }
 
 export interface TabularSort {
@@ -422,8 +421,7 @@ export type TabularLimitErrorCode =
   | 'scan-record-ceiling-exceeded'
   | 'query-value-depth-ceiling-exceeded'
   | 'query-value-code-unit-ceiling-exceeded'
-  | 'query-value-node-ceiling-exceeded'
-  | 'live-request-generation-ceiling-exceeded';
+  | 'query-value-node-ceiling-exceeded';
 
 export type TabularErrorCode =
   | TabularLimitErrorCode
@@ -435,12 +433,14 @@ export type TabularErrorCode =
   | 'invalid-query-value'
   | 'invalid-query-descriptor'
   | 'invalid-query-event'
+  | 'invalid-data-table-event'
   | 'invalid-source'
   | 'source-policy-failed'
   | 'missing-policy-key'
   | 'duplicate-identity'
   | 'invalid-controlled-shape'
   | 'controlled-value-required'
+  | 'controller-disposed'
   | 'uncontrolled-value-update'
   | 'stale-revision'
   | 'revision-ceiling-reached'

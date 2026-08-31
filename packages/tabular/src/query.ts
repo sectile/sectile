@@ -40,6 +40,8 @@ const DEFAULT_QUERY_LIMITS: Pick<
 });
 
 type QueryLimits = typeof DEFAULT_QUERY_LIMITS;
+const QUERY_LIMITS = Symbol('sectile.tabular.query-limits');
+type CanonicalQuery = TabularQuery & { readonly [QUERY_LIMITS]: QueryLimits };
 
 export function createTabularQuery(
   input: TabularQueryInput = {},
@@ -55,6 +57,9 @@ export function tryCreateTabularQuery(
   if (input === null || typeof input !== 'object' || Array.isArray(input)) {
     return fail('construction', 'invalid-query-descriptor', 'Tabular query input must be an object.');
   }
+  if (QUERY_LIMITS in input && sameQueryLimits((input as CanonicalQuery)[QUERY_LIMITS], limits)) {
+    return ok(input as CanonicalQuery);
+  }
   const sort = normalizeSort(input.sort ?? [], limits);
   if (!sort.ok) return sort;
   const filters = normalizeFilters(input.filters ?? [], limits);
@@ -65,13 +70,13 @@ export function tryCreateTabularQuery(
   if (!aggregates.ok) return aggregates;
   const pivots = normalizePivots(input.pivots ?? [], aggregates.value, limits);
   if (!pivots.ok) return pivots;
-  return ok(Object.freeze({
+  return ok(canonicalQuery({
     sort: sort.value,
     filters: filters.value,
     groups: groups.value,
     aggregates: aggregates.value,
     pivots: pivots.value,
-  }));
+  }, limits));
 }
 
 export function applyTabularQueryEvent(
@@ -86,13 +91,47 @@ export function applyTabularQueryEvent(
   }
   switch (event.type) {
     case 'reset': return tryCreateTabularQuery({}, limits);
-    case 'set-sort': return asTransition(tryCreateTabularQuery({ ...current.value, sort: event.sort }, limits));
-    case 'set-filters': return asTransition(tryCreateTabularQuery({ ...current.value, filters: event.filters }, limits));
-    case 'set-groups': return asTransition(tryCreateTabularQuery({ ...current.value, groups: event.groups }, limits));
-    case 'set-aggregates': return asTransition(tryCreateTabularQuery({ ...current.value, aggregates: event.aggregates }, limits));
-    case 'set-pivots': return asTransition(tryCreateTabularQuery({ ...current.value, pivots: event.pivots }, limits));
+    case 'set-sort': return replaceQuerySlice(current.value, 'sort', normalizeSort(event.sort, limits), limits);
+    case 'set-filters': return replaceQuerySlice(current.value, 'filters', normalizeFilters(event.filters, limits), limits);
+    case 'set-groups': return replaceQuerySlice(current.value, 'groups', normalizeGroups(event.groups, limits), limits);
+    case 'set-aggregates': {
+      const aggregates = normalizeAggregates(event.aggregates, limits);
+      if (!aggregates.ok) return asTransition(aggregates);
+      const pivots = normalizePivots(current.value.pivots, aggregates.value, limits);
+      if (!pivots.ok) return asTransition(pivots);
+      return ok(canonicalQuery({ ...current.value, aggregates: aggregates.value, pivots: pivots.value }, limits));
+    }
+    case 'set-pivots': return replaceQuerySlice(
+      current.value,
+      'pivots',
+      normalizePivots(event.pivots, current.value.aggregates, limits),
+      limits,
+    );
     default: return fail('transition-rejection', 'invalid-query-event', 'Tabular query event type is unknown.', { event });
   }
+}
+
+function replaceQuerySlice<Key extends keyof TabularQuery>(
+  query: TabularQuery,
+  key: Key,
+  value: TabularResult<TabularQuery[Key]>,
+  limits: QueryLimits,
+): TabularResult<TabularQuery> {
+  return value.ok
+    ? ok(canonicalQuery({ ...query, [key]: value.value }, limits))
+    : asTransition(value);
+}
+
+function canonicalQuery(query: TabularQuery, limits: QueryLimits): CanonicalQuery {
+  const result = { ...query } as TabularQuery & { [QUERY_LIMITS]?: QueryLimits };
+  Object.defineProperty(result, QUERY_LIMITS, { value: limits, enumerable: false });
+  return Object.freeze(result) as CanonicalQuery;
+}
+
+function sameQueryLimits(left: QueryLimits, right: QueryLimits): boolean {
+  return Object.keys(DEFAULT_QUERY_LIMITS).every((key) => (
+    left[key as keyof QueryLimits] === right[key as keyof QueryLimits]
+  ));
 }
 
 function normalizeSort(input: readonly TabularSort[], limits: QueryLimits): TabularResult<readonly TabularSort[]> {

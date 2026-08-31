@@ -111,10 +111,27 @@ test('TAB-GRD-05: request execution remains single-owner and disposable', () => 
   assert.equal(requests.length, 1);
   assert.equal(controller.attachRequestExecutor(() => {}).error.code, 'duplicate-source-executor');
   attached.value();
-  assert.equal(controller.attachRequestExecutor(() => {}).ok, true);
+  const reattached = controller.attachRequestExecutor(() => {});
+  assert.equal(reattached.ok, true);
+  const before = controller.getSnapshot();
   controller.dispose();
   controller.dispose();
-  assert.equal(controller.dispatch({ type: 'request-view' }).ok, false);
+  reattached.value();
+  const failures = [
+    controller.dispatch({ type: 'request-view' }),
+    controller.synchronizeView({}),
+    controller.syncControlledValues({}),
+    controller.requestView(),
+    controller.abandonRequest(1),
+    controller.attachRequestExecutor(() => assert.fail('disposed executor attached')),
+  ];
+  for (const result of failures) {
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'controller-disposed');
+    assert.equal(controller.getSnapshot(), before);
+  }
+  controller.subscribeCommands(() => assert.fail('disposed observer attached'))();
+  assert.doesNotThrow(() => controller.getProjection());
 });
 
 test('TAB-GRD-06: projection cells and indexes are retained across adjacent movement', () => {
@@ -138,4 +155,77 @@ test('TAB-GRD-06: projection cells and indexes are retained across adjacent move
   const afterMove = controller.getProjection();
   assert.equal(afterMove.rows, first.rows);
   assert.equal(afterMove.rows[1].cells[0], first.rows[1].cells[0]);
+});
+
+test('controlled DataGrid callback synchronization preserves the latest shared-base revision', () => {
+  const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
+  const next = { ...query, sort: [{ id: 'name', columnID: 'name', direction: 'ascending', comparator: 'text' }] };
+  let controller;
+  controller = createDataGrid({
+    columns,
+    controlled: { query: true },
+    initialValues: { query },
+    onQueryChange(value) {
+      assert.equal(controller.syncControlledValues({ query: value }).ok, true);
+    },
+  });
+  const requests = [];
+  controller.subscribeCommands((command) => {
+    if (command.type === 'request-view') requests.push(command.request);
+  });
+
+  const outer = controller.dispatch({ type: 'set-query', query: next });
+  assert.equal(outer.ok, true);
+  assert.deepEqual(controller.getSnapshot().tabular.state.query, next);
+  assert.notEqual(controller.getSnapshot().tabular.state.query, next);
+  assert.equal(controller.getSnapshot().revision, 1);
+  assert.equal(controller.getSnapshot().tabular.revision, 2);
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].requestID, controller.getSnapshot().tabular.state.requestState.pendingRequest.requestID);
+});
+
+test('TAB-GRD-07: controlled cursor and edit proposals wait for owner sync including null and navigation', () => {
+  const cursorProposals = [];
+  const editProposals = [];
+  const controller = createDataGrid({
+    columns,
+    controlled: { cursor: true, edit: true },
+    initialValues: { cursor: { current: null }, edit: { kind: 'navigation' } },
+    onCursorChange: (value) => cursorProposals.push(value),
+    onEditStateChange: (value) => editProposals.push(value),
+  });
+  assert.equal(controller.synchronizeView(resolve(controller)).ok, true);
+  const cell = { rowID: 'r2', columnID: 'name' };
+  const focused = controller.dispatch({ type: 'focus-cell', cell });
+  assert.equal(focused.ok, true);
+  assert.deepEqual(focused.value.commands, []);
+  assert.equal(controller.getSnapshot().cursor.current, null);
+  assert.deepEqual(cursorProposals.at(-1), { current: cell });
+
+  assert.equal(controller.syncControlledValues({ cursor: { current: cell }, edit: { kind: 'navigation' } }).ok, true);
+  assert.deepEqual(controller.getSnapshot().cursor.current, cell);
+  const begun = controller.dispatch({ type: 'begin-edit' });
+  assert.equal(begun.ok, true);
+  assert.deepEqual(begun.value.commands, []);
+  assert.deepEqual(controller.getSnapshot().edit, { kind: 'navigation' });
+  assert.deepEqual(editProposals.at(-1), { kind: 'editing', cell });
+
+  assert.equal(controller.syncControlledValues({ cursor: { current: cell }, edit: { kind: 'editing', cell } }).ok, true);
+  assert.deepEqual(controller.getSnapshot().edit, { kind: 'editing', cell });
+  assert.equal(controller.syncControlledValues({ cursor: { current: null }, edit: { kind: 'navigation' } }).ok, true);
+  assert.equal(controller.getSnapshot().cursor.current, null);
+  assert.deepEqual(controller.getSnapshot().edit, { kind: 'navigation' });
+});
+
+test('TAB-GRD-08: async first-view default cursor is applied exactly once', () => {
+  const preferred = { rowID: 'r2', columnID: 'score' };
+  const controller = createDataGrid({ columns, initialValues: { cursor: { current: preferred } } });
+  assert.equal(controller.getSnapshot().cursor.current, null);
+  assert.equal(controller.synchronizeView(resolve(controller)).ok, true);
+  assert.deepEqual(controller.getSnapshot().cursor.current, preferred);
+  const replacement = { rowID: 'r1', columnID: 'name' };
+  assert.equal(controller.dispatch({ type: 'focus-cell', cell: replacement }).ok, true);
+  assert.equal(controller.requestView().ok, true);
+  assert.equal(controller.synchronizeView({ ...resolve(controller), viewRevision: 2 }).ok, true);
+  assert.deepEqual(controller.getSnapshot().cursor.current, replacement);
 });

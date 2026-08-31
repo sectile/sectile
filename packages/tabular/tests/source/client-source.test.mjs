@@ -212,15 +212,68 @@ test('TAB-SRC-08: authoritative deletion deltas require unique valid row identit
   const active = request({ requestID: 9 });
   const resolved = resolveClientTabularRequest(source(), active);
   assert.equal(resolved.ok, true);
-  assert.equal(synchronizeTabularView(active, { ...resolved.value, removedRowIDs: ['r4'] }).ok, true);
+  assert.equal(synchronizeTabularView(active, { ...resolved.value, removedRowIDs: ['removed:r4'] }).ok, true);
 
-  const duplicate = synchronizeTabularView(active, { ...resolved.value, removedRowIDs: ['r4', 'r4'] });
+  const duplicate = synchronizeTabularView(active, { ...resolved.value, removedRowIDs: ['removed:r4', 'removed:r4'] });
   assert.equal(duplicate.ok, false);
   assert.equal(duplicate.error.code, 'duplicate-identity');
 
   const malformed = synchronizeTabularView(active, { ...resolved.value, removedRowIDs: [''] });
   assert.equal(malformed.ok, false);
   assert.equal(malformed.error.code, 'invalid-id');
+});
+
+test('TAB-SRC-11: response cross-invariants reject overlap, impossible counts, and incomplete ranges', () => {
+  const active = request();
+  const resolved = resolveClientTabularRequest(source(), active);
+  assert.equal(resolved.ok, true);
+  const cases = [
+    { ...resolved.value, removedRowIDs: ['r1'] },
+    { ...resolved.value, matchingLeafCount: { kind: 'known', value: 3 } },
+    { ...resolved.value, visibleRowCount: { kind: 'known', value: 3 } },
+  ];
+  for (const response of cases) {
+    const result = synchronizeTabularView(active, response);
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'response-envelope-mismatch');
+  }
+
+  const windowRequest = request({ access: { kind: 'window', start: 0, count: 2 } });
+  const windowResponse = resolveClientTabularRequest(source(), windowRequest);
+  assert.equal(windowResponse.ok, true);
+  const overfilled = synchronizeTabularView(windowRequest, {
+    ...windowResponse.value,
+    rows: [...windowResponse.value.rows, resolved.value.rows[2]],
+  });
+  assert.equal(overfilled.ok, false);
+  assert.equal(overfilled.error.code, 'response-envelope-mismatch');
+  const incomplete = synchronizeTabularView(windowRequest, {
+    ...windowResponse.value,
+    rows: windowResponse.value.rows.slice(0, 1),
+  });
+  assert.equal(incomplete.ok, false);
+  assert.equal(incomplete.error.code, 'response-envelope-mismatch');
+});
+
+test('TAB-SRC-12: initial client schema bootstrap advances later request echo monotonically', () => {
+  const versioned = createClientTabularSource({
+    records,
+    columnSchema: { ...columnSchema, revision: 2 },
+    getRowID: (record) => record.id,
+    getValue: (record, columnID) => record[columnID],
+  });
+  const initial = request({ columnSchemaRevision: 0 });
+  const first = resolveClientTabularRequest(versioned, initial);
+  assert.equal(first.ok, true);
+  assert.equal(first.value.columnSchema.revision, 2);
+  assert.equal(synchronizeTabularView(initial, first.value).ok, true);
+
+  const next = resolveClientTabularRequest(versioned, request({ requestID: 2, columnSchemaRevision: 2 }));
+  assert.equal(next.ok, true);
+  assert.equal(next.value.columnSchema.revision, 2);
+  const stale = resolveClientTabularRequest(versioned, request({ requestID: 3, columnSchemaRevision: 1 }));
+  assert.equal(stale.ok, false);
+  assert.equal(stale.error.code, 'response-envelope-mismatch');
 });
 
 test('TAB-SRC-09: one current source, query, and expansion stage is retained by explicit revisions', () => {

@@ -7,6 +7,7 @@ import {
   reconcileDataGridVirtualAdapter,
   reconcileDataTableVirtualAdapter,
   tryCreateDataGridVirtualAdapter,
+  tryCreateDataTableVirtualAdapter,
 } from '../../.verification-dist/virtual.js';
 
 const exact = (value) => ({ kind: 'exact', value });
@@ -112,4 +113,84 @@ test('TAB-VIR-04: partition and projected-cell ceilings remain distinct', () => 
   });
   assert.equal(cells.ok, false);
   assert.equal(cells.error.code, 'projected-cell-ceiling-exceeded');
+});
+
+test('TAB-VIR-05: by-id extent callbacks fail through a typed coordinate boundary', () => {
+  const rows = tryCreateDataTableVirtualAdapter({
+    projection: tableProjection(['r1']),
+    rowExtents: { kind: 'by-id', getExtent: () => { throw new Error('row failed'); } },
+  });
+  assert.equal(rows.ok, false);
+  assert.equal(rows.error.code, 'extent-policy-failed');
+  assert.deepEqual(rows.error.details, { axis: 'row', id: 'r1', index: 0, message: 'row failed' });
+
+  const columns = tryCreateDataGridVirtualAdapter({
+    projection: gridProjection(['r1']),
+    rowExtents: { kind: 'uniform', extent: exact(20) },
+    columnExtents: { kind: 'by-id', getExtent: (id, index) => {
+      if (id === 'score') throw new Error('column failed');
+      return exact(80 + index);
+    } },
+  });
+  assert.equal(columns.ok, false);
+  assert.equal(columns.error.code, 'extent-policy-failed');
+  assert.deepEqual(columns.error.details, { axis: 'column', id: 'score', index: 1, message: 'column failed' });
+});
+
+test('TAB-VIR-06: sparse repair is bounded and bulk replacement reuses stable measurements', () => {
+  const ids = Array.from({ length: 128 }, (_, index) => `r${index}`);
+  let extentCalls = 0;
+  const adapter = createDataTableVirtualAdapter({
+    projection: tableProjection(ids),
+    rowExtents: { kind: 'by-id', getExtent: (_id, index) => { extentCalls += 1; return estimated(20 + index); } },
+  });
+  const measured = adapter.strategy.tryMeasure(adapter.state, {
+    generation: adapter.state.generation,
+    measurements: [{ index: 64, extent: exact(77) }],
+    anchor: null,
+  });
+  assert.equal(measured.ok, true);
+
+  const sparse = reconcileDataTableVirtualAdapter(adapter, measured.value.state, tableProjection(['r0', 'new-sparse', ...ids.slice(1)], 2));
+  assert.equal(sparse.ok, true);
+  assert.equal(sparse.value.mutations.length, 1);
+  assert.equal(extentCalls, 129);
+
+  const rotatedIDs = [...ids.slice(31), ...ids.slice(0, 31)];
+  const rotated = reconcileDataTableVirtualAdapter(adapter, measured.value.state, tableProjection(rotatedIDs, 3));
+  assert.equal(rotated.ok, true);
+  assert.equal(rotated.value.mutations.length, 1);
+  assert.equal(rotated.value.mutations[0].patch.type, 'move');
+
+  const target = ['new-bulk-a', ...ids.slice(4).reverse(), 'new-bulk-b'];
+  const bulk = reconcileDataTableVirtualAdapter(adapter, measured.value.state, tableProjection(target, 4));
+  assert.equal(bulk.ok, true);
+  assert.equal(bulk.value.mutations.length, 1);
+  assert.deepEqual(bulk.value.mutations[0].patch, { type: 'splice', index: 0, deleteCount: 128, inserted: target });
+  assert.equal(extentCalls, 131);
+  assert.deepEqual(bulk.value.state.extents.extentAt(target.indexOf('r64')), exact(77));
+});
+
+test('TAB-VIR-07: table and grid locators reuse production indexes without array scans or cell maps', () => {
+  const ids = Array.from({ length: 256 }, (_, index) => `r${index}`);
+  const table = createDataTableVirtualAdapter({ projection: tableProjection(ids), rowExtents: { kind: 'uniform', extent: exact(20) } });
+  const grid = createDataGridVirtualAdapter({
+    projection: gridProjection(ids),
+    rowExtents: { kind: 'uniform', extent: exact(20) },
+    columnExtents: { kind: 'uniform', extent: exact(80) },
+  });
+  const originalIndexOf = Array.prototype.indexOf;
+  let scans = 0;
+  Array.prototype.indexOf = function (...args) { scans += 1; return originalIndexOf.apply(this, args); };
+  try {
+    for (let index = 0; index < 100; index += 1) {
+      assert.deepEqual(table.locateRow('r255'), { id: 'r255', index: 255 });
+      assert.deepEqual(grid.locateRow('r255'), { id: 'r255', index: 255 });
+      assert.deepEqual(grid.locateColumn('score'), { id: 'score', index: 1 });
+      assert.deepEqual(grid.locateCell({ rowID: 'r255', columnID: 'score' }), { id: 'c1:4:r2555:score', index: 511 });
+    }
+  } finally {
+    Array.prototype.indexOf = originalIndexOf;
+  }
+  assert.equal(scans, 0);
 });

@@ -25,11 +25,11 @@ import type {
   TabularViewResponse,
 } from '@sectile/tabular';
 
-export interface SemanticController<State, Event, Command> {
+export interface SemanticController<State, Event, Command, ControlledValues extends TabularControlledValues = TabularControlledValues> {
   getSnapshot(): State;
   dispatch(event: Event, expectedRevision?: number): TabularResult<{ readonly snapshot: State; readonly commands: readonly Command[] }>;
   synchronizeView(response: TabularViewResponse): TabularResult<State>;
-  syncControlledValues(values: TabularControlledValues): TabularResult<State>;
+  syncControlledValues(values: ControlledValues): TabularResult<State>;
   requestView(): TabularResult<State>;
   abandonRequest(requestID: number): TabularResult<State>;
   subscribeCommands(listener: (command: Command) => void): () => void;
@@ -37,7 +37,7 @@ export interface SemanticController<State, Event, Command> {
   dispose(): void;
 }
 
-export interface VueProfileController<State, Event, Command> extends SemanticController<State, Event, Command> {
+export interface VueProfileController<State, Event, Command, ControlledValues extends TabularControlledValues = TabularControlledValues> extends SemanticController<State, Event, Command, ControlledValues> {
   readonly snapshot: Readonly<ShallowRef<State>>;
   readonly acceptedViewState: ComputedRef<TabularAcceptedViewState>;
   readonly requestState: ComputedRef<TabularRequestState>;
@@ -46,12 +46,12 @@ export interface VueProfileController<State, Event, Command> extends SemanticCon
 const semantics = new WeakMap<object, SemanticController<unknown, unknown, unknown>>();
 const refreshers = new WeakMap<object, () => void>();
 
-export function createVueProfileController<State, Event, Command>(
-  semantic: SemanticController<State, Event, Command>,
-): VueProfileController<State, Event, Command> {
+export function createVueProfileController<State, Event, Command, ControlledValues extends TabularControlledValues = TabularControlledValues>(
+  semantic: SemanticController<State, Event, Command, ControlledValues>,
+): VueProfileController<State, Event, Command, ControlledValues> {
   const snapshot = shallowRef(semantic.getSnapshot()) as ShallowRef<State>;
   const refresh = (): void => { snapshot.value = semantic.getSnapshot(); };
-  const controller: VueProfileController<State, Event, Command> = Object.freeze({
+  const controller: VueProfileController<State, Event, Command, ControlledValues> = Object.freeze({
     snapshot: snapshot as Readonly<ShallowRef<State>>,
     acceptedViewState: computed(() => stateOf(snapshot.value).acceptedViewState),
     requestState: computed(() => stateOf(snapshot.value).requestState),
@@ -66,7 +66,7 @@ export function createVueProfileController<State, Event, Command>(
       if (result.ok) refresh();
       return result;
     },
-    syncControlledValues: (values: TabularControlledValues) => {
+    syncControlledValues: (values: ControlledValues) => {
       const result = semantic.syncControlledValues(values);
       if (result.ok) refresh();
       return result;

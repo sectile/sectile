@@ -3,11 +3,32 @@
   "package": "@sectile/tabular",
   "entries": [
     {
-      "id": "WI-032:root-selection-expression-closure",
+      "id": "WI-014:root-request-generation-contract",
       "change": "signature-changed",
       "before": { "subpath": "." },
-      "symbols": ["TabularRowSelection declaration closure"],
+      "symbols": ["TabularLimits.maxLiveRequestGenerations", "TabularLimitErrorCode.live-request-generation-ceiling-exceeded", "TabularRowSelection declaration closure"],
       "replacement": { "package": "@sectile/tabular", "subpath": "." }
+    },
+    {
+      "id": "WI-014:model-request-generation-contract",
+      "change": "signature-changed",
+      "before": { "subpath": "./model" },
+      "symbols": ["TabularLimits.maxLiveRequestGenerations", "TabularLimitErrorCode.live-request-generation-ceiling-exceeded"],
+      "replacement": { "package": "@sectile/tabular", "subpath": "./model" }
+    },
+    {
+      "id": "WI-014:source-request-generation-contract",
+      "change": "signature-changed",
+      "before": { "subpath": "./source" },
+      "symbols": ["Partial<TabularLimits>.maxLiveRequestGenerations"],
+      "replacement": { "package": "@sectile/tabular", "subpath": "./source" }
+    },
+    {
+      "id": "WI-015:virtual-extent-policy-boundary",
+      "change": "signature-changed",
+      "before": { "subpath": "./virtual" },
+      "symbols": ["TabularVirtualErrorCode.extent-policy-failed", "TabularRowSelection declaration closure"],
+      "replacement": { "package": "@sectile/tabular", "subpath": "./virtual" }
     },
     {
       "id": "WI-032:data-grid-selection-expression-closure",
@@ -31,11 +52,11 @@
       "replacement": { "package": "@sectile/tabular", "subpath": "./data-tree-grid" }
     },
     {
-      "id": "WI-032:virtual-selection-expression-closure",
+      "id": "WI-002:query-canonicalization-closure",
       "change": "signature-changed",
-      "before": { "subpath": "./virtual" },
-      "symbols": ["TabularRowSelection declaration closure"],
-      "replacement": { "package": "@sectile/tabular", "subpath": "./virtual" }
+      "before": { "subpath": "./query" },
+      "symbols": ["Tabular query declaration closure"],
+      "replacement": { "package": "@sectile/tabular", "subpath": "./query" }
     }
   ]
 }

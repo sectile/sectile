@@ -1,6 +1,10 @@
 import { unwrap } from '@sectile/core/result';
 import { fail, ok, validateID } from './internal/foundation.js';
+import { canonicalizeTabularAccessState } from './internal/access.js';
+import { canonicalizeTabularColumnState } from './internal/columns.js';
+import { canonicalizeTabularExpansion } from './internal/expansion.js';
 import { canonicalizeRowSelection } from './internal/selection.js';
+import { tryCreateTabularQuery } from './query.js';
 import type {
   TabularAccessState,
   TabularCellAddress,
@@ -40,7 +44,6 @@ const DEFAULT_TABULAR_LIMITS: TabularLimits = Object.freeze({
   maxQueryValueDepth: 32,
   maxQueryValueCodeUnits: 1_048_576,
   maxQueryValueNodes: 100_000,
-  maxLiveRequestGenerations: 1,
 });
 
 const EMPTY_QUERY: TabularQuery = Object.freeze({
@@ -185,9 +188,56 @@ export function reconcileTabularState(
           : `Controlled ${key} requires its external value.`, { key });
     }
   }
-  const slices = validateSlices(model, { ...state, ...values });
-  if (!slices.ok) return slices;
-  return ok(Object.freeze({ ...state, ...slices.value }));
+  const query = model.controlled.query ? canonicalizeTabularStateQuery(model, values.query as TabularQuery) : ok(state.query);
+  if (!query.ok) return query;
+  const rowSelection = model.controlled.rowSelection
+    ? canonicalizeRowSelection(values.rowSelection as TabularRowSelection, model.limits)
+    : ok(state.rowSelection);
+  if (!rowSelection.ok) return rowSelection;
+  const columnState = model.controlled.columnState
+    ? canonicalizeTabularColumnState(values.columnState as TabularColumnState, model.columns, model.headers)
+    : ok(state.columnState);
+  if (!columnState.ok) return columnState;
+  const accessState = model.controlled.accessState
+    ? canonicalizeTabularAccessState(values.accessState as TabularAccessState)
+    : ok(state.accessState);
+  if (!accessState.ok) return accessState;
+  const expansion = model.controlled.expansion
+    ? canonicalizeTabularExpansion(values.expansion as readonly string[], model.limits)
+    : ok(state.expansion);
+  if (!expansion.ok) return expansion;
+  return ok(Object.freeze({
+    ...state,
+    query: query.value,
+    rowSelection: rowSelection.value,
+    columnState: columnState.value,
+    accessState: accessState.value,
+    expansion: expansion.value,
+  }));
+}
+
+export function canonicalizeTabularStateQuery(
+  model: Pick<TabularModel, 'columns' | 'limits'>,
+  input: TabularQuery,
+): TabularResult<TabularQuery> {
+  const query = tryCreateTabularQuery(input, model.limits);
+  if (!query.ok) return query;
+  const columns = new Set(model.columns.map((column) => column.id));
+  for (const descriptor of [
+    ...query.value.sort,
+    ...query.value.groups,
+    ...query.value.aggregates,
+    ...query.value.pivots,
+    ...query.value.filters.filter((filter) => filter.scope === 'column'),
+  ]) {
+    if (!columns.has(descriptor.columnID as string)) {
+      return fail('construction', 'invalid-query-descriptor', 'Query descriptor column must exist in the Tabular model.', {
+        id: descriptor.id,
+        columnID: descriptor.columnID,
+      });
+    }
+  }
+  return query;
 }
 
 export function encodeTabularCellID(
@@ -249,6 +299,7 @@ function normalizeColumns(
   limits: TabularLimits,
 ): TabularResult<readonly TabularColumnDefinition[]> {
   const ids = new Set<string>();
+  const fallbackHeaderIDs = new Set<string>();
   const result: TabularColumnDefinition[] = [];
   for (const column of columns) {
     if (column === null || typeof column !== 'object') {
@@ -260,6 +311,13 @@ function normalizeColumns(
       return fail('construction', 'duplicate-identity', 'Column identities must be unique.', { id: column.id });
     }
     ids.add(column.id);
+    const fallbackHeaderID = column.headerNodeID ?? column.id;
+    const fallbackIDError = validateID(fallbackHeaderID, 'headerNodeID', limits);
+    if (fallbackIDError !== null) return { ok: false, error: fallbackIDError };
+    if (fallbackHeaderIDs.has(fallbackHeaderID)) {
+      return fail('construction', 'duplicate-identity', 'Fallback header identities must be unique.', { id: fallbackHeaderID });
+    }
+    fallbackHeaderIDs.add(fallbackHeaderID);
     if (column.label !== undefined && typeof column.label !== 'string') {
       return fail('construction', 'invalid-column-definition', 'Column label must be a string.', { id: column.id });
     }
@@ -324,6 +382,12 @@ function normalizeHeaders(
     if (!normalized.ok) return normalized;
     result.push(normalized.value);
   }
+  if (headers.length > 0 && leafColumns.size !== columns.length) {
+    return fail('construction', 'invalid-header-node', 'Explicit headers must reference every model column exactly once.', {
+      expectedLeafCount: columns.length,
+      actualLeafCount: leafColumns.size,
+    });
+  }
   return ok(Object.freeze(result));
 }
 
@@ -361,48 +425,22 @@ function validateSlices(
   if (query === undefined || rowSelection === undefined || columnState === undefined || accessState === undefined || expansion === undefined) {
     return fail('construction', 'invalid-controlled-shape', 'Every Tabular state slice must be present.');
   }
-  if (query.sort.length > model.limits.maxSortRules) return ceiling('sort-rule-ceiling-exceeded', query.sort.length, model.limits.maxSortRules);
-  if (query.filters.length > model.limits.maxFilterRules) return ceiling('filter-rule-ceiling-exceeded', query.filters.length, model.limits.maxFilterRules);
-  if (query.groups.length > model.limits.maxGroupDescriptors) return ceiling('group-descriptor-ceiling-exceeded', query.groups.length, model.limits.maxGroupDescriptors);
-  if (query.aggregates.length > model.limits.maxAggregateDescriptors) return ceiling('aggregate-descriptor-ceiling-exceeded', query.aggregates.length, model.limits.maxAggregateDescriptors);
-  if (query.pivots.length > model.limits.maxPivotDescriptors) return ceiling('pivot-descriptor-ceiling-exceeded', query.pivots.length, model.limits.maxPivotDescriptors);
+  const canonicalQuery = canonicalizeTabularStateQuery(model, query);
+  if (!canonicalQuery.ok) return canonicalQuery;
   const canonicalSelection = canonicalizeRowSelection(rowSelection, model.limits);
   if (!canonicalSelection.ok) return canonicalSelection;
-  const columnResult = validateColumnState(columnState, model.columns);
+  const columnResult = canonicalizeTabularColumnState(columnState, model.columns, model.headers);
   if (!columnResult.ok) return columnResult;
-  if (!Array.isArray(expansion)) return fail('construction', 'invalid-controlled-shape', 'Expansion must be an array.');
-  const frozenExpansion = Object.freeze([...expansion]);
+  const canonicalAccess = canonicalizeTabularAccessState(accessState);
+  if (!canonicalAccess.ok) return canonicalAccess;
+  const canonicalExpansion = canonicalizeTabularExpansion(expansion, model.limits);
+  if (!canonicalExpansion.ok) return canonicalExpansion;
   return ok(Object.freeze({
-    query,
+    query: canonicalQuery.value,
     rowSelection: canonicalSelection.value,
     columnState: columnResult.value,
-    accessState,
-    expansion: frozenExpansion,
-  }));
-}
-
-function validateColumnState(
-  state: TabularColumnState,
-  columns: readonly TabularColumnDefinition[],
-): TabularResult<TabularColumnState> {
-  const domain = new Set(columns.map((column) => column.id));
-  if (!Array.isArray(state.order) || state.order.length !== domain.size || new Set(state.order).size !== state.order.length
-    || state.order.some((id) => !domain.has(id))) {
-    return fail('construction', 'invalid-controlled-shape', 'Column order must be a permutation of the model columns.');
-  }
-  for (const [label, ids] of [['hidden', state.hidden], ['pinnedStart', state.pinnedStart], ['pinnedEnd', state.pinnedEnd]] as const) {
-    if (!Array.isArray(ids) || new Set(ids).size !== ids.length || ids.some((id) => !domain.has(id))) {
-      return fail('construction', 'invalid-controlled-shape', `${label} must contain unique model column IDs.`);
-    }
-  }
-  if (state.pinnedStart.some((id) => state.pinnedEnd.includes(id))) {
-    return fail('construction', 'invalid-controlled-shape', 'A column cannot be pinned to both logical edges.');
-  }
-  return ok(Object.freeze({
-    order: Object.freeze([...state.order]),
-    hidden: Object.freeze([...state.hidden]),
-    pinnedStart: Object.freeze([...state.pinnedStart]),
-    pinnedEnd: Object.freeze([...state.pinnedEnd]),
+    accessState: canonicalAccess.value,
+    expansion: canonicalExpansion.value,
   }));
 }
 
