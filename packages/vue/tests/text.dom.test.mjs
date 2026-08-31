@@ -11,6 +11,7 @@ Object.assign(globalThis, {
   HTMLElement: browserWindow.HTMLElement,
   HTMLInputElement: browserWindow.HTMLInputElement,
   HTMLTextAreaElement: browserWindow.HTMLTextAreaElement,
+  KeyboardEvent: browserWindow.KeyboardEvent,
   SVGElement: browserWindow.SVGElement,
   Event: browserWindow.Event,
   InputEvent: browserWindow.InputEvent,
@@ -106,14 +107,18 @@ test('Vue TextField lazy modifier emits only after the native change boundary', 
   host.remove();
 });
 
-test('controlled Vue TextField leaves consecutive Hangul composition under native input ownership', async () => {
+test('controlled Vue TextField commits Hangul once when Tab ends composition', async () => {
   const host = document.createElement('div');
   document.body.append(host);
+  const updates = [];
   const value = ref('');
   const app = createApp({
     render: () => h(TextField, {
       modelValue: value.value,
-      'onUpdate:modelValue': (nextValue) => { value.value = nextValue; },
+      'onUpdate:modelValue': (nextValue) => {
+        updates.push(nextValue);
+        value.value = nextValue;
+      },
     }),
   });
 
@@ -145,32 +150,69 @@ test('controlled Vue TextField leaves consecutive Hangul composition under nativ
   input.setSelectionRange(1, 1);
   input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
   await nextTick();
-  input.dispatchEvent(compositionEvent('compositionend', '한'));
-  composing = false;
-  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
-  await Promise.resolve();
-  await nextTick();
-
-  composing = true;
-  input.setSelectionRange(input.value.length, input.value.length);
-  input.dispatchEvent(compositionEvent('compositionstart', ''));
-  valueDescriptor.set.call(input, '한ㄱ');
-  input.setSelectionRange(2, 2);
-  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
-  await nextTick();
   valueDescriptor.set.call(input, '한글');
   input.setSelectionRange(2, 2);
   input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
   await nextTick();
+  assert.deepEqual(updates, []);
+  assert.equal(value.value, '');
+  assert.equal(input.value, '한글');
+
+  input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Tab' }));
   input.dispatchEvent(compositionEvent('compositionend', '글'));
   composing = false;
+  input.dispatchEvent(new Event('blur'));
   input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
   await Promise.resolve();
   await nextTick();
+  await Promise.resolve();
 
   assert.deepEqual(writes.filter((write) => write.composing), []);
+  assert.deepEqual(updates, ['한글']);
   assert.equal(value.value, '한글');
   assert.equal(input.value, '한글');
+
+  app.unmount();
+  host.remove();
+});
+
+test('controlled Vue TextField defers external values until composition settles', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const updates = [];
+  const value = ref('초기');
+  const app = createApp({
+    render: () => h(TextField, {
+      modelValue: value.value,
+      'onUpdate:modelValue': (nextValue) => { updates.push(nextValue); },
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const input = host.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+  input.setSelectionRange(2, 2);
+  input.dispatchEvent(compositionEvent('compositionstart', ''));
+  input.value = '초기한';
+  input.setSelectionRange(3, 3);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await nextTick();
+
+  value.value = '외부';
+  await nextTick();
+  assert.deepEqual(updates, []);
+  assert.equal(input.value, '초기한');
+
+  input.dispatchEvent(compositionEvent('compositionend', '한'));
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await Promise.resolve();
+  await nextTick();
+  await Promise.resolve();
+
+  assert.deepEqual(updates, ['초기한']);
+  assert.equal(value.value, '외부');
+  assert.equal(input.value, '외부');
 
   app.unmount();
   host.remove();

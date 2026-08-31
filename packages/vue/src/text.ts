@@ -83,19 +83,15 @@ export const TextField = defineComponent({
         disabled: props.disabled,
         readOnly: props.readonly,
         onValueChange: (change) => {
+          const wasComposing = proposedState !== null && proposedState.composition !== null;
           proposedState = change.value;
-          if (!props.modelModifiers.lazy) {
-            const proposal = change.value;
-            const text = proposal.snapshot.text;
-            emit('update:modelValue', text);
-            void nextTick(() => {
-              if (connection === null || proposedState !== proposal) return;
-              if (String(props.modelValue) !== text) return;
-              proposedState = null;
-              const result = connection.syncControlledValues({ value: proposal });
-              if (!result.ok) throw new TypeError(result.error.message);
-            });
+          if (change.value.composition !== null) return;
+          if (props.modelModifiers.lazy) {
+            if (wasComposing) settleControlledProposal(change.value);
+            return;
           }
+          emit('update:modelValue', change.value.snapshot.text);
+          settleControlledProposal(change.value);
         },
       });
       if (!result.ok) throw new TypeError(result.error.message);
@@ -110,9 +106,31 @@ export const TextField = defineComponent({
         element: element.value,
         disabled: props.disabled,
         readOnly: props.readonly,
+        onTransition: ({ input }) => {
+          if (!controlled || props.modelModifiers.lazy || input.type !== 'composition-commit') return;
+          const proposal = proposedState;
+          if (proposal === null || proposal.composition !== null || connection === null) return;
+          const result = connection.syncControlledValues({ value: proposal });
+          if (!result.ok) throw new TypeError(result.error.message);
+        },
       });
       connection.render();
     };
+    function settleControlledProposal(proposal: TextState): void {
+      if (!controlled) return;
+      void nextTick(() => {
+        if (connection === null || proposedState !== proposal || props.modelValue === undefined) return;
+        proposedState = null;
+        const text = String(props.modelValue);
+        const state = proposal.snapshot.text === text ? proposal : createTextState(text);
+        if (props.modelModifiers.lazy) {
+          mountConnection(state);
+          return;
+        }
+        const result = connection.syncControlledValues({ value: state });
+        if (!result.ok) throw new TypeError(result.error.message);
+      });
+    }
     const participation = useNativeInputFormControl(element, {
       reset: () => {
         queueMicrotask(() => mountConnection(createTextState(
@@ -135,6 +153,7 @@ export const TextField = defineComponent({
 
     watch(() => props.modelValue, (value) => {
       if (!controlled || value === undefined || connection === null) return;
+      if (proposedState !== null && proposedState.composition !== null) return;
       const text = String(value);
       const state = proposedState?.snapshot.text === text ? proposedState : createTextState(text);
       proposedState = null;
