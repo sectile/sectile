@@ -233,10 +233,12 @@ test('controller view ownership converges only through controlled synchronizatio
   });
   const request = controller.dispatch({ type: 'zoom-axis-view', axisID: 'linear', factor: 2 }).value;
   assert.equal(request.snapshot.revision, 0);
-  assert.equal(request.snapshot.state.view, view);
+  assert.notEqual(request.snapshot.state.view, view);
+  assert.deepEqual(request.snapshot.state.view, view);
   const requestedView = request.commands.find((command) => command.type === 'view-change-requested').view;
   const synced = controller.syncControlledValues({ view: requestedView }).value;
   assert.equal(synced.revision, 1);
-  assert.equal(synced.state.view, requestedView);
+  assert.notEqual(synced.state.view, requestedView);
+  assert.deepEqual(synced.state.view, requestedView);
   assert.equal(controller.syncControlledValues({}).error.code, 'chart-controller-invalid');
 });

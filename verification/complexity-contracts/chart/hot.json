@@ -9,7 +9,8 @@
       "inherits": "constant-v1",
       "source": "packages/chart/src/controller.ts",
       "benchmarkIDs": [
-        "chart:projection:cached"
+        "chart:projection:cached",
+        "VAL-001:chart-projection-cache-allocation"
       ],
       "specificationCeiling": "O(1)",
       "contract": {
@@ -26,7 +27,7 @@
           "retained": "O(kRepresentative)"
         },
         "resources": {
-          "allocations": "0",
+          "allocations": "O(1)",
           "cacheEntries": "1",
           "listeners": "0",
           "observers": "0",
@@ -34,11 +35,11 @@
           "subscriptions": "0"
         },
         "assumptions": [
-          "model generation, viewport, representative ceiling, and canonical view transform are unchanged",
-          "caller-supplied scales disable caching"
+          "model generation, viewport, representative ceiling, canonical controller-owned view, view transform, and inset scalars are unchanged",
+          "caller-supplied scales, explicit view, and previous projection disable caching"
         ],
-        "proof": "The controller compares a fixed scalar cache key and returns the single retained immutable projection.",
-        "adversarialWitness": "Repeated projection reads on a one-million-datum model return one object identity without domain traversal.",
+        "proof": "The controller compares a fixed scalar cache key before constructing a resolved request and returns the single retained immutable projection in one Result wrapper.",
+        "adversarialWitness": "Repeated projection reads on a one-million-datum model return one object identity without domain traversal; a 50,000-read heap-allocation sample stays below one percent of an otherwise identical uncached previous-projection request.",
         "fullScan": {
           "allowed": false,
           "rationale": "A cache hit cannot visit source data."
@@ -50,9 +51,9 @@
       "inherits": "lifecycle-v1",
       "source": "packages/chart/src/controller.ts",
       "benchmarkIDs": [
-        "VAL-014:chart-snapshot-subscriptions"
+        "VAL-002:chart-publication-cascade"
       ],
-      "specificationCeiling": "O(sSnapshot + cCommand*sCommand)",
+      "specificationCeiling": "O(q*(sSnapshot + cCommand*sCommand)), q <= 1024",
       "contract": {
         "variables": [
           {
@@ -69,31 +70,78 @@
             "name": "cCommand",
             "meaning": "commands emitted by one accepted transition",
             "ceiling": "bounded Chart transition command count"
+          },
+          {
+            "name": "q",
+            "meaning": "active and pending publication records in one synchronous drain",
+            "ceiling": "1024"
           }
         ],
         "time": {
-          "bound": "O(sSnapshot + cCommand*sCommand)",
+          "bound": "O(q*(sSnapshot + cCommand*sCommand))",
           "kind": "worst-case",
           "runtimeState": "mounted"
         },
         "space": {
-          "auxiliary": "O(1)",
-          "output": "O(1)",
-          "retained": "O(sSnapshot + sCommand)"
+          "auxiliary": "O(q*(sSnapshot + sCommand + cCommand))",
+          "output": "O(q)",
+          "retained": "O(q*(sSnapshot + sCommand + cCommand))"
         },
         "resources": {
-          "allocations": "0 per listener notification",
-          "cacheEntries": "0",
+          "allocations": "O(q*(sSnapshot + sCommand + cCommand))",
+          "cacheEntries": "at most 1024 queued publication records",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "O(sSnapshot + sCommand)"
         },
-        "proof": "One committed immutable snapshot is published directly to each snapshot listener before the already-bounded command list is delivered. Unsubscribe and controller disposal remove retained listeners idempotently.",
-        "adversarialWitness": "Every active snapshot and command listener remains mounted while one accepted transition emits its maximum bounded command list.",
+        "proof": "Each transition reserves one of 1,024 synchronous cascade slots before commit, captures one immutable snapshot/command record and current listener arrays, and drains records iteratively in FIFO order. Every captured target is attempted and the first user error is rethrown only after the queue is empty. Unsubscribe and controller disposal remove retained listeners idempotently.",
+        "adversarialWitness": "A command listener creates one nested state transition per delivered render command; revision 1,024 commits and the 1,025th transition returns a resource failure before commit.",
         "fullScan": {
           "allowed": false,
           "rationale": "Publication iterates subscribed listeners only and never inspects chart data."
+        }
+      }
+    },
+    {
+      "id": "definition.preflight",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/definition.ts",
+      "benchmarkIDs": [
+        "VAL-007:chart-definition-preflight"
+      ],
+      "specificationCeiling": "O(nLayer)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nLayer",
+            "meaning": "declarative input layer count inspected before accessors",
+            "ceiling": "maxLayers or the first layer crossing maxDatums"
+          }
+        ],
+        "time": {
+          "bound": "O(nLayer)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Normalized limits are shared with model construction. The preflight reads only the layer array length and each data array length, accumulating the datum count before coordinate normalization, observations, accessors, or scale compilation.",
+        "adversarialWitness": "An over-ceiling definition with throwing identity and value accessors returns the layer or datum resource error with every accessor counter at zero; an accepted boundary visits each layer header once.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Every accepted declarative layer contributes a data length to the global datum ceiling, so the bounded layer header array must be inspected once."
         }
       }
     },

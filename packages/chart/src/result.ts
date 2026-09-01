@@ -26,6 +26,7 @@ export type ChartOwnErrorCode =
   | 'chart-patch-ceiling-exceeded'
   | 'chart-patch-invalid'
   | 'chart-profile-invalid'
+  | 'chart-publication-ceiling-exceeded'
   | 'chart-coordinate-invalid'
   | 'chart-coordinate-mismatch'
   | 'chart-projection-ceiling-exceeded'

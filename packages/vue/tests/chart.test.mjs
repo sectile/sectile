@@ -93,3 +93,33 @@ test('controlled view publishes requests while defaultView remains controller-ow
   }), /mutually exclusive/);
   seed.dispose(); chart.dispose(); uncontrolled.dispose();
 });
+
+test('controlled cursor focuses only after the Vue owner accepts the request', async () => {
+  const cursor = shallowRef(1);
+  const commands = [];
+  let accept = false;
+  const chart = useChart({
+    definition: cartesianDefinition(),
+    viewCapabilities: [{ axisID: 10 }],
+    cursor,
+    onCursorChange: (value) => {
+      if (!accept && value !== 1) cursor.value = 1;
+    },
+    onCommand: (command) => commands.push(command.type),
+  });
+
+  chart.dispatch({ type: 'set-cursor', id: '2' });
+  await nextTick();
+  assert.equal(chart.snapshot.value.state.cursor, 1);
+  assert.deepEqual(commands, ['cursor-change-requested']);
+
+  accept = true;
+  chart.dispatch({ type: 'set-cursor', id: '2' });
+  await nextTick();
+  assert.equal(chart.snapshot.value.state.cursor, '2');
+  assert.deepEqual(commands, [
+    'cursor-change-requested',
+    'cursor-change-requested', 'render-requested', 'focus-datum', 'announce-datum',
+  ]);
+  chart.dispose();
+});

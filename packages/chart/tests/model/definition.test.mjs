@@ -53,3 +53,56 @@ test('keeps radial coordinates axis-free and rejects invalid radial values', () 
     layers: [{ id: 'share', kind: 'pie', data: [{ id: 1, value: -1 }] }],
   }).error.code, 'chart-definition-invalid');
 });
+
+test('rejects definition ceilings before invoking identity or value accessors', () => {
+  const calls = { identity: 0, axis: 0, x: 0, y: 0 };
+  const result = tryCreateChartDefinition({
+    coordinate: { kind: 'cartesian', axes: [
+      { id: 'x', orientation: 'x', scale: 'linear', getValue: (datum) => { calls.axis += 1; return datum.x; } },
+      { id: 'y', orientation: 'y', scale: 'linear', field: 'y' },
+    ] },
+    layers: [{
+      id: 'series',
+      kind: 'line',
+      xAxis: 'x',
+      yAxis: 'y',
+      data: [{ id: 1, x: 0, y: 0 }, { id: 2, x: 1, y: 1 }],
+      getId: (datum) => { calls.identity += 1; return datum.id; },
+      getX: (datum) => { calls.x += 1; return datum.x; },
+      getY: (datum) => { calls.y += 1; return datum.y; },
+    }],
+  }, { maxDatums: 1 });
+  assert.equal(result.error.code, 'chart-datum-ceiling-exceeded');
+  assert.deepEqual(calls, { identity: 0, axis: 0, x: 0, y: 0 });
+
+  const layerResult = tryCreateChartDefinition({
+    coordinate: { kind: 'radial' },
+    layers: [{
+      id: 'share',
+      kind: 'pie',
+      data: [{ id: 1, value: 1 }],
+      getId: (datum) => { calls.identity += 1; return datum.id; },
+      getValue: (datum) => { calls.x += 1; return datum.value; },
+    }],
+  }, { maxLayers: 0 });
+  assert.equal(layerResult.error.code, 'chart-layer-ceiling-exceeded');
+  assert.deepEqual(calls, { identity: 0, axis: 0, x: 0, y: 0 });
+
+  const acceptedCalls = { identity: 0, x: 0, y: 0 };
+  const accepted = tryCreateChartDefinition({
+    coordinate: { kind: 'cartesian', axes: [
+      { id: 'x', orientation: 'x', scale: 'linear', getValue: (datum) => { acceptedCalls.x += 1; return datum.x; } },
+      { id: 'y', orientation: 'y', scale: 'linear', getValue: (datum) => { acceptedCalls.y += 1; return datum.y; } },
+    ] },
+    layers: [{
+      id: 'series',
+      kind: 'line',
+      xAxis: 'x',
+      yAxis: 'y',
+      data: [{ id: 1, x: 0, y: 0 }, { id: 2, x: 1, y: 1 }],
+      getId: (datum) => { acceptedCalls.identity += 1; return datum.id; },
+    }],
+  }, { maxLayers: 1, maxDatums: 2 });
+  assert.equal(accepted.ok, true);
+  assert.deepEqual(acceptedCalls, { identity: 2, x: 2, y: 2 });
+});

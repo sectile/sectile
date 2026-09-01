@@ -1,5 +1,4 @@
 import type { StableID } from '@sectile/core';
-import { DEFAULT_MAX_ID_CODE_UNITS } from '@sectile/core/identity';
 import { unwrap } from '@sectile/core/result';
 import {
   tryResolveChartIdentity,
@@ -14,10 +13,12 @@ import {
   type NormalizedChartCoordinateDefinition,
 } from './contract.js';
 import { chartFail, chartOK } from './internal/result.js';
+import { tryNormalizeChartLimits } from './internal/limits.js';
 import { tryResolveChartAxes, type ChartAxisObservations, type ResolvedChartAxis } from './layout.js';
 import {
   tryCreateChartModel,
   tryReplaceChartModel,
+  DEFAULT_CHART_LIMITS,
   type ChartLayer,
   type ChartLimits,
   type ChartModelState,
@@ -89,7 +90,11 @@ export function tryCreateChartDefinition<Datum, ID extends StableID>(
   if (input === null || typeof input !== 'object' || !Array.isArray(input.layers)) {
     return invalidDefinition('Chart definition requires one coordinate and a layer array.');
   }
-  const normalizedCoordinate = tryNormalizeChartCoordinate(input.coordinate, limits);
+  const normalizedLimits = tryNormalizeChartLimits(limits, DEFAULT_CHART_LIMITS);
+  if (!normalizedLimits.ok) return normalizedLimits;
+  const preflight = preflightDefinitionLayers(input.layers, normalizedLimits.value);
+  if (!preflight.ok) return preflight;
+  const normalizedCoordinate = tryNormalizeChartCoordinate(input.coordinate, normalizedLimits.value);
   if (!normalizedCoordinate.ok) return normalizedCoordinate;
   const coordinate = normalizedCoordinate.value as NormalizedChartCoordinateDefinition<unknown, ID>;
   const observations = new Map<ID, ChartAxisValue[]>();
@@ -100,7 +105,7 @@ export function tryCreateChartDefinition<Datum, ID extends StableID>(
     const layer = sourceLayer as unknown as ChartLayerDefinition<unknown, ID>;
     const compatible = tryValidateChartLayerCoordinate(coordinate, layer);
     if (!compatible.ok) return compatible;
-    const collected = collectLayer(coordinate, layer, observations, limits.maxIDCodeUnits ?? DEFAULT_MAX_ID_CODE_UNITS);
+    const collected = collectLayer(coordinate, layer, observations, normalizedLimits.value.maxIDCodeUnits);
     if (!collected.ok) return collected;
     pending.push(Object.freeze({ definition: layer, datums: collected.value }));
     datumCount += collected.value.length;
@@ -124,7 +129,7 @@ export function tryCreateChartDefinition<Datum, ID extends StableID>(
     modelLayers.push(compiled.value.model);
     layers.push(compiled.value.layer);
   }
-  const modelResult = tryCreateChartModel({ layers: Object.freeze(modelLayers) }, limits);
+  const modelResult = tryCreateChartModel({ layers: Object.freeze(modelLayers) }, normalizedLimits.value);
   if (!modelResult.ok) return modelResult;
   const model = modelResult.value;
   return chartOK(Object.freeze({
@@ -134,6 +139,32 @@ export function tryCreateChartDefinition<Datum, ID extends StableID>(
     model,
     diagnostics: Object.freeze({ resolvedAxes: axes.length, resolvedLayers: layers.length, resolvedDatums: datumCount }),
   }));
+}
+
+function preflightDefinitionLayers(
+  layers: readonly ChartLayerDefinition<unknown, StableID>[],
+  limits: Readonly<Required<ChartLimits>>,
+): ChartResult<true> {
+  if (layers.length > limits.maxLayers) {
+    return chartFail('resource-rejection', 'chart-layer-ceiling-exceeded', 'Chart layer count exceeds its ceiling.', {
+      actual: layers.length,
+      ceiling: limits.maxLayers,
+    });
+  }
+  let datums = 0;
+  for (const layer of layers) {
+    if (layer === null || typeof layer !== 'object' || !Array.isArray(layer.data)) {
+      return invalidDefinition('Chart layer data must be an array.');
+    }
+    datums += layer.data.length;
+    if (datums > limits.maxDatums) {
+      return chartFail('resource-rejection', 'chart-datum-ceiling-exceeded', 'Chart datum count exceeds its ceiling.', {
+        actual: datums,
+        ceiling: limits.maxDatums,
+      });
+    }
+  }
+  return chartOK(true);
 }
 
 export function replaceChartDefinition<Datum, ID extends StableID>(

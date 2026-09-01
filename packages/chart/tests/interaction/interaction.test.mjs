@@ -27,9 +27,7 @@ test('controlled channels emit change requests without mutating local state', ()
   const update = reduceChartEvent(model, initial, { type: 'set-cursor', id: '1' }, { cursor: true }).value;
   assert.equal(update.changed, false);
   assert.equal(update.state, initial);
-  assert.deepEqual(update.commands.map((command) => command.type), [
-    'cursor-change-requested', 'focus-datum', 'announce-datum',
-  ]);
+  assert.deepEqual(update.commands.map((command) => command.type), ['cursor-change-requested']);
 });
 
 test('selection validates membership and reconciles through model generations', () => {

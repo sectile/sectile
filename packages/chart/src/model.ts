@@ -19,6 +19,7 @@ import {
   type ChartModelData,
   type PackedChartLayer,
 } from './internal/model-store.js';
+import { tryNormalizeChartLimits } from './internal/limits.js';
 import { chartFail, chartOK } from './internal/result.js';
 import type { ChartResult } from './result.js';
 
@@ -437,7 +438,7 @@ function normalizeChartModel<ID extends StableID>(
   generation: number,
   previousState?: ChartModelState<ID>,
 ): ChartResult<ChartModelState<ID>> {
-  const limits = normalizeLimits(limitsInput);
+  const limits = tryNormalizeChartLimits(limitsInput, DEFAULT_CHART_LIMITS);
   if (!limits.ok) return limits;
   if (input === null || typeof input !== 'object' || !Array.isArray(input.layers)) {
     return chartFail('construction', 'chart-model-invalid', 'Chart model layers must be an array.');
@@ -714,28 +715,6 @@ function duplicateOutsideReplacedRange<ID extends StableID>(
     if (previousIndex !== null && (previousIndex < index || previousIndex >= end)) return id;
   }
   return null;
-}
-
-function normalizeLimits(input: ChartLimits): ChartResult<Required<ChartLimits>> {
-  if (input === null || typeof input !== 'object') {
-    return chartFail('construction', 'chart-model-invalid', 'Chart limits must be an object.');
-  }
-  const value = {
-    maxAxes: input.maxAxes ?? DEFAULT_CHART_LIMITS.maxAxes,
-    maxLayers: input.maxLayers ?? DEFAULT_CHART_LIMITS.maxLayers,
-    maxDatums: input.maxDatums ?? DEFAULT_CHART_LIMITS.maxDatums,
-    maxPatchOperations: input.maxPatchOperations ?? DEFAULT_CHART_LIMITS.maxPatchOperations,
-    maxIDCodeUnits: input.maxIDCodeUnits ?? DEFAULT_CHART_LIMITS.maxIDCodeUnits,
-  };
-  for (const [name, limit] of Object.entries(value)) {
-    if (!Number.isSafeInteger(limit) || limit < (name === 'maxIDCodeUnits' ? 1 : 0)) {
-      return chartFail('construction', 'chart-model-invalid', 'Chart limits must be non-negative safe integers.', {
-        name,
-        value: limit,
-      });
-    }
-  }
-  return chartOK(Object.freeze(value));
 }
 
 function staleGeneration<T>(actual: number, expected: number | undefined): ChartResult<T> | null {

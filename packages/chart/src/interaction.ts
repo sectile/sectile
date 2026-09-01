@@ -1,6 +1,6 @@
 import type { StableID } from '@sectile/core';
 import { unwrap } from '@sectile/core/result';
-import { tryCreateChartViewState, type ChartAxisViewWindow, type ChartViewState } from './contract.js';
+import { tryCreateChartViewState, type ChartViewState } from './contract.js';
 import { chartFail, chartOK } from './internal/result.js';
 import type { ChartModelState } from './model.js';
 import type { ChartResult } from './result.js';
@@ -172,13 +172,13 @@ function updateActive<ID extends StableID>(state: ChartState<ID>, id: ID | null,
 
 function updateCursor<ID extends StableID>(state: ChartState<ID>, id: ID | null, controlled: boolean): ChartResult<ChartTransition<ID>> {
   if (state.cursor === id) return unchanged(state);
+  if (controlled) return transition<ID>(state, [Object.freeze({ type: 'cursor-change-requested', id })], false);
   const commands: ChartCommand<ID>[] = [];
-  if (controlled) commands.push(Object.freeze({ type: 'cursor-change-requested', id }));
   if (id !== null) {
     commands.push(Object.freeze({ type: 'focus-datum', id }));
     commands.push(Object.freeze({ type: 'announce-datum', id }));
   }
-  return controlled ? transition(state, commands, false) : changedState(state, { cursor: id }, commands);
+  return changedState(state, { cursor: id }, commands);
 }
 
 function updateSelection<ID extends StableID>(state: ChartState<ID>, selection: ChartSelection<ID>, controlled: boolean): ChartResult<ChartTransition<ID>> {
@@ -299,33 +299,7 @@ function normalizeView<ID extends StableID>(view: ChartViewState<ID> | null): Ch
   if (view === null) return chartOK(null);
   const normalized = tryCreateChartViewState(view.axes, view.revision);
   if (!normalized.ok) return normalized;
-  return chartOK(sameViewState(view, normalized.value) ? view : normalized.value);
-}
-
-function sameViewState<ID extends StableID>(left: ChartViewState<ID>, right: ChartViewState<ID>): boolean {
-  if (left.revision !== right.revision || left.axes.length !== right.axes.length) return false;
-  for (let index = 0; index < left.axes.length; index += 1) {
-    const a = left.axes[index]; const b = right.axes[index];
-    if (a === undefined || b === undefined || a.axisID !== b.axisID || a.orientation !== b.orientation || a.scale !== b.scale || a.revision !== b.revision
-      || a.minimumSpan !== b.minimumSpan || a.maximumSpan !== b.maximumSpan || a.update !== b.update
-      || a.followingEnd !== b.followingEnd || !sameViewWindow(a.base, b.base)
-      || !sameViewWindow(a.initial ?? a.visible, b.initial ?? b.visible) || !sameViewWindow(a.visible, b.visible)) return false;
-    if (a.categories === undefined || b.categories === undefined) {
-      if (a.categories !== b.categories) return false;
-    } else {
-      if (a.categories.length !== b.categories.length) return false;
-      for (let category = 0; category < a.categories.length; category += 1) {
-        if (a.categories[category] !== b.categories[category]) return false;
-      }
-    }
-  }
-  return true;
-}
-
-function sameViewWindow(left: ChartAxisViewWindow, right: ChartAxisViewWindow): boolean {
-  return left.kind === right.kind && (left.kind === 'continuous' && right.kind === 'continuous'
-    ? left.minimum === right.minimum && left.maximum === right.maximum
-    : left.kind === 'categorical' && right.kind === 'categorical' && left.start === right.start && left.end === right.end);
+  return chartOK(normalized.value);
 }
 
 function sameSelection<ID extends StableID>(left: ChartSelection<ID>, right: ChartSelection<ID>): boolean {
