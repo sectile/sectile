@@ -23,6 +23,10 @@ Let the parent own the current value and apply accepted changes back to the comp
 
 <ComponentExample component="tooltip" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
 
+## Floating positioning
+
+This component uses the shared positioning engine. Use the [live positioning example](/guide/positioning) to change `side`, `align`, offsets, collision boundaries, strategy, and tracking while inspecting the resolved placement.
+
 ## API
 
 Vue package: `@sectile/vue/tooltip`
@@ -104,6 +108,13 @@ Vue package: `@sectile/vue/tooltip`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>position</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether the popup is positioned relative to its trigger.</p>
 </dd>
 </div>
 <div class="component-api-definition">

@@ -1,6 +1,13 @@
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
-import type { Result, StableID } from '@sectile/core'; import { createMenuControl, type MenuControl, type MenuControlOptions } from './internal/menu-control.js'; export type MenuButtonOptions<ID extends StableID = StableID> = Omit<MenuControlOptions<ID>, 'kind'> & { readonly trigger: HTMLElement }; export type MenuButtonConnection<ID extends StableID = StableID> = MenuControl<ID>; export function createMenuButton<ID extends StableID>(options: MenuButtonOptions<ID>): FacadeConnection<MenuButtonConnection<ID>> {
+import type { Result, StableID } from '@sectile/core';
+import type { PositionOptions } from './position.js';
+import { createMenuControl, type MenuControl, type MenuControlOptions } from './internal/menu-control.js';
+
+export type MenuButtonOptions<ID extends StableID = StableID> = Omit<MenuControlOptions<ID>, 'kind'> & PositionOptions & { readonly trigger: HTMLElement; readonly position?: boolean };
+export type MenuButtonConnection<ID extends StableID = StableID> = MenuControl<ID>;
+
+export function createMenuButton<ID extends StableID>(options: MenuButtonOptions<ID>): FacadeConnection<MenuButtonConnection<ID>> {
   return unwrap(tryCreateMenuButton(options));
 }
 

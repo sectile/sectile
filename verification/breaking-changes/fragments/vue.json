@@ -60,8 +60,9 @@
       "id": "WI-009:cascade-select-domain-reconciliation",
       "change": "signature-changed",
       "before": { "subpath": "./cascade-select" },
-      "symbols": ["stable item-domain reconciliation declaration closure"],
-      "replacement": { "package": "@sectile/vue", "subpath": "./cascade-select" }
+      "symbols": ["stable item-domain reconciliation declaration closure", "CascadeSelectRoot positioning props", "automatic trigger-relative positioning"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./cascade-select" },
+      "removalReason": "CascadeSelectContent now uses automatic trigger-relative positioning by default; pass position=false to preserve consumer-owned layout."
     },
     {
       "id": "WI-036:alert-dialog-positioning-props",
@@ -88,8 +89,9 @@
       "id": "WI-036:popover-positioning-props",
       "change": "signature-changed",
       "before": { "subpath": "./popover" },
-      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props"],
-      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props", "PopoverRootProps.position"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" },
+      "removalReason": "Use position=false when PopoverContent layout remains consumer-owned."
     },
     {
       "id": "WI-036:select-positioning-props",
@@ -99,11 +101,52 @@
       "replacement": { "package": "@sectile/dom", "subpath": "./position" }
     },
     {
+      "id": "WI-036:menu-positioning-props",
+      "change": "signature-changed",
+      "before": { "subpath": "./menu" },
+      "symbols": ["MenuButtonRoot positioning props", "automatic trigger-relative positioning"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./menu" },
+      "removalReason": "MenuButtonContent now uses Select-compatible automatic trigger positioning; pass position=false to preserve consumer-owned layout."
+    },
+    {
+      "id": "WI-036:menu-button-positioning-props",
+      "change": "signature-changed",
+      "before": { "subpath": "./menu-button" },
+      "symbols": ["MenuButtonRoot positioning props", "automatic trigger-relative positioning"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./menu-button" },
+      "removalReason": "MenuButtonContent now uses Select-compatible automatic trigger positioning; pass position=false to preserve consumer-owned layout."
+    },
+    {
+      "id": "WI-036:menubar-positioning-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./menubar" },
+      "symbols": ["shared menu declaration closure"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./menubar" },
+      "removalReason": "Menubar behavior and props remain unchanged; its declarations share the menu implementation that now exposes MenuButton positioning props."
+    },
+    {
+      "id": "WI-036:navigation-menu-positioning-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./navigation-menu" },
+      "symbols": ["shared menu declaration closure"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./navigation-menu" },
+      "removalReason": "Navigation Menu behavior and props remain unchanged; its declarations share the menu implementation that now exposes MenuButton positioning props."
+    },
+    {
+      "id": "WI-036:combobox-positioning-props",
+      "change": "signature-changed",
+      "before": { "subpath": "./combobox" },
+      "symbols": ["ComboboxRoot positioning props", "automatic input-relative positioning"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./combobox" },
+      "removalReason": "ComboboxContent now uses automatic input-relative positioning by default; pass position=false to preserve consumer-owned layout."
+    },
+    {
       "id": "WI-036:tooltip-positioning-props",
       "change": "signature-changed",
       "before": { "subpath": "./tooltip" },
-      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props"],
-      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props", "TooltipRootProps.position"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" },
+      "removalReason": "Use position=false when TooltipContent layout remains consumer-owned."
     }
   ]
 }

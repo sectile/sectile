@@ -65,8 +65,9 @@
       "id": "WI-036:popover-positioning-surface",
       "change": "signature-changed",
       "before": { "subpath": "./popover" },
-      "symbols": ["middleware", "autoUpdate", "onPositionChange", "Floating UI type re-exports"],
-      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+      "symbols": ["middleware", "autoUpdate", "onPositionChange", "Floating UI type re-exports", "PopoverOptions.position"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" },
+      "removalReason": "Use position=false when popup layout remains consumer-owned."
     },
     {
       "id": "WI-036:select-positioning-surface",
@@ -76,11 +77,28 @@
       "replacement": { "package": "@sectile/dom", "subpath": "./position" }
     },
     {
+      "id": "WI-036:menu-button-positioning-surface",
+      "change": "signature-changed",
+      "before": { "subpath": "./menu-button" },
+      "symbols": ["MenuButtonOptions positioning options", "manual positioning opt-out"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./menu-button" },
+      "removalReason": "Menu Button accepts the shared anchored-position contract; pass position=false to preserve consumer-owned layout."
+    },
+    {
+      "id": "WI-036:cascade-select-positioning-surface",
+      "change": "signature-changed",
+      "before": { "subpath": "./cascade-select" },
+      "symbols": ["CascadeSelectOptions positioning options", "automatic trigger-relative positioning"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./cascade-select" },
+      "removalReason": "Cascade Select now positions its popup by default; pass position=false to preserve consumer-owned layout."
+    },
+    {
       "id": "WI-036:tooltip-positioning-surface",
       "change": "signature-changed",
       "before": { "subpath": "./tooltip" },
-      "symbols": ["middleware", "autoUpdate", "onPositionChange", "Floating UI type re-exports"],
-      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+      "symbols": ["middleware", "autoUpdate", "onPositionChange", "Floating UI type re-exports", "TooltipOptions.position"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" },
+      "removalReason": "Use position=false when tooltip layout remains consumer-owned."
     },
     {
       "id": "WI-013:rating-canonical-engine",
@@ -122,9 +140,9 @@
       "id": "WI-046:combobox-text-native-dispatch",
       "change": "signature-changed",
       "before": { "subpath": "./combobox" },
-      "symbols": ["TextInput declaration closure"],
+      "symbols": ["TextInput declaration closure", "ComboboxConnectionOptions positioning options", "automatic input-relative positioning"],
       "replacement": { "package": "@sectile/dom", "subpath": "./combobox" },
-      "removalReason": "Combobox text transitions retain the same TextInput union while their declaration closure adopts the native-owned Text connection surface."
+      "removalReason": "Combobox text transitions retain the same TextInput union, and popup positioning is now automatic by default; pass position=false to preserve consumer-owned layout."
     },
     {
       "id": "WI-008:slider-semantic-controller-closure",

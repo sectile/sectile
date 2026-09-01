@@ -66,7 +66,6 @@ const values = computed(() => props.options.map((option) => option.value));
 
 <style scoped>
 .nav-preference-menu {
-  position: relative;
   height: var(--vp-nav-height);
 }
 

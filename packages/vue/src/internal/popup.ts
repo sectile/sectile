@@ -66,6 +66,7 @@ export interface PopupFactoryOptions extends PositionOptions {
   readonly onOpenChange: (open: boolean) => void;
   readonly onUpdate: () => void;
   readonly manageVisibility?: boolean;
+  readonly position?: boolean;
 }
 
 export interface PopupComponentConfig {
@@ -97,6 +98,7 @@ export interface PopupRootProps extends PositionOptions {
   readonly closeOnInteractOutside?: boolean;
   readonly interactOutsideExclusions?: readonly HTMLElement[];
   readonly unmountOnExit?: boolean;
+  readonly position?: boolean;
 }
 export interface PopupPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface PopupPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
@@ -113,6 +115,7 @@ interface PopupContext {
   readonly titleID: string;
   readonly descriptionID: string;
   readonly side: ComputedRef<'top' | 'right' | 'bottom' | 'left'>;
+  readonly position: ComputedRef<boolean>;
   readonly strategy: ComputedRef<PositionStrategy>;
   registerElement(part: PopupElementPart, element?: HTMLElement): void;
   activateTrigger(event?: Event): void;
@@ -165,6 +168,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       closeOnInteractOutside: { type: Boolean, default: config.closeOnInteractOutside ?? false },
       interactOutsideExclusions: { type: Array as PropType<readonly HTMLElement[]>, default: undefined },
       side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: config.defaultSide ?? 'bottom' },
+      position: { type: Boolean, default: true },
       swipeToDismiss: { type: Boolean, default: true },
       swipeThreshold: { type: Number, default: 80 },
       swipeVelocityThreshold: { type: Number, default: 0.5 },
@@ -204,6 +208,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const unmountOnExit = computed(() => props.unmountOnExit);
       const label = computed(() => props.label);
       const side = computed(() => props.side);
+      const position = computed(() => props.position);
       const strategy = computed(() => props.strategy);
       const update = (): void => {
         if (connection.value === undefined) return;
@@ -235,6 +240,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           closeOnInteractOutside: props.closeOnInteractOutside,
           ...(props.interactOutsideExclusions === undefined ? {} : { interactOutsideExclusions: props.interactOutsideExclusions }),
           side: props.side,
+          ...(config.positioned === true ? { position: props.position } : {}),
           swipeToDismiss: props.swipeToDismiss,
           swipeThreshold: props.swipeThreshold,
           swipeVelocityThreshold: props.swipeVelocityThreshold,
@@ -298,7 +304,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       watch([
         () => props.disabled, () => props.modal, () => props.label, () => props.initialFocus,
         () => props.autoFocus, () => props.restoreFocus,
-        () => props.trapFocus, () => props.closeOnInteractOutside, () => props.interactOutsideExclusions, () => props.side,
+        () => props.trapFocus, () => props.closeOnInteractOutside, () => props.interactOutsideExclusions, () => props.side, () => props.position,
         () => props.swipeToDismiss, () => props.swipeThreshold, () => props.swipeVelocityThreshold, () => props.align,
         () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary,
         () => props.avoidCollisions, () => props.arrowPadding, () => props.hideWhenDetached,
@@ -309,7 +315,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         disconnect();
       });
       provide<PopupContext>(contextKey, {
-        open, disabled, modal, unmountOnExit, label, contentID, titleID, descriptionID, side, strategy,
+        open, disabled, modal, unmountOnExit, label, contentID, titleID, descriptionID, side, position, strategy,
         registerElement, activateTrigger, deactivateTrigger,
         close: () => { connection.value?.handleEvent('close'); },
         refresh: () => { connection.value?.refresh(); },
@@ -357,7 +363,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
             root.registerElement('content', node);
           },
           id: root.contentID, role: config.role, hidden: !present.value, dir: direction.value,
-          style: config.positioned === true
+          style: config.positioned === true && root.position.value
             ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
             : undefined,
           'aria-modal': config.role === 'tooltip' ? undefined : String(root.modal.value),

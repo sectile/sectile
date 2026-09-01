@@ -12,11 +12,14 @@ Object.assign(globalThis, {
   getComputedStyle: browserWindow.getComputedStyle.bind(browserWindow),
 });
 
-const { createApp, createSSRApp, defineComponent, h, nextTick, ref, shallowRef } = await import('vue');
+const { Teleport, createApp, createSSRApp, defineComponent, h, nextTick, ref, shallowRef } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
 const { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } = await import('../.verification-dist/dialog.js');
 const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import('../.verification-dist/alert-dialog.js');
 const { SelectContent, SelectItem, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectViewport } = await import('../.verification-dist/select.js');
+const { ComboboxContent, ComboboxInput, ComboboxRoot } = await import('../.verification-dist/combobox.js');
+const { CascadeSelectContent, CascadeSelectRoot, CascadeSelectTrigger } = await import('../.verification-dist/cascade-select.js');
+const { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem } = await import('../.verification-dist/menu.js');
 const { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } = await import('../.verification-dist/popover.js');
 const { TooltipContent, TooltipPortal, TooltipRoot, TooltipTrigger } = await import('../.verification-dist/tooltip.js');
 const { ToastClose, ToastPortal, ToastProvider, ToastRoot, ToastTitle, ToastViewport } = await import('../.verification-dist/toast.js');
@@ -152,16 +155,56 @@ test('portalled Select keeps typeahead, selection, and positioning connected', a
   }
 });
 
+test('Combobox, CascadeSelect, and MenuButton share Select positioning defaults and manual opt-out', async () => {
+  const host = document.createElement('div'); const portal = document.createElement('div'); document.body.append(host, portal); const position = ref(true);
+  const app = createApp({ render: () => [
+    h(ComboboxRoot, {
+      items: [{ id: 'seoul', label: 'Seoul' }], defaultOpen: true,
+      position: position.value, side: 'top', strategy: 'fixed', avoidCollisions: false,
+    }, { default: () => [h(ComboboxInput), h(Teleport, { to: portal }, h(ComboboxContent))] }),
+    h(CascadeSelectRoot, {
+      nodes: [{ id: 'asia', parentID: null }, { id: 'seoul', parentID: 'asia' }], defaultOpen: true,
+      position: position.value, side: 'top', strategy: 'fixed', avoidCollisions: false,
+    }, { default: () => [h(CascadeSelectTrigger), h(Teleport, { to: portal }, h(CascadeSelectContent))] }),
+    h(MenuButtonRoot, {
+      items: [{ id: 'seoul', parentID: null }], defaultOpen: true,
+      position: position.value, side: 'top', strategy: 'fixed', avoidCollisions: false,
+    }, { default: () => [h(MenuButtonTrigger), h(Teleport, { to: portal }, h(MenuButtonContent, null, { default: () => h(MenuItem, { value: 'seoul' }) }))] }),
+  ] });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick(); await new Promise((resolve) => setTimeout(resolve, 0));
+    const contents = portal.querySelectorAll('[data-part="content"]');
+    assert.equal(contents.length, 3);
+    assert.equal(host.querySelectorAll('[data-part="content"]').length, 0);
+    for (const content of contents) {
+      assert.equal(content.style.position, 'fixed');
+      assert.equal(content.style.visibility, '');
+      assert.equal(content.dataset.side, 'top');
+    }
+
+    position.value = false; await nextTick(); await nextTick();
+    for (const content of contents) {
+      assert.equal(content.style.position, '');
+      assert.equal(content.style.left, '');
+      assert.equal(content.style.top, '');
+      assert.equal(content.dataset.positionRoute, undefined);
+    }
+  } finally {
+    app.unmount(); host.remove(); portal.remove();
+  }
+});
+
 test('portalled Popover and Tooltip leave document flow before insertion', async () => {
   const host = document.createElement('div'); const portal = document.createElement('div'); document.body.append(host, portal);
   const inserted = capturePositionedContentInsertions(portal);
-  const popoverText = ref('Popover');
+  const popoverText = ref('Popover'); const position = ref(true);
   const app = createApp({ render: () => [
-    h(PopoverRoot, { unmountOnExit: true, hideWhenDetached: false }, { default: () => [
+    h(PopoverRoot, { unmountOnExit: true, hideWhenDetached: false, position: position.value }, { default: () => [
       h(PopoverTrigger, null, { default: () => 'Open' }),
       h(PopoverPortal, { to: portal }, { default: () => h(PopoverContent, null, { default: () => popoverText.value }) }),
     ] }),
-    h(TooltipRoot, { unmountOnExit: true, hideWhenDetached: false }, { default: () => [
+    h(TooltipRoot, { unmountOnExit: true, hideWhenDetached: false, position: position.value }, { default: () => [
       h(TooltipTrigger, null, { default: () => 'Info' }),
       h(TooltipPortal, { to: portal }, { default: () => h(TooltipContent, null, { default: () => 'Tooltip' }) }),
     ] }),
@@ -188,6 +231,13 @@ test('portalled Popover and Tooltip leave document flow before insertion', async
     popoverText.value = 'Updated'; await nextTick();
     assert.equal(contents[0].textContent, 'Updated');
     assert.equal(contents[0].style.visibility, '');
+    position.value = false; await nextTick(); await nextTick();
+    for (const content of contents) {
+      assert.equal(content.style.position, '');
+      assert.equal(content.style.left, '');
+      assert.equal(content.style.top, '');
+      assert.equal(content.dataset.positionRoute, undefined);
+    }
   } finally {
     app.unmount(); host.remove(); portal.remove();
   }

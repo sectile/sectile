@@ -283,7 +283,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "a2e8d45f27b4a9f393799e7aff43b62e89218530a1f8ce4e901a00113a2f28cc",
+  "fingerprint": "bb2bba7a15ff733fff30b903b51a92757290565ddb87dc4e3fe4c2244abfee56",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -307,7 +307,7 @@
     },
     {
       "path": "dist/cascade-select.d.ts",
-      "sha256": "a8449883929ffffba20cad3f78dc18863a83cf16d235af3b6a27b0facca40a43"
+      "sha256": "c0959d877979cbb6b907531b7c44324c5e7ba8e64856d8f8efe82f98169ceb20"
     },
     {
       "path": "dist/chart.d.ts",
@@ -327,7 +327,7 @@
     },
     {
       "path": "dist/combobox.d.ts",
-      "sha256": "6c2bd06bde26ad4959d39d88d7092f893963d503f458a4608618fbb2712e8645"
+      "sha256": "4872af88f1644286d35bea2ed5ec0fe6aa33a9c8f8d0ac3ae3155bb8e5b51be6"
     },
     {
       "path": "dist/data-grid.d.ts",
@@ -447,7 +447,7 @@
     },
     {
       "path": "dist/menu-button.d.ts",
-      "sha256": "76ffc6af1cf727d07505299c020ab8b38c29659a4ff48cfec48693837d7a9220"
+      "sha256": "5f2e1670e8447d24dc4359840ec23ae95c6acdb33df63048baaa9a84a7a5162c"
     },
     {
       "path": "dist/menu.d.ts",
@@ -495,7 +495,7 @@
     },
     {
       "path": "dist/popover.d.ts",
-      "sha256": "8cca0e0d7ceaa32db4fc6bddddd93eeac530ac57bc48c4e45d3c35b9e76ba036"
+      "sha256": "5ada0d958ad871153b2f68db252cbfd5cdb3d3503682730c0d3f95103b7dfb88"
     },
     {
       "path": "dist/position.d.ts",
@@ -591,7 +591,7 @@
     },
     {
       "path": "dist/tooltip.d.ts",
-      "sha256": "ede3cf1be1204c96f3b865bf2c987f0cecea1beff8d4e5b30c0690c95bc2b0b8"
+      "sha256": "87cffea1d939182dc3ae1dd77bb6904229a39819fd746e36976ad5a35245c60e"
     },
     {
       "path": "dist/tree-grid.d.ts",

@@ -315,7 +315,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "6c719ce66e667b92aa2954886500ab6e00c456df709b3a86ba5946c2eac2cd45",
+  "fingerprint": "5466f897b40f9667f345318c4da3feb91278146c2b1091b63f4d54f67d0a705d",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -323,7 +323,7 @@
     },
     {
       "path": "dist/alert-dialog.d.ts",
-      "sha256": "a12c89b2b790ca9446a713d8c53583fe08c354a00eb8c214b386c06bed5d227b"
+      "sha256": "4d421e6e0200df7845f4659f48926fcb003585b012e7c10012c3b94f6264b440"
     },
     {
       "path": "dist/calendar.d.ts",
@@ -339,7 +339,7 @@
     },
     {
       "path": "dist/cascade-select.d.ts",
-      "sha256": "5faf18e6098d0d7714031be9c514dd8742aa6643be292a79821d2936ca4f21c5"
+      "sha256": "2aaf406f03096c9d41d47ed8723dd32235b2e6a8992009645baf8d859fd1de9a"
     },
     {
       "path": "dist/chart.d.ts",
@@ -359,7 +359,7 @@
     },
     {
       "path": "dist/combobox.d.ts",
-      "sha256": "6db3c2d258abc9ac3642752d48d03438f8e5f97bd622ab17aeca38d01a50a19f"
+      "sha256": "f531e562cc8c0aadfb4d1649311320f1f8e56f9d11b533bd83f2ff86292533b9"
     },
     {
       "path": "dist/data-grid.d.ts",
@@ -403,7 +403,7 @@
     },
     {
       "path": "dist/dialog.d.ts",
-      "sha256": "d6a3db0c04e3965bcc7acb75804b05446fa228777ce3ed2e5df93a796196e03c"
+      "sha256": "848bb5ac857ca0699cfa15bdb00356aa43481b8608bff1253dc02ae048552cc6"
     },
     {
       "path": "dist/disclosure.d.ts",
@@ -411,7 +411,7 @@
     },
     {
       "path": "dist/drawer.d.ts",
-      "sha256": "75748cf08d1cefa0cd7c080fefedae2fbcad1ad885137128d1af5efb51f68497"
+      "sha256": "d2787026b0abba9a69c088fe43a11281f779ef0f314b015bfe63e79e1dab4040"
     },
     {
       "path": "dist/editable.d.ts",
@@ -459,7 +459,7 @@
     },
     {
       "path": "dist/internal/popup.d.ts",
-      "sha256": "cb3ea846dfb12e58b3748072a09abb75e289568d64d12a29fe3f221da79c8d1b"
+      "sha256": "6db183a718b72f0a2c06c7b7b571f628cd53eefc41dfc759d9942c13746176b8"
     },
     {
       "path": "dist/internal/tabular-components.d.ts",
@@ -499,7 +499,7 @@
     },
     {
       "path": "dist/menu.d.ts",
-      "sha256": "9ad063df6c572f5e5072509259f5286741bb741425ea613bf1ad2349dd237780"
+      "sha256": "4c18534cc813a72049cb4f54b3a930608c8ab3f6612c707f3055d8427f804784"
     },
     {
       "path": "dist/menubar.d.ts",
@@ -639,7 +639,7 @@
     },
     {
       "path": "dist/tooltip.d.ts",
-      "sha256": "565dc7836b1a67803ecaed82d35e3de4b7e0350ae3129c8417479aa39aad786c"
+      "sha256": "ff0b5ea79693fb8aabbb0b66ee9a6455881ba167cc302799ab03f517fa6dd628"
     },
     {
       "path": "dist/tree-grid.d.ts",

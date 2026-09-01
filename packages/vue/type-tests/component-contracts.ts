@@ -31,13 +31,17 @@ import {
 } from '../.verification-dist/meter-group.js';
 import { MeterRoot, type MeterRootProps, type MeterRootSlotProps } from '../.verification-dist/meter.js';
 import { NumberField, type NumberFieldProps } from '../.verification-dist/number-field.js';
+import { PopoverRoot } from '../.verification-dist/popover.js';
 import { SelectRoot } from '../.verification-dist/select.js';
+import { ComboboxRoot } from '../.verification-dist/combobox.js';
+import { CascadeSelectRoot } from '../.verification-dist/cascade-select.js';
 import {
   SpinButtonInput,
   SpinButtonRoot,
   type SpinButtonInputProps,
 } from '../.verification-dist/spin-button.js';
 import { TimeField } from '../.verification-dist/time-field.js';
+import { TooltipRoot } from '../.verification-dist/tooltip.js';
 import { useToast, type UseToastReturn } from '../.verification-dist/toast.js';
 import { VirtualGrid, type VirtualGridProps, type VirtualGridSlotProps } from '../.verification-dist/virtual-grid.js';
 import { VirtualList, type VirtualListProps, type VirtualListSlotProps } from '../.verification-dist/virtual-list.js';
@@ -116,10 +120,42 @@ createDOMForm({ form: formElement, ...rawDOMSubmission });
 createDOMForm({ form: formElement, ...schemaDOMSubmission });
 
 h(SelectRoot, { items: [], modelValue: null, defaultValue: null });
+h(ComboboxRoot, {
+  items: [],
+  position: true,
+  side: 'bottom',
+  align: 'start',
+  sideOffset: 8,
+  collisionPadding: 8,
+  collisionBoundary: 'viewport',
+  avoidCollisions: true,
+  hideWhenDetached: false,
+  strategy: 'absolute',
+  tracking: 'events',
+});
+h(CascadeSelectRoot, {
+  nodes: [],
+  position: true,
+  side: 'bottom',
+  align: 'start',
+  sideOffset: 8,
+  collisionPadding: 8,
+  collisionBoundary: 'viewport',
+  avoidCollisions: true,
+  hideWhenDetached: false,
+  strategy: 'absolute',
+  tracking: 'events',
+});
 h(SpinButtonRoot, { min: 0, max: 10, draft: null, defaultDraft: null });
 h(SpinButtonInput, { name: 'quantity', form: 'order', required: true });
 h(MenuRoot, { items: [] });
-h(MenuButtonRoot, { items: [], open: false });
+h(MenuButtonRoot, {
+  items: [], open: false, position: true, side: 'bottom', align: 'start', sideOffset: 8,
+  collisionPadding: 8, collisionBoundary: 'viewport', avoidCollisions: true,
+  hideWhenDetached: false, strategy: 'absolute', tracking: 'events',
+});
+h(PopoverRoot, { position: false });
+h(TooltipRoot, { position: false });
 h(MeterRoot, { value: '25', min: 0, max: '100', label: 'Quota' });
 // @ts-expect-error Meter value is required.
 h(MeterRoot, {});

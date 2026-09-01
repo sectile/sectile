@@ -23,6 +23,10 @@ Let the parent own the current value and apply accepted changes back to the comp
 
 <ComponentExample component="menu-button" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
 
+## Floating positioning
+
+This component uses the shared positioning engine. Use the [live positioning example](/guide/positioning) to change `side`, `align`, offsets, collision boundaries, strategy, and tracking while inspecting the resolved placement.
+
 ## API
 
 Vue package: `@sectile/vue/menu-button`
@@ -45,6 +49,13 @@ Vue package: `@sectile/vue/menu-button`
 
 <dl class="component-api-definitions component-api-definitions--props">
 <div class="component-api-definition">
+<dt><code>align</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionAlign</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Alignment of positioned content relative to its anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>as</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
@@ -56,6 +67,27 @@ Vue package: `@sectile/vue/menu-button`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>avoidCollisions</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether positioned content may flip or shift to remain visible.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionBoundary</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionBoundary</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Boundary used to keep positioned content visible.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionPadding</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionPadding</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Space kept between positioned content and its collision boundary.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -87,6 +119,13 @@ Vue package: `@sectile/vue/menu-button`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>hideWhenDetached</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether positioned content hides when its anchor leaves the layout.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>items</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly MenuItemDefinition&lt;string&gt;[]</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
@@ -115,10 +154,45 @@ Vue package: `@sectile/vue/menu-button`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>position</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether the popup is positioned relative to its trigger.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>side</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionSide</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Preferred side of the anchor for positioned content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>sideOffset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Distance between positioned content and its anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>strategy</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionStrategy</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>CSS positioning strategy used for anchored content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>textValue</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(id: string) =&gt; string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Returns searchable or presentational text for an item value.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>tracking</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionTracking</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Update strategy used while anchored content is open.</p>
 </dd>
 </div>
 </dl>

@@ -38,6 +38,10 @@ Flip or shift the popup when its preferred side would leave the viewport.
 />
 ```
 
+## Floating positioning
+
+This component uses the shared positioning engine. Use the [live positioning example](/guide/positioning) to change `side`, `align`, offsets, collision boundaries, strategy, and tracking while inspecting the resolved placement.
+
 ## API
 
 Vue package: `@sectile/vue/popover`
@@ -165,6 +169,13 @@ Vue package: `@sectile/vue/popover`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>position</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether the popup is positioned relative to its trigger.</p>
 </dd>
 </div>
 <div class="component-api-definition">

@@ -3,7 +3,7 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import type { PositionAlign, PositionOptions, PositionSide } from './position.js';
-import { createPosition, type PositionConnection } from './internal/position-connection.js';
+import { createPosition, manualPositionConnection, type PositionConnection } from './internal/position-connection.js';
 import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
 import type { InteractOutsideHandler } from './interact-outside.js';
 
@@ -35,6 +35,7 @@ export interface PopoverOptions extends PositionOptions {
   readonly onFocusRestore?: () => void;
   readonly onUpdate?: () => void;
   readonly manageVisibility?: boolean;
+  readonly position?: boolean;
 }
 
 export type PopoverOpenChangeHandler = NonNullable<PopoverOptions['onOpenChange']>;
@@ -96,7 +97,7 @@ class PositionedPopover implements PopoverConnection {
 
   public constructor(popup: DOMPopupConnection<PopoverState, PopoverEvent>, options: PopoverOptions) {
     this.#popup = popup;
-    this.#position = createPosition({
+    this.#position = options.position === false ? manualPositionConnection : createPosition({
       root: options.root,
       reference: options.anchor ?? options.trigger,
       ...(options.arrow === undefined ? {} : { arrow: options.arrow }),

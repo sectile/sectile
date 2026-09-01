@@ -3,7 +3,7 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { applyTooltipEvent, tryCreateTooltipState, type TooltipCommand, type TooltipEvent, type TooltipState } from '@sectile/core/tooltip';
 import type { PositionAlign, PositionOptions, PositionSide } from './position.js';
-import { createPosition, type PositionConnection } from './internal/position-connection.js';
+import { createPosition, manualPositionConnection, type PositionConnection } from './internal/position-connection.js';
 import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
 
 export type TooltipSide = PositionSide;
@@ -20,6 +20,7 @@ export interface TooltipOptions extends PositionOptions {
   readonly onOpenChange?: (open: boolean) => void;
   readonly onUpdate?: () => void;
   readonly manageVisibility?: boolean;
+  readonly position?: boolean;
 }
 
 export type TooltipOpenChangeHandler = NonNullable<TooltipOptions['onOpenChange']>;
@@ -66,7 +67,7 @@ class PositionedTooltip implements TooltipConnection {
 
   public constructor(popup: DOMPopupConnection<TooltipState, TooltipEvent>, options: TooltipOptions) {
     this.#popup = popup;
-    this.#position = createPosition({
+    this.#position = options.position === false ? manualPositionConnection : createPosition({
       root: options.root,
       reference: options.anchor ?? options.trigger,
       ...(options.arrow === undefined ? {} : { arrow: options.arrow }),

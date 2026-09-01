@@ -38,6 +38,10 @@
 />
 ```
 
+## Floating 위치
+
+이 컴포넌트는 공통 위치 엔진을 사용합니다. [실시간 위치 예시](/ko/guide/positioning)에서 `side`, `align`, 간격, 충돌 경계, strategy, tracking을 바꾸며 계산 결과를 확인할 수 있습니다.
+
 ## API
 
 Vue 패키지: `@sectile/vue/popover`
@@ -165,6 +169,13 @@ Vue 패키지: `@sectile/vue/popover`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
 <p>연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>position</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>실행 요소를 기준으로 팝업 위치를 계산할지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">

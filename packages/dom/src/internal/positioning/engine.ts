@@ -287,6 +287,7 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
       diagnostics.layoutObservers = 1;
     }
     writeStyle(ownedStyles, options.root, 'position', options.strategy ?? 'absolute', diagnostics);
+    if (options.arrow !== undefined) writeStyle(ownedStyles, options.arrow, 'position', 'absolute', diagnostics);
     if (options.root.style.left === '' && options.root.style.top === '') writeStyle(ownedStyles, options.root, 'visibility', 'hidden', diagnostics);
     schedule();
   };
@@ -582,10 +583,11 @@ function writeStyle(
   }
   let owned = properties.get(property);
   if (owned === undefined) {
-    owned = { previous: element.style.getPropertyValue(property), applied: value };
+    owned = { previous: element.style.getPropertyValue(property), applied: '' };
     properties.set(property, owned);
-  } else owned.applied = value;
+  }
   element.style.setProperty(property, value);
+  owned.applied = element.style.getPropertyValue(property);
   diagnostics.projectionWrites += 1;
 }
 

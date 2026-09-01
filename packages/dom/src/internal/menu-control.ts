@@ -10,7 +10,8 @@ import {
 import { setInteractionAttributes } from './interaction.js';
 import { horizontalArrow, type ReadingDirection } from './direction.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './layer-binding.js';
-import { createPosition, type PositionConnection } from './position-connection.js';
+import type { PositionOptions } from '../position.js';
+import { createPosition, manualPositionConnection, type PositionConnection } from './position-connection.js';
 
 export type MenuKind = 'menu' | 'menubar' | 'navigation-menu' | 'menu-button';
 export interface MenuTypeaheadOptions<ID extends StableID> { readonly textValue: (id: ID) => string; readonly timeout?: number; readonly now?: () => number; readonly normalize?: (text: string) => string }
@@ -33,6 +34,8 @@ export interface MenuControlOptions<ID extends StableID> {
   readonly onInvoke?: (id: ID) => void;
   readonly onUpdate?: () => void;
 }
+type MenuControlPositionOptions = PositionOptions & { readonly position?: boolean };
+type ResolvedMenuControlOptions<ID extends StableID> = MenuControlOptions<ID> & MenuControlPositionOptions;
 export interface MenuControl<ID extends StableID> {
   getSnapshot(): RevisionSnapshot<MenuState<ID>>;
   syncControlledValue(open: boolean): Result<RevisionSnapshot<MenuState<ID>>>;
@@ -66,26 +69,34 @@ export function createMenuControl<ID extends StableID>(options: MenuControlOptio
     onChange: (open) => options.onOpenChange?.(open),
     interaction: options,
   });
-  return runtime.ok ? { ok: true, value: new DOMMenuControl(options, model.value.tree, runtime.value, policies) } : runtime;
+  return runtime.ok ? { ok: true, value: new DOMMenuControl(options as ResolvedMenuControlOptions<ID>, model.value.tree, runtime.value, policies) } : runtime;
 }
 
 class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
-  readonly #options: MenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>; readonly #policies: MenuPolicies<ID>; readonly #elements = new Map<ID, HTMLElement>(); readonly #submenus = new Map<ID, HTMLElement>();
+  readonly #options: ResolvedMenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>; readonly #policies: MenuPolicies<ID>; readonly #elements = new Map<ID, HTMLElement>(); readonly #submenus = new Map<ID, HTMLElement>();
   readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined; readonly #popupPosition: PositionConnection | undefined; readonly #submenuPositions = new Map<ID, PositionConnection>();
   #typeaheadBuffer = ''; #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
-  public constructor(options: MenuControlOptions<ID>, tree: Tree<ID>, runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>, policies: MenuPolicies<ID>) {
+  public constructor(options: ResolvedMenuControlOptions<ID>, tree: Tree<ID>, runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>, policies: MenuPolicies<ID>) {
     this.#options = options; this.#tree = tree; this.#runtime = runtime; this.#policies = policies;
     setInteractionAttributes(options.root, options); if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options, { native: true });
     this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
     this.#layer = options.kind === 'menu-button' && options.trigger !== undefined ? createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close-popup'); } }) : undefined;
     this.#popupPosition = options.kind === 'menu-button' && options.trigger !== undefined
-      ? createPosition({
-        root: options.root,
-        reference: options.trigger,
-        side: 'bottom',
-        align: 'center',
-        sideOffset: 8,
-      })
+      ? options.position === false
+        ? manualPositionConnection
+        : createPosition({
+          root: options.root,
+          reference: options.trigger,
+          ...(options.side === undefined ? {} : { side: options.side }),
+          ...(options.align === undefined ? {} : { align: options.align }),
+          ...(options.sideOffset === undefined ? {} : { sideOffset: options.sideOffset }),
+          ...(options.collisionPadding === undefined ? {} : { collisionPadding: options.collisionPadding }),
+          ...(options.collisionBoundary === undefined ? {} : { collisionBoundary: options.collisionBoundary }),
+          ...(options.avoidCollisions === undefined ? {} : { avoidCollisions: options.avoidCollisions }),
+          ...(options.hideWhenDetached === undefined ? {} : { hideWhenDetached: options.hideWhenDetached }),
+          ...(options.strategy === undefined ? {} : { strategy: options.strategy }),
+          ...(options.tracking === undefined ? {} : { tracking: options.tracking }),
+        })
       : undefined;
     this.#keydown = (event) => { if (this.#handleTypeahead(event)) { event.preventDefault(); return; } const semantic = toMenuEvent(event, options.kind, options.direction); if (semantic !== null && this.handleEvent(semantic)) event.preventDefault(); };
     this.#click = (event) => { for (const [id, element] of this.#elements) if (event.target === element || (typeof Node !== 'undefined' && event.target instanceof Node && element.contains(event.target))) { const wasOpen = this.getSnapshot().state.openPath.includes(id); this.handleEvent({ type: 'focus', id }); if (this.#policies.disabled?.(id) !== true && (this.#tree.isLeaf(id) || !wasOpen)) this.handleEvent(this.#tree.isLeaf(id) ? 'invoke' : 'open-submenu'); return; } };

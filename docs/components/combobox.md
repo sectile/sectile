@@ -31,6 +31,10 @@ Keep composition text separate until an IME commit produces the accepted query.
 
 <ComponentExample component="combobox" scenario="ime" title="IME" description="Keep composition text separate until an IME commit produces the accepted query." :index="3" />
 
+## Floating positioning
+
+This component uses the shared positioning engine. Use the [live positioning example](/guide/positioning) to change `side`, `align`, offsets, collision boundaries, strategy, and tracking while inspecting the resolved placement.
+
 ## API
 
 Vue package: `@sectile/vue/combobox`
@@ -52,6 +56,13 @@ Vue package: `@sectile/vue/combobox`
 
 <dl class="component-api-definitions component-api-definitions--props">
 <div class="component-api-definition">
+<dt><code>align</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionAlign</code></span><span><span class="component-api-definition__label">Default</span><code>'start'</code></span></div>
+<p>Alignment of positioned content relative to its anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>as</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'div'</code></span></div>
@@ -63,6 +74,27 @@ Vue package: `@sectile/vue/combobox`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
 <p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>avoidCollisions</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether positioned content may flip or shift to remain visible.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionBoundary</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionBoundary</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Boundary used to keep positioned content visible.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionPadding</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionPadding</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
+<p>Space kept between positioned content and its collision boundary.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -91,6 +123,13 @@ Vue package: `@sectile/vue/combobox`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
 <p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>hideWhenDetached</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether positioned content hides when its anchor leaves the layout.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -136,10 +175,45 @@ Vue package: `@sectile/vue/combobox`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>position</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether the popup is positioned relative to its trigger.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
 <p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>side</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionSide</code></span><span><span class="component-api-definition__label">Default</span><code>'bottom'</code></span></div>
+<p>Preferred side of the anchor for positioned content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>sideOffset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
+<p>Distance between positioned content and its anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>strategy</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionStrategy</code></span><span><span class="component-api-definition__label">Default</span><code>'absolute'</code></span></div>
+<p>CSS positioning strategy used for anchored content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>tracking</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PositionTracking</code></span><span><span class="component-api-definition__label">Default</span><code>'events'</code></span></div>
+<p>Update strategy used while anchored content is open.</p>
 </dd>
 </div>
 </dl>

@@ -23,6 +23,10 @@ Let the parent own the current value and apply accepted changes back to the comp
 
 <ComponentExample component="year-picker" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
 
+## Floating positioning
+
+This component uses the shared positioning engine. Use the [live positioning example](/guide/positioning) to change `side`, `align`, offsets, collision boundaries, strategy, and tracking while inspecting the resolved placement.
+
 ## API
 
 Vue package: `@sectile/vue/temporal/year-picker`

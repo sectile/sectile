@@ -25,6 +25,12 @@ import { setInteractionAttributes } from './internal/interaction.js';
 import { findDelegatedStableID } from './internal/delegated-event.js';
 import { stableIDElementToken, stableIDToken } from './internal/stable-id-token.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
+import {
+  createPosition,
+  manualPositionConnection,
+  type PositionConnection,
+} from './internal/position-connection.js';
+import type { PositionOptions } from './position.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -121,10 +127,11 @@ export interface ComboboxTransitionDetails<ID extends StableID = StableID> {
   readonly result: RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
 }
 
-export interface ComboboxConnectionOptions<ID extends StableID = StableID> {
+export interface ComboboxConnectionOptions<ID extends StableID = StableID> extends PositionOptions {
   readonly controller: ComboboxController<ID>;
   readonly input: TextElement;
   readonly popup?: HTMLElement;
+  readonly position?: boolean;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
   readonly getItemElementID?: (id: ID) => string;
@@ -269,6 +276,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   readonly #onUpdate: (() => void) | undefined;
   readonly #binding: DOMTextElementBinding;
   readonly #layer: DOMLayerBinding | undefined;
+  readonly #position: PositionConnection;
   readonly #handleKeydown: (event: Event) => void;
   readonly #handleClick: (event: MouseEvent) => void;
 
@@ -295,6 +303,22 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
       readOpen: () => this.#controller.getSnapshot().state.popupOpen,
       close: () => { this.handleEvent('close'); },
     });
+    this.#position = this.#popup === undefined || options.position === false
+      ? manualPositionConnection
+      : createPosition({
+          root: this.#popup,
+          reference: this.#input,
+          side: options.side,
+          align: options.align,
+          sideOffset: options.sideOffset,
+          collisionPadding: options.collisionPadding,
+          collisionBoundary: options.collisionBoundary,
+          avoidCollisions: options.avoidCollisions,
+          arrowPadding: options.arrowPadding,
+          hideWhenDetached: options.hideWhenDetached,
+          strategy: options.strategy,
+          tracking: options.tracking,
+        });
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event as KeyboardEvent)) event.preventDefault();
     };
@@ -391,13 +415,19 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
 
   public render(): void {
     this.#binding.render();
+    this.#renderPopupState();
+  }
+
+  #renderPopupState(): void {
     this.setInputAttributes(this.#input.getAttribute('aria-label') ?? undefined);
     this.setPopupAttributes(this.#popup?.getAttribute('aria-label') ?? undefined);
     this.#layer?.sync();
+    this.#position.update();
   }
 
   public disconnect(): void {
     this.#layer?.disconnect();
+    this.#position.disconnect();
     this.#binding.disconnect();
     this.#input.removeEventListener('keydown', this.#handleKeydown);
     this.#popup?.removeEventListener('click', this.#handleClick);
@@ -412,6 +442,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
       : this.#controller.handleEvent(event);
     if (result.ok) this.#applyEffects(result.commands);
     if (event !== null) this.#onTransition?.(Object.freeze({ event, result }));
+    this.#renderPopupState();
     if (result.ok) this.#onUpdate?.();
     return result;
   }

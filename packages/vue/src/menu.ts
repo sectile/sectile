@@ -1,11 +1,18 @@
 import {
-  Fragment, computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
+  Fragment, computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
   shallowRef, watch, type Component, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createMenu, type MenuConnection, type MenuItemDefinition, type MenuPolicies } from '@sectile/dom/menu';
 import { createMenuButton } from '@sectile/dom/menu-button';
 import { createMenubar } from '@sectile/dom/menubar';
 import { createNavigationMenu } from '@sectile/dom/navigation-menu';
+import type {
+  PositionBoundary,
+  PositionOptions,
+  PositionPadding,
+  PositionStrategy,
+  PositionTracking,
+} from '@sectile/dom/position';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostDirection, useHostId } from './host-provider.js';
 import { reconcileCollectionState } from './internal/collection.js';
@@ -25,7 +32,11 @@ export interface MenuRootProps {
 }
 
 export type MenuTextValueResolver = NonNullable<MenuRootProps['textValue']>;
-export interface MenuButtonRootProps extends MenuRootProps { readonly open?: boolean; readonly defaultOpen?: boolean }
+export interface MenuButtonRootProps extends MenuRootProps, Omit<PositionOptions, 'arrowPadding'> {
+  readonly open?: boolean;
+  readonly defaultOpen?: boolean;
+  readonly position?: boolean;
+}
 export interface MenuRootSlotProps { readonly open: boolean; readonly highlightedValue: string | null; readonly openPath: readonly string[]; readonly disabled: boolean }
 export interface MenuItemProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface MenuItemSlotProps { readonly value: string; readonly highlighted: boolean; readonly open: boolean; readonly disabled: boolean }
@@ -38,6 +49,8 @@ interface Context {
   readonly label: ComputedRef<string | undefined>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
   readonly direction: ComputedRef<'ltr' | 'rtl'>;
+  readonly position: ComputedRef<boolean>;
+  readonly strategy: ComputedRef<PositionStrategy>;
   registerRoot(element?: HTMLElement): void;
   registerTrigger(element?: HTMLElement): void;
   registerItem(element: HTMLElement, id: string): void;
@@ -55,6 +68,16 @@ interface ResolvedRootProps {
   readonly asChild: boolean;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
+  readonly position?: boolean;
+  readonly side?: PositionOptions['side'];
+  readonly align?: PositionOptions['align'];
+  readonly sideOffset?: number;
+  readonly collisionPadding?: PositionPadding;
+  readonly collisionBoundary?: PositionBoundary;
+  readonly avoidCollisions?: boolean;
+  readonly hideWhenDetached?: boolean;
+  readonly strategy?: PositionStrategy;
+  readonly tracking?: PositionTracking;
 }
 const key = Symbol('SectileMenuRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
@@ -72,6 +95,13 @@ const menuButtonProps = {
   ...commonProps,
   open: { type: Boolean, default: undefined },
   defaultOpen: { type: Boolean, default: false },
+  position: { type: Boolean, default: true },
+  side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
+  align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'start' },
+  sideOffset: { type: Number, default: 8 }, collisionPadding: { type: [Number, Object] as PropType<PositionPadding>, default: 8 },
+  collisionBoundary: { type: [String, Object] as PropType<PositionBoundary>, default: undefined }, avoidCollisions: { type: Boolean, default: true },
+  hideWhenDetached: { type: Boolean, default: false }, strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
+  tracking: { type: String as PropType<PositionTracking>, default: 'events' },
 } as const;
 
 function createRoot<RootProps extends typeof commonProps | typeof menuButtonProps>(
@@ -98,6 +128,8 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
         'open',
         () => kind === 'menu-button' ? runtimeProps.open : undefined,
       );
+      const position = computed(() => kind === 'menu-button' ? runtimeProps.position ?? true : false);
+      const strategy = computed<PositionStrategy>(() => runtimeProps.strategy ?? 'absolute');
       const state = computed<MenuRootSlotProps>(() => ({
         open: kind === 'menu-button' && runtimeProps.open !== undefined ? runtimeProps.open : open.value,
         highlightedValue: highlighted.value, openPath: openPath.value, disabled: runtimeProps.disabled,
@@ -126,6 +158,14 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
         const options = {
           root: root.value, items: runtimeProps.items, disabledItems: runtimeProps.disabledItems, disabled: runtimeProps.disabled,
           direction: direction.value, baseID,
+          ...(kind === 'menu-button' ? {
+            position: runtimeProps.position ?? true,
+            side: runtimeProps.side ?? 'bottom', align: runtimeProps.align ?? 'start', sideOffset: runtimeProps.sideOffset ?? 8,
+            collisionPadding: runtimeProps.collisionPadding ?? 8,
+            ...(runtimeProps.collisionBoundary === undefined ? {} : { collisionBoundary: runtimeProps.collisionBoundary }),
+            avoidCollisions: runtimeProps.avoidCollisions ?? true, hideWhenDetached: runtimeProps.hideWhenDetached ?? false,
+            strategy: runtimeProps.strategy ?? 'absolute', tracking: runtimeProps.tracking ?? 'events',
+          } : {}),
           ...(runtimeProps.policies === undefined ? {} : { policies: runtimeProps.policies }),
           defaultHighlightedValue: reconciled.current,
           ...(runtimeProps.label === undefined ? {} : { label: runtimeProps.label }),
@@ -138,19 +178,46 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
           : kind === 'menubar' ? createMenubar(options) : kind === 'navigation-menu' ? createNavigationMenu(options) : createMenu(options);
         refreshParts(); refresh();
       };
+      let mounted = false;
+      let connectScheduled = false;
+      const scheduleConnect = (): void => {
+        if (!mounted || connectScheduled) return;
+        connectScheduled = true;
+        void nextTick(() => {
+          connectScheduled = false;
+          if (mounted) connect();
+        });
+      };
+      const registerRoot = (element?: HTMLElement): void => {
+        if (root.value === element) return;
+        root.value = element;
+        if (element === undefined) {
+          connection.value?.disconnect();
+          connection.value = undefined;
+        } else scheduleConnect();
+      };
+      const registerTrigger = (element?: HTMLElement): void => {
+        if (trigger.value === element) return;
+        trigger.value = element;
+        if (element === undefined) {
+          connection.value?.disconnect();
+          connection.value = undefined;
+        } else scheduleConnect();
+      };
       provide<Context>(key, {
         state, kind, label: computed(() => runtimeProps.label), disabledItems: computed(() => new Set(runtimeProps.disabledItems)), direction,
-        registerRoot: (element) => { root.value = element; }, registerTrigger: (element) => { trigger.value = element; },
+        position, strategy, registerRoot, registerTrigger,
         registerItem: (element, id) => connection.value?.setItemAttributes(element, id),
         registerSubmenu: (element, parent) => connection.value?.setSubmenuAttributes(element, parent),
       });
-      onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-      watch([() => runtimeProps.items, () => runtimeProps.disabledItems, () => runtimeProps.disabled, () => runtimeProps.label, () => runtimeProps.textValue, () => runtimeProps.policies, direction], connect);
+      onMounted(() => { mounted = true; connect(); });
+      onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); });
+      watch([() => runtimeProps.items, () => runtimeProps.disabledItems, () => runtimeProps.disabled, () => runtimeProps.label, () => runtimeProps.textValue, () => runtimeProps.policies, direction, () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset, () => runtimeProps.collisionPadding, () => runtimeProps.collisionBoundary, () => runtimeProps.avoidCollisions, () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.tracking], connect);
       watch(() => runtimeProps.open, (value) => { if (!controlled || value === undefined || connection.value === undefined) return; const result = connection.value.syncControlledValue(value); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
       return (): VNodeChild => {
         if (providerOnly) return h(Fragment as Component, null, slots['default']?.(state.value) ?? []);
         return h(Primitive, mergeProps(attrs, {
-          as: runtimeProps.as, asChild: runtimeProps.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
+          as: runtimeProps.as, asChild: runtimeProps.asChild, elementRef: (node: unknown) => registerRoot(node instanceof HTMLElement ? node : undefined),
           role: kind === 'navigation-menu' ? 'navigation' : kind === 'menubar' ? 'menubar' : 'menu', 'aria-label': runtimeProps.label,
           dir: direction.value,
           'data-scope': kind === 'navigation-menu' ? 'navigation-menu' : kind === 'menubar' ? 'menubar' : 'menu', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed',
@@ -187,9 +254,10 @@ export const MenuButtonTrigger = defineComponent({
 export const MenuButtonContent = defineComponent({
   name: 'SectileMenuButtonContent', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: MenuRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('MenuButtonContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerRoot(node instanceof HTMLElement ? node : undefined),
+  setup(props, { attrs, slots }) { const root = useRoot('MenuButtonContent'); const element = shallowRef<HTMLElement>(); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerRoot(content); },
     role: 'menu', hidden: !root.state.value.open, 'aria-label': root.label.value, dir: root.direction.value,
+    style: root.position.value ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined } : undefined,
     'data-scope': 'menu-button', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
   }), { default: () => slots['default']?.(root.state.value) }); },
 });

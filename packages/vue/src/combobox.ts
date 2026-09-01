@@ -5,13 +5,20 @@ import {
 import {
   createCombobox, type ComboboxConnection, type ComboboxItem as ComboboxItemDefinition, type ComboboxPolicies,
 } from '@sectile/dom/combobox';
+import type {
+  PositionBoundary,
+  PositionOptions,
+  PositionPadding,
+  PositionStrategy,
+  PositionTracking,
+} from '@sectile/dom/position';
 import { createTextState, type TextState } from '@sectile/dom/text';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useNativeInputFormControl } from './internal/form-control.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
-export interface ComboboxRootProps {
+export interface ComboboxRootProps extends Omit<PositionOptions, 'arrowPadding'> {
   readonly items: readonly ComboboxItemDefinition<string>[];
   readonly modelValue?: string | null;
   readonly defaultValue?: string | null;
@@ -22,6 +29,7 @@ export interface ComboboxRootProps {
   readonly disabled?: boolean;
   readonly?: boolean;
   readonly label?: string;
+  readonly position?: boolean;
   readonly policies?: ComboboxPolicies<string>;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
@@ -33,6 +41,8 @@ export interface ComboboxPartProps { readonly as?: PrimitiveAs; readonly asChild
 
 interface Context {
   readonly state: ComputedRef<ComboboxRootSlotProps>;
+  readonly position: ComputedRef<boolean>;
+  readonly strategy: ComputedRef<PositionStrategy>;
   readonly label: ComputedRef<string | undefined>;
   readonly connection: ComputedRef<ComboboxConnection<string> | undefined>;
   registerInput(element?: HTMLInputElement): void;
@@ -50,6 +60,13 @@ export const ComboboxRoot = defineComponent({
     inputValue: { type: String, default: undefined }, defaultInputValue: { type: String, default: '' },
     open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, label: { type: String, default: undefined },
+    position: { type: Boolean, default: true },
+    side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
+    align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'start' },
+    sideOffset: { type: Number, default: 8 }, collisionPadding: { type: [Number, Object] as PropType<PositionPadding>, default: 8 },
+    collisionBoundary: { type: [String, Object] as PropType<PositionBoundary>, default: undefined }, avoidCollisions: { type: Boolean, default: true },
+    hideWhenDetached: { type: Boolean, default: false }, strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
+    tracking: { type: String as PropType<PositionTracking>, default: 'events' },
     policies: { type: Object as PropType<ComboboxPolicies<string>>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
@@ -113,6 +130,11 @@ export const ComboboxRoot = defineComponent({
         ...(controlled.input ? { inputState: createTextState(props.inputValue as string) } : { defaultInputState: createTextState(localInput.value) }),
         ...(controlled.open ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
         disabled: props.disabled, readOnly: props.readonly,
+        position: props.position, side: props.side, align: props.align, sideOffset: props.sideOffset,
+        collisionPadding: props.collisionPadding,
+        ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }),
+        avoidCollisions: props.avoidCollisions, hideWhenDetached: props.hideWhenDetached,
+        strategy: props.strategy, tracking: props.tracking,
         onValueChange: ({ value }) => { localValue.value = value; emit('update:modelValue', value); },
         onInputStateChange: ({ value }) => {
           proposedInputState = value;
@@ -133,16 +155,27 @@ export const ComboboxRoot = defineComponent({
       });
       connection.value.setInputAttributes(props.label); connection.value.setPopupAttributes(props.label); refreshItems(); refresh();
     };
+    let mounted = false;
+    let connectScheduled = false;
+    const scheduleConnect = (): void => {
+      if (!mounted || connectScheduled) return;
+      connectScheduled = true;
+      void nextTick(() => {
+        connectScheduled = false;
+        if (mounted) connect();
+      });
+    };
     provide<Context>(key, {
-      state, label: computed(() => props.label), connection: computed(() => connection.value),
-      registerInput: (element) => { input.value = element; }, registerPopup: (element) => { popup.value = element; },
+      state, position: computed(() => props.position), strategy: computed(() => props.strategy),
+      label: computed(() => props.label), connection: computed(() => connection.value),
+      registerInput: (element) => { const changed = input.value !== element; input.value = element; if (changed) scheduleConnect(); }, registerPopup: (element) => { const changed = popup.value !== element; popup.value = element; if (changed) scheduleConnect(); },
       registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, { id, disabled }),
     });
-    onMounted(connect); onBeforeUnmount(() => { connection.value?.disconnect(); connection.value = undefined; proposedInputState = null; });
+    onMounted(() => { mounted = true; connect(); }); onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); connection.value = undefined; proposedInputState = null; });
     watch(() => props.items, (items, previousItems) => {
       if (!sameComboboxItems(items, previousItems)) connect();
     });
-    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.policies], connect);
+    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies], connect);
     watch([() => props.modelValue, () => props.inputValue, () => props.open], () => {
       const inputState = controlled.input
         && proposedInputState !== null
@@ -186,11 +219,12 @@ export const ComboboxInput = defineComponent({
     const input = shallowRef<HTMLInputElement | null>(null);
     const participation = useNativeInputFormControl(input);
     const renderServerValue = typeof window === 'undefined';
+    const registerInput = (node: unknown): void => {
+      input.value = node instanceof HTMLInputElement ? node : null;
+      root.registerInput(input.value ?? undefined);
+    };
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-      as: props.as, asChild: props.asChild, elementRef: (node: unknown) => {
-        input.value = node instanceof HTMLInputElement ? node : null;
-        root.registerInput(input.value ?? undefined);
-      },
+      as: props.as, asChild: props.asChild, elementRef: registerInput,
       type: 'text', role: 'combobox',
       ...(renderServerValue ? { value: root.state.value.inputValue } : {}),
       name: props.name, form: props.form, required: props.required,
@@ -205,9 +239,12 @@ export const ComboboxContent = defineComponent({
   name: 'SectileComboboxContent', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: ComboboxRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('ComboboxContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerPopup(node instanceof HTMLElement ? node : undefined),
+  setup(props, { attrs, slots }) { const root = useRoot('ComboboxContent'); const element = shallowRef<HTMLElement>(); const registerContent = (node: unknown): void => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); }; return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+    as: props.as, asChild: props.asChild, elementRef: registerContent,
     role: 'listbox', hidden: !root.state.value.open, 'aria-label': root.label.value,
+    style: root.position.value
+      ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
+      : undefined,
     'data-scope': 'combobox', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
   }), { default: () => slots['default']?.(root.state.value) }); },
 });

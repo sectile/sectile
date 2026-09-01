@@ -23,6 +23,10 @@
 
 <ComponentExample component="menu-button" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="2" />
 
+## Floating 위치
+
+이 컴포넌트는 공통 위치 엔진을 사용합니다. [실시간 위치 예시](/ko/guide/positioning)에서 `side`, `align`, 간격, 충돌 경계, strategy, tracking을 바꾸며 계산 결과를 확인할 수 있습니다.
+
 ## API
 
 Vue 패키지: `@sectile/vue/menu-button`
@@ -45,6 +49,13 @@ Vue 패키지: `@sectile/vue/menu-button`
 
 <dl class="component-api-definitions component-api-definitions--props">
 <div class="component-api-definition">
+<dt><code>align</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionAlign</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>기준 요소를 중심으로 팝업 내용을 정렬할 위치입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>as</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
@@ -56,6 +67,27 @@ Vue 패키지: `@sectile/vue/menu-button`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
 <p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>avoidCollisions</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>팝업이 화면 안에 남도록 위치를 뒤집거나 이동할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionBoundary</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionBoundary</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>팝업을 화면 안에 유지할 때 사용할 경계입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionPadding</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionPadding</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>팝업과 충돌 경계 사이에 둘 간격입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -87,6 +119,13 @@ Vue 패키지: `@sectile/vue/menu-button`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>hideWhenDetached</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>기준 요소가 레이아웃에서 벗어나면 팝업을 숨길지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>items</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly MenuItemDefinition&lt;string&gt;[]</code></span><span><span class="component-api-definition__label">기본값</span>필수</span></div>
@@ -115,10 +154,45 @@ Vue 패키지: `@sectile/vue/menu-button`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>position</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>실행 요소를 기준으로 팝업 위치를 계산할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>side</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionSide</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>기준 요소를 중심으로 팝업을 우선 배치할 방향입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>sideOffset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>팝업과 기준 요소 사이 거리입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>strategy</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionStrategy</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>기준 요소에 연결된 콘텐츠의 CSS 위치 전략입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>textValue</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>(id: string) =&gt; string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
 <p>항목 값을 검색 또는 표시 문자열로 바꾸는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>tracking</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PositionTracking</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>기준 요소에 연결된 콘텐츠가 열린 동안 위치를 갱신할 방식입니다.</p>
 </dd>
 </div>
 </dl>

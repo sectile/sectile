@@ -23,6 +23,10 @@
 
 <ComponentExample component="date-time-picker" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="2" />
 
+## Floating 위치
+
+이 컴포넌트는 공통 위치 엔진을 사용합니다. [실시간 위치 예시](/ko/guide/positioning)에서 `side`, `align`, 간격, 충돌 경계, strategy, tracking을 바꾸며 계산 결과를 확인할 수 있습니다.
+
 ## API
 
 Vue 패키지: `@sectile/vue/temporal/date-time-picker`

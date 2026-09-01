@@ -33,7 +33,7 @@ export const TooltipContent = parts.Content;
 export const TooltipArrow = parts.Arrow;
 export type TooltipRootProps = Pick<PopupRootProps,
   | 'open' | 'defaultOpen' | 'disabled'
-  | 'side' | 'align' | 'sideOffset'
+  | 'position' | 'side' | 'align' | 'sideOffset'
   | 'collisionPadding' | 'collisionBoundary' | 'avoidCollisions'
   | 'arrowPadding' | 'hideWhenDetached' | 'strategy' | 'tracking' | 'unmountOnExit'
 >;

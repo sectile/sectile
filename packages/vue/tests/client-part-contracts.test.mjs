@@ -14,11 +14,12 @@ Object.assign(globalThis, {
   Event: window.Event,
 });
 
-const { createApp, h } = await import('vue');
+const { createApp, h, nextTick, ref } = await import('vue');
 const rating = await import('../.verification-dist/rating.js');
 const stepper = await import('../.verification-dist/stepper.js');
 const checkboxGroup = await import('../.verification-dist/checkbox-group.js');
 const windowSplitter = await import('../.verification-dist/window-splitter.js');
+const popover = await import('../.verification-dist/popover.js');
 
 function renderClient(render) {
   const host = document.createElement('div');
@@ -56,4 +57,54 @@ test('composed Vue controls preserve their public scope and part contract after 
   assert.doesNotMatch(rendered.checkboxGroup, /data-scope="checkbox"/);
   assert.match(rendered.windowSplitter, /data-part="handle"/);
   assert.doesNotMatch(rendered.windowSplitter, /data-scope="slider"|data-part="thumb"/);
+});
+
+test('position prop updates project the latest popup placement', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const side = ref('bottom');
+  const align = ref('center');
+  const sideOffset = ref(3);
+  const app = createApp({
+    render: () => h(popover.PopoverRoot, {
+      defaultOpen: true,
+      side: side.value,
+      align: align.value,
+      sideOffset: sideOffset.value,
+      avoidCollisions: false,
+    }, () => [
+      h(popover.PopoverTrigger, null, () => 'Anchor'),
+      h(popover.PopoverContent, null, () => [
+        h(popover.PopoverArrow, { style: { position: 'relative' } }),
+        'Content',
+      ]),
+    ]),
+  });
+
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const arrow = host.querySelector('[data-part="arrow"]');
+    const content = host.querySelector('[data-part="content"]');
+    assert.ok(arrow instanceof HTMLElement);
+    assert.ok(content instanceof HTMLElement);
+    assert.equal(arrow.style.position, 'absolute');
+    assert.equal(content.dataset.side, 'bottom');
+    assert.equal(content.dataset.align, 'center');
+
+    side.value = 'top';
+    align.value = 'end';
+    sideOffset.value = 4;
+    await nextTick();
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(content.dataset.side, 'top');
+    assert.equal(content.dataset.align, 'end');
+    assert.equal(arrow.style.position, 'absolute');
+  } finally {
+    app.unmount();
+    host.remove();
+  }
 });

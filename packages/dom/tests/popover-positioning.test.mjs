@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
 import { createPopover } from '../.verification-dist/popover.js';
+import { createTooltip } from '../.verification-dist/tooltip.js';
 import {
   createPositionEngine,
   readPositionSourceRegistryDiagnostics,
@@ -21,12 +22,65 @@ test('DOM positioning reserves layout synchronously before measuring', () => {
   const window = new Window({ url: 'https://sectile.dev/' });
   const root = window.document.createElement('div');
   const trigger = window.document.createElement('button');
+  const arrow = window.document.createElement('div');
+  arrow.style.position = 'relative';
+  root.append(arrow);
   window.document.body.append(trigger, root);
-  const popover = createPopover({ root, trigger, defaultOpen: true, strategy: 'absolute' });
+  const popover = createPopover({ root, trigger, arrow, defaultOpen: true, strategy: 'absolute' });
   assert.equal(root.style.position, 'absolute');
   assert.equal(root.style.visibility, 'hidden');
+  assert.equal(arrow.style.position, 'absolute');
   popover.disconnect();
+  assert.equal(arrow.style.position, 'relative');
   window.close();
+});
+
+test('DOM positioning excludes the arrow from its first floating measurement', () => {
+  const fixture = createPositionFixture();
+  const arrow = fixture.window.document.createElement('div');
+  arrow.style.position = 'relative';
+  fixture.root.append(arrow);
+  setRect(fixture.reference, { x: 100, y: 200, width: 40, height: 20 });
+  setRect(fixture.boundary, { x: 0, y: 0, width: 400, height: 400 });
+  setRect(arrow, { x: 0, y: 0, width: 8, height: 8 });
+  fixture.root.getBoundingClientRect = () => {
+    const height = arrow.style.position === 'absolute' ? 10 : 28;
+    return Object.freeze({ x: 0, y: 0, top: 0, right: 80, bottom: height, left: 0, width: 80, height, toJSON() { return this; } });
+  };
+  const engine = createPositionEngine({
+    root: fixture.root,
+    reference: fixture.reference,
+    arrow,
+    collisionBoundary: fixture.boundary,
+    side: 'top',
+    align: 'end',
+    sideOffset: 3,
+    avoidCollisions: false,
+  });
+  engine.connect();
+  assert.equal(arrow.style.position, 'absolute');
+  fixture.frames.flush();
+  assert.equal(fixture.root.style.top, '187px');
+  engine.disconnect();
+  assert.equal(arrow.style.position, 'relative');
+  fixture.close();
+});
+
+test('DOM popover and tooltip support resource-free manual positioning', () => {
+  for (const [kind, create] of [['popover', createPopover], ['tooltip', createTooltip]]) {
+    const window = new Window({ url: 'https://sectile.dev/' });
+    const root = window.document.createElement('div');
+    const trigger = window.document.createElement('button');
+    window.document.body.append(trigger, root);
+    const before = readPositionSourceRegistryDiagnostics();
+    const connection = create({ root, trigger, defaultOpen: true, position: false });
+    assert.equal(root.style.position, '', kind);
+    assert.equal(root.dataset.positionRoute, undefined, kind);
+    assert.deepEqual(readPositionSourceRegistryDiagnostics(), before, kind);
+    connection.disconnect();
+    assert.deepEqual(readPositionSourceRegistryDiagnostics(), before, kind);
+    window.close();
+  }
 });
 
 test('DOM positioning selects CSS only for the fully supported narrow route', () => {
@@ -81,6 +135,32 @@ test('DOM JavaScript positioning coalesces updates and restores owned projection
   assert.equal(engine.diagnostics().sourceSubscriptions, 0);
   assert.equal(engine.diagnostics().resizeObservers, 0);
   assert.equal(engine.diagnostics().layoutObservers, 0);
+  fixture.close();
+});
+
+test('DOM positioning restores styles after browser CSSOM value normalization', () => {
+  const fixture = createPositionFixture();
+  setRect(fixture.reference, { x: 20.123456, y: 20.123456, width: 40, height: 20 });
+  const style = fixture.root.style;
+  const setProperty = style.setProperty.bind(style);
+  style.setProperty = (property, value, priority) => {
+    const normalized = property === 'top' && value.endsWith('px')
+      ? `${Number.parseFloat(value).toFixed(3)}px`
+      : value;
+    setProperty(property, normalized, priority);
+  };
+  const engine = createPositionEngine({
+    root: fixture.root,
+    reference: fixture.reference,
+    collisionBoundary: fixture.boundary,
+    side: 'bottom',
+    avoidCollisions: false,
+  });
+  engine.connect();
+  fixture.frames.flush();
+  assert.match(fixture.root.style.top, /^48\.123px$/);
+  engine.disconnect();
+  assert.equal(fixture.root.style.top, '');
   fixture.close();
 });
 

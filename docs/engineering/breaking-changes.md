@@ -65,7 +65,7 @@
 | WI-008 | @sectile/dom | `./window-splitter` | `WindowSplitter controller declaration closure` | @sectile/dom/window-splitter |
 | WI-008 | @sectile/terminal | `./window-splitter` | `WindowSplitter controller declaration closure` | @sectile/terminal/window-splitter |
 | WI-009 | @sectile/vue | `./cascade-list` | `stable item-domain reconciliation declaration closure` | @sectile/vue/cascade-list |
-| WI-009 | @sectile/vue | `./cascade-select` | `stable item-domain reconciliation declaration closure` | @sectile/vue/cascade-select |
+| WI-009 | @sectile/vue | `./cascade-select` | `stable item-domain reconciliation declaration closure`, `CascadeSelectRoot positioning props`, `automatic trigger-relative positioning` | @sectile/vue/cascade-select |
 | WI-009 | @sectile/vue | `./checkbox-group` | `CheckboxGroupRootProps.items` | @sectile/vue/checkbox-group |
 | WI-009 | @sectile/core | `./adapter-runtime` | `tryReconcileCollectionIdentities` | @sectile/core/adapter-runtime |
 | WI-009 | @sectile/form | `./error` | `FormErrorCode form-event-invalid`, `Core Result declaration closure` | @sectile/form/error |
@@ -119,22 +119,29 @@
 | WI-034 | @sectile/virtual | `.` | `VirtualPoint, VirtualSize, VirtualRect, and VirtualInsets declaration closure` | @sectile/virtual |
 | WI-036 | @sectile/vue | `./alert-dialog` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props` | @sectile/dom/position |
 | WI-036 | @sectile/dom | `./alert-dialog` | `Floating UI declaration closure`, `PositionOptions` | @sectile/dom/position |
+| WI-036 | @sectile/dom | `./cascade-select` | `CascadeSelectOptions positioning options`, `automatic trigger-relative positioning` | @sectile/dom/cascade-select |
+| WI-036 | @sectile/vue | `./combobox` | `ComboboxRoot positioning props`, `automatic input-relative positioning` | @sectile/vue/combobox |
 | WI-036 | @sectile/vue | `./dialog` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props` | @sectile/dom/position |
 | WI-036 | @sectile/dom | `./dialog` | `Floating UI declaration closure`, `PositionOptions` | @sectile/dom/position |
 | WI-036 | @sectile/vue | `./drawer` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props` | @sectile/dom/position |
 | WI-036 | @sectile/dom | `./drawer` | `Floating UI declaration closure`, `PositionOptions` | @sectile/dom/position |
-| WI-036 | @sectile/vue | `./popover` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props` | @sectile/dom/position |
-| WI-036 | @sectile/dom | `./popover` | `middleware`, `autoUpdate`, `onPositionChange`, `Floating UI type re-exports` | @sectile/dom/position |
+| WI-036 | @sectile/vue | `./menu-button` | `MenuButtonRoot positioning props`, `automatic trigger-relative positioning` | @sectile/vue/menu-button |
+| WI-036 | @sectile/dom | `./menu-button` | `MenuButtonOptions positioning options`, `manual positioning opt-out` | @sectile/dom/menu-button |
+| WI-036 | @sectile/vue | `./menu` | `MenuButtonRoot positioning props`, `automatic trigger-relative positioning` | @sectile/vue/menu |
+| WI-036 | @sectile/vue | `./menubar` | `shared menu declaration closure` | @sectile/vue/menubar |
+| WI-036 | @sectile/vue | `./navigation-menu` | `shared menu declaration closure` | @sectile/vue/navigation-menu |
+| WI-036 | @sectile/vue | `./popover` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props`, `PopoverRootProps.position` | @sectile/dom/position |
+| WI-036 | @sectile/dom | `./popover` | `middleware`, `autoUpdate`, `onPositionChange`, `Floating UI type re-exports`, `PopoverOptions.position` | @sectile/dom/position |
 | WI-036 | @sectile/vue | `./select` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props` | @sectile/dom/position |
 | WI-036 | @sectile/dom | `./select` | `middleware`, `autoUpdate`, `onPositionChange`, `Floating UI declaration closure` | @sectile/dom/position |
-| WI-036 | @sectile/vue | `./tooltip` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props` | @sectile/dom/position |
-| WI-036 | @sectile/dom | `./tooltip` | `middleware`, `autoUpdate`, `onPositionChange`, `Floating UI type re-exports` | @sectile/dom/position |
+| WI-036 | @sectile/vue | `./tooltip` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props`, `TooltipRootProps.position` | @sectile/dom/position |
+| WI-036 | @sectile/dom | `./tooltip` | `middleware`, `autoUpdate`, `onPositionChange`, `Floating UI type re-exports`, `TooltipOptions.position` | @sectile/dom/position |
 | WI-037 | @sectile/core | `./color-picker` | `ColorValue is the canonical Rgba8 declaration closure` | @sectile/core/color-picker |
 | WI-038 | @sectile/form | `./schema` | `StandardSchemaV1 structural declaration` | @sectile/form/schema |
 | WI-039 | @sectile/virtual | `./track-grid-layout` | `TrackGridLayoutState.regions readonly array`, `Virtual geometry declaration closure` | @sectile/virtual/track-grid-layout |
 | WI-039 | @sectile/virtual | `./partitioned-track-grid-layout` | `PartitionedTrackGridLayoutState.rows and columns readonly arrays`, `Virtual geometry declaration closure` | @sectile/virtual/partitioned-track-grid-layout |
 | WI-039 | @sectile/virtual | `./spatial-layout` | `SpatialLayoutState.items readonly array`, `SpatialLayoutInput.domain`, `Virtual geometry declaration closure` | @sectile/virtual/spatial-layout |
-| WI-046 | @sectile/dom | `./combobox` | `TextInput declaration closure` | @sectile/dom/combobox |
+| WI-046 | @sectile/dom | `./combobox` | `TextInput declaration closure`, `ComboboxConnectionOptions positioning options`, `automatic input-relative positioning` | @sectile/dom/combobox |
 | WI-046 | @sectile/dom | `./text` | `TextConnection.handleEvent`, `FacadeConnection<TextConnection>.send` | @sectile/dom/text |
 | WI-047 | @sectile/form | `./state` | `FormEvent update-field`, `FormFieldInput.valid`, `getFormFieldIDsByIssueSource`, `FormState flat validation and submission fields`, `FormStateInput flat validation and submission fields`, `FormIssue`, `FormFieldState`, `FormEvent submit-failed` | @sectile/form/state |
 | WI-047 | @sectile/dom | `./form` | `FormConnection.subscribe`, `FormConnection field mutation surface`, `FormValidationIssue`, `FormSubmitResult`, `FormSubmitErrorMapper`, `FormSubmitFailureResult`, `FormConnection.submitFailed`, `FormAnnounceSummaryHandler` | @sectile/dom/form |

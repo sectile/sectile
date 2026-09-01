@@ -97,7 +97,6 @@ const optionLabel = (id: string): string => (
 
 <style scoped>
 .demo-select {
-  position: relative;
   width: 100%;
 }
 

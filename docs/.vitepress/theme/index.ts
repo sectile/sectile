@@ -14,6 +14,7 @@ const docsComponents = {
   ComponentExample: defineAsyncComponent(() => import('./components/ComponentExample.vue')),
   DocsHome: defineAsyncComponent(() => import('./components/DocsHome.vue')),
   FormPackageExample: defineAsyncComponent(() => import('./components/FormPackageExample.vue')),
+  FloatingPositionExample: defineAsyncComponent(() => import('./components/FloatingPositionExampleFrame.vue')),
   HostCode: defineAsyncComponent(() => import('./components/HostCode.vue')),
   HostInstall: defineAsyncComponent(() => import('./components/HostInstall.vue')),
   PackageImport: defineAsyncComponent(() => import('./components/PackageImport.vue')),
