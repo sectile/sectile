@@ -1,5 +1,11 @@
 # @sectile/core
 
+## 0.14.1
+
+### Changes
+
+- No package-specific changes.
+
 ## 0.14.0
 
 ### Changes

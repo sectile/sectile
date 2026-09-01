@@ -1,5 +1,11 @@
 # @sectile/tabular
 
+## 0.14.1
+
+### Changes
+
+- feat(release): support independent package versions (a7f50440)
+
 ## 0.14.0
 
 ### Changes

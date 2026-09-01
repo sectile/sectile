@@ -1,5 +1,12 @@
 # @sectile/vue
 
+## 0.14.1
+
+### Changes
+
+- feat(positioning): unify anchored popup contracts (7db920e6)
+- feat(release): support independent package versions (a7f50440)
+
 ## 0.14.0
 
 ### Changes
