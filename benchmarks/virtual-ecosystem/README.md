@@ -1,6 +1,6 @@
 # Virtualization ecosystem benchmark
 
-This browser benchmark compares equivalent public framework paths across list, flow-grid, masonry, track-grid, and spatial families. The list family covers seven virtualizers:
+This browser benchmark compares equivalent public framework paths across list, flow-grid, masonry, track-grid, and spatial families. The committed `chrome-151-macos-arm64*.json` files are a historical Sectile Virtual 0.11.1 observation from commit `ce84a7b1`; they are not current-release results. The list family in that observation covers seven virtualizers:
 
 - Sectile Virtual 0.11.1 with Vue 3.5.22
 - TanStack Virtual 3.14.10 with React 19.2.8
@@ -9,6 +9,8 @@ This browser benchmark compares equivalent public framework paths across list, f
 - react-virtualized 9.22.6 with React 19.2.8
 - Virtua 0.50.5 with React 19.2.8
 - Vue Virtual Scroller 3.0.5 with Vue 3.5.22
+
+The runner always injects the current `@sectile/virtual/package.json` version into newly generated reports. A result describes only its recorded package version, browser, operating system, source commit, dirty-worktree flag, and build fingerprint. Publish a current-release comparison only after a fresh complete run in the declared environment; never relabel an older result.
 
 ## Row profiles and height conditions
 
@@ -94,7 +96,7 @@ node benchmarks/virtual-ecosystem/scripts/commit-results.mjs \
   /tmp/sectile-virtual-baselines.json
 ```
 
-The current baseline is stored in `results/chrome-151-macos-arm64-baseline.json`. Mutation observations remain in the full-suite result file, so updating initial-render measurements never rewrites them with a different source build.
+The historical 0.11.1 baseline is stored in `results/chrome-151-macos-arm64-baseline.json`. Mutation observations remain in the matching full-suite result file, so updating initial-render measurements never rewrites them with a different source build.
 
 Commit the four completed non-list sessions together. The command rejects missing families, mixed source fingerprints, non-standard item counts, and any Sectile correctness failure:
 
@@ -106,7 +108,7 @@ pnpm --filter @sectile/benchmark-virtual-ecosystem commit-layout-results \
   /tmp/sectile-spatial-session.json
 ```
 
-The layout bundle is stored in `results/chrome-151-macos-arm64-layouts.json`. `commit-results.mjs` reads that bundle when generating the documentation data and rejects it when its source fingerprint differs from the list result.
+The historical 0.11.1 layout bundle is stored in `results/chrome-151-macos-arm64-layouts.json`. `commit-results.mjs` reads that bundle when generating the documentation data and rejects it when its source fingerprint differs from the list result.
 
 If one baseline library exceeds the browser session limit, keep all 40 recorded scrolls and split only its independent rounds. Merge the five one-round reports afterward:
 
@@ -124,4 +126,4 @@ Mutation merge keys include `rowProfile`, so uniform and heterogeneous shards ca
 
 All shards within one observation must come from the same benchmark build. Restarting the page is safe because each run keeps its own ID, but rebuilding after source changes produces a new fingerprint and requires both baseline profiles again. Mutation shards still require one shared build for the complete mutation observation.
 
-The observation committed in `results/chrome-151-macos-arm64.json` is descriptive, not a release threshold. Compare revisions on the same machine before treating a difference as a regression.
+The 0.11.1 observation committed in `results/chrome-151-macos-arm64.json` is descriptive, not a release threshold. Compare revisions on the same machine before treating a difference as a regression.

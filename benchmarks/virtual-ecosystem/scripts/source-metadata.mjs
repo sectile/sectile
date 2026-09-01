@@ -11,6 +11,7 @@ const sourcePaths = Object.freeze([
   'benchmarks/virtual-ecosystem/scripts/source-metadata.mjs',
   'benchmarks/virtual-ecosystem/src',
   'packages/dom/src/virtual.ts',
+  'packages/virtual/package.json',
   'packages/virtual/src',
   'packages/vue/src/virtual-list.ts',
   'packages/vue/src/virtual-grid.ts',

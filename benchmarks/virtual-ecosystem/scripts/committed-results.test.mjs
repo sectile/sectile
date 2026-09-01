@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+import virtualPackage from '../../../packages/virtual/package.json' with { type: 'json' };
+import viteConfig from '../vite.config.ts';
 
 const resultRoot = new URL('../results/', import.meta.url);
 
@@ -29,3 +31,29 @@ test('committed list and layout results share one clean source without Sectile f
     assert.ok(report.layoutMutationResults.some((result) => result.library === 'Sectile Virtual'));
   }
 });
+
+test('committed results remain historical while fresh builds inject the workspace version', async () => {
+  const [list, baseline, layouts] = await Promise.all([
+    readResult('chrome-151-macos-arm64.json'),
+    readResult('chrome-151-macos-arm64-baseline.json'),
+    readResult('chrome-151-macos-arm64-layouts.json'),
+  ]);
+  assert.equal(baseline.source.gitCommit, list.source.gitCommit);
+  assert.deepEqual(layouts.source, list.source);
+  assert.match(list.environment, /Macintosh.+Chrome\/151\./);
+  for (const report of [list, baseline, layouts]) {
+    assert.deepEqual([...sectileVersions(report)], ['0.11.1']);
+  }
+
+  assert.equal(JSON.parse(viteConfig.define.__SECTILE_VIRTUAL_VERSION__), virtualPackage.version);
+});
+
+function sectileVersions(value, versions = new Set()) {
+  if (Array.isArray(value)) {
+    for (const entry of value) sectileVersions(entry, versions);
+  } else if (value !== null && typeof value === 'object') {
+    if (value.library === 'Sectile Virtual' && typeof value.version === 'string') versions.add(value.version);
+    for (const entry of Object.values(value)) sectileVersions(entry, versions);
+  }
+  return versions;
+}
