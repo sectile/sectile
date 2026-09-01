@@ -79,6 +79,9 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
   readonly #click: () => void;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #documentKeydown: (event: KeyboardEvent) => void;
+  readonly #focusStartGuard: HTMLElement | undefined;
+  readonly #focusEndGuard: HTMLElement | undefined;
+  readonly #focusGuard: () => void;
   readonly #focusIn: () => void;
   readonly #focusOut: () => void;
   readonly #pointerEnter: () => void;
@@ -88,6 +91,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
   readonly #layers: DOMLayerManager;
   #modalEffects: ModalEffects | undefined;
   #initialFocusApplied = false;
+  #tabDirection: 'forward' | 'backward' = 'forward';
   #focused = false;
   #hovered = false;
 
@@ -98,19 +102,35 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     this.#layers = getDOMLayerManager(options.root);
     this.#click = (): void => { this.handleEvent(options.toggle); };
     this.#keydown = (event): void => {
+      if (event.isComposing) return;
       if (event.key === 'Escape') {
         if (this.#layers.dismiss(this.#layerID, 'escape')) event.preventDefault();
-      } else if (event.key === 'Tab' && options.trapFocus === true && this.#isOpen()) {
-        this.#trapTab(event);
       }
     };
     this.#documentKeydown = (event): void => {
-      if (event.key !== 'Escape' || !this.#isOpen()) return;
+      if (!this.#isOpen()) return;
+      if (event.key === 'Tab' && options.trapFocus === true) {
+        this.#tabDirection = event.shiftKey ? 'backward' : 'forward';
+        this.#ensureFocusGuards();
+        return;
+      }
+      if (event.isComposing || event.key !== 'Escape') return;
       if (this.#layers.dismiss(this.#layerID, 'escape')) {
         event.preventDefault();
         event.stopImmediatePropagation?.();
       }
     };
+    this.#focusStartGuard = options.trapFocus === true ? createFocusGuard(options.root, 'start') : undefined;
+    this.#focusEndGuard = options.trapFocus === true ? createFocusGuard(options.root, 'end') : undefined;
+    this.#focusGuard = (): void => {
+      if (!this.#isOpen()) return;
+      const target = this.#tabDirection === 'backward'
+        ? lastFocusable(this.#options.root)
+        : firstFocusable(this.#options.root);
+      focusElement(target ?? this.#options.root);
+    };
+    this.#focusStartGuard?.addEventListener('focus', this.#focusGuard);
+    this.#focusEndGuard?.addEventListener('focus', this.#focusGuard);
     this.#focusIn = (): void => { this.#focused = true; this.handleEvent(options.open); };
     this.#focusOut = (): void => { this.#focused = false; if (!this.#hovered) this.handleEvent(options.close); };
     this.#pointerEnter = (): void => { this.#hovered = true; this.handleEvent(options.open); };
@@ -170,6 +190,8 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     if (this.#isOpen()) this.#layers.close(this.#layerID);
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.trigger?.removeEventListener('keydown', this.#keydown);
+    this.#focusStartGuard?.removeEventListener('focus', this.#focusGuard);
+    this.#focusEndGuard?.removeEventListener('focus', this.#focusGuard);
     this.#options.root.ownerDocument?.removeEventListener?.('keydown', this.#documentKeydown, true);
     this.#options.trigger?.removeEventListener('click', this.#click);
     this.#options.trigger?.removeEventListener('focus', this.#focusIn);
@@ -179,15 +201,19 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     if (this.#options.closeOnInteractOutside === true || this.#options.onInteractOutside !== undefined) this.#options.root.ownerDocument?.removeEventListener?.('pointerdown', this.#pointerDown, true);
     this.#modalEffects?.release();
     this.#modalEffects = undefined;
+    this.#removeFocusGuards();
   }
   #isOpen(): boolean { return this.#options.read(this.#runtime.getSnapshot().state); }
   #refresh(previous: boolean | undefined): void {
     const open = this.#isOpen();
     if (open && previous !== true) {
+      this.#ensureFocusGuards();
       if (this.#options.modal === true && this.#modalEffects === undefined) {
         this.#modalEffects = acquireModalEffects(this.#options.root, [
           ...(this.#options.modalBranches ?? []),
           ...(this.#options.interactOutsideExclusions ?? []),
+          ...(this.#focusStartGuard === undefined ? [] : [this.#focusStartGuard]),
+          ...(this.#focusEndGuard === undefined ? [] : [this.#focusEndGuard]),
         ]);
       }
       this.#layers.register({
@@ -215,6 +241,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
       this.#layers.close(this.#layerID);
       this.#modalEffects?.release();
       this.#modalEffects = undefined;
+      this.#removeFocusGuards();
     }
     if (this.#options.manageVisibility !== false) this.#options.root.hidden = !open;
     if (this.#options.trigger !== undefined && this.#options.triggerMode !== 'focus-hover') this.#options.trigger.setAttribute('aria-expanded', String(open));
@@ -228,16 +255,44 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     focusElement(target);
     this.#initialFocusApplied = this.#options.root.ownerDocument?.activeElement === target;
   }
-  #trapTab(event: KeyboardEvent): void {
-    const focusable = [...this.#options.root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((element) => !element.hasAttribute('disabled') && element.tabIndex >= 0);
-    if (focusable.length === 0) { event.preventDefault(); this.#options.root.focus(); return; }
-    const activeIndex = focusable.indexOf(this.#options.root.ownerDocument?.activeElement as HTMLElement);
-    const nextIndex = event.shiftKey ? activeIndex <= 0 ? focusable.length - 1 : activeIndex - 1 : activeIndex < 0 || activeIndex === focusable.length - 1 ? 0 : activeIndex + 1;
-    event.preventDefault();
-    focusable[nextIndex]?.focus();
+  #ensureFocusGuards(): void {
+    const parent = this.#options.root.parentNode;
+    if (parent === null || this.#focusStartGuard === undefined || this.#focusEndGuard === undefined) return;
+    if (this.#focusStartGuard.parentNode !== parent || this.#focusStartGuard.nextSibling !== this.#options.root) {
+      parent.insertBefore(this.#focusStartGuard, this.#options.root);
+    }
+    if (this.#focusEndGuard.parentNode !== parent || this.#options.root.nextSibling !== this.#focusEndGuard) {
+      parent.insertBefore(this.#focusEndGuard, this.#options.root.nextSibling);
+    }
+  }
+  #removeFocusGuards(): void {
+    this.#focusStartGuard?.remove();
+    this.#focusEndGuard?.remove();
   }
 }
 
 const FOCUSABLE = 'button,[href],input,select,textarea,[tabindex]';
-function firstFocusable(root: HTMLElement): HTMLElement | null { return root.querySelectorAll?.<HTMLElement>(FOCUSABLE)[0] ?? null; }
+function focusable(root: HTMLElement): HTMLElement[] {
+  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((element) => !element.hasAttribute('disabled') && element.tabIndex >= 0);
+}
+function firstFocusable(root: HTMLElement): HTMLElement | null { return focusable(root)[0] ?? null; }
+function lastFocusable(root: HTMLElement): HTMLElement | null { return focusable(root).at(-1) ?? null; }
 function focusElement(element: HTMLElement | undefined): void { element?.focus?.(); }
+function createFocusGuard(root: HTMLElement, edge: 'start' | 'end'): HTMLElement | undefined {
+  const createElement = root.ownerDocument?.createElement;
+  if (typeof createElement !== 'function') return undefined;
+  const guard = createElement.call(root.ownerDocument, 'span');
+  guard.tabIndex = 0;
+  guard.setAttribute('aria-hidden', 'true');
+  guard.setAttribute('data-sectile-focus-guard', edge);
+  guard.style.position = 'fixed';
+  guard.style.width = '1px';
+  guard.style.height = '1px';
+  guard.style.padding = '0';
+  guard.style.margin = '-1px';
+  guard.style.overflow = 'hidden';
+  guard.style.clip = 'rect(0, 0, 0, 0)';
+  guard.style.whiteSpace = 'nowrap';
+  guard.style.border = '0';
+  return guard;
+}

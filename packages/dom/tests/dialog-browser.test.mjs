@@ -33,6 +33,78 @@ test('modal dialog isolates background, locks scroll, handles document Escape, a
   dialog.disconnect();
 });
 
+test('dialog preserves native Tab during composition and wraps through focus guards', () => {
+  const window = new Window();
+  const document = window.document;
+  const surface = document.createElement('section');
+  const first = document.createElement('input');
+  const second = document.createElement('input');
+  surface.append(first, second);
+  document.body.append(surface);
+  const dialog = createDialog({ root: surface });
+  dialog.handleEvent('open');
+  const startGuard = document.querySelector('[data-sectile-focus-guard="start"]');
+  const endGuard = document.querySelector('[data-sectile-focus-guard="end"]');
+  assert.ok(startGuard);
+  assert.ok(endGuard);
+
+  first.focus();
+  const tab = new window.KeyboardEvent('keydown', {
+    key: 'Tab',
+    bubbles: true,
+    cancelable: true,
+  });
+  first.dispatchEvent(tab);
+  assert.equal(tab.defaultPrevented, false);
+  assert.equal(document.activeElement, first);
+
+  second.focus();
+  const composingTab = new window.KeyboardEvent('keydown', {
+    key: 'Tab',
+    bubbles: true,
+    cancelable: true,
+    isComposing: true,
+  });
+  second.dispatchEvent(composingTab);
+  assert.equal(composingTab.defaultPrevented, false);
+  assert.equal(document.activeElement, second);
+
+  second.dispatchEvent(new window.CompositionEvent('compositionend', {
+    bubbles: true,
+    data: '글',
+  }));
+  assert.equal(document.activeElement, second);
+  endGuard.focus();
+  assert.equal(document.activeElement, first);
+
+  const shiftTab = new window.KeyboardEvent('keydown', {
+    key: 'Tab',
+    shiftKey: true,
+    bubbles: true,
+    cancelable: true,
+  });
+  first.dispatchEvent(shiftTab);
+  assert.equal(shiftTab.defaultPrevented, false);
+  startGuard.focus();
+  assert.equal(document.activeElement, second);
+
+  const composingEscape = new window.KeyboardEvent('keydown', {
+    key: 'Escape',
+    bubbles: true,
+    cancelable: true,
+    isComposing: true,
+  });
+  first.dispatchEvent(composingEscape);
+  assert.equal(composingEscape.defaultPrevented, false);
+  assert.equal(dialog.getSnapshot().state.open, true);
+  dialog.handleEvent('close');
+  assert.equal(document.querySelector('[data-sectile-focus-guard]'), null);
+  dialog.handleEvent('open');
+  assert.equal(document.querySelectorAll('[data-sectile-focus-guard]').length, 2);
+  dialog.disconnect();
+  assert.equal(document.querySelector('[data-sectile-focus-guard]'), null);
+});
+
 test('nested modal effects restore the parent isolation before the page', () => {
   const window = new Window();
   const document = window.document;
