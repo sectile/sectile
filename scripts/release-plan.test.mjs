@@ -41,6 +41,20 @@ test('independent release plans propagate pre-1 minor dependency changes', (cont
   }
 });
 
+test('independent releases preserve commit-based bump recommendations', (context) => {
+  const root = releaseFixture(context);
+  writeFileSync(join(root, 'packages', 'form', 'source.txt'), 'changed\n');
+  git(root, ['add', '.']);
+  git(root, ['commit', '-m', 'feat(form): add validation mode']);
+  const result = spawnSync(process.execPath, [join(root, 'scripts', 'release.mjs'), '--dry-run'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /recommended bump: minor \(feat\(form\): add validation mode\)/u);
+  assert.match(result.stderr, /release bump is required without an interactive terminal/u);
+});
+
 test('automatic release plans reject an empty package change set', (context) => {
   const root = releaseFixture(context);
   const result = spawnSync(process.execPath, [join(root, 'scripts', 'release.mjs'), 'patch', '--dry-run'], {

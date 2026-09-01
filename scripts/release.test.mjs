@@ -142,6 +142,11 @@ test('offers every bump while keeping the recommendation optional', () => {
     { bump: 'minor', index: 2, version: '0.4.0', recommended: true },
     { bump: 'major', index: 3, version: '1.0.0', recommended: false },
   ]);
+  assert.deepEqual(releaseBumpChoices(undefined, 'patch'), [
+    { bump: 'patch', index: 1, version: undefined, recommended: true },
+    { bump: 'minor', index: 2, version: undefined, recommended: false },
+    { bump: 'major', index: 3, version: undefined, recommended: false },
+  ]);
   assert.equal(parseReleaseBumpChoice('', 'minor'), 'minor');
   assert.equal(parseReleaseBumpChoice('1', 'minor'), 'patch');
   assert.equal(parseReleaseBumpChoice('major', 'minor'), 'major');

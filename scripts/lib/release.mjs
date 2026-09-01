@@ -86,7 +86,7 @@ export function releaseBumpChoices(version, recommendedBump) {
   return releaseBumps.map((bump, index) => Object.freeze({
     bump,
     index: index + 1,
-    version: bumpVersion(version, bump),
+    version: version === undefined ? undefined : bumpVersion(version, bump),
     recommended: bump === recommendedBump,
   }));
 }

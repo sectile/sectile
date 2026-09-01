@@ -178,8 +178,6 @@ function packageCommits(root, entry, baseTag) {
 }
 
 async function planIndependentRelease(root, options, releaseTag = createReleaseSetTag()) {
-  assert.notEqual(options.requestedBump, undefined,
-    'independent releases require an explicit bump: pnpm release patch');
   assertIndependentBaseline(root);
   const packages = await independentReleaseEntries(root);
   const byName = new Map(packages.map((entry) => [entry.name, entry]));
@@ -196,16 +194,33 @@ async function planIndependentRelease(root, options, releaseTag = createReleaseS
       .map(({ name }) => name);
     assert.ok(requestedNames.length > 0, 'no changed packages since their latest release tags');
   }
-  const planned = planIndependentVersions(packages, requestedNames, options.requestedBump);
+  const directChanges = requestedNames.map((name) => {
+    const source = byName.get(name);
+    assert.notEqual(source, undefined, `unknown release package: ${name}`);
+    const details = detected.get(name);
+    const baseTag = details?.baseTag ?? packageBaseTag(root, source);
+    const commits = details?.commits ?? packageCommits(root, source, baseTag);
+    if (commits.length === 0) {
+      assert.notEqual(options.reason, undefined,
+        `${name} has no package commits since ${baseTag}; supply --reason for a version-only repair`);
+    }
+    return Object.freeze({ baseTag, commits, name });
+  });
+  const commits = [...new Map(
+    directChanges.flatMap((entry) => entry.commits).map((commit) => [commit.hash, commit]),
+  ).values()];
+  const recommendation = recommendBump(commits);
+  console.log(`release bases:\n${directChanges.map(({ baseTag, name }) => `- ${name}: ${baseTag}`).join('\n')}`);
+  console.log(`commits:\n${commits.length === 0 ? '- version-only repair' : formatCommitList(commits)}`);
+  console.log(`recommended bump: ${recommendation.bump} (${recommendation.reason})`);
+  const releaseBump = await selectReleaseBump(undefined, recommendation, options.requestedBump);
+  console.log(`${options.requestedBump === undefined ? 'selected' : 'requested'} bump: ${releaseBump}`);
+  const planned = planIndependentVersions(packages, requestedNames, releaseBump);
   const detailed = planned.map((entry) => {
     const source = byName.get(entry.name);
     const details = detected.get(entry.name);
     const baseTag = details?.baseTag ?? packageBaseTag(root, source);
     const commits = details?.commits ?? packageCommits(root, source, baseTag);
-    if (entry.direct && commits.length === 0) {
-      assert.notEqual(options.reason, undefined,
-        `${entry.name} has no package commits since ${baseTag}; supply --reason for a version-only repair`);
-    }
     return Object.freeze({ ...entry, baseTag, commits, source });
   });
   return Object.freeze({
@@ -295,7 +310,7 @@ async function selectReleaseBump(version, recommendation, requestedBump) {
 
   console.log('\nversion bump:');
   for (const choice of releaseBumpChoices(version, recommendation.bump)) {
-    console.log(`  ${choice.index}) ${choice.bump.padEnd(5)} v${choice.version}${choice.recommended ? '  recommended' : ''}`);
+    console.log(`  ${choice.index}) ${choice.bump.padEnd(5)}${choice.version === undefined ? '' : ` v${choice.version}`}${choice.recommended ? '  recommended' : ''}`);
   }
 
   const prompt = createInterface({ input: process.stdin, output: process.stdout });
