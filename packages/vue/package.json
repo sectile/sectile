@@ -427,16 +427,16 @@
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },
   "dependencies": {
-    "@sectile/core": "workspace:*",
-    "@sectile/dom": "workspace:*"
+    "@sectile/core": "workspace:^",
+    "@sectile/dom": "workspace:^"
   },
   "peerDependencies": {
-    "@sectile/chart": "workspace:*",
-    "@sectile/form": "workspace:*",
-    "@sectile/tabular": "workspace:*",
-    "@sectile/virtual": "workspace:*",
+    "@sectile/chart": "workspace:^",
+    "@sectile/form": "workspace:^",
+    "@sectile/tabular": "workspace:^",
+    "@sectile/virtual": "workspace:^",
     "vue": "^3.5.0",
-    "@sectile/temporal": "workspace:*"
+    "@sectile/temporal": "workspace:^"
   },
   "peerDependenciesMeta": {
     "@sectile/chart": {

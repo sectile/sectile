@@ -42,19 +42,19 @@ for (const name of packageNames) {
   }
 }
 const tabular = JSON.parse(await readFile(resolve(root, 'packages/tabular/package.json'), 'utf8'));
-assert.equal(tabular.dependencies['@sectile/core'], 'workspace:*');
-assert.equal(tabular.peerDependencies['@sectile/virtual'], 'workspace:*');
+assert.equal(tabular.dependencies['@sectile/core'], 'workspace:^');
+assert.equal(tabular.peerDependencies['@sectile/virtual'], 'workspace:^');
 assert.equal(tabular.peerDependenciesMeta['@sectile/virtual'].optional, true);
 const dom = JSON.parse(await readFile(resolve(root, 'packages/dom/package.json'), 'utf8'));
 const vue = JSON.parse(await readFile(resolve(root, 'packages/vue/package.json'), 'utf8'));
 assert.equal(dom.dependencies?.['@sectile/tabular'], undefined);
-assert.equal(dom.peerDependencies['@sectile/tabular'], 'workspace:*');
+assert.equal(dom.peerDependencies['@sectile/tabular'], 'workspace:^');
 assert.equal(dom.peerDependenciesMeta['@sectile/tabular'].optional, true);
 for (const dependency of ['@sectile/core', '@sectile/dom']) {
-  assert.equal(vue.dependencies[dependency], 'workspace:*', `Vue declaration dependency missing ${dependency}`);
+  assert.equal(vue.dependencies[dependency], 'workspace:^', `Vue declaration dependency missing ${dependency}`);
 }
 assert.equal(vue.dependencies?.['@sectile/tabular'], undefined);
-assert.equal(vue.peerDependencies['@sectile/tabular'], 'workspace:*');
+assert.equal(vue.peerDependencies['@sectile/tabular'], 'workspace:^');
 assert.equal(vue.peerDependenciesMeta['@sectile/tabular'].optional, true);
 
 const consumer = JSON.parse(await readFile(resolve(root, 'verification/consumer-install/tabular.json'), 'utf8'));

@@ -279,7 +279,7 @@ test('Form remains an optional DOM and Vue peer with no Terminal adapter', async
 
   for (const manifestSource of [domPackage, vuePackage]) {
     const manifest = JSON.parse(manifestSource);
-    assert.equal(manifest.peerDependencies['@sectile/form'], 'workspace:*');
+    assert.equal(manifest.peerDependencies['@sectile/form'], 'workspace:^');
     assert.equal(manifest.peerDependenciesMeta['@sectile/form'].optional, true);
   }
 

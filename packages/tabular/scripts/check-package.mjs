@@ -5,8 +5,8 @@ import { join } from 'node:path';
 const manifest = JSON.parse(await readFile('package.json', 'utf8'));
 assert.deepEqual(manifest.files, ['dist']);
 assert.equal(manifest.sideEffects, false);
-assert.equal(manifest.dependencies?.['@sectile/core'], 'workspace:*');
-assert.equal(manifest.peerDependencies?.['@sectile/virtual'], 'workspace:*');
+assert.equal(manifest.dependencies?.['@sectile/core'], 'workspace:^');
+assert.equal(manifest.peerDependencies?.['@sectile/virtual'], 'workspace:^');
 assert.equal(manifest.peerDependenciesMeta?.['@sectile/virtual']?.optional, true);
 assert.deepEqual(Object.keys(manifest.exports['./virtual']).sort(), ['default', 'import', 'types']);
 

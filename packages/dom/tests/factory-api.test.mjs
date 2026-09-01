@@ -24,7 +24,7 @@ test('every public DOM component exposes direct and fallible factories', async (
 
 test('Form is exposed only through its optional subpath', async () => {
   assert.equal(packageManifest.dependencies?.['@sectile/form'], undefined);
-  assert.equal(packageManifest.peerDependencies?.['@sectile/form'], 'workspace:*');
+  assert.equal(packageManifest.peerDependencies?.['@sectile/form'], 'workspace:^');
   assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/form']?.optional, true);
 
   const rootModule = await import('../.verification-dist/index.js');
@@ -38,7 +38,7 @@ test('Form is exposed only through its optional subpath', async () => {
 
 test('virtualization is exposed only through its optional subpath', async () => {
   assert.equal(packageManifest.dependencies?.['@sectile/virtual'], undefined);
-  assert.equal(packageManifest.peerDependencies?.['@sectile/virtual'], 'workspace:*');
+  assert.equal(packageManifest.peerDependencies?.['@sectile/virtual'], 'workspace:^');
   assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/virtual']?.optional, true);
 
   const rootModule = await import('../.verification-dist/index.js');
@@ -54,7 +54,7 @@ test('virtualization is exposed only through its optional subpath', async () => 
 
 test('Tabular controls are exposed only through their optional subpath', async () => {
   assert.equal(packageManifest.dependencies?.['@sectile/tabular'], undefined);
-  assert.equal(packageManifest.peerDependencies?.['@sectile/tabular'], 'workspace:*');
+  assert.equal(packageManifest.peerDependencies?.['@sectile/tabular'], 'workspace:^');
   assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/tabular']?.optional, true);
 
   const rootModule = await import('../.verification-dist/index.js');
@@ -75,7 +75,7 @@ test('Tabular controls are exposed only through their optional subpath', async (
 
 test('Chart rendering is exposed only through its optional subpath', async () => {
   assert.equal(packageManifest.dependencies?.['@sectile/chart'], undefined);
-  assert.equal(packageManifest.peerDependencies?.['@sectile/chart'], 'workspace:*');
+  assert.equal(packageManifest.peerDependencies?.['@sectile/chart'], 'workspace:^');
   assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/chart']?.optional, true);
 
   const rootModule = await import('../.verification-dist/index.js');
@@ -93,7 +93,7 @@ test('Chart rendering is exposed only through its optional subpath', async () =>
 
 test('temporal controls are exposed only through their optional subpath', async () => {
   assert.equal(packageManifest.dependencies?.['@sectile/temporal'], undefined);
-  assert.equal(packageManifest.peerDependencies?.['@sectile/temporal'], 'workspace:*');
+  assert.equal(packageManifest.peerDependencies?.['@sectile/temporal'], 'workspace:^');
   assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/temporal']?.optional, true);
 
   const rootModule = await import('../.verification-dist/index.js');

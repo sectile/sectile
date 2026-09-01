@@ -8,17 +8,42 @@ export const releaseBumps = Object.freeze(['patch', 'minor', 'major']);
 
 export function parseReleaseArguments(args) {
   let allowDirty = false;
+  let dryRun = false;
+  let reason;
   let requestedBump;
-  for (const argument of args.filter((candidate) => candidate !== '--')) {
+  const packageNames = [];
+  const filtered = args.filter((candidate) => candidate !== '--');
+  for (let index = 0; index < filtered.length; index += 1) {
+    const argument = filtered[index];
     if (argument === '--allow-dirty') {
       allowDirty = true;
+      continue;
+    }
+    if (argument === '--dry-run') {
+      dryRun = true;
+      continue;
+    }
+    if (argument === '--package' || argument.startsWith('--package=')) {
+      const name = argument === '--package' ? filtered[++index] : argument.slice('--package='.length);
+      assert.ok(typeof name === 'string' && name !== '', '--package requires a package name');
+      packageNames.push(name);
+      continue;
+    }
+    if (argument === '--reason' || argument.startsWith('--reason=')) {
+      assert.equal(reason, undefined, 'release reason may be specified once');
+      reason = argument === '--reason' ? filtered[++index] : argument.slice('--reason='.length);
+      assert.ok(typeof reason === 'string' && reason.trim() !== '', '--reason requires text');
+      reason = reason.trim();
       continue;
     }
     assert.equal(releaseBumps.includes(argument), true, `unexpected release argument: ${argument}`);
     assert.equal(requestedBump, undefined, `multiple release bumps: ${requestedBump}, ${argument}`);
     requestedBump = argument;
   }
-  return Object.freeze({ allowDirty, requestedBump });
+  assert.equal(new Set(packageNames).size, packageNames.length, 'release packages must be unique');
+  assert.equal(reason !== undefined && packageNames.length === 0, false, '--reason requires --package');
+  assert.equal(dryRun && packageNames.length === 0, false, '--dry-run requires --package');
+  return Object.freeze({ allowDirty, dryRun, packageNames: Object.freeze(packageNames), reason, requestedBump });
 }
 
 export function parseStableVersion(version) {
@@ -118,11 +143,16 @@ export function filterPackageCommits(commits, directory, changedPathsByHash) {
 }
 
 export function prependChangelog(document, packageName, version, commits) {
+  return prependChangelogChanges(document, packageName, version,
+    commits.length === 0 ? ['No package-specific changes.'] : commits.map(({ shortHash, subject }) => `${subject} (${shortHash})`));
+}
+
+export function prependChangelogChanges(document, packageName, version, changes) {
   const heading = `# ${packageName}`;
   assert.equal(document.startsWith(heading), true, `changelog must start with ${heading}`);
   const rest = document.slice(heading.length).trimStart();
-  const changes = commits.length === 0 ? '- No package-specific changes.' : formatCommitList(commits);
-  const entry = `## ${version}\n\n### Changes\n\n${changes}`;
+  assert.ok(changes.length > 0, 'release changelog requires at least one change');
+  const entry = `## ${version}\n\n### Changes\n\n${changes.map((change) => `- ${change}`).join('\n')}`;
   const history = rest.trimEnd();
   return history === '' ? `${heading}\n\n${entry}\n` : `${heading}\n\n${entry}\n\n${history}\n`;
 }

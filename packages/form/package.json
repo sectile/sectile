@@ -64,7 +64,7 @@
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },
   "dependencies": {
-    "@sectile/core": "workspace:*"
+    "@sectile/core": "workspace:^"
   },
   "devDependencies": {
     "typescript": "7.0.2"

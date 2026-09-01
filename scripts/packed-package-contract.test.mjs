@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  assertPackedDependencyRanges,
   assertPackedManifestMatchesSource,
   validatePackedPackageContents,
   validateTarballEntries,
@@ -77,4 +78,24 @@ test('rejects manifest drift and tarball paths outside package/', () => {
   assert.throws(() => assertPackedManifestMatchesSource(manifest, sourceManifest), /packed exports differs/u);
   assert.throws(() => validateTarballEntries(['package/package.json', '../escape']), /must stay under package/u);
   assert.throws(() => validateTarballEntries(['package/package.json', 'package/../escape']), /parent traversal/u);
+});
+
+test('validates exact and caret workspace ranges after packing', () => {
+  const sourceManifest = {
+    name: '@sectile/form',
+    dependencies: { '@sectile/core': 'workspace:^' },
+    devDependencies: { '@sectile/virtual': 'workspace:*' },
+  };
+  const packedManifest = {
+    name: '@sectile/form',
+    dependencies: { '@sectile/core': '^0.14.1' },
+    devDependencies: { '@sectile/virtual': '0.14.3' },
+  };
+  const versions = new Map([
+    ['@sectile/core', '0.14.1'],
+    ['@sectile/virtual', '0.14.3'],
+  ]);
+  assert.doesNotThrow(() => assertPackedDependencyRanges(packedManifest, sourceManifest, versions));
+  packedManifest.dependencies['@sectile/core'] = '0.14.1';
+  assert.throws(() => assertPackedDependencyRanges(packedManifest, sourceManifest, versions), /must be \^0\.14\.1/u);
 });

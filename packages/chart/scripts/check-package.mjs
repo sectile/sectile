@@ -5,7 +5,7 @@ import { join } from 'node:path';
 const manifest = JSON.parse(await readFile('package.json', 'utf8'));
 assert.deepEqual(manifest.files, ['dist']);
 assert.equal(manifest.sideEffects, false);
-assert.equal(manifest.dependencies?.['@sectile/core'], 'workspace:*');
+assert.equal(manifest.dependencies?.['@sectile/core'], 'workspace:^');
 assert.deepEqual(Object.keys(manifest.dependencies), ['@sectile/core']);
 
 for (const [subpath, target] of Object.entries(manifest.exports)) {

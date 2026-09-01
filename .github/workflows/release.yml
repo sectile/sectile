@@ -79,11 +79,16 @@ jobs:
           git fetch origin main
           git restore --source=origin/main -- \
             scripts/publish-packages.mjs \
+            scripts/lib/npm-registry-artifact.mjs \
             scripts/lib/npm-publish-auth.mjs \
             scripts/lib/packed-package-contract.mjs \
             scripts/lib/portable-process.mjs \
             scripts/lib/published-packages.mjs \
-            scripts/lib/source-map-policy.mjs
+            scripts/lib/release.mjs \
+            scripts/lib/release-set.mjs \
+            scripts/lib/repository.mjs \
+            scripts/lib/source-map-policy.mjs \
+            scripts/lib/workspace-graph.mjs
       - name: Publish npm packages with OIDC
         run: node scripts/publish-packages.mjs --tarball-directory=release-artifacts
       - name: Ensure GitHub release

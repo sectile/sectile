@@ -382,14 +382,14 @@
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },
   "dependencies": {
-    "@sectile/core": "workspace:*"
+    "@sectile/core": "workspace:^"
   },
   "peerDependencies": {
-    "@sectile/chart": "workspace:*",
-    "@sectile/form": "workspace:*",
-    "@sectile/tabular": "workspace:*",
-    "@sectile/temporal": "workspace:*",
-    "@sectile/virtual": "workspace:*"
+    "@sectile/chart": "workspace:^",
+    "@sectile/form": "workspace:^",
+    "@sectile/tabular": "workspace:^",
+    "@sectile/temporal": "workspace:^",
+    "@sectile/virtual": "workspace:^"
   },
   "peerDependenciesMeta": {
     "@sectile/chart": {

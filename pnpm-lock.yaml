@@ -173,7 +173,7 @@ importers:
   packages/chart:
     dependencies:
       '@sectile/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       typescript:
@@ -189,7 +189,7 @@ importers:
   packages/dom:
     dependencies:
       '@sectile/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       '@sectile/chart':
@@ -217,7 +217,7 @@ importers:
   packages/form:
     dependencies:
       '@sectile/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       typescript:
@@ -227,7 +227,7 @@ importers:
   packages/tabular:
     dependencies:
       '@sectile/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       '@sectile/virtual':
@@ -240,7 +240,7 @@ importers:
   packages/temporal:
     dependencies:
       '@sectile/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       typescript:
@@ -250,10 +250,10 @@ importers:
   packages/terminal:
     dependencies:
       '@sectile/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@sectile/temporal':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../temporal
     devDependencies:
       '@types/node':
@@ -266,7 +266,7 @@ importers:
   packages/virtual:
     dependencies:
       '@sectile/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       '@chenglou/pretext':
@@ -279,10 +279,10 @@ importers:
   packages/vue:
     dependencies:
       '@sectile/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@sectile/dom':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../dom
     devDependencies:
       '@sectile/chart':

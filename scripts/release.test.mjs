@@ -16,6 +16,17 @@ import {
   releaseBumpChoices,
   resolveExpectedReleaseTag,
 } from './lib/release.mjs';
+import {
+  assertIndependentDependencyProtocols,
+  assertSynchronizedReleaseBase,
+  caretAccepts,
+  createPackageTag,
+  createReleaseManifest,
+  createReleaseSetTag,
+  planIndependentVersions,
+  selectReleasePackages,
+  validateReleaseManifest,
+} from './lib/release-set.mjs';
 import { publishedPackageDirectories } from './lib/published-packages.mjs';
 
 const commit = (subject, body = '') => ({ hash: 'abcdef123456', shortHash: 'abcdef1', subject, body });
@@ -45,11 +56,16 @@ test('release retries prepare tagged artifacts and load the complete current pub
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   for (const path of [
     'scripts/publish-packages.mjs',
+    'scripts/lib/npm-registry-artifact.mjs',
     'scripts/lib/npm-publish-auth.mjs',
     'scripts/lib/packed-package-contract.mjs',
     'scripts/lib/portable-process.mjs',
     'scripts/lib/published-packages.mjs',
+    'scripts/lib/release.mjs',
+    'scripts/lib/release-set.mjs',
+    'scripts/lib/repository.mjs',
     'scripts/lib/source-map-policy.mjs',
+    'scripts/lib/workspace-graph.mjs',
   ]) assert.ok(workflow.includes(path), `${path} is absent from publication tooling restore`);
   assert.match(publication, /parseNpmWebAuthChallenge/u);
   assert.match(publication, /completeNpmWebAuth/u);
@@ -132,11 +148,31 @@ test('offers every bump while keeping the recommendation optional', () => {
 });
 
 test('parses an optional dirty-worktree release guard override', () => {
-  assert.deepEqual(parseReleaseArguments(['patch']), { allowDirty: false, requestedBump: 'patch' });
-  assert.deepEqual(parseReleaseArguments(['--allow-dirty', 'minor']), { allowDirty: true, requestedBump: 'minor' });
-  assert.deepEqual(parseReleaseArguments(['major', '--', '--allow-dirty']), { allowDirty: true, requestedBump: 'major' });
+  assert.deepEqual(parseReleaseArguments(['patch']), {
+    allowDirty: false, dryRun: false, packageNames: [], reason: undefined, requestedBump: 'patch',
+  });
+  assert.deepEqual(parseReleaseArguments(['--allow-dirty', 'minor']), {
+    allowDirty: true, dryRun: false, packageNames: [], reason: undefined, requestedBump: 'minor',
+  });
+  assert.deepEqual(parseReleaseArguments(['major', '--', '--allow-dirty']), {
+    allowDirty: true, dryRun: false, packageNames: [], reason: undefined, requestedBump: 'major',
+  });
   assert.throws(() => parseReleaseArguments(['--force']), /unexpected release argument/u);
   assert.throws(() => parseReleaseArguments(['patch', 'minor']), /multiple release bumps/u);
+});
+
+test('parses independent package releases and read-only plans', () => {
+  assert.deepEqual(parseReleaseArguments([
+    'patch', '--package', '@sectile/form', '--reason=repair package metadata', '--dry-run',
+  ]), {
+    allowDirty: false,
+    dryRun: true,
+    packageNames: ['@sectile/form'],
+    reason: 'repair package metadata',
+    requestedBump: 'patch',
+  });
+  assert.throws(() => parseReleaseArguments(['patch', '--dry-run']), /requires --package/u);
+  assert.throws(() => parseReleaseArguments(['patch', '--reason', 'empty release']), /requires --package/u);
 });
 
 test('parses git records and renders commit-based notes', () => {
@@ -180,3 +216,121 @@ test('writes an explicit empty package release entry', () => {
     '# @sectile/core\n\n## 0.2.0\n\n### Changes\n\n- No package-specific changes.\n\n## 0.1.0\n\n- Initial release.\n',
   );
 });
+
+test('creates stable release-set and package tags', () => {
+  assert.equal(createReleaseSetTag(new Date('2026-09-01T01:02:03.000Z')), 'release-20260901010203');
+  assert.equal(createPackageTag('@sectile/form', '0.14.2'), '@sectile/form@0.14.2');
+  assert.throws(() => createPackageTag('@other/form', '0.14.2'), /invalid package name/u);
+  assert.doesNotThrow(() => assertSynchronizedReleaseBase('v0.14.0'));
+  assert.throws(() => assertSynchronizedReleaseBase('v0.14.1'), /synchronized releases ended/u);
+  assert.throws(() => assertSynchronizedReleaseBase('release-20260901010203'), /not a legacy stable tag/u);
+});
+
+test('uses pre-1 caret compatibility to isolate patches and propagate minors', () => {
+  assert.equal(caretAccepts('0.14.1', '0.14.2'), true);
+  assert.equal(caretAccepts('0.14.1', '0.15.0'), false);
+  assert.equal(caretAccepts('1.4.0', '1.9.0'), true);
+  assert.equal(caretAccepts('1.4.0', '2.0.0'), false);
+
+  const packages = releaseGraphFixture();
+  assert.deepEqual(planIndependentVersions(packages, ['@sectile/form'], 'patch'), [{
+    name: '@sectile/form',
+    directory: 'form',
+    previousVersion: '0.14.1',
+    version: '0.14.2',
+    bump: 'patch',
+    direct: true,
+    dependencies: [],
+  }]);
+  assert.deepEqual(planIndependentVersions(packages, ['@sectile/core'], 'minor'), [
+    {
+      name: '@sectile/core',
+      directory: 'core',
+      previousVersion: '0.14.1',
+      version: '0.15.0',
+      bump: 'minor',
+      direct: true,
+      dependencies: [],
+    },
+    {
+      name: '@sectile/form',
+      directory: 'form',
+      previousVersion: '0.14.1',
+      version: '0.14.2',
+      bump: 'patch',
+      direct: false,
+      dependencies: ['@sectile/core'],
+    },
+    {
+      name: '@sectile/dom',
+      directory: 'dom',
+      previousVersion: '0.14.1',
+      version: '0.14.2',
+      bump: 'patch',
+      direct: false,
+      dependencies: ['@sectile/core'],
+    },
+  ]);
+});
+
+test('validates release manifests against package source versions', () => {
+  const packages = releaseGraphFixture();
+  const entries = planIndependentVersions(packages, ['@sectile/form'], 'patch');
+  const manifest = createReleaseManifest('release-20260901010203', entries);
+  const sourcePackages = packages.map((entry) => ({
+    ...entry,
+    manifest: { ...entry.manifest, version: entry.name === '@sectile/form' ? '0.14.2' : entry.manifest.version },
+  }));
+  assert.deepEqual(selectReleasePackages(sourcePackages, 'v0.14.1'), sourcePackages);
+  assert.deepEqual(
+    validateReleaseManifest(manifest, sourcePackages, 'release-20260901010203').map(({ name }) => name),
+    ['@sectile/form'],
+  );
+  assert.throws(
+    () => validateReleaseManifest(manifest, packages, 'release-20260901010203'),
+    /manifest version 0\.14\.1 does not match 0\.14\.2/u,
+  );
+  assert.throws(
+    () => validateReleaseManifest({
+      ...manifest,
+      packages: [{ ...manifest.packages[0], bump: 'minor' }],
+    }, sourcePackages, 'release-20260901010203'),
+    /does not match its minor bump/u,
+  );
+});
+
+test('requires caret workspace protocols for independently published edges', () => {
+  const packages = releaseGraphFixture().map((entry) => ({ directory: entry.directory, manifest: entry.manifest }));
+  assert.doesNotThrow(() => assertIndependentDependencyProtocols(packages));
+  packages[1].manifest = { ...packages[1].manifest, dependencies: { '@sectile/core': 'workspace:*' } };
+  assert.throws(() => assertIndependentDependencyProtocols(packages), /must use workspace:\^/u);
+});
+
+function releaseGraphFixture() {
+  return [
+    {
+      name: '@sectile/core',
+      directory: 'core',
+      manifest: { name: '@sectile/core', version: '0.14.1' },
+    },
+    {
+      name: '@sectile/form',
+      directory: 'form',
+      manifest: {
+        name: '@sectile/form',
+        version: '0.14.1',
+        dependencies: { '@sectile/core': 'workspace:^' },
+      },
+    },
+    {
+      name: '@sectile/dom',
+      directory: 'dom',
+      manifest: {
+        name: '@sectile/dom',
+        version: '0.14.1',
+        dependencies: { '@sectile/core': 'workspace:^' },
+        peerDependencies: { '@sectile/form': 'workspace:^' },
+      },
+    },
+  ];
+}

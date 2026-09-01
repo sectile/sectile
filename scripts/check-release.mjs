@@ -4,6 +4,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { publishedPackageDirectories } from './lib/published-packages.mjs';
 import { resolveExpectedReleaseTag } from './lib/release.mjs';
+import {
+  assertIndependentDependencyProtocols,
+  isLegacyReleaseTag,
+  isReleaseSetTag,
+  releaseManifestFile,
+  validateReleaseManifest,
+} from './lib/release-set.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const packageDirectories = publishedPackageDirectories;
@@ -27,12 +34,10 @@ const packages = await Promise.all(packageDirectories.map(async (directory) => {
 }));
 
 assert.deepEqual(packages.map(({ manifest }) => manifest.name), expectedNames);
-assert.equal(new Set(packages.map(({ manifest }) => manifest.version)).size, 1, 'published packages must use one synchronized version');
-
-const version = packages[0].manifest.version;
-assert.match(version, semverPattern, `invalid stable version: ${version}`);
+assertIndependentDependencyProtocols(packages);
 
 for (const { directory, manifest, license } of packages) {
+  assert.match(manifest.version, semverPattern, `invalid stable version: ${manifest.version}`);
   assert.notEqual(manifest.private, true, `${manifest.name} is private`);
   assert.equal(manifest.license, 'MIT', `${manifest.name} must use the MIT license`);
   assert.equal(manifest.publishConfig?.access, 'public', `${manifest.name} must publish with public access`);
@@ -52,7 +57,16 @@ for (const { directory, manifest, license } of packages) {
 }
 
 if (expectedTag !== undefined) {
-  assert.equal(expectedTag, `v${version}`, `release tag ${expectedTag} does not match package version ${version}`);
+  if (isLegacyReleaseTag(expectedTag)) {
+    assert.equal(new Set(packages.map(({ manifest }) => manifest.version)).size, 1,
+      'legacy releases require one synchronized package version');
+    const version = packages[0].manifest.version;
+    assert.equal(expectedTag, `v${version}`, `release tag ${expectedTag} does not match package version ${version}`);
+  } else {
+    assert.equal(isReleaseSetTag(expectedTag), true, `unsupported release tag: ${expectedTag}`);
+    const manifest = JSON.parse(await readFile(join(root, releaseManifestFile), 'utf8'));
+    validateReleaseManifest(manifest, packages, expectedTag);
+  }
 }
 
-console.log(`release metadata valid for @sectile/* ${version}`);
+console.log(`release metadata valid for ${packages.length} @sectile/* packages`);

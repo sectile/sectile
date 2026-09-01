@@ -75,7 +75,7 @@
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },
   "dependencies": {
-    "@sectile/core": "workspace:*"
+    "@sectile/core": "workspace:^"
   },
   "devDependencies": {
     "@chenglou/pretext": "0.0.8",

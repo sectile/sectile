@@ -52,7 +52,7 @@ export async function inspectPackedPackageDirectory(packageRoot, options = {}) {
   return Object.freeze({ contract, manifest, paths: Object.freeze(paths) });
 }
 
-export function validatePackedPackageContents({ contents, manifest, paths, sourceManifest }) {
+export function validatePackedPackageContents({ contents, manifest, paths, sourceManifest, workspaceVersions }) {
   const pathSet = new Set(paths);
   assert.match(manifest.name ?? '', /^@sectile\/[a-z0-9-]+$/u, 'packed package name is invalid');
   assert.match(manifest.version ?? '', /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u,
@@ -87,7 +87,10 @@ export function validatePackedPackageContents({ contents, manifest, paths, sourc
         `${manifest.name}: unresolved workspace protocol for ${field}.${dependency}`);
     }
   }
-  if (sourceManifest !== undefined) assertPackedManifestMatchesSource(manifest, sourceManifest);
+  if (sourceManifest !== undefined) {
+    assertPackedManifestMatchesSource(manifest, sourceManifest);
+    if (workspaceVersions !== undefined) assertPackedDependencyRanges(manifest, sourceManifest, workspaceVersions);
+  }
   return Object.freeze({ ...sourceMapPolicy, files: paths.length });
 }
 
@@ -95,6 +98,22 @@ export function assertPackedManifestMatchesSource(manifest, sourceManifest) {
   for (const field of sourceManifestFields) {
     assert.deepEqual(manifest[field], sourceManifest[field],
       `${sourceManifest.name}: packed ${field} differs from source manifest`);
+  }
+}
+
+export function assertPackedDependencyRanges(manifest, sourceManifest, workspaceVersions) {
+  for (const field of dependencyFields) {
+    for (const [name, sourceRange] of Object.entries(sourceManifest[field] ?? {})) {
+      if (!String(sourceRange).startsWith('workspace:')) continue;
+      const workspaceVersion = workspaceVersions.get(name);
+      assert.notEqual(workspaceVersion, undefined, `${sourceManifest.name}: missing workspace version for ${name}`);
+      const protocolRange = String(sourceRange).slice('workspace:'.length);
+      assert.equal(protocolRange === '*' || protocolRange === '^', true,
+        `${sourceManifest.name}: unsupported workspace range ${sourceRange}`);
+      const expected = protocolRange === '*' ? workspaceVersion : `${protocolRange}${workspaceVersion}`;
+      assert.equal(manifest[field]?.[name], expected,
+        `${sourceManifest.name}: packed ${field}.${name} must be ${expected}`);
+    }
   }
 }
 

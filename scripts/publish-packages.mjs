@@ -1,18 +1,27 @@
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readdir, readFile, rm, rmdir } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import {
+  assertPackedDependencyRanges,
   assertPackedManifestMatchesSource,
   inspectPackedPackage,
 } from './lib/packed-package-contract.mjs';
 import { completeNpmWebAuth, parseNpmWebAuthChallenge } from './lib/npm-publish-auth.mjs';
+import { assertRegistryArtifact } from './lib/npm-registry-artifact.mjs';
 import { execFileSyncPortable, spawnSyncPortable } from './lib/portable-process.mjs';
-import { discoverPublishedPackageDirectories } from './lib/published-packages.mjs';
+import { resolveExpectedReleaseTag } from './lib/release.mjs';
+import {
+  isReleaseSetTag,
+  releaseManifestFile,
+  selectReleasePackages,
+} from './lib/release-set.mjs';
+import { loadPublishedPackageGraph } from './lib/workspace-graph.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const packageDirectories = discoverPublishedPackageDirectories(join(root, 'packages'));
 const registry = 'https://registry.npmjs.org';
+const expectedTag = resolveExpectedReleaseTag(undefined, process.env);
 const packOnly = process.argv.includes('--pack-only');
 const bootstrapOnly = process.argv.includes('--bootstrap-only');
 const validateOnly = process.argv.includes('--validate-only');
@@ -62,37 +71,47 @@ function assertSupportedNpm() {
   assert.equal(major > 11 || (major === 11 && (minor > 5 || (minor === 5 && patch >= 1))), true, `npm 11.5.1 or newer is required for trusted publishing; found ${version}`);
 }
 
-function registryContains(specifier, environment) {
-  const result = spawnSyncPortable('npm', ['view', specifier, 'name', '--json', '--registry', registry], {
+function registryMetadata(specifier, environment) {
+  const result = spawnSyncPortable('npm', [
+    'view', specifier, 'name', 'version', 'dist.integrity', '--json', '--prefer-online', '--registry', registry,
+  ], {
     cwd: root,
     encoding: 'utf8',
     env: environment,
   });
-  if (result.status === 0) return true;
+  if (result.status === 0) return JSON.parse(result.stdout);
 
   const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
-  if (/\bE404\b|404 Not Found/i.test(output)) return false;
+  if (/\bE404\b|404 Not Found/i.test(output)) return undefined;
   throw new Error(`failed to query ${specifier}:\n${output.trim()}`);
 }
 
 assertSupportedNpm();
 
-const packages = await Promise.all(packageDirectories.map(async (directory) => {
-  const packageRoot = join(root, 'packages', directory);
-  const manifest = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8'));
-  return { directory, packageRoot, manifest };
+const graph = await loadPublishedPackageGraph();
+const allPackages = graph.order.map(({ directory, manifest, name }) => ({
+  directory,
+  manifest,
+  name,
+  packageRoot: join(root, 'packages', directory),
 }));
-
-const versions = new Set(packages.map(({ manifest }) => manifest.version));
-assert.equal(versions.size, 1, 'package versions must be synchronized');
-const version = packages[0].manifest.version;
-if (!packOnly) assert.notEqual(version, '0.0.0', 'prepare the initial package version before publishing');
-run(process.execPath, ['scripts/check-release.mjs', `v${version}`]);
+const workspaceVersions = new Map(allPackages.map(({ manifest }) => [manifest.name, manifest.version]));
+const releaseManifest = isReleaseSetTag(expectedTag)
+  ? JSON.parse(await readFile(join(root, releaseManifestFile), 'utf8'))
+  : undefined;
+const packages = selectReleasePackages(allPackages, expectedTag, releaseManifest);
+for (const { manifest } of packages) {
+  if (!packOnly) assert.notEqual(manifest.version, '0.0.0', `prepare ${manifest.name} before publishing`);
+}
+run(process.execPath, expectedTag === undefined
+  ? ['scripts/check-release.mjs']
+  : ['scripts/check-release.mjs', expectedTag]);
 if (tarballDirectory === undefined) {
+  const buildNames = dependencyClosure(graph, packages.map(({ manifest }) => manifest.name));
   run('pnpm', [
     '--recursive',
     '--workspace-concurrency=1',
-    ...packages.flatMap(({ manifest }) => ['--filter', manifest.name]),
+    ...graph.order.filter(({ name }) => buildNames.has(name)).flatMap(({ name }) => ['--filter', name]),
     'build',
   ]);
 }
@@ -112,8 +131,8 @@ async function createPackRoot() {
 
 try {
   const packed = tarballDirectory === undefined
-    ? await packPackages(packages, packRoot)
-    : await loadPackedPackages(packages, packRoot);
+    ? await packPackages(packages, packRoot, workspaceVersions)
+    : await loadPackedPackages(packages, packRoot, workspaceVersions);
 
   const npmEnvironment = {
     ...process.env,
@@ -121,12 +140,12 @@ try {
   };
   const unregistered = packOnly || validateOnly
     ? []
-    : packed.filter(({ manifest }) => !registryContains(manifest.name, npmEnvironment));
+    : packed.filter(({ manifest }) => registryMetadata(manifest.name, npmEnvironment) === undefined);
 
   if (packOnly) {
-    console.log(`validated ${packed.length} package tarballs for ${version}`);
+    console.log(`validated ${packed.length} package tarballs`);
   } else if (validateOnly) {
-    console.log(`validated ${packed.length} downloaded package tarballs for ${version}`);
+    console.log(`validated ${packed.length} downloaded package tarballs`);
   } else if (bootstrapOnly) {
     for (const { manifest, tarball } of unregistered) {
       await publishTarball(tarball, npmEnvironment);
@@ -140,11 +159,14 @@ try {
       'unregistered packages require local `pnpm publish:packages -- --bootstrap-only` before release publication',
     );
     for (const { manifest, tarball } of packed) {
-      if (registryContains(`${manifest.name}@${manifest.version}`, npmEnvironment)) {
+      const published = registryMetadata(`${manifest.name}@${manifest.version}`, npmEnvironment);
+      if (published !== undefined) {
+        await assertPublishedArtifact(published, manifest, tarball);
         console.log(`skipped ${manifest.name}@${manifest.version}; already published`);
         continue;
       }
       await publishTarball(tarball, npmEnvironment);
+      await waitForPublishedArtifact(manifest, tarball, npmEnvironment);
     }
   }
 } finally {
@@ -154,6 +176,34 @@ try {
       if (error.code !== 'ENOTEMPTY' && error.code !== 'EEXIST') throw error;
     });
   }
+}
+
+function dependencyClosure(packageGraph, targets) {
+  const closure = new Set();
+  const visit = (name) => {
+    if (closure.has(name)) return;
+    closure.add(name);
+    for (const dependency of packageGraph.byName.get(name).dependencies) visit(dependency);
+  };
+  for (const target of targets) visit(target);
+  return closure;
+}
+
+async function assertPublishedArtifact(published, manifest, tarball) {
+  assertRegistryArtifact(published, manifest, await readFile(tarball));
+}
+
+async function waitForPublishedArtifact(manifest, tarball, environment) {
+  const specifier = `${manifest.name}@${manifest.version}`;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const published = registryMetadata(specifier, environment);
+    if (published !== undefined) {
+      await assertPublishedArtifact(published, manifest, tarball);
+      return;
+    }
+    if (attempt < 5) await delay(2_000);
+  }
+  throw new Error(`${specifier} was not readable after publication`);
 }
 
 async function publishTarball(tarball, environment) {
@@ -188,7 +238,7 @@ function writeProcessOutput(result) {
   if (result.stderr) process.stderr.write(result.stderr);
 }
 
-async function packPackages(packageEntries, destination) {
+async function packPackages(packageEntries, destination, versions) {
   const packed = [];
   for (const entry of packageEntries) {
     const before = new Set(await readdir(destination));
@@ -196,13 +246,13 @@ async function packPackages(packageEntries, destination) {
     const files = (await readdir(destination)).filter((file) => file.endsWith('.tgz') && !before.has(file));
     assert.equal(files.length, 1, `${entry.manifest.name} did not produce exactly one tarball`);
     const tarball = join(destination, files[0]);
-    await inspectPackedPackage(tarball, { sourceManifest: entry.manifest });
+    await inspectPackedPackage(tarball, { sourceManifest: entry.manifest, workspaceVersions: versions });
     packed.push({ ...entry, tarball });
   }
   return packed;
 }
 
-async function loadPackedPackages(packageEntries, directory) {
+async function loadPackedPackages(packageEntries, directory, versions) {
   const files = (await readdir(directory)).filter((file) => file.endsWith('.tgz')).sort();
   assert.equal(files.length, packageEntries.length,
     `expected ${packageEntries.length} verified tarballs, found ${files.length}`);
@@ -216,6 +266,7 @@ async function loadPackedPackages(packageEntries, directory) {
     assert.equal(manifest.version, entry.manifest.version,
       `${manifest.name} tarball version ${manifest.version} does not match ${entry.manifest.version}`);
     assertPackedManifestMatchesSource(manifest, entry.manifest);
+    assertPackedDependencyRanges(manifest, entry.manifest, versions);
     packed.push({ ...entry, tarball });
     byName.delete(manifest.name);
   }

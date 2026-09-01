@@ -6,8 +6,8 @@ import { join, sep } from 'node:path';
 const manifest = JSON.parse(await readFile('package.json', 'utf8'));
 
 test('base Tabular remains renderer-neutral and Virtual stays an optional peer', async () => {
-  assert.equal(manifest.dependencies['@sectile/core'], 'workspace:*');
-  assert.equal(manifest.peerDependencies['@sectile/virtual'], 'workspace:*');
+  assert.equal(manifest.dependencies['@sectile/core'], 'workspace:^');
+  assert.equal(manifest.peerDependencies['@sectile/virtual'], 'workspace:^');
   assert.equal(manifest.peerDependenciesMeta['@sectile/virtual'].optional, true);
 
   const forbiddenImports = [

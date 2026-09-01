@@ -386,8 +386,8 @@
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },
   "dependencies": {
-    "@sectile/core": "workspace:*",
-    "@sectile/temporal": "workspace:*"
+    "@sectile/core": "workspace:^",
+    "@sectile/temporal": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "26.2.0",

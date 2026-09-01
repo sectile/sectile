@@ -85,10 +85,10 @@
     "benchmark": "pnpm --silent run build && node --expose-gc benchmarks/tabular.mjs"
   },
   "dependencies": {
-    "@sectile/core": "workspace:*"
+    "@sectile/core": "workspace:^"
   },
   "peerDependencies": {
-    "@sectile/virtual": "workspace:*"
+    "@sectile/virtual": "workspace:^"
   },
   "peerDependenciesMeta": {
     "@sectile/virtual": {
