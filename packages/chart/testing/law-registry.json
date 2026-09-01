@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "laws": [
+    {
+      "id": "CHT-01",
+      "theory": "chart",
+      "statement": "model generations and dense identity indices preserve exact stable identity"
+    },
+    {
+      "id": "CHT-02",
+      "theory": "chart",
+      "statement": "rejected model patches are failure-atomic"
+    },
+    {
+      "id": "CHT-03",
+      "theory": "chart",
+      "statement": "continuous scales round-trip values through normalization and inversion"
+    },
+    {
+      "id": "CHT-04",
+      "theory": "chart",
+      "statement": "controlled state changes only through canonical owner synchronization"
+    },
+    {
+      "id": "CHT-05",
+      "theory": "chart",
+      "statement": "eligible projection cache hits are equivalent to uncached projection"
+    },
+    {
+      "id": "CHT-06",
+      "theory": "chart",
+      "statement": "reentrant publication drains immutable transition records in bounded FIFO order"
+    },
+    {
+      "id": "CHT-07",
+      "theory": "chart",
+      "statement": "view reconciliation preserves bounds and declared data-update policy"
+    },
+    {
+      "id": "CHT-08",
+      "theory": "chart",
+      "statement": "definition accessors are contained and resource ceilings reject before observation"
+    }
+  ]
+}

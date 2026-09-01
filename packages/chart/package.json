@@ -94,6 +94,7 @@
     "benchmark:semantic-projection": "pnpm --silent run build && node benchmarks/semantic-projection.mjs",
     "benchmark:view-transition": "pnpm --silent run build && node benchmarks/view-transition.mjs",
     "benchmark:retention": "pnpm --silent run build && node --expose-gc benchmarks/retention.mjs",
+    "check:laws": "node scripts/check-laws.mjs",
     "check:package": "node scripts/check-package.mjs",
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },

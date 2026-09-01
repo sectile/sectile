@@ -18,7 +18,7 @@ const allProfiles = {
   ],
 };
 
-test('normalizes every chart profile into immutable dense identity state', () => {
+test('CHT-01: model generations and dense indices preserve exact stable identity', () => {
   const state = createChartModel(allProfiles);
   assert.equal(state.generation, 0);
   assert.equal(state.layerCount, 5);
@@ -33,6 +33,21 @@ test('normalizes every chart profile into immutable dense identity state', () =>
   assert.deepEqual(state.toModel(), allProfiles);
   assert.equal(Object.isFrozen(state), true);
   assert.equal(Object.isFrozen(state.identities), true);
+});
+
+test('CHT-02: rejected patches leave the original model unchanged', () => {
+  const initial = createChartModel({ layers: [{
+    id: 'points', profile: 'point', data: [{ id: 1, x: 0, y: 0 }],
+  }] });
+  const before = initial.toModel();
+  const result = tryApplyChartPatch(initial, { operations: [
+    { type: 'insert', layerID: 'points', index: 1, data: [{ id: 2, x: 1, y: 1 }] },
+    { type: 'insert', layerID: 'points', index: 2, data: [{ id: 1, x: 2, y: 2 }] },
+  ] });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, 'chart-datum-duplicate');
+  assert.equal(initial.generation, 0);
+  assert.deepEqual(initial.toModel(), before);
 });
 
 test('reuses unchanged layer owners and bounds changed-layer normalization', () => {

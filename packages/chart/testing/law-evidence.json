@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "evidence": {
+    "CHT-01": "tests/model/model.test.mjs",
+    "CHT-02": "tests/model/model.test.mjs",
+    "CHT-03": "tests/scale/scale.test.mjs",
+    "CHT-04": "tests/controller/controller.test.mjs",
+    "CHT-05": "tests/controller/controller.test.mjs",
+    "CHT-06": "tests/controller/controller.test.mjs",
+    "CHT-07": "tests/interaction/view.test.mjs",
+    "CHT-08": "tests/model/definition.test.mjs"
+  }
+}

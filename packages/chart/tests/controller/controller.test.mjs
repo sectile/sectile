@@ -26,7 +26,7 @@ test('controller serializes model and interaction transitions by revision', () =
   assert.equal(controller.getModel().size, 3);
 });
 
-test('controlled ownership remains shape-stable and converges only through sync', () => {
+test('CHT-04: controlled ownership remains shape-stable and converges only through sync', () => {
   const controller = createChartController({ ...options(), controlled: { cursor: 1 } });
   const commands = [];
   controller.subscribeCommands((command) => commands.push(command.type));
@@ -79,7 +79,7 @@ test('snapshot subscriptions publish committed state once and release idempotent
   assert.deepEqual(revisions, [1, 2]);
 });
 
-test('publication records serialize reentrant transitions after the active record', () => {
+test('CHT-06: publication records serialize reentrant transitions after the active record', () => {
   const controller = createChartController(options());
   const order = [];
   controller.subscribeSnapshots((snapshot) => {
@@ -164,7 +164,7 @@ test('controller owns declarative definitions and axis-domain view capabilities'
   assert.notEqual(externalSecond, externalFirst);
 });
 
-test('declarative projection cache keys insets and bypasses previous projections', () => {
+test('CHT-05: declarative projection cache is equivalent and bypasses ineligible inputs', () => {
   const controller = createChartController({
     definition: definition([
       { id: 1, recordedAt: 0, amount: 4 },
@@ -175,8 +175,33 @@ test('declarative projection cache keys insets and bypasses previous projections
   const wideInsets = { top: 20, right: 20, bottom: 20, left: 20 };
   const first = controller.project({ viewport: { width: 320, height: 180 }, insets: compactInsets }).value;
   const repeated = controller.project({ viewport: { width: 320, height: 180 }, insets: { ...compactInsets } }).value;
+  const uncached = controller.project({
+    viewport: { width: 320, height: 180 }, insets: compactInsets,
+    view: controller.getSnapshot().state.view,
+  }).value;
   const second = controller.project({ viewport: { width: 320, height: 180 }, insets: wideInsets }).value;
   assert.equal(repeated, first);
+  assert.notEqual(uncached, first);
+  const comparableProjection = projection => ({
+    ...projection,
+    layout: projection.layout && {
+      ...projection.layout,
+      axes: projection.layout.axes.map(({ scale, geometryScale, ...axis }) => ({
+        ...axis,
+        scale: { kind: scale.kind, range: scale.range },
+        geometryScale: { kind: geometryScale.kind, range: geometryScale.range },
+      })),
+    },
+  });
+  assert.deepEqual(comparableProjection(uncached), comparableProjection(first));
+  for (let index = 0; index < first.layout.axes.length; index += 1) {
+    const cachedAxis = first.layout.axes[index];
+    const uncachedAxis = uncached.layout.axes[index];
+    for (const tick of cachedAxis.ticks) {
+      assert.equal(uncachedAxis.scale.normalize(tick.value), cachedAxis.scale.normalize(tick.value));
+      assert.equal(uncachedAxis.scale.invert(tick.position), cachedAxis.scale.invert(tick.position));
+    }
+  }
   assert.notEqual(second, first);
   assert.equal(first.layout.plot.x, 10);
   assert.equal(second.layout.plot.x, 20);

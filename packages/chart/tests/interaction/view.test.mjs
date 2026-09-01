@@ -82,7 +82,7 @@ test('limits produce semantic no-ops and reset-to-latest restores sticky follow-
   assert.equal(latest.axis.followingEnd, true);
 });
 
-test('data replacement preserves categories by value and applies reset or follow-end policy', () => {
+test('CHT-07: data replacement preserves bounds and applies the declared update policy', () => {
   const previous = createChartAxisViewState(axes, [
     { axisID: 7, initial: { kind: 'categorical', start: 1, end: 3 }, update: 'preserve' },
     { axisID: 'linear', initial: { kind: 'continuous', minimum: 60, maximum: 100 }, update: 'follow-end' },

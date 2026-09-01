@@ -54,7 +54,7 @@ test('keeps radial coordinates axis-free and rejects invalid radial values', () 
   }).error.code, 'chart-definition-invalid');
 });
 
-test('rejects definition ceilings before invoking identity or value accessors', () => {
+test('CHT-08: contains accessor failures and rejects ceilings before observation', () => {
   const calls = { identity: 0, axis: 0, x: 0, y: 0 };
   const result = tryCreateChartDefinition({
     coordinate: { kind: 'cartesian', axes: [
@@ -105,4 +105,17 @@ test('rejects definition ceilings before invoking identity or value accessors', 
   }, { maxLayers: 1, maxDatums: 2 });
   assert.equal(accepted.ok, true);
   assert.deepEqual(acceptedCalls, { identity: 2, x: 2, y: 2 });
+
+  let accessorFailure;
+  assert.doesNotThrow(() => {
+    accessorFailure = tryCreateChartDefinition({
+      coordinate: { kind: 'radial' },
+      layers: [{
+        id: 'share', kind: 'pie', data: [{ id: 1, value: 1 }],
+        getId: () => { throw new Error('application accessor failed'); },
+      }],
+    });
+  });
+  assert.equal(accessorFailure.ok, false);
+  assert.equal(accessorFailure.error.code, 'chart-accessor-invalid');
 });

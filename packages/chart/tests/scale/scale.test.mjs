@@ -16,7 +16,7 @@ import {
   tryCreateLinearScale,
 } from '../../.verification-dist/scale.js';
 
-test('linear and temporal scales invert finite positions with bounded ticks', () => {
+test('CHT-03: linear and temporal scales round-trip finite values with bounded ticks', () => {
   for (const scale of [
     createLinearScale({ minimum: -10, maximum: 10 }, { start: 0, end: 100 }),
     createTemporalScale({ minimum: 1_000, maximum: 2_000 }, { start: 100, end: 0 }),
