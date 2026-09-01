@@ -188,6 +188,15 @@ test('renderer construction rejects invalid styles and unavailable explicit mode
   assert.equal(tryCreateChartRenderer(canvas, { mode: 'webgl2' }).error.code, 'invalid-boundary');
 });
 
+test('fallible renderer construction contains throwing canvas boundaries', () => {
+  const canvas = {
+    getContext() { throw new Error('host context failed'); },
+  };
+  const result = tryCreateChartRenderer(canvas, { mode: 'canvas2d' });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, 'invalid-boundary');
+});
+
 test('automatic renderer falls back to Canvas2D when WebGL2 initialization fails', () => {
   const { canvas: fallback } = fixture();
   const canvas = {

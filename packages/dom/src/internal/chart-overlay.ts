@@ -7,6 +7,8 @@ const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 const MAXIMUM_OVERLAY_TICKS = 512;
 const MAXIMUM_LEGEND_ITEMS = 64;
 const MAXIMUM_INTERACTION_MARKS = 512;
+const MAXIMUM_AXIS_FRACTION_DIGITS = 12;
+const FALLBACK_AXIS_SIGNIFICANT_DIGITS = 6;
 
 export class ChartOverlay<ID extends StableID> {
   readonly #root: HTMLElement;
@@ -17,15 +19,23 @@ export class ChartOverlay<ID extends StableID> {
   public constructor(root: HTMLElement) {
     this.#root = root;
     this.#position = root.style.position;
-    if (root.ownerDocument.defaultView?.getComputedStyle(root).position === 'static') root.style.position = 'relative';
-    this.#svg = root.ownerDocument.createElementNS(SVG_NAMESPACE, 'svg');
-    this.#svg.setAttribute('aria-hidden', 'true');
-    this.#svg.setAttribute('focusable', 'false');
-    this.#svg.style.position = 'absolute';
-    this.#svg.style.inset = '0';
-    this.#svg.style.pointerEvents = 'none';
-    this.#svg.style.overflow = 'visible';
-    root.append(this.#svg);
+    let svg: SVGSVGElement | undefined;
+    try {
+      if (root.ownerDocument.defaultView?.getComputedStyle(root).position === 'static') root.style.position = 'relative';
+      svg = root.ownerDocument.createElementNS(SVG_NAMESPACE, 'svg');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('focusable', 'false');
+      svg.style.position = 'absolute';
+      svg.style.inset = '0';
+      svg.style.pointerEvents = 'none';
+      svg.style.overflow = 'visible';
+      root.append(svg);
+      this.#svg = svg;
+    } catch (error) {
+      svg?.remove();
+      root.style.position = this.#position;
+      throw error;
+    }
   }
 
   public render(projection: ChartProjection<ID>, state?: ChartState<ID>): void {
@@ -174,6 +184,7 @@ function appendAxis(
   );
   axes.append(baseline);
   const ticks = sampledTicks(axis.ticks, MAXIMUM_OVERLAY_TICKS);
+  const fractionDigits = axisFractionDigits(axis, ticks);
   for (let tickIndex = 0; tickIndex < ticks.length; tickIndex += 1) {
     const tick = ticks[tickIndex];
     if (tick === undefined) continue;
@@ -192,7 +203,7 @@ function appendAxis(
       horizontal ? plot.y + plot.height + 4 : position,
       'axis-tick',
     ));
-    const value = svgText(document, formatAxisTickValue(axis, tick.value), 'axis-value');
+    const value = svgText(document, formatAxisTickValue(axis, tick.value, fractionDigits), 'axis-value');
     value.setAttribute('x', String(horizontal ? position : plot.x - 8));
     value.setAttribute('y', String(horizontal ? plot.y + plot.height + 16 : position + 4));
     value.setAttribute('text-anchor', horizontal
@@ -217,9 +228,33 @@ function appendAxis(
   axes.append(label);
 }
 
-function formatAxisTickValue(axis: ChartAxisLayout, value: number | string): string {
-  if (axis.axis.scale !== 'temporal' || typeof value !== 'number') return String(value);
-  return new Date(value).toISOString().slice(0, 10);
+function formatAxisTickValue(axis: ChartAxisLayout, value: number | string, fractionDigits: number | null): string {
+  if (typeof value !== 'number') return String(value);
+  if (axis.axis.scale === 'temporal') return new Date(value).toISOString().slice(0, 10);
+  if (axis.axis.scale === 'categorical') return String(value);
+  return fractionDigits === null
+    ? String(Number(value.toPrecision(FALLBACK_AXIS_SIGNIFICANT_DIGITS)))
+    : String(Number(value.toFixed(fractionDigits)));
+}
+
+function axisFractionDigits(
+  axis: ChartAxisLayout,
+  ticks: readonly { readonly value: number | string }[],
+): number | null {
+  if (axis.axis.scale === 'temporal' || axis.axis.scale === 'categorical') return null;
+  let previous: number | undefined;
+  let minimumStep = Number.POSITIVE_INFINITY;
+  for (const tick of ticks) {
+    if (typeof tick.value !== 'number') continue;
+    if (previous !== undefined) {
+      const step = Math.abs(tick.value - previous);
+      if (step > 0 && step < minimumStep) minimumStep = step;
+    }
+    previous = tick.value;
+  }
+  if (!Number.isFinite(minimumStep)) return null;
+  const fractionDigits = Math.max(0, 1 - Math.floor(Math.log10(minimumStep)));
+  return fractionDigits <= MAXIMUM_AXIS_FRACTION_DIGITS ? fractionDigits : null;
 }
 
 function appendLegend<ID extends StableID>(

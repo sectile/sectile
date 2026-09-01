@@ -42,6 +42,8 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   #viewport: ChartViewport;
   #projection: ChartProjection<ID> | null = null;
   #accessibilityGeneration = -1;
+  #accessibilityStart = 0;
+  #accessibilityCount = 0;
   #accessibilityActive: ID | null = null;
   #accessibilityCursor: ID | null = null;
   #accessibilitySelection: ChartSelection<ID> | null = null;
@@ -60,6 +62,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     view: ChartWindow,
     navigation: NormalizedDOMChartNavigation<ID>,
   ) {
+    const cleanup: Array<() => void> = [];
     this.#options = options;
     this.controller = options.controller;
     this.#renderer = renderer;
@@ -68,32 +71,59 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     this.#accessibilityLimit = accessibilityLimit;
     this.#view = view;
     this.#renderScale = policy.maximumRenderScale;
-    this.#rootAttributes = snapshotAttributes(options.root, ['role', 'tabindex', 'aria-label']);
-    this.#canvasAttributes = snapshotAttributes(options.canvas, ['aria-hidden']);
-    options.root.setAttribute('role', 'region');
-    options.root.setAttribute('tabindex', '0');
-    options.root.setAttribute('aria-label', options.accessibilityLabel ?? 'Chart');
-    options.canvas.setAttribute('aria-hidden', 'true');
-    this.#list = createAssistiveContainer(options.root.ownerDocument, `${this.#prefix}-data`, 'listbox');
-    this.#live = createAssistiveContainer(options.root.ownerDocument, `${this.#prefix}-live`, 'status');
-    this.#live.setAttribute('aria-live', 'polite');
-    options.root.append(this.#list, this.#live);
-    this.#overlay = new ChartOverlay(options.root);
-    this.#viewport = this.#measureViewport();
-    this.#navigation = new ChartNavigationAdapter(
-      options.root, options.canvas, this.controller, view, navigation, () => this.#projection,
-    );
-    this.#unsubscribe = this.controller.subscribeCommands(this.#handleCommand);
-    options.canvas.addEventListener('pointermove', this.#handlePointerMove);
-    options.canvas.addEventListener('pointerleave', this.#handlePointerLeave);
-    options.canvas.addEventListener('click', this.#handleClick);
-    options.root.addEventListener('keydown', this.#handleKeyDown);
-    if (typeof view.ResizeObserver === 'function') {
-      const observer = new view.ResizeObserver(this.#handleResize);
-      observer.observe(options.root);
-      this.#resizeObserver = observer;
-    } else this.#resizeObserver = null;
-    this.refresh();
+    try {
+      this.#rootAttributes = snapshotAttributes(options.root, ['role', 'tabindex', 'aria-label']);
+      this.#canvasAttributes = snapshotAttributes(options.canvas, ['aria-hidden']);
+      cleanup.push(() => {
+        restoreAttributes(options.root, this.#rootAttributes);
+        restoreAttributes(options.canvas, this.#canvasAttributes);
+      });
+      options.root.setAttribute('role', 'region');
+      options.root.setAttribute('tabindex', '0');
+      options.root.setAttribute('aria-label', options.accessibilityLabel ?? 'Chart');
+      options.canvas.setAttribute('aria-hidden', 'true');
+      this.#list = createAssistiveContainer(options.root.ownerDocument, `${this.#prefix}-data`, 'listbox');
+      this.#live = createAssistiveContainer(options.root.ownerDocument, `${this.#prefix}-live`, 'status');
+      this.#live.setAttribute('aria-live', 'polite');
+      cleanup.push(() => { this.#list.remove(); this.#live.remove(); });
+      options.root.append(this.#list, this.#live);
+      this.#overlay = new ChartOverlay(options.root);
+      cleanup.push(() => this.#overlay.disconnect());
+      this.#viewport = this.#measureViewport();
+      this.#navigation = new ChartNavigationAdapter(
+        options.root, options.canvas, this.controller, view, navigation, () => this.#projection,
+      );
+      cleanup.push(() => this.#navigation.disconnect());
+      this.#unsubscribe = this.controller.subscribeCommands(this.#handleCommand);
+      if (typeof this.#unsubscribe !== 'function') throw new TypeError('Chart controller subscription must return an unsubscribe function.');
+      cleanup.push(() => this.#unsubscribe());
+      cleanup.push(() => options.canvas.removeEventListener('pointermove', this.#handlePointerMove));
+      options.canvas.addEventListener('pointermove', this.#handlePointerMove);
+      cleanup.push(() => options.canvas.removeEventListener('pointerleave', this.#handlePointerLeave));
+      options.canvas.addEventListener('pointerleave', this.#handlePointerLeave);
+      cleanup.push(() => options.canvas.removeEventListener('click', this.#handleClick));
+      options.canvas.addEventListener('click', this.#handleClick);
+      cleanup.push(() => options.root.removeEventListener('keydown', this.#handleKeyDown));
+      options.root.addEventListener('keydown', this.#handleKeyDown);
+      if (typeof view.ResizeObserver === 'function') {
+        const observer = new view.ResizeObserver(this.#handleResize);
+        this.#resizeObserver = observer;
+        cleanup.push(() => observer.disconnect());
+        observer.observe(options.root);
+      } else this.#resizeObserver = null;
+      cleanup.push(() => {
+        if (this.#frame !== 0) view.cancelAnimationFrame(this.#frame);
+        this.#frame = 0;
+      });
+      this.refresh();
+    } catch (error) {
+      this.#active = false;
+      for (let index = cleanup.length - 1; index >= 0; index -= 1) {
+        try { cleanup[index]?.(); }
+        catch { /* Continue rolling back the remaining owned resources. */ }
+      }
+      throw error;
+    }
   }
 
   public getViewport(): ChartViewport { return this.#viewport; }
@@ -176,6 +206,8 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     if (command.type === 'render-requested') {
       if (!this.#inFrame) this.#schedule();
     } else if (command.type === 'focus-datum') {
+      if (this.#accessibilityLimit === 0) return;
+      this.#refreshAccessibility(command.id);
       this.#nodes.get(command.id)?.focus({ preventScroll: true });
     } else if (command.type === 'announce-datum') {
       this.#live.textContent = this.#label(command.id, this.controller.getModel().indexOf(command.id));
@@ -204,6 +236,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   };
   readonly #handleKeyDown = (event: KeyboardEvent): void => {
     if (this.#navigation.handleKeyDown(event)) return;
+    if (this.#accessibilityLimit === 0) return;
     const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 'next'
       : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? 'previous'
         : event.key === 'Home' ? 'first' : event.key === 'End' ? 'last' : null;
@@ -258,21 +291,33 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     return Math.abs(this.#renderScale - before) > 0.001;
   }
 
-  #refreshAccessibility(): void {
+  #refreshAccessibility(anchorID?: ID): void {
     const model = this.controller.getModel();
-    if (model.generation !== this.#accessibilityGeneration) {
+    const state = this.controller.getSnapshot().state;
+    const anchor = anchorID ?? state.cursor;
+    const anchorIndex = anchor === null ? -1 : model.indexOf(anchor);
+    const anchorOutsideWindow = anchorIndex >= 0
+      && (anchorIndex < this.#accessibilityStart || anchorIndex >= this.#accessibilityStart + this.#accessibilityCount);
+    if (model.generation !== this.#accessibilityGeneration || anchorOutsideWindow) {
       this.#accessibilityGeneration = model.generation;
       this.#nodes.clear();
       this.#list.replaceChildren();
       const count = Math.min(model.size, this.#accessibilityLimit);
+      const start = anchorIndex < 0 || count === 0
+        ? 0
+        : Math.min(Math.max(0, anchorIndex - Math.floor(count / 2)), model.size - count);
+      this.#accessibilityStart = start;
+      this.#accessibilityCount = count;
       const fragment = this.#options.root.ownerDocument.createDocumentFragment();
-      for (let index = 0; index < count; index += 1) {
+      for (let index = start; index < start + count; index += 1) {
         const id = model.identityAt(index);
         if (id === null) continue;
         const option = this.#options.root.ownerDocument.createElement('div');
         option.id = `${this.#prefix}-${stableIDElementToken(id)}`;
         option.setAttribute('role', 'option');
         option.setAttribute('tabindex', '-1');
+        option.setAttribute('aria-posinset', String(index + 1));
+        option.setAttribute('aria-setsize', String(model.size));
         option.textContent = this.#label(id, index);
         fragment.append(option);
         this.#nodes.set(id, option);
@@ -283,7 +328,6 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
       this.#accessibilityCursor = null;
       this.#accessibilitySelection = null;
     }
-    const state = this.controller.getSnapshot().state;
     if (state.activeDatum !== this.#accessibilityActive) {
       if (this.#accessibilityActive !== null) this.#nodes.get(this.#accessibilityActive)?.removeAttribute('data-active');
       if (state.activeDatum !== null) this.#nodes.get(state.activeDatum)?.setAttribute('data-active', '');

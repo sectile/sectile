@@ -131,16 +131,20 @@ export class ChartNavigationAdapter<ID extends StableID> {
 
   #install(): void {
     if (!this.#active) return;
-    if (this.#navigation.drag !== 'none' || this.#navigation.pinch) {
-      this.#canvas.addEventListener('pointerdown', this.#onPointerDown);
-      this.#canvas.addEventListener('pointermove', this.#onPointerMove);
-      this.#canvas.addEventListener('pointerup', this.#onPointerUp);
-      this.#canvas.addEventListener('pointercancel', this.#onPointerCancel);
-      this.#listeners += 4;
-    }
-    if (this.#navigation.wheel !== 'native') {
-      this.#canvas.addEventListener('wheel', this.#onWheel, { passive: false });
-      this.#listeners += 1;
+    try {
+      if (this.#navigation.drag !== 'none' || this.#navigation.pinch) {
+        this.#listeners += 1; this.#canvas.addEventListener('pointerdown', this.#onPointerDown);
+        this.#listeners += 1; this.#canvas.addEventListener('pointermove', this.#onPointerMove);
+        this.#listeners += 1; this.#canvas.addEventListener('pointerup', this.#onPointerUp);
+        this.#listeners += 1; this.#canvas.addEventListener('pointercancel', this.#onPointerCancel);
+      }
+      if (this.#navigation.wheel !== 'native') {
+        this.#listeners += 1;
+        this.#canvas.addEventListener('wheel', this.#onWheel, { passive: false });
+      }
+    } catch (error) {
+      this.#uninstall();
+      throw error;
     }
   }
 

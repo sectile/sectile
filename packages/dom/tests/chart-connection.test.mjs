@@ -52,6 +52,92 @@ test('DOM Chart projects synchronously and exposes a bounded mixed-ID accessibil
   assert.equal(value.disconnected(), 0, 'borrowed renderer remains caller-owned');
 });
 
+test('fallible DOM Chart construction is total for malformed host and renderer shapes', () => {
+  assert.doesNotThrow(() => {
+    const malformed = tryCreateDOMChart({ root: {}, canvas: {}, controller: {} });
+    assert.equal(malformed.ok, false);
+    assert.equal(malformed.error.code, 'invalid-boundary');
+  });
+
+  const value = fixture();
+  const invalidRenderer = tryCreateDOMChart({
+    root: value.root,
+    canvas: value.canvas,
+    controller: value.controller,
+    renderer: { capabilities: {} },
+  });
+  assert.equal(invalidRenderer.ok, false);
+  assert.equal(invalidRenderer.error.code, 'invalid-boundary');
+});
+
+test('failed DOM Chart construction rolls back every acquired host resource', () => {
+  const value = fixture();
+  let listeners = 0;
+  for (const target of [value.root, value.canvas]) {
+    const add = target.addEventListener.bind(target);
+    const remove = target.removeEventListener.bind(target);
+    target.addEventListener = (...args) => { listeners += 1; return add(...args); };
+    target.removeEventListener = (...args) => { listeners -= 1; return remove(...args); };
+  }
+  let observers = 0;
+  value.window.ResizeObserver = class {
+    observe() { observers += 1; }
+    disconnect() { observers -= 1; }
+  };
+  let subscriptions = 0;
+  const controller = new Proxy(value.controller, {
+    get(target, property) {
+      if (property === 'subscribeCommands') return (listener) => {
+        subscriptions += 1;
+        const unsubscribe = target.subscribeCommands(listener);
+        return () => { subscriptions -= 1; unsubscribe(); };
+      };
+      const member = Reflect.get(target, property, target);
+      return typeof member === 'function' ? member.bind(target) : member;
+    },
+  });
+  const renderer = {
+    ...value.renderer,
+    render() { throw new Error('initial render failed'); },
+  };
+
+  const result = tryCreateDOMChart({ root: value.root, canvas: value.canvas, controller, renderer });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, 'invalid-boundary');
+  assert.equal(listeners, 0);
+  assert.equal(observers, 0);
+  assert.equal(subscriptions, 0);
+  assert.equal(value.root.hasAttribute('role'), false);
+  assert.equal(value.canvas.hasAttribute('aria-hidden'), false);
+  assert.equal(value.root.querySelector('[role="listbox"]'), null);
+  assert.equal(value.root.querySelector('svg'), null);
+  assert.equal(value.disconnected(), 0, 'borrowed renderer remains caller-owned');
+});
+
+test('DOM Chart rollback removes a listener when host registration throws after applying it', () => {
+  const value = fixture();
+  const add = value.canvas.addEventListener.bind(value.canvas);
+  const remove = value.canvas.removeEventListener.bind(value.canvas);
+  let listeners = 0;
+  value.canvas.addEventListener = (...args) => {
+    listeners += 1;
+    add(...args);
+    if (args[0] === 'pointerleave') throw new Error('host registration failed');
+  };
+  value.canvas.removeEventListener = (...args) => {
+    listeners -= 1;
+    remove(...args);
+  };
+
+  const result = tryCreateDOMChart({
+    root: value.root, canvas: value.canvas, controller: value.controller, renderer: value.renderer,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(listeners, 0);
+  assert.equal(value.root.querySelector('[role="listbox"]'), null);
+  assert.equal(value.root.querySelector('svg'), null);
+});
+
 test('pointer and click use bounded nearest regions while ordinary wheel remains native', () => {
   const value = fixture();
   const commands = [];
@@ -110,7 +196,7 @@ test('connection-owned overlay renders bounded axes, grid, values, labels, units
   const january = Date.UTC(2026, 0, 1);
   const february = Date.UTC(2026, 1, 1);
   const xScale = { normalize: (datum) => 40 + ((datum - january) / (february - january)) * 50 };
-  const yScale = { normalize: (datum) => 70 - datum * 5 };
+  const yScale = { normalize: (datum) => 70 - (datum - 48) * 60 };
   const semanticProjection = {
     generation: 0,
     profile: 'point',
@@ -127,7 +213,7 @@ test('connection-owned overlay renders bounded axes, grid, values, labels, units
       plot: { x: 40, y: 10, width: 50, height: 60 },
       axes: [
         { axis: { id: 'month', orientation: 'x', scale: 'temporal', domain: { kind: 'temporal', minimum: january, maximum: february }, ticks: 2, label: 'Month' }, descriptor: { axisID: 'month', orientation: 'x', kind: 'temporal', domain: { kind: 'temporal', minimum: january, maximum: february }, geometryDomain: { minimum: january, maximum: february }, range: { start: 40, end: 90 } }, scale: xScale, geometryScale: xScale, ticks: [{ value: january, position: 40 }, { value: february, position: 90 }] },
-        { axis: { id: 'revenue', orientation: 'y', scale: 'linear', domain: { kind: 'linear', minimum: 0, maximum: 10 }, ticks: 2, label: 'Revenue', unit: 'USD' }, descriptor: { axisID: 'revenue', orientation: 'y', kind: 'linear', domain: { kind: 'linear', minimum: 0, maximum: 10 }, geometryDomain: { minimum: 0, maximum: 10 }, range: { start: 70, end: 10 } }, scale: yScale, geometryScale: yScale, ticks: [{ value: 0, position: 70 }, { value: 10, position: 10 }] },
+        { axis: { id: 'revenue', orientation: 'y', scale: 'linear', domain: { kind: 'linear', minimum: 48, maximum: 49 }, ticks: 4, label: 'Revenue', unit: 'USD' }, descriptor: { axisID: 'revenue', orientation: 'y', kind: 'linear', domain: { kind: 'linear', minimum: 48, maximum: 49 }, geometryDomain: { minimum: 48, maximum: 49 }, range: { start: 70, end: 10 } }, scale: yScale, geometryScale: yScale, ticks: [{ value: 48, position: 70 }, { value: 48 + 1 / 3, position: 50 }, { value: 48 + 2 / 3, position: 30 }, { value: 49, position: 10 }] },
       ],
     },
   };
@@ -139,9 +225,9 @@ test('connection-owned overlay renders bounded axes, grid, values, labels, units
     },
   });
   const connection = createDOMChart({ root: value.root, canvas: value.canvas, controller, renderer: value.renderer });
-  assert.equal(value.root.querySelectorAll('[data-chart-overlay="grid-line"]').length, 4);
-  assert.deepEqual([...value.root.querySelectorAll('[data-chart-overlay="axis-value"]')].map((node) => node.textContent), ['2026-01-01', '2026-02-01', '0', '10']);
-  assert.deepEqual([...value.root.querySelectorAll('[data-chart-overlay="axis-value"]')].map((node) => node.getAttribute('text-anchor')), ['start', 'end', 'end', 'end']);
+  assert.equal(value.root.querySelectorAll('[data-chart-overlay="grid-line"]').length, 6);
+  assert.deepEqual([...value.root.querySelectorAll('[data-chart-overlay="axis-value"]')].map((node) => node.textContent), ['2026-01-01', '2026-02-01', '48', '48.33', '48.67', '49']);
+  assert.deepEqual([...value.root.querySelectorAll('[data-chart-overlay="axis-value"]')].map((node) => node.getAttribute('text-anchor')), ['start', 'end', 'end', 'end', 'end', 'end']);
   assert.deepEqual([...value.root.querySelectorAll('[data-chart-overlay="axis-label"]')].map((node) => node.textContent), ['Month', 'Revenue (USD)']);
   assert.equal(value.root.querySelector('[data-chart-overlay="legend-label"]').textContent, 'revenue');
   assert.equal(value.root.querySelectorAll('[data-chart-overlay="interaction-active"]').length, 1);
@@ -163,6 +249,45 @@ test('model generations rebuild accessibility within the declared ceiling', () =
   connection.flush();
   assert.equal(value.root.querySelectorAll('[role="option"]').length, 1);
   assert.equal(value.root.querySelector('[role="listbox"]').getAttribute('aria-setsize'), '3');
+  connection.disconnect();
+});
+
+test('large accessibility windows retain the cursor with global positions at every boundary', () => {
+  const value = fixture();
+  const data = Array.from({ length: 10_001 }, (_, id) => ({ id, x: id, y: id }));
+  const controller = createChartController({ model: { layers: [{ id: 'points', profile: 'point', data }] } });
+  const connection = createDOMChart({
+    root: value.root, canvas: value.canvas, controller,
+    renderer: value.renderer, accessibilityLimit: 5,
+  });
+  const list = value.root.querySelector('[role="listbox"]');
+
+  for (const [id, position] of [[0, '1'], [5_000, '5001'], [10_000, '10001']]) {
+    controller.dispatch({ type: 'set-cursor', id });
+    const options = [...value.root.querySelectorAll('[role="option"]')];
+    const current = value.root.querySelector('[aria-current="true"]');
+    assert.equal(options.length, 5);
+    assert.equal(current?.getAttribute('aria-posinset'), position);
+    assert.equal(current?.getAttribute('aria-setsize'), '10001');
+    assert.equal(list.getAttribute('aria-activedescendant'), current?.id);
+    assert.equal(value.window.document.activeElement, current);
+  }
+
+  connection.disconnect();
+});
+
+test('zero accessibility limit disables built-in datum keyboard and focus projection', () => {
+  const value = fixture();
+  const connection = createDOMChart({
+    root: value.root, canvas: value.canvas, controller: value.controller,
+    renderer: value.renderer, accessibilityLimit: 0,
+  });
+  const keydown = new value.window.KeyboardEvent('keydown', { key: 'ArrowRight', cancelable: true });
+  value.root.dispatchEvent(keydown);
+  assert.equal(value.controller.getSnapshot().state.cursor, null);
+  assert.equal(keydown.defaultPrevented, false);
+  assert.equal(value.root.querySelectorAll('[role="option"]').length, 0);
+  assert.equal(value.root.querySelector('[role="listbox"]').hasAttribute('aria-activedescendant'), false);
   connection.disconnect();
 });
 

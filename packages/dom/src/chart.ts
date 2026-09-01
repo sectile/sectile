@@ -92,27 +92,31 @@ export function tryCreateChartRenderer(
   canvas: HTMLCanvasElement,
   options: ChartRendererOptions = {},
 ): Result<ChartRenderer> {
-  if (canvas === null || typeof canvas !== 'object' || typeof canvas.getContext !== 'function') return invalidRenderer('Chart renderer requires a canvas.');
-  if (options === null || typeof options !== 'object') return invalidRenderer('Chart renderer options must be an object.');
-  const style = normalizeRenderStyle(options.style);
-  if (!style.ok) return style;
-  const mode = options.mode ?? 'auto';
-  if (mode !== 'auto' && mode !== 'webgl2' && mode !== 'canvas2d') return invalidRenderer('Chart renderer mode is invalid.');
-  if (mode !== 'canvas2d') {
-    const context = canvas.getContext('webgl2', { alpha: true, antialias: true, depth: false, preserveDrawingBuffer: false });
-    if (context !== null) {
-      try {
-        return { ok: true, value: new WebGL2ChartRenderer(canvas, context, style.value) };
-      } catch (error) {
-        if (mode === 'webgl2') return invalidRenderer(error instanceof Error ? error.message : 'WebGL2 chart renderer initialization failed.');
+  try {
+    if (canvas === null || typeof canvas !== 'object' || typeof canvas.getContext !== 'function') return invalidRenderer('Chart renderer requires a canvas.');
+    if (options === null || typeof options !== 'object') return invalidRenderer('Chart renderer options must be an object.');
+    const style = normalizeRenderStyle(options.style);
+    if (!style.ok) return style;
+    const mode = options.mode ?? 'auto';
+    if (mode !== 'auto' && mode !== 'webgl2' && mode !== 'canvas2d') return invalidRenderer('Chart renderer mode is invalid.');
+    if (mode !== 'canvas2d') {
+      const context = canvas.getContext('webgl2', { alpha: true, antialias: true, depth: false, preserveDrawingBuffer: false });
+      if (context !== null) {
+        try {
+          return { ok: true, value: new WebGL2ChartRenderer(canvas, context, style.value) };
+        } catch (error) {
+          if (mode === 'webgl2') return invalidRenderer(error instanceof Error ? error.message : 'WebGL2 chart renderer initialization failed.');
+        }
       }
+      if (mode === 'webgl2') return invalidRenderer('WebGL2 is unavailable for the chart canvas.');
     }
-    if (mode === 'webgl2') return invalidRenderer('WebGL2 is unavailable for the chart canvas.');
+    const context = canvas.getContext('2d');
+    return context === null
+      ? invalidRenderer('Canvas2D is unavailable for the chart canvas.')
+      : { ok: true, value: new Canvas2DChartRenderer(context, style.value) };
+  } catch {
+    return invalidRenderer('Chart renderer construction failed.');
   }
-  const context = canvas.getContext('2d');
-  return context === null
-    ? invalidRenderer('Canvas2D is unavailable for the chart canvas.')
-    : { ok: true, value: new Canvas2DChartRenderer(context, style.value) };
 }
 
 export interface NormalizedChartRenderStyle {
@@ -186,30 +190,68 @@ export function createDOMChart<ID extends StableID>(options: DOMChartOptions<ID>
 }
 
 export function tryCreateDOMChart<ID extends StableID>(options: DOMChartOptions<ID>): Result<DOMChartConnection<ID>> {
-  if (options === null || typeof options !== 'object'
-    || options.root === null || typeof options.root !== 'object'
-    || options.canvas === null || typeof options.canvas !== 'object'
-    || options.controller === null || typeof options.controller !== 'object') {
-    return invalidRenderer('DOM Chart requires root, canvas, and controller objects.');
+  let renderer: ChartRenderer | undefined;
+  let ownsRenderer = false;
+  try {
+    if (!isDOMChartOptionsShape(options)) return invalidRenderer('DOM Chart requires compatible root, canvas, and controller objects.');
+    const view = options.root.ownerDocument.defaultView;
+    if (view === null || typeof view !== 'object'
+      || typeof view.requestAnimationFrame !== 'function'
+      || typeof view.cancelAnimationFrame !== 'function'
+      || typeof view.performance?.now !== 'function') {
+      return invalidRenderer('DOM Chart requires a browser window with animation frame support.');
+    }
+    const policy = normalizeRenderPolicy(options.renderPolicy);
+    if (!policy.ok) return policy;
+    const accessibilityLimit = options.accessibilityLimit ?? 1_000;
+    if (!Number.isSafeInteger(accessibilityLimit) || accessibilityLimit < 0 || accessibilityLimit > 10_000) {
+      return invalidRenderer('DOM Chart accessibility limit must be a safe integer from zero through 10,000.');
+    }
+    const borrowedRenderer = options.renderer !== undefined && typeof options.renderer === 'object';
+    if (borrowedRenderer && !isChartRenderer(options.renderer)) return invalidRenderer('Borrowed Chart renderer has an invalid method contract.');
+    const navigation = tryNormalizeDOMChartNavigation(options.navigation);
+    if (!navigation.ok) return navigation;
+    const rendererResult = borrowedRenderer
+      ? { ok: true as const, value: options.renderer as ChartRenderer }
+      : tryCreateChartRenderer(options.canvas, { mode: options.renderer ?? 'auto' });
+    if (!rendererResult.ok) return rendererResult;
+    renderer = rendererResult.value;
+    ownsRenderer = !borrowedRenderer;
+    return { ok: true, value: new DOMChart(options, renderer, ownsRenderer, policy.value, accessibilityLimit, view, navigation.value) };
+  } catch {
+    if (ownsRenderer && renderer !== undefined) {
+      try { renderer.disconnect(); }
+      catch { /* Construction failure remains the primary error. */ }
+    }
+    return invalidRenderer('DOM Chart construction failed.');
   }
-  const view = options.root.ownerDocument.defaultView;
-  if (view === null || typeof view.requestAnimationFrame !== 'function' || typeof view.cancelAnimationFrame !== 'function') {
-    return invalidRenderer('DOM Chart requires a browser window with animation frame support.');
-  }
-  const policy = normalizeRenderPolicy(options.renderPolicy);
-  if (!policy.ok) return policy;
-  const accessibilityLimit = options.accessibilityLimit ?? 1_000;
-  if (!Number.isSafeInteger(accessibilityLimit) || accessibilityLimit < 0 || accessibilityLimit > 10_000) {
-    return invalidRenderer('DOM Chart accessibility limit must be a safe integer from zero through 10,000.');
-  }
-  const borrowedRenderer = options.renderer !== undefined && typeof options.renderer === 'object';
-  const navigation = tryNormalizeDOMChartNavigation(options.navigation);
-  if (!navigation.ok) return navigation;
-  const renderer = borrowedRenderer
-    ? { ok: true as const, value: options.renderer as ChartRenderer }
-    : tryCreateChartRenderer(options.canvas, { mode: options.renderer ?? 'auto' });
-  if (!renderer.ok) return renderer;
-  return { ok: true, value: new DOMChart(options, renderer.value, !borrowedRenderer, policy.value, accessibilityLimit, view, navigation.value) };
+}
+
+function isDOMChartOptionsShape<ID extends StableID>(options: DOMChartOptions<ID>): boolean {
+  if (options === null || typeof options !== 'object') return false;
+  const root = options.root;
+  const canvas = options.canvas;
+  const controller = options.controller;
+  if (root === null || typeof root !== 'object' || canvas === null || typeof canvas !== 'object'
+    || controller === null || typeof controller !== 'object') return false;
+  const document = root.ownerDocument;
+  return document !== null && typeof document === 'object'
+    && typeof document.createElement === 'function'
+    && typeof document.createElementNS === 'function'
+    && typeof document.createDocumentFragment === 'function'
+    && ['setAttribute', 'removeAttribute', 'getAttribute', 'hasAttribute', 'append', 'addEventListener', 'removeEventListener', 'getBoundingClientRect']
+      .every((method) => typeof (root as unknown as Record<string, unknown>)[method] === 'function')
+    && ['setAttribute', 'removeAttribute', 'getAttribute', 'hasAttribute', 'addEventListener', 'removeEventListener', 'getBoundingClientRect']
+      .every((method) => typeof (canvas as unknown as Record<string, unknown>)[method] === 'function')
+    && ['getSnapshot', 'getModel', 'project', 'dispatch', 'subscribeCommands']
+      .every((method) => typeof (controller as unknown as Record<string, unknown>)[method] === 'function');
+}
+
+function isChartRenderer(renderer: unknown): renderer is ChartRenderer {
+  if (renderer === null || typeof renderer !== 'object') return false;
+  const candidate = renderer as Record<string, unknown>;
+  return candidate['capabilities'] !== null && typeof candidate['capabilities'] === 'object'
+    && ['render', 'getDiagnostics', 'flush', 'disconnect'].every((method) => typeof candidate[method] === 'function');
 }
 
 export function normalizeDOMChartNavigation<ID extends StableID>(
