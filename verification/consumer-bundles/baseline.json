@@ -12221,9 +12221,9 @@
       "source": "@sectile/terminal/listbox",
       "exportName": "connectListbox",
       "platform": "browser",
-      "raw": 1314,
-      "gzip": 603,
-      "brotli": 505,
+      "raw": 1566,
+      "gzip": 720,
+      "brotli": 620,
       "modules": [
         "@sectile/terminal/dist/listbox.js",
         "fixture"
@@ -12237,9 +12237,9 @@
       "source": "@sectile/terminal/listbox",
       "exportName": "connectListbox",
       "platform": "browser",
-      "raw": 1323,
-      "gzip": 599,
-      "brotli": 501,
+      "raw": 1581,
+      "gzip": 723,
+      "brotli": 619,
       "modules": [
         "@sectile/terminal/dist/listbox.js",
         "fixture"
@@ -12253,9 +12253,9 @@
       "source": "@sectile/terminal",
       "exportName": "connectListbox",
       "platform": "browser",
-      "raw": 1314,
-      "gzip": 603,
-      "brotli": 508,
+      "raw": 1566,
+      "gzip": 720,
+      "brotli": 620,
       "modules": [
         "@sectile/terminal/dist/listbox.js",
         "fixture"
@@ -12269,9 +12269,9 @@
       "source": "@sectile/terminal",
       "exportName": "connectListbox",
       "platform": "browser",
-      "raw": 1323,
-      "gzip": 599,
-      "brotli": 501,
+      "raw": 1581,
+      "gzip": 723,
+      "brotli": 619,
       "modules": [
         "@sectile/terminal/dist/listbox.js",
         "fixture"

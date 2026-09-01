@@ -112,6 +112,43 @@ test('DOM facade exposes state, send, update, subscribe, and destroy aliases', (
   assert.equal(connection.send('previous'), false);
 });
 
+test('DOM ready listbox publishes host effects and observers before callback errors escape', async () => {
+  const root = new FakeElement();
+  const item = new FakeElement();
+  const trace = [];
+  const callbackError = new Error('value callback failed');
+  const connection = createListbox({
+    items: ['a', 'b'],
+    root,
+    defaultHighlightedValue: 'a',
+    onActivate: (id) => trace.push(`effect:${id}`),
+    onValueChange: () => {
+      trace.push('value');
+      throw callbackError;
+    },
+    onUpdate: () => {
+      trace.push('update');
+      throw new Error('secondary update callback failed');
+    },
+  });
+  connection.setItemAttributes(item, { id: 'b' });
+  connection.subscribe((snapshot) => trace.push(`observer:${snapshot.revision}`));
+
+  assert.throws(
+    () => connection.handleEvent({ type: 'activate', id: 'b' }),
+    (error) => error === callbackError,
+  );
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['b']);
+  assert.equal(root.attributes.get('aria-activedescendant'), item.id);
+  assert.deepEqual(trace, ['effect:b', 'value', 'observer:1', 'update']);
+
+  connection.destroy();
+  await Promise.resolve();
+  assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
+  assert.equal(root.listeners.get('click')?.size ?? 0, 0);
+  assert.equal(root.focusCount, 0);
+});
+
 test('DOM listbox delegates clicks by selection mode and derives disabled semantics', () => {
   const root = new FakeElement();
   const activations = [];
@@ -286,6 +323,7 @@ class FakeElement {
   dataset = {};
   listeners = new Map();
   tabIndex = -1;
+  focusCount = 0;
 
   addEventListener(type, listener) {
     const listeners = this.listeners.get(type) ?? new Set();
@@ -313,5 +351,5 @@ class FakeElement {
     return [];
   }
 
-  focus() {}
+  focus() { this.focusCount += 1; }
 }

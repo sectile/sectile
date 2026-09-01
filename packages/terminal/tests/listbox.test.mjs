@@ -83,6 +83,35 @@ test('terminal facade exposes state, send, update, subscribe, and destroy aliase
   assert.equal(connection.send('previous'), false);
 });
 
+test('terminal ready listbox publishes host effects and observers before callback errors escape', () => {
+  const trace = [];
+  const callbackError = new Error('value callback failed');
+  const connection = createListbox({
+    items: ['a', 'b'],
+    defaultHighlightedValue: 'a',
+    onActivate: (id) => trace.push(`effect:${id}`),
+    onValueChange: () => {
+      trace.push('value');
+      throw callbackError;
+    },
+    onUpdate: () => {
+      trace.push('update');
+      throw new Error('secondary update callback failed');
+    },
+  });
+  connection.subscribe((snapshot) => trace.push(`observer:${snapshot.revision}`));
+
+  assert.throws(
+    () => connection.handleEvent({ type: 'activate', id: 'b' }),
+    (error) => error === callbackError,
+  );
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['b']);
+  assert.deepEqual(trace, ['effect:b', 'value', 'observer:1', 'update']);
+
+  connection.destroy();
+  assert.equal(connection.send('previous'), false);
+});
+
 test('terminal listbox supports single selection, disabled items, typeahead, and direct events', () => {
   let now = 0;
   const connection = createListbox({

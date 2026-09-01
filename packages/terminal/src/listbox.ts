@@ -126,6 +126,13 @@ export type ListboxOptions<ID extends StableID = StableID> =
 export function createListboxController<ID extends StableID>(
   options: ListboxControllerOptions<ID>,
 ): Result<ListboxController<ID>> {
+  return createListboxControllerWithPublisher(options);
+}
+
+function createListboxControllerWithPublisher<ID extends StableID>(
+  options: ListboxControllerOptions<ID>,
+  publishEffect?: (effect: ListboxEffect<ID>) => void,
+): Result<ListboxController<ID>> {
   const policies = listboxPolicies(options);
   if (!policies.ok) return policies;
   const interaction = tryCreateInteractionState(options);
@@ -153,6 +160,7 @@ export function createListboxController<ID extends StableID>(
     ),
     notify: (previous, proposed) => notifyListboxChange(options, previous, proposed),
     toEffect: toListboxEffect,
+    publishEffect: publishEffect!,
     interaction: interaction.value,
     interactionIntent: listboxIntent,
   });
@@ -178,9 +186,14 @@ function tryCreateListboxConnection<ID extends StableID>(
 ): Result<ListboxConnection<ID>> {
   const domain = tryCreateSequence(options.items);
   if (!domain.ok) return domain;
-  const controller = createListboxController({ ...options, domain: domain.value });
+  let connection: TerminalListboxConnection<ID>;
+  const controller = createListboxControllerWithPublisher(
+    { ...options, domain: domain.value },
+    (effect) => connection.publishEffect(effect),
+  );
   if (!controller.ok) return controller;
-  return { ok: true, value: connectListbox({ ...options, controller: controller.value }) };
+  connection = new TerminalListboxConnection({ ...options, controller: controller.value }, true);
+  return { ok: true, value: connection };
 }
 
 export function connectListbox<ID extends StableID>(
@@ -220,14 +233,16 @@ class TerminalListboxConnection<ID extends StableID> implements ListboxConnectio
   readonly #onUpdate: (() => void) | undefined;
   readonly #orientation: 'horizontal' | 'vertical';
   readonly #typeaheadEnabled: boolean;
+  readonly #effectsPublished: boolean;
 
-  public constructor(options: ListboxConnectionOptions<ID>) {
+  public constructor(options: ListboxConnectionOptions<ID>, effectsPublished = false) {
     this.#controller = options.controller;
     this.#onActivate = options.onActivate;
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
     this.#orientation = options.orientation ?? 'vertical';
     this.#typeaheadEnabled = options.typeahead !== undefined;
+    this.#effectsPublished = effectsPublished;
   }
 
   public getSnapshot(): RevisionSnapshot<ListboxState<ID>> {
@@ -246,29 +261,61 @@ class TerminalListboxConnection<ID extends StableID> implements ListboxConnectio
     const event = toListboxEvent<ID>(input, this.#orientation);
     const query = printableText(input);
     if (event === null && (query === null || !this.#typeaheadEnabled)) return false;
-    const result = this.#controller.handleKeyboardInput(input);
-    if (result.ok) {
-      for (const effect of result.commands) {
-        if (effect.type === 'submit-item') this.#onActivate?.(effect.id);
-      }
+    const previousRevision = this.#controller.getSnapshot().revision;
+    let result: RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
+    try {
+      result = this.#controller.handleKeyboardInput(input);
+    } catch (error) {
+      this.#completeCommittedThrow(previousRevision, error);
     }
     const transitionEvent: ListboxTransitionDetails<ID>['event'] = event
       ?? { type: 'typeahead', query: query as string };
-    this.#onTransition?.(Object.freeze({ event: transitionEvent, result }));
-    if (result.ok) this.#onUpdate?.();
+    this.#completePublication(transitionEvent, result);
     return result.ok;
   }
 
   public handleEvent(event: ListboxEvent<ID>): boolean {
-    const result = this.#controller.handleEvent(event);
-    if (result.ok) {
+    const previousRevision = this.#controller.getSnapshot().revision;
+    let result: RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
+    try {
+      result = this.#controller.handleEvent(event);
+    } catch (error) {
+      this.#completeCommittedThrow(previousRevision, error);
+    }
+    this.#completePublication(event, result);
+    return result.ok;
+  }
+
+  public publishEffect(effect: ListboxEffect<ID>): void {
+    if (effect.type === 'submit-item') this.#onActivate?.(effect.id);
+  }
+
+  #completePublication(
+    event: ListboxTransitionDetails<ID>['event'],
+    result: RevisionResult<ListboxState<ID>, ListboxEffect<ID>>,
+  ): void {
+    let failure: readonly [unknown] | undefined;
+    if (result.ok && !this.#effectsPublished) {
       for (const effect of result.commands) {
-        if (effect.type === 'submit-item') this.#onActivate?.(effect.id);
+        try { this.publishEffect(effect); }
+        catch (error) { failure ??= [error]; }
       }
     }
-    this.#onTransition?.(Object.freeze({ event, result }));
-    if (result.ok) this.#onUpdate?.();
-    return result.ok;
+    try { this.#onTransition?.(Object.freeze({ event, result })); }
+    catch (error) { failure ??= [error]; }
+    if (result.ok) {
+      try { this.#onUpdate?.(); }
+      catch (error) { failure ??= [error]; }
+    }
+    if (failure) throw failure[0];
+  }
+
+  #completeCommittedThrow(previousRevision: number, error: unknown): never {
+    if (this.#controller.getSnapshot().revision !== previousRevision) {
+      try { this.#onUpdate?.(); }
+      catch { /* Preserve the first publication error. */ }
+    }
+    throw error;
   }
 }
 

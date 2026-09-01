@@ -131,6 +131,42 @@ test('TAB-TBL-07: command delivery snapshots observers, completes channels, and 
   assert.equal(table.getSnapshot().state.requestState.pendingRequest.requestID, beforeRequestID + 1);
 });
 
+test('DataTable publishes requests before callbacks and preserves the first publication error', () => {
+  const trace = [];
+  const listenerError = new Error('request listener failed');
+  const callbackError = new Error('query callback failed');
+  const table = createDataTable({
+    columns,
+    onQueryChange: () => {
+      trace.push('callback');
+      throw callbackError;
+    },
+  });
+  table.subscribeCommands((command) => {
+    if (command.type !== 'request-view') return;
+    trace.push('listener');
+    throw listenerError;
+  });
+  assert.equal(table.attachRequestExecutor(() => trace.push('executor')).ok, true);
+  trace.length = 0;
+  const beforeRequestID = table.getSnapshot().state.requestState.pendingRequest.requestID;
+  const next = {
+    sort: [{ id: 'name', columnID: 'name', direction: 'ascending', comparator: 'text' }],
+    filters: [],
+    groups: [],
+    aggregates: [],
+    pivots: [],
+  };
+
+  assert.throws(
+    () => table.dispatch({ type: 'set-query', query: next }),
+    (error) => error === listenerError,
+  );
+  assert.deepEqual(trace, ['listener', 'executor', 'callback']);
+  assert.equal(table.getSnapshot().state.requestState.pendingRequest.requestID, beforeRequestID + 1);
+  assert.equal(table.getSnapshot().state.query.sort[0].id, 'name');
+});
+
 test('controlled DataTable callbacks preserve synchronous owner revisions and active requests', () => {
   const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
   const next = { ...query, sort: [{ id: 'name', columnID: 'name', direction: 'ascending', comparator: 'text' }] };

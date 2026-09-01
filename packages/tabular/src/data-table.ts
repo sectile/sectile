@@ -191,13 +191,20 @@ class DataTableRuntime implements DataTableController {
       : proposed.value.commands;
     const snapshot = Object.freeze({ revision: proposed.value.snapshot.revision, state: committedState });
     this.#snapshot = snapshot;
-    this.#notifyControlled(before, proposedState);
     const commands = Object.freeze(candidateCommands.filter((command) => (
       command.type !== 'request-view'
-      || this.#snapshot.state.requestState.pendingRequest?.requestID === command.request.requestID
+      || snapshot.state.requestState.pendingRequest?.requestID === command.request.requestID
     )));
     const update = Object.freeze({ snapshot, commands });
-    this.#emit(commands);
+    let firstError: unknown;
+    let hasError = false;
+    try { this.#emit(commands); }
+    catch (error) { hasError = true; firstError = error; }
+    try { this.#notifyControlled(before, proposedState); }
+    catch (error) {
+      if (!hasError) { hasError = true; firstError = error; }
+    }
+    if (hasError) throw firstError;
     return ok(update);
   }
 
@@ -361,9 +368,16 @@ class DataTableRuntime implements DataTableController {
       accessState: this.#options.onAccessStateChange,
       expansion: this.#options.onExpansionChange,
     };
+    let firstError: unknown;
+    let hasError = false;
     for (const key of ['query', 'rowSelection', 'columnState', 'accessState', 'expansion'] as const) {
-      if (proposed[key] !== previous[key]) callbacks[key]?.(proposed[key] as never);
+      if (proposed[key] === previous[key]) continue;
+      try { callbacks[key]?.(proposed[key] as never); }
+      catch (error) {
+        if (!hasError) { hasError = true; firstError = error; }
+      }
     }
+    if (hasError) throw firstError;
   }
 
   #emit(commands: readonly DataTableCommand[]): void {

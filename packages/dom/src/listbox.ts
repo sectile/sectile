@@ -174,6 +174,13 @@ export type ListboxOptions<ID extends StableID = StableID> =
 export function createListboxController<ID extends StableID>(
   options: ListboxControllerOptions<ID>,
 ): Result<ListboxController<ID>> {
+  return createListboxControllerWithPublisher(options);
+}
+
+function createListboxControllerWithPublisher<ID extends StableID>(
+  options: ListboxControllerOptions<ID>,
+  publishEffect?: (effect: ListboxEffect<ID>) => void,
+): Result<ListboxController<ID>> {
   const policies = listboxPolicies(options);
   if (!policies.ok) return policies;
   const interaction = tryCreateInteractionState(options);
@@ -201,6 +208,7 @@ export function createListboxController<ID extends StableID>(
     ),
     notify: (previous, proposed) => notifyListboxChange(options, previous, proposed),
     toEffect: toListboxEffect,
+    publishEffect: publishEffect!,
     interaction: interaction.value,
     interactionIntent: listboxIntent,
   });
@@ -273,13 +281,18 @@ function tryCreateListboxConnection<ID extends StableID>(
 ): Result<ListboxConnection<ID>> {
   const domain = tryCreateSequence(options.items);
   if (!domain.ok) return domain;
-  const controller = createListboxController({ ...options, domain: domain.value });
+  let connection: DOMListboxConnection<ID>;
+  const controller = createListboxControllerWithPublisher(
+    { ...options, domain: domain.value },
+    (effect) => connection.publishEffect(effect),
+  );
   if (!controller.ok) return controller;
-  return { ok: true, value: connectListbox({
+  connection = new DOMListboxConnection({
     ...options,
     selectionMode: options.selectionMode ?? options.policies?.selectionMode ?? DEFAULT_LISTBOX_SELECTION_MODE,
     controller: controller.value,
-  }) };
+  }, true);
+  return { ok: true, value: connection };
 }
 
 export function connectListbox<ID extends StableID>(
@@ -329,13 +342,14 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   readonly #disabledItems: ReadonlySet<ID>;
   readonly #typeaheadEnabled: boolean;
   readonly #disabled: boolean;
+  readonly #effectsPublished: boolean;
   readonly #baseID: string;
   readonly #itemIDs = new Map<ID, string>();
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handleClick: (event: MouseEvent) => void;
   #active = true;
 
-  public constructor(options: ListboxConnectionOptions<ID>) {
+  public constructor(options: ListboxConnectionOptions<ID>, effectsPublished = false) {
     this.#controller = options.controller;
     this.#root = options.root;
     this.#onActivate = options.onActivate;
@@ -348,6 +362,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     this.#disabledItems = new Set(options.disabledItems ?? []);
     this.#typeaheadEnabled = options.typeahead !== undefined;
     this.#disabled = options.disabled ?? false;
+    this.#effectsPublished = effectsPublished;
     this.#baseID = options.root.id || `sectile-listbox-${nextListboxID++}`;
     if (!options.root.id) options.root.id = this.#baseID;
     this.#handleKeydown = (event): void => {
@@ -412,39 +427,40 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   }
 
   public handleKeyboardEvent(event: KeyboardEvent): boolean {
-    const input: KeyboardInput = {
-      key: event.key,
-      altKey: event.altKey,
-      ctrlKey: event.ctrlKey,
-      metaKey: event.metaKey,
-    };
-    const semanticEvent = toListboxEvent<ID>(input, this.#orientation, this.#direction);
-    const query = printableKey(input);
+    const semanticEvent = toListboxEvent<ID>(event, this.#orientation, this.#direction);
+    const query = printableKey(event);
     if (semanticEvent === null && (query === null || !this.#typeaheadEnabled)) return false;
-    const result = this.#controller.handleKeyboardInput(input);
-    if (result.ok) this.#applyEffects(result.commands);
+    const previousRevision = this.#controller.getSnapshot().revision;
+    let result: RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
+    try {
+      result = this.#controller.handleKeyboardInput(event);
+    } catch (error) {
+      this.#completeCommittedThrow(previousRevision, error);
+    }
     const transitionEvent: ListboxTransitionDetails<ID>['event'] = semanticEvent
       ?? { type: 'typeahead', query: query as string };
-    this.#onTransition?.(Object.freeze({
-      event: transitionEvent,
-      result,
-    }));
-    if (result.ok) {
-      this.#onUpdate?.();
-      this.focusCurrent();
-    }
+    this.#completePublication(transitionEvent, result);
     return result.ok;
   }
 
   public handleEvent(event: ListboxEvent<ID>): boolean {
-    const result = this.#controller.handleEvent(event);
-    if (result.ok) this.#applyEffects(result.commands);
-    this.#onTransition?.(Object.freeze({ event, result }));
-    if (result.ok) {
-      this.#onUpdate?.();
-      this.focusCurrent();
+    const previousRevision = this.#controller.getSnapshot().revision;
+    let result: RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
+    try {
+      result = this.#controller.handleEvent(event);
+    } catch (error) {
+      this.#completeCommittedThrow(previousRevision, error);
     }
+    this.#completePublication(event, result);
     return result.ok;
+  }
+
+  public publishEffect(effect: ListboxEffect<ID>): void {
+    if (effect.type === 'dispatch-activation') {
+      this.#onActivate?.(effect.id);
+    } else {
+      applyAttributes(this.#root, { 'aria-activedescendant': this.#itemIDs.get(effect.id) });
+    }
   }
 
   public focusCurrent(): void {
@@ -464,10 +480,34 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     this.#itemIDs.clear();
   }
 
-  #applyEffects(effects: readonly ListboxEffect<ID>[]): void {
-    for (const effect of effects) {
-      if (effect.type === 'dispatch-activation') this.#onActivate?.(effect.id);
+  #completePublication(
+    event: ListboxTransitionDetails<ID>['event'],
+    result: RevisionResult<ListboxState<ID>, ListboxEffect<ID>>,
+  ): void {
+    let failure: readonly [unknown] | undefined;
+    if (result.ok && !this.#effectsPublished) {
+      for (const effect of result.commands) {
+        try { this.publishEffect(effect); }
+        catch (error) { failure ??= [error]; }
+      }
     }
+    if (result.ok) this.focusCurrent();
+    try { this.#onTransition?.(Object.freeze({ event, result })); }
+    catch (error) { failure ??= [error]; }
+    if (result.ok) {
+      try { this.#onUpdate?.(); }
+      catch (error) { failure ??= [error]; }
+    }
+    if (failure) throw failure[0];
+  }
+
+  #completeCommittedThrow(previousRevision: number, error: unknown): never {
+    if (this.#controller.getSnapshot().revision !== previousRevision) {
+      this.focusCurrent();
+      try { this.#onUpdate?.(); }
+      catch { /* Preserve the first publication error. */ }
+    }
+    throw error;
   }
 }
 
