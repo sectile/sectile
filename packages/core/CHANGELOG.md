@@ -1,5 +1,13 @@
 # @sectile/core
 
+## 0.14.0
+
+### Changes
+
+- chore(verification): refresh generated evidence (4c1aa6ac)
+- feat(core): order host publication phases (93f8e63c)
+- perf(core): specialize packed 2d radius queries (c123f870)
+
 ## 0.13.1
 
 ### Changes

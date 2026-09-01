@@ -1,6 +1,6 @@
 {
   "name": "@sectile/chart",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "description": "Renderer-neutral chart models, interaction, and packed projections for Sectile.",
   "license": "MIT",
   "type": "module",

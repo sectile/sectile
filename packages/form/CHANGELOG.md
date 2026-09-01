@@ -1,5 +1,11 @@
 # @sectile/form
 
+## 0.14.0
+
+### Changes
+
+- test(form): complete law registry (fc33ff4a)
+
 ## 0.13.1
 
 ### Changes

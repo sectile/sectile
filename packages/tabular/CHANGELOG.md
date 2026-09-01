@@ -1,5 +1,11 @@
 # @sectile/tabular
 
+## 0.14.0
+
+### Changes
+
+- fix(runtime): complete publication before callbacks (974dd3f9)
+
 ## 0.13.1
 
 ### Changes

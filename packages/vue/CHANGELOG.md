@@ -1,5 +1,11 @@
 # @sectile/vue
 
+## 0.14.0
+
+### Changes
+
+- fix(chart): harden controller runtime contracts (8536c5e1)
+
 ## 0.13.1
 
 ### Changes

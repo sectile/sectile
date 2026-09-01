@@ -1,5 +1,13 @@
 # @sectile/chart
 
+## 0.14.0
+
+### Changes
+
+- chore(verification): refresh generated evidence (4c1aa6ac)
+- test(chart): register executable laws (d95cd260)
+- fix(chart): harden controller runtime contracts (8536c5e1)
+
 ## 0.13.1
 
 ### Changes

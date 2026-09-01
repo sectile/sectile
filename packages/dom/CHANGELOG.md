@@ -1,5 +1,12 @@
 # @sectile/dom
 
+## 0.14.0
+
+### Changes
+
+- fix(dom): harden chart host projection (1772ce61)
+- fix(runtime): complete publication before callbacks (974dd3f9)
+
 ## 0.13.1
 
 ### Changes
