@@ -230,6 +230,17 @@ class PackedMetricIndex<ID extends StableID> implements MetricIndex<ID> {
 
   #packedRadius(target: readonly number[], squaredRadius: number): InternalMatch[] {
     const matches: InternalMatch[] = [];
+    if (this.dimensions === 2) {
+      const targetX = target[0] as number;
+      const targetY = target[1] as number;
+      for (let index = 0, offset = 0; index < this.size; index += 1, offset += 2) {
+        const deltaX = (this.#coordinates[offset] as number) - targetX;
+        const deltaY = (this.#coordinates[offset + 1] as number) - targetY;
+        const squaredDistance = deltaX * deltaX + deltaY * deltaY;
+        if (squaredDistance <= squaredRadius) matches.push({ index, squaredDistance });
+      }
+      return matches;
+    }
     for (let index = 0; index < this.size; index += 1) {
       const squaredDistance = this.#distanceTo(index, target);
       if (squaredDistance <= squaredRadius) matches.push({ index, squaredDistance });

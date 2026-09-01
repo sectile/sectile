@@ -1561,7 +1561,7 @@
         "assumptions": [
           "balanced kd expected work is O(cMetric*d + rMetric) for the selected low-dimensional repeated-query regime"
         ],
-        "proof": "Packed queries inspect x points. Indexed queries prune by squared axis distance, abort above x/2 candidates, and restart one packed scan; construction performs all index building so no query rebuild is hidden. Radius output is restored to domain order with bounded radix passes.",
+        "proof": "Packed queries inspect x points; the fixed 2D radius path reads one scalar coordinate pair per point without changing scan or output order. Indexed queries prune by squared axis distance, abort above x/2 candidates, and restart one packed scan; construction performs all index building so no query rebuild is hidden. Radius output is restored to domain order with bounded radix passes.",
         "adversarialWitness": "Collinear or duplicate coordinates defeat pruning, cross the x/2 threshold, and execute the bounded packed fallback with stable ties.",
         "fullScan": {
           "allowed": true,
