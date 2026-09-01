@@ -27,6 +27,7 @@ import {
   tryCreateFormValues,
 } from '../../.verification-dist/values.js';
 
+// FRM-10
 test('form field paths normalize dot, bracket, and explicit segment syntax', () => {
   assert.deepEqual(createFormFieldPath('profile.name'), ['profile', 'name']);
   assert.deepEqual(createFormFieldPath('addresses[0].city'), ['addresses', 0, 'city']);
@@ -44,6 +45,9 @@ test('form field paths normalize dot, bracket, and explicit segment syntax', () 
     appendFormFieldPath('filters.price', [0]),
     ['filters', 'price', 0],
   );
+  for (const path of [['profile', 'name'], ['addresses', 0, 'city'], ['items', 12]]) {
+    assert.deepEqual(createFormFieldPath(encodeFormFieldPath(path)), path);
+  }
 });
 
 test('form values build immutable nested objects, indexed arrays, and repeated leaves', () => {
@@ -222,6 +226,7 @@ test('form registry preserves order and derives aggregate field state', () => {
   assert.deepEqual(state.fields.map((field) => field.id), ['email']);
 });
 
+// FRM-11
 test('invalid submit focuses the first invalid field and announces its issues', () => {
   const state = createFormState({
     fields: [
@@ -330,6 +335,7 @@ test('valid submit has an explicit request, pending, success, and failure lifecy
   assert.equal(state.issues.length, 0);
 });
 
+// FRM-08
 test('issue replacement preserves other sources and unregistered server issues', () => {
   let state = createFormState({
     fields: [{ id: 'email', valid: false, issues: [requiredIssue] }],
@@ -363,6 +369,7 @@ test('issue replacement preserves other sources and unregistered server issues',
   );
 });
 
+// FRM-09
 test('multi-field server issues stay canonical and clear when a related value changes', () => {
   const issue = {
     id: 'lookup-mismatch',
@@ -603,6 +610,7 @@ test('FRM-03: unknown form events reject atomically without resetting state', ()
   }
 });
 
+// FRM-07
 test('reinitialize establishes a clean baseline without resetting participant values', () => {
   const state = createFormState({
     validation: { generation: 1, status: 'invalid', trigger: 'submit', intent: 'submission' },

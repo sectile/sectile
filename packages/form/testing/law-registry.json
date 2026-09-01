@@ -30,6 +30,31 @@
       "id": "FRM-06",
       "theory": "form",
       "statement": "library-owned branches freeze without mutating caller leaves"
+    },
+    {
+      "id": "FRM-07",
+      "theory": "form",
+      "statement": "reinitialize establishes a clean dirty baseline while preserving requested metadata groups"
+    },
+    {
+      "id": "FRM-08",
+      "theory": "form",
+      "statement": "issue replacement changes only the selected source"
+    },
+    {
+      "id": "FRM-09",
+      "theory": "form",
+      "statement": "multi-field issues project one canonical issue into every related field"
+    },
+    {
+      "id": "FRM-10",
+      "theory": "form",
+      "statement": "canonical field paths round-trip through their encoded representation"
+    },
+    {
+      "id": "FRM-11",
+      "theory": "form",
+      "statement": "invalid submission focuses the first invalid field before announcing the ordered summary"
     }
   ]
 }

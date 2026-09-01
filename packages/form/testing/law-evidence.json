@@ -6,6 +6,11 @@
     "FRM-03": "tests/state/form.test.mjs",
     "FRM-04": "tests/state/form.test.mjs",
     "FRM-05": "tests/state/form.test.mjs",
-    "FRM-06": "tests/state/form.test.mjs"
+    "FRM-06": "tests/state/form.test.mjs",
+    "FRM-07": "tests/state/form.test.mjs",
+    "FRM-08": "tests/state/form.test.mjs",
+    "FRM-09": "tests/state/form.test.mjs",
+    "FRM-10": "tests/state/form.test.mjs",
+    "FRM-11": "tests/state/form.test.mjs"
   }
 }
