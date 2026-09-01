@@ -9,15 +9,22 @@ Core는 ID, 실패, 사건의 순서, 자원 사용량을 밖에서 확인할 �
 
 ## 안정적인 ID
 
-`StableID`는 문자열입니다. 숫자나 객체 ID는 상태를 만들기 전에 충돌을 피한 안정적인 문자열로 바꿉니다. 원래 값을 찾기 위한 표는 앱 상태에 둡니다.
+`StableID`는 비어 있지 않고 올바른 UTF-16인 문자열 또는 음의 0이 아닌 안전한 정수입니다. ID는 값과 타입을 그대로 비교하므로 `1`과 `'1'`은 서로 다릅니다. 같은 항목을 나타내는 동안 ID를 바꾸지 말고, 객체 ID는 상태를 만들기 전에 안정적인 문자열이나 안전한 정수로 바꿉니다.
 
 ```ts
 import { createSequence } from '@sectile/core/sequence'
 
-const products = createSequence(['product:42', 'product:91'])
+const products = createSequence(['product:42', 91])
 ```
 
-같은 문자열 ID를 직렬화, DOM 속성, 터미널 명령, 프레임워크 키에서 그대로 사용할 수 있습니다.
+| 경계 | ID 계약 |
+| --- | --- |
+| Core, Chart, DOM, Terminal | 문자열과 숫자 `StableID`를 타입까지 그대로 유지합니다. |
+| Vue Chart, Virtual | 문자열과 숫자 `StableID`를 받습니다. |
+| Vue 선택 컴포넌트 | 현재 공개 `value` prop은 문자열입니다. |
+| DOM 속성, 폼 값, URL 같은 문자열 전용 경계 | ID를 되돌릴 수 있게 인코딩합니다. `1`과 `'1'`이 함께 올 수 있으면 `String(id)`를 사용하지 않습니다. |
+
+문자열 ID 길이는 `maxIDCodeUnits`의 제한을 받습니다. 숫자 ID는 `Number.isSafeInteger`를 만족해야 하며 `-0`은 허용되지 않습니다. JSON은 두 기본 타입을 보존하지만 DOM 속성과 폼 값은 그렇지 않으므로, 문자열 경계에서 원래 ID를 찾는 표가 필요하면 앱 상태에 둡니다.
 
 ## 결과와 실패
 

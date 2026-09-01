@@ -21,7 +21,7 @@ import * as sequence from '@sectile/core/sequence'
 - canonical structures: sequence, range, grid, tree
 - independent state: cursor, selection, expansion, text editing
 - deterministic transitions and ordered commands
-- stable string identity, revisions, typed failures, resource ceilings
+- stable string or safe-integer identity, revisions, typed failures, resource ceilings
 - bounded geometry values and operations, anchored placement, and a generic metric index
 - composed component semantics such as Listbox, Combobox, Slider, and Tree Grid
 

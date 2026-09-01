@@ -442,17 +442,15 @@ applyEventAB : (SA × SB) × I
 
 ### 5.1 Identity
 
-Theory 수준의 `ID`는 opaque equality sort다. TypeScript v1은 다음 contract를 사용한다.
+Theory 수준의 `ID`는 opaque equality sort다. TypeScript v1의 `StableID`는 다음 두 contract 중 하나를 사용하며 값과 타입을 exact equality로 비교한다.
 
 ```text
-non-empty string
-well-formed UTF-16
-exact equality
-no implicit normalization
-explicit maximum code-unit length
+string: non-empty, well-formed UTF-16, no implicit normalization,
+        explicit maximum code-unit length
+number: safe integer other than negative zero
 ```
 
-Canonically equivalent Unicode spelling도 ID로서는 서로 다르다. ID normalization은 identity collision과 state authority 변경을 만들 수 있으므로 금지한다.
+따라서 `1`과 `'1'`은 서로 다르며 canonically equivalent Unicode spelling도 다른 ID다. DOM attribute처럼 문자열만 받는 경계는 타입을 포함한 reversible encoding을 소유해야 한다. ID normalization이나 단순 `String(id)` 변환은 identity collision과 state authority 변경을 만들 수 있으므로 금지한다. 현재 Vue 선택 컴포넌트의 공개 `value`는 문자열이고, Vue Chart와 Virtual은 일반 `StableID`를 지원한다.
 
 ### 5.2 Failure class
 

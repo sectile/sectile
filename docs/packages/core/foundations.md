@@ -9,15 +9,22 @@ Core makes identity, failure, ordering, and resource use observable. These contr
 
 ## Stable identity
 
-`StableID` is a string contract. Map numeric or object identities to stable, collision-free strings before constructing a domain. Keep any reverse lookup in application state.
+`StableID` accepts a non-empty, well-formed UTF-16 string or a safe integer other than negative zero. Identity uses exact equality, so `1` and `'1'` are distinct. Keep an ID unchanged while it represents the same item; map object identities to a stable string or safe integer before constructing a domain.
 
 ```ts
 import { createSequence } from '@sectile/core/sequence'
 
-const products = createSequence(['product:42', 'product:91'])
+const products = createSequence(['product:42', 91])
 ```
 
-Strings survive serialization, DOM attributes, terminal effects, and framework keys without package-specific conversion.
+| Surface | ID contract |
+| --- | --- |
+| Core, Chart, DOM, and Terminal | Preserve string and numeric `StableID` values without changing their type. |
+| Vue Chart and Virtual | Accept string and numeric `StableID` values. |
+| Vue choice components | Their current public `value` props are strings. |
+| DOM attributes, form values, URLs, and other string-only boundaries | Encode IDs reversibly. Do not use `String(id)` when a domain can contain both `1` and `'1'`. |
+
+String IDs are limited by `maxIDCodeUnits`. Numeric IDs must satisfy `Number.isSafeInteger`, and `-0` is rejected. JSON preserves both supported primitive types, while DOM attributes and form values do not; keep any reverse lookup needed by a string-only boundary in application state.
 
 ## Results and failures
 
