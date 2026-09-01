@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readdir, readFile, rm, rmdir } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
-import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import {
   assertPackedDependencyRanges,
@@ -9,7 +8,7 @@ import {
   inspectPackedPackage,
 } from './lib/packed-package-contract.mjs';
 import { completeNpmWebAuth, parseNpmWebAuthChallenge } from './lib/npm-publish-auth.mjs';
-import { assertRegistryArtifact } from './lib/npm-registry-artifact.mjs';
+import { assertRegistryArtifact, waitForRegistryArtifact } from './lib/npm-registry-artifact.mjs';
 import { execFileSyncPortable, spawnSyncPortable } from './lib/portable-process.mjs';
 import { resolveExpectedReleaseTag } from './lib/release.mjs';
 import {
@@ -195,15 +194,8 @@ async function assertPublishedArtifact(published, manifest, tarball) {
 
 async function waitForPublishedArtifact(manifest, tarball, environment) {
   const specifier = `${manifest.name}@${manifest.version}`;
-  for (let attempt = 0; attempt < 6; attempt += 1) {
-    const published = registryMetadata(specifier, environment);
-    if (published !== undefined) {
-      await assertPublishedArtifact(published, manifest, tarball);
-      return;
-    }
-    if (attempt < 5) await delay(2_000);
-  }
-  throw new Error(`${specifier} was not readable after publication`);
+  const published = await waitForRegistryArtifact(() => registryMetadata(specifier, environment), specifier);
+  await assertPublishedArtifact(published, manifest, tarball);
 }
 
 async function publishTarball(tarball, environment) {

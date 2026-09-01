@@ -15,6 +15,7 @@ import {
   recommendBump,
   releaseBumpChoices,
   resolveExpectedReleaseTag,
+  selectReleaseTrack,
 } from './lib/release.mjs';
 import {
   assertIndependentDependencyProtocols,
@@ -171,8 +172,21 @@ test('parses independent package releases and read-only plans', () => {
     reason: 'repair package metadata',
     requestedBump: 'patch',
   });
-  assert.throws(() => parseReleaseArguments(['patch', '--dry-run']), /requires --package/u);
+  assert.deepEqual(parseReleaseArguments(['patch', '--dry-run']), {
+    allowDirty: false,
+    dryRun: true,
+    packageNames: [],
+    reason: undefined,
+    requestedBump: 'patch',
+  });
   assert.throws(() => parseReleaseArguments(['patch', '--reason', 'empty release']), /requires --package/u);
+});
+
+test('switches the default release command to independent tracking after the bridge', () => {
+  assert.equal(selectReleaseTrack([], false, false), 'synchronized');
+  assert.equal(selectReleaseTrack([], false, true), 'independent');
+  assert.equal(selectReleaseTrack([], true, false), 'independent');
+  assert.equal(selectReleaseTrack(['@sectile/form'], false, false), 'independent');
 });
 
 test('parses git records and renders commit-based notes', () => {

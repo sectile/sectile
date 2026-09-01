@@ -18,6 +18,7 @@ import {
   prependChangelogChanges,
   recommendBump,
   releaseBumpChoices,
+  selectReleaseTrack,
 } from './lib/release.mjs';
 import {
   assertIndependentDependencyProtocols,
@@ -149,6 +150,11 @@ function assertIndependentBaseline(root) {
   run(root, 'git', ['merge-base', '--is-ancestor', independentReleaseBaselineTag, 'HEAD'], { capture: true });
 }
 
+function independentReleaseActive(root) {
+  const tag = run(root, 'git', ['tag', '--list', independentReleaseBaselineTag], { capture: true });
+  return tag === independentReleaseBaselineTag && isAncestor(root, independentReleaseBaselineTag, 'HEAD');
+}
+
 function packageBaseTag(root, entry) {
   const expected = createPackageTag(entry.name, entry.manifest.version);
   const tags = run(root, 'git', ['tag', '--list', '--sort=-version:refname', `${entry.name}@*`], { capture: true })
@@ -173,15 +179,29 @@ function packageCommits(root, entry, baseTag) {
 
 async function planIndependentRelease(root, options, releaseTag = createReleaseSetTag()) {
   assert.notEqual(options.requestedBump, undefined,
-    'independent releases require an explicit bump: pnpm release patch --package @sectile/form');
+    'independent releases require an explicit bump: pnpm release patch');
   assertIndependentBaseline(root);
   const packages = await independentReleaseEntries(root);
-  const planned = planIndependentVersions(packages, options.packageNames, options.requestedBump);
   const byName = new Map(packages.map((entry) => [entry.name, entry]));
+  const detected = new Map();
+  let requestedNames = options.packageNames;
+  if (requestedNames.length === 0) {
+    for (const entry of packages) {
+      const baseTag = packageBaseTag(root, entry);
+      const commits = packageCommits(root, entry, baseTag);
+      detected.set(entry.name, Object.freeze({ baseTag, commits }));
+    }
+    requestedNames = packages
+      .filter(({ name }) => detected.get(name).commits.length > 0)
+      .map(({ name }) => name);
+    assert.ok(requestedNames.length > 0, 'no changed packages since their latest release tags');
+  }
+  const planned = planIndependentVersions(packages, requestedNames, options.requestedBump);
   const detailed = planned.map((entry) => {
     const source = byName.get(entry.name);
-    const baseTag = packageBaseTag(root, source);
-    const commits = packageCommits(root, source, baseTag);
+    const details = detected.get(entry.name);
+    const baseTag = details?.baseTag ?? packageBaseTag(root, source);
+    const commits = details?.commits ?? packageCommits(root, source, baseTag);
     if (entry.direct && commits.length === 0) {
       assert.notEqual(options.reason, undefined,
         `${entry.name} has no package commits since ${baseTag}; supply --reason for a version-only repair`);
@@ -460,9 +480,10 @@ async function main() {
   if (isolatedResultPath !== undefined) {
     delete process.env[isolatedResultEnvironment];
     assert.equal(releaseWorktreeStatus(workspaceRoot), '', 'isolated release worktree must start clean');
-    const release = packageNames.length === 0
-      ? await prepareRelease(workspaceRoot, requestedBump, true)
-      : await prepareIndependentRelease(workspaceRoot, options, true);
+    const track = selectReleaseTrack(packageNames, dryRun, independentReleaseActive(workspaceRoot));
+    const release = track === 'independent'
+      ? await prepareIndependentRelease(workspaceRoot, options, true)
+      : await prepareRelease(workspaceRoot, requestedBump, true);
     writeFileSync(isolatedResultPath, `${JSON.stringify(release ?? null)}\n`);
     return;
   }
@@ -484,9 +505,10 @@ async function main() {
     return;
   }
 
-  const release = packageNames.length === 0
-    ? await prepareRelease(workspaceRoot, requestedBump, false)
-    : await prepareIndependentRelease(workspaceRoot, options, false);
+  const track = selectReleaseTrack(packageNames, dryRun, independentReleaseActive(workspaceRoot));
+  const release = track === 'independent'
+    ? await prepareIndependentRelease(workspaceRoot, options, false)
+    : await prepareRelease(workspaceRoot, requestedBump, false);
   if (release !== undefined) publishRelease(workspaceRoot, release);
 }
 

@@ -42,8 +42,14 @@ export function parseReleaseArguments(args) {
   }
   assert.equal(new Set(packageNames).size, packageNames.length, 'release packages must be unique');
   assert.equal(reason !== undefined && packageNames.length === 0, false, '--reason requires --package');
-  assert.equal(dryRun && packageNames.length === 0, false, '--dry-run requires --package');
   return Object.freeze({ allowDirty, dryRun, packageNames: Object.freeze(packageNames), reason, requestedBump });
+}
+
+export function selectReleaseTrack(packageNames, dryRun, independentBaseline) {
+  assert.ok(Array.isArray(packageNames), 'release package names must be an array');
+  assert.equal(typeof dryRun, 'boolean', 'release dry-run marker must be boolean');
+  assert.equal(typeof independentBaseline, 'boolean', 'independent release baseline marker must be boolean');
+  return dryRun || packageNames.length > 0 || independentBaseline ? 'independent' : 'synchronized';
 }
 
 export function parseStableVersion(version) {

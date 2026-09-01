@@ -25,7 +25,7 @@ export function isReleaseSetTag(tag) {
 export function assertSynchronizedReleaseBase(tag) {
   assert.equal(isLegacyReleaseTag(tag), true, `latest GitHub release is not a legacy stable tag: ${tag}`);
   assert.notEqual(tag, independentReleaseBaselineTag,
-    `synchronized releases ended at ${independentReleaseBaselineTag}; use --package for an independent release`);
+    `synchronized releases ended at ${independentReleaseBaselineTag}; use independent release tracking`);
 }
 
 export function createReleaseSetTag(date = new Date()) {
