@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "87145b7fb0319dce82d0181748d5c0524e7a952c6771977a9ab711f8fd783de6",
+    "publicSignatureFingerprint": "35414af44b934db66d5d5eb093f55545a5a9480968fa8ec3a043aa6eacac43a0",
     "subpaths": [
       ".",
       "./accordion",
@@ -519,7 +519,7 @@
     }
   ],
   "acceptance": {
-    "classification": "breaking",
-    "reason": "WI-008-removes-applyControllerEvent-in-favor-of-createSemanticController"
+    "classification": "type-change-reviewed",
+    "reason": "WI-003-adds-optional-host-effect-publication-before-notify"
   }
 }

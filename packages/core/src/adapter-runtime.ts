@@ -112,6 +112,7 @@ export interface SemanticControllerOptions<State, Event, Command, Effect, Code e
   readonly initial: Result<State, Code>;
   readonly reducer: EventReducer<State, Event, Command, Code>;
   readonly reconcile?: (previous: State, proposed: State) => Result<State, Code>;
+  readonly publishEffect?: (effect: Effect) => void;
   readonly notify?: (previous: State, proposed: State) => void;
   readonly toEffect: (command: Command) => Effect;
   readonly interaction?: InteractionStateInput | undefined;
@@ -172,7 +173,13 @@ export function createSemanticController<State, Event, Command, Effect, Code ext
         );
         if (!prepared.result.ok) return prepared.result;
         current = prepared.result.snapshot;
-        options.notify?.(previous.state, prepared.proposed);
+        publishControllerUpdate(
+          prepared.result.commands,
+          options.publishEffect,
+          options.notify,
+          previous.state,
+          prepared.proposed,
+        );
         return prepared.result;
       },
       reject: <Code extends string>(
@@ -197,6 +204,7 @@ export function createHostAdapter<State, HostInput, Event, Command, HostEffect, 
     reducer: options.reducer,
     toEffect: options.project,
     ...(options.reconcile === undefined ? {} : { reconcile: options.reconcile }),
+    ...(options.publishEffect === undefined ? {} : { publishEffect: options.publishEffect }),
     ...(options.notify === undefined ? {} : { notify: options.notify }),
     ...(options.interaction === undefined ? {} : { interaction: options.interaction }),
     ...(options.interactionIntent === undefined ? {} : { interactionIntent: options.interactionIntent }),
@@ -530,10 +538,26 @@ export function createFacadeConnection<
   let active = true;
   const onUpdate = (): void => {
     if (!active) return;
-    options.onUpdate?.();
-    if (connection === undefined) return;
-    const snapshot = connection.getSnapshot() as SnapshotOf<Connection>;
-    for (const subscriber of subscribers) subscriber(snapshot);
+    let firstError: unknown;
+    let hasError = false;
+    if (connection !== undefined) {
+      let snapshot: SnapshotOf<Connection> | undefined;
+      try { snapshot = connection.getSnapshot() as SnapshotOf<Connection>; }
+      catch (error) { hasError = true; firstError = error; }
+      if (snapshot !== undefined) {
+        for (const subscriber of [...subscribers]) {
+          try { subscriber(snapshot); }
+          catch (error) {
+            if (!hasError) { hasError = true; firstError = error; }
+          }
+        }
+      }
+    }
+    try { options.onUpdate?.(); }
+    catch (error) {
+      if (!hasError) { hasError = true; firstError = error; }
+    }
+    if (hasError) throw firstError;
   };
   const constructed = construct({ ...options, onUpdate } as Options);
   if (!constructed.ok) return constructed;
@@ -583,6 +607,30 @@ export function createFacadeConnection<
     },
   });
   return { ok: true, value: facade as unknown as FacadeConnection<Connection> };
+}
+
+function publishControllerUpdate<State, Effect>(
+  effects: readonly Effect[],
+  publishEffect: ((effect: Effect) => void) | undefined,
+  notify: ((previous: State, proposed: State) => void) | undefined,
+  previous: State,
+  proposed: State,
+): void {
+  let firstError: unknown;
+  let hasError = false;
+  if (publishEffect !== undefined) {
+    for (const effect of effects) {
+      try { publishEffect(effect); }
+      catch (error) {
+        if (!hasError) { hasError = true; firstError = error; }
+      }
+    }
+  }
+  try { notify?.(previous, proposed); }
+  catch (error) {
+    if (!hasError) { hasError = true; firstError = error; }
+  }
+  if (hasError) throw firstError;
 }
 
 function destroyedConnectionResult(): Result<never> {

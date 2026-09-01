@@ -158,11 +158,6 @@
             "name": "cCommand",
             "meaning": "commands emitted by the reducer",
             "ceiling": "command ceiling"
-          },
-          {
-            "name": "pAffected",
-            "meaning": "affected controller subscribers",
-            "ceiling": "controller-owned subscription count"
           }
         ],
         "time": {
@@ -181,10 +176,10 @@
           "listeners": "0",
           "observers": "0",
           "timers": "0",
-          "subscriptions": "O(pAffected)"
+          "subscriptions": "0"
         },
-        "proof": "One reducer call freezes one command vector and notifies only controller subscribers.",
-        "adversarialWitness": "Reducer emits the command ceiling with every subscriber affected.",
+        "proof": "One reducer call freezes and maps one bounded command vector, commits the reconciled snapshot, attempts the stable host-effect publisher once per mapped effect, then attempts the single application notify callback. The first user error is rethrown only after both phases complete.",
+        "adversarialWitness": "The reducer emits the command ceiling, the first and last host effects throw, and application notify also throws; every effect and notify is still attempted in phase order.",
         "fullScan": {
           "allowed": false,
           "rationale": "Unrelated controllers and subscribers are outside the owner."
@@ -349,6 +344,48 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Adding or removing one subscriber cannot scan existing subscribers."
+        }
+      }
+    },
+    {
+      "id": "adapter.facade-update-publication",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": [
+        "VAL-003:facade-publication-order"
+      ],
+      "specificationCeiling": "O(pSubscriber)",
+      "contract": {
+        "variables": [
+          {
+            "name": "pSubscriber",
+            "meaning": "facade snapshot subscribers captured for one update",
+            "ceiling": "facade-owned subscription count"
+          }
+        ],
+        "time": {
+          "bound": "O(pSubscriber)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(pSubscriber)",
+          "output": "O(1)",
+          "retained": "O(pSubscriber)"
+        },
+        "resources": {
+          "allocations": "O(pSubscriber)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(pSubscriber)"
+        },
+        "proof": "One stable onUpdate relay captures the current subscriber Set once, attempts every snapshot subscriber, then attempts the application onUpdate callback and rethrows the first user error after both phases.",
+        "adversarialWitness": "The first facade subscriber throws, later subscribers still observe the committed snapshot, and a throwing application callback runs last while the first error is preserved.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Only facade-owned subscribers may be visited by one connection update."
         }
       }
     },

@@ -20374,11 +20374,6 @@
             "name": "cCommand",
             "meaning": "commands emitted by the reducer",
             "ceiling": "command ceiling"
-          },
-          {
-            "name": "pAffected",
-            "meaning": "affected controller subscribers",
-            "ceiling": "controller-owned subscription count"
           }
         ],
         "time": {
@@ -20397,7 +20392,7 @@
           "listeners": "0",
           "observers": "0",
           "timers": "0",
-          "subscriptions": "O(pAffected)"
+          "subscriptions": "0"
         },
         "assumptions": [
           "canonical owner identity and generation are current"
@@ -20413,8 +20408,8 @@
           "zero domain traversal"
         ],
         "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
-        "proof": "One reducer call freezes one command vector and notifies only controller subscribers.",
-        "adversarialWitness": "Reducer emits the command ceiling with every subscriber affected.",
+        "proof": "One reducer call freezes and maps one bounded command vector, commits the reconciled snapshot, attempts the stable host-effect publisher once per mapped effect, then attempts the single application notify callback. The first user error is rethrown only after both phases complete.",
+        "adversarialWitness": "The reducer emits the command ceiling, the first and last host effects throw, and application notify also throws; every effect and notify is still attempted in phase order.",
         "evidence": [
           "VAL-016",
           "VAL-017"
@@ -20671,6 +20666,69 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Adding or removing one subscriber cannot scan existing subscribers."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "adapter.facade-update-publication",
+      "source": "packages/core/src/adapter-runtime.ts",
+      "benchmarkIDs": [
+        "VAL-003:facade-publication-order"
+      ],
+      "specificationCeiling": "O(pSubscriber)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "pSubscriber",
+            "meaning": "facade snapshot subscribers captured for one update",
+            "ceiling": "facade-owned subscription count"
+          }
+        ],
+        "time": {
+          "bound": "O(pSubscriber)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(pSubscriber)",
+          "output": "O(1)",
+          "retained": "O(pSubscriber)"
+        },
+        "resources": {
+          "allocations": "O(pSubscriber)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(pSubscriber)"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "One stable onUpdate relay captures the current subscriber Set once, attempts every snapshot subscriber, then attempts the application onUpdate callback and rethrows the first user error after both phases.",
+        "adversarialWitness": "The first facade subscriber throws, later subscribers still observe the committed snapshot, and a throwing application callback runs last while the first error is preserved.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Only facade-owned subscribers may be visited by one connection update."
         }
       }
     },

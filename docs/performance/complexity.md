@@ -8,7 +8,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 380 | 26 | 53 |
+| core | 380 | 26 | 54 |
 | chart | 79 | 0 | 12 |
 | dom | 421 | 181 | 15 |
 | form | 21 | 0 | 7 |
@@ -37,6 +37,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:adapter.facade-destroy | connected | `O(pSubscriber + rResource)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:adapter.facade-method-read | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(pMethod)` | forbidden | VAL-016, VAL-017 |
 | core:adapter.facade-subscribe | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| core:adapter.facade-update-publication | mounted | `O(pSubscriber)` worst-case | `O(pSubscriber)` | `O(1)` | `O(pSubscriber)` | forbidden | VAL-016, VAL-017 |
 | core:anchored-layout.solve | external | `O(cAnchor)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:canonical-state.transition | trusted | `O(sMove + oResult)` expected | `O(1)` | `O(oResult)` | `O(oResult)` | forbidden | VAL-016, VAL-017 |
 | core:canonical-state.validation-external | external | `O(n + k + sMove)` worst-case | `O(n + k)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |

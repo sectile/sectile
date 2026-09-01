@@ -4,6 +4,7 @@ import {
   createCollectionComponentController,
   createControlledComponentController,
   createFacadeConnection,
+  createHostAdapter,
   createSemanticController,
 } from '../../.verification-dist/adapter-runtime.js';
 
@@ -182,6 +183,50 @@ test('semantic controller retains its committed snapshot when notification throw
   assert.equal(constructed.value.getSnapshot().revision, 1);
 });
 
+test('semantic controller completes host effects before notify and preserves the first error', () => {
+  const first = new Error('first host effect failed');
+  const later = new Error('application notify failed');
+  const trace = [];
+  const constructed = createSemanticController({
+    initial: { ok: true, value: 0 },
+    reducer: (state) => ({
+      ok: true,
+      value: { state: state + 1, commands: [{ id: 1 }, { id: 2 }] },
+    }),
+    toEffect: (command) => ({ ...command, type: 'host-effect' }),
+    publishEffect: (effect) => {
+      trace.push(`effect:${effect.id}`);
+      if (effect.id === 1) throw first;
+    },
+    notify: () => { trace.push('notify'); throw later; },
+  });
+  assert.equal(constructed.ok, true);
+
+  assert.throws(() => constructed.value.handle('increment'), (error) => error === first);
+  assert.equal(constructed.value.getSnapshot().state, 1);
+  assert.deepEqual(trace, ['effect:1', 'effect:2', 'notify']);
+});
+
+test('host adapter forwards its stable effect publisher before application notify', () => {
+  const trace = [];
+  const constructed = createHostAdapter({
+    initial: { ok: true, value: 0 },
+    decode: (input) => input,
+    reducer: (state, amount) => ({
+      ok: true,
+      value: { state: state + amount, commands: [{ amount }] },
+    }),
+    project: (command) => ({ type: 'apply', amount: command.amount }),
+    publishEffect: (effect) => trace.push(`${effect.type}:${effect.amount}`),
+    notify: () => trace.push('notify'),
+  });
+  assert.equal(constructed.ok, true);
+
+  const result = constructed.value.handleInput(2);
+  assert.equal(result.snapshot.state, 2);
+  assert.deepEqual(trace, ['apply:2', 'notify']);
+});
+
 test('facade connection exposes live state, subscriptions, and idempotent destruction', () => {
   let state = 0;
   let onUpdate = () => undefined;
@@ -215,6 +260,34 @@ test('facade connection exposes live state, subscriptions, and idempotent destru
   constructed.value.destroy();
   assert.equal(constructed.value.send(4), false);
   assert.equal(disconnects, 1);
+});
+
+test('facade connection completes subscribers before application update and preserves the first error', () => {
+  let state = 0;
+  let onUpdate = () => undefined;
+  const first = new Error('first subscriber failed');
+  const later = new Error('application update failed');
+  const trace = [];
+  const constructed = createFacadeConnection(
+    { onUpdate: () => { trace.push('onUpdate'); throw later; } },
+    (options) => {
+      onUpdate = options.onUpdate;
+      return {
+        ok: true,
+        value: {
+          getSnapshot: () => ({ state }),
+          handleEvent: (value) => { state = value; onUpdate(); return true; },
+        },
+      };
+    },
+  );
+  assert.equal(constructed.ok, true);
+  constructed.value.subscribe(() => { trace.push('subscriber:first'); throw first; });
+  constructed.value.subscribe(() => trace.push('subscriber:second'));
+
+  assert.throws(() => constructed.value.send(3), (error) => error === first);
+  assert.equal(constructed.value.state, 3);
+  assert.deepEqual(trace, ['subscriber:first', 'subscriber:second', 'onUpdate']);
 });
 
 test('facade connection retains stable method wrappers across repeated property reads', () => {
