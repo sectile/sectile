@@ -76,6 +76,93 @@ test('DOM Chart accessibility IDs preserve exact stable identity and linkage', (
   connection.disconnect();
 });
 
+test('DOM Chart completes required command effects before callback errors escape', () => {
+  const value = fixture();
+  const callbackErrors = {
+    'render-requested': new Error('render callback failed'),
+    'focus-datum': new Error('focus callback failed'),
+    'announce-datum': new Error('announce callback failed'),
+  };
+  const observed = [];
+  let connection;
+  connection = createDOMChart({
+    root: value.root,
+    canvas: value.canvas,
+    controller: value.controller,
+    renderer: value.renderer,
+    onCommand: (command) => {
+      const list = value.root.querySelector('[role="listbox"]');
+      const status = value.root.querySelector('[role="status"]');
+      if (command.type === 'render-requested') {
+        observed.push({ type: command.type, frames: connection.getLifecycleDiagnostics().frames });
+      } else if (command.type === 'focus-datum') {
+        observed.push({
+          type: command.type,
+          activeDescendant: list.getAttribute('aria-activedescendant'),
+          focused: value.window.document.activeElement?.id,
+        });
+      } else if (command.type === 'announce-datum') {
+        observed.push({ type: command.type, announcement: status.textContent });
+      }
+      const error = callbackErrors[command.type];
+      if (error !== undefined) throw error;
+    },
+  });
+
+  assert.throws(
+    () => value.controller.dispatch({ type: 'set-cursor', id: '1' }),
+    (error) => error === callbackErrors['render-requested'],
+  );
+  const activeID = value.root.querySelector('[role="listbox"]').getAttribute('aria-activedescendant');
+  assert.deepEqual(observed, [
+    { type: 'render-requested', frames: 1 },
+    { type: 'focus-datum', activeDescendant: activeID, focused: activeID },
+    { type: 'announce-datum', announcement: 'Data point 2: 1' },
+  ]);
+  assert.equal(value.controller.getSnapshot().state.cursor, '1');
+  connection.disconnect();
+});
+
+test('DOM Chart restores frame publication after a projection callback error', () => {
+  const value = fixture();
+  const callbackError = new Error('projection callback failed');
+  let projectionCalls = 0;
+  const connection = createDOMChart({
+    root: value.root,
+    canvas: value.canvas,
+    controller: value.controller,
+    renderer: value.renderer,
+    onProjectionChange: () => {
+      projectionCalls += 1;
+      if (projectionCalls > 1) throw callbackError;
+    },
+  });
+  assert.equal(projectionCalls, 1);
+
+  value.controller.replaceModel({ layers: [{
+    id: 'points', profile: 'point', data: [
+      { id: 1, x: 0, y: 0 },
+      { id: '1', x: 1, y: 1 },
+      { id: 2, x: 2, y: 2 },
+    ],
+  }] });
+  assert.equal(connection.getLifecycleDiagnostics().frames, 1);
+  assert.throws(() => connection.flush(), (error) => error === callbackError);
+  assert.equal(value.root.querySelectorAll('[role="option"]').length, 3);
+  assert.equal(connection.getLifecycleDiagnostics().frames, 0);
+
+  value.controller.replaceModel({ layers: [{
+    id: 'points', profile: 'point', data: [
+      { id: 1, x: 0, y: 0 },
+      { id: '1', x: 1, y: 1 },
+      { id: 2, x: 2, y: 2 },
+      { id: 3, x: 3, y: 3 },
+    ],
+  }] });
+  assert.equal(connection.getLifecycleDiagnostics().frames, 1);
+  connection.disconnect();
+});
+
 test('fallible DOM Chart construction is total for malformed host and renderer shapes', () => {
   assert.doesNotThrow(() => {
     const malformed = tryCreateDOMChart({ root: {}, canvas: {}, controller: {} });

@@ -502,20 +502,39 @@ const ChartRootRuntime = defineComponent({
       const prior = previousState;
       snapshot.value = current;
       previousState = current.state;
-      if (prior !== null) {
-        if (!controlled.activeDatum && prior.activeDatum !== current.state.activeDatum) emit('update:activeDatum', current.state.activeDatum);
-        if (!controlled.cursor && prior.cursor !== current.state.cursor) emit('update:cursor', current.state.cursor);
-        if (!controlled.selection && prior.selection !== current.state.selection) emit('update:modelValue', current.state.selection);
-        if (!controlled.view && prior.view !== current.state.view) emit('update:view', current.state.view);
+      if (prior === null) return;
+      let failure: readonly [unknown] | undefined;
+      if (!controlled.activeDatum && prior.activeDatum !== current.state.activeDatum) {
+        try { emit('update:activeDatum', current.state.activeDatum); }
+        catch (error) { failure ??= [error]; }
       }
+      if (!controlled.cursor && prior.cursor !== current.state.cursor) {
+        try { emit('update:cursor', current.state.cursor); }
+        catch (error) { failure ??= [error]; }
+      }
+      if (!controlled.selection && prior.selection !== current.state.selection) {
+        try { emit('update:modelValue', current.state.selection); }
+        catch (error) { failure ??= [error]; }
+      }
+      if (!controlled.view && prior.view !== current.state.view) {
+        try { emit('update:view', current.state.view); }
+        catch (error) { failure ??= [error]; }
+      }
+      if (failure !== undefined) throw failure[0];
     };
     const onCommand = (command: ChartCommand): void => {
-      emit('command', command);
-      if (command.type === 'active-change-requested') emit('update:activeDatum', command.id);
-      else if (command.type === 'cursor-change-requested') emit('update:cursor', command.id);
-      else if (command.type === 'selection-change-requested') emit('update:modelValue', command.selection);
-      else if (command.type === 'view-change-requested') emit('update:view', command.view);
-      publishSnapshot();
+      let failure: readonly [unknown] | undefined;
+      try { publishSnapshot(); }
+      catch (error) { failure ??= [error]; }
+      try { emit('command', command); }
+      catch (error) { failure ??= [error]; }
+      try {
+        if (command.type === 'active-change-requested') emit('update:activeDatum', command.id);
+        else if (command.type === 'cursor-change-requested') emit('update:cursor', command.id);
+        else if (command.type === 'selection-change-requested') emit('update:modelValue', command.selection);
+        else if (command.type === 'view-change-requested') emit('update:view', command.view);
+      } catch (error) { failure ??= [error]; }
+      if (failure !== undefined) throw failure[0];
     };
     const connect = (): void => {
       const owner = controller.value;
@@ -1254,27 +1273,51 @@ function bindController<ID extends StableID>(
     const current = controller.getSnapshot();
     if (current === previous) return;
     snapshot.value = current;
-    if (!controlledFlags.activeDatum && current.state.activeDatum !== previous.state.activeDatum) options.onActiveDatumChange?.(current.state.activeDatum);
-    if (!controlledFlags.cursor && current.state.cursor !== previous.state.cursor) options.onCursorChange?.(current.state.cursor);
-    if (!controlledFlags.selection && current.state.selection !== previous.state.selection) options.onSelectionChange?.(current.state.selection);
-    if (!controlledFlags.view && current.state.view !== previous.state.view) options.onViewChange?.(current.state.view);
+    let failure: readonly [unknown] | undefined;
+    if (!controlledFlags.activeDatum && current.state.activeDatum !== previous.state.activeDatum) {
+      try { options.onActiveDatumChange?.(current.state.activeDatum); }
+      catch (error) { failure ??= [error]; }
+    }
+    if (!controlledFlags.cursor && current.state.cursor !== previous.state.cursor) {
+      try { options.onCursorChange?.(current.state.cursor); }
+      catch (error) { failure ??= [error]; }
+    }
+    if (!controlledFlags.selection && current.state.selection !== previous.state.selection) {
+      try { options.onSelectionChange?.(current.state.selection); }
+      catch (error) { failure ??= [error]; }
+    }
+    if (!controlledFlags.view && current.state.view !== previous.state.view) {
+      try { options.onViewChange?.(current.state.view); }
+      catch (error) { failure ??= [error]; }
+    }
+    if (failure !== undefined) throw failure[0];
   };
   const unsubscribeCommands = controller.subscribeCommands((command) => {
-    options.onCommand?.(command);
-    if (command.type === 'active-change-requested') {
-      if (options.activeDatum !== undefined) options.activeDatum.value = command.id;
-      options.onActiveDatumChange?.(command.id);
-    } else if (command.type === 'cursor-change-requested') {
-      if (options.cursor !== undefined) options.cursor.value = command.id;
-      options.onCursorChange?.(command.id);
-    } else if (command.type === 'selection-change-requested') {
-      if (options.selection !== undefined) options.selection.value = command.selection;
-      options.onSelectionChange?.(command.selection);
-    } else if (command.type === 'view-change-requested') {
-      if (options.view !== undefined) options.view.value = command.view;
-      options.onViewChange?.(command.view);
+    let failure: readonly [unknown] | undefined;
+    if (command.type === 'active-change-requested' && options.activeDatum !== undefined) {
+      try { options.activeDatum.value = command.id; }
+      catch (error) { failure ??= [error]; }
+    } else if (command.type === 'cursor-change-requested' && options.cursor !== undefined) {
+      try { options.cursor.value = command.id; }
+      catch (error) { failure ??= [error]; }
+    } else if (command.type === 'selection-change-requested' && options.selection !== undefined) {
+      try { options.selection.value = command.selection; }
+      catch (error) { failure ??= [error]; }
+    } else if (command.type === 'view-change-requested' && options.view !== undefined) {
+      try { options.view.value = command.view; }
+      catch (error) { failure ??= [error]; }
     }
-    publish();
+    try { publish(); }
+    catch (error) { failure ??= [error]; }
+    try { options.onCommand?.(command); }
+    catch (error) { failure ??= [error]; }
+    try {
+      if (command.type === 'active-change-requested') options.onActiveDatumChange?.(command.id);
+      else if (command.type === 'cursor-change-requested') options.onCursorChange?.(command.id);
+      else if (command.type === 'selection-change-requested') options.onSelectionChange?.(command.selection);
+      else if (command.type === 'view-change-requested') options.onViewChange?.(command.view);
+    } catch (error) { failure ??= [error]; }
+    if (failure !== undefined) throw failure[0];
   });
   const unsubscribeSnapshots = controller.subscribeSnapshots(() => { publish(); });
   const result: UseChartResult<ID> = {

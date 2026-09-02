@@ -80,6 +80,8 @@ window.addEventListener('pagehide', () => {
 
 In a single-page application, run the same two cleanup calls when the route or owning component unmounts instead of waiting for `pagehide`.
 
+`onCommand` runs after the command's required render scheduling, focus, or announcement effect. `onProjectionChange` runs after renderer, navigation, and accessibility publication. A callback error does not roll back committed controller state or skip the remaining required host work; the first synchronous error is rethrown after those phases finish.
+
 ## Choose a renderer
 
 `auto` uses WebGL2 when available and falls back to Canvas2D. It is the right default for most applications. Choose `canvas2d` when diagnosing compatibility, or `webgl2` when the application must fail instead of using the slower fallback.

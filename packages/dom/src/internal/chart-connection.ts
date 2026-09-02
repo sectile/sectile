@@ -161,20 +161,33 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     });
     if (!projected.ok) return;
     this.#projection = projected.value;
-    this.#renderer.render(projected.value);
-    this.#overlay.render(projected.value, this.controller.getSnapshot().state);
-    this.#navigation.refreshCapabilities(projected.value);
-    this.#options.onProjectionChange?.(projected.value);
-    this.#refreshAccessibility();
-    const elapsed = this.#view.performance.now() - startedAt;
-    if (this.#policy.type === 'adaptive' && this.#adaptScale(elapsed)) this.#schedule();
+    let failure: readonly [unknown] | undefined;
+    try { this.#renderer.render(projected.value); }
+    catch (error) { failure ??= [error]; }
+    try { this.#overlay.render(projected.value, this.controller.getSnapshot().state); }
+    catch (error) { failure ??= [error]; }
+    try { this.#navigation.refreshCapabilities(projected.value); }
+    catch (error) { failure ??= [error]; }
+    try { this.#refreshAccessibility(); }
+    catch (error) { failure ??= [error]; }
+    try {
+      const elapsed = this.#view.performance.now() - startedAt;
+      if (this.#policy.type === 'adaptive' && this.#adaptScale(elapsed)) this.#schedule();
+    } catch (error) { failure ??= [error]; }
+    try { this.#options.onProjectionChange?.(projected.value); }
+    catch (error) { failure ??= [error]; }
+    if (failure !== undefined) throw failure[0];
   }
 
   public flush(): void {
     if (!this.#active) return;
     if (this.#frame !== 0) { this.#view.cancelAnimationFrame(this.#frame); this.#frame = 0; }
-    this.#runFrame();
-    this.#renderer.flush();
+    let failure: readonly [unknown] | undefined;
+    try { this.#runFrame(); }
+    catch (error) { failure ??= [error]; }
+    try { this.#renderer.flush(); }
+    catch (error) { failure ??= [error]; }
+    if (failure !== undefined) throw failure[0];
   }
 
   public disconnect(): void {
@@ -202,18 +215,25 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
 
   readonly #handleCommand = (command: ChartCommand<ID>): void => {
     if (!this.#active) return;
-    this.#options.onCommand?.(command);
+    let failure: readonly [unknown] | undefined;
     if (command.type === 'render-requested') {
-      if (!this.#inFrame) this.#schedule();
-    } else if (command.type === 'focus-datum') {
-      if (this.#accessibilityLimit === 0) return;
-      this.#refreshAccessibility(command.id);
-      this.#nodes.get(command.id)?.focus({ preventScroll: true });
+      try { if (!this.#inFrame) this.#schedule(); }
+      catch (error) { failure ??= [error]; }
+    } else if (command.type === 'focus-datum' && this.#accessibilityLimit !== 0) {
+      try { this.#refreshAccessibility(command.id); }
+      catch (error) { failure ??= [error]; }
+      try { this.#nodes.get(command.id)?.focus({ preventScroll: true }); }
+      catch (error) { failure ??= [error]; }
     } else if (command.type === 'announce-datum') {
-      this.#live.textContent = this.#label(command.id, this.controller.getModel().indexOf(command.id));
+      try { this.#live.textContent = this.#label(command.id, this.controller.getModel().indexOf(command.id)); }
+      catch (error) { failure ??= [error]; }
     } else if (command.type === 'view-phase' && command.phase === 'settled') {
-      this.#announceView(command.axisID);
+      try { this.#announceView(command.axisID); }
+      catch (error) { failure ??= [error]; }
     }
+    try { this.#options.onCommand?.(command); }
+    catch (error) { failure ??= [error]; }
+    if (failure !== undefined) throw failure[0];
   };
 
   readonly #handleResize = (): void => { this.#schedule(); };
@@ -255,14 +275,23 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     if (!this.#active) return;
     this.#frame = 0;
     this.#inFrame = true;
-    if (this.#pendingPointer !== null && this.#projection !== null) {
-      const hits = hitTestChartProjection(this.#projection, { ...this.#pendingPointer, maximumHits: 1 });
-      const hit = hits[0];
-      this.controller.dispatch({ type: 'pointer-candidate', id: hit?.kind === 'datum' ? hit.id : null });
-      this.#pendingPointer = null;
+    let failure: readonly [unknown] | undefined;
+    try {
+      if (this.#pendingPointer !== null && this.#projection !== null) {
+        const pointer = this.#pendingPointer;
+        this.#pendingPointer = null;
+        try {
+          const hits = hitTestChartProjection(this.#projection, { ...pointer, maximumHits: 1 });
+          const hit = hits[0];
+          this.controller.dispatch({ type: 'pointer-candidate', id: hit?.kind === 'datum' ? hit.id : null });
+        } catch (error) { failure ??= [error]; }
+      }
+      try { this.refresh(); }
+      catch (error) { failure ??= [error]; }
+    } finally {
+      this.#inFrame = false;
     }
-    this.refresh();
-    this.#inFrame = false;
+    if (failure !== undefined) throw failure[0];
   };
 
   #hitAt(clientX: number, clientY: number): ID | null {

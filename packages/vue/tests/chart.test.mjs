@@ -94,6 +94,52 @@ test('controlled view publishes requests while defaultView remains controller-ow
   seed.dispose(); chart.dispose(); uncontrolled.dispose();
 });
 
+test('Chart callbacks observe published controlled refs and cannot block sibling callbacks', async () => {
+  const cursor = shallowRef(1);
+  const commandError = new Error('application command failed');
+  const changeError = new Error('application cursor change failed');
+  const observed = [];
+  let chart;
+  chart = useChart({
+    definition: cartesianDefinition(),
+    viewCapabilities: [{ axisID: 10 }],
+    cursor,
+    onCommand: (command) => {
+      if (command.type !== 'cursor-change-requested') return;
+      observed.push({
+        callback: 'command',
+        requested: command.id,
+        controlled: cursor.value,
+        committed: chart.snapshot.value.state.cursor,
+      });
+      throw commandError;
+    },
+    onCursorChange: (value) => {
+      observed.push({
+        callback: 'change',
+        requested: value,
+        controlled: cursor.value,
+        committed: chart.snapshot.value.state.cursor,
+      });
+      throw changeError;
+    },
+  });
+
+  assert.throws(
+    () => chart.dispatch({ type: 'set-cursor', id: '2' }),
+    (error) => error === commandError,
+  );
+  assert.equal(cursor.value, '2');
+  assert.deepEqual(observed, [
+    { callback: 'command', requested: '2', controlled: '2', committed: 1 },
+    { callback: 'change', requested: '2', controlled: '2', committed: 1 },
+  ]);
+
+  await nextTick();
+  assert.equal(chart.snapshot.value.state.cursor, '2');
+  chart.dispose();
+});
+
 test('controlled cursor focuses only after the Vue owner accepts the request', async () => {
   const cursor = shallowRef(1);
   const commands = [];

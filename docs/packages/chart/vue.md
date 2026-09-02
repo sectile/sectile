@@ -128,6 +128,8 @@ Records with `id`, `value`, and `label` fields need no additional mapping. Pie a
 
 The default slot exposes current `state`, `projection`, and `definition` values for a tooltip or nearby status. Components elsewhere in the page can read only the value they need with `useChartSelector`, `useChartLayerSelector`, or `useChartAxisSelector`.
 
+Controlled refs and committed snapshots are published before command and change callbacks run. A callback error does not undo the publication or prevent the other matching callback from running; imperative composables rethrow the first synchronous callback error after publication completes.
+
 Use `ChartProvider` or `createChartComponents(controller)` only when one controller must be shared across several chart roots or component subtrees.
 
 During server rendering, `ChartRoot` does not create browser resources. Pass the same chart components and controlled values on the server and the first client render. Measurement and Canvas drawing start after hydration.
