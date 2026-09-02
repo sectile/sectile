@@ -278,11 +278,12 @@ async function runAll(): Promise<void> {
       durationMs: round(performance.now() - startedAt), source: __BENCHMARK_SOURCE__,
     });
     const report = Object.freeze({
-      benchmark: 'sectile-virtual-ecosystem', protocolVersion: 10,
+      benchmark: 'sectile-virtual-ecosystem', protocolVersion: 11,
       environment: navigator.userAgent, source: __BENCHMARK_SOURCE__,
       runs: Object.freeze({ [runId]: run }),
       conditions: Object.freeze({
         family, itemCount, viewport: Object.freeze([VIEWPORT_WIDTH, VIEWPORT_HEIGHT]),
+        viewportPolicy: 'scrollbars are visually hidden so the CSS viewport and client viewport remain identical across operating systems',
         validation: Object.freeze({
           exact: 'exact content extent, absolute item geometry, identity, and viewport coverage',
           exactGeometry: 'finite provisional extent plus exact absolute item geometry, identity, and viewport coverage',

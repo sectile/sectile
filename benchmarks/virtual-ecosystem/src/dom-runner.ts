@@ -1,6 +1,7 @@
 import type { MutationLocation } from './mutations.js';
 export { waitForElement } from './dom-observation.js';
 import {
+  attainableViewportOffset,
   correctedTargetScroll,
   initialTargetScroll,
   intersectsViewportGeometry,
@@ -99,8 +100,8 @@ export function waitForFrameSettlement<Failure>(
 }
 
 export async function positionBenchmarkTarget(options: PositionTargetOptions): Promise<void> {
-  const desiredTop = targetViewportOffset(options.targetHeight, options.location, options.scroller.clientHeight);
-  const desiredLeft = options.targetViewportLeft
+  const requestedTop = targetViewportOffset(options.targetHeight, options.location, options.scroller.clientHeight);
+  const requestedLeft = options.targetViewportLeft
     ?? targetViewportOffset(options.targetWidth, options.location, options.scroller.clientWidth);
   const scrollGeometry = () => ({
     targetIndex: options.targetIndex,
@@ -128,9 +129,22 @@ export async function positionBenchmarkTarget(options: PositionTargetOptions): P
       const rect = target.getBoundingClientRect();
       const targetViewportLeft = rect.left - viewport.left;
       const targetViewportTop = rect.top - viewport.top;
-      const horizontalSettled = options.scroller.scrollWidth <= options.scroller.clientWidth + options.tolerance
-        || Math.abs(targetViewportLeft - desiredLeft) <= options.tolerance;
-      if (horizontalSettled && Math.abs(targetViewportTop - desiredTop) <= options.tolerance) {
+      const attainableTop = attainableViewportOffset(
+        options.scroller.scrollTop + targetViewportTop,
+        requestedTop,
+        options.scroller.clientHeight,
+        options.scroller.scrollHeight,
+      );
+      const attainableLeft = attainableViewportOffset(
+        options.scroller.scrollLeft + targetViewportLeft,
+        requestedLeft,
+        options.scroller.clientWidth,
+        options.scroller.scrollWidth,
+      );
+      if (
+        Math.abs(targetViewportLeft - attainableLeft) <= options.tolerance
+        && Math.abs(targetViewportTop - attainableTop) <= options.tolerance
+      ) {
         const geometry = Object.freeze({
           scrollTop: options.scroller.scrollTop,
           scrollHeight: options.scroller.scrollHeight,
@@ -151,8 +165,8 @@ export async function positionBenchmarkTarget(options: PositionTargetOptions): P
       } else {
         previousGeometry = undefined;
         stableFrames = 0;
-        top = Math.max(0, options.scroller.scrollTop + targetViewportTop - desiredTop);
-        left = Math.max(0, options.scroller.scrollLeft + targetViewportLeft - desiredLeft);
+        top = Math.max(0, options.scroller.scrollTop + targetViewportTop - attainableTop);
+        left = Math.max(0, options.scroller.scrollLeft + targetViewportLeft - attainableLeft);
       }
       pushTrace(trace, {
         attempt,
@@ -161,6 +175,8 @@ export async function positionBenchmarkTarget(options: PositionTargetOptions): P
         scrollLeft: Math.round(options.scroller.scrollLeft),
         targetViewportTop: Math.round(targetViewportTop),
         targetViewportLeft: Math.round(targetViewportLeft),
+        attainableTop: Math.round(attainableTop),
+        attainableLeft: Math.round(attainableLeft),
         stableFrames,
       });
       continue;

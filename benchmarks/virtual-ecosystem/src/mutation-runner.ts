@@ -39,6 +39,11 @@ import {
   waitForElement as waitForDOMElement,
   waitForFrameSettlement,
 } from './dom-runner.js';
+import {
+  expectedScrollerExtent,
+  expectedScrollerExtentDelta,
+  visibleContentRange,
+} from './baseline-policy.js';
 
 export interface MutationFailure {
   readonly severity: 'failure' | 'fatal';
@@ -187,7 +192,7 @@ export const mutationConditions = Object.freeze({
   reproducibleFailureSamplesPerBatch: REPRODUCIBLE_FAILURE_SAMPLES_PER_BATCH,
   geometryTolerancePx: GEOMETRY_TOLERANCE_PX,
   lifecycle: 'adaptive independent mounts use batches of 5, 5, 10, 10, 10, and 10 measured mutations; each sample restores a verified initial collection',
-  completion: 'first animation frame with correct DOM order, row geometry, viewport coverage, and anchor position; exact total height is required for uniform rows and recorded as estimation quality for heterogeneous rows',
+  completion: 'first animation frame with correct DOM order, row geometry, content-bearing viewport coverage, browser scroll extent, and attainable anchor position; exact scroll extent is required for uniform rows and recorded as estimation quality for heterogeneous rows',
   recovery: 'every frame after the mutation becomes observable is checked; recovery within 200ms is responsive, recovery from 200ms through 500ms is slow, and no correct frame within 500ms is a hard failure; an unchanged incorrect layout can fail earlier at the stable-failure threshold',
   earlyStop: 'a scenario stops after two independent batches reproduce the same hard failure five times each, or after at least 30 clean samples keep the cumulative median within 5% and p95 within 10%',
 });
@@ -466,7 +471,7 @@ async function runMountedMutationSample(
       });
     }
     const nextIndex = indexByID(scenario.nextItems);
-    const expectedScrollHeight = scenario.nextTotalHeight;
+    const expectedContentHeight = scenario.nextTotalHeight;
     const anchor = captureAnchor(scroller, initialInspection.rows, initialIndex, nextIndex, scenario);
     if (anchor === undefined) {
       return Object.freeze({
@@ -489,7 +494,7 @@ async function runMountedMutationSample(
       scroller,
       host,
       nextIndex,
-      expectedScrollHeight,
+      expectedContentHeight,
       anchor,
       startedAt,
     });
@@ -519,7 +524,7 @@ interface WaitOptions {
   readonly scroller: HTMLElement;
   readonly host: HTMLElement;
   readonly nextIndex: ReadonlyMap<string, number>;
-  readonly expectedScrollHeight: number;
+  readonly expectedContentHeight: number;
   readonly anchor: Anchor | undefined;
   readonly startedAt: number;
 }
@@ -537,7 +542,7 @@ function waitForCorrectMutation(options: WaitOptions): Promise<SampleOutcome> {
         options.scroller,
         options.nextIndex,
         options.scenario.nextLayout,
-        options.expectedScrollHeight,
+        options.expectedContentHeight,
         options.anchor,
         options.scenario.rowProfile === 'uniform' && options.adapter.sizeMode !== 'automatic',
       );
@@ -614,7 +619,7 @@ function inspectLayout(
   scroller: HTMLElement,
   expectedIndex: ReadonlyMap<string, number>,
   expectedLayout: ExpectedLayout,
-  expectedScrollHeight: number,
+  expectedContentHeight: number,
   anchor: Anchor | undefined,
   strictTotalHeight: boolean,
 ): LayoutInspection {
@@ -672,24 +677,29 @@ function inspectLayout(
 
   const visibleRows = rows.filter((row) => row.bottom > viewport.top + GEOMETRY_TOLERANCE_PX && row.top < viewport.bottom - GEOMETRY_TOLERANCE_PX);
   if (visibleRows.length === 0) {
-    failures.push({ code: 'blank-viewport', message: 'No row covers the viewport.', details: describeRows(scroller) });
+    failures.push({ code: 'blank-viewport', message: 'No row covers the visible content region.', details: describeRows(scroller) });
   } else {
     const first = visibleRows[0]!;
     const last = visibleRows.at(-1)!;
-    if (scroller.scrollTop > GEOMETRY_TOLERANCE_PX && first.top > viewport.top + GEOMETRY_TOLERANCE_PX) {
-      failures.push({ code: 'blank-viewport', message: 'Blank space appeared at the top of the viewport.', details: { viewportTop: viewport.top, first } });
-    }
-    const maximum = scroller.scrollHeight - scroller.clientHeight;
-    if (scroller.scrollTop < maximum - GEOMETRY_TOLERANCE_PX && last.bottom < viewport.bottom - GEOMETRY_TOLERANCE_PX) {
-      failures.push({ code: 'blank-viewport', message: 'Blank space appeared at the bottom of the viewport.', details: { viewportBottom: viewport.bottom, last } });
+    const contentRange = visibleContentRange(expectedContentHeight, scroller.clientHeight, scroller.scrollTop);
+    if (contentRange !== null) {
+      const expectedTop = viewport.top + contentRange.start;
+      const expectedBottom = viewport.top + contentRange.end;
+      if (first.top > expectedTop + GEOMETRY_TOLERANCE_PX) {
+        failures.push({ code: 'blank-viewport', message: 'Blank space appeared before the visible content.', details: { expectedTop, first } });
+      }
+      if (last.bottom < expectedBottom - GEOMETRY_TOLERANCE_PX) {
+        failures.push({ code: 'blank-viewport', message: 'Blank space appeared after the visible content.', details: { expectedBottom, last } });
+      }
     }
   }
 
+  const expectedScrollHeight = expectedScrollerExtent(expectedContentHeight, scroller.clientHeight);
   if (strictTotalHeight && Math.abs(scroller.scrollHeight - expectedScrollHeight) > GEOMETRY_TOLERANCE_PX) {
     failures.push({
       code: 'scroll-height',
       message: `Scroll height was ${scroller.scrollHeight}px instead of ${expectedScrollHeight}px.`,
-      details: { expectedScrollHeight, actualScrollHeight: scroller.scrollHeight },
+      details: { expectedContentHeight, expectedScrollHeight, actualScrollHeight: scroller.scrollHeight },
     });
   }
 
@@ -744,8 +754,16 @@ function captureAnchor(
   const beforeAbsolute = scenario.initialLayout.offsetAt(beforeIndex);
   const afterAbsolute = scenario.nextLayout.offsetAt(afterIndex);
   const absoluteDelta = afterAbsolute - beforeAbsolute;
+  const projectedScrollHeight = Math.max(
+    scroller.clientHeight,
+    scroller.scrollHeight + expectedScrollerExtentDelta(
+      scenario.initialTotalHeight,
+      scenario.nextTotalHeight,
+      scroller.clientHeight,
+    ),
+  );
   const desiredScrollTop = Math.min(
-    Math.max(0, scroller.scrollHeight + scenario.expectedScrollHeightDelta - scroller.clientHeight),
+    Math.max(0, projectedScrollHeight - scroller.clientHeight),
     Math.max(0, scroller.scrollTop + absoluteDelta),
   );
   const viewportOffset = (selected.top - viewport.top) + absoluteDelta - (desiredScrollTop - scroller.scrollTop);

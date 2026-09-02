@@ -1,7 +1,12 @@
 import { fixedAdapters, type BenchmarkAdapter, type MountedAdapter } from './adapters.js';
 import { ITEM_COUNT, items, ROW_HEIGHT, VIEWPORT_HEIGHT, type RowProfile } from './constants.js';
 import { createHeightOracle, type ExpectedLayout, type HeightOracle } from './fixture.js';
-import { requiresExactTotalHeight } from './baseline-policy.js';
+import {
+  clampedScrollOffset,
+  expectedScrollerExtent,
+  requiresExactTotalHeight,
+  visibleContentRange,
+} from './baseline-policy.js';
 import { waitForElement, waitForPresentationBoundary } from './dom-observation.js';
 import {
   EMBEDDED_LONG_TASK_BUDGET_MS,
@@ -80,6 +85,7 @@ interface BenchmarkResult {
   readonly scrollProbeMedianMs: number;
   readonly scrollChecksMedian: number;
   readonly scrollSampleCount: number;
+  readonly scrollNoOpSampleCount: number;
   readonly scrollRoundMedianRangeMs: readonly [number, number];
   readonly scrollRoundP95RangeMs: readonly [number, number];
   readonly renderedRows: number;
@@ -108,6 +114,7 @@ interface BaselineBenchmarkFailure {
 }
 
 interface ScrollMeasurement {
+  readonly trigger: 'native-scroll' | 'no-op';
   readonly elapsedMs: number;
   readonly lowerBoundMs: number;
   readonly probeMs: number;
@@ -135,6 +142,7 @@ interface RawBenchmarkResult extends Omit<BenchmarkResult,
   | 'scrollProbeMedianMs'
   | 'scrollChecksMedian'
   | 'scrollSampleCount'
+  | 'scrollNoOpSampleCount'
   | 'scrollRoundMedianRangeMs'
   | 'scrollRoundP95RangeMs'
   | 'scrollTotalHeightErrorMedianPercent'
@@ -160,6 +168,8 @@ interface BaselineRowSnapshot {
 interface BaselineLayoutSnapshot {
   readonly observedAt: number;
   readonly scrollHeight: number;
+  readonly clientHeight: number;
+  readonly scrollTop: number;
   readonly viewportTop: number;
   readonly viewportBottom: number;
   readonly rows: readonly BaselineRowSnapshot[];
@@ -511,7 +521,7 @@ async function runAll(): Promise<void> {
     });
     const report = {
       benchmark: 'sectile-virtual-ecosystem',
-      protocolVersion: 11,
+      protocolVersion: 12,
       environment: navigator.userAgent,
       source: __BENCHMARK_SOURCE__,
       runs,
@@ -534,11 +544,11 @@ async function runAll(): Promise<void> {
           medianRelativeTolerance: BASELINE_MEDIAN_RELATIVE_TOLERANCE,
           p95RelativeTolerance: BASELINE_P95_RELATIVE_TOLERANCE,
           completion: rowProfile === 'uniform'
-            ? 'exact target row, contiguous row geometry, correct total scroll height, and complete viewport coverage'
-            : 'correct visible row content and geometry, contiguous viewport coverage, and a separately recorded total-height estimate error',
-          trigger: 'programmatic scrollTop change; the browser-generated scroll event is observed at document capture before target listeners',
-          observation: 'timing starts when the browser begins native scroll-event delivery and ends after DOM geometry has been read; correctness validation runs outside the timed interval',
-          diagnostics: 'raw samples retain round, sample, lower and upper timing bounds, geometry-probe cost, and correctness-check count; summaries retain per-round ranges',
+            ? 'exact target row, contiguous row geometry, correct browser scroll extent, and complete coverage of the content-bearing viewport region'
+            : 'correct visible row content and geometry, contiguous coverage of the content-bearing viewport region, and a separately recorded scroll-extent estimate error',
+          trigger: 'programmatic scrollTop change; native samples observe browser-generated scroll delivery at document capture, while an unchanged clamped offset is recorded as a no-op sample',
+          observation: 'native timing starts when the browser begins scroll-event delivery and ends after DOM geometry has been read; no-op samples report zero scroll latency and retain the untimed geometry-probe cost',
+          diagnostics: 'raw samples retain trigger kind, round, sample, lower and upper timing bounds, geometry-probe cost, and correctness-check count; summaries retain no-op counts and per-round ranges',
           stableFailureMinMs: STABLE_FAILURE_MIN_MS,
           stableFailureFrames: STABLE_FAILURE_FRAMES,
           timing: {
@@ -547,8 +557,8 @@ async function runAll(): Promise<void> {
             setupMs: 'warm median for adapter and framework setup through committed scroller output',
             firstRowsMs: 'warm median until the first benchmark rows exist',
             mountMs: rowProfile === 'uniform'
-              ? 'time until total scroll height and viewport geometry are correct'
-              : 'time until the initial viewport geometry is correct; total-height estimate error is recorded separately',
+              ? 'time until browser scroll extent and visible content geometry are correct'
+              : 'time until the initial visible content geometry is correct; scroll-extent estimate error is recorded separately',
           },
         },
         mutations: mutationConditions,
@@ -771,7 +781,10 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement, oracle: 
     const strictTotalHeight = requiresExactTotalHeight(benchmarkCase.rowProfile);
     await waitForBaselineLayout(mounted.scroller, strictTotalHeight ? 0 : undefined, expectedLayout, strictTotalHeight);
     const mountMs = performance.now() - startedAt;
-    const initialTotalHeightErrorPercent = totalHeightErrorPercent(mounted.scroller.scrollHeight, expectedLayout.totalHeight);
+    const initialTotalHeightErrorPercent = totalHeightErrorPercent(
+      mounted.scroller.scrollHeight,
+      expectedScrollerExtent(expectedLayout.totalHeight, mounted.scroller.clientHeight),
+    );
     const sampleCount = WARMUP_SCROLLS + RECORDED_SCROLLS;
     const fractions = Array.from({ length: sampleCount }, (_, index) => (((index + 1) * 19) % 47) / 46);
     const measurements: ScrollMeasurement[] = [];
@@ -829,6 +842,7 @@ function aggregate(
   const mounts = rounds.map((round) => round.mountMs).sort(ascending);
   const initialTotalHeightErrors = rounds.map((round) => round.initialTotalHeightErrorPercent).sort(ascending);
   const measurements = rounds.flatMap((round) => round.scrollMeasurements);
+  const scrollNoOpSampleCount = measurements.filter((measurement) => measurement.trigger === 'no-op').length;
   const scrolls = measurements.map((measurement) => measurement.elapsedMs).sort(ascending);
   const lowerBounds = measurements.map((measurement) => measurement.lowerBoundMs).sort(ascending);
   const probes = measurements.map((measurement) => measurement.probeMs).sort(ascending);
@@ -862,6 +876,7 @@ function aggregate(
     scrollProbeMedianMs: round(percentile(probes, 0.5)),
     scrollChecksMedian: round(percentile(checks, 0.5)),
     scrollSampleCount: measurements.length,
+    scrollNoOpSampleCount,
     scrollRoundMedianRangeMs: Object.freeze([round(Math.min(...roundMedians)), round(Math.max(...roundMedians))] as const),
     scrollRoundP95RangeMs: Object.freeze([round(Math.min(...roundP95s)), round(Math.max(...roundP95s))] as const),
     renderedRows: last.renderedRows,
@@ -950,6 +965,23 @@ async function measureScrollLayout(
   strictTotalHeight: boolean,
 ): Promise<ScrollMeasurement> {
   await nextAnimationFrame();
+  const targetOffset = clampedScrollOffset(offset, scroller.scrollHeight, scroller.clientHeight);
+  if (Math.abs(scroller.scrollTop - targetOffset) <= 0.5) {
+    const probeStartedAt = performance.now();
+    const snapshot = captureBaselineLayout(scroller);
+    assertBaselineSnapshot(snapshot, expectedIndex, expectedLayout, strictTotalHeight);
+    return Object.freeze({
+      trigger: 'no-op',
+      elapsedMs: 0,
+      lowerBoundMs: 0,
+      probeMs: snapshot.observedAt - probeStartedAt,
+      checks: 1,
+      totalHeightErrorPercent: totalHeightErrorPercent(
+        snapshot.scrollHeight,
+        expectedScrollerExtent(expectedLayout.totalHeight, snapshot.clientHeight),
+      ),
+    });
+  }
   return new Promise((resolve, reject) => {
     let settled = false;
     let checkQueued = false;
@@ -981,11 +1013,15 @@ async function measureScrollLayout(
         settled = true;
         cleanup();
         resolve(Object.freeze({
+          trigger: 'native-scroll',
           elapsedMs: snapshot.observedAt - startedAt,
           lowerBoundMs: probeStartedAt - startedAt,
           probeMs,
           checks,
-          totalHeightErrorPercent: totalHeightErrorPercent(snapshot.scrollHeight, expectedLayout.totalHeight),
+          totalHeightErrorPercent: totalHeightErrorPercent(
+            snapshot.scrollHeight,
+            expectedScrollerExtent(expectedLayout.totalHeight, snapshot.clientHeight),
+          ),
         }));
       } catch (error) {
         lastFailureMessage = error instanceof Error ? error.message : String(error);
@@ -1036,7 +1072,7 @@ async function measureScrollLayout(
       reject(new Error(`Timed out waiting for a correct scroll layout: ${lastFailureMessage}`));
     }, FRAME_TIMEOUT_MS);
 
-    scroller.scrollTop = offset;
+    scroller.scrollTop = targetOffset;
   });
 }
 
@@ -1056,6 +1092,8 @@ function captureBaselineLayout(scroller: HTMLElement): BaselineLayoutSnapshot {
   return Object.freeze({
     observedAt: performance.now(),
     scrollHeight,
+    clientHeight: scroller.clientHeight,
+    scrollTop: scroller.scrollTop,
     viewportTop: viewport.top,
     viewportBottom: viewport.bottom,
     rows: Object.freeze(rows),
@@ -1065,6 +1103,8 @@ function captureBaselineLayout(scroller: HTMLElement): BaselineLayoutSnapshot {
 function baselineFailureFingerprint(snapshot: BaselineLayoutSnapshot): string {
   return JSON.stringify({
     scrollHeight: snapshot.scrollHeight,
+    clientHeight: snapshot.clientHeight,
+    scrollTop: Math.round(snapshot.scrollTop),
     rows: snapshot.rows.map((row) => Object.freeze({
       index: row.index,
       top: Math.round(row.top),
@@ -1080,7 +1120,7 @@ function assertBaselineSnapshot(
   expectedLayout: ExpectedLayout,
   strictTotalHeight: boolean,
 ): void {
-  const expectedHeight = expectedLayout.totalHeight;
+  const expectedHeight = expectedScrollerExtent(expectedLayout.totalHeight, snapshot.clientHeight);
   if (strictTotalHeight && Math.abs(snapshot.scrollHeight - expectedHeight) > HEIGHT_TOLERANCE_PX) {
     throw new Error(`Scroll height ${snapshot.scrollHeight}px did not match ${expectedHeight}px.`);
   }
@@ -1109,8 +1149,17 @@ function assertBaselineSnapshot(
   }
   const first = visible[0]!;
   const last = visible.at(-1)!;
-  if (first.top > snapshot.viewportTop + HEIGHT_TOLERANCE_PX) throw new Error(`Blank space precedes benchmark row ${first.index}.`);
-  if (last.bottom < snapshot.viewportBottom - HEIGHT_TOLERANCE_PX) throw new Error(`Blank space follows benchmark row ${last.index}.`);
+  const contentRange = visibleContentRange(
+    expectedLayout.totalHeight,
+    snapshot.clientHeight,
+    snapshot.scrollTop,
+  );
+  if (contentRange !== null) {
+    const expectedTop = snapshot.viewportTop + contentRange.start;
+    const expectedBottom = snapshot.viewportTop + contentRange.end;
+    if (first.top > expectedTop + HEIGHT_TOLERANCE_PX) throw new Error(`Blank space precedes benchmark row ${first.index}.`);
+    if (last.bottom < expectedBottom - HEIGHT_TOLERANCE_PX) throw new Error(`Blank space follows benchmark row ${last.index}.`);
+  }
   for (let index = 1; index < visible.length; index += 1) {
     if (visible[index]!.index !== visible[index - 1]!.index + 1) throw new Error(`Visible benchmark rows ${visible[index - 1]!.index} and ${visible[index]!.index} are not contiguous.`);
   }

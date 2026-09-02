@@ -106,7 +106,9 @@ const copy = computed(() => isKorean.value ? {
   earlyStop: (actual: number, planned: number) => `동일 오류가 재현되어 ${planned}회 중 ${actual}회에서 종료했습니다.`,
   mountEvidence: (rounds: number) => `${rounds}라운드`,
   firstMountEvidence: '첫 인스턴스 1회 · 웜 중앙값에서 제외',
-  scrollEvidence: (samples: number, rounds: number, range: readonly [number, number]) => `표본 ${samples} · ${rounds}라운드 · 중앙값 범위 ${range[0].toFixed(1)}–${range[1].toFixed(1)} ms`,
+  scrollEvidence: (samples: number, rounds: number, range: readonly [number, number], noOps: number) => noOps > 0
+    ? `표본 ${samples} · 무동작 ${noOps} · ${rounds}라운드 · 중앙값 범위 ${range[0].toFixed(1)}–${range[1].toFixed(1)} ms`
+    : `표본 ${samples} · ${rounds}라운드 · 중앙값 범위 ${range[0].toFixed(1)}–${range[1].toFixed(1)} ms`,
   mutationEvidence: (samples: number, planned: number) => `표본 ${samples}/${planned}`,
   failureCode: { exception: '실행', 'target-position': '대상 행 배치', 'scroll-anchor': '기준 행 이동', 'row-overlap': '행 겹침', 'scroll-height': '전체 높이 오차', 'blank-viewport': '빈 화면', timeout: '안정화 실패', 'row-gap': '행 사이 빈틈', 'row-height': '행 높이 오차', 'row-order': '행 순서 오류', 'duplicate-id': 'ID 중복', 'unexpected-id': '잘못된 ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `최대 ${maximum.toFixed(0)} ms · 로그 눈금` : `최대 ${maximum.toFixed(0)} ms`,
@@ -182,7 +184,9 @@ const copy = computed(() => isKorean.value ? {
   earlyStop: (actual: number, planned: number) => `The repeated error stopped the run after ${actual} of ${planned} samples.`,
   mountEvidence: (rounds: number) => `${rounds} rounds`,
   firstMountEvidence: '1 first instance · excluded from warm medians',
-  scrollEvidence: (samples: number, rounds: number, range: readonly [number, number]) => `n=${samples} · ${rounds} rounds · median range ${range[0].toFixed(1)}–${range[1].toFixed(1)} ms`,
+  scrollEvidence: (samples: number, rounds: number, range: readonly [number, number], noOps: number) => noOps > 0
+    ? `n=${samples} · ${noOps} no-op · ${rounds} rounds · median range ${range[0].toFixed(1)}–${range[1].toFixed(1)} ms`
+    : `n=${samples} · ${rounds} rounds · median range ${range[0].toFixed(1)}–${range[1].toFixed(1)} ms`,
   mutationEvidence: (samples: number, planned: number) => `n=${samples}/${planned}`,
   failureCode: { exception: 'an execution error', 'target-position': 'target-row positioning', 'scroll-anchor': 'anchor movement', 'row-overlap': 'row overlap', 'scroll-height': 'a scroll-height error', 'blank-viewport': 'a blank viewport', timeout: 'a settle timeout', 'row-gap': 'a row gap', 'row-height': 'a row-height error', 'row-order': 'a row-order error', 'duplicate-id': 'a duplicate ID', 'unexpected-id': 'an unexpected ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `Max ${maximum.toFixed(0)} ms · logarithmic scale` : `Max ${maximum.toFixed(0)} ms`,
@@ -379,7 +383,12 @@ function baselineResult(metadata: { readonly library: string; readonly version: 
       ? copy.value.firstMountEvidence
       : scenario.value === 'mount'
         ? copy.value.mountEvidence(result.completedRounds)
-        : copy.value.scrollEvidence(result.scrollSampleCount, result.completedRounds, result.scrollRoundMedianRangeMs),
+        : copy.value.scrollEvidence(
+            result.scrollSampleCount,
+            result.completedRounds,
+            result.scrollRoundMedianRangeMs,
+            result.scrollNoOpSampleCount ?? 0,
+          ),
   };
 }
 

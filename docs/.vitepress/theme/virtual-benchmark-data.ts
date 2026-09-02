@@ -81,6 +81,7 @@ export interface BaselineBenchmarkResult {
   readonly scrollProbeMedianMs: number;
   readonly scrollChecksMedian: number;
   readonly scrollSampleCount: number;
+  readonly scrollNoOpSampleCount?: number;
   readonly scrollRoundMedianRangeMs: readonly [number, number];
   readonly scrollRoundP95RangeMs: readonly [number, number];
   readonly completedRounds: number;

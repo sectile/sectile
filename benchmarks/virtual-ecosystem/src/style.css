@@ -9,7 +9,13 @@ button { margin-top: 20px; min-height: 40px; border: 1px solid #4d63ed; border-r
 button:disabled { opacity: 0.55; cursor: wait; }
 #status { margin-bottom: 14px; font-weight: 650; }
 #mount { position: fixed; left: -10000px; top: 0; width: 720px; height: 480px; contain: strict; }
-.bench-scroller { overflow: auto !important; color: #242832; background: #fff; }
+.bench-scroller {
+  overflow: auto !important;
+  scrollbar-width: none;
+  color: #242832;
+  background: #fff;
+}
+.bench-scroller::-webkit-scrollbar { width: 0; height: 0; }
 .bench-row { box-sizing: border-box; width: 100%; border-bottom: 1px solid #e6e8ee; background: #fff; color: #30323a; font: 14px/20px Inter, ui-sans-serif, system-ui, sans-serif; }
 .bench-row:not(.bench-row--heterogeneous) { overflow: hidden; font-size: min(14px, max(10px, calc(var(--benchmark-row-height, 72px) - 4px))); line-height: min(20px, var(--benchmark-row-height, 72px)); }
 .bench-row--uniform { display: flex; align-items: center; padding: 0 14px; }

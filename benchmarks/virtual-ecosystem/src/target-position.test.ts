@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  attainableViewportOffset,
   correctedTargetScroll,
   initialTargetScroll,
   intersectsViewportGeometry,
@@ -26,6 +27,13 @@ test('corrects from a rendered reference row using the current average size', ()
     location: 'middle',
     viewportHeight: 480,
   }), 3_388);
+});
+
+test('accepts the closest attainable target offset for short and edge-clamped content', () => {
+  assert.equal(attainableViewportOffset(72, 408, 480, 480), 72);
+  assert.equal(attainableViewportOffset(3_600, 204, 480, 7_200), 204);
+  assert.equal(attainableViewportOffset(72, 204, 480, 7_200), 72);
+  assert.equal(attainableViewportOffset(7_128, 0, 480, 7_200), 408);
 });
 
 test('rejects retained rows outside the current viewport', () => {

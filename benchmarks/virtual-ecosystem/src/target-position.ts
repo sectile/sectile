@@ -53,6 +53,20 @@ export function targetViewportOffset(
   return Math.max(0, (viewportHeight - targetHeight) / 2);
 }
 
+export function attainableViewportOffset(
+  targetAbsoluteStart: number,
+  requestedViewportOffset: number,
+  viewportExtent: number,
+  scrollExtent: number,
+): number {
+  const maximumScrollOffset = Math.max(0, scrollExtent - viewportExtent);
+  const scrollOffset = Math.min(
+    maximumScrollOffset,
+    Math.max(0, targetAbsoluteStart - requestedViewportOffset),
+  );
+  return targetAbsoluteStart - scrollOffset;
+}
+
 export function intersectsViewportGeometry(
   rowTop: number,
   rowBottom: number,

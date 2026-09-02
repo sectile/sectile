@@ -14,7 +14,6 @@ export interface MutationScenario {
   readonly affectedIDs: readonly string[];
   readonly initialTotalHeight: number;
   readonly nextTotalHeight: number;
-  readonly expectedScrollHeightDelta: number;
   readonly initialLayout: ExpectedLayout;
   readonly nextLayout: ExpectedLayout;
 }
@@ -72,7 +71,6 @@ export function reverseMutationScenario(scenario: MutationScenario): MutationSce
     nextItems: scenario.initialItems,
     initialTotalHeight: scenario.nextTotalHeight,
     nextTotalHeight: scenario.initialTotalHeight,
-    expectedScrollHeightDelta: -scenario.expectedScrollHeightDelta,
     initialLayout: scenario.nextLayout,
     nextLayout: scenario.initialLayout,
   });
@@ -100,7 +98,6 @@ function freezeScenario(input: {
     affectedIDs: Object.freeze(input.affectedIDs),
     initialTotalHeight: initialLayout.totalHeight,
     nextTotalHeight: nextLayout.totalHeight,
-    expectedScrollHeightDelta: nextLayout.totalHeight - initialLayout.totalHeight,
     initialLayout,
     nextLayout,
   });
