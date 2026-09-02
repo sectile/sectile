@@ -22,23 +22,28 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const registry = 'https://registry.npmjs.org';
 const expectedTag = resolveExpectedReleaseTag(undefined, process.env);
 const packOnly = process.argv.includes('--pack-only');
+const prepared = process.argv.includes('--prepared');
 const bootstrapOnly = process.argv.includes('--bootstrap-only');
 const validateOnly = process.argv.includes('--validate-only');
 const packDestinationArgument = process.argv.find((argument) => argument.startsWith('--pack-destination='));
 const tarballDirectoryArgument = process.argv.find((argument) => argument.startsWith('--tarball-directory='));
+const packageArguments = process.argv.filter((argument) => argument.startsWith('--package='));
 const packDestination = packDestinationArgument?.slice('--pack-destination='.length);
 const tarballDirectory = tarballDirectoryArgument?.slice('--tarball-directory='.length);
 const unexpectedArguments = process.argv.slice(2).filter((argument) => (
   argument !== '--pack-only'
+  && argument !== '--prepared'
   && argument !== '--bootstrap-only'
   && argument !== '--validate-only'
   && argument !== '--'
   && argument !== packDestinationArgument
   && argument !== tarballDirectoryArgument
+  && !packageArguments.includes(argument)
 ));
 
 assert.deepEqual(unexpectedArguments, [], `unexpected arguments: ${unexpectedArguments.join(', ')}`);
 assert.equal(packOnly && bootstrapOnly, false, 'pack-only and bootstrap-only cannot be combined');
+assert.equal(prepared && !packOnly, false, '--prepared requires --pack-only');
 assert.equal(validateOnly && (packOnly || bootstrapOnly), false,
   '--validate-only cannot be combined with --pack-only or --bootstrap-only');
 assert.equal(packDestination !== undefined && !packOnly, false, '--pack-destination requires --pack-only');
@@ -98,14 +103,28 @@ const workspaceVersions = new Map(allPackages.map(({ manifest }) => [manifest.na
 const releaseManifest = isReleaseSetTag(expectedTag)
   ? JSON.parse(await readFile(join(root, releaseManifestFile), 'utf8'))
   : undefined;
-const packages = selectReleasePackages(allPackages, expectedTag, releaseManifest);
+const selectedReleasePackages = selectReleasePackages(allPackages, expectedTag, releaseManifest);
+const requestedPackageNames = new Set(packageArguments.map((argument) => {
+  const value = argument.slice('--package='.length);
+  assert.notEqual(value, '', '--package requires a package name');
+  return value.startsWith('@sectile/') ? value : `@sectile/${value}`;
+}));
+assert.equal(requestedPackageNames.size > 0 && !packOnly, false, '--package requires --pack-only');
+const packages = requestedPackageNames.size === 0
+  ? selectedReleasePackages
+  : selectedReleasePackages.filter(({ manifest }) => requestedPackageNames.has(manifest.name));
+assert.deepEqual(
+  [...requestedPackageNames].filter((name) => !packages.some(({ manifest }) => manifest.name === name)),
+  [],
+  'requested pack package is not a published release package',
+);
 for (const { manifest } of packages) {
   if (!packOnly) assert.notEqual(manifest.version, '0.0.0', `prepare ${manifest.name} before publishing`);
 }
 run(process.execPath, expectedTag === undefined
   ? ['scripts/check-release.mjs']
   : ['scripts/check-release.mjs', expectedTag]);
-if (tarballDirectory === undefined) {
+if (tarballDirectory === undefined && !prepared) {
   const buildNames = dependencyClosure(graph, packages.map(({ manifest }) => manifest.name));
   run('pnpm', [
     '--recursive',

@@ -12,6 +12,8 @@ import { loadPublishedPackageGraph } from './lib/workspace-graph.mjs';
 import { runVerificationSteps } from './lib/verification-runner.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const publicationPackDirectory = join(root, '.tasks', 'verification', 'publication-packs');
+const formConsumerPackages = Object.freeze(['core', 'form', 'temporal', 'dom', 'terminal', 'vue']);
 const rawArguments = process.argv.slice(2).filter((argument) => argument !== '--');
 const quietRequested = rawArguments.includes('--quiet');
 const verbose = rawArguments.includes('--verbose');
@@ -159,9 +161,12 @@ function verificationSteps() {
   if (selectedPackages.has('@sectile/tabular')) {
     result.push(packageScriptStep('Tabular raw Virtual witnesses', '@sectile/tabular', ['test:virtual:witnesses']));
   }
+  const publicationArtifacts = publicationArtifactStep();
+  if (publicationArtifacts !== null) result.push(publicationArtifacts);
   if (selectedPackages.has('@sectile/form')) {
     result.push(commandStep('Form packed consumer verification', process.execPath, [
       join(root, 'verification', 'consumer-install', 'form.mjs'),
+      `--tarball-directory=${publicationPackDirectory}`,
     ]));
   }
   if (includeDocumentation) {
@@ -172,6 +177,20 @@ function verificationSteps() {
   if (fullRepositoryVerification) result.push(...workspaceContractSteps({ includePerformance: releaseRequested }));
   else result.push(...affectedWorkspaceContractSteps());
   return result;
+}
+
+function publicationArtifactStep() {
+  if (!fullRepositoryVerification && !selectedPackages.has('@sectile/form')) return null;
+  const packageNames = fullRepositoryVerification
+    ? graph.order.map(({ directory }) => directory)
+    : formConsumerPackages;
+  return commandStep('prepare publication artifacts', process.execPath, [
+    join(root, 'scripts', 'publish-packages.mjs'),
+    '--pack-only',
+    '--prepared',
+    `--pack-destination=${publicationPackDirectory}`,
+    ...packageNames.map((name) => `--package=${name}`),
+  ]);
 }
 
 function compatibilitySteps() {
@@ -207,9 +226,6 @@ function workspaceContractSteps({ includePerformance }) {
     commandStep('representation crossovers', 'pnpm', ['check:crossovers']),
     commandStep('entrypoint migrations', 'pnpm', ['check:entrypoint-migrations']),
     commandStep('published source maps', process.execPath, [join(root, 'scripts', 'source-map-policy.mjs'), 'check']),
-    commandStep('packed publication artifacts', process.execPath, [
-      join(root, 'scripts', 'publish-packages.mjs'), '--pack-only',
-    ]),
     commandStep('workspace boundaries', 'pnpm', ['check:boundaries']),
     commandStep('public signatures', 'pnpm', ['check:signatures']),
     commandStep('component completeness', 'pnpm', ['check:components']),
@@ -220,7 +236,7 @@ function workspaceContractSteps({ includePerformance }) {
     commandStep('breaking changes', process.execPath, [join(root, 'scripts', 'check-breaking-changes.mjs')]),
     commandStep('workstream ownership', process.execPath, [join(root, 'scripts', 'check-workstream-ownership.mjs')]),
     commandStep('consumer bundles', process.execPath, [join(root, 'scripts', 'consumer-bundles', 'run.mjs'), 'check']),
-    commandStep('consumer install', process.execPath, [join(root, 'scripts', 'consumer-install', 'run.mjs'), 'check']),
+    commandStep('consumer install', process.execPath, [join(root, 'scripts', 'consumer-install', 'run.mjs'), 'check', `--tarball-directory=${publicationPackDirectory}`]),
     commandStep('lifecycle retention', 'pnpm', ['check:lifecycle-retention']),
   ];
   if (includePerformance) {
@@ -363,6 +379,7 @@ function cleanGeneratedOutputs() {
     rmSync(join(root, 'packages', entry.directory, 'dist'), { recursive: true, force: true });
     rmSync(join(root, 'packages', entry.directory, '.verification-dist'), { recursive: true, force: true });
   }
+  rmSync(publicationPackDirectory, { recursive: true, force: true });
   if (includeDocumentation) rmSync(join(root, 'docs', '.vitepress', 'dist'), { recursive: true, force: true });
 }
 

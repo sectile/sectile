@@ -8,17 +8,31 @@ import { packInstalledDependencyClosure } from './local-dependency-closure.mjs';
 
 const root = resolve(import.meta.dirname, '..', '..');
 const packageNames = ['core', 'form', 'temporal', 'dom', 'terminal', 'vue'];
+const tarballDirectoryArgument = process.argv.slice(2)
+  .find((argument) => argument.startsWith('--tarball-directory='));
+const unexpectedArguments = process.argv.slice(2).filter((argument) => (
+  argument !== '--'
+  && argument !== tarballDirectoryArgument
+));
+assert.deepEqual(unexpectedArguments, [], `unexpected Form consumer arguments: ${unexpectedArguments.join(', ')}`);
+if (tarballDirectoryArgument !== undefined) {
+  assert.notEqual(tarballDirectoryArgument.slice('--tarball-directory='.length), '', '--tarball-directory requires a directory');
+}
+const tarballDirectory = tarballDirectoryArgument === undefined
+  ? null
+  : resolve(root, tarballDirectoryArgument.slice('--tarball-directory='.length));
 const temporary = await mkdtemp(join(tmpdir(), 'sectile-form-consumer-'));
 const store = join(temporary, 'pnpm-store');
+const packDirectory = tarballDirectory ?? join(temporary, 'packs');
 const tarballs = {};
 let vueDependency;
 
 try {
   for (const name of packageNames) {
-    run('pnpm', ['--filter', `@sectile/${name}`, 'build'], root);
-    const destination = join(temporary, 'packs');
+    if (tarballDirectory === null) run('pnpm', ['--filter', `@sectile/${name}`, 'build'], root);
+    const destination = packDirectory;
     await mkdir(destination, { recursive: true });
-    run('pnpm', ['--filter', `@sectile/${name}`, 'pack', '--pack-destination', destination], root);
+    if (tarballDirectory === null) run('pnpm', ['--filter', `@sectile/${name}`, 'pack', '--pack-destination', destination], root);
     const prefix = `sectile-${name}-`;
     const file = (await readdir(destination))
       .find((entry) => entry.startsWith(prefix) && entry.endsWith('.tgz'));

@@ -11,11 +11,24 @@ import { publishedPackageDirectories } from '../lib/published-packages.mjs';
 const repoRoot = resolve('.');
 const mode = process.argv[2] ?? 'check';
 assert.ok(mode === 'record' || mode === 'check', 'Usage: run.mjs <record|check>');
+const tarballDirectoryArgument = process.argv.slice(3)
+  .find((argument) => argument.startsWith('--tarball-directory='));
+const unexpectedArguments = process.argv.slice(3).filter((argument) => (
+  argument !== '--'
+  && argument !== tarballDirectoryArgument
+));
+assert.deepEqual(unexpectedArguments, [], `unexpected consumer-install arguments: ${unexpectedArguments.join(', ')}`);
+if (tarballDirectoryArgument !== undefined) {
+  assert.notEqual(tarballDirectoryArgument.slice('--tarball-directory='.length), '', '--tarball-directory requires a directory');
+}
+const suppliedTarballDirectory = tarballDirectoryArgument === undefined
+  ? null
+  : resolve(repoRoot, tarballDirectoryArgument.slice('--tarball-directory='.length));
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'sectile-consumer-install-'));
 if (process.env['SECTILE_KEEP_INSTALL'] === '1') process.stderr.write(`consumer install temp: ${temporaryRoot}\n`);
 try {
-  const packDirectory = join(temporaryRoot, 'packs');
-  await mkdir(packDirectory);
+  const packDirectory = suppliedTarballDirectory ?? join(temporaryRoot, 'packs');
+  await mkdir(packDirectory, { recursive: true });
   const packageNames = publishedPackageDirectories;
   for (const packageName of packageNames) {
     const manifest = JSON.parse(await readFile(resolve(repoRoot, `packages/${packageName}/package.json`), 'utf8'));
@@ -25,7 +38,7 @@ try {
   }
   const tarballs = {};
   for (const packageName of packageNames) {
-    await run('pnpm', ['--filter', `@sectile/${packageName}`, 'pack', '--pack-destination', packDirectory], repoRoot);
+    if (suppliedTarballDirectory === null) await run('pnpm', ['--filter', `@sectile/${packageName}`, 'pack', '--pack-destination', packDirectory], repoRoot);
     const candidates = (await readdir(packDirectory)).filter((name) => name.startsWith(`sectile-${packageName}-`) && name.endsWith('.tgz'));
     assert.equal(candidates.length, 1, `${packageName}: expected one packed tarball`);
     tarballs[packageName] = join(packDirectory, candidates[0]);
