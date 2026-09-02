@@ -66,6 +66,7 @@ export function deriveAffectedWorkspaceGates(changedFiles, selectedPackages) {
   if (publicSurfaceChanged) {
     gates.add('entrypoint-migrations');
     gates.add('public-signatures');
+    gates.add('consumer-bundles');
   }
   if (selectedPackages.has('@sectile/form')) gates.add('form-scenarios');
 

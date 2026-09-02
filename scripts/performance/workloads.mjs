@@ -59,69 +59,19 @@ import {
   createFacadeConnection,
   createSemanticController,
 } from '../../packages/core/dist/adapter-runtime.js';
-import {
-  createClientTabularSource,
-  resolveClientTabularRequest,
-} from '../../packages/tabular/dist/source.js';
-import { createDataGrid } from '../../packages/tabular/dist/data-grid.js';
-import { createExtentIndex } from '../../packages/virtual/dist/extent-index.js';
-import {
-  applyLinearMeasurements,
-  createLinearLayout,
-  queryLinearLayout,
-} from '../../packages/virtual/dist/linear-layout.js';
-import {
-  applySpatialMeasurements,
-  createSpatialLayout,
-  querySpatialLayout,
-} from '../../packages/virtual/dist/spatial-layout.js';
-import {
-  applyPartitionedTrackGridMeasurements,
-  createPartitionedTrackGridLayout,
-} from '../../packages/virtual/dist/partitioned-track-grid-layout.js';
+import { PERFORMANCE_TIMING_PACKAGES, WORKLOAD_SCHEMA } from './schema.mjs';
 
-export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 18,
-  scales: Object.freeze([1_000, 10_000, 100_000]),
-  patchDepths: Object.freeze([1, 8, 32, 64]),
-  changedDensities: Object.freeze([1, 32, 'full']),
-  families: Object.freeze([
-    'runner',
-    'core-structure',
-    'core-selection',
-    'core-semantic',
-    'core-runtime',
-    'core-editing',
-    'tabular-resolution',
-    'tabular-profile',
-    'virtual-layout',
-  ]),
-  browserQualifiedRegistrations: Object.freeze([
-    Object.freeze({
-      id: 'vue:mounted-virtual-projection',
-      runtime: 'browser',
-      metrics: Object.freeze(['render-count', 'effect-count', 'measurement-count', 'resource-count']),
-      portableTimingBudget: false,
-    }),
-  ]),
-});
-
-export const PERFORMANCE_TIMING_PACKAGES = Object.freeze(['core', 'tabular', 'virtual']);
-
-export function performancePackageForFamily(family) {
-  if (family === 'runner') return null;
-  if (family.startsWith('core-')) return 'core';
-  if (family.startsWith('tabular-')) return 'tabular';
-  if (family === 'virtual-layout') return 'virtual';
-  throw new Error(`unowned performance workload family: ${family}`);
-}
-
-export function createWorkloads({ quick = false } = {}) {
+export async function createWorkloads({ quick = false, packages = PERFORMANCE_TIMING_PACKAGES } = {}) {
+  const selectedPackages = new Set(packages);
+  const includeCore = selectedPackages.has('core');
+  const includeTabular = selectedPackages.has('tabular');
+  const includeVirtual = selectedPackages.has('virtual');
   const scales = quick ? [1_000] : WORKLOAD_SCHEMA.scales;
   const workloads = [createCalibrationWorkload(quick)];
 
   for (const size of scales) {
-    const ids = Object.freeze(Array.from({ length: size }, (_, index) => `id-${size}-${index}`));
+    if (includeCore) {
+      const ids = Object.freeze(Array.from({ length: size }, (_, index) => `id-${size}-${index}`));
     const geometryRects = Object.freeze(Array.from({ length: size }, (_, index) => Object.freeze({
       x: index % 997,
       y: Math.floor(index / 997),
@@ -335,11 +285,13 @@ export function createWorkloads({ quick = false } = {}) {
       timed(`core:tree-grid:right:${size}`, 'core-semantic', { size, operation: 'canonical-transition' }, canonicalIterations, () => unwrap(applyTreeGridEvent(treeGridModel, treeGridState, 'right')).state.selection.size),
       timed(`core:tree-grid:right:external:${size}`, 'core-semantic', { size, operation: 'external-validation-reference' }, semanticIterations, () => unwrap(applyTreeGridEvent(treeGridModel, externalTreeGridState, 'right')).state.selection.size),
     );
+    }
 
-    workloads.push(...createTabularWorkloads(size, quick));
-    workloads.push(...createVirtualWorkloads(size, quick));
+    if (includeTabular) workloads.push(...await createTabularWorkloads(size, quick));
+    if (includeVirtual) workloads.push(...await createVirtualWorkloads(size, quick));
   }
 
+  if (includeCore) {
   const range = createRange({ origin: '0', step: '0.01', count: 10_000_000 });
   workloads.push(timed('core:range:arithmetic', 'core-structure', { operation: 'value-ratio-map', count: 10_000_000 }, quick ? 1_000 : 10_000, (iteration) => {
     const tick = (iteration * 104_729) % 10_000_001;
@@ -378,6 +330,7 @@ export function createWorkloads({ quick = false } = {}) {
       parseColorText('oklch(62.7955% 0.25768 29.2339)').value.red),
   );
   workloads.push(...createRuntimeWorkloads(quick));
+  }
   return Object.freeze(workloads);
 }
 
@@ -413,7 +366,13 @@ function createRuntimeWorkloads(quick) {
   ];
 }
 
-function createTabularWorkloads(size, quick) {
+async function createTabularWorkloads(size, quick) {
+  const [sourceModule, gridModule] = await Promise.all([
+    import('../../packages/tabular/dist/source.js'),
+    import('../../packages/tabular/dist/data-grid.js'),
+  ]);
+  const { createClientTabularSource, resolveClientTabularRequest } = sourceModule;
+  const { createDataGrid } = gridModule;
   const records = Object.freeze(Array.from({ length: size }, (_, index) => Object.freeze({
     id: `row-${size}-${index}`,
     score: (index * 48_271) % 100_003,
@@ -481,7 +440,17 @@ function tabularRequest(queryRevision, direction) {
   });
 }
 
-function createVirtualWorkloads(size, quick) {
+async function createVirtualWorkloads(size, quick) {
+  const [extentModule, linearModule, spatialModule, partitionedModule] = await Promise.all([
+    import('../../packages/virtual/dist/extent-index.js'),
+    import('../../packages/virtual/dist/linear-layout.js'),
+    import('../../packages/virtual/dist/spatial-layout.js'),
+    import('../../packages/virtual/dist/partitioned-track-grid-layout.js'),
+  ]);
+  const { createExtentIndex } = extentModule;
+  const { applyLinearMeasurements, createLinearLayout, queryLinearLayout } = linearModule;
+  const { applySpatialMeasurements, createSpatialLayout, querySpatialLayout } = spatialModule;
+  const { applyPartitionedTrackGridMeasurements, createPartitionedTrackGridLayout } = partitionedModule;
   const domain = createSequence(Array.from({ length: size }, (_, index) => `virtual-${size}-${index}`));
   const estimated = (value) => Object.freeze({ kind: 'estimated', value });
   const exact = (value) => Object.freeze({ kind: 'exact', value });

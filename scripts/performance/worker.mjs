@@ -6,7 +6,8 @@ import {
   TARGET_BATCH_COUNT,
 } from './config.mjs';
 import { collectRetainedGarbage, collectTransientGarbage } from './gc-policy.mjs';
-import { createWorkloads, performancePackageForFamily } from './workloads.mjs';
+import { performancePackageForFamily } from './schema.mjs';
+import { createWorkloads } from './workloads.mjs';
 
 const quick = process.env['SECTILE_PERFORMANCE_QUICK'] === '1';
 const screening = process.env['SECTILE_PERFORMANCE_SCREENING'] === '1';
@@ -17,7 +18,10 @@ const batchCount = quick ? QUICK_BATCH_COUNT : screening ? TARGET_BATCH_COUNT : 
 const metrics = [];
 let sink = 0;
 
-for (const workload of createWorkloads({ quick })) {
+for (const workload of await createWorkloads({
+  quick,
+  packages: targetPackages.size === 0 ? undefined : [...targetPackages],
+})) {
   const owner = performancePackageForFamily(workload.family);
   if (targetPackages.size > 0 && owner !== null && !targetPackages.has(owner)) continue;
   const warmupStartedAt = performance.now();

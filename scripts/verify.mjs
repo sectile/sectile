@@ -20,8 +20,9 @@ const fullRequested = rawArguments.includes('--full');
 const releaseRequested = rawArguments.includes('--release');
 const explainRequested = rawArguments.includes('--explain');
 const continueOnFailure = rawArguments.includes('--continue');
+const exactRequested = rawArguments.includes('--exact');
 const targetArguments = rawArguments.filter((argument) => !argument.startsWith('--'));
-const knownFlags = new Set(['--quiet', '--verbose', '--compat', '--full', '--release', '--explain', '--continue']);
+const knownFlags = new Set(['--quiet', '--verbose', '--compat', '--full', '--release', '--explain', '--continue', '--exact']);
 const unknownFlags = rawArguments.filter((argument) => argument.startsWith('--') && !knownFlags.has(argument));
 if (unknownFlags.length > 0) throw new Error(`unexpected verification flags: ${unknownFlags.join(', ')}`);
 if (quietRequested && verbose) throw new Error('verification cannot be both quiet and verbose');
@@ -31,6 +32,9 @@ if (compatibility && (fullRequested || releaseRequested)) {
 }
 if ((fullRequested || releaseRequested) && targetArguments.length > 0) {
   throw new Error('full and release verification do not accept package targets');
+}
+if (exactRequested && targetArguments.length === 0) {
+  throw new Error('--exact requires at least one package target');
 }
 
 const graph = await loadPublishedPackageGraph();
@@ -54,21 +58,23 @@ if (compatibility && explicitTargets.has('@sectile/docs')) {
 }
 
 const fullRepositoryVerification = fullRequested || releaseRequested;
-const changedFiles = explicitTargets.size === 0 && !fullRepositoryVerification && !compatibility
-  ? collectChangedFiles()
-  : [];
-const affectedSelection = changedFiles.length === 0
+const changedFiles = !fullRepositoryVerification && !compatibility ? collectChangedFiles() : [];
+const scopedChangedFiles = explicitTargets.size === 0
+  ? changedFiles
+  : changedFiles.filter((path) => fileMatchesExplicitTargets(path));
+const affectedSelection = exactRequested || scopedChangedFiles.length === 0
   ? null
-  : deriveAffectedSelection(graph, changedFiles);
+  : deriveAffectedSelection(graph, scopedChangedFiles);
+const explicitPackages = [...explicitTargets].filter((name) => name !== '@sectile/docs');
 const selectedPackages = new Set(
   compatibility
     ? explicitTargets.size === 0
       ? graph.packages.map(({ name }) => name)
-      : [...explicitTargets]
+      : explicitPackages
     : fullRepositoryVerification
       ? graph.packages.map(({ name }) => name)
       : explicitTargets.size > 0
-        ? [...explicitTargets].filter((name) => name !== '@sectile/docs')
+        ? [...explicitPackages, ...(affectedSelection?.selectedPackages ?? [])]
         : affectedSelection?.selectedPackages ?? [],
 );
 const includeDocumentation = compatibility
@@ -76,7 +82,7 @@ const includeDocumentation = compatibility
   : fullRepositoryVerification
     || explicitTargets.has('@sectile/docs')
     || affectedSelection?.includeDocumentation === true;
-const workspaceGates = new Set(affectedSelection?.workspaceGates ?? []);
+const workspaceGates = new Set(exactRequested ? [] : affectedSelection?.workspaceGates ?? []);
 const dependencyClosure = collectDependencyClosure(selectedPackagesGraph(), selectedPackages, includeDocumentation);
 const modeLabel = compatibility
   ? 'runtime compatibility'
@@ -125,7 +131,9 @@ if (explainRequested) {
   process.stdout.write(`${JSON.stringify({
     mode: modeLabel,
     target: targetLabel,
+    exact: exactRequested,
     changedFiles,
+    scopedChangedFiles,
     selectedPackages: [...selectedPackages],
     preparedPackages: graph.order.filter(({ name }) => dependencyClosure.has(name) && !selectedPackages.has(name)).map(({ name }) => name),
     documentation: includeDocumentation,
@@ -194,7 +202,7 @@ function workspaceContractSteps({ includePerformance }) {
     commandStep('cross-host verification', process.execPath, ['--test', '--test-concurrency=1', ...crossHostTests]),
     commandStep('tooling verification', 'pnpm', ['test:tooling']),
     commandStep('semantic authority', 'pnpm', ['check:semantic-authority']),
-    commandStep('complexity contracts', 'pnpm', ['check:complexity']),
+    commandStep('complexity contracts', process.execPath, [join(root, 'scripts', 'check-complexity-contracts.mjs')]),
     commandStep('algorithm reuse inventory', 'pnpm', ['check:algorithm-reuse']),
     commandStep('representation crossovers', 'pnpm', ['check:crossovers']),
     commandStep('entrypoint migrations', 'pnpm', ['check:entrypoint-migrations']),
@@ -209,13 +217,14 @@ function workspaceContractSteps({ includePerformance }) {
     commandStep('component public API', process.execPath, [
       join(root, 'scripts', 'check-component-public-api.mjs'),
     ]),
-    commandStep('public change gates', process.execPath, [
-      join(root, 'scripts', 'check-public-change-gates.mjs'), '--full',
-    ]),
+    commandStep('breaking changes', process.execPath, [join(root, 'scripts', 'check-breaking-changes.mjs')]),
+    commandStep('workstream ownership', process.execPath, [join(root, 'scripts', 'check-workstream-ownership.mjs')]),
+    commandStep('consumer bundles', process.execPath, [join(root, 'scripts', 'consumer-bundles', 'run.mjs'), 'check']),
+    commandStep('consumer install', process.execPath, [join(root, 'scripts', 'consumer-install', 'run.mjs'), 'check']),
     commandStep('lifecycle retention', 'pnpm', ['check:lifecycle-retention']),
   ];
   if (includePerformance) {
-    result.splice(result.length - 1, 0, commandStep('performance certification', 'pnpm', ['performance:certify']));
+    result.splice(result.length - 1, 0, commandStep('performance certification', 'pnpm', ['performance:certify:prepared']));
   }
   return result;
 }
@@ -233,6 +242,11 @@ function affectedWorkspaceContractSteps() {
   add('representation-crossovers', commandStep('representation crossovers', 'pnpm', ['check:crossovers']));
   add('entrypoint-migrations', commandStep('entrypoint migrations', 'pnpm', ['check:entrypoint-migrations']));
   add('public-signatures', commandStep('public signatures', 'pnpm', ['check:signatures']));
+  add('consumer-bundles', commandStep('affected consumer bundles', process.execPath, [
+    join(root, 'scripts', 'consumer-bundles', 'run.mjs'),
+    'check',
+    ...graph.order.filter(({ name }) => selectedPackages.has(name)).map(({ directory }) => directory),
+  ]));
   add('form-scenarios', commandStep('Form scenario completeness', 'pnpm', ['check:form-scenarios']));
   return result;
 }
@@ -350,6 +364,23 @@ function cleanGeneratedOutputs() {
     rmSync(join(root, 'packages', entry.directory, '.verification-dist'), { recursive: true, force: true });
   }
   if (includeDocumentation) rmSync(join(root, 'docs', '.vitepress', 'dist'), { recursive: true, force: true });
+}
+
+function fileMatchesExplicitTargets(path) {
+  for (const target of explicitTargets) {
+    if (target === '@sectile/docs') {
+      if (path === 'docs' || path.startsWith('docs/')) return true;
+      continue;
+    }
+    const entry = graph.byName.get(target);
+    if (entry === undefined) continue;
+    if (path.startsWith(`packages/${entry.directory}/`)) return true;
+    if (path.startsWith(`docs/packages/${entry.directory}/`)) return true;
+    if (path.startsWith(`verification/complexity-contracts/${entry.directory}/`)) return true;
+    if (path.startsWith(`verification/consumer-bundles/${entry.directory}/`)) return true;
+    if (path.endsWith(`/breaking-changes/${entry.directory}.json`)) return true;
+  }
+  return false;
 }
 
 function collectChangedFiles() {

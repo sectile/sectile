@@ -61,6 +61,12 @@ tests, full workspace builds, performance or heap probes,
 bundle/install gates, browser checks, generated inventory updates, generated
 docs, or baseline recording during ordinary implementation.
 
+### Verification scopes
+
+`pnpm verify` derives affected packages and conditional workspace gates from the upstream diff and fails fast by default. `pnpm verify -- <package>` anchors that analysis to the requested package and expands only when its changed runtime surface affects dependents; add `--exact` to force package-only verification. Use `--explain` to inspect the plan without executing it and `--continue` only when collecting multiple failures is intentional.
+
+`pnpm verify:full` runs the complete deterministic repository suite without statistical performance certification. `pnpm verify:release` adds the explicit repository-wide performance certification and may reuse artifacts already produced by the deterministic package builds.
+
 ### Close
 
 Close first checks that every completed work item already has its declared

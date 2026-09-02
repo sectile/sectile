@@ -118,7 +118,9 @@ export function compareReports(baseline, current) {
     if (timingRegression || allocationRegression || heapRegression) regressions.push(comparison);
   }
   const footprintComparisons = comparePackageFootprints(baseline, current, runnerBand);
-  regressions.push(...footprintComparisons.filter(({ footprintRatio, band }) => footprintRatio > 1 + band));
+  if (certification) {
+    regressions.push(...footprintComparisons.filter(({ footprintRatio, band }) => footprintRatio > 1 + band));
+  }
   return Object.freeze({
     runnerBand,
     comparisons: Object.freeze(comparisons),

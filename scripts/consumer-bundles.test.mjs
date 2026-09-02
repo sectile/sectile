@@ -48,6 +48,25 @@ test('intentional byte and dependency regressions fail the baseline', () => {
   assert.throws(() => validateBaseline(baseline, dependency), /dependency closure expanded/u);
 });
 
+test('targeted consumer bundle checks compare only selected package fixtures', () => {
+  const coreFixture = { id: 'core:./sequence:named', package: 'core' };
+  const chartFixture = { id: 'chart:./projection:named', package: 'chart' };
+  const core = fixtureResult(coreFixture.id, 'named', ['core'], 100, []);
+  const chart = fixtureResult(chartFixture.id, 'named', ['chart'], 100, []);
+  const baseline = {
+    schemaVersion: 1,
+    fixtures: [coreFixture, chartFixture],
+    results: [core, chart],
+  };
+  const current = {
+    schemaVersion: 1,
+    packages: ['chart'],
+    fixtures: [chartFixture],
+    results: [chart],
+  };
+  assert.doesNotThrow(() => validateBaseline(baseline, current));
+});
+
 test('intentional temporal and virtual sibling closures fail', () => {
   assert.throws(() => validateGranularClosures([
     fixtureResult('vue:./virtual/list:named', 'named', ['@sectile/virtual/dist/masonry-layout.js'], 1),

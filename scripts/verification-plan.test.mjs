@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 import {
   collectDependencyClosure,
@@ -23,6 +24,7 @@ test('runtime package changes expand through reverse workspace dependencies', ()
     'algorithm-reuse',
     'public-signatures',
     'entrypoint-migrations',
+    'consumer-bundles',
   ]));
 });
 
@@ -46,6 +48,28 @@ test('dependency closure prepares dependencies without verifying unrelated depen
     new Set(['@sectile/core', '@sectile/chart']),
   );
 });
+
+test('verification CLI separates affected, full deterministic, and release certification plans', () => {
+  const chart = explain(['chart', '--exact']);
+  assert.deepEqual(chart.stages, ['prepare @sectile/core', 'verify @sectile/chart']);
+  assert.equal(chart.exact, true);
+  assert.equal(chart.certificationPerformance, false);
+  assert.equal(chart.failFast, true);
+
+  const full = explain(['--full']);
+  assert.equal(full.stages.includes('performance certification'), false);
+  assert.equal(full.certificationPerformance, false);
+
+  const release = explain(['--release']);
+  assert.equal(release.stages.includes('performance certification'), true);
+  assert.equal(release.certificationPerformance, true);
+});
+
+function explain(arguments_) {
+  const result = spawnSync(process.execPath, ['scripts/verify.mjs', ...arguments_, '--explain'], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
+}
 
 function fixtureGraph() {
   const packages = [

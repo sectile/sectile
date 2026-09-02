@@ -22,9 +22,9 @@ import { PERFORMANCE_SCHEMA_VERSION } from './performance/config.mjs';
 import {
   PERFORMANCE_TIMING_PACKAGES,
   WORKLOAD_SCHEMA,
-  createWorkloads,
   performancePackageForFamily,
-} from './performance/workloads.mjs';
+} from './performance/schema.mjs';
+import { createWorkloads } from './performance/workloads.mjs';
 
 test('performance statistics report stable median, p95, and relative MAD', () => {
   assert.equal(median([5, 1, 3, 2, 4]), 3);
@@ -137,12 +137,15 @@ test('comparison reports intentional allocation and retained-heap regressions', 
   assert.deepEqual(comparison.regressions.map(({ id }) => id), ['core:case']);
 });
 
-test('comparison reports an intentional package-footprint regression', () => {
+test('comparison reports an intentional package-footprint regression only for certification', () => {
   const baseline = fixture();
   const current = fixture();
   current.provenance.packageFootprint.core = 121;
-  const comparison = compareReports(baseline, current);
-  assert.deepEqual(comparison.regressions.map(({ id }) => id), ['package-footprint:core']);
+  assert.deepEqual(compareReports(baseline, current).regressions.map(({ id }) => id), ['package-footprint:core']);
+
+  const targeted = structuredClone(current);
+  targeted.runner = { processCount: 3, certification: false, targetPackages: ['core'] };
+  assert.deepEqual(compareReports(baseline, targeted).regressions, []);
 });
 
 test('comparison does not call a bimodal median shift a regression without tail corroboration', () => {
@@ -166,12 +169,12 @@ test('comparison requires isolated-process distributions to separate', () => {
   assert.deepEqual(compareReports(baseline, current).regressions, []);
 });
 
-test('workload schema covers required scales, patch depth, density, domains, and browser counters', () => {
+test('workload schema covers required scales, patch depth, density, domains, and browser counters', async () => {
   assert.deepEqual(WORKLOAD_SCHEMA.scales, [1_000, 10_000, 100_000]);
   assert.deepEqual(WORKLOAD_SCHEMA.patchDepths, [1, 8, 32, 64]);
   assert.deepEqual(WORKLOAD_SCHEMA.changedDensities, [1, 32, 'full']);
   assert.equal(WORKLOAD_SCHEMA.browserQualifiedRegistrations[0].portableTimingBudget, false);
-  const workloads = createWorkloads({ quick: true });
+  const workloads = await createWorkloads({ quick: true });
   assert.equal(new Set(workloads.map(({ id }) => id)).size, workloads.length);
   for (const family of WORKLOAD_SCHEMA.families) {
     if (family === 'runner') continue;
@@ -182,12 +185,15 @@ test('workload schema covers required scales, patch depth, density, domains, and
   assert.equal(workloads.some(({ id }) => id === 'core:tree-reorder:move:1000'), true);
 });
 
-test('timing workload families have explicit package owners', () => {
+test('timing workload families have explicit package owners', async () => {
   assert.deepEqual(PERFORMANCE_TIMING_PACKAGES, ['core', 'tabular', 'virtual']);
   assert.equal(performancePackageForFamily('core-runtime'), 'core');
   assert.equal(performancePackageForFamily('tabular-resolution'), 'tabular');
   assert.equal(performancePackageForFamily('virtual-layout'), 'virtual');
   assert.equal(performancePackageForFamily('runner'), null);
+  const coreWorkloads = await createWorkloads({ quick: true, packages: ['core'] });
+  assert.equal(coreWorkloads.some(({ family }) => family.startsWith('tabular-') || family === 'virtual-layout'), false);
+  assert.equal(coreWorkloads.some(({ family }) => family.startsWith('core-')), true);
 });
 
 test('targeted screening accepts three processes and uses a coarse regression band', () => {

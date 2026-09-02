@@ -25,6 +25,7 @@ assert.deepEqual(manifest.certificationWhen, [
 ]);
 assert.equal(packageJSON.scripts['check:performance-gates'], 'node scripts/check-performance-gates.mjs');
 assert.equal(packageJSON.scripts['performance:certify'], 'pnpm check:performance-gates && node scripts/performance/run.mjs check --all');
+assert.equal(packageJSON.scripts['performance:certify:prepared'], 'pnpm check:performance-gates && node scripts/performance/run.mjs check --all --prepared');
 assert.equal(packageJSON.scripts['verify:performance'], 'pnpm performance:certify');
 
 console.log(JSON.stringify({ status: 'passed', schemaVersion: manifest.schemaVersion }));

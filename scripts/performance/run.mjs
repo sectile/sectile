@@ -29,7 +29,7 @@ import {
 } from './session-log.mjs';
 import { summarize } from './statistics.mjs';
 import { publishedPackageDirectories } from '../lib/published-packages.mjs';
-import { PERFORMANCE_TIMING_PACKAGES, WORKLOAD_SCHEMA } from './workloads.mjs';
+import { PERFORMANCE_TIMING_PACKAGES, WORKLOAD_SCHEMA } from './schema.mjs';
 
 const execFile = promisify(execFileCallback);
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -52,7 +52,7 @@ async function main() {
     return;
   }
 
-  await prepareBuild(options);
+  if (!options.prepared) await prepareBuild(options);
   const session = await createPerformanceSession({
     runsRoot: options.runsRoot,
     mode: options.mode,
@@ -212,6 +212,7 @@ function parseArguments(arguments_) {
   const runsRoot = resolve(repoRoot, DEFAULT_RUNS_PATH);
   let outputPath = null;
   let all = mode === 'record';
+  let prepared = false;
   let processCount = null;
   let quick = false;
   let workItem = null;
@@ -219,6 +220,7 @@ function parseArguments(arguments_) {
   for (let index = 1; index < arguments_.length; index += 1) {
     const argument = arguments_[index];
     if (argument === '--all') all = true;
+    else if (argument === '--prepared') prepared = true;
     else if (argument === '--quick') quick = true;
     else if (argument === '--baseline') baselinePath = resolve(repoRoot, requireValue(arguments_, ++index, argument));
     else if (argument === '--output') outputPath = resolve(repoRoot, requireValue(arguments_, ++index, argument));
@@ -244,6 +246,7 @@ function parseArguments(arguments_) {
   return Object.freeze({
     mode,
     all,
+    prepared,
     targetPackages: Object.freeze(uniqueTargets),
     baselinePath,
     baselineDirectory,

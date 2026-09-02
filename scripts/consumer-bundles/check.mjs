@@ -2,8 +2,17 @@ import assert from 'node:assert/strict';
 
 export function validateBaseline(baseline, current) {
   assert.equal(baseline.schemaVersion, 1, 'unsupported consumer bundle baseline');
-  assert.deepEqual(current.fixtures, baseline.fixtures, 'consumer fixture coverage drifted; review surfaces and record a baseline');
-  const expected = new Map(baseline.results.map((entry) => [`${entry.bundler}:${entry.id}`, entry]));
+  const targeted = current.fixtures.length !== baseline.fixtures.length;
+  const expectedFixtures = targeted
+    ? baseline.fixtures.filter((fixture) => current.packages.includes(fixture.package))
+    : baseline.fixtures;
+  assert.deepEqual(current.fixtures, expectedFixtures, 'consumer fixture coverage drifted; review surfaces and record a baseline');
+  const expectedIDs = new Set(current.fixtures.map(({ id }) => id));
+  const expected = new Map(
+    baseline.results
+      .filter((entry) => !targeted || expectedIDs.has(entry.id))
+      .map((entry) => [`${entry.bundler}:${entry.id}`, entry]),
+  );
   assert.equal(current.results.length, expected.size, 'consumer bundle result count drifted');
   for (const result of current.results) {
     const before = expected.get(`${result.bundler}:${result.id}`);

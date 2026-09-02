@@ -13,9 +13,14 @@ import {
 
 const repoRoot = resolve('.');
 const mode = process.argv[2] ?? 'check';
-assert.ok(mode === 'record' || mode === 'check', 'Usage: run.mjs <record|check>');
-const fragments = await loadSurfaceFragments(repoRoot);
-for (const packageName of PACKAGE_NAMES) {
+assert.ok(mode === 'record' || mode === 'check', 'Usage: run.mjs <record|check> [package ...]');
+const requestedPackages = process.argv.slice(3).map(normalizePackageName);
+const packageNames = requestedPackages.length === 0 ? PACKAGE_NAMES : Object.freeze([...new Set(requestedPackages)]);
+if (mode === 'record') assert.deepEqual(packageNames, PACKAGE_NAMES, 'record requires the complete package surface set');
+
+const allFragments = await loadSurfaceFragments(repoRoot);
+const fragments = allFragments.filter((entry) => packageNames.includes(entry.package));
+for (const packageName of packageNames) {
   const fragment = fragments.find((entry) => entry.package === packageName);
   assert.ok(fragment !== undefined, `${packageName}: missing consumer surface fragment`);
   validateSurfaceFragment(fragment, await deriveSurfaceFragment(repoRoot, packageName));
@@ -35,6 +40,7 @@ validateCurrentResults(fixtures, results);
 
 const report = Object.freeze({
   schemaVersion: 1,
+  packages: Object.freeze([...packageNames]),
   fixtures: Object.freeze(fixtures),
   results: Object.freeze(results),
 });
@@ -49,7 +55,14 @@ if (mode === 'record') {
 console.log(JSON.stringify({
   status: 'passed',
   mode,
+  packages: packageNames,
   surfaces: fragments.reduce((total, fragment) => total + fragment.surfaces.length, 0),
   fixtures: fixtures.length,
   bundles: results.length,
 }));
+
+function normalizePackageName(value) {
+  const packageName = value.startsWith('@sectile/') ? value.slice('@sectile/'.length) : value;
+  assert.ok(PACKAGE_NAMES.includes(packageName), `unknown consumer bundle package ${value}`);
+  return packageName;
+}
