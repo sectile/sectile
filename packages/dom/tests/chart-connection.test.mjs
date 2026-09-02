@@ -111,13 +111,13 @@ test('DOM Chart completes required command effects before callback errors escape
 
   assert.throws(
     () => value.controller.dispatch({ type: 'set-cursor', id: '1' }),
-    (error) => error === callbackErrors['render-requested'],
+    (error) => error === callbackErrors['focus-datum'],
   );
   const activeID = value.root.querySelector('[role="listbox"]').getAttribute('aria-activedescendant');
   assert.deepEqual(observed, [
-    { type: 'render-requested', frames: 1 },
     { type: 'focus-datum', activeDescendant: activeID, focused: activeID },
     { type: 'announce-datum', announcement: 'Data point 2: 1' },
+    { type: 'render-requested', frames: 1 },
   ]);
   assert.equal(value.controller.getSnapshot().state.cursor, '1');
   connection.disconnect();

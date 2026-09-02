@@ -4125,6 +4125,15 @@
       "inherits": "public-value-v1"
     },
     {
+      "key": "chart:./projection:cloneChartProjection",
+      "package": "chart",
+      "subpath": "./projection",
+      "exportName": "cloneChartProjection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "chart:./projection:createChartProjection",
       "package": "chart",
       "subpath": "./projection",
@@ -5020,6 +5029,24 @@
       "package": "dom",
       "subpath": "./grid",
       "exportName": "tryCreateGridControl",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./identity:stableIDElementToken",
+      "package": "dom",
+      "subpath": "./identity",
+      "exportName": "stableIDElementToken",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./identity:stableIDToken",
+      "package": "dom",
+      "subpath": "./identity",
+      "exportName": "stableIDToken",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -23772,7 +23799,8 @@
         },
         "assumptions": [
           "model generation, viewport, representative ceiling, canonical controller-owned view, view transform, and inset scalars are unchanged",
-          "caller-supplied scales, explicit view, and previous projection disable caching"
+          "caller-supplied scales, explicit view, and previous projection disable caching",
+          "consumers preserve borrowed projection buffers without mutation or detachment"
         ],
         "ceilings": [
           "safe-integer and package resource ceilings"
@@ -23785,7 +23813,7 @@
           "zero domain traversal"
         ],
         "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
-        "proof": "The controller compares a fixed scalar cache key before constructing a resolved request and returns the single retained immutable projection in one Result wrapper.",
+        "proof": "The controller compares a fixed scalar cache key before constructing a resolved request and returns the single retained structurally immutable projection with borrowed binary storage in one Result wrapper.",
         "adversarialWitness": "Repeated projection reads on a one-million-datum model return one object identity without domain traversal; a 50,000-read heap-allocation sample stays below one percent of an otherwise identical uncached previous-projection request.",
         "evidence": [
           "VAL-016",
@@ -23935,6 +23963,74 @@
         "fullScan": {
           "allowed": true,
           "rationale": "Every accepted declarative layer contributes a data length to the global datum ceiling, so the bounded layer header array must be inspected once."
+        }
+      }
+    },
+    {
+      "package": "chart",
+      "surface": "hot",
+      "id": "input.model-cardinality-preflight",
+      "source": "packages/chart/src/model.ts",
+      "benchmarkIDs": [
+        "VAL-013:chart-model-cardinality-preflight"
+      ],
+      "specificationCeiling": "O(nLayer + qOperation)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nLayer",
+            "meaning": "raw model layer headers inspected before datum packing",
+            "ceiling": "maxLayers"
+          },
+          {
+            "name": "qOperation",
+            "meaning": "patch operation headers inspected before mutation work",
+            "ceiling": "maxPatchOperations"
+          }
+        ],
+        "time": {
+          "bound": "O(nLayer + qOperation)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nLayer + qOperation)",
+          "output": "O(nLayer + qOperation)",
+          "retained": "O(nLayer + qOperation)"
+        },
+        "resources": {
+          "allocations": "O(nLayer + qOperation)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "preflight reads layer and operation metadata plus data array lengths but not datum elements",
+          "patch layer indexes resolve through the retained immutable model index"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Raw model normalization captures every bounded layer header before packing. Patch preflight copies current layer sizes once, resolves each bounded operation through the retained layer index, and updates a running total in declaration order before any datum is materialized or packed.",
+        "adversarialWitness": "An over-ceiling replacement or insert exposes datum arrays through read-counting proxies and returns the resource rejection with zero element reads; an insert-then-remove sequence that only fits at the end is rejected at its overflowing intermediate state.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "The final raw model count and every sequential patch intermediate count depend on all bounded headers, while datum storage must remain unobserved until the preflight succeeds."
         }
       }
     },
@@ -24213,6 +24309,74 @@
     {
       "package": "chart",
       "surface": "hot",
+      "id": "projection.clone",
+      "source": "packages/chart/src/projection.ts",
+      "benchmarkIDs": [
+        "VAL-014:chart-projection-clone-ownership"
+      ],
+      "specificationCeiling": "O(bBuffer + vView)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "bBuffer",
+            "meaning": "bytes in distinct public typed-array backing buffers",
+            "ceiling": "projection binary storage bounded by maximumRepresentatives"
+          },
+          {
+            "name": "vView",
+            "meaning": "public typed-array views reachable from batches and data batches",
+            "ceiling": "a fixed number of views per emitted layer batch"
+          }
+        ],
+        "time": {
+          "bound": "O(bBuffer + vView)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(vView)",
+          "output": "O(bBuffer + vView)",
+          "retained": "O(bBuffer + vView)"
+        },
+        "resources": {
+          "allocations": "one ArrayBuffer per distinct source buffer and one typed-array view per distinct source view",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the input is a valid Chart-owned projection with attached borrowed buffers",
+          "immutable projection metadata remains shared"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "The clone walks public batch and data-batch fields once. One map copies each distinct backing buffer exactly once, a second map recreates each distinct typed-array view exactly once, and both maps preserve source alias relationships inside the isolated result.",
+        "adversarialWitness": "A layered Cartesian plus radial projection shares identity, color, and polyline-offset views across public surfaces; the clone preserves those aliases, remains isolated from a second clone and the controller cache, and can transfer its buffer without detaching the source.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "An explicit consumer-owned binary clone must copy every reachable public backing-buffer byte once."
+        }
+      }
+    },
+    {
+      "package": "chart",
+      "surface": "hot",
       "id": "projection.create",
       "source": "packages/chart/src/projection.ts",
       "benchmarkIDs": [
@@ -24424,7 +24588,7 @@
           "subscriptions": "0"
         },
         "assumptions": [
-          "prepareChartProjectionQueries or an earlier hit test built the immutable projection BVH and categorical bar orders",
+          "prepareChartProjectionQueries or an earlier hit test built the projection BVH and categorical bar orders before any consumer-owned clone mutation",
           "ordered-series projected X coordinates remain nondecreasing"
         ],
         "ceilings": [
@@ -24501,7 +24665,7 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Primitive bounds are emitted once, Morton keys are sorted once, categorical bar records are sorted once by their dominant-axis centers, and one balanced packed hierarchy plus two packed bar orders is retained per immutable projection.",
+        "proof": "Primitive bounds are emitted once, Morton keys are sorted once, categorical bar records are sorted once by their dominant-axis centers, and one balanced packed hierarchy plus two packed bar orders is retained per structurally immutable projection owner.",
         "adversarialWitness": "Every representative emits one sortable query primitive; every categorical bar additionally enters exactly one dominant-axis order.",
         "evidence": [
           "VAL-016",

@@ -82,8 +82,16 @@ async function inspectVueInstall(root, packageManager, tarballs) {
     await run('pnpm', ['--store-dir', resolve(repoRoot, '.pnpm-store'), 'install', '--ignore-scripts', '--no-frozen-lockfile', '--config.optional=false', '--config.auto-install-peers=false'], directory);
   }
   await run(process.execPath, ['--input-type=module', '-e', "await import('@sectile/vue');"], directory);
+  await run(process.execPath, ['--input-type=module', '-e', [
+    "const { stableIDElementToken } = await import('@sectile/dom/identity');",
+    "if (stableIDElementToken('%') === stableIDElementToken('-25')) throw new Error('DOM identity encoding collision');",
+  ].join(' ')], directory);
   const optionalDomains = [
-    { packageName: 'chart', imports: ['@sectile/vue/chart'], removed: [] },
+    {
+      packageName: 'chart',
+      imports: ['@sectile/chart/projection', '@sectile/dom/chart', '@sectile/vue/chart'],
+      removed: [],
+    },
     { packageName: 'form', imports: ['@sectile/vue/form'], removed: [] },
     {
       packageName: 'tabular',

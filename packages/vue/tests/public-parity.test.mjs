@@ -9,7 +9,7 @@ test('Vue exposes every public DOM component family', async () => {
     readPackage('../../dom/package.json'),
     readPackage('../package.json'),
   ]);
-  const ignored = new Set(['.', './package.json', './form', './position', './tabular', './virtual']);
+  const ignored = new Set(['.', './package.json', './form', './identity', './position', './tabular', './virtual']);
   const domSubpaths = Object.keys(domPackage.exports).filter((subpath) => !ignored.has(subpath));
   const missing = domSubpaths.filter((subpath) => vuePackage.exports[subpath] === undefined);
 

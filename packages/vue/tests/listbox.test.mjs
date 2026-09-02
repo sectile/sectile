@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
-import { Window } from 'happy-dom';
 import { createSSRApp, h, nextTick, ref } from 'vue';
 import {
   ListboxItem,
@@ -9,8 +8,10 @@ import {
   ListboxItemText,
   ListboxRoot,
 } from '../.verification-dist/listbox.js';
+import { createTestWindow } from './happy-dom.mjs';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 const items = ['alpha', 'beta', 'nightly'];
 
 function options() {
@@ -54,10 +55,9 @@ test('Vue listbox generated IDs preserve exact values and active-descendant link
     }),
   });
   const html = await renderToString(app);
-  const window = new Window();
-  window.document.body.innerHTML = html;
-  const root = window.document.querySelector('[role="listbox"]');
-  const options = [...window.document.querySelectorAll('[role="option"]')];
+  browserWindow.document.body.innerHTML = html;
+  const root = browserWindow.document.querySelector('[role="listbox"]');
+  const options = [...browserWindow.document.querySelectorAll('[role="option"]')];
   assert.equal(options.length, exactItems.length);
   assert.equal(new Set(options.map((option) => option.id)).size, exactItems.length);
   assert.equal(root?.getAttribute('aria-activedescendant'), options[0]?.id);

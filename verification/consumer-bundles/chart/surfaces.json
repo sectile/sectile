@@ -152,6 +152,7 @@
         "CHART_RECTANGLE_STRIDE",
         "DEFAULT_MAXIMUM_CHART_REPRESENTATIVES",
         "MAXIMUM_CHART_REPRESENTATIVES",
+        "cloneChartProjection",
         "createChartProjection",
         "tryCreateChartProjection"
       ],

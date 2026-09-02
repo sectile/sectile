@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 
-const expectedIDs = Array.from({ length: 8 }, (_, index) => `CHT-${String(index + 1).padStart(2, '0')}`);
+const expectedIDs = Array.from({ length: 10 }, (_, index) => `CHT-${String(index + 1).padStart(2, '0')}`);
 const registry = JSON.parse(await readFile('testing/law-registry.json', 'utf8'));
 const evidence = JSON.parse(await readFile('testing/law-evidence.json', 'utf8'));
 

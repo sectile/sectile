@@ -477,6 +477,22 @@
       ]
     },
     {
+      "subpath": "./identity",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "stableIDElementToken",
+        "stableIDToken"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./listbox",
       "classification": "named-subpath",
       "platform": "browser",

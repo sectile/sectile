@@ -123,6 +123,7 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'core:./color',
     'core:./color-text',
     'chart:./projection',
+    'dom:./identity',
     'dom:./listbox',
     'dom:./popover',
     'form:./form',

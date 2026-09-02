@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import packageManifest from '../package.json' with { type: 'json' };
 
-const excludedSubpaths = new Set(['./package.json', './chart', './form', './position', './tabular', './virtual']);
+const excludedSubpaths = new Set(['./package.json', './chart', './form', './identity', './position', './tabular', './virtual']);
 
 test('every public DOM component exposes direct and fallible factories', async () => {
   const rootModule = await import('../.verification-dist/index.js');
@@ -20,6 +20,16 @@ test('every public DOM component exposes direct and fallible factories', async (
     assert.equal(typeof rootModule[`create${name}`], 'function', `root create${name} export`);
     assert.equal(typeof rootModule[`tryCreate${name}`], 'function', `root tryCreate${name} export`);
   }
+});
+
+test('identity encoding is exposed only through its focused utility subpath', async () => {
+  const rootModule = await import('../.verification-dist/index.js');
+  assert.equal(rootModule.stableIDToken, undefined);
+  assert.equal(rootModule.stableIDElementToken, undefined);
+
+  const identityModule = await import('../.verification-dist/identity.js');
+  assert.equal(typeof identityModule.stableIDToken, 'function');
+  assert.equal(typeof identityModule.stableIDElementToken, 'function');
 });
 
 test('Form is exposed only through its optional subpath', async () => {

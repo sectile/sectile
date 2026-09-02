@@ -147,7 +147,7 @@
       }
     },
     {
-      "id": "model.cardinality-preflight",
+      "id": "input.model-cardinality-preflight",
       "inherits": "linear-v1",
       "source": "packages/chart/src/model.ts",
       "benchmarkIDs": [

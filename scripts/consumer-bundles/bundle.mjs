@@ -69,6 +69,8 @@ function representativeNamedExport(packageName, subpath, surface) {
     ['core:./color', 'srgbToOklch'],
     ['core:./color-text', 'parseColorText'],
     ['core:./range', 'createExactRatio'],
+    ['chart:./projection', 'cloneChartProjection'],
+    ['dom:./identity', 'stableIDElementToken'],
   ]).get(`${packageName}:${subpath}`);
   if (preferred !== undefined) {
     assert.ok(surface.runtimeExports.includes(preferred), `${packageName}:${subpath}: representative export missing`);

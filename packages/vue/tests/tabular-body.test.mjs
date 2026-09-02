@@ -58,7 +58,7 @@ test('automatic Body renders accepted rows and supplies row identity to nested p
   const header = host.querySelector('[data-part="column-header"]');
   assert.equal(host.querySelector('[data-part="header-row"]')?.hasAttribute('data-depth'), false);
   assert.equal(header?.getAttribute('data-header-node-id'), 'name');
-  assert.equal(header?.id, 'sectile-tabular-header-name');
+  assert.equal(header?.id, 'sectile-tabular-header-s%3Aname');
   assert.deepEqual([...host.querySelectorAll('[data-part="row"]')].map((row) => row.getAttribute('data-row-id')), ['ada', 'grace']);
   assert.deepEqual([...host.querySelectorAll('[data-part="cell"]')].map((cell) => cell.textContent), ['0:Ada', 'Engineer', '1:Grace', 'Admiral']);
   assert.deepEqual([...host.querySelectorAll('input[name="people"]')].map((input) => input.value), ['ada', 'grace']);

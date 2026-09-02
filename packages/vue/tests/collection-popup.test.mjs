@@ -35,7 +35,7 @@ test('Vue select exposes portal-safe anatomy and active descendant linkage', asy
   assert.match(html, /aria-controls="sectile-select-[^"]+-content"/);
   assert.match(html, /data-part="viewport"/);
   assert.match(html, /data-part="item-text"/);
-  assert.match(html, /id="sectile-select-[^"]+-content-item-alpha"/);
+  assert.match(html, /id="sectile-select-[^"]+-content-item-s%3Aalpha"/);
 });
 
 test('Vue combobox renders one native editing input and persistent listbox content', async () => {

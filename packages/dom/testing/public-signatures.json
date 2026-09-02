@@ -75,6 +75,10 @@
       "types": "dist/grid.d.ts"
     },
     {
+      "subpath": "./identity",
+      "types": "dist/identity.d.ts"
+    },
+    {
       "subpath": "./listbox",
       "types": "dist/listbox.d.ts"
     },
@@ -283,7 +287,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "bb2bba7a15ff733fff30b903b51a92757290565ddb87dc4e3fe4c2244abfee56",
+  "fingerprint": "c9b70e12e714fabcc98c89532e648a6556aebac68507d609f12a466e33490d77",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -396,6 +400,10 @@
     {
       "path": "dist/grid.d.ts",
       "sha256": "74da63f4c79abb77e05cb9cd089db2f9922d9582bd8676cc12e57275749fb5ce"
+    },
+    {
+      "path": "dist/identity.d.ts",
+      "sha256": "ab195bc851386bfb3003137ec7c9952dbf22f671da5d508695c6fabb8133fb17"
     },
     {
       "path": "dist/index.d.ts",

@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
-import { Window } from 'happy-dom';
 import { createSSRApp, h, nextTick, ref } from 'vue';
 import { RadioGroupIndicator, RadioGroupItem, RadioGroupRoot } from '../.verification-dist/radio-group.js';
 import { ToggleGroupItem, ToggleGroupRoot } from '../.verification-dist/toggle-group.js';
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from '../.verification-dist/tabs.js';
+import { createTestWindow } from './happy-dom.mjs';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
+
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 
 test('Vue radio group projects persistent indicators and native form radios', async () => {
   const items = ['email', 'sms'];
@@ -101,10 +103,9 @@ test('Vue tabs generated IDs preserve exact values and link each trigger to its 
     }),
   });
   const html = await renderToString(app);
-  const window = new Window();
-  window.document.body.innerHTML = html;
-  const triggers = [...window.document.querySelectorAll('[role="tab"]')];
-  const panels = [...window.document.querySelectorAll('[role="tabpanel"]')];
+  browserWindow.document.body.innerHTML = html;
+  const triggers = [...browserWindow.document.querySelectorAll('[role="tab"]')];
+  const panels = [...browserWindow.document.querySelectorAll('[role="tabpanel"]')];
   const elementIDs = [...triggers, ...panels].map((element) => element.id);
   assert.equal(triggers.length, items.length);
   assert.equal(panels.length, items.length);

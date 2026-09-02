@@ -30,16 +30,16 @@
       "unpackedFiles": 51,
       "categories": {
         "runtimeJS": {
-          "files": 16,
-          "bytes": 192559
+          "files": 17,
+          "bytes": 203274
         },
         "declarations": {
           "files": 16,
           "bytes": 54081
         },
         "sourceMaps": {
-          "files": 16,
-          "bytes": 146400
+          "files": 17,
+          "bytes": 154278
         },
         "other": {
           "files": 3,

@@ -70,7 +70,7 @@ test('DOM DataTable preserves native structure, form output, and disposable regi
 
   const header = document.createElement('th');
   connection.setHeaderCellAttributes(header, { columnID: 'name' });
-  assert.equal(header.id, 'sectile-tabular-header-header%3Aname');
+  assert.equal(header.id, 'sectile-tabular-header-s%3Aheader%3Aname');
   assert.equal(header.getAttribute('data-header-node-id'), 'header:name');
 
   const row = document.createElement('tr');
@@ -81,7 +81,7 @@ test('DOM DataTable preserves native structure, form output, and disposable regi
   const registered = connection.registerCell(cell, { cell: { rowID: 'r1', columnID: 'name' } });
   assert.equal(registered.ok, true);
   assert.equal(table.hasAttribute('role'), false);
-  assert.equal(cell.getAttribute('headers'), 'sectile-tabular-header-header%3Aname');
+  assert.equal(cell.getAttribute('headers'), 'sectile-tabular-header-s%3Aheader%3Aname');
 
   const selection = document.createElement('input');
   const styledSelection = document.createElement('button');
@@ -165,7 +165,7 @@ test('DOM DataTable header metrics follow contiguous projected intervals after l
   connection.setHeaderCellAttributes(group, { headerNodeID: 'group:ab' });
   connection.setHeaderCellAttributes(leafB, { columnID: 'b' });
   assert.equal(group.colSpan, 2);
-  assert.equal(leafB.id, 'sectile-tabular-header-header%3Ab');
+  assert.equal(leafB.id, 'sectile-tabular-header-s%3Aheader%3Ab');
 
   const projected = connection.controller.dispatch({
     type: 'set-column-state',
@@ -177,7 +177,7 @@ test('DOM DataTable header metrics follow contiguous projected intervals after l
   connection.setHeaderCellAttributes(projectedGroup, { headerNodeID: 'group:ab' });
   connection.setHeaderCellAttributes(projectedC, { columnID: 'c' });
   assert.equal(projectedGroup.colSpan, 1);
-  assert.equal(projectedC.id, 'sectile-tabular-header-header%3Ac');
+  assert.equal(projectedC.id, 'sectile-tabular-header-s%3Aheader%3Ac');
   connection.disconnect();
 });
 
@@ -287,7 +287,7 @@ test('DOM DataGrid projects ARIA, emits one reveal, restores focus, and tears do
 
   const header = document.createElement('div');
   connection.setColumnHeaderAttributes(header, { columnID: 'name' });
-  assert.equal(header.id, 'sectile-tabular-header-header%3Aname');
+  assert.equal(header.id, 'sectile-tabular-header-s%3Aheader%3Aname');
   assert.equal(header.getAttribute('aria-colindex'), '1');
 
   const first = document.createElement('div');
