@@ -15,7 +15,7 @@ The DOM and Vue integrations handle drawing automatically. Use the APIs on this 
 
 ## Create shapes for one chart size
 
-A projection is a read-only snapshot of the shapes needed for a particular width and height. Creating one does not draw anything.
+A projection is a structurally read-only snapshot of the shapes needed for a particular width and height. Creating one does not draw anything.
 
 ```ts
 import { createChartController } from '@sectile/chart/controller'
@@ -33,7 +33,23 @@ if (!projection.ok) {
 }
 ```
 
-A successful result contains batches of points, lines, rectangles, cells, or arcs. `maximumRepresentatives` limits how many draw-ready items the projection may return. The limit prevents an unexpectedly large data set from creating unbounded drawing work.
+A successful result contains batches of points, lines, rectangles, cells, or arcs. Its typed arrays are borrowed, read-only binary storage owned by the controller or an immutable layer cache. Do not modify them with indexed writes or `set()`, and do not transfer or otherwise detach their backing buffers. Eligible controller calls may return the same projection object, and separate projections may share data-space geometry buffers.
+
+Use `cloneChartProjection` when a renderer, exporter, or debugger needs mutable binary storage:
+
+```ts
+import { cloneChartProjection } from '@sectile/chart/projection'
+
+const mutable = cloneChartProjection(projection.value)
+const first = mutable.batches[0]
+if (first?.type === 'point') {
+  first.positions[0] += 8
+}
+```
+
+The clone owns every public typed-array backing buffer and can be mutated or transferred without changing the source projection. Immutable metadata such as identities, representatives, layout, and revisions remains shared. Finish geometry mutations before calling `prepareChartProjectionQueries` or the first hit test on that clone; changing geometry after its query index has been prepared leaves that clone's index stale.
+
+`maximumRepresentatives` limits how many draw-ready items the projection may return. The limit prevents an unexpectedly large data set from creating unbounded drawing work.
 
 Sectile does not silently drop marks to fit the limit. Line charts can preserve visible high and low points with fewer line points. Density scatter plots and aggregated heatmaps can return summary cells. Other built-in modes return an error when every visible mark does not fit. See [Large datasets](./performance) before choosing a limit.
 

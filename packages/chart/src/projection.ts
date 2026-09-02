@@ -155,6 +155,11 @@ export interface ChartProjectionDelta<ID extends StableID = StableID> {
   readonly exit: readonly ID[];
 }
 
+/**
+ * A structurally immutable projection whose typed arrays are borrowed from
+ * Chart-owned caches. Consumers must not mutate, transfer, or detach those
+ * buffers. Use cloneChartProjection when mutable binary storage is required.
+ */
 export interface ChartProjection<ID extends StableID = StableID> {
   readonly generation: number;
   readonly profile: ChartProfile | 'layered';
@@ -190,6 +195,157 @@ export const CHART_POINT_STRIDE = 2;
 export const CHART_RECTANGLE_STRIDE = 4;
 export const CHART_CELL_STRIDE = 5;
 export const CHART_ARC_STRIDE = 6;
+
+/**
+ * Copies every public typed-array backing buffer into consumer-owned storage.
+ * Immutable metadata remains shared, while repeated source views and backing
+ * buffers preserve their alias relationships within the returned projection.
+ * The operation is O(B) in the distinct borrowed backing-buffer bytes.
+ */
+export function cloneChartProjection<ID extends StableID>(
+  projection: ChartProjection<ID>,
+): ChartProjection<ID> {
+  const state: ChartProjectionCloneState = {
+    buffers: new Map<ArrayBufferLike, ArrayBuffer>(),
+    views: new Map<object, object>(),
+  };
+  const batches = Object.freeze(projection.batches.map((batch) => cloneProjectionBatch(batch, state)));
+  const dataBatches = projection.dataBatches === undefined
+    ? undefined
+    : Object.freeze(projection.dataBatches.map((batch) => cloneDataBatch(batch, state)));
+  return Object.freeze({
+    ...projection,
+    batches,
+    ...(dataBatches === undefined ? {} : { dataBatches }),
+  });
+}
+
+interface ChartProjectionCloneState {
+  readonly buffers: Map<ArrayBufferLike, ArrayBuffer>;
+  readonly views: Map<object, object>;
+}
+
+function cloneProjectionBatch(
+  batch: ChartProjectionBatch,
+  state: ChartProjectionCloneState,
+): ChartProjectionBatch {
+  if (batch.type === 'point') {
+    return Object.freeze({
+      ...batch,
+      positions: cloneFloat32Array(batch.positions, state),
+      identityIndices: cloneUint32Array(batch.identityIndices, state),
+      ...(batch.colors === undefined ? {} : { colors: cloneUint8Array(batch.colors, state) }),
+    });
+  }
+  if (batch.type === 'polyline') {
+    return Object.freeze({
+      ...batch,
+      positions: cloneFloat32Array(batch.positions, state),
+      offsets: cloneUint32Array(batch.offsets, state),
+      identityIndices: cloneUint32Array(batch.identityIndices, state),
+      ...(batch.colors === undefined ? {} : { colors: cloneUint8Array(batch.colors, state) }),
+    });
+  }
+  if (batch.type === 'rectangle') {
+    return Object.freeze({
+      ...batch,
+      rectangles: cloneFloat32Array(batch.rectangles, state),
+      identityIndices: cloneUint32Array(batch.identityIndices, state),
+      ...(batch.colors === undefined ? {} : { colors: cloneUint8Array(batch.colors, state) }),
+    });
+  }
+  if (batch.type === 'cell') {
+    return Object.freeze({
+      ...batch,
+      cells: cloneFloat32Array(batch.cells, state),
+      identityIndices: cloneUint32Array(batch.identityIndices, state),
+      ...(batch.colors === undefined ? {} : { colors: cloneUint8Array(batch.colors, state) }),
+    });
+  }
+  return Object.freeze({
+    ...batch,
+    arcs: cloneFloat32Array(batch.arcs, state),
+    identityIndices: cloneUint32Array(batch.identityIndices, state),
+    ...(batch.colors === undefined ? {} : { colors: cloneUint8Array(batch.colors, state) }),
+  });
+}
+
+function cloneDataBatch(
+  batch: ChartDataBatch,
+  state: ChartProjectionCloneState,
+): ChartDataBatch {
+  return Object.freeze({
+    ...batch,
+    geometry: cloneDataGeometry(batch.geometry, state),
+    ...(batch.values === undefined ? {} : { values: cloneFloat64Array(batch.values, state) }),
+    identityIndices: cloneUint32Array(batch.identityIndices, state),
+    ...(batch.colors === undefined ? {} : { colors: cloneUint8Array(batch.colors, state) }),
+  });
+}
+
+function cloneDataGeometry(
+  geometry: ChartDataGeometry,
+  state: ChartProjectionCloneState,
+): ChartDataGeometry {
+  if (geometry.type === 'point' || geometry.type === 'polyline') {
+    return Object.freeze({
+      ...geometry,
+      positions: cloneFloat64Array(geometry.positions, state),
+      ...(geometry.offsets === undefined ? {} : { offsets: cloneUint32Array(geometry.offsets, state) }),
+    });
+  }
+  if (geometry.type === 'rectangle') {
+    return Object.freeze({ ...geometry, segments: cloneFloat64Array(geometry.segments, state) });
+  }
+  if (geometry.type === 'cell') {
+    return Object.freeze({ ...geometry, bounds: cloneFloat64Array(geometry.bounds, state) });
+  }
+  if (geometry.type === 'arc') {
+    return Object.freeze({ ...geometry, arcs: cloneFloat64Array(geometry.arcs, state) });
+  }
+  throw new TypeError('Chart data geometry type is invalid.');
+}
+
+function cloneFloat32Array(value: Float32Array, state: ChartProjectionCloneState): Float32Array {
+  const retained = state.views.get(value);
+  if (retained !== undefined) return retained as Float32Array;
+  const cloned = new Float32Array(cloneProjectionBuffer(value.buffer, state), value.byteOffset, value.length);
+  state.views.set(value, cloned);
+  return cloned;
+}
+
+function cloneFloat64Array(value: Float64Array, state: ChartProjectionCloneState): Float64Array {
+  const retained = state.views.get(value);
+  if (retained !== undefined) return retained as Float64Array;
+  const cloned = new Float64Array(cloneProjectionBuffer(value.buffer, state), value.byteOffset, value.length);
+  state.views.set(value, cloned);
+  return cloned;
+}
+
+function cloneUint32Array(value: Uint32Array, state: ChartProjectionCloneState): Uint32Array {
+  const retained = state.views.get(value);
+  if (retained !== undefined) return retained as Uint32Array;
+  const cloned = new Uint32Array(cloneProjectionBuffer(value.buffer, state), value.byteOffset, value.length);
+  state.views.set(value, cloned);
+  return cloned;
+}
+
+function cloneUint8Array(value: Uint8Array, state: ChartProjectionCloneState): Uint8Array {
+  const retained = state.views.get(value);
+  if (retained !== undefined) return retained as Uint8Array;
+  const cloned = new Uint8Array(cloneProjectionBuffer(value.buffer, state), value.byteOffset, value.length);
+  state.views.set(value, cloned);
+  return cloned;
+}
+
+function cloneProjectionBuffer(value: ArrayBufferLike, state: ChartProjectionCloneState): ArrayBuffer {
+  const retained = state.buffers.get(value);
+  if (retained !== undefined) return retained;
+  const cloned = new ArrayBuffer(value.byteLength);
+  new Uint8Array(cloned).set(new Uint8Array(value));
+  state.buffers.set(value, cloned);
+  return cloned;
+}
 
 export function createChartProjection<ID extends StableID>(
   source: ChartProjectionSource<ID>,

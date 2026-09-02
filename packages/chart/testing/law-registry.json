@@ -45,6 +45,11 @@
       "id": "CHT-09",
       "theory": "chart",
       "statement": "raw model and patch cardinality ceilings reject before datum observation"
+    },
+    {
+      "id": "CHT-10",
+      "theory": "chart",
+      "statement": "projection clones isolate borrowed binary buffers while preserving internal aliases"
     }
   ]
 }

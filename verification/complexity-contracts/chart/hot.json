@@ -36,9 +36,10 @@
         },
         "assumptions": [
           "model generation, viewport, representative ceiling, canonical controller-owned view, view transform, and inset scalars are unchanged",
-          "caller-supplied scales, explicit view, and previous projection disable caching"
+          "caller-supplied scales, explicit view, and previous projection disable caching",
+          "consumers preserve borrowed projection buffers without mutation or detachment"
         ],
-        "proof": "The controller compares a fixed scalar cache key before constructing a resolved request and returns the single retained immutable projection in one Result wrapper.",
+        "proof": "The controller compares a fixed scalar cache key before constructing a resolved request and returns the single retained structurally immutable projection with borrowed binary storage in one Result wrapper.",
         "adversarialWitness": "Repeated projection reads on a one-million-datum model return one object identity without domain traversal; a 50,000-read heap-allocation sample stays below one percent of an otherwise identical uncached previous-projection request.",
         "fullScan": {
           "allowed": false,
@@ -389,6 +390,57 @@
       }
     },
     {
+      "id": "projection.clone",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/projection.ts",
+      "benchmarkIDs": [
+        "VAL-014:chart-projection-clone-ownership"
+      ],
+      "specificationCeiling": "O(bBuffer + vView)",
+      "contract": {
+        "variables": [
+          {
+            "name": "bBuffer",
+            "meaning": "bytes in distinct public typed-array backing buffers",
+            "ceiling": "projection binary storage bounded by maximumRepresentatives"
+          },
+          {
+            "name": "vView",
+            "meaning": "public typed-array views reachable from batches and data batches",
+            "ceiling": "a fixed number of views per emitted layer batch"
+          }
+        ],
+        "time": {
+          "bound": "O(bBuffer + vView)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(vView)",
+          "output": "O(bBuffer + vView)",
+          "retained": "O(bBuffer + vView)"
+        },
+        "resources": {
+          "allocations": "one ArrayBuffer per distinct source buffer and one typed-array view per distinct source view",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the input is a valid Chart-owned projection with attached borrowed buffers",
+          "immutable projection metadata remains shared"
+        ],
+        "proof": "The clone walks public batch and data-batch fields once. One map copies each distinct backing buffer exactly once, a second map recreates each distinct typed-array view exactly once, and both maps preserve source alias relationships inside the isolated result.",
+        "adversarialWitness": "A layered Cartesian plus radial projection shares identity, color, and polyline-offset views across public surfaces; the clone preserves those aliases, remains isolated from a second clone and the controller cache, and can transfer its buffer without detaching the source.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "An explicit consumer-owned binary clone must copy every reachable public backing-buffer byte once."
+        }
+      }
+    },
+    {
       "id": "projection.create",
       "inherits": "linear-v1",
       "source": "packages/chart/src/projection.ts",
@@ -562,7 +614,7 @@
           "subscriptions": "0"
         },
         "assumptions": [
-          "prepareChartProjectionQueries or an earlier hit test built the immutable projection BVH and categorical bar orders",
+          "prepareChartProjectionQueries or an earlier hit test built the projection BVH and categorical bar orders before any consumer-owned clone mutation",
           "ordered-series projected X coordinates remain nondecreasing"
         ],
         "proof": "Filled areas use exact BVH candidates; ordered lines use one binary search per bounded layer plus equal-X candidates; categorical bars use retained center orders; scatter points use the bounded-radius BVH. Deterministic diagnostics count visited nodes, tested primitives, and searched line or bar partitions.",
@@ -607,7 +659,7 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Primitive bounds are emitted once, Morton keys are sorted once, categorical bar records are sorted once by their dominant-axis centers, and one balanced packed hierarchy plus two packed bar orders is retained per immutable projection.",
+        "proof": "Primitive bounds are emitted once, Morton keys are sorted once, categorical bar records are sorted once by their dominant-axis centers, and one balanced packed hierarchy plus two packed bar orders is retained per structurally immutable projection owner.",
         "adversarialWitness": "Every representative emits one sortable query primitive; every categorical bar additionally enters exactly one dominant-axis order.",
         "fullScan": {
           "allowed": true,

@@ -12,7 +12,7 @@ import {
 } from '@sectile/chart/contract';
 import { replaceChartLayer, type ChartModel } from '@sectile/chart/model';
 import { createChartDefinition, replaceChartDefinition } from '@sectile/chart/definition';
-import { createChartProjection } from '@sectile/chart/projection';
+import { cloneChartProjection, createChartProjection } from '@sectile/chart/projection';
 import { hitTestChartProjection, inspectChartProjectionHitTest } from '@sectile/chart/query';
 import { createContinuousColorScale, createOrdinalColorScale } from '@sectile/chart/scale';
 import { createChartAxisViewState, reduceChartViewAction } from '@sectile/chart/view';
@@ -148,7 +148,10 @@ const zoomed = reduceChartViewAction(semanticView, {
 if (!zoomed.ok) throw new TypeError(zoomed.error.message);
 const zoomedView = zoomed.value.state;
 const semanticProjection = createChartProjection(semanticNext, { viewport: { width: 640, height: 320 }, view: zoomedView });
+const mutableProjection = cloneChartProjection(semanticProjection);
+mutableProjection.batches[0]!.positions[0] = 0;
 void semanticProjection.dataBatches;
+void mutableProjection;
 const semanticHits = hitTestChartProjection(semanticProjection, { x: 100, y: 100, radius: 40, maximumHits: 1 });
 semanticHits[0]?.kind satisfies 'datum' | 'aggregate' | undefined;
 const inspectedHits = inspectChartProjectionHitTest(semanticProjection, { x: 100, y: 100 });

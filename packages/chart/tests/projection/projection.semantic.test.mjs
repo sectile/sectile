@@ -1,13 +1,147 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createChartDefinition, replaceChartDefinition } from '../../.verification-dist/definition.js';
-import { createChartProjection, tryCreateChartProjection } from '../../.verification-dist/projection.js';
+import {
+  cloneChartProjection,
+  createChartProjection,
+  tryCreateChartProjection,
+} from '../../.verification-dist/projection.js';
 import { hitTestChartProjection } from '../../.verification-dist/query.js';
 
 const axes = [
   { id: 'x', orientation: 'x', scale: 'linear' },
   { id: 'y', orientation: 'y', scale: 'linear' },
 ];
+
+function projectionTypedArrays(projection) {
+  const output = new Map();
+  for (let index = 0; index < projection.batches.length; index += 1) {
+    const batch = projection.batches[index];
+    if (batch.type === 'point' || batch.type === 'polyline') output.set(`batch:${index}:positions`, batch.positions);
+    else if (batch.type === 'rectangle') output.set(`batch:${index}:rectangles`, batch.rectangles);
+    else if (batch.type === 'cell') output.set(`batch:${index}:cells`, batch.cells);
+    else output.set(`batch:${index}:arcs`, batch.arcs);
+    if (batch.type === 'polyline') output.set(`batch:${index}:offsets`, batch.offsets);
+    output.set(`batch:${index}:identity-indices`, batch.identityIndices);
+    if (batch.colors !== undefined) output.set(`batch:${index}:colors`, batch.colors);
+  }
+  for (let index = 0; index < (projection.dataBatches?.length ?? 0); index += 1) {
+    const batch = projection.dataBatches[index];
+    const geometry = batch.geometry;
+    if (geometry.type === 'point' || geometry.type === 'polyline') output.set(`data:${index}:positions`, geometry.positions);
+    else if (geometry.type === 'rectangle') output.set(`data:${index}:segments`, geometry.segments);
+    else if (geometry.type === 'cell') output.set(`data:${index}:bounds`, geometry.bounds);
+    else output.set(`data:${index}:arcs`, geometry.arcs);
+    if (geometry.type === 'polyline' && geometry.offsets !== undefined) output.set(`data:${index}:offsets`, geometry.offsets);
+    if (batch.values !== undefined) output.set(`data:${index}:values`, batch.values);
+    output.set(`data:${index}:identity-indices`, batch.identityIndices);
+    if (batch.colors !== undefined) output.set(`data:${index}:colors`, batch.colors);
+  }
+  return output;
+}
+
+function assertProjectionCloneIsolation(source) {
+  const clone = cloneChartProjection(source);
+  const independent = cloneChartProjection(source);
+  assert.notEqual(clone, source);
+  assert.notEqual(clone.batches, source.batches);
+  assert.notEqual(clone.dataBatches, source.dataBatches);
+  assert.deepEqual(clone, source);
+  assert.equal(Object.isFrozen(clone), true);
+  assert.equal(clone.batches.every(Object.isFrozen), true);
+  assert.equal(clone.dataBatches?.every(Object.isFrozen) ?? true, true);
+
+  const sourceViews = projectionTypedArrays(source);
+  const cloneViews = projectionTypedArrays(clone);
+  const independentViews = projectionTypedArrays(independent);
+  assert.deepEqual([...cloneViews.keys()], [...sourceViews.keys()]);
+  for (const [path, sourceView] of sourceViews) {
+    const cloneView = cloneViews.get(path);
+    const independentView = independentViews.get(path);
+    assert.notEqual(cloneView, sourceView, path);
+    assert.notEqual(cloneView.buffer, sourceView.buffer, path);
+    assert.notEqual(independentView.buffer, cloneView.buffer, path);
+    assert.deepEqual(cloneView, sourceView, path);
+    assert.deepEqual(independentView, sourceView, path);
+  }
+
+  const sourceEntries = [...sourceViews.entries()];
+  for (let left = 0; left < sourceEntries.length; left += 1) {
+    for (let right = left + 1; right < sourceEntries.length; right += 1) {
+      const [leftPath, leftView] = sourceEntries[left];
+      const [rightPath, rightView] = sourceEntries[right];
+      const leftClone = cloneViews.get(leftPath);
+      const rightClone = cloneViews.get(rightPath);
+      assert.equal(leftClone === rightClone, leftView === rightView, `${leftPath} / ${rightPath} view alias`);
+      assert.equal(leftClone.buffer === rightClone.buffer, leftView.buffer === rightView.buffer, `${leftPath} / ${rightPath} buffer alias`);
+    }
+  }
+
+  const sourceValues = new Map([...sourceViews].map(([path, view]) => [path, [...view]]));
+  const independentValues = new Map([...independentViews].map(([path, view]) => [path, [...view]]));
+  for (const view of new Set(cloneViews.values())) {
+    if (view.length === 0) continue;
+    view[0] = view[0] === 255 ? 0 : view[0] + 1;
+  }
+  for (const [path, view] of sourceViews) assert.deepEqual([...view], sourceValues.get(path), path);
+  for (const [path, view] of independentViews) assert.deepEqual([...view], independentValues.get(path), path);
+
+  const transferable = [...new Set([...cloneViews.values()].map((view) => view.buffer))][0];
+  const sourceBuffer = sourceViews.values().next().value.buffer;
+  structuredClone(transferable, { transfer: [transferable] });
+  assert.equal(transferable.byteLength, 0);
+  assert.ok(sourceBuffer.byteLength > 0);
+  return clone;
+}
+
+test('CHT-10: projection clones isolate every borrowed binary buffer', () => {
+  const cartesianSource = createChartDefinition({
+    coordinate: { kind: 'cartesian', axes: [
+      { id: 'x', orientation: 'x', scale: 'linear', field: 'x' },
+      { id: 'category', orientation: 'x', scale: 'categorical', field: 'category' },
+      { id: 'y', orientation: 'y', scale: 'linear', field: 'y' },
+    ] },
+    layers: [
+      { id: 'line', kind: 'line', xAxis: 'x', yAxis: 'y', data: [
+        { id: 'line-0', x: 0, y: 0 }, { id: 'line-1', x: 2, y: 3 },
+      ] },
+      { id: 'scatter', kind: 'scatter', projection: 'raw', xAxis: 'x', yAxis: 'y', data: [
+        { id: 'point-0', x: 7, y: 8 }, { id: 'point-1', x: 9, y: 6 },
+      ] },
+      { id: 'bars', kind: 'bar', xAxis: 'category', yAxis: 'y', data: [
+        { id: 'bar-0', category: 'A', y: 4 }, { id: 'bar-1', category: 'B', y: 5 },
+      ] },
+      { id: 'heat', kind: 'heatmap', xAxis: 'x', yAxis: 'y', data: [
+        { id: 'cell-0', x: 3, y: 4, value: 2 }, { id: 'cell-1', x: 4, y: 5, value: 9 },
+      ] },
+    ],
+  });
+  const cartesian = createChartProjection(cartesianSource, { viewport: { width: 320, height: 180 } });
+  assert.deepEqual(cartesian.batches.map((batch) => batch.type), ['polyline', 'point', 'rectangle', 'cell']);
+  assert.deepEqual(cartesian.dataBatches.map((batch) => batch.geometry.type), ['polyline', 'point', 'rectangle', 'cell']);
+  const point = cartesian.batches.find((batch) => batch.type === 'point');
+  const beforeHits = hitTestChartProjection(cartesian, { x: point.positions[0], y: point.positions[1], radius: 1 });
+  assertProjectionCloneIsolation(cartesian);
+  assert.deepEqual(
+    hitTestChartProjection(cartesian, { x: point.positions[0], y: point.positions[1], radius: 1 }),
+    beforeHits,
+  );
+  const resized = createChartProjection(cartesianSource, { viewport: { width: 640, height: 360 } });
+  for (const batch of cartesian.dataBatches) {
+    assert.equal(resized.dataBatches.find((candidate) => candidate.layerIndex === batch.layerIndex)?.geometry, batch.geometry);
+  }
+
+  const radialSource = createChartDefinition({
+    coordinate: { kind: 'radial' },
+    layers: [{ id: 'share', kind: 'donut', innerRadius: 0.4, data: [
+      { id: 'slice-0', value: 1 }, { id: 'slice-1', value: 3 },
+    ] }],
+  });
+  const radial = createChartProjection(radialSource, { viewport: { width: 200, height: 200 } });
+  assert.equal(radial.batches[0].type, 'arc');
+  assert.equal(radial.dataBatches[0].geometry.type, 'arc');
+  assertProjectionCloneIsolation(radial);
+});
 
 test('uses a bounded retained envelope for ordered series without fabricated identities', () => {
   const data = Array.from({ length: 4_096 }, (_, id) => ({ id, x: id, y: Math.sin(id / 8) * 100 }));

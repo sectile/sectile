@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createChartController } from '../../.verification-dist/controller.js';
+import { cloneChartProjection } from '../../.verification-dist/projection.js';
 import { createLinearScale } from '../../.verification-dist/scale.js';
 
 const options = () => ({ model: { layers: [{ id: 'points', profile: 'point', data: [
@@ -220,6 +221,19 @@ test('CHT-05: declarative projection cache is equivalent and bypasses ineligible
   const customFirst = modelController.project({ viewport: { width: 320, height: 180 }, xScale, yScale }).value;
   const customSecond = modelController.project({ viewport: { width: 320, height: 180 }, xScale, yScale }).value;
   assert.notEqual(customSecond, customFirst);
+});
+
+test('projection clones cannot contaminate the retained controller cache', () => {
+  const controller = createChartController(options());
+  const first = controller.project({ viewport: { width: 320, height: 180 } }).value;
+  const cloned = cloneChartProjection(first);
+  const original = first.batches[0].positions[0];
+  cloned.batches[0].positions[0] = original + 100;
+
+  const repeated = controller.project({ viewport: { width: 320, height: 180 } }).value;
+  assert.equal(repeated, first);
+  assert.equal(repeated.batches[0].positions[0], original);
+  controller.dispose();
 });
 
 test('controlled values and nested capabilities remain isolated from caller mutation', () => {
