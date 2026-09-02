@@ -59,10 +59,15 @@ test('verification CLI separates affected, full deterministic, and release certi
   const full = explain(['--full']);
   assert.equal(full.stages.includes('performance certification'), false);
   assert.equal(full.certificationPerformance, false);
+  assert.equal(full.documentationSiteBuild, false);
 
   const release = explain(['--release']);
   assert.equal(release.stages.includes('performance certification'), true);
   assert.equal(release.certificationPerformance, true);
+  assert.equal(release.documentationSiteBuild, true);
+
+  const docs = explain(['docs']);
+  assert.equal(docs.documentationSiteBuild, true);
 });
 
 function explain(arguments_) {

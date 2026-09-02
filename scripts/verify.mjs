@@ -84,6 +84,7 @@ const includeDocumentation = compatibility
   : fullRepositoryVerification
     || explicitTargets.has('@sectile/docs')
     || affectedSelection?.includeDocumentation === true;
+const buildDocumentationSite = includeDocumentation && (releaseRequested || !fullRepositoryVerification);
 const workspaceGates = new Set(exactRequested ? [] : affectedSelection?.workspaceGates ?? []);
 const dependencyClosure = collectDependencyClosure(selectedPackagesGraph(), selectedPackages, includeDocumentation);
 const modeLabel = compatibility
@@ -139,6 +140,7 @@ if (explainRequested) {
     selectedPackages: [...selectedPackages],
     preparedPackages: graph.order.filter(({ name }) => dependencyClosure.has(name) && !selectedPackages.has(name)).map(({ name }) => name),
     documentation: includeDocumentation,
+    documentationSiteBuild: buildDocumentationSite,
     workspaceGates: [...workspaceGates],
     certificationPerformance: releaseRequested,
     failFast: !continueOnFailure,
@@ -170,9 +172,9 @@ function verificationSteps() {
     ]));
   }
   if (includeDocumentation) {
-    result.push(packageScriptStep('documentation verification', '@sectile/docs', [
-      'generate:check', 'typecheck', 'test', 'build',
-    ]));
+    const documentationScripts = ['generate:check', 'typecheck', 'test'];
+    if (buildDocumentationSite) documentationScripts.push('build');
+    result.push(packageScriptStep('documentation verification', '@sectile/docs', documentationScripts));
   }
   if (fullRepositoryVerification) result.push(...workspaceContractSteps({ includePerformance: releaseRequested }));
   else result.push(...affectedWorkspaceContractSteps());
