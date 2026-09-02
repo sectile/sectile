@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { execFile as execFileCallback } from 'node:child_process';
 import {
-  DEFAULT_BASELINE_PATH,
+  DEFAULT_BASELINE_DIRECTORY,
   DEFAULT_LATEST_COMPARISON_PATH,
   DEFAULT_PROCESS_COUNT,
   DEFAULT_RUNS_PATH,
   MINIMUM_PROCESS_COUNT,
   PERFORMANCE_SCHEMA_VERSION,
 } from './config.mjs';
+import { performanceBaselinePath, selectPerformanceBaseline } from './baselines.mjs';
 import { compareReports, validateRunnerReport } from './check.mjs';
 import { collectProvenance } from './provenance.mjs';
 import {
@@ -42,7 +42,7 @@ async function main() {
     runsRoot: options.runsRoot,
     mode: options.mode,
     processCount: options.processCount,
-    baseline: options.baselinePath,
+    baseline: options.baselinePath ?? options.baselineDirectory,
   });
   try {
     const workerPath = resolve(repoRoot, 'scripts/performance/worker.mjs');
@@ -90,20 +90,27 @@ async function main() {
     }
 
     if (options.mode === 'record') {
-      await recordPerformanceBaseline(session, options.baselinePath, report);
+      const baselinePath = options.baselinePath ?? performanceBaselinePath(options.baselineDirectory, report);
+      await recordPerformanceBaseline(session, baselinePath, report);
       await finalizePerformanceSession(session, 'recorded');
       process.stdout.write(`${JSON.stringify({
         mode: options.mode,
         runID: session.session.runID,
         session: session.manifestPath,
         report: reportPath,
-        baseline: options.baselinePath,
+        baseline: baselinePath,
         metrics: Object.keys(report.metrics).length,
       })}\n`);
       return;
     }
 
-    const baseline = JSON.parse(await readFile(options.baselinePath, 'utf8'));
+    const selectedBaseline = await selectPerformanceBaseline({
+      current: report,
+      explicitPath: options.baselinePath,
+      directory: options.baselineDirectory,
+    });
+    const baselinePath = selectedBaseline.path;
+    const baseline = selectedBaseline.report;
     const comparison = compareReports(baseline, report);
     const comparisonPath = resolve(session.directory, 'comparison.json');
     const output = Object.freeze({
@@ -113,7 +120,7 @@ async function main() {
       session: session.manifestPath,
       currentRunReport: reportPath,
       comparisonReport: comparisonPath,
-      baseline: options.baselinePath,
+      baseline: baselinePath,
       baselineBuildFingerprint: baseline.provenance.buildFingerprint,
       currentBuildFingerprint: report.provenance.buildFingerprint,
       ...comparison,
@@ -174,7 +181,8 @@ function aggregateMetrics(processReports) {
 function parseArguments(arguments_) {
   const mode = arguments_[0] ?? 'check';
   if (!['record', 'compare', 'check'].includes(mode)) throw new Error('Usage: run.mjs <record|compare|check> [options]');
-  let baselinePath = resolve(repoRoot, DEFAULT_BASELINE_PATH);
+  let baselinePath = null;
+  const baselineDirectory = resolve(repoRoot, DEFAULT_BASELINE_DIRECTORY);
   const latestComparisonPath = resolve(repoRoot, DEFAULT_LATEST_COMPARISON_PATH);
   const runsRoot = resolve(repoRoot, DEFAULT_RUNS_PATH);
   let outputPath = null;
@@ -197,7 +205,17 @@ function parseArguments(arguments_) {
     assert.notEqual(mode, 'record', '--work-item is only valid for compare/check evidence.');
     assert.notEqual(outputPath, null, '--work-item requires --output so before/after evidence is retained.');
   }
-  return Object.freeze({ mode, baselinePath, latestComparisonPath, runsRoot, outputPath, processCount, quick, workItem });
+  return Object.freeze({
+    mode,
+    baselinePath,
+    baselineDirectory,
+    latestComparisonPath,
+    runsRoot,
+    outputPath,
+    processCount,
+    quick,
+    workItem,
+  });
 }
 
 function requireValue(arguments_, index, option) {

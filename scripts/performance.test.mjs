@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import {
+  performanceBaselinePath,
+  promotePerformanceReport,
+  selectPerformanceBaseline,
+} from './performance/baselines.mjs';
 import { assertComparable, compareReports, validateRunnerReport } from './performance/check.mjs';
 import {
   appendPerformanceProcess,
@@ -36,6 +41,62 @@ test('comparison rejects workload, runtime, hardware, and flag mismatches', () =
   const current = fixture();
   current.provenance.cpuModel = 'different';
   assert.throws(() => assertComparable(baseline, current), /mismatched workload, runtime, hardware, or flags/u);
+});
+
+test('default performance baselines require one exact environment partition', async (context) => {
+  const root = await mkdtemp(join(tmpdir(), 'sectile-performance-baselines-'));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const directory = join(root, 'baselines');
+  await mkdir(directory);
+
+  const current = fixture();
+  const partitionedPath = performanceBaselinePath(directory, current);
+  await writeFile(partitionedPath, `${JSON.stringify(current, null, 2)}\n`, 'utf8');
+  const partitioned = await selectPerformanceBaseline({ current, directory });
+  assert.equal(partitioned.path, partitionedPath);
+  assert.deepEqual(partitioned.report, current);
+
+  await rm(partitionedPath);
+  const incompatible = structuredClone(current);
+  incompatible.provenance.platform = 'different';
+  await writeFile(
+    performanceBaselinePath(directory, incompatible),
+    `${JSON.stringify(incompatible, null, 2)}\n`,
+    'utf8',
+  );
+  await assert.rejects(
+    selectPerformanceBaseline({ current, directory }),
+    /No compatible performance baseline exists/u,
+  );
+
+  const explicitPath = join(root, 'explicit.json');
+  await writeFile(explicitPath, `${JSON.stringify(current, null, 2)}\n`, 'utf8');
+  const explicit = await selectPerformanceBaseline({ current, explicitPath, directory });
+  assert.equal(explicit.path, explicitPath);
+});
+
+test('retained full performance reports promote once without overwriting evidence', async (context) => {
+  const root = await mkdtemp(join(tmpdir(), 'sectile-performance-promote-'));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const directory = join(root, 'baselines');
+  const reportPath = join(root, 'report.json');
+  const report = fixture();
+  report.runner.quick = false;
+  await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+
+  const created = await promotePerformanceReport({ reportPath, directory });
+  assert.equal(created.created, true);
+  assert.deepEqual(JSON.parse(await readFile(created.path, 'utf8')), report);
+  const unchanged = await promotePerformanceReport({ reportPath, directory });
+  assert.equal(unchanged.created, false);
+
+  const conflicting = structuredClone(report);
+  conflicting.provenance.buildFingerprint = 'different-build';
+  await writeFile(reportPath, `${JSON.stringify(conflicting, null, 2)}\n`, 'utf8');
+  await assert.rejects(
+    promotePerformanceReport({ reportPath, directory }),
+    /already contains different evidence/u,
+  );
 });
 
 test('comparison reports an intentional timing regression', () => {

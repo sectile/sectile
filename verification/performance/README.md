@@ -8,6 +8,7 @@ and captures peak allocation pressure plus post-GC retained heap.
 
 ```sh
 pnpm performance:record
+pnpm performance:promote -- .tasks/performance/runs/<run-id>/report.json
 pnpm performance:compare
 pnpm performance:check
 pnpm verify:performance
@@ -20,13 +21,22 @@ and complete runs add `report.json`. Interrupted runs therefore retain their
 last completed process count instead of disappearing. Invalid calibration,
 comparison failures, and regressions retain their reports and terminal status.
 
-`record` validates one non-quick run and atomically replaces `baseline.json`.
-The previous baseline and update metadata remain inside the run session, so no
-separate promotion command is required. Run IDs are generated automatically.
-Raw sessions are intentionally Git-ignored because every run retains all
-process reports; approved comparison summaries and the recorded baseline remain
-the repository evidence.
+`record` validates one non-quick run and writes it to the environment-partitioned
+`baselines/` directory. The filename is the SHA-256 digest of the exact runtime,
+OS, architecture, CPU, flags, and workload metadata used for comparison. A
+previous baseline for the same environment and its update metadata remain inside
+the run session. `performance:promote` applies the same validation to a retained
+complete report, allowing a failed comparison caused only by a missing exact
+environment partition to become the initial baseline without rerunning workers.
+It refuses quick reports and conflicting existing evidence. Every approved
+baseline lives in its environment partition, so different operating systems and
+Node runtimes cannot overwrite or silently inherit one another's evidence. Run
+IDs are generated automatically. Raw sessions are intentionally Git-ignored
+because every run retains all process reports; approved comparison summaries and
+recorded baselines remain the repository evidence.
 
+Without an explicit `--baseline`, `compare` and `check` require the environment
+partition whose compatibility metadata exactly matches the current report.
 `compare` reports differences without enforcing the gate. `check` fails when a
 calibrated median regression is corroborated by p95 and the current
 isolated-process distribution clears the baseline distribution, or when

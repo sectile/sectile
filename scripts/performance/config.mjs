@@ -5,6 +5,6 @@ export const QUICK_BATCH_COUNT = 3;
 export const MINIMUM_PROCESS_COUNT = 10;
 export const MINIMUM_REGRESSION_BAND = 0.05;
 export const MAXIMUM_REGRESSION_BAND = 0.1;
-export const DEFAULT_BASELINE_PATH = 'verification/performance/baseline.json';
+export const DEFAULT_BASELINE_DIRECTORY = 'verification/performance/baselines';
 export const DEFAULT_RUNS_PATH = '.tasks/performance/runs';
 export const DEFAULT_LATEST_COMPARISON_PATH = '.tasks/performance/latest-comparison.json';

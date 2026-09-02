@@ -14,6 +14,7 @@
     "test:release": "node --test --test-concurrency=1 scripts/release.test.mjs",
     "test:tooling": "node --test --test-concurrency=1 scripts/*.test.mjs",
     "performance:record": "pnpm run build:workspace && node scripts/performance/run.mjs record",
+    "performance:promote": "node scripts/performance/promote.mjs",
     "performance:compare": "pnpm run build:workspace && node scripts/performance/run.mjs compare",
     "performance:check": "pnpm run build:workspace && node scripts/performance/run.mjs check",
     "check:performance-gates": "node scripts/check-performance-gates.mjs",
