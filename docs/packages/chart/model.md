@@ -78,6 +78,8 @@ Outside Vue, call `controller.replaceDefinition(nextDefinition)` after replacing
 
 `ChartModel` and `ChartPatch` are advanced APIs for systems that already produce incremental chart operations. Most applications should use definitions so Sectile can recalculate axes when values change.
 
+Raw model limits are checked from layer and operation metadata before Sectile reads datum elements or allocates packed geometry. Patch operations are evaluated in declaration order, and every intermediate datum count must remain within `maxDatums`; a later removal does not make an earlier over-ceiling insert valid.
+
 ## Handle invalid data before showing it
 
 Sectile rejects duplicate IDs, incompatible axes, invalid dates, non-finite numbers, and data above configured limits. A failed replacement leaves the current chart unchanged.

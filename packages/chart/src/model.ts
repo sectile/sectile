@@ -245,21 +245,33 @@ export function tryReplaceChartLayer<ID extends StableID>(
   if (state.generation === Number.MAX_SAFE_INTEGER) {
     return chartFail('resource-rejection', 'chart-generation-exhausted', 'Chart generation is exhausted.');
   }
+  if (layer === null || typeof layer !== 'object' || !Array.isArray(layer.data)) {
+    return chartFail('construction', 'chart-model-invalid', 'Chart layer data must be an array.');
+  }
+  const layerID = layer.id;
+  const profile = layer.profile;
+  const layerData = layer.data;
+  const layerSize = layerData.length;
   const data = getChartModelData<ID>(state);
-  const layerPosition = data.layerIndex.get(layer.id);
+  const layerPosition = data.layerIndex.get(layerID);
   if (layerPosition === undefined) {
-    return chartFail('transition-rejection', 'chart-layer-missing', 'Chart layer does not exist.', { layerID: layer.id });
+    return chartFail('transition-rejection', 'chart-layer-missing', 'Chart layer does not exist.', { layerID });
   }
   const previous = data.layers[layerPosition] as PackedChartLayer<ID>;
-  const packed = packLayerInput(layer, layerPosition, state.limits);
-  if (!packed.ok) return packed;
-  const nextSize = data.identities.size - previous.owner.size + packed.value.identities.length;
-  if (nextSize > state.limits.maxDatums) {
+  const retainedSize = data.identities.size - previous.owner.size;
+  if (layerSize > state.limits.maxDatums - retainedSize) {
     return chartFail('resource-rejection', 'chart-datum-ceiling-exceeded', 'Chart datum count exceeds its ceiling.', {
-      actual: nextSize,
+      actual: retainedSize + layerSize,
       ceiling: state.limits.maxDatums,
     });
   }
+  const packed = packLayerInput(
+    { id: layerID, profile, data: layerData } as ChartLayer<ID>,
+    layerPosition,
+    state.limits,
+    layerSize,
+  );
+  if (!packed.ok) return packed;
   for (const id of packed.value.identities) {
     const existing = data.identities.indexOf(id);
     if (existing !== null && !previous.owner.identities.contains(id)) {
@@ -300,23 +312,31 @@ export function tryApplyChartPatch<ID extends StableID>(
   state: ChartModelState<ID>,
   patch: ChartPatch<ID>,
 ): ChartResult<ChartModelState<ID>> {
-  if (patch === null || typeof patch !== 'object' || !Array.isArray(patch.operations)) {
+  if (patch === null || typeof patch !== 'object') {
+    return chartFail('construction', 'chart-patch-invalid', 'Chart patch operations must be an array.');
+  }
+  const operations = patch.operations;
+  if (!Array.isArray(operations)) {
     return chartFail('construction', 'chart-patch-invalid', 'Chart patch operations must be an array.');
   }
   const stale = staleGeneration<ChartModelState<ID>>(state.generation, patch.expectedGeneration);
   if (stale !== null) return stale;
-  if (patch.operations.length > state.limits.maxPatchOperations) {
+  const operationCount = operations.length;
+  if (operationCount > state.limits.maxPatchOperations) {
     return chartFail('resource-rejection', 'chart-patch-ceiling-exceeded', 'Chart patch operation count exceeds its ceiling.', {
-      actual: patch.operations.length,
+      actual: operationCount,
       ceiling: state.limits.maxPatchOperations,
     });
   }
-  if (patch.operations.length === 0) return chartOK(state);
+  if (operationCount === 0) return chartOK(state);
   if (state.generation === Number.MAX_SAFE_INTEGER) {
     return chartFail('resource-rejection', 'chart-generation-exhausted', 'Chart generation is exhausted.');
   }
 
   const data = getChartModelData<ID>(state);
+  const prepared = preflightChartPatch(data, operations, operationCount, state.limits);
+  if (!prepared.ok) return prepared;
+  if (prepared.value.length === 0) return chartOK(state);
   const owners = data.layers.map((layer) => layer.owner);
   let identities: Sequence<ID> = data.identities;
   let changed = false;
@@ -326,31 +346,25 @@ export function tryApplyChartPatch<ID extends StableID>(
   let rebuiltIndexEntries = 0;
   let repairedLayers = 0;
   let rebuiltLayers = 0;
-  for (const operation of patch.operations) {
-    if (operation === null || typeof operation !== 'object' || !('layerID' in operation)) {
-      return chartFail('construction', 'chart-patch-invalid', 'Chart patch operation is invalid.');
-    }
-    const targetIndex = data.layerIndex.get(operation.layerID);
-    if (targetIndex === undefined) {
-      return chartFail('transition-rejection', 'chart-layer-missing', 'Chart patch layer does not exist.', {
-        layerID: operation.layerID,
-      });
-    }
+  for (const operation of prepared.value) {
+    const targetIndex = operation.layerIndex;
     const owner = owners[targetIndex] as PackedChartLayerOwner<ID>;
-    if (!Number.isSafeInteger(operation.index) || operation.index < 0 || operation.index > owner.size) {
-      return chartFail('construction', 'chart-patch-invalid', 'Chart patch index is outside the target layer.', {
-        index: operation.index,
-        size: owner.size,
-      });
-    }
     if (operation.type === 'replace') {
-      if (!Array.isArray(operation.data) || operation.index + operation.data.length > owner.size) {
-        return chartFail('construction', 'chart-patch-invalid', 'Chart patch replacement is outside the target layer.');
-      }
-      if (operation.data.length === 0) continue;
-      const packed = packLayerPatch(owner, operation.data, targetIndex, operation.index, state.limits);
+      const packed = packLayerPatch(
+        owner,
+        operation.data,
+        targetIndex,
+        operation.index,
+        state.limits,
+        operation.dataLength,
+      );
       if (!packed.ok) return packed;
-      const localDuplicate = duplicateOutsideReplacedRange(owner, operation.index, operation.data.length, packed.value.identities);
+      const localDuplicate = duplicateOutsideReplacedRange(
+        owner,
+        operation.index,
+        operation.dataLength,
+        packed.value.identities,
+      );
       if (localDuplicate !== null) return chartFail('construction', 'chart-datum-duplicate', 'Chart datum identities must be unique within a layer.', { id: localDuplicate });
       const duplicate = duplicateOutsideLayer(identities, owner.identities, packed.value.identities);
       if (duplicate !== null) return chartFail('construction', 'chart-datum-duplicate', 'Chart datum identities must be globally unique.', { id: duplicate });
@@ -358,7 +372,7 @@ export function tryApplyChartPatch<ID extends StableID>(
       if (!mutation.changed) continue;
       const identityOffset = ownerOffset(owners, targetIndex) + operation.index;
       identities = applySequencePatch(identities, {
-        type: 'splice', index: identityOffset, deleteCount: operation.data.length, inserted: packed.value.identities,
+        type: 'splice', index: identityOffset, deleteCount: operation.dataLength, inserted: packed.value.identities,
       });
       owners[targetIndex] = mutation.owner;
       changed = true;
@@ -369,31 +383,12 @@ export function tryApplyChartPatch<ID extends StableID>(
       rebuiltIndexEntries += mutation.work.rebuiltIndexEntries;
       continue;
     }
-    const datums = materializePackedLayer(owner);
-    if (operation.type === 'insert') {
-      if (!Array.isArray(operation.data)) return chartFail('construction', 'chart-patch-invalid', 'Inserted chart data must be an array.');
-      if (operation.data.length === 0) continue;
-      datums.splice(operation.index, 0, ...operation.data as readonly ChartDatum<ID>[]);
-    } else if (operation.type === 'remove') {
-      if (!Number.isSafeInteger(operation.count) || operation.count < 0 || operation.index + operation.count > owner.size) {
-        return chartFail('construction', 'chart-patch-invalid', 'Chart patch removal is outside the target layer.');
-      }
-      if (operation.count === 0) continue;
-      datums.splice(operation.index, operation.count);
-    } else {
-      return chartFail('construction', 'chart-patch-invalid', 'Chart patch operation type is invalid.');
-    }
-    const nextSize = identities.size - owner.size + datums.length;
-    if (nextSize > state.limits.maxDatums) {
-      return chartFail('resource-rejection', 'chart-datum-ceiling-exceeded', 'Chart datum count exceeds its ceiling.', {
-        actual: nextSize,
-        ceiling: state.limits.maxDatums,
-      });
-    }
+    const datums = materializeCardinalityPatch(owner, operation);
     const rebuilt = packLayerInput(
       { id: owner.id, profile: owner.profile, data: datums } as ChartLayer<ID>,
       targetIndex,
       state.limits,
+      datums.length,
     );
     if (!rebuilt.ok) return rebuilt;
     const duplicate = duplicateOutsideLayer(identities, owner.identities, rebuilt.value.identities);
@@ -432,6 +427,203 @@ export function tryApplyChartPatch<ID extends StableID>(
   ));
 }
 
+interface PreparedChartPatchBase<ID extends StableID> {
+  readonly layerID: ID;
+  readonly layerIndex: number;
+  readonly index: number;
+}
+
+interface PreparedChartReplaceOperation<ID extends StableID> extends PreparedChartPatchBase<ID> {
+  readonly type: 'replace';
+  readonly data: readonly ChartDatum<ID>[];
+  readonly dataLength: number;
+}
+
+interface PreparedChartInsertOperation<ID extends StableID> extends PreparedChartPatchBase<ID> {
+  readonly type: 'insert';
+  readonly data: readonly ChartDatum<ID>[];
+  readonly dataLength: number;
+}
+
+interface PreparedChartRemoveOperation<ID extends StableID> extends PreparedChartPatchBase<ID> {
+  readonly type: 'remove';
+  readonly count: number;
+}
+
+type PreparedChartPatchOperation<ID extends StableID> =
+  | PreparedChartReplaceOperation<ID>
+  | PreparedChartInsertOperation<ID>
+  | PreparedChartRemoveOperation<ID>;
+
+type PreparedChartCardinalityOperation<ID extends StableID> =
+  | PreparedChartInsertOperation<ID>
+  | PreparedChartRemoveOperation<ID>;
+
+function preflightChartPatch<ID extends StableID>(
+  data: ChartModelData<ID>,
+  operations: readonly ChartPatchOperation<ID>[],
+  operationCount: number,
+  limits: Required<ChartLimits>,
+): ChartResult<readonly PreparedChartPatchOperation<ID>[]> {
+  const layerSizes = data.layers.map((layer) => layer.owner.size);
+  const prepared: PreparedChartPatchOperation<ID>[] = [];
+  let datumCount = data.identities.size;
+  for (let operationIndex = 0; operationIndex < operationCount; operationIndex += 1) {
+    const input = operations[operationIndex];
+    if (input === null || typeof input !== 'object' || !('layerID' in input)) {
+      return chartFail('construction', 'chart-patch-invalid', 'Chart patch operation is invalid.');
+    }
+    const record = input as unknown as Record<string, unknown>;
+    const type = record['type'];
+    const layerID = record['layerID'] as ID;
+    const index = record['index'];
+    const layerIndex = data.layerIndex.get(layerID);
+    if (layerIndex === undefined) {
+      return chartFail('transition-rejection', 'chart-layer-missing', 'Chart patch layer does not exist.', { layerID });
+    }
+    const layerSize = layerSizes[layerIndex] as number;
+    if (!Number.isSafeInteger(index) || (index as number) < 0 || (index as number) > layerSize) {
+      return chartFail('construction', 'chart-patch-invalid', 'Chart patch index is outside the target layer.', {
+        index,
+        size: layerSize,
+      });
+    }
+    const normalizedIndex = index as number;
+    if (type === 'replace') {
+      const operationData = record['data'];
+      if (!Array.isArray(operationData)) {
+        return chartFail('construction', 'chart-patch-invalid', 'Chart patch replacement data must be an array.');
+      }
+      const dataLength = operationData.length;
+      if (dataLength > layerSize - normalizedIndex) {
+        return chartFail('construction', 'chart-patch-invalid', 'Chart patch replacement is outside the target layer.');
+      }
+      if (dataLength > 0) prepared.push(Object.freeze({
+        type,
+        layerID,
+        layerIndex,
+        index: normalizedIndex,
+        data: operationData as readonly ChartDatum<ID>[],
+        dataLength,
+      }));
+      continue;
+    }
+    if (type === 'insert') {
+      const operationData = record['data'];
+      if (!Array.isArray(operationData)) {
+        return chartFail('construction', 'chart-patch-invalid', 'Inserted chart data must be an array.');
+      }
+      const dataLength = operationData.length;
+      if (dataLength === 0) continue;
+      if (dataLength > limits.maxDatums - datumCount) {
+        return chartFail('resource-rejection', 'chart-datum-ceiling-exceeded', 'Chart datum count exceeds its ceiling.', {
+          actual: datumCount + dataLength,
+          ceiling: limits.maxDatums,
+        });
+      }
+      datumCount += dataLength;
+      layerSizes[layerIndex] = layerSize + dataLength;
+      prepared.push(Object.freeze({
+        type,
+        layerID,
+        layerIndex,
+        index: normalizedIndex,
+        data: operationData as readonly ChartDatum<ID>[],
+        dataLength,
+      }));
+      continue;
+    }
+    if (type === 'remove') {
+      const count = record['count'];
+      if (!Number.isSafeInteger(count) || (count as number) < 0 || (count as number) > layerSize - normalizedIndex) {
+        return chartFail('construction', 'chart-patch-invalid', 'Chart patch removal is outside the target layer.');
+      }
+      const normalizedCount = count as number;
+      if (normalizedCount === 0) continue;
+      datumCount -= normalizedCount;
+      layerSizes[layerIndex] = layerSize - normalizedCount;
+      prepared.push(Object.freeze({
+        type,
+        layerID,
+        layerIndex,
+        index: normalizedIndex,
+        count: normalizedCount,
+      }));
+      continue;
+    }
+    return chartFail('construction', 'chart-patch-invalid', 'Chart patch operation type is invalid.');
+  }
+  return chartOK(Object.freeze(prepared));
+}
+
+function materializeCardinalityPatch<ID extends StableID>(
+  owner: PackedChartLayerOwner<ID>,
+  operation: PreparedChartCardinalityOperation<ID>,
+): ChartDatum<ID>[] {
+  const datums = materializePackedLayer(owner);
+  if (operation.type === 'insert') {
+    const previousSize = datums.length;
+    datums.length = previousSize + operation.dataLength;
+    datums.copyWithin(operation.index + operation.dataLength, operation.index, previousSize);
+    for (let offset = 0; offset < operation.dataLength; offset += 1) {
+      datums[operation.index + offset] = operation.data[offset] as ChartDatum<ID>;
+    }
+    return datums;
+  }
+  datums.copyWithin(operation.index, operation.index + operation.count);
+  datums.length -= operation.count;
+  return datums;
+}
+
+interface PreparedChartLayerInput<ID extends StableID> {
+  readonly id: ID;
+  readonly profile: ChartProfile;
+  readonly data: readonly ChartDatum<ID>[];
+  readonly dataLength: number;
+}
+
+interface PreparedChartModelInput<ID extends StableID> {
+  readonly layers: readonly PreparedChartLayerInput<ID>[];
+  readonly datumCount: number;
+}
+
+function preflightChartModel<ID extends StableID>(
+  layers: readonly ChartLayer<ID>[],
+  limits: Required<ChartLimits>,
+): ChartResult<PreparedChartModelInput<ID>> {
+  if (layers.length > limits.maxLayers) {
+    return chartFail('resource-rejection', 'chart-layer-ceiling-exceeded', 'Chart layer count exceeds its ceiling.', {
+      actual: layers.length,
+      ceiling: limits.maxLayers,
+    });
+  }
+  const prepared: PreparedChartLayerInput<ID>[] = [];
+  const layerIDs = new Set<ID>();
+  let datumCount = 0;
+  for (let layerPosition = 0; layerPosition < layers.length; layerPosition += 1) {
+    const layer = layers[layerPosition];
+    if (layer === null || typeof layer !== 'object' || !Array.isArray(layer.data)) {
+      return chartFail('construction', 'chart-model-invalid', 'Chart layer data must be an array.', { layer: layerPosition });
+    }
+    const id = layer.id;
+    if (layerIDs.has(id)) {
+      return chartFail('construction', 'chart-layer-duplicate', 'Chart layer identities must be unique.', { id });
+    }
+    const data = layer.data as readonly ChartDatum<ID>[];
+    const dataLength = data.length;
+    if (dataLength > limits.maxDatums - datumCount) {
+      return chartFail('resource-rejection', 'chart-datum-ceiling-exceeded', 'Chart datum count exceeds its ceiling.', {
+        actual: datumCount + dataLength,
+        ceiling: limits.maxDatums,
+      });
+    }
+    datumCount += dataLength;
+    layerIDs.add(id);
+    prepared.push(Object.freeze({ id, profile: layer.profile, data, dataLength }));
+  }
+  return chartOK(Object.freeze({ layers: Object.freeze(prepared), datumCount }));
+}
+
 function normalizeChartModel<ID extends StableID>(
   input: ChartModel<ID>,
   limitsInput: ChartLimits,
@@ -443,39 +635,26 @@ function normalizeChartModel<ID extends StableID>(
   if (input === null || typeof input !== 'object' || !Array.isArray(input.layers)) {
     return chartFail('construction', 'chart-model-invalid', 'Chart model layers must be an array.');
   }
-  if (input.layers.length > limits.value.maxLayers) {
-    return chartFail('resource-rejection', 'chart-layer-ceiling-exceeded', 'Chart layer count exceeds its ceiling.', {
-      actual: input.layers.length,
-      ceiling: limits.value.maxLayers,
-    });
-  }
+  const prepared = preflightChartModel(input.layers, limits.value);
+  if (!prepared.ok) return prepared;
 
   const identities: ID[] = [];
   const identitySet = new Set<ID>();
   const layerIndex = new Map<ID, number>();
   const owners: PackedChartLayerOwner<ID>[] = [];
   const previousData = previousState === undefined ? null : getChartModelData<ID>(previousState);
-  let datumCount = 0;
   let reusedLayers = 0;
   let rebuiltLayers = 0;
   let copiedValueBlocks = 0;
   let rebuiltIndexEntries = 0;
-  for (let layerPosition = 0; layerPosition < input.layers.length; layerPosition += 1) {
-    const layer = input.layers[layerPosition];
-    if (layer === null || typeof layer !== 'object' || !Array.isArray(layer.data)) {
-      return chartFail('construction', 'chart-model-invalid', 'Chart layer data must be an array.', { layer: layerPosition });
-    }
-    if (layerIndex.has(layer.id)) {
-      return chartFail('construction', 'chart-layer-duplicate', 'Chart layer identities must be unique.', { id: layer.id });
-    }
-    datumCount += layer.data.length;
-    if (datumCount > limits.value.maxDatums) {
-      return chartFail('resource-rejection', 'chart-datum-ceiling-exceeded', 'Chart datum count exceeds its ceiling.', {
-        actual: datumCount,
-        ceiling: limits.value.maxDatums,
-      });
-    }
-    const packed = packLayerInput(layer as ChartLayer<ID>, layerPosition, limits.value);
+  for (let layerPosition = 0; layerPosition < prepared.value.layers.length; layerPosition += 1) {
+    const layer = prepared.value.layers[layerPosition] as PreparedChartLayerInput<ID>;
+    const packed = packLayerInput(
+      { id: layer.id, profile: layer.profile, data: layer.data } as ChartLayer<ID>,
+      layerPosition,
+      limits.value,
+      layer.dataLength,
+    );
     if (!packed.ok) return packed;
     for (const id of packed.value.identities) {
       if (identitySet.has(id)) return chartFail('construction', 'chart-datum-duplicate', 'Chart datum identities must be globally unique.', { id });
@@ -501,7 +680,7 @@ function normalizeChartModel<ID extends StableID>(
   const sequence = createSequence(identities, { maxItems: limits.value.maxDatums, maxIDCodeUnits: limits.value.maxIDCodeUnits });
   return chartOK(assembleChartModel(generation, owners, sequence, limits.value, {
     normalizedLayers: rebuiltLayers,
-    normalizedDatums: datumCount,
+    normalizedDatums: prepared.value.datumCount,
     reusedLayers,
     rebuiltLayers,
     repairedLayers: 0,
@@ -515,6 +694,7 @@ function packLayerInput<ID extends StableID>(
   layer: ChartLayer<ID>,
   layerPosition: number,
   limits: Required<ChartLimits>,
+  datumCount?: number,
 ): ChartResult<PackedLayerInput<ID>> {
   if (layer === null || typeof layer !== 'object' || !Array.isArray(layer.data)) {
     return chartFail('construction', 'chart-model-invalid', 'Chart layer data must be an array.', { layer: layerPosition });
@@ -524,13 +704,15 @@ function packLayerInput<ID extends StableID>(
   if (!isChartProfile(layer.profile)) {
     return chartFail('construction', 'chart-profile-invalid', 'Chart layer profile is invalid.', { profile: layer.profile });
   }
+  const data = layer.data;
+  const normalizedDatumCount = datumCount ?? data.length;
   const stride = strideFor(layer.profile);
-  const values = new Float64Array(layer.data.length * stride);
+  const values = new Float64Array(normalizedDatumCount * stride);
   const identities: ID[] = [];
   const identitySet = new Set<ID>();
   let previousX = -Infinity;
-  for (let datumPosition = 0; datumPosition < layer.data.length; datumPosition += 1) {
-    const datum = layer.data[datumPosition];
+  for (let datumPosition = 0; datumPosition < normalizedDatumCount; datumPosition += 1) {
+    const datum = data[datumPosition];
     if (datum === null || typeof datum !== 'object' || !('id' in datum)) {
       return invalidDatum(layerPosition, datumPosition);
     }
@@ -613,14 +795,15 @@ function packLayerPatch<ID extends StableID>(
   layerPosition: number,
   index: number,
   limits: Required<ChartLimits>,
+  datumCount: number,
 ): ChartResult<{ readonly index: number; readonly identities: readonly ID[]; readonly values: Float64Array }> {
   const identities: ID[] = [];
   const seen = new Set<ID>();
-  const values = new Float64Array(datums.length * owner.stride);
+  const values = new Float64Array(datumCount * owner.stride);
   let previousX = owner.profile === 'ordered-series' && index > 0
     ? readPackedLayerValue(owner, index - 1, 0)
     : Number.NEGATIVE_INFINITY;
-  for (let offset = 0; offset < datums.length; offset += 1) {
+  for (let offset = 0; offset < datumCount; offset += 1) {
     const datum = datums[offset];
     if (datum === null || typeof datum !== 'object' || !('id' in datum)) return invalidDatum(layerPosition, index + offset);
     const id = datum.id as ID;
@@ -637,9 +820,9 @@ function packLayerPatch<ID extends StableID>(
       previousX = x;
     }
   }
-  if (owner.profile === 'ordered-series' && index + datums.length < owner.size
-    && previousX > readPackedLayerValue(owner, index + datums.length, 0)) {
-    return invalidDatum(layerPosition, index + datums.length - 1);
+  if (owner.profile === 'ordered-series' && index + datumCount < owner.size
+    && previousX > readPackedLayerValue(owner, index + datumCount, 0)) {
+    return invalidDatum(layerPosition, index + datumCount - 1);
   }
   return chartOK({ index, identities: Object.freeze(identities), values });
 }

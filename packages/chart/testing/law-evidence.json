@@ -8,6 +8,7 @@
     "CHT-05": "tests/controller/controller.test.mjs",
     "CHT-06": "tests/controller/controller.test.mjs",
     "CHT-07": "tests/interaction/view.test.mjs",
-    "CHT-08": "tests/model/definition.test.mjs"
+    "CHT-08": "tests/model/definition.test.mjs",
+    "CHT-09": "tests/model/model.test.mjs"
   }
 }

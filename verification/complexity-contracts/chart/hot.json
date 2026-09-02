@@ -146,6 +146,57 @@
       }
     },
     {
+      "id": "model.cardinality-preflight",
+      "inherits": "linear-v1",
+      "source": "packages/chart/src/model.ts",
+      "benchmarkIDs": [
+        "VAL-013:chart-model-cardinality-preflight"
+      ],
+      "specificationCeiling": "O(nLayer + qOperation)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nLayer",
+            "meaning": "raw model layer headers inspected before datum packing",
+            "ceiling": "maxLayers"
+          },
+          {
+            "name": "qOperation",
+            "meaning": "patch operation headers inspected before mutation work",
+            "ceiling": "maxPatchOperations"
+          }
+        ],
+        "time": {
+          "bound": "O(nLayer + qOperation)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nLayer + qOperation)",
+          "output": "O(nLayer + qOperation)",
+          "retained": "O(nLayer + qOperation)"
+        },
+        "resources": {
+          "allocations": "O(nLayer + qOperation)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "preflight reads layer and operation metadata plus data array lengths but not datum elements",
+          "patch layer indexes resolve through the retained immutable model index"
+        ],
+        "proof": "Raw model normalization captures every bounded layer header before packing. Patch preflight copies current layer sizes once, resolves each bounded operation through the retained layer index, and updates a running total in declaration order before any datum is materialized or packed.",
+        "adversarialWitness": "An over-ceiling replacement or insert exposes datum arrays through read-counting proxies and returns the resource rejection with zero element reads; an insert-then-remove sequence that only fits at the end is rejected at its overflowing intermediate state.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "The final raw model count and every sequential patch intermediate count depend on all bounded headers, while datum storage must remain unobserved until the preflight succeeds."
+        }
+      }
+    },
+    {
       "id": "interaction.selection-contains",
       "inherits": "linear-v1",
       "source": "packages/chart/src/interaction.ts",

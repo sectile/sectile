@@ -40,6 +40,11 @@
       "id": "CHT-08",
       "theory": "chart",
       "statement": "definition accessors are contained and resource ceilings reject before observation"
+    },
+    {
+      "id": "CHT-09",
+      "theory": "chart",
+      "statement": "raw model and patch cardinality ceilings reject before datum observation"
     }
   ]
 }

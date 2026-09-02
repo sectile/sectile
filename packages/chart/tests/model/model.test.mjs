@@ -5,6 +5,7 @@ import {
   replaceChartLayer,
   tryApplyChartPatch,
   tryCreateChartModel,
+  tryReplaceChartLayer,
   tryReplaceChartModel,
 } from '../../.verification-dist/model.js';
 
@@ -17,6 +18,19 @@ const allProfiles = {
     { id: 'radial', profile: 'radial-segment', data: [{ id: 'slice', value: 5, innerRadius: 0.25, outerRadius: 1 }] },
   ],
 };
+
+function observeDatumReads(data) {
+  let reads = 0;
+  return {
+    data: new Proxy(data, {
+      get(target, property, receiver) {
+        if (typeof property === 'string' && /^(?:0|[1-9]\d*)$/u.test(property)) reads += 1;
+        return Reflect.get(target, property, receiver);
+      },
+    }),
+    reads: () => reads,
+  };
+}
 
 test('CHT-01: model generations and dense indices preserve exact stable identity', () => {
   const state = createChartModel(allProfiles);
@@ -48,6 +62,76 @@ test('CHT-02: rejected patches leave the original model unchanged', () => {
   assert.equal(result.error.code, 'chart-datum-duplicate');
   assert.equal(initial.generation, 0);
   assert.deepEqual(initial.toModel(), before);
+});
+
+test('CHT-09: raw model and patch ceilings reject before datum observation', () => {
+  const initial = createChartModel({ layers: [{
+    id: 'points', profile: 'point', data: [{ id: 0, x: 0, y: 0 }, { id: 1, x: 1, y: 1 }],
+  }] }, { maxLayers: 2, maxDatums: 3 });
+
+  const modelData = observeDatumReads([{ id: 10, x: 10, y: 10 }]);
+  const modelResult = tryReplaceChartModel(initial, { layers: [
+    { id: 'points', profile: 'point', data: modelData.data },
+    { id: 'extra', profile: 'point', data: [
+      { id: 11, x: 11, y: 11 }, { id: 12, x: 12, y: 12 }, { id: 13, x: 13, y: 13 },
+    ] },
+  ] });
+  assert.equal(modelResult.error.code, 'chart-datum-ceiling-exceeded');
+  assert.equal(modelData.reads(), 0);
+
+  const replacementData = observeDatumReads(Array.from(
+    { length: 4 },
+    (_, id) => ({ id: id + 20, x: id, y: id }),
+  ));
+  const replacement = tryReplaceChartLayer(initial, {
+    id: 'points', profile: 'point', data: replacementData.data,
+  });
+  assert.equal(replacement.error.code, 'chart-datum-ceiling-exceeded');
+  assert.equal(replacementData.reads(), 0);
+
+  const rejectedInsertData = observeDatumReads([
+    { id: 30, x: 30, y: 30 }, { id: 31, x: 31, y: 31 },
+  ]);
+  const rejectedPatch = tryApplyChartPatch(initial, { operations: [
+    { type: 'insert', layerID: 'points', index: 2, data: rejectedInsertData.data },
+    { type: 'remove', layerID: 'points', index: 0, count: 1 },
+  ] });
+  assert.equal(rejectedPatch.error.code, 'chart-datum-ceiling-exceeded');
+  assert.equal(rejectedInsertData.reads(), 0);
+  assert.equal(initial.generation, 0);
+  assert.deepEqual(initial.identities, [0, 1]);
+
+  const acceptedInsertData = observeDatumReads([
+    { id: 2, x: 2, y: 2 }, { id: 3, x: 3, y: 3 },
+  ]);
+  const acceptedPatch = tryApplyChartPatch(initial, { operations: [
+    { type: 'remove', layerID: 'points', index: 1, count: 1 },
+    { type: 'insert', layerID: 'points', index: 1, data: acceptedInsertData.data },
+  ] });
+  assert.equal(acceptedPatch.ok, true);
+  assert.equal(acceptedInsertData.reads(), 2);
+  assert.deepEqual(acceptedPatch.value.identities, [0, 2, 3]);
+});
+
+test('large valid inserts remain total without variadic argument expansion', () => {
+  const insertCount = 130_000;
+  const inserted = Array.from({ length: insertCount }, (_, offset) => ({
+    id: offset + 1,
+    x: offset + 1,
+    y: offset + 1,
+  }));
+  const initial = createChartModel({ layers: [{
+    id: 'points', profile: 'point', data: [{ id: 0, x: 0, y: 0 }],
+  }] }, { maxDatums: insertCount + 1 });
+  let result;
+  assert.doesNotThrow(() => {
+    result = tryApplyChartPatch(initial, { operations: [{
+      type: 'insert', layerID: 'points', index: 1, data: inserted,
+    }] });
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.value.size, insertCount + 1);
+  assert.equal(result.value.identityAt(insertCount), insertCount);
 });
 
 test('reuses unchanged layer owners and bounds changed-layer normalization', () => {
