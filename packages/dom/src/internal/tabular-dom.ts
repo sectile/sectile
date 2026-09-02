@@ -14,6 +14,7 @@ import type {
   TabularWireValue,
 } from '@sectile/tabular';
 import { rowSelectionContains } from '@sectile/tabular/data-table';
+import { stableIDElementToken } from '../identity.js';
 
 export interface TabularDOMColumnSizeState {
   readonly revision: number;
@@ -487,7 +488,7 @@ export function resolveHeaderReference(
 }
 
 export function headerElementID(headerNodeID: TabularHeaderNodeID): string {
-  return `sectile-tabular-header-${encodeURIComponent(headerNodeID)}`;
+  return `sectile-tabular-header-${stableIDElementToken(headerNodeID)}`;
 }
 
 export function leafHeaderID(snapshot: TabularSnapshot, columnID: TabularColumnID): string | null {

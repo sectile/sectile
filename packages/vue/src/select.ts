@@ -2,6 +2,7 @@ import {
   Teleport, computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
   shallowRef, watch, type Component, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
+import { stableIDElementToken } from '@sectile/dom/identity';
 import { createSelect, type SelectConnection, type SelectPolicies } from '@sectile/dom/select';
 import type {
   PositionBoundary,
@@ -105,7 +106,7 @@ export const SelectRoot = defineComponent({
       submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
     });
     const connection = shallowRef<SelectConnection<string>>();
-    const id = useHostId(); const contentID = `sectile-select-${id}-content`; const itemID = (value: string): string => `${contentID}-item-${encodeURIComponent(value)}`;
+    const id = useHostId(); const contentID = `sectile-select-${id}-content`; const itemID = (value: string): string => `${contentID}-item-${stableIDElementToken(value)}`;
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localOpen = shallowRef(props.open ?? props.defaultOpen); const highlighted = shallowRef<string | null>(localValue.value);
     const valueControlled = useControlledStateInvariant('SelectRoot', 'modelValue', () => props.modelValue);

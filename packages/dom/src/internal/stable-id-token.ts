@@ -1,15 +1,9 @@
 import { validateStableID } from '@sectile/core/identity';
 import type { StableID } from '@sectile/core';
 
+export { stableIDElementToken, stableIDToken } from '../identity.js';
+
 const MAX_TOKEN_CODE_UNITS = Number.MAX_SAFE_INTEGER;
-
-export function stableIDToken(id: StableID): string {
-  return typeof id === 'number' ? `n:${id}` : `s:${id}`;
-}
-
-export function stableIDElementToken(id: StableID): string {
-  return encodeURIComponent(stableIDToken(id)).replaceAll('%', '-');
-}
 
 export function stableIDFromToken(token: string): StableID | null {
   const kind = token.slice(0, 2);

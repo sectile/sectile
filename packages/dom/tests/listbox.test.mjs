@@ -50,19 +50,35 @@ test('DOM listbox facade owns construction, keyboard dispatch, ARIA, and activat
   assert.equal(duplicate.ok, false);
 });
 
-test('DOM listbox host tokens preserve mixed primitive identities', () => {
+test('DOM listbox host tokens preserve exact metadata and element identities', () => {
   const root = new FakeElement();
   const connection = createListbox({
-    items: [1, '1', -1, '-1'],
+    items: [1, '1', -1, '-1', '%', '-25', '/', '-2F'],
     root,
     defaultHighlightedValue: 1,
   });
   const numeric = new FakeElement();
   const textual = new FakeElement();
+  const percent = new FakeElement();
+  const escapedPercent = new FakeElement();
+  const slash = new FakeElement();
+  const escapedSlash = new FakeElement();
   connection.setItemAttributes(numeric, { id: 1 });
   connection.setItemAttributes(textual, { id: '1' });
+  connection.setItemAttributes(percent, { id: '%' });
+  connection.setItemAttributes(escapedPercent, { id: '-25' });
+  connection.setItemAttributes(slash, { id: '/' });
+  connection.setItemAttributes(escapedSlash, { id: '-2F' });
   assert.equal(numeric.dataset.listboxId, 'n:1');
   assert.equal(textual.dataset.listboxId, 's:1');
+  assert.equal(new Set([
+    numeric.id,
+    textual.id,
+    percent.id,
+    escapedPercent.id,
+    slash.id,
+    escapedSlash.id,
+  ]).size, 6);
   root.emit('click', { target: textual });
   assert.equal(connection.getSnapshot().state.cursor.current, '1');
   root.emit('click', { target: numeric });

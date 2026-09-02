@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
+import { Window } from 'happy-dom';
 import { createSSRApp, h, nextTick, ref } from 'vue';
 import {
   ListboxItem,
@@ -40,6 +41,26 @@ test('Vue listbox projects native listbox semantics and form state', async () =>
   assert.match(html, /data-part="item-indicator"/);
   assert.match(html, /<select/);
   assert.match(html, /name="channel"/);
+});
+
+test('Vue listbox generated IDs preserve exact values and active-descendant linkage', async () => {
+  const exactItems = ['%', '-25', '/', '-2F', 'a%b', 'a-25b', 'é', 'e\u0301'];
+  const app = createSSRApp({
+    render: () => h(ListboxRoot, {
+      items: exactItems,
+      defaultValue: exactItems[0],
+    }, {
+      default: () => exactItems.map((value) => h(ListboxItem, { value }, () => value)),
+    }),
+  });
+  const html = await renderToString(app);
+  const window = new Window();
+  window.document.body.innerHTML = html;
+  const root = window.document.querySelector('[role="listbox"]');
+  const options = [...window.document.querySelectorAll('[role="option"]')];
+  assert.equal(options.length, exactItems.length);
+  assert.equal(new Set(options.map((option) => option.id)).size, exactItems.length);
+  assert.equal(root?.getAttribute('aria-activedescendant'), options[0]?.id);
 });
 
 test('Vue listbox follows controlled single selection', async () => {

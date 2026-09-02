@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
+import { Window } from 'happy-dom';
 import { createSSRApp, h, nextTick, ref } from 'vue';
 import { RadioGroupIndicator, RadioGroupItem, RadioGroupRoot } from '../.verification-dist/radio-group.js';
 import { ToggleGroupItem, ToggleGroupRoot } from '../.verification-dist/toggle-group.js';
@@ -87,6 +88,31 @@ test('Vue tabs link triggers to persistent panels', async () => {
   assert.match(html, /aria-controls="sectile-tabs-/);
   assert.match(html, /role="tabpanel"/);
   assert.match(html, /hidden/);
+});
+
+test('Vue tabs generated IDs preserve exact values and link each trigger to its panel', async () => {
+  const items = ['%', '-25', '/', '-2F', 'a%b', 'a-25b', 'é', 'e\u0301'];
+  const app = createSSRApp({
+    render: () => h(TabsRoot, { items, defaultValue: items[0] }, {
+      default: () => [
+        h(TabsList, null, { default: () => items.map((value) => h(TabsTrigger, { value }, () => value)) }),
+        ...items.map((value) => h(TabsContent, { value }, () => `${value} panel`)),
+      ],
+    }),
+  });
+  const html = await renderToString(app);
+  const window = new Window();
+  window.document.body.innerHTML = html;
+  const triggers = [...window.document.querySelectorAll('[role="tab"]')];
+  const panels = [...window.document.querySelectorAll('[role="tabpanel"]')];
+  const elementIDs = [...triggers, ...panels].map((element) => element.id);
+  assert.equal(triggers.length, items.length);
+  assert.equal(panels.length, items.length);
+  assert.equal(new Set(elementIDs).size, elementIDs.length);
+  for (let index = 0; index < items.length; index += 1) {
+    assert.equal(triggers[index]?.getAttribute('aria-controls'), panels[index]?.id);
+    assert.equal(panels[index]?.getAttribute('aria-labelledby'), triggers[index]?.id);
+  }
 });
 
 test('Vue tabs changes controlled panels without removing them', async () => {

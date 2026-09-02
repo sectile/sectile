@@ -4,7 +4,9 @@ import { Window } from 'happy-dom';
 import { createChartController } from '@sectile/chart/controller';
 import { createDOMChart, tryCreateDOMChart } from '../.verification-dist/chart.js';
 
-function fixture(profile = 'point') {
+function fixture(profile = 'point', data = [
+  { id: 1, x: 0, y: 0 }, { id: '1', x: 1, y: 1 },
+]) {
   const window = new Window({ url: 'https://sectile.dev/chart' });
   const root = window.document.createElement('div');
   const canvas = window.document.createElement('canvas');
@@ -21,9 +23,7 @@ function fixture(profile = 'point') {
     flush() {},
     disconnect: () => { disconnected += 1; },
   };
-  const controller = createChartController({ model: { layers: [{ id: 'points', profile, data: [
-    { id: 1, x: 0, y: 0 }, { id: '1', x: 1, y: 1 },
-  ] }] } });
+  const controller = createChartController({ model: { layers: [{ id: 'points', profile, data }] } });
   return { window, root, canvas, renderer, controller, renders, disconnected: () => disconnected };
 }
 
@@ -50,6 +50,30 @@ test('DOM Chart projects synchronously and exposes a bounded mixed-ID accessibil
   assert.equal(value.root.hasAttribute('role'), false);
   assert.equal(value.root.querySelector('[role="listbox"]'), null);
   assert.equal(value.disconnected(), 0, 'borrowed renderer remains caller-owned');
+});
+
+test('DOM Chart accessibility IDs preserve exact stable identity and linkage', () => {
+  const ids = ['%', '-25', '/', '-2F', 1, '1', 'a%b', 'a-25b', 'é', 'e\u0301'];
+  const value = fixture('point', ids.map((id, index) => ({ id, x: index, y: index })));
+  const label = (id) => `${typeof id}:${String(id)}`;
+  const connection = createDOMChart({
+    root: value.root,
+    canvas: value.canvas,
+    controller: value.controller,
+    renderer: value.renderer,
+    getAccessibleDatumLabel: label,
+  });
+  const options = [...value.root.querySelectorAll('[role="option"]')];
+  assert.equal(options.length, ids.length);
+  assert.equal(new Set(options.map((option) => option.id)).size, ids.length);
+  const list = value.root.querySelector('[role="listbox"]');
+  for (const id of ids) {
+    value.controller.dispatch({ type: 'set-cursor', id });
+    const activeID = list.getAttribute('aria-activedescendant');
+    assert.notEqual(activeID, null);
+    assert.equal(value.window.document.getElementById(activeID)?.textContent, label(id));
+  }
+  connection.disconnect();
 });
 
 test('fallible DOM Chart construction is total for malformed host and renderer shapes', () => {

@@ -8,6 +8,7 @@ import {
   getTabsRootAttributes,
   getTabsTriggerAttributes,
 } from '@sectile/dom/tabs';
+import { stableIDElementToken } from '@sectile/dom/identity';
 import { createListboxControllerFromItems, type ListboxController, type ListboxEffect } from '@sectile/dom/listbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { usePartContract } from './internal/part-contract.js';
@@ -72,7 +73,7 @@ export const TabsRoot = defineComponent({
     const ids = (value: string): TabsIDs => {
       const found = idMap.get(value);
       if (found !== undefined) return found;
-      const safe = encodeURIComponent(value).replaceAll('%', '-');
+      const safe = stableIDElementToken(value);
       const created = Object.freeze({ trigger: `sectile-tabs-${instanceID}-${safe}-trigger`, content: `sectile-tabs-${instanceID}-${safe}-content` });
       idMap.set(value, created);
       return created;

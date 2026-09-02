@@ -21,6 +21,7 @@ import {
   type ListboxController,
   type ListboxEffect,
 } from '@sectile/dom/listbox';
+import { stableIDElementToken } from '@sectile/dom/identity';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
@@ -143,7 +144,7 @@ export const ListboxRoot = defineComponent({
   setup(props, { attrs, emit, slots }) {
     const direction = useHostDirection();
     const instanceID = useHostId();
-    const itemID = (id: string): string => `sectile-listbox-${instanceID}-option-${encodeURIComponent(id).replaceAll('%', '-')}`;
+    const itemID = (id: string): string => `sectile-listbox-${instanceID}-option-${stableIDElementToken(id)}`;
     const rootElement = shallowRef<HTMLElement | null>(null);
     const submissionElement = shallowRef<HTMLSelectElement | null>(null);
     let controllerProps = snapshotListboxControllerProps({
