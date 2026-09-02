@@ -1,7 +1,14 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "certificationCommand": "pnpm performance:certify",
-  "targetedCommand": "pnpm performance:check -- <package>",
+  "targetedCommand": "pnpm performance:check -- <package> [--type <type>] [--domain <domain>] [--scale <scale>] [--evidence <evidence>]",
+  "selectorAxes": [
+    "owner",
+    "type",
+    "domain",
+    "scale",
+    "evidence"
+  ],
   "defaultEvidence": [
     "complexity",
     "deterministicWork",
@@ -15,6 +22,6 @@
   "certificationWhen": [
     "release certification",
     "nightly or dedicated benchmark execution",
-    "an explicit full-performance certification request"
+    "an explicit selected or full performance certification request"
   ]
 }

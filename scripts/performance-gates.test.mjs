@@ -5,7 +5,8 @@ import test from 'node:test';
 
 test('performance policy separates default structural evidence from timing certification', async () => {
   const manifest = JSON.parse(await readFile('verification/performance/gates.json', 'utf8'));
-  assert.equal(manifest.schemaVersion, 2);
+  assert.equal(manifest.schemaVersion, 3);
+  assert.deepEqual(manifest.selectorAxes, ['owner', 'type', 'domain', 'scale', 'evidence']);
   assert.deepEqual(manifest.defaultEvidence, ['complexity', 'deterministicWork', 'resourceBounds']);
   assert.equal(manifest.timingEvidenceWhen.length, 3);
   assert.equal(manifest.certificationWhen.length, 3);
@@ -33,6 +34,20 @@ test('Chart is a first-class targeted performance owner', () => {
   assert.deepEqual(output.selection.types, ['projection']);
   assert.deepEqual(output.selection.scales, ['representative']);
   assert.deepEqual(output.selection.evidence, ['timing']);
+});
+
+test('certification rigor is independent from selected workload scope', () => {
+  const result = spawnSync(process.execPath, [
+    'scripts/performance/run.mjs', 'check', '--certify', 'chart', '--type', 'projection', '--explain',
+  ], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  const output = JSON.parse(result.stdout);
+  assert.equal(output.certification, true);
+  assert.equal(output.processCount, 10);
+  assert.deepEqual(output.selection.owners, ['chart']);
+  assert.deepEqual(output.selection.types, ['projection']);
+  assert.deepEqual(output.selection.scales, []);
+  assert.deepEqual(output.selection.evidence, []);
 });
 
 test('work-item evidence requires a package target and output artifact', () => {

@@ -166,6 +166,15 @@ export function performanceSelectionID(selection) {
   ].join('__');
 }
 
+export function performanceSelectionIsFull(selection) {
+  const normalized = normalizePerformanceSelection(selection);
+  return normalized.owners.length === 0
+    && normalized.types.length === 0
+    && normalized.domains.length === 0
+    && normalized.scales.length === 0
+    && normalized.evidence.length === 0;
+}
+
 function rule(pattern, owner, type, domain) {
   return Object.freeze({ pattern, owner, type, domain });
 }

@@ -4,6 +4,11 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { validateRunnerReport } from './check.mjs';
 import { compatibilityMetadata } from './provenance.mjs';
+import {
+  normalizePerformanceSelection,
+  performanceSelectionID,
+  performanceSelectionIsFull,
+} from './schema.mjs';
 import { writeJSONAtomic } from './session-log.mjs';
 
 export function performanceBaselineID(report) {
@@ -11,8 +16,12 @@ export function performanceBaselineID(report) {
   return createHash('sha256').update(JSON.stringify(metadata)).digest('hex');
 }
 
-export function performanceBaselinePath(directory, report) {
-  return resolve(directory, `${performanceBaselineID(report)}.json`);
+export function performanceBaselinePath(directory, report, selection = report.runner?.selection ?? {}) {
+  return resolve(
+    directory,
+    performanceBaselineID(report),
+    `${performanceSelectionID(selection)}.json`,
+  );
 }
 
 export async function selectPerformanceBaseline({ current, explicitPath = null, directory }) {
@@ -20,20 +29,23 @@ export async function selectPerformanceBaseline({ current, explicitPath = null, 
     return Object.freeze({ path: resolve(explicitPath), report: await readReport(explicitPath) });
   }
 
-  const partitionedPath = performanceBaselinePath(directory, current);
-  const partitioned = await tryReadReport(partitionedPath);
-  if (partitioned === null) {
-    throw new Error(
-      `No compatible performance baseline exists for environment ${performanceBaselineID(current)}. `
-        + 'Run pnpm performance:record in this exact runtime and hardware environment.',
-    );
+  const selection = normalizePerformanceSelection(current.runner?.selection ?? {});
+  const exactPath = performanceBaselinePath(directory, current, selection);
+  const exact = await tryReadReport(exactPath);
+  if (exact !== null) return validatePartition(current, exactPath, exact);
+
+  if (!performanceSelectionIsFull(selection)) {
+    const fullPath = performanceBaselinePath(directory, current, {});
+    const full = await tryReadReport(fullPath);
+    if (full !== null) return validatePartition(current, fullPath, full);
   }
-  assert.deepEqual(
-    compatibilityMetadata(partitioned.provenance),
-    compatibilityMetadata(current.provenance),
-    `performance baseline ${partitionedPath} does not match its environment partition`,
+
+  throw new Error(
+    `No compatible performance baseline exists for environment ${performanceBaselineID(current)} `
+      + `and selection ${performanceSelectionID(selection)}. `
+      + 'Run pnpm performance:record with this selection in the exact runtime and hardware environment, '
+      + 'or record the full certification suite.',
   );
-  return Object.freeze({ path: partitionedPath, report: partitioned });
 }
 
 export async function promotePerformanceReport({ reportPath, directory }) {
@@ -49,6 +61,15 @@ export async function promotePerformanceReport({ reportPath, directory }) {
   }
   await writeJSONAtomic(baselinePath, report);
   return Object.freeze({ path: baselinePath, report, created: true });
+}
+
+function validatePartition(current, path, report) {
+  assert.deepEqual(
+    compatibilityMetadata(report.provenance),
+    compatibilityMetadata(current.provenance),
+    `performance baseline ${path} does not match its environment partition`,
+  );
+  return Object.freeze({ path, report });
 }
 
 async function readReport(path) {

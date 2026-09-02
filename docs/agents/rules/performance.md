@@ -71,7 +71,10 @@ adversarial witness, deterministic work/resource counter, and production-bound
 validation code with the implementation. Timing evidence is conditional: require
 it for an explicit latency/throughput target, a registered performance-sensitive
 workload owner, or a representation/crossover decision that depends on measured
-cost. Repository-wide statistical certification is release/nightly evidence, not
-a default local correctness gate. Baselines are review inputs, not values adjusted
-to the current result. Record the previous value, measured delta, contributors,
-consumer impact, and approved ceiling before replacing a baseline.
+cost. Select timing work by owner, operation type, domain, scale, and evidence;
+do not construct or execute unrelated workload shards. Statistical rigor is
+independent from workload scope: a selected shard may use certification-grade
+sampling, while repository-wide certification remains release/nightly evidence
+rather than a default local correctness gate. Baselines are review inputs, not
+values adjusted to the current result. Record the previous value, measured delta,
+contributors, consumer impact, and approved ceiling before replacing a baseline.

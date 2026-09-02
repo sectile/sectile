@@ -83,7 +83,7 @@ Close then owns execution, diagnosis, fixes, and reruns in dependency order:
 8. generated documentation and inventory refresh;
 9. full deterministic repository verification and clean-worktree review.
 
-The repository-wide statistical performance certification is separate from ordinary and full deterministic verification. Run it only for release certification, nightly or dedicated benchmark execution, or an explicit full-performance request. A timing regression is diagnostic evidence to classify; do not optimize unrelated code merely to restore a noisy global baseline.
+Statistical performance certification is separate from ordinary and full deterministic verification. Certification rigor may be applied to one selected workload shard (owner, type, domain, scale, evidence) or to the full catalog. Run full-catalog certification only for release certification, nightly or dedicated benchmark execution, or an explicit full-performance request. A timing regression is diagnostic evidence to classify; do not optimize unrelated code merely to restore a noisy global baseline.
 
 Fix failures at the owning layer and rerun only failed or affected layers until
 clean. Record new baselines only after implementation and validation fixes are

@@ -44,7 +44,7 @@ await main();
 async function main() {
   const options = parseArguments(process.argv.slice(2).filter((argument) => argument !== '--'));
   const executionMode = performanceExecutionMode(options.mode, options.quick);
-  const minimumProcesses = options.quick ? 1 : options.all ? MINIMUM_PROCESS_COUNT : MINIMUM_TARGET_PROCESS_COUNT;
+  const minimumProcesses = options.quick ? 1 : options.certification ? MINIMUM_PROCESS_COUNT : MINIMUM_TARGET_PROCESS_COUNT;
   if (options.processCount < minimumProcesses) {
     throw new Error(`Performance runs require at least ${minimumProcesses} isolated processes.`);
   }
@@ -53,7 +53,7 @@ async function main() {
     process.stdout.write(`${JSON.stringify({
       mode: executionMode,
       requestedMode: options.mode,
-      certification: executionMode !== 'smoke' && options.all,
+      certification: executionMode !== 'smoke' && options.certification,
       processCount: options.processCount,
       requestedPackages: options.requestedPackages,
       unsupportedPackages: options.unsupportedPackages,
@@ -92,7 +92,7 @@ async function main() {
           ...process.env,
           SECTILE_PERFORMANCE_PROCESS_INDEX: String(processIndex),
           SECTILE_PERFORMANCE_QUICK: options.quick ? '1' : '0',
-          SECTILE_PERFORMANCE_SCREENING: options.all ? '0' : '1',
+          SECTILE_PERFORMANCE_SCREENING: options.certification ? '0' : '1',
           SECTILE_PERFORMANCE_PACKAGES: options.selection.owners.join(','),
           SECTILE_PERFORMANCE_TYPES: options.selection.types.join(','),
           SECTILE_PERFORMANCE_DOMAINS: options.selection.domains.join(','),
@@ -122,7 +122,7 @@ async function main() {
         warmup: true,
         sink: processReports.reduce((total, entry) => (total + entry.sink) % 1_000_000_007, 0),
         quick: options.quick,
-        certification: executionMode !== 'smoke' && options.all,
+        certification: executionMode !== 'smoke' && options.certification,
         targetPackages: options.selection.owners,
         selection: options.selection,
         selectionID: performanceSelectionID(options.selection),
@@ -184,7 +184,7 @@ async function main() {
     const comparisonPath = resolve(session.directory, 'comparison.json');
     const output = Object.freeze({
       mode: options.mode,
-      certification: options.all,
+      certification: options.certification,
       selection: options.selection,
       selectionID: performanceSelectionID(options.selection),
       workItem: options.workItem,
@@ -273,7 +273,8 @@ function parseArguments(arguments_) {
   const latestComparisonPath = resolve(repoRoot, DEFAULT_LATEST_COMPARISON_PATH);
   const runsRoot = resolve(repoRoot, DEFAULT_RUNS_PATH);
   let outputPath = null;
-  let all = mode === 'record';
+  let all = false;
+  let certification = mode === 'record';
   let prepared = false;
   let processCount = null;
   let quick = false;
@@ -287,6 +288,7 @@ function parseArguments(arguments_) {
   for (let index = 1; index < arguments_.length; index += 1) {
     const argument = arguments_[index];
     if (argument === '--all') all = true;
+    else if (argument === '--certify') certification = true;
     else if (argument === '--prepared') prepared = true;
     else if (argument === '--quick') quick = true;
     else if (argument === '--explain') explain = true;
@@ -303,15 +305,14 @@ function parseArguments(arguments_) {
   }
   const uniqueTargets = [...new Set(targetPackages)];
   if (all && uniqueTargets.length > 0) throw new Error('--all cannot be combined with package targets');
-  if (!all && uniqueTargets.length === 0) {
-    throw new Error('targeted performance checks require at least one package; use pnpm performance:certify for the full suite');
+  if (!certification && !all && uniqueTargets.length === 0) {
+    throw new Error('targeted performance checks require at least one package; use pnpm performance:certify for certification');
   }
-  if (mode === 'record') assert.equal(all, true, 'record always captures the complete certification suite');
-  if (quick && mode === 'record') throw new Error('record does not accept --quick; authoritative baselines require full certification');
+  if (quick && certification) throw new Error('--quick cannot be combined with certification');
   if (quick && baselinePath !== null) throw new Error('--quick smoke mode does not accept --baseline');
   if (quick && outputPath !== null) throw new Error('--quick smoke mode does not accept --output');
   if (quick && workItem !== null) throw new Error('--quick smoke mode does not accept --work-item');
-  processCount ??= quick ? 1 : all ? DEFAULT_PROCESS_COUNT : TARGET_PROCESS_COUNT;
+  processCount ??= quick ? 1 : certification ? DEFAULT_PROCESS_COUNT : TARGET_PROCESS_COUNT;
   if (!Number.isSafeInteger(processCount) || processCount < 1) throw new Error('--processes must be a positive safe integer.');
   if (mode === 'record') assert.equal(outputPath, null, 'record writes its report to the performance session log');
   if (workItem !== null) {
@@ -321,10 +322,11 @@ function parseArguments(arguments_) {
   }
   const supportedTargets = uniqueTargets.filter((packageName) => PERFORMANCE_TIMING_PACKAGES.includes(packageName));
   const unsupportedPackages = uniqueTargets.filter((packageName) => !PERFORMANCE_TIMING_PACKAGES.includes(packageName));
-  const defaultScales = all ? [] : ['representative'];
-  const defaultEvidence = all ? [] : ['timing'];
+  const allOwners = all || (certification && uniqueTargets.length === 0);
+  const defaultScales = certification ? [] : ['representative'];
+  const defaultEvidence = certification ? [] : ['timing'];
   const selection = normalizePerformanceSelection({
-    owners: all ? [] : supportedTargets,
+    owners: allOwners ? [] : supportedTargets,
     types,
     domains,
     scales: scales.length === 0 ? defaultScales : scales,
@@ -332,7 +334,8 @@ function parseArguments(arguments_) {
   });
   return Object.freeze({
     mode,
-    all,
+    all: allOwners,
+    certification,
     prepared,
     explain,
     requestedPackages: Object.freeze(uniqueTargets),

@@ -1,39 +1,51 @@
 # Performance verification
 
-Performance verification has two distinct modes.
+Performance verification is a workload catalog, not one indivisible suite.
+Each workload is classified by five independent selector axes: owner, type,
+domain, scale, and evidence. The same catalog can therefore answer a narrow
+question without constructing or executing unrelated fixtures.
 
-Targeted screening is the ordinary developer tool. It accepts one or more
-package targets, runs only timing workloads owned by those packages, uses three
-sequential isolated Node processes, three measured batches, and a coarse 20%
-regression band. It is intended to catch large, plausible regressions without
-turning workstation noise into a repository-wide optimization mandate.
+Targeted screening is the ordinary developer tool. It uses three sequential
+isolated Node processes and a coarse 20% regression band. With no explicit
+selector it runs representative-scale timing for the requested owner; selectors
+narrow it further.
 
 ```sh
-pnpm performance:check -- core
-pnpm performance:check -- tabular virtual
-pnpm performance:compare -- core
+pnpm performance:check -- chart --type projection
+pnpm performance:check -- core --type query --domain metric-index
+pnpm performance:check -- virtual --type mutation --domain spatial
+pnpm performance:check -- core --evidence allocation
+pnpm performance:compare -- tabular --type query
 ```
 
-Packages without registered central timing workloads are reported as skipped.
-In particular, the runner must not substitute unrelated Core, Tabular, or
-Virtual workloads for another package. Structural performance evidence for such
-packages comes from their complexity contracts, deterministic work/resource
-witnesses, and package-local benchmarks when a task explicitly requires timing.
+Types are `construct`, `query`, `mutation`, `transition`, `projection`, and
+`primitive`. Scales are `representative`, `scaling`, and `stress`. Evidence is
+`timing`, `allocation`, or `retention`. Multiple selectors of the same axis form
+a union; different axes intersect.
 
-Repository certification is intentionally separate and expensive:
+Packages without registered central workloads are reported as skipped. The
+runner never substitutes another package's workloads. Chart is a first-class
+owner alongside Core, Tabular, and Virtual.
+
+Certification controls statistical rigor, not workload scope. It uses at least
+ten sequential isolated Node processes. With no selectors it certifies the full
+catalog; the same rigor can be applied to one shard.
 
 ```sh
 pnpm performance:certify
+pnpm performance:certify -- chart --type projection
+pnpm performance:certify -- core --type query --domain metric-index --scale scaling
 pnpm performance:record
+pnpm performance:record -- chart --type projection
 pnpm performance:promote -- .tasks/performance/runs/<run-id>/report.json
 ```
 
-Certification executes the complete workload schema in at least ten sequential,
-isolated Node processes. Each worker warms operations, uses a result sink,
-measures repeated batches, and captures allocation plus post-GC retained heap.
-This mode is for release certification, nightly or dedicated benchmark runs, or
-an explicit full-performance investigation. It is not part of ordinary
-`pnpm verify` or `pnpm verify:full`.
+A full certification measures timing, allocation, and retained heap across all
+registered shards. A selected certification measures only the requested owner,
+type, domain, scale, and evidence. Timing-only runs do not execute the heap pass
+or retained-GC phase. Certification is for release, nightly or dedicated
+benchmark runs, or an explicit selected/full investigation. It is not part of
+ordinary `pnpm verify` or `pnpm verify:full`.
 
 Every command that actually measures performance creates a retained session
 under `.tasks/performance/runs/<run-id>/`. The progress manifest is written
@@ -42,20 +54,21 @@ written, and complete runs add `report.json`. Interrupted runs therefore retain
 their completed process reports. Invalid calibration, comparison failures, and
 regressions retain their reports and terminal status.
 
-`record` validates one complete non-quick certification run and writes it to the
-environment-partitioned `baselines/` directory. The filename is the SHA-256
-digest of the runtime, OS, architecture, CPU, flags, and workload metadata used
-for comparison. `performance:promote` accepts only complete certification
-reports; targeted screenings and quick reports cannot become authoritative
-baselines.
+`record` accepts a non-quick certification run and writes it under an exact
+environment partition plus its workload-selection ID. A selected baseline can
+therefore coexist with the full baseline for the same Node/V8/OS/CPU/flag
+configuration. `performance:promote` accepts certification reports, including
+selected certification shards; three-process screenings and quick runs cannot
+become authoritative baselines.
 
-Without an explicit `--baseline`, screening and certification require the exact
-environment partition matching the current runtime and hardware metadata.
-Certification preserves the previous strict rule: a timing regression must be
-corroborated by median, p95, and separated isolated-process distributions, with
-a calibrated 5-10% band. Targeted screening uses median and p95 with a minimum
-20% band and does not claim certification-grade tail or distribution evidence
-from only three processes.
+Without an explicit `--baseline`, comparison first looks for the exact selected
+baseline. If a selected baseline has not been recorded, it may compare the
+selected metric subset against the full baseline for the same environment and
+workload schema. Full certification still requires the complete catalog.
+Certification timing regressions require median, p95, and separated
+isolated-process distributions with the calibrated strict band. Screening uses
+median and p95 with a minimum 20% band and does not claim certification-grade
+tail evidence from three processes.
 
 Performance timing is conditional evidence. The default performance contract is
 structural: complexity, deterministic work, and resource bounds. Timing evidence

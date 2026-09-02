@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import test from 'node:test';
 import {
   performanceBaselinePath,
@@ -61,6 +61,7 @@ test('default performance baselines require one exact environment partition', as
 
   const current = fixture();
   const partitionedPath = performanceBaselinePath(directory, current);
+  await mkdir(dirname(partitionedPath), { recursive: true });
   await writeFile(partitionedPath, `${JSON.stringify(current, null, 2)}\n`, 'utf8');
   const partitioned = await selectPerformanceBaseline({ current, directory });
   assert.equal(partitioned.path, partitionedPath);
@@ -69,8 +70,10 @@ test('default performance baselines require one exact environment partition', as
   await rm(partitionedPath);
   const incompatible = structuredClone(current);
   incompatible.provenance.platform = 'different';
+  const incompatiblePath = performanceBaselinePath(directory, incompatible);
+  await mkdir(dirname(incompatiblePath), { recursive: true });
   await writeFile(
-    performanceBaselinePath(directory, incompatible),
+    incompatiblePath,
     `${JSON.stringify(incompatible, null, 2)}\n`,
     'utf8',
   );
@@ -83,6 +86,38 @@ test('default performance baselines require one exact environment partition', as
   await writeFile(explicitPath, `${JSON.stringify(current, null, 2)}\n`, 'utf8');
   const explicit = await selectPerformanceBaseline({ current, explicitPath, directory });
   assert.equal(explicit.path, explicitPath);
+});
+
+test('performance baselines partition environment and workload selection independently', async (context) => {
+  const root = await mkdtemp(join(tmpdir(), 'sectile-performance-shards-'));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const directory = join(root, 'baselines');
+  const full = fixture();
+  full.runner = {
+    processCount: 10,
+    certification: true,
+    quick: false,
+    selection: normalizePerformanceSelection(),
+  };
+  const fullPath = performanceBaselinePath(directory, full);
+  await mkdir(dirname(fullPath), { recursive: true });
+  await writeFile(fullPath, `${JSON.stringify(full, null, 2)}\n`, 'utf8');
+
+  const shard = structuredClone(full);
+  shard.runner.selection = normalizePerformanceSelection({
+    owners: ['core'],
+    types: ['query'],
+    domains: ['metric-index'],
+    scales: ['representative'],
+    evidence: ['timing'],
+  });
+  const shardPath = performanceBaselinePath(directory, shard);
+  assert.notEqual(shardPath, fullPath);
+  assert.equal((await selectPerformanceBaseline({ current: shard, directory })).path, fullPath);
+
+  await mkdir(dirname(shardPath), { recursive: true });
+  await writeFile(shardPath, `${JSON.stringify(shard, null, 2)}\n`, 'utf8');
+  assert.equal((await selectPerformanceBaseline({ current: shard, directory })).path, shardPath);
 });
 
 test('retained full performance reports promote once without overwriting evidence', async (context) => {
@@ -252,6 +287,20 @@ test('targeted reports may compare a workload subset against a certification bas
   baseline.metrics['core:extra'] = metric(100, 0.01);
   const current = fixture();
   current.runner = { processCount: 3, certification: false, targetPackages: ['core'] };
+  assert.doesNotThrow(() => assertComparable(baseline, current));
+});
+
+test('certification shards may compare a workload subset against a full certification baseline', () => {
+  const baseline = fixture();
+  baseline.metrics['core:extra'] = metric(100, 0.01);
+  const current = fixture();
+  current.runner = {
+    processCount: 10,
+    certification: true,
+    selection: normalizePerformanceSelection({
+      owners: ['core'], types: ['query'], domains: ['metric-index'], scales: ['representative'], evidence: ['timing'],
+    }),
+  };
   assert.doesNotThrow(() => assertComparable(baseline, current));
 });
 
