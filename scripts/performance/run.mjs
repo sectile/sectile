@@ -29,7 +29,11 @@ import {
 } from './session-log.mjs';
 import { summarize } from './statistics.mjs';
 import { publishedPackageDirectories } from '../lib/published-packages.mjs';
-import { PERFORMANCE_TIMING_PACKAGES, WORKLOAD_SCHEMA } from './schema.mjs';
+import {
+  PERFORMANCE_TIMING_PACKAGES,
+  WORKLOAD_SCHEMA,
+  performanceExecutionMode,
+} from './schema.mjs';
 
 const execFile = promisify(execFileCallback);
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -37,7 +41,8 @@ await main();
 
 async function main() {
   const options = parseArguments(process.argv.slice(2).filter((argument) => argument !== '--'));
-  const minimumProcesses = options.all ? MINIMUM_PROCESS_COUNT : MINIMUM_TARGET_PROCESS_COUNT;
+  const executionMode = performanceExecutionMode(options.mode, options.quick);
+  const minimumProcesses = options.quick ? 1 : options.all ? MINIMUM_PROCESS_COUNT : MINIMUM_TARGET_PROCESS_COUNT;
   if (options.processCount < minimumProcesses) {
     throw new Error(`Performance runs require at least ${minimumProcesses} isolated processes.`);
   }
@@ -45,7 +50,8 @@ async function main() {
   if (!options.all && unsupportedTargets.length === options.targetPackages.length) {
     process.stdout.write(`${JSON.stringify({
       status: 'skipped',
-      mode: options.mode,
+      mode: executionMode,
+      requestedMode: options.mode,
       targetPackages: options.targetPackages,
       reason: 'no central timing workloads are registered for these packages',
     })}\n`);
@@ -55,9 +61,9 @@ async function main() {
   if (!options.prepared) await prepareBuild(options);
   const session = await createPerformanceSession({
     runsRoot: options.runsRoot,
-    mode: options.mode,
+    mode: executionMode,
     processCount: options.processCount,
-    baseline: options.baselinePath ?? options.baselineDirectory,
+    baseline: executionMode === 'smoke' ? null : options.baselinePath ?? options.baselineDirectory,
   });
   try {
     const workerPath = resolve(repoRoot, 'scripts/performance/worker.mjs');
@@ -95,7 +101,7 @@ async function main() {
         warmup: true,
         sink: processReports.reduce((total, entry) => (total + entry.sink) % 1_000_000_007, 0),
         quick: options.quick,
-        certification: options.all,
+        certification: executionMode !== 'smoke' && options.all,
         targetPackages: Object.freeze([...options.targetPackages]),
       }),
       workloadSchema: WORKLOAD_SCHEMA,
@@ -108,6 +114,22 @@ async function main() {
     } catch (error) {
       await finalizePerformanceSession(session, 'invalid', error);
       throw error;
+    }
+
+    if (executionMode === 'smoke') {
+      await finalizePerformanceSession(session, 'passed');
+      process.stdout.write(`${JSON.stringify({
+        status: 'passed',
+        mode: executionMode,
+        requestedMode: options.mode,
+        certification: false,
+        targetPackages: options.targetPackages,
+        runID: session.session.runID,
+        session: session.manifestPath,
+        report: reportPath,
+        metrics: Object.keys(report.metrics).length,
+      })}\n`);
+      return;
     }
 
     if (options.mode === 'record') {
@@ -235,7 +257,11 @@ function parseArguments(arguments_) {
     throw new Error('targeted performance checks require at least one package; use pnpm performance:certify for the full suite');
   }
   if (mode === 'record') assert.equal(all, true, 'record always captures the complete certification suite');
-  processCount ??= all ? DEFAULT_PROCESS_COUNT : TARGET_PROCESS_COUNT;
+  if (quick && mode === 'record') throw new Error('record does not accept --quick; authoritative baselines require full certification');
+  if (quick && baselinePath !== null) throw new Error('--quick smoke mode does not accept --baseline');
+  if (quick && outputPath !== null) throw new Error('--quick smoke mode does not accept --output');
+  if (quick && workItem !== null) throw new Error('--quick smoke mode does not accept --work-item');
+  processCount ??= quick ? 1 : all ? DEFAULT_PROCESS_COUNT : TARGET_PROCESS_COUNT;
   if (!Number.isSafeInteger(processCount) || processCount < 1) throw new Error('--processes must be a positive safe integer.');
   if (mode === 'record') assert.equal(outputPath, null, 'record writes its report to the performance session log');
   if (workItem !== null) {

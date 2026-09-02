@@ -22,6 +22,7 @@ import { PERFORMANCE_SCHEMA_VERSION } from './performance/config.mjs';
 import {
   PERFORMANCE_TIMING_PACKAGES,
   WORKLOAD_SCHEMA,
+  performanceExecutionMode,
   performancePackageForFamily,
 } from './performance/schema.mjs';
 import { createWorkloads } from './performance/workloads.mjs';
@@ -194,6 +195,13 @@ test('timing workload families have explicit package owners', async () => {
   const coreWorkloads = await createWorkloads({ quick: true, packages: ['core'] });
   assert.equal(coreWorkloads.some(({ family }) => family.startsWith('tabular-') || family === 'virtual-layout'), false);
   assert.equal(coreWorkloads.some(({ family }) => family.startsWith('core-')), true);
+});
+
+test('quick performance runs are smoke checks rather than baseline comparisons', () => {
+  assert.equal(performanceExecutionMode('check', true), 'smoke');
+  assert.equal(performanceExecutionMode('compare', true), 'smoke');
+  assert.equal(performanceExecutionMode('check', false), 'check');
+  assert.equal(performanceExecutionMode('record', false), 'record');
 });
 
 test('targeted screening accepts three processes and uses a coarse regression band', () => {

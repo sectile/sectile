@@ -11,8 +11,12 @@ import { compatibilityMetadata } from './provenance.mjs';
 
 export function validateRunnerReport(report) {
   assert.equal(report.schemaVersion, PERFORMANCE_SCHEMA_VERSION, 'performance schema mismatch');
-  const certification = report.runner.certification !== false;
-  const minimumProcesses = certification ? MINIMUM_PROCESS_COUNT : MINIMUM_TARGET_PROCESS_COUNT;
+  const certification = report.runner.certification !== false && report.runner.quick !== true;
+  const minimumProcesses = report.runner.quick === true
+    ? 1
+    : certification
+      ? MINIMUM_PROCESS_COUNT
+      : MINIMUM_TARGET_PROCESS_COUNT;
   assert.ok(
     report.runner.processCount >= minimumProcesses,
     `performance checks require at least ${minimumProcesses} isolated processes`,

@@ -82,4 +82,7 @@ resource usage, and registered browser-only counters. Comparison refuses a
 runtime, hardware, flag, or workload-schema mismatch. Build fingerprints may
 differ because comparison exists to evaluate code changes.
 
-`--quick` remains a smoke mode. It is not authoritative certification evidence.
+`--quick` is a smoke mode. It validates workload construction, execution,
+calibration, and retained run artifacts with one isolated process, without
+selecting or comparing an authoritative baseline. It cannot produce work-item
+evidence or replace a baseline.

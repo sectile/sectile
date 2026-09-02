@@ -33,3 +33,7 @@ export function performancePackageForFamily(family) {
   if (family === 'virtual-layout') return 'virtual';
   throw new Error(`unowned performance workload family: ${family}`);
 }
+
+export function performanceExecutionMode(mode, quick) {
+  return quick && mode !== 'record' ? 'smoke' : mode;
+}
