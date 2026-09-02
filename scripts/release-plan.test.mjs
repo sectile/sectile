@@ -85,6 +85,8 @@ function releaseFixture(context) {
   git(root, ['init', '--initial-branch=main']);
   git(root, ['config', 'user.email', 'release-test@example.com']);
   git(root, ['config', 'user.name', 'Release Test']);
+  git(root, ['config', 'commit.gpgSign', 'false']);
+  git(root, ['config', 'tag.gpgSign', 'false']);
   git(root, ['add', '.']);
   git(root, ['commit', '-m', 'chore(release): v0.14.1']);
   git(root, ['tag', 'v0.14.1']);
