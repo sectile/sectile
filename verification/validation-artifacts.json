@@ -35,7 +35,7 @@
     ],
     "WI-015": [
       { "path": "packages/core/tests/runtime/adapter-runtime.test.mjs", "contains": "stable method wrappers" },
-      { "path": "scripts/performance/workloads.mjs", "contains": "core:facade:access" }
+      { "path": "scripts/performance/workloads/core.mjs", "contains": "core:facade:access" }
     ],
     "WI-013": [
       { "path": "packages/core/tests/composites/canonical-provenance.test.mjs", "contains": "canonical provenance skips validation" }
@@ -46,7 +46,7 @@
     "WI-021": [
       { "path": "packages/core/tests/editing/text.reference-law.test.mjs", "contains": "referenceReplacePlainText" },
       { "path": "packages/core/tests/runtime/reorder.test.mjs", "contains": "tree reorder changes parent" },
-      { "path": "scripts/performance/workloads.mjs", "contains": "core:tree-reorder:move" }
+      { "path": "scripts/performance/workloads/core.mjs", "contains": "core:tree-reorder:move" }
     ],
     "WI-022": [
       { "path": "packages/virtual/tests/runtime/linear-layout.test.mjs", "contains": "measurement" }
