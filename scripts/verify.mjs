@@ -104,27 +104,27 @@ const targetLabel = fullRepositoryVerification || (compatibility && explicitTarg
 
 const packagePipelines = Object.freeze({
   '@sectile/core': [
-    'typecheck', 'test', 'build', 'check:contracts', 'check:public-api',
+    'test', 'build', 'check:contracts', 'check:public-api',
     'check:api-stability', 'check:semantic-api', 'check:laws', 'check:naming',
     'check:layout', 'check:module-dag', 'check:import-boundaries', 'check:dist-boundary',
-    'check:subpaths', 'check:package', 'check:verification',
+    'check:subpaths', 'check:package', releaseRequested ? 'check:verification:determinism' : 'check:verification',
     'verify:reproducible-build',
   ],
-  '@sectile/chart': ['typecheck', 'typecheck:public', 'test', 'build', 'check:laws', 'check:package', 'verify:reproducible-build'],
+  '@sectile/chart': ['test', 'build', 'typecheck:public:prepared', 'check:laws', 'check:package', 'verify:reproducible-build'],
   '@sectile/form': [
-    'typecheck', 'test', 'build', 'check:laws', 'check:package',
+    'test', 'build', 'check:laws', 'check:package',
     'check:public-api', 'verify:reproducible-build',
   ],
-  '@sectile/temporal': ['typecheck', 'test', 'build', 'check:laws', 'check:package', 'verify:reproducible-build'],
-  '@sectile/virtual': ['typecheck', 'test', 'build', 'check:laws', 'check:package', 'verify:reproducible-build'],
+  '@sectile/temporal': ['test', 'build', 'check:laws', 'check:package', 'verify:reproducible-build'],
+  '@sectile/virtual': ['test', 'build', 'check:laws', 'check:package', 'verify:reproducible-build'],
   '@sectile/tabular': [
-    'typecheck', 'test', 'build', 'check:laws', 'check:package', 'check:implementation',
+    'test', 'build', 'check:laws', 'check:package', 'check:implementation',
     'verify:reproducible-build',
   ],
-  '@sectile/dom': ['typecheck', 'test', 'build', 'verify:reproducible-build'],
-  '@sectile/terminal': ['typecheck', 'test', 'build', 'verify:reproducible-build'],
+  '@sectile/dom': ['test', 'build', 'verify:reproducible-build'],
+  '@sectile/terminal': ['test', 'build', 'verify:reproducible-build'],
   '@sectile/vue': [
-    'typecheck', 'typecheck:public', 'test', 'check:controlled-reconciliation',
+    'test', 'typecheck:public:prepared', 'check:controlled-reconciliation',
     'check:hydration-contract', 'build', 'verify:reproducible-build',
   ],
 });

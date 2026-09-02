@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
+const determinism = process.argv.includes('--determinism');
+const unexpected = process.argv.slice(2).filter((argument) => argument !== '--determinism');
+assert.deepEqual(unexpected, [], `unexpected verification arguments: ${unexpected.join(', ')}`);
 const normalizeText = (value) => value.toString('utf8').replaceAll('\r\n', '\n');
 const hash = (value) => createHash('sha256').update(normalizeText(value)).digest('hex');
 const theoryOutput = await readFile('verification/theory-verification.json');
@@ -15,9 +18,11 @@ const run = () => spawnSync(process.execPath, ['verification/implementation-veri
 });
 const first = run();
 assert.equal(first.status, 0, first.stderr?.toString() ?? 'implementation verifier failed');
-const second = run();
-assert.equal(second.status, 0, second.stderr?.toString() ?? 'implementation verifier failed');
-assert.equal(normalizeText(second.stdout), normalizeText(first.stdout), 'implementation verification is not deterministic');
+if (determinism) {
+  const second = run();
+  assert.equal(second.status, 0, second.stderr?.toString() ?? 'implementation verifier failed');
+  assert.equal(normalizeText(second.stdout), normalizeText(first.stdout), 'implementation verification is not deterministic');
+}
 assert.equal(normalizeText(first.stdout), normalizeText(stored), 'stored implementation verification is stale');
 const parsed = JSON.parse(first.stdout.toString('utf8'));
 assert.equal(parsed.status, 'pass');

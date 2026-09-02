@@ -395,6 +395,7 @@
     "check:subpaths": "node scripts/check-subpath-imports.mjs",
     "check:package": "node scripts/check-package-footprint.mjs",
     "check:verification": "node scripts/check-verification.mjs",
+    "check:verification:determinism": "node scripts/check-verification.mjs --determinism",
     "update:api-stability": "node scripts/update-api-stability.mjs",
     "update:semantic-api": "node scripts/update-semantic-api.mjs"
   },

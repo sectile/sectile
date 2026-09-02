@@ -62,6 +62,26 @@ test('package scripts stay local and leave verification orchestration to the wor
   }
 });
 
+test('workspace verification reuses package build artifacts instead of repeating typecheck builds', async () => {
+  const source = await readFile(join(root, 'scripts', 'verify.mjs'), 'utf8');
+  const pipeline = source.slice(source.indexOf('const packagePipelines'), source.indexOf('const steps ='));
+  assert.equal(pipeline.includes("'typecheck',"), false);
+  assert.match(pipeline, /@sectile\/chart[^\n]+typecheck:public:prepared/u);
+  assert.match(pipeline, /@sectile\/vue[\s\S]+typecheck:public:prepared/u);
+  assert.match(pipeline, /releaseRequested \? 'check:verification:determinism' : 'check:verification'/u);
+
+  const chart = await readJSON(join(root, 'packages', 'chart', 'package.json'));
+  assert.equal(chart.scripts['typecheck:public:prepared'], 'tsc --project type-tests/tsconfig.json --pretty false');
+  assert.match(chart.scripts['typecheck:public'], /run build && pnpm --silent run typecheck:public:prepared/u);
+
+  const vue = await readJSON(join(root, 'packages', 'vue', 'package.json'));
+  assert.match(vue.scripts['typecheck:public'], /run build:verification && pnpm --silent run typecheck:public:prepared/u);
+  assert.ok(vue.scripts['typecheck:public:prepared'].includes('type-tests/tsconfig.json'));
+
+  const core = await readJSON(join(root, 'packages', 'core', 'package.json'));
+  assert.equal(core.scripts['check:verification:determinism'], 'node scripts/check-verification.mjs --determinism');
+});
+
 test('host package tests build isolated verification artifacts', async () => {
   for (const directory of ['dom', 'terminal', 'vue']) {
     const manifest = await readJSON(join(root, 'packages', directory, 'package.json'));
