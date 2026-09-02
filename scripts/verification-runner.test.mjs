@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runVerificationSteps } from './lib/verification-runner.mjs';
 
-test('verification runner reports every failure without stopping later commands', () => {
+test('verification runner stops at the first failure by default', () => {
   const commands = [
     Object.freeze({ command: 'first', args: [], detail: 'first' }),
     Object.freeze({ command: 'second', args: [], detail: 'second' }),
@@ -18,15 +18,29 @@ test('verification runner reports every failure without stopping later commands'
     onFailure: ({ command }) => { reported.push(command.detail); },
     run: (command) => {
       invoked.push(command.detail);
-      if (command.detail === 'first') return { status: 1 };
-      if (command.detail === 'third') return { error: new Error('missing executable'), status: null };
-      return { status: 0 };
+      return { status: command.detail === 'first' ? 1 : 0 };
     },
   });
 
-  assert.deepEqual(invoked, ['first', 'second', 'third']);
-  assert.deepEqual(reported, ['first', 'third']);
+  assert.deepEqual(invoked, ['first']);
+  assert.deepEqual(reported, ['first']);
   assert.equal(result.status, 1);
+  assert.equal(result.failures.length, 1);
+});
+
+test('verification runner can collect failures when explicitly requested', () => {
+  const commands = ['first', 'second', 'third'].map((detail) => Object.freeze({ command: detail, args: [], detail }));
+  const invoked = [];
+  const result = runVerificationSteps([
+    Object.freeze({ label: 'one', commands: Object.freeze(commands) }),
+  ], {
+    continueOnFailure: true,
+    run: (command) => {
+      invoked.push(command.detail);
+      return { status: command.detail === 'second' ? 0 : 1 };
+    },
+  });
+  assert.deepEqual(invoked, ['first', 'second', 'third']);
   assert.equal(result.failures.length, 2);
 });
 

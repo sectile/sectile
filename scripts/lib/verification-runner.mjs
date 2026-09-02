@@ -1,5 +1,6 @@
 export function runVerificationSteps(steps, options) {
   const failures = [];
+  const continueOnFailure = options.continueOnFailure === true;
   for (const [stepIndex, step] of steps.entries()) {
     options.onStep?.(step, stepIndex, steps.length);
     for (const commandEntry of step.commands) {
@@ -15,6 +16,9 @@ export function runVerificationSteps(steps, options) {
       });
       failures.push(failure);
       options.onFailure?.(failure);
+      if (!continueOnFailure) {
+        return Object.freeze({ failures: Object.freeze(failures), status: 1 });
+      }
     }
   }
   return Object.freeze({ failures: Object.freeze(failures), status: failures.length === 0 ? 0 : 1 });
