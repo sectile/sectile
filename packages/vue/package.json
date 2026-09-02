@@ -425,7 +425,8 @@
     "typecheck:public": "pnpm --silent run build:verification && pnpm --silent run typecheck:public:prepared",
     "typecheck:public:prepared": "node node_modules/typescript/lib/tsc.js --project type-tests/tsconfig.json --pretty false && node scripts/typecheck-public-sfc.mjs --project type-tests/tsconfig.vue.json --noEmit",
     "test": "pnpm --silent run build:verification && node --test --test-concurrency=4 tests/*.test.mjs",
-    "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
+    "verify:reproducible-build": "node scripts/check-reproducible-build.mjs",
+    "verify:reproducible-build:prepared": "node scripts/check-reproducible-build.mjs --prepared"
   },
   "dependencies": {
     "@sectile/core": "workspace:^",

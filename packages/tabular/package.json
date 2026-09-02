@@ -82,6 +82,7 @@
     "check:package": "node scripts/check-package.mjs",
     "check:implementation": "node scripts/check-implementation-verification.mjs",
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs",
+    "verify:reproducible-build:prepared": "node scripts/check-reproducible-build.mjs --prepared",
     "benchmark": "pnpm --silent run build && node --expose-gc benchmarks/tabular.mjs"
   },
   "dependencies": {

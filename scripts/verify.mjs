@@ -102,30 +102,31 @@ const targetLabel = fullRepositoryVerification || (compatibility && explicitTarg
       ? [...selectedPackages, ...(includeDocumentation ? ['@sectile/docs'] : [])].join(', ')
       : 'no affected targets';
 
+const reproducibleBuildScripts = Object.freeze(['verify:reproducible-build:prepared']);
 const packagePipelines = Object.freeze({
   '@sectile/core': [
     'test', 'build', 'check:contracts', 'check:public-api',
     'check:api-stability', 'check:semantic-api', 'check:laws', 'check:naming',
     'check:layout', 'check:module-dag', 'check:import-boundaries', 'check:dist-boundary',
     'check:subpaths', 'check:package', releaseRequested ? 'check:verification:determinism' : 'check:verification',
-    'verify:reproducible-build',
+    ...reproducibleBuildScripts,
   ],
-  '@sectile/chart': ['test', 'build', 'typecheck:public:prepared', 'check:laws', 'check:package', 'verify:reproducible-build'],
+  '@sectile/chart': ['test', 'build', 'typecheck:public:prepared', 'check:laws', 'check:package', ...reproducibleBuildScripts],
   '@sectile/form': [
     'test', 'build', 'check:laws', 'check:package',
-    'check:public-api', 'verify:reproducible-build',
+    'check:public-api', ...reproducibleBuildScripts,
   ],
-  '@sectile/temporal': ['test', 'build', 'check:laws', 'check:package', 'verify:reproducible-build'],
-  '@sectile/virtual': ['test', 'build', 'check:laws', 'check:package', 'verify:reproducible-build'],
+  '@sectile/temporal': ['test', 'build', 'check:laws', 'check:package', ...reproducibleBuildScripts],
+  '@sectile/virtual': ['test', 'build', 'check:laws', 'check:package', ...reproducibleBuildScripts],
   '@sectile/tabular': [
     'test', 'build', 'check:laws', 'check:package', 'check:implementation',
-    'verify:reproducible-build',
+    ...reproducibleBuildScripts,
   ],
-  '@sectile/dom': ['test', 'build', 'verify:reproducible-build'],
-  '@sectile/terminal': ['test', 'build', 'verify:reproducible-build'],
+  '@sectile/dom': ['test', 'build', ...reproducibleBuildScripts],
+  '@sectile/terminal': ['test', 'build', ...reproducibleBuildScripts],
   '@sectile/vue': [
     'test', 'typecheck:public:prepared', 'check:controlled-reconciliation',
-    'check:hydration-contract', 'build', 'verify:reproducible-build',
+    'check:hydration-contract', 'build', ...reproducibleBuildScripts,
   ],
 });
 
