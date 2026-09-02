@@ -45,8 +45,7 @@ try {
   }
   const packages = {};
   for (const packageName of packageNames) packages[packageName] = await inspectTarball(temporaryRoot, packageName, tarballs[packageName]);
-  const installs = [];
-  for (const packageManager of ['npm', 'pnpm']) installs.push(await inspectVueInstall(temporaryRoot, packageManager, tarballs));
+  const installs = await Promise.all(['npm', 'pnpm'].map((packageManager) => inspectVueInstall(temporaryRoot, packageManager, tarballs)));
   const report = Object.freeze({
     schemaVersion: 2,
     packages,

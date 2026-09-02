@@ -27,15 +27,19 @@ for (const packageName of packageNames) {
 }
 
 const fixtures = deriveFixtures(fragments);
-const results = [];
-for (const [index, fixture] of fixtures.entries()) {
+const concurrency = readConcurrency();
+let completedFixtures = 0;
+const results = (await mapWithConcurrency(fixtures, concurrency, async (fixture) => {
+  const bundled = [];
   for (const bundler of ['esbuild', 'vite']) {
-    results.push(await bundleFixture(repoRoot, fixture, bundler));
+    bundled.push(await bundleFixture(repoRoot, fixture, bundler));
   }
-  if ((index + 1) % 50 === 0 || index + 1 === fixtures.length) {
-    process.stderr.write(`consumer fixtures ${index + 1}/${fixtures.length} complete\n`);
+  completedFixtures += 1;
+  if (completedFixtures % 50 === 0 || completedFixtures === fixtures.length) {
+    process.stderr.write(`consumer fixtures ${completedFixtures}/${fixtures.length} complete\n`);
   }
-}
+  return bundled;
+})).flat();
 validateCurrentResults(fixtures, results);
 
 const report = Object.freeze({
@@ -65,4 +69,26 @@ function normalizePackageName(value) {
   const packageName = value.startsWith('@sectile/') ? value.slice('@sectile/'.length) : value;
   assert.ok(PACKAGE_NAMES.includes(packageName), `unknown consumer bundle package ${value}`);
   return packageName;
+}
+
+function readConcurrency() {
+  const raw = process.env.SECTILE_CONSUMER_BUNDLE_CONCURRENCY ?? '4';
+  const concurrency = Number(raw);
+  assert.ok(Number.isSafeInteger(concurrency) && concurrency >= 1 && concurrency <= 16, `invalid consumer bundle concurrency: ${raw}`);
+  return concurrency;
+}
+
+async function mapWithConcurrency(values, concurrency, action) {
+  const results = new Array(values.length);
+  let nextIndex = 0;
+  async function worker() {
+    while (true) {
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= values.length) return;
+      results[index] = await action(values[index], index);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, values.length) }, () => worker()));
+  return results;
 }
