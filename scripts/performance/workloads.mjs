@@ -59,7 +59,11 @@ import {
   createFacadeConnection,
   createSemanticController,
 } from '../../packages/core/dist/adapter-runtime.js';
-import { PERFORMANCE_TIMING_PACKAGES, WORKLOAD_SCHEMA } from './schema.mjs';
+import {
+  PERFORMANCE_TIMING_PACKAGES,
+  WORKLOAD_SCHEMA,
+  classifyPerformanceMetric,
+} from './schema.mjs';
 
 export async function createWorkloads({ quick = false, packages = PERFORMANCE_TIMING_PACKAGES } = {}) {
   const selectedPackages = new Set(packages);
@@ -534,6 +538,7 @@ function timed(id, family, dimensions, iterationCount, operation) {
   return Object.freeze({
     id,
     family,
+    metadata: classifyPerformanceMetric(id, family, dimensions),
     dimensions: Object.freeze(dimensions),
     iterations: iterationCount,
     warmupIterations: Math.max(1, Math.min(iterationCount, 10)),

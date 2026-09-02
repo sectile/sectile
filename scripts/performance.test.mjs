@@ -22,8 +22,12 @@ import { PERFORMANCE_SCHEMA_VERSION } from './performance/config.mjs';
 import {
   PERFORMANCE_TIMING_PACKAGES,
   WORKLOAD_SCHEMA,
+  classifyPerformanceMetric,
+  normalizePerformanceSelection,
   performanceExecutionMode,
+  performanceMetricSelected,
   performancePackageForFamily,
+  performanceSelectionID,
 } from './performance/schema.mjs';
 import { createWorkloads } from './performance/workloads.mjs';
 
@@ -195,6 +199,25 @@ test('timing workload families have explicit package owners', async () => {
   const coreWorkloads = await createWorkloads({ quick: true, packages: ['core'] });
   assert.equal(coreWorkloads.some(({ family }) => family.startsWith('tabular-') || family === 'virtual-layout'), false);
   assert.equal(coreWorkloads.some(({ family }) => family.startsWith('core-')), true);
+});
+
+test('every central workload has one selectable owner, type, domain, scale, and evidence contract', async () => {
+  const workloads = await createWorkloads({ quick: true });
+  for (const workload of workloads) {
+    assert.deepEqual(workload.metadata, classifyPerformanceMetric(workload.id, workload.family, workload.dimensions));
+  }
+  const selection = normalizePerformanceSelection({
+    owners: ['core'],
+    types: ['query'],
+    domains: ['metric-index'],
+    scales: ['representative'],
+    evidence: ['timing'],
+  });
+  assert.equal(performanceSelectionID(selection), 'core__query__metric-index__representative__timing');
+  const selected = workloads.filter(({ metadata }) => performanceMetricSelected(metadata, selection));
+  assert.ok(selected.length > 1);
+  assert.equal(selected.every(({ metadata }) => metadata.owner === 'runner'
+    || (metadata.owner === 'core' && metadata.type === 'query' && metadata.domain === 'metric-index')), true);
 });
 
 test('quick performance runs are smoke checks rather than baseline comparisons', () => {

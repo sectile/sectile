@@ -32,7 +32,9 @@ import { publishedPackageDirectories } from '../lib/published-packages.mjs';
 import {
   PERFORMANCE_TIMING_PACKAGES,
   WORKLOAD_SCHEMA,
+  normalizePerformanceSelection,
   performanceExecutionMode,
+  performanceSelectionID,
 } from './schema.mjs';
 
 const execFile = promisify(execFileCallback);
@@ -46,13 +48,28 @@ async function main() {
   if (options.processCount < minimumProcesses) {
     throw new Error(`Performance runs require at least ${minimumProcesses} isolated processes.`);
   }
-  const unsupportedTargets = options.targetPackages.filter((packageName) => !PERFORMANCE_TIMING_PACKAGES.includes(packageName));
-  if (!options.all && unsupportedTargets.length === options.targetPackages.length) {
+
+  if (options.explain) {
+    process.stdout.write(`${JSON.stringify({
+      mode: executionMode,
+      requestedMode: options.mode,
+      certification: executionMode !== 'smoke' && options.all,
+      processCount: options.processCount,
+      requestedPackages: options.requestedPackages,
+      unsupportedPackages: options.unsupportedPackages,
+      selection: options.selection,
+      selectionID: performanceSelectionID(options.selection),
+      prepared: options.prepared,
+    }, null, 2)}\n`);
+    return;
+  }
+
+  if (!options.all && options.selection.owners.length === 0) {
     process.stdout.write(`${JSON.stringify({
       status: 'skipped',
       mode: executionMode,
       requestedMode: options.mode,
-      targetPackages: options.targetPackages,
+      targetPackages: options.requestedPackages,
       reason: 'no central timing workloads are registered for these packages',
     })}\n`);
     return;
@@ -76,7 +93,11 @@ async function main() {
           SECTILE_PERFORMANCE_PROCESS_INDEX: String(processIndex),
           SECTILE_PERFORMANCE_QUICK: options.quick ? '1' : '0',
           SECTILE_PERFORMANCE_SCREENING: options.all ? '0' : '1',
-          SECTILE_PERFORMANCE_PACKAGES: options.targetPackages.join(','),
+          SECTILE_PERFORMANCE_PACKAGES: options.selection.owners.join(','),
+          SECTILE_PERFORMANCE_TYPES: options.selection.types.join(','),
+          SECTILE_PERFORMANCE_DOMAINS: options.selection.domains.join(','),
+          SECTILE_PERFORMANCE_SCALES: options.selection.scales.join(','),
+          SECTILE_PERFORMANCE_EVIDENCE: options.selection.evidence.join(','),
         },
         maxBuffer: 64 * 1024 * 1024,
       });
@@ -91,7 +112,7 @@ async function main() {
       schemaVersion: PERFORMANCE_SCHEMA_VERSION,
       createdAt: new Date().toISOString(),
       provenance: await collectProvenance(repoRoot, workloadFingerprint, {
-        packageNames: options.all ? publishedPackageDirectories : options.targetPackages,
+        packageNames: options.all ? publishedPackageDirectories : options.selection.owners,
       }),
       runner: Object.freeze({
         processCount: options.processCount,
@@ -102,7 +123,9 @@ async function main() {
         sink: processReports.reduce((total, entry) => (total + entry.sink) % 1_000_000_007, 0),
         quick: options.quick,
         certification: executionMode !== 'smoke' && options.all,
-        targetPackages: Object.freeze([...options.targetPackages]),
+        targetPackages: options.selection.owners,
+        selection: options.selection,
+        selectionID: performanceSelectionID(options.selection),
       }),
       workloadSchema: WORKLOAD_SCHEMA,
       metrics: aggregateMetrics(processReports),
@@ -123,7 +146,8 @@ async function main() {
         mode: executionMode,
         requestedMode: options.mode,
         certification: false,
-        targetPackages: options.targetPackages,
+        selection: options.selection,
+        selectionID: performanceSelectionID(options.selection),
         runID: session.session.runID,
         session: session.manifestPath,
         report: reportPath,
@@ -138,6 +162,8 @@ async function main() {
       await finalizePerformanceSession(session, 'recorded');
       process.stdout.write(`${JSON.stringify({
         mode: options.mode,
+        selection: options.selection,
+        selectionID: performanceSelectionID(options.selection),
         runID: session.session.runID,
         session: session.manifestPath,
         report: reportPath,
@@ -159,7 +185,8 @@ async function main() {
     const output = Object.freeze({
       mode: options.mode,
       certification: options.all,
-      targetPackages: options.targetPackages,
+      selection: options.selection,
+      selectionID: performanceSelectionID(options.selection),
       workItem: options.workItem,
       runID: session.session.runID,
       session: session.manifestPath,
@@ -190,6 +217,7 @@ function aggregateMetrics(processReports) {
     for (const metric of reportEntry.metrics) {
       const aggregate = byID.get(metric.id) ?? {
         family: metric.family,
+        metadata: metric.metadata,
         dimensions: metric.dimensions,
         processTimings: [],
         batchTimings: [],
@@ -198,6 +226,7 @@ function aggregateMetrics(processReports) {
         operations: 0,
       };
       assert.equal(aggregate.family, metric.family);
+      assert.deepEqual(aggregate.metadata, metric.metadata);
       assert.deepEqual(aggregate.dimensions, metric.dimensions);
       aggregate.processTimings.push(summarize(metric.samples).median);
       aggregate.batchTimings.push(...metric.samples);
@@ -209,6 +238,7 @@ function aggregateMetrics(processReports) {
   }
   return Object.freeze(Object.fromEntries([...byID].sort(([left], [right]) => left.localeCompare(right)).map(([id, value]) => [id, Object.freeze({
     family: value.family,
+    metadata: value.metadata,
     dimensions: value.dimensions,
     unit: 'nanoseconds-per-operation',
     timing: summarize(value.processTimings),
@@ -237,13 +267,23 @@ function parseArguments(arguments_) {
   let prepared = false;
   let processCount = null;
   let quick = false;
+  let explain = false;
   let workItem = null;
   const targetPackages = [];
+  const types = [];
+  const domains = [];
+  const scales = [];
+  const evidence = [];
   for (let index = 1; index < arguments_.length; index += 1) {
     const argument = arguments_[index];
     if (argument === '--all') all = true;
     else if (argument === '--prepared') prepared = true;
     else if (argument === '--quick') quick = true;
+    else if (argument === '--explain') explain = true;
+    else if (argument === '--type') types.push(requireValue(arguments_, ++index, argument));
+    else if (argument === '--domain') domains.push(requireValue(arguments_, ++index, argument));
+    else if (argument === '--scale') scales.push(requireValue(arguments_, ++index, argument));
+    else if (argument === '--evidence') evidence.push(requireValue(arguments_, ++index, argument));
     else if (argument === '--baseline') baselinePath = resolve(repoRoot, requireValue(arguments_, ++index, argument));
     else if (argument === '--output') outputPath = resolve(repoRoot, requireValue(arguments_, ++index, argument));
     else if (argument === '--work-item') workItem = requireValue(arguments_, ++index, argument);
@@ -269,11 +309,25 @@ function parseArguments(arguments_) {
     assert.notEqual(mode, 'record', '--work-item is only valid for compare/check evidence.');
     assert.notEqual(outputPath, null, '--work-item requires --output so before/after evidence is retained.');
   }
+  const supportedTargets = uniqueTargets.filter((packageName) => PERFORMANCE_TIMING_PACKAGES.includes(packageName));
+  const unsupportedPackages = uniqueTargets.filter((packageName) => !PERFORMANCE_TIMING_PACKAGES.includes(packageName));
+  const defaultScales = all ? [] : ['representative'];
+  const defaultEvidence = all ? [] : ['timing'];
+  const selection = normalizePerformanceSelection({
+    owners: all ? [] : supportedTargets,
+    types,
+    domains,
+    scales: scales.length === 0 ? defaultScales : scales,
+    evidence: evidence.length === 0 ? defaultEvidence : evidence,
+  });
   return Object.freeze({
     mode,
     all,
     prepared,
-    targetPackages: Object.freeze(uniqueTargets),
+    explain,
+    requestedPackages: Object.freeze(uniqueTargets),
+    unsupportedPackages: Object.freeze(unsupportedPackages),
+    selection,
     baselinePath,
     baselineDirectory,
     latestComparisonPath,
@@ -296,7 +350,7 @@ function normalizePerformanceTarget(value) {
 async function prepareBuild(options) {
   const filters = options.all
     ? []
-    : options.targetPackages.flatMap((packageName) => ['--filter', `@sectile/${packageName}...`]);
+    : options.selection.owners.flatMap((packageName) => ['--filter', `@sectile/${packageName}...`]);
   const args = options.all
     ? ['-r', '--workspace-concurrency=1', '--if-present', 'build']
     : ['-r', '--workspace-concurrency=1', ...filters, '--if-present', 'build'];

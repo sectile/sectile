@@ -6,24 +6,30 @@ import {
   TARGET_BATCH_COUNT,
 } from './config.mjs';
 import { collectRetainedGarbage, collectTransientGarbage } from './gc-policy.mjs';
-import { performancePackageForFamily } from './schema.mjs';
+import {
+  normalizePerformanceSelection,
+  performanceMetricSelected,
+} from './schema.mjs';
 import { createWorkloads } from './workloads.mjs';
 
 const quick = process.env['SECTILE_PERFORMANCE_QUICK'] === '1';
 const screening = process.env['SECTILE_PERFORMANCE_SCREENING'] === '1';
-const targetPackages = new Set(
-  (process.env['SECTILE_PERFORMANCE_PACKAGES'] ?? '').split(',').filter(Boolean),
-);
+const selection = normalizePerformanceSelection({
+  owners: splitEnvironmentList('SECTILE_PERFORMANCE_PACKAGES'),
+  types: splitEnvironmentList('SECTILE_PERFORMANCE_TYPES'),
+  domains: splitEnvironmentList('SECTILE_PERFORMANCE_DOMAINS'),
+  scales: splitEnvironmentList('SECTILE_PERFORMANCE_SCALES'),
+  evidence: splitEnvironmentList('SECTILE_PERFORMANCE_EVIDENCE'),
+});
 const batchCount = quick ? QUICK_BATCH_COUNT : screening ? TARGET_BATCH_COUNT : DEFAULT_BATCH_COUNT;
 const metrics = [];
 let sink = 0;
 
 for (const workload of await createWorkloads({
   quick,
-  packages: targetPackages.size === 0 ? undefined : [...targetPackages],
+  packages: selection.owners.length === 0 ? undefined : selection.owners,
 })) {
-  const owner = performancePackageForFamily(workload.family);
-  if (targetPackages.size > 0 && owner !== null && !targetPackages.has(owner)) continue;
+  if (!performanceMetricSelected(workload.metadata, selection)) continue;
   const warmupStartedAt = performance.now();
   for (let iteration = 0; iteration < workload.warmupIterations; iteration += 1) {
     sink = consume(sink, workload.operation(iteration));
@@ -62,6 +68,7 @@ for (const workload of await createWorkloads({
   metrics.push(Object.freeze({
     id: workload.id,
     family: workload.family,
+    metadata: workload.metadata,
     dimensions: workload.dimensions,
     iterationsPerBatch: measuredIterations,
     batchCount,
@@ -83,6 +90,10 @@ process.stdout.write(JSON.stringify(Object.freeze({
   resourceUsage: process.resourceUsage(),
   metrics: Object.freeze(metrics),
 })));
+
+function splitEnvironmentList(name) {
+  return (process.env[name] ?? '').split(',').map((entry) => entry.trim()).filter(Boolean);
+}
 
 function consume(previous, value) {
   if (typeof value === 'number') return (previous + (Number.isFinite(value) ? value : 0)) % 1_000_000_007;
