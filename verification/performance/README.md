@@ -1,76 +1,85 @@
 # Performance verification
 
-The repository performance runner executes the same workload schema in at
-least ten sequential, isolated Node processes. Each worker warms operations,
-uses a result sink, measures repeated batches, records isolated-process
-median/p95/relative MAD plus the pooled batch distribution,
-and captures peak allocation pressure plus post-GC retained heap.
+Performance verification has two distinct modes.
+
+Targeted screening is the ordinary developer tool. It accepts one or more
+package targets, runs only timing workloads owned by those packages, uses three
+sequential isolated Node processes, three measured batches, and a coarse 20%
+regression band. It is intended to catch large, plausible regressions without
+turning workstation noise into a repository-wide optimization mandate.
 
 ```sh
+pnpm performance:check -- core
+pnpm performance:check -- tabular virtual
+pnpm performance:compare -- core
+```
+
+Packages without registered central timing workloads are reported as skipped.
+In particular, the runner must not substitute unrelated Core, Tabular, or
+Virtual workloads for another package. Structural performance evidence for such
+packages comes from their complexity contracts, deterministic work/resource
+witnesses, and package-local benchmarks when a task explicitly requires timing.
+
+Repository certification is intentionally separate and expensive:
+
+```sh
+pnpm performance:certify
 pnpm performance:record
 pnpm performance:promote -- .tasks/performance/runs/<run-id>/report.json
-pnpm performance:compare
-pnpm performance:check
-pnpm verify:performance
 ```
 
-Every command that measures performance creates a retained session under
-`.tasks/performance/runs/<run-id>/`. The progress manifest is written before
-the first worker starts, each isolated worker report is immutable once written,
-and complete runs add `report.json`. Interrupted runs therefore retain their
-last completed process count instead of disappearing. Invalid calibration,
-comparison failures, and regressions retain their reports and terminal status.
+Certification executes the complete workload schema in at least ten sequential,
+isolated Node processes. Each worker warms operations, uses a result sink,
+measures repeated batches, and captures allocation plus post-GC retained heap.
+This mode is for release certification, nightly or dedicated benchmark runs, or
+an explicit full-performance investigation. It is not part of ordinary
+`pnpm verify` or `pnpm verify:full`.
 
-`record` validates one non-quick run and writes it to the environment-partitioned
-`baselines/` directory. The filename is the SHA-256 digest of the exact runtime,
-OS, architecture, CPU, flags, and workload metadata used for comparison. A
-previous baseline for the same environment and its update metadata remain inside
-the run session. `performance:promote` applies the same validation to a retained
-complete report, allowing a failed comparison caused only by a missing exact
-environment partition to become the initial baseline without rerunning workers.
-It refuses quick reports and conflicting existing evidence. Every approved
-baseline lives in its environment partition, so different operating systems and
-Node runtimes cannot overwrite or silently inherit one another's evidence. Run
-IDs are generated automatically. Raw sessions are intentionally Git-ignored
-because every run retains all process reports; approved comparison summaries and
-recorded baselines remain the repository evidence.
+Every command that actually measures performance creates a retained session
+under `.tasks/performance/runs/<run-id>/`. The progress manifest is written
+before the first worker starts, each isolated worker report is immutable once
+written, and complete runs add `report.json`. Interrupted runs therefore retain
+their completed process reports. Invalid calibration, comparison failures, and
+regressions retain their reports and terminal status.
 
-Without an explicit `--baseline`, `compare` and `check` require the environment
-partition whose compatibility metadata exactly matches the current report.
-`compare` reports differences without enforcing the gate. `check` fails when a
-calibrated median regression is corroborated by p95 and the current
-isolated-process distribution clears the baseline distribution, or when
-allocation/retained-heap evidence satisfies the same three checks.
-This prevents a bimodal process split from turning a stable tail into a false
-regression while still rejecting uniform slowdowns.
+`record` validates one complete non-quick certification run and writes it to the
+environment-partitioned `baselines/` directory. The filename is the SHA-256
+digest of the runtime, OS, architecture, CPU, flags, and workload metadata used
+for comparison. `performance:promote` accepts only complete certification
+reports; targeted screenings and quick reports cannot become authoritative
+baselines.
 
-Every runtime-changing work item listed in `gates.json` retains task-local
-before/after evidence with latency, allocation, retained heap, scaling, and
-package-footprint comparisons:
+Without an explicit `--baseline`, screening and certification require the exact
+environment partition matching the current runtime and hardware metadata.
+Certification preserves the previous strict rule: a timing regression must be
+corroborated by median, p95, and separated isolated-process distributions, with
+a calibrated 5-10% band. Targeted screening uses median and p95 with a minimum
+20% band and does not claim certification-grade tail or distribution evidence
+from only three processes.
+
+Performance timing is conditional evidence. The default performance contract is
+structural: complexity, deterministic work, and resource bounds. Timing evidence
+is required when an operation has an explicit latency or throughput target, a
+registered performance-sensitive timing owner is changed, or a representation
+or crossover decision depends on measured cost. A timing failure is diagnostic
+evidence to classify; unrelated code must not be optimized merely to restore a
+noisy global baseline.
+
+Task-local timing evidence retains the package target explicitly:
 
 ```sh
-pnpm performance:check -- --work-item WI-013 --output .tasks/aux/WI-013-performance.json
+pnpm performance:check -- core --work-item WI-013 --output .tasks/aux/WI-013-performance.json
 ```
 
-`compare` and `check` always retain their current run and `comparison.json` in
-the session directory. They also replace
-`.tasks/performance/latest-comparison.json`, giving the latest result a stable
-path. `--output` additionally copies that comparison to the requested task
-path. The work-item flag is rejected without an output path.
-`verify:performance` is the repository gate for a controlled runner; portable
-CI must not replace it with a noisy single sample or compare against mismatched
-hardware metadata.
+`compare` and `check` retain their current run and `comparison.json` in the
+session directory and replace `.tasks/performance/latest-comparison.json`.
+`--output` additionally copies the comparison to the requested task path. The
+work-item flag is rejected without an output path.
 
 Reports include the workload fingerprint, implementation/build fingerprint,
-Node/V8/OS/architecture/CPU/flag metadata, all nine built-package footprints,
-process resource usage, and registered browser-only Vue counters. Comparison
-refuses a workload, runtime, hardware, or flag mismatch. Build fingerprints may
-differ because comparison is specifically intended to evaluate code changes.
+Node/V8/OS/architecture/CPU/flag metadata, measured package footprints, process
+resource usage, and registered browser-only counters. Comparison refuses a
+runtime, hardware, flag, or workload-schema mismatch. Build fingerprints may
+differ because comparison exists to evaluate code changes.
 
-The runner rejects calibration when `max(5%, 3 x relative MAD)` would require a
-band above 10%. Browser timings are not portable Node budgets; the workload
-schema records the required Vue render/effect/measurement/resource counters for
-browser-qualified validation.
-
-`--quick` is a workload smoke mode, not an authoritative regression gate. Its
-short batches may legitimately exceed the full-run noise budget.
+`--quick` remains a smoke mode. It is not authoritative certification evidence.

@@ -77,6 +77,7 @@ export async function finalizePerformanceSession(handle, status, error = null) {
 export async function recordPerformanceBaseline(handle, baselinePath, report) {
   assert.equal(handle.session.status, 'running', 'performance session is already finalized');
   assert.equal(handle.session.report, 'report.json', 'performance session has no completed report');
+  assert.notEqual(report.runner.certification, false, 'targeted performance screenings cannot become authoritative baselines');
   assert.equal(report.runner.quick, false, 'quick performance runs cannot become an authoritative baseline');
 
   const previousPath = join(handle.directory, 'previous-baseline.json');

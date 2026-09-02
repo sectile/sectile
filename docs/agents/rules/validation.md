@@ -71,11 +71,13 @@ Close then owns execution, diagnosis, fixes, and reruns in dependency order:
 2. targeted tests, then full tests;
 3. workspace typecheck and build;
 4. semantic authority, complexity, reuse, and crossover checks;
-5. calibrated performance, allocation, and retained-heap runs;
+5. targeted performance, allocation, or retained-heap runs only when the change selects that evidence;
 6. consumer bundle, tree-shaking, pack, install, declaration, and source maps;
 7. browser, SSR, hydration, focus, ARIA, and lifecycle verification;
 8. generated documentation and inventory refresh;
-9. full repository verification and clean-worktree review.
+9. full deterministic repository verification and clean-worktree review.
+
+The repository-wide statistical performance certification is separate from ordinary and full deterministic verification. Run it only for release certification, nightly or dedicated benchmark execution, or an explicit full-performance request. A timing regression is diagnostic evidence to classify; do not optimize unrelated code merely to restore a noisy global baseline.
 
 Fix failures at the owning layer and rerun only failed or affected layers until
 clean. Record new baselines only after implementation and validation fixes are

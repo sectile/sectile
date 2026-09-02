@@ -106,6 +106,16 @@ export const WORKLOAD_SCHEMA = Object.freeze({
   ]),
 });
 
+export const PERFORMANCE_TIMING_PACKAGES = Object.freeze(['core', 'tabular', 'virtual']);
+
+export function performancePackageForFamily(family) {
+  if (family === 'runner') return null;
+  if (family.startsWith('core-')) return 'core';
+  if (family.startsWith('tabular-')) return 'tabular';
+  if (family === 'virtual-layout') return 'virtual';
+  throw new Error(`unowned performance workload family: ${family}`);
+}
+
 export function createWorkloads({ quick = false } = {}) {
   const scales = quick ? [1_000] : WORKLOAD_SCHEMA.scales;
   const workloads = [createCalibrationWorkload(quick)];

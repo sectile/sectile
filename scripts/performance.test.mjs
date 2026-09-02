@@ -19,7 +19,12 @@ import {
 } from './performance/session-log.mjs';
 import { median, percentile, relativeMAD, summarize } from './performance/statistics.mjs';
 import { PERFORMANCE_SCHEMA_VERSION } from './performance/config.mjs';
-import { WORKLOAD_SCHEMA, createWorkloads } from './performance/workloads.mjs';
+import {
+  PERFORMANCE_TIMING_PACKAGES,
+  WORKLOAD_SCHEMA,
+  createWorkloads,
+  performancePackageForFamily,
+} from './performance/workloads.mjs';
 
 test('performance statistics report stable median, p95, and relative MAD', () => {
   assert.equal(median([5, 1, 3, 2, 4]), 3);
@@ -99,6 +104,19 @@ test('retained full performance reports promote once without overwriting evidenc
   );
 });
 
+test('targeted screening reports cannot become authoritative baselines', async (context) => {
+  const root = await mkdtemp(join(tmpdir(), 'sectile-performance-targeted-promote-'));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const reportPath = join(root, 'report.json');
+  const report = fixture();
+  report.runner = { processCount: 3, certification: false, targetPackages: ['core'], quick: false };
+  await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+  await assert.rejects(
+    promotePerformanceReport({ reportPath, directory: join(root, 'baselines') }),
+    /targeted performance screenings cannot become authoritative baselines/u,
+  );
+});
+
 test('comparison reports an intentional timing regression', () => {
   const baseline = fixture();
   const current = fixture();
@@ -162,6 +180,38 @@ test('workload schema covers required scales, patch depth, density, domains, and
   assert.equal(workloads.some(({ id }) => id === 'core:text:replace:1000'), true);
   assert.equal(workloads.some(({ id }) => id === 'core:sequence-reorder:move:1000'), true);
   assert.equal(workloads.some(({ id }) => id === 'core:tree-reorder:move:1000'), true);
+});
+
+test('timing workload families have explicit package owners', () => {
+  assert.deepEqual(PERFORMANCE_TIMING_PACKAGES, ['core', 'tabular', 'virtual']);
+  assert.equal(performancePackageForFamily('core-runtime'), 'core');
+  assert.equal(performancePackageForFamily('tabular-resolution'), 'tabular');
+  assert.equal(performancePackageForFamily('virtual-layout'), 'virtual');
+  assert.equal(performancePackageForFamily('runner'), null);
+});
+
+test('targeted screening accepts three processes and uses a coarse regression band', () => {
+  const baseline = fixture();
+  const current = fixture();
+  current.runner = { processCount: 3, certification: false, targetPackages: ['core'] };
+  current.metrics['core:case'].timing = {
+    median: 121,
+    p95: 121,
+    relativeMAD: 0.01,
+    minimum: 100,
+    maximum: 125,
+  };
+  const comparison = compareReports(baseline, current);
+  assert.equal(comparison.runnerBand, 0.2);
+  assert.deepEqual(comparison.regressions.map(({ id }) => id), ['core:case']);
+});
+
+test('targeted reports may compare a workload subset against a certification baseline', () => {
+  const baseline = fixture();
+  baseline.metrics['core:extra'] = metric(100, 0.01);
+  const current = fixture();
+  current.runner = { processCount: 3, certification: false, targetPackages: ['core'] };
+  assert.doesNotThrow(() => assertComparable(baseline, current));
 });
 
 test('performance sessions retain completed workers and reject run ID reuse', async (context) => {

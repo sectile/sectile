@@ -3,22 +3,27 @@ import {
   MAXIMUM_REGRESSION_BAND,
   MINIMUM_PROCESS_COUNT,
   MINIMUM_REGRESSION_BAND,
+  MINIMUM_TARGET_PROCESS_COUNT,
   PERFORMANCE_SCHEMA_VERSION,
+  TARGET_REGRESSION_BAND,
 } from './config.mjs';
 import { compatibilityMetadata } from './provenance.mjs';
 
 export function validateRunnerReport(report) {
   assert.equal(report.schemaVersion, PERFORMANCE_SCHEMA_VERSION, 'performance schema mismatch');
+  const certification = report.runner.certification !== false;
+  const minimumProcesses = certification ? MINIMUM_PROCESS_COUNT : MINIMUM_TARGET_PROCESS_COUNT;
   assert.ok(
-    report.runner.processCount >= MINIMUM_PROCESS_COUNT,
-    `performance checks require at least ${MINIMUM_PROCESS_COUNT} isolated processes`,
+    report.runner.processCount >= minimumProcesses,
+    `performance checks require at least ${minimumProcesses} isolated processes`,
   );
   const calibration = report.metrics['runner:calibration'];
   assert.ok(calibration, 'runner calibration metric is missing');
   const requiredBand = Math.max(MINIMUM_REGRESSION_BAND, calibration.timing.relativeMAD * 3);
+  const maximumBand = certification ? MAXIMUM_REGRESSION_BAND : TARGET_REGRESSION_BAND;
   assert.ok(
-    requiredBand <= MAXIMUM_REGRESSION_BAND,
-    `runner calibration requires a ${(requiredBand * 100).toFixed(2)}% band, exceeding the 10% validity ceiling`,
+    requiredBand <= maximumBand,
+    `runner calibration requires a ${(requiredBand * 100).toFixed(2)}% band, exceeding the ${(maximumBand * 100).toFixed(0)}% validity ceiling`,
   );
 }
 
@@ -28,11 +33,17 @@ export function assertComparable(baseline, current) {
     compatibilityMetadata(baseline.provenance),
     'performance reports have mismatched workload, runtime, hardware, or flags metadata',
   );
-  assert.deepEqual(
-    Object.keys(current.metrics).sort(),
-    Object.keys(baseline.metrics).sort(),
-    'performance reports have mismatched workload keys',
-  );
+  const currentKeys = Object.keys(current.metrics).sort();
+  const baselineKeys = new Set(Object.keys(baseline.metrics));
+  if (current.runner.certification === false) {
+    assert.deepEqual(
+      currentKeys.filter((key) => !baselineKeys.has(key)),
+      [],
+      'targeted performance report contains workload keys missing from the certification baseline',
+    );
+  } else {
+    assert.deepEqual(currentKeys, [...baselineKeys].sort(), 'performance reports have mismatched workload keys');
+  }
 }
 
 export function compareReports(baseline, current) {
@@ -43,7 +54,10 @@ export function compareReports(baseline, current) {
     baseline.metrics['runner:calibration'].timing.relativeMAD,
     current.metrics['runner:calibration'].timing.relativeMAD,
   );
-  const runnerBand = Math.max(MINIMUM_REGRESSION_BAND, calibrationBand * 3);
+  const certification = current.runner.certification !== false;
+  const runnerBand = certification
+    ? Math.max(MINIMUM_REGRESSION_BAND, calibrationBand * 3)
+    : Math.max(TARGET_REGRESSION_BAND, calibrationBand * 3);
   const comparisons = [];
   const regressions = [];
   for (const id of Object.keys(current.metrics).sort()) {
@@ -90,15 +104,18 @@ export function compareReports(baseline, current) {
       band,
     });
     comparisons.push(comparison);
-    if ((medianRatio > 1 + band && p95Ratio > 1 + band && timingFloorRatio > 1 + band)
-      || (allocationRatio !== null && allocationRatio > 1 + allocationBand
-        && allocationP95Ratio > 1 + allocationBand
-        && allocationFloorRatio > 1 + allocationBand)
-      || (heapRatio !== null && heapRatio > 1 + heapBand
-        && heapP95Ratio > 1 + heapBand
-        && heapFloorRatio > 1 + heapBand)) {
-      regressions.push(comparison);
-    }
+    const timingRegression = certification
+      ? medianRatio > 1 + band && p95Ratio > 1 + band && timingFloorRatio > 1 + band
+      : medianRatio > 1 + band && p95Ratio > 1 + band;
+    const allocationRegression = allocationRatio !== null
+      && allocationRatio > 1 + allocationBand
+      && allocationP95Ratio > 1 + allocationBand
+      && (!certification || allocationFloorRatio > 1 + allocationBand);
+    const heapRegression = heapRatio !== null
+      && heapRatio > 1 + heapBand
+      && heapP95Ratio > 1 + heapBand
+      && (!certification || heapFloorRatio > 1 + heapBand);
+    if (timingRegression || allocationRegression || heapRegression) regressions.push(comparison);
   }
   const footprintComparisons = comparePackageFootprints(baseline, current, runnerBand);
   regressions.push(...footprintComparisons.filter(({ footprintRatio, band }) => footprintRatio > 1 + band));
@@ -115,7 +132,11 @@ function comparePackageFootprints(baseline, current, runnerBand) {
   const after = current.provenance.packageFootprint;
   assert.ok(before !== null && typeof before === 'object', 'baseline package footprint is missing');
   assert.ok(after !== null && typeof after === 'object', 'current package footprint is missing');
-  assert.deepEqual(Object.keys(after).sort(), Object.keys(before).sort(), 'performance reports have mismatched package footprint keys');
+  assert.deepEqual(
+    Object.keys(after).filter((packageName) => before[packageName] === undefined),
+    [],
+    'performance report contains package footprint keys missing from the certification baseline',
+  );
   return Object.freeze(Object.keys(after).sort().map((packageName) => {
     assert.ok(Number.isSafeInteger(before[packageName]) && before[packageName] >= 0, `invalid baseline footprint for ${packageName}`);
     assert.ok(Number.isSafeInteger(after[packageName]) && after[packageName] >= 0, `invalid current footprint for ${packageName}`);

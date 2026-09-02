@@ -4,18 +4,22 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import { relative, resolve, sep } from 'node:path';
 import { publishedPackageDirectories } from '../lib/published-packages.mjs';
 
-const FINGERPRINT_INPUTS = Object.freeze([
+const BASE_FINGERPRINT_INPUTS = Object.freeze([
   'package.json',
   'pnpm-lock.yaml',
   'scripts/performance',
-  ...publishedPackageDirectories.flatMap((packageName) => [
-    `packages/${packageName}/package.json`,
-    `packages/${packageName}/dist`,
-  ]),
 ]);
 
-export async function collectProvenance(repoRoot, workloadFingerprint) {
+export async function collectProvenance(repoRoot, workloadFingerprint, options = {}) {
   const cpu = cpus()[0];
+  const packageNames = options.packageNames ?? publishedPackageDirectories;
+  const fingerprintInputs = [
+    ...BASE_FINGERPRINT_INPUTS,
+    ...packageNames.flatMap((packageName) => [
+      `packages/${packageName}/package.json`,
+      `packages/${packageName}/dist`,
+    ]),
+  ];
   return Object.freeze({
     node: process.version,
     v8: process.versions.v8,
@@ -26,14 +30,14 @@ export async function collectProvenance(repoRoot, workloadFingerprint) {
     cpuCount: cpus().length,
     execArgv: Object.freeze([...process.execArgv].sort()),
     workloadFingerprint,
-    buildFingerprint: await fingerprintPaths(repoRoot, FINGERPRINT_INPUTS),
-    packageFootprint: await packageFootprint(repoRoot),
+    buildFingerprint: await fingerprintPaths(repoRoot, fingerprintInputs),
+    packageFootprint: await packageFootprint(repoRoot, packageNames),
   });
 }
 
-async function packageFootprint(repoRoot) {
+async function packageFootprint(repoRoot, packageNames) {
   const result = {};
-  for (const packageName of publishedPackageDirectories) {
+  for (const packageName of packageNames) {
     result[packageName] = await directoryBytes(resolve(repoRoot, `packages/${packageName}/dist`));
   }
   return Object.freeze(result);

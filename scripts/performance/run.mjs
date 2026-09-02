@@ -11,7 +11,9 @@ import {
   DEFAULT_PROCESS_COUNT,
   DEFAULT_RUNS_PATH,
   MINIMUM_PROCESS_COUNT,
+  MINIMUM_TARGET_PROCESS_COUNT,
   PERFORMANCE_SCHEMA_VERSION,
+  TARGET_PROCESS_COUNT,
 } from './config.mjs';
 import { performanceBaselinePath, selectPerformanceBaseline } from './baselines.mjs';
 import { compareReports, validateRunnerReport } from './check.mjs';
@@ -26,7 +28,8 @@ import {
   writePerformanceReport,
 } from './session-log.mjs';
 import { summarize } from './statistics.mjs';
-import { WORKLOAD_SCHEMA } from './workloads.mjs';
+import { publishedPackageDirectories } from '../lib/published-packages.mjs';
+import { PERFORMANCE_TIMING_PACKAGES, WORKLOAD_SCHEMA } from './workloads.mjs';
 
 const execFile = promisify(execFileCallback);
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -34,10 +37,22 @@ await main();
 
 async function main() {
   const options = parseArguments(process.argv.slice(2).filter((argument) => argument !== '--'));
-  if (options.processCount < MINIMUM_PROCESS_COUNT) {
-    throw new Error(`Performance runs require at least ${MINIMUM_PROCESS_COUNT} isolated processes.`);
+  const minimumProcesses = options.all ? MINIMUM_PROCESS_COUNT : MINIMUM_TARGET_PROCESS_COUNT;
+  if (options.processCount < minimumProcesses) {
+    throw new Error(`Performance runs require at least ${minimumProcesses} isolated processes.`);
+  }
+  const unsupportedTargets = options.targetPackages.filter((packageName) => !PERFORMANCE_TIMING_PACKAGES.includes(packageName));
+  if (!options.all && unsupportedTargets.length === options.targetPackages.length) {
+    process.stdout.write(`${JSON.stringify({
+      status: 'skipped',
+      mode: options.mode,
+      targetPackages: options.targetPackages,
+      reason: 'no central timing workloads are registered for these packages',
+    })}\n`);
+    return;
   }
 
+  await prepareBuild(options);
   const session = await createPerformanceSession({
     runsRoot: options.runsRoot,
     mode: options.mode,
@@ -54,6 +69,8 @@ async function main() {
           ...process.env,
           SECTILE_PERFORMANCE_PROCESS_INDEX: String(processIndex),
           SECTILE_PERFORMANCE_QUICK: options.quick ? '1' : '0',
+          SECTILE_PERFORMANCE_SCREENING: options.all ? '0' : '1',
+          SECTILE_PERFORMANCE_PACKAGES: options.targetPackages.join(','),
         },
         maxBuffer: 64 * 1024 * 1024,
       });
@@ -67,7 +84,9 @@ async function main() {
     const report = Object.freeze({
       schemaVersion: PERFORMANCE_SCHEMA_VERSION,
       createdAt: new Date().toISOString(),
-      provenance: await collectProvenance(repoRoot, workloadFingerprint),
+      provenance: await collectProvenance(repoRoot, workloadFingerprint, {
+        packageNames: options.all ? publishedPackageDirectories : options.targetPackages,
+      }),
       runner: Object.freeze({
         processCount: options.processCount,
         batchesPerProcess: processReports[0]?.metrics[0]?.batchCount ?? 0,
@@ -76,6 +95,8 @@ async function main() {
         warmup: true,
         sink: processReports.reduce((total, entry) => (total + entry.sink) % 1_000_000_007, 0),
         quick: options.quick,
+        certification: options.all,
+        targetPackages: Object.freeze([...options.targetPackages]),
       }),
       workloadSchema: WORKLOAD_SCHEMA,
       metrics: aggregateMetrics(processReports),
@@ -115,6 +136,8 @@ async function main() {
     const comparisonPath = resolve(session.directory, 'comparison.json');
     const output = Object.freeze({
       mode: options.mode,
+      certification: options.all,
+      targetPackages: options.targetPackages,
       workItem: options.workItem,
       runID: session.session.runID,
       session: session.manifestPath,
@@ -180,24 +203,37 @@ function aggregateMetrics(processReports) {
 
 function parseArguments(arguments_) {
   const mode = arguments_[0] ?? 'check';
-  if (!['record', 'compare', 'check'].includes(mode)) throw new Error('Usage: run.mjs <record|compare|check> [options]');
+  if (!['record', 'compare', 'check'].includes(mode)) {
+    throw new Error('Usage: run.mjs <record|compare|check> [package ... | --all] [options]');
+  }
   let baselinePath = null;
   const baselineDirectory = resolve(repoRoot, DEFAULT_BASELINE_DIRECTORY);
   const latestComparisonPath = resolve(repoRoot, DEFAULT_LATEST_COMPARISON_PATH);
   const runsRoot = resolve(repoRoot, DEFAULT_RUNS_PATH);
   let outputPath = null;
-  let processCount = DEFAULT_PROCESS_COUNT;
+  let all = mode === 'record';
+  let processCount = null;
   let quick = false;
   let workItem = null;
+  const targetPackages = [];
   for (let index = 1; index < arguments_.length; index += 1) {
     const argument = arguments_[index];
-    if (argument === '--quick') quick = true;
+    if (argument === '--all') all = true;
+    else if (argument === '--quick') quick = true;
     else if (argument === '--baseline') baselinePath = resolve(repoRoot, requireValue(arguments_, ++index, argument));
     else if (argument === '--output') outputPath = resolve(repoRoot, requireValue(arguments_, ++index, argument));
     else if (argument === '--work-item') workItem = requireValue(arguments_, ++index, argument);
     else if (argument === '--processes') processCount = Number(requireValue(arguments_, ++index, argument));
-    else throw new Error(`Unknown performance option: ${argument}`);
+    else if (argument.startsWith('--')) throw new Error(`Unknown performance option: ${argument}`);
+    else targetPackages.push(normalizePerformanceTarget(argument));
   }
+  const uniqueTargets = [...new Set(targetPackages)];
+  if (all && uniqueTargets.length > 0) throw new Error('--all cannot be combined with package targets');
+  if (!all && uniqueTargets.length === 0) {
+    throw new Error('targeted performance checks require at least one package; use pnpm performance:certify for the full suite');
+  }
+  if (mode === 'record') assert.equal(all, true, 'record always captures the complete certification suite');
+  processCount ??= all ? DEFAULT_PROCESS_COUNT : TARGET_PROCESS_COUNT;
   if (!Number.isSafeInteger(processCount) || processCount < 1) throw new Error('--processes must be a positive safe integer.');
   if (mode === 'record') assert.equal(outputPath, null, 'record writes its report to the performance session log');
   if (workItem !== null) {
@@ -207,6 +243,8 @@ function parseArguments(arguments_) {
   }
   return Object.freeze({
     mode,
+    all,
+    targetPackages: Object.freeze(uniqueTargets),
     baselinePath,
     baselineDirectory,
     latestComparisonPath,
@@ -216,6 +254,24 @@ function parseArguments(arguments_) {
     quick,
     workItem,
   });
+}
+
+function normalizePerformanceTarget(value) {
+  const normalized = value.startsWith('@sectile/') ? value.slice('@sectile/'.length) : value;
+  if (!publishedPackageDirectories.includes(normalized)) {
+    throw new Error(`unknown performance target ${value}; expected ${publishedPackageDirectories.join(', ')}`);
+  }
+  return normalized;
+}
+
+async function prepareBuild(options) {
+  const filters = options.all
+    ? []
+    : options.targetPackages.flatMap((packageName) => ['--filter', `@sectile/${packageName}...`]);
+  const args = options.all
+    ? ['-r', '--workspace-concurrency=1', '--if-present', 'build']
+    : ['-r', '--workspace-concurrency=1', ...filters, '--if-present', 'build'];
+  await execFile('pnpm', args, { cwd: repoRoot, maxBuffer: 64 * 1024 * 1024 });
 }
 
 function requireValue(arguments_, index, option) {

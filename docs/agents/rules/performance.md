@@ -68,7 +68,10 @@ adversarial, and bundle evidence against the production implementation.
 
 Every changed hot operation adds its complexity contract, source proof,
 adversarial witness, deterministic work/resource counter, and production-bound
-validation code with the implementation. Execute and calibrate them at close.
-Baselines are review inputs, not values adjusted to the current result. Record
-the previous value, measured delta, contributors, consumer impact, and approved
-ceiling before replacing a baseline.
+validation code with the implementation. Timing evidence is conditional: require
+it for an explicit latency/throughput target, a registered performance-sensitive
+workload owner, or a representation/crossover decision that depends on measured
+cost. Repository-wide statistical certification is release/nightly evidence, not
+a default local correctness gate. Baselines are review inputs, not values adjusted
+to the current result. Record the previous value, measured delta, contributors,
+consumer impact, and approved ceiling before replacing a baseline.

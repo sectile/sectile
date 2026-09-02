@@ -39,6 +39,7 @@ export async function selectPerformanceBaseline({ current, explicitPath = null, 
 export async function promotePerformanceReport({ reportPath, directory }) {
   const report = await readReport(reportPath);
   validateRunnerReport(report);
+  assert.notEqual(report.runner.certification, false, 'targeted performance screenings cannot become authoritative baselines');
   assert.equal(report.runner.quick, false, 'quick performance reports cannot become authoritative baselines');
   const baselinePath = performanceBaselinePath(directory, report);
   const existing = await tryReadReport(baselinePath);

@@ -1,15 +1,25 @@
 import { performance } from 'node:perf_hooks';
 import { getHeapStatistics } from 'node:v8';
-import { DEFAULT_BATCH_COUNT, QUICK_BATCH_COUNT } from './config.mjs';
+import {
+  DEFAULT_BATCH_COUNT,
+  QUICK_BATCH_COUNT,
+  TARGET_BATCH_COUNT,
+} from './config.mjs';
 import { collectRetainedGarbage, collectTransientGarbage } from './gc-policy.mjs';
-import { createWorkloads } from './workloads.mjs';
+import { createWorkloads, performancePackageForFamily } from './workloads.mjs';
 
 const quick = process.env['SECTILE_PERFORMANCE_QUICK'] === '1';
-const batchCount = quick ? QUICK_BATCH_COUNT : DEFAULT_BATCH_COUNT;
+const screening = process.env['SECTILE_PERFORMANCE_SCREENING'] === '1';
+const targetPackages = new Set(
+  (process.env['SECTILE_PERFORMANCE_PACKAGES'] ?? '').split(',').filter(Boolean),
+);
+const batchCount = quick ? QUICK_BATCH_COUNT : screening ? TARGET_BATCH_COUNT : DEFAULT_BATCH_COUNT;
 const metrics = [];
 let sink = 0;
 
 for (const workload of createWorkloads({ quick })) {
+  const owner = performancePackageForFamily(workload.family);
+  if (targetPackages.size > 0 && owner !== null && !targetPackages.has(owner)) continue;
   const warmupStartedAt = performance.now();
   for (let iteration = 0; iteration < workload.warmupIterations; iteration += 1) {
     sink = consume(sink, workload.operation(iteration));
@@ -18,7 +28,7 @@ for (const workload of createWorkloads({ quick })) {
     1,
     ((performance.now() - warmupStartedAt) * 1_000_000) / workload.warmupIterations,
   );
-  const targetBatchNanoseconds = quick ? 2_000_000 : 20_000_000;
+  const targetBatchNanoseconds = quick ? 2_000_000 : screening ? 10_000_000 : 20_000_000;
   const measuredIterations = Math.max(
     workload.iterations,
     Math.min(1_000_000, Math.ceil(targetBatchNanoseconds / warmupNanosecondsPerOperation)),
