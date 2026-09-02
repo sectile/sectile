@@ -62,6 +62,9 @@ export function compareReports(baseline, current) {
   const runnerBand = certification
     ? Math.max(MINIMUM_REGRESSION_BAND, calibrationBand * 3)
     : Math.max(TARGET_REGRESSION_BAND, calibrationBand * 3);
+  const timingEvidence = evidenceRequested(current, 'timing');
+  const allocationEvidence = evidenceRequested(current, 'allocation');
+  const retentionEvidence = evidenceRequested(current, 'retention');
   const comparisons = [];
   const regressions = [];
   for (const id of Object.keys(current.metrics).sort()) {
@@ -69,21 +72,29 @@ export function compareReports(baseline, current) {
     const before = baseline.metrics[id];
     const after = current.metrics[id];
     const band = runnerBand;
-    const medianRatio = ratio(after.timing.median, before.timing.median);
-    const p95Ratio = ratio(after.timing.p95, before.timing.p95);
-    const timingFloorRatio = ratio(after.timing.minimum, before.timing.maximum);
-    const allocationRatio = before.heap.positivePeakDeltaMedian < 65_536
-      ? null
-      : ratio(after.heap.positivePeakDeltaMedian, before.heap.positivePeakDeltaMedian);
+    const medianRatio = timingEvidence && before.timing !== null && after.timing !== null
+      ? ratio(after.timing.median, before.timing.median)
+      : null;
+    const p95Ratio = medianRatio === null ? null : ratio(after.timing.p95, before.timing.p95);
+    const timingFloorRatio = medianRatio === null ? null : ratio(after.timing.minimum, before.timing.maximum);
+    const allocationRatio = allocationEvidence
+      && before.heap?.positivePeakDeltaMedian !== null
+      && after.heap?.positivePeakDeltaMedian !== null
+      && before.heap.positivePeakDeltaMedian >= 65_536
+      ? ratio(after.heap.positivePeakDeltaMedian, before.heap.positivePeakDeltaMedian)
+      : null;
     const allocationP95Ratio = allocationRatio === null
       ? null
       : ratio(after.heap.peakDelta.p95, before.heap.peakDelta.p95);
     const allocationFloorRatio = allocationRatio === null
       ? null
       : ratio(after.heap.peakDelta.minimum, before.heap.peakDelta.maximum);
-    const heapRatio = before.heap.positiveRetainedDeltaMedian < 65_536
-      ? null
-      : ratio(after.heap.positiveRetainedDeltaMedian, before.heap.positiveRetainedDeltaMedian);
+    const heapRatio = retentionEvidence
+      && before.heap?.positiveRetainedDeltaMedian !== null
+      && after.heap?.positiveRetainedDeltaMedian !== null
+      && before.heap.positiveRetainedDeltaMedian >= 65_536
+      ? ratio(after.heap.positiveRetainedDeltaMedian, before.heap.positiveRetainedDeltaMedian)
+      : null;
     const heapP95Ratio = heapRatio === null
       ? null
       : ratio(after.heap.retainedDelta.p95, before.heap.retainedDelta.p95);
@@ -108,9 +119,9 @@ export function compareReports(baseline, current) {
       band,
     });
     comparisons.push(comparison);
-    const timingRegression = certification
+    const timingRegression = medianRatio !== null && (certification
       ? medianRatio > 1 + band && p95Ratio > 1 + band && timingFloorRatio > 1 + band
-      : medianRatio > 1 + band && p95Ratio > 1 + band;
+      : medianRatio > 1 + band && p95Ratio > 1 + band);
     const allocationRegression = allocationRatio !== null
       && allocationRatio > 1 + allocationBand
       && allocationP95Ratio > 1 + allocationBand
@@ -156,6 +167,11 @@ function comparePackageFootprints(baseline, current, runnerBand) {
       band: runnerBand,
     });
   }));
+}
+
+function evidenceRequested(report, name) {
+  const evidence = report.runner.selection?.evidence ?? [];
+  return evidence.length === 0 || evidence.includes(name);
 }
 
 function ratio(current, baseline) {

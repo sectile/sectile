@@ -176,6 +176,7 @@ test('comparison requires isolated-process distributions to separate', () => {
 
 test('workload schema covers required scales, patch depth, density, domains, and browser counters', async () => {
   assert.deepEqual(WORKLOAD_SCHEMA.scales, [1_000, 10_000, 100_000]);
+  assert.deepEqual(WORKLOAD_SCHEMA.chartScales, [10_000, 100_000, 1_000_000]);
   assert.deepEqual(WORKLOAD_SCHEMA.patchDepths, [1, 8, 32, 64]);
   assert.deepEqual(WORKLOAD_SCHEMA.changedDensities, [1, 32, 'full']);
   assert.equal(WORKLOAD_SCHEMA.browserQualifiedRegistrations[0].portableTimingBudget, false);
@@ -191,13 +192,14 @@ test('workload schema covers required scales, patch depth, density, domains, and
 });
 
 test('timing workload families have explicit package owners', async () => {
-  assert.deepEqual(PERFORMANCE_TIMING_PACKAGES, ['core', 'tabular', 'virtual']);
+  assert.deepEqual(PERFORMANCE_TIMING_PACKAGES, ['core', 'chart', 'tabular', 'virtual']);
   assert.equal(performancePackageForFamily('core-runtime'), 'core');
+  assert.equal(performancePackageForFamily('chart-projection'), 'chart');
   assert.equal(performancePackageForFamily('tabular-resolution'), 'tabular');
   assert.equal(performancePackageForFamily('virtual-layout'), 'virtual');
   assert.equal(performancePackageForFamily('runner'), null);
   const coreWorkloads = await createWorkloads({ quick: true, packages: ['core'] });
-  assert.equal(coreWorkloads.some(({ family }) => family.startsWith('tabular-') || family === 'virtual-layout'), false);
+  assert.equal(coreWorkloads.some(({ family }) => family.startsWith('chart-') || family.startsWith('tabular-') || family === 'virtual-layout'), false);
   assert.equal(coreWorkloads.some(({ family }) => family.startsWith('core-')), true);
 });
 
@@ -218,6 +220,8 @@ test('every central workload has one selectable owner, type, domain, scale, and 
   assert.ok(selected.length > 1);
   assert.equal(selected.every(({ metadata }) => metadata.owner === 'runner'
     || (metadata.owner === 'core' && metadata.type === 'query' && metadata.domain === 'metric-index')), true);
+  const targeted = await createWorkloads({ quick: true, selection });
+  assert.deepEqual(targeted.map(({ id }) => id), selected.map(({ id }) => id));
 });
 
 test('quick performance runs are smoke checks rather than baseline comparisons', () => {

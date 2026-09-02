@@ -228,11 +228,17 @@ function aggregateMetrics(processReports) {
       assert.equal(aggregate.family, metric.family);
       assert.deepEqual(aggregate.metadata, metric.metadata);
       assert.deepEqual(aggregate.dimensions, metric.dimensions);
-      aggregate.processTimings.push(summarize(metric.samples).median);
-      aggregate.batchTimings.push(...metric.samples);
-      aggregate.heapPeakDeltas.push(metric.heap.peakDelta);
-      aggregate.heapRetainedDeltas.push(metric.heap.retainedDelta);
-      aggregate.operations += metric.iterationsPerBatch * metric.batchCount;
+      if (metric.samples !== null) {
+        aggregate.processTimings.push(summarize(metric.samples).median);
+        aggregate.batchTimings.push(...metric.samples);
+        aggregate.operations += metric.iterationsPerBatch * metric.batchCount;
+      }
+      if (metric.heap?.peakDelta !== null && metric.heap?.peakDelta !== undefined) {
+        aggregate.heapPeakDeltas.push(metric.heap.peakDelta);
+      }
+      if (metric.heap?.retainedDelta !== null && metric.heap?.retainedDelta !== undefined) {
+        aggregate.heapRetainedDeltas.push(metric.heap.retainedDelta);
+      }
       byID.set(metric.id, aggregate);
     }
   }
@@ -241,16 +247,20 @@ function aggregateMetrics(processReports) {
     metadata: value.metadata,
     dimensions: value.dimensions,
     unit: 'nanoseconds-per-operation',
-    timing: summarize(value.processTimings),
-    batchTiming: summarize(value.batchTimings),
+    timing: optionalSummary(value.processTimings),
+    batchTiming: optionalSummary(value.batchTimings),
     heap: Object.freeze({
-      peakDelta: summarize(value.heapPeakDeltas),
-      retainedDelta: summarize(value.heapRetainedDeltas),
-      positivePeakDeltaMedian: Math.max(0, summarize(value.heapPeakDeltas).median),
-      positiveRetainedDeltaMedian: Math.max(0, summarize(value.heapRetainedDeltas).median),
+      peakDelta: optionalSummary(value.heapPeakDeltas),
+      retainedDelta: optionalSummary(value.heapRetainedDeltas),
+      positivePeakDeltaMedian: value.heapPeakDeltas.length === 0 ? null : Math.max(0, summarize(value.heapPeakDeltas).median),
+      positiveRetainedDeltaMedian: value.heapRetainedDeltas.length === 0 ? null : Math.max(0, summarize(value.heapRetainedDeltas).median),
     }),
     operations: value.operations,
   })])));
+}
+
+function optionalSummary(values) {
+  return values.length === 0 ? null : summarize(values);
 }
 
 function parseArguments(arguments_) {

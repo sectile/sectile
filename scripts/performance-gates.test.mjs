@@ -15,12 +15,24 @@ test('performance policy separates default structural evidence from timing certi
 
 test('packages without registered timing workloads skip instead of running unrelated suites', () => {
   const result = spawnSync(process.execPath, [
-    'scripts/performance/run.mjs', 'check', 'chart',
+    'scripts/performance/run.mjs', 'check', 'form',
   ], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   const output = JSON.parse(result.stdout);
   assert.equal(output.status, 'skipped');
-  assert.deepEqual(output.targetPackages, ['chart']);
+  assert.deepEqual(output.targetPackages, ['form']);
+});
+
+test('Chart is a first-class targeted performance owner', () => {
+  const result = spawnSync(process.execPath, [
+    'scripts/performance/run.mjs', 'check', 'chart', '--type', 'projection', '--explain',
+  ], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  const output = JSON.parse(result.stdout);
+  assert.deepEqual(output.selection.owners, ['chart']);
+  assert.deepEqual(output.selection.types, ['projection']);
+  assert.deepEqual(output.selection.scales, ['representative']);
+  assert.deepEqual(output.selection.evidence, ['timing']);
 });
 
 test('work-item evidence requires a package target and output artifact', () => {
