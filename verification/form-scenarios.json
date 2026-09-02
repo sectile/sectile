@@ -6,8 +6,8 @@
       "description": "Standalone Sectile controls and host roots remain usable without the optional Form peer.",
       "evidence": [
         { "file": "packages/vue/tests/form.dom.test.mjs", "test": "Vue Form value-control inventory is an explicit integration ratchet" },
-        { "file": "verification/consumer-install/form.mjs", "contains": "const domBase = await fixture('dom-base'" },
-        { "file": "verification/consumer-install/form.mjs", "contains": "const vueBase = await fixture('vue-base'" }
+        { "file": "verification/consumer-install/form.mjs", "contains": "async function verifyDOMBaseConsumer()" },
+        { "file": "verification/consumer-install/form.mjs", "contains": "async function verifyVueBaseConsumer()" }
       ]
     },
     {
@@ -167,7 +167,7 @@
       "evidence": [
         { "file": "packages/vue/tests/form.test.mjs", "test": "Vue Form renders native semantics and stable compound part boundaries during SSR" },
         { "file": "packages/vue/tests/hydration.dom.test.mjs", "test": "[HYD-07] Form hydration registers one participant and preserves controlled ownership" },
-        { "file": "verification/consumer-install/form.mjs", "contains": "await missingPeer(vueBase, '@sectile/vue/form', '@sectile/form')" }
+        { "file": "verification/consumer-install/form.mjs", "contains": "await missingPeer(directory, '@sectile/vue/form', '@sectile/form')" }
       ]
     },
     {
