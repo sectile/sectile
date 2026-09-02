@@ -51,7 +51,11 @@ test('dependency closure prepares dependencies without verifying unrelated depen
 
 test('verification CLI separates affected, full deterministic, and release certification plans', () => {
   const chart = explain(['chart', '--exact']);
-  assert.deepEqual(chart.stages, ['prepare @sectile/core', 'verify @sectile/chart']);
+  assert.deepEqual(chart.stages, [
+    'prepare @sectile/core',
+    'verify @sectile/chart',
+    'reproducible package builds',
+  ]);
   assert.equal(chart.exact, true);
   assert.equal(chart.certificationPerformance, false);
   assert.equal(chart.failFast, true);

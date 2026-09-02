@@ -383,8 +383,7 @@
     "build:verification": "node scripts/build.mjs verification",
     "typecheck": "tsc --project tsconfig.json --pretty false",
     "test": "pnpm --silent run build:verification && node --test --test-concurrency=4 tests/*.test.mjs",
-    "verify:reproducible-build": "node scripts/check-reproducible-build.mjs",
-    "verify:reproducible-build:prepared": "node scripts/check-reproducible-build.mjs --prepared"
+    "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },
   "dependencies": {
     "@sectile/core": "workspace:^",

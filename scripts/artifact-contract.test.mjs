@@ -81,17 +81,11 @@ test('workspace verification reuses package build artifacts instead of repeating
   const core = await readJSON(join(root, 'packages', 'core', 'package.json'));
   assert.equal(core.scripts['check:verification:determinism'], 'node scripts/check-verification.mjs --determinism');
 
-  assert.match(source, /const reproducibleBuildScripts = Object\.freeze\(\['verify:reproducible-build:prepared'\]\)/u);
-  for (const directory of publishedPackageDirectories) {
-    const manifest = await readJSON(join(root, 'packages', directory, 'package.json'));
-    assert.equal(
-      manifest.scripts['verify:reproducible-build:prepared'],
-      'node scripts/check-reproducible-build.mjs --prepared',
-      `${manifest.name} does not expose prepared reproducibility verification`,
-    );
-    const verifier = await readFile(join(root, 'packages', directory, 'scripts', 'check-reproducible-build.mjs'), 'utf8');
-    assert.match(verifier, /verifyReproducibleBuild/u, `${manifest.name} does not use the shared verifier`);
-  }
+  assert.match(source, /reproducible package builds/u);
+  assert.match(source, /check-reproducible-builds\.mjs/u);
+  assert.match(source, /'--prepared'/u);
+  const reproducibility = await readFile(join(root, 'scripts', 'check-reproducible-builds.mjs'), 'utf8');
+  assert.match(reproducibility, /verifyReproducibleBuild/u);
 });
 
 test('host package tests build isolated verification artifacts', async () => {

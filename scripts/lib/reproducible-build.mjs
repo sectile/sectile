@@ -3,22 +3,21 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-export async function verifyReproducibleBuild(packageRoot, arguments_ = process.argv.slice(2)) {
-  const prepared = arguments_.includes('--prepared');
-  const unexpected = arguments_.filter((argument) => argument !== '--prepared');
-  assert.deepEqual(unexpected, [], `unexpected reproducible-build arguments: ${unexpected.join(', ')}`);
-
-  const root = packageRoot instanceof URL ? fileURLToPath(packageRoot) : resolve(packageRoot);
+export async function verifyReproducibleBuild(packageRoot, options = {}) {
+  const root = resolve(packageRoot);
   const output = join(root, 'dist');
-  const first = prepared
+  const first = options.prepared === true
     ? await fingerprint(output)
     : await buildAndFingerprint(root, output);
   const second = await buildAndFingerprint(root, output);
 
-  assert.equal(second, first, 'production build output is not reproducible');
-  console.log(JSON.stringify({ status: 'passed', fingerprint: first, prepared }, null, 2));
+  assert.equal(second, first, `${options.label ?? root}: production build output is not reproducible`);
+  return Object.freeze({
+    status: 'passed',
+    fingerprint: first,
+    prepared: options.prepared === true,
+  });
 }
 
 async function buildAndFingerprint(root, output) {

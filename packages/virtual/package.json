@@ -72,8 +72,7 @@
     "benchmark": "pnpm --silent run build && node benchmarks/virtualization.mjs",
     "check:laws": "node scripts/check-laws.mjs",
     "check:package": "node scripts/check-package.mjs",
-    "verify:reproducible-build": "node scripts/check-reproducible-build.mjs",
-    "verify:reproducible-build:prepared": "node scripts/check-reproducible-build.mjs --prepared"
+    "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },
   "dependencies": {
     "@sectile/core": "workspace:^"

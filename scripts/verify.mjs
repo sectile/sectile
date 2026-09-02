@@ -102,31 +102,25 @@ const targetLabel = fullRepositoryVerification || (compatibility && explicitTarg
       ? [...selectedPackages, ...(includeDocumentation ? ['@sectile/docs'] : [])].join(', ')
       : 'no affected targets';
 
-const reproducibleBuildScripts = Object.freeze(['verify:reproducible-build:prepared']);
 const packagePipelines = Object.freeze({
   '@sectile/core': [
     'test', 'build', 'check:contracts', 'check:public-api',
     'check:api-stability', 'check:semantic-api', 'check:laws', 'check:naming',
     'check:layout', 'check:module-dag', 'check:import-boundaries', 'check:dist-boundary',
     'check:subpaths', 'check:package', releaseRequested ? 'check:verification:determinism' : 'check:verification',
-    ...reproducibleBuildScripts,
   ],
-  '@sectile/chart': ['test', 'build', 'typecheck:public:prepared', 'check:laws', 'check:package', ...reproducibleBuildScripts],
+  '@sectile/chart': ['test', 'build', 'typecheck:public:prepared', 'check:laws', 'check:package'],
   '@sectile/form': [
-    'test', 'build', 'check:laws', 'check:package',
-    'check:public-api', ...reproducibleBuildScripts,
+    'test', 'build', 'check:laws', 'check:package', 'check:public-api',
   ],
-  '@sectile/temporal': ['test', 'build', 'check:laws', 'check:package', ...reproducibleBuildScripts],
-  '@sectile/virtual': ['test', 'build', 'check:laws', 'check:package', ...reproducibleBuildScripts],
-  '@sectile/tabular': [
-    'test', 'build', 'check:laws', 'check:package', 'check:implementation',
-    ...reproducibleBuildScripts,
-  ],
-  '@sectile/dom': ['test', 'build', ...reproducibleBuildScripts],
-  '@sectile/terminal': ['test', 'build', ...reproducibleBuildScripts],
+  '@sectile/temporal': ['test', 'build', 'check:laws', 'check:package'],
+  '@sectile/virtual': ['test', 'build', 'check:laws', 'check:package'],
+  '@sectile/tabular': ['test', 'build', 'check:laws', 'check:package', 'check:implementation'],
+  '@sectile/dom': ['test', 'build'],
+  '@sectile/terminal': ['test', 'build'],
   '@sectile/vue': [
     'test', 'typecheck:public:prepared', 'check:controlled-reconciliation',
-    'check:hydration-contract', 'build', ...reproducibleBuildScripts,
+    'check:hydration-contract', 'build',
   ],
 });
 
@@ -164,6 +158,8 @@ function verificationSteps() {
   if (selectedPackages.has('@sectile/tabular')) {
     result.push(packageScriptStep('Tabular raw Virtual witnesses', '@sectile/tabular', ['test:virtual:witnesses']));
   }
+  const reproducibleBuilds = reproducibleBuildStep();
+  if (reproducibleBuilds !== null) result.push(reproducibleBuilds);
   const publicationArtifacts = publicationArtifactStep();
   if (publicationArtifacts !== null) result.push(publicationArtifacts);
   if (selectedPackages.has('@sectile/form')) {
@@ -180,6 +176,18 @@ function verificationSteps() {
   if (fullRepositoryVerification) result.push(...workspaceContractSteps({ includePerformance: releaseRequested }));
   else result.push(...affectedWorkspaceContractSteps());
   return result;
+}
+
+function reproducibleBuildStep() {
+  const packageNames = graph.order
+    .filter(({ name }) => selectedPackages.has(name))
+    .map(({ directory }) => directory);
+  if (packageNames.length === 0) return null;
+  return commandStep('reproducible package builds', process.execPath, [
+    join(root, 'scripts', 'check-reproducible-builds.mjs'),
+    '--prepared',
+    ...packageNames,
+  ]);
 }
 
 function publicationArtifactStep() {
