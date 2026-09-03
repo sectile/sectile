@@ -18,6 +18,14 @@
       "replacement": { "package": "@sectile/dom", "subpath": "./virtual" }
     },
     {
+      "id": "WI-003:dom-virtual-surface-frame",
+      "change": "signature-changed",
+      "before": { "subpath": "./virtual" },
+      "symbols": ["VirtualizerOptions.root", "VirtualizerOptions.scrollport", "VirtualizerOptions.surface", "VirtualizerOptions.viewportInsets", "VirtualizerConnection.registerFrame", "VirtualizerConnection.setViewportInsets", "virtualContentStyle", "virtualSurfaceStyle"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./virtual" },
+      "removalReason": "Virtualizer connections now name the physical scrollport and surface separately, project layout viewports through the Virtual-owned surface frame, and apply plan size through virtualSurfaceStyle."
+    },
+    {
       "id": "WI-030:dom-grid-control-closure",
       "change": "signature-changed",
       "before": { "subpath": "./grid" },

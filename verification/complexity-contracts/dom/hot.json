@@ -668,6 +668,225 @@
           "rationale": "Autocomplete, history, and selectionless input types expose the resulting value but not a trustworthy changed range, so exact reconciliation may inspect the complete owned value."
         }
       }
+    },
+    {
+      "id": "virtual.disconnect",
+      "inherits": "lifecycle-v1",
+      "source": "packages/dom/src/virtual.ts",
+      "benchmarkIDs": [
+        "VAL-004:dom-virtual-disconnect-zero"
+      ],
+      "specificationCeiling": "O(nMounted + kPlacement + rFrame)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nMounted",
+            "meaning": "registered item elements",
+            "ceiling": "mounted item count"
+          },
+          {
+            "name": "kPlacement",
+            "meaning": "indexed placements in the current plan",
+            "ceiling": "owning Virtual plan output"
+          },
+          {
+            "name": "rFrame",
+            "meaning": "registered frame regions plus scrollport and surface",
+            "ceiling": "bounded host anatomy"
+          }
+        ],
+        "time": {
+          "bound": "O(nMounted + kPlacement + rFrame)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "-O(nMounted + kPlacement + rFrame)",
+          "listeners": "-1",
+          "observers": "-2",
+          "timers": "-O(1)",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "every registry and scheduled frame is connection-owned",
+          "disconnect is idempotent"
+        ],
+        "ceilings": [
+          "mounted item count",
+          "emitted placement count",
+          "bounded frame-region count"
+        ],
+        "benchmarkIDs": [
+          "VAL-004:dom-virtual-disconnect-zero"
+        ],
+        "deterministicWork": [
+          "one listener removal and two observer disconnects",
+          "all connection-owned registries become empty",
+          "a pending frame is cancelled and stale callbacks observe the inactive generation"
+        ],
+        "resourceRationale": "Disconnect visits and releases only resources retained by one virtualizer connection.",
+        "proof": "The connection removes its stable scroll handler, disconnects both observers, cancels one pending frame, and clears each owner-local frame, item, pending-entry, and placement registry exactly once.",
+        "adversarialWitness": "Disconnect during simultaneous frame and item invalidation, then invoke captured observer and animation-frame callbacks and verify zero publication or resource recreation.",
+        "evidence": [
+          "VAL-004",
+          "VAL-010"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Cleanup may visit only connection-owned registrations and placements."
+        }
+      }
+    },
+    {
+      "id": "virtual.frame",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/virtual.ts",
+      "benchmarkIDs": [
+        "VAL-004:dom-virtual-frame-transaction",
+        "VAL-010:dom-virtual-frame-work"
+      ],
+      "specificationCeiling": "O(rFrame + eChanged + kPlacement)",
+      "contract": {
+        "variables": [
+          {
+            "name": "rFrame",
+            "meaning": "geometry observer entries from the bounded host frame",
+            "ceiling": "registered frame regions plus scrollport and surface"
+          },
+          {
+            "name": "eChanged",
+            "meaning": "changed registered item observer entries",
+            "ceiling": "eChanged <= nMounted"
+          },
+          {
+            "name": "nMounted",
+            "meaning": "registered item elements",
+            "ceiling": "mounted item count"
+          },
+          {
+            "name": "kPlacement",
+            "meaning": "placements emitted and indexed by the owning layout query",
+            "ceiling": "owning Virtual plan output"
+          }
+        ],
+        "time": {
+          "bound": "O(rFrame + eChanged + kPlacement)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(eChanged + kPlacement)",
+          "output": "O(kPlacement)",
+          "retained": "O(nMounted + kPlacement + rFrame)"
+        },
+        "resources": {
+          "allocations": "O(eChanged + kPlacement)",
+          "cacheEntries": "O(nMounted + kPlacement + rFrame)",
+          "listeners": "1",
+          "observers": "2",
+          "timers": "O(1)",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "portable viewport and correction algebra is delegated to @sectile/virtual",
+          "the owning layout query and repair retain their registered package bounds"
+        ],
+        "ceilings": [
+          "bounded frame-region count",
+          "mounted item count",
+          "owning layout placement output"
+        ],
+        "benchmarkIDs": [
+          "VAL-004:dom-virtual-frame-transaction",
+          "VAL-010:dom-virtual-frame-work"
+        ],
+        "deterministicWork": [
+          "at most one scheduled animation frame per connection",
+          "one surface-frame read per geometry-invalidated transaction",
+          "one measurement batch, one physical scroll write, one final query, and one plan publication"
+        ],
+        "resourceRationale": "One connection retains two observers, one scroll listener, one pending frame, registered elements, changed entries, and the current placement index.",
+        "proof": "Geometry and item callbacks coalesce into one generation-guarded frame; the transaction resolves only changed entries, composes frame and layout deltas, performs at most one physical write, then indexes each emitted placement once.",
+        "adversarialWitness": "A header resize and every changed mounted item arrive before the same frame and still produce one write, query, state publication, and plan publication.",
+        "evidence": [
+          "VAL-004",
+          "VAL-010"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "The DOM layer may visit only bounded frame entries, changed mounted items, and emitted placements; it cannot scan the logical item domain."
+        }
+      }
+    },
+    {
+      "id": "virtual.scroll",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/virtual.ts",
+      "benchmarkIDs": [
+        "VAL-004:dom-virtual-scroll-frame-cache",
+        "VAL-010:dom-virtual-scroll-work"
+      ],
+      "specificationCeiling": "O(kPlacement)",
+      "contract": {
+        "variables": [
+          {
+            "name": "kPlacement",
+            "meaning": "placements emitted and indexed by the owning layout query",
+            "ceiling": "owning Virtual plan output"
+          }
+        ],
+        "time": {
+          "bound": "O(kPlacement)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(kPlacement)",
+          "output": "O(kPlacement)",
+          "retained": "O(kPlacement)"
+        },
+        "resources": {
+          "allocations": "O(kPlacement)",
+          "cacheEntries": "O(kPlacement)",
+          "listeners": "1",
+          "observers": "0 additional",
+          "timers": "O(1)",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the cached surface frame is current",
+          "the owning layout query retains its registered package bound"
+        ],
+        "ceilings": [
+          "owning layout placement output"
+        ],
+        "benchmarkIDs": [
+          "VAL-004:dom-virtual-scroll-frame-cache",
+          "VAL-010:dom-virtual-scroll-work"
+        ],
+        "deterministicWork": [
+          "zero getBoundingClientRect calls on ordinary scroll",
+          "one physical viewport read and one owning query",
+          "one placement-index insertion per emitted placement"
+        ],
+        "resourceRationale": "Ordinary scroll reuses the connection frame and replaces only the current emitted placement index.",
+        "proof": "The stable scroll listener marks the viewport dirty, one coalesced frame reads scalar scroll offsets, projects through the cached frame, delegates one query, and indexes each returned placement once.",
+        "adversarialWitness": "A maximum-output viewport scrolls without any geometry invalidation and performs zero element rectangle reads.",
+        "evidence": [
+          "VAL-004",
+          "VAL-010"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Ordinary scroll may process emitted placements only, never mounted elements or the full logical domain."
+        }
+      }
     }
   ]
 }

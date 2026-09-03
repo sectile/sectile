@@ -9,6 +9,7 @@ import {
   createPositionEngine,
   readPositionSourceRegistryDiagnostics,
 } from '../packages/dom/dist/internal/positioning/engine.js';
+import { createVirtualizer } from '../packages/dom/dist/virtual.js';
 import { createCheckbox as createTerminalCheckbox } from '../packages/terminal/dist/checkbox.js';
 
 if (typeof globalThis.gc !== 'function') throw new Error('Lifecycle retention requires --expose-gc.');
@@ -28,6 +29,35 @@ const measuredBatches = heapCheck ? batchCount - warmupBatches : 0;
 const baselineListeners = resources.activeListeners();
 const baselineRegistry = readPositionSourceRegistryDiagnostics();
 const samples = [];
+const virtualState = Object.freeze({ generation: 0 });
+const virtualStrategy = Object.freeze({
+  kind: 'lifecycle-virtual',
+  tryQuery: (state, { viewport }) => ({
+    ok: true,
+    value: Object.freeze({
+      generation: state.generation,
+      contentSize: Object.freeze({ width: 1, height: 1 }),
+      viewport,
+      renderBounds: Object.freeze({
+        x: Math.max(0, viewport.x),
+        y: Math.max(0, viewport.y),
+        width: viewport.width,
+        height: viewport.height,
+      }),
+      placements: Object.freeze([]),
+      anchor: null,
+    }),
+  }),
+  tryMeasure: (state) => ({
+    ok: true,
+    value: Object.freeze({ state, scrollDelta: Object.freeze({ x: 0, y: 0 }) }),
+  }),
+  tryMutate: (state) => ({
+    ok: true,
+    value: Object.freeze({ state, scrollDelta: Object.freeze({ x: 0, y: 0 }) }),
+  }),
+  tryScrollTarget: () => ({ ok: true, value: Object.freeze({ x: 0, y: 0 }) }),
+});
 
 for (let batch = 0; batch < batchCount; batch += 1) {
   runBatch(window, resources, baselineListeners, baselineRegistry, 1_000);
@@ -83,6 +113,29 @@ function runBatch(view, resources, baselineListeners, baselineRegistry, count) {
       unsubscribeField();
       form.destroy();
       assert.equal(form.setFieldMeta('field', { dirty: false }), false);
+    }
+
+    if (workload === 'all' || workload === 'virtual') {
+      const scrollport = document.createElement('div');
+      const surface = document.createElement('div');
+      const frame = document.createElement('div');
+      const item = document.createElement('div');
+      scrollport.append(frame, surface);
+      surface.append(item);
+      const virtualizer = createVirtualizer({
+        scrollport,
+        surface,
+        state: virtualState,
+        strategy: virtualStrategy,
+        measure: () => null,
+      });
+      const unregisterFrame = virtualizer.registerFrame(frame);
+      const unregisterItem = virtualizer.registerItem(item, 'item');
+      virtualizer.refresh();
+      virtualizer.disconnect();
+      virtualizer.disconnect();
+      unregisterFrame();
+      unregisterItem();
     }
 
     if (workload === 'all' || workload === 'position-resources') {
