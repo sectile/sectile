@@ -66,6 +66,32 @@ test('authoritative records can use the screening measurement profile', () => {
   assert.deepEqual(output.selection.evidence, ['timing']);
 });
 
+test('worker separates allocation and retention evidence lanes', () => {
+  const allocation = runWorker('allocation');
+  const allocationMetric = allocation.metrics.find(({ id }) => id === 'core:color-text:parse');
+  assert.notEqual(allocationMetric, undefined);
+  assert.equal(allocationMetric.samples, null);
+  assert.notEqual(allocationMetric.heap.allocation, null);
+  assert.equal(allocationMetric.heap.retention, null);
+  assert.equal(typeof allocationMetric.heap.peakDelta, 'number');
+  assert.equal(allocationMetric.heap.retainedDelta, null);
+
+  const retention = runWorker('retention');
+  const retentionMetric = retention.metrics.find(({ id }) => id === 'core:color-text:parse');
+  assert.notEqual(retentionMetric, undefined);
+  assert.equal(retentionMetric.samples, null);
+  assert.equal(retentionMetric.heap.allocation, null);
+  assert.notEqual(retentionMetric.heap.retention, null);
+  assert.equal(retentionMetric.heap.peakDelta, null);
+  assert.equal(typeof retentionMetric.heap.retainedDelta, 'number');
+
+  for (const report of [allocation, retention]) {
+    const calibration = report.metrics.find(({ id }) => id === 'runner:calibration');
+    assert.notEqual(calibration, undefined);
+    assert.notEqual(calibration.samples, null);
+  }
+});
+
 test('work-item evidence requires a package target and output artifact', () => {
   const result = spawnSync(process.execPath, [
     'scripts/performance/run.mjs', 'check', 'core', '--work-item', 'WI-013',
@@ -73,3 +99,21 @@ test('work-item evidence requires a package target and output artifact', () => {
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /requires --output/u);
 });
+
+function runWorker(evidence) {
+  const result = spawnSync(process.execPath, ['--expose-gc', 'scripts/performance/worker.mjs'], {
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      SECTILE_PERFORMANCE_QUICK: '1',
+      SECTILE_PERFORMANCE_PROFILE: 'screening',
+      SECTILE_PERFORMANCE_PACKAGES: 'core',
+      SECTILE_PERFORMANCE_TYPES: 'primitive',
+      SECTILE_PERFORMANCE_DOMAINS: 'color-text',
+      SECTILE_PERFORMANCE_SCALES: 'representative',
+      SECTILE_PERFORMANCE_EVIDENCE: evidence,
+    },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
+}

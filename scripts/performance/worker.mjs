@@ -27,88 +27,128 @@ const selection = normalizePerformanceSelection({
   evidence: splitEnvironmentList('SECTILE_PERFORMANCE_EVIDENCE'),
 });
 const batchCount = quick ? QUICK_BATCH_COUNT : screening ? TARGET_BATCH_COUNT : DEFAULT_BATCH_COUNT;
-const metrics = [];
+const metricsByID = new Map();
 let sink = 0;
 
-for await (const createGroup of createWorkloadGroups({ quick, selection })) {
-  await measureWorkloadGroup(createGroup);
+for (const lane of evidenceLanes()) {
+  for await (const createGroup of createWorkloadGroups({ quick, selection })) {
+    await measureWorkloadGroup(createGroup, lane);
+  }
 }
+const metrics = Object.freeze([...metricsByID.values()].map(finalizeMetric));
 
-async function measureWorkloadGroup(createGroup) {
+async function measureWorkloadGroup(createGroup, lane) {
   const workloads = await createGroup();
   for (const workload of workloads) {
     if (!performanceMetricSelected(workload.metadata, selection)) continue;
     const calibration = workload.metadata.owner === 'runner';
-    const timingRequested = calibration || evidenceRequested('timing');
-    const allocationRequested = !calibration && evidenceRequested('allocation');
-    const retentionRequested = !calibration && evidenceRequested('retention');
-    let measuredIterations = workload.iterations;
-    let samples = null;
+    if (calibration ? lane !== 'timing' : !evidenceRequested(lane)) continue;
+    const metric = metricResult(workload);
+    if (lane === 'timing') measureTiming(workload, metric);
+    else if (lane === 'allocation') measureAllocation(workload, metric);
+    else measureRetention(workload, metric);
+  }
+}
 
-    if (timingRequested) {
-      const warmupStartedAt = performance.now();
-      for (let iteration = 0; iteration < workload.warmupIterations; iteration += 1) {
-        sink = consume(sink, workload.operation(iteration));
-      }
-      const warmupNanosecondsPerOperation = Math.max(
-        1,
-        ((performance.now() - warmupStartedAt) * 1_000_000) / workload.warmupIterations,
-      );
-      const targetBatchNanoseconds = quick ? 2_000_000 : screening ? 10_000_000 : 20_000_000;
-      measuredIterations = Math.max(
-        workload.iterations,
-        Math.min(1_000_000, Math.ceil(targetBatchNanoseconds / warmupNanosecondsPerOperation)),
-      );
-      for (let warmupBatch = 0; warmupBatch < 3; warmupBatch += 1) {
-        for (let iteration = 0; iteration < measuredIterations; iteration += 1) {
-          sink = consume(sink, workload.operation(iteration + warmupBatch * measuredIterations));
-        }
-      }
-      collectTransientGarbage();
-      const timingSamples = [];
-      for (let batch = 0; batch < batchCount; batch += 1) {
-        const startedAt = performance.now();
-        for (let iteration = 0; iteration < measuredIterations; iteration += 1) {
-          sink = consume(sink, workload.operation(iteration));
-        }
-        timingSamples.push(((performance.now() - startedAt) * 1_000_000) / measuredIterations);
-      }
-      samples = Object.freeze(timingSamples);
+function measureTiming(workload, metric) {
+  const warmupStartedAt = performance.now();
+  for (let iteration = 0; iteration < workload.warmupIterations; iteration += 1) {
+    sink = consume(sink, workload.operation(iteration));
+  }
+  const warmupNanosecondsPerOperation = Math.max(
+    1,
+    ((performance.now() - warmupStartedAt) * 1_000_000) / workload.warmupIterations,
+  );
+  const targetBatchNanoseconds = quick ? 2_000_000 : screening ? 10_000_000 : 20_000_000;
+  const measuredIterations = Math.max(
+    workload.iterations,
+    Math.min(1_000_000, Math.ceil(targetBatchNanoseconds / warmupNanosecondsPerOperation)),
+  );
+  for (let warmupBatch = 0; warmupBatch < 3; warmupBatch += 1) {
+    for (let iteration = 0; iteration < measuredIterations; iteration += 1) {
+      sink = consume(sink, workload.operation(iteration + warmupBatch * measuredIterations));
     }
-
-    let heap = null;
-    if (allocationRequested || retentionRequested) {
-      collectTransientGarbage();
-      const before = getHeapStatistics().used_heap_size;
-      for (let iteration = 0; iteration < workload.iterations; iteration += 1) {
-        sink = consume(sink, workload.operation(iteration));
-      }
-      const afterMeasurement = getHeapStatistics().used_heap_size;
-      let afterGC = null;
-      if (retentionRequested) {
-        collectRetainedGarbage();
-        afterGC = getHeapStatistics().used_heap_size;
-      }
-      heap = Object.freeze({
-        before,
-        afterMeasurement,
-        afterGC,
-        peakDelta: allocationRequested ? Math.max(0, afterMeasurement - before) : null,
-        retainedDelta: retentionRequested ? afterGC - before : null,
-      });
+  }
+  collectTransientGarbage();
+  const samples = [];
+  for (let batch = 0; batch < batchCount; batch += 1) {
+    const startedAt = performance.now();
+    for (let iteration = 0; iteration < measuredIterations; iteration += 1) {
+      sink = consume(sink, workload.operation(iteration));
     }
+    samples.push(((performance.now() - startedAt) * 1_000_000) / measuredIterations);
+  }
+  metric.iterationsPerBatch = measuredIterations;
+  metric.batchCount = batchCount;
+  metric.samples = Object.freeze(samples);
+}
 
-    metrics.push(Object.freeze({
+function measureAllocation(workload, metric) {
+  collectTransientGarbage();
+  const before = getHeapStatistics().used_heap_size;
+  for (let iteration = 0; iteration < workload.iterations; iteration += 1) {
+    sink = consume(sink, workload.operation(iteration));
+  }
+  const afterMeasurement = getHeapStatistics().used_heap_size;
+  const heap = heapResult(metric);
+  heap.allocation = Object.freeze({ before, afterMeasurement });
+  heap.peakDelta = Math.max(0, afterMeasurement - before);
+}
+
+function measureRetention(workload, metric) {
+  collectTransientGarbage();
+  const before = getHeapStatistics().used_heap_size;
+  for (let iteration = 0; iteration < workload.iterations; iteration += 1) {
+    sink = consume(sink, workload.operation(iteration));
+  }
+  collectRetainedGarbage();
+  const afterGC = getHeapStatistics().used_heap_size;
+  const heap = heapResult(metric);
+  heap.retention = Object.freeze({ before, afterGC });
+  heap.retainedDelta = afterGC - before;
+}
+
+function metricResult(workload) {
+  let metric = metricsByID.get(workload.id);
+  if (metric === undefined) {
+    metric = {
       id: workload.id,
       family: workload.family,
       metadata: workload.metadata,
       dimensions: workload.dimensions,
-      iterationsPerBatch: timingRequested ? measuredIterations : 0,
-      batchCount: timingRequested ? batchCount : 0,
-      samples,
-      heap,
-    }));
+      iterationsPerBatch: 0,
+      batchCount: 0,
+      samples: null,
+      heap: null,
+    };
+    metricsByID.set(workload.id, metric);
   }
+  return metric;
+}
+
+function heapResult(metric) {
+  metric.heap ??= { allocation: null, retention: null, peakDelta: null, retainedDelta: null };
+  return metric.heap;
+}
+
+function finalizeMetric(metric) {
+  return Object.freeze({
+    ...metric,
+    heap: metric.heap === null ? null : Object.freeze({
+      allocation: metric.heap.allocation,
+      retention: metric.heap.retention,
+      peakDelta: metric.heap.peakDelta,
+      retainedDelta: metric.heap.retainedDelta,
+    }),
+  });
+}
+
+function evidenceLanes() {
+  return Object.freeze([
+    'timing',
+    ...(evidenceRequested('allocation') ? ['allocation'] : []),
+    ...(evidenceRequested('retention') ? ['retention'] : []),
+  ]);
 }
 
 if (!Number.isFinite(sink)) throw new Error('Performance sink became invalid.');
