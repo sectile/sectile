@@ -17,7 +17,7 @@ test('independent release plans are read-only and isolate compatible package pat
   const beforeStatus = git(root, ['status', '--short']);
   const beforeTags = git(root, ['tag', '--list']);
 
-  const patchPlan = runRelease(root, ['patch', '--dry-run']);
+  const patchPlan = runRelease(root, ['--dry-run']);
   assert.match(patchPlan, /@sectile\/form: 0\.14\.1 -> 0\.14\.2/u);
   assert.doesNotMatch(patchPlan, /@sectile\/dom:/u);
   assert.equal(git(root, ['status', '--short']), beforeStatus);
@@ -25,7 +25,7 @@ test('independent release plans are read-only and isolate compatible package pat
   assert.equal(packageVersion(root, 'form'), '0.14.1');
 
   const versionOnlyPlan = runRelease(root, [
-    'patch', '--package', '@sectile/chart', '--reason', 'repair package metadata', '--dry-run',
+    '--package', '@sectile/chart', '--reason', 'repair package metadata', '--dry-run',
   ]);
   assert.match(versionOnlyPlan, /@sectile\/chart: 0\.14\.1 -> 0\.14\.2/u);
 });
@@ -35,7 +35,7 @@ test('independent release plans propagate pre-1 minor dependency changes', (cont
   writeFileSync(join(root, 'packages', 'core', 'source.txt'), 'changed\n');
   git(root, ['add', '.']);
   git(root, ['commit', '-m', 'feat(core): revise package contract']);
-  const plan = runRelease(root, ['minor', '--dry-run']);
+  const plan = runRelease(root, ['--dry-run']);
   for (const directory of publishedPackageDirectories) {
     assert.match(plan, new RegExp(`@sectile/${directory}:`, 'u'), `${directory} was not propagated`);
   }
@@ -50,14 +50,15 @@ test('independent releases preserve commit-based bump recommendations', (context
     cwd: root,
     encoding: 'utf8',
   });
-  assert.equal(result.status, 1);
+  assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /recommended bump: minor \(feat\(form\): add validation mode\)/u);
-  assert.match(result.stderr, /release bump is required without an interactive terminal/u);
+  assert.match(result.stdout, /@sectile\/form: 0\.14\.1 -> 0\.15\.0/u);
+  assert.equal(result.stderr, '');
 });
 
 test('automatic release plans reject an empty package change set', (context) => {
   const root = releaseFixture(context);
-  const result = spawnSync(process.execPath, [join(root, 'scripts', 'release.mjs'), 'patch', '--dry-run'], {
+  const result = spawnSync(process.execPath, [join(root, 'scripts', 'release.mjs'), '--dry-run'], {
     cwd: root,
     encoding: 'utf8',
   });
