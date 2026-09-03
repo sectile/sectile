@@ -18,7 +18,12 @@ import {
   writePerformanceReport,
 } from './performance/session-log.mjs';
 import { median, percentile, relativeMAD, summarize } from './performance/statistics.mjs';
-import { PERFORMANCE_SCHEMA_VERSION } from './performance/config.mjs';
+import {
+  PERFORMANCE_GC_PROTOCOL_VERSION,
+  PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
+  PERFORMANCE_SCHEMA_VERSION,
+  PERFORMANCE_STATISTICS_PROTOCOL_VERSION,
+} from './performance/config.mjs';
 import {
   PERFORMANCE_TIMING_PACKAGES,
   WORKLOAD_SCHEMA,

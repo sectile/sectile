@@ -3,6 +3,11 @@ import { cpus, platform, arch, release } from 'node:os';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { relative, resolve, sep } from 'node:path';
 import { publishedPackageDirectories } from '../lib/published-packages.mjs';
+import {
+  PERFORMANCE_GC_PROTOCOL_VERSION,
+  PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
+  PERFORMANCE_STATISTICS_PROTOCOL_VERSION,
+} from './config.mjs';
 
 const BASE_FINGERPRINT_INPUTS = Object.freeze([
   'package.json',
@@ -30,6 +35,9 @@ export async function collectProvenance(repoRoot, workloadFingerprint, options =
     cpuCount: cpus().length,
     execArgv: Object.freeze([...process.execArgv].sort()),
     workloadFingerprint,
+    measurementProtocolVersion: PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
+    statisticsProtocolVersion: PERFORMANCE_STATISTICS_PROTOCOL_VERSION,
+    gcProtocolVersion: PERFORMANCE_GC_PROTOCOL_VERSION,
     buildFingerprint: await fingerprintPaths(repoRoot, fingerprintInputs),
     packageFootprint: await packageFootprint(repoRoot, packageNames),
   });
@@ -60,6 +68,9 @@ export function compatibilityMetadata(provenance) {
     cpuCount: provenance.cpuCount,
     execArgv: provenance.execArgv,
     workloadFingerprint: provenance.workloadFingerprint,
+    measurementProtocolVersion: provenance.measurementProtocolVersion,
+    statisticsProtocolVersion: provenance.statisticsProtocolVersion,
+    gcProtocolVersion: provenance.gcProtocolVersion,
   });
 }
 
