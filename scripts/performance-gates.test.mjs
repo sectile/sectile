@@ -30,6 +30,7 @@ test('Chart is a first-class targeted performance owner', () => {
   ], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   const output = JSON.parse(result.stdout);
+  assert.equal(output.measurementProfile, 'screening');
   assert.deepEqual(output.selection.owners, ['chart']);
   assert.deepEqual(output.selection.types, ['projection']);
   assert.deepEqual(output.selection.scales, ['representative']);
@@ -43,11 +44,26 @@ test('certification rigor is independent from selected workload scope', () => {
   assert.equal(result.status, 0, result.stderr);
   const output = JSON.parse(result.stdout);
   assert.equal(output.certification, true);
+  assert.equal(output.measurementProfile, 'certification');
   assert.equal(output.processCount, 10);
   assert.deepEqual(output.selection.owners, ['chart']);
   assert.deepEqual(output.selection.types, ['projection']);
   assert.deepEqual(output.selection.scales, []);
   assert.deepEqual(output.selection.evidence, []);
+});
+
+test('authoritative records can use the screening measurement profile', () => {
+  const result = spawnSync(process.execPath, [
+    'scripts/performance/run.mjs', 'record', 'chart', '--profile', 'screening', '--scale', 'representative', '--evidence', 'timing', '--explain',
+  ], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  const output = JSON.parse(result.stdout);
+  assert.equal(output.certification, true);
+  assert.equal(output.measurementProfile, 'screening');
+  assert.equal(output.processCount, 10);
+  assert.deepEqual(output.selection.owners, ['chart']);
+  assert.deepEqual(output.selection.scales, ['representative']);
+  assert.deepEqual(output.selection.evidence, ['timing']);
 });
 
 test('work-item evidence requires a package target and output artifact', () => {

@@ -12,6 +12,7 @@ import {
   DEFAULT_RUNS_PATH,
   MINIMUM_PROCESS_COUNT,
   MINIMUM_TARGET_PROCESS_COUNT,
+  PERFORMANCE_MEASUREMENT_PROFILES,
   PERFORMANCE_SCHEMA_VERSION,
   TARGET_PROCESS_COUNT,
 } from './config.mjs';
@@ -54,6 +55,7 @@ async function main() {
       mode: executionMode,
       requestedMode: options.mode,
       certification: executionMode !== 'smoke' && options.certification,
+      measurementProfile: options.measurementProfile,
       processCount: options.processCount,
       requestedPackages: options.requestedPackages,
       unsupportedPackages: options.unsupportedPackages,
@@ -92,7 +94,7 @@ async function main() {
           ...process.env,
           SECTILE_PERFORMANCE_PROCESS_INDEX: String(processIndex),
           SECTILE_PERFORMANCE_QUICK: options.quick ? '1' : '0',
-          SECTILE_PERFORMANCE_SCREENING: options.certification ? '0' : '1',
+          SECTILE_PERFORMANCE_PROFILE: options.measurementProfile,
           SECTILE_PERFORMANCE_PACKAGES: options.selection.owners.join(','),
           SECTILE_PERFORMANCE_TYPES: options.selection.types.join(','),
           SECTILE_PERFORMANCE_DOMAINS: options.selection.domains.join(','),
@@ -113,6 +115,7 @@ async function main() {
       createdAt: new Date().toISOString(),
       provenance: await collectProvenance(repoRoot, workloadFingerprint, {
         packageNames: options.all ? publishedPackageDirectories : options.selection.owners,
+        measurementProfile: options.measurementProfile,
       }),
       runner: Object.freeze({
         processCount: options.processCount,
@@ -123,6 +126,7 @@ async function main() {
         sink: processReports.reduce((total, entry) => (total + entry.sink) % 1_000_000_007, 0),
         quick: options.quick,
         certification: executionMode !== 'smoke' && options.certification,
+        measurementProfile: options.measurementProfile,
         targetPackages: options.selection.owners,
         selection: options.selection,
         selectionID: performanceSelectionID(options.selection),
@@ -279,6 +283,7 @@ function parseArguments(arguments_) {
   let processCount = null;
   let quick = false;
   let explain = false;
+  let measurementProfile = null;
   let workItem = null;
   const targetPackages = [];
   const types = [];
@@ -292,6 +297,7 @@ function parseArguments(arguments_) {
     else if (argument === '--prepared') prepared = true;
     else if (argument === '--quick') quick = true;
     else if (argument === '--explain') explain = true;
+    else if (argument === '--profile') measurementProfile = requireValue(arguments_, ++index, argument);
     else if (argument === '--type') types.push(requireValue(arguments_, ++index, argument));
     else if (argument === '--domain') domains.push(requireValue(arguments_, ++index, argument));
     else if (argument === '--scale') scales.push(requireValue(arguments_, ++index, argument));
@@ -312,6 +318,11 @@ function parseArguments(arguments_) {
   if (quick && baselinePath !== null) throw new Error('--quick smoke mode does not accept --baseline');
   if (quick && outputPath !== null) throw new Error('--quick smoke mode does not accept --output');
   if (quick && workItem !== null) throw new Error('--quick smoke mode does not accept --work-item');
+  measurementProfile ??= certification ? 'certification' : 'screening';
+  if (!PERFORMANCE_MEASUREMENT_PROFILES.includes(measurementProfile)) {
+    throw new Error(`unknown performance measurement profile ${measurementProfile}; expected ${PERFORMANCE_MEASUREMENT_PROFILES.join(', ')}`);
+  }
+  if (quick && measurementProfile !== 'screening') throw new Error('--quick smoke mode requires --profile screening');
   processCount ??= quick ? 1 : certification ? DEFAULT_PROCESS_COUNT : TARGET_PROCESS_COUNT;
   if (!Number.isSafeInteger(processCount) || processCount < 1) throw new Error('--processes must be a positive safe integer.');
   if (mode === 'record') assert.equal(outputPath, null, 'record writes its report to the performance session log');
@@ -348,6 +359,7 @@ function parseArguments(arguments_) {
     outputPath,
     processCount,
     quick,
+    measurementProfile,
     workItem,
   });
 }

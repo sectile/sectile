@@ -2,6 +2,7 @@ import { performance } from 'node:perf_hooks';
 import { getHeapStatistics } from 'node:v8';
 import {
   DEFAULT_BATCH_COUNT,
+  PERFORMANCE_MEASUREMENT_PROFILES,
   QUICK_BATCH_COUNT,
   TARGET_BATCH_COUNT,
 } from './config.mjs';
@@ -13,7 +14,11 @@ import {
 import { createWorkloads } from './workloads.mjs';
 
 const quick = process.env['SECTILE_PERFORMANCE_QUICK'] === '1';
-const screening = process.env['SECTILE_PERFORMANCE_SCREENING'] === '1';
+const measurementProfile = process.env['SECTILE_PERFORMANCE_PROFILE'] ?? 'screening';
+if (!PERFORMANCE_MEASUREMENT_PROFILES.includes(measurementProfile)) {
+  throw new Error(`unknown performance measurement profile: ${measurementProfile}`);
+}
+const screening = measurementProfile === 'screening';
 const selection = normalizePerformanceSelection({
   owners: splitEnvironmentList('SECTILE_PERFORMANCE_PACKAGES'),
   types: splitEnvironmentList('SECTILE_PERFORMANCE_TYPES'),

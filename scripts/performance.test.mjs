@@ -54,6 +54,7 @@ test('runner rejects calibration requiring a regression band above ten percent',
 test('comparison rejects workload, runtime, hardware, flag, and protocol mismatches', () => {
   for (const [field, value] of [
     ['cpuModel', 'different'],
+    ['measurementProfile', 'certification'],
     ['measurementProtocolVersion', PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION + 1],
     ['statisticsProtocolVersion', PERFORMANCE_STATISTICS_PROTOCOL_VERSION + 1],
     ['gcProtocolVersion', PERFORMANCE_GC_PROTOCOL_VERSION + 1],
@@ -395,6 +396,7 @@ function fixture() {
     provenance: {
       node: 'v1', v8: '1', platform: 'test', architecture: 'test', osRelease: '1',
       cpuModel: 'test', cpuCount: 1, execArgv: [], workloadFingerprint: 'schema',
+      measurementProfile: 'screening',
       measurementProtocolVersion: PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
       statisticsProtocolVersion: PERFORMANCE_STATISTICS_PROTOCOL_VERSION,
       gcProtocolVersion: PERFORMANCE_GC_PROTOCOL_VERSION,

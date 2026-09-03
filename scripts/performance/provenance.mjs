@@ -5,6 +5,7 @@ import { relative, resolve, sep } from 'node:path';
 import { publishedPackageDirectories } from '../lib/published-packages.mjs';
 import {
   PERFORMANCE_GC_PROTOCOL_VERSION,
+  PERFORMANCE_MEASUREMENT_PROFILES,
   PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
   PERFORMANCE_STATISTICS_PROTOCOL_VERSION,
 } from './config.mjs';
@@ -18,6 +19,10 @@ const BASE_FINGERPRINT_INPUTS = Object.freeze([
 export async function collectProvenance(repoRoot, workloadFingerprint, options = {}) {
   const cpu = cpus()[0];
   const packageNames = options.packageNames ?? publishedPackageDirectories;
+  const measurementProfile = options.measurementProfile;
+  if (!PERFORMANCE_MEASUREMENT_PROFILES.includes(measurementProfile)) {
+    throw new Error(`unknown performance measurement profile: ${measurementProfile}`);
+  }
   const fingerprintInputs = [
     ...BASE_FINGERPRINT_INPUTS,
     ...packageNames.flatMap((packageName) => [
@@ -35,6 +40,7 @@ export async function collectProvenance(repoRoot, workloadFingerprint, options =
     cpuCount: cpus().length,
     execArgv: Object.freeze([...process.execArgv].sort()),
     workloadFingerprint,
+    measurementProfile,
     measurementProtocolVersion: PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
     statisticsProtocolVersion: PERFORMANCE_STATISTICS_PROTOCOL_VERSION,
     gcProtocolVersion: PERFORMANCE_GC_PROTOCOL_VERSION,
@@ -68,6 +74,7 @@ export function compatibilityMetadata(provenance) {
     cpuCount: provenance.cpuCount,
     execArgv: provenance.execArgv,
     workloadFingerprint: provenance.workloadFingerprint,
+    measurementProfile: provenance.measurementProfile,
     measurementProtocolVersion: provenance.measurementProtocolVersion,
     statisticsProtocolVersion: provenance.statisticsProtocolVersion,
     gcProtocolVersion: provenance.gcProtocolVersion,

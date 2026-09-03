@@ -5,8 +5,9 @@ Each workload is classified by five independent selector axes: owner, type,
 domain, scale, and evidence. The same catalog can therefore answer a narrow
 question without constructing or executing unrelated fixtures.
 
-Targeted screening is the ordinary developer tool. It uses three sequential
-isolated Node processes and a coarse 20% regression band. With no explicit
+Targeted screening is the ordinary developer tool. It uses the `screening`
+measurement profile, three sequential isolated Node processes, three measured
+batches, a 10 ms target batch, and a coarse 20% regression band. With no explicit
 selector it runs representative-scale timing for the requested owner; selectors
 narrow it further.
 
@@ -27,9 +28,10 @@ Packages without registered central workloads are reported as skipped. The
 runner never substitutes another package's workloads. Chart is a first-class
 owner alongside Core, Tabular, and Virtual.
 
-Certification controls statistical rigor, not workload scope. It uses at least
-ten sequential isolated Node processes. With no selectors it certifies the full
-catalog; the same rigor can be applied to one shard.
+Certification controls statistical rigor, not workload scope. It uses the
+`certification` measurement profile, at least ten sequential isolated Node
+processes, five measured batches, and a 20 ms target batch. With no selectors it
+certifies the full catalog; the same rigor can be applied to one shard.
 
 ```sh
 pnpm performance:certify
@@ -37,6 +39,7 @@ pnpm performance:certify -- chart --type projection
 pnpm performance:certify -- core --type query --domain metric-index --scale scaling
 pnpm performance:record
 pnpm performance:record -- chart --type projection
+pnpm performance:record -- chart --profile screening --scale representative --evidence timing
 pnpm performance:promote -- .tasks/performance/runs/<run-id>/report.json
 ```
 
@@ -56,13 +59,16 @@ regressions retain their reports and terminal status.
 
 `record` accepts a non-quick certification run and writes it under an exact
 environment partition plus its workload-selection ID. The environment partition
-includes Node/V8/OS/CPU/flags, the workload fingerprint, and explicit measurement,
-statistics, and GC protocol versions. Changing benchmark semantics therefore
-selects a new baseline partition even when the runtime and hardware are unchanged.
-A selected baseline can coexist with the full baseline for the same compatible
-measurement environment. `performance:promote` accepts certification reports,
-including selected certification shards; three-process screenings and quick runs
-cannot become authoritative baselines.
+includes Node/V8/OS/CPU/flags, the workload fingerprint, the measurement profile,
+and explicit measurement, statistics, and GC protocol versions. Changing benchmark
+semantics or switching between `screening` and `certification` therefore selects a
+new baseline partition even when the runtime and hardware are unchanged. A selected
+baseline can coexist with the full baseline for the same compatible measurement
+environment. `performance:promote` accepts certification reports, including selected
+certification shards; three-process screenings and quick runs cannot become
+authoritative baselines. A screening-profile baseline is authoritative when it is
+recorded with ten isolated processes; ordinary three-process screening can then
+compare against it without changing the measurement profile.
 
 Without an explicit `--baseline`, comparison first looks for the exact selected
 baseline. If a selected baseline has not been recorded, it may compare the
