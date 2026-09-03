@@ -5,7 +5,6 @@ import { basename, dirname, join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import {
-  assertIndependentReleaseArguments,
   bumpVersion,
   classifyReleaseBranch,
   filterPackageCommits,
@@ -13,12 +12,11 @@ import {
   formatReleaseNotes,
   parseGitLog,
   parseReleaseArguments,
-  parseReleaseBumpChoice,
+  parseReleaseConfirmation,
   parseStableVersion,
   prependChangelog,
   prependChangelogChanges,
   recommendBump,
-  releaseBumpChoices,
   selectReleaseTrack,
 } from './lib/release.mjs';
 import {
@@ -178,50 +176,33 @@ function packageCommits(root, entry, baseTag) {
   return output === '' ? [] : parseGitLog(output);
 }
 
-async function inspectIndependentRelease(root, options, releaseTag = createReleaseSetTag()) {
+async function inspectIndependentRelease(root, releaseTag = createReleaseSetTag()) {
   assertIndependentBaseline(root);
   const packages = await independentReleaseEntries(root);
   const byName = new Map(packages.map((entry) => [entry.name, entry]));
-  const detected = new Map();
-  let requestedNames = options.packageNames;
-  if (requestedNames.length === 0) {
-    for (const entry of packages) {
-      const baseTag = packageBaseTag(root, entry);
-      const commits = packageCommits(root, entry, baseTag);
-      detected.set(entry.name, Object.freeze({ baseTag, commits }));
-    }
-    requestedNames = packages
-      .filter(({ name }) => detected.get(name).commits.length > 0)
-      .map(({ name }) => name);
-    assert.ok(requestedNames.length > 0, 'no changed packages since their latest release tags');
-  }
-  const directChanges = requestedNames.map((name) => {
-    const source = byName.get(name);
-    assert.notEqual(source, undefined, `unknown release package: ${name}`);
-    const details = detected.get(name);
-    const baseTag = details?.baseTag ?? packageBaseTag(root, source);
-    const commits = details?.commits ?? packageCommits(root, source, baseTag);
-    if (commits.length === 0) {
-      assert.notEqual(options.reason, undefined,
-        `${name} has no package commits since ${baseTag}; supply --reason for a version-only repair`);
-    }
-    return Object.freeze({
+  const directChanges = [];
+  for (const source of packages) {
+    const baseTag = packageBaseTag(root, source);
+    const commits = packageCommits(root, source, baseTag);
+    if (commits.length === 0) continue;
+    directChanges.push(Object.freeze({
       baseTag,
       commits,
-      name,
+      name: source.name,
       recommendation: Object.freeze(recommendBump(commits)),
       source,
-    });
-  });
+    }));
+  }
+  assert.ok(directChanges.length > 0, 'no changed packages since their latest release tags');
   return Object.freeze({ byName, directChanges: Object.freeze(directChanges), packages, releaseTag });
 }
 
-function createIndependentPlan(context, bumps, reason) {
+function createIndependentPlan(context) {
   const planned = planIndependentVersions(
     context.packages,
     context.directChanges.map(({ name, recommendation }) => Object.freeze({
       name,
-      bump: bumps.get(name) ?? recommendation.bump,
+      bump: recommendation.bump,
     })),
   );
   const detailed = planned.map((entry) => {
@@ -233,7 +214,7 @@ function createIndependentPlan(context, bumps, reason) {
   });
   return Object.freeze({
     entries: Object.freeze(detailed),
-    manifest: createReleaseManifest(context.releaseTag, detailed, reason),
+    manifest: createReleaseManifest(context.releaseTag, detailed, undefined),
     releaseTag: context.releaseTag,
   });
 }
@@ -255,14 +236,14 @@ function renderIndependentPlan(plan) {
   ].join('\n');
 }
 
-function updateIndependentPackages(root, plan, reason) {
+function updateIndependentPackages(root, plan) {
   for (const entry of plan.entries) {
     const manifest = JSON.parse(readFileSync(entry.source.manifestPath, 'utf8'));
     manifest.version = entry.version;
     writeFileSync(entry.source.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
     const commitChanges = entry.commits.map(({ shortHash, subject }) => `${subject} (${shortHash})`);
     const changes = entry.direct
-      ? [...(reason === undefined ? [] : [reason]), ...commitChanges]
+      ? commitChanges
       : [`Update compatibility for ${entry.dependencies.join(', ')}.`];
     writeFileSync(entry.source.changelogPath, prependChangelogChanges(
       readFileSync(entry.source.changelogPath, 'utf8'),
@@ -274,8 +255,27 @@ function updateIndependentPackages(root, plan, reason) {
   writeFileSync(join(root, releaseManifestFile), `${JSON.stringify(plan.manifest, null, 2)}\n`);
 }
 
-async function prepareIndependentRelease(root, options, installDependencies) {
-  assertIndependentReleaseArguments(options);
+async function confirmReleasePlan() {
+  assert.equal(
+    process.stdin.isTTY && process.stdout.isTTY,
+    true,
+    'release confirmation requires an interactive terminal; inspect the plan with pnpm release:plan',
+  );
+  const prompt = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    while (true) {
+      try {
+        return parseReleaseConfirmation(await prompt.question('\ncontinue with this release plan? [y/N]: '));
+      } catch (error) {
+        console.error(error.message);
+      }
+    }
+  } finally {
+    prompt.close();
+  }
+}
+
+async function prepareIndependentRelease(root, installDependencies) {
   const repository = githubRepository(run(root, 'git', ['remote', 'get-url', 'origin'], { capture: true }));
   run(root, 'git', ['fetch', 'origin', 'main', '--tags']);
   const sourceHead = run(root, 'git', ['rev-parse', 'HEAD'], { capture: true });
@@ -283,15 +283,15 @@ async function prepareIndependentRelease(root, options, installDependencies) {
   const branchState = classifyReleaseBranch(sourceHead, remoteHead, isAncestor(root, 'origin/main', 'HEAD'));
   assert.notEqual(branchState, 'blocked', 'local main must contain origin/main; fetch and reconcile remote changes before release');
 
-  const context = await inspectIndependentRelease(root, options);
+  const context = await inspectIndependentRelease(root);
   console.log(renderIndependentRecommendations(context));
-  const recommendedPlan = createIndependentPlan(context, new Map(), options.reason);
-  console.log(`\nrecommended release plan:\n${renderIndependentPlan(recommendedPlan)}`);
-  const selectedBumps = await selectIndependentReleaseBumps(context.directChanges, options.packageBumps);
-  const plan = createIndependentPlan(context, selectedBumps, options.reason);
-  if (context.directChanges.some(({ name, recommendation }) => selectedBumps.get(name) !== recommendation.bump)) {
-    console.log(`\nselected release plan:\n${renderIndependentPlan(plan)}`);
+  const plan = createIndependentPlan(context);
+  console.log(`\nrecommended release plan:\n${renderIndependentPlan(plan)}`);
+  if (!await confirmReleasePlan()) {
+    console.log('\nrelease cancelled');
+    return undefined;
   }
+
   const tags = [plan.releaseTag, ...plan.manifest.packages.map(({ tag }) => tag)];
   for (const tag of tags) {
     assert.equal(run(root, 'git', ['tag', '--list', tag], { capture: true }), '', `${tag} already exists locally`);
@@ -299,7 +299,7 @@ async function prepareIndependentRelease(root, options, installDependencies) {
       `${tag} already exists on origin`);
   }
 
-  updateIndependentPackages(root, plan, options.reason);
+  updateIndependentPackages(root, plan);
   run(root, 'pnpm', ['install', '--lockfile-only']);
   if (installDependencies) run(root, 'pnpm', ['install', '--frozen-lockfile']);
   run(root, 'pnpm', ['release:check', plan.releaseTag]);
@@ -324,55 +324,7 @@ async function prepareIndependentRelease(root, options, installDependencies) {
   });
 }
 
-async function selectReleaseBump(version, recommendation, requestedBump) {
-  if (requestedBump !== undefined) return requestedBump;
-  assert.equal(
-    process.stdin.isTTY && process.stdout.isTTY,
-    true,
-    'release bump is required without an interactive terminal: pnpm release patch|minor|major',
-  );
-
-  console.log('\nversion bump:');
-  for (const choice of releaseBumpChoices(version, recommendation.bump)) {
-    console.log(`  ${choice.index}) ${choice.bump.padEnd(5)}${choice.version === undefined ? '' : ` v${choice.version}`}${choice.recommended ? '  recommended' : ''}`);
-  }
-
-  const prompt = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    while (true) {
-      const answer = await prompt.question(`select bump [${recommendation.bump}]: `);
-      try {
-        return parseReleaseBumpChoice(answer, recommendation.bump);
-      } catch (error) {
-        console.error(error.message);
-      }
-    }
-  } finally {
-    prompt.close();
-  }
-}
-
-async function selectIndependentReleaseBumps(directChanges, packageBumps) {
-  const missing = directChanges.filter(({ name }) => packageBumps[name] === undefined);
-  if (missing.length > 0) {
-    assert.equal(
-      process.stdin.isTTY && process.stdout.isTTY,
-      true,
-      `release bump selection requires an interactive terminal; specify each direct package explicitly, for example --package ${missing[0].name} --bump ${missing[0].recommendation.bump}`,
-    );
-  }
-  const selected = new Map();
-  for (const entry of directChanges) {
-    const requested = packageBumps[entry.name];
-    if (requested === undefined) console.log(`\n${entry.name} (${entry.baseTag})`);
-    const bump = await selectReleaseBump(entry.source.manifest.version, entry.recommendation, requested);
-    selected.set(entry.name, bump);
-    console.log(`${requested === undefined ? 'selected' : 'requested'} bump for ${entry.name}: ${bump}`);
-  }
-  return selected;
-}
-
-async function prepareRelease(root, requestedBump, installDependencies) {
+async function prepareRelease(root, installDependencies) {
   const packages = releasePackages(root);
   const repository = githubRepository(run(root, 'git', ['remote', 'get-url', 'origin'], { capture: true }));
   for (const { manifestPath } of packages) {
@@ -401,15 +353,17 @@ async function prepareRelease(root, requestedBump, installDependencies) {
   }
 
   const recommendation = recommendBump(commits);
+  const version = bumpVersion(previousVersion, recommendation.bump);
+  const tag = `v${version}`;
   console.log(`release base: ${baseTag}`);
   console.log(`release branch: ${branchState}`);
   console.log(`commits:\n${formatCommitList(commits)}`);
   console.log(`recommended bump: ${recommendation.bump} (${recommendation.reason})`);
-  const releaseBump = await selectReleaseBump(previousVersion, recommendation, requestedBump);
-  const version = bumpVersion(previousVersion, releaseBump);
-  const tag = `v${version}`;
-  console.log(`${requestedBump === undefined ? 'selected' : 'requested'} bump: ${releaseBump}`);
-  console.log(`release tag: ${tag}`);
+  console.log(`\nrecommended release plan:\nrelease tag: ${tag}`);
+  if (!await confirmReleasePlan()) {
+    console.log('\nrelease cancelled');
+    return undefined;
+  }
 
   assert.equal(run(root, 'git', ['tag', '--list', tag], { capture: true }), '', `${tag} already exists locally`);
   assert.equal(run(root, 'git', ['ls-remote', '--tags', 'origin', `refs/tags/${tag}`], { capture: true }), '', `${tag} already exists on origin`);
@@ -437,18 +391,7 @@ function publishRelease(root, release) {
   console.log(`released ${release.tag} from ${release.repository}; dispatched npm publication through GitHub Actions OIDC`);
 }
 
-function independentArguments(options) {
-  return [
-    ...(options.requestedBump === undefined ? [] : [options.requestedBump]),
-    ...options.packageNames.flatMap((name) => [
-      '--package', name,
-      ...(options.packageBumps[name] === undefined ? [] : ['--bump', options.packageBumps[name]]),
-    ]),
-    ...(options.reason === undefined ? [] : ['--reason', options.reason]),
-  ];
-}
-
-function prepareIsolatedRelease(worktree, options) {
+function prepareIsolatedRelease(worktree) {
   const workerScript = join(worktree.worktreeRoot, 'scripts', 'release.mjs');
   assert.equal(
     readFileSync(workerScript, 'utf8').includes(isolatedResultEnvironment),
@@ -458,7 +401,7 @@ function prepareIsolatedRelease(worktree, options) {
   const resultPath = join(worktree.temporaryRoot, 'result.json');
   const result = spawnSync(
     process.execPath,
-    [workerScript, ...independentArguments(options)],
+    [workerScript],
     {
       cwd: worktree.worktreeRoot,
       env: { ...process.env, [isolatedResultEnvironment]: resultPath },
@@ -470,12 +413,12 @@ function prepareIsolatedRelease(worktree, options) {
   return JSON.parse(readFileSync(resultPath, 'utf8'));
 }
 
-async function releaseFromDirtyWorkspace(options) {
+async function releaseFromDirtyWorkspace() {
   const sourceHead = run(workspaceRoot, 'git', ['rev-parse', 'HEAD'], { capture: true });
   const worktree = createReleaseWorktree(workspaceRoot, sourceHead);
   try {
     console.log(`verifying committed ${sourceHead.slice(0, 12)} in isolated worktree ${worktree.worktreeRoot}`);
-    const release = prepareIsolatedRelease(worktree, options);
+    const release = prepareIsolatedRelease(worktree);
     if (release === null) return;
 
     assert.equal(
@@ -536,44 +479,41 @@ async function releaseFromDirtyWorkspace(options) {
 }
 
 async function main() {
-  const options = parseReleaseArguments(process.argv.slice(2));
-  const { allowDirty, dryRun, packageNames, requestedBump } = options;
+  const { allowDirty, dryRun } = parseReleaseArguments(process.argv.slice(2));
   const isolatedResultPath = process.env[isolatedResultEnvironment];
   if (isolatedResultPath !== undefined) {
     delete process.env[isolatedResultEnvironment];
     assert.equal(releaseWorktreeStatus(workspaceRoot), '', 'isolated release worktree must start clean');
-    const track = selectReleaseTrack(packageNames, dryRun, independentReleaseActive(workspaceRoot));
+    const track = selectReleaseTrack(dryRun, independentReleaseActive(workspaceRoot));
     const release = track === 'independent'
-      ? await prepareIndependentRelease(workspaceRoot, options, true)
-      : await prepareRelease(workspaceRoot, requestedBump, true);
+      ? await prepareIndependentRelease(workspaceRoot, true)
+      : await prepareRelease(workspaceRoot, true);
     writeFileSync(isolatedResultPath, `${JSON.stringify(release ?? null)}\n`);
     return;
   }
 
   assert.equal(run(workspaceRoot, 'git', ['branch', '--show-current'], { capture: true }), 'main', 'release must run from main');
-  const track = selectReleaseTrack(packageNames, dryRun, independentReleaseActive(workspaceRoot));
-  if (track === 'independent') assertIndependentReleaseArguments(options);
+  const track = selectReleaseTrack(dryRun, independentReleaseActive(workspaceRoot));
   if (dryRun) {
-    const context = await inspectIndependentRelease(workspaceRoot, options);
+    const context = await inspectIndependentRelease(workspaceRoot);
     console.log(renderIndependentRecommendations(context));
-    const plan = createIndependentPlan(context, new Map(), options.reason);
+    const plan = createIndependentPlan(context);
     console.log(`\n${renderIndependentPlan(plan)}`);
     return;
   }
   const dirtyStatus = releaseWorktreeStatus(workspaceRoot);
   if (dirtyStatus !== '' && !allowDirty) {
-    const retry = `pnpm release ${[...independentArguments(options), '--allow-dirty'].join(' ')}`;
-    throw new Error(`worktree has uncommitted changes:\n${dirtyStatus}\n\nVerify committed HEAD in isolation with:\n  ${retry}`);
+    throw new Error(`worktree has uncommitted changes:\n${dirtyStatus}\n\nVerify committed HEAD in isolation with:\n  pnpm release --allow-dirty`);
   }
 
   if (dirtyStatus !== '') {
-    await releaseFromDirtyWorkspace(options);
+    await releaseFromDirtyWorkspace();
     return;
   }
 
   const release = track === 'independent'
-    ? await prepareIndependentRelease(workspaceRoot, options, false)
-    : await prepareRelease(workspaceRoot, requestedBump, false);
+    ? await prepareIndependentRelease(workspaceRoot, false)
+    : await prepareRelease(workspaceRoot, false);
   if (release !== undefined) publishRelease(workspaceRoot, release);
 }
 

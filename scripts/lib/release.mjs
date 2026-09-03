@@ -9,14 +9,7 @@ export const releaseBumps = Object.freeze(['patch', 'minor', 'major']);
 export function parseReleaseArguments(args) {
   let allowDirty = false;
   let dryRun = false;
-  let reason;
-  let requestedBump;
-  const packageNames = [];
-  const packageBumps = new Map();
-  let currentPackage;
-  const filtered = args.filter((candidate) => candidate !== '--');
-  for (let index = 0; index < filtered.length; index += 1) {
-    const argument = filtered[index];
+  for (const argument of args.filter((candidate) => candidate !== '--')) {
     if (argument === '--allow-dirty') {
       allowDirty = true;
       continue;
@@ -25,58 +18,22 @@ export function parseReleaseArguments(args) {
       dryRun = true;
       continue;
     }
-    if (argument === '--package' || argument.startsWith('--package=')) {
-      const name = argument === '--package' ? filtered[++index] : argument.slice('--package='.length);
-      assert.ok(typeof name === 'string' && name !== '', '--package requires a package name');
-      packageNames.push(name);
-      currentPackage = name;
-      continue;
-    }
-    if (argument === '--bump' || argument.startsWith('--bump=')) {
-      assert.notEqual(currentPackage, undefined, '--bump requires a preceding --package');
-      assert.equal(packageBumps.has(currentPackage), false, `${currentPackage} release bump may be specified once`);
-      const bump = argument === '--bump' ? filtered[++index] : argument.slice('--bump='.length);
-      assert.equal(releaseBumps.includes(bump), true, '--bump requires patch, minor, or major');
-      packageBumps.set(currentPackage, bump);
-      continue;
-    }
-    if (argument === '--reason' || argument.startsWith('--reason=')) {
-      assert.equal(reason, undefined, 'release reason may be specified once');
-      reason = argument === '--reason' ? filtered[++index] : argument.slice('--reason='.length);
-      assert.ok(typeof reason === 'string' && reason.trim() !== '', '--reason requires text');
-      reason = reason.trim();
-      continue;
-    }
-    assert.equal(releaseBumps.includes(argument), true, `unexpected release argument: ${argument}`);
-    assert.equal(requestedBump, undefined, `multiple release bumps: ${requestedBump}, ${argument}`);
-    requestedBump = argument;
+    throw new Error(`unexpected release argument: ${argument}; pnpm release does not accept bump or package overrides`);
   }
-  assert.equal(new Set(packageNames).size, packageNames.length, 'release packages must be unique');
-  assert.equal(reason !== undefined && packageNames.length === 0, false, '--reason requires --package');
-  return Object.freeze({
-    allowDirty,
-    dryRun,
-    packageBumps: Object.freeze(Object.fromEntries(packageBumps)),
-    packageNames: Object.freeze(packageNames),
-    reason,
-    requestedBump,
-  });
+  return Object.freeze({ allowDirty, dryRun });
 }
 
-export function assertIndependentReleaseArguments(options) {
-  if (options.requestedBump !== undefined) {
-    throw new Error('independent releases do not accept a global bump; use --package <name> --bump patch|minor|major');
-  }
-  if (options.dryRun && Object.keys(options.packageBumps).length > 0) {
-    throw new Error('release:plan always uses package recommendations and does not accept --bump');
-  }
+export function parseReleaseConfirmation(input) {
+  const answer = input.trim().toLowerCase();
+  if (answer === 'y' || answer === 'yes') return true;
+  if (answer === '' || answer === 'n' || answer === 'no') return false;
+  throw new Error('answer y or n');
 }
 
-export function selectReleaseTrack(packageNames, dryRun, independentBaseline) {
-  assert.ok(Array.isArray(packageNames), 'release package names must be an array');
+export function selectReleaseTrack(dryRun, independentBaseline) {
   assert.equal(typeof dryRun, 'boolean', 'release dry-run marker must be boolean');
   assert.equal(typeof independentBaseline, 'boolean', 'independent release baseline marker must be boolean');
-  return dryRun || packageNames.length > 0 || independentBaseline ? 'independent' : 'synchronized';
+  return dryRun || independentBaseline ? 'independent' : 'synchronized';
 }
 
 export function parseStableVersion(version) {
@@ -106,28 +63,6 @@ export function bumpVersion(version, bump) {
   if (bump === 'minor') return `${major}.${minor + 1}.0`;
   assert.equal(bump, 'patch', `invalid release bump: ${bump}`);
   return `${major}.${minor}.${patch + 1}`;
-}
-
-export function releaseBumpChoices(version, recommendedBump) {
-  assert.equal(releaseBumps.includes(recommendedBump), true, `invalid recommended release bump: ${recommendedBump}`);
-  return releaseBumps.map((bump, index) => Object.freeze({
-    bump,
-    index: index + 1,
-    version: version === undefined ? undefined : bumpVersion(version, bump),
-    recommended: bump === recommendedBump,
-  }));
-}
-
-export function parseReleaseBumpChoice(input, recommendedBump) {
-  assert.equal(releaseBumps.includes(recommendedBump), true, `invalid recommended release bump: ${recommendedBump}`);
-  const choice = input.trim();
-  if (choice === '') return recommendedBump;
-  const numericIndex = Number(choice);
-  if (Number.isInteger(numericIndex) && numericIndex >= 1 && numericIndex <= releaseBumps.length) {
-    return releaseBumps[numericIndex - 1];
-  }
-  assert.equal(releaseBumps.includes(choice), true, 'select patch, minor, major, or 1, 2, 3');
-  return choice;
 }
 
 export function classifyReleaseBranch(localHead, remoteHead, remoteIsAncestor) {

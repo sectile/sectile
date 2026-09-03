@@ -4,17 +4,15 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
-  assertIndependentReleaseArguments,
   bumpVersion,
   classifyReleaseBranch,
   filterPackageCommits,
   formatReleaseNotes,
   parseGitLog,
   parseReleaseArguments,
-  parseReleaseBumpChoice,
+  parseReleaseConfirmation,
   prependChangelog,
   recommendBump,
-  releaseBumpChoices,
   resolveExpectedReleaseTag,
   selectReleaseTrack,
 } from './lib/release.mjs';
@@ -137,81 +135,36 @@ test('bumps stable synchronized versions', () => {
   assert.throws(() => bumpVersion('1.2.3-beta.1', 'patch'));
 });
 
-test('offers every bump while keeping the recommendation optional', () => {
-  assert.deepEqual(releaseBumpChoices('0.3.0', 'minor'), [
-    { bump: 'patch', index: 1, version: '0.3.1', recommended: false },
-    { bump: 'minor', index: 2, version: '0.4.0', recommended: true },
-    { bump: 'major', index: 3, version: '1.0.0', recommended: false },
-  ]);
-  assert.deepEqual(releaseBumpChoices(undefined, 'patch'), [
-    { bump: 'patch', index: 1, version: undefined, recommended: true },
-    { bump: 'minor', index: 2, version: undefined, recommended: false },
-    { bump: 'major', index: 3, version: undefined, recommended: false },
-  ]);
-  assert.equal(parseReleaseBumpChoice('', 'minor'), 'minor');
-  assert.equal(parseReleaseBumpChoice('1', 'minor'), 'patch');
-  assert.equal(parseReleaseBumpChoice('major', 'minor'), 'major');
-  assert.throws(() => parseReleaseBumpChoice('automatic', 'minor'), /select patch, minor, major/u);
+test('release confirmation accepts yes and defaults to cancellation', () => {
+  assert.equal(parseReleaseConfirmation('y'), true);
+  assert.equal(parseReleaseConfirmation('YES'), true);
+  assert.equal(parseReleaseConfirmation(''), false);
+  assert.equal(parseReleaseConfirmation('n'), false);
+  assert.equal(parseReleaseConfirmation('no'), false);
+  assert.throws(() => parseReleaseConfirmation('maybe'), /answer y or n/u);
 });
 
-test('parses an optional dirty-worktree release guard override', () => {
-  assert.deepEqual(parseReleaseArguments(['patch']), {
-    allowDirty: false, dryRun: false, packageBumps: {}, packageNames: [], reason: undefined, requestedBump: 'patch',
-  });
-  assert.deepEqual(parseReleaseArguments(['--allow-dirty', 'minor']), {
-    allowDirty: true, dryRun: false, packageBumps: {}, packageNames: [], reason: undefined, requestedBump: 'minor',
-  });
-  assert.deepEqual(parseReleaseArguments(['major', '--', '--allow-dirty']), {
-    allowDirty: true, dryRun: false, packageBumps: {}, packageNames: [], reason: undefined, requestedBump: 'major',
-  });
-  assert.throws(() => parseReleaseArguments(['--force']), /unexpected release argument/u);
-  assert.throws(() => parseReleaseArguments(['patch', 'minor']), /multiple release bumps/u);
-});
-
-test('uses package-scoped bump overrides only for independent releases', () => {
-  const packageRelease = parseReleaseArguments([
-    '--package', '@sectile/form', '--bump=minor', '--reason=repair package metadata',
-  ]);
-  assert.deepEqual(packageRelease, {
-    allowDirty: false,
-    dryRun: false,
-    packageBumps: { '@sectile/form': 'minor' },
-    packageNames: ['@sectile/form'],
-    reason: 'repair package metadata',
-    requestedBump: undefined,
-  });
-  assert.doesNotThrow(() => assertIndependentReleaseArguments(packageRelease));
-
-  const plan = parseReleaseArguments(['--dry-run']);
-  assert.deepEqual(plan, {
-    allowDirty: false,
-    dryRun: true,
-    packageBumps: {},
-    packageNames: [],
-    reason: undefined,
-    requestedBump: undefined,
-  });
-  assert.doesNotThrow(() => assertIndependentReleaseArguments(plan));
-
-  assert.throws(
-    () => assertIndependentReleaseArguments(parseReleaseArguments(['minor'])),
-    /do not accept a global bump/u,
-  );
-  assert.throws(
-    () => assertIndependentReleaseArguments(parseReleaseArguments([
-      '--dry-run', '--package', '@sectile/form', '--bump', 'minor',
-    ])),
-    /always uses package recommendations/u,
-  );
-  assert.throws(() => parseReleaseArguments(['--bump', 'minor']), /requires a preceding --package/u);
-  assert.throws(() => parseReleaseArguments(['patch', '--reason', 'empty release']), /requires --package/u);
+test('release accepts only workflow control flags', () => {
+  assert.deepEqual(parseReleaseArguments([]), { allowDirty: false, dryRun: false });
+  assert.deepEqual(parseReleaseArguments(['--allow-dirty']), { allowDirty: true, dryRun: false });
+  assert.deepEqual(parseReleaseArguments(['--dry-run']), { allowDirty: false, dryRun: true });
+  assert.deepEqual(parseReleaseArguments(['--', '--allow-dirty']), { allowDirty: true, dryRun: false });
+  for (const args of [
+    ['patch'],
+    ['minor'],
+    ['--package', '@sectile/form'],
+    ['--bump', 'minor'],
+    ['--reason', 'repair package metadata'],
+    ['--force'],
+  ]) {
+    assert.throws(() => parseReleaseArguments(args), /does not accept bump or package overrides|unexpected release argument/u);
+  }
 });
 
 test('switches the default release command to independent tracking after the bridge', () => {
-  assert.equal(selectReleaseTrack([], false, false), 'synchronized');
-  assert.equal(selectReleaseTrack([], false, true), 'independent');
-  assert.equal(selectReleaseTrack([], true, false), 'independent');
-  assert.equal(selectReleaseTrack(['@sectile/form'], false, false), 'independent');
+  assert.equal(selectReleaseTrack(false, false), 'synchronized');
+  assert.equal(selectReleaseTrack(false, true), 'independent');
+  assert.equal(selectReleaseTrack(true, false), 'independent');
 });
 
 test('parses git records and renders commit-based notes', () => {

@@ -24,10 +24,11 @@ test('independent release plans are read-only and isolate compatible package pat
   assert.equal(git(root, ['tag', '--list']), beforeTags);
   assert.equal(packageVersion(root, 'form'), '0.14.1');
 
-  const versionOnlyPlan = runRelease(root, [
-    '--package', '@sectile/chart', '--reason', 'repair package metadata', '--dry-run',
-  ]);
-  assert.match(versionOnlyPlan, /@sectile\/chart: 0\.14\.1 -> 0\.14\.2/u);
+  const unsupported = spawnSync(process.execPath, [
+    join(root, 'scripts', 'release.mjs'), '--package', '@sectile/chart', '--dry-run',
+  ], { cwd: root, encoding: 'utf8' });
+  assert.equal(unsupported.status, 1);
+  assert.match(unsupported.stderr, /does not accept bump or package overrides/u);
 });
 
 test('independent release plans propagate pre-1 minor dependency changes', (context) => {
