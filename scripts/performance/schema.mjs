@@ -175,6 +175,16 @@ export function performanceSelectionIsFull(selection) {
     && normalized.evidence.length === 0;
 }
 
+export function performanceSelectionCovers(candidate, requested) {
+  const normalizedCandidate = normalizePerformanceSelection(candidate);
+  const normalizedRequested = normalizePerformanceSelection(requested);
+  return selectionAxisCovers(normalizedCandidate.owners, normalizedRequested.owners)
+    && selectionAxisCovers(normalizedCandidate.types, normalizedRequested.types)
+    && selectionAxisCovers(normalizedCandidate.domains, normalizedRequested.domains)
+    && selectionAxisCovers(normalizedCandidate.scales, normalizedRequested.scales)
+    && selectionAxisCovers(normalizedCandidate.evidence, normalizedRequested.evidence);
+}
+
 function rule(pattern, owner, type, domain) {
   return Object.freeze({ pattern, owner, type, domain });
 }
@@ -189,6 +199,11 @@ function normalizeValues(values, allowed, label) {
 
 function selected(values, value) {
   return values.length === 0 || values.includes(value);
+}
+
+function selectionAxisCovers(candidate, requested) {
+  if (requested.length === 0) return candidate.length === 0;
+  return candidate.length === 0 || requested.every((value) => candidate.includes(value));
 }
 
 function segment(values, fallback) {

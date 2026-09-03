@@ -71,9 +71,12 @@ recorded with ten isolated processes; ordinary three-process screening can then
 compare against it without changing the measurement profile.
 
 Without an explicit `--baseline`, comparison first looks for the exact selected
-baseline. If a selected baseline has not been recorded, it may compare the
-selected metric subset against the full baseline for the same environment and
-workload schema. Full certification still requires the complete catalog.
+baseline. If an exact baseline has not been recorded, it selects the narrowest
+recorded shard whose owner, type, domain, scale, and evidence selection covers
+the request and whose report contains every requested metric. An owner-level
+baseline can therefore serve narrower type or domain checks without falling back
+to an unrelated global catalog. Full certification still requires the complete
+catalog.
 Certification timing regressions require median, p95, and separated
 isolated-process distributions with the calibrated strict band. Screening uses
 median and p95 with a minimum 20% band and does not claim certification-grade

@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { readFile, readdir } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 import { validateRunnerReport } from './check.mjs';
 import { compatibilityMetadata } from './provenance.mjs';
 import {
   normalizePerformanceSelection,
+  performanceSelectionCovers,
   performanceSelectionID,
   performanceSelectionIsFull,
 } from './schema.mjs';
@@ -35,16 +36,14 @@ export async function selectPerformanceBaseline({ current, explicitPath = null, 
   if (exact !== null) return validatePartition(current, exactPath, exact);
 
   if (!performanceSelectionIsFull(selection)) {
-    const fullPath = performanceBaselinePath(directory, current, {});
-    const full = await tryReadReport(fullPath);
-    if (full !== null) return validatePartition(current, fullPath, full);
+    const covering = await selectCoveringBaseline({ current, exactPath, selection });
+    if (covering !== null) return covering;
   }
 
   throw new Error(
     `No compatible performance baseline exists for environment ${performanceBaselineID(current)} `
       + `and selection ${performanceSelectionID(selection)}. `
-      + 'Run pnpm performance:record with this selection in the exact runtime and hardware environment, '
-      + 'or record the full certification suite.',
+      + 'Run pnpm performance:record with this selection or a covering shard in the exact runtime and hardware environment.',
   );
 }
 
@@ -70,6 +69,49 @@ function validatePartition(current, path, report) {
     `performance baseline ${path} does not match its environment partition`,
   );
   return Object.freeze({ path, report });
+}
+
+async function selectCoveringBaseline({ current, exactPath, selection }) {
+  const environmentDirectory = dirname(exactPath);
+  let entries;
+  try {
+    entries = await readdir(environmentDirectory, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') return null;
+    throw error;
+  }
+
+  const currentMetricIDs = Object.keys(current.metrics);
+  const candidates = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+    const path = resolve(environmentDirectory, entry.name);
+    if (path === exactPath) continue;
+    const report = await readReport(path);
+    const candidateSelection = normalizePerformanceSelection(report.runner?.selection ?? {});
+    if (!performanceSelectionCovers(candidateSelection, selection)) continue;
+    if (!currentMetricIDs.every((id) => report.metrics[id] !== undefined)) continue;
+    validatePartition(current, path, report);
+    candidates.push(Object.freeze({
+      metricCount: Object.keys(report.metrics).length,
+      path,
+      report,
+      wildcardCount: selectionWildcardCount(candidateSelection),
+    }));
+  }
+
+  candidates.sort((left, right) => (
+    left.metricCount - right.metricCount
+    || left.wildcardCount - right.wildcardCount
+    || left.path.localeCompare(right.path)
+  ));
+  const selected = candidates[0];
+  return selected === undefined ? null : Object.freeze({ path: selected.path, report: selected.report });
+}
+
+function selectionWildcardCount(selection) {
+  return ['owners', 'types', 'domains', 'scales', 'evidence']
+    .reduce((count, axis) => count + Number(selection[axis].length === 0), 0);
 }
 
 async function readReport(path) {

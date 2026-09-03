@@ -32,6 +32,7 @@ import {
   performanceExecutionMode,
   performanceMetricSelected,
   performancePackageForFamily,
+  performanceSelectionCovers,
   performanceSelectionID,
 } from './performance/schema.mjs';
 import { createWorkloads } from './performance/workloads.mjs';
@@ -128,9 +129,33 @@ test('performance baselines partition environment and workload selection indepen
   assert.notEqual(shardPath, fullPath);
   assert.equal((await selectPerformanceBaseline({ current: shard, directory })).path, fullPath);
 
+  const owner = structuredClone(full);
+  owner.runner.selection = normalizePerformanceSelection({
+    owners: ['core'],
+    scales: ['representative'],
+    evidence: ['timing'],
+  });
+  const ownerPath = performanceBaselinePath(directory, owner);
+  await writeFile(ownerPath, `${JSON.stringify(owner, null, 2)}\n`, 'utf8');
+  assert.equal((await selectPerformanceBaseline({ current: shard, directory })).path, ownerPath);
+
   await mkdir(dirname(shardPath), { recursive: true });
   await writeFile(shardPath, `${JSON.stringify(shard, null, 2)}\n`, 'utf8');
   assert.equal((await selectPerformanceBaseline({ current: shard, directory })).path, shardPath);
+});
+
+test('performance selections cover only equal or broader selector axes', () => {
+  const requested = normalizePerformanceSelection({
+    owners: ['chart'],
+    types: ['projection'],
+    scales: ['representative'],
+    evidence: ['timing'],
+  });
+  assert.equal(performanceSelectionCovers({ owners: ['chart'], scales: ['representative'], evidence: ['timing'] }, requested), true);
+  assert.equal(performanceSelectionCovers({}, requested), true);
+  assert.equal(performanceSelectionCovers({ owners: ['core'] }, requested), false);
+  assert.equal(performanceSelectionCovers({ owners: ['chart'], types: ['projection'], scales: ['scaling'] }, requested), false);
+  assert.equal(performanceSelectionCovers({ owners: ['chart'], scales: ['representative'] }, normalizePerformanceSelection({ owners: ['chart'] })), false);
 });
 
 test('retained full performance reports promote once without overwriting evidence', async (context) => {
