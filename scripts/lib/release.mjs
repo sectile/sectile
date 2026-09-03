@@ -12,6 +12,8 @@ export function parseReleaseArguments(args) {
   let reason;
   let requestedBump;
   const packageNames = [];
+  const packageBumps = new Map();
+  let currentPackage;
   const filtered = args.filter((candidate) => candidate !== '--');
   for (let index = 0; index < filtered.length; index += 1) {
     const argument = filtered[index];
@@ -27,6 +29,15 @@ export function parseReleaseArguments(args) {
       const name = argument === '--package' ? filtered[++index] : argument.slice('--package='.length);
       assert.ok(typeof name === 'string' && name !== '', '--package requires a package name');
       packageNames.push(name);
+      currentPackage = name;
+      continue;
+    }
+    if (argument === '--bump' || argument.startsWith('--bump=')) {
+      assert.notEqual(currentPackage, undefined, '--bump requires a preceding --package');
+      assert.equal(packageBumps.has(currentPackage), false, `${currentPackage} release bump may be specified once`);
+      const bump = argument === '--bump' ? filtered[++index] : argument.slice('--bump='.length);
+      assert.equal(releaseBumps.includes(bump), true, '--bump requires patch, minor, or major');
+      packageBumps.set(currentPackage, bump);
       continue;
     }
     if (argument === '--reason' || argument.startsWith('--reason=')) {
@@ -42,7 +53,23 @@ export function parseReleaseArguments(args) {
   }
   assert.equal(new Set(packageNames).size, packageNames.length, 'release packages must be unique');
   assert.equal(reason !== undefined && packageNames.length === 0, false, '--reason requires --package');
-  return Object.freeze({ allowDirty, dryRun, packageNames: Object.freeze(packageNames), reason, requestedBump });
+  return Object.freeze({
+    allowDirty,
+    dryRun,
+    packageBumps: Object.freeze(Object.fromEntries(packageBumps)),
+    packageNames: Object.freeze(packageNames),
+    reason,
+    requestedBump,
+  });
+}
+
+export function assertIndependentReleaseArguments(options) {
+  if (options.requestedBump !== undefined) {
+    throw new Error('independent releases do not accept a global bump; use --package <name> --bump patch|minor|major');
+  }
+  if (options.dryRun && Object.keys(options.packageBumps).length > 0) {
+    throw new Error('release:plan always uses package recommendations and does not accept --bump');
+  }
 }
 
 export function selectReleaseTrack(packageNames, dryRun, independentBaseline) {

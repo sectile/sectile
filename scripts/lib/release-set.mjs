@@ -55,19 +55,23 @@ export function caretAccepts(baseVersion, candidateVersion) {
   return patch === basePatch;
 }
 
-export function planIndependentVersions(packages, requestedNames, requestedBump) {
-  assert.equal(releaseBumps.includes(requestedBump), true, `invalid release bump: ${requestedBump}`);
-  assert.ok(requestedNames.length > 0, 'at least one package is required for an independent release');
+export function planIndependentVersions(packages, requestedReleases) {
+  assert.ok(requestedReleases.length > 0, 'at least one package is required for an independent release');
   const byName = new Map(packages.map((entry) => [entry.name, entry]));
   assert.equal(byName.size, packages.length, 'published package names must be unique');
-  const requested = new Set(requestedNames);
-  assert.equal(requested.size, requestedNames.length, 'release packages must be unique');
-  for (const name of requested) assert.ok(byName.has(name), `unknown release package: ${name}`);
+  const requested = new Map();
+  for (const release of requestedReleases) {
+    assert.equal(typeof release?.name, 'string', 'release package name is required');
+    assert.equal(releaseBumps.includes(release.bump), true, `invalid release bump for ${release.name}: ${release.bump}`);
+    assert.equal(requested.has(release.name), false, `duplicate release package: ${release.name}`);
+    assert.ok(byName.has(release.name), `unknown release package: ${release.name}`);
+    requested.set(release.name, release.bump);
+  }
 
   const planned = new Map();
-  for (const name of requested) {
+  for (const [name, bump] of requested) {
     const entry = byName.get(name);
-    planned.set(name, releaseEntry(entry, requestedBump, true, []));
+    planned.set(name, releaseEntry(entry, bump, true, []));
   }
 
   let changed = true;

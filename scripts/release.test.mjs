@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
+  assertIndependentReleaseArguments,
   bumpVersion,
   classifyReleaseBranch,
   filterPackageCommits,
@@ -155,35 +156,54 @@ test('offers every bump while keeping the recommendation optional', () => {
 
 test('parses an optional dirty-worktree release guard override', () => {
   assert.deepEqual(parseReleaseArguments(['patch']), {
-    allowDirty: false, dryRun: false, packageNames: [], reason: undefined, requestedBump: 'patch',
+    allowDirty: false, dryRun: false, packageBumps: {}, packageNames: [], reason: undefined, requestedBump: 'patch',
   });
   assert.deepEqual(parseReleaseArguments(['--allow-dirty', 'minor']), {
-    allowDirty: true, dryRun: false, packageNames: [], reason: undefined, requestedBump: 'minor',
+    allowDirty: true, dryRun: false, packageBumps: {}, packageNames: [], reason: undefined, requestedBump: 'minor',
   });
   assert.deepEqual(parseReleaseArguments(['major', '--', '--allow-dirty']), {
-    allowDirty: true, dryRun: false, packageNames: [], reason: undefined, requestedBump: 'major',
+    allowDirty: true, dryRun: false, packageBumps: {}, packageNames: [], reason: undefined, requestedBump: 'major',
   });
   assert.throws(() => parseReleaseArguments(['--force']), /unexpected release argument/u);
   assert.throws(() => parseReleaseArguments(['patch', 'minor']), /multiple release bumps/u);
 });
 
-test('parses independent package releases and read-only plans', () => {
-  assert.deepEqual(parseReleaseArguments([
-    'patch', '--package', '@sectile/form', '--reason=repair package metadata', '--dry-run',
-  ]), {
+test('uses package-scoped bump overrides only for independent releases', () => {
+  const packageRelease = parseReleaseArguments([
+    '--package', '@sectile/form', '--bump=minor', '--reason=repair package metadata',
+  ]);
+  assert.deepEqual(packageRelease, {
     allowDirty: false,
-    dryRun: true,
+    dryRun: false,
+    packageBumps: { '@sectile/form': 'minor' },
     packageNames: ['@sectile/form'],
     reason: 'repair package metadata',
-    requestedBump: 'patch',
+    requestedBump: undefined,
   });
-  assert.deepEqual(parseReleaseArguments(['patch', '--dry-run']), {
+  assert.doesNotThrow(() => assertIndependentReleaseArguments(packageRelease));
+
+  const plan = parseReleaseArguments(['--dry-run']);
+  assert.deepEqual(plan, {
     allowDirty: false,
     dryRun: true,
+    packageBumps: {},
     packageNames: [],
     reason: undefined,
-    requestedBump: 'patch',
+    requestedBump: undefined,
   });
+  assert.doesNotThrow(() => assertIndependentReleaseArguments(plan));
+
+  assert.throws(
+    () => assertIndependentReleaseArguments(parseReleaseArguments(['minor'])),
+    /do not accept a global bump/u,
+  );
+  assert.throws(
+    () => assertIndependentReleaseArguments(parseReleaseArguments([
+      '--dry-run', '--package', '@sectile/form', '--bump', 'minor',
+    ])),
+    /always uses package recommendations/u,
+  );
+  assert.throws(() => parseReleaseArguments(['--bump', 'minor']), /requires a preceding --package/u);
   assert.throws(() => parseReleaseArguments(['patch', '--reason', 'empty release']), /requires --package/u);
 });
 
@@ -252,7 +272,7 @@ test('uses pre-1 caret compatibility to isolate patches and propagate minors', (
   assert.equal(caretAccepts('1.4.0', '2.0.0'), false);
 
   const packages = releaseGraphFixture();
-  assert.deepEqual(planIndependentVersions(packages, ['@sectile/form'], 'patch'), [{
+  assert.deepEqual(planIndependentVersions(packages, [{ name: '@sectile/form', bump: 'patch' }]), [{
     name: '@sectile/form',
     directory: 'form',
     previousVersion: '0.14.1',
@@ -261,7 +281,10 @@ test('uses pre-1 caret compatibility to isolate patches and propagate minors', (
     direct: true,
     dependencies: [],
   }]);
-  assert.deepEqual(planIndependentVersions(packages, ['@sectile/core'], 'minor'), [
+  assert.deepEqual(planIndependentVersions(packages, [
+    { name: '@sectile/core', bump: 'minor' },
+    { name: '@sectile/form', bump: 'patch' },
+  ]), [
     {
       name: '@sectile/core',
       directory: 'core',
@@ -277,8 +300,8 @@ test('uses pre-1 caret compatibility to isolate patches and propagate minors', (
       previousVersion: '0.14.1',
       version: '0.14.2',
       bump: 'patch',
-      direct: false,
-      dependencies: ['@sectile/core'],
+      direct: true,
+      dependencies: [],
     },
     {
       name: '@sectile/dom',
@@ -294,7 +317,7 @@ test('uses pre-1 caret compatibility to isolate patches and propagate minors', (
 
 test('validates release manifests against package source versions', () => {
   const packages = releaseGraphFixture();
-  const entries = planIndependentVersions(packages, ['@sectile/form'], 'patch');
+  const entries = planIndependentVersions(packages, [{ name: '@sectile/form', bump: 'patch' }]);
   const manifest = createReleaseManifest('release-20260901010203', entries);
   const sourcePackages = packages.map((entry) => ({
     ...entry,
