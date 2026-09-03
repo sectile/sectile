@@ -1,5 +1,5 @@
 export const TRANSIENT_GC_PASSES = 1;
-export const RETAINED_GC_PASSES = 4;
+export const RETAINED_GC_PASSES = 3;
 
 export function collectTransientGarbage(collect = globalThis.gc) {
   collectGarbage(TRANSIENT_GC_PASSES, collect);

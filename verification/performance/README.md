@@ -52,7 +52,10 @@ retained-GC work, while an allocation-only or retention-only selection runs only
 the calibration timing plus its requested memory lane. Timing and allocation are
 the default evidence for registered metrics. Retention is opt-in for operations
 that mutate or populate long-lived owner state or caches, so the retention lane
-does not construct unrelated stateless workload groups. Within each lane,
+does not construct unrelated stateless workload groups. Retained-heap sampling
+uses three GC passes; across all registered retention scales, the third-to-fourth
+pass delta stayed below the 64 KiB comparison floor while one or two passes did
+not. Within each lane,
 selected fixtures are constructed as lazy related-metric groups; one group
 completes before the next fixture group is created, so unrelated large fixtures
 do not extend each other's retained lifetime. Certification is for release,

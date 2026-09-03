@@ -17,7 +17,7 @@ test('transient collections use one pass outside retained-heap measurement', () 
 test('retained-heap collections complete weak-reference cleanup passes', () => {
   let calls = 0;
   collectRetainedGarbage(() => { calls += 1; });
-  assert.equal(RETAINED_GC_PASSES, 4);
+  assert.equal(RETAINED_GC_PASSES, 3);
   assert.equal(calls, RETAINED_GC_PASSES);
 });
 
