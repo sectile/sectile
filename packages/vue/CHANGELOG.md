@@ -1,5 +1,16 @@
 # @sectile/vue
 
+## 0.14.2
+
+### Changes
+
+- fix(verification): keep reproducibility orchestration at root (89f20c08)
+- refactor(verification): reuse prepared builds for reproducibility (57b47892)
+- refactor(verification): reuse package build artifacts (95deaf13)
+- chore(verification): close chart audit gates (1e143db4)
+- fix(chart): complete host effects before callbacks (e486488e)
+- fix(dom): preserve exact generated identities (c6d28579)
+
 ## 0.14.1
 
 ### Changes

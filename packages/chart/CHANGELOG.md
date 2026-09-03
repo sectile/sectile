@@ -1,5 +1,16 @@
 # @sectile/chart
 
+## 0.15.0
+
+### Changes
+
+- fix(verification): keep reproducibility orchestration at root (89f20c08)
+- refactor(verification): reuse prepared builds for reproducibility (57b47892)
+- refactor(verification): reuse package build artifacts (95deaf13)
+- chore(verification): close chart audit gates (1e143db4)
+- feat(chart): expose isolated projection clones (1b0c95a0)
+- fix(chart): preflight model resource ceilings (a955399e)
+
 ## 0.14.1
 
 ### Changes

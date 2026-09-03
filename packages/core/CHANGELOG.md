@@ -1,5 +1,13 @@
 # @sectile/core
 
+## 0.14.2
+
+### Changes
+
+- fix(verification): keep reproducibility orchestration at root (89f20c08)
+- refactor(verification): reuse prepared builds for reproducibility (57b47892)
+- refactor(verification): reuse package build artifacts (95deaf13)
+
 ## 0.14.1
 
 ### Changes
