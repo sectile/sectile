@@ -155,7 +155,9 @@ if (explainRequested) {
 }
 
 function verificationSteps() {
-  const result = packageSteps((name) => packagePipelines[name]);
+  const result = fullRepositoryVerification
+    ? fullPackageWaveSteps((name) => packagePipelines[name])
+    : packageSteps((name) => packagePipelines[name]);
   if (selectedPackages.has('@sectile/tabular')) {
     result.push(packageScriptStep('Tabular raw Virtual witnesses', '@sectile/tabular', ['test:virtual:witnesses']));
   }
@@ -226,6 +228,26 @@ function packageSteps(pipelineFor) {
   return result;
 }
 
+function fullPackageWaveSteps(pipelineFor) {
+  const depthByPackage = new Map();
+  const waves = [];
+  for (const entry of graph.order) {
+    const depth = entry.dependencies.reduce(
+      (maximum, dependency) => Math.max(maximum, (depthByPackage.get(dependency) ?? -1) + 1),
+      0,
+    );
+    depthByPackage.set(entry.name, depth);
+    if (!selectedPackages.has(entry.name)) continue;
+    waves[depth] ??= { lanes: [], packages: [] };
+    waves[depth].packages.push(entry.name);
+    waves[depth].lanes.push(packageScriptCommands(entry.name, pipelineFor(entry.name)));
+  }
+  return waves.filter(Boolean).map(({ lanes, packages }, index) => parallelLaneStep(
+    `verify package wave ${index + 1}: ${packages.join(', ')}`,
+    lanes,
+  ));
+}
+
 function workspaceContractSteps({ includePerformance }) {
   const crossHostTests = crossHostTestPaths();
   const result = [
@@ -294,13 +316,17 @@ function crossHostTestPaths() {
 
 function packageScriptStep(label, packageName, scripts) {
   return Object.freeze({
-    commands: Object.freeze(scripts.map((script) => Object.freeze({
-      args: ['--filter', packageName, '--silent', 'run', script],
-      command: 'pnpm',
-      detail: `${packageName} ${script}`,
-    }))),
+    commands: Object.freeze(packageScriptCommands(packageName, scripts)),
     label,
   });
+}
+
+function packageScriptCommands(packageName, scripts) {
+  return scripts.map((script) => commandEntry(
+    `${packageName} ${script}`,
+    'pnpm',
+    ['--filter', packageName, '--silent', 'run', script],
+  ));
 }
 
 function commandStep(label, command, args) {
@@ -311,7 +337,17 @@ function commandStep(label, command, args) {
 }
 
 function parallelStep(label, commands) {
-  return Object.freeze({ commands: Object.freeze(commands), label, parallel: true });
+  return parallelLaneStep(label, commands.map((command) => [command]));
+}
+
+function parallelLaneStep(label, lanes) {
+  const frozenLanes = Object.freeze(lanes.map((lane) => Object.freeze(lane)));
+  return Object.freeze({
+    commands: Object.freeze(frozenLanes.flat()),
+    label,
+    lanes: frozenLanes,
+    parallel: true,
+  });
 }
 
 function commandEntry(detail, command, args) {

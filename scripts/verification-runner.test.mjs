@@ -87,3 +87,38 @@ test('verification runner overlaps explicit parallel commands and stops before t
   assert.equal(result.status, 1);
   assert.deepEqual(result.failures.map(({ command }) => command.detail), ['first']);
 });
+
+
+test('verification runner keeps commands serial within each parallel lane', async () => {
+  const commands = ['first', 'first-after', 'second', 'second-after']
+    .map((detail) => Object.freeze({ command: detail, args: [], detail }));
+  const invoked = [];
+  let active = 0;
+  let maximumActive = 0;
+  const result = await runVerificationSteps([
+    Object.freeze({
+      label: 'parallel lanes',
+      parallel: true,
+      commands: Object.freeze(commands),
+      lanes: Object.freeze([
+        Object.freeze(commands.slice(0, 2)),
+        Object.freeze(commands.slice(2)),
+      ]),
+    }),
+  ], {
+    run: () => ({ status: 0 }),
+    runAsync: async (command) => {
+      invoked.push(command.detail);
+      active += 1;
+      maximumActive = Math.max(maximumActive, active);
+      await new Promise((resolve) => setImmediate(resolve));
+      active -= 1;
+      return { status: 0 };
+    },
+  });
+
+  assert.equal(maximumActive, 2);
+  assert.ok(invoked.indexOf('first') < invoked.indexOf('first-after'));
+  assert.ok(invoked.indexOf('second') < invoked.indexOf('second-after'));
+  assert.equal(result.status, 0);
+});
