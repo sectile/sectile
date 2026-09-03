@@ -7,7 +7,7 @@ import {
   TARGET_BATCH_COUNT,
 } from './config.mjs';
 import { collectRetainedGarbage, collectTransientGarbage } from './gc-policy.mjs';
-import { calibratedTimingIterations } from './measurement.mjs';
+import { calibratedTimingIterations, timingCalibrationComplete } from './measurement.mjs';
 import {
   normalizePerformanceSelection,
   performanceMetricSelected,
@@ -70,13 +70,18 @@ async function measureWorkloadGroup(createGroup, lane, laneSelection) {
 
 function measureTiming(workload, metric) {
   const warmupStartedAt = performance.now();
-  for (let iteration = 0; iteration < workload.warmupIterations; iteration += 1) {
-    sink = consume(sink, workload.operation(iteration));
-  }
-  const warmupNanosecondsPerOperation = Math.max(
-    1,
-    ((performance.now() - warmupStartedAt) * 1_000_000) / workload.warmupIterations,
-  );
+  let calibrationIterations = 0;
+  let warmupNanoseconds = 0;
+  do {
+    sink = consume(sink, workload.operation(calibrationIterations));
+    calibrationIterations += 1;
+    warmupNanoseconds = (performance.now() - warmupStartedAt) * 1_000_000;
+  } while (!timingCalibrationComplete(
+    warmupNanoseconds,
+    calibrationIterations,
+    workload.warmupIterations,
+  ));
+  const warmupNanosecondsPerOperation = Math.max(1, warmupNanoseconds / calibrationIterations);
   const targetBatchNanoseconds = quick ? 2_000_000 : screening ? 10_000_000 : 20_000_000;
   const measuredIterations = calibratedTimingIterations(
     targetBatchNanoseconds,

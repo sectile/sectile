@@ -18,7 +18,12 @@ import {
   writePerformanceReport,
 } from './performance/session-log.mjs';
 import { median, percentile, relativeMAD, summarize } from './performance/statistics.mjs';
-import { calibratedTimingIterations, MAX_TIMING_ITERATIONS } from './performance/measurement.mjs';
+import {
+  calibratedTimingIterations,
+  MAX_TIMING_ITERATIONS,
+  MIN_TIMING_CALIBRATION_NANOSECONDS,
+  timingCalibrationComplete,
+} from './performance/measurement.mjs';
 import {
   PERFORMANCE_GC_PROTOCOL_VERSION,
   PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
@@ -48,10 +53,14 @@ test('performance statistics report stable median, p95, and relative MAD', () =>
   });
 });
 
-test('timing calibration targets batch duration without a workload iteration floor', () => {
+test('timing calibration targets bounded setup and batch duration', () => {
+  assert.equal(timingCalibrationComplete(MIN_TIMING_CALIBRATION_NANOSECONDS - 1, 1, 10), false);
+  assert.equal(timingCalibrationComplete(MIN_TIMING_CALIBRATION_NANOSECONDS, 1, 10), true);
+  assert.equal(timingCalibrationComplete(1, 10, 10), true);
   assert.equal(calibratedTimingIterations(20_000_000, 800_000_000), 1);
   assert.equal(calibratedTimingIterations(20_000_000, 4_000_000), 5);
   assert.equal(calibratedTimingIterations(20_000_000, 1), MAX_TIMING_ITERATIONS);
+  assert.throws(() => timingCalibrationComplete(-1, 1, 10), /non-negative/u);
   assert.throws(() => calibratedTimingIterations(0, 1), /positive finite/u);
   assert.throws(() => calibratedTimingIterations(1, 0), /positive finite/u);
 });
