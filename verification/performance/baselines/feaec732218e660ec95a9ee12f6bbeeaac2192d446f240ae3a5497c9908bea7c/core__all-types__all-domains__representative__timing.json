@@ -1,0 +1,2786 @@
+{
+  "schemaVersion": 6,
+  "createdAt": "2026-09-03T01:20:50.638Z",
+  "provenance": {
+    "node": "v24.20.0",
+    "v8": "13.6.233.17-node.53",
+    "platform": "linux",
+    "architecture": "x64",
+    "osRelease": "6.18.33.2-microsoft-standard-WSL2",
+    "cpuModel": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "cpuCount": 16,
+    "execArgv": [],
+    "workloadFingerprint": "ec0814260c74de683db2561e173f82800e699b65c512f16a2d9414983a24c647",
+    "measurementProfile": "screening",
+    "measurementProtocolVersion": 2,
+    "statisticsProtocolVersion": 2,
+    "gcProtocolVersion": 1,
+    "buildFingerprint": "40128416867ca4924a0f65a9716b8309998b4746cc896f0002f70b955f883faf",
+    "packageFootprint": {
+      "core": 819917
+    }
+  },
+  "runner": {
+    "processCount": 10,
+    "batchesPerProcess": 3,
+    "isolatedProcesses": true,
+    "forcedGC": true,
+    "warmup": true,
+    "sink": 592491634.6505182,
+    "quick": false,
+    "certification": true,
+    "measurementProfile": "screening",
+    "targetPackages": [
+      "core"
+    ],
+    "selection": {
+      "owners": [
+        "core"
+      ],
+      "types": [],
+      "domains": [],
+      "scales": [
+        "representative"
+      ],
+      "evidence": [
+        "timing"
+      ]
+    },
+    "selectionID": "core__all-types__all-domains__representative__timing"
+  },
+  "workloadSchema": {
+    "version": 19,
+    "scales": [
+      1000,
+      10000,
+      100000
+    ],
+    "chartScales": [
+      10000,
+      100000,
+      1000000
+    ],
+    "patchDepths": [
+      1,
+      8,
+      32,
+      64
+    ],
+    "changedDensities": [
+      1,
+      32,
+      "full"
+    ],
+    "families": [
+      "runner",
+      "core-structure",
+      "core-selection",
+      "core-semantic",
+      "core-runtime",
+      "core-editing",
+      "chart-model",
+      "chart-projection",
+      "chart-query",
+      "chart-view",
+      "tabular-resolution",
+      "tabular-profile",
+      "virtual-layout"
+    ],
+    "browserQualifiedRegistrations": [
+      {
+        "id": "vue:mounted-virtual-projection",
+        "runtime": "browser",
+        "metrics": [
+          "render-count",
+          "effect-count",
+          "measurement-count",
+          "resource-count"
+        ],
+        "portableTimingBudget": false
+      }
+    ]
+  },
+  "metrics": {
+    "core:anchored-layout:solve": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "primitive",
+        "domain": "anchored-layout",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "bounded-placement",
+        "candidates": 4
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 285.36085,
+        "p95": 328.583165,
+        "relativeMAD": 0.0208429081985,
+        "minimum": 273.6192,
+        "maximum": 358.709
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 286.9586,
+        "p95": 336.900965,
+        "relativeMAD": 0.0245796780441,
+        "minimum": 271.7317,
+        "maximum": 384.1638
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:cascade:next:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "cascade",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "depth": 1000,
+        "operation": "canonical-transition"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 298.28355,
+        "p95": 325.65451,
+        "relativeMAD": 0.0372365489146,
+        "minimum": 278.0927,
+        "maximum": 332.9302
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 303.08245,
+        "p95": 365.35281,
+        "relativeMAD": 0.0656502875703,
+        "minimum": 276.7041,
+        "maximum": 444.9079
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:cascade:next:external:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "cascade",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "depth": 1000,
+        "operation": "external-validation-reference"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 66651.1695353,
+        "p95": 70420.7000261,
+        "relativeMAD": 0.0154688388694,
+        "minimum": 65301.1333333,
+        "maximum": 70750.3678161
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 67633.5875548,
+        "p95": 71744.3245,
+        "relativeMAD": 0.029043803359,
+        "minimum": 63293.3033708,
+        "maximum": 75079.2528736
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 2580
+    },
+    "core:color-text:parse": {
+      "family": "core-editing",
+      "metadata": {
+        "owner": "core",
+        "type": "primitive",
+        "domain": "color-text",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "parse",
+        "codeUnits": 34
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 921.04015,
+        "p95": 1121.15678,
+        "relativeMAD": 0.02073297239,
+        "minimum": 883.9733,
+        "maximum": 1223.9492
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 929.2222,
+        "p95": 1391.15736,
+        "relativeMAD": 0.0785469288186,
+        "minimum": 832.1162,
+        "maximum": 1664.8224
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:color:convert": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "primitive",
+        "domain": "color",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "srgb-oklch-roundtrip"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 343.69834,
+        "p95": 381.6978675,
+        "relativeMAD": 0.0123523290802,
+        "minimum": 337.37205,
+        "maximum": 385.39419
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 345.605285,
+        "p95": 385.265832,
+        "relativeMAD": 0.0151750717585,
+        "minimum": 336.25082,
+        "maximum": 389.69725
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 3000000
+    },
+    "core:color:gamut-reduce": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "primitive",
+        "domain": "color",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "reduce-chroma",
+        "iterations": 12
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 1656.33685,
+        "p95": 1702.631595,
+        "relativeMAD": 0.0120438665601,
+        "minimum": 1626.4596,
+        "maximum": 1723.7046
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 1658.8359,
+        "p95": 1727.718115,
+        "relativeMAD": 0.0109456878767,
+        "minimum": 1608.8961,
+        "maximum": 1742.5308
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:controller:handle": {
+      "family": "core-runtime",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "runtime",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "controller"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 213.27305,
+        "p95": 287.26393,
+        "relativeMAD": 0.0231435711169,
+        "minimum": 205.3039,
+        "maximum": 333.2713
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 213.5465,
+        "p95": 295.281445,
+        "relativeMAD": 0.0408529289874,
+        "minimum": 202.177,
+        "maximum": 343.2532
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:exact-ratio:add:1024": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "primitive",
+        "domain": "exact-ratio",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "reduced-add",
+        "bits": 1024
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 7486.0185,
+        "p95": 9331.86875,
+        "relativeMAD": 0.0676355528643,
+        "minimum": 6536.752,
+        "maximum": 10030.226
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 7551.3735,
+        "p95": 10304.3262,
+        "relativeMAD": 0.0598467947586,
+        "minimum": 6440.278,
+        "maximum": 10867.322
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 30000
+    },
+    "core:facade:access": {
+      "family": "core-runtime",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "runtime",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "facade-proxy"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 29.95725,
+        "p95": 41.812525,
+        "relativeMAD": 0.0127398209115,
+        "minimum": 29.5751,
+        "maximum": 47.1403
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 32.0978,
+        "p95": 47.77841,
+        "relativeMAD": 0.0793450018383,
+        "minimum": 29.3836,
+        "maximum": 55.0873
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:geometry:bounds:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "primitive",
+        "domain": "geometry",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "bounds"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 7070.17357674,
+        "p95": 7874.86863187,
+        "relativeMAD": 0.0676900046888,
+        "minimum": 6242.5,
+        "maximum": 7938.5049505
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 7132.92079208,
+        "p95": 8168.96089109,
+        "relativeMAD": 0.0903918036597,
+        "minimum": 6213.80681818,
+        "maximum": 11487.8019802
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 2919
+    },
+    "core:geometry:intersection": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "primitive",
+        "domain": "geometry",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "intersection"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 11.76895,
+        "p95": 11.9616155,
+        "relativeMAD": 0.00964954392703,
+        "minimum": 11.51001,
+        "maximum": 12.01265
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 11.772955,
+        "p95": 12.1023485,
+        "relativeMAD": 0.0116287711963,
+        "minimum": 11.15533,
+        "maximum": 12.18188
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 3000000
+    },
+    "core:grid-control:right:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "grid-control",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "canonical-transition"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 271.50275,
+        "p95": 283.350925,
+        "relativeMAD": 0.019281204334,
+        "minimum": 261.7008,
+        "maximum": 283.474
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 272.2269,
+        "p95": 300.045825,
+        "relativeMAD": 0.0277151155892,
+        "minimum": 250.5356,
+        "maximum": 315.746
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:grid-control:right:external:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "grid-control",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "external-validation-reference"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 1223.62109055,
+        "p95": 1594.77051672,
+        "relativeMAD": 0.0507562118614,
+        "minimum": 1150.11753372,
+        "maximum": 1788.648
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 1274.94986911,
+        "p95": 1704.7564,
+        "relativeMAD": 0.0767898447726,
+        "minimum": 1099.00952381,
+        "maximum": 1830.368
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 15582
+    },
+    "core:grid:position:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "grid",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "position"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 91.71625,
+        "p95": 117.477235,
+        "relativeMAD": 0.0337606476497,
+        "minimum": 88.4646,
+        "maximum": 128.3581
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 91.99325,
+        "p95": 137.13082,
+        "relativeMAD": 0.0332883119143,
+        "minimum": 86.8284,
+        "maximum": 153.3435
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:grid:views:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "grid",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "views"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 42.9610000001,
+        "p95": 57.89485,
+        "relativeMAD": 0.180722050232,
+        "minimum": 35.0470000001,
+        "maximum": 59.563
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 38.6879999999,
+        "p95": 70.17555,
+        "relativeMAD": 0.0914236972662,
+        "minimum": 34.9560000002,
+        "maximum": 104.298
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 30000
+    },
+    "core:index-span:contains:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "index-span",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "spans": 500,
+        "operation": "contains"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 60.3476,
+        "p95": 66.437195,
+        "relativeMAD": 0.047473304655,
+        "minimum": 54.381,
+        "maximum": 66.8957
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 61.1218,
+        "p95": 69.564845,
+        "relativeMAD": 0.069296061307,
+        "minimum": 53.0515,
+        "maximum": 74.4631
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:index-span:normalize:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "construct",
+        "domain": "index-span",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "normalize-contiguous"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 20344.5849282,
+        "p95": 22670.7854852,
+        "relativeMAD": 0.0203814064928,
+        "minimum": 19900.6989247,
+        "maximum": 23153.9767442
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 20489.840747,
+        "p95": 23223.8203488,
+        "relativeMAD": 0.0363782997616,
+        "minimum": 18291.443299,
+        "maximum": 40761.7011494
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 2760
+    },
+    "core:index-span:union:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "mutation",
+        "domain": "index-span",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "spans": 1000,
+        "operation": "union"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 40191.0641375,
+        "p95": 43148.5145086,
+        "relativeMAD": 0.0382330425027,
+        "minimum": 37677.6057692,
+        "maximum": 44112.3490566
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 39762.6063564,
+        "p95": 45332.6423966,
+        "relativeMAD": 0.0351841878187,
+        "minimum": 36645.1009174,
+        "maximum": 48466.9056604
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 3180
+    },
+    "core:listbox:next:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "listbox",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "canonical-transition"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 252.1897,
+        "p95": 270.80404,
+        "relativeMAD": 0.0264985048953,
+        "minimum": 241.758,
+        "maximum": 272.446
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 252.20075,
+        "p95": 284.28883,
+        "relativeMAD": 0.0421095099837,
+        "minimum": 225.5542,
+        "maximum": 410.4785
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:listbox:next:external:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "listbox",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "external-validation-reference"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 12896.1128365,
+        "p95": 14109.2026118,
+        "relativeMAD": 0.0346794997859,
+        "minimum": 12116.2826087,
+        "maximum": 14434.0705128
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 13224.8088907,
+        "p95": 14933.4503644,
+        "relativeMAD": 0.0628760314938,
+        "minimum": 11815.9183673,
+        "maximum": 16912.4313725
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 4200
+    },
+    "core:menu:next:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "menu",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "canonical-transition"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 256.0208,
+        "p95": 275.80509,
+        "relativeMAD": 0.0422485204327,
+        "minimum": 237.5811,
+        "maximum": 275.8896
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 258.1428,
+        "p95": 339.248265,
+        "relativeMAD": 0.0642080662331,
+        "minimum": 227.8496,
+        "maximum": 359.6671
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:menu:next:external:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "menu",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "external-validation-reference"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 44265.6735896,
+        "p95": 47149.5590069,
+        "relativeMAD": 0.0190217169698,
+        "minimum": 42036.1342282,
+        "maximum": 48898.6564886
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 44630.3808518,
+        "p95": 51106.1633486,
+        "relativeMAD": 0.048692678048,
+        "minimum": 40524.7019868,
+        "maximum": 52301.4427481
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 4083
+    },
+    "core:metric-index:construct:2d:indexed:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "construct",
+        "domain": "metric-index",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "dimensions": 2,
+        "operation": "construct-indexed"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 337126.892857,
+        "p95": 343516.984066,
+        "relativeMAD": 0.018203045779,
+        "minimum": 314328.214286,
+        "maximum": 343733.285714
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 337126.892857,
+        "p95": 597160.907418,
+        "relativeMAD": 0.0687221752327,
+        "minimum": 301367.357143,
+        "maximum": 603421.5
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 414
+    },
+    "core:metric-index:construct:2d:packed:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "construct",
+        "domain": "metric-index",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "dimensions": 2,
+        "operation": "construct-packed"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 58990.3793831,
+        "p95": 61833.1802885,
+        "relativeMAD": 0.0076084009968,
+        "minimum": 57419.9404762,
+        "maximum": 61843.9846154
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 59435.1759897,
+        "p95": 62649.4478281,
+        "relativeMAD": 0.0192986002374,
+        "minimum": 56686.4166667,
+        "maximum": 63625.0125
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 2259
+    },
+    "core:metric-index:forward:2d:indexed:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "metric-index",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "dimensions": 2,
+        "operation": "forward-indexed"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 1816.92938374,
+        "p95": 2189.9573159,
+        "relativeMAD": 0.0649086318682,
+        "minimum": 1662.77405858,
+        "maximum": 2242.01714286
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 1900.63301548,
+        "p95": 3437.36638407,
+        "relativeMAD": 0.11538256501,
+        "minimum": 1642.2629108,
+        "maximum": 6501.8
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 6480
+    },
+    "core:metric-index:forward:2d:packed:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "metric-index",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "dimensions": 2,
+        "operation": "forward-packed"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 3660.19148179,
+        "p95": 3831.37459623,
+        "relativeMAD": 0.011327313477,
+        "minimum": 3589.48181818,
+        "maximum": 3852.35722041
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 3669.07445858,
+        "p95": 3913.20313081,
+        "relativeMAD": 0.0190919265935,
+        "minimum": 3550.60113636,
+        "maximum": 4556.38020833
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 26805
+    },
+    "core:metric-index:nearest:2d:indexed:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "metric-index",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "dimensions": 2,
+        "operation": "nearest-indexed"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 1020.84146549,
+        "p95": 1331.00488582,
+        "relativeMAD": 0.0579386644202,
+        "minimum": 950.780612245,
+        "maximum": 1338.26829268
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 1074.71273741,
+        "p95": 1354.34733232,
+        "relativeMAD": 0.113317170864,
+        "minimum": 929.499999999,
+        "maximum": 1365.07006369
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 5259
+    },
+    "core:metric-index:nearest:2d:packed:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "metric-index",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "dimensions": 2,
+        "operation": "nearest-packed"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 2686.83014667,
+        "p95": 2804.18483761,
+        "relativeMAD": 0.0216198161826,
+        "minimum": 2578.05769231,
+        "maximum": 2854.34743202
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 2704.08716337,
+        "p95": 2947.83502368,
+        "relativeMAD": 0.0398270449054,
+        "minimum": 2553.25531915,
+        "maximum": 3386.44551282
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 8919
+    },
+    "core:metric-index:nearest:32d:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "metric-index",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "dimensions": 32,
+        "operation": "nearest-packed"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 147604,
+        "p95": 154020.524011,
+        "relativeMAD": 0.00839369398187,
+        "minimum": 144525.288462,
+        "maximum": 157388.156863
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 148507.09375,
+        "p95": 157925.656349,
+        "relativeMAD": 0.0179651541406,
+        "minimum": 144357.392157,
+        "maximum": 169099.156863
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 1539
+    },
+    "core:metric-index:radius:2d:indexed:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "metric-index",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "dimensions": 2,
+        "operation": "radius-indexed"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 2130.29439955,
+        "p95": 2508.23067053,
+        "relativeMAD": 0.0383731283489,
+        "minimum": 1956.87830688,
+        "maximum": 2526.11258278
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 2130.29439955,
+        "p95": 3446.72003749,
+        "relativeMAD": 0.0867251489578,
+        "minimum": 1933.03157895,
+        "maximum": 4163.77083333
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 5352
+    },
+    "core:metric-index:radius:2d:packed:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "metric-index",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "dimensions": 2,
+        "operation": "radius-packed"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 1081.40524478,
+        "p95": 1300.41783687,
+        "relativeMAD": 0.0449352602179,
+        "minimum": 1021.70621469,
+        "maximum": 1303.44512195
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 1111.77364628,
+        "p95": 1458.06141907,
+        "relativeMAD": 0.0850952657025,
+        "minimum": 995.400990099,
+        "maximum": 1592.27227723
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 5676
+    },
+    "core:range:arithmetic": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "primitive",
+        "domain": "range",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "value-ratio-map",
+        "count": 10000000
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 420.62675,
+        "p95": 603.732365,
+        "relativeMAD": 0.0394861953026,
+        "minimum": 394.1065,
+        "maximum": 657.4625
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 419.7961,
+        "p95": 879.694455,
+        "relativeMAD": 0.039801465521,
+        "minimum": 384.0714,
+        "maximum": 1816.1606
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:revision:apply": {
+      "family": "core-runtime",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "runtime",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "revision"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 89.45045,
+        "p95": 113.52481,
+        "relativeMAD": 0.0302083443963,
+        "minimum": 85.0842,
+        "maximum": 128.4028
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 88.3399,
+        "p95": 117.99547,
+        "relativeMAD": 0.0306871526909,
+        "minimum": 83.924,
+        "maximum": 142.8712
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:selection-expression:contains:1000": {
+      "family": "core-selection",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "selection-expression",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "exceptions": 500,
+        "operation": "contains"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 20.2028,
+        "p95": 21.012785,
+        "relativeMAD": 0.0391505137902,
+        "minimum": 18.6123,
+        "maximum": 21.1841
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 20.2153,
+        "p95": 23.732165,
+        "relativeMAD": 0.064184058609,
+        "minimum": 18.5321,
+        "maximum": 30.5699
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:selection-expression:materialize:1000": {
+      "family": "core-selection",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "selection-expression",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "exceptions": 500,
+        "operation": "materialize"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 13320.8691919,
+        "p95": 14562.6803582,
+        "relativeMAD": 0.0170755930656,
+        "minimum": 13072.0199005,
+        "maximum": 14839.8940397
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 13320.8691919,
+        "p95": 15825.7648468,
+        "relativeMAD": 0.0267516416911,
+        "minimum": 12830.255,
+        "maximum": 21028.2727273
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 5709
+    },
+    "core:selection-expression:union:1000": {
+      "family": "core-selection",
+      "metadata": {
+        "owner": "core",
+        "type": "mutation",
+        "domain": "selection-expression",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "exceptions": 1000,
+        "operation": "union"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 54489.6538613,
+        "p95": 56547.7142592,
+        "relativeMAD": 0.0080321022843,
+        "minimum": 53878.8275862,
+        "maximum": 57102.4259259
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 54676.3414695,
+        "p95": 59987.5574418,
+        "relativeMAD": 0.0162963735426,
+        "minimum": 52248.8507463,
+        "maximum": 61990.8333333
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 2835
+    },
+    "core:selection:toggle:1000": {
+      "family": "core-selection",
+      "metadata": {
+        "owner": "core",
+        "type": "mutation",
+        "domain": "selection",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "selected": 10,
+        "operation": "toggle"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 614.090589995,
+        "p95": 670.245066583,
+        "relativeMAD": 0.0373650558026,
+        "minimum": 546.88028169,
+        "maximum": 679.799256506
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 614.090589994,
+        "p95": 778.239825978,
+        "relativeMAD": 0.047999518462,
+        "minimum": 545.727699531,
+        "maximum": 985.695167286
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 12030
+    },
+    "core:sequence-reorder:move:1000": {
+      "family": "core-editing",
+      "metadata": {
+        "owner": "core",
+        "type": "mutation",
+        "domain": "sequence-reorder",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "move-before"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 1125.09630787,
+        "p95": 1415.35811349,
+        "relativeMAD": 0.129326883303,
+        "minimum": 888.105571848,
+        "maximum": 1530.42182891
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 1210.37506893,
+        "p95": 2498.0021562,
+        "relativeMAD": 0.258085333991,
+        "minimum": 803.958944281,
+        "maximum": 2917.005291
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 10152
+    },
+    "core:sequence:construct:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "construct",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "construct"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 43264.7365741,
+        "p95": 45519.0749751,
+        "relativeMAD": 0.0255992945861,
+        "minimum": 41371.8550725,
+        "maximum": 45538.1679389
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 43220.0452008,
+        "p95": 46550.4580254,
+        "relativeMAD": 0.028943242532,
+        "minimum": 40819.3913043,
+        "maximum": 47868.1526718
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 3840
+    },
+    "core:sequence:index-of:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "index-of"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 29.66115,
+        "p95": 32.22753,
+        "relativeMAD": 0.0180539190153,
+        "minimum": 28.4739,
+        "maximum": 32.3583
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 29.66115,
+        "p95": 34.256075,
+        "relativeMAD": 0.0433041200359,
+        "minimum": 27.6283,
+        "maximum": 36.4501
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:sequence:materialize:1000:1": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "patchDepth": 1,
+        "operation": "materialize"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 14.6586670538,
+        "p95": 18.8310982307,
+        "relativeMAD": 0.00208388503456,
+        "minimum": 14.4929091606,
+        "maximum": 20.0219298246
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 14.6773079294,
+        "p95": 25.1821052586,
+        "relativeMAD": 0.0284528262332,
+        "minimum": 14.0551935607,
+        "maximum": 27.1953157675
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 72282
+    },
+    "core:sequence:materialize:1000:32": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "patchDepth": 32,
+        "operation": "materialize"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 12.7196135132,
+        "p95": 13.1094779798,
+        "relativeMAD": 0.00640034970917,
+        "minimum": 12.6097197547,
+        "maximum": 13.2664034994
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 12.7016619205,
+        "p95": 13.4942877804,
+        "relativeMAD": 0.00599387969212,
+        "minimum": 12.5765177066,
+        "maximum": 14.4719468574
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 543378
+    },
+    "core:sequence:materialize:1000:64": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "patchDepth": 64,
+        "operation": "materialize"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 12.7754730534,
+        "p95": 13.6720380962,
+        "relativeMAD": 0.014411076512,
+        "minimum": 12.573622291,
+        "maximum": 13.747025755
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 12.6860037799,
+        "p95": 13.7526582996,
+        "relativeMAD": 0.00786522697887,
+        "minimum": 12.5594427245,
+        "maximum": 13.9646191261
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 586050
+    },
+    "core:sequence:materialize:1000:8": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "patchDepth": 8,
+        "operation": "materialize"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 13.5984634051,
+        "p95": 15.3694686329,
+        "relativeMAD": 0.00598459634558,
+        "minimum": 13.4679077522,
+        "maximum": 16.6733388935
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 13.610670842,
+        "p95": 16.8494856825,
+        "relativeMAD": 0.0117088292841,
+        "minimum": 13.3475760066,
+        "maximum": 17.0556831228
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 108366
+    },
+    "core:sequence:move:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "mutation",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "move",
+        "changed": 32
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 114.597127644,
+        "p95": 206.845611427,
+        "relativeMAD": 0.0194428459492,
+        "minimum": 110.661521499,
+        "maximum": 226.352272727
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 114.704356976,
+        "p95": 219.42265625,
+        "relativeMAD": 0.0322829069385,
+        "minimum": 109.888643881,
+        "maximum": 228.742897727
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 27477
+    },
+    "core:sequence:patch-lookup:1000:1": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "patchDepth": 1,
+        "operation": "lookup"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 30.1973,
+        "p95": 42.95066,
+        "relativeMAD": 0.0161901891891,
+        "minimum": 27.9248,
+        "maximum": 48.9146
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 30.5409,
+        "p95": 49.05573,
+        "relativeMAD": 0.0996925434413,
+        "minimum": 27.0852,
+        "maximum": 56.8898
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 150000
+    },
+    "core:sequence:patch-lookup:1000:32": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "patchDepth": 32,
+        "operation": "lookup"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 202.227483268,
+        "p95": 231.172413135,
+        "relativeMAD": 0.0418844088925,
+        "minimum": 193.752311463,
+        "maximum": 243.43859281
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 203.038835561,
+        "p95": 235.430907413,
+        "relativeMAD": 0.0454842154295,
+        "minimum": 190.477070474,
+        "maximum": 337.104035529
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 795327
+    },
+    "core:sequence:patch-lookup:1000:64": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "patchDepth": 64,
+        "operation": "lookup"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 198.812151603,
+        "p95": 217.264994191,
+        "relativeMAD": 0.0190069595195,
+        "minimum": 192.647487931,
+        "maximum": 220.824814397
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 197.878821976,
+        "p95": 219.866743238,
+        "relativeMAD": 0.0159404900528,
+        "minimum": 191.429501162,
+        "maximum": 223.277568313
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 797286
+    },
+    "core:sequence:patch-lookup:1000:8": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "patchDepth": 8,
+        "operation": "lookup"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 53.7451903462,
+        "p95": 56.6226053714,
+        "relativeMAD": 0.0201364069553,
+        "minimum": 51.7728374806,
+        "maximum": 57.589627199
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 53.9212228682,
+        "p95": 61.5163935363,
+        "relativeMAD": 0.0381795721113,
+        "minimum": 51.2811776502,
+        "maximum": 62.9124487004
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 1682217
+    },
+    "core:sequence:splice:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "mutation",
+        "domain": "sequence",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "splice",
+        "changed": 1
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 299.473454122,
+        "p95": 340.885469108,
+        "relativeMAD": 0.0552519117145,
+        "minimum": 270.60625,
+        "maximum": 341.265446224
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 308.553060662,
+        "p95": 368.790287438,
+        "relativeMAD": 0.0602260691432,
+        "minimum": 265.55,
+        "maximum": 537.974828375
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 19476
+    },
+    "core:text:replace:1000": {
+      "family": "core-editing",
+      "metadata": {
+        "owner": "core",
+        "type": "mutation",
+        "domain": "text",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "replace-one"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 1133.2992606,
+        "p95": 1164.95749664,
+        "relativeMAD": 0.0191238998898,
+        "minimum": 1104.54560531,
+        "maximum": 1171.48294434
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 1134.01422455,
+        "p95": 1234.23348193,
+        "relativeMAD": 0.0249410859827,
+        "minimum": 1099.06902357,
+        "maximum": 1445.70646766
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 17148
+    },
+    "core:tree-grid:right:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "tree-grid",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "canonical-transition"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 532.36585,
+        "p95": 587.418855,
+        "relativeMAD": 0.0492289278135,
+        "minimum": 487.0777,
+        "maximum": 602.547
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 532.36585,
+        "p95": 841.13453,
+        "relativeMAD": 0.199082172532,
+        "minimum": 411.3833,
+        "maximum": 861.9066
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:tree-grid:right:external:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "tree-grid",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "external-validation-reference"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 32049.4772157,
+        "p95": 32654.8988889,
+        "relativeMAD": 0.0108151959708,
+        "minimum": 30442.4311927,
+        "maximum": 32754.3888889
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 32097.9243322,
+        "p95": 35566.1716667,
+        "relativeMAD": 0.0326196270697,
+        "minimum": 29286.7168142,
+        "maximum": 63467.3130435
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 3039
+    },
+    "core:tree-reorder:move:1000": {
+      "family": "core-editing",
+      "metadata": {
+        "owner": "core",
+        "type": "mutation",
+        "domain": "tree-reorder",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "move-node"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 546599.65,
+        "p95": 596593.47,
+        "relativeMAD": 0.0315095335315,
+        "minimum": 519717.3,
+        "maximum": 615927.9
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 546599.65,
+        "p95": 708572.33,
+        "relativeMAD": 0.2244945638,
+        "minimum": 391682.9,
+        "maximum": 733473.5
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300
+    },
+    "core:tree-view:next:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "tree-view",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "canonical-transition"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 281.3975,
+        "p95": 355.09571,
+        "relativeMAD": 0.0239486846898,
+        "minimum": 269.0076,
+        "maximum": 384.5114
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 280.1311,
+        "p95": 363.683555,
+        "relativeMAD": 0.0549282103987,
+        "minimum": 255.7454,
+        "maximum": 419.8444
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 300000
+    },
+    "core:tree-view:next:external:1000": {
+      "family": "core-semantic",
+      "metadata": {
+        "owner": "core",
+        "type": "transition",
+        "domain": "tree-view",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "external-validation-reference"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 29087.0288323,
+        "p95": 34601.820602,
+        "relativeMAD": 0.0169345512836,
+        "minimum": 27709.1686747,
+        "maximum": 34879.1410256
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 29342.8264458,
+        "p95": 38795.3934544,
+        "relativeMAD": 0.0686532415375,
+        "minimum": 27068.5,
+        "maximum": 44698.9679487
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 4785
+    },
+    "core:tree:views:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "tree",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "views"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 15.7764062093,
+        "p95": 23.2590844235,
+        "relativeMAD": 0.052275129986,
+        "minimum": 13.5061295972,
+        "maximum": 24.0394117647
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 15.7764062092,
+        "p95": 24.9360219903,
+        "relativeMAD": 0.125224154827,
+        "minimum": 13.4535901926,
+        "maximum": 39.3505882353
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 67935
+    },
+    "core:tree:visible:1000": {
+      "family": "core-structure",
+      "metadata": {
+        "owner": "core",
+        "type": "query",
+        "domain": "tree",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "operation": "visible"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 24512.3801425,
+        "p95": 24768.58423,
+        "relativeMAD": 0.00509738643795,
+        "minimum": 23569.2704082,
+        "maximum": 24835.1455696
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 24512.3801424,
+        "p95": 25975.9580935,
+        "relativeMAD": 0.0209808627198,
+        "minimum": 23533.127551,
+        "maximum": 26601.9680365
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 6150
+    },
+    "runner:calibration": {
+      "family": "runner",
+      "metadata": {
+        "owner": "runner",
+        "type": "primitive",
+        "domain": "calibration",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "integer-mix"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 83.266553,
+        "p95": 85.59520245,
+        "relativeMAD": 0.00477839523392,
+        "minimum": 82.629609,
+        "maximum": 85.600197
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 83.3406845,
+        "p95": 86.123771,
+        "relativeMAD": 0.00756673650791,
+        "minimum": 82.470983,
+        "maximum": 86.803885
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 30000000
+    }
+  },
+  "processResources": [
+    {
+      "userCPUTime": 2602482,
+      "systemCPUTime": 123737,
+      "maxRSS": 151532,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 31944,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 3318,
+      "involuntaryContextSwitches": 13
+    },
+    {
+      "userCPUTime": 2711852,
+      "systemCPUTime": 171484,
+      "maxRSS": 215828,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 50534,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 3452,
+      "involuntaryContextSwitches": 12
+    },
+    {
+      "userCPUTime": 2649811,
+      "systemCPUTime": 143547,
+      "maxRSS": 152984,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 33541,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 3402,
+      "involuntaryContextSwitches": 12
+    },
+    {
+      "userCPUTime": 2685384,
+      "systemCPUTime": 115031,
+      "maxRSS": 151348,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 31879,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 3365,
+      "involuntaryContextSwitches": 12
+    },
+    {
+      "userCPUTime": 2716457,
+      "systemCPUTime": 152215,
+      "maxRSS": 150304,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 33675,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 3355,
+      "involuntaryContextSwitches": 14
+    },
+    {
+      "userCPUTime": 2656578,
+      "systemCPUTime": 142242,
+      "maxRSS": 151140,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 33678,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 3384,
+      "involuntaryContextSwitches": 15
+    },
+    {
+      "userCPUTime": 2682942,
+      "systemCPUTime": 116144,
+      "maxRSS": 216280,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 48263,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 3359,
+      "involuntaryContextSwitches": 13
+    },
+    {
+      "userCPUTime": 2614839,
+      "systemCPUTime": 129488,
+      "maxRSS": 150452,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 33779,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 3459,
+      "involuntaryContextSwitches": 13
+    },
+    {
+      "userCPUTime": 2648403,
+      "systemCPUTime": 109004,
+      "maxRSS": 148928,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 32439,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 3305,
+      "involuntaryContextSwitches": 14
+    },
+    {
+      "userCPUTime": 2626948,
+      "systemCPUTime": 140655,
+      "maxRSS": 151136,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 30915,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 3339,
+      "involuntaryContextSwitches": 13
+    }
+  ]
+}
