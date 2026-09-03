@@ -68,7 +68,7 @@ test('authoritative records can use the screening measurement profile', () => {
 
 test('worker separates allocation and retention evidence lanes', () => {
   const allocation = runWorker('allocation');
-  const allocationMetric = allocation.metrics.find(({ id }) => id === 'core:color-text:parse');
+  const allocationMetric = allocation.metrics.find(({ id }) => id === 'core:controller:handle');
   assert.notEqual(allocationMetric, undefined);
   assert.equal(allocationMetric.samples, null);
   assert.notEqual(allocationMetric.heap.allocation, null);
@@ -77,13 +77,14 @@ test('worker separates allocation and retention evidence lanes', () => {
   assert.equal(allocationMetric.heap.retainedDelta, null);
 
   const retention = runWorker('retention');
-  const retentionMetric = retention.metrics.find(({ id }) => id === 'core:color-text:parse');
+  const retentionMetric = retention.metrics.find(({ id }) => id === 'core:controller:handle');
   assert.notEqual(retentionMetric, undefined);
   assert.equal(retentionMetric.samples, null);
   assert.equal(retentionMetric.heap.allocation, null);
   assert.notEqual(retentionMetric.heap.retention, null);
   assert.equal(retentionMetric.heap.peakDelta, null);
   assert.equal(typeof retentionMetric.heap.retainedDelta, 'number');
+  assert.equal(retention.metrics.some(({ id }) => id === 'core:revision:apply'), false);
 
   for (const report of [allocation, retention]) {
     const calibration = report.metrics.find(({ id }) => id === 'runner:calibration');
@@ -108,8 +109,8 @@ function runWorker(evidence) {
       SECTILE_PERFORMANCE_QUICK: '1',
       SECTILE_PERFORMANCE_PROFILE: 'screening',
       SECTILE_PERFORMANCE_PACKAGES: 'core',
-      SECTILE_PERFORMANCE_TYPES: 'primitive',
-      SECTILE_PERFORMANCE_DOMAINS: 'color-text',
+      SECTILE_PERFORMANCE_TYPES: 'transition',
+      SECTILE_PERFORMANCE_DOMAINS: 'runtime',
       SECTILE_PERFORMANCE_SCALES: 'representative',
       SECTILE_PERFORMANCE_EVIDENCE: evidence,
     },

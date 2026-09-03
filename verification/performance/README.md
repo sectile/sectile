@@ -43,12 +43,16 @@ pnpm performance:record -- chart --profile screening --scale representative --ev
 pnpm performance:promote -- .tasks/performance/runs/<run-id>/report.json
 ```
 
-A full certification measures timing, allocation, and retained heap across all
-registered shards. A selected certification measures only the requested owner,
+A full certification measures timing and allocation across all registered
+shards, plus retained heap for shards with a retention contract. A selected
+certification measures only the requested owner,
 type, domain, scale, and evidence. Each worker executes timing, allocation, and
 retention as separate evidence lanes. Timing completes before allocation or any
 retained-GC work, while an allocation-only or retention-only selection runs only
-the calibration timing plus its requested memory lane. Within each lane,
+the calibration timing plus its requested memory lane. Timing and allocation are
+the default evidence for registered metrics. Retention is opt-in for operations
+that mutate or populate long-lived owner state or caches, so the retention lane
+does not construct unrelated stateless workload groups. Within each lane,
 selected fixtures are constructed as lazy related-metric groups; one group
 completes before the next fixture group is created, so unrelated large fixtures
 do not extend each other's retained lifetime. Certification is for release,

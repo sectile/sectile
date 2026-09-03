@@ -1,5 +1,5 @@
 import { WORKLOAD_SCHEMA } from '../schema.mjs';
-import { selectedSizes, timed, unwrap, wants, wantsAny, workloadGroup } from './shared.mjs';
+import { selectedSizes, timed, unwrap, wants, wantsMetric, workloadGroup } from './shared.mjs';
 
 export function* createChartWorkloadGroups({ quick, selection }) {
   const sizes = selectedSizes('chart', WORKLOAD_SCHEMA.chartScales, selection);
@@ -10,14 +10,23 @@ export function* createChartWorkloadGroups({ quick, selection }) {
     if (wants(selection, 'chart', 'mutation', 'model', size)) {
       yield workloadGroup(() => modelMutationWorkloads(size, quick));
     }
+    if (
+      wants(selection, 'chart', 'projection', 'projection', size)
+      || wantsMetric(selection, `chart:projection:cold:${size}`, 'chart-projection', { size, operation: 'cold' })
+    ) {
+      yield workloadGroup(() => controllerProjectionWorkloads(size, quick));
+    }
     if (wants(selection, 'chart', 'projection', 'projection', size)) {
-      yield workloadGroup(() => projectionWorkloads(size, quick));
+      yield workloadGroup(() => semanticProjectionWorkloads(size, quick));
     }
     if (wants(selection, 'chart', 'query', 'query', size)) {
       yield workloadGroup(() => queryWorkloads(size, quick));
     }
   }
-  if (wants(selection, 'chart', 'transition', 'view')) {
+  if (
+    wants(selection, 'chart', 'transition', 'view')
+    || wantsMetric(selection, 'chart:view:transition', 'chart-view', { axes: 16, operation: 'zoom-axis-view' })
+  ) {
     yield workloadGroup(async () => [await viewWorkload(quick)]);
   }
 }
@@ -47,26 +56,18 @@ async function modelMutationWorkloads(size, quick) {
   ];
 }
 
-async function projectionWorkloads(size, quick) {
-  const [{ createChartController }, { cloneChartProjection }, { createChartDefinition }] = await Promise.all([
+async function controllerProjectionWorkloads(size, quick) {
+  const [{ createChartController }, { cloneChartProjection }] = await Promise.all([
     import('../../../packages/chart/dist/controller.js'),
     import('../../../packages/chart/dist/projection.js'),
-    import('../../../packages/chart/dist/definition.js'),
   ]);
-  const data = chartData(size);
-  const definition = definitionInput(data);
   const controller = createChartController({
-    definition,
+    definition: definitionInput(chartData(size)),
     viewCapabilities: [{ axisID: 'x', initial: { kind: 'continuous', minimum: 0, maximum: Math.floor(size / 2) } }],
     limits: { maxDatums: size },
   });
   const input = projectionInput();
   const projection = unwrap(controller.project(input));
-  const semantic = createChartDefinition({
-    coordinate: definition.coordinate,
-    layers: [{ id: 'scatter', kind: 'scatter', projection: 'density', xAxis: 'x', yAxis: 'y', data }],
-  }, { maxDatums: size });
-  const { createChartProjection } = await import('../../../packages/chart/dist/projection.js');
   return [
     timed(`chart:projection:cold:${size}`, 'chart-projection', { size, operation: 'cold' }, quick ? 1 : 5, (iteration) => {
       const moved = controller.dispatch({ type: 'pan-axis-view', axisID: 'x', fraction: iteration % 2 === 0 ? 0.01 : -0.01 });
@@ -78,9 +79,23 @@ async function projectionWorkloads(size, quick) {
       const cloned = cloneChartProjection(projection);
       return cloned.batches.length + (cloned.dataBatches?.length ?? 0);
     }),
-    timed(`chart:projection:semantic-bounded:${size}`, 'chart-projection', { size, operation: 'semantic-bounded' }, quick ? 1 : 5, () =>
-      createChartProjection(semantic, { ...input, maximumRepresentatives: 8_192 }).diagnostics.visitedIndexNodes),
   ];
+}
+
+async function semanticProjectionWorkloads(size, quick) {
+  const [{ createChartDefinition }, { createChartProjection }] = await Promise.all([
+    import('../../../packages/chart/dist/definition.js'),
+    import('../../../packages/chart/dist/projection.js'),
+  ]);
+  const data = chartData(size);
+  const definition = definitionInput(data);
+  const semantic = createChartDefinition({
+    coordinate: definition.coordinate,
+    layers: [{ id: 'scatter', kind: 'scatter', projection: 'density', xAxis: 'x', yAxis: 'y', data }],
+  }, { maxDatums: size });
+  const input = projectionInput();
+  return [timed(`chart:projection:semantic-bounded:${size}`, 'chart-projection', { size, operation: 'semantic-bounded' }, quick ? 1 : 5, () =>
+    createChartProjection(semantic, { ...input, maximumRepresentatives: 8_192 }).diagnostics.visitedIndexNodes)];
 }
 
 async function queryWorkloads(size, quick) {

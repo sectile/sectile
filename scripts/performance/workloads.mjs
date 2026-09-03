@@ -1,6 +1,7 @@
 import {
   PERFORMANCE_TIMING_PACKAGES,
   normalizePerformanceSelection,
+  performanceMetricSelected,
 } from './schema.mjs';
 import { timed } from './workloads/shared.mjs';
 
@@ -11,15 +12,10 @@ const OWNER_MODULES = Object.freeze({
   virtual: Object.freeze({ path: './workloads/virtual.mjs', factory: 'createVirtualWorkloadGroups' }),
 });
 
-export async function* createWorkloadGroups({
-  quick = false,
-  packages = PERFORMANCE_TIMING_PACKAGES,
-  selection = null,
-} = {}) {
-  const normalizedSelection = selection === null
-    ? normalizePerformanceSelection({ owners: packages, scales: quick ? ['representative'] : [] })
-    : normalizePerformanceSelection(selection);
-  const owners = normalizedSelection.owners.length === 0 ? PERFORMANCE_TIMING_PACKAGES : normalizedSelection.owners;
+export async function* createWorkloadGroups(options = {}) {
+  const { quick = false } = options;
+  const selection = workloadSelection(options);
+  const owners = selection.owners.length === 0 ? PERFORMANCE_TIMING_PACKAGES : selection.owners;
   yield Object.freeze(() => Object.freeze([createCalibrationWorkload(quick)]));
   for (const owner of owners) {
     const registration = OWNER_MODULES[owner];
@@ -27,14 +23,25 @@ export async function* createWorkloadGroups({
     const module = await import(registration.path);
     const factory = module[registration.factory];
     if (typeof factory !== 'function') throw new Error(`missing performance workload group factory ${registration.factory}`);
-    yield* factory({ quick, selection: normalizedSelection });
+    yield* factory({ quick, selection });
   }
 }
 
 export async function createWorkloads(options = {}) {
+  const selection = workloadSelection(options);
   const workloads = [];
-  for await (const createGroup of createWorkloadGroups(options)) workloads.push(...await createGroup());
+  for await (const createGroup of createWorkloadGroups(options)) {
+    for (const workload of await createGroup()) {
+      if (performanceMetricSelected(workload.metadata, selection)) workloads.push(workload);
+    }
+  }
   return Object.freeze(workloads);
+}
+
+function workloadSelection({ quick = false, packages = PERFORMANCE_TIMING_PACKAGES, selection = null } = {}) {
+  return selection === null
+    ? normalizePerformanceSelection({ owners: packages, scales: quick ? ['representative'] : [] })
+    : normalizePerformanceSelection(selection);
 }
 
 function createCalibrationWorkload(quick) {

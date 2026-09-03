@@ -1,9 +1,10 @@
 import {
-  PERFORMANCE_EVIDENCE,
   classifyPerformanceMetric,
   performanceMetricSelected,
   performanceScaleClass,
 } from '../schema.mjs';
+
+const DEFAULT_WORKLOAD_EVIDENCE = Object.freeze(['timing', 'allocation']);
 
 export function timed(id, family, dimensions, iterationCount, operation) {
   return Object.freeze({
@@ -39,8 +40,12 @@ export function wants(selection, owner, type, domain, size = undefined) {
     type,
     domain,
     scale: performanceScaleClass(owner, size),
-    evidence: PERFORMANCE_EVIDENCE,
+    evidence: DEFAULT_WORKLOAD_EVIDENCE,
   }, selection);
+}
+
+export function wantsMetric(selection, id, family, dimensions = {}) {
+  return performanceMetricSelected(classifyPerformanceMetric(id, family, dimensions), selection);
 }
 
 export function wantsAny(selection, owner, types, domain, size = undefined) {

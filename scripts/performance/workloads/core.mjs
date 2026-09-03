@@ -21,7 +21,7 @@ import { applyTreeGridEvent, createTreeGridModel, createTreeGridState } from '..
 import { applyRevisionedEvent, createRevisionSnapshot } from '../../../packages/core/dist/revision.js';
 import { createFacadeConnection, createSemanticController } from '../../../packages/core/dist/adapter-runtime.js';
 import { WORKLOAD_SCHEMA } from '../schema.mjs';
-import { iterations, selectedSizes, timed, unwrap, wants, wantsAny, workloadGroup } from './shared.mjs';
+import { iterations, selectedSizes, timed, unwrap, wants, wantsAny, wantsMetric, workloadGroup } from './shared.mjs';
 
 export function* createCoreWorkloadGroups({ quick, selection }) {
   const sizes = selectedSizes('core', WORKLOAD_SCHEMA.scales, selection);
@@ -65,7 +65,10 @@ export function* createCoreWorkloadGroups({ quick, selection }) {
       }
     }
   }
-  if (wantsAny(selection, 'core', ['transition', 'query'], 'runtime')) {
+  if (
+    wantsAny(selection, 'core', ['transition', 'query'], 'runtime')
+    || wantsMetric(selection, 'core:controller:handle', 'core-runtime', { operation: 'controller' })
+  ) {
     yield workloadGroup(() => runtimeWorkloads(quick, selection));
   }
   if (wants(selection, 'core', 'primitive', 'range')) {
@@ -296,15 +299,17 @@ function semanticWorkloads(domain, size, quick) {
 function runtimeWorkloads(quick, selection) {
   const result = [];
   const reducer = (state, event) => ({ ok: true, value: { state: state + event, commands: [state] } });
-  if (wants(selection, 'core', 'transition', 'runtime')) {
+  if (wantsMetric(selection, 'core:revision:apply', 'core-runtime', { operation: 'revision' })) {
     const snapshot = createRevisionSnapshot(0);
-    const controller = unwrap(createSemanticController({ initial: { ok: true, value: 0 }, reducer, toEffect: (command) => command }));
-    result.push(
-      timed('core:revision:apply', 'core-runtime', { operation: 'revision' }, quick ? 1_000 : 10_000, () => applyRevisionedEvent(snapshot, 0, 1, reducer).snapshot.revision),
-      timed('core:controller:handle', 'core-runtime', { operation: 'controller' }, quick ? 1_000 : 10_000, () => controller.handle(1).snapshot.revision),
-    );
+    result.push(timed('core:revision:apply', 'core-runtime', { operation: 'revision' }, quick ? 1_000 : 10_000, () =>
+      applyRevisionedEvent(snapshot, 0, 1, reducer).snapshot.revision));
   }
-  if (wants(selection, 'core', 'query', 'runtime')) {
+  if (wantsMetric(selection, 'core:controller:handle', 'core-runtime', { operation: 'controller' })) {
+    const controller = unwrap(createSemanticController({ initial: { ok: true, value: 0 }, reducer, toEffect: (command) => command }));
+    result.push(timed('core:controller:handle', 'core-runtime', { operation: 'controller' }, quick ? 1_000 : 10_000, () =>
+      controller.handle(1).snapshot.revision));
+  }
+  if (wantsMetric(selection, 'core:facade:access', 'core-runtime', { operation: 'facade-proxy' })) {
     const connection = { getSnapshot: () => ({ state: 1 }), handleEvent: () => true, syncControlledValue: () => ({ ok: true, value: 1 }) };
     const facade = unwrap(createFacadeConnection({}, () => ({ ok: true, value: connection })));
     result.push(timed('core:facade:access', 'core-runtime', { operation: 'facade-proxy' }, quick ? 1_000 : 10_000, () => facade.state + (facade.send(1) ? 1 : 0)));

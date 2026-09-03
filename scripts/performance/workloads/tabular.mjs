@@ -1,12 +1,19 @@
-import { iterations, selectedSizes, timed, unwrap, wants, workloadGroup } from './shared.mjs';
+import { iterations, selectedSizes, timed, unwrap, wants, wantsMetric, workloadGroup } from './shared.mjs';
 
 export function* createTabularWorkloadGroups({ quick, selection }) {
   const sizes = selectedSizes('tabular', [1_000, 10_000, 100_000], selection);
   for (const size of sizes) {
-    if (wants(selection, 'tabular', 'query', 'resolution', size)) {
+    if (
+      wants(selection, 'tabular', 'query', 'resolution', size)
+      || wantsMetric(selection, `tabular:resolve:warm:${size}`, 'tabular-resolution', { size, stage: 'warm' })
+      || wantsMetric(selection, `tabular:resolve:invalidate:${size}`, 'tabular-resolution', { size, stage: 'invalidation' })
+    ) {
       yield workloadGroup(() => resolutionWorkloads(size, quick));
     }
-    if (wants(selection, 'tabular', 'transition', 'grid-profile', size)) {
+    if (
+      wants(selection, 'tabular', 'transition', 'grid-profile', size)
+      || wantsMetric(selection, `tabular:grid-profile:move:${size}`, 'tabular-profile', { size, operation: 'move-cell' })
+    ) {
       yield workloadGroup(() => gridProfileWorkloads(size, quick));
     }
   }

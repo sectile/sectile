@@ -31,18 +31,35 @@ const metricsByID = new Map();
 let sink = 0;
 
 for (const lane of evidenceLanes()) {
-  for await (const createGroup of createWorkloadGroups({ quick, selection })) {
-    await measureWorkloadGroup(createGroup, lane);
+  if (lane === 'timing' && !evidenceRequested('timing')) {
+    await measureCalibration();
+    continue;
+  }
+  const laneSelection = selectionForEvidence(lane);
+  for await (const createGroup of createWorkloadGroups({ quick, selection: laneSelection })) {
+    await measureWorkloadGroup(createGroup, lane, laneSelection);
   }
 }
 const metrics = Object.freeze([...metricsByID.values()].map(finalizeMetric));
 
-async function measureWorkloadGroup(createGroup, lane) {
+async function measureCalibration() {
+  const laneSelection = selectionForEvidence('timing');
+  const iterator = createWorkloadGroups({ quick, selection: laneSelection })[Symbol.asyncIterator]();
+  try {
+    const calibration = await iterator.next();
+    if (calibration.done) throw new Error('performance calibration workload is missing');
+    await measureWorkloadGroup(calibration.value, 'timing', laneSelection);
+  } finally {
+    await iterator.return?.();
+  }
+}
+
+async function measureWorkloadGroup(createGroup, lane, laneSelection) {
   const workloads = await createGroup();
   for (const workload of workloads) {
-    if (!performanceMetricSelected(workload.metadata, selection)) continue;
+    if (!performanceMetricSelected(workload.metadata, laneSelection)) continue;
     const calibration = workload.metadata.owner === 'runner';
-    if (calibration ? lane !== 'timing' : !evidenceRequested(lane)) continue;
+    if (calibration ? lane !== 'timing' : !workload.metadata.evidence.includes(lane)) continue;
     const metric = metricResult(workload);
     if (lane === 'timing') measureTiming(workload, metric);
     else if (lane === 'allocation') measureAllocation(workload, metric);
@@ -149,6 +166,10 @@ function evidenceLanes() {
     ...(evidenceRequested('allocation') ? ['allocation'] : []),
     ...(evidenceRequested('retention') ? ['retention'] : []),
   ]);
+}
+
+function selectionForEvidence(evidence) {
+  return normalizePerformanceSelection({ ...selection, evidence: [evidence] });
 }
 
 if (!Number.isFinite(sink)) throw new Error('Performance sink became invalid.');

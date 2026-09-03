@@ -10,9 +10,10 @@ export const PERFORMANCE_TYPES = Object.freeze([
 export const PERFORMANCE_EVIDENCE = Object.freeze(['timing', 'allocation', 'retention']);
 export const PERFORMANCE_SCALE_CLASSES = Object.freeze(['representative', 'scaling', 'stress']);
 export const PERFORMANCE_TIMING_PACKAGES = Object.freeze(['core', 'chart', 'tabular', 'virtual']);
+const DEFAULT_METRIC_EVIDENCE = Object.freeze(['timing', 'allocation']);
 
 export const WORKLOAD_SCHEMA = Object.freeze({
-  version: 19,
+  version: 20,
   scales: Object.freeze([1_000, 10_000, 100_000]),
   chartScales: Object.freeze([10_000, 100_000, 1_000_000]),
   patchDepths: Object.freeze([1, 8, 32, 64]),
@@ -65,7 +66,8 @@ const METRIC_RULES = Object.freeze([
   rule(/^core:cascade:/u, 'core', 'transition', 'cascade'),
   rule(/^core:grid-control:/u, 'core', 'transition', 'grid-control'),
   rule(/^core:tree-grid:/u, 'core', 'transition', 'tree-grid'),
-  rule(/^core:(?:revision|controller):/u, 'core', 'transition', 'runtime'),
+  rule(/^core:revision:/u, 'core', 'transition', 'runtime'),
+  rule(/^core:controller:/u, 'core', 'transition', 'runtime', PERFORMANCE_EVIDENCE),
   rule(/^core:facade:/u, 'core', 'query', 'runtime'),
   rule(/^core:range:/u, 'core', 'primitive', 'range'),
   rule(/^core:exact-ratio:/u, 'core', 'primitive', 'exact-ratio'),
@@ -73,8 +75,9 @@ const METRIC_RULES = Object.freeze([
   rule(/^core:anchored-layout:/u, 'core', 'primitive', 'anchored-layout'),
   rule(/^core:color:/u, 'core', 'primitive', 'color'),
   rule(/^core:color-text:/u, 'core', 'primitive', 'color-text'),
-  rule(/^tabular:resolve:/u, 'tabular', 'query', 'resolution'),
-  rule(/^tabular:grid-profile:/u, 'tabular', 'transition', 'grid-profile'),
+  rule(/^tabular:resolve:cold:/u, 'tabular', 'query', 'resolution'),
+  rule(/^tabular:resolve:(?:warm|invalidate):/u, 'tabular', 'query', 'resolution', PERFORMANCE_EVIDENCE),
+  rule(/^tabular:grid-profile:/u, 'tabular', 'transition', 'grid-profile', PERFORMANCE_EVIDENCE),
   rule(/^virtual:linear:query:/u, 'virtual', 'query', 'linear'),
   rule(/^virtual:linear:measure:/u, 'virtual', 'mutation', 'linear'),
   rule(/^virtual:spatial:build:/u, 'virtual', 'construct', 'spatial'),
@@ -83,9 +86,10 @@ const METRIC_RULES = Object.freeze([
   rule(/^virtual:partitioned:measure:/u, 'virtual', 'mutation', 'partitioned'),
   rule(/^chart:model:normalize:/u, 'chart', 'construct', 'model'),
   rule(/^chart:model:(?:replace-layer|patch-layer-sparse):/u, 'chart', 'mutation', 'model'),
-  rule(/^chart:projection:/u, 'chart', 'projection', 'projection'),
+  rule(/^chart:projection:cold:/u, 'chart', 'projection', 'projection', PERFORMANCE_EVIDENCE),
+  rule(/^chart:projection:(?:cached|clone|semantic-bounded):/u, 'chart', 'projection', 'projection'),
   rule(/^chart:query:/u, 'chart', 'query', 'query'),
-  rule(/^chart:view:/u, 'chart', 'transition', 'view'),
+  rule(/^chart:view:/u, 'chart', 'transition', 'view', PERFORMANCE_EVIDENCE),
 ]);
 
 export function classifyPerformanceMetric(id, family, dimensions = {}) {
@@ -108,7 +112,7 @@ export function classifyPerformanceMetric(id, family, dimensions = {}) {
     type: selected.type,
     domain: selected.domain,
     scale: performanceScaleClass(selected.owner, dimensions.size),
-    evidence: PERFORMANCE_EVIDENCE,
+    evidence: selected.evidence,
   });
 }
 
@@ -185,8 +189,8 @@ export function performanceSelectionCovers(candidate, requested) {
     && selectionAxisCovers(normalizedCandidate.evidence, normalizedRequested.evidence);
 }
 
-function rule(pattern, owner, type, domain) {
-  return Object.freeze({ pattern, owner, type, domain });
+function rule(pattern, owner, type, domain, evidence = DEFAULT_METRIC_EVIDENCE) {
+  return Object.freeze({ pattern, owner, type, domain, evidence });
 }
 
 function normalizeValues(values, allowed, label) {

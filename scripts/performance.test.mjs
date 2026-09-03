@@ -25,6 +25,7 @@ import {
   PERFORMANCE_STATISTICS_PROTOCOL_VERSION,
 } from './performance/config.mjs';
 import {
+  PERFORMANCE_EVIDENCE,
   PERFORMANCE_TIMING_PACKAGES,
   WORKLOAD_SCHEMA,
   classifyPerformanceMetric,
@@ -276,6 +277,7 @@ test('comparison requires isolated-process distributions to separate', () => {
 });
 
 test('workload schema covers required scales, patch depth, density, domains, and browser counters', async () => {
+  assert.equal(WORKLOAD_SCHEMA.version, 20);
   assert.deepEqual(WORKLOAD_SCHEMA.scales, [1_000, 10_000, 100_000]);
   assert.deepEqual(WORKLOAD_SCHEMA.chartScales, [10_000, 100_000, 1_000_000]);
   assert.deepEqual(WORKLOAD_SCHEMA.patchDepths, [1, 8, 32, 64]);
@@ -290,6 +292,29 @@ test('workload schema covers required scales, patch depth, density, domains, and
   assert.equal(workloads.some(({ id }) => id === 'core:text:replace:1000'), true);
   assert.equal(workloads.some(({ id }) => id === 'core:sequence-reorder:move:1000'), true);
   assert.equal(workloads.some(({ id }) => id === 'core:tree-reorder:move:1000'), true);
+});
+
+test('retention evidence is limited to owner-retained state and caches', async () => {
+  assert.deepEqual(
+    classifyPerformanceMetric('core:revision:apply', 'core-runtime', { operation: 'revision' }).evidence,
+    ['timing', 'allocation'],
+  );
+  assert.deepEqual(
+    classifyPerformanceMetric('core:controller:handle', 'core-runtime', { operation: 'controller' }).evidence,
+    PERFORMANCE_EVIDENCE,
+  );
+  const selection = normalizePerformanceSelection({ scales: ['representative'], evidence: ['retention'] });
+  const workloads = await createWorkloads({ quick: true, selection });
+  assert.deepEqual(workloads.map(({ id }) => id), [
+    'runner:calibration',
+    'core:controller:handle',
+    'chart:projection:cold:10000',
+    'chart:view:transition',
+    'tabular:resolve:warm:1000',
+    'tabular:resolve:invalidate:1000',
+    'tabular:grid-profile:move:1000',
+  ]);
+  assert.equal(workloads.every(({ metadata }) => metadata.evidence.includes('retention')), true);
 });
 
 test('workload groups defer fixture construction and preserve catalog order', async () => {
