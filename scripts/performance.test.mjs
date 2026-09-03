@@ -22,6 +22,7 @@ import {
   calibratedTimingIterations,
   MAX_TIMING_ITERATIONS,
   MIN_TIMING_CALIBRATION_NANOSECONDS,
+  TIMING_WARMUP_BATCH_COUNT,
   timingCalibrationComplete,
 } from './performance/measurement.mjs';
 import {
@@ -54,6 +55,7 @@ test('performance statistics report stable median, p95, and relative MAD', () =>
 });
 
 test('timing calibration targets bounded setup and batch duration', () => {
+  assert.equal(TIMING_WARMUP_BATCH_COUNT, 2);
   assert.equal(timingCalibrationComplete(MIN_TIMING_CALIBRATION_NANOSECONDS - 1, 1, 10), false);
   assert.equal(timingCalibrationComplete(MIN_TIMING_CALIBRATION_NANOSECONDS, 1, 10), true);
   assert.equal(timingCalibrationComplete(1, 10, 10), true);

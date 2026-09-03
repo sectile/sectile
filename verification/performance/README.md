@@ -30,12 +30,13 @@ owner alongside Core, Tabular, and Virtual.
 
 Certification controls statistical rigor, not workload scope. It uses the
 `certification` measurement profile, at least ten sequential isolated Node
-processes, five measured batches, and a 20 ms target batch. Initial timing
-calibration runs until it has observed at least 1 ms of work or reaches the
-workload's bounded warmup count, whichever comes first. Timing iterations are
-then calibrated only from that observed cost, bounded from one to one million
-operations per batch; the workload's declared iteration count remains the memory
-evidence operation count instead of forcing slow timing batches above the target.
+processes, five measured batches, two warmup batches, and a 20 ms target batch.
+Initial timing calibration runs until it has observed at least 1 ms of work or
+reaches the workload's bounded warmup count, whichever comes first. Timing
+iterations are then calibrated only from that observed cost, bounded from one to
+one million operations per batch; the workload's declared iteration count remains
+the memory evidence operation count instead of forcing slow timing batches above
+the target.
 With no selectors it certifies the full catalog; the same rigor can be applied to
 one shard.
 

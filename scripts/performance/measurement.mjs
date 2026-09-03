@@ -1,5 +1,6 @@
 export const MAX_TIMING_ITERATIONS = 1_000_000;
 export const MIN_TIMING_CALIBRATION_NANOSECONDS = 1_000_000;
+export const TIMING_WARMUP_BATCH_COUNT = 2;
 
 export function timingCalibrationComplete(elapsedNanoseconds, iterations, maximumIterations) {
   if (!Number.isFinite(elapsedNanoseconds) || elapsedNanoseconds < 0) {

@@ -7,7 +7,11 @@ import {
   TARGET_BATCH_COUNT,
 } from './config.mjs';
 import { collectRetainedGarbage, collectTransientGarbage } from './gc-policy.mjs';
-import { calibratedTimingIterations, timingCalibrationComplete } from './measurement.mjs';
+import {
+  calibratedTimingIterations,
+  TIMING_WARMUP_BATCH_COUNT,
+  timingCalibrationComplete,
+} from './measurement.mjs';
 import {
   normalizePerformanceSelection,
   performanceMetricSelected,
@@ -87,7 +91,7 @@ function measureTiming(workload, metric) {
     targetBatchNanoseconds,
     warmupNanosecondsPerOperation,
   );
-  for (let warmupBatch = 0; warmupBatch < 3; warmupBatch += 1) {
+  for (let warmupBatch = 0; warmupBatch < TIMING_WARMUP_BATCH_COUNT; warmupBatch += 1) {
     for (let iteration = 0; iteration < measuredIterations; iteration += 1) {
       sink = consume(sink, workload.operation(iteration + warmupBatch * measuredIterations));
     }
