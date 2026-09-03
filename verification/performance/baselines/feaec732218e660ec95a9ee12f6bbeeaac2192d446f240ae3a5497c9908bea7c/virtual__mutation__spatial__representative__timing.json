@@ -1,0 +1,461 @@
+{
+  "schemaVersion": 6,
+  "createdAt": "2026-09-03T01:32:47.709Z",
+  "provenance": {
+    "node": "v24.20.0",
+    "v8": "13.6.233.17-node.53",
+    "platform": "linux",
+    "architecture": "x64",
+    "osRelease": "6.18.33.2-microsoft-standard-WSL2",
+    "cpuModel": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "cpuCount": 16,
+    "execArgv": [],
+    "workloadFingerprint": "ec0814260c74de683db2561e173f82800e699b65c512f16a2d9414983a24c647",
+    "measurementProfile": "screening",
+    "measurementProtocolVersion": 2,
+    "statisticsProtocolVersion": 2,
+    "gcProtocolVersion": 1,
+    "buildFingerprint": "a3603bc3be644dc14b6e06cedfed52b25fa4db0dbea0b4841876dfb027af455a",
+    "packageFootprint": {
+      "virtual": 261270
+    }
+  },
+  "runner": {
+    "processCount": 10,
+    "batchesPerProcess": 3,
+    "isolatedProcesses": true,
+    "forcedGC": true,
+    "warmup": true,
+    "sink": 103587454,
+    "quick": false,
+    "certification": true,
+    "measurementProfile": "screening",
+    "targetPackages": [
+      "virtual"
+    ],
+    "selection": {
+      "owners": [
+        "virtual"
+      ],
+      "types": [
+        "mutation"
+      ],
+      "domains": [
+        "spatial"
+      ],
+      "scales": [
+        "representative"
+      ],
+      "evidence": [
+        "timing"
+      ]
+    },
+    "selectionID": "virtual__mutation__spatial__representative__timing"
+  },
+  "workloadSchema": {
+    "version": 19,
+    "scales": [
+      1000,
+      10000,
+      100000
+    ],
+    "chartScales": [
+      10000,
+      100000,
+      1000000
+    ],
+    "patchDepths": [
+      1,
+      8,
+      32,
+      64
+    ],
+    "changedDensities": [
+      1,
+      32,
+      "full"
+    ],
+    "families": [
+      "runner",
+      "core-structure",
+      "core-selection",
+      "core-semantic",
+      "core-runtime",
+      "core-editing",
+      "chart-model",
+      "chart-projection",
+      "chart-query",
+      "chart-view",
+      "tabular-resolution",
+      "tabular-profile",
+      "virtual-layout"
+    ],
+    "browserQualifiedRegistrations": [
+      {
+        "id": "vue:mounted-virtual-projection",
+        "runtime": "browser",
+        "metrics": [
+          "render-count",
+          "effect-count",
+          "measurement-count",
+          "resource-count"
+        ],
+        "portableTimingBudget": false
+      }
+    ]
+  },
+  "metrics": {
+    "runner:calibration": {
+      "family": "runner",
+      "metadata": {
+        "owner": "runner",
+        "type": "primitive",
+        "domain": "calibration",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "operation": "integer-mix"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 84.2286645,
+        "p95": 85.0024636,
+        "relativeMAD": 0.007975990169,
+        "minimum": 83.006669,
+        "maximum": 85.117021
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 84.2628035,
+        "p95": 85.54363925,
+        "relativeMAD": 0.00841444825652,
+        "minimum": 82.669991,
+        "maximum": 86.097047
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 30000000
+    },
+    "virtual:spatial:measure:1000:1": {
+      "family": "virtual-layout",
+      "metadata": {
+        "owner": "virtual",
+        "type": "mutation",
+        "domain": "spatial",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "changed": 1,
+        "operation": "measurement"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 139336.672414,
+        "p95": 142626.427758,
+        "relativeMAD": 0.0139561248759,
+        "minimum": 124467.870968,
+        "maximum": 144148.241379
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 138308.848276,
+        "p95": 147476.55,
+        "relativeMAD": 0.039852215149,
+        "minimum": 97612.0357143,
+        "maximum": 202447.275862
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 891
+    },
+    "virtual:spatial:measure:1000:1000": {
+      "family": "virtual-layout",
+      "metadata": {
+        "owner": "virtual",
+        "type": "mutation",
+        "domain": "spatial",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "changed": 1000,
+        "operation": "measurement"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 491895.610715,
+        "p95": 786163.271054,
+        "relativeMAD": 0.0391718645446,
+        "minimum": 407256.736842,
+        "maximum": 1003302.27273
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 494458.785714,
+        "p95": 949936.0875,
+        "relativeMAD": 0.147460602547,
+        "minimum": 367675.368421,
+        "maximum": 1202142.09091
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 567
+    },
+    "virtual:spatial:measure:1000:32": {
+      "family": "virtual-layout",
+      "metadata": {
+        "owner": "virtual",
+        "type": "mutation",
+        "domain": "spatial",
+        "scale": "representative",
+        "evidence": [
+          "timing",
+          "allocation",
+          "retention"
+        ]
+      },
+      "dimensions": {
+        "size": 1000,
+        "changed": 32,
+        "operation": "measurement"
+      },
+      "unit": "nanoseconds-per-operation",
+      "timing": {
+        "count": 10,
+        "median": 102386.142804,
+        "p95": 130454.638444,
+        "relativeMAD": 0.060630284683,
+        "minimum": 95033.72,
+        "maximum": 137429.25
+      },
+      "batchTiming": {
+        "count": 30,
+        "median": 102386.142804,
+        "p95": 137282.386557,
+        "relativeMAD": 0.1473259142,
+        "minimum": 85852.6226415,
+        "maximum": 142659.5
+      },
+      "heap": {
+        "peakDelta": null,
+        "retainedDelta": null,
+        "positivePeakDeltaMedian": null,
+        "positiveRetainedDeltaMedian": null
+      },
+      "operations": 1542
+    }
+  },
+  "processResources": [
+    {
+      "userCPUTime": 787346,
+      "systemCPUTime": 71576,
+      "maxRSS": 153648,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 27260,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 731,
+      "involuntaryContextSwitches": 8
+    },
+    {
+      "userCPUTime": 764258,
+      "systemCPUTime": 97981,
+      "maxRSS": 144904,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 25144,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 669,
+      "involuntaryContextSwitches": 1
+    },
+    {
+      "userCPUTime": 748341,
+      "systemCPUTime": 86347,
+      "maxRSS": 149888,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 27594,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 695,
+      "involuntaryContextSwitches": 6
+    },
+    {
+      "userCPUTime": 784147,
+      "systemCPUTime": 75077,
+      "maxRSS": 154616,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 27505,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 704,
+      "involuntaryContextSwitches": 7
+    },
+    {
+      "userCPUTime": 759561,
+      "systemCPUTime": 73505,
+      "maxRSS": 142536,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 25335,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 633,
+      "involuntaryContextSwitches": 5
+    },
+    {
+      "userCPUTime": 784592,
+      "systemCPUTime": 58739,
+      "maxRSS": 156064,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 27969,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 716,
+      "involuntaryContextSwitches": 10
+    },
+    {
+      "userCPUTime": 798968,
+      "systemCPUTime": 51418,
+      "maxRSS": 154364,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 28518,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 717,
+      "involuntaryContextSwitches": 6
+    },
+    {
+      "userCPUTime": 792555,
+      "systemCPUTime": 59441,
+      "maxRSS": 153216,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 28168,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 748,
+      "involuntaryContextSwitches": 6
+    },
+    {
+      "userCPUTime": 803351,
+      "systemCPUTime": 43531,
+      "maxRSS": 153800,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 27508,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 656,
+      "involuntaryContextSwitches": 11
+    },
+    {
+      "userCPUTime": 811835,
+      "systemCPUTime": 44208,
+      "maxRSS": 158524,
+      "sharedMemorySize": 0,
+      "unsharedDataSize": 0,
+      "unsharedStackSize": 0,
+      "minorPageFault": 28856,
+      "majorPageFault": 0,
+      "swappedOut": 0,
+      "fsRead": 0,
+      "fsWrite": 0,
+      "ipcSent": 0,
+      "ipcReceived": 0,
+      "signalsCount": 0,
+      "voluntaryContextSwitches": 726,
+      "involuntaryContextSwitches": 7
+    }
+  ]
+}
