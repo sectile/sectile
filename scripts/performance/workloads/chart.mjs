@@ -5,7 +5,7 @@ export function* createChartWorkloadGroups({ quick, selection }) {
   const sizes = selectedSizes('chart', WORKLOAD_SCHEMA.chartScales, selection);
   for (const size of sizes) {
     if (wants(selection, 'chart', 'construct', 'model', size)) {
-      yield workloadGroup(() => modelConstructWorkloads(size, quick));
+      yield workloadGroup(() => modelConstructWorkloads(size));
     }
     if (wants(selection, 'chart', 'mutation', 'model', size)) {
       yield workloadGroup(() => modelMutationWorkloads(size, quick));
@@ -17,7 +17,7 @@ export function* createChartWorkloadGroups({ quick, selection }) {
       yield workloadGroup(() => controllerProjectionWorkloads(size, quick));
     }
     if (wants(selection, 'chart', 'projection', 'projection', size)) {
-      yield workloadGroup(() => semanticProjectionWorkloads(size, quick));
+      yield workloadGroup(() => semanticProjectionWorkloads(size));
     }
     if (wants(selection, 'chart', 'query', 'query', size)) {
       yield workloadGroup(() => queryWorkloads(size, quick));
@@ -31,10 +31,10 @@ export function* createChartWorkloadGroups({ quick, selection }) {
   }
 }
 
-async function modelConstructWorkloads(size, quick) {
+async function modelConstructWorkloads(size) {
   const { createChartModel } = await import('../../../packages/chart/dist/model.js');
   const source = chartData(size);
-  return [timed(`chart:model:normalize:${size}`, 'chart-model', { size, operation: 'normalize' }, quick ? 1 : size >= 1_000_000 ? 1 : 3, () =>
+  return [timed(`chart:model:normalize:${size}`, 'chart-model', { size, operation: 'normalize' }, 1, () =>
     createChartModel({ layers: [{ id: 'series', profile: 'ordered-series', data: source }] }, { maxDatums: size }).diagnostics.rebuiltIndexEntries)];
 }
 
@@ -44,14 +44,14 @@ async function modelMutationWorkloads(size, quick) {
   const initial = createChartModel({ layers: [{ id: 'series', profile: 'ordered-series', data: source }] }, { maxDatums: size });
   const dense = source.map((datum) => ({ ...datum, y: datum.y + 1 }));
   return [
-    timed(`chart:model:patch-layer-sparse:${size}`, 'chart-model', { size, changed: 1, operation: 'patch-layer-sparse' }, quick ? 1 : 7, (iteration) => {
+    timed(`chart:model:patch-layer-sparse:${size}`, 'chart-model', { size, changed: 1, operation: 'patch-layer-sparse' }, quick ? 1 : 3, (iteration) => {
       const index = size >>> 1;
       const next = applyChartPatch(initial, {
         operations: [{ type: 'replace', layerID: 'series', index, data: [{ ...source[index], y: iteration + 1 }] }],
       });
       return next.diagnostics.copiedValueBlocks + next.diagnostics.repairedIndexEntries;
     }),
-    timed(`chart:model:replace-layer:${size}`, 'chart-model', { size, operation: 'replace-layer' }, quick ? 1 : 5, () =>
+    timed(`chart:model:replace-layer:${size}`, 'chart-model', { size, operation: 'replace-layer' }, 1, () =>
       replaceChartLayer(initial, { id: 'series', profile: 'ordered-series', data: dense }).diagnostics.rebuiltIndexEntries),
   ];
 }
@@ -82,7 +82,7 @@ async function controllerProjectionWorkloads(size, quick) {
   ];
 }
 
-async function semanticProjectionWorkloads(size, quick) {
+async function semanticProjectionWorkloads(size) {
   const [{ createChartDefinition }, { createChartProjection }] = await Promise.all([
     import('../../../packages/chart/dist/definition.js'),
     import('../../../packages/chart/dist/projection.js'),
@@ -94,7 +94,7 @@ async function semanticProjectionWorkloads(size, quick) {
     layers: [{ id: 'scatter', kind: 'scatter', projection: 'density', xAxis: 'x', yAxis: 'y', data }],
   }, { maxDatums: size });
   const input = projectionInput();
-  return [timed(`chart:projection:semantic-bounded:${size}`, 'chart-projection', { size, operation: 'semantic-bounded' }, quick ? 1 : 5, () =>
+  return [timed(`chart:projection:semantic-bounded:${size}`, 'chart-projection', { size, operation: 'semantic-bounded' }, 1, () =>
     createChartProjection(semantic, { ...input, maximumRepresentatives: 8_192 }).diagnostics.visitedIndexNodes)];
 }
 

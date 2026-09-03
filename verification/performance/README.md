@@ -57,10 +57,14 @@ type, domain, scale, and evidence. Each worker executes timing, allocation, and
 retention as separate evidence lanes. Timing completes before allocation or any
 retained-GC work, while an allocation-only or retention-only selection runs only
 the calibration timing plus its requested memory lane. Timing and allocation are
-the default evidence for registered metrics. Retention is opt-in for operations
-that mutate or populate long-lived owner state or caches, so the retention lane
-does not construct unrelated stateless workload groups. Retained-heap sampling
-uses three GC passes; across all registered retention scales, the third-to-fourth
+the default evidence for registered metrics. Allocation repetition is workload-
+specific and uses the minimum bounded amplification needed to keep the intended
+heap signal measurable; bulk chart operations avoid redundant repeats once a
+single operation already produces multi-megabyte evidence. Retention is opt-in
+for operations that mutate or populate long-lived owner state or caches, so the
+retention lane does not construct unrelated stateless workload groups.
+Retained-heap sampling uses three GC passes; across all registered retention
+scales, the third-to-fourth
 pass delta stayed below the 64 KiB comparison floor while one or two passes did
 not. Within each lane,
 selected fixtures are constructed as lazy related-metric groups; one group

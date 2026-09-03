@@ -337,6 +337,17 @@ test('retention evidence is limited to owner-retained state and caches', async (
   assert.equal(workloads.every(({ metadata }) => metadata.evidence.includes('retention')), true);
 });
 
+test('chart bulk allocation workloads avoid redundant amplification', async () => {
+  const selection = normalizePerformanceSelection({ owners: ['chart'], scales: ['representative'], evidence: ['allocation'] });
+  const workloads = await createWorkloads({ quick: false, selection });
+  const byID = new Map(workloads.map((workload) => [workload.id, workload]));
+  assert.equal(byID.get('chart:model:normalize:10000').iterations, 1);
+  assert.equal(byID.get('chart:model:patch-layer-sparse:10000').iterations, 3);
+  assert.equal(byID.get('chart:model:replace-layer:10000').iterations, 1);
+  assert.equal(byID.get('chart:projection:semantic-bounded:10000').iterations, 1);
+  assert.equal(byID.get('chart:projection:cold:10000').iterations, 5);
+});
+
 test('workload groups defer fixture construction and preserve catalog order', async () => {
   const iterator = createWorkloadGroups({ quick: true, packages: ['chart'] })[Symbol.asyncIterator]();
   const calibration = await iterator.next();
