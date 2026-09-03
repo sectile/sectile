@@ -57,21 +57,25 @@ export { ZERO_INSETS, ZERO_POINT, pointDelta, rectanglesIntersect };
 
 export function normalizeQuery(input: VirtualQueryInput): VirtualResult<{ readonly viewport: VirtualRect; readonly overscan: VirtualInsets; readonly renderBounds: VirtualRect }> {
   const viewportResult = tryCreateRect(input.viewport);
-  if (!viewportResult.ok || viewportResult.value.x < 0 || viewportResult.value.y < 0) return invalidGeometry('Viewport coordinates and extents must be finite and non-negative.', input.viewport);
+  if (!viewportResult.ok) return invalidGeometry('Viewport coordinates must be finite and extents must be finite and non-negative.', input.viewport);
   const viewport = viewportResult.value;
   const overscan = normalizeInsets(input.overscan);
   if (overscan === null) return invalidGeometry('Overscan must contain finite non-negative extents.', input.overscan);
-  const renderX = Math.max(0, viewport.x - overscan.left);
-  const renderY = Math.max(0, viewport.y - overscan.top);
+  const renderLeft = Math.max(0, viewport.x - overscan.left);
+  const renderTop = Math.max(0, viewport.y - overscan.top);
+  const renderRight = Math.max(0, viewport.x + viewport.width + overscan.right);
+  const renderBottom = Math.max(0, viewport.y + viewport.height + overscan.bottom);
+  const renderBounds = tryCreateRect({
+    x: renderLeft,
+    y: renderTop,
+    width: Math.max(0, renderRight - renderLeft),
+    height: Math.max(0, renderBottom - renderTop),
+  });
+  if (!renderBounds.ok) return invalidGeometry('Overscan expansion must produce finite non-negative render bounds.', { viewport, overscan });
   return { ok: true, value: Object.freeze({
     viewport,
     overscan,
-    renderBounds: Object.freeze({
-      x: renderX,
-      y: renderY,
-      width: viewport.x + viewport.width + overscan.right - renderX,
-      height: viewport.y + viewport.height + overscan.bottom - renderY,
-    }),
+    renderBounds: renderBounds.value,
   }) };
 }
 

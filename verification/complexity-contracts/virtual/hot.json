@@ -851,6 +851,48 @@
       }
     },
     {
+      "id": "surface.frame-transform",
+      "inherits": "constant-v1",
+      "source": "packages/virtual/src/surface.ts",
+      "benchmarkIDs": [
+        "VAL-001:surface-frame-laws"
+      ],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "input cardinality is fixed to one point, rectangle, frame, or frame pair",
+          "external scalar geometry is validated at the operation boundary"
+        ],
+        "ceilings": [
+          "finite IEEE-754 geometry"
+        ],
+        "deterministicWork": [
+          "a bounded number of scalar validation and arithmetic steps",
+          "one fixed-size frozen point, rectangle, or frame result"
+        ],
+        "resourceRationale": "Surface-frame transforms retain no owner state and create no host resources.",
+        "proof": "Each operation reads a fixed number of point, rectangle, and inset scalars and emits one fixed-size immutable value.",
+        "adversarialWitness": "Maximum finite asymmetric coordinates and a negative surface-local viewport do not increase deterministic work.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Surface-frame transforms have no collection domain to traverse."
+        }
+      }
+    },
+    {
       "id": "track.measure",
       "inherits": "linear-v1",
       "source": "packages/virtual/src/track-grid-layout.ts",
