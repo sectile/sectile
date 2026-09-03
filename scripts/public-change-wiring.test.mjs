@@ -32,8 +32,9 @@ test('full deterministic verification retains every public-change gate independe
       { check: 'consumer-install', stage: 'consumer install' },
     ],
   );
-  for (const stage of ['public signatures', 'breaking changes', 'workstream ownership', 'consumer bundles', 'consumer install']) {
-    assert.ok(plan.stages.includes(stage), `missing full verification stage: ${stage}`);
+  for (const command of ['public signatures', 'breaking changes', 'workstream ownership', 'consumer bundles', 'consumer install']) {
+    assert.ok(plan.commands.includes(command), `missing full verification command: ${command}`);
   }
+  assert.ok(plan.stages.includes('consumer verification'));
   assert.equal(plan.stages.includes('public change gates'), false);
 });

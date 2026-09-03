@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { withArtifactSession } from './lib/artifact-session.mjs';
 import { boundedFailureOutput } from './lib/compact-process.mjs';
-import { spawnSyncPortable } from './lib/portable-process.mjs';
+import { execFilePortable, spawnSyncPortable } from './lib/portable-process.mjs';
 import {
   collectDependencyClosure,
   deriveAffectedSelection,
@@ -140,6 +140,7 @@ if (explainRequested) {
     certificationPerformance: releaseRequested,
     failFast: !continueOnFailure,
     stages: steps.map(({ label }) => label),
+    commands: steps.flatMap(({ commands }) => commands.map(({ detail }) => detail)),
   }, null, 2)}\n`);
   process.exitCode = 0;
 } else if (steps.length === 0) {
@@ -246,8 +247,14 @@ function workspaceContractSteps({ includePerformance }) {
     ]),
     commandStep('breaking changes', process.execPath, [join(root, 'scripts', 'check-breaking-changes.mjs')]),
     commandStep('workstream ownership', process.execPath, [join(root, 'scripts', 'check-workstream-ownership.mjs')]),
-    commandStep('consumer bundles', process.execPath, [join(root, 'scripts', 'consumer-bundles', 'run.mjs'), 'check']),
-    commandStep('consumer install', process.execPath, [join(root, 'scripts', 'consumer-install', 'run.mjs'), 'check', `--tarball-directory=${publicationPackDirectory}`]),
+    parallelStep('consumer verification', [
+      commandEntry('consumer bundles', process.execPath, [join(root, 'scripts', 'consumer-bundles', 'run.mjs'), 'check']),
+      commandEntry('consumer install', process.execPath, [
+        join(root, 'scripts', 'consumer-install', 'run.mjs'),
+        'check',
+        `--tarball-directory=${publicationPackDirectory}`,
+      ]),
+    ]),
     commandStep('lifecycle retention', 'pnpm', ['check:lifecycle-retention']),
   ];
   if (includePerformance) {
@@ -298,35 +305,65 @@ function packageScriptStep(label, packageName, scripts) {
 
 function commandStep(label, command, args) {
   return Object.freeze({
-    commands: Object.freeze([Object.freeze({ args, command, detail: label })]),
+    commands: Object.freeze([commandEntry(label, command, args)]),
     label,
   });
 }
 
-function runVerification() {
+function parallelStep(label, commands) {
+  return Object.freeze({ commands: Object.freeze(commands), label, parallel: true });
+}
+
+function commandEntry(detail, command, args) {
+  return Object.freeze({ args, command, detail });
+}
+
+async function runVerification() {
   const verificationStartedAt = performance.now();
   const startedAt = new Date().toISOString();
   const runID = `${startedAt.replaceAll(':', '-').replaceAll('.', '-')}-${process.pid}`;
-  const commands = [];
-  const report = (status, completedAt = null) => ({
-    schemaVersion: 1,
-    runID,
-    mode: modeLabel,
-    target: targetLabel,
-    startedAt,
-    completedAt,
-    status,
-    stageCount: steps.length,
-    commandCount: commands.length,
-    failureCount: commands.filter((command) => command.status === 'failed').length,
-    commands,
-    performanceComparison: releaseRequested ? '.tasks/performance/latest-comparison.json' : null,
-  });
+  const commandOrder = new Map(steps.flatMap(({ commands }) => commands).map((entry, index) => [entry, index]));
+  const commandResults = new Array(commandOrder.size);
+  const report = (status, completedAt = null) => {
+    const commands = commandResults.filter((command) => command !== undefined);
+    return {
+      schemaVersion: 1,
+      runID,
+      mode: modeLabel,
+      target: targetLabel,
+      startedAt,
+      completedAt,
+      status,
+      stageCount: steps.length,
+      commandCount: commands.length,
+      failureCount: commands.filter((command) => command.status === 'failed').length,
+      commands,
+      performanceComparison: releaseRequested ? '.tasks/performance/latest-comparison.json' : null,
+    };
+  };
+  const recordCommandResult = (commandEntry, commandStartedAt, result) => {
+    const index = commandOrder.get(commandEntry);
+    if (index === undefined) throw new Error(`verification command is not part of the plan: ${commandEntry.detail}`);
+    commandResults[index] = {
+      detail: commandEntry.detail,
+      command: commandEntry.command,
+      args: commandEntry.args,
+      status: result.error === undefined && result.status === 0 ? 'passed' : 'failed',
+      exitCode: result.status ?? null,
+      signal: result.signal ?? null,
+      elapsedSeconds: elapsedNumber(commandStartedAt),
+      error: result.error?.message ?? null,
+      stdout: result.status === 0 ? null : boundedFailureOutput(result.stdout),
+      stderr: result.status === 0 ? null : boundedFailureOutput(result.stderr),
+    };
+    writeVerificationReport(report('running'));
+    return result;
+  };
   writeVerificationReport(report('running'));
   if (verbose) console.log(`verification: ${modeLabel} (${targetLabel}) on ${process.version}`);
   cleanGeneratedOutputs();
 
-  const result = runVerificationSteps(steps, {
+  const result = await runVerificationSteps(steps, {
     continueOnFailure,
     onFailure: ({ command, result: commandResult, startedAt }) => {
       reportFailure(command.detail, startedAt, commandResult);
@@ -334,7 +371,8 @@ function runVerification() {
     onStep: (step, index, total) => {
       if (!quietRequested) console.log(`[${index + 1}/${total}] ${step.label}`);
     },
-    run: ({ detail, command, args }) => {
+    run: (commandEntry) => {
+      const { detail, command, args } = commandEntry;
       if (verbose) console.log(`  ${detail}`);
       const commandStartedAt = performance.now();
       const result = spawnSyncPortable(command, args, {
@@ -343,20 +381,16 @@ function runVerification() {
         maxBuffer: 32 * 1_024 * 1_024,
         stdio: verbose ? 'inherit' : ['ignore', 'pipe', 'pipe'],
       });
-      commands.push({
-        detail,
-        command,
-        args,
-        status: result.error === undefined && result.status === 0 ? 'passed' : 'failed',
-        exitCode: result.status ?? null,
-        signal: result.signal ?? null,
-        elapsedSeconds: elapsedNumber(commandStartedAt),
-        error: result.error?.message ?? null,
-        stdout: result.status === 0 ? null : boundedFailureOutput(result.stdout),
-        stderr: result.status === 0 ? null : boundedFailureOutput(result.stderr),
-      });
-      writeVerificationReport(report('running'));
-      return result;
+      return recordCommandResult(commandEntry, commandStartedAt, result);
+    },
+    runAsync: async (commandEntry) => {
+      const { detail, command, args } = commandEntry;
+      if (verbose) console.log(`  ${detail}`);
+      const commandStartedAt = performance.now();
+      const result = await runAsyncCommand(command, args);
+      if (verbose && result.stdout) process.stdout.write(String(result.stdout));
+      if (verbose && result.stderr) process.stderr.write(String(result.stderr));
+      return recordCommandResult(commandEntry, commandStartedAt, result);
     },
   });
   writeVerificationReport(report(result.status === 0 ? 'passed' : 'failed', new Date().toISOString()));
@@ -367,6 +401,27 @@ function runVerification() {
 
   console.log(`verification passed: ${steps.length} stages (${elapsedSeconds(verificationStartedAt)}s)`);
   return 0;
+}
+
+
+async function runAsyncCommand(command, args) {
+  try {
+    const result = await execFilePortable(command, args, {
+      cwd: root,
+      encoding: 'utf8',
+      maxBuffer: 32 * 1_024 * 1_024,
+    });
+    return { error: undefined, status: 0, signal: null, stdout: result.stdout ?? '', stderr: result.stderr ?? '' };
+  } catch (error) {
+    const exitCode = typeof error?.code === 'number' ? error.code : null;
+    return {
+      error: exitCode === null ? error : undefined,
+      status: exitCode,
+      signal: error?.signal ?? null,
+      stdout: error?.stdout ?? '',
+      stderr: error?.stderr ?? '',
+    };
+  }
 }
 
 function writeVerificationReport(report) {

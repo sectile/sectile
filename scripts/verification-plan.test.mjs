@@ -62,6 +62,10 @@ test('verification CLI separates affected, full deterministic, and release certi
 
   const full = explain(['--full']);
   assert.equal(full.stages.includes('performance certification'), false);
+  assert.equal(full.stages.includes('consumer verification'), true);
+  assert.equal(full.stages.includes('consumer bundles'), false);
+  assert.equal(full.commands.includes('consumer bundles'), true);
+  assert.equal(full.commands.includes('consumer install'), true);
   assert.equal(full.certificationPerformance, false);
   assert.equal(full.documentationSiteBuild, false);
 
