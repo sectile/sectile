@@ -17,6 +17,10 @@ export function timed(id, family, dimensions, iterationCount, operation) {
   });
 }
 
+export function workloadGroup(create) {
+  return Object.freeze(async () => Object.freeze(await create()));
+}
+
 export function iterations(size, quick) {
   if (quick) return 1;
   if (size >= 100_000) return 1;

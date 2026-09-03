@@ -21,43 +21,71 @@ import { applyTreeGridEvent, createTreeGridModel, createTreeGridState } from '..
 import { applyRevisionedEvent, createRevisionSnapshot } from '../../../packages/core/dist/revision.js';
 import { createFacadeConnection, createSemanticController } from '../../../packages/core/dist/adapter-runtime.js';
 import { WORKLOAD_SCHEMA } from '../schema.mjs';
-import { iterations, selectedSizes, timed, unwrap, wants, wantsAny } from './shared.mjs';
+import { iterations, selectedSizes, timed, unwrap, wants, wantsAny, workloadGroup } from './shared.mjs';
 
-export function createCoreWorkloads({ quick, selection }) {
-  const workloads = [];
+export function* createCoreWorkloadGroups({ quick, selection }) {
   const sizes = selectedSizes('core', WORKLOAD_SCHEMA.scales, selection);
   for (const size of sizes) {
     if (wantsAny(selection, 'core', ['construct', 'query', 'mutation'], 'sequence', size)) {
-      workloads.push(...sequenceWorkloads(size, quick, selection));
+      yield workloadGroup(() => sequenceWorkloads(size, quick, selection));
     }
-    if (wants(selection, 'core', 'mutation', 'selection', size)) workloads.push(...selectionWorkloads(size, quick));
+    if (wants(selection, 'core', 'mutation', 'selection', size)) {
+      yield workloadGroup(() => selectionWorkloads(size, quick));
+    }
     if (wantsAny(selection, 'core', ['query', 'mutation'], 'selection-expression', size)) {
-      workloads.push(...selectionExpressionWorkloads(size, quick, selection));
+      yield workloadGroup(() => selectionExpressionWorkloads(size, quick, selection));
     }
     if (wantsAny(selection, 'core', ['construct', 'query'], 'metric-index', size)) {
-      workloads.push(...metricIndexWorkloads(size, quick, selection));
+      yield workloadGroup(() => metricIndexWorkloads(size, quick, selection));
     }
-    if (wants(selection, 'core', 'query', 'tree', size)) workloads.push(...treeWorkloads(size, quick));
-    if (wants(selection, 'core', 'primitive', 'geometry', size)) workloads.push(geometryBoundsWorkload(size, quick));
-    if (wants(selection, 'core', 'mutation', 'text', size)) workloads.push(textWorkload(size, quick));
-    if (wants(selection, 'core', 'mutation', 'sequence-reorder', size)) workloads.push(sequenceReorderWorkload(size, quick));
-    if (wants(selection, 'core', 'mutation', 'tree-reorder', size)) workloads.push(treeReorderWorkload(size, quick));
-    if (wants(selection, 'core', 'query', 'grid', size)) workloads.push(...gridWorkloads(size, quick));
+    if (wants(selection, 'core', 'query', 'tree', size)) {
+      yield workloadGroup(() => treeWorkloads(size, quick));
+    }
+    if (wants(selection, 'core', 'primitive', 'geometry', size)) {
+      yield workloadGroup(() => [geometryBoundsWorkload(size, quick)]);
+    }
+    if (wants(selection, 'core', 'mutation', 'text', size)) {
+      yield workloadGroup(() => [textWorkload(size, quick)]);
+    }
+    if (wants(selection, 'core', 'mutation', 'sequence-reorder', size)) {
+      yield workloadGroup(() => [sequenceReorderWorkload(size, quick)]);
+    }
+    if (wants(selection, 'core', 'mutation', 'tree-reorder', size)) {
+      yield workloadGroup(() => [treeReorderWorkload(size, quick)]);
+    }
+    if (wants(selection, 'core', 'query', 'grid', size)) {
+      yield workloadGroup(() => gridWorkloads(size, quick));
+    }
     if (wantsAny(selection, 'core', ['construct', 'query', 'mutation'], 'index-span', size)) {
-      workloads.push(...indexSpanWorkloads(size, quick, selection));
+      yield workloadGroup(() => indexSpanWorkloads(size, quick, selection));
     }
     for (const domain of ['listbox', 'tree-view', 'menu', 'cascade', 'grid-control', 'tree-grid']) {
-      if (wants(selection, 'core', 'transition', domain, size)) workloads.push(...semanticWorkloads(domain, size, quick));
+      if (wants(selection, 'core', 'transition', domain, size)) {
+        yield workloadGroup(() => semanticWorkloads(domain, size, quick));
+      }
     }
   }
-  if (wantsAny(selection, 'core', ['transition', 'query'], 'runtime')) workloads.push(...runtimeWorkloads(quick, selection));
-  if (wants(selection, 'core', 'primitive', 'range')) workloads.push(rangeWorkload(quick));
-  if (wants(selection, 'core', 'primitive', 'exact-ratio')) workloads.push(exactRatioWorkload(quick));
-  if (wants(selection, 'core', 'primitive', 'geometry')) workloads.push(geometryIntersectionWorkload(quick));
-  if (wants(selection, 'core', 'primitive', 'anchored-layout')) workloads.push(anchoredLayoutWorkload(quick));
-  if (wants(selection, 'core', 'primitive', 'color')) workloads.push(...colorWorkloads(quick));
-  if (wants(selection, 'core', 'primitive', 'color-text')) workloads.push(colorTextWorkload(quick));
-  return workloads;
+  if (wantsAny(selection, 'core', ['transition', 'query'], 'runtime')) {
+    yield workloadGroup(() => runtimeWorkloads(quick, selection));
+  }
+  if (wants(selection, 'core', 'primitive', 'range')) {
+    yield workloadGroup(() => [rangeWorkload(quick)]);
+  }
+  if (wants(selection, 'core', 'primitive', 'exact-ratio')) {
+    yield workloadGroup(() => [exactRatioWorkload(quick)]);
+  }
+  if (wants(selection, 'core', 'primitive', 'geometry')) {
+    yield workloadGroup(() => [geometryIntersectionWorkload(quick)]);
+  }
+  if (wants(selection, 'core', 'primitive', 'anchored-layout')) {
+    yield workloadGroup(() => [anchoredLayoutWorkload(quick)]);
+  }
+  if (wants(selection, 'core', 'primitive', 'color')) {
+    yield workloadGroup(() => colorWorkloads(quick));
+  }
+  if (wants(selection, 'core', 'primitive', 'color-text')) {
+    yield workloadGroup(() => [colorTextWorkload(quick)]);
+  }
 }
 
 function sequenceWorkloads(size, quick, selection) {

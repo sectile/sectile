@@ -1,48 +1,50 @@
 import { WORKLOAD_SCHEMA } from '../schema.mjs';
-import { selectedSizes, timed, unwrap, wants, wantsAny } from './shared.mjs';
+import { selectedSizes, timed, unwrap, wants, wantsAny, workloadGroup } from './shared.mjs';
 
-export async function createChartWorkloads({ quick, selection }) {
-  const workloads = [];
+export function* createChartWorkloadGroups({ quick, selection }) {
   const sizes = selectedSizes('chart', WORKLOAD_SCHEMA.chartScales, selection);
   for (const size of sizes) {
-    if (wantsAny(selection, 'chart', ['construct', 'mutation'], 'model', size)) {
-      workloads.push(...await modelWorkloads(size, quick, selection));
+    if (wants(selection, 'chart', 'construct', 'model', size)) {
+      yield workloadGroup(() => modelConstructWorkloads(size, quick));
+    }
+    if (wants(selection, 'chart', 'mutation', 'model', size)) {
+      yield workloadGroup(() => modelMutationWorkloads(size, quick));
     }
     if (wants(selection, 'chart', 'projection', 'projection', size)) {
-      workloads.push(...await projectionWorkloads(size, quick));
+      yield workloadGroup(() => projectionWorkloads(size, quick));
     }
     if (wants(selection, 'chart', 'query', 'query', size)) {
-      workloads.push(...await queryWorkloads(size, quick));
+      yield workloadGroup(() => queryWorkloads(size, quick));
     }
   }
-  if (wants(selection, 'chart', 'transition', 'view')) workloads.push(await viewWorkload(quick));
-  return workloads;
+  if (wants(selection, 'chart', 'transition', 'view')) {
+    yield workloadGroup(async () => [await viewWorkload(quick)]);
+  }
 }
 
-async function modelWorkloads(size, quick, selection) {
+async function modelConstructWorkloads(size, quick) {
+  const { createChartModel } = await import('../../../packages/chart/dist/model.js');
+  const source = chartData(size);
+  return [timed(`chart:model:normalize:${size}`, 'chart-model', { size, operation: 'normalize' }, quick ? 1 : size >= 1_000_000 ? 1 : 3, () =>
+    createChartModel({ layers: [{ id: 'series', profile: 'ordered-series', data: source }] }, { maxDatums: size }).diagnostics.rebuiltIndexEntries)];
+}
+
+async function modelMutationWorkloads(size, quick) {
   const { applyChartPatch, createChartModel, replaceChartLayer } = await import('../../../packages/chart/dist/model.js');
   const source = chartData(size);
-  const result = [];
-  if (wants(selection, 'chart', 'construct', 'model', size)) {
-    result.push(timed(`chart:model:normalize:${size}`, 'chart-model', { size, operation: 'normalize' }, quick ? 1 : size >= 1_000_000 ? 1 : 3, () =>
-      createChartModel({ layers: [{ id: 'series', profile: 'ordered-series', data: source }] }, { maxDatums: size }).diagnostics.rebuiltIndexEntries));
-  }
-  if (wants(selection, 'chart', 'mutation', 'model', size)) {
-    const initial = createChartModel({ layers: [{ id: 'series', profile: 'ordered-series', data: source }] }, { maxDatums: size });
-    const dense = source.map((datum) => ({ ...datum, y: datum.y + 1 }));
-    result.push(
-      timed(`chart:model:patch-layer-sparse:${size}`, 'chart-model', { size, changed: 1, operation: 'patch-layer-sparse' }, quick ? 1 : 7, (iteration) => {
-        const index = size >>> 1;
-        const next = applyChartPatch(initial, {
-          operations: [{ type: 'replace', layerID: 'series', index, data: [{ ...source[index], y: iteration + 1 }] }],
-        });
-        return next.diagnostics.copiedValueBlocks + next.diagnostics.repairedIndexEntries;
-      }),
-      timed(`chart:model:replace-layer:${size}`, 'chart-model', { size, operation: 'replace-layer' }, quick ? 1 : 5, () =>
-        replaceChartLayer(initial, { id: 'series', profile: 'ordered-series', data: dense }).diagnostics.rebuiltIndexEntries),
-    );
-  }
-  return result;
+  const initial = createChartModel({ layers: [{ id: 'series', profile: 'ordered-series', data: source }] }, { maxDatums: size });
+  const dense = source.map((datum) => ({ ...datum, y: datum.y + 1 }));
+  return [
+    timed(`chart:model:patch-layer-sparse:${size}`, 'chart-model', { size, changed: 1, operation: 'patch-layer-sparse' }, quick ? 1 : 7, (iteration) => {
+      const index = size >>> 1;
+      const next = applyChartPatch(initial, {
+        operations: [{ type: 'replace', layerID: 'series', index, data: [{ ...source[index], y: iteration + 1 }] }],
+      });
+      return next.diagnostics.copiedValueBlocks + next.diagnostics.repairedIndexEntries;
+    }),
+    timed(`chart:model:replace-layer:${size}`, 'chart-model', { size, operation: 'replace-layer' }, quick ? 1 : 5, () =>
+      replaceChartLayer(initial, { id: 'series', profile: 'ordered-series', data: dense }).diagnostics.rebuiltIndexEntries),
+  ];
 }
 
 async function projectionWorkloads(size, quick) {

@@ -35,7 +35,7 @@ import {
   performanceSelectionCovers,
   performanceSelectionID,
 } from './performance/schema.mjs';
-import { createWorkloads } from './performance/workloads.mjs';
+import { createWorkloadGroups, createWorkloads } from './performance/workloads.mjs';
 
 test('performance statistics report stable median, p95, and relative MAD', () => {
   assert.equal(median([5, 1, 3, 2, 4]), 3);
@@ -290,6 +290,35 @@ test('workload schema covers required scales, patch depth, density, domains, and
   assert.equal(workloads.some(({ id }) => id === 'core:text:replace:1000'), true);
   assert.equal(workloads.some(({ id }) => id === 'core:sequence-reorder:move:1000'), true);
   assert.equal(workloads.some(({ id }) => id === 'core:tree-reorder:move:1000'), true);
+});
+
+test('workload groups defer fixture construction and preserve catalog order', async () => {
+  const iterator = createWorkloadGroups({ quick: true, packages: ['chart'] })[Symbol.asyncIterator]();
+  const calibration = await iterator.next();
+  assert.equal(calibration.done, false);
+  assert.equal(typeof calibration.value, 'function');
+  assert.deepEqual((await calibration.value()).map(({ id }) => id), ['runner:calibration']);
+
+  const construct = await iterator.next();
+  assert.equal(construct.done, false);
+  assert.equal(typeof construct.value, 'function');
+  assert.deepEqual((await construct.value()).map(({ id }) => id), ['chart:model:normalize:10000']);
+
+  const mutation = await iterator.next();
+  assert.equal(mutation.done, false);
+  assert.equal(typeof mutation.value, 'function');
+  assert.deepEqual((await mutation.value()).map(({ id }) => id), [
+    'chart:model:patch-layer-sparse:10000',
+    'chart:model:replace-layer:10000',
+  ]);
+  await iterator.return();
+
+  const grouped = [];
+  for await (const createGroup of createWorkloadGroups({ quick: true, packages: ['chart'] })) {
+    grouped.push(...await createGroup());
+  }
+  const flattened = await createWorkloads({ quick: true, packages: ['chart'] });
+  assert.deepEqual(grouped.map(({ id }) => id), flattened.map(({ id }) => id));
 });
 
 test('timing workload families have explicit package owners', async () => {

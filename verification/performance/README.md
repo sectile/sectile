@@ -46,9 +46,12 @@ pnpm performance:promote -- .tasks/performance/runs/<run-id>/report.json
 A full certification measures timing, allocation, and retained heap across all
 registered shards. A selected certification measures only the requested owner,
 type, domain, scale, and evidence. Timing-only runs do not execute the heap pass
-or retained-GC phase. Certification is for release, nightly or dedicated
-benchmark runs, or an explicit selected/full investigation. It is not part of
-ordinary `pnpm verify` or `pnpm verify:full`.
+or retained-GC phase. Within each worker, selected fixtures are constructed as
+lazy related-metric groups; one group completes before the next fixture group is
+created, so unrelated large fixtures do not extend each other's retained
+lifetime. Certification is for release, nightly or dedicated benchmark runs,
+or an explicit selected/full investigation. It is not part of ordinary
+`pnpm verify` or `pnpm verify:full`.
 
 Every command that actually measures performance creates a retained session
 under `.tasks/performance/runs/<run-id>/`. The progress manifest is written

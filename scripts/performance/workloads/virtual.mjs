@@ -1,21 +1,19 @@
 import { createSequence } from '../../../packages/core/dist/structures/sequence.js';
-import { iterations, selectedSizes, timed, wants, wantsAny } from './shared.mjs';
+import { iterations, selectedSizes, timed, wants, wantsAny, workloadGroup } from './shared.mjs';
 
-export async function createVirtualWorkloads({ quick, selection }) {
-  const workloads = [];
+export function* createVirtualWorkloadGroups({ quick, selection }) {
   const sizes = selectedSizes('virtual', [1_000, 10_000, 100_000], selection);
   for (const size of sizes) {
     if (wantsAny(selection, 'virtual', ['query', 'mutation'], 'linear', size)) {
-      workloads.push(...await linearWorkloads(size, quick, selection));
+      yield workloadGroup(() => linearWorkloads(size, quick, selection));
     }
     if (wantsAny(selection, 'virtual', ['construct', 'query', 'mutation'], 'spatial', size)) {
-      workloads.push(...await spatialWorkloads(size, quick, selection));
+      yield workloadGroup(() => spatialWorkloads(size, quick, selection));
     }
     if (wants(selection, 'virtual', 'mutation', 'partitioned', size)) {
-      workloads.push(...await partitionedWorkloads(size, quick));
+      yield workloadGroup(() => partitionedWorkloads(size, quick));
     }
   }
-  return workloads;
 }
 
 async function linearWorkloads(size, quick, selection) {

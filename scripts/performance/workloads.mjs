@@ -5,26 +5,35 @@ import {
 import { timed } from './workloads/shared.mjs';
 
 const OWNER_MODULES = Object.freeze({
-  core: Object.freeze({ path: './workloads/core.mjs', factory: 'createCoreWorkloads' }),
-  chart: Object.freeze({ path: './workloads/chart.mjs', factory: 'createChartWorkloads' }),
-  tabular: Object.freeze({ path: './workloads/tabular.mjs', factory: 'createTabularWorkloads' }),
-  virtual: Object.freeze({ path: './workloads/virtual.mjs', factory: 'createVirtualWorkloads' }),
+  core: Object.freeze({ path: './workloads/core.mjs', factory: 'createCoreWorkloadGroups' }),
+  chart: Object.freeze({ path: './workloads/chart.mjs', factory: 'createChartWorkloadGroups' }),
+  tabular: Object.freeze({ path: './workloads/tabular.mjs', factory: 'createTabularWorkloadGroups' }),
+  virtual: Object.freeze({ path: './workloads/virtual.mjs', factory: 'createVirtualWorkloadGroups' }),
 });
 
-export async function createWorkloads({ quick = false, packages = PERFORMANCE_TIMING_PACKAGES, selection = null } = {}) {
+export async function* createWorkloadGroups({
+  quick = false,
+  packages = PERFORMANCE_TIMING_PACKAGES,
+  selection = null,
+} = {}) {
   const normalizedSelection = selection === null
     ? normalizePerformanceSelection({ owners: packages, scales: quick ? ['representative'] : [] })
     : normalizePerformanceSelection(selection);
   const owners = normalizedSelection.owners.length === 0 ? PERFORMANCE_TIMING_PACKAGES : normalizedSelection.owners;
-  const workloads = [createCalibrationWorkload(quick)];
+  yield Object.freeze(() => Object.freeze([createCalibrationWorkload(quick)]));
   for (const owner of owners) {
     const registration = OWNER_MODULES[owner];
     if (registration === undefined) throw new Error(`missing performance workload module for ${owner}`);
     const module = await import(registration.path);
     const factory = module[registration.factory];
-    if (typeof factory !== 'function') throw new Error(`missing performance workload factory ${registration.factory}`);
-    workloads.push(...await factory({ quick, selection: normalizedSelection }));
+    if (typeof factory !== 'function') throw new Error(`missing performance workload group factory ${registration.factory}`);
+    yield* factory({ quick, selection: normalizedSelection });
   }
+}
+
+export async function createWorkloads(options = {}) {
+  const workloads = [];
+  for await (const createGroup of createWorkloadGroups(options)) workloads.push(...await createGroup());
   return Object.freeze(workloads);
 }
 

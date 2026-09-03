@@ -1,17 +1,15 @@
-import { iterations, selectedSizes, timed, unwrap, wants } from './shared.mjs';
+import { iterations, selectedSizes, timed, unwrap, wants, workloadGroup } from './shared.mjs';
 
-export async function createTabularWorkloads({ quick, selection }) {
-  const workloads = [];
+export function* createTabularWorkloadGroups({ quick, selection }) {
   const sizes = selectedSizes('tabular', [1_000, 10_000, 100_000], selection);
   for (const size of sizes) {
     if (wants(selection, 'tabular', 'query', 'resolution', size)) {
-      workloads.push(...await resolutionWorkloads(size, quick));
+      yield workloadGroup(() => resolutionWorkloads(size, quick));
     }
     if (wants(selection, 'tabular', 'transition', 'grid-profile', size)) {
-      workloads.push(...await gridProfileWorkloads(size, quick));
+      yield workloadGroup(() => gridProfileWorkloads(size, quick));
     }
   }
-  return workloads;
 }
 
 async function resolutionWorkloads(size, quick) {
