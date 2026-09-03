@@ -339,7 +339,7 @@ test('targeted screening requires batch-tail corroboration for noisy three-proce
     maximum: 185,
   };
   current.metrics['core:case'].batchTiming = {
-    median: 150,
+    median: 110,
     p95: 119,
     relativeMAD: 0.3,
     minimum: 80,
