@@ -76,5 +76,8 @@ do not construct or execute unrelated workload shards. Statistical rigor is
 independent from workload scope: a selected shard may use certification-grade
 sampling, while repository-wide certification remains release/nightly evidence
 rather than a default local correctness gate. Baselines are review inputs, not
-values adjusted to the current result. Record the previous value, measured delta,
-contributors, consumer impact, and approved ceiling before replacing a baseline.
+values adjusted to the current result. Any change to warmup/batch/measurement
+semantics, statistical interpretation, or explicit GC policy bumps the owning
+performance protocol version so incompatible baselines cannot be selected.
+Record the previous value, measured delta, contributors, consumer impact, and
+approved ceiling before replacing a baseline.

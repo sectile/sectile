@@ -51,11 +51,18 @@ test('runner rejects calibration requiring a regression band above ten percent',
   assert.throws(() => validateRunnerReport(report), /10% validity ceiling/u);
 });
 
-test('comparison rejects workload, runtime, hardware, and flag mismatches', () => {
-  const baseline = fixture();
-  const current = fixture();
-  current.provenance.cpuModel = 'different';
-  assert.throws(() => assertComparable(baseline, current), /mismatched workload, runtime, hardware, or flags/u);
+test('comparison rejects workload, runtime, hardware, flag, and protocol mismatches', () => {
+  for (const [field, value] of [
+    ['cpuModel', 'different'],
+    ['measurementProtocolVersion', PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION + 1],
+    ['statisticsProtocolVersion', PERFORMANCE_STATISTICS_PROTOCOL_VERSION + 1],
+    ['gcProtocolVersion', PERFORMANCE_GC_PROTOCOL_VERSION + 1],
+  ]) {
+    const baseline = fixture();
+    const current = fixture();
+    current.provenance[field] = value;
+    assert.throws(() => assertComparable(baseline, current), /mismatched workload, runtime, hardware, flags, or protocol/u);
+  }
 });
 
 test('default performance baselines require one exact environment partition', async (context) => {
@@ -387,7 +394,11 @@ function fixture() {
     schemaVersion: PERFORMANCE_SCHEMA_VERSION,
     provenance: {
       node: 'v1', v8: '1', platform: 'test', architecture: 'test', osRelease: '1',
-      cpuModel: 'test', cpuCount: 1, execArgv: [], workloadFingerprint: 'schema', buildFingerprint: 'build',
+      cpuModel: 'test', cpuCount: 1, execArgv: [], workloadFingerprint: 'schema',
+      measurementProtocolVersion: PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
+      statisticsProtocolVersion: PERFORMANCE_STATISTICS_PROTOCOL_VERSION,
+      gcProtocolVersion: PERFORMANCE_GC_PROTOCOL_VERSION,
+      buildFingerprint: 'build',
       packageFootprint: { core: 100 },
     },
     runner: { processCount: 10 },

@@ -55,11 +55,14 @@ their completed process reports. Invalid calibration, comparison failures, and
 regressions retain their reports and terminal status.
 
 `record` accepts a non-quick certification run and writes it under an exact
-environment partition plus its workload-selection ID. A selected baseline can
-therefore coexist with the full baseline for the same Node/V8/OS/CPU/flag
-configuration. `performance:promote` accepts certification reports, including
-selected certification shards; three-process screenings and quick runs cannot
-become authoritative baselines.
+environment partition plus its workload-selection ID. The environment partition
+includes Node/V8/OS/CPU/flags, the workload fingerprint, and explicit measurement,
+statistics, and GC protocol versions. Changing benchmark semantics therefore
+selects a new baseline partition even when the runtime and hardware are unchanged.
+A selected baseline can coexist with the full baseline for the same compatible
+measurement environment. `performance:promote` accepts certification reports,
+including selected certification shards; three-process screenings and quick runs
+cannot become authoritative baselines.
 
 Without an explicit `--baseline`, comparison first looks for the exact selected
 baseline. If a selected baseline has not been recorded, it may compare the

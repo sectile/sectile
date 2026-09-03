@@ -36,7 +36,7 @@ export function assertComparable(baseline, current) {
   assert.deepEqual(
     compatibilityMetadata(current.provenance),
     compatibilityMetadata(baseline.provenance),
-    'performance reports have mismatched workload, runtime, hardware, or flags metadata',
+    'performance reports have mismatched workload, runtime, hardware, flags, or protocol metadata',
   );
   const currentKeys = Object.keys(current.metrics).sort();
   const baselineKeys = new Set(Object.keys(baseline.metrics));
