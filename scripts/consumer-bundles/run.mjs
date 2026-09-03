@@ -30,10 +30,7 @@ const fixtures = deriveFixtures(fragments);
 const concurrency = readConcurrency();
 let completedFixtures = 0;
 const results = (await mapWithConcurrency(fixtures, concurrency, async (fixture) => {
-  const bundled = [];
-  for (const bundler of ['esbuild', 'vite']) {
-    bundled.push(await bundleFixture(repoRoot, fixture, bundler));
-  }
+  const bundled = await Promise.all(['esbuild', 'vite'].map((bundler) => bundleFixture(repoRoot, fixture, bundler)));
   completedFixtures += 1;
   if (completedFixtures % 50 === 0 || completedFixtures === fixtures.length) {
     process.stderr.write(`consumer fixtures ${completedFixtures}/${fixtures.length} complete\n`);
