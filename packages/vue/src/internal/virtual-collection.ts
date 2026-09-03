@@ -1,4 +1,5 @@
 import { h, shallowRef, type ShallowRef, type VNodeArrayChildren, type VNodeChild } from 'vue';
+import { resolveVirtualLaneGeometry } from '@sectile/virtual/collection';
 import type { VirtualInsets, VirtualLayoutPlan, VirtualPlacement, VirtualRect, VirtualScrollAlignment, VirtualizerConnection } from '@sectile/dom/virtual';
 import { VirtualizerItem, type VirtualizerItemSize, type VirtualizerRootExpose } from './virtual-core.js';
 import type { PreparedVirtualList, VirtualListItemAttributes, VirtualListKeyResolver } from './virtual-collection-model.js';
@@ -43,22 +44,27 @@ export function resolveResponsiveLanes(
   maxLaneCount: number,
   laneGap: number,
 ): ResponsiveLaneGeometry {
-  if (!Number.isFinite(minLaneSize) || minLaneSize <= 0)
-    throw new TypeError('minLaneSize must be a positive finite number.');
-  if (!Number.isSafeInteger(maxLaneCount) || maxLaneCount < 1)
-    throw new TypeError('maxLaneCount must be a positive safe integer.');
-  if (!Number.isFinite(laneGap) || laneGap < 0)
-    throw new TypeError('laneGap must be a non-negative finite number.');
-  if (requestedCount !== undefined && (!Number.isSafeInteger(requestedCount) || requestedCount < 1))
-    throw new TypeError('laneCount must be a positive safe integer.');
-  const available = Number.isFinite(crossExtent) && crossExtent > 0 ? crossExtent : minLaneSize;
-  const count = requestedCount ?? Math.max(
-    1,
-    Math.min(maxLaneCount, Math.floor((available + laneGap) / (minLaneSize + laneGap))),
+  const available = Number.isFinite(crossExtent) && crossExtent > 0
+    ? crossExtent
+    : minLaneSize;
+  const geometry = resolveVirtualLaneGeometry(
+    available,
+    requestedCount === undefined
+      ? Object.freeze({
+          kind: 'responsive' as const,
+          minExtent: minLaneSize,
+          maxCount: maxLaneCount,
+          gap: laneGap,
+        })
+      : Object.freeze({
+          kind: 'fixed' as const,
+          count: requestedCount,
+          gap: laneGap,
+        }),
   );
   return Object.freeze({
-    count,
-    extent: Math.max(1, (available - laneGap * (count - 1)) / count),
+    count: geometry.count,
+    extent: geometry.extent,
   });
 }
 

@@ -5,5 +5,5 @@
     "isolatedDeclarations": false,
     "noEmit": true
   },
-  "include": ["spatial-layout.ts", "surface.ts"]
+  "include": ["collection.ts", "spatial-layout.ts", "surface.ts"]
 }

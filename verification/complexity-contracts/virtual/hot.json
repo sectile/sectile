@@ -5,6 +5,312 @@
   "kind": "internal-operations",
   "operations": [
     {
+      "id": "collection.extents.reconcile",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-003:collection-extent-work"
+      ],
+      "specificationCeiling": "O(jChanged log nItem)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "active stable-identity and extent count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "inserted identities requiring retained or initial extents",
+            "ceiling": "jChanged <= nItem"
+          }
+        ],
+        "time": {
+          "bound": "O(jChanged log nItem)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(jChanged)",
+          "output": "O(jChanged)",
+          "retained": "O(jChanged)"
+        },
+        "resources": {
+          "allocations": "O(jChanged)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the collection projection and layout extent owner are canonical",
+          "stable identity lookup follows the bounded Core Sequence representation"
+        ],
+        "ceilings": [
+          "maxItems",
+          "Core Sequence patch depth",
+          "extent-index height"
+        ],
+        "benchmarkIDs": [
+          "VAL-003:collection-extent-work"
+        ],
+        "deterministicWork": [
+          "one stable-ID lookup per inserted identity",
+          "at most one retained extent read or one initial extent creation per inserted identity"
+        ],
+        "resourceRationale": "Extent reconciliation allocates only the splice output and one extent entry per inserted identity.",
+        "proof": "Each inserted identity performs one bounded Sequence lookup and at most one logarithmic extent-index lookup before emitting one extent.",
+        "adversarialWitness": "Every inserted identity survives from a different retained extent-index leaf or requires a new estimate.",
+        "evidence": [
+          "VAL-003"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Extent reconciliation must not visit identities outside the inserted change window."
+        }
+      }
+    },
+    {
+      "id": "collection.lanes.resolve",
+      "inherits": "constant-v1",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-003:lane-policy-work"
+      ],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "one fixed or responsive lane policy is supplied",
+          "lane geometry is represented by bounded scalar values"
+        ],
+        "ceilings": [
+          "positive safe-integer lane count",
+          "finite cross extent and gap"
+        ],
+        "benchmarkIDs": [
+          "VAL-003:lane-policy-work"
+        ],
+        "deterministicWork": [
+          "a bounded number of scalar validation and arithmetic steps",
+          "one immutable lane geometry result"
+        ],
+        "resourceRationale": "Lane resolution retains no collection state and allocates one fixed-size result.",
+        "proof": "Fixed and responsive policies use only scalar validation, division, and clamping.",
+        "adversarialWitness": "Maximum safe lane counts and finite asymmetric gaps do not increase deterministic work.",
+        "evidence": [
+          "VAL-003"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Lane resolution has no item domain to traverse."
+        }
+      }
+    },
+    {
+      "id": "collection.patch.trusted",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-003:trusted-collection-patch-work"
+      ],
+      "specificationCeiling": "O(jChanged)",
+      "contract": {
+        "variables": [
+          {
+            "name": "jChanged",
+            "meaning": "inserted identities plus explicitly changed values",
+            "ceiling": "declared trusted patch cardinality"
+          }
+        ],
+        "time": {
+          "bound": "O(jChanged)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(jChanged)",
+          "output": "O(1)",
+          "retained": "O(jChanged)"
+        },
+        "resources": {
+          "allocations": "O(jChanged)",
+          "cacheEntries": "O(jChanged)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the patch is bound to the active projection by an owner-created opaque token",
+          "Core Sequence identity lookup has bounded patch depth"
+        ],
+        "ceilings": [
+          "projection maxItems",
+          "projection maxIDCodeUnits",
+          "Core Sequence patch depth"
+        ],
+        "benchmarkIDs": [
+          "VAL-003:trusted-collection-patch-work"
+        ],
+        "deterministicWork": [
+          "resolver calls equal inserted identities plus the declared value-change range",
+          "no unchanged source position is read"
+        ],
+        "resourceRationale": "The trusted path retains one bounded Core Sequence patch, changed IDs, and an opaque update token.",
+        "proof": "Patch creation validates only the declared splice identities and value-change range, then Core applies one bounded structural patch; token application is constant time.",
+        "adversarialWitness": "A sparse patch inserts identities that collide with distant survivors and exercises every local validation without scanning unchanged values.",
+        "evidence": [
+          "VAL-003"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "A trusted patch must never rediscover unchanged raw-array identity."
+        }
+      }
+    },
+    {
+      "id": "collection.project.raw",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-003:raw-collection-project-work"
+      ],
+      "specificationCeiling": "O(nItem)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "raw source item count",
+            "ceiling": "maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nItem)",
+          "output": "O(1)",
+          "retained": "O(nItem)"
+        },
+        "resources": {
+          "allocations": "O(nItem)",
+          "cacheEntries": "O(nItem)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "raw arrays carry no trusted identity patch",
+          "each source position is resolved exactly once"
+        ],
+        "ceilings": [
+          "maxItems",
+          "maxIDCodeUnits"
+        ],
+        "benchmarkIDs": [
+          "VAL-003:raw-collection-project-work"
+        ],
+        "deterministicWork": [
+          "exactly nItem ID resolver calls after ceiling validation",
+          "one Core Sequence construction"
+        ],
+        "resourceRationale": "Initial projection retains the application array reference and one Core Sequence identity owner.",
+        "proof": "Projection resolves every raw item once and Core validates and indexes each resulting stable identity once.",
+        "adversarialWitness": "A maximum-size raw array with the final identity invalid still requires complete preceding validation.",
+        "evidence": [
+          "VAL-003"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Initial raw projection must validate every identity."
+        }
+      }
+    },
+    {
+      "id": "collection.replace.raw",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-003:raw-collection-replacement-work"
+      ],
+      "specificationCeiling": "O(nItem + jChanged)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "maximum previous or next raw source item count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "discovered changed window, or nItem when resolver provenance changes",
+            "ceiling": "jChanged <= nItem"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem + jChanged)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(jChanged)",
+          "output": "O(1)",
+          "retained": "O(jChanged)"
+        },
+        "resources": {
+          "allocations": "O(jChanged)",
+          "cacheEntries": "O(jChanged)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "unchanged prefix and suffix values preserve object identity",
+          "dense Core Sequence repair is O(jChanged) because dense changes make jChanged proportional to nItem"
+        ],
+        "ceilings": [
+          "maxItems",
+          "maxIDCodeUnits",
+          "Core Sequence patch depth"
+        ],
+        "benchmarkIDs": [
+          "VAL-003:raw-collection-replacement-work"
+        ],
+        "deterministicWork": [
+          "prefix and suffix comparisons visit at most nItem values",
+          "resolver calls and new retained identities are bounded by jChanged"
+        ],
+        "resourceRationale": "Raw replacement retains only changed IDs and bounded Core patch metadata unless the changed density makes a full rebuild asymptotically equivalent.",
+        "proof": "The owner discovers one prefix/suffix window, resolves only that window under stable resolver provenance, and applies one Core Sequence splice.",
+        "adversarialWitness": "Only the middle item changes after equal prefix and suffix scans consume the rest of a maximum-size array.",
+        "evidence": [
+          "VAL-003"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Raw arrays provide no patch, so unchanged prefix and suffix discovery may inspect the complete source."
+        }
+      }
+    },
+    {
       "id": "extent.lookup",
       "inherits": "constant-v1",
       "source": "packages/virtual/src/extent-index.ts",

@@ -26,6 +26,11 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./collection": {
+      "types": "./dist/collection.d.ts",
+      "import": "./dist/collection.js",
+      "default": "./dist/collection.js"
+    },
     "./extent-index": {
       "types": "./dist/extent-index.d.ts",
       "import": "./dist/extent-index.js",
