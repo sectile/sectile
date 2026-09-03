@@ -2,7 +2,7 @@ import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, shallowRef, w
 import { createExtentIndex, createUniformExtentIndex, type Extent, type ExtentIndex } from '@sectile/virtual/extent-index';
 import { createDenseTrackGridLayout, trackGridLayoutStrategy, type GridRegion, type GridTrackMeasurement, type TrackGridLayoutState, type TrackGridMutation } from '@sectile/virtual/track-grid-layout';
 import { createAxisMeasurementResolver, type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
-import { VirtualizerContent, VirtualizerRoot, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './internal/virtual-core.js';
+import { VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './internal/virtual-core.js';
 import { assertVirtualListSizeMode, createPreparedVirtualListSequence, exactExtent, estimatedExtent, prepareVirtualList, requireAutomaticEstimate, requiresDOMBootstrap, updatePreparedVirtualList, type PreparedVirtualList, type VirtualListEstimate, type VirtualListItemAttributes, type VirtualListKeyResolver } from './internal/virtual-collection-model.js';
 import type { VirtualListSlotProps } from './internal/virtual-list.js';
 import { createHighLevelVirtualExpose, nearlyEqual, renderCollectionBootstrapItems, renderHighLevelItems, resolveResponsiveLanes, type ResponsiveLaneGeometry, type ResponsiveLaneProps, type VirtualCollectionBaseProps } from './internal/virtual-collection.js';
@@ -264,7 +264,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
       },
       onError: (error: Parameters<VirtualizerErrorHandler>[0]) => emit('error', error),
     }, {
-      default: ({ placements }: VirtualizerRootSlotProps) => h(VirtualizerContent, { as: props.contentAs }, {
+      default: ({ placements }: VirtualizerRootSlotProps) => h(VirtualizerSurface, { as: props.contentAs }, {
         default: () => isBootstrapping()
           ? renderCollectionBootstrapItems(
               'virtual-grid',

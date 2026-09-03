@@ -1,7 +1,7 @@
 import { defineComponent, h, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type SlotsType, type VNodeChild, type VNodeProps } from 'vue';
 import { createSpatialLayout, spatialLayoutStrategy, type SpatialItem, type SpatialLayoutState, type SpatialMeasurement, type SpatialMutation, type SpatialPlacement } from '@sectile/virtual/spatial-layout';
 import { type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
-import { VirtualizerContent, VirtualizerRoot, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './internal/virtual-core.js';
+import { VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './internal/virtual-core.js';
 import { prepareVirtualList, updatePreparedVirtualList, type PreparedVirtualList, type VirtualListItemAttributes, type VirtualListKeyResolver } from './internal/virtual-collection-model.js';
 import type { VirtualListSlotProps } from './internal/virtual-list.js';
 import { createHighLevelVirtualExpose, renderHighLevelItems, type VirtualCollectionBaseProps } from './internal/virtual-collection.js';
@@ -179,7 +179,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
       onPlanChange: (plan: VirtualLayoutPlan<string>) => emit('planChange', plan),
       onError: (error: Parameters<VirtualizerErrorHandler>[0]) => emit('error', error),
     }, {
-      default: ({ placements }: VirtualizerRootSlotProps) => h(VirtualizerContent, { as: props.contentAs }, {
+      default: ({ placements }: VirtualizerRootSlotProps) => h(VirtualizerSurface, { as: props.contentAs }, {
         default: () => renderHighLevelItems(
           'virtual-spatial',
           placements,

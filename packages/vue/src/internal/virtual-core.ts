@@ -1,7 +1,53 @@
-import { computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onScopeDispose, provide, shallowRef, toValue, watch, type ComputedRef, type MaybeRefOrGetter, type PropType, type Ref, type ShallowRef, type SlotsType, type VNodeChild } from 'vue';
-import type { StableID } from '@sectile/core';
-import { createAxisMeasurementResolver, createVirtualizer, virtualContentStyle, virtualItemStyle, type VirtualInsets, type VirtualItemStyleOptions, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualPlacement, type VirtualRect, type VirtualScrollAlignment, type VirtualScrollWriter, type VirtualViewportReader, type VirtualizerConnection, type VirtualizerEnvironment, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
+import {
+  computed,
+  defineComponent,
+  h,
+  inject,
+  mergeProps,
+  onBeforeUnmount,
+  onScopeDispose,
+  provide,
+  shallowRef,
+  toValue,
+  watch,
+  type ComputedRef,
+  type MaybeRefOrGetter,
+  type PropType,
+  type Ref,
+  type ShallowRef,
+  type SlotsType,
+  type VNodeChild,
+} from 'vue';
+import type { Result, StableID } from '@sectile/core';
+import type { VirtualErrorCode } from '@sectile/virtual';
+import {
+  createAxisMeasurementResolver,
+  createVirtualizer,
+  virtualItemStyle,
+  virtualSurfaceStyle,
+  type VirtualInsets,
+  type VirtualItemStyleOptions,
+  type VirtualLayoutMutation,
+  type VirtualLayoutPlan,
+  type VirtualLayoutStrategy,
+  type VirtualMeasurementResolver,
+  type VirtualPlacement,
+  type VirtualPoint,
+  type VirtualRect,
+  type VirtualScrollAlignment,
+  type VirtualScrollWriter,
+  type VirtualViewportReader,
+  type VirtualizerConnection,
+  type VirtualizerEnvironment,
+  type VirtualizerErrorHandler,
+} from '@sectile/dom/virtual';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
+
+export type VirtualizerHostErrorCode = 'virtualizer-not-connected';
+export type VirtualizerOperationResult<T> = Result<
+  T,
+  VirtualErrorCode | VirtualizerHostErrorCode
+>;
 
 export interface UseVirtualizerOptions<
   State,
@@ -11,8 +57,12 @@ export interface UseVirtualizerOptions<
 > {
   readonly state: Ref<State>;
   readonly strategy: VirtualLayoutStrategy<State, ID, Measurement, Mutation>;
-  readonly root?: ShallowRef<HTMLElement | null | undefined>;
+  readonly scrollport?: ShallowRef<HTMLElement | null | undefined>;
+  readonly surface?: ShallowRef<HTMLElement | null | undefined>;
   readonly overscan?: MaybeRefOrGetter<
+    number | Partial<VirtualInsets> | undefined
+  >;
+  readonly viewportInsets?: MaybeRefOrGetter<
     number | Partial<VirtualInsets> | undefined
   >;
   readonly initialViewport?: VirtualRect;
@@ -31,32 +81,26 @@ export interface UseVirtualizerReturn<
   Measurement,
   Mutation,
 > {
-  readonly root: ShallowRef<HTMLElement | null | undefined>;
+  readonly scrollport: ShallowRef<HTMLElement | null | undefined>;
+  readonly surface: ShallowRef<HTMLElement | null | undefined>;
   readonly plan: ShallowRef<VirtualLayoutPlan<ID> | null>;
   readonly connection: ShallowRef<
     VirtualizerConnection<State, ID, Measurement, Mutation> | undefined
   >;
+  registerFrame(element: HTMLElement): () => void;
   registerItem(element: HTMLElement, id: ID): () => void;
   measure(
     measurements: readonly Measurement[],
-  ): ReturnType<
-    VirtualizerConnection<State, ID, Measurement, Mutation>['measure']
-  >;
+  ): VirtualizerOperationResult<VirtualLayoutMutation<State>>;
   mutate(
     mutation: Mutation,
-  ): ReturnType<
-    VirtualizerConnection<State, ID, Measurement, Mutation>['mutate']
-  >;
+  ): VirtualizerOperationResult<VirtualLayoutMutation<State>>;
   scrollTo(
     id: ID,
     alignment?: VirtualScrollAlignment,
-  ): ReturnType<
-    VirtualizerConnection<State, ID, Measurement, Mutation>['scrollTo']
-  >;
+  ): VirtualizerOperationResult<VirtualPoint>;
   refresh(): void;
-  flush(): ReturnType<
-    VirtualizerConnection<State, ID, Measurement, Mutation>['flush']
-  >;
+  flush(): VirtualizerOperationResult<VirtualLayoutPlan<ID>>;
 }
 
 export type VirtualizerItemSize = 'none' | 'width' | 'height' | 'both';
@@ -65,6 +109,7 @@ export interface VirtualizerRootProps {
   readonly defaultState: object;
   readonly strategy: VirtualLayoutStrategy<object, string, unknown, unknown>;
   readonly overscan?: number | Partial<VirtualInsets>;
+  readonly viewportInsets?: number | Partial<VirtualInsets>;
   readonly initialViewport?: VirtualRect;
   readonly measure?: VirtualMeasurementResolver<object, string, unknown>;
   readonly as?: PrimitiveAs;
@@ -78,26 +123,23 @@ export interface VirtualizerRootSlotProps {
   scrollTo(
     id: string,
     alignment?: VirtualScrollAlignment,
-  ): ReturnType<
-    VirtualizerConnection<object, string, unknown, unknown>['scrollTo']
-  >;
+  ): VirtualizerOperationResult<VirtualPoint>;
   measure(
     measurements: readonly unknown[],
-  ): ReturnType<
-    VirtualizerConnection<object, string, unknown, unknown>['measure']
-  >;
+  ): VirtualizerOperationResult<VirtualLayoutMutation<object>>;
   mutate(
     mutation: unknown,
-  ): ReturnType<
-    VirtualizerConnection<object, string, unknown, unknown>['mutate']
-  >;
+  ): VirtualizerOperationResult<VirtualLayoutMutation<object>>;
   refresh(): void;
-  flush(): ReturnType<
-    VirtualizerConnection<object, string, unknown, unknown>['flush']
-  >;
+  flush(): VirtualizerOperationResult<VirtualLayoutPlan<string>>;
 }
 
-export interface VirtualizerContentProps {
+export interface VirtualizerFrameProps {
+  readonly as?: PrimitiveAs;
+  readonly asChild?: boolean;
+}
+
+export interface VirtualizerSurfaceProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
@@ -110,26 +152,44 @@ export interface VirtualizerItemProps {
 }
 
 export interface VirtualizerRootExpose extends VirtualizerRootSlotProps {
-  readonly root: ShallowRef<HTMLElement | null | undefined>;
+  readonly scrollport: ShallowRef<HTMLElement | null | undefined>;
+  readonly surface: ShallowRef<HTMLElement | null | undefined>;
 }
 
+interface DesiredItem<ID extends StableID> {
+  readonly id: ID;
+  readonly token: object;
+}
 
 interface VirtualizerContext {
   readonly plan: ComputedRef<VirtualLayoutPlan<string> | null>;
+  readonly surface: ShallowRef<HTMLElement | null | undefined>;
+  registerFrame(element: HTMLElement): () => void;
+  registerItem(element: HTMLElement, id: string): () => void;
+}
+
+interface VirtualizerSurfaceContext {
   registerItem(element: HTMLElement, id: string): () => void;
 }
 
 const virtualizerContextKey = Symbol('SectileVirtualizerRoot');
+const virtualizerSurfaceContextKey = Symbol('SectileVirtualizerSurface');
 
 export function useVirtualizer<State, ID extends StableID, Measurement, Mutation>(
   options: UseVirtualizerOptions<State, ID, Measurement, Mutation>,
 ): UseVirtualizerReturn<State, ID, Measurement, Mutation> {
-  const root = options.root ?? shallowRef<HTMLElement | null>(null);
+  const scrollport = options.scrollport
+    ?? shallowRef<HTMLElement | null | undefined>(null);
+  const surface = options.surface
+    ?? shallowRef<HTMLElement | null | undefined>(null);
   const plan = shallowRef<VirtualLayoutPlan<ID> | null>(null);
   const connection =
     shallowRef<VirtualizerConnection<State, ID, Measurement, Mutation>>();
-  const items = new Map<HTMLElement, ID>();
-  const registrations = new Map<HTMLElement, () => void>();
+  const frames = new Map<HTMLElement, object>();
+  const frameRegistrations = new Map<HTMLElement, () => void>();
+  const items = new Map<HTMLElement, DesiredItem<ID>>();
+  const itemRegistrations = new Map<HTMLElement, () => void>();
+  let disposed = false;
 
   const report = (error: Parameters<VirtualizerErrorHandler>[0]): void => {
     options.onError?.(error);
@@ -153,23 +213,35 @@ export function useVirtualizer<State, ID extends StableID, Measurement, Mutation
   };
   updateInitialPlan();
 
-  const disconnect = (): void => {
-    registrations.clear();
+  const disconnectConnection = (): void => {
+    frameRegistrations.clear();
+    itemRegistrations.clear();
     connection.value?.disconnect();
     connection.value = undefined;
   };
-  const connect = (element: HTMLElement | null | undefined): void => {
-    disconnect();
-    if (element === null || element === undefined) {
+  const connect = (): void => {
+    if (disposed) return;
+    disconnectConnection();
+    const currentScrollport = scrollport.value;
+    const currentSurface = surface.value;
+    if (
+      currentScrollport === null
+      || currentScrollport === undefined
+      || currentSurface === null
+      || currentSurface === undefined
+    ) {
       updateInitialPlan();
       return;
     }
     const overscan = toValue(options.overscan);
+    const viewportInsets = toValue(options.viewportInsets);
     const next = createVirtualizer({
-      root: element,
+      scrollport: currentScrollport,
+      surface: currentSurface,
       state: options.state.value,
       strategy: options.strategy,
       ...(overscan === undefined ? {} : { overscan }),
+      ...(viewportInsets === undefined ? {} : { viewportInsets }),
       ...(options.measure === undefined ? {} : { measure: options.measure }),
       ...(options.readViewport === undefined
         ? {}
@@ -191,11 +263,15 @@ export function useVirtualizer<State, ID extends StableID, Measurement, Mutation
       onError: report,
     });
     connection.value = next;
-    for (const [item, id] of items)
-      registrations.set(item, next.registerItem(item, id));
+    for (const frame of frames.keys()) {
+      frameRegistrations.set(frame, next.registerFrame(frame));
+    }
+    for (const [item, desired] of items) {
+      itemRegistrations.set(item, next.registerItem(item, desired.id));
+    }
   };
 
-  watch(root, connect, { flush: 'post', immediate: true });
+  watch([scrollport, surface], connect, { flush: 'post', immediate: true });
   watch(
     options.state,
     (value) => {
@@ -212,47 +288,104 @@ export function useVirtualizer<State, ID extends StableID, Measurement, Mutation
     },
     { deep: true, flush: 'sync' },
   );
-  onScopeDispose(disconnect);
+  watch(
+    () => toValue(options.viewportInsets),
+    (value) => {
+      connection.value?.setViewportInsets(value);
+    },
+    { deep: true, flush: 'sync' },
+  );
+  onScopeDispose(() => {
+    disposed = true;
+    disconnectConnection();
+    frames.clear();
+    items.clear();
+  });
 
-  const requireConnection = (): VirtualizerConnection<
+  const currentConnection = (): VirtualizerConnection<
     State,
     ID,
     Measurement,
     Mutation
-  > => {
-    if (connection.value === undefined)
-      throw new TypeError('Virtualizer must be mounted before this operation.');
-    return connection.value;
-  };
+  > | undefined => connection.value;
+
   return Object.freeze({
-    root,
+    scrollport,
+    surface,
     plan,
     connection,
-    registerItem: (element: HTMLElement, id: ID): (() => void) => {
-      registrations.get(element)?.();
-      items.set(element, id);
+    registerFrame: (element: HTMLElement): (() => void) => {
+      const token = Object.freeze({});
+      frameRegistrations.get(element)?.();
+      frameRegistrations.delete(element);
+      frames.set(element, token);
       if (connection.value !== undefined) {
-        registrations.set(element, connection.value.registerItem(element, id));
+        frameRegistrations.set(
+          element,
+          connection.value.registerFrame(element),
+        );
       }
       return (): void => {
-        if (items.get(element) !== id) return;
-        registrations.get(element)?.();
-        registrations.delete(element);
+        if (frames.get(element) !== token) return;
+        frameRegistrations.get(element)?.();
+        frameRegistrations.delete(element);
+        frames.delete(element);
+      };
+    },
+    registerItem: (element: HTMLElement, id: ID): (() => void) => {
+      const token = Object.freeze({});
+      itemRegistrations.get(element)?.();
+      itemRegistrations.delete(element);
+      items.set(element, Object.freeze({ id, token }));
+      if (connection.value !== undefined) {
+        itemRegistrations.set(
+          element,
+          connection.value.registerItem(element, id),
+        );
+      }
+      return (): void => {
+        if (items.get(element)?.token !== token) return;
+        itemRegistrations.get(element)?.();
+        itemRegistrations.delete(element);
         items.delete(element);
       };
     },
-    measure: (measurements: readonly Measurement[]) =>
-      requireConnection().measure(measurements),
-    mutate: (mutation: Mutation) => requireConnection().mutate(mutation),
-    scrollTo: (id: ID, alignment?: VirtualScrollAlignment) =>
-      requireConnection().scrollTo(id, alignment),
+    measure: (
+      measurements: readonly Measurement[],
+    ): VirtualizerOperationResult<VirtualLayoutMutation<State>> => {
+      const active = currentConnection();
+      return active === undefined
+        ? virtualizerNotConnected()
+        : active.measure(measurements);
+    },
+    mutate: (
+      mutation: Mutation,
+    ): VirtualizerOperationResult<VirtualLayoutMutation<State>> => {
+      const active = currentConnection();
+      return active === undefined
+        ? virtualizerNotConnected()
+        : active.mutate(mutation);
+    },
+    scrollTo: (
+      id: ID,
+      alignment?: VirtualScrollAlignment,
+    ): VirtualizerOperationResult<VirtualPoint> => {
+      const active = currentConnection();
+      return active === undefined
+        ? virtualizerNotConnected()
+        : active.scrollTo(id, alignment);
+    },
     refresh: (): void => {
       connection.value?.refresh();
     },
-    flush: () => requireConnection().flush(),
+    flush: (): VirtualizerOperationResult<VirtualLayoutPlan<ID>> => {
+      const active = currentConnection();
+      return active === undefined
+        ? virtualizerNotConnected()
+        : active.flush();
+    },
   });
 }
-
 
 export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
   name: 'SectileVirtualizerRoot',
@@ -266,6 +399,10 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
       required: true,
     },
     overscan: {
+      type: [Number, Object] as PropType<number | Partial<VirtualInsets>>,
+      default: undefined,
+    },
+    viewportInsets: {
       type: [Number, Object] as PropType<number | Partial<VirtualInsets>>,
       default: undefined,
     },
@@ -299,6 +436,7 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
       state,
       strategy: props.strategy,
       overscan: () => props.overscan,
+      viewportInsets: () => props.viewportInsets,
       ...(props.initialViewport === undefined
         ? {}
         : { initialViewport: props.initialViewport }),
@@ -342,11 +480,14 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
     );
     provide<VirtualizerContext>(virtualizerContextKey, {
       plan: computed(() => virtualizer.plan.value),
+      surface: virtualizer.surface,
+      registerFrame: virtualizer.registerFrame,
       registerItem: virtualizer.registerItem,
     });
     expose(
       Object.freeze({
-        root: virtualizer.root,
+        scrollport: virtualizer.scrollport,
+        surface: virtualizer.surface,
         get state() {
           return slotProps.value.state;
         },
@@ -370,7 +511,7 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
           as: props.as,
           asChild: props.asChild,
           elementRef: (element: unknown) => {
-            virtualizer.root.value =
+            virtualizer.scrollport.value =
               element instanceof HTMLElement ? element : null;
           },
           'data-scope': 'virtualizer',
@@ -381,8 +522,50 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
   },
 });
 
-export const VirtualizerContent = /* @__PURE__ */ defineComponent({
-  name: 'SectileVirtualizerContent',
+export const VirtualizerHeader = /* @__PURE__ */ defineComponent({
+  name: 'SectileVirtualizerHeader',
+  inheritAttrs: false,
+  props: {
+    as: {
+      type: [String, Object, Function] as PropType<PrimitiveAs>,
+      default: 'div',
+    },
+    asChild: { type: Boolean, default: false },
+  },
+  slots: Object as SlotsType<{ default: () => VNodeChild }>,
+  setup(props, { attrs, slots }) {
+    const root = useVirtualizerRoot('VirtualizerHeader');
+    let element: HTMLElement | null = null;
+    let unregister: (() => void) | undefined;
+    const setElement = (value: unknown): void => {
+      const next = value instanceof HTMLElement ? value : null;
+      if (element === next) return;
+      unregister?.();
+      unregister = undefined;
+      element = next;
+      if (next !== null) unregister = root.registerFrame(next);
+    };
+    onBeforeUnmount(() => {
+      unregister?.();
+      unregister = undefined;
+      element = null;
+    });
+    return (): VNodeChild => h(
+      Primitive,
+      mergeProps(attrs, {
+        as: props.as,
+        asChild: props.asChild,
+        elementRef: setElement,
+        'data-scope': 'virtualizer',
+        'data-part': 'header',
+      }),
+      { default: () => slots['default']?.() },
+    );
+  },
+});
+
+export const VirtualizerSurface = /* @__PURE__ */ defineComponent({
+  name: 'SectileVirtualizerSurface',
   inheritAttrs: false,
   props: {
     as: {
@@ -395,21 +578,41 @@ export const VirtualizerContent = /* @__PURE__ */ defineComponent({
     default: (plan: VirtualLayoutPlan<string> | null) => VNodeChild;
   }>,
   setup(props, { attrs, slots }) {
-    const root = useVirtualizerRoot('VirtualizerContent');
+    const root = useVirtualizerRoot('VirtualizerSurface');
+    provide<VirtualizerSurfaceContext>(virtualizerSurfaceContextKey, {
+      registerItem: root.registerItem,
+    });
+    let element: HTMLElement | null = null;
     const style = computed(() =>
       root.plan.value === null
         ? Object.freeze({ position: 'relative' })
-        : virtualContentStyle(root.plan.value),
+        : virtualSurfaceStyle(root.plan.value),
     );
+    const setElement = (value: unknown): void => {
+      const next = value instanceof HTMLElement ? value : null;
+      if (element === next) return;
+      if (element !== null && root.surface.value === element) {
+        root.surface.value = null;
+      }
+      element = next;
+      if (next !== null) root.surface.value = next;
+    };
+    onBeforeUnmount(() => {
+      if (element !== null && root.surface.value === element) {
+        root.surface.value = null;
+      }
+      element = null;
+    });
     return (): VNodeChild =>
       h(
         Primitive,
         mergeProps(attrs, {
           as: props.as,
           asChild: props.asChild,
+          elementRef: setElement,
           style: style.value,
           'data-scope': 'virtualizer',
-          'data-part': 'content',
+          'data-part': 'surface',
         }),
         { default: () => slots['default']?.(root.plan.value) },
       );
@@ -435,30 +638,37 @@ export const VirtualizerItem = /* @__PURE__ */ defineComponent({
     default: (placement: VirtualPlacement<string>) => VNodeChild;
   }>,
   setup(props, { attrs, slots }) {
-    const root = useVirtualizerRoot('VirtualizerItem');
+    const surface = useVirtualizerSurface('VirtualizerItem');
+    let element: HTMLElement | null = null;
     let unregister: (() => void) | undefined;
-    onBeforeUnmount(() => {
-      unregister?.();
-    });
     const sizing = computed<VirtualItemStyleOptions>(() =>
       Object.freeze({
         width: props.size === 'width' || props.size === 'both',
         height: props.size === 'height' || props.size === 'both',
       }),
     );
+    const setElement = (value: unknown): void => {
+      const next = value instanceof HTMLElement ? value : null;
+      if (element === next) return;
+      unregister?.();
+      unregister = undefined;
+      element = next;
+      if (next !== null) {
+        unregister = surface.registerItem(next, props.placement.id);
+      }
+    };
+    onBeforeUnmount(() => {
+      unregister?.();
+      unregister = undefined;
+      element = null;
+    });
     return (): VNodeChild =>
       h(
         Primitive,
         mergeProps(attrs, {
           as: props.as,
           asChild: props.asChild,
-          elementRef: (element: unknown) => {
-            unregister?.();
-            unregister =
-              element instanceof HTMLElement
-                ? root.registerItem(element, props.placement.id)
-                : undefined;
-          },
+          elementRef: setElement,
           style: virtualItemStyle(props.placement, sizing.value),
           'data-scope': 'virtualizer',
           'data-part': 'item',
@@ -470,11 +680,73 @@ export const VirtualizerItem = /* @__PURE__ */ defineComponent({
   },
 });
 
+export const VirtualizerFooter = /* @__PURE__ */ defineComponent({
+  name: 'SectileVirtualizerFooter',
+  inheritAttrs: false,
+  props: {
+    as: {
+      type: [String, Object, Function] as PropType<PrimitiveAs>,
+      default: 'div',
+    },
+    asChild: { type: Boolean, default: false },
+  },
+  slots: Object as SlotsType<{ default: () => VNodeChild }>,
+  setup(props, { attrs, slots }) {
+    const root = useVirtualizerRoot('VirtualizerFooter');
+    let element: HTMLElement | null = null;
+    let unregister: (() => void) | undefined;
+    const setElement = (value: unknown): void => {
+      const next = value instanceof HTMLElement ? value : null;
+      if (element === next) return;
+      unregister?.();
+      unregister = undefined;
+      element = next;
+      if (next !== null) unregister = root.registerFrame(next);
+    };
+    onBeforeUnmount(() => {
+      unregister?.();
+      unregister = undefined;
+      element = null;
+    });
+    return (): VNodeChild => h(
+      Primitive,
+      mergeProps(attrs, {
+        as: props.as,
+        asChild: props.asChild,
+        elementRef: setElement,
+        'data-scope': 'virtualizer',
+        'data-part': 'footer',
+      }),
+      { default: () => slots['default']?.() },
+    );
+  },
+});
+
 function useVirtualizerRoot(part: string): VirtualizerContext {
   const root = inject<VirtualizerContext>(virtualizerContextKey);
-  if (root === undefined)
+  if (root === undefined) {
     throw new TypeError(`${part} must be used inside VirtualizerRoot.`);
+  }
   return root;
+}
+
+function useVirtualizerSurface(part: string): VirtualizerSurfaceContext {
+  const surface = inject<VirtualizerSurfaceContext>(virtualizerSurfaceContextKey);
+  if (surface === undefined) {
+    throw new TypeError(`${part} must be used inside VirtualizerSurface.`);
+  }
+  return surface;
+}
+
+function virtualizerNotConnected<T>(): VirtualizerOperationResult<T> {
+  return {
+    ok: false,
+    error: {
+      class: 'transition-rejection',
+      code: 'virtualizer-not-connected',
+      message: 'Virtualizer requires mounted scrollport and surface elements.',
+    },
+  };
 }
 
 export type {
@@ -483,10 +755,15 @@ export type {
   VirtualLayoutStrategy,
   VirtualMeasurementResolver,
   VirtualPlacement,
+  VirtualPoint,
   VirtualRect,
   VirtualScrollAlignment,
   VirtualizerConnection,
   VirtualizerEnvironment,
 };
 
-export { createAxisMeasurementResolver, virtualContentStyle, virtualItemStyle };
+export {
+  createAxisMeasurementResolver,
+  virtualItemStyle,
+  virtualSurfaceStyle,
+};

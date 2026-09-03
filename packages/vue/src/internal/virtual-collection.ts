@@ -1,7 +1,7 @@
 import { h, shallowRef, type ShallowRef, type VNodeArrayChildren, type VNodeChild } from 'vue';
 import { resolveVirtualLaneGeometry } from '@sectile/virtual/collection';
-import type { VirtualInsets, VirtualLayoutPlan, VirtualPlacement, VirtualRect, VirtualScrollAlignment, VirtualizerConnection } from '@sectile/dom/virtual';
-import { VirtualizerItem, type VirtualizerItemSize, type VirtualizerRootExpose } from './virtual-core.js';
+import type { VirtualInsets, VirtualLayoutPlan, VirtualPlacement, VirtualPoint, VirtualRect, VirtualScrollAlignment } from '@sectile/dom/virtual';
+import { VirtualizerItem, type VirtualizerItemSize, type VirtualizerOperationResult, type VirtualizerRootExpose } from './virtual-core.js';
 import type { PreparedVirtualList, VirtualListItemAttributes, VirtualListKeyResolver } from './virtual-collection-model.js';
 
 export interface VirtualCollectionBaseProps<Value> {
@@ -27,9 +27,9 @@ export interface VirtualCollectionExpose<State> {
   readonly root: ShallowRef<HTMLElement | null | undefined>;
   readonly state: State;
   readonly plan: VirtualLayoutPlan<string> | null;
-  scrollTo(id: string, alignment?: VirtualScrollAlignment): ReturnType<VirtualizerConnection<object, string, unknown, unknown>['scrollTo']> | undefined;
+  scrollTo(id: string, alignment?: VirtualScrollAlignment): VirtualizerOperationResult<VirtualPoint> | undefined;
   refresh(): void;
-  flush(): ReturnType<VirtualizerConnection<object, string, unknown, unknown>['flush']> | undefined;
+  flush(): VirtualizerOperationResult<VirtualLayoutPlan<string>> | undefined;
 }
 
 export interface ResponsiveLaneGeometry {
@@ -150,7 +150,7 @@ export function createHighLevelVirtualExpose<State>(
 ): VirtualCollectionExpose<State> {
   const emptyRoot = shallowRef<HTMLElement | null>(null);
   return Object.freeze({
-    get root() { return root.value?.root ?? emptyRoot; },
+    get root() { return root.value?.scrollport ?? emptyRoot; },
     get state() { return (root.value?.state as State | undefined) ?? initialState; },
     get plan() { return root.value?.plan ?? null; },
     scrollTo: (id: string, alignment?: VirtualScrollAlignment) => root.value?.scrollTo(id, alignment),

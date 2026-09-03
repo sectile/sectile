@@ -3,7 +3,7 @@ import { createDataGridVirtualAdapter, createDataTableVirtualAdapter, reconcileD
 import { useDataGrid, createDataGridComponents } from '../../.verification-dist/data-grid.js';
 import { useDataTable, createDataTableComponents } from '../../.verification-dist/data-table.js';
 import { VirtualList } from '../../.verification-dist/virtual-list.js';
-import { VirtualizerContent, VirtualizerItem, VirtualizerRoot } from '../../.verification-dist/virtual-core.js';
+import { VirtualizerItem, VirtualizerRoot, VirtualizerSurface } from '../../.verification-dist/virtual-core.js';
 
 const exact = (value) => ({ kind: 'exact', value });
 const estimated = (value) => ({ kind: 'estimated', value });
@@ -43,7 +43,7 @@ async function nativeScenario() {
       adapter = createDataTableVirtualAdapter({ projection: controller.getProjection(), rowExtents: { kind: 'uniform', extent: estimated(26) } });
       return () => h(DataTable.Provider, null, {
         default: () => h(VirtualizerRoot, { ref: root, defaultState: adapter.state, strategy: adapter.strategy, initialViewport: nativeViewport, overscan: 0, style: { width: '320px', height: '104px', overflow: 'auto' }, onError: (error) => errors.push(`${error.code}:${error.message}`) }, {
-          default: ({ placements }) => h(VirtualizerContent, { asChild: true }, {
+          default: ({ placements }) => h(VirtualizerSurface, { asChild: true }, {
             default: () => h(DataTable.Root, { 'aria-label': 'Native virtual table' }, {
               default: () => h(DataTable.Body, { manual: true }, {
                 default: () => placements.map((placement) => h(VirtualizerItem, { key: placement.id, placement, asChild: true }, {
@@ -84,7 +84,7 @@ async function pinnedScenario() {
       return () => h(DataGrid.Provider, null, {
         default: () => h(DataGrid.Root, { 'aria-label': 'Pinned virtual grid', onCommand }, {
           default: () => h(VirtualizerRoot, { ref: root, defaultState: adapter.value.state, strategy: adapter.value.strategy, initialViewport: pinnedViewport, overscan: 0, style: { width: '220px', height: '84px', overflow: 'auto' } }, {
-            default: ({ placements }) => h(VirtualizerContent, null, {
+            default: ({ placements }) => h(VirtualizerSurface, null, {
               default: () => placements.map((placement) => {
                 const cell = cells.get(placement.id);
                 return cell === undefined ? null : h(VirtualizerItem, { key: placement.id, placement, asChild: true }, {

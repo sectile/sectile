@@ -27,6 +27,14 @@
       "removalReason": "Replaced by the complete checked core/list/grid/masonry/spatial mapping in verification/entrypoint-migrations/WI-025.json."
     },
     {
+      "id": "WI-004:virtual-low-level-surface-anatomy",
+      "change": "signature-changed",
+      "before": { "subpath": "./virtual-core" },
+      "symbols": ["VirtualizerContent", "VirtualizerContentProps", "UseVirtualizerOptions.root", "UseVirtualizerReturn.root", "VirtualizerRootExpose.root"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./virtual-core" },
+      "removalReason": "Use VirtualizerRoot with explicit scrollport and surface refs plus VirtualizerHeader, VirtualizerSurface, VirtualizerItem, and VirtualizerFooter. Host operations return a virtualizer-not-connected Result until both physical elements are mounted."
+    },
+    {
       "id": "WI-009:checkbox-group-domain",
       "change": "signature-changed",
       "before": { "subpath": "./checkbox-group" },

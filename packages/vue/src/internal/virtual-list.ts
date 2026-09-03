@@ -2,9 +2,9 @@ import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, shallowRef, w
 import { createSequence, type BoundaryPolicy, type Direction, type MoveResult, type ScanOptions, type Sequence } from '@sectile/core/sequence';
 import { createExtentIndex, createUniformExtentIndex, type Extent, type ExtentIndex } from '@sectile/virtual/extent-index';
 import { linearLayoutStrategyFor, tryApplyLinearPatch, createLinearLayout, type LinearAxis, type LinearLayoutState, type LinearMeasurement, type LinearPatch } from '@sectile/virtual/linear-layout';
-import { createAxisMeasurementResolver, virtualItemStyle, type VirtualInsets, type VirtualLayoutPlan, type VirtualMeasurementResolver, type VirtualPlacement, type VirtualRect, type VirtualScrollAlignment, type VirtualizerConnection, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
+import { createAxisMeasurementResolver, virtualItemStyle, type VirtualInsets, type VirtualLayoutPlan, type VirtualMeasurementResolver, type VirtualPlacement, type VirtualPoint, type VirtualRect, type VirtualScrollAlignment, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
 import { Primitive } from '../primitive.js';
-import { VirtualizerContent, VirtualizerRoot, useVirtualizer, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
+import { useVirtualizer, type VirtualizerOperationResult } from './virtual-core.js';
 import {
   assertVirtualListSizeMode,
   createPreparedVirtualListSequence,
@@ -68,23 +68,9 @@ export interface VirtualListExpose {
   scrollTo(
     id: string,
     alignment?: VirtualScrollAlignment,
-  ): ReturnType<
-    VirtualizerConnection<
-      LinearLayoutState<string>,
-      string,
-      { readonly index: number; readonly extent: Extent },
-      LinearPatch<string>
-    >['scrollTo']
-  >;
+  ): VirtualizerOperationResult<VirtualPoint>;
   refresh(): void;
-  flush(): ReturnType<
-    VirtualizerConnection<
-      LinearLayoutState<string>,
-      string,
-      { readonly index: number; readonly extent: Extent },
-      LinearPatch<string>
-    >['flush']
-  >;
+  flush(): VirtualizerOperationResult<VirtualLayoutPlan<string>>;
 }
 
 export interface VirtualListComponent {
@@ -107,9 +93,9 @@ export interface VirtualCollectionExpose<State> {
   scrollTo(
     id: string,
     alignment?: VirtualScrollAlignment,
-  ): ReturnType<VirtualizerConnection<object, string, unknown, unknown>['scrollTo']> | undefined;
+  ): VirtualizerOperationResult<VirtualPoint> | undefined;
   refresh(): void;
-  flush(): ReturnType<VirtualizerConnection<object, string, unknown, unknown>['flush']> | undefined;
+  flush(): VirtualizerOperationResult<VirtualLayoutPlan<string>> | undefined;
 }
 
 
@@ -204,7 +190,10 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     const forcedMeasurements = new Set<string>();
     let measurementScheduled = false;
     const setRootElement = (value: unknown): void => {
-      virtualizer.root.value = value instanceof HTMLElement ? value : null;
+      virtualizer.scrollport.value = value instanceof HTMLElement ? value : null;
+    };
+    const setSurfaceElement = (value: unknown): void => {
+      virtualizer.surface.value = value instanceof HTMLElement ? value : null;
     };
 
     const measurePendingItems = (): void => {
@@ -306,7 +295,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       }
       const total = extents.reduce((sum, extent) => sum + extent, 0)
         + props.gap * Math.max(0, extents.length - 1);
-      const root = virtualizer.root.value;
+      const root = virtualizer.scrollport.value;
       const measuredViewportExtent = props.axis === 'vertical'
         ? root?.clientHeight ?? 0
         : root?.clientWidth ?? 0;
@@ -439,7 +428,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     });
 
     expose(Object.freeze({
-      root: virtualizer.root,
+      root: virtualizer.scrollport,
       get state() {
         return state.value;
       },
@@ -539,9 +528,10 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
           h(
             props.contentAs,
             {
+              ref: setSurfaceElement,
               style: contentStyle,
               'data-scope': 'virtual-list',
-              'data-part': 'content',
+              'data-part': 'surface',
             },
             children,
           ),

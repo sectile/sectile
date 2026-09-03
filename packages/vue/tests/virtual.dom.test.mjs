@@ -37,12 +37,12 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, h, nextTick, ref, shallowRef } = await import('vue');
+const { createApp, effectScope, h, nextTick, ref, shallowRef } = await import('vue');
 const { VirtualGrid } = await import('../.verification-dist/virtual-grid.js');
 const { VirtualList } = await import('../.verification-dist/virtual-list.js');
 const { VirtualMasonry } = await import('../.verification-dist/virtual-masonry.js');
 const { VirtualSpatial } = await import('../.verification-dist/virtual-spatial.js');
-const { VirtualizerContent, VirtualizerRoot } = await import('../.verification-dist/virtual-core.js');
+const { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, useVirtualizer } = await import('../.verification-dist/virtual-core.js');
 
 test('VirtualList renders intrinsic rows without per-item Sectile wrappers and reconciles keyed data', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
@@ -770,6 +770,66 @@ test('declarative virtual collections resolve only the changed keyed window', as
   }
 });
 
+test('useVirtualizer returns controlled not-connected results until both host elements mount', () => {
+  const scope = effectScope();
+  let virtualizer;
+  scope.run(() => {
+    virtualizer = useVirtualizer({
+      state: shallowRef(Object.freeze({ value: 0, generation: 0 })),
+      strategy: createStrategy(1),
+      initialViewport: Object.freeze({ x: 0, y: 0, width: 100, height: 80 }),
+    });
+  });
+
+  try {
+    for (const result of [
+      virtualizer.flush(),
+      virtualizer.mutate(1),
+      virtualizer.measure([]),
+      virtualizer.scrollTo('missing'),
+    ]) {
+      assert.equal(result.ok, false);
+      assert.equal(result.error.code, 'virtualizer-not-connected');
+    }
+  } finally {
+    scope.stop();
+  }
+});
+
+test('Vue low-level virtualizer keeps root, header, surface, and footer anatomy stable', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const root = ref();
+  const app = createApp({
+    render: () => h(VirtualizerRoot, {
+      ref: root,
+      defaultState: Object.freeze({ value: 0, generation: 0 }),
+      strategy: createStrategy(1),
+      initialViewport: Object.freeze({ x: 0, y: 0, width: 100, height: 80 }),
+    }, {
+      default: () => [
+        h(VirtualizerHeader, null, { default: () => 'header' }),
+        h(VirtualizerSurface, null, { default: () => 'surface' }),
+        h(VirtualizerFooter, null, { default: () => 'footer' }),
+      ],
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    const parts = [...host.querySelectorAll('[data-scope="virtualizer"]')]
+      .map((element) => element.getAttribute('data-part'));
+    assert.deepEqual(parts, ['root', 'header', 'surface', 'footer']);
+    assert.equal(root.value.scrollport.value.getAttribute('data-part'), 'root');
+    assert.equal(root.value.surface.value.getAttribute('data-part'), 'surface');
+    assert.equal(root.value.flush().ok, true);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
 test('Vue virtualizer owns frame-local state and keeps construction options fixed', async () => {
   const host = document.createElement('div');
   document.body.append(host);
@@ -787,7 +847,7 @@ test('Vue virtualizer owns frame-local state and keeps construction options fixe
       initialViewport: Object.freeze({ x: 0, y: 0, width: 100, height: 80 }),
       onStateChange: (state) => changes.push(state.value),
     }, {
-      default: ({ state }) => h(VirtualizerContent, null, {
+      default: ({ state }) => h(VirtualizerSurface, null, {
         default: () => String(state.value),
       }),
     }),
