@@ -30,8 +30,12 @@ owner alongside Core, Tabular, and Virtual.
 
 Certification controls statistical rigor, not workload scope. It uses the
 `certification` measurement profile, at least ten sequential isolated Node
-processes, five measured batches, and a 20 ms target batch. With no selectors it
-certifies the full catalog; the same rigor can be applied to one shard.
+processes, five measured batches, and a 20 ms target batch. Timing iterations are
+calibrated only from measured warmup cost, bounded from one to one million
+operations per batch; the workload's declared iteration count remains the memory
+evidence operation count instead of forcing slow timing batches above the target.
+With no selectors it certifies the full catalog; the same rigor can be applied to
+one shard.
 
 ```sh
 pnpm performance:certify

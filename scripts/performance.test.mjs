@@ -18,6 +18,7 @@ import {
   writePerformanceReport,
 } from './performance/session-log.mjs';
 import { median, percentile, relativeMAD, summarize } from './performance/statistics.mjs';
+import { calibratedTimingIterations, MAX_TIMING_ITERATIONS } from './performance/measurement.mjs';
 import {
   PERFORMANCE_GC_PROTOCOL_VERSION,
   PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
@@ -45,6 +46,14 @@ test('performance statistics report stable median, p95, and relative MAD', () =>
   assert.deepEqual(summarize([1, 2, 3]), {
     count: 3, median: 2, p95: 2.9, relativeMAD: 0.5, minimum: 1, maximum: 3,
   });
+});
+
+test('timing calibration targets batch duration without a workload iteration floor', () => {
+  assert.equal(calibratedTimingIterations(20_000_000, 800_000_000), 1);
+  assert.equal(calibratedTimingIterations(20_000_000, 4_000_000), 5);
+  assert.equal(calibratedTimingIterations(20_000_000, 1), MAX_TIMING_ITERATIONS);
+  assert.throws(() => calibratedTimingIterations(0, 1), /positive finite/u);
+  assert.throws(() => calibratedTimingIterations(1, 0), /positive finite/u);
 });
 
 test('runner rejects calibration requiring a regression band above ten percent', () => {
