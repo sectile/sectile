@@ -71,12 +71,11 @@ recorded with ten isolated processes; ordinary three-process screening can then
 compare against it without changing the measurement profile.
 
 Without an explicit `--baseline`, comparison first looks for the exact selected
-baseline. If an exact baseline has not been recorded, it selects the narrowest
-recorded shard whose owner, type, domain, scale, and evidence selection covers
-the request and whose report contains every requested metric. An owner-level
-baseline can therefore serve narrower type or domain checks without falling back
-to an unrelated global catalog. Full certification still requires the complete
-catalog.
+baseline. A broader selector may be used only when it resolves to the identical
+metric set; extra workloads can change JIT, cache, and GC state and are
+therefore a different measurement context. In practice, owner-level baselines
+serve owner-level checks, while narrower type or domain checks record their own
+exact shard baseline. Full certification still requires the complete catalog.
 Certification timing regressions require median, p95, and separated
 isolated-process distributions with the calibrated strict band. Screening uses
 the isolated-process median plus batch-sample p95 corroboration with a minimum

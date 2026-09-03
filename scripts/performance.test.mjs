@@ -144,6 +144,34 @@ test('performance baselines partition environment and workload selection indepen
   assert.equal((await selectPerformanceBaseline({ current: shard, directory })).path, shardPath);
 });
 
+test('covering baseline discovery rejects broader workload execution contexts', async (context) => {
+  const root = await mkdtemp(join(tmpdir(), 'sectile-performance-context-'));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const directory = join(root, 'baselines');
+  const owner = fixture();
+  owner.runner.selection = normalizePerformanceSelection({
+    owners: ['core'],
+    scales: ['representative'],
+    evidence: ['timing'],
+  });
+  owner.metrics['core:extra'] = metric(100, 0.01);
+  const ownerPath = performanceBaselinePath(directory, owner);
+  await mkdir(dirname(ownerPath), { recursive: true });
+  await writeFile(ownerPath, `${JSON.stringify(owner, null, 2)}\n`, 'utf8');
+
+  const shard = fixture();
+  shard.runner.selection = normalizePerformanceSelection({
+    owners: ['core'],
+    types: ['query'],
+    scales: ['representative'],
+    evidence: ['timing'],
+  });
+  await assert.rejects(
+    selectPerformanceBaseline({ current: shard, directory }),
+    /No compatible performance baseline exists/u,
+  );
+});
+
 test('performance selections cover only equal or broader selector axes', () => {
   const requested = normalizePerformanceSelection({
     owners: ['chart'],
@@ -351,26 +379,23 @@ test('targeted screening requires batch-tail corroboration for noisy three-proce
   assert.deepEqual(comparison.regressions, []);
 });
 
-test('targeted reports may compare a workload subset against a certification baseline', () => {
-  const baseline = fixture();
-  baseline.metrics['core:extra'] = metric(100, 0.01);
-  const current = fixture();
-  current.runner = { processCount: 3, certification: false, targetPackages: ['core'] };
-  assert.doesNotThrow(() => assertComparable(baseline, current));
-});
-
-test('certification shards may compare a workload subset against a full certification baseline', () => {
-  const baseline = fixture();
-  baseline.metrics['core:extra'] = metric(100, 0.01);
-  const current = fixture();
-  current.runner = {
-    processCount: 10,
-    certification: true,
-    selection: normalizePerformanceSelection({
-      owners: ['core'], types: ['query'], domains: ['metric-index'], scales: ['representative'], evidence: ['timing'],
-    }),
-  };
-  assert.doesNotThrow(() => assertComparable(baseline, current));
+test('targeted and certification reports reject broader workload execution contexts', () => {
+  for (const certification of [false, true]) {
+    const baseline = fixture();
+    baseline.metrics['core:extra'] = metric(100, 0.01);
+    const current = fixture();
+    current.runner = {
+      processCount: certification ? 10 : 3,
+      certification,
+      selection: normalizePerformanceSelection({
+        owners: ['core'], types: ['query'], domains: ['metric-index'], scales: ['representative'], evidence: ['timing'],
+      }),
+    };
+    assert.throws(
+      () => assertComparable(baseline, current),
+      /record an exact workload-context baseline/u,
+    );
+  }
 });
 
 test('performance sessions retain completed workers and reject run ID reuse', async (context) => {

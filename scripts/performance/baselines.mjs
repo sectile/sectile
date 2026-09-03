@@ -90,10 +90,12 @@ async function selectCoveringBaseline({ current, exactPath, selection }) {
     const report = await readReport(path);
     const candidateSelection = normalizePerformanceSelection(report.runner?.selection ?? {});
     if (!performanceSelectionCovers(candidateSelection, selection)) continue;
+    const candidateMetricIDs = Object.keys(report.metrics);
+    if (candidateMetricIDs.length !== currentMetricIDs.length) continue;
     if (!currentMetricIDs.every((id) => report.metrics[id] !== undefined)) continue;
     validatePartition(current, path, report);
     candidates.push(Object.freeze({
-      metricCount: Object.keys(report.metrics).length,
+      metricCount: candidateMetricIDs.length,
       path,
       report,
       wildcardCount: selectionWildcardCount(candidateSelection),

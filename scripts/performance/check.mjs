@@ -8,7 +8,6 @@ import {
   TARGET_REGRESSION_BAND,
 } from './config.mjs';
 import { compatibilityMetadata } from './provenance.mjs';
-import { performanceSelectionIsFull } from './schema.mjs';
 
 export function validateRunnerReport(report) {
   assert.equal(report.schemaVersion, PERFORMANCE_SCHEMA_VERSION, 'performance schema mismatch');
@@ -39,18 +38,12 @@ export function assertComparable(baseline, current) {
     'performance reports have mismatched workload, runtime, hardware, flags, or protocol metadata',
   );
   const currentKeys = Object.keys(current.metrics).sort();
-  const baselineKeys = new Set(Object.keys(baseline.metrics));
-  const subsetComparison = current.runner.certification === false
-    || !performanceSelectionIsFull(current.runner.selection ?? {});
-  if (subsetComparison) {
-    assert.deepEqual(
-      currentKeys.filter((key) => !baselineKeys.has(key)),
-      [],
-      'selected performance report contains workload keys missing from the baseline',
-    );
-  } else {
-    assert.deepEqual(currentKeys, [...baselineKeys].sort(), 'performance reports have mismatched workload keys');
-  }
+  const baselineKeys = Object.keys(baseline.metrics).sort();
+  assert.deepEqual(
+    currentKeys,
+    baselineKeys,
+    'performance reports have mismatched workload keys; record an exact workload-context baseline',
+  );
 }
 
 export function compareReports(baseline, current) {
