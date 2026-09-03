@@ -79,6 +79,11 @@ export function compareReports(baseline, current) {
       ? ratio(after.timing.median, before.timing.median)
       : null;
     const p95Ratio = medianRatio === null ? null : ratio(after.timing.p95, before.timing.p95);
+    const batchP95Ratio = medianRatio === null
+      || before.batchTiming?.p95 === undefined
+      || after.batchTiming?.p95 === undefined
+      ? p95Ratio
+      : ratio(after.batchTiming.p95, before.batchTiming.p95);
     const timingFloorRatio = medianRatio === null ? null : ratio(after.timing.minimum, before.timing.maximum);
     const allocationRatio = allocationEvidence
       && before.heap?.positivePeakDeltaMedian !== null
@@ -110,6 +115,7 @@ export function compareReports(baseline, current) {
       id,
       medianRatio,
       p95Ratio,
+      batchP95Ratio,
       timingFloorRatio,
       allocationRatio,
       allocationP95Ratio,
@@ -124,7 +130,7 @@ export function compareReports(baseline, current) {
     comparisons.push(comparison);
     const timingRegression = medianRatio !== null && (certification
       ? medianRatio > 1 + band && p95Ratio > 1 + band && timingFloorRatio > 1 + band
-      : medianRatio > 1 + band && p95Ratio > 1 + band);
+      : medianRatio > 1 + band && batchP95Ratio > 1 + band);
     const allocationRegression = allocationRatio !== null
       && allocationRatio > 1 + allocationBand
       && allocationP95Ratio > 1 + allocationBand

@@ -79,8 +79,9 @@ to an unrelated global catalog. Full certification still requires the complete
 catalog.
 Certification timing regressions require median, p95, and separated
 isolated-process distributions with the calibrated strict band. Screening uses
-median and p95 with a minimum 20% band and does not claim certification-grade
-tail evidence from three processes.
+the isolated-process median plus batch-sample p95 corroboration with a minimum
+20% band; it does not treat the p95 of only three process medians as stable tail
+evidence.
 
 Performance timing is conditional evidence. The default performance contract is
 structural: complexity, deterministic work, and resource bounds. Timing evidence

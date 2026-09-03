@@ -315,9 +315,40 @@ test('targeted screening accepts three processes and uses a coarse regression ba
     minimum: 100,
     maximum: 125,
   };
+  current.metrics['core:case'].batchTiming = {
+    median: 121,
+    p95: 121,
+    relativeMAD: 0.01,
+    minimum: 100,
+    maximum: 125,
+  };
   const comparison = compareReports(baseline, current);
   assert.equal(comparison.runnerBand, 0.2);
   assert.deepEqual(comparison.regressions.map(({ id }) => id), ['core:case']);
+});
+
+test('targeted screening requires batch-tail corroboration for noisy three-process p95', () => {
+  const baseline = fixture();
+  const current = fixture();
+  current.runner = { processCount: 3, certification: false, targetPackages: ['core'] };
+  current.metrics['core:case'].timing = {
+    median: 180,
+    p95: 180,
+    relativeMAD: 0.12,
+    minimum: 100,
+    maximum: 185,
+  };
+  current.metrics['core:case'].batchTiming = {
+    median: 150,
+    p95: 119,
+    relativeMAD: 0.3,
+    minimum: 80,
+    maximum: 200,
+  };
+  const comparison = compareReports(baseline, current);
+  assert.equal(comparison.comparisons[0].p95Ratio, 1.8);
+  assert.equal(comparison.comparisons[0].batchP95Ratio, 1.19);
+  assert.deepEqual(comparison.regressions, []);
 });
 
 test('targeted reports may compare a workload subset against a certification baseline', () => {
@@ -448,6 +479,7 @@ function heapMetric(value) {
 function metric(value, dispersion) {
   return {
     timing: { median: value, p95: value, relativeMAD: dispersion, minimum: value, maximum: value },
+    batchTiming: { median: value, p95: value, relativeMAD: dispersion, minimum: value, maximum: value },
     heap: {
       peakDelta: { p95: 0, minimum: 0, maximum: 0 },
       retainedDelta: { p95: 0, minimum: 0, maximum: 0 },
