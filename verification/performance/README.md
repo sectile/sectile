@@ -34,9 +34,9 @@ processes, five measured batches, two warmup batches, and a 20 ms target batch.
 Initial timing calibration runs until it has observed at least 1 ms of work or
 reaches the workload's bounded warmup count, whichever comes first. Timing
 iterations are then calibrated only from that observed cost, bounded from one to
-one million operations per batch; the workload's declared iteration count remains
-the memory evidence operation count instead of forcing slow timing batches above
-the target.
+one million operations per batch. Runtime workloads do not use their memory
+iteration count as a timing floor, while the runner calibration workload keeps its
+one-million-operation floor so the cross-process noise check remains meaningful.
 With no selectors it certifies the full catalog; the same rigor can be applied to
 one shard.
 

@@ -61,6 +61,7 @@ test('timing calibration targets bounded setup and batch duration', () => {
   assert.equal(timingCalibrationComplete(1, 10, 10), true);
   assert.equal(calibratedTimingIterations(20_000_000, 800_000_000), 1);
   assert.equal(calibratedTimingIterations(20_000_000, 4_000_000), 5);
+  assert.equal(calibratedTimingIterations(20_000_000, 800_000_000, MAX_TIMING_ITERATIONS), MAX_TIMING_ITERATIONS);
   assert.equal(calibratedTimingIterations(20_000_000, 1), MAX_TIMING_ITERATIONS);
   assert.throws(() => timingCalibrationComplete(-1, 1, 10), /non-negative/u);
   assert.throws(() => calibratedTimingIterations(0, 1), /positive finite/u);

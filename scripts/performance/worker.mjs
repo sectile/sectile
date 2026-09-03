@@ -90,6 +90,7 @@ function measureTiming(workload, metric) {
   const measuredIterations = calibratedTimingIterations(
     targetBatchNanoseconds,
     warmupNanosecondsPerOperation,
+    workload.metadata.owner === 'runner' ? workload.iterations : 1,
   );
   for (let warmupBatch = 0; warmupBatch < TIMING_WARMUP_BATCH_COUNT; warmupBatch += 1) {
     for (let iteration = 0; iteration < measuredIterations; iteration += 1) {

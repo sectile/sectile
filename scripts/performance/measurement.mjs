@@ -15,15 +15,22 @@ export function timingCalibrationComplete(elapsedNanoseconds, iterations, maximu
   return elapsedNanoseconds >= MIN_TIMING_CALIBRATION_NANOSECONDS || iterations >= maximumIterations;
 }
 
-export function calibratedTimingIterations(targetBatchNanoseconds, warmupNanosecondsPerOperation) {
+export function calibratedTimingIterations(
+  targetBatchNanoseconds,
+  warmupNanosecondsPerOperation,
+  minimumIterations = 1,
+) {
   if (!Number.isFinite(targetBatchNanoseconds) || targetBatchNanoseconds <= 0) {
     throw new TypeError('target batch duration must be a positive finite number');
   }
   if (!Number.isFinite(warmupNanosecondsPerOperation) || warmupNanosecondsPerOperation <= 0) {
     throw new TypeError('warmup cost must be a positive finite number');
   }
+  if (!Number.isSafeInteger(minimumIterations) || minimumIterations < 1 || minimumIterations > MAX_TIMING_ITERATIONS) {
+    throw new TypeError('minimum timing iterations must be a bounded positive safe integer');
+  }
   return Math.min(
     MAX_TIMING_ITERATIONS,
-    Math.max(1, Math.ceil(targetBatchNanoseconds / warmupNanosecondsPerOperation)),
+    Math.max(minimumIterations, Math.ceil(targetBatchNanoseconds / warmupNanosecondsPerOperation)),
   );
 }
