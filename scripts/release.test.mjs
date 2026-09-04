@@ -123,17 +123,24 @@ test('does not mistake a workflow dispatch branch for a release tag', () => {
   }), 'v0.7.0');
 });
 
-test('recommends major for a breaking subject or body', () => {
-  assert.deepEqual(recommendBump([commit('feat(core)!: replace state shape')]), {
+test('keeps breaking changes on 0.x within the minor line and uses major after 1.0', () => {
+  const breaking = [commit('feat(core)!: replace state shape')];
+  assert.deepEqual(recommendBump(breaking, '0.14.2'), {
+    bump: 'minor',
+    reason: 'feat(core)!: replace state shape',
+  });
+  assert.deepEqual(recommendBump(breaking, '1.4.2'), {
     bump: 'major',
     reason: 'feat(core)!: replace state shape',
   });
-  assert.equal(recommendBump([commit('fix: retain state', 'BREAKING CHANGE: old snapshots are invalid')]).bump, 'major');
+  assert.equal(recommendBump([
+    commit('fix: retain state', 'BREAKING CHANGE: old snapshots are invalid'),
+  ], '0.14.2').bump, 'minor');
 });
 
 test('recommends minor for a feature and patch otherwise', () => {
-  assert.equal(recommendBump([commit('fix: restore focus'), commit('feat(dom): add projection')]).bump, 'minor');
-  assert.equal(recommendBump([commit('fix: restore focus'), commit('docs: clarify release')]).bump, 'patch');
+  assert.equal(recommendBump([commit('fix: restore focus'), commit('feat(dom): add projection')], '0.14.2').bump, 'minor');
+  assert.equal(recommendBump([commit('fix: restore focus'), commit('docs: clarify release')], '0.14.2').bump, 'patch');
 });
 
 test('bumps stable synchronized versions', () => {

@@ -70,9 +70,10 @@ export function classifyReleaseBranch(localHead, remoteHead, remoteIsAncestor) {
   return remoteIsAncestor ? 'ahead' : 'blocked';
 }
 
-export function recommendBump(commits) {
+export function recommendBump(commits, currentVersion) {
+  const [major] = parseStableVersion(currentVersion);
   const breaking = commits.find(({ subject, body }) => breakingSubjectPattern.test(subject) || breakingBodyPattern.test(body));
-  if (breaking !== undefined) return { bump: 'major', reason: breaking.subject };
+  if (breaking !== undefined) return { bump: major === 0 ? 'minor' : 'major', reason: breaking.subject };
 
   const feature = commits.find(({ subject }) => featureSubjectPattern.test(subject));
   if (feature !== undefined) return { bump: 'minor', reason: feature.subject };

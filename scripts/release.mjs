@@ -202,7 +202,7 @@ async function inspectIndependentRelease(root, releaseTag = nextReleaseSetTag(ro
       baseTag,
       commits,
       name: source.name,
-      recommendation: Object.freeze(recommendBump(commits)),
+      recommendation: Object.freeze(recommendBump(commits, source.manifest.version)),
       source,
     }));
   }
@@ -363,7 +363,7 @@ async function prepareRelease(root, installDependencies) {
     return undefined;
   }
 
-  const recommendation = recommendBump(commits);
+  const recommendation = recommendBump(commits, previousVersion);
   const version = bumpVersion(previousVersion, recommendation.bump);
   const tag = `v${version}`;
   console.log(`release base: ${baseTag}`);
