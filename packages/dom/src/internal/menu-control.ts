@@ -12,6 +12,7 @@ import { horizontalArrow, type ReadingDirection } from './direction.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './layer-binding.js';
 import type { PositionOptions } from '../position.js';
 import { createPosition, manualPositionConnection, type PositionConnection } from './position-connection.js';
+import { createHiddenBinding, type HiddenBinding } from './hidden-binding.js';
 
 export type MenuKind = 'menu' | 'menubar' | 'navigation-menu' | 'menu-button';
 export interface MenuTypeaheadOptions<ID extends StableID> { readonly textValue: (id: ID) => string; readonly timeout?: number; readonly now?: () => number; readonly normalize?: (text: string) => string }
@@ -74,10 +75,13 @@ export function createMenuControl<ID extends StableID>(options: MenuControlOptio
 
 class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   readonly #options: ResolvedMenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>; readonly #policies: MenuPolicies<ID>; readonly #elements = new Map<ID, HTMLElement>(); readonly #submenus = new Map<ID, HTMLElement>();
+  readonly #rootVisibility: HiddenBinding | undefined; readonly #submenuVisibility = new Map<ID, HiddenBinding>(); readonly #submenuIDs = new Map<ID, { readonly element: HTMLElement; readonly previous: string | null; readonly applied: string }>(); readonly #submenuControlIDs = new Map<ID, string>();
+  #nextSubmenuID = 0;
   readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined; readonly #popupPosition: PositionConnection | undefined; readonly #submenuPositions = new Map<ID, PositionConnection>();
   #typeaheadBuffer = ''; #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
   public constructor(options: ResolvedMenuControlOptions<ID>, tree: Tree<ID>, runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>, policies: MenuPolicies<ID>) {
     this.#options = options; this.#tree = tree; this.#runtime = runtime; this.#policies = policies;
+    this.#rootVisibility = options.kind === 'menu-button' ? createHiddenBinding(options.root) : undefined;
     setInteractionAttributes(options.root, options); if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options, { native: true });
     this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
     this.#layer = options.kind === 'menu-button' && options.trigger !== undefined ? createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close-popup'); } }) : undefined;
@@ -109,22 +113,70 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     if (result.ok) { this.#refresh(); this.#options.onUpdate?.(); }
     return result;
   }
-  public setItemAttributes(element: HTMLElement, id: ID): void { if (this.#tree.has(id)) { this.#elements.set(id, element); this.#connectSubmenuPosition(id); this.#refresh(); } }
-  public setSubmenuAttributes(element: HTMLElement, parentID: ID): void {
+  public setItemAttributes(element: HTMLElement | undefined, id: ID): void {
+    if (!this.#tree.has(id)) return;
+    const current = this.#elements.get(id);
+    if (current === element) return;
+    if (current !== undefined) {
+      this.#clearSubmenuControl(id, current);
+      this.#elements.delete(id);
+      this.#disconnectSubmenuPosition(id);
+    }
+    if (element !== undefined) {
+      for (const [candidate, registered] of this.#elements) {
+        if (candidate === id || registered !== element) continue;
+        this.#clearSubmenuControl(candidate, registered);
+        this.#elements.delete(candidate);
+        this.#disconnectSubmenuPosition(candidate);
+      }
+      this.#elements.set(id, element);
+      this.#connectSubmenuPosition(id);
+    }
+    this.#refresh();
+  }
+  public setSubmenuAttributes(element: HTMLElement | undefined, parentID: ID): void {
     if (!this.#tree.has(parentID) || this.#tree.isLeaf(parentID)) return;
-    this.#submenus.set(parentID, element);
-    if (element.id.length === 0) element.id = `sectile-menu-${this.#instanceID}-submenu-${this.#submenus.size}`;
-    this.#connectSubmenuPosition(parentID);
+    const current = this.#submenus.get(parentID);
+    if (current === element) return;
+    if (current !== undefined) this.#releaseSubmenu(parentID, current);
+    if (element !== undefined) {
+      for (const [candidate, registered] of this.#submenus) {
+        if (candidate === parentID || registered !== element) continue;
+        this.#releaseSubmenu(candidate, registered);
+      }
+      this.#submenus.set(parentID, element);
+      this.#submenuVisibility.set(parentID, createHiddenBinding(element));
+      if (element.id.length === 0) {
+        const previous = element.getAttribute('id');
+        const applied = `sectile-menu-${this.#instanceID}-submenu-${this.#nextSubmenuID += 1}`;
+        element.id = applied;
+        element.setAttribute('id', applied);
+        this.#submenuIDs.set(parentID, { element, previous, applied });
+      }
+      this.#connectSubmenuPosition(parentID);
+    }
     this.#refresh();
   }
   public handleEvent(event: MenuEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) { this.#refresh(); for (const effect of result.commands) { if (effect.type === 'invoke') this.#options.onInvoke?.(effect.id); if (effect.type === 'focus') this.#elements.get(effect.id)?.focus(); if (effect.type === 'restore-focus') this.#options.trigger?.focus(); } this.#options.onUpdate?.(); } return result.ok; }
-  public disconnect(): void { this.#layer?.disconnect(); this.#popupPosition?.disconnect(); for (const position of this.#submenuPositions.values()) position.disconnect(); this.#submenuPositions.clear(); this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.root.removeEventListener('click', this.#click); this.#options.trigger?.removeEventListener('click', this.#triggerClick); this.#elements.clear(); this.#submenus.clear(); }
+  public disconnect(): void {
+    this.#layer?.disconnect();
+    this.#popupPosition?.disconnect();
+    this.#rootVisibility?.disconnect();
+    for (const [parentID, submenu] of [...this.#submenus]) this.#releaseSubmenu(parentID, submenu);
+    for (const position of this.#submenuPositions.values()) position.disconnect();
+    this.#submenuPositions.clear();
+    this.#options.root.removeEventListener('keydown', this.#keydown);
+    this.#options.root.removeEventListener('click', this.#click);
+    this.#options.trigger?.removeEventListener('click', this.#triggerClick);
+    this.#elements.clear();
+    this.#submenuControlIDs.clear();
+  }
   #refresh(): void {
     const state = this.getSnapshot().state;
     this.#options.root.setAttribute('role', this.#options.kind === 'navigation-menu' ? 'navigation' : this.#options.kind === 'menubar' ? 'menubar' : 'menu');
     this.#options.root.setAttribute('dir', this.#options.direction ?? 'ltr');
     if (this.#options.label !== undefined) this.#options.root.setAttribute('aria-label', this.#options.label);
-    this.#options.root.hidden = !state.open;
+    this.#rootVisibility?.setHidden(!state.open);
     this.#options.trigger?.setAttribute('aria-haspopup', 'menu'); this.#options.trigger?.setAttribute('aria-expanded', String(state.open));
     for (const [id, element] of this.#elements) {
       element.dataset['level'] = String(this.#tree.depthOf(id) ?? 0);
@@ -132,18 +184,52 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
       if (this.#policies.disabled?.(id) === true) element.setAttribute('aria-disabled', 'true'); else element.removeAttribute('aria-disabled');
       if (this.#tree.isLeaf(id) === false) {
         element.setAttribute('aria-haspopup', 'menu'); element.setAttribute('aria-expanded', String(state.openPath.includes(id)));
-        const submenu = this.#submenus.get(id); if (submenu !== undefined) element.setAttribute('aria-controls', submenu.id);
+        const submenu = this.#submenus.get(id);
+        if (submenu !== undefined) {
+          element.setAttribute('aria-controls', submenu.id);
+          this.#submenuControlIDs.set(id, submenu.id);
+        }
       }
       element.tabIndex = state.cursor.current === id ? 0 : -1;
     }
     for (const [parentID, submenu] of this.#submenus) {
       const open = state.open && state.openPath.includes(parentID);
       submenu.dataset['level'] = String((this.#tree.depthOf(parentID) ?? 0) + 1);
-      if (this.#options.kind === 'navigation-menu') submenu.removeAttribute('role'); else submenu.setAttribute('role', 'menu'); submenu.hidden = !open;
+      if (this.#options.kind === 'navigation-menu') submenu.removeAttribute('role'); else submenu.setAttribute('role', 'menu');
+      this.#submenuVisibility.get(parentID)?.setHidden(!open);
     }
     this.#layer?.sync();
     this.#popupPosition?.update();
     for (const position of this.#submenuPositions.values()) position.update();
+  }
+  #clearSubmenuControl(parentID: ID, element: HTMLElement): void {
+    const applied = this.#submenuControlIDs.get(parentID);
+    if (applied !== undefined && element.getAttribute('aria-controls') === applied) element.removeAttribute('aria-controls');
+    this.#submenuControlIDs.delete(parentID);
+  }
+  #disconnectSubmenuPosition(parentID: ID): void {
+    this.#submenuPositions.get(parentID)?.disconnect();
+    this.#submenuPositions.delete(parentID);
+  }
+  #releaseSubmenu(parentID: ID, element: HTMLElement): void {
+    const anchor = this.#elements.get(parentID);
+    if (anchor !== undefined) this.#clearSubmenuControl(parentID, anchor);
+    else this.#submenuControlIDs.delete(parentID);
+    this.#disconnectSubmenuPosition(parentID);
+    this.#submenuVisibility.get(parentID)?.disconnect();
+    this.#submenuVisibility.delete(parentID);
+    const ownedID = this.#submenuIDs.get(parentID);
+    if (ownedID !== undefined && ownedID.element === element && element.id === ownedID.applied) {
+      if (ownedID.previous === null) {
+        element.id = '';
+        element.removeAttribute('id');
+      } else {
+        element.id = ownedID.previous;
+        element.setAttribute('id', ownedID.previous);
+      }
+    }
+    this.#submenuIDs.delete(parentID);
+    if (this.#submenus.get(parentID) === element) this.#submenus.delete(parentID);
   }
   #connectSubmenuPosition(parentID: ID): void {
     const anchor = this.#elements.get(parentID); const submenu = this.#submenus.get(parentID);

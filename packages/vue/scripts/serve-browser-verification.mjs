@@ -21,7 +21,7 @@ const vite = await createViteServer({
     __VUE_PROD_DEVTOOLS__: 'false',
     __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true',
   },
-  server: { middlewareMode: true },
+  server: { middlewareMode: true, host: '127.0.0.1' },
 });
 const rendered = await renderToString(createSSRApp(createHydrationFixture()));
 const template = `<!doctype html>

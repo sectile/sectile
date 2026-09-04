@@ -273,7 +273,9 @@ const measure = createAxisMeasurementResolver('vertical')
 
 SSR 지원 범위는 검증 증거를 기준으로 정합니다. 현재 server-to-client hydration 매트릭스는 중첩 Fragment의 `asChild` 채택, deferred Select/Toast Teleport, host가 생성한 ID 관계, 열린 상태와 닫힌 상태의 conditional presence, 숨겨진 form control을 검증합니다. 이 시나리오는 Vue mismatch 경고 0건과 함께 의도한 동일성, 대상 구조, presence 상태, 네이티브 제출 값을 유지해야 합니다. 기준 목록과 증거 경로는 `packages/vue/testing/hydration-contract.json`에 있습니다.
 
-Dialog, Alert Dialog, Drawer, Popover, Tooltip, Select root는 기본적으로 닫힌 동안에도 Content와, 해당하는 경우 Overlay DOM을 유지합니다. `unmountOnExit`을 지정하면 CSS 닫힘 animation 또는 transition이 끝난 뒤 presence 관리 파트를 제거합니다. Root와 Trigger는 유지되므로 다시 열 수 있습니다. DOM을 다시 만들기 때문에 비제어 form 입력값 같은 DOM 내부 상태도 초기화됩니다.
+Dialog, Alert Dialog, Drawer, Popover, Tooltip, Select는 기본적으로 닫힌 동안에도 Content와, 해당하는 경우 Overlay DOM을 유지합니다. 의미상 close는 즉시 끝나므로 focus 복귀, modal 격리, layer 소유권 같은 상호작용 효과는 시각적 exit가 끝나기 전에 해제됩니다. 닫혔지만 CSS exit를 위해 아직 present한 surface에는 Vue가 `inert`와 접근성 숨김을 반영하고, positioning은 rendered presence가 끝날 때까지만 유지합니다. `unmountOnExit`을 지정하면 exit 완료 뒤 popup part를 제거합니다. 지정하지 않으면 같은 DOM node를 숨긴 채 유지해 reopen 때 다시 사용하므로 DOM 내부 상태를 보존할 수 있습니다.
+
+Toast item도 같은 브라우저 presence 관찰자를 사용하지만 `unmountOnExit` 대신 keyed collection 수명을 따릅니다. 닫힌 item은 CSS exit 동안 `inert`와 접근성 숨김 상태로 남고, exit가 끝나면 렌더링 collection에서 제거됩니다. 완료 전에 같은 toast ID가 다시 활성화되면 현재 element의 오래된 exit generation을 취소합니다. Menu, Combobox, Cascade Select, picker surface는 계속 즉시 닫히며 이 계약 때문에 delayed exit나 새 visibility prop이 추가되지 않습니다.
 
 이벤트 API 이름은 `positionChange`, `interactOutside`처럼 camelCase를 사용합니다. Vue 템플릿에서는 `@position-change`, `@interact-outside`처럼 kebab-case로 수신하고, render function과 JSX에서는 `onPositionChange`, `onInteractOutside`를 사용합니다.
 

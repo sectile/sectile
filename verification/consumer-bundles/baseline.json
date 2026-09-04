@@ -1,5 +1,16 @@
 {
   "schemaVersion": 1,
+  "packages": [
+    "core",
+    "chart",
+    "dom",
+    "form",
+    "tabular",
+    "temporal",
+    "terminal",
+    "virtual",
+    "vue"
+  ],
   "fixtures": [
     {
       "id": "chart:.:namespace",
@@ -1306,6 +1317,26 @@
       "package": "dom",
       "subpath": "./popover",
       "source": "@sectile/dom/popover",
+      "exportName": null,
+      "mode": "side-effect",
+      "platform": "browser",
+      "pair": null
+    },
+    {
+      "id": "dom:./presence:named",
+      "package": "dom",
+      "subpath": "./presence",
+      "source": "@sectile/dom/presence",
+      "exportName": "createPresence",
+      "mode": "named",
+      "platform": "browser",
+      "pair": null
+    },
+    {
+      "id": "dom:./presence:side-effect",
+      "package": "dom",
+      "subpath": "./presence",
+      "source": "@sectile/dom/presence",
       "exportName": null,
       "mode": "side-effect",
       "platform": "browser",
@@ -8065,6 +8096,64 @@
       "bundler": "vite",
       "mode": "side-effect",
       "source": "@sectile/dom/popover",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
+      "id": "dom:./presence:named",
+      "bundler": "esbuild",
+      "mode": "named",
+      "source": "@sectile/dom/presence",
+      "exportName": "createPresence",
+      "platform": "browser",
+      "raw": 2650,
+      "gzip": 1081,
+      "brotli": 958,
+      "modules": [
+        "@sectile/dom/dist/presence.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "dom:./presence:named",
+      "bundler": "vite",
+      "mode": "named",
+      "source": "@sectile/dom/presence",
+      "exportName": "createPresence",
+      "platform": "browser",
+      "raw": 2699,
+      "gzip": 1087,
+      "brotli": 977,
+      "modules": [
+        "@sectile/dom/dist/presence.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "dom:./presence:side-effect",
+      "bundler": "esbuild",
+      "mode": "side-effect",
+      "source": "@sectile/dom/presence",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
+      "id": "dom:./presence:side-effect",
+      "bundler": "vite",
+      "mode": "side-effect",
+      "source": "@sectile/dom/presence",
       "exportName": null,
       "platform": "browser",
       "raw": 0,

@@ -122,6 +122,30 @@ Popover and tooltip connections use Floating UI for offset, collision flipping, 
 
 Every trigger-owned popup also joins one layer stack per document. Mixed nesting across dialogs, popovers, selects, comboboxes, menus, cascade selects, and date pickers therefore shares topmost Escape handling, outside dismissal, descendant close propagation, and focus restoration.
 
+## Presence and visibility ownership
+
+`@sectile/dom/presence` is a focused browser-motion observer for renderers that keep a surface mounted through CSS exit motion. It does not write `hidden`, ARIA attributes, `inert`, or styles. The renderer owns those projections and calls `update(false, element)` only after its closed-state DOM has been committed, so the observer measures the exit styles that are actually rendered.
+
+```ts
+import { createPresence } from '@sectile/dom/presence'
+
+const presence = createPresence({
+  open: true,
+  element: content,
+  onPresentChange(present) {
+    if (!present) content.hidden = true
+  },
+})
+
+// First render the semantic closed state, then arm exit observation.
+content.dataset.state = 'closed'
+presence.update(false, content)
+```
+
+Reopening cancels the pending exit immediately. Element replacement and `disconnect()` release the old listeners and timer before a stale generation can publish. The observer waits for the longest finite transition or animation on the owning element and bounds its fallback wait; child motion does not own the parent surface lifetime.
+
+Direct DOM components that manage functional visibility continue to update `hidden` synchronously so focus, layering, and positioning see the correct state in the same transition. Existing framework-oriented opt-outs such as `manageVisibility: false` remain limited to the component APIs that already expose them; Menu, Combobox, Cascade Select, and picker families do not gain a generic visibility opt-out. When a connection owns `hidden`, disconnect restores the pre-connection attribute only if the consumer has not changed it since Sectile's last write.
+
 ## Reorder
 
 `@sectile/dom/reorder` maps sequence and tree reorder semantics onto Alt-modified movement keys and pointer placement. Pointer capture and hit-testing stay in the DOM adapter; Core receives only stable identities and semantic before/after or parent placement.

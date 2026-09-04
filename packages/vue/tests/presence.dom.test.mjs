@@ -34,17 +34,45 @@ const PopupSurface = defineComponent({
   },
 });
 
-test('dialog keeps closed content present until its exit motion completes', async () => {
+test('dialog projects closed presence before measuring exit motion and quarantines retained surfaces', async () => {
   const host = document.createElement('div'); document.body.append(host); const open = ref(false);
-  const app = createApp({ render: () => h(DialogRoot, { open: open.value, modal: false, 'onUpdate:open': (value) => { open.value = value; } }, { default: () => h(DialogContent, { style: { transitionDuration: '50ms' } }, { default: () => h(DialogClose, null, { default: () => 'Close' }) }) }) });
-  app.mount(host); await nextTick(); const content = host.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, true);
+  const motion = { transitionProperty: 'opacity, transform', transitionDuration: '5ms, 20ms' };
+  const app = createApp({ render: () => h(DialogRoot, { open: open.value, modal: false, 'onUpdate:open': (value) => { open.value = value; } }, { default: () => [
+    h(DialogOverlay, { style: motion }),
+    h(DialogContent, { style: motion }, { default: () => h(DialogClose, null, { default: () => 'Close' }) }),
+  ] }) });
+  app.mount(host); await nextTick();
+  const content = host.querySelector('[data-part="content"]'); const overlay = host.querySelector('[data-part="overlay"]');
+  assert.ok(content instanceof HTMLElement); assert.ok(overlay instanceof HTMLElement); assert.equal(content.hidden, true);
   open.value = true; await nextTick(); await nextTick();
   const close = host.querySelector('[data-part="close"]'); assert.ok(close instanceof HTMLButtonElement); assert.equal(document.activeElement, close);
   open.value = false; await nextTick();
-  assert.equal(content.dataset.state, 'closed'); assert.equal(content.hidden, false);
-  content.dispatchEvent(new Event('transitionend', { bubbles: true })); await nextTick();
-  assert.equal(content.hidden, true);
+  assert.equal(content.dataset.state, 'closed'); assert.equal(content.hidden, false); assert.equal(content.inert, true); assert.equal(content.getAttribute('aria-hidden'), 'true');
+  assert.equal(overlay.hidden, false); assert.equal(overlay.inert, true); assert.equal(overlay.getAttribute('aria-hidden'), 'true');
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  content.dispatchEvent(new Event('transitionend', { bubbles: true })); overlay.dispatchEvent(new Event('transitionend', { bubbles: true }));
+  await nextTick(); await nextTick();
+  assert.equal(content.hidden, true); assert.equal(content.inert, false); assert.equal(content.getAttribute('aria-hidden'), null); assert.equal(overlay.hidden, true);
   app.unmount(); host.remove();
+});
+
+test('dialog reopen cancels the prior exit and preserves the retained content node', async () => {
+  const host = document.createElement('div'); document.body.append(host); const open = ref(true);
+  const app = createApp({ render: () => h(DialogRoot, { open: open.value, modal: false, 'onUpdate:open': (value) => { open.value = value; } }, { default: () => h(DialogContent, { style: { transitionProperty: 'all', transitionDuration: '100ms' } }, { default: () => 'Retained' }) }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const content = host.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement);
+    open.value = false; await nextTick();
+    assert.equal(content.hidden, false); assert.equal(content.inert, true); assert.equal(content.getAttribute('aria-hidden'), 'true');
+    open.value = true; await nextTick();
+    const reopened = host.querySelector('[data-part="content"]');
+    assert.equal(reopened, content); assert.equal(content.hidden, false); assert.equal(content.inert, false); assert.equal(content.getAttribute('aria-hidden'), null);
+    content.dispatchEvent(new Event('transitionend', { bubbles: true })); await nextTick();
+    assert.equal(content.hidden, false); assert.equal(content.dataset.state, 'open');
+  } finally {
+    app.unmount(); host.remove();
+  }
 });
 
 test('controlled toast retains its closed item through exit motion and then removes it', async () => {
@@ -125,31 +153,31 @@ test('component-backed popup parts keep their connection and focus across reacti
   }
 });
 
-test('portalled Select keeps typeahead, selection, and positioning connected', async () => {
+test('portalled Select keeps typeahead, selection, and exit presence connected', async () => {
   const host = document.createElement('div'); const portal = document.createElement('div'); document.body.append(host, portal);
-  const inserted = capturePositionedContentInsertions(portal);
   const selected = ref(null); const open = ref(false); const highlighted = ref(null);
   const app = createApp({ render: () => h(SelectRoot, {
     items: ['alpha', 'beta', 'gamma'], modelValue: selected.value, open: open.value,
-    unmountOnExit: true, hideWhenDetached: false,
+    unmountOnExit: true, position: false,
     textValue: (id) => ({ alpha: 'Apple', beta: 'Banana', gamma: 'Grape' })[id],
     'onUpdate:modelValue': (value) => { selected.value = value; }, 'onUpdate:open': (value) => { open.value = value; },
     onHighlight: (value) => { highlighted.value = value; },
   }, { default: () => [
     h(SelectTrigger, null, { default: () => 'Choose' }),
-    h(SelectPortal, { to: portal }, { default: () => h(SelectContent, null, { default: () => h(SelectViewport, null, { default: () => ['alpha', 'beta', 'gamma'].map((value) => h(SelectItem, { value }, { default: () => h(SelectItemText, null, { default: () => value }) })) }) }) }),
+    h(SelectPortal, { to: portal }, { default: () => h(SelectContent, { style: { transitionProperty: 'opacity', transitionDuration: '20ms' } }, { default: () => h(SelectViewport, null, { default: () => ['alpha', 'beta', 'gamma'].map((value) => h(SelectItem, { value }, { default: () => h(SelectItemText, null, { default: () => value }) })) }) }) }),
   ] }) });
   app.mount(host);
   try {
     await nextTick(); const trigger = host.querySelector('[data-part="trigger"]'); assert.ok(trigger instanceof HTMLButtonElement);
-    trigger.click(); await nextTick(); await new Promise((resolve) => setTimeout(resolve, 0));
-    const content = portal.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, false); assert.equal(content.style.position, 'absolute');
-    assert.deepEqual(inserted, [{ scope: 'select', position: 'absolute', visibility: 'hidden' }]);
-    assert.equal(content.style.visibility, '');
+    trigger.click(); await nextTick(); await nextTick();
+    const content = portal.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, false); assert.equal(content.style.position, '');
     content.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true })); await nextTick();
     assert.equal(highlighted.value, 'beta');
     content.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); await nextTick();
     assert.equal(selected.value, 'beta'); assert.equal(open.value, false);
+    assert.equal(portal.querySelector('[data-part="content"]'), content); assert.equal(content.hidden, false); assert.equal(content.inert, true); assert.equal(content.getAttribute('aria-hidden'), 'true');
+    await new Promise((resolve) => setTimeout(resolve, 25)); content.dispatchEvent(new Event('transitionend', { bubbles: true })); await nextTick(); await nextTick();
+    assert.equal(portal.querySelector('[data-part="content"]'), null);
   } finally {
     app.unmount(); host.remove(); portal.remove();
   }
@@ -158,6 +186,10 @@ test('portalled Select keeps typeahead, selection, and positioning connected', a
 test('Combobox, CascadeSelect, and MenuButton share Select positioning defaults and manual opt-out', async () => {
   const host = document.createElement('div'); const portal = document.createElement('div'); document.body.append(host, portal); const position = ref(true);
   const app = createApp({ render: () => [
+    h(SelectRoot, {
+      items: ['seoul'], defaultOpen: true,
+      position: position.value, side: 'top', strategy: 'fixed', avoidCollisions: false,
+    }, { default: () => [h(SelectTrigger), h(SelectPortal, { to: portal }, { default: () => h(SelectContent) })] }),
     h(ComboboxRoot, {
       items: [{ id: 'seoul', label: 'Seoul' }], defaultOpen: true,
       position: position.value, side: 'top', strategy: 'fixed', avoidCollisions: false,
@@ -175,7 +207,7 @@ test('Combobox, CascadeSelect, and MenuButton share Select positioning defaults 
   try {
     await nextTick(); await nextTick(); await new Promise((resolve) => setTimeout(resolve, 0));
     const contents = portal.querySelectorAll('[data-part="content"]');
-    assert.equal(contents.length, 3);
+    assert.equal(contents.length, 4);
     assert.equal(host.querySelectorAll('[data-part="content"]').length, 0);
     for (const content of contents) {
       assert.equal(content.style.position, 'fixed');

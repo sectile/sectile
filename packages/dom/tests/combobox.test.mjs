@@ -73,6 +73,18 @@ test('DOM combobox facade owns construction, native text input, ARIA, navigation
   assert.equal(duplicate.ok, false);
 });
 
+test('DOM combobox restores exact popup hidden ownership on disconnect', () => {
+  const input = new FakeTextElement();
+  const popup = new FakeElement();
+  popup.setAttribute('hidden', 'until-found');
+  popup.hidden = true;
+  const connection = createCombobox({ items: items(), input, popup, defaultOpen: true });
+
+  assert.equal(popup.getAttribute('hidden'), null);
+  connection.disconnect();
+  assert.equal(popup.getAttribute('hidden'), 'until-found');
+});
+
 test('DOM keyboard and text inputs map onto combobox semantics', () => {
   assert.equal(toComboboxEvent({ key: 'ArrowDown' }), 'next');
   assert.equal(toComboboxEvent({ key: 'ArrowUp' }), 'previous');

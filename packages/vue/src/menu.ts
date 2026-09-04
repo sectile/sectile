@@ -19,6 +19,10 @@ import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 type MenuKind = 'menu' | 'menu-button' | 'menubar' | 'navigation-menu';
+type MenuRegistrationConnection = Omit<MenuConnection<string>, 'setItemAttributes' | 'setSubmenuAttributes'> & {
+  setItemAttributes(element: HTMLElement | undefined, id: string): void;
+  setSubmenuAttributes(element: HTMLElement | undefined, parentID: string): void;
+};
 export interface MenuRootProps {
   readonly items: readonly MenuItemDefinition<string>[];
   readonly disabledItems?: readonly string[];
@@ -53,8 +57,8 @@ interface Context {
   readonly strategy: ComputedRef<PositionStrategy>;
   registerRoot(element?: HTMLElement): void;
   registerTrigger(element?: HTMLElement): void;
-  registerItem(element: HTMLElement, id: string): void;
-  registerSubmenu(element: HTMLElement, parent: string): void;
+  registerItem(element: HTMLElement | undefined, id: string): void;
+  registerSubmenu(element: HTMLElement | undefined, parent: string): void;
 }
 interface ResolvedRootProps {
   readonly items: readonly MenuItemDefinition<string>[];
@@ -207,8 +211,8 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
       provide<Context>(key, {
         state, kind, label: computed(() => runtimeProps.label), disabledItems: computed(() => new Set(runtimeProps.disabledItems)), direction,
         position, strategy, registerRoot, registerTrigger,
-        registerItem: (element, id) => connection.value?.setItemAttributes(element, id),
-        registerSubmenu: (element, parent) => connection.value?.setSubmenuAttributes(element, parent),
+        registerItem: (element, id) => (connection.value as MenuRegistrationConnection | undefined)?.setItemAttributes(element, id),
+        registerSubmenu: (element, parent) => (connection.value as MenuRegistrationConnection | undefined)?.setSubmenuAttributes(element, parent),
       });
       onMounted(() => { mounted = true; connect(); });
       onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); });
@@ -267,7 +271,7 @@ export const MenuItem = defineComponent({
   props: { value: { type: String, required: true }, disabled: { type: Boolean, default: false }, ...partProps },
   slots: Object as SlotsType<{ default: (props: MenuItemSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('MenuItem'); const state = computed<MenuItemSlotProps>(() => ({ value: props.value, highlighted: root.state.value.highlightedValue === props.value, open: root.state.value.openPath.includes(props.value), disabled: root.state.value.disabled || props.disabled || root.disabledItems.value.has(props.value) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerItem(node, props.value); },
+    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.registerItem(node instanceof HTMLElement ? node : undefined, props.value); },
     role: root.kind === 'navigation-menu' ? undefined : 'menuitem', 'aria-disabled': state.value.disabled ? 'true' : undefined, 'data-sectile-menu-id': props.value,
     'data-scope': root.kind === 'navigation-menu' ? 'navigation-menu' : root.kind === 'menubar' ? 'menubar' : 'menu', 'data-part': 'item', 'data-highlighted': state.value.highlighted ? '' : undefined,
     'data-state': state.value.open ? 'open' : 'closed',
@@ -279,7 +283,7 @@ export const MenuSubContent = defineComponent({
   props: { for: { type: String, required: true }, ...partProps },
   slots: Object as SlotsType<{ default: (props: MenuRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('MenuSubContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerSubmenu(node, props.for); },
+    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.registerSubmenu(node instanceof HTMLElement ? node : undefined, props.for); },
     role: root.kind === 'navigation-menu' ? undefined : 'menu', hidden: !root.state.value.openPath.includes(props.for), dir: root.direction.value, 'data-sectile-submenu-for': props.for,
     'data-scope': root.kind === 'navigation-menu' ? 'navigation-menu' : 'menu', 'data-part': 'sub-content', 'data-state': root.state.value.openPath.includes(props.for) ? 'open' : 'closed',
   }), { default: () => slots['default']?.(root.state.value) }); },

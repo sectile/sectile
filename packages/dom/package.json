@@ -171,6 +171,11 @@
       "import": "./dist/position.js",
       "default": "./dist/position.js"
     },
+    "./presence": {
+      "types": "./dist/presence.d.ts",
+      "import": "./dist/presence.js",
+      "default": "./dist/presence.js"
+    },
     "./toast": {
       "types": "./dist/toast.d.ts",
       "import": "./dist/toast.js",

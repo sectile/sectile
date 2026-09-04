@@ -5403,6 +5403,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "dom:./presence:createPresence",
+      "package": "dom",
+      "subpath": "./presence",
+      "exportName": "createPresence",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "dom:./progress:createProgress",
       "package": "dom",
       "subpath": "./progress",

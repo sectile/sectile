@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
+import { createMenu } from '../.verification-dist/menu.js';
 import { createMenuButton } from '../.verification-dist/menu-button.js';
 import { createMenubar } from '../.verification-dist/menubar.js';
 import { createNavigationMenu } from '../.verification-dist/navigation-menu.js';
@@ -196,6 +197,69 @@ test('DOM navigation menu preserves native navigation roles and toggles panels',
   assert.equal(panel.hidden, true);
 });
 
+test('standalone menu roots preserve consumer-authored hidden state', () => {
+  const root = new FakeElement();
+  root.setAttribute('hidden', 'until-found');
+  root.hidden = true;
+  const menu = createMenu({ root, items: [{ id: 'file', parentID: null }] });
+
+  assert.equal(root.getAttribute('hidden'), 'until-found');
+  assert.equal(root.hidden, true);
+  menu.disconnect();
+  assert.equal(root.getAttribute('hidden'), 'until-found');
+});
+
+test('menu button restores its exact hidden baseline without overwriting a later consumer change', () => {
+  const root = new FakeElement();
+  const trigger = new FakeElement();
+  root.setAttribute('hidden', 'until-found');
+  root.hidden = true;
+  const menu = createMenuButton({ root, trigger, items: [{ id: 'file', parentID: null }] });
+
+  assert.equal(root.getAttribute('hidden'), '');
+  menu.handleEvent('open-popup');
+  assert.equal(root.getAttribute('hidden'), null);
+  menu.disconnect();
+  assert.equal(root.getAttribute('hidden'), 'until-found');
+
+  const consumerRoot = new FakeElement();
+  const consumerMenu = createMenuButton({ root: consumerRoot, trigger: new FakeElement(), items: [{ id: 'file', parentID: null }] });
+  assert.equal(consumerRoot.getAttribute('hidden'), '');
+  consumerRoot.setAttribute('hidden', 'until-found');
+  consumerRoot.hidden = true;
+  consumerMenu.disconnect();
+  assert.equal(consumerRoot.getAttribute('hidden'), 'until-found');
+});
+
+test('menu unregister restores submenu visibility and generated ID ownership', () => {
+  const root = new FakeElement();
+  const trigger = new FakeElement();
+  const file = new FakeElement();
+  const child = new FakeElement();
+  const submenu = new FakeElement();
+  submenu.setAttribute('hidden', 'until-found');
+  submenu.hidden = true;
+  const menu = createMenuButton({
+    root, trigger,
+    items: [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }],
+  });
+
+  menu.setItemAttributes(file, 'file');
+  menu.setItemAttributes(child, 'open');
+  menu.setSubmenuAttributes(submenu, 'file');
+  const generated = submenu.id;
+  assert.notEqual(generated, '');
+  assert.equal(file.getAttribute('aria-controls'), generated);
+  assert.equal(submenu.getAttribute('hidden'), '');
+
+  menu.setSubmenuAttributes(undefined, 'file');
+  assert.equal(file.getAttribute('aria-controls'), null);
+  assert.equal(submenu.getAttribute('hidden'), 'until-found');
+  assert.equal(submenu.id, '');
+  menu.setItemAttributes(undefined, 'file');
+  menu.disconnect();
+});
+
 class FakeView {
   listeners = new Map();
   constructor(innerWidth, innerHeight) { this.innerWidth = innerWidth; this.innerHeight = innerHeight; }
@@ -256,7 +320,8 @@ class FakeElement {
     this.rect = rect ?? { left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0 };
     this.ownerDocument = view === null ? undefined : { defaultView: view };
   }
-  setAttribute(name, value) { this.attributes.set(name, value); }
+  setAttribute(name, value) { this.attributes.set(name, String(value)); }
+  getAttribute(name) { return this.attributes.get(name) ?? null; }
   removeAttribute(name) { this.attributes.delete(name); }
   addEventListener(type, listener) { const set = this.listeners.get(type) ?? new Set(); set.add(listener); this.listeners.set(type, set); }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }

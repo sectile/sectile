@@ -122,6 +122,30 @@ Popover와 Tooltip 연결 객체는 Floating UI를 사용합니다. 기본 오�
 
 트리거가 있는 모든 팝업은 문서별 레이어 스택에도 참여합니다. Dialog, Popover, Select, Combobox, Menu, Cascade Select, Date Picker가 섞여 중첩돼도 최상위 Escape, 바깥 상호작용 닫기, 하위 레이어 전파, 포커스 복귀가 같은 규칙을 따릅니다.
 
+## Presence와 표시 상태 소유권
+
+`@sectile/dom/presence`는 CSS 닫힘 모션 동안 surface를 DOM에 유지하는 renderer를 위한 브라우저 모션 관찰자입니다. 이 API는 `hidden`, ARIA 속성, `inert`, style을 직접 쓰지 않습니다. 해당 DOM 반영은 renderer가 소유하며, 닫힌 상태의 DOM을 먼저 반영한 뒤 `update(false, element)`를 호출해야 실제 exit style을 기준으로 모션을 측정할 수 있습니다.
+
+```ts
+import { createPresence } from '@sectile/dom/presence'
+
+const presence = createPresence({
+  open: true,
+  element: content,
+  onPresentChange(present) {
+    if (!present) content.hidden = true
+  },
+})
+
+// 의미상 닫힌 상태를 먼저 렌더링한 뒤 exit 관찰을 시작합니다.
+content.dataset.state = 'closed'
+presence.update(false, content)
+```
+
+다시 열면 대기 중인 exit가 즉시 취소됩니다. 요소가 교체되거나 `disconnect()`가 호출되면 이전 listener와 timer를 먼저 해제하므로 오래된 generation이 상태를 반영할 수 없습니다. 관찰자는 소유 요소의 유한한 transition과 animation 중 가장 긴 모션을 기다리며 fallback 대기 시간에는 상한이 있습니다. 자식 요소의 모션은 부모 surface의 수명을 결정하지 않습니다.
+
+기능적 표시 상태를 관리하는 직접 DOM 컴포넌트는 계속 `hidden`을 동기적으로 갱신합니다. 그래야 같은 상태 전이에서 focus, layer, positioning이 올바른 표시 상태를 볼 수 있습니다. `manageVisibility: false` 같은 기존 framework용 opt-out은 이미 이 옵션을 제공하던 API에만 유지됩니다. Menu, Combobox, Cascade Select, picker 제품군에 범용 표시 상태 opt-out을 새로 추가하지 않습니다. 연결 객체가 `hidden`을 소유한 경우에는 Sectile이 마지막으로 쓴 값이 그대로 남아 있을 때만 연결 전 attribute 값을 복원하므로, 연결 중 소비자가 바꾼 상태를 덮어쓰지 않습니다.
+
 ## 순서 변경
 
 `@sectile/dom/reorder`는 sequence와 tree 순서 변경을 Alt 조합 이동 키와 포인터 배치로 연결합니다. 포인터 캡처와 위치 판정은 DOM 어댑터가 담당하고 Core에는 안정 식별자와 before/after 또는 부모 배치만 전달합니다.

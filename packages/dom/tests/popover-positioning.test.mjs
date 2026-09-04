@@ -164,6 +164,30 @@ test('DOM positioning restores styles after browser CSSOM value normalization', 
   fixture.close();
 });
 
+test('DOM positioning disconnect preserves consumer style and data mutations made after projection', () => {
+  const fixture = createPositionFixture();
+  fixture.root.style.left = '3px';
+  fixture.root.dataset.side = 'before';
+  const engine = createPositionEngine({
+    root: fixture.root,
+    reference: fixture.reference,
+    collisionBoundary: fixture.boundary,
+    side: 'bottom',
+    avoidCollisions: false,
+  });
+  engine.connect();
+  fixture.frames.flush();
+  assert.notEqual(fixture.root.style.left, '3px');
+  assert.equal(fixture.root.dataset.side, 'bottom');
+
+  fixture.root.style.left = '77px';
+  fixture.root.dataset.side = 'consumer';
+  engine.disconnect();
+  assert.equal(fixture.root.style.left, '77px');
+  assert.equal(fixture.root.dataset.side, 'consumer');
+  fixture.close();
+});
+
 test('DOM positioning shares physical event sources and releases every resource', () => {
   const before = readPositionSourceRegistryDiagnostics();
   const first = createPositionFixture();

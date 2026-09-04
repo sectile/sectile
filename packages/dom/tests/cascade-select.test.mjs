@@ -19,6 +19,17 @@ test('DOM cascade select projects columns and commits a leaf', () => {
   select.disconnect();
 });
 
+test('DOM cascade select restores exact popup hidden ownership on disconnect', () => {
+  const root = new FakeElement(); const trigger = new FakeElement(); const popup = new FakeElement();
+  popup.setAttribute('hidden', 'until-found'); popup.hidden = true;
+  const select = createCascadeSelect({ root, trigger, popup, nodes });
+  assert.equal(popup.getAttribute('hidden'), '');
+  select.handleEvent('open');
+  assert.equal(popup.getAttribute('hidden'), null);
+  select.disconnect();
+  assert.equal(popup.getAttribute('hidden'), 'until-found');
+});
+
 test('DOM cascade select exposes native keyboard mapping and disabled semantics', () => {
   assert.equal(toCascadeSelectEvent({ key: 'ArrowRight', altKey: false, ctrlKey: false, metaKey: false }), 'right');
   const root = new FakeElement(); const trigger = new FakeElement(); const popup = new FakeElement(); const option = new FakeElement();
@@ -28,7 +39,7 @@ test('DOM cascade select exposes native keyboard mapping and disabled semantics'
 
 class FakeElement {
   attributes = new Map(); dataset = {}; listeners = new Map(); tabIndex = -1; hidden = false; disabled = false;
-  setAttribute(name, value) { this.attributes.set(name, value); } removeAttribute(name) { this.attributes.delete(name); }
+  setAttribute(name, value) { this.attributes.set(name, String(value)); } getAttribute(name) { return this.attributes.get(name) ?? null; } removeAttribute(name) { this.attributes.delete(name); }
   addEventListener(type, listener) { const set = this.listeners.get(type) ?? new Set(); set.add(listener); this.listeners.set(type, set); }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); } querySelectorAll() { return []; } focus() {}
 }

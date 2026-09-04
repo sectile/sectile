@@ -173,6 +173,29 @@ test('modal isolation covers background nodes added while open', async () => {
   dialog.disconnect();
 });
 
+test('dialog visibility ownership restores exact baseline and preserves consumer changes', () => {
+  const window = new Window();
+  const document = window.document;
+  const root = document.createElement('section');
+  root.setAttribute('hidden', 'until-found');
+  document.body.append(root);
+  const dialog = createDialog({ root });
+
+  assert.equal(root.getAttribute('hidden'), '');
+  dialog.handleEvent('open');
+  assert.equal(root.getAttribute('hidden'), null);
+  dialog.disconnect();
+  assert.equal(root.getAttribute('hidden'), 'until-found');
+
+  const consumerRoot = document.createElement('section');
+  document.body.append(consumerRoot);
+  const consumerDialog = createDialog({ root: consumerRoot });
+  assert.equal(consumerRoot.getAttribute('hidden'), '');
+  consumerRoot.setAttribute('hidden', 'until-found');
+  consumerDialog.disconnect();
+  assert.equal(consumerRoot.getAttribute('hidden'), 'until-found');
+});
+
 test('initial focus retries after a framework makes managed content visible', () => {
   const window = new Window();
   const document = window.document;

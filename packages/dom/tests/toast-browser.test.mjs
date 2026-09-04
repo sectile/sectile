@@ -37,6 +37,31 @@ test('toast supports localized controls, viewport hotkey, window pause, and Esca
   toast.disconnect();
 });
 
+test('toast visibility ownership restores exact item baseline and opt-out leaves consumer state alone', () => {
+  const window = new Window();
+  const document = window.document;
+  const viewport = document.createElement('ol');
+  const item = document.createElement('li');
+  item.setAttribute('hidden', 'until-found');
+  viewport.append(item); document.body.append(viewport);
+  const toast = createToast({ root: viewport, autoDismiss: false });
+  toast.push({ id: 'saved', title: 'Saved' });
+  toast.setToastAttributes(item, 'saved');
+  assert.equal(item.getAttribute('hidden'), null);
+  toast.disconnect();
+  assert.equal(item.getAttribute('hidden'), 'until-found');
+
+  const unmanaged = document.createElement('li');
+  unmanaged.setAttribute('hidden', 'until-found');
+  viewport.append(unmanaged);
+  const unmanagedToast = createToast({ root: viewport, autoDismiss: false, manageVisibility: false });
+  unmanagedToast.push({ id: 'manual', title: 'Manual' });
+  unmanagedToast.setToastAttributes(unmanaged, 'manual');
+  unmanaged.removeAttribute('hidden');
+  unmanagedToast.disconnect();
+  assert.equal(unmanaged.getAttribute('hidden'), null);
+});
+
 test('controlled toast emits proposals and changes only when synchronized', () => {
   const window = new Window();
   const viewport = window.document.createElement('ol');
@@ -113,6 +138,38 @@ test('controlled toast commits countdown progress and preserves it across extern
   assert.equal(dismissals.length, 1);
   toast.syncItems([]);
   assert.equal(toast.getSnapshot().state.items.length, 0);
+  toast.disconnect();
+});
+
+test('toast registration replacement and unregister release owned DOM state immediately', () => {
+  const window = new Window();
+  const viewport = window.document.createElement('ol');
+  const first = window.document.createElement('li');
+  const second = window.document.createElement('li');
+  const oldClose = window.document.createElement('button');
+  const newClose = window.document.createElement('button');
+  first.setAttribute('hidden', 'until-found');
+  viewport.append(first, second); window.document.body.append(viewport);
+  const toast = createToast({ root: viewport, autoDismiss: false, swipeDirection: 'right' });
+  toast.push({ id: 'saved', title: 'Saved' });
+  toast.setToastAttributes(first, 'saved');
+  toast.setCloseButtonAttributes(oldClose, 'saved');
+  assert.equal(first.getAttribute('hidden'), null);
+  assert.equal(first.style.touchAction, 'pan-y');
+
+  toast.setToastAttributes(second, 'saved');
+  toast.setCloseButtonAttributes(newClose, 'saved');
+  assert.equal(first.getAttribute('hidden'), 'until-found');
+  assert.equal(first.style.touchAction, '');
+  oldClose.click();
+  assert.equal(toast.getSnapshot().state.items.length, 1);
+
+  second.style.touchAction = 'consumer';
+  toast.setToastAttributes(undefined, 'saved');
+  toast.setCloseButtonAttributes(undefined, 'saved');
+  assert.equal(second.style.touchAction, 'consumer');
+  newClose.click();
+  assert.equal(toast.getSnapshot().state.items.length, 1);
   toast.disconnect();
 });
 

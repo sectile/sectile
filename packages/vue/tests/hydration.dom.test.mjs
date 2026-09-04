@@ -81,7 +81,13 @@ test('[HYD-04] conditional popup presence hydrates both initial variants', async
     };
     const rendered = await hydrate(component);
     try {
-      assert.equal(rendered.host.querySelector('[data-part="content"]') !== null, open);
+      const content = rendered.host.querySelector('[data-part="content"]');
+      assert.equal(content !== null, open);
+      if (content instanceof HTMLElement) {
+        assert.equal(content.hidden, false);
+        assert.equal(content.inert, false);
+        assert.equal(content.getAttribute('aria-hidden'), null);
+      }
       assert.deepEqual(rendered.warnings, []);
     } finally {
       rendered.app.unmount();

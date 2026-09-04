@@ -20,6 +20,7 @@ import {
   type PositionConnection,
 } from './internal/position-connection.js';
 import type { PositionOptions } from './position.js';
+import { createHiddenBinding, type HiddenBinding } from './internal/hidden-binding.js';
 
 export type { TreeNodeInput as CascadeSelectItemDefinition } from '@sectile/core/tree';
 export type { CascadeSelectPolicies } from '@sectile/core/cascade-select';
@@ -130,9 +131,10 @@ class DOMCascadeSelectConnection<ID extends StableID> implements CascadeSelectCo
   readonly #layer: DOMLayerBinding;
   readonly #choice: DOMCascadeChoiceBinding<ID>;
   readonly #position: PositionConnection;
+  readonly #visibility: HiddenBinding;
 
   public constructor(options: CascadeSelectOptions<ID>, tree: Tree<ID>, runtime: SemanticController<CascadeSelectState<ID>, CascadeSelectEvent<ID>, CascadeSelectEffect<ID>>, disabled: ReadonlySet<ID>, controlled: { value: boolean; highlighted: boolean; open: boolean }) {
-    this.#options = options; this.tree = tree; this.#runtime = runtime; this.#controlled = controlled;
+    this.#options = options; this.tree = tree; this.#runtime = runtime; this.#controlled = controlled; this.#visibility = createHiddenBinding(options.popup);
     this.#layer = createDOMLayerBinding({ surface: options.popup, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close'); } });
     this.#position = options.position === false
       ? manualPositionConnection
@@ -188,8 +190,8 @@ class DOMCascadeSelectConnection<ID extends StableID> implements CascadeSelectCo
     }
     this.#options.onUpdate?.(); return true;
   }
-  public disconnect(): void { this.#layer.disconnect(); this.#choice.disconnect(); this.#position.disconnect(); this.#options.trigger.removeEventListener('click', this.#triggerClick); }
-  #render(): void { const state = this.getSnapshot().state; this.#options.trigger.setAttribute('aria-expanded', String(state.open)); this.#options.popup.hidden = !state.open; this.#layer.sync(); this.#position.update(); }
+  public disconnect(): void { this.#layer.disconnect(); this.#choice.disconnect(); this.#position.disconnect(); this.#visibility.disconnect(); this.#options.trigger.removeEventListener('click', this.#triggerClick); }
+  #render(): void { const state = this.getSnapshot().state; this.#options.trigger.setAttribute('aria-expanded', String(state.open)); this.#visibility.setHidden(!state.open); this.#layer.sync(); this.#position.update(); }
 }
 
 export function toCascadeSelectEvent<ID extends StableID>(input: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey'>): CascadeSelectEvent<ID> | null {

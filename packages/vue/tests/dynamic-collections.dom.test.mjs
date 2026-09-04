@@ -22,7 +22,7 @@ const { CarouselRoot } = await import('../.verification-dist/carousel.js');
 const { CascadeSelectContent, CascadeSelectRoot, CascadeSelectTrigger } = await import('../.verification-dist/cascade-select.js');
 const { FeedRoot } = await import('../.verification-dist/feed.js');
 const { GridRoot } = await import('../.verification-dist/grid.js');
-const { MenuRoot } = await import('../.verification-dist/menu.js');
+const { MenuItem, MenuRoot, MenuSubContent } = await import('../.verification-dist/menu.js');
 const { PaginationRoot } = await import('../.verification-dist/pagination.js');
 const { SelectContent, SelectRoot, SelectTrigger } = await import('../.verification-dist/select.js');
 const { ToolbarRoot } = await import('../.verification-dist/toolbar.js');
@@ -160,6 +160,35 @@ test('Vue cascade select clears a controlled leaf removed from its tree', async 
   nodes.value = [{ id: 'other', parentID: null }];
   await settle();
   assert.equal(value.value, null);
+  unmount(app, host);
+});
+
+test('Vue menu unregisters a conditionally removed submenu from DOM ownership', async () => {
+  const showSubmenu = ref(true);
+  const items = [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }];
+  const { app, host } = mount(() => h(MenuRoot, { items, defaultHighlightedValue: 'file' }, {
+    default: () => [
+      h(MenuItem, { value: 'file' }, { default: () => 'File' }),
+      showSubmenu.value
+        ? h(MenuSubContent, { for: 'file' }, { default: () => h(MenuItem, { value: 'open' }, { default: () => 'Open' }) })
+        : null,
+    ],
+  }));
+
+  await settle();
+  const file = host.querySelector('[data-sectile-menu-id="file"]');
+  const submenu = host.querySelector('[data-sectile-submenu-for="file"]');
+  assert.ok(file instanceof HTMLElement);
+  assert.ok(submenu instanceof HTMLElement);
+  file.dispatchEvent(new browserWindow.MouseEvent('click', { bubbles: true }));
+  await settle();
+  assert.notEqual(file.getAttribute('aria-controls'), null);
+
+  showSubmenu.value = false;
+  await settle();
+  assert.equal(host.querySelector('[data-sectile-submenu-for="file"]'), null);
+  assert.equal(file.getAttribute('aria-controls'), null);
+  assert.equal(submenu.style.position, '');
   unmount(app, host);
 });
 

@@ -98,6 +98,12 @@ async function inspectVueInstall(root, packageManager, tarballs) {
     "const { stableIDElementToken } = await import('@sectile/dom/identity');",
     "if (stableIDElementToken('%') === stableIDElementToken('-25')) throw new Error('DOM identity encoding collision');",
   ].join(' ')], directory);
+  await run(process.execPath, ['--input-type=module', '-e', [
+    "const { createPresence } = await import('@sectile/dom/presence');",
+    "const presence = createPresence({ open: false });",
+    "if (presence.getPresent() !== false) throw new Error('DOM presence initial state mismatch');",
+    "presence.disconnect();",
+  ].join(' ')], directory);
   const optionalDomains = [
     {
       packageName: 'chart',

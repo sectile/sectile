@@ -2,7 +2,7 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all 9 package source trees.
 
-Findings: 453; migration owners: WI-020, WI-027, WI-040.
+Findings: 451; migration owners: WI-020, WI-027, WI-040.
 
 ## Classifications
 
@@ -11,17 +11,17 @@ Findings: 453; migration owners: WI-020, WI-027, WI-040.
 | bounded-small | 10 |
 | migration-required | 60 |
 | result-proportional | 171 |
-| reuse | 212 |
+| reuse | 210 |
 
 ## Categories
 
 | Category | Count |
 |---|---:|
 | controller-connection-rebuild | 36 |
-| discarded-canonical-index | 58 |
+| discarded-canonical-index | 57 |
 | measurement-authority | 25 |
 | private-algorithm-bypass | 4 |
-| raw-full-domain-scan | 286 |
+| raw-full-domain-scan | 285 |
 | repeated-immutable-view | 13 |
 | whole-domain-validation | 31 |
 
@@ -69,7 +69,7 @@ Findings: 453; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:304` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:198` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:222` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:215` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:219` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/multi-thumb-slider.ts:153` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/pagination.ts:137` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/quantity-field.ts:92` | controller-rebuild |
@@ -82,8 +82,8 @@ Findings: 453; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/switch.ts:122` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tabs.ts:123` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tags-input.ts:134` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/toast.ts:143` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/toast.ts:178` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/toast.ts:146` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/toast.ts:191` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/toggle-button.ts:83` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/toggle-group.ts:116` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/toolbar.ts:62` | controller-rebuild |
