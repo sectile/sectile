@@ -7,6 +7,7 @@ import {
   bumpVersion,
   classifyReleaseBranch,
   filterPackageCommits,
+  formatIndependentReleaseNotes,
   formatReleaseNotes,
   parseGitLog,
   parseReleaseArguments,
@@ -23,7 +24,11 @@ import {
   createPackageTag,
   createReleaseManifest,
   createReleaseSetTag,
+  formatReleaseTitle,
+  isReleaseSetTag,
   planIndependentVersions,
+  releaseSetDate,
+  releaseSetSequence,
   selectReleasePackages,
   validateReleaseManifest,
 } from './lib/release-set.mjs';
@@ -56,6 +61,7 @@ test('release retries prepare tagged artifacts and load the complete current pub
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   for (const path of [
     'scripts/publish-packages.mjs',
+    'scripts/release-metadata.mjs',
     'scripts/lib/npm-registry-artifact.mjs',
     'scripts/lib/npm-publish-auth.mjs',
     'scripts/lib/packed-package-contract.mjs',
@@ -74,6 +80,8 @@ test('release retries prepare tagged artifacts and load the complete current pub
   assert.match(workflow, /--pack-destination=release-artifacts/u);
   assert.match(workflow, /path: release-artifacts\/\*\.tgz/u);
   assert.match(workflow, /--tarball-directory=release-artifacts/u);
+  assert.ok(workflow.includes('node scripts/release-metadata.mjs title "$RELEASE_TAG"'));
+  assert.ok(workflow.includes('--notes-from-tag --title "$RELEASE_TITLE"'));
   assert.match(workflow, /jobs:\n  prepare:/u);
   assert.match(workflow, /run: pnpm release:check/u);
   assert.match(workflow, /run: pnpm --filter @sectile\/docs build/u);
@@ -173,6 +181,32 @@ test('parses git records and renders commit-based notes', () => {
   assert.equal(formatReleaseNotes('v1.2.3', commits), '## Changes since v1.2.3\n\n- feat: add field (abcdef1)\n');
 });
 
+test('independent release notes retain package transitions and unique commit subjects', () => {
+  const shared = commit('feat(dom): add presence');
+  const vue = { ...commit('fix(vue): retain exit node'), hash: 'bbbbbb123456', shortHash: 'bbbbbb1' };
+  assert.equal(formatIndependentReleaseNotes('release-2026-09-04.1', [
+    {
+      name: '@sectile/dom', previousVersion: '0.14.1', version: '0.14.2', commits: [shared],
+    },
+    {
+      name: '@sectile/vue', previousVersion: '0.14.1', version: '0.14.2', commits: [shared, vue],
+    },
+  ]), [
+    'Sectile release-2026-09-04.1',
+    '',
+    '## Packages',
+    '',
+    '- @sectile/dom: 0.14.1 -> 0.14.2',
+    '- @sectile/vue: 0.14.1 -> 0.14.2',
+    '',
+    '## Changes',
+    '',
+    '- feat(dom): add presence (abcdef1)',
+    '- fix(vue): retain exit node (bbbbbb1)',
+    '',
+  ].join('\n'));
+});
+
 test('prepends the same commit list to a package changelog', () => {
   const changelog = '# @sectile/core\n\n## 0.1.0\n\n- Initial release.\n';
   assert.equal(
@@ -209,13 +243,52 @@ test('writes an explicit empty package release entry', () => {
   );
 });
 
-test('creates stable release-set and package tags', () => {
-  assert.equal(createReleaseSetTag(new Date('2026-09-01T01:02:03.000Z')), 'release-20260901010203');
+test('creates readable release-set tags while accepting legacy release-set tags', () => {
+  const date = new Date('2026-09-01T01:02:03.000Z');
+  assert.equal(createReleaseSetTag(date), 'release-2026-09-01.1');
+  assert.equal(createReleaseSetTag(date, 3), 'release-2026-09-01.3');
+  assert.equal(isReleaseSetTag('release-2026-09-01.3'), true);
+  assert.equal(isReleaseSetTag('release-20260901010203'), true);
+  assert.equal(releaseSetDate('release-2026-09-01.3'), '2026-09-01');
+  assert.equal(releaseSetDate('release-20260901010203'), '2026-09-01');
+  assert.equal(releaseSetSequence('release-2026-09-01.3'), 3);
+  assert.equal(releaseSetSequence('release-20260901010203'), null);
+  assert.throws(() => createReleaseSetTag(date, 0), /positive integer/u);
   assert.equal(createPackageTag('@sectile/form', '0.14.2'), '@sectile/form@0.14.2');
   assert.throws(() => createPackageTag('@other/form', '0.14.2'), /invalid package name/u);
   assert.doesNotThrow(() => assertSynchronizedReleaseBase('v0.14.0'));
   assert.throws(() => assertSynchronizedReleaseBase('v0.14.1'), /synchronized releases ended/u);
   assert.throws(() => assertSynchronizedReleaseBase('release-20260901010203'), /not a legacy stable tag/u);
+});
+
+test('formats compact GitHub release titles by package count', () => {
+  assert.equal(formatReleaseTitle({
+    releaseTag: 'release-2026-09-04.1',
+    packages: [{ name: '@sectile/dom', version: '0.14.2' }],
+  }), 'dom v0.14.2');
+  assert.equal(formatReleaseTitle({
+    releaseTag: 'release-2026-09-04.2',
+    packages: [
+      { name: '@sectile/dom', version: '0.14.2' },
+      { name: '@sectile/vue', version: '0.15.0' },
+    ],
+  }), 'dom v0.14.2 + vue v0.15.0');
+  assert.equal(formatReleaseTitle({
+    releaseTag: 'release-2026-09-04.3',
+    packages: [
+      { name: '@sectile/core', version: '0.15.0' },
+      { name: '@sectile/dom', version: '0.14.2' },
+      { name: '@sectile/vue', version: '0.15.0' },
+    ],
+  }), '3 packages · 2026-09-04');
+  assert.equal(formatReleaseTitle({
+    releaseTag: 'release-20260904070050',
+    packages: [
+      { name: '@sectile/core', version: '0.15.0' },
+      { name: '@sectile/dom', version: '0.14.2' },
+      { name: '@sectile/vue', version: '0.15.0' },
+    ],
+  }), '3 packages · 2026-09-04');
 });
 
 test('uses pre-1 caret compatibility to isolate patches and propagate minors', () => {

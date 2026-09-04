@@ -6,7 +6,8 @@ export const releaseManifestSchemaVersion = 1;
 export const independentReleaseBaselineTag = 'v0.14.1';
 
 const legacyReleaseTagPattern = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u;
-const releaseSetTagPattern = /^release-(\d{14})$/u;
+const legacyReleaseSetTagPattern = /^release-(\d{4})(\d{2})(\d{2})\d{6}$/u;
+const releaseSetTagPattern = /^release-(\d{4})-(\d{2})-(\d{2})\.([1-9]\d*)$/u;
 const packageTagPattern = /^(@sectile\/[a-z0-9-]+)@((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))$/u;
 const publishedDependencyFields = Object.freeze([
   'dependencies',
@@ -19,7 +20,7 @@ export function isLegacyReleaseTag(tag) {
 }
 
 export function isReleaseSetTag(tag) {
-  return releaseSetTagPattern.test(tag);
+  return releaseSetTagPattern.test(tag) || legacyReleaseSetTagPattern.test(tag);
 }
 
 export function assertSynchronizedReleaseBase(tag) {
@@ -28,9 +29,36 @@ export function assertSynchronizedReleaseBase(tag) {
     `synchronized releases ended at ${independentReleaseBaselineTag}; use independent release tracking`);
 }
 
-export function createReleaseSetTag(date = new Date()) {
+export function createReleaseSetTag(date = new Date(), sequence = 1) {
   assert.equal(Number.isNaN(date.getTime()), false, 'release date is invalid');
-  return `release-${date.toISOString().replace(/\D/gu, '').slice(0, 14)}`;
+  assert.equal(Number.isSafeInteger(sequence) && sequence > 0, true, 'release sequence must be a positive integer');
+  return `release-${date.toISOString().slice(0, 10)}.${sequence}`;
+}
+
+export function releaseSetDate(tag) {
+  const current = releaseSetTagPattern.exec(tag);
+  if (current !== null) return `${current[1]}-${current[2]}-${current[3]}`;
+  const legacy = legacyReleaseSetTagPattern.exec(tag);
+  assert.notEqual(legacy, null, `invalid release-set tag: ${tag}`);
+  return `${legacy[1]}-${legacy[2]}-${legacy[3]}`;
+}
+
+export function releaseSetSequence(tag) {
+  const match = releaseSetTagPattern.exec(tag);
+  return match === null ? null : Number.parseInt(match[4], 10);
+}
+
+export function formatReleaseTitle(manifest) {
+  assert.equal(isReleaseSetTag(manifest?.releaseTag), true, `invalid release-set tag: ${manifest?.releaseTag}`);
+  assert.ok(Array.isArray(manifest.packages) && manifest.packages.length > 0,
+    'release manifest requires at least one package');
+  const titles = manifest.packages.map(({ name, version }) => {
+    assert.match(name, /^@sectile\/[a-z0-9-]+$/u, `invalid package name: ${name}`);
+    parseStableVersion(version);
+    return `${name.slice('@sectile/'.length)} v${version}`;
+  });
+  if (titles.length <= 2) return titles.join(' + ');
+  return `${titles.length} packages · ${releaseSetDate(manifest.releaseTag)}`;
 }
 
 export function createPackageTag(packageName, version) {

@@ -9,6 +9,7 @@ import {
   classifyReleaseBranch,
   filterPackageCommits,
   formatCommitList,
+  formatIndependentReleaseNotes,
   formatReleaseNotes,
   parseGitLog,
   parseReleaseArguments,
@@ -28,6 +29,7 @@ import {
   independentReleaseBaselineTag,
   planIndependentVersions,
   releaseManifestFile,
+  releaseSetSequence,
 } from './lib/release-set.mjs';
 import { publishedPackageDirectories } from './lib/published-packages.mjs';
 import { execFileSyncPortable } from './lib/portable-process.mjs';
@@ -176,7 +178,18 @@ function packageCommits(root, entry, baseTag) {
   return output === '' ? [] : parseGitLog(output);
 }
 
-async function inspectIndependentRelease(root, releaseTag = createReleaseSetTag()) {
+function nextReleaseSetTag(root, date = new Date()) {
+  const first = createReleaseSetTag(date);
+  const prefix = first.slice(0, first.lastIndexOf('.') + 1);
+  const tags = run(root, 'git', ['tag', '--list', `${prefix}*`], { capture: true })
+    .split('\n')
+    .filter(Boolean);
+  let sequence = 0;
+  for (const tag of tags) sequence = Math.max(sequence, releaseSetSequence(tag) ?? 0);
+  return createReleaseSetTag(date, sequence + 1);
+}
+
+async function inspectIndependentRelease(root, releaseTag = nextReleaseSetTag(root)) {
   assertIndependentBaseline(root);
   const packages = await independentReleaseEntries(root);
   const byName = new Map(packages.map((entry) => [entry.name, entry]));
@@ -310,9 +323,7 @@ async function prepareIndependentRelease(root, installDependencies) {
   ]);
   run(root, 'git', ['commit', '-m', `chore(release): ${plan.releaseTag}`]);
   const releaseCommit = run(root, 'git', ['rev-parse', 'HEAD'], { capture: true });
-  const notes = `Sectile ${plan.releaseTag}\n\n## Packages\n\n${plan.entries
-    .map(({ name, previousVersion, version }) => `- ${name}: ${previousVersion} -> ${version}`)
-    .join('\n')}\n`;
+  const notes = formatIndependentReleaseNotes(plan.releaseTag, plan.entries);
   return Object.freeze({
     repository,
     remoteHead,

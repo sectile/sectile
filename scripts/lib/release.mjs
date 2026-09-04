@@ -100,6 +100,24 @@ export function formatReleaseNotes(baseTag, commits) {
   return `## Changes since ${baseTag}\n\n${formatCommitList(commits)}\n`;
 }
 
+export function formatIndependentReleaseNotes(releaseTag, entries) {
+  assert.ok(entries.length > 0, 'independent release notes require at least one package');
+  const commits = [];
+  const seen = new Set();
+  for (const entry of entries) {
+    for (const commit of entry.commits ?? []) {
+      if (seen.has(commit.hash)) continue;
+      seen.add(commit.hash);
+      commits.push(commit);
+    }
+  }
+  const packages = entries
+    .map(({ name, previousVersion, version }) => `- ${name}: ${previousVersion} -> ${version}`)
+    .join('\n');
+  const changes = commits.length === 0 ? '- No direct package commits.' : formatCommitList(commits);
+  return `Sectile ${releaseTag}\n\n## Packages\n\n${packages}\n\n## Changes\n\n${changes}\n`;
+}
+
 export function filterPackageCommits(commits, directory, changedPathsByHash) {
   const packagePrefix = `packages/${directory}/`;
   const changelogPath = `${packagePrefix}CHANGELOG.md`;
