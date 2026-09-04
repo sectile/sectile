@@ -9,6 +9,7 @@ export const releaseBumps = Object.freeze(['patch', 'minor', 'major']);
 export function parseReleaseArguments(args) {
   let allowDirty = false;
   let dryRun = false;
+  let yes = false;
   for (const argument of args.filter((candidate) => candidate !== '--')) {
     if (argument === '--allow-dirty') {
       allowDirty = true;
@@ -18,9 +19,26 @@ export function parseReleaseArguments(args) {
       dryRun = true;
       continue;
     }
+    if (argument === '--yes') {
+      yes = true;
+      continue;
+    }
     throw new Error(`unexpected release argument: ${argument}; pnpm release does not accept bump or package overrides`);
   }
-  return Object.freeze({ allowDirty, dryRun });
+  return Object.freeze({ allowDirty, dryRun, yes });
+}
+
+export function shouldPromptForRelease(yes, stdinTTY, stdoutTTY) {
+  assert.equal(typeof yes, 'boolean', 'release yes marker must be boolean');
+  assert.equal(typeof stdinTTY, 'boolean', 'release stdin TTY marker must be boolean');
+  assert.equal(typeof stdoutTTY, 'boolean', 'release stdout TTY marker must be boolean');
+  if (yes) return false;
+  assert.equal(
+    stdinTTY && stdoutTTY,
+    true,
+    'release confirmation requires an interactive terminal; inspect the plan with pnpm release:plan or pass --yes',
+  );
+  return true;
 }
 
 export function parseReleaseConfirmation(input) {

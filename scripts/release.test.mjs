@@ -16,6 +16,7 @@ import {
   recommendBump,
   resolveExpectedReleaseTag,
   selectReleaseTrack,
+  shouldPromptForRelease,
 } from './lib/release.mjs';
 import {
   assertIndependentDependencyProtocols,
@@ -161,10 +162,12 @@ test('release confirmation accepts yes and defaults to cancellation', () => {
 });
 
 test('release accepts only workflow control flags', () => {
-  assert.deepEqual(parseReleaseArguments([]), { allowDirty: false, dryRun: false });
-  assert.deepEqual(parseReleaseArguments(['--allow-dirty']), { allowDirty: true, dryRun: false });
-  assert.deepEqual(parseReleaseArguments(['--dry-run']), { allowDirty: false, dryRun: true });
-  assert.deepEqual(parseReleaseArguments(['--', '--allow-dirty']), { allowDirty: true, dryRun: false });
+  assert.deepEqual(parseReleaseArguments([]), { allowDirty: false, dryRun: false, yes: false });
+  assert.deepEqual(parseReleaseArguments(['--allow-dirty']), { allowDirty: true, dryRun: false, yes: false });
+  assert.deepEqual(parseReleaseArguments(['--dry-run']), { allowDirty: false, dryRun: true, yes: false });
+  assert.deepEqual(parseReleaseArguments(['--yes']), { allowDirty: false, dryRun: false, yes: true });
+  assert.deepEqual(parseReleaseArguments(['--allow-dirty', '--yes']), { allowDirty: true, dryRun: false, yes: true });
+  assert.deepEqual(parseReleaseArguments(['--', '--yes']), { allowDirty: false, dryRun: false, yes: true });
   for (const args of [
     ['patch'],
     ['minor'],
@@ -175,6 +178,15 @@ test('release accepts only workflow control flags', () => {
   ]) {
     assert.throws(() => parseReleaseArguments(args), /does not accept bump or package overrides|unexpected release argument/u);
   }
+});
+
+test('release --yes bypasses only the interactive confirmation requirement', () => {
+  assert.equal(shouldPromptForRelease(true, false, false), false);
+  assert.equal(shouldPromptForRelease(false, true, true), true);
+  assert.throws(
+    () => shouldPromptForRelease(false, false, false),
+    /interactive terminal.*--yes/u,
+  );
 });
 
 test('switches the default release command to independent tracking after the bridge', () => {
