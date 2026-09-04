@@ -160,23 +160,37 @@ function createSectileCollectionAdapter(
               : SectileSpatial;
           return () => h(componentType, {
             items: layoutAdapterItems(fixture.value),
-            getKey: layoutItemKey,
+            getID: layoutItemKey,
             ...(family === 'spatial'
               ? {
                   getRect: layoutItemRect,
                   getZIndex: layoutItemZIndex,
                   measureSize: false,
                 }
-              : {
-                  laneCount: fixture.value.laneCount,
-                  laneGap: fixture.value.gap,
-                  ...(family === 'flow-grid' ? { rowGap: fixture.value.gap } : { itemGap: fixture.value.gap }),
-                  ...(mode === 'fixed'
-                    ? { itemSize: fixture.value.rowHeight }
-                    : mode === 'estimated'
-                      ? { estimateSize: fixture.value.rowHeight }
-                      : {}),
-                }),
+              : family === 'flow-grid'
+                ? {
+                    sizePolicy: mode === 'fixed'
+                      ? { kind: 'fixed' as const, extent: fixture.value.rowHeight }
+                      : mode === 'estimated'
+                        ? { kind: 'estimated' as const, estimate: fixture.value.rowHeight }
+                        : { kind: 'measured' as const },
+                    lanePolicy: {
+                      kind: 'fixed' as const,
+                      count: fixture.value.laneCount,
+                      gap: fixture.value.gap,
+                    },
+                    rowGap: fixture.value.gap,
+                  }
+                : {
+                    laneCount: fixture.value.laneCount,
+                    laneGap: fixture.value.gap,
+                    itemGap: fixture.value.gap,
+                    ...(mode === 'fixed'
+                      ? { itemSize: fixture.value.rowHeight }
+                      : mode === 'estimated'
+                        ? { estimateSize: fixture.value.rowHeight }
+                        : {}),
+                  }),
             overscan: 288,
             maxItems: 1_000_001,
             initialViewport: { x: 0, y: 0, width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
@@ -187,7 +201,7 @@ function createSectileCollectionAdapter(
               layoutItemAttributes(fixture.value.items[index]!)
             ),
           }, {
-            default: ({ index }: { index: number }) => layoutItemContent(fixture.value.items[index]!),
+            item: ({ index }: { index: number }) => layoutItemContent(fixture.value.items[index]!),
           });
         },
       });

@@ -57,8 +57,8 @@ void measuredList;
 const numberGrid: VirtualGridPublicProps<NumberValue, number> = {
   items: numberItems,
   getID: (value) => value.id,
-  itemSize: 24,
-  laneCount: 2,
+  sizePolicy: { kind: 'fixed', extent: 24 },
+  lanePolicy: { kind: 'fixed', count: 2 },
 };
 void numberGrid;
 

@@ -263,6 +263,62 @@
           "rationale": "Projection work is bounded by emitted placements and may not traverse unmounted collection items."
         }
       }
+    },
+    {
+      "id": "virtual.grid-reconfigure",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/virtual-grid.ts",
+      "benchmarkIDs": [
+        "VAL-007:grid-geometry-repair"
+      ],
+      "specificationCeiling": "O(nItem)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "active dense Grid item count",
+            "ceiling": "component maxItems"
+          },
+          {
+            "name": "rRepair",
+            "meaning": "rows whose aggregate extent must be recomputed",
+            "ceiling": "ceil(nItem / cLane)"
+          },
+          {
+            "name": "cLane",
+            "meaning": "active lane count",
+            "ceiling": "lanePolicy fixed count or responsive maxCount"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(rRepair + cLane)",
+          "output": "O(rRepair + cLane)",
+          "retained": "O(nItem)"
+        },
+        "resources": {
+          "allocations": "O(rRepair + cLane)",
+          "cacheEntries": "O(nItem)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "collection identity and changed-value windows come from the Virtual-owned projection",
+          "lane geometry comes from resolveVirtualLaneGeometry"
+        ],
+        "proof": "An unchanged effective width does not change viewportWidth and therefore schedules no Grid geometry repair. Value-only changes recompute only the contiguous affected row window. Fixed-size structural changes patch the dense identity domain and row tail only. Non-fixed structural changes recompute rows from the first regrouped row, and an actual lane-geometry change rebuilds at most all rows and cLane columns.",
+        "adversarialWitness": "Insert one item at index zero under a non-fixed size policy so every later dense row is regrouped, then change the effective viewport width so the lane count also changes; the repair visits at most nItem values and emits one replacement row set plus cLane columns.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A lane-count change or a structural regrouping at the start can change every dense row aggregate; same-width frame-origin changes and bounded value windows do not take this full-rebuild branch."
+        }
+      }
     }
   ]
 }

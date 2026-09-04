@@ -177,8 +177,9 @@ h(VirtualList, {
 });
 h(VirtualGrid, {
   items: [{ id: 'cell-1' }],
-  getKey: (value: { id: string }) => value.id,
-  minLaneSize: 180,
+  getID: (value: { id: string }) => value.id,
+  sizePolicy: { kind: 'fixed', extent: 24 },
+  lanePolicy: { kind: 'responsive', minExtent: 180, maxCount: 6 },
 });
 h(VirtualMasonry, {
   items: [{ id: 'card-1' }],
@@ -267,14 +268,24 @@ type VirtualRowValue = VirtualListSlotProps<VirtualRow>['value'];
 type VirtualGridValue = VirtualGridSlotProps<VirtualRow>['value'];
 type VirtualMasonryValue = VirtualMasonrySlotProps<VirtualRow>['value'];
 type VirtualSpatialValue = VirtualSpatialSlotProps<VirtualRow>['value'];
+const virtualRows: readonly VirtualRow[] = [{ id: 'row-1', title: 'First row' }];
 const virtualListProps: VirtualListProps<VirtualRow> = {
-  items: [{ id: 'row-1', title: 'First row' }],
-  getKey: (value) => value.id,
+  items: virtualRows,
+  getID: (value) => value.id,
+  sizePolicy: { kind: 'fixed', extent: 24 },
 };
-const virtualGridProps: VirtualGridProps<VirtualRow> = virtualListProps;
-const virtualMasonryProps: VirtualMasonryProps<VirtualRow> = virtualListProps;
-const virtualSpatialProps: VirtualSpatialProps<VirtualRow> = {
+const virtualGridProps: VirtualGridProps<VirtualRow> = {
   ...virtualListProps,
+  lanePolicy: { kind: 'fixed', count: 2 },
+};
+const virtualMasonryProps: VirtualMasonryProps<VirtualRow> = {
+  items: virtualRows,
+  getID: (value) => value.id,
+  estimateSize: 24,
+};
+const virtualSpatialProps: VirtualSpatialProps<VirtualRow> = {
+  items: virtualRows,
+  getID: (value) => value.id,
   getRect: (_value) => ({ x: 0, y: 0, width: 1, height: 1 }),
 };
 void virtualListProps;

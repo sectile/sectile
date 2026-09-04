@@ -58,8 +58,8 @@ test('high-level projection mounts one shared projector and no per-placement Vir
       ref: grid,
       items,
       getID: (value) => value.id,
-      itemSize: 20,
-      laneCount: 4,
+      sizePolicy: { kind: 'fixed', extent: 20 },
+      lanePolicy: { kind: 'fixed', count: 4 },
       initialViewport: { x: 0, y: 0, width: 200, height: 100 },
       overscan: 0,
     }, {
@@ -525,8 +525,8 @@ test('VirtualGrid and VirtualMasonry bootstrap unknown sizes from rendered items
         ref: grid,
         items,
         getID: (value) => value.id,
-        laneCount: 2,
-        minLaneSize: 50,
+        sizePolicy: { kind: 'measured' },
+        lanePolicy: { kind: 'fixed', count: 2 },
         initialViewport: { x: 0, y: 0, width: 120, height: 100 },
         overscan: 0,
         itemAttributes: (value) => ({ 'data-bootstrap-height': String(value.height) }),
@@ -589,16 +589,17 @@ test('VirtualGrid derives responsive columns and reconciles declarative items', 
     render: () => h(VirtualGrid, {
       ref: grid,
       items: items.value,
-      getKey: (value) => value.id,
-      estimateSize: 20,
-      minLaneSize: 50,
-      maxLaneCount: 6,
-      laneGap: 10,
+      getID: (value) => value.id,
+      sizePolicy: { kind: 'estimated', estimate: 20 },
+      lanePolicy: { kind: 'responsive', minExtent: 50, maxCount: 6, gap: 10 },
       initialViewport: { x: 0, y: 0, width: 120, height: 100 },
       overscan: 0,
       onStateChange: (state) => stateChanges.push(state),
       onPlanChange: (plan) => planChanges.push(plan),
-    }, { default: ({ key, row, column }) => `${key}:${row}:${column}` }),
+    }, {
+      header: () => h('div', { 'data-grid-header': '' }, 'Grid header'),
+      item: ({ id, row, column }) => `${id}:${row}:${column}`,
+    }),
   });
 
   try {
@@ -640,6 +641,17 @@ test('VirtualGrid derives responsive columns and reconciles declarative items', 
     assert.equal(grid.value.state.generation, generation + 1);
     assert.equal(stateChanges.length, 0);
     assert.equal(planChanges.length, 0);
+
+    const frameStableState = grid.value.state;
+    const frameStableGeneration = grid.value.state.generation;
+    const header = host.querySelector('[data-grid-header]')?.parentElement;
+    assert.ok(header !== null && header !== undefined);
+    FakeResizeObserver.notify(header);
+    grid.value.flush();
+    await settle();
+    assert.equal(grid.value.state, frameStableState);
+    assert.equal(grid.value.state.generation, frameStableGeneration);
+    assert.equal(grid.value.state.columns.size, 2);
 
     const root = host.querySelector('[data-scope="virtualizer"][data-part="root"]');
     Object.defineProperty(root, 'clientWidth', { configurable: true, value: 240 });
@@ -817,11 +829,11 @@ test('declarative virtual collections resolve only the changed keyed window', as
       }, { item: ({ id }) => id }),
       h(VirtualGrid, {
         items: items.value,
-        getKey: keys.grid,
-        itemSize: 20,
-        laneCount: 2,
+        getID: keys.grid,
+        sizePolicy: { kind: 'fixed', extent: 20 },
+        lanePolicy: { kind: 'fixed', count: 2 },
         initialViewport: { x: 0, y: 0, width: 40, height: 20 },
-      }, { default: ({ key: id }) => id }),
+      }, { item: ({ id }) => id }),
       h(VirtualMasonry, {
         items: items.value,
         getKey: keys.masonry,
