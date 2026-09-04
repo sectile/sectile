@@ -1098,6 +1098,7 @@ test('Vue virtualizer owns frame-local state and keeps construction options fixe
   const host = document.createElement('div');
   document.body.append(host);
   const root = ref();
+  const defaultState = Object.freeze({ value: 0, generation: 0 });
   const strategy = shallowRef(createStrategy(1));
   const changes = [];
   const warnings = [];
@@ -1106,7 +1107,7 @@ test('Vue virtualizer owns frame-local state and keeps construction options fixe
   const app = createApp({
     render: () => h(VirtualizerRoot, {
       ref: root,
-      defaultState: Object.freeze({ value: 0, generation: 0 }),
+      defaultState,
       strategy: strategy.value,
       initialViewport: Object.freeze({ x: 0, y: 0, width: 100, height: 80 }),
       onStateChange: (state) => changes.push(state.value),
