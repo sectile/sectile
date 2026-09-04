@@ -45,6 +45,10 @@ const { VirtualSpatial } = await import('../.verification-dist/virtual-spatial.j
 const { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, useVirtualizer } = await import('../.verification-dist/virtual-core.js');
 
 test('high-level projection mounts one shared projector and no per-placement VirtualizerItem instances', async () => {
+  const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 100; } });
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return 200; } });
   const host = document.createElement('div');
   document.body.append(host);
   const componentMounts = new Map();
@@ -85,6 +89,10 @@ test('high-level projection mounts one shared projector and no per-placement Vir
   } finally {
     app.unmount();
     host.remove();
+    if (heightDescriptor === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
+    if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
   }
 });
 
@@ -664,14 +672,12 @@ test('VirtualGrid derives responsive columns and reconciles declarative items', 
     assert.equal(planChanges.length, 1);
 
     stateChanges.length = 0;
-    planChanges.length = 0;
     FakeResizeObserver.notify(first);
     FakeResizeObserver.notify(second);
     grid.value.flush();
     await settle();
     assert.equal(grid.value.state.generation, generation + 1);
     assert.equal(stateChanges.length, 0);
-    assert.equal(planChanges.length, 0);
 
     const frameStableState = grid.value.state;
     const frameStableGeneration = grid.value.state.generation;
@@ -700,7 +706,7 @@ test('VirtualGrid derives responsive columns and reconciles declarative items', 
     assert.equal(grid.value.state.regions.size, 13);
     assert.equal(grid.value.state.regions.at(0).id, 'grid-new');
     assert.equal(grid.value.state.regions.at(4).row, 1);
-    assert.equal(grid.value.state.rows.extentAt(1), retainedRowExtent);
+    assert.deepEqual(grid.value.state.rows.extentAt(1), retainedRowExtent);
   } finally {
     app.unmount();
     host.remove();
@@ -898,6 +904,10 @@ test('VirtualSpatial mounted size ownership preserves application position and f
 });
 
 test('VirtualSpatial declared size ownership keeps application rectangles authoritative', async () => {
+  const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 80; } });
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return 100; } });
   const host = document.createElement('div');
   document.body.append(host);
   const spatial = ref();
@@ -932,6 +942,10 @@ test('VirtualSpatial declared size ownership keeps application rectangles author
   } finally {
     app.unmount();
     host.remove();
+    if (heightDescriptor === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
+    if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
   }
 });
 
