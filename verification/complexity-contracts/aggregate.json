@@ -6672,19 +6672,19 @@
       "inherits": "public-callable-v1"
     },
     {
-      "key": "dom:./virtual:virtualContentStyle",
+      "key": "dom:./virtual:virtualItemStyle",
       "package": "dom",
       "subpath": "./virtual",
-      "exportName": "virtualContentStyle",
+      "exportName": "virtualItemStyle",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
-      "key": "dom:./virtual:virtualItemStyle",
+      "key": "dom:./virtual:virtualSurfaceStyle",
       "package": "dom",
       "subpath": "./virtual",
-      "exportName": "virtualItemStyle",
+      "exportName": "virtualSurfaceStyle",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -12729,6 +12729,168 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "virtual:./collection:constrainVirtualCollectionDomain",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "constrainVirtualCollectionDomain",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:createEstimatedVirtualExtent",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "createEstimatedVirtualExtent",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:createExactVirtualExtent",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "createExactVirtualExtent",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:createVirtualCollection",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "createVirtualCollection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:createVirtualCollectionPatch",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "createVirtualCollectionPatch",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:createVirtualExtent",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "createVirtualExtent",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:reconcileVirtualCollectionExtents",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "reconcileVirtualCollectionExtents",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:reconcileVirtualCollectionValueExtents",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "reconcileVirtualCollectionValueExtents",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:replaceVirtualCollection",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "replaceVirtualCollection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:requireVirtualMeasuredEstimate",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "requireVirtualMeasuredEstimate",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:resolveVirtualLaneGeometry",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "resolveVirtualLaneGeometry",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:tryConstrainVirtualCollectionDomain",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "tryConstrainVirtualCollectionDomain",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:tryCreateVirtualCollection",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "tryCreateVirtualCollection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:tryCreateVirtualCollectionPatch",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "tryCreateVirtualCollectionPatch",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:tryReplaceVirtualCollection",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "tryReplaceVirtualCollection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:tryUpdateVirtualCollection",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "tryUpdateVirtualCollection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:updateVirtualCollection",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "updateVirtualCollection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./collection:virtualSizePolicyRequiresMeasurement",
+      "package": "virtual",
+      "subpath": "./collection",
+      "exportName": "virtualSizePolicyRequiresMeasurement",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "virtual:./extent-index:createExtentIndex",
       "package": "virtual",
       "subpath": "./extent-index",
@@ -12927,6 +13089,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "virtual:./linear-layout:setLinearCrossExtent",
+      "package": "virtual",
+      "subpath": "./linear-layout",
+      "exportName": "setLinearCrossExtent",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "virtual:./linear-layout:snapshotLinearLayout",
       "package": "virtual",
       "subpath": "./linear-layout",
@@ -12994,6 +13165,15 @@
       "package": "virtual",
       "subpath": "./linear-layout",
       "exportName": "tryRestoreLinearLayout",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./linear-layout:trySetLinearCrossExtent",
+      "package": "virtual",
+      "subpath": "./linear-layout",
+      "exportName": "trySetLinearCrossExtent",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -13390,6 +13570,42 @@
       "package": "virtual",
       "subpath": "./spatial-layout",
       "exportName": "trySpatialScrollTarget",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./surface:createVirtualSurfaceFrame",
+      "package": "virtual",
+      "subpath": "./surface",
+      "exportName": "createVirtualSurfaceFrame",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./surface:surfaceFrameScrollDelta",
+      "package": "virtual",
+      "subpath": "./surface",
+      "exportName": "surfaceFrameScrollDelta",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./surface:toScrollportPoint",
+      "package": "virtual",
+      "subpath": "./surface",
+      "exportName": "toScrollportPoint",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "virtual:./surface:toVirtualViewport",
+      "package": "virtual",
+      "subpath": "./surface",
+      "exportName": "toVirtualViewport",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -17877,10 +18093,19 @@
       "inherits": "public-callable-v1"
     },
     {
-      "key": "vue:./virtual/core:VirtualizerContent",
+      "key": "vue:./virtual/core:VirtualizerFooter",
       "package": "vue",
       "subpath": "./virtual/core",
-      "exportName": "VirtualizerContent",
+      "exportName": "VirtualizerFooter",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./virtual/core:VirtualizerHeader",
+      "package": "vue",
+      "subpath": "./virtual/core",
+      "exportName": "VirtualizerHeader",
       "kind": "object",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -17899,6 +18124,15 @@
       "package": "vue",
       "subpath": "./virtual/core",
       "exportName": "VirtualizerRoot",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./virtual/core:VirtualizerSurface",
+      "package": "vue",
+      "subpath": "./virtual/core",
+      "exportName": "VirtualizerSurface",
       "kind": "object",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -25756,6 +25990,231 @@
       }
     },
     {
+      "package": "dom",
+      "surface": "hot",
+      "id": "virtual.disconnect",
+      "source": "packages/dom/src/virtual.ts",
+      "benchmarkIDs": [
+        "VAL-004:dom-virtual-disconnect-zero"
+      ],
+      "specificationCeiling": "O(nMounted + kPlacement + rFrame)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nMounted",
+            "meaning": "registered item elements",
+            "ceiling": "mounted item count"
+          },
+          {
+            "name": "kPlacement",
+            "meaning": "indexed placements in the current plan",
+            "ceiling": "owning Virtual plan output"
+          },
+          {
+            "name": "rFrame",
+            "meaning": "registered frame regions plus scrollport and surface",
+            "ceiling": "bounded host anatomy"
+          }
+        ],
+        "time": {
+          "bound": "O(nMounted + kPlacement + rFrame)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "-O(nMounted + kPlacement + rFrame)",
+          "listeners": "-1",
+          "observers": "-2",
+          "timers": "-O(1)",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "every registry and scheduled frame is connection-owned",
+          "disconnect is idempotent"
+        ],
+        "ceilings": [
+          "mounted item count",
+          "emitted placement count",
+          "bounded frame-region count"
+        ],
+        "benchmarkIDs": [
+          "VAL-004:dom-virtual-disconnect-zero"
+        ],
+        "deterministicWork": [
+          "one listener removal and two observer disconnects",
+          "all connection-owned registries become empty",
+          "a pending frame is cancelled and stale callbacks observe the inactive generation"
+        ],
+        "resourceRationale": "Disconnect visits and releases only resources retained by one virtualizer connection.",
+        "proof": "The connection removes its stable scroll handler, disconnects both observers, cancels one pending frame, and clears each owner-local frame, item, pending-entry, and placement registry exactly once.",
+        "adversarialWitness": "Disconnect during simultaneous frame and item invalidation, then invoke captured observer and animation-frame callbacks and verify zero publication or resource recreation.",
+        "evidence": [
+          "VAL-004",
+          "VAL-010"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Cleanup may visit only connection-owned registrations and placements."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
+      "id": "virtual.frame",
+      "source": "packages/dom/src/virtual.ts",
+      "benchmarkIDs": [
+        "VAL-004:dom-virtual-frame-transaction",
+        "VAL-010:dom-virtual-frame-work"
+      ],
+      "specificationCeiling": "O(rFrame + eChanged + kPlacement)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "rFrame",
+            "meaning": "geometry observer entries from the bounded host frame",
+            "ceiling": "registered frame regions plus scrollport and surface"
+          },
+          {
+            "name": "eChanged",
+            "meaning": "changed registered item observer entries",
+            "ceiling": "eChanged <= nMounted"
+          },
+          {
+            "name": "nMounted",
+            "meaning": "registered item elements",
+            "ceiling": "mounted item count"
+          },
+          {
+            "name": "kPlacement",
+            "meaning": "placements emitted and indexed by the owning layout query",
+            "ceiling": "owning Virtual plan output"
+          }
+        ],
+        "time": {
+          "bound": "O(rFrame + eChanged + kPlacement)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(eChanged + kPlacement)",
+          "output": "O(kPlacement)",
+          "retained": "O(nMounted + kPlacement + rFrame)"
+        },
+        "resources": {
+          "allocations": "O(eChanged + kPlacement)",
+          "cacheEntries": "O(nMounted + kPlacement + rFrame)",
+          "listeners": "1",
+          "observers": "2",
+          "timers": "O(1)",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "portable viewport and correction algebra is delegated to @sectile/virtual",
+          "the owning layout query and repair retain their registered package bounds"
+        ],
+        "ceilings": [
+          "bounded frame-region count",
+          "mounted item count",
+          "owning layout placement output"
+        ],
+        "benchmarkIDs": [
+          "VAL-004:dom-virtual-frame-transaction",
+          "VAL-010:dom-virtual-frame-work"
+        ],
+        "deterministicWork": [
+          "at most one scheduled animation frame per connection",
+          "one surface-frame read per geometry-invalidated transaction",
+          "one measurement batch, one physical scroll write, one final query, and one plan publication"
+        ],
+        "resourceRationale": "One connection retains two observers, one scroll listener, one pending frame, registered elements, changed entries, and the current placement index.",
+        "proof": "Geometry and item callbacks coalesce into one generation-guarded frame; the transaction resolves only changed entries, composes frame and layout deltas, performs at most one physical write, then indexes each emitted placement once.",
+        "adversarialWitness": "A header resize and every changed mounted item arrive before the same frame and still produce one write, query, state publication, and plan publication.",
+        "evidence": [
+          "VAL-004",
+          "VAL-010"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "The DOM layer may visit only bounded frame entries, changed mounted items, and emitted placements; it cannot scan the logical item domain."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
+      "id": "virtual.scroll",
+      "source": "packages/dom/src/virtual.ts",
+      "benchmarkIDs": [
+        "VAL-004:dom-virtual-scroll-frame-cache",
+        "VAL-010:dom-virtual-scroll-work"
+      ],
+      "specificationCeiling": "O(kPlacement)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "kPlacement",
+            "meaning": "placements emitted and indexed by the owning layout query",
+            "ceiling": "owning Virtual plan output"
+          }
+        ],
+        "time": {
+          "bound": "O(kPlacement)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(kPlacement)",
+          "output": "O(kPlacement)",
+          "retained": "O(kPlacement)"
+        },
+        "resources": {
+          "allocations": "O(kPlacement)",
+          "cacheEntries": "O(kPlacement)",
+          "listeners": "1",
+          "observers": "0 additional",
+          "timers": "O(1)",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the cached surface frame is current",
+          "the owning layout query retains its registered package bound"
+        ],
+        "ceilings": [
+          "owning layout placement output"
+        ],
+        "benchmarkIDs": [
+          "VAL-004:dom-virtual-scroll-frame-cache",
+          "VAL-010:dom-virtual-scroll-work"
+        ],
+        "deterministicWork": [
+          "zero getBoundingClientRect calls on ordinary scroll",
+          "one physical viewport read and one owning query",
+          "one placement-index insertion per emitted placement"
+        ],
+        "resourceRationale": "Ordinary scroll reuses the connection frame and replaces only the current emitted placement index.",
+        "proof": "The stable scroll listener marks the viewport dirty, one coalesced frame reads scalar scroll offsets, projects through the cached frame, delegates one query, and indexes each returned placement once.",
+        "adversarialWitness": "A maximum-output viewport scrolls without any geometry invalidation and performs zero element rectangle reads.",
+        "evidence": [
+          "VAL-004",
+          "VAL-010"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Ordinary scroll may process emitted placements only, never mounted elements or the full logical domain."
+        }
+      }
+    },
+    {
       "package": "form",
       "surface": "hot",
       "id": "field.get",
@@ -27123,6 +27582,396 @@
     {
       "package": "virtual",
       "surface": "hot",
+      "id": "collection.extents.reconcile",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-003:collection-extent-work"
+      ],
+      "specificationCeiling": "O(jChanged log nItem)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "active stable-identity and extent count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "inserted identities requiring retained or initial extents",
+            "ceiling": "jChanged <= nItem"
+          }
+        ],
+        "time": {
+          "bound": "O(jChanged log nItem)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(jChanged)",
+          "output": "O(jChanged)",
+          "retained": "O(jChanged)"
+        },
+        "resources": {
+          "allocations": "O(jChanged)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the collection projection and layout extent owner are canonical",
+          "stable identity lookup follows the bounded Core Sequence representation"
+        ],
+        "ceilings": [
+          "maxItems",
+          "Core Sequence patch depth",
+          "extent-index height"
+        ],
+        "benchmarkIDs": [
+          "VAL-003:collection-extent-work"
+        ],
+        "deterministicWork": [
+          "one stable-ID lookup per inserted identity",
+          "at most one retained extent read or one initial extent creation per inserted identity"
+        ],
+        "resourceRationale": "Extent reconciliation allocates only the splice output and one extent entry per inserted identity.",
+        "proof": "Each inserted identity performs one bounded Sequence lookup and at most one logarithmic extent-index lookup before emitting one extent.",
+        "adversarialWitness": "Every inserted identity survives from a different retained extent-index leaf or requires a new estimate.",
+        "evidence": [
+          "VAL-003"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Extent reconciliation must not visit identities outside the inserted change window."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
+      "id": "collection.lanes.resolve",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-003:lane-policy-work"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "one fixed or responsive lane policy is supplied",
+          "lane geometry is represented by bounded scalar values"
+        ],
+        "ceilings": [
+          "positive safe-integer lane count",
+          "finite cross extent and gap"
+        ],
+        "benchmarkIDs": [
+          "VAL-003:lane-policy-work"
+        ],
+        "deterministicWork": [
+          "a bounded number of scalar validation and arithmetic steps",
+          "one immutable lane geometry result"
+        ],
+        "resourceRationale": "Lane resolution retains no collection state and allocates one fixed-size result.",
+        "proof": "Fixed and responsive policies use only scalar validation, division, and clamping.",
+        "adversarialWitness": "Maximum safe lane counts and finite asymmetric gaps do not increase deterministic work.",
+        "evidence": [
+          "VAL-003"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Lane resolution has no item domain to traverse."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
+      "id": "collection.patch.trusted",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-003:trusted-collection-patch-work"
+      ],
+      "specificationCeiling": "O(jChanged)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "jChanged",
+            "meaning": "inserted identities plus explicitly changed values",
+            "ceiling": "declared trusted patch cardinality"
+          }
+        ],
+        "time": {
+          "bound": "O(jChanged)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(jChanged)",
+          "output": "O(1)",
+          "retained": "O(jChanged)"
+        },
+        "resources": {
+          "allocations": "O(jChanged)",
+          "cacheEntries": "O(jChanged)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the patch is bound to the active projection by an owner-created opaque token",
+          "Core Sequence identity lookup has bounded patch depth"
+        ],
+        "ceilings": [
+          "projection maxItems",
+          "projection maxIDCodeUnits",
+          "Core Sequence patch depth"
+        ],
+        "benchmarkIDs": [
+          "VAL-003:trusted-collection-patch-work"
+        ],
+        "deterministicWork": [
+          "resolver calls equal inserted identities plus the declared value-change range",
+          "no unchanged source position is read"
+        ],
+        "resourceRationale": "The trusted path retains one bounded Core Sequence patch, changed IDs, and an opaque update token.",
+        "proof": "Patch creation validates only the declared splice identities and value-change range, then Core applies one bounded structural patch; token application is constant time.",
+        "adversarialWitness": "A sparse patch inserts identities that collide with distant survivors and exercises every local validation without scanning unchanged values.",
+        "evidence": [
+          "VAL-003"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "A trusted patch must never rediscover unchanged raw-array identity."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
+      "id": "collection.project.raw",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-003:raw-collection-project-work"
+      ],
+      "specificationCeiling": "O(nItem)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "raw source item count",
+            "ceiling": "maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nItem)",
+          "output": "O(1)",
+          "retained": "O(nItem)"
+        },
+        "resources": {
+          "allocations": "O(nItem)",
+          "cacheEntries": "O(nItem)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "raw arrays carry no trusted identity patch",
+          "each source position is resolved exactly once"
+        ],
+        "ceilings": [
+          "maxItems",
+          "maxIDCodeUnits"
+        ],
+        "benchmarkIDs": [
+          "VAL-003:raw-collection-project-work"
+        ],
+        "deterministicWork": [
+          "exactly nItem ID resolver calls after ceiling validation",
+          "one Core Sequence construction"
+        ],
+        "resourceRationale": "Initial projection retains the application array reference and one Core Sequence identity owner.",
+        "proof": "Projection resolves every raw item once and Core validates and indexes each resulting stable identity once.",
+        "adversarialWitness": "A maximum-size raw array with the final identity invalid still requires complete preceding validation.",
+        "evidence": [
+          "VAL-003"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Initial raw projection must validate every identity."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
+      "id": "collection.replace.raw",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-003:raw-collection-replacement-work"
+      ],
+      "specificationCeiling": "O(nItem + jChanged)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "maximum previous or next raw source item count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "discovered changed window, or nItem when resolver provenance changes",
+            "ceiling": "jChanged <= nItem"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem + jChanged)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(jChanged)",
+          "output": "O(1)",
+          "retained": "O(jChanged)"
+        },
+        "resources": {
+          "allocations": "O(jChanged)",
+          "cacheEntries": "O(jChanged)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "unchanged prefix and suffix values preserve object identity",
+          "dense Core Sequence repair is O(jChanged) because dense changes make jChanged proportional to nItem"
+        ],
+        "ceilings": [
+          "maxItems",
+          "maxIDCodeUnits",
+          "Core Sequence patch depth"
+        ],
+        "benchmarkIDs": [
+          "VAL-003:raw-collection-replacement-work"
+        ],
+        "deterministicWork": [
+          "prefix and suffix comparisons visit at most nItem values",
+          "resolver calls and new retained identities are bounded by jChanged"
+        ],
+        "resourceRationale": "Raw replacement retains only changed IDs and bounded Core patch metadata unless the changed density makes a full rebuild asymptotically equivalent.",
+        "proof": "The owner discovers one prefix/suffix window, resolves only that window under stable resolver provenance, and applies one Core Sequence splice.",
+        "adversarialWitness": "Only the middle item changes after equal prefix and suffix scans consume the rest of a maximum-size array.",
+        "evidence": [
+          "VAL-003"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Raw arrays provide no patch, so unchanged prefix and suffix discovery may inspect the complete source."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
+      "id": "collection.value-extents.reconcile",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-019:collection-value-extent-work"
+      ],
+      "specificationCeiling": "O(jChanged log nItem)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "active stable-identity and extent count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "value-only changed identities whose size projection may be invalidated",
+            "ceiling": "jChanged <= nItem"
+          }
+        ],
+        "time": {
+          "bound": "O(jChanged log nItem)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(jChanged)",
+          "output": "O(jChanged)",
+          "retained": "O(jChanged)"
+        },
+        "resources": {
+          "allocations": "O(jChanged)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "The owner visits only the retained valueChange window, verifies identity at each changed index, derives one policy extent, and emits an update only when that extent differs from the retained projection. Fixed size policy is an O(1) no-op.",
+        "adversarialWitness": "Every value in the declared changed window invalidates a previously exact measurement while all identities outside the window remain untouched.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Value-dependent repair is bounded by the owner-provided changed value window."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
       "id": "extent.lookup",
       "source": "packages/virtual/src/extent-index.ts",
       "benchmarkIDs": [
@@ -27367,6 +28216,68 @@
         "fullScan": {
           "allowed": true,
           "rationale": "The explicit snapshot output itself contains every item."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
+      "id": "linear.cross-extent",
+      "source": "packages/virtual/src/linear-layout.ts",
+      "benchmarkIDs": [
+        "VAL-019:linear-cross-extent-work"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "linear item count retained by the state",
+            "ceiling": "maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "canonical owner identity and generation are current"
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "bounded indexed/scalar steps",
+          "zero domain traversal"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Cross-extent reconfiguration validates one scalar, returns the existing state for an unchanged extent, or freezes one shallow state copy while retaining the existing domain and extent index identities.",
+        "adversarialWitness": "Resize the cross axis of a maximum-size linear state and verify domain and extent-index identity are retained while generation changes exactly once.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Cross-axis geometry is independent of item cardinality and may not traverse the domain or extent index."
         }
       }
     },
@@ -28321,6 +29232,63 @@
     {
       "package": "virtual",
       "surface": "hot",
+      "id": "surface.frame-transform",
+      "source": "packages/virtual/src/surface.ts",
+      "benchmarkIDs": [
+        "VAL-001:surface-frame-laws"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "input cardinality is fixed to one point, rectangle, frame, or frame pair",
+          "external scalar geometry is validated at the operation boundary"
+        ],
+        "ceilings": [
+          "finite IEEE-754 geometry"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "a bounded number of scalar validation and arithmetic steps",
+          "one fixed-size frozen point, rectangle, or frame result"
+        ],
+        "resourceRationale": "Surface-frame transforms retain no owner state and create no host resources.",
+        "proof": "Each operation reads a fixed number of point, rectangle, and inset scalars and emits one fixed-size immutable value.",
+        "adversarialWitness": "Maximum finite asymmetric coordinates and a negative surface-local viewport do not increase deterministic work.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Surface-frame transforms have no collection domain to traverse."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
       "id": "track.measure",
       "source": "packages/virtual/src/track-grid-layout.ts",
       "benchmarkIDs": [
@@ -28759,46 +29727,52 @@
     {
       "package": "vue",
       "surface": "hot",
-      "id": "projection.reconfigure",
-      "source": "packages/vue/src/internal/virtual-collection-model.ts",
+      "id": "virtual.grid-reconfigure",
+      "source": "packages/vue/src/virtual-grid.ts",
       "benchmarkIDs": [
-        "vue:mounted-virtual-projection"
+        "VAL-007:grid-geometry-repair"
       ],
-      "specificationCeiling": "O(nItem + jChanged)",
+      "specificationCeiling": "O(nItem)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
             "name": "nItem",
-            "meaning": "external item count",
+            "meaning": "active dense Grid item count",
             "ceiling": "component maxItems"
           },
           {
-            "name": "jChanged",
-            "meaning": "inserted and deleted keyed-window cardinality",
-            "ceiling": "jChanged <= nItem"
+            "name": "rRepair",
+            "meaning": "rows whose aggregate extent must be recomputed",
+            "ceiling": "ceil(nItem / cLane)"
+          },
+          {
+            "name": "cLane",
+            "meaning": "active lane count",
+            "ceiling": "lanePolicy fixed count or responsive maxCount"
           }
         ],
         "time": {
-          "bound": "O(nItem + jChanged)",
+          "bound": "O(nItem)",
           "kind": "worst-case",
           "runtimeState": "mounted"
         },
         "space": {
-          "auxiliary": "O(jChanged)",
-          "output": "O(jChanged)",
-          "retained": "O(nItem + jChanged)"
+          "auxiliary": "O(rRepair + cLane)",
+          "output": "O(rRepair + cLane)",
+          "retained": "O(nItem)"
         },
         "resources": {
-          "allocations": "O(jChanged)",
-          "cacheEntries": "O(jChanged)",
+          "allocations": "O(rRepair + cLane)",
+          "cacheEntries": "O(nItem)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
         "assumptions": [
-          "getKey resolver identity remains stable across the external array replacement"
+          "collection identity and changed-value windows come from the Virtual-owned projection",
+          "lane geometry comes from resolveVirtualLaneGeometry"
         ],
         "ceilings": [
           "operation item and output ceilings"
@@ -28811,63 +29785,58 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "A stable key resolver discovers the changed keyed window with one prefix/suffix identity scan, validates only inserted identities, and delegates the splice to Core's bounded Sequence overlay instead of allocating another complete ID snapshot.",
-        "adversarialWitness": "A one-item insertion at the start of a maxItems array must compare the retained suffix but allocate only one inserted ID and bounded patch metadata.",
+        "proof": "An unchanged effective width does not change viewportWidth and therefore schedules no Grid geometry repair. Value-only changes recompute only the contiguous affected row window. Fixed-size structural changes patch the dense identity domain and row tail only. Non-fixed structural changes recompute rows from the first regrouped row, and an actual lane-geometry change rebuilds at most all rows and cLane columns.",
+        "adversarialWitness": "Insert one item at index zero under a non-fixed size policy so every later dense row is regrouped, then change the effective viewport width so the lane count also changes; the repair visits at most nItem values and emits one replacement row set plus cLane columns.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "A raw external array replacement has no trusted patch descriptor, so semantic change discovery may inspect every retained item identity; allocation remains proportional to the changed keyed window."
+          "rationale": "A lane-count change or a structural regrouping at the start can change every dense row aggregate; same-width frame-origin changes and bounded value windows do not take this full-rebuild branch."
         }
       }
     },
     {
       "package": "vue",
       "surface": "hot",
-      "id": "virtual.measurement-update",
-      "source": "packages/vue/src/internal/virtual-list.ts",
+      "id": "virtual.item-projection",
+      "source": "packages/vue/src/internal/virtual-collection.ts",
       "benchmarkIDs": [
         "vue:mounted-virtual-projection"
       ],
-      "specificationCeiling": "O(nMounted + jChanged + kPlacement)",
+      "specificationCeiling": "O(kPlacement)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
-            "name": "nMounted",
-            "meaning": "currently mounted rendered elements",
-            "ceiling": "virtual rendered-entry ceiling"
-          },
-          {
-            "name": "jChanged",
-            "meaning": "ResizeObserver changed entries",
-            "ceiling": "mounted rendered entry count"
-          },
-          {
             "name": "kPlacement",
-            "meaning": "final projected placements",
+            "meaning": "placements emitted by the active Virtual plan",
             "ceiling": "virtual query result ceiling"
+          },
+          {
+            "name": "nMounted",
+            "meaning": "currently mounted projected item elements",
+            "ceiling": "kPlacement"
           }
         ],
         "time": {
-          "bound": "O(nMounted + jChanged + kPlacement)",
+          "bound": "O(kPlacement)",
           "kind": "worst-case",
           "runtimeState": "mounted"
         },
         "space": {
-          "auxiliary": "O(nMounted + jChanged + kPlacement)",
+          "auxiliary": "O(kPlacement)",
           "output": "O(kPlacement)",
           "retained": "O(nMounted)"
         },
         "resources": {
-          "allocations": "O(nMounted + jChanged + kPlacement)",
+          "allocations": "O(kPlacement)",
           "cacheEntries": "O(nMounted)",
           "listeners": "0",
-          "observers": "O(1)",
-          "timers": "O(1)",
-          "subscriptions": "O(nMounted)"
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
         },
         "assumptions": [
           "resources are connection-owned",
@@ -28884,15 +29853,157 @@
           "disconnect leaves every resource counter at zero"
         ],
         "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
-        "proof": "ResizeObserver callbacks enqueue only changed entries; keyed value replacements may inspect the currently mounted identities to schedule forced measurements, and one coalesced batch performs at most one Virtual measurement mutation and placement publication.",
-        "adversarialWitness": "Every mounted row changes value identity while one ResizeObserver batch reports every mounted element.",
+        "proof": "The shared Vue projector visits each emitted placement once, creates the native item VNode directly, and retains one element, registration disposer, and stable function ref per mounted identity. DOM owns item observation and measurement batching.",
+        "adversarialWitness": "A maximum render window mounts kPlacement distinct identities, then replaces the window so every cached registration is released and replaced without creating per-placement Sectile component instances.",
         "evidence": [
           "VAL-016",
           "VAL-017"
         ],
         "fullScan": {
           "allowed": false,
-          "rationale": "Measurement may visit the mounted render window but cannot inspect unmounted collection items."
+          "rationale": "Projection work is bounded by emitted placements and may not traverse unmounted collection items."
+        }
+      }
+    },
+    {
+      "package": "vue",
+      "surface": "hot",
+      "id": "virtual.masonry-reconfigure",
+      "source": "packages/vue/src/virtual-masonry.ts",
+      "benchmarkIDs": [
+        "VAL-007:masonry-geometry-repair"
+      ],
+      "specificationCeiling": "O(nItem log lLane + jChanged log nItem)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "active Masonry item count",
+            "ceiling": "component maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "changed collection identities or value-dependent extents",
+            "ceiling": "jChanged <= nItem"
+          },
+          {
+            "name": "lLane",
+            "meaning": "active Masonry lane count",
+            "ceiling": "lanePolicy fixed count or responsive maxCount"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem log lLane + jChanged log nItem)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(nItem + jChanged log nItem)",
+          "output": "O(nItem)",
+          "retained": "O(nItem)"
+        },
+        "resources": {
+          "allocations": "O(nItem + jChanged log nItem)",
+          "cacheEntries": "O(nItem)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "collection identity and changed-value windows come from the Virtual-owned projection",
+          "lane geometry comes from resolveVirtualLaneGeometry",
+          "Masonry placement repair is owned by @sectile/virtual/masonry-layout"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "The Vue host performs no geometry work when the effective width and policy-derived lane geometry are unchanged. Structural and value changes are forwarded through Virtual-owned extent reconciliation. An actual lane geometry, itemGap, or placementPolicy change issues one Masonry geometry mutation; variable extents may then require the owner to rebuild every placement, while uniform extents remain formula-backed.",
+        "adversarialWitness": "Change the effective width under responsive lanes with variable extents and shortest-lane placement so the lane count changes and every item placement must be rebuilt; separately invalidate a changed value window near index zero so the owner must repair from the earliest affected item.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A real lane-geometry or placement-policy change can observably change every Masonry placement; same-width frame-origin changes do not issue that mutation."
+        }
+      }
+    },
+    {
+      "package": "vue",
+      "surface": "hot",
+      "id": "virtual.spatial-host-update",
+      "source": "packages/vue/src/virtual-spatial.ts",
+      "benchmarkIDs": [
+        "VAL-007:spatial-size-ownership"
+      ],
+      "specificationCeiling": "O(nItem + jChanged log nItem)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "active Spatial item count",
+            "ceiling": "component maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "changed collection/value window materialized by the Vue host",
+            "ceiling": "jChanged <= nItem"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem + jChanged log nItem)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(nItem)",
+          "output": "O(nItem)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(nItem)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "collection identity and changed-value windows come from the Virtual-owned projection",
+          "packed Spatial geometry and repair are owned by @sectile/virtual/spatial-layout"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Surface/frame changes are not reactive inputs to the Spatial state watcher and therefore issue no Spatial mutation. With stable geometry resolvers, the host materializes only the collection change window and, in mounted size ownership, performs StableID lookups only for that window to retain measured width and height. A getRect or getZIndex resolver identity change may affect every application rectangle and therefore materializes one full replacement.",
+        "adversarialWitness": "Replace the getRect resolver for an nItem collection so every declared rectangle may change; separately move the surface frame without changing collection values and assert the Spatial state identity and generation remain unchanged.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Only an application resolver change may require a full host-side geometry replacement; frame movement and bounded stable-resolver updates do not take that branch."
         }
       }
     }

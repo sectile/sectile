@@ -10,13 +10,13 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 |---|---:|---:|---:|
 | core | 380 | 26 | 54 |
 | chart | 80 | 0 | 14 |
-| dom | 423 | 181 | 15 |
+| dom | 423 | 181 | 18 |
 | form | 21 | 0 | 7 |
 | tabular | 33 | 0 | 8 |
 | temporal | 99 | 24 | 2 |
 | terminal | 347 | 177 | 2 |
-| virtual | 90 | 0 | 19 |
-| vue | 738 | 319 | 6 |
+| virtual | 114 | 0 | 27 |
+| vue | 740 | 319 | 8 |
 
 ## Variables
 
@@ -112,6 +112,9 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:position.update | connected | `O(aDom + cAnchor)` worst-case | `O(aDom + cAnchor)` | `O(1)` | `O(aDom)` | forbidden | VAL-016, VAL-017 |
 | dom:tabular.header-metrics | trusted | `O(c + h)` worst-case | `O(c + h)` | `O(h)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | dom:text.native-reconcile | connected | `O(n)` worst-case | `O(1)` | `O(n)` | `O(1)` | allowed | VAL-016, VAL-017 |
+| dom:virtual.disconnect | connected | `O(nMounted + kPlacement + rFrame)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-004, VAL-010 |
+| dom:virtual.frame | connected | `O(rFrame + eChanged + kPlacement)` worst-case | `O(eChanged + kPlacement)` | `O(kPlacement)` | `O(nMounted + kPlacement + rFrame)` | forbidden | VAL-004, VAL-010 |
+| dom:virtual.scroll | connected | `O(kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(kPlacement)` | forbidden | VAL-004, VAL-010 |
 | form:field.get | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(fField)` | forbidden | VAL-016, VAL-017 |
 | form:field.ids-by-issue-source | trusted | `O(uSource)` worst-case | `O(uSource)` | `O(uSource)` | `O(fField + iIssue)` | forbidden | VAL-016, VAL-017 |
 | form:field.update | trusted | `O(iIssue + rAffected + aField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIssue + rAffected + aField + fField/64 + iFieldIssue)` | `O(iIssue)` | `O(fField + iIssue + rRelation)` | forbidden | VAL-016, VAL-017 |
@@ -131,10 +134,17 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | temporal:field.transition | external | `O(sSegment)` worst-case | `O(sSegment)` | `O(sSegment)` | `O(sSegment)` | allowed | VAL-016, VAL-017 |
 | terminal:component.dispatch | trusted | `O(nDomain + cCommand)` worst-case | `O(nDomain + cCommand)` | `O(cCommand)` | `O(nDomain)` | allowed | VAL-016, VAL-017 |
 | terminal:screen.render | connected | `O(rRow * cColumn)` worst-case | `O(rRow * cColumn)` | `O(rRow * cColumn)` | `O(rRow * cColumn)` | allowed | VAL-016, VAL-017 |
+| virtual:collection.extents.reconcile | trusted | `O(jChanged log nItem)` worst-case | `O(jChanged)` | `O(jChanged)` | `O(jChanged)` | forbidden | VAL-003 |
+| virtual:collection.lanes.resolve | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-003 |
+| virtual:collection.patch.trusted | external | `O(jChanged)` worst-case | `O(jChanged)` | `O(1)` | `O(jChanged)` | forbidden | VAL-003 |
+| virtual:collection.project.raw | external | `O(nItem)` worst-case | `O(nItem)` | `O(1)` | `O(nItem)` | allowed | VAL-003 |
+| virtual:collection.replace.raw | external | `O(nItem + jChanged)` worst-case | `O(jChanged)` | `O(1)` | `O(jChanged)` | allowed | VAL-003 |
+| virtual:collection.value-extents.reconcile | trusted | `O(jChanged log nItem)` worst-case | `O(jChanged)` | `O(jChanged)` | `O(jChanged)` | forbidden | VAL-016, VAL-017 |
 | virtual:extent.lookup | trusted | `O(log n)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:indexed-view.at | trusted | `O(log nItem)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:indexed-view.iterate | trusted | `O(nItem)` worst-case | `O(log nItem)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | virtual:indexed-view.to-array | trusted | `O(nItem)` worst-case | `O(log nItem)` | `O(nItem)` | `O(1)` | allowed | VAL-016, VAL-017 |
+| virtual:linear.cross-extent | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:linear.measure | trusted | `O(jChanged log nItem)` worst-case | `O(jChanged log nItem)` | `O(1)` | `O(jChanged log nItem)` | forbidden | VAL-016, VAL-017 |
 | virtual:linear.query | trusted | `O((log nItem)^2 + kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:masonry.formula.derive | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
@@ -148,14 +158,17 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:spatial.measure.rebuild | trusted | `O(nItem log nItem)` worst-case | `O(nItem)` | `O(nItem)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
 | virtual:spatial.patch.incremental | trusted | `O((jChanged + pOverlay) * dSequence)` worst-case | `O(jChanged + pOverlay)` | `O(1)` | `O(jChanged + pOverlay + dSequence)` | forbidden | VAL-016, VAL-017 |
 | virtual:spatial.query | trusted | `O(log nItem + (cCandidate + pOverlay) * dSequence + kPlacement log kPlacement)` expected | `O(log nItem + cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| virtual:surface.frame-transform | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.measure | trusted | `O(jChanged log nTrack)` worst-case | `O(jChanged log nTrack)` | `O(1)` | `O(jChanged log nTrack)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.query | trusted | `O(log nRegion + cCandidate + kPlacement log kPlacement)` worst-case | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | vue:chart.declaration-reconcile | mounted | `O(aAxis + lLayer + nDatum)` worst-case | `O(aAxis + lLayer + nDatum)` | `O(1)` | `O(aAxis + lLayer + nDatum)` | allowed | VAL-016, VAL-017 |
 | vue:chart.selector-bridge | mounted | `O(sState + sLayer*lLayer + sAxis*aAxis)` worst-case | `O(1)` | `O(1)` | `O(sState + sLayer + sAxis)` | forbidden | VAL-016, VAL-017 |
 | vue:collection.external-reconcile | external | `O(nOption + sSelected + dDisabled)` expected | `O(nOption + sSelected + dDisabled)` | `O(sSelected)` | `O(sSelected)` | allowed | VAL-016, VAL-017 |
 | vue:form.selector-bridge | mounted | `O(sForm + sField)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
-| vue:projection.reconfigure | mounted | `O(nItem + jChanged)` worst-case | `O(jChanged)` | `O(jChanged)` | `O(nItem + jChanged)` | allowed | VAL-016, VAL-017 |
-| vue:virtual.measurement-update | mounted | `O(nMounted + jChanged + kPlacement)` worst-case | `O(nMounted + jChanged + kPlacement)` | `O(kPlacement)` | `O(nMounted)` | forbidden | VAL-016, VAL-017 |
+| vue:virtual.grid-reconfigure | mounted | `O(nItem)` worst-case | `O(rRepair + cLane)` | `O(rRepair + cLane)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
+| vue:virtual.item-projection | mounted | `O(kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(nMounted)` | forbidden | VAL-016, VAL-017 |
+| vue:virtual.masonry-reconfigure | mounted | `O(nItem log lLane + jChanged log nItem)` worst-case | `O(nItem + jChanged log nItem)` | `O(nItem)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
+| vue:virtual.spatial-host-update | mounted | `O(nItem + jChanged log nItem)` worst-case | `O(nItem)` | `O(nItem)` | `O(1)` | allowed | VAL-016, VAL-017 |
 
 ## Deterministic scaling evidence
 
