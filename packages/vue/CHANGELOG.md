@@ -1,5 +1,11 @@
 # @sectile/vue
 
+## 0.15.0
+
+### Changes
+
+- feat(presence): normalize transient surface lifecycle (b8538e06)
+
 ## 0.14.2
 
 ### Changes
