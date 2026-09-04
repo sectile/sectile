@@ -49,10 +49,10 @@ async function validateVueVirtualRuntimeClosures(packageRoot) {
   const packageJSON = JSON.parse(await readFile(resolve(packageRoot, 'package.json'), 'utf8'));
   const expected = new Map([
     ['./virtual/core', new Set()],
-    ['./virtual/list', new Set(['@sectile/virtual/extent-index', '@sectile/virtual/linear-layout'])],
-    ['./virtual/grid', new Set(['@sectile/virtual/extent-index', '@sectile/virtual/track-grid-layout'])],
-    ['./virtual/masonry', new Set(['@sectile/virtual/extent-index', '@sectile/virtual/masonry-layout'])],
-    ['./virtual/spatial', new Set(['@sectile/virtual/spatial-layout'])],
+    ['./virtual/list', new Set(['@sectile/virtual/collection', '@sectile/virtual/extent-index', '@sectile/virtual/linear-layout'])],
+    ['./virtual/grid', new Set(['@sectile/virtual/collection', '@sectile/virtual/extent-index', '@sectile/virtual/track-grid-layout'])],
+    ['./virtual/masonry', new Set(['@sectile/virtual/collection', '@sectile/virtual/extent-index', '@sectile/virtual/masonry-layout'])],
+    ['./virtual/spatial', new Set(['@sectile/virtual/collection', '@sectile/virtual/spatial-layout'])],
   ]);
   for (const [subpath, allowed] of expected) {
     const entry = resolve(packageRoot, packageJSON.exports[subpath].import);

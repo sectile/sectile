@@ -45,42 +45,38 @@
         {
           "subpath": "./virtual/core",
           "symbols": [
-            "UseVirtualizerOptions", "UseVirtualizerReturn", "VirtualizerFooter", "VirtualizerFrameProps",
-            "VirtualizerHeader", "VirtualizerHostErrorCode", "VirtualizerItem", "VirtualizerItemProps",
-            "VirtualizerItemSize", "VirtualizerOperationResult", "VirtualizerRoot", "VirtualizerRootExpose",
-            "VirtualizerRootProps", "VirtualizerRootSlotProps", "VirtualizerSurface", "VirtualizerSurfaceProps",
-            "useVirtualizer"
+            "UseVirtualizerOptions", "UseVirtualizerReturn", "VirtualizerItemSize", "VirtualizerRootProps",
+            "VirtualizerRootSlotProps", "VirtualizerContentProps", "VirtualizerItemProps", "VirtualizerRootExpose",
+            "useVirtualizer", "VirtualizerRoot", "VirtualizerContent", "VirtualizerItem"
           ]
         },
         {
           "subpath": "./virtual/list",
           "symbols": [
-            "VirtualCollectionExpose", "VirtualCollectionItemSlotProps", "VirtualCollectionLanePolicyProps",
-            "VirtualCollectionPhase", "VirtualCollectionSizePolicyProps", "VirtualCollectionSlots", "VirtualList",
-            "VirtualListComponent", "VirtualListExpose", "VirtualListIDResolver", "VirtualListItemAttributes",
-            "VirtualListProps", "VirtualListPublicProps", "VirtualListSlotProps"
+            "VirtualListKeyResolver", "VirtualListEstimate", "VirtualListItemAttributes", "VirtualListProps",
+            "VirtualListPublicProps", "VirtualListSlotProps", "VirtualListExpose", "VirtualListComponent",
+            "VirtualCollectionExpose", "VirtualList"
           ]
         },
         {
           "subpath": "./virtual/grid",
           "symbols": [
-            "VirtualGrid", "VirtualGridComponent", "VirtualGridProps", "VirtualGridPublicProps",
-            "VirtualGridSlotProps"
+            "VirtualGridProps", "VirtualGridPublicProps", "VirtualGridSlotProps", "VirtualGridComponent",
+            "VirtualGrid"
           ]
         },
         {
           "subpath": "./virtual/masonry",
           "symbols": [
-            "VirtualMasonry", "VirtualMasonryComponent", "VirtualMasonryProps",
-            "VirtualMasonryPublicProps", "VirtualMasonrySlotProps"
+            "VirtualMasonryProps", "VirtualMasonryPublicProps", "VirtualMasonrySlotProps",
+            "VirtualMasonryComponent", "VirtualMasonry"
           ]
         },
         {
           "subpath": "./virtual/spatial",
           "symbols": [
-            "VirtualSpatial", "VirtualSpatialComponent", "VirtualSpatialProps", "VirtualSpatialPublicProps",
-            "VirtualSpatialRectResolver", "VirtualSpatialSizeOwnership", "VirtualSpatialSlotProps",
-            "VirtualSpatialZIndexResolver"
+            "VirtualSpatialRectResolver", "VirtualSpatialZIndexResolver", "VirtualSpatialProps",
+            "VirtualSpatialPublicProps", "VirtualSpatialSlotProps", "VirtualSpatialComponent", "VirtualSpatial"
           ]
         }
       ]
