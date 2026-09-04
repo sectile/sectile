@@ -31,10 +31,12 @@ function gridProjection(ids, columns = { start: [], center: ['name', 'score'], e
 }
 
 test('TAB-VIR-01: DataTable reconciliation preserves measured stable identities across insert remove and reorder', () => {
-  const adapter = createDataTableVirtualAdapter({ projection: tableProjection(['r1', 'r2']), rowExtents: { kind: 'uniform', extent: estimated(24) } });
+  const adapter = createDataTableVirtualAdapter({ projection: tableProjection(['r1', 'r2']), rowExtents: { kind: 'uniform', extent: estimated(24) }, crossExtent: 320 });
   const plan = adapter.strategy.tryQuery(adapter.state, { viewport: { x: 0, y: 0, width: 320, height: 24 } });
   assert.equal(plan.ok, true);
   assert.deepEqual(plan.value.placements.map(({ id }) => id), ['r1']);
+  assert.equal(plan.value.placements[0].rect.width, 320);
+  assert.equal(plan.value.contentSize.width, 320);
   const measured = adapter.strategy.tryMeasure(adapter.state, { generation: adapter.state.generation, measurements: [{ index: 0, extent: exact(41) }], anchor: null });
   assert.equal(measured.ok, true);
   const reconciled = reconcileDataTableVirtualAdapter(adapter, measured.value.state, tableProjection(['r3', 'r1'], 9));
@@ -47,7 +49,7 @@ test('TAB-VIR-01: DataTable reconciliation preserves measured stable identities 
 });
 
 test('TAB-VIR-02: reconciliation rejects stale unrelated Virtual state without conflating projection generation', () => {
-  const adapter = createDataTableVirtualAdapter({ projection: tableProjection(['r1']), rowExtents: { kind: 'uniform', extent: exact(20) } });
+  const adapter = createDataTableVirtualAdapter({ projection: tableProjection(['r1']), rowExtents: { kind: 'uniform', extent: exact(20) }, crossExtent: 320 });
   const first = reconcileDataTableVirtualAdapter(adapter, adapter.state, tableProjection(['r1', 'r2'], 50));
   assert.equal(first.ok, true);
   const stale = reconcileDataTableVirtualAdapter(first.value.adapter, adapter.state, tableProjection(['r1'], 51));
@@ -119,6 +121,7 @@ test('TAB-VIR-05: by-id extent callbacks fail through a typed coordinate boundar
   const rows = tryCreateDataTableVirtualAdapter({
     projection: tableProjection(['r1']),
     rowExtents: { kind: 'by-id', getExtent: () => { throw new Error('row failed'); } },
+    crossExtent: 320,
   });
   assert.equal(rows.ok, false);
   assert.equal(rows.error.code, 'extent-policy-failed');
@@ -143,6 +146,7 @@ test('TAB-VIR-06: sparse repair is bounded and bulk replacement reuses stable me
   const adapter = createDataTableVirtualAdapter({
     projection: tableProjection(ids),
     rowExtents: { kind: 'by-id', getExtent: (_id, index) => { extentCalls += 1; return estimated(20 + index); } },
+    crossExtent: 320,
   });
   const measured = adapter.strategy.tryMeasure(adapter.state, {
     generation: adapter.state.generation,
@@ -173,7 +177,7 @@ test('TAB-VIR-06: sparse repair is bounded and bulk replacement reuses stable me
 
 test('TAB-VIR-07: table and grid locators reuse production indexes without array scans or cell maps', () => {
   const ids = Array.from({ length: 256 }, (_, index) => `r${index}`);
-  const table = createDataTableVirtualAdapter({ projection: tableProjection(ids), rowExtents: { kind: 'uniform', extent: exact(20) } });
+  const table = createDataTableVirtualAdapter({ projection: tableProjection(ids), rowExtents: { kind: 'uniform', extent: exact(20) }, crossExtent: 320 });
   const grid = createDataGridVirtualAdapter({
     projection: gridProjection(ids),
     rowExtents: { kind: 'uniform', extent: exact(20) },

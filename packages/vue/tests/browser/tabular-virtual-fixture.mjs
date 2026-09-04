@@ -3,7 +3,7 @@ import { createDataGridVirtualAdapter, createDataTableVirtualAdapter, reconcileD
 import { useDataGrid, createDataGridComponents } from '../../.verification-dist/data-grid.js';
 import { useDataTable, createDataTableComponents } from '../../.verification-dist/data-table.js';
 import { VirtualList } from '../../.verification-dist/virtual-list.js';
-import { VirtualizerItem, VirtualizerRoot, VirtualizerSurface } from '../../.verification-dist/virtual-core.js';
+import { VirtualizerFooter, VirtualizerHeader, VirtualizerItem, VirtualizerRoot, VirtualizerSurface } from '../../.verification-dist/virtual-core.js';
 
 const exact = (value) => ({ kind: 'exact', value });
 const estimated = (value) => ({ kind: 'estimated', value });
@@ -40,7 +40,7 @@ async function nativeScenario() {
     setup() {
       controller = readyTable();
       const DataTable = createDataTableComponents(controller);
-      adapter = createDataTableVirtualAdapter({ projection: controller.getProjection(), rowExtents: { kind: 'uniform', extent: estimated(26) } });
+      adapter = createDataTableVirtualAdapter({ projection: controller.getProjection(), rowExtents: { kind: 'uniform', extent: estimated(26) }, crossExtent: nativeViewport.width });
       return () => h(DataTable.Provider, null, {
         default: () => h(VirtualizerRoot, { ref: root, defaultState: adapter.state, strategy: adapter.strategy, initialViewport: nativeViewport, overscan: 0, style: { width: '320px', height: '104px', overflow: 'auto' }, onError: (error) => errors.push(`${error.code}:${error.message}`) }, {
           default: ({ placements }) => h(VirtualizerSurface, { asChild: true }, {
@@ -84,16 +84,20 @@ async function pinnedScenario() {
       return () => h(DataGrid.Provider, null, {
         default: () => h(DataGrid.Root, { 'aria-label': 'Pinned virtual grid', onCommand }, {
           default: () => h(VirtualizerRoot, { ref: root, defaultState: adapter.value.state, strategy: adapter.value.strategy, initialViewport: pinnedViewport, overscan: 0, style: { width: '220px', height: '84px', overflow: 'auto' } }, {
-            default: ({ placements }) => h(VirtualizerSurface, null, {
-              default: () => placements.map((placement) => {
-                const cell = cells.get(placement.id);
-                return cell === undefined ? null : h(VirtualizerItem, { key: placement.id, placement, asChild: true }, {
-                  default: () => h(DataGrid.Cell, { rowID: cell.rowID, column: cell.columnID }, {
-                    default: () => [rows[Number(cell.rowID.slice(1))]?.cells[cell.columnID], h(DataGrid.Editor, { rowID: cell.rowID, column: cell.columnID, 'aria-label': `Edit ${cell.rowID} ${cell.columnID}` })],
-                  }),
-                });
+            default: ({ placements }) => [
+              h(VirtualizerHeader, null, { default: () => h('div', { 'data-tabular-outer-header': '', style: { height: '24px' } }, 'Outer header') }),
+              h(VirtualizerSurface, null, {
+                default: () => placements.map((placement) => {
+                  const cell = cells.get(placement.id);
+                  return cell === undefined ? null : h(VirtualizerItem, { key: placement.id, placement, asChild: true }, {
+                    default: () => h(DataGrid.Cell, { rowID: cell.rowID, column: cell.columnID }, {
+                      default: () => [rows[Number(cell.rowID.slice(1))]?.cells[cell.columnID], h(DataGrid.Editor, { rowID: cell.rowID, column: cell.columnID, 'aria-label': `Edit ${cell.rowID} ${cell.columnID}` })],
+                    }),
+                  });
+                }),
               }),
-            }),
+              h(VirtualizerFooter, null, { default: () => h('div', { 'data-tabular-outer-footer': '', style: { height: '16px' } }, 'Outer footer') }),
+            ],
           }),
         }),
       });
@@ -101,6 +105,8 @@ async function pinnedScenario() {
   });
   try {
     app.mount(host); await settle(); root.value.flush(); await settle();
+    const outerFramesPresent = host.querySelector('[data-tabular-outer-header]') !== null && host.querySelector('[data-tabular-outer-footer]') !== null;
+    const surfaceLocalFrameOffset = (root.value.plan?.viewport.y ?? 0) < 0;
     root.value.measure([{ axis: 'row', id: 'r0', extent: exact(43) }, { axis: 'column', id: 'name', extent: exact(137) }]); root.value.flush(); await settle();
     const before = adapter.value; const changed = controller.dispatch({ type: 'set-column-state', columnState: { order: ['id', 'name', 'score'], hidden: [], pinnedStart: ['id'], pinnedEnd: ['score'] } });
     if (!changed.ok) throw new Error(changed.error.message);
@@ -113,7 +119,8 @@ async function pinnedScenario() {
     for (let index = 0; index < 8; index += 1) { (document.activeElement ?? first)?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); await settle(); root.value.flush(); await settle(); }
     (document.activeElement ?? host.querySelector('[data-part="cell"]'))?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); await settle();
     const editingFocus = document.activeElement?.getAttribute('data-part') === 'editor';
-    return Object.freeze({ ok: adapter.value.strategy === strategy && pinnedOverlap && measurementSurvived && revealCount > 0 && editingFocus, strategyStable: adapter.value.strategy === strategy, pinnedOverlap, measurementSurvived, revealCount, editingFocus });
+    const frameIDsOutsideVirtualDomain = !root.value.state.rows.toArray().some((track) => track.id === 'outer-header' || track.id === 'outer-footer') && !root.value.state.columns.toArray().some((track) => track.id === 'outer-header' || track.id === 'outer-footer');
+    return Object.freeze({ ok: adapter.value.strategy === strategy && pinnedOverlap && measurementSurvived && revealCount > 0 && editingFocus && outerFramesPresent && surfaceLocalFrameOffset && frameIDsOutsideVirtualDomain, strategyStable: adapter.value.strategy === strategy, pinnedOverlap, measurementSurvived, revealCount, editingFocus, outerFramesPresent, surfaceLocalFrameOffset, frameIDsOutsideVirtualDomain });
   } finally { app.unmount(); host.remove(); }
 }
 

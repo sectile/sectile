@@ -210,6 +210,7 @@ function measureVirtualReconciliation() {
       const adapter = createDataTableVirtualAdapter({
         projection: virtualTableProjection(ids),
         rowExtents: { kind: 'by-id', getExtent: () => { extentCalls += 1; return { kind: 'estimated', value: 24 }; } },
+        crossExtent: 320,
       });
       const beforeCalls = extentCalls;
       globalThis.gc();

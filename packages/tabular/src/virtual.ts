@@ -54,6 +54,7 @@ export interface TabularVirtualLocator<ID extends string> {
 export interface DataTableVirtualAdapterOptions {
   readonly projection: DataTableProjection;
   readonly rowExtents: TabularVirtualExtentPolicy<TabularRowID>;
+  readonly crossExtent: number;
   readonly limits?: Partial<TabularVirtualLimits>;
 }
 
@@ -140,9 +141,7 @@ export function tryCreateDataTableVirtualAdapter(options: DataTableVirtualAdapte
   if (!extents.ok) return extents;
   const state = tryCreateLinearLayout(sequence.value, extents.value, {
     axis: 'vertical',
-    // Row virtualization owns only the main axis. A non-zero normalized cross
-    // span keeps rows queryable while the native table continues to own width.
-    crossExtent: 1,
+    crossExtent: options.crossExtent,
   });
   if (!state.ok) return state;
   return success(createTableAdapter(options.projection.generation, state.value, options.rowExtents, limits.value));
