@@ -144,7 +144,7 @@ presence.update(false, content)
 
 다시 열면 대기 중인 exit가 즉시 취소됩니다. 요소가 교체되거나 `disconnect()`가 호출되면 이전 listener와 timer를 먼저 해제하므로 오래된 generation이 상태를 반영할 수 없습니다. 관찰자는 소유 요소의 유한한 transition과 animation 중 가장 긴 모션을 기다리며 fallback 대기 시간에는 상한이 있습니다. 자식 요소의 모션은 부모 surface의 수명을 결정하지 않습니다.
 
-기능적 표시 상태를 관리하는 직접 DOM 컴포넌트는 계속 `hidden`을 동기적으로 갱신합니다. 그래야 같은 상태 전이에서 focus, layer, positioning이 올바른 표시 상태를 볼 수 있습니다. `manageVisibility: false` 같은 기존 framework용 opt-out은 이미 이 옵션을 제공하던 API에만 유지됩니다. Menu, Combobox, Cascade Select, picker 제품군에 범용 표시 상태 opt-out을 새로 추가하지 않습니다. 연결 객체가 `hidden`을 소유한 경우에는 Sectile이 마지막으로 쓴 값이 그대로 남아 있을 때만 연결 전 attribute 값을 복원하므로, 연결 중 소비자가 바꾼 상태를 덮어쓰지 않습니다.
+직접 DOM transient surface 연결은 기본적으로 기능적 `hidden` 표시 상태를 동기적으로 관리하므로 imperative 사용자는 기존 focus, layer, positioning 계약을 그대로 유지합니다. 공개 `manageVisibility: false`는 이미 렌더러 소유 visibility를 지원하던 popup, Select, Toast API에 그대로 유지됩니다. Vue는 Menu 계열 transient surface, Combobox, Cascade Select, popup picker에도 DOM presence 관찰자를 조합하지만, 이 연결은 내부 renderer handoff로 처리하며 direct DOM API에 새 visibility 옵션을 추가하지 않습니다. 연결 객체가 `hidden`을 소유하는 기본 모드에서는 Sectile이 마지막으로 쓴 값이 그대로 남아 있을 때만 연결 전 attribute 값을 복원하므로, 연결 중 소비자가 바꾼 상태를 덮어쓰지 않습니다.
 
 ## 순서 변경
 

@@ -298,22 +298,35 @@ test('DOM popup picker families restore exact hidden baselines on disconnect', (
     createDateTimeValue(createDateValue(2026, 8, 21), createTimeValue(17, 45)),
   );
   const factories = [
-    (root) => createDatePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: date }),
-    (root) => createDateRangePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: dateRange }),
-    (root) => createDateTimePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: dateTime }),
-    (root) => createDateTimeRangePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: dateTimeRange }),
+    (root, manageVisibility) => createDatePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: date, ...manageVisibility }),
+    (root, manageVisibility) => createDateRangePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: dateRange, ...manageVisibility }),
+    (root, manageVisibility) => createDateTimePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: dateTime, ...manageVisibility }),
+    (root, manageVisibility) => createDateTimeRangePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: dateTimeRange, ...manageVisibility }),
   ];
 
   for (const create of factories) {
     const root = new FakeElement();
     root.setAttribute('hidden', 'until-found');
     root.hidden = true;
-    const picker = create(root);
+    const picker = create(root, {});
     assert.equal(root.getAttribute('hidden'), '');
     picker.handleEvent('open');
     assert.equal(root.getAttribute('hidden'), null);
     picker.disconnect();
     assert.equal(root.getAttribute('hidden'), 'until-found');
+
+    const unmanaged = new FakeElement();
+    unmanaged.setAttribute('hidden', 'until-found');
+    unmanaged.hidden = true;
+    const rendererOwned = create(unmanaged, { manageVisibility: false });
+    assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+    rendererOwned.handleEvent('open');
+    rendererOwned.refresh();
+    assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+    rendererOwned.handleEvent('close');
+    assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+    rendererOwned.disconnect();
+    assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
   }
 });
 

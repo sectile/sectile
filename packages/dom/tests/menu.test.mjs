@@ -231,6 +231,60 @@ test('menu button restores its exact hidden baseline without overwriting a later
   assert.equal(consumerRoot.getAttribute('hidden'), 'until-found');
 });
 
+test('menu visibility management can be delegated to the renderer', () => {
+  const root = new FakeElement();
+  const trigger = new FakeElement();
+  const file = new FakeElement();
+  const child = new FakeElement();
+  const submenu = new FakeElement();
+  root.setAttribute('hidden', 'until-found'); root.hidden = true;
+  submenu.setAttribute('hidden', 'until-found'); submenu.hidden = true;
+  const menu = createMenuButton({
+    root, trigger, manageVisibility: false,
+    items: [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }],
+  });
+
+  menu.setItemAttributes(file, 'file');
+  menu.setItemAttributes(child, 'open');
+  menu.setSubmenuAttributes(submenu, 'file');
+  menu.handleEvent('open-popup');
+  menu.handleEvent('open-submenu');
+  assert.equal(root.getAttribute('hidden'), 'until-found');
+  assert.equal(submenu.getAttribute('hidden'), 'until-found');
+  menu.handleEvent('close-popup');
+  menu.refresh();
+  assert.equal(root.getAttribute('hidden'), 'until-found');
+  assert.equal(submenu.getAttribute('hidden'), 'until-found');
+  menu.disconnect();
+});
+
+test('renderer-owned menu visibility defers focus until the surface is visible', () => {
+  const { root, trigger, file, child, submenu } = menuDOM(500, 300);
+  root.hidden = true;
+  submenu.hidden = true;
+  const menu = createMenuButton({
+    root, trigger, manageVisibility: false, position: false,
+    items: [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }],
+  });
+  menu.setItemAttributes(file, 'file');
+  menu.setItemAttributes(child, 'open');
+  menu.setSubmenuAttributes(submenu, 'file');
+  trigger.focus();
+
+  menu.handleEvent('open-popup');
+  assert.equal(document.activeElement, trigger);
+  root.hidden = false;
+  menu.refresh();
+  assert.equal(document.activeElement, file);
+
+  menu.handleEvent('open-submenu');
+  assert.equal(document.activeElement, file);
+  submenu.hidden = false;
+  menu.refresh();
+  assert.equal(document.activeElement, child);
+  menu.disconnect();
+});
+
 test('menu unregister restores submenu visibility and generated ID ownership', () => {
   const root = new FakeElement();
   const trigger = new FakeElement();

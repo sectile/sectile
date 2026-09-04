@@ -36,7 +36,9 @@ export interface MenuControlOptions<ID extends StableID> {
   readonly onUpdate?: () => void;
 }
 type MenuControlPositionOptions = PositionOptions & { readonly position?: boolean };
-type ResolvedMenuControlOptions<ID extends StableID> = MenuControlOptions<ID> & MenuControlPositionOptions;
+type ResolvedMenuControlOptions<ID extends StableID> = MenuControlOptions<ID> & MenuControlPositionOptions & {
+  readonly manageVisibility?: boolean;
+};
 export interface MenuControl<ID extends StableID> {
   getSnapshot(): RevisionSnapshot<MenuState<ID>>;
   syncControlledValue(open: boolean): Result<RevisionSnapshot<MenuState<ID>>>;
@@ -77,11 +79,12 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   readonly #options: ResolvedMenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>; readonly #policies: MenuPolicies<ID>; readonly #elements = new Map<ID, HTMLElement>(); readonly #submenus = new Map<ID, HTMLElement>();
   readonly #rootVisibility: HiddenBinding | undefined; readonly #submenuVisibility = new Map<ID, HiddenBinding>(); readonly #submenuIDs = new Map<ID, { readonly element: HTMLElement; readonly previous: string | null; readonly applied: string }>(); readonly #submenuControlIDs = new Map<ID, string>();
   #nextSubmenuID = 0;
+  #pendingFocus: ID | undefined;
   readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined; readonly #popupPosition: PositionConnection | undefined; readonly #submenuPositions = new Map<ID, PositionConnection>();
   #typeaheadBuffer = ''; #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
   public constructor(options: ResolvedMenuControlOptions<ID>, tree: Tree<ID>, runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>, policies: MenuPolicies<ID>) {
     this.#options = options; this.#tree = tree; this.#runtime = runtime; this.#policies = policies;
-    this.#rootVisibility = options.kind === 'menu-button' ? createHiddenBinding(options.root) : undefined;
+    this.#rootVisibility = options.manageVisibility === false || options.kind !== 'menu-button' ? undefined : createHiddenBinding(options.root);
     setInteractionAttributes(options.root, options); if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options, { native: true });
     this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
     this.#layer = options.kind === 'menu-button' && options.trigger !== undefined ? createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close-popup'); } }) : undefined;
@@ -145,7 +148,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
         this.#releaseSubmenu(candidate, registered);
       }
       this.#submenus.set(parentID, element);
-      this.#submenuVisibility.set(parentID, createHiddenBinding(element));
+      if (this.#options.manageVisibility !== false) this.#submenuVisibility.set(parentID, createHiddenBinding(element));
       if (element.id.length === 0) {
         const previous = element.getAttribute('id');
         const applied = `sectile-menu-${this.#instanceID}-submenu-${this.#nextSubmenuID += 1}`;
@@ -157,7 +160,8 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     }
     this.#refresh();
   }
-  public handleEvent(event: MenuEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) { this.#refresh(); for (const effect of result.commands) { if (effect.type === 'invoke') this.#options.onInvoke?.(effect.id); if (effect.type === 'focus') this.#elements.get(effect.id)?.focus(); if (effect.type === 'restore-focus') this.#options.trigger?.focus(); } this.#options.onUpdate?.(); } return result.ok; }
+  public handleEvent(event: MenuEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) { this.#refresh(); for (const effect of result.commands) { if (effect.type === 'invoke') this.#options.onInvoke?.(effect.id); if (effect.type === 'focus') { this.#pendingFocus = effect.id; this.#focusPending(); } if (effect.type === 'restore-focus') { this.#pendingFocus = undefined; this.#options.trigger?.focus(); } } this.#options.onUpdate?.(); } return result.ok; }
+  public refresh(): void { this.#refresh(); }
   public disconnect(): void {
     this.#layer?.disconnect();
     this.#popupPosition?.disconnect();
@@ -168,11 +172,13 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
     this.#options.trigger?.removeEventListener('click', this.#triggerClick);
+    this.#pendingFocus = undefined;
     this.#elements.clear();
     this.#submenuControlIDs.clear();
   }
   #refresh(): void {
     const state = this.getSnapshot().state;
+    if (this.#pendingFocus !== undefined && state.cursor.current !== this.#pendingFocus) this.#pendingFocus = undefined;
     this.#options.root.setAttribute('role', this.#options.kind === 'navigation-menu' ? 'navigation' : this.#options.kind === 'menubar' ? 'menubar' : 'menu');
     this.#options.root.setAttribute('dir', this.#options.direction ?? 'ltr');
     if (this.#options.label !== undefined) this.#options.root.setAttribute('aria-label', this.#options.label);
@@ -201,6 +207,18 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     this.#layer?.sync();
     this.#popupPosition?.update();
     for (const position of this.#submenuPositions.values()) position.update();
+    this.#focusPending();
+  }
+  #focusPending(): void {
+    const id = this.#pendingFocus;
+    if (id === undefined) return;
+    const element = this.#elements.get(id);
+    if (element === undefined) return;
+    const parentID = this.#tree.parentOf(id);
+    const surface = parentID === null ? this.#options.root : this.#submenus.get(parentID);
+    if (surface === undefined || surface.hidden || surface.inert) return;
+    this.#pendingFocus = undefined;
+    element.focus();
   }
   #clearSubmenuControl(parentID: ID, element: HTMLElement): void {
     const applied = this.#submenuControlIDs.get(parentID);

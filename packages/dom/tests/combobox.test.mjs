@@ -83,6 +83,19 @@ test('DOM combobox restores exact popup hidden ownership on disconnect', () => {
   assert.equal(popup.getAttribute('hidden'), null);
   connection.disconnect();
   assert.equal(popup.getAttribute('hidden'), 'until-found');
+
+  const unmanaged = new FakeElement();
+  unmanaged.setAttribute('hidden', 'until-found');
+  unmanaged.hidden = true;
+  const rendererOwned = createCombobox({
+    items: items(), input: new FakeTextElement(), popup: unmanaged, defaultOpen: true, manageVisibility: false,
+  });
+  assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+  rendererOwned.handleEvent('close');
+  rendererOwned.render();
+  assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+  rendererOwned.disconnect();
+  assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
 });
 
 test('DOM keyboard and text inputs map onto combobox semantics', () => {

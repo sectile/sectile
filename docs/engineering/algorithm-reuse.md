@@ -2,7 +2,7 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all 9 package source trees.
 
-Findings: 451; migration owners: WI-020, WI-027, WI-040.
+Findings: 450; migration owners: WI-020, WI-027, WI-040.
 
 ## Classifications
 
@@ -11,7 +11,7 @@ Findings: 451; migration owners: WI-020, WI-027, WI-040.
 | bounded-small | 10 |
 | migration-required | 60 |
 | result-proportional | 171 |
-| reuse | 210 |
+| reuse | 209 |
 
 ## Categories
 
@@ -21,7 +21,7 @@ Findings: 451; migration owners: WI-020, WI-027, WI-040.
 | discarded-canonical-index | 57 |
 | measurement-authority | 25 |
 | private-algorithm-bypass | 4 |
-| raw-full-domain-scan | 285 |
+| raw-full-domain-scan | 284 |
 | repeated-immutable-view | 13 |
 | whole-domain-validation | 31 |
 
@@ -56,20 +56,20 @@ Findings: 451; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/accordion.ts:158` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/carousel.ts:131` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/cascade-list.ts:203` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/cascade-select.ts:141` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/cascade-select.ts:147` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/checkbox.ts:141` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/color-picker.ts:82` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:175` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:178` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:179` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:182` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/disclosure.ts:110` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/feed.ts:68` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/grid.ts:130` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/date-picker.ts:401` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/date-picker.ts:405` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/native-field.ts:120` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:304` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:198` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:222` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:219` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:223` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/multi-thumb-slider.ts:153` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/pagination.ts:137` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/quantity-field.ts:92` | controller-rebuild |

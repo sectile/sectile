@@ -288,7 +288,10 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
     this.labels = options.controller.labels;
     this.#input = options.input;
     this.#popup = options.popup;
-    this.#visibility = this.#popup === undefined ? undefined : createHiddenBinding(this.#popup);
+    const manageVisibility = (options as ComboboxConnectionOptions<ID> & { readonly manageVisibility?: boolean }).manageVisibility;
+    this.#visibility = this.#popup === undefined || manageVisibility === false
+      ? undefined
+      : createHiddenBinding(this.#popup);
     this.#getItemElementID = options.getItemElementID
       ?? ((id): string => `sectile-combobox-${stableIDElementToken(id)}`);
     this.#onAccept = options.onAccept;

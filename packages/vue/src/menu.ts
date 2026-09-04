@@ -17,11 +17,13 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostDirection, useHostId } from './host-provider.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import { usePresence } from './internal/presence.js';
 
 type MenuKind = 'menu' | 'menu-button' | 'menubar' | 'navigation-menu';
 type MenuRegistrationConnection = Omit<MenuConnection<string>, 'setItemAttributes' | 'setSubmenuAttributes'> & {
   setItemAttributes(element: HTMLElement | undefined, id: string): void;
   setSubmenuAttributes(element: HTMLElement | undefined, parentID: string): void;
+  refresh(): void;
 };
 export interface MenuRootProps {
   readonly items: readonly MenuItemDefinition<string>[];
@@ -59,6 +61,7 @@ interface Context {
   registerTrigger(element?: HTMLElement): void;
   registerItem(element: HTMLElement | undefined, id: string): void;
   registerSubmenu(element: HTMLElement | undefined, parent: string): void;
+  refresh(): void;
 }
 interface ResolvedRootProps {
   readonly items: readonly MenuItemDefinition<string>[];
@@ -161,7 +164,7 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
         highlighted.value = reconciled.current;
         const options = {
           root: root.value, items: runtimeProps.items, disabledItems: runtimeProps.disabledItems, disabled: runtimeProps.disabled,
-          direction: direction.value, baseID,
+          direction: direction.value, baseID, manageVisibility: false,
           ...(kind === 'menu-button' ? {
             position: runtimeProps.position ?? true,
             side: runtimeProps.side ?? 'bottom', align: runtimeProps.align ?? 'start', sideOffset: runtimeProps.sideOffset ?? 8,
@@ -211,6 +214,7 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
       provide<Context>(key, {
         state, kind, label: computed(() => runtimeProps.label), disabledItems: computed(() => new Set(runtimeProps.disabledItems)), direction,
         position, strategy, registerRoot, registerTrigger,
+        refresh: () => (connection.value as MenuRegistrationConnection | undefined)?.refresh(),
         registerItem: (element, id) => (connection.value as MenuRegistrationConnection | undefined)?.setItemAttributes(element, id),
         registerSubmenu: (element, parent) => (connection.value as MenuRegistrationConnection | undefined)?.setSubmenuAttributes(element, parent),
       });
@@ -258,12 +262,23 @@ export const MenuButtonTrigger = defineComponent({
 export const MenuButtonContent = defineComponent({
   name: 'SectileMenuButtonContent', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: MenuRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('MenuButtonContent'); const element = shallowRef<HTMLElement>(); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerRoot(content); },
-    role: 'menu', hidden: !root.state.value.open, 'aria-label': root.label.value, dir: root.direction.value,
-    style: root.position.value ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined } : undefined,
-    'data-scope': 'menu-button', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
-  }), { default: () => slots['default']?.(root.state.value) }); },
+  setup(props, { attrs, slots }) {
+    const root = useRoot('MenuButtonContent');
+    const element = shallowRef<HTMLElement>();
+    const open = computed(() => root.state.value.open);
+    const present = usePresence(open, element);
+    watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' });
+    return (): VNodeChild => {
+      const exiting = !open.value && present.value;
+      return h(Primitive, mergeProps(attrs, {
+        as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerRoot(content); },
+        role: 'menu', hidden: !present.value, 'aria-label': root.label.value, dir: root.direction.value,
+        ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
+        style: root.position.value ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined } : undefined,
+        'data-scope': 'menu-button', 'data-part': 'content', 'data-state': open.value ? 'open' : 'closed',
+      }), { default: () => slots['default']?.(root.state.value) });
+    };
+  },
 });
 
 export const MenuItem = defineComponent({
@@ -282,11 +297,22 @@ export const MenuSubContent = defineComponent({
   name: 'SectileMenuSubContent', inheritAttrs: false,
   props: { for: { type: String, required: true }, ...partProps },
   slots: Object as SlotsType<{ default: (props: MenuRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('MenuSubContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.registerSubmenu(node instanceof HTMLElement ? node : undefined, props.for); },
-    role: root.kind === 'navigation-menu' ? undefined : 'menu', hidden: !root.state.value.openPath.includes(props.for), dir: root.direction.value, 'data-sectile-submenu-for': props.for,
-    'data-scope': root.kind === 'navigation-menu' ? 'navigation-menu' : 'menu', 'data-part': 'sub-content', 'data-state': root.state.value.openPath.includes(props.for) ? 'open' : 'closed',
-  }), { default: () => slots['default']?.(root.state.value) }); },
+  setup(props, { attrs, slots }) {
+    const root = useRoot('MenuSubContent');
+    const element = shallowRef<HTMLElement>();
+    const open = computed(() => root.state.value.open && root.state.value.openPath.includes(props.for));
+    const present = usePresence(open, element);
+    watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' });
+    return (): VNodeChild => {
+      const exiting = !open.value && present.value;
+      return h(Primitive, mergeProps(attrs, {
+        as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const submenu = node instanceof HTMLElement ? node : undefined; element.value = submenu; root.registerSubmenu(submenu, props.for); },
+        role: root.kind === 'navigation-menu' ? undefined : 'menu', hidden: !present.value, dir: root.direction.value, 'data-sectile-submenu-for': props.for,
+        ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
+        'data-scope': root.kind === 'navigation-menu' ? 'navigation-menu' : 'menu', 'data-part': 'sub-content', 'data-state': open.value ? 'open' : 'closed',
+      }), { default: () => slots['default']?.(root.state.value) });
+    };
+  },
 });
 
 export const MenuSeparator = defineComponent({

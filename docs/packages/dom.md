@@ -144,7 +144,7 @@ presence.update(false, content)
 
 Reopening cancels the pending exit immediately. Element replacement and `disconnect()` release the old listeners and timer before a stale generation can publish. The observer waits for the longest finite transition or animation on the owning element and bounds its fallback wait; child motion does not own the parent surface lifetime.
 
-Direct DOM components that manage functional visibility continue to update `hidden` synchronously so focus, layering, and positioning see the correct state in the same transition. Existing framework-oriented opt-outs such as `manageVisibility: false` remain limited to the component APIs that already expose them; Menu, Combobox, Cascade Select, and picker families do not gain a generic visibility opt-out. When a connection owns `hidden`, disconnect restores the pre-connection attribute only if the consumer has not changed it since Sectile's last write.
+Direct DOM transient-surface connections manage functional `hidden` visibility synchronously by default so imperative consumers keep the existing focus, layering, and positioning contract. Public `manageVisibility: false` remains available on the popup, Select, and Toast APIs that already expose renderer-owned visibility. Vue also composes the DOM presence observer with Menu-family transient surfaces, Combobox, Cascade Select, and popup pickers through an internal renderer handoff, without adding new direct-DOM visibility options. When a connection owns `hidden`, disconnect restores the pre-connection attribute only if the consumer has not changed it since Sectile's last write.
 
 ## Reorder
 

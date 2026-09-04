@@ -28,6 +28,20 @@ test('DOM cascade select restores exact popup hidden ownership on disconnect', (
   assert.equal(popup.getAttribute('hidden'), null);
   select.disconnect();
   assert.equal(popup.getAttribute('hidden'), 'until-found');
+
+  const unmanaged = new FakeElement();
+  unmanaged.setAttribute('hidden', 'until-found'); unmanaged.hidden = true;
+  const rendererOwned = createCascadeSelect({
+    root: new FakeElement(), trigger: new FakeElement(), popup: unmanaged, nodes, manageVisibility: false,
+  });
+  assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+  rendererOwned.handleEvent('open');
+  rendererOwned.refresh();
+  assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+  rendererOwned.handleEvent('close');
+  assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+  rendererOwned.disconnect();
+  assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
 });
 
 test('DOM cascade select exposes native keyboard mapping and disabled semantics', () => {

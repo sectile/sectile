@@ -74,7 +74,7 @@ class DOMDatePicker implements DatePickerConnection {
   readonly #field: FacadeConnection<DateFieldConnection> | null;
   readonly #layer: DOMLayerBinding;
   readonly #position: PositionConnection;
-  readonly #visibility: HiddenBinding;
+  readonly #visibility: HiddenBinding | undefined;
   #syncingField = false;
   #active = true;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
@@ -84,7 +84,8 @@ class DOMDatePicker implements DatePickerConnection {
     this.options = options;
     this.runtime = runtime;
     this.controls = controls;
-    this.#visibility = createHiddenBinding(options.root);
+    const manageVisibility = (options as DatePickerOptions & { readonly manageVisibility?: boolean }).manageVisibility;
+    this.#visibility = manageVisibility === false ? undefined : createHiddenBinding(options.root);
     this.#layer = createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close'); } });
     this.#position = createPickerPosition(options.root, options.trigger, options);
     this.#field = options.input === undefined ? null : createDateField({
@@ -123,7 +124,7 @@ class DOMDatePicker implements DatePickerConnection {
   public handleEvent(event: DatePickerEvent): boolean { const result = this.runtime.handle(event); if (result.ok) { this.refresh(); this.options.onUpdate?.(); if (result.commands.some((command) => command.type === 'open-changed' && !command.open)) this.options.trigger.focus(); else if (result.commands.some((command) => command.type === 'highlight-changed')) queueMicrotask(() => { if (this.#active) this.options.grid.querySelector<HTMLElement>('[tabindex="0"]')?.focus(); }); } return result.ok; }
   public refresh(): void {
     const state = this.getSnapshot().state;
-    this.#visibility.setHidden(!state.open);
+    this.#visibility?.setHidden(!state.open);
     this.options.trigger.setAttribute('aria-haspopup', 'dialog');
     this.options.trigger.setAttribute('aria-expanded', String(state.open));
     if (this.options.label !== undefined) this.options.grid.setAttribute('aria-label', this.options.label);
@@ -139,7 +140,7 @@ class DOMDatePicker implements DatePickerConnection {
     this.#active = false;
     this.#layer.disconnect();
     this.#position.disconnect();
-    this.#visibility.disconnect();
+    this.#visibility?.disconnect();
     this.#field?.disconnect();
     this.options.trigger.removeEventListener('click', this.#trigger);
     this.options.grid.removeEventListener('keydown', this.#keydown);

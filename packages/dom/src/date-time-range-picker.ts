@@ -160,7 +160,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
   readonly #endDateField: FacadeConnection<DateFieldConnection> | null;
   readonly #layer: DOMLayerBinding;
   readonly #position: PositionConnection;
-  readonly #visibility: HiddenBinding;
+  readonly #visibility: HiddenBinding | undefined;
   #syncingFields = false;
   #active = true;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
@@ -192,7 +192,8 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     this.options = options;
     this.runtime = runtime;
     this.controls = controls;
-    this.#visibility = createHiddenBinding(options.root);
+    const manageVisibility = (options as DateTimeRangePickerOptions & { readonly manageVisibility?: boolean }).manageVisibility;
+    this.#visibility = manageVisibility === false ? undefined : createHiddenBinding(options.root);
     this.#layer = createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.calendar.open, close: () => { this.handleEvent('close'); } });
     this.#position = createPickerPosition(options.root, options.trigger, options);
     const state = runtime.getSnapshot().state;
@@ -332,7 +333,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
 
   public refresh(): void {
     const state = this.getSnapshot().state;
-    this.#visibility.setHidden(!state.calendar.open);
+    this.#visibility?.setHidden(!state.calendar.open);
     this.options.trigger.setAttribute('aria-haspopup', 'dialog');
     this.options.trigger.setAttribute('aria-expanded', String(state.calendar.open));
     if (this.options.label !== undefined) this.options.grid.setAttribute('aria-label', this.options.label);
@@ -361,7 +362,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     this.#active = false;
     this.#layer.disconnect();
     this.#position.disconnect();
-    this.#visibility.disconnect();
+    this.#visibility?.disconnect();
     this.#startTimeField?.disconnect();
     this.#endTimeField?.disconnect();
     this.#startDateField?.disconnect();
