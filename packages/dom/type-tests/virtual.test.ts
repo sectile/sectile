@@ -42,7 +42,7 @@ connection.registerFrame(frameRegion)();
 connection.scrollTo(2, 'center') satisfies ReturnType<
   VirtualizerConnection<State, ID, Measurement, Mutation>['scrollTo']
 >;
-virtualSurfaceStyle(connection.getPlan())['position'] satisfies string;
+virtualSurfaceStyle(connection.getPlan()) satisfies Readonly<Record<string, string>>;
 
 const point: VirtualPoint = { x: 0, y: 0 };
 const stable: StableID = 2;
