@@ -11,19 +11,12 @@
       "removalReason": "Replaced by the complete checked @sectile/dom/temporal/* mapping in verification/entrypoint-migrations/WI-025.json."
     },
     {
-      "id": "WI-025:dom-virtual-side-effect-removal",
-      "change": "signature-changed",
-      "before": { "subpath": "./virtual" },
-      "symbols": ["module side-effect import @sectile/virtual"],
-      "replacement": { "package": "@sectile/dom", "subpath": "./virtual" }
-    },
-    {
       "id": "WI-003:dom-virtual-surface-frame",
       "change": "signature-changed",
       "before": { "subpath": "./virtual" },
-      "symbols": ["VirtualizerOptions.root", "VirtualizerOptions.scrollport", "VirtualizerOptions.surface", "VirtualizerOptions.viewportInsets", "VirtualizerConnection.registerFrame", "VirtualizerConnection.setViewportInsets", "virtualContentStyle", "virtualSurfaceStyle"],
+      "symbols": ["module side-effect import @sectile/virtual", "VirtualizerOptions.root", "VirtualizerOptions.scrollport", "VirtualizerOptions.surface", "VirtualizerOptions.viewportInsets", "VirtualizerConnection.registerFrame", "VirtualizerConnection.setViewportInsets", "virtualContentStyle", "virtualSurfaceStyle"],
       "replacement": { "package": "@sectile/dom", "subpath": "./virtual" },
-      "removalReason": "Virtualizer connections now name the physical scrollport and surface separately, project layout viewports through the Virtual-owned surface frame, and apply plan size through virtualSurfaceStyle."
+      "removalReason": "The DOM virtual entrypoint no longer relies on a module side-effect import, and Virtualizer connections now name the physical scrollport and surface separately, project layout viewports through the Virtual-owned surface frame, and apply plan size through virtualSurfaceStyle."
     },
     {
       "id": "WI-030:dom-grid-control-closure",

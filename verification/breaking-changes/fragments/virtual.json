@@ -10,6 +10,13 @@
       "replacement": { "package": "@sectile/virtual", "subpath": "." }
     },
     {
+      "id": "WI-002:extent-index-virtual-error-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./extent-index" },
+      "symbols": ["VirtualErrorCode declaration closure"],
+      "replacement": { "package": "@sectile/virtual", "subpath": "./extent-index" }
+    },
+    {
       "id": "WI-034:layout-core-geometry-closure",
       "change": "signature-changed",
       "before": { "subpath": "./layout" },
