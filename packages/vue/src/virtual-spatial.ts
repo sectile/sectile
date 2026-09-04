@@ -1,10 +1,9 @@
 import { defineComponent, h, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type SlotsType, type VNodeChild, type VNodeProps } from 'vue';
+import type { StableID } from '@sectile/core';
 import { createSpatialLayout, spatialLayoutStrategy, type SpatialItem, type SpatialLayoutState, type SpatialMeasurement, type SpatialMutation, type SpatialPlacement } from '@sectile/virtual/spatial-layout';
 import { type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
-import { VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './internal/virtual-core.js';
-import { prepareVirtualList, updatePreparedVirtualList, type PreparedVirtualList, type VirtualListItemAttributes, type VirtualListKeyResolver } from './internal/virtual-collection-model.js';
-import type { VirtualListSlotProps } from './internal/virtual-list.js';
-import { createHighLevelVirtualExpose, renderHighLevelItems, type VirtualCollectionBaseProps } from './internal/virtual-collection.js';
+import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './internal/virtual-core.js';
+import { createVirtualCollectionExpose, prepareVirtualCollection, renderHighLevelItems, updatePreparedVirtualCollection, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './internal/virtual-collection.js';
 
 export type VirtualSpatialRectResolver<Value> = {
   bivarianceHack(value: Value, index: number): VirtualRect;
@@ -13,36 +12,38 @@ export type VirtualSpatialZIndexResolver<Value> = number | {
   bivarianceHack(value: Value, index: number): number;
 }['bivarianceHack'];
 
-export interface VirtualSpatialProps<Value = unknown>
-  extends VirtualCollectionBaseProps<Value> {
+export interface VirtualSpatialProps<Value = unknown, ID extends StableID = StableID>
+  extends VirtualCollectionBaseProps<Value, ID> {
   readonly getRect: VirtualSpatialRectResolver<Value>;
   readonly getZIndex?: VirtualSpatialZIndexResolver<Value>;
   readonly measureSize?: boolean;
 }
 
-export type VirtualSpatialPublicProps<Value = unknown> =
-  VirtualSpatialProps<Value>
+export type VirtualSpatialPublicProps<Value = unknown, ID extends StableID = StableID> =
+  VirtualSpatialProps<Value, ID>
   & VNodeProps
   & AllowedComponentProps
   & ComponentCustomProps
   & {
-    readonly onStateChange?: (state: SpatialLayoutState<string>) => unknown;
-    readonly onPlanChange?: (plan: VirtualLayoutPlan<string>) => unknown;
+    readonly onStateChange?: (state: SpatialLayoutState<ID>) => unknown;
+    readonly onPlanChange?: (plan: VirtualLayoutPlan<ID>) => unknown;
     readonly onError?: VirtualizerErrorHandler;
   };
 
-export interface VirtualSpatialSlotProps<Value = unknown>
-  extends VirtualListSlotProps<Value> {
-  readonly placement: SpatialPlacement<string>;
+export interface VirtualSpatialSlotProps<Value = unknown, ID extends StableID = StableID>
+  extends VirtualCollectionItemSlotProps<Value, ID> {
+  readonly placement: SpatialPlacement<ID>;
   readonly zIndex: number;
 }
 
 export interface VirtualSpatialComponent {
-  new <Value = unknown>(props: VirtualSpatialPublicProps<Value>): {
-    $props: VirtualSpatialPublicProps<Value>;
+  new <Value = unknown, ID extends StableID = StableID>(props: VirtualSpatialPublicProps<Value, ID>): {
+    $props: VirtualSpatialPublicProps<Value, ID>;
     $slots: {
-      default?: (props: VirtualSpatialSlotProps<Value>) => VNodeChild;
+      header?: () => VNodeChild;
+      item?: (props: VirtualSpatialSlotProps<Value, ID>) => VNodeChild;
       empty?: () => VNodeChild;
+      footer?: () => VNodeChild;
     };
   };
 }
@@ -53,39 +54,42 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
   inheritAttrs: false,
   props: {
     items: { type: Array as unknown as PropType<readonly unknown[]>, required: true },
-    getKey: { type: Function as PropType<VirtualListKeyResolver<unknown>>, required: true },
+    getID: { type: Function as PropType<VirtualCollectionIDResolver<unknown, StableID>>, required: true },
     getRect: { type: Function as PropType<VirtualSpatialRectResolver<unknown>>, required: true },
     getZIndex: { type: [Number, Function] as PropType<VirtualSpatialZIndexResolver<unknown>>, default: 0 },
     measureSize: { type: Boolean, default: true },
     overscan: { type: [Number, Object] as PropType<number | Partial<VirtualInsets>>, default: 240 },
+    viewportInsets: { type: [Number, Object] as PropType<number | Partial<VirtualInsets>>, default: undefined },
     maxItems: { type: Number, default: 1_000_000 },
     initialViewport: { type: Object as PropType<VirtualRect>, default: undefined },
     as: { type: String, default: 'div' },
     contentAs: { type: String, default: 'div' },
     itemAs: { type: String, default: 'div' },
-    itemAttributes: { type: Function as PropType<VirtualListItemAttributes<unknown>>, default: undefined },
+    itemAttributes: { type: Function as PropType<VirtualCollectionItemAttributes<unknown>>, default: undefined },
   },
   emits: {
-    stateChange: (_state: SpatialLayoutState<string>): boolean => true,
-    planChange: (_plan: VirtualLayoutPlan<string>): boolean => true,
+    stateChange: (_state: SpatialLayoutState<StableID>): boolean => true,
+    planChange: (_plan: VirtualLayoutPlan<StableID>): boolean => true,
     error: (_error: Parameters<VirtualizerErrorHandler>[0]): boolean => true,
   },
   slots: Object as SlotsType<{
-    default: (props: VirtualSpatialSlotProps<unknown>) => VNodeChild;
+    header: () => VNodeChild;
+    item: (props: VirtualSpatialSlotProps<unknown>) => VNodeChild;
     empty: () => VNodeChild;
+    footer: () => VNodeChild;
   }>,
   setup(props, { attrs, emit, expose, slots }) {
     const initialViewport = props.initialViewport === undefined
       ? undefined
       : Object.freeze({ ...props.initialViewport });
-    const prepared = shallowRef(prepareVirtualList(props.items, props.getKey, props.maxItems));
+    const prepared = shallowRef(prepareVirtualCollection(props.items, props.getID, props.maxItems));
     const initialState = createVirtualSpatialState(prepared.value, props.items, props);
     const root = shallowRef<VirtualizerRootExpose>();
     const measure = props.measureSize
       ? (({ element, placement, state }) => {
           const bounds = element.getBoundingClientRect();
           if (bounds.width <= 0 || bounds.height <= 0) return null;
-          const current = (state as SpatialLayoutState<string>).items.at(placement.index);
+          const current = (state as SpatialLayoutState<StableID>).items.at(placement.index);
           if (current === undefined) return null;
           if (
             current.rect.width === bounds.width
@@ -100,16 +104,16 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
               height: bounds.height,
             }),
           });
-        }) satisfies VirtualMeasurementResolver<SpatialLayoutState<string>, string, SpatialMeasurement<string>>
+        }) satisfies VirtualMeasurementResolver<SpatialLayoutState<StableID>, StableID, SpatialMeasurement<StableID>>
       : undefined;
 
     watch(
-      () => [props.items, props.getKey, props.getRect, props.getZIndex] as const,
+      () => [props.items, props.getID, props.getRect, props.getZIndex] as const,
       (current, previous) => {
         const exposed = root.value;
         if (exposed === undefined) return;
-        const next = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
-        const state = exposed.state as SpatialLayoutState<string>;
+        const next = updatePreparedVirtualCollection(prepared.value, props.items, props.getID);
+        const state = exposed.state as SpatialLayoutState<StableID>;
         const resolverChanged = current[2] !== previous[2] || current[3] !== previous[3];
         const valuePatch = next.valueChange === null
           ? null
@@ -131,7 +135,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
                   state,
                   props.measureSize,
                 ),
-              }) satisfies SpatialMutation<string>)
+              }) satisfies SpatialMutation<StableID>)
             : null
           : exposed.mutate(Object.freeze({
               type: 'patch',
@@ -152,7 +156,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
                 state,
                 props.measureSize,
               ),
-            }) satisfies SpatialMutation<string>);
+            }) satisfies SpatialMutation<StableID>);
         if (result === null) {
           prepared.value = next;
           return;
@@ -161,46 +165,60 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
       },
       { flush: 'post' },
     );
-    expose(createHighLevelVirtualExpose(root, initialState));
+    expose(createVirtualCollectionExpose(
+      root,
+      initialState,
+      () => prepared.value.domain.size === 0 ? 'empty' : 'ready',
+    ));
 
     return (): VNodeChild => h(VirtualizerRoot, {
       ...attrs,
       ref: root,
       defaultState: initialState,
-      strategy: spatialLayoutStrategy as unknown as VirtualLayoutStrategy<object, string, unknown, unknown>,
+      strategy: spatialLayoutStrategy as unknown as VirtualLayoutStrategy<object, StableID, unknown, unknown>,
       overscan: props.overscan,
+      ...(props.viewportInsets === undefined ? {} : { viewportInsets: props.viewportInsets }),
       ...(initialViewport === undefined ? {} : { initialViewport }),
       ...(measure === undefined ? {} : {
-        measure: measure as unknown as VirtualMeasurementResolver<object, string, unknown>,
+        measure: measure as unknown as VirtualMeasurementResolver<object, StableID, unknown>,
       }),
       as: props.as,
       'data-virtual-layout': 'virtual-spatial',
-      onStateChange: (state: object) => emit('stateChange', state as SpatialLayoutState<string>),
-      onPlanChange: (plan: VirtualLayoutPlan<string>) => emit('planChange', plan),
+      'data-phase': prepared.value.domain.size === 0 ? 'empty' : 'ready',
+      onStateChange: (state: object) => emit('stateChange', state as SpatialLayoutState<StableID>),
+      onPlanChange: (plan: VirtualLayoutPlan<StableID>) => emit('planChange', plan),
       onError: (error: Parameters<VirtualizerErrorHandler>[0]) => emit('error', error),
     }, {
-      default: ({ placements }: VirtualizerRootSlotProps) => h(VirtualizerSurface, { as: props.contentAs }, {
-        default: () => renderHighLevelItems(
-          'virtual-spatial',
-          placements,
-          prepared.value,
-          props.items,
-          props.itemAs,
-          props.itemAttributes,
-          props.measureSize ? 'none' : 'both',
-          (value, key, index, placement) => {
-            const spatialPlacement = placement as SpatialPlacement<string>;
-            return slots['default']?.({
-              value,
-              key,
-              index,
-              placement: spatialPlacement,
-              zIndex: spatialPlacement.zIndex,
-            });
-          },
-          slots['empty'],
-        ),
-      }),
+      default: ({ placements }: VirtualizerRootSlotProps) => [
+        slots['header'] === undefined
+          ? null
+          : h(VirtualizerHeader, {}, { default: () => slots['header']?.() }),
+        h(VirtualizerSurface, { as: props.contentAs }, {
+          default: () => renderHighLevelItems(
+            'virtual-spatial',
+            placements,
+            prepared.value,
+            props.items,
+            props.itemAs,
+            props.itemAttributes,
+            props.measureSize ? 'none' : 'both',
+            (value, id, index, placement) => {
+              const spatialPlacement = placement as SpatialPlacement<StableID>;
+              return slots['item']?.({
+                value,
+                id,
+                index,
+                placement: spatialPlacement,
+                zIndex: spatialPlacement.zIndex,
+              });
+            },
+            slots['empty'],
+          ),
+        }),
+        slots['footer'] === undefined
+          ? null
+          : h(VirtualizerFooter, {}, { default: () => slots['footer']?.() }),
+      ],
     });
   },
 });
@@ -209,14 +227,14 @@ export const VirtualSpatial = VirtualSpatialRuntime as typeof VirtualSpatialRunt
 
 
 function createVirtualSpatialState(
-  prepared: PreparedVirtualList,
+  prepared: PreparedVirtualCollection<unknown, StableID>,
   items: readonly unknown[],
   props: Readonly<{
     getRect: VirtualSpatialRectResolver<unknown>;
     getZIndex: VirtualSpatialZIndexResolver<unknown>;
     maxItems: number;
   }>,
-): SpatialLayoutState<string> {
+): SpatialLayoutState<StableID> {
   return createSpatialLayout(createSpatialItems(prepared, items, props), {
     maxItems: props.maxItems,
     domain: prepared.domain,
@@ -225,18 +243,18 @@ function createVirtualSpatialState(
 
 
 function createSpatialItems(
-  prepared: PreparedVirtualList,
+  prepared: PreparedVirtualCollection<unknown, StableID>,
   items: readonly unknown[],
   props: Readonly<{
     getRect: VirtualSpatialRectResolver<unknown>;
     getZIndex: VirtualSpatialZIndexResolver<unknown>;
   }>,
-): readonly SpatialItem<string>[] {
+): readonly SpatialItem<StableID>[] {
   return createSpatialItemsRange(prepared, items, props, 0, prepared.domain.size);
 }
 
 function createSpatialItemsRange(
-  prepared: PreparedVirtualList,
+  prepared: PreparedVirtualCollection<unknown, StableID>,
   items: readonly unknown[],
   props: Readonly<{
     getRect: VirtualSpatialRectResolver<unknown>;
@@ -244,8 +262,8 @@ function createSpatialItemsRange(
   }>,
   start: number,
   count: number,
-): readonly SpatialItem<string>[] {
-  const spatialItems = Array<SpatialItem<string>>(count);
+): readonly SpatialItem<StableID>[] {
+  const spatialItems = Array<SpatialItem<StableID>>(count);
   for (let localIndex = 0; localIndex < count; localIndex += 1) {
     const index = start + localIndex;
     spatialItems[localIndex] = {
@@ -260,10 +278,10 @@ function createSpatialItemsRange(
 }
 
 function preserveSpatialMeasurements(
-  items: readonly SpatialItem<string>[],
-  state: SpatialLayoutState<string>,
+  items: readonly SpatialItem<StableID>[],
+  state: SpatialLayoutState<StableID>,
   preserve: boolean,
-): readonly SpatialItem<string>[] {
+): readonly SpatialItem<StableID>[] {
   if (!preserve) return items;
   return items.map((item) => {
     const previousIndex = state.domain.indexOf(item.id);

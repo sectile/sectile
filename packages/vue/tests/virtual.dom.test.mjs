@@ -44,6 +44,50 @@ const { VirtualMasonry } = await import('../.verification-dist/virtual-masonry.j
 const { VirtualSpatial } = await import('../.verification-dist/virtual-spatial.js');
 const { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, useVirtualizer } = await import('../.verification-dist/virtual-core.js');
 
+test('high-level projection mounts one shared projector and no per-placement VirtualizerItem instances', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const componentMounts = new Map();
+  const items = Object.freeze(Array.from(
+    { length: 64 },
+    (_unused, id) => Object.freeze({ id, label: `Item ${id}` }),
+  ));
+  const grid = ref();
+  const app = createApp({
+    render: () => h(VirtualGrid, {
+      ref: grid,
+      items,
+      getID: (value) => value.id,
+      itemSize: 20,
+      laneCount: 4,
+      initialViewport: { x: 0, y: 0, width: 200, height: 100 },
+      overscan: 0,
+    }, {
+      item: ({ id }) => String(id),
+    }),
+  });
+  app.mixin({
+    beforeCreate() {
+      const name = this.$options.name;
+      if (typeof name === 'string' && name.startsWith('SectileVirtual')) {
+        componentMounts.set(name, (componentMounts.get(name) ?? 0) + 1);
+      }
+    },
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    assert.equal(componentMounts.get('SectileVirtualizerItem') ?? 0, 0);
+    assert.equal(componentMounts.get('SectileVirtualCollectionProjection') ?? 0, 1);
+    assert.ok(host.querySelectorAll('[data-virtual-layout="virtual-grid"][data-part="item"]').length > 1);
+    assert.equal(grid.value.plan?.placements[0]?.id, 0);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
 test('VirtualList renders intrinsic rows without per-item Sectile wrappers and reconciles keyed data', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
   const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
@@ -440,30 +484,42 @@ test('VirtualGrid and VirtualMasonry bootstrap unknown sizes from rendered items
       h(VirtualGrid, {
         ref: grid,
         items,
-        getKey: (value) => value.id,
+        getID: (value) => value.id,
         laneCount: 2,
         minLaneSize: 50,
         initialViewport: { x: 0, y: 0, width: 120, height: 100 },
         overscan: 0,
         itemAttributes: (value) => ({ 'data-bootstrap-height': String(value.height) }),
-      }, { default: ({ key }) => key }),
+      }, { item: ({ id }) => id }),
       h(VirtualMasonry, {
         ref: masonry,
         items,
-        getKey: (value) => value.id,
+        getID: (value) => value.id,
         laneCount: 2,
         minLaneSize: 50,
         initialViewport: { x: 0, y: 0, width: 120, height: 100 },
         overscan: 0,
         itemAttributes: (value) => ({ 'data-bootstrap-height': String(value.height) }),
-      }, { default: ({ key }) => key }),
+      }, { item: ({ id }) => id }),
     ]),
   });
 
   try {
     app.mount(host);
+    const gridRoot = host.querySelector('[data-virtual-layout="virtual-grid"][data-part="root"]');
+    const gridSurface = host.querySelector('[data-virtual-layout="virtual-grid"] [data-part="surface"]');
+    const masonryRoot = host.querySelector('[data-virtual-layout="virtual-masonry"][data-part="root"]');
+    const masonrySurface = host.querySelector('[data-virtual-layout="virtual-masonry"] [data-part="surface"]');
+    assert.equal(gridRoot?.getAttribute('data-phase'), 'bootstrap');
+    assert.equal(masonryRoot?.getAttribute('data-phase'), 'bootstrap');
     await settle();
     await settle();
+    assert.equal(host.querySelector('[data-virtual-layout="virtual-grid"][data-part="root"]'), gridRoot);
+    assert.equal(host.querySelector('[data-virtual-layout="virtual-grid"] [data-part="surface"]'), gridSurface);
+    assert.equal(host.querySelector('[data-virtual-layout="virtual-masonry"][data-part="root"]'), masonryRoot);
+    assert.equal(host.querySelector('[data-virtual-layout="virtual-masonry"] [data-part="surface"]'), masonrySurface);
+    assert.equal(gridRoot?.getAttribute('data-phase'), 'ready');
+    assert.equal(masonryRoot?.getAttribute('data-phase'), 'ready');
     assert.deepEqual(grid.value.state.rows.extentAt(4), { kind: 'unknown', fallback: 50 });
     assert.deepEqual(masonry.value.state.extents.extentAt(4), { kind: 'unknown', fallback: 40 });
   } finally {

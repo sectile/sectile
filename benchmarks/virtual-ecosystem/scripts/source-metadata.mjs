@@ -20,7 +20,6 @@ const sourcePaths = Object.freeze([
   'packages/vue/src/virtual-core.ts',
   'packages/vue/src/internal/virtual-core.ts',
   'packages/vue/src/internal/virtual-collection.ts',
-  'packages/vue/src/internal/virtual-collection-model.ts',
   'packages/vue/src/internal/virtual-list.ts',
   'pnpm-lock.yaml',
 ]);

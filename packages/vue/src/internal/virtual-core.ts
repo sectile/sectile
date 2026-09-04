@@ -107,21 +107,21 @@ export type VirtualizerItemSize = 'none' | 'width' | 'height' | 'both';
 
 export interface VirtualizerRootProps {
   readonly defaultState: object;
-  readonly strategy: VirtualLayoutStrategy<object, string, unknown, unknown>;
+  readonly strategy: VirtualLayoutStrategy<object, StableID, unknown, unknown>;
   readonly overscan?: number | Partial<VirtualInsets>;
   readonly viewportInsets?: number | Partial<VirtualInsets>;
   readonly initialViewport?: VirtualRect;
-  readonly measure?: VirtualMeasurementResolver<object, string, unknown>;
+  readonly measure?: VirtualMeasurementResolver<object, StableID, unknown>;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
 
 export interface VirtualizerRootSlotProps {
   readonly state: object;
-  readonly plan: VirtualLayoutPlan<string> | null;
-  readonly placements: readonly VirtualPlacement<string>[];
+  readonly plan: VirtualLayoutPlan<StableID> | null;
+  readonly placements: readonly VirtualPlacement<StableID>[];
   scrollTo(
-    id: string,
+    id: StableID,
     alignment?: VirtualScrollAlignment,
   ): VirtualizerOperationResult<VirtualPoint>;
   measure(
@@ -131,7 +131,7 @@ export interface VirtualizerRootSlotProps {
     mutation: unknown,
   ): VirtualizerOperationResult<VirtualLayoutMutation<object>>;
   refresh(): void;
-  flush(): VirtualizerOperationResult<VirtualLayoutPlan<string>>;
+  flush(): VirtualizerOperationResult<VirtualLayoutPlan<StableID>>;
 }
 
 export interface VirtualizerFrameProps {
@@ -145,7 +145,7 @@ export interface VirtualizerSurfaceProps {
 }
 
 export interface VirtualizerItemProps {
-  readonly placement: VirtualPlacement<string>;
+  readonly placement: VirtualPlacement<StableID>;
   readonly size?: VirtualizerItemSize;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
@@ -162,15 +162,17 @@ interface DesiredItem<ID extends StableID> {
 }
 
 interface VirtualizerContext {
-  readonly plan: ComputedRef<VirtualLayoutPlan<string> | null>;
+  readonly plan: ComputedRef<VirtualLayoutPlan<StableID> | null>;
   readonly surface: ShallowRef<HTMLElement | null | undefined>;
   registerFrame(element: HTMLElement): () => void;
-  registerItem(element: HTMLElement, id: string): () => void;
+  registerItem(element: HTMLElement, id: StableID): () => void;
 }
 
-interface VirtualizerSurfaceContext {
-  registerItem(element: HTMLElement, id: string): () => void;
+export interface VirtualizerSurfaceRegistration {
+  registerItem(element: HTMLElement, id: StableID): () => void;
 }
+
+type VirtualizerSurfaceContext = VirtualizerSurfaceRegistration;
 
 const virtualizerContextKey = Symbol('SectileVirtualizerRoot');
 const virtualizerSurfaceContextKey = Symbol('SectileVirtualizerSurface');
@@ -394,7 +396,7 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
     defaultState: { type: Object as PropType<object>, required: true },
     strategy: {
       type: Object as PropType<
-        VirtualLayoutStrategy<object, string, unknown, unknown>
+        VirtualLayoutStrategy<object, StableID, unknown, unknown>
       >,
       required: true,
     },
@@ -412,7 +414,7 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
     },
     measure: {
       type: Function as PropType<
-        VirtualMeasurementResolver<object, string, unknown>
+        VirtualMeasurementResolver<object, StableID, unknown>
       >,
       default: undefined,
     },
@@ -424,7 +426,7 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
   },
   emits: {
     stateChange: (_state: object): boolean => true,
-    planChange: (_plan: VirtualLayoutPlan<string>): boolean => true,
+    planChange: (_plan: VirtualLayoutPlan<StableID>): boolean => true,
     error: (_error: Parameters<VirtualizerErrorHandler>[0]): boolean => true,
   },
   slots: Object as SlotsType<{
@@ -451,6 +453,13 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
         emit('error', error);
       },
     });
+    watch(
+      () => props.defaultState,
+      (value) => {
+        if (!Object.is(state.value, value)) state.value = value;
+      },
+      { flush: 'sync' },
+    );
     let constructionWarningShown = false;
     watch(
       () => [props.strategy, props.measure, props.initialViewport] as const,
@@ -575,7 +584,7 @@ export const VirtualizerSurface = /* @__PURE__ */ defineComponent({
     asChild: { type: Boolean, default: false },
   },
   slots: Object as SlotsType<{
-    default: (plan: VirtualLayoutPlan<string> | null) => VNodeChild;
+    default: (plan: VirtualLayoutPlan<StableID> | null) => VNodeChild;
   }>,
   setup(props, { attrs, slots }) {
     const root = useVirtualizerRoot('VirtualizerSurface');
@@ -624,7 +633,7 @@ export const VirtualizerItem = /* @__PURE__ */ defineComponent({
   inheritAttrs: false,
   props: {
     placement: {
-      type: Object as PropType<VirtualPlacement<string>>,
+      type: Object as PropType<VirtualPlacement<StableID>>,
       required: true,
     },
     size: { type: String as PropType<VirtualizerItemSize>, default: 'none' },
@@ -635,7 +644,7 @@ export const VirtualizerItem = /* @__PURE__ */ defineComponent({
     asChild: { type: Boolean, default: false },
   },
   slots: Object as SlotsType<{
-    default: (placement: VirtualPlacement<string>) => VNodeChild;
+    default: (placement: VirtualPlacement<StableID>) => VNodeChild;
   }>,
   setup(props, { attrs, slots }) {
     const surface = useVirtualizerSurface('VirtualizerItem');
@@ -738,7 +747,13 @@ function useVirtualizerSurface(part: string): VirtualizerSurfaceContext {
   return surface;
 }
 
-function virtualizerNotConnected<T>(): VirtualizerOperationResult<T> {
+export function useVirtualizerSurfaceRegistration(
+  part: string,
+): VirtualizerSurfaceRegistration {
+  return useVirtualizerSurface(part);
+}
+
+export function virtualizerNotConnected<T>(): VirtualizerOperationResult<T> {
   return {
     ok: false,
     error: {

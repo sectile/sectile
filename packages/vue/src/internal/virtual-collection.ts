@@ -1,19 +1,92 @@
-import { h, shallowRef, type ShallowRef, type VNodeArrayChildren, type VNodeChild } from 'vue';
-import { resolveVirtualLaneGeometry } from '@sectile/virtual/collection';
-import type { VirtualInsets, VirtualLayoutPlan, VirtualPlacement, VirtualPoint, VirtualRect, VirtualScrollAlignment } from '@sectile/dom/virtual';
-import { VirtualizerItem, type VirtualizerItemSize, type VirtualizerOperationResult, type VirtualizerRootExpose } from './virtual-core.js';
-import type { PreparedVirtualList, VirtualListItemAttributes, VirtualListKeyResolver } from './virtual-collection-model.js';
+import {
+  defineComponent,
+  h,
+  onBeforeUnmount,
+  shallowRef,
+  type PropType,
+  type ShallowRef,
+  type SlotsType,
+  type VNodeArrayChildren,
+  type VNodeChild,
+} from 'vue';
+import type { StableID } from '@sectile/core';
+import type { Sequence } from '@sectile/core/sequence';
+import {
+  constrainVirtualCollectionDomain,
+  createEstimatedVirtualExtent,
+  createExactVirtualExtent,
+  createVirtualCollection,
+  reconcileVirtualCollectionExtents,
+  replaceVirtualCollection,
+  resolveVirtualLaneGeometry,
+  virtualSizePolicyRequiresMeasurement,
+  type VirtualCollectionIDResolver as OwnerVirtualCollectionIDResolver,
+  type VirtualCollectionProjection,
+  type VirtualExtentEstimate,
+  type VirtualLanePolicy,
+  type VirtualSizePolicy,
+} from '@sectile/virtual/collection';
+import type { Extent } from '@sectile/virtual/extent-index';
+import type { LinearLayoutState, LinearPatch } from '@sectile/virtual/linear-layout';
+import {
+  virtualItemStyle,
+  type VirtualInsets,
+  type VirtualItemStyleOptions,
+  type VirtualLayoutPlan,
+  type VirtualPlacement,
+  type VirtualPoint,
+  type VirtualRect,
+  type VirtualScrollAlignment,
+} from '@sectile/dom/virtual';
+import {
+  useVirtualizerSurfaceRegistration,
+  virtualizerNotConnected,
+  type VirtualizerItemSize,
+  type VirtualizerOperationResult,
+  type VirtualizerRootExpose,
+} from './virtual-core.js';
 
-export interface VirtualCollectionBaseProps<Value> {
+export type VirtualCollectionIDResolver<
+  Value,
+  ID extends StableID = StableID,
+> = OwnerVirtualCollectionIDResolver<Value, ID>;
+
+export type VirtualCollectionEstimate<Value> = VirtualExtentEstimate<Value>;
+
+export type VirtualCollectionItemAttributes<Value> = {
+  bivarianceHack(
+    value: Value,
+    index: number,
+  ): Readonly<Record<string, unknown>>;
+}['bivarianceHack'];
+
+export type PreparedVirtualCollection<
+  Value = unknown,
+  ID extends StableID = StableID,
+> = VirtualCollectionProjection<Value, ID>;
+
+export interface VirtualCollectionBaseProps<
+  Value,
+  ID extends StableID = StableID,
+> {
   readonly items: readonly Value[];
-  readonly getKey: VirtualListKeyResolver<Value>;
+  readonly getID: VirtualCollectionIDResolver<Value, ID>;
   readonly overscan?: number | Partial<VirtualInsets>;
+  readonly viewportInsets?: number | Partial<VirtualInsets>;
   readonly maxItems?: number;
   readonly initialViewport?: VirtualRect;
   readonly as?: string;
   readonly contentAs?: string;
   readonly itemAs?: string;
-  readonly itemAttributes?: VirtualListItemAttributes<Value>;
+  readonly itemAttributes?: VirtualCollectionItemAttributes<Value>;
+}
+
+export interface VirtualCollectionSizePolicyProps<Value> {
+  readonly sizePolicy?: VirtualSizePolicy<Value>;
+}
+
+export interface VirtualCollectionLanePolicyProps {
+  readonly lanePolicy?: VirtualLanePolicy;
 }
 
 export interface ResponsiveLaneProps {
@@ -23,18 +96,139 @@ export interface ResponsiveLaneProps {
   readonly laneGap?: number;
 }
 
-export interface VirtualCollectionExpose<State> {
-  readonly root: ShallowRef<HTMLElement | null | undefined>;
+export type VirtualCollectionPhase = 'bootstrap' | 'ready' | 'empty';
+
+export interface VirtualCollectionItemSlotProps<
+  Value = unknown,
+  ID extends StableID = StableID,
+> {
+  readonly value: Value;
+  readonly id: ID;
+  readonly index: number;
+  readonly placement: VirtualPlacement<ID>;
+}
+
+export interface VirtualCollectionSlots<
+  Value = unknown,
+  ID extends StableID = StableID,
+> {
+  readonly header?: () => VNodeChild;
+  readonly item?: (props: VirtualCollectionItemSlotProps<Value, ID>) => VNodeChild;
+  readonly empty?: () => VNodeChild;
+  readonly footer?: () => VNodeChild;
+}
+
+export interface VirtualCollectionExpose<
+  State,
+  ID extends StableID = StableID,
+> {
+  readonly scrollport: ShallowRef<HTMLElement | null | undefined>;
+  readonly surface: ShallowRef<HTMLElement | null | undefined>;
   readonly state: State;
-  readonly plan: VirtualLayoutPlan<string> | null;
-  scrollTo(id: string, alignment?: VirtualScrollAlignment): VirtualizerOperationResult<VirtualPoint> | undefined;
+  readonly plan: VirtualLayoutPlan<ID> | null;
+  readonly phase: VirtualCollectionPhase;
+  scrollToID(
+    id: ID,
+    alignment?: VirtualScrollAlignment,
+  ): VirtualizerOperationResult<VirtualPoint>;
   refresh(): void;
-  flush(): VirtualizerOperationResult<VirtualLayoutPlan<string>> | undefined;
+  flush(): VirtualizerOperationResult<VirtualLayoutPlan<ID>>;
 }
 
 export interface ResponsiveLaneGeometry {
   readonly count: number;
   readonly extent: number;
+}
+
+export function prepareVirtualCollection<
+  Value,
+  ID extends StableID,
+>(
+  items: readonly Value[],
+  getID: VirtualCollectionIDResolver<Value, ID>,
+  maxItems = 1_000_000,
+): PreparedVirtualCollection<Value, ID> {
+  return createVirtualCollection(items, getID, {
+    maxItems,
+    maxIDCodeUnits: 1_024,
+  });
+}
+
+export function updatePreparedVirtualCollection<
+  Value,
+  ID extends StableID,
+>(
+  previous: PreparedVirtualCollection<Value, ID>,
+  items: readonly Value[],
+  getID: VirtualCollectionIDResolver<Value, ID>,
+): PreparedVirtualCollection<Value, ID> {
+  return replaceVirtualCollection(previous, items, getID);
+}
+
+export function constrainPreparedVirtualCollection<
+  Value,
+  ID extends StableID,
+>(
+  prepared: PreparedVirtualCollection<Value, ID>,
+  maxItems: number,
+): Sequence<ID> {
+  return constrainVirtualCollectionDomain(prepared, maxItems);
+}
+
+export function reconcilePreparedVirtualCollection<ID extends StableID>(
+  state: Pick<LinearLayoutState<ID>, 'domain' | 'extents'>,
+  next: PreparedVirtualCollection<unknown, ID>,
+  props: Readonly<{
+    itemSize: number | undefined;
+    estimateSize: VirtualCollectionEstimate<unknown> | undefined;
+  }>,
+  automaticEstimate?: number,
+): LinearPatch<ID> | null {
+  return reconcileVirtualCollectionExtents(
+    state,
+    next,
+    legacyVirtualSizePolicy(props.itemSize, props.estimateSize),
+    automaticEstimate,
+  );
+}
+
+export function assertLegacyVirtualSizeMode(
+  itemSize: number | undefined,
+  estimateSize: VirtualCollectionEstimate<unknown> | undefined,
+): void {
+  if (itemSize !== undefined && estimateSize !== undefined) {
+    throw new TypeError('Virtual itemSize and estimateSize are mutually exclusive.');
+  }
+}
+
+export function requireVirtualAutomaticEstimate(
+  estimate: VirtualCollectionEstimate<unknown> | undefined,
+): VirtualCollectionEstimate<unknown> {
+  if (estimate === undefined) {
+    throw new TypeError('Automatic virtual size must be measured before layout initialization.');
+  }
+  return estimate;
+}
+
+export function requiresVirtualDOMBootstrap(
+  itemSize: number | undefined,
+  estimateSize: VirtualCollectionEstimate<unknown> | undefined,
+): boolean {
+  return virtualSizePolicyRequiresMeasurement(
+    legacyVirtualSizePolicy(itemSize, estimateSize),
+  );
+}
+
+export function exactVirtualExtent(value: number): Extent {
+  return createExactVirtualExtent(value);
+}
+
+export function estimatedVirtualExtent(
+  estimate: VirtualCollectionEstimate<unknown>,
+  value: unknown,
+  index: number,
+): Extent {
+  return createEstimatedVirtualExtent(estimate, value, index);
 }
 
 export function resolveResponsiveLanes(
@@ -68,97 +262,292 @@ export function resolveResponsiveLanes(
   });
 }
 
+const VirtualCollectionProjectionRuntime = /* @__PURE__ */ defineComponent({
+  name: 'SectileVirtualCollectionProjection',
+  inheritAttrs: false,
+  props: {
+    scope: { type: String, required: true },
+    placements: {
+      type: Array as unknown as PropType<readonly VirtualPlacement<StableID>[]>,
+      required: true,
+    },
+    prepared: {
+      type: Object as PropType<PreparedVirtualCollection<unknown, StableID>>,
+      required: true,
+    },
+    items: {
+      type: Array as unknown as PropType<readonly unknown[]>,
+      required: true,
+    },
+    itemAs: { type: String, required: true },
+    itemAttributes: {
+      type: Function as PropType<VirtualCollectionItemAttributes<unknown>>,
+      default: undefined,
+    },
+    size: { type: String as PropType<VirtualizerItemSize>, required: true },
+  },
+  slots: Object as SlotsType<{
+    default: (props: VirtualCollectionItemSlotProps<unknown, StableID>) => VNodeChild;
+  }>,
+  setup(props, { slots }) {
+    const surface = useVirtualizerSurfaceRegistration('VirtualCollectionProjection');
+    const registrations = new Map<StableID, () => void>();
+    const elements = new Map<StableID, HTMLElement>();
+    const refs = new Map<StableID, (value: unknown) => void>();
+
+    const itemRef = (id: StableID): ((value: unknown) => void) => {
+      const existing = refs.get(id);
+      if (existing !== undefined) return existing;
+      const callback = (value: unknown): void => {
+        const element = value instanceof HTMLElement ? value : null;
+        if (element !== null && elements.get(id) === element) return;
+        registrations.get(id)?.();
+        registrations.delete(id);
+        elements.delete(id);
+        if (element === null) {
+          if (refs.get(id) === callback) refs.delete(id);
+          return;
+        }
+        elements.set(id, element);
+        registrations.set(id, surface.registerItem(element, id));
+      };
+      refs.set(id, callback);
+      return callback;
+    };
+
+    onBeforeUnmount(() => {
+      for (const unregister of registrations.values()) unregister();
+      registrations.clear();
+      elements.clear();
+      refs.clear();
+    });
+
+    return (): VNodeArrayChildren => {
+      const sizing = itemSizing(props.size);
+      const children: VNodeArrayChildren = [];
+      for (const placement of props.placements) {
+        const index = placement.index;
+        if (
+          index >= props.items.length
+          || props.prepared.domain.at(index) !== placement.id
+        ) continue;
+        const value = props.items[index];
+        const attributes = props.itemAttributes?.(value, index) ?? {};
+        const rendered = slots['default']?.({
+          value,
+          id: placement.id,
+          index,
+          placement,
+        });
+        children.push(h(props.itemAs, {
+          ...attributes,
+          key: placement.id,
+          ref: itemRef(placement.id),
+          style: [attributes['style'], virtualItemStyle(placement, sizing)],
+          'data-scope': props.scope,
+          'data-virtual-layout': props.scope,
+          'data-part': 'item',
+          'data-index': placement.index,
+          'data-visible': placement.visible ? '' : undefined,
+        }, normalizeChildren(rendered)));
+      }
+      return children;
+    };
+  },
+});
+
+const VirtualCollectionBootstrapProjectionRuntime = /* @__PURE__ */ defineComponent({
+  name: 'SectileVirtualCollectionBootstrapProjection',
+  inheritAttrs: false,
+  props: {
+    scope: { type: String, required: true },
+    prepared: {
+      type: Object as PropType<PreparedVirtualCollection<unknown, StableID>>,
+      required: true,
+    },
+    items: {
+      type: Array as unknown as PropType<readonly unknown[]>,
+      required: true,
+    },
+    count: { type: Number, required: true },
+    width: { type: Number, required: true },
+    itemAs: { type: String, required: true },
+    itemAttributes: {
+      type: Function as PropType<VirtualCollectionItemAttributes<unknown>>,
+      default: undefined,
+    },
+    itemRef: {
+      type: Function as PropType<(index: number, value: unknown) => void>,
+      required: true,
+    },
+  },
+  slots: Object as SlotsType<{
+    default: (props: VirtualCollectionItemSlotProps<unknown, StableID>) => VNodeChild;
+  }>,
+  setup(props, { slots }) {
+    const refs = new Map<number, (value: unknown) => void>();
+    const bootstrapRef = (index: number): ((value: unknown) => void) => {
+      const existing = refs.get(index);
+      if (existing !== undefined) return existing;
+      const callback = (value: unknown): void => {
+        props.itemRef(index, value);
+        if (value === null && refs.get(index) === callback) refs.delete(index);
+      };
+      refs.set(index, callback);
+      return callback;
+    };
+    onBeforeUnmount(() => refs.clear());
+
+    return (): VNodeArrayChildren => {
+      const children: VNodeArrayChildren = [];
+      const count = Math.min(props.count, props.prepared.domain.size);
+      for (let index = 0; index < count; index += 1) {
+        const id = props.prepared.domain.at(index)!;
+        const value = props.items[index];
+        const attributes = props.itemAttributes?.(value, index) ?? {};
+        const placement = Object.freeze({
+          id,
+          index,
+          rect: Object.freeze({
+            x: index * props.width,
+            y: 0,
+            width: props.width,
+            height: 0,
+          }),
+          visible: true,
+        });
+        children.push(h(props.itemAs, {
+          ...attributes,
+          key: id,
+          ref: bootstrapRef(index),
+          style: [attributes['style'], { width: `${props.width}px` }],
+          'data-scope': props.scope,
+          'data-virtual-layout': props.scope,
+          'data-part': 'item',
+          'data-index': index,
+          'data-bootstrap': '',
+        }, normalizeChildren(slots['default']?.({
+          value,
+          id,
+          index,
+          placement,
+        }))));
+      }
+      return children;
+    };
+  },
+});
 
 export function renderHighLevelItems(
   scope: string,
-  placements: readonly VirtualPlacement<string>[],
-  prepared: PreparedVirtualList,
+  placements: readonly VirtualPlacement<StableID>[],
+  prepared: PreparedVirtualCollection<unknown, StableID>,
   items: readonly unknown[],
   itemAs: string,
-  itemAttributes: VirtualListItemAttributes<unknown> | undefined,
+  itemAttributes: VirtualCollectionItemAttributes<unknown> | undefined,
   size: VirtualizerItemSize,
-  render: (value: unknown, key: string, index: number, placement: VirtualPlacement<string>) => VNodeChild,
+  render: (
+    value: unknown,
+    id: StableID,
+    index: number,
+    placement: VirtualPlacement<StableID>,
+  ) => VNodeChild,
   empty: (() => VNodeChild) | undefined,
 ): VNodeArrayChildren {
   if (prepared.domain.size === 0) {
     const child = empty?.();
     return child === undefined || child === null ? [] : [child];
   }
-  return placements.flatMap((placement) => {
-    const index = placement.index;
-    if (index >= items.length || prepared.domain.at(index) !== placement.id) return [];
-    const value = items[index];
-    const attributes = itemAttributes?.(value, index) ?? {};
-    return [h(VirtualizerItem, {
-      ...attributes,
-      key: placement.id,
-      placement,
-      size,
-      as: itemAs,
-      style: attributes['style'],
-      'data-scope': scope,
-      'data-virtual-layout': scope,
-      'data-part': 'item',
-    }, { default: () => render(value, placement.id, index, placement) })];
-  }) as VNodeArrayChildren;
+  return [h(VirtualCollectionProjectionRuntime, {
+    scope,
+    placements,
+    prepared,
+    items,
+    itemAs,
+    ...(itemAttributes === undefined ? {} : { itemAttributes }),
+    size,
+  }, {
+    default: ({ value, id, index, placement }: VirtualCollectionItemSlotProps<unknown, StableID>) =>
+      render(value, id, index, placement),
+  })];
 }
 
 export function renderCollectionBootstrapItems(
   scope: string,
-  prepared: PreparedVirtualList,
+  prepared: PreparedVirtualCollection<unknown, StableID>,
   items: readonly unknown[],
   count: number,
   width: number,
   itemAs: string,
-  itemAttributes: VirtualListItemAttributes<unknown> | undefined,
-  render: (value: unknown, key: string, index: number, placement: VirtualPlacement<string>) => VNodeChild,
+  itemAttributes: VirtualCollectionItemAttributes<unknown> | undefined,
+  render: (
+    value: unknown,
+    id: StableID,
+    index: number,
+    placement: VirtualPlacement<StableID>,
+  ) => VNodeChild,
   itemRef: (index: number, value: unknown) => void,
 ): VNodeArrayChildren {
-  return Array.from({ length: Math.min(count, prepared.domain.size) }, (_unused, index) => {
-    const id = prepared.domain.at(index)!;
-    const value = items[index];
-    const attributes = itemAttributes?.(value, index) ?? {};
-    const placement = Object.freeze({
-      id,
-      index,
-      rect: Object.freeze({ x: index * width, y: 0, width, height: 0 }),
-      visible: true,
-    });
-    const rendered = render(value, id, index, placement);
-    const children = rendered === undefined || rendered === null
-      ? []
-      : Array.isArray(rendered)
-        ? rendered
-        : [rendered];
-    return h(itemAs, {
-      ...attributes,
-      key: id,
-      ref: (element: unknown) => itemRef(index, element),
-      style: [attributes['style'], { width: `${width}px` }],
-      'data-scope': scope,
-      'data-virtual-layout': scope,
-      'data-part': 'item',
-      'data-index': index,
-      'data-bootstrap': '',
-    }, children as VNodeArrayChildren);
-  });
+  return [h(VirtualCollectionBootstrapProjectionRuntime, {
+    scope,
+    prepared,
+    items,
+    count,
+    width,
+    itemAs,
+    ...(itemAttributes === undefined ? {} : { itemAttributes }),
+    itemRef,
+  }, {
+    default: ({ value, id, index, placement }: VirtualCollectionItemSlotProps<unknown, StableID>) =>
+      render(value, id, index, placement),
+  })];
 }
 
-export function createHighLevelVirtualExpose<State>(
+export function createVirtualCollectionExpose<State>(
   root: ShallowRef<VirtualizerRootExpose | undefined>,
   initialState: State,
-): VirtualCollectionExpose<State> {
-  const emptyRoot = shallowRef<HTMLElement | null>(null);
+  phase: () => VirtualCollectionPhase,
+): VirtualCollectionExpose<State, StableID> {
+  const emptyScrollport = shallowRef<HTMLElement | null>(null);
+  const emptySurface = shallowRef<HTMLElement | null>(null);
   return Object.freeze({
-    get root() { return root.value?.scrollport ?? emptyRoot; },
+    get scrollport() { return root.value?.scrollport ?? emptyScrollport; },
+    get surface() { return root.value?.surface ?? emptySurface; },
     get state() { return (root.value?.state as State | undefined) ?? initialState; },
     get plan() { return root.value?.plan ?? null; },
-    scrollTo: (id: string, alignment?: VirtualScrollAlignment) => root.value?.scrollTo(id, alignment),
+    get phase() { return phase(); },
+    scrollToID: (id: StableID, alignment?: VirtualScrollAlignment) =>
+      root.value?.scrollTo(id, alignment) ?? virtualizerNotConnected(),
     refresh: () => root.value?.refresh(),
-    flush: () => root.value?.flush(),
+    flush: () => root.value?.flush() ?? virtualizerNotConnected(),
   });
 }
 
 export function nearlyEqual(left: number, right: number): boolean {
   return Math.abs(left - right) < 0.01;
+}
+
+function legacyVirtualSizePolicy(
+  itemSize: number | undefined,
+  estimateSize: VirtualCollectionEstimate<unknown> | undefined,
+): VirtualSizePolicy<unknown> {
+  if (itemSize !== undefined) {
+    return Object.freeze({ kind: 'fixed', extent: itemSize });
+  }
+  if (estimateSize !== undefined) {
+    return Object.freeze({ kind: 'estimated', estimate: estimateSize });
+  }
+  return Object.freeze({ kind: 'measured' });
+}
+
+function itemSizing(size: VirtualizerItemSize): VirtualItemStyleOptions {
+  return Object.freeze({
+    width: size === 'width' || size === 'both',
+    height: size === 'height' || size === 'both',
+  });
+}
+
+function normalizeChildren(rendered: VNodeChild | undefined): VNodeArrayChildren {
+  if (rendered === undefined || rendered === null) return [];
+  return Array.isArray(rendered) ? rendered : [rendered];
 }

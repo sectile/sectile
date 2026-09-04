@@ -1,4 +1,5 @@
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type ShallowRef, type SlotsType, type VNodeArrayChildren, type VNodeChild, type VNodeProps } from 'vue';
+import type { StableID } from '@sectile/core';
 import { createSequence, type BoundaryPolicy, type Direction, type MoveResult, type ScanOptions, type Sequence } from '@sectile/core/sequence';
 import { createExtentIndex, createUniformExtentIndex, type Extent, type ExtentIndex } from '@sectile/virtual/extent-index';
 import { linearLayoutStrategyFor, tryApplyLinearPatch, createLinearLayout, type LinearAxis, type LinearLayoutState, type LinearMeasurement, type LinearPatch } from '@sectile/virtual/linear-layout';
@@ -6,35 +7,35 @@ import { createAxisMeasurementResolver, virtualItemStyle, type VirtualInsets, ty
 import { Primitive } from '../primitive.js';
 import { useVirtualizer, type VirtualizerOperationResult } from './virtual-core.js';
 import {
-  assertVirtualListSizeMode,
-  createPreparedVirtualListSequence,
-  estimatedExtent,
-  exactExtent,
-  prepareVirtualList,
-  reconcileVirtualList,
-  requireAutomaticEstimate,
-  requiresDOMBootstrap,
-  updatePreparedVirtualList,
-  type PreparedVirtualList,
-  type VirtualListEstimate,
-  type VirtualListItemAttributes,
-  type VirtualListKeyResolver,
-} from './virtual-collection-model.js';
+  assertLegacyVirtualSizeMode,
+  constrainPreparedVirtualCollection,
+  estimatedVirtualExtent,
+  exactVirtualExtent,
+  prepareVirtualCollection,
+  reconcilePreparedVirtualCollection,
+  requireVirtualAutomaticEstimate,
+  requiresVirtualDOMBootstrap,
+  updatePreparedVirtualCollection,
+  type PreparedVirtualCollection,
+  type VirtualCollectionEstimate,
+  type VirtualCollectionIDResolver,
+  type VirtualCollectionItemAttributes,
+  type VirtualCollectionPhase,
+} from './virtual-collection.js';
 
-export type {
-  VirtualListEstimate,
-  VirtualListItemAttributes,
-  VirtualListKeyResolver,
-} from './virtual-collection-model.js';
+export type VirtualListEstimate<Value> = VirtualCollectionEstimate<Value>;
+export type VirtualListItemAttributes<Value> = VirtualCollectionItemAttributes<Value>;
+export type VirtualListIDResolver<Value, ID extends StableID = StableID> = VirtualCollectionIDResolver<Value, ID>;
 
-export interface VirtualListProps<Value = unknown> {
+export interface VirtualListProps<Value = unknown, ID extends StableID = StableID> {
   readonly items: readonly Value[];
-  readonly getKey: VirtualListKeyResolver<Value>;
+  readonly getID: VirtualListIDResolver<Value, ID>;
   readonly itemSize?: number;
   readonly estimateSize?: VirtualListEstimate<Value>;
   readonly axis?: LinearAxis;
   readonly gap?: number;
   readonly overscan?: number | Partial<VirtualInsets>;
+  readonly viewportInsets?: number | Partial<VirtualInsets>;
   readonly maxItems?: number;
   readonly initialViewport?: VirtualRect;
   readonly as?: string;
@@ -43,60 +44,52 @@ export interface VirtualListProps<Value = unknown> {
   readonly itemAttributes?: VirtualListItemAttributes<Value>;
 }
 
-export type VirtualListPublicProps<Value = unknown> =
-  VirtualListProps<Value>
+export type VirtualListPublicProps<Value = unknown, ID extends StableID = StableID> =
+  VirtualListProps<Value, ID>
   & VNodeProps
   & AllowedComponentProps
   & ComponentCustomProps
   & {
-    readonly onStateChange?: (state: LinearLayoutState<string>) => unknown;
-    readonly onPlanChange?: (plan: VirtualLayoutPlan<string>) => unknown;
+    readonly onStateChange?: (state: LinearLayoutState<ID>) => unknown;
+    readonly onPlanChange?: (plan: VirtualLayoutPlan<ID>) => unknown;
     readonly onError?: VirtualizerErrorHandler;
   };
 
-export interface VirtualListSlotProps<Value = unknown> {
+export interface VirtualListSlotProps<Value = unknown, ID extends StableID = StableID> {
   readonly value: Value;
-  readonly key: string;
+  readonly id: ID;
   readonly index: number;
-  readonly placement: VirtualPlacement<string>;
+  readonly placement: VirtualPlacement<ID>;
 }
 
-export interface VirtualListExpose {
-  readonly root: ShallowRef<HTMLElement | null | undefined>;
-  readonly state: LinearLayoutState<string>;
-  readonly plan: VirtualLayoutPlan<string> | null;
-  scrollTo(
-    id: string,
+export interface VirtualListExpose<ID extends StableID = StableID> {
+  readonly scrollport: ShallowRef<HTMLElement | null | undefined>;
+  readonly surface: ShallowRef<HTMLElement | null | undefined>;
+  readonly state: LinearLayoutState<ID>;
+  readonly plan: VirtualLayoutPlan<ID> | null;
+  readonly phase: VirtualCollectionPhase;
+  scrollToID(
+    id: ID,
     alignment?: VirtualScrollAlignment,
   ): VirtualizerOperationResult<VirtualPoint>;
   refresh(): void;
-  flush(): VirtualizerOperationResult<VirtualLayoutPlan<string>>;
+  flush(): VirtualizerOperationResult<VirtualLayoutPlan<ID>>;
 }
 
 export interface VirtualListComponent {
-  new <Value = unknown>(
-    props: VirtualListPublicProps<Value>,
+  new <Value = unknown, ID extends StableID = StableID>(
+    props: VirtualListPublicProps<Value, ID>,
   ): {
-    $props: VirtualListPublicProps<Value>;
+    $props: VirtualListPublicProps<Value, ID>;
     $slots: {
-      default?: (props: VirtualListSlotProps<Value>) => VNodeChild;
+      header?: () => VNodeChild;
+      item?: (props: VirtualListSlotProps<Value, ID>) => VNodeChild;
       empty?: () => VNodeChild;
+      footer?: () => VNodeChild;
     };
   };
 }
 
-
-export interface VirtualCollectionExpose<State> {
-  readonly root: ShallowRef<HTMLElement | null | undefined>;
-  readonly state: State;
-  readonly plan: VirtualLayoutPlan<string> | null;
-  scrollTo(
-    id: string,
-    alignment?: VirtualScrollAlignment,
-  ): VirtualizerOperationResult<VirtualPoint> | undefined;
-  refresh(): void;
-  flush(): VirtualizerOperationResult<VirtualLayoutPlan<string>> | undefined;
-}
 
 
 const VirtualListRuntime = /* @__PURE__ */ defineComponent({
@@ -107,8 +100,8 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       type: Array as unknown as PropType<readonly unknown[]>,
       required: true,
     },
-    getKey: {
-      type: Function as PropType<VirtualListKeyResolver<unknown>>,
+    getID: {
+      type: Function as PropType<VirtualListIDResolver<unknown>>,
       required: true,
     },
     estimateSize: {
@@ -125,6 +118,10 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       type: [Number, Object] as PropType<number | Partial<VirtualInsets>>,
       default: 240,
     },
+    viewportInsets: {
+      type: [Number, Object] as PropType<number | Partial<VirtualInsets>>,
+      default: undefined,
+    },
     maxItems: { type: Number, default: 1_000_000 },
     initialViewport: {
       type: Object as PropType<VirtualRect>,
@@ -139,26 +136,28 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     },
   },
   emits: {
-    stateChange: (_state: LinearLayoutState<string>): boolean => true,
-    planChange: (_plan: VirtualLayoutPlan<string>): boolean => true,
+    stateChange: (_state: LinearLayoutState<StableID>): boolean => true,
+    planChange: (_plan: VirtualLayoutPlan<StableID>): boolean => true,
     error: (_error: Parameters<VirtualizerErrorHandler>[0]): boolean => true,
   },
   slots: Object as SlotsType<{
-    default: (props: VirtualListSlotProps<unknown>) => VNodeChild;
+    header: () => VNodeChild;
+    item: (props: VirtualListSlotProps<unknown>) => VNodeChild;
     empty: () => VNodeChild;
+    footer: () => VNodeChild;
   }>,
   setup(props, { attrs, emit, expose, slots }) {
-    assertVirtualListSizeMode(props.itemSize, props.estimateSize);
-    const prepared = shallowRef(prepareVirtualList(props.items, props.getKey, props.maxItems));
+    assertLegacyVirtualSizeMode(props.itemSize, props.estimateSize);
+    const prepared = shallowRef(prepareVirtualCollection(props.items, props.getID, props.maxItems));
     const automaticEstimate = shallowRef<number>();
     const bootstrapCount = shallowRef(
-      requiresDOMBootstrap(props.itemSize, props.estimateSize) && prepared.value.domain.size > 0 ? 1 : 0,
+      requiresVirtualDOMBootstrap(props.itemSize, props.estimateSize) && prepared.value.domain.size > 0 ? 1 : 0,
     );
     const bootstrapElements = new Map<number, HTMLElement>();
     let bootstrapScheduled = false;
     let disposed = false;
     const state = shallowRef(
-      requiresDOMBootstrap(props.itemSize, props.estimateSize)
+      requiresVirtualDOMBootstrap(props.itemSize, props.estimateSize)
         ? createEmptyVirtualListState(props)
         : createVirtualListState(prepared.value, props.items, props),
     );
@@ -167,8 +166,9 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       : undefined;
     const virtualizer = useVirtualizer({
       state,
-      strategy: linearLayoutStrategyFor<string>(),
+      strategy: linearLayoutStrategyFor<StableID>(),
       overscan: () => props.overscan,
+      viewportInsets: () => props.viewportInsets,
       ...(props.initialViewport === undefined
         ? {}
         : { initialViewport: props.initialViewport }),
@@ -183,17 +183,37 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
         emit('error', error);
       },
     });
-    const registrations = new Map<string, () => void>();
-    const elements = new Map<string, HTMLElement>();
-    const itemRefs = new Map<string, (value: unknown) => void>();
-    const pendingMeasurements = new Set<string>();
-    const forcedMeasurements = new Set<string>();
+    const registrations = new Map<StableID, () => void>();
+    const elements = new Map<StableID, HTMLElement>();
+    const itemRefs = new Map<StableID, (value: unknown) => void>();
+    const pendingMeasurements = new Set<StableID>();
+    const forcedMeasurements = new Set<StableID>();
     let measurementScheduled = false;
     const setRootElement = (value: unknown): void => {
       virtualizer.scrollport.value = value instanceof HTMLElement ? value : null;
     };
     const setSurfaceElement = (value: unknown): void => {
       virtualizer.surface.value = value instanceof HTMLElement ? value : null;
+    };
+    let headerElement: HTMLElement | null = null;
+    let footerElement: HTMLElement | null = null;
+    let unregisterHeader: (() => void) | undefined;
+    let unregisterFooter: (() => void) | undefined;
+    const setHeaderElement = (value: unknown): void => {
+      const element = value instanceof HTMLElement ? value : null;
+      if (headerElement === element) return;
+      unregisterHeader?.();
+      unregisterHeader = undefined;
+      headerElement = element;
+      if (element !== null) unregisterHeader = virtualizer.registerFrame(element);
+    };
+    const setFooterElement = (value: unknown): void => {
+      const element = value instanceof HTMLElement ? value : null;
+      if (footerElement === element) return;
+      unregisterFooter?.();
+      unregisterFooter = undefined;
+      footerElement = element;
+      if (element !== null) unregisterFooter = virtualizer.registerFrame(element);
     };
 
     const measurePendingItems = (): void => {
@@ -221,7 +241,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       for (const id of queued) forcedMeasurements.delete(id);
       if (measurements.length > 0) connection.measure(measurements);
     };
-    const scheduleItemMeasurement = (id: string, force = false): void => {
+    const scheduleItemMeasurement = (id: StableID, force = false): void => {
       if (props.itemSize !== undefined) return;
       pendingMeasurements.add(id);
       if (force) forcedMeasurements.add(id);
@@ -230,10 +250,10 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       void nextTick(measurePendingItems);
     };
     const scheduleChangedRenderedItemMeasurements = (
-      previousPrepared: PreparedVirtualList,
-      previousState: LinearLayoutState<string>,
-      nextPrepared: PreparedVirtualList,
-      nextState: LinearLayoutState<string>,
+      previousPrepared: PreparedVirtualCollection<unknown, StableID>,
+      previousState: LinearLayoutState<StableID>,
+      nextPrepared: PreparedVirtualCollection<unknown, StableID>,
+      nextState: LinearLayoutState<StableID>,
     ): void => {
       if (props.itemSize !== undefined) return;
       for (const id of elements.keys()) {
@@ -250,7 +270,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       }
     };
 
-    const itemRef = (id: string): ((value: unknown) => void) => {
+    const itemRef = (id: StableID): ((value: unknown) => void) => {
       const existing = itemRefs.get(id);
       if (existing !== undefined) return existing;
       const callback = (value: unknown): void => {
@@ -280,7 +300,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     const completeBootstrap = (): void => {
       if (
         automaticEstimate.value !== undefined
-        || !requiresDOMBootstrap(props.itemSize, props.estimateSize)
+        || !requiresVirtualDOMBootstrap(props.itemSize, props.estimateSize)
         || prepared.value.domain.size === 0
       ) return;
       const count = Math.min(bootstrapCount.value, prepared.value.domain.size);
@@ -344,17 +364,16 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       (items) => {
         const previousPrepared = prepared.value;
         const previousState = state.value;
-        const next = updatePreparedVirtualList(previousPrepared, items, props.getKey);
-        if (requiresDOMBootstrap(props.itemSize, props.estimateSize) && automaticEstimate.value === undefined) {
+        const next = updatePreparedVirtualCollection(previousPrepared, items, props.getID);
+        if (requiresVirtualDOMBootstrap(props.itemSize, props.estimateSize) && automaticEstimate.value === undefined) {
           prepared.value = next;
           bootstrapCount.value = next.domain.size > 0 ? 1 : 0;
           scheduleBootstrap();
           return;
         }
-        const patch = reconcileVirtualList(
+        const patch = reconcilePreparedVirtualCollection(
           state.value,
           next,
-          items,
           props,
           automaticEstimate.value,
         );
@@ -418,6 +437,12 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
 
     onBeforeUnmount(() => {
       disposed = true;
+      unregisterHeader?.();
+      unregisterHeader = undefined;
+      headerElement = null;
+      unregisterFooter?.();
+      unregisterFooter = undefined;
+      footerElement = null;
       for (const unregister of registrations.values()) unregister();
       registrations.clear();
       elements.clear();
@@ -428,14 +453,21 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     });
 
     expose(Object.freeze({
-      root: virtualizer.scrollport,
+      scrollport: virtualizer.scrollport,
+      surface: virtualizer.surface,
       get state() {
         return state.value;
       },
       get plan() {
         return virtualizer.plan.value;
       },
-      scrollTo: virtualizer.scrollTo,
+      get phase(): VirtualCollectionPhase {
+        if (prepared.value.domain.size === 0) return 'empty';
+        return automaticEstimate.value === undefined && bootstrapCount.value > 0
+          ? 'bootstrap'
+          : 'ready';
+      },
+      scrollToID: virtualizer.scrollTo,
       refresh: virtualizer.refresh,
       flush: virtualizer.flush,
     }) satisfies VirtualListExpose);
@@ -469,9 +501,9 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
           : props.axis === 'vertical'
             ? { height: true }
             : { width: true });
-        const rendered = slots['default']?.({
+        const rendered = slots['item']?.({
           value,
-          key: placement.id,
+          id: placement.id,
           index,
           placement,
         });
@@ -507,7 +539,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
           props.items,
           bootstrapCount.value,
           props,
-          slots['default'],
+          slots['item'],
           bootstrapItemRef,
         ));
       }
@@ -523,8 +555,20 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
           style: [{ overflow: 'auto' }, rootStyle],
           'data-scope': 'virtual-list',
           'data-part': 'root',
+          'data-phase': prepared.value.domain.size === 0
+            ? 'empty'
+            : bootstrapping
+              ? 'bootstrap'
+              : 'ready',
         },
         [
+          slots['header'] === undefined
+            ? null
+            : h('div', {
+                ref: setHeaderElement,
+                'data-scope': 'virtual-list',
+                'data-part': 'header',
+              }, [slots['header']()]),
           h(
             props.contentAs,
             {
@@ -535,6 +579,13 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
             },
             children,
           ),
+          slots['footer'] === undefined
+            ? null
+            : h('div', {
+                ref: setFooterElement,
+                'data-scope': 'virtual-list',
+                'data-part': 'footer',
+              }, [slots['footer']()]),
         ],
       );
     };
@@ -545,16 +596,16 @@ export const VirtualList = VirtualListRuntime as typeof VirtualListRuntime & Vir
 
 export function createVirtualListMeasurementResolver(
   axis: LinearAxis,
-): VirtualMeasurementResolver<LinearLayoutState<string>, string, LinearMeasurement> {
+): VirtualMeasurementResolver<LinearLayoutState<StableID>, StableID, LinearMeasurement> {
   return ({ element, placement, state }) =>
     measureVirtualListElement(axis, placement.id, element, state);
 }
 
 function measureVirtualListElement(
   axis: LinearAxis,
-  id: string,
+  id: StableID,
   element: HTMLElement,
-  state: LinearLayoutState<string>,
+  state: LinearLayoutState<StableID>,
 ): LinearMeasurement | null {
   const index = state.domain.indexOf(id);
   if (index === null) return null;
@@ -570,7 +621,7 @@ function measureVirtualListElement(
 }
 
 export function createVirtualListState(
-  prepared: PreparedVirtualList,
+  prepared: PreparedVirtualCollection<unknown, StableID>,
   items: readonly unknown[],
   props: Readonly<{
     itemSize: number | undefined;
@@ -580,18 +631,18 @@ export function createVirtualListState(
     maxItems: number;
   }>,
   automaticEstimate?: number,
-): LinearLayoutState<string> {
+): LinearLayoutState<StableID> {
   const estimate = props.estimateSize ?? automaticEstimate;
   const sharedExtent = props.itemSize !== undefined
-    ? exactExtent(props.itemSize)
+    ? exactVirtualExtent(props.itemSize)
     : typeof estimate !== 'function'
-      ? estimatedExtent(requireAutomaticEstimate(estimate), undefined, 0)
+      ? estimatedVirtualExtent(requireVirtualAutomaticEstimate(estimate), undefined, 0)
       : null;
   return createLinearLayout(
-    createPreparedVirtualListSequence(prepared, props.maxItems),
+    constrainPreparedVirtualCollection(prepared, props.maxItems),
     sharedExtent === null
       ? createExtentIndex(
-          Array.from({ length: prepared.domain.size }, (_unused, index) => estimatedExtent(
+          Array.from({ length: prepared.domain.size }, (_unused, index) => estimatedVirtualExtent(
             estimate!,
             items[index],
             index,
@@ -611,10 +662,10 @@ export function createEmptyVirtualListState(
     gap: number;
     maxItems: number;
   }>,
-): LinearLayoutState<string> {
+): LinearLayoutState<StableID> {
   return createLinearLayout(
     createSequence([], { maxItems: props.maxItems, maxIDCodeUnits: 1_024 }),
-    createUniformExtentIndex(0, exactExtent(0), { maxItems: props.maxItems }),
+    createUniformExtentIndex(0, exactVirtualExtent(0), { maxItems: props.maxItems }),
     { axis: props.axis, gap: props.gap, crossExtent: 1 },
   );
 }
@@ -630,7 +681,7 @@ export function bootstrapTrailingOverscanExtent(
 }
 
 export function renderVirtualListBootstrapItems(
-  prepared: PreparedVirtualList,
+  prepared: PreparedVirtualCollection<unknown, StableID>,
   items: readonly unknown[],
   count: number,
   props: Readonly<{
@@ -639,7 +690,7 @@ export function renderVirtualListBootstrapItems(
     itemAs: string;
     itemAttributes: VirtualListItemAttributes<unknown> | undefined;
   }>,
-  render: ((props: VirtualListSlotProps<unknown>) => VNodeChild) | undefined,
+  render: ((props: VirtualListSlotProps<unknown, StableID>) => VNodeChild) | undefined,
   itemRef: (index: number, value: unknown) => void,
 ): VNodeArrayChildren {
   return Array.from({ length: Math.min(count, prepared.domain.size) }, (_unused, index) => {
@@ -652,7 +703,7 @@ export function renderVirtualListBootstrapItems(
       rect: Object.freeze({ x: 0, y: 0, width: 0, height: 0 }),
       visible: true,
     });
-    const rendered = render?.({ value, key: id, index, placement });
+    const rendered = render?.({ value, id, index, placement });
     const children = rendered === undefined || rendered === null
       ? []
       : Array.isArray(rendered)

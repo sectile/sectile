@@ -218,56 +218,6 @@
       }
     },
     {
-      "id": "projection.reconfigure",
-      "inherits": "linear-v1",
-      "source": "packages/vue/src/internal/virtual-collection-model.ts",
-      "benchmarkIDs": [
-        "vue:mounted-virtual-projection"
-      ],
-      "specificationCeiling": "O(nItem + jChanged)",
-      "contract": {
-        "variables": [
-          {
-            "name": "nItem",
-            "meaning": "external item count",
-            "ceiling": "component maxItems"
-          },
-          {
-            "name": "jChanged",
-            "meaning": "inserted and deleted keyed-window cardinality",
-            "ceiling": "jChanged <= nItem"
-          }
-        ],
-        "assumptions": [
-          "getKey resolver identity remains stable across the external array replacement"
-        ],
-        "time": {
-          "bound": "O(nItem + jChanged)",
-          "kind": "worst-case",
-          "runtimeState": "mounted"
-        },
-        "space": {
-          "auxiliary": "O(jChanged)",
-          "output": "O(jChanged)",
-          "retained": "O(nItem + jChanged)"
-        },
-        "resources": {
-          "allocations": "O(jChanged)",
-          "cacheEntries": "O(jChanged)",
-          "listeners": "0",
-          "observers": "0",
-          "timers": "0",
-          "subscriptions": "0"
-        },
-        "proof": "A stable key resolver discovers the changed keyed window with one prefix/suffix identity scan, validates only inserted identities, and delegates the splice to Core's bounded Sequence overlay instead of allocating another complete ID snapshot.",
-        "adversarialWitness": "A one-item insertion at the start of a maxItems array must compare the retained suffix but allocate only one inserted ID and bounded patch metadata.",
-        "fullScan": {
-          "allowed": true,
-          "rationale": "A raw external array replacement has no trusted patch descriptor, so semantic change discovery may inspect every retained item identity; allocation remains proportional to the changed keyed window."
-        }
-      }
-    },
-    {
       "id": "virtual.measurement-update",
       "inherits": "lifecycle-v1",
       "source": "packages/vue/src/internal/virtual-list.ts",
