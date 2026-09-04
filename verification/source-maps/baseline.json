@@ -93,20 +93,20 @@
     },
     {
       "package": "virtual",
-      "javascriptFiles": 15,
-      "declarationFiles": 15,
-      "sourceMapFiles": 15,
+      "javascriptFiles": 17,
+      "declarationFiles": 17,
+      "sourceMapFiles": 17,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 124979,
-        "declarations": 39924,
-        "sourceMaps": 96367,
-        "total": 261270
+        "javascript": 148707,
+        "declarations": 48147,
+        "sourceMaps": 112168,
+        "total": 309022
       },
       "packed": {
-        "tarballBytes": 54003,
-        "unpackedBytes": 266126,
-        "files": 48
+        "tarballBytes": 63531,
+        "unpackedBytes": 314129,
+        "files": 54
       }
     },
     {
