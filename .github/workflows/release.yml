@@ -49,6 +49,8 @@ jobs:
           path: release-artifacts/*.tgz
           if-no-files-found: error
           retention-days: 7
+      - name: Build release documentation dependencies
+        run: pnpm --recursive --workspace-concurrency=1 --filter @sectile/docs^... build
       - name: Build release documentation
         run: pnpm --filter @sectile/docs build
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0

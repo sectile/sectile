@@ -84,6 +84,7 @@ test('release retries prepare tagged artifacts and load the complete current pub
   assert.ok(workflow.includes('--notes-from-tag --title "$RELEASE_TITLE"'));
   assert.match(workflow, /jobs:\n  prepare:/u);
   assert.match(workflow, /run: pnpm release:check/u);
+  assert.ok(workflow.includes('run: pnpm --recursive --workspace-concurrency=1 --filter @sectile/docs^... build'));
   assert.match(workflow, /run: pnpm --filter @sectile\/docs build/u);
   assert.equal(workflow.includes('verify:release'), false);
   assert.equal(workflow.includes('verify:compat'), false);
