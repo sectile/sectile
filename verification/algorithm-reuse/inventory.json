@@ -4383,7 +4383,7 @@
       "detector": "controller-rebuild",
       "category": "controller-connection-rebuild",
       "path": "packages/vue/src/internal/virtual-core.ts",
-      "line": 276,
+      "line": 277,
       "evidence": "watch([scrollport, surface], connect",
       "rule": "vue-controller-reconfiguration",
       "classification": "migration-required",
