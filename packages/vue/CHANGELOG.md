@@ -1,5 +1,11 @@
 # @sectile/vue
 
+## 0.15.1
+
+### Changes
+
+- fix(presence): complete transient exit lifecycle (c48f51dd)
+
 ## 0.15.0
 
 ### Changes

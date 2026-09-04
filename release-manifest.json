@@ -1,24 +1,24 @@
 {
   "schemaVersion": 1,
-  "releaseTag": "release-2026-09-04.1",
+  "releaseTag": "release-2026-09-04.2",
   "packages": [
     {
       "name": "@sectile/dom",
       "directory": "dom",
-      "previousVersion": "0.14.2",
-      "version": "0.15.0",
-      "bump": "minor",
-      "tag": "@sectile/dom@0.15.0",
+      "previousVersion": "0.15.0",
+      "version": "0.15.1",
+      "bump": "patch",
+      "tag": "@sectile/dom@0.15.1",
       "direct": true,
       "dependencies": []
     },
     {
       "name": "@sectile/vue",
       "directory": "vue",
-      "previousVersion": "0.14.2",
-      "version": "0.15.0",
-      "bump": "minor",
-      "tag": "@sectile/vue@0.15.0",
+      "previousVersion": "0.15.0",
+      "version": "0.15.1",
+      "bump": "patch",
+      "tag": "@sectile/vue@0.15.1",
       "direct": true,
       "dependencies": []
     }
