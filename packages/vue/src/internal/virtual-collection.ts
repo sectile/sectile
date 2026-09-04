@@ -2,6 +2,7 @@ import {
   defineComponent,
   h,
   onBeforeUnmount,
+  shallowReactive,
   shallowRef,
   type PropType,
   type ShallowRef,
@@ -401,7 +402,7 @@ export function createVirtualCollectionExpose<State>(
 ): VirtualCollectionExpose<State, StableID> {
   const emptyScrollport = shallowRef<HTMLElement | null>(null);
   const emptySurface = shallowRef<HTMLElement | null>(null);
-  return Object.freeze({
+  return shallowReactive({
     get scrollport() { return root.value?.scrollport ?? emptyScrollport; },
     get surface() { return root.value?.surface ?? emptySurface; },
     get state() { return (root.value?.state as State | undefined) ?? initialState; },

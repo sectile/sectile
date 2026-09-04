@@ -7,6 +7,7 @@ import {
   onBeforeUnmount,
   onScopeDispose,
   provide,
+  shallowReactive,
   shallowRef,
   toValue,
   watch,
@@ -494,9 +495,13 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
       registerItem: virtualizer.registerItem,
     });
     expose(
-      Object.freeze({
-        scrollport: virtualizer.scrollport,
-        surface: virtualizer.surface,
+      shallowReactive({
+        get scrollport() {
+          return virtualizer.scrollport;
+        },
+        get surface() {
+          return virtualizer.surface;
+        },
         get state() {
           return slotProps.value.state;
         },

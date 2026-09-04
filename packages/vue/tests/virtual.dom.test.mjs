@@ -88,6 +88,35 @@ test('high-level projection mounts one shared projector and no per-placement Vir
   }
 });
 
+test('VirtualList public expose preserves scrollport and surface refs', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const list = ref();
+  const app = createApp({
+    render: () => h(VirtualList, {
+      ref: list,
+      items: [{ id: 'row-0', label: 'Row 0' }],
+      getID: (value) => value.id,
+      sizePolicy: { kind: 'fixed', extent: 20 },
+      initialViewport: { x: 0, y: 0, width: 120, height: 80 },
+    }, {
+      item: ({ value }) => value.label,
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    const root = host.querySelector('[data-virtual-layout="virtual-list"][data-part="root"]');
+    const surface = root.querySelector('[data-part="surface"]');
+    assert.equal(list.value.scrollport.value, root);
+    assert.equal(list.value.surface.value, surface);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
 test('VirtualList renders intrinsic rows without per-item Sectile wrappers and reconciles keyed data', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
   const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
