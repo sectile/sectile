@@ -82,7 +82,7 @@
     ],
     "WI-040": [
       { "path": "packages/dom/tests/virtual.test.mjs", "contains": "one mutation and publication" },
-      { "path": "packages/vue/tests/virtual.dom.test.mjs", "contains": "equalState" }
+      { "path": "packages/vue/tests/virtual.dom.test.mjs", "contains": "Vue virtualizer owns frame-local state and keeps construction options fixed" }
     ],
     "WI-047": [
       { "path": "packages/form/tests/state/form.test.mjs", "contains": "multi-field server issues stay canonical" },
