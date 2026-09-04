@@ -26,7 +26,7 @@ async function flatScenario() {
   const host = fixtureHost('flat');
   const list = ref();
   let controller;
-  const app = createApp({ setup() { controller = readyGrid(); const DataGrid = createDataGridComponents(controller); return () => h(DataGrid.Provider, null, { default: () => h(DataGrid.Root, { 'aria-label': 'Flat virtual grid' }, { default: () => h(VirtualList, { ref: list, items: controller.getProjection().rows, getKey: (entry) => entry.rowID, itemSize: 24, overscan: 0, initialViewport: flatViewport, style: { width: '320px', height: '96px', overflow: 'auto' }, itemAttributes: (entry) => ({ role: 'row', 'data-flat-row': entry.rowID }) }, { default: ({ value }) => h('span', { role: 'gridcell' }, value.row.cells.name) }) }) }); } });
+  const app = createApp({ setup() { controller = readyGrid(); const DataGrid = createDataGridComponents(controller); return () => h(DataGrid.Provider, null, { default: () => h(DataGrid.Root, { 'aria-label': 'Flat virtual grid' }, { default: () => h(VirtualList, { ref: list, items: controller.getProjection().rows, getID: (entry) => entry.rowID, sizePolicy: { kind: 'fixed', extent: 24 }, overscan: 0, initialViewport: flatViewport, style: { width: '320px', height: '96px', overflow: 'auto' }, itemAttributes: (entry) => ({ role: 'row', 'data-flat-row': entry.rowID }) }, { item: ({ value }) => h('span', { role: 'gridcell' }, value.row.cells.name) }) }) }); } });
   try {
     app.mount(host); await settle(); list.value.flush(); await settle();
     const rendered = host.querySelectorAll('[data-flat-row]').length;

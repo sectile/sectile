@@ -1,8 +1,10 @@
 import type { StableID } from '@sectile/core';
 import type { Sequence } from '@sectile/core/sequence';
+import { createExtentIndex } from '@sectile/virtual/extent-index';
 import {
   createVirtualCollection,
   createVirtualCollectionPatch,
+  reconcileVirtualCollectionValueExtents,
   resolveVirtualLaneGeometry,
   updateVirtualCollection,
   type VirtualCollectionProjection,
@@ -50,6 +52,17 @@ const estimated = {
 } satisfies VirtualSizePolicy<Item>;
 void measured;
 void estimated;
+reconcileVirtualCollectionValueExtents(
+  {
+    domain: projection.domain,
+    extents: createExtentIndex([
+      { kind: 'unknown', fallback: 10 },
+      { kind: 'unknown', fallback: 20 },
+    ]),
+  },
+  projection,
+  estimated,
+) satisfies readonly { readonly index: number; readonly extent: unknown }[];
 
 const lanes = {
   kind: 'responsive',

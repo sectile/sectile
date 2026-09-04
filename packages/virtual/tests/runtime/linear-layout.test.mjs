@@ -13,8 +13,10 @@ import {
   linearLayoutStrategyFor,
   queryLinearLayout,
   restoreLinearLayout,
+  setLinearCrossExtent,
   snapshotLinearLayout,
   tryApplyLinearMeasurements,
+  trySetLinearCrossExtent,
 } from '../../.verification-dist/linear-layout.js';
 import {
   applyGridMeasurements,
@@ -80,6 +82,30 @@ test('linear layouts preserve mixed primitive identities through the shared stra
   const plan = queryLinearLayout(mixed, { viewport: { x: 0, y: 0, width: 20, height: 40 } });
   assert.deepEqual(plan.placements.map(({ id }) => id), [1, '1', -1, '-1']);
   assert.equal(linearLayoutStrategyFor(), linearLayoutStrategyFor());
+});
+
+test('linear cross extent changes are constant-time state transitions with stable no-ops', () => {
+  const state = createLinearLayout(
+    domain(3),
+    createExtentIndex(Array(3).fill(exact(10))),
+    { crossExtent: 20 },
+  );
+  assert.equal(setLinearCrossExtent(state, 20), state);
+
+  const resized = setLinearCrossExtent(state, 80);
+  assert.equal(resized.generation, state.generation + 1);
+  assert.equal(resized.domain, state.domain);
+  assert.equal(resized.extents, state.extents);
+  assert.equal(resized.crossExtent, 80);
+  const plan = queryLinearLayout(resized, {
+    viewport: { x: 0, y: 0, width: 80, height: 30 },
+  });
+  assert.deepEqual(plan.contentSize, { width: 80, height: 30 });
+  assert.deepEqual(plan.placements.map(({ rect }) => rect.width), [80, 80, 80]);
+
+  const invalid = trySetLinearCrossExtent(resized, Number.NaN);
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'virtual-layout-geometry-invalid');
 });
 
 test('VRT-07: serializable snapshots restore every strategy with identical observations', () => {

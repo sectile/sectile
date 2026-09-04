@@ -361,8 +361,10 @@ function createSectileMutableAdapter(sizeMode: DynamicSizeMode): MutableBenchmar
       setup() {
         return () => h(SectileList, {
           items: data.value,
-          getKey: benchmarkItemKey,
-          ...(sizeMode === 'estimated' ? { estimateSize: ROW_HEIGHT } : {}),
+          getID: benchmarkItemKey,
+          sizePolicy: sizeMode === 'estimated'
+            ? { kind: 'estimated', estimate: ROW_HEIGHT }
+            : { kind: 'measured' },
           overscan: OVERSCAN_PX,
           maxItems: ITEM_COUNT + 1,
           initialViewport: { x: 0, y: 0, width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
@@ -375,7 +377,7 @@ function createSectileMutableAdapter(sizeMode: DynamicSizeMode): MutableBenchmar
             ...(rowProfile === 'uniform' ? { style: { height: `${ROW_HEIGHT}px` } } : {}),
           }),
         }, {
-          default: ({ value }: { value: BenchmarkItem }) => vueRowContent(value, rowProfile),
+          item: ({ value }: { value: BenchmarkItem }) => vueRowContent(value, rowProfile),
         });
       },
     });

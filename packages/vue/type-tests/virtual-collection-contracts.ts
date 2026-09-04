@@ -34,16 +34,25 @@ declare const stringItems: readonly StringValue[];
 const numberList: VirtualListPublicProps<NumberValue, number> = {
   items: numberItems,
   getID: (value) => value.id,
-  itemSize: 24,
+  sizePolicy: { kind: 'fixed', extent: 24 },
 };
 numberList.getID(numberItems[0]!, 0) satisfies number;
+numberList.sizePolicy satisfies VirtualSizePolicy<NumberValue>;
 
 const stringList: VirtualListPublicProps<StringValue, string> = {
   items: stringItems,
   getID: (value) => value.id,
-  estimateSize: 24,
+  sizePolicy: { kind: 'estimated', estimate: 24 },
 };
 stringList.getID(stringItems[0]!, 0) satisfies string;
+stringList.sizePolicy satisfies VirtualSizePolicy<StringValue>;
+
+const measuredList: VirtualListPublicProps<NumberValue, number> = {
+  items: numberItems,
+  getID: (value) => value.id,
+  sizePolicy: { kind: 'measured' },
+};
+void measuredList;
 
 const numberGrid: VirtualGridPublicProps<NumberValue, number> = {
   items: numberItems,

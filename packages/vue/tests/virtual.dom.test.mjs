@@ -107,19 +107,19 @@ test('VirtualList renders intrinsic rows without per-item Sectile wrappers and r
     render: () => h(VirtualList, {
       ref: list,
       items: items.value,
-      getKey: (value) => value.id,
-      estimateSize: 20,
+      getID: (value) => value.id,
+      sizePolicy: { kind: 'estimated', estimate: 20 },
       overscan: 0,
       itemAttributes: (value) => ({ 'data-id': value.id }),
     }, {
-      default: ({ value }) => value.label,
+      item: ({ value }) => value.label,
     }),
   });
 
   try {
     app.mount(host);
     await settle();
-    const root = host.querySelector('[data-scope="virtual-list"][data-part="root"]');
+    const root = host.querySelector('[data-virtual-layout="virtual-list"][data-part="root"]');
     Object.defineProperty(root, 'clientHeight', { configurable: true, value: 80 });
     Object.defineProperty(root, 'clientWidth', { configurable: true, value: 120 });
     root.scrollTo = ({ left = root.scrollLeft, top = root.scrollTop }) => {
@@ -130,8 +130,16 @@ test('VirtualList renders intrinsic rows without per-item Sectile wrappers and r
     await settle();
     assert.equal(root.clientHeight, 80);
     assert.equal(list.value.plan.viewport.height, 80);
+    assert.equal(list.value.state.crossExtent, 120);
+    assert.equal(list.value.plan.contentSize.width, 120);
+    assert.deepEqual(
+      list.value.plan.placements.map((placement) => placement.rect.width),
+      [120, 120, 120, 120],
+    );
     assert.equal(root.children.length, 1);
+    assert.equal(root.firstElementChild.style.width, '120px');
     assert.equal(root.firstElementChild.children.length, 4);
+    assert.equal(root.firstElementChild.firstElementChild.style.width, '120px');
     assert.deepEqual(
       [...root.firstElementChild.children].map((element) => element.dataset.id),
       ['row-0', 'row-1', 'row-2', 'row-3'],
@@ -217,18 +225,23 @@ test('VirtualList measures only changed or newly rendered identities after keyed
     render: () => h(VirtualList, {
       ref: list,
       items: items.value,
-      getKey: (value) => value.id,
-      estimateSize: 20,
+      getID: (value) => value.id,
+      sizePolicy: { kind: 'estimated', estimate: 20 },
       overscan: 0,
       itemAttributes: (value) => ({
         'data-id': value.id,
         'data-height': String(value.height),
       }),
-    }, { default: ({ value }) => value.label }),
+    }, { item: ({ value }) => value.label }),
   });
 
   try {
     app.mount(host);
+    await settle();
+    const renderedRows = [...host.querySelectorAll('[data-virtual-layout="virtual-list"] [data-part="item"]')];
+    assert.equal(renderedRows.length, 4);
+    renderedRows.forEach((element) => FakeResizeObserver.notify(element));
+    list.value.flush();
     await settle();
     assert.equal(itemReads, 4);
     for (let index = 0; index < 4; index += 1) {
@@ -236,15 +249,20 @@ test('VirtualList measures only changed or newly rendered identities after keyed
     }
 
     itemReads = 0;
-    const unchangedState = list.value.state;
-    const unchangedPlan = list.value.plan;
+    const domain = list.value.state.domain;
     items.value = items.value.map((item, index) => index === 0
       ? { ...item, label: 'Changed row' }
       : item);
     await settle();
+    assert.equal(itemReads, 0);
+    assert.equal(list.value.state.domain, domain);
+    assert.deepEqual(list.value.state.extents.extentAt(0), { kind: 'unknown', fallback: 20 });
+    FakeResizeObserver.notify(host.querySelector('[data-id="row-0"]'));
+    list.value.flush();
+    await settle();
     assert.equal(itemReads, 1);
-    assert.equal(list.value.state, unchangedState);
-    assert.equal(list.value.plan, unchangedPlan);
+    assert.equal(list.value.state.domain, domain);
+    assert.deepEqual(list.value.state.extents.extentAt(0), { kind: 'exact', value: 20 });
 
     itemReads = 0;
     items.value = [
@@ -252,6 +270,11 @@ test('VirtualList measures only changed or newly rendered identities after keyed
       { id: 'inserted', label: 'Inserted', height: 35 },
       ...items.value.slice(1),
     ];
+    await settle();
+    const inserted = host.querySelector('[data-id="inserted"]');
+    assert.ok(inserted !== null);
+    FakeResizeObserver.notify(inserted);
+    list.value.flush();
     await settle();
     assert.equal(itemReads, 1);
     assert.deepEqual(list.value.state.extents.extentAt(1), { kind: 'exact', value: 35 });
@@ -267,86 +290,40 @@ test('VirtualList measures only changed or newly rendered identities after keyed
   }
 });
 
-test('VirtualList keeps the layout domain for value-only replacements and measures the changed row once', async () => {
+test('VirtualList projects horizontal cross geometry from the surface viewport', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
   const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
-  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 80; } });
-  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return 120; } });
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 60; } });
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return 80; } });
   const host = document.createElement('div');
   document.body.append(host);
   const list = ref();
-  const items = shallowRef(Array.from({ length: 20 }, (_, index) => ({
-    id: `row-${index}`,
-    label: `Row ${index}`,
-    height: 20,
-  })));
+  const items = Array.from({ length: 8 }, (_unused, index) => ({ id: index }));
   const app = createApp({
     render: () => h(VirtualList, {
       ref: list,
-      items: items.value,
-      getKey: (value) => value.id,
-      estimateSize: 20,
+      items,
+      getID: (value) => value.id,
+      sizePolicy: { kind: 'fixed', extent: 20 },
+      axis: 'horizontal',
       overscan: 0,
-      itemAttributes: (value) => ({
-        'data-id': value.id,
-        style: { height: `${value.height}px` },
-      }),
-    }, { default: ({ value }) => value.label }),
+      initialViewport: { x: 0, y: 0, width: 80, height: 60 },
+    }, { item: ({ id }) => String(id) }),
   });
 
   try {
     app.mount(host);
     await settle();
-    const root = host.querySelector('[data-scope="virtual-list"][data-part="root"]');
-    root.scrollTo = ({ left = root.scrollLeft, top = root.scrollTop }) => {
-      root.scrollLeft = left;
-      root.scrollTop = top;
-    };
-    list.value.flush();
-    await settle();
-    const firstRow = root.querySelector('[data-id="row-0"]');
-    firstRow.getBoundingClientRect = () => {
-      const height = Number.parseFloat(firstRow.style.height);
-      return {
-        x: 0,
-        y: 0,
-        top: 0,
-        right: 120,
-        bottom: height,
-        left: 0,
-        width: 120,
-        height,
-        toJSON() {},
-      };
-    };
-    FakeResizeObserver.notify(firstRow);
-    list.value.flush();
-    await settle();
-
-    const domain = list.value.state.domain;
-    const generation = list.value.state.generation;
-    const equalState = list.value.state;
-    const equalPlan = list.value.plan;
-    items.value = items.value.map((item) => ({ ...item }));
-    await settle();
-    assert.equal(list.value.state, equalState);
-    assert.equal(list.value.plan, equalPlan);
-
-    items.value = items.value.map((item, index) => index === 0
-      ? { ...item, label: 'Changed row', height: 40 }
-      : item);
-    await settle();
-
-    assert.equal(list.value.state.domain, domain);
-    assert.equal(list.value.state.generation, generation + 1);
-    assert.deepEqual(list.value.state.extents.extentAt(0), { kind: 'exact', value: 40 });
-    assert.match(firstRow.textContent, /Changed row/);
-
-    FakeResizeObserver.notify(firstRow);
-    list.value.flush();
-    await settle();
-    assert.equal(list.value.state.generation, generation + 1);
-    assert.deepEqual(list.value.state.extents.extentAt(0), { kind: 'exact', value: 40 });
+    const root = host.querySelector('[data-virtual-layout="virtual-list"][data-part="root"]');
+    const surface = root.querySelector('[data-part="surface"]');
+    assert.equal(list.value.state.crossExtent, 60);
+    assert.deepEqual(list.value.plan.contentSize, { width: 160, height: 60 });
+    assert.deepEqual(
+      list.value.plan.placements.map((placement) => placement.rect.height),
+      [60, 60, 60, 60],
+    );
+    assert.equal(surface.style.height, '60px');
+    assert.equal(surface.firstElementChild.style.height, '60px');
   } finally {
     app.unmount();
     host.remove();
@@ -392,33 +369,41 @@ test('VirtualList separates fixed sizes from automatic DOM measurement', async (
       h(VirtualList, {
         ref: fixed,
         items,
-        getKey: (value) => value.id,
-        itemSize: 20,
+        getID: (value) => value.id,
+        sizePolicy: { kind: 'fixed', extent: 20 },
         overscan: 0,
-      }, { default: ({ key }) => key }),
+      }, { item: ({ id }) => id }),
       h(VirtualList, {
         ref: automatic,
         items,
-        getKey: (value) => value.id,
+        getID: (value) => value.id,
+        sizePolicy: { kind: 'measured' },
         overscan: 0,
         itemAttributes: () => ({ 'data-automatic': '' }),
-      }, { default: ({ key }) => key }),
+      }, { item: ({ id }) => id }),
     ]),
   });
 
   try {
     app.mount(host);
+    const roots = host.querySelectorAll('[data-virtual-layout="virtual-list"][data-part="root"]');
+    const automaticRoot = roots[1];
+    const automaticSurface = automaticRoot.querySelector('[data-part="surface"]');
+    assert.equal(automaticRoot.getAttribute('data-phase'), 'bootstrap');
+    await settle();
     await settle();
     fixed.value.flush();
     automatic.value.flush();
     await settle();
+    assert.equal(host.querySelectorAll('[data-virtual-layout="virtual-list"][data-part="root"]')[1], automaticRoot);
+    assert.equal(automaticRoot.querySelector('[data-part="surface"]'), automaticSurface);
+    assert.equal(automaticRoot.getAttribute('data-phase'), 'ready');
     assert.deepEqual(fixed.value.state.extents.extentAt(0), { kind: 'exact', value: 20 });
     assert.equal(fixed.value.plan.contentSize.height, 400);
     assert.deepEqual(automatic.value.state.extents.extentAt(10), { kind: 'unknown', fallback: 35 });
     assert.equal(automatic.value.plan.contentSize.height, 700);
 
-    const fixedRow = host.querySelectorAll('[data-scope="virtual-list"][data-part="root"]')[0]
-      .querySelector('[data-part="item"]');
+    const fixedRow = roots[0].querySelector('[data-part="item"]');
     Object.defineProperty(fixedRow, 'getBoundingClientRect', {
       configurable: true,
       value: () => ({
@@ -446,6 +431,61 @@ test('VirtualList separates fixed sizes from automatic DOM measurement', async (
     else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
     if (boundsDescriptor === undefined) delete HTMLElement.prototype.getBoundingClientRect;
     else Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', boundsDescriptor);
+  }
+});
+
+test('VirtualList keeps frame anatomy stable across empty and ready phases', async () => {
+  const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 80; } });
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return 120; } });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const items = ref([]);
+  const list = ref();
+  const app = createApp({
+    render: () => h(VirtualList, {
+      ref: list,
+      items: items.value,
+      getID: (value) => value.id,
+      sizePolicy: { kind: 'fixed', extent: 20 },
+      overscan: 0,
+      initialViewport: { x: 0, y: 0, width: 120, height: 80 },
+    }, {
+      header: () => h('span', { 'data-list-header': '' }, 'Header'),
+      item: ({ id }) => h('span', { 'data-list-item': id }, String(id)),
+      empty: () => h('span', { 'data-list-empty': '' }, 'Empty'),
+      footer: () => h('span', { 'data-list-footer': '' }, 'Footer'),
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    const root = host.querySelector('[data-virtual-layout="virtual-list"][data-part="root"]');
+    const header = root.querySelector('[data-part="header"]');
+    const surface = root.querySelector('[data-part="surface"]');
+    const footer = root.querySelector('[data-part="footer"]');
+    assert.equal(root.getAttribute('data-phase'), 'empty');
+    assert.ok(surface.querySelector('[data-list-empty]') !== null);
+
+    items.value = [{ id: 1 }];
+    await settle();
+    assert.equal(host.querySelector('[data-virtual-layout="virtual-list"][data-part="root"]'), root);
+    assert.equal(root.querySelector('[data-part="header"]'), header);
+    assert.equal(root.querySelector('[data-part="surface"]'), surface);
+    assert.equal(root.querySelector('[data-part="footer"]'), footer);
+    assert.equal(root.getAttribute('data-phase'), 'ready');
+    assert.equal(surface.querySelector('[data-list-empty]'), null);
+    assert.equal(surface.querySelector('[data-list-item]')?.textContent, '1');
+    assert.equal(list.value.state.domain.at(0), 1);
+  } finally {
+    app.unmount();
+    host.remove();
+    if (heightDescriptor === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
+    if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
   }
 });
 
@@ -771,10 +811,10 @@ test('declarative virtual collections resolve only the changed keyed window', as
     render: () => h('div', [
       h(VirtualList, {
         items: items.value,
-        getKey: keys.list,
-        itemSize: 20,
+        getID: keys.list,
+        sizePolicy: { kind: 'fixed', extent: 20 },
         initialViewport: { x: 0, y: 0, width: 20, height: 20 },
-      }, { default: ({ key: id }) => id }),
+      }, { item: ({ id }) => id }),
       h(VirtualGrid, {
         items: items.value,
         getKey: keys.grid,

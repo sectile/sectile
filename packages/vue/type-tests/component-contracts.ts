@@ -172,7 +172,8 @@ h(TimeField, { policies: timeFieldPolicies });
 h(DateTimeField, { policies: dateTimeFieldPolicies });
 h(VirtualList, {
   items: [{ id: 'row-1', title: 'First row' }],
-  getKey: (value: { id: string }) => value.id,
+  getID: (value: { id: string }) => value.id,
+  sizePolicy: { kind: 'fixed', extent: 24 },
 });
 h(VirtualGrid, {
   items: [{ id: 'cell-1' }],

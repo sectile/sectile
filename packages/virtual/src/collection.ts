@@ -10,7 +10,7 @@ import {
   type Sequence,
 } from '@sectile/core/sequence';
 import type { VirtualResult } from './error.js';
-import type { Extent, ExtentIndex } from './extent-index.js';
+import type { Extent, ExtentIndex, ExtentUpdate } from './extent-index.js';
 import { fail, ok } from './internal/foundation.js';
 
 export type VirtualCollectionIDResolver<
@@ -619,6 +619,63 @@ export function reconcileVirtualCollectionExtents<
   });
 }
 
+export function reconcileVirtualCollectionValueExtents<
+  Value,
+  ID extends StableID,
+>(
+  state: VirtualCollectionExtentState<ID>,
+  next: VirtualCollectionProjection<Value, ID>,
+  policy: VirtualSizePolicy<Value>,
+  measuredEstimate?: number,
+): readonly ExtentUpdate[] {
+  if (projectionIdentityOf(next) === null) {
+    return unwrap(collectionInputFailure<never>(
+      'Virtual collection value reconciliation requires an owner-created projection.',
+      next,
+    ));
+  }
+  virtualSizePolicyRequiresMeasurement(policy);
+  const change = next.valueChange;
+  if (change === null || policy.kind === 'fixed') return Object.freeze([]);
+  if (
+    state.domain.size !== state.extents.size
+    || state.domain.size !== next.domain.size
+  ) {
+    return unwrap(fail<never>(
+      'construction',
+      'virtual-layout-domain-mismatch',
+      'Virtual collection value reconciliation requires aligned identity and extent domains.',
+      Object.freeze({
+        stateDomainSize: state.domain.size,
+        stateExtentSize: state.extents.size,
+        nextDomainSize: next.domain.size,
+      }),
+    ));
+  }
+  const updates: ExtentUpdate[] = [];
+  const end = change.index + change.count;
+  for (let index = change.index; index < end; index += 1) {
+    if (state.domain.at(index) !== next.domain.at(index)) {
+      return unwrap(fail<never>(
+        'transition-rejection',
+        'virtual-layout-domain-mismatch',
+        'Virtual collection value reconciliation requires stable identities inside the changed value window.',
+        Object.freeze({ index }),
+      ));
+    }
+    const extent = createVirtualExtent(
+      policy,
+      next.items[index] as Value,
+      index,
+      measuredEstimate,
+    );
+    const current = state.extents.extentAt(index);
+    if (current !== null && sameExtent(current, extent)) continue;
+    updates.push(Object.freeze({ index, extent }));
+  }
+  return Object.freeze(updates);
+}
+
 export function createVirtualExtent<Value>(
   policy: VirtualSizePolicy<Value>,
   value: Value,
@@ -907,6 +964,15 @@ function changedValues<Value>(
     index: window.prefix,
     count: next.length - window.prefix - window.suffix,
   });
+}
+
+function sameExtent(left: Extent, right: Extent): boolean {
+  if (left.kind !== right.kind) return false;
+  return left.kind === 'exact' && right.kind === 'exact'
+    ? left.value === right.value
+    : left.kind === 'unknown' && right.kind === 'unknown'
+      ? left.fallback === right.fallback
+      : false;
 }
 
 function normalizeValueChange(

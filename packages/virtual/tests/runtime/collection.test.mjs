@@ -8,6 +8,7 @@ import {
   createVirtualCollectionPatch,
   createVirtualExtent,
   reconcileVirtualCollectionExtents,
+  reconcileVirtualCollectionValueExtents,
   replaceVirtualCollection,
   resolveVirtualLaneGeometry,
   updateVirtualCollection,
@@ -106,6 +107,44 @@ test('COL-01: value-only replacements retain the identity owner and expose a bou
   assert.equal(next.domain, previous.domain);
   assert.equal(next.change, null);
   assert.deepEqual(next.valueChange, { index: 0, count: 1 });
+});
+
+test('COL-01: value-dependent extent repair is bounded to the changed value window', () => {
+  const source = Object.freeze([
+    item('a', 'aa'),
+    item('b', 'bbb'),
+    item('c', 'cccc'),
+  ]);
+  const previous = createVirtualCollection(source, getID);
+  const next = replaceVirtualCollection(
+    previous,
+    Object.freeze([source[0], item('b', 'bbbbbb'), source[2]]),
+    getID,
+  );
+  const state = {
+    domain: previous.domain,
+    extents: createExtentIndex([
+      createEstimatedVirtualExtent(2, source[0], 0),
+      createExactVirtualExtent(3),
+      createEstimatedVirtualExtent(4, source[2], 2),
+    ]),
+  };
+  const updates = reconcileVirtualCollectionValueExtents(
+    state,
+    next,
+    { kind: 'estimated', estimate: (value) => value.label.length },
+  );
+  assert.deepEqual(updates, [
+    { index: 1, extent: { kind: 'unknown', fallback: 6 } },
+  ]);
+  assert.deepEqual(
+    reconcileVirtualCollectionValueExtents(
+      state,
+      next,
+      { kind: 'fixed', extent: 20 },
+    ),
+    [],
+  );
 });
 
 test('COL-02: trusted patches match raw replacement while resolving only declared identities', () => {

@@ -170,8 +170,8 @@ const sectileAdapter: BenchmarkAdapter = Object.freeze({
       setup() {
         return () => h(SectileList, {
           items,
-          getKey: benchmarkItemKey,
-          itemSize: ROW_HEIGHT,
+          getID: benchmarkItemKey,
+          sizePolicy: { kind: 'fixed', extent: ROW_HEIGHT },
           overscan: OVERSCAN_PX,
           initialViewport: { x: 0, y: 0, width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
           class: 'bench-scroller',
@@ -182,7 +182,7 @@ const sectileAdapter: BenchmarkAdapter = Object.freeze({
             style: { height: `${ROW_HEIGHT}px` },
           }),
         }, {
-          default: ({ value }: { value: BenchmarkItem }) => h('span', contentFor(value).title),
+          item: ({ value }: { value: BenchmarkItem }) => h('span', contentFor(value).title),
         });
       },
     });

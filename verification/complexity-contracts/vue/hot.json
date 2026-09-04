@@ -218,54 +218,49 @@
       }
     },
     {
-      "id": "virtual.measurement-update",
+      "id": "virtual.item-projection",
       "inherits": "lifecycle-v1",
-      "source": "packages/vue/src/internal/virtual-list.ts",
+      "source": "packages/vue/src/internal/virtual-collection.ts",
       "benchmarkIDs": [
         "vue:mounted-virtual-projection"
       ],
-      "specificationCeiling": "O(nMounted + jChanged + kPlacement)",
+      "specificationCeiling": "O(kPlacement)",
       "contract": {
         "variables": [
           {
-            "name": "nMounted",
-            "meaning": "currently mounted rendered elements",
-            "ceiling": "virtual rendered-entry ceiling"
-          },
-          {
-            "name": "jChanged",
-            "meaning": "ResizeObserver changed entries",
-            "ceiling": "mounted rendered entry count"
-          },
-          {
             "name": "kPlacement",
-            "meaning": "final projected placements",
+            "meaning": "placements emitted by the active Virtual plan",
             "ceiling": "virtual query result ceiling"
+          },
+          {
+            "name": "nMounted",
+            "meaning": "currently mounted projected item elements",
+            "ceiling": "kPlacement"
           }
         ],
         "time": {
-          "bound": "O(nMounted + jChanged + kPlacement)",
+          "bound": "O(kPlacement)",
           "kind": "worst-case",
           "runtimeState": "mounted"
         },
         "space": {
-          "auxiliary": "O(nMounted + jChanged + kPlacement)",
+          "auxiliary": "O(kPlacement)",
           "output": "O(kPlacement)",
           "retained": "O(nMounted)"
         },
         "resources": {
-          "allocations": "O(nMounted + jChanged + kPlacement)",
+          "allocations": "O(kPlacement)",
           "cacheEntries": "O(nMounted)",
           "listeners": "0",
-          "observers": "O(1)",
-          "timers": "O(1)",
-          "subscriptions": "O(nMounted)"
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
         },
-        "proof": "ResizeObserver callbacks enqueue only changed entries; keyed value replacements may inspect the currently mounted identities to schedule forced measurements, and one coalesced batch performs at most one Virtual measurement mutation and placement publication.",
-        "adversarialWitness": "Every mounted row changes value identity while one ResizeObserver batch reports every mounted element.",
+        "proof": "The shared Vue projector visits each emitted placement once, creates the native item VNode directly, and retains one element, registration disposer, and stable function ref per mounted identity. DOM owns item observation and measurement batching.",
+        "adversarialWitness": "A maximum render window mounts kPlacement distinct identities, then replaces the window so every cached registration is released and replaced without creating per-placement Sectile component instances.",
         "fullScan": {
           "allowed": false,
-          "rationale": "Measurement may visit the mounted render window but cannot inspect unmounted collection items."
+          "rationale": "Projection work is bounded by emitted placements and may not traverse unmounted collection items."
         }
       }
     }

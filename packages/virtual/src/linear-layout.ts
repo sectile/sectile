@@ -88,6 +88,30 @@ export function tryCreateLinearLayout<ID extends StableID>(domain: Sequence<ID>,
   return ok(freezeState({ domain, extents, axis, flow, gap, crossOffset, crossExtent, generation: 0 }));
 }
 
+export function setLinearCrossExtent<ID extends StableID>(
+  state: LinearLayoutState<ID>,
+  crossExtent: number,
+): LinearLayoutState<ID> {
+  return unwrap(trySetLinearCrossExtent(state, crossExtent));
+}
+
+export function trySetLinearCrossExtent<ID extends StableID>(
+  state: LinearLayoutState<ID>,
+  crossExtent: number,
+): VirtualResult<LinearLayoutState<ID>> {
+  if (!finiteNonNegative(crossExtent)) {
+    return geometryFailure('Linear cross extent must be finite and non-negative.');
+  }
+  if (state.crossExtent === crossExtent) return ok(state);
+  const generation = nextGeneration(state.generation);
+  if (!generation.ok) return generation;
+  return ok(freezeState({
+    ...state,
+    crossExtent,
+    generation: generation.value,
+  }));
+}
+
 export function snapshotLinearLayout<ID extends StableID>(
   state: LinearLayoutState<ID>,
 ): LinearLayoutSnapshot<ID> {
