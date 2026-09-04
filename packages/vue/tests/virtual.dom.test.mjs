@@ -151,6 +151,8 @@ test('VirtualList renders intrinsic rows without per-item Sectile wrappers and r
     const root = host.querySelector('[data-virtual-layout="virtual-list"][data-part="root"]');
     Object.defineProperty(root, 'clientHeight', { configurable: true, value: 80 });
     Object.defineProperty(root, 'clientWidth', { configurable: true, value: 120 });
+    Object.defineProperty(root, 'scrollHeight', { configurable: true, value: 500 });
+    Object.defineProperty(root, 'scrollWidth', { configurable: true, value: 120 });
     root.scrollTo = ({ left = root.scrollLeft, top = root.scrollTop }) => {
       root.scrollLeft = left;
       root.scrollTop = top;
