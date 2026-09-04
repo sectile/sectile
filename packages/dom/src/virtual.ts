@@ -22,7 +22,7 @@ import type { VirtualErrorCode } from '@sectile/virtual';
 
 type DOMVirtualResult<T> = Result<T, VirtualErrorCode>;
 
-const ZERO_POINT: VirtualPoint = Object.freeze({ x: 0, y: 0 });
+const ZERO_POINT: VirtualPoint = /* @__PURE__ */ Object.freeze({ x: 0, y: 0 });
 
 export interface VirtualizerEnvironment {
   requestFrame(callback: FrameRequestCallback): number;
