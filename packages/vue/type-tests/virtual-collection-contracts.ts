@@ -22,6 +22,7 @@ import type {
 } from '../.verification-dist/virtual-masonry.js';
 import type {
   VirtualSpatialPublicProps,
+  VirtualSpatialSizeOwnership,
   VirtualSpatialSlotProps,
 } from '../.verification-dist/virtual-spatial.js';
 
@@ -75,8 +76,9 @@ const numberSpatial: VirtualSpatialPublicProps<NumberValue, number> = {
   items: numberItems,
   getID: (value) => value.id,
   getRect: (_value, index) => ({ x: 0, y: index * 20, width: 20, height: 20 }),
+  sizeOwnership: 'declared',
 };
-void numberSpatial;
+numberSpatial.sizeOwnership satisfies VirtualSpatialSizeOwnership;
 
 declare const commonSlot: VirtualCollectionItemSlotProps<NumberValue, number>;
 commonSlot.id satisfies number;

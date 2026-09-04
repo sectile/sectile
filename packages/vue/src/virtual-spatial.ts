@@ -11,12 +11,13 @@ export type VirtualSpatialRectResolver<Value> = {
 export type VirtualSpatialZIndexResolver<Value> = number | {
   bivarianceHack(value: Value, index: number): number;
 }['bivarianceHack'];
+export type VirtualSpatialSizeOwnership = 'declared' | 'mounted';
 
 export interface VirtualSpatialProps<Value = unknown, ID extends StableID = StableID>
   extends VirtualCollectionBaseProps<Value, ID> {
   readonly getRect: VirtualSpatialRectResolver<Value>;
   readonly getZIndex?: VirtualSpatialZIndexResolver<Value>;
-  readonly measureSize?: boolean;
+  readonly sizeOwnership: VirtualSpatialSizeOwnership;
 }
 
 export type VirtualSpatialPublicProps<Value = unknown, ID extends StableID = StableID> =
@@ -57,7 +58,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
     getID: { type: Function as PropType<VirtualCollectionIDResolver<unknown, StableID>>, required: true },
     getRect: { type: Function as PropType<VirtualSpatialRectResolver<unknown>>, required: true },
     getZIndex: { type: [Number, Function] as PropType<VirtualSpatialZIndexResolver<unknown>>, default: 0 },
-    measureSize: { type: Boolean, default: true },
+    sizeOwnership: { type: String as PropType<VirtualSpatialSizeOwnership>, required: true },
     overscan: { type: [Number, Object] as PropType<number | Partial<VirtualInsets>>, default: 240 },
     viewportInsets: { type: [Number, Object] as PropType<number | Partial<VirtualInsets>>, default: undefined },
     maxItems: { type: Number, default: 1_000_000 },
@@ -82,10 +83,11 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
     const initialViewport = props.initialViewport === undefined
       ? undefined
       : Object.freeze({ ...props.initialViewport });
+    const sizeOwnership = props.sizeOwnership;
     const prepared = shallowRef(prepareVirtualCollection(props.items, props.getID, props.maxItems));
     const initialState = createVirtualSpatialState(prepared.value, props.items, props);
     const root = shallowRef<VirtualizerRootExpose>();
-    const measure = props.measureSize
+    const measure = sizeOwnership === 'mounted'
       ? (({ element, placement, state }) => {
           const bounds = element.getBoundingClientRect();
           if (bounds.width <= 0 || bounds.height <= 0) return null;
@@ -130,10 +132,10 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
           ? resolverChanged
             ? exposed.mutate(Object.freeze({
                 type: 'replace',
-                items: preserveSpatialMeasurements(
+                items: preserveMountedSpatialSizes(
                   createSpatialItems(next, props.items, props),
                   state,
-                  props.measureSize,
+                  sizeOwnership,
                 ),
               }) satisfies SpatialMutation<StableID>)
             : null
@@ -145,7 +147,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
                 deleteCount: collectionPatch.deleteCount,
                 inserted: collectionPatch.inserted,
               }),
-              inserted: preserveSpatialMeasurements(
+              inserted: preserveMountedSpatialSizes(
                 createSpatialItemsRange(
                   next,
                   props.items,
@@ -154,7 +156,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
                   collectionPatch.inserted.length,
                 ),
                 state,
-                props.measureSize,
+                sizeOwnership,
               ),
             }) satisfies SpatialMutation<StableID>);
         if (result === null) {
@@ -165,6 +167,20 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
       },
       { flush: 'post' },
     );
+
+    let sizeOwnershipWarningShown = false;
+    watch(
+      () => props.sizeOwnership,
+      (value) => {
+        if (sizeOwnershipWarningShown || value === sizeOwnership) return;
+        sizeOwnershipWarningShown = true;
+        console.warn(
+          '[Sectile] VirtualSpatial sizeOwnership is a construction-time option. Remount the spatial collection to change it.',
+        );
+      },
+      { flush: 'sync' },
+    );
+
     expose(createVirtualCollectionExpose(
       root,
       initialState,
@@ -201,7 +217,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
             props.items,
             props.itemAs,
             props.itemAttributes,
-            props.measureSize ? 'none' : 'both',
+            sizeOwnership === 'mounted' ? 'none' : 'both',
             (value, id, index, placement) => {
               const spatialPlacement = placement as SpatialPlacement<StableID>;
               return slots['item']?.({
@@ -277,12 +293,12 @@ function createSpatialItemsRange(
   return spatialItems;
 }
 
-function preserveSpatialMeasurements(
+function preserveMountedSpatialSizes(
   items: readonly SpatialItem<StableID>[],
   state: SpatialLayoutState<StableID>,
-  preserve: boolean,
+  sizeOwnership: VirtualSpatialSizeOwnership,
 ): readonly SpatialItem<StableID>[] {
-  if (!preserve) return items;
+  if (sizeOwnership !== 'mounted') return items;
   return items.map((item) => {
     const previousIndex = state.domain.indexOf(item.id);
     const previous = previousIndex === null ? undefined : state.items.at(previousIndex);

@@ -376,6 +376,57 @@
           "rationale": "A real lane-geometry or placement-policy change can observably change every Masonry placement; same-width frame-origin changes do not issue that mutation."
         }
       }
+    },
+    {
+      "id": "virtual.spatial-host-update",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/virtual-spatial.ts",
+      "benchmarkIDs": [
+        "VAL-007:spatial-size-ownership"
+      ],
+      "specificationCeiling": "O(nItem + jChanged log nItem)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "active Spatial item count",
+            "ceiling": "component maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "changed collection/value window materialized by the Vue host",
+            "ceiling": "jChanged <= nItem"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem + jChanged log nItem)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(nItem)",
+          "output": "O(nItem)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(nItem)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "collection identity and changed-value windows come from the Virtual-owned projection",
+          "packed Spatial geometry and repair are owned by @sectile/virtual/spatial-layout"
+        ],
+        "proof": "Surface/frame changes are not reactive inputs to the Spatial state watcher and therefore issue no Spatial mutation. With stable geometry resolvers, the host materializes only the collection change window and, in mounted size ownership, performs StableID lookups only for that window to retain measured width and height. A getRect or getZIndex resolver identity change may affect every application rectangle and therefore materializes one full replacement.",
+        "adversarialWitness": "Replace the getRect resolver for an nItem collection so every declared rectangle may change; separately move the surface frame without changing collection values and assert the Spatial state identity and generation remain unchanged.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Only an application resolver change may require a full host-side geometry replacement; frame movement and bounded stable-resolver updates do not take that branch."
+        }
+      }
     }
   ]
 }

@@ -189,13 +189,14 @@ h(VirtualMasonry, {
 });
 h(VirtualSpatial, {
   items: [{ id: 'node-1', x: 10, y: 20 }],
-  getKey: (value: { id: string }) => value.id,
+  getID: (value: { id: string }) => value.id,
   getRect: (value: { x: number; y: number }) => ({
     x: value.x,
     y: value.y,
     width: 120,
     height: 80,
   }),
+  sizeOwnership: 'declared',
 });
 
 // @ts-expect-error items is required at runtime.
@@ -289,6 +290,7 @@ const virtualSpatialProps: VirtualSpatialProps<VirtualRow> = {
   items: virtualRows,
   getID: (value) => value.id,
   getRect: (_value) => ({ x: 0, y: 0, width: 1, height: 1 }),
+  sizeOwnership: 'mounted',
 };
 void virtualListProps;
 void virtualGridProps;

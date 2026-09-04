@@ -768,7 +768,7 @@ test('VirtualMasonry measures natural item heights and preserves declarative ord
   }
 });
 
-test('VirtualSpatial measures DOM size while data owns position and z-order', async () => {
+test('VirtualSpatial mounted size ownership preserves application position and frame-local geometry', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
   const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
   Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 100; } });
@@ -780,23 +780,40 @@ test('VirtualSpatial measures DOM size while data owns position and z-order', as
     { id: 'node-a', x: 0, y: 0, z: 2 },
     { id: 'node-b', x: 60, y: 20, z: 1 },
   ]);
+  const getRect = (value) => ({ x: value.x, y: value.y, width: 20, height: 20 });
+  const getZIndex = (value) => value.z;
   const app = createApp({
     render: () => h(VirtualSpatial, {
       ref: spatial,
       items: items.value,
-      getKey: (value) => value.id,
-      getRect: (value) => ({ x: value.x, y: value.y, width: 20, height: 20 }),
-      getZIndex: (value) => value.z,
+      getID: (value) => value.id,
+      getRect,
+      getZIndex,
+      sizeOwnership: 'mounted',
       initialViewport: { x: 0, y: 0, width: 120, height: 100 },
       overscan: 0,
-    }, { default: ({ key, zIndex }) => `${key}:${zIndex}` }),
+    }, {
+      header: () => h('div', { 'data-spatial-header': '' }, 'Spatial header'),
+      item: ({ id, zIndex }) => `${id}:${zIndex}`,
+      empty: () => h('div', { 'data-spatial-empty': '' }, 'Spatial empty'),
+      footer: () => h('div', { 'data-spatial-footer': '' }, 'Spatial footer'),
+    }),
   });
 
   try {
     app.mount(host);
     await settle();
-    assert.match(host.textContent, /^node-b:1node-a:2/);
-    const first = host.querySelector('[data-virtual-layout="virtual-spatial"][data-part="item"]');
+    assert.match(host.textContent, /node-b:1node-a:2/);
+    const root = host.querySelector('[data-virtual-layout="virtual-spatial"][data-part="root"]');
+    assert.ok(root !== null);
+    const surface = root.querySelector('[data-part="surface"]');
+    const header = root.querySelector('[data-part="header"]');
+    const footer = root.querySelector('[data-part="footer"]');
+    const first = root.querySelector('[data-part="item"]');
+    assert.ok(surface !== null);
+    assert.ok(header !== null);
+    assert.ok(footer !== null);
+    assert.ok(first !== null);
     first.getBoundingClientRect = () => ({
       x: 60, y: 20, top: 20, right: 90, bottom: 60, left: 60,
       width: 30, height: 40, toJSON() {},
@@ -804,14 +821,41 @@ test('VirtualSpatial measures DOM size while data owns position and z-order', as
     FakeResizeObserver.notify(first);
     spatial.value.flush();
     await settle();
-    const measured = spatial.value.state.items.toArray().find((item) => item.id === first.textContent.split(':')[0]);
+    const measuredID = first.textContent.split(':')[0];
+    const measuredIndex = spatial.value.state.domain.indexOf(measuredID);
+    assert.notEqual(measuredIndex, null);
+    const measured = spatial.value.state.items.at(measuredIndex);
     assert.equal(measured.rect.width, 30);
     assert.equal(measured.rect.height, 40);
 
-    items.value = [items.value[1], { ...items.value[0], x: 30 }];
+    const frameStableState = spatial.value.state;
+    const frameStableGeneration = frameStableState.generation;
+    FakeResizeObserver.notify(header);
+    spatial.value.flush();
+    await settle();
+    assert.equal(spatial.value.state, frameStableState);
+    assert.equal(spatial.value.state.generation, frameStableGeneration);
+    assert.equal(spatial.value.state.items.at(measuredIndex).rect.width, 30);
+
+    items.value = [
+      { ...items.value[1], x: 80 },
+      { ...items.value[0], x: 30 },
+    ];
     await settle();
     assert.deepEqual(spatial.value.state.domain.ids, ['node-b', 'node-a']);
+    assert.equal(spatial.value.state.items.at(0).rect.x, 80);
+    assert.equal(spatial.value.state.items.at(0).rect.width, 30);
+    assert.equal(spatial.value.state.items.at(0).rect.height, 40);
     assert.equal(spatial.value.state.items.at(1).rect.x, 30);
+
+    items.value = [];
+    await settle();
+    assert.equal(host.querySelector('[data-virtual-layout="virtual-spatial"][data-part="root"]'), root);
+    assert.equal(root.querySelector('[data-part="surface"]'), surface);
+    assert.equal(root.querySelector('[data-part="header"]'), header);
+    assert.equal(root.querySelector('[data-part="footer"]'), footer);
+    assert.equal(root.getAttribute('data-phase'), 'empty');
+    assert.ok(surface.querySelector('[data-spatial-empty]') !== null);
   } finally {
     app.unmount();
     host.remove();
@@ -819,6 +863,44 @@ test('VirtualSpatial measures DOM size while data owns position and z-order', as
     else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
     if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
     else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
+  }
+});
+
+test('VirtualSpatial declared size ownership keeps application rectangles authoritative', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const spatial = ref();
+  const app = createApp({
+    render: () => h(VirtualSpatial, {
+      ref: spatial,
+      items: [{ id: 1 }],
+      getID: (value) => value.id,
+      getRect: () => ({ x: 5, y: 7, width: 25, height: 15 }),
+      sizeOwnership: 'declared',
+      initialViewport: { x: 0, y: 0, width: 100, height: 80 },
+      overscan: 0,
+    }, { item: ({ id }) => String(id) }),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    const item = host.querySelector('[data-virtual-layout="virtual-spatial"][data-part="item"]');
+    assert.ok(item !== null);
+    assert.deepEqual(spatial.value.state.items.at(0).rect, { x: 5, y: 7, width: 25, height: 15 });
+    assert.equal(item.style.width, '25px');
+    assert.equal(item.style.height, '15px');
+    item.getBoundingClientRect = () => ({
+      x: 5, y: 7, top: 7, right: 95, bottom: 77, left: 5,
+      width: 90, height: 70, toJSON() {},
+    });
+    FakeResizeObserver.notify(item);
+    spatial.value.flush();
+    await settle();
+    assert.deepEqual(spatial.value.state.items.at(0).rect, { x: 5, y: 7, width: 25, height: 15 });
+  } finally {
+    app.unmount();
+    host.remove();
   }
 });
 
@@ -873,11 +955,11 @@ test('declarative virtual collections resolve only the changed keyed window', as
       h(VirtualSpatial, {
         ref: spatial,
         items: items.value,
-        getKey: keys.spatial,
+        getID: keys.spatial,
         getRect,
-        measureSize: false,
+        sizeOwnership: 'declared',
         initialViewport: { x: 0, y: 0, width: 20, height: 20 },
-      }, { default: ({ key: id }) => id }),
+      }, { item: ({ id }) => id }),
     ]),
   });
 

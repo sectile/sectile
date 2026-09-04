@@ -165,7 +165,7 @@ function createSectileCollectionAdapter(
               ? {
                   getRect: layoutItemRect,
                   getZIndex: layoutItemZIndex,
-                  measureSize: false,
+                  sizeOwnership: 'declared' as const,
                 }
               : {
                   sizePolicy: mode === 'fixed'
