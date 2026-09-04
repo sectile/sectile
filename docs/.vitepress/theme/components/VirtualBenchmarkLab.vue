@@ -1659,7 +1659,7 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
                 ref="checkpointHistoryList"
                 class="benchmark-checkpoint-history__list"
                 :items="checkpoints"
-                :get-id="checkpointKey"
+                :get-i-d="checkpointKey"
                 :item-extent="46"
                 :gap="6"
               >

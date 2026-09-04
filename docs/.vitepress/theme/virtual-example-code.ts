@@ -21,7 +21,7 @@ const rows = Array.from({ length: 50_000 }, (_, index) => ({
 <template>
   <VirtualList
     :items="rows"
-    :get-id="row => row.id"
+    :get-i-d="row => row.id"
     :size-policy="{ kind: 'measured' }"
   >
     <template #item="{ value: row }">
@@ -207,7 +207,7 @@ const cards = Array.from({ length: 30_000 }, (_, index) => ({
 <template>
   <VirtualMasonry
     :items="cards"
-    :get-id="card => card.id"
+    :get-i-d="card => card.id"
     :size-policy="{ kind: 'measured' }"
     :lane-policy="{ kind: 'responsive', minExtent: 104, maxCount: 8, gap: 8 }"
     :item-gap="8"
@@ -283,7 +283,7 @@ const nodes = Array.from({ length: 40_000 }, (_, index) => {
 <template>
   <VirtualSpatial
     :items="nodes"
-    :get-id="node => node.id"
+    :get-i-d="node => node.id"
     :get-rect="node => node"
     :get-z-index="node => node.layer"
     size-ownership="declared"

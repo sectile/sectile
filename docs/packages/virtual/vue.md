@@ -28,7 +28,7 @@ const rows = Array.from({ length: 50_000 }, (_, index) => ({
 <template>
   <VirtualList
     :items="rows"
-    :get-id="row => row.id"
+    :get-i-d="row => row.id"
     :size-policy="{ kind: 'estimated', estimate: 40 }"
     class="list"
   >

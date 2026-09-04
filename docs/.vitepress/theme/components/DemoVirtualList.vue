@@ -1,5 +1,6 @@
-<script setup lang="ts" generic="Value">
+<script setup lang="ts" generic="Value, ID extends StableID = StableID">
 import { useTemplateRef, type PropType, type VNodeChild } from 'vue';
+import type { StableID } from '@sectile/core';
 import {
   VirtualList,
   type VirtualListExpose,
@@ -15,7 +16,7 @@ const props = defineProps({
     required: true,
   },
   getID: {
-    type: Function as PropType<VirtualListIDResolver<Value, string>>,
+    type: Function as PropType<VirtualListIDResolver<Value, ID>>,
     required: true,
   },
   itemExtent: { type: Number, required: true },
@@ -25,12 +26,20 @@ const props = defineProps({
 });
 
 defineSlots<{
-  item(props: VirtualListSlotProps<Value, string>): VNodeChild;
+  item(props: VirtualListSlotProps<Value, ID>): VNodeChild;
   empty(): VNodeChild;
 }>();
 
-const list = useTemplateRef<VirtualListExpose<string>>('list');
+const list = useTemplateRef<VirtualListExpose<StableID>>('list');
+const runtimeGetID: VirtualListIDResolver<unknown, StableID> = (value, index) =>
+  props.getID(value as Value, index);
 const listItemAttributes = (): { readonly role: 'listitem' } => ({ role: 'listitem' });
+
+function itemSlotProps(
+  slotProps: VirtualListSlotProps<unknown, StableID>,
+): VirtualListSlotProps<Value, ID> {
+  return slotProps as unknown as VirtualListSlotProps<Value, ID>;
+}
 
 defineExpose({
   isAtEnd(threshold = 8) {
@@ -38,7 +47,7 @@ defineExpose({
     if (scrollport === null || scrollport === undefined) return true;
     return scrollport.scrollHeight - scrollport.scrollTop - scrollport.clientHeight <= threshold;
   },
-  scrollToID(id: string, alignment?: 'start' | 'center' | 'end' | 'nearest') {
+  scrollToID(id: ID, alignment?: 'start' | 'center' | 'end' | 'nearest') {
     return list.value?.scrollToID(id, alignment);
   },
 });
@@ -49,7 +58,7 @@ defineExpose({
     ref="list"
     v-bind="$attrs"
     :items="props.items"
-    :get-id="props.getID"
+    :get-i-d="runtimeGetID"
     :size-policy="{ kind: 'fixed', extent: props.itemExtent }"
     :gap="props.gap"
     :overscan="props.overscan"
@@ -57,7 +66,7 @@ defineExpose({
     :item-attributes="listItemAttributes"
     role="list"
   >
-    <template #item="slotProps"><slot name="item" v-bind="slotProps" /></template>
+    <template #item="slotProps"><slot name="item" v-bind="itemSlotProps(slotProps)" /></template>
     <template #empty><slot name="empty" /></template>
   </VirtualList>
 </template>

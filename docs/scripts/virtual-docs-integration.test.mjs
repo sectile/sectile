@@ -29,7 +29,7 @@ test('Virtual examples follow the shared usage environment and real host connect
   assert.doesNotMatch(component, /virtual-overscan-diagram__(?:rendered|viewport)/u);
   assert.match(component, /@scroll\.passive="handleScroll"/u);
   assert.match(examples, /<template #item="\{ value: row \}">/u);
-  assert.match(examples, /:get-id="row => row\.id"/u);
+  assert.match(examples, /:get-i-d="row => row\.id"/u);
   assert.match(examples, /:size-policy="\{ kind: 'measured' \}"/u);
   assert.match(examples, /:lane-policy="\{ kind: 'responsive'/u);
   assert.match(examples, /size-ownership="declared"/u);
@@ -153,7 +153,7 @@ test('Virtual benchmark lab stays isolated and reuses docs controls', async () =
   assert.match(lab, /<DemoVirtualList/u);
   assert.match(virtualList, /from '@sectile\/vue\/virtual\/list'/u);
   assert.match(virtualList, /VirtualListIDResolver/u);
-  assert.match(virtualList, /:get-id="props\.getID"/u);
+  assert.match(virtualList, /:get-i-d="runtimeGetID"/u);
   assert.match(virtualList, /:size-policy="\{ kind: 'fixed', extent: props\.itemExtent \}"/u);
   assert.match(virtualList, /scrollToID/u);
   const running = lab.match(/\.benchmark-running\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';
