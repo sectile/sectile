@@ -183,8 +183,9 @@ h(VirtualGrid, {
 });
 h(VirtualMasonry, {
   items: [{ id: 'card-1' }],
-  getKey: (value: { id: string }) => value.id,
-  estimateSize: 240,
+  getID: (value: { id: string }) => value.id,
+  sizePolicy: { kind: 'estimated', estimate: 240 },
+  lanePolicy: { kind: 'fixed', count: 2 },
 });
 h(VirtualSpatial, {
   items: [{ id: 'node-1', x: 10, y: 20 }],
@@ -281,7 +282,8 @@ const virtualGridProps: VirtualGridProps<VirtualRow> = {
 const virtualMasonryProps: VirtualMasonryProps<VirtualRow> = {
   items: virtualRows,
   getID: (value) => value.id,
-  estimateSize: 24,
+  sizePolicy: { kind: 'estimated', estimate: 24 },
+  lanePolicy: { kind: 'fixed', count: 2 },
 };
 const virtualSpatialProps: VirtualSpatialProps<VirtualRow> = {
   items: virtualRows,

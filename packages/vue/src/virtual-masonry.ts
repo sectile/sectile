@@ -1,15 +1,26 @@
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type SlotsType, type VNodeChild, type VNodeProps } from 'vue';
 import type { StableID } from '@sectile/core';
+import {
+  createExactVirtualExtent,
+  createVirtualExtent,
+  reconcileVirtualCollectionExtents,
+  reconcileVirtualCollectionValueExtents,
+  resolveVirtualLaneGeometry,
+  virtualSizePolicyRequiresMeasurement,
+  type VirtualLaneGeometry,
+  type VirtualLanePolicy,
+  type VirtualSizePolicy,
+} from '@sectile/virtual/collection';
 import { createExtentIndex, createUniformExtentIndex } from '@sectile/virtual/extent-index';
 import { createMasonryLayout, masonryLayoutStrategy, type MasonryLayoutState, type MasonryMeasurement, type MasonryMutation, type MasonryPlacement, type MasonryPlacementPolicy } from '@sectile/virtual/masonry-layout';
 import { createAxisMeasurementResolver, type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
 import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './internal/virtual-core.js';
-import { assertLegacyVirtualSizeMode, constrainPreparedVirtualCollection, createVirtualCollectionExpose, estimatedVirtualExtent, exactVirtualExtent, nearlyEqual, prepareVirtualCollection, reconcilePreparedVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, requireVirtualAutomaticEstimate, requiresVirtualDOMBootstrap, resolveResponsiveLanes, updatePreparedVirtualCollection, type PreparedVirtualCollection, type ResponsiveLaneGeometry, type ResponsiveLaneProps, type VirtualCollectionBaseProps, type VirtualCollectionEstimate, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './internal/virtual-collection.js';
+import { constrainPreparedVirtualCollection, createVirtualCollectionExpose, nearlyEqual, prepareVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, updatePreparedVirtualCollection, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './internal/virtual-collection.js';
 
 export interface VirtualMasonryProps<Value = unknown, ID extends StableID = StableID>
-  extends VirtualCollectionBaseProps<Value, ID>, ResponsiveLaneProps {
-  readonly itemSize?: number;
-  readonly estimateSize?: VirtualCollectionEstimate<Value>;
+  extends VirtualCollectionBaseProps<Value, ID> {
+  readonly sizePolicy: VirtualSizePolicy<Value>;
+  readonly lanePolicy: VirtualLanePolicy;
   readonly itemGap?: number;
   readonly placementPolicy?: MasonryPlacementPolicy;
 }
@@ -50,12 +61,8 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
   props: {
     items: { type: Array as unknown as PropType<readonly unknown[]>, required: true },
     getID: { type: Function as PropType<VirtualCollectionIDResolver<unknown, StableID>>, required: true },
-    itemSize: { type: Number, default: undefined },
-    estimateSize: { type: [Number, Function] as PropType<VirtualCollectionEstimate<unknown>>, default: undefined },
-    laneCount: { type: Number, default: undefined },
-    minLaneSize: { type: Number, default: 240 },
-    maxLaneCount: { type: Number, default: 12 },
-    laneGap: { type: Number, default: 0 },
+    sizePolicy: { type: Object as PropType<VirtualSizePolicy<unknown>>, required: true },
+    lanePolicy: { type: Object as PropType<VirtualLanePolicy>, required: true },
     itemGap: { type: Number, default: 0 },
     placementPolicy: { type: String as PropType<MasonryPlacementPolicy>, default: 'shortest' },
     overscan: { type: [Number, Object] as PropType<number | Partial<VirtualInsets>>, default: 240 },
@@ -79,20 +86,16 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
     footer: () => VNodeChild;
   }>,
   setup(props, { attrs, emit, expose, slots }) {
-    assertLegacyVirtualSizeMode(props.itemSize, props.estimateSize);
     const initialViewport = props.initialViewport === undefined
       ? undefined
       : Object.freeze({ ...props.initialViewport });
     const prepared = shallowRef(prepareVirtualCollection(props.items, props.getID, props.maxItems));
-    const initialGeometry = resolveResponsiveLanes(
+    const initialGeometry = resolveVirtualLaneGeometry(
       initialViewport?.width ?? 0,
-      props.laneCount,
-      props.minLaneSize,
-      props.maxLaneCount,
-      props.laneGap,
+      props.lanePolicy,
     );
     const automaticEstimate = shallowRef<number>();
-    const initialState = requiresVirtualDOMBootstrap(props.itemSize, props.estimateSize)
+    const initialState = virtualSizePolicyRequiresMeasurement(props.sizePolicy)
       ? createVirtualMasonryState(
           prepareVirtualCollection([], props.getID, props.maxItems),
           [],
@@ -107,7 +110,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
     const bootstrapElements = new Map<number, HTMLElement>();
     let bootstrapScheduled = false;
     let disposed = false;
-    const isBootstrapping = (): boolean => requiresVirtualDOMBootstrap(props.itemSize, props.estimateSize)
+    const isBootstrapping = (): boolean => virtualSizePolicyRequiresMeasurement(props.sizePolicy)
       && automaticEstimate.value === undefined
       && prepared.value.domain.size > 0;
     const bootstrapItemRef = (index: number, value: unknown): void => {
@@ -120,12 +123,9 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
     };
     const completeBootstrap = (): void => {
       if (!isBootstrapping()) return;
-      const geometry = resolveResponsiveLanes(
+      const geometry = resolveVirtualLaneGeometry(
         viewportWidth.value,
-        props.laneCount,
-        props.minLaneSize,
-        props.maxLaneCount,
-        props.laneGap,
+        props.lanePolicy,
       );
       const count = Math.min(geometry.count, prepared.value.domain.size);
       let total = 0;
@@ -165,42 +165,64 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
       disposed = true;
       bootstrapElements.clear();
     });
-    const measure = props.itemSize === undefined
-      ? createAxisMeasurementResolver<MasonryLayoutState<StableID>, StableID>('vertical')
-      : undefined;
+    const measure = props.sizePolicy.kind === 'fixed'
+      ? undefined
+      : createAxisMeasurementResolver<MasonryLayoutState<StableID>, StableID>('vertical');
 
     watch(
       () => [props.items, props.getID] as const,
       () => {
-        if (requiresVirtualDOMBootstrap(props.itemSize, props.estimateSize) && automaticEstimate.value === undefined) {
-          prepared.value = updatePreparedVirtualCollection(prepared.value, props.items, props.getID);
+        if (
+          virtualSizePolicyRequiresMeasurement(props.sizePolicy)
+          && automaticEstimate.value === undefined
+        ) {
+          prepared.value = updatePreparedVirtualCollection(
+            prepared.value,
+            props.items,
+            props.getID,
+          );
           scheduleBootstrap();
           return;
         }
         const exposed = root.value;
         if (exposed === undefined) return;
-        const next = updatePreparedVirtualCollection(prepared.value, props.items, props.getID);
-        const patch = reconcilePreparedVirtualCollection(
-          exposed.state as MasonryLayoutState<StableID>,
+        const next = updatePreparedVirtualCollection(
+          prepared.value,
+          props.items,
+          props.getID,
+        );
+        let state = exposed.state as MasonryLayoutState<StableID>;
+        const patch = reconcileVirtualCollectionExtents(
+          state,
           next,
-          props,
+          props.sizePolicy,
           automaticEstimate.value,
         );
-        if (patch === null) {
-          prepared.value = next;
-          return;
+        if (patch !== null) {
+          const result = exposed.mutate(Object.freeze({
+            type: 'items',
+            ...patch,
+          }) satisfies MasonryMutation<StableID>);
+          if (!result.ok) return;
+          state = result.value.state as MasonryLayoutState<StableID>;
         }
-        const result = exposed.mutate(Object.freeze({ type: 'items', ...patch }) satisfies MasonryMutation<StableID>);
-        if (result.ok) prepared.value = next;
+        const valueUpdates = reconcileVirtualCollectionValueExtents(
+          state,
+          next,
+          props.sizePolicy,
+          automaticEstimate.value,
+        );
+        if (valueUpdates.length > 0) {
+          const result = exposed.measure(valueUpdates as readonly MasonryMeasurement[]);
+          if (!result.ok) return;
+        }
+        prepared.value = next;
       },
       { flush: 'post' },
     );
     watch(
       () => [
-        props.laneCount,
-        props.minLaneSize,
-        props.maxLaneCount,
-        props.laneGap,
+        props.lanePolicy,
         props.itemGap,
         props.placementPolicy,
         viewportWidth.value,
@@ -208,18 +230,15 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
       () => {
         const exposed = root.value;
         if (exposed === undefined) return;
-        const geometry = resolveResponsiveLanes(
+        const geometry = resolveVirtualLaneGeometry(
           viewportWidth.value,
-          props.laneCount,
-          props.minLaneSize,
-          props.maxLaneCount,
-          props.laneGap,
+          props.lanePolicy,
         );
         const state = exposed.state as MasonryLayoutState<StableID>;
         if (
           state.laneCount === geometry.count
           && nearlyEqual(state.laneExtent, geometry.extent)
-          && state.laneGap === props.laneGap
+          && state.laneGap === geometry.gap
           && state.itemGap === props.itemGap
           && state.placementPolicy === props.placementPolicy
         ) return;
@@ -227,7 +246,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
           type: 'geometry',
           laneCount: geometry.count,
           laneExtent: geometry.extent,
-          laneGap: props.laneGap,
+          laneGap: geometry.gap,
           itemGap: props.itemGap,
           placementPolicy: props.placementPolicy,
         }) satisfies MasonryMutation<StableID>);
@@ -264,7 +283,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
           : 'ready',
       onStateChange: (state: object) => emit('stateChange', state as MasonryLayoutState<StableID>),
       onPlanChange: (plan: VirtualLayoutPlan<StableID>) => {
-        if (plan.viewport.width > 0) viewportWidth.value = plan.viewport.width;
+        viewportWidth.value = plan.viewport.width;
         emit('planChange', plan);
       },
       onError: (error: Parameters<VirtualizerErrorHandler>[0]) => emit('error', error),
@@ -280,21 +299,15 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
                 prepared.value,
                 props.items,
                 Math.min(
-                  resolveResponsiveLanes(
+                  resolveVirtualLaneGeometry(
                     viewportWidth.value,
-                    props.laneCount,
-                    props.minLaneSize,
-                    props.maxLaneCount,
-                    props.laneGap,
+                    props.lanePolicy,
                   ).count,
                   prepared.value.domain.size,
                 ),
-                resolveResponsiveLanes(
+                resolveVirtualLaneGeometry(
                   viewportWidth.value,
-                  props.laneCount,
-                  props.minLaneSize,
-                  props.maxLaneCount,
-                  props.laneGap,
+                  props.lanePolicy,
                 ).extent,
                 props.itemAs,
                 props.itemAttributes,
@@ -314,7 +327,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
                 props.items,
                 props.itemAs,
                 props.itemAttributes,
-                props.itemSize === undefined ? 'width' : 'both',
+                props.sizePolicy.kind === 'fixed' ? 'both' : 'width',
                 (value, id, index, placement) => {
                   const masonryPlacement = placement as MasonryPlacement<StableID>;
                   return slots['item']?.({
@@ -343,14 +356,12 @@ function createVirtualMasonryState(
   prepared: PreparedVirtualCollection<unknown, StableID>,
   items: readonly unknown[],
   props: Readonly<{
-    itemSize: number | undefined;
-    estimateSize: VirtualCollectionEstimate<unknown> | undefined;
-    laneGap: number;
+    sizePolicy: VirtualSizePolicy<unknown>;
     itemGap: number;
     placementPolicy: MasonryPlacementPolicy;
     maxItems: number;
   }>,
-  geometry: ResponsiveLaneGeometry,
+  geometry: VirtualLaneGeometry,
   automaticEstimate?: number,
 ): MasonryLayoutState<StableID> {
   return createMasonryLayout(
@@ -359,7 +370,7 @@ function createVirtualMasonryState(
     {
       laneCount: geometry.count,
       laneExtent: geometry.extent,
-      laneGap: props.laneGap,
+      laneGap: geometry.gap,
       itemGap: props.itemGap,
       placementPolicy: props.placementPolicy,
       maxLanes: Math.max(geometry.count, 1_024),
@@ -367,24 +378,47 @@ function createVirtualMasonryState(
   );
 }
 
-
 function createCollectionExtents(
   prepared: PreparedVirtualCollection<unknown, StableID>,
   items: readonly unknown[],
   props: Readonly<{
-    itemSize: number | undefined;
-    estimateSize: VirtualCollectionEstimate<unknown> | undefined;
+    sizePolicy: VirtualSizePolicy<unknown>;
     maxItems: number;
   }>,
   automaticEstimate?: number,
 ) {
-  const estimate = props.estimateSize ?? automaticEstimate;
-  const shared = props.itemSize !== undefined
-    ? exactVirtualExtent(props.itemSize)
-    : typeof estimate !== 'function'
-      ? estimatedVirtualExtent(requireVirtualAutomaticEstimate(estimate), undefined, 0)
-      : null;
+  if (prepared.domain.size === 0) {
+    return createUniformExtentIndex(0, createExactVirtualExtent(0), {
+      maxItems: props.maxItems,
+    });
+  }
+  const shared = props.sizePolicy.kind === 'fixed'
+    || props.sizePolicy.kind === 'measured'
+    || (
+      props.sizePolicy.kind === 'estimated'
+      && typeof props.sizePolicy.estimate === 'number'
+    )
+    ? createVirtualExtent(
+        props.sizePolicy,
+        items[0],
+        0,
+        automaticEstimate,
+      )
+    : null;
   return shared === null
-    ? createExtentIndex(Array.from({ length: prepared.domain.size }, (_unused, index) => estimatedVirtualExtent(estimate!, items[index], index)), { maxItems: props.maxItems })
-    : createUniformExtentIndex(prepared.domain.size, shared, { maxItems: props.maxItems });
+    ? createExtentIndex(
+        Array.from(
+          { length: prepared.domain.size },
+          (_unused, index) => createVirtualExtent(
+            props.sizePolicy,
+            items[index],
+            index,
+            automaticEstimate,
+          ),
+        ),
+        { maxItems: props.maxItems },
+      )
+    : createUniformExtentIndex(prepared.domain.size, shared, {
+        maxItems: props.maxItems,
+      });
 }

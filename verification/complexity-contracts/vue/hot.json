@@ -319,6 +319,63 @@
           "rationale": "A lane-count change or a structural regrouping at the start can change every dense row aggregate; same-width frame-origin changes and bounded value windows do not take this full-rebuild branch."
         }
       }
+    },
+    {
+      "id": "virtual.masonry-reconfigure",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/virtual-masonry.ts",
+      "benchmarkIDs": [
+        "VAL-007:masonry-geometry-repair"
+      ],
+      "specificationCeiling": "O(nItem log lLane + jChanged log nItem)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "active Masonry item count",
+            "ceiling": "component maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "changed collection identities or value-dependent extents",
+            "ceiling": "jChanged <= nItem"
+          },
+          {
+            "name": "lLane",
+            "meaning": "active Masonry lane count",
+            "ceiling": "lanePolicy fixed count or responsive maxCount"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem log lLane + jChanged log nItem)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(nItem + jChanged log nItem)",
+          "output": "O(nItem)",
+          "retained": "O(nItem)"
+        },
+        "resources": {
+          "allocations": "O(nItem + jChanged log nItem)",
+          "cacheEntries": "O(nItem)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "collection identity and changed-value windows come from the Virtual-owned projection",
+          "lane geometry comes from resolveVirtualLaneGeometry",
+          "Masonry placement repair is owned by @sectile/virtual/masonry-layout"
+        ],
+        "proof": "The Vue host performs no geometry work when the effective width and policy-derived lane geometry are unchanged. Structural and value changes are forwarded through Virtual-owned extent reconciliation. An actual lane geometry, itemGap, or placementPolicy change issues one Masonry geometry mutation; variable extents may then require the owner to rebuild every placement, while uniform extents remain formula-backed.",
+        "adversarialWitness": "Change the effective width under responsive lanes with variable extents and shortest-lane placement so the lane count changes and every item placement must be rebuilt; separately invalidate a changed value window near index zero so the owner must repair from the earliest affected item.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A real lane-geometry or placement-policy change can observably change every Masonry placement; same-width frame-origin changes do not issue that mutation."
+        }
+      }
     }
   ]
 }

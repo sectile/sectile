@@ -535,8 +535,8 @@ test('VirtualGrid and VirtualMasonry bootstrap unknown sizes from rendered items
         ref: masonry,
         items,
         getID: (value) => value.id,
-        laneCount: 2,
-        minLaneSize: 50,
+        sizePolicy: { kind: 'measured' },
+        lanePolicy: { kind: 'fixed', count: 2 },
         initialViewport: { x: 0, y: 0, width: 120, height: 100 },
         overscan: 0,
         itemAttributes: (value) => ({ 'data-bootstrap-height': String(value.height) }),
@@ -693,13 +693,17 @@ test('VirtualMasonry measures natural item heights and preserves declarative ord
     render: () => h(VirtualMasonry, {
       ref: masonry,
       items: items.value,
-      getKey: (value) => value.id,
-      estimateSize: 20,
-      minLaneSize: 50,
-      laneGap: 10,
+      getID: (value) => value.id,
+      sizePolicy: { kind: 'estimated', estimate: 20 },
+      lanePolicy: { kind: 'responsive', minExtent: 50, maxCount: 6, gap: 10 },
       initialViewport: { x: 0, y: 0, width: 120, height: 100 },
       overscan: 0,
-    }, { default: ({ key, lane }) => `${key}:${lane}` }),
+    }, {
+      header: () => h('div', { 'data-masonry-header': '' }, 'Masonry header'),
+      item: ({ id, lane }) => `${id}:${lane}`,
+      empty: () => h('div', { 'data-masonry-empty': '' }, 'Masonry empty'),
+      footer: () => h('div', { 'data-masonry-footer': '' }, 'Masonry footer'),
+    }),
   });
 
   try {
@@ -716,6 +720,17 @@ test('VirtualMasonry measures natural item heights and preserves declarative ord
     await settle();
     assert.deepEqual(masonry.value.state.extents.extentAt(0), { kind: 'exact', value: 35 });
 
+    const frameStableState = masonry.value.state;
+    const frameStableGeneration = frameStableState.generation;
+    const header = host.querySelector('[data-masonry-header]')?.parentElement;
+    assert.ok(header !== null && header !== undefined);
+    FakeResizeObserver.notify(header);
+    masonry.value.flush();
+    await settle();
+    assert.equal(masonry.value.state, frameStableState);
+    assert.equal(masonry.value.state.generation, frameStableGeneration);
+    assert.equal(masonry.value.state.laneCount, 2);
+
     const root = host.querySelector('[data-virtual-layout="virtual-masonry"][data-part="root"]');
     Object.defineProperty(root, 'clientWidth', { configurable: true, value: 240 });
     Object.defineProperty(root, 'clientHeight', { configurable: true, value: 100 });
@@ -729,6 +744,20 @@ test('VirtualMasonry measures natural item heights and preserves declarative ord
     await settle();
     assert.equal(masonry.value.state.domain.at(0), 'card-new');
     assert.equal(masonry.value.state.domain.size, 13);
+    assert.deepEqual(masonry.value.state.extents.extentAt(1), { kind: 'exact', value: 35 });
+
+    const surface = root.querySelector('[data-part="surface"]');
+    const footer = host.querySelector('[data-masonry-footer]')?.parentElement;
+    assert.ok(surface !== null);
+    assert.ok(footer !== null && footer !== undefined);
+    items.value = [];
+    await settle();
+    assert.equal(host.querySelector('[data-virtual-layout="virtual-masonry"][data-part="root"]'), root);
+    assert.equal(root.querySelector('[data-part="surface"]'), surface);
+    assert.equal(host.querySelector('[data-masonry-footer]')?.parentElement, footer);
+    assert.equal(root.getAttribute('data-phase'), 'empty');
+    assert.ok(surface.querySelector('[data-masonry-empty]') !== null);
+    assert.equal(masonry.value.state.domain.size, 0);
   } finally {
     app.unmount();
     host.remove();
@@ -836,11 +865,11 @@ test('declarative virtual collections resolve only the changed keyed window', as
       }, { item: ({ id }) => id }),
       h(VirtualMasonry, {
         items: items.value,
-        getKey: keys.masonry,
-        itemSize: 20,
-        laneCount: 2,
+        getID: keys.masonry,
+        sizePolicy: { kind: 'fixed', extent: 20 },
+        lanePolicy: { kind: 'fixed', count: 2 },
         initialViewport: { x: 0, y: 0, width: 40, height: 20 },
-      }, { default: ({ key: id }) => id }),
+      }, { item: ({ id }) => id }),
       h(VirtualSpatial, {
         ref: spatial,
         items: items.value,

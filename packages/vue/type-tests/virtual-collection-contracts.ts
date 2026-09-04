@@ -65,10 +65,11 @@ void numberGrid;
 const numberMasonry: VirtualMasonryPublicProps<NumberValue, number> = {
   items: numberItems,
   getID: (value) => value.id,
-  estimateSize: 24,
-  laneCount: 2,
+  sizePolicy: { kind: 'estimated', estimate: 24 },
+  lanePolicy: { kind: 'fixed', count: 2 },
 };
-void numberMasonry;
+numberMasonry.sizePolicy satisfies VirtualSizePolicy<NumberValue>;
+numberMasonry.lanePolicy satisfies VirtualLanePolicy;
 
 const numberSpatial: VirtualSpatialPublicProps<NumberValue, number> = {
   items: numberItems,

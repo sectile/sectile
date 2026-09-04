@@ -13,21 +13,13 @@ import type { StableID } from '@sectile/core';
 import type { Sequence } from '@sectile/core/sequence';
 import {
   constrainVirtualCollectionDomain,
-  createEstimatedVirtualExtent,
-  createExactVirtualExtent,
   createVirtualCollection,
-  reconcileVirtualCollectionExtents,
   replaceVirtualCollection,
-  resolveVirtualLaneGeometry,
-  virtualSizePolicyRequiresMeasurement,
   type VirtualCollectionIDResolver as OwnerVirtualCollectionIDResolver,
   type VirtualCollectionProjection,
-  type VirtualExtentEstimate,
   type VirtualLanePolicy,
   type VirtualSizePolicy,
 } from '@sectile/virtual/collection';
-import type { Extent } from '@sectile/virtual/extent-index';
-import type { LinearLayoutState, LinearPatch } from '@sectile/virtual/linear-layout';
 import {
   virtualItemStyle,
   type VirtualInsets,
@@ -50,8 +42,6 @@ export type VirtualCollectionIDResolver<
   Value,
   ID extends StableID = StableID,
 > = OwnerVirtualCollectionIDResolver<Value, ID>;
-
-export type VirtualCollectionEstimate<Value> = VirtualExtentEstimate<Value>;
 
 export type VirtualCollectionItemAttributes<Value> = {
   bivarianceHack(
@@ -87,13 +77,6 @@ export interface VirtualCollectionSizePolicyProps<Value> {
 
 export interface VirtualCollectionLanePolicyProps {
   readonly lanePolicy?: VirtualLanePolicy;
-}
-
-export interface ResponsiveLaneProps {
-  readonly laneCount?: number;
-  readonly minLaneSize?: number;
-  readonly maxLaneCount?: number;
-  readonly laneGap?: number;
 }
 
 export type VirtualCollectionPhase = 'bootstrap' | 'ready' | 'empty';
@@ -135,11 +118,6 @@ export interface VirtualCollectionExpose<
   flush(): VirtualizerOperationResult<VirtualLayoutPlan<ID>>;
 }
 
-export interface ResponsiveLaneGeometry {
-  readonly count: number;
-  readonly extent: number;
-}
-
 export function prepareVirtualCollection<
   Value,
   ID extends StableID,
@@ -173,93 +151,6 @@ export function constrainPreparedVirtualCollection<
   maxItems: number,
 ): Sequence<ID> {
   return constrainVirtualCollectionDomain(prepared, maxItems);
-}
-
-export function reconcilePreparedVirtualCollection<ID extends StableID>(
-  state: Pick<LinearLayoutState<ID>, 'domain' | 'extents'>,
-  next: PreparedVirtualCollection<unknown, ID>,
-  props: Readonly<{
-    itemSize: number | undefined;
-    estimateSize: VirtualCollectionEstimate<unknown> | undefined;
-  }>,
-  automaticEstimate?: number,
-): LinearPatch<ID> | null {
-  return reconcileVirtualCollectionExtents(
-    state,
-    next,
-    legacyVirtualSizePolicy(props.itemSize, props.estimateSize),
-    automaticEstimate,
-  );
-}
-
-export function assertLegacyVirtualSizeMode(
-  itemSize: number | undefined,
-  estimateSize: VirtualCollectionEstimate<unknown> | undefined,
-): void {
-  if (itemSize !== undefined && estimateSize !== undefined) {
-    throw new TypeError('Virtual itemSize and estimateSize are mutually exclusive.');
-  }
-}
-
-export function requireVirtualAutomaticEstimate(
-  estimate: VirtualCollectionEstimate<unknown> | undefined,
-): VirtualCollectionEstimate<unknown> {
-  if (estimate === undefined) {
-    throw new TypeError('Automatic virtual size must be measured before layout initialization.');
-  }
-  return estimate;
-}
-
-export function requiresVirtualDOMBootstrap(
-  itemSize: number | undefined,
-  estimateSize: VirtualCollectionEstimate<unknown> | undefined,
-): boolean {
-  return virtualSizePolicyRequiresMeasurement(
-    legacyVirtualSizePolicy(itemSize, estimateSize),
-  );
-}
-
-export function exactVirtualExtent(value: number): Extent {
-  return createExactVirtualExtent(value);
-}
-
-export function estimatedVirtualExtent(
-  estimate: VirtualCollectionEstimate<unknown>,
-  value: unknown,
-  index: number,
-): Extent {
-  return createEstimatedVirtualExtent(estimate, value, index);
-}
-
-export function resolveResponsiveLanes(
-  crossExtent: number,
-  requestedCount: number | undefined,
-  minLaneSize: number,
-  maxLaneCount: number,
-  laneGap: number,
-): ResponsiveLaneGeometry {
-  const available = Number.isFinite(crossExtent) && crossExtent > 0
-    ? crossExtent
-    : minLaneSize;
-  const geometry = resolveVirtualLaneGeometry(
-    available,
-    requestedCount === undefined
-      ? Object.freeze({
-          kind: 'responsive' as const,
-          minExtent: minLaneSize,
-          maxCount: maxLaneCount,
-          gap: laneGap,
-        })
-      : Object.freeze({
-          kind: 'fixed' as const,
-          count: requestedCount,
-          gap: laneGap,
-        }),
-  );
-  return Object.freeze({
-    count: geometry.count,
-    extent: geometry.extent,
-  });
 }
 
 const VirtualCollectionProjectionRuntime = /* @__PURE__ */ defineComponent({
@@ -525,19 +416,6 @@ export function createVirtualCollectionExpose<State>(
 
 export function nearlyEqual(left: number, right: number): boolean {
   return Math.abs(left - right) < 0.01;
-}
-
-function legacyVirtualSizePolicy(
-  itemSize: number | undefined,
-  estimateSize: VirtualCollectionEstimate<unknown> | undefined,
-): VirtualSizePolicy<unknown> {
-  if (itemSize !== undefined) {
-    return Object.freeze({ kind: 'fixed', extent: itemSize });
-  }
-  if (estimateSize !== undefined) {
-    return Object.freeze({ kind: 'estimated', estimate: estimateSize });
-  }
-  return Object.freeze({ kind: 'measured' });
 }
 
 function itemSizing(size: VirtualizerItemSize): VirtualItemStyleOptions {
