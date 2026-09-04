@@ -177,12 +177,12 @@ async function controlledContractScenario() {
       && resizeHandle?.getAttribute('aria-valuemax') === '150'
       && selection?.getAttribute('aria-checked') === 'true'
       && selection?.tabIndex === 0
-      && controller.cursor.value.current?.rowID === 'r0'
-      && controller.editState.value.kind === 'editing';
+      && cursor.value.current?.rowID === 'r0'
+      && editState.value.kind === 'editing';
     app.unmount();
     columnSizes.value = { name: 132 };
     await nextTick();
-    return Object.freeze({ ok: ok && resizeHandle?.getAttribute('aria-valuenow') === beforeUnmount, columnSize: beforeUnmount, selection: selection?.getAttribute('aria-checked') ?? null, cursor: controller.cursor.value.current, edit: controller.editState.value.kind, cleanupStable: resizeHandle?.getAttribute('aria-valuenow') === beforeUnmount });
+    return Object.freeze({ ok: ok && resizeHandle?.getAttribute('aria-valuenow') === beforeUnmount, columnSize: beforeUnmount, selection: selection?.getAttribute('aria-checked') ?? null, cursor: cursor.value.current, edit: editState.value.kind, cleanupStable: resizeHandle?.getAttribute('aria-valuenow') === beforeUnmount });
   } finally { if (host.isConnected) { app.unmount(); host.remove(); } }
 }
 
