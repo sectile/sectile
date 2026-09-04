@@ -130,7 +130,9 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'tabular:./data-table',
     'temporal:./calendar',
     'terminal:./listbox',
+    'virtual:./collection',
     'virtual:./linear-layout',
+    'virtual:./surface',
     'vue:./listbox',
   ]);
   return representatives.has(`${packageName}:${subpath}`);

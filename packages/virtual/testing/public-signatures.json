@@ -7,6 +7,10 @@
       "types": "dist/index.d.ts"
     },
     {
+      "subpath": "./collection",
+      "types": "dist/collection.d.ts"
+    },
+    {
       "subpath": "./extent-index",
       "types": "dist/extent-index.d.ts"
     },
@@ -31,15 +35,23 @@
       "types": "dist/spatial-layout.d.ts"
     },
     {
+      "subpath": "./surface",
+      "types": "dist/surface.d.ts"
+    },
+    {
       "subpath": "./track-grid-layout",
       "types": "dist/track-grid-layout.d.ts"
     }
   ],
-  "fingerprint": "3fc6736b5c459ce7c6289e24bd4e33f9bdcca9d648031a95d73f1955b099f3de",
+  "fingerprint": "e981abdbacf4856d0de04ad380e8310bdea68b87809c1a3846e4ae7f573aba8f",
   "files": [
     {
+      "path": "dist/collection.d.ts",
+      "sha256": "235847fe3bcae8bfd68b2efb2cb412a25c95d83608ae71c1b5530e6d64154a13"
+    },
+    {
       "path": "dist/error.d.ts",
-      "sha256": "760abd896918fa1341c7ce627c6942051b7bae84079c02d5d10c4fdddacdd352"
+      "sha256": "715fbd77a5dbab3f3b36322fc461b84211dc6282a513984ae43c39fa30a717a1"
     },
     {
       "path": "dist/extent-index.d.ts",
@@ -47,7 +59,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "63e7cc7833b5ef9cf6a38c8eea27a512760820da8788884911fb6cbc1bd5e4e5"
+      "sha256": "2aab8c02d9473e1f8d79b3ca71f864b65e5586c56deb28302ff6e02f6faa1871"
     },
     {
       "path": "dist/internal/track.d.ts",
@@ -59,7 +71,7 @@
     },
     {
       "path": "dist/linear-layout.d.ts",
-      "sha256": "f572c1cc4c8232bb8ce078e1e9b02041e91c3b913a8e7233b63371cda84217e5"
+      "sha256": "b2979d6aa8cbbd639406cbece7bc91f74ed2227b9e3411ffcae913c6560f6d7b"
     },
     {
       "path": "dist/masonry-layout.d.ts",
@@ -72,6 +84,10 @@
     {
       "path": "dist/spatial-layout.d.ts",
       "sha256": "e66ae0a54df4e10cc509198dcc0d0f948fccf69c5b807f97d5a401da8a407e6d"
+    },
+    {
+      "path": "dist/surface.d.ts",
+      "sha256": "4b56b81ce1b43a15e4d328b3f6e226448b899980363e1460e5d22f5a840fdc73"
     },
     {
       "path": "dist/track-grid-layout.d.ts",

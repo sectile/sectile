@@ -111,6 +111,14 @@ try {
   `);
   scenarios.push({ id: 'tabular-virtual-explicit-opt-in', status: 'passed' });
 
+  const virtualFoundations = await fixture('virtual-foundations', [tarballs.core, tarballs.virtual]);
+  await runtime(virtualFoundations, `
+    const collection = await import('@sectile/virtual/collection');
+    const surface = await import('@sectile/virtual/surface');
+    if (typeof collection.createVirtualCollection !== 'function' || typeof collection.resolveVirtualLaneGeometry !== 'function' || typeof surface.createVirtualSurfaceFrame !== 'function' || typeof surface.toVirtualViewport !== 'function') process.exit(2);
+  `);
+  scenarios.push({ id: 'virtual-foundation-subpaths', status: 'passed' });
+
   const domVirtual = await fixture('dom-virtual', [tarballs.core, tarballs.dom, tarballs.virtual]);
   await runtime(domVirtual, `
     const virtual = await import('@sectile/dom/virtual');

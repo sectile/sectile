@@ -28,8 +28,15 @@ test('Virtual examples follow the shared usage environment and real host connect
   );
   assert.doesNotMatch(component, /virtual-overscan-diagram__(?:rendered|viewport)/u);
   assert.match(component, /@scroll\.passive="handleScroll"/u);
-  assert.match(examples, /<template v-slot="\{ value: row \}">/u);
-  assert.doesNotMatch(examples, /#default|class=|:class=|style=|<style/u);
+  assert.match(examples, /<template #item="\{ value: row \}">/u);
+  assert.match(examples, /:get-id="row => row\.id"/u);
+  assert.match(examples, /:size-policy="\{ kind: 'measured' \}"/u);
+  assert.match(examples, /:lane-policy="\{ kind: 'responsive'/u);
+  assert.match(examples, /size-ownership="declared"/u);
+  assert.match(examples, /<VirtualizerSurface>/u);
+  assert.match(examples, /scrollport: list/u);
+  assert.match(examples, /surface: listSurface/u);
+  assert.doesNotMatch(examples, /class=|:class=|style=|<style/u);
 
   for (const host of ['core', 'dom', 'terminal', 'vue']) {
     assert.match(examples, new RegExp(`\\b${host}:`));
@@ -68,7 +75,7 @@ test('Virtual visual examples keep a dense viewport', async () => {
   assert.match(component, /laneCount: 8/u);
   assert.match(component, /laneExtent: 108/u);
   assert.match(component, /const spatialClusterSize = 180;/u);
-  assert.match(examples, /:min-lane-size="104"/u);
+  assert.match(examples, /minExtent: 104, maxCount: 8, gap: 8/u);
   assert.match(examples, /laneCount: 8, laneExtent: 108/u);
 });
 
@@ -145,6 +152,10 @@ test('Virtual benchmark lab stays isolated and reuses docs controls', async () =
   assert.match(lab, /class="benchmark-checkpoints"/u);
   assert.match(lab, /<DemoVirtualList/u);
   assert.match(virtualList, /from '@sectile\/vue\/virtual\/list'/u);
+  assert.match(virtualList, /VirtualListIDResolver/u);
+  assert.match(virtualList, /:get-id="props\.getID"/u);
+  assert.match(virtualList, /:size-policy="\{ kind: 'fixed', extent: props\.itemExtent \}"/u);
+  assert.match(virtualList, /scrollToID/u);
   const running = lab.match(/\.benchmark-running\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';
   const runningStack = lab.match(/\.benchmark-running-stack\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';
   const checkpointCard = lab.match(/\.benchmark-checkpoints\s*\{(?<rules>[^}]*)\}/u)?.groups?.rules ?? '';

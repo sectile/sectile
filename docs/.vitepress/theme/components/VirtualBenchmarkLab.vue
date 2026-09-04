@@ -156,7 +156,7 @@ interface BenchmarkCheckpoint {
 
 interface DemoVirtualListHandle {
   isAtEnd(threshold?: number): boolean;
-  scrollTo(id: string, alignment?: 'start' | 'center' | 'end' | 'nearest'): unknown;
+  scrollToID(id: string, alignment?: 'start' | 'center' | 'end' | 'nearest'): unknown;
 }
 
 interface BenchmarkLibraryTotals {
@@ -913,7 +913,7 @@ function recordCheckpoint(message: RunnerMessage): void {
     const followLatest = checkpointHistoryList.value?.isAtEnd() ?? true;
     checkpoints.value = [...checkpoints.value, previousCheckpoint];
     if (followLatest) {
-      void nextTick(() => checkpointHistoryList.value?.scrollTo(String(previousCheckpoint.id), 'end'));
+      void nextTick(() => checkpointHistoryList.value?.scrollToID(String(previousCheckpoint.id), 'end'));
     }
   }
   latestCheckpoint.value = checkpoint;
@@ -1659,11 +1659,11 @@ function isRunnerMessage(value: unknown): value is RunnerMessage {
                 ref="checkpointHistoryList"
                 class="benchmark-checkpoint-history__list"
                 :items="checkpoints"
-                :get-key="checkpointKey"
-                :item-size="46"
+                :get-id="checkpointKey"
+                :item-extent="46"
                 :gap="6"
               >
-                <template #default="{ value: checkpoint }">
+                <template #item="{ value: checkpoint }">
                   <div class="benchmark-checkpoint-history__item">
                     <span>
                       <strong>{{ checkpointHeading(checkpoint) }}</strong>

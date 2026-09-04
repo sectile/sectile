@@ -19,8 +19,8 @@ Findings: 453; migration owners: WI-020, WI-027, WI-040.
 |---|---:|
 | controller-connection-rebuild | 36 |
 | discarded-canonical-index | 58 |
-| measurement-authority | 25 |
-| private-algorithm-bypass | 4 |
+| measurement-authority | 27 |
+| private-algorithm-bypass | 2 |
 | raw-full-domain-scan | 286 |
 | repeated-immutable-view | 13 |
 | whole-domain-validation | 31 |
@@ -67,7 +67,7 @@ Findings: 453; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/date-picker.ts:401` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/native-field.ts:120` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:304` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:198` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:276` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:222` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:215` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/multi-thumb-slider.ts:153` | controller-rebuild |

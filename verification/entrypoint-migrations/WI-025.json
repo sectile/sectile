@@ -45,17 +45,19 @@
         {
           "subpath": "./virtual/core",
           "symbols": [
-            "UseVirtualizerOptions", "UseVirtualizerReturn", "VirtualizerContent",
-            "VirtualizerContentProps", "VirtualizerItem", "VirtualizerItemProps",
-            "VirtualizerItemSize", "VirtualizerRoot", "VirtualizerRootExpose",
-            "VirtualizerRootProps", "VirtualizerRootSlotProps", "useVirtualizer"
+            "UseVirtualizerOptions", "UseVirtualizerReturn", "VirtualizerFooter", "VirtualizerFrameProps",
+            "VirtualizerHeader", "VirtualizerHostErrorCode", "VirtualizerItem", "VirtualizerItemProps",
+            "VirtualizerItemSize", "VirtualizerOperationResult", "VirtualizerRoot", "VirtualizerRootExpose",
+            "VirtualizerRootProps", "VirtualizerRootSlotProps", "VirtualizerSurface", "VirtualizerSurfaceProps",
+            "useVirtualizer"
           ]
         },
         {
           "subpath": "./virtual/list",
           "symbols": [
-            "VirtualCollectionExpose", "VirtualList", "VirtualListComponent", "VirtualListEstimate",
-            "VirtualListExpose", "VirtualListItemAttributes", "VirtualListKeyResolver",
+            "VirtualCollectionExpose", "VirtualCollectionItemSlotProps", "VirtualCollectionLanePolicyProps",
+            "VirtualCollectionPhase", "VirtualCollectionSizePolicyProps", "VirtualCollectionSlots", "VirtualList",
+            "VirtualListComponent", "VirtualListExpose", "VirtualListIDResolver", "VirtualListItemAttributes",
             "VirtualListProps", "VirtualListPublicProps", "VirtualListSlotProps"
           ]
         },
@@ -77,7 +79,8 @@
           "subpath": "./virtual/spatial",
           "symbols": [
             "VirtualSpatial", "VirtualSpatialComponent", "VirtualSpatialProps", "VirtualSpatialPublicProps",
-            "VirtualSpatialRectResolver", "VirtualSpatialSlotProps", "VirtualSpatialZIndexResolver"
+            "VirtualSpatialRectResolver", "VirtualSpatialSizeOwnership", "VirtualSpatialSlotProps",
+            "VirtualSpatialZIndexResolver"
           ]
         }
       ]

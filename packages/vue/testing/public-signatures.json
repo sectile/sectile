@@ -315,7 +315,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "5466f897b40f9667f345318c4da3feb91278146c2b1091b63f4d54f67d0a705d",
+  "fingerprint": "a1d93e9f2609ef123c7c22860fdfddabb6cf2d873baf1e8186686c3e03e9be56",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -474,20 +474,16 @@
       "sha256": "780f8b291a67b7c8191182e637a1dd4a459512d6df1fe59cdefa048877e4c17e"
     },
     {
-      "path": "dist/internal/virtual-collection-model.d.ts",
-      "sha256": "580a09cfc2d33da017db9b4be1235c308e2ab1395e21bd04634b9a52470ed536"
-    },
-    {
       "path": "dist/internal/virtual-collection.d.ts",
-      "sha256": "9fd59e30176bf951639741aa9c7841b7f93021ab63d030bf376c5a56c65646c5"
+      "sha256": "b51f5f6bfa010d596376acdf24470d87cdbc38e6cfdc604da38e7409d7e5d132"
     },
     {
       "path": "dist/internal/virtual-core.d.ts",
-      "sha256": "a67f87011271af59027f1fa08d3587cb41c7bb33254995c31b91343209520b34"
+      "sha256": "4ce7fa9bfc9992ac9627a1891bdf749c25d9095165219b3bf0d2eadac2c00355"
     },
     {
       "path": "dist/internal/virtual-list.d.ts",
-      "sha256": "1ba103d725aaa098738bd3410b19747a28fadd73b39886ea778051c50f0d8a86"
+      "sha256": "f65fd349507baa394c983af12563bb1d362cad3b0c5083eced75276a1b2379a2"
     },
     {
       "path": "dist/listbox.d.ts",
@@ -651,23 +647,23 @@
     },
     {
       "path": "dist/virtual-core.d.ts",
-      "sha256": "b92657f15d2c39853efe6454ca912f76f6929a17a2ac524c706ae7bbb2081075"
+      "sha256": "0b123d112c9ede2d7201d15be7ad3a25ba2b7d51d9d020ad1106b552ed4e2d7a"
     },
     {
       "path": "dist/virtual-grid.d.ts",
-      "sha256": "742e417ec2e27186f698de1a23bd07b613501ac787594e39e1d293c5002e2ddb"
+      "sha256": "36e24b33944faf8f34a03fe3c15a5e8496126aac9656892dfa959007bfacde7f"
     },
     {
       "path": "dist/virtual-list.d.ts",
-      "sha256": "f245855d093ea1502f1da593acbf1ce85870cc55dc282486b9a018045fd25667"
+      "sha256": "4b0bdfbb18f382ee4a66db459993f0b798563fcbe5d9f851b95106d155d8f3fc"
     },
     {
       "path": "dist/virtual-masonry.d.ts",
-      "sha256": "b86aad163ed39f927ca880b90c5fc16bf4a7ab8fbe269233c8ee8cf971458538"
+      "sha256": "36c5207482e2bc56b05e000fb65473ba3d6a7bf9a634d851bb81d7b65571025d"
     },
     {
       "path": "dist/virtual-spatial.d.ts",
-      "sha256": "a0db2c2a2f6f8ab5edcdbadc92e16b7c35044548937525ec4623c806cdaee0c8"
+      "sha256": "38683666f2c87ec12f7d58fd6d22e0598fcd87f971da86b40d3242b0aaa4a984"
     },
     {
       "path": "dist/window-splitter.d.ts",

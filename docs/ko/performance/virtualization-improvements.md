@@ -1,55 +1,42 @@
 ---
 title: 가상화 확장성 개선
-description: 대규모 컬렉션 측정을 바탕으로 반영한 Core·Vue 변경과 검증 결과, 남은 한계를 정리합니다.
+description: Sectile Virtual collection과 surface framing의 현재 소유권, 복잡도 상한, 브라우저 한계를 정리합니다.
 ---
 
 # 가상화 확장성 개선
 
-대규모 브라우저 측정에서 Sectile의 고정 높이 스크롤 비용은 항목 수와 무관하게 유지됐지만, 초기 구성과 Vue의 작은 컬렉션 변경은 전체 항목 수에 따라 늘어났습니다. 아래 내용은 이 결과를 바탕으로 실제 반영한 변경과 숨기지 않고 남겨 둔 한계입니다.
+Sectile은 가상화 비용도 공개 동작의 일부로 다룹니다. 현재 구조는 collection identity, portable layout geometry, 브라우저 frame geometry, Vue projection을 서로 다른 소유자에게 나눠 각 계층이 의미상 필요한 최소 cardinality에 맞춰 일하도록 설계되어 있습니다.
 
-## 측정에서 확인한 점
+## Collection 변경
 
-10만 행과 100만 행 결과는 서로 다른 dirty build에서 행 높이도 다르게 실행했으므로 릴리스 간 직접 비교 수치는 아닙니다. 다만 100만 행 고정 높이 조건에서는 초기 구성과 마운트 시간이 항목 수에 가까운 비율로 늘어난 반면, 스크롤 중앙값은 거의 유지됐습니다. 작은 목록 변경도 전체 컬렉션 크기에 가까운 증가 폭을 보였습니다.
+`@sectile/virtual/collection`이 raw array projection, StableID reconciliation, size policy, lane policy를 소유합니다. 최초 raw projection은 모든 item의 ID를 한 번씩 검증하고 index를 만들어야 하므로 `O(nItem)` 시간과 보유 공간이 필요합니다.
 
-100만 행 고정 높이 조건에서 Sectile 정확성 실패는 없었고 마운트된 DOM 수도 제한됐습니다. 서로 다른 높이 조건에서는 별도의 한계가 드러났습니다. 논리 높이가 브라우저의 약 1,680만 픽셀 물리 스크롤 범위를 넘을 수 있습니다. 이는 논리 크기 계산을 clamp해야 한다는 뜻이 아니라 물리 스크롤 투영의 한계입니다.
+Raw replacement에는 신뢰할 patch 정보가 없어서 동일한 prefix와 suffix를 찾는 과정이 전체 source를 볼 수 있습니다. 다만 resolver provenance가 유지되면 ID를 다시 계산하고 보유하는 범위는 실제 changed window로 제한됩니다. 따라서 계약은 `O(nItem + jChanged)` 시간, `O(jChanged)` 추가 allocation입니다. 이미 신뢰할 수 있는 patch를 소유한 호출자는 owner patch 경로를 사용해 변경되지 않은 raw identity를 다시 찾지 않아도 됩니다.
 
-## 계층별 반영 결과
+값에 따라 크기가 달라지는 policy도 같은 경계를 따릅니다. Fixed policy는 value repair가 필요 없고, estimated/measured policy는 변경된 value window만 fallback 상태로 되돌린 뒤 mount된 measurement가 exact extent를 다시 확정합니다.
 
-### Core
+## Layout geometry
 
-`Sequence`가 안정 ID와 색인, 구조 공유의 소유자라는 경계를 유지했습니다. 기존에는 overlay 깊이가 32를 넘기 전에만 압축했지만, 이제 삽입·삭제·이동의 누적 변경량이 결과 도메인의 1/8을 넘을 때도 압축합니다. 고정된 표현 규칙과 실제 구현이 같아졌고, 큰 교체 뒤에 전체 이전 도메인과 큰 patch chain을 함께 오래 보유하는 상황을 막습니다.
+Linear layout은 실제 surface의 유효 cross extent를 state에 저장합니다. 그래서 placement rect와 `contentSize`가 CSS 보정 없이 같은 geometry를 사용하며, cross extent가 의미상 같다면 기존 state를 그대로 반환합니다.
 
-작은 변경은 여전히 제한된 overlay로 유지되며 전체 ID 배열 없이 `at`, `indexOf`, `contains`, `compare`를 처리합니다. 전체 `ids` 출력을 명시적으로 요청할 때의 선형 materialization은 피할 수 없는 비용으로 남습니다.
+Grid와 Masonry는 `lanePolicy`를 통해 유효 surface 너비에서 lane geometry를 계산합니다. 너비가 같은 frame-origin 변경만으로 layout geometry mutation을 만들지 않습니다. 반대로 lane count나 lane extent가 실제로 바뀌면 dense Grid 또는 Masonry의 전체 placement가 영향을 받을 수 있으므로 그 분기에서는 필요한 전체 repair를 허용합니다.
 
-### Virtual
+Spatial layout의 application rectangle은 Virtual owner가 보유합니다. Surface가 이동하는 것만으로 rectangle이나 packed spatial index를 다시 만들지 않습니다. `sizeOwnership: 'mounted'`에서는 DOM measurement가 width와 height를 바꿀 수 있지만 StableID를 기준으로 collection reorder나 value update 뒤에도 측정된 크기를 유지합니다.
 
-Virtual 알고리즘은 바꾸지 않았습니다. 선형 배치는 이미 Core sequence splice를 적용하고, 같은 크기는 공유 저장소로 압축하며, 구성 이후 viewport 조회는 전체 항목 수에 의존하지 않습니다. 컬렉션 비교나 DOM 자원 소유를 이 계층에 중복 구현하지 않았습니다.
+## 브라우저 frame 작업
 
-### DOM
+`@sectile/dom/virtual`은 명시적인 scrollport와 surface를 연결합니다. Header와 footer는 virtual item이 아니라 frame region으로 등록됩니다. Connection은 frame geometry를 cache하고 scroll, frame invalidation, measurement, mutation을 하나의 scheduled frame으로 합친 뒤 frame correction과 layout anchor correction을 함께 적용하고 다음 plan을 공개합니다.
 
-DOM 런타임 변경도 필요하지 않았습니다. 루트 observer 하나와 항목 observer 하나가 바뀐 entry를 keyed map에 합치고 한 프레임에 처리합니다. 측정 작업량은 전체 컬렉션이 아니라 마운트된 변경 항목과 최종 배치 수에 의해 제한됩니다.
+일반 scroll에서는 cached frame geometry를 사용합니다. Frame rectangle을 다시 읽는 경계는 explicit refresh 또는 geometry invalidation입니다. Item measurement도 전체 논리 collection을 훑지 않고 실제로 변경된 mounted entry를 기준으로 처리합니다. Connection은 passive scroll listener 하나, geometry observer 하나, item observer 하나, 최대 하나의 pending animation frame을 소유하며 disconnect 시 모두 정리합니다.
 
-공통 축 측정기는 계속 `getBoundingClientRect()`를 사용합니다. `ResizeObserverEntry.borderBoxSize`는 transform과 fragmented box에서 의미가 다를 수 있으므로 브라우저 동등성 증거 없이 교체하지 않았습니다.
+## Vue projection
 
-### Vue
+High-level Vue 컴포넌트는 하나의 공통 collection host를 사용하고 native 또는 consumer item element를 직접 투영합니다. Placement마다 Sectile component instance를 하나씩 만들지 않습니다. 따라서 render 작업은 실제로 emit된 placement 수에 비례하고, 보유하는 item registration은 mount된 identity 수에 비례합니다.
 
-준비된 가상 컬렉션이 ID 배열과 Vue 전용 보조 색인 대신 Core `Sequence`를 직접 보유하도록 바꿨습니다. 최초 외부 입력에서는 키 검증과 색인 생성을 위해 한 번의 전체 순회가 그대로 필요합니다.
+공통 공개 계약은 `StableID`, `getID`, named frame/item slot, 명시적인 size/lane policy, 그리고 bootstrap·ready·empty 사이에서도 유지되는 scrollport/surface anatomy를 사용합니다.
 
-같은 `getKey`를 사용하는 배열 교체는 신뢰할 patch 정보가 없으므로 prefix/suffix identity 비교를 계속 수행합니다. 변경 구간을 찾은 뒤에는 삽입 키만 검증하고 Core `applySequencePatch`를 호출합니다. 따라서 작은 keyed 변경에서 전체 ID 배열을 한 번 더 만들지 않고 변경 ID와 제한된 patch metadata만 할당합니다. 값만 바뀌고 키가 같다면 기존 도메인 소유자를 그대로 재사용합니다.
+## 남은 브라우저 한계
 
-이 변경은 할당량과 보유 메모리를 줄이지만 raw array 변경 탐색을 sublinear하게 만들지는 않습니다. 이를 위해서는 의미 소유자가 신뢰할 수 있는 컬렉션 patch를 제공하는 별도 API가 필요합니다.
+논리 layout 크기를 브라우저의 물리 scroll 범위에 맞춰 clamp하지 않습니다. 매우 큰 logical extent는 하나의 물리 scroll element가 표현할 수 있는 범위를 넘을 수 있습니다. 이 경우에는 별도의 logical-to-physical scroll-range mapping이 필요하며, 논리 extent를 줄이거나 정확성 검사를 완화하는 방식은 경계를 숨길 뿐 해결하지 못합니다.
 
-## 검증
-
-`@sectile/core`, `@sectile/vue` production build를 통과했습니다. Core는 splice·move·중복·자원 상한·긴 patch chain·깊이 압축·누적 변경량 압축 reference-law 검증을 통과했습니다. Vue는 구조 공유·값만 바뀐 교체·중복 거부·키 계산 전 항목 상한·선언형 컬렉션 reconciliation·변경 항목 DOM 측정 검증을 통과했습니다.
-
-복잡도 계약에는 같은 resolver를 쓰는 raw array 교체가 `nItem` identity를 확인할 수 있지만 할당은 `jChanged`에 비례한다는 점을 기록했습니다. Core materialization에는 깊이 32와 누적 변경량 1/8 상한을 함께 기록했습니다. 복잡도 계약 검사와 `git diff --check`도 통과했습니다.
-
-브라우저 벤치마크는 이번 작업에서 다시 실행하지 않았습니다. 실제 지연 시간과 heap 변화는 같은 기기에서 변경 전후를 실행해 확인해야 합니다.
-
-## 남은 한계
-
-- 신뢰할 patch 정보가 없는 raw array 교체의 변경 탐색은 `O(nItem)`입니다.
-- Core는 overlay 깊이나 누적 변경량이 고정된 crossover를 넘으면 의도적으로 materialize합니다.
-- dense grid는 geometry나 항목별 예상값이 달라지면 row extent를 다시 만들 수 있습니다.
-- 브라우저 물리 스크롤 범위를 넘는 논리 배치는 별도의 논리-물리 스크롤 투영이 필요합니다. 예상 높이나 정확성 검사를 clamp하는 것은 해결이 아닙니다.
+Timing certification은 이런 결정적인 복잡도·자원 계약과 별도로 관리합니다. Release나 특정 성능 의사결정에서 실제 지연 시간이 필요할 때 같은 환경의 timing evidence를 사용합니다.

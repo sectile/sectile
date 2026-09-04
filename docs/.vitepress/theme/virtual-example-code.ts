@@ -21,9 +21,10 @@ const rows = Array.from({ length: 50_000 }, (_, index) => ({
 <template>
   <VirtualList
     :items="rows"
-    :get-key="row => row.id"
+    :get-id="row => row.id"
+    :size-policy="{ kind: 'measured' }"
   >
-    <template v-slot="{ value: row }">
+    <template #item="{ value: row }">
       <article>
         <h3>{{ row.title }}</h3>
         <p v-for="(line, lineIndex) in row.lines" :key="lineIndex">
@@ -39,8 +40,8 @@ import { createLinearLayout, linearLayoutStrategy } from '@sectile/virtual/linea
 import {
   createAxisMeasurementResolver,
   createVirtualizer,
-  virtualContentStyle,
   virtualItemStyle,
+  virtualSurfaceStyle,
 } from '@sectile/dom/virtual'
 
 const ids = Array.from({ length: 50_000 }, (_, index) => \`row-\${index}\`)
@@ -51,13 +52,17 @@ let state = createLinearLayout(
 )
 
 createVirtualizer({
-  root: list,
+  scrollport: list,
+  surface: listSurface,
   state,
   strategy: linearLayoutStrategy,
   overscan: 240,
   measure: createAxisMeasurementResolver('vertical'),
   onStateChange: next => { state = next },
-  onPlanChange: plan => renderRows(plan, virtualContentStyle, virtualItemStyle),
+  onPlanChange: plan => {
+    Object.assign(listSurface.style, virtualSurfaceStyle(plan))
+    renderRows(plan, virtualItemStyle)
+  },
 })`,
   core: `import { createSequence } from '@sectile/core/sequence'
 import { createUniformExtentIndex } from '@sectile/virtual/extent-index'
@@ -99,7 +104,7 @@ const gridSources: VirtualExampleSources = Object.freeze({
   vue: `<script setup lang="ts">
 import { createUniformExtentIndex } from '@sectile/virtual/extent-index'
 import { createDenseTrackGridLayout, trackGridLayoutStrategy } from '@sectile/virtual/track-grid-layout'
-import { VirtualizerContent, VirtualizerItem, VirtualizerRoot } from '@sectile/vue/virtual/core'
+import { VirtualizerItem, VirtualizerRoot, VirtualizerSurface } from '@sectile/vue/virtual/core'
 
 const count = 300
 const ids = Array.from({ length: count * count }, (_, index) =>
@@ -118,7 +123,7 @@ const grid = createDenseTrackGridLayout(
     :strategy="trackGridLayoutStrategy"
   >
     <template v-slot="{ placements }">
-      <VirtualizerContent>
+      <VirtualizerSurface>
         <VirtualizerItem
           v-for="cell in placements"
           :key="cell.id"
@@ -127,13 +132,13 @@ const grid = createDenseTrackGridLayout(
         >
           {{ cell.id }}
         </VirtualizerItem>
-      </VirtualizerContent>
+      </VirtualizerSurface>
     </template>
   </VirtualizerRoot>
 </template>`,
   dom: `import { createUniformExtentIndex } from '@sectile/virtual/extent-index'
 import { createDenseTrackGridLayout, trackGridLayoutStrategy } from '@sectile/virtual/track-grid-layout'
-import { createVirtualizer } from '@sectile/dom/virtual'
+import { createVirtualizer, virtualSurfaceStyle } from '@sectile/dom/virtual'
 
 const count = 300
 const ids = Array.from({ length: count * count }, (_, index) =>
@@ -146,11 +151,15 @@ const state = createDenseTrackGridLayout(
 )
 
 createVirtualizer({
-  root: grid,
+  scrollport: grid,
+  surface: gridSurface,
   state,
   strategy: trackGridLayoutStrategy,
   overscan: 160,
-  onPlanChange: renderCells,
+  onPlanChange: plan => {
+    Object.assign(gridSurface.style, virtualSurfaceStyle(plan))
+    renderCells(plan)
+  },
 })`,
   core: `import { createUniformExtentIndex } from '@sectile/virtual/extent-index'
 import { createDenseTrackGridLayout, queryTrackGridLayout } from '@sectile/virtual/track-grid-layout'
@@ -198,12 +207,12 @@ const cards = Array.from({ length: 30_000 }, (_, index) => ({
 <template>
   <VirtualMasonry
     :items="cards"
-    :get-key="card => card.id"
-    :min-lane-size="104"
-    :lane-gap="8"
+    :get-id="card => card.id"
+    :size-policy="{ kind: 'measured' }"
+    :lane-policy="{ kind: 'responsive', minExtent: 104, maxCount: 8, gap: 8 }"
     :item-gap="8"
   >
-    <template v-slot="{ value: card }">
+    <template #item="{ value: card }">
       <article>
         <h3>{{ card.id }}</h3>
         <p v-for="lineIndex in card.lines" :key="lineIndex">
@@ -216,7 +225,7 @@ const cards = Array.from({ length: 30_000 }, (_, index) => ({
   dom: `import { createSequence } from '@sectile/core/sequence'
 import { createUniformExtentIndex } from '@sectile/virtual/extent-index'
 import { createMasonryLayout, masonryLayoutStrategy } from '@sectile/virtual/masonry-layout'
-import { createAxisMeasurementResolver, createVirtualizer } from '@sectile/dom/virtual'
+import { createAxisMeasurementResolver, createVirtualizer, virtualSurfaceStyle } from '@sectile/dom/virtual'
 
 const ids = Array.from({ length: 30_000 }, (_, index) => \`card-\${index}\`)
 const state = createMasonryLayout(
@@ -226,11 +235,15 @@ const state = createMasonryLayout(
 )
 
 createVirtualizer({
-  root: board,
+  scrollport: board,
+  surface: boardSurface,
   state,
   strategy: masonryLayoutStrategy,
   measure: createAxisMeasurementResolver('vertical'),
-  onPlanChange: renderCards,
+  onPlanChange: plan => {
+    Object.assign(boardSurface.style, virtualSurfaceStyle(plan))
+    renderCards(plan)
+  },
 })`,
   core: `const plan = queryMasonryLayout(masonry, {
   viewport: { x: 0, y: 20_000, width: 664, height: 384 },
@@ -270,18 +283,18 @@ const nodes = Array.from({ length: 40_000 }, (_, index) => {
 <template>
   <VirtualSpatial
     :items="nodes"
-    :get-key="node => node.id"
+    :get-id="node => node.id"
     :get-rect="node => node"
     :get-z-index="node => node.layer"
-    :measure-size="false"
+    size-ownership="declared"
   >
-    <template v-slot="{ value: node }">
+    <template #item="{ value: node }">
       {{ node.id }}
     </template>
   </VirtualSpatial>
 </template>`,
   dom: `import { createSpatialLayout, spatialLayoutStrategy } from '@sectile/virtual/spatial-layout'
-import { createVirtualizer } from '@sectile/dom/virtual'
+import { createVirtualizer, virtualSurfaceStyle } from '@sectile/dom/virtual'
 
 const nodes = serviceMap.map(node => ({
   id: node.id,
@@ -295,11 +308,15 @@ const nodes = serviceMap.map(node => ({
 }))
 
 createVirtualizer({
-  root: canvas,
+  scrollport: canvas,
+  surface: canvasSurface,
   state: createSpatialLayout(nodes),
   strategy: spatialLayoutStrategy,
   overscan: 160,
-  onPlanChange: renderNodes,
+  onPlanChange: plan => {
+    Object.assign(canvasSurface.style, virtualSurfaceStyle(plan))
+    renderNodes(plan)
+  },
 })`,
   core: `const plan = querySpatialLayout(spatial, {
   viewport: { x: 12_000, y: 12_000, width: 640, height: 384 },

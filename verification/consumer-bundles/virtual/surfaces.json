@@ -15,6 +15,38 @@
       ]
     },
     {
+      "subpath": "./collection",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "constrainVirtualCollectionDomain",
+        "createEstimatedVirtualExtent",
+        "createExactVirtualExtent",
+        "createVirtualCollection",
+        "createVirtualCollectionPatch",
+        "createVirtualExtent",
+        "reconcileVirtualCollectionExtents",
+        "reconcileVirtualCollectionValueExtents",
+        "replaceVirtualCollection",
+        "requireVirtualMeasuredEstimate",
+        "resolveVirtualLaneGeometry",
+        "tryConstrainVirtualCollectionDomain",
+        "tryCreateVirtualCollection",
+        "tryCreateVirtualCollectionPatch",
+        "tryReplaceVirtualCollection",
+        "tryUpdateVirtualCollection",
+        "updateVirtualCollection",
+        "virtualSizePolicyRequiresMeasurement"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./extent-index",
       "classification": "named-subpath",
       "platform": "browser",
@@ -67,6 +99,7 @@
         "queryLinearLayout",
         "queryLinearWindow",
         "restoreLinearLayout",
+        "setLinearCrossExtent",
         "snapshotLinearLayout",
         "tryApplyLinearMeasurements",
         "tryApplyLinearPatch",
@@ -74,7 +107,8 @@
         "tryLinearScrollTarget",
         "tryQueryLinearLayout",
         "tryQueryLinearWindow",
-        "tryRestoreLinearLayout"
+        "tryRestoreLinearLayout",
+        "trySetLinearCrossExtent"
       ],
       "typeBearing": true,
       "optionalPeer": null,
@@ -173,6 +207,24 @@
       "rootEquivalentExport": null,
       "fixtureModes": [
         "side-effect"
+      ]
+    },
+    {
+      "subpath": "./surface",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createVirtualSurfaceFrame",
+        "surfaceFrameScrollDelta",
+        "toScrollportPoint",
+        "toVirtualViewport"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
       ]
     },
     {

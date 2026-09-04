@@ -15,7 +15,7 @@ Use a track grid when rows and columns are both independently large. This exampl
 
 A track grid manages row heights and column widths separately. Spanning regions can occupy multiple tracks in the same coordinate system. In Vue, connect `trackGridLayoutStrategy` to `VirtualizerRoot`.
 
-For a product-card grid that only flows vertically and changes its column count with viewport width, `VirtualGrid` is the smaller API. `minLaneSize` derives its responsive column count.
+For a product-card grid that only flows vertically, `VirtualGrid` is the smaller API. Give it a responsive `lanePolicy`, for example `{ kind: 'responsive', minExtent: 180, maxCount: 6, gap: 12 }`, to derive lane geometry from the effective surface width.
 
 ## Masonry
 
@@ -23,7 +23,7 @@ Masonry places variable-height cards across lanes while reducing empty space. Th
 
 <VirtualExample kind="masonry" />
 
-`VirtualMasonry` derives its lane count from viewport width and `minLaneSize`. Once a card is measured, only the affected tail of the layout is updated.
+`VirtualMasonry` uses the same `lanePolicy` model as Grid. Pair it with an estimated or measured `sizePolicy` when mounted card heights should refine the layout; fixed-size cards can use a fixed size policy instead.
 
 ## Spatial
 
@@ -31,7 +31,7 @@ Use spatial layout when a diagram or editor already owns each item's x-y coordin
 
 <VirtualExample kind="spatial" />
 
-Pass x, y, width, and height through `getRect`. Sectile keeps those coordinates and performs the viewport intersection query.
+Pass x, y, width, and height through `getRect`. Use `sizeOwnership: 'declared'` when those dimensions remain authoritative, or `'mounted'` when DOM measurement should replace width and height while preserving the application's x-y position. Surface movement itself does not rewrite application rectangles.
 
 ## Choose by data shape
 

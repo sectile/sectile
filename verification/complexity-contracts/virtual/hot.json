@@ -72,53 +72,6 @@
       }
     },
     {
-      "id": "collection.value-extents.reconcile",
-      "inherits": "linear-v1",
-      "source": "packages/virtual/src/collection.ts",
-      "benchmarkIDs": [
-        "VAL-019:collection-value-extent-work"
-      ],
-      "specificationCeiling": "O(jChanged log nItem)",
-      "contract": {
-        "variables": [
-          {
-            "name": "nItem",
-            "meaning": "active stable-identity and extent count",
-            "ceiling": "maxItems"
-          },
-          {
-            "name": "jChanged",
-            "meaning": "value-only changed identities whose size projection may be invalidated",
-            "ceiling": "jChanged <= nItem"
-          }
-        ],
-        "time": {
-          "bound": "O(jChanged log nItem)",
-          "kind": "worst-case",
-          "runtimeState": "trusted"
-        },
-        "space": {
-          "auxiliary": "O(jChanged)",
-          "output": "O(jChanged)",
-          "retained": "O(jChanged)"
-        },
-        "resources": {
-          "allocations": "O(jChanged)",
-          "cacheEntries": "0",
-          "listeners": "0",
-          "observers": "0",
-          "timers": "0",
-          "subscriptions": "0"
-        },
-        "proof": "The owner visits only the retained valueChange window, verifies identity at each changed index, derives one policy extent, and emits an update only when that extent differs from the retained projection. Fixed size policy is an O(1) no-op.",
-        "adversarialWitness": "Every value in the declared changed window invalidates a previously exact measurement while all identities outside the window remain untouched.",
-        "fullScan": {
-          "allowed": false,
-          "rationale": "Value-dependent repair is bounded by the owner-provided changed value window."
-        }
-      }
-    },
-    {
       "id": "collection.lanes.resolve",
       "inherits": "constant-v1",
       "source": "packages/virtual/src/collection.ts",
@@ -358,6 +311,53 @@
       }
     },
     {
+      "id": "collection.value-extents.reconcile",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/collection.ts",
+      "benchmarkIDs": [
+        "VAL-019:collection-value-extent-work"
+      ],
+      "specificationCeiling": "O(jChanged log nItem)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "active stable-identity and extent count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "value-only changed identities whose size projection may be invalidated",
+            "ceiling": "jChanged <= nItem"
+          }
+        ],
+        "time": {
+          "bound": "O(jChanged log nItem)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(jChanged)",
+          "output": "O(jChanged)",
+          "retained": "O(jChanged)"
+        },
+        "resources": {
+          "allocations": "O(jChanged)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "The owner visits only the retained valueChange window, verifies identity at each changed index, derives one policy extent, and emits an update only when that extent differs from the retained projection. Fixed size policy is an O(1) no-op.",
+        "adversarialWitness": "Every value in the declared changed window invalidates a previously exact measurement while all identities outside the window remain untouched.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Value-dependent repair is bounded by the owner-provided changed value window."
+        }
+      }
+    },
+    {
       "id": "extent.lookup",
       "inherits": "constant-v1",
       "source": "packages/virtual/src/extent-index.ts",
@@ -505,6 +505,48 @@
       }
     },
     {
+      "id": "linear.cross-extent",
+      "inherits": "constant-v1",
+      "source": "packages/virtual/src/linear-layout.ts",
+      "benchmarkIDs": [
+        "VAL-019:linear-cross-extent-work"
+      ],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "linear item count retained by the state",
+            "ceiling": "maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Cross-extent reconfiguration validates one scalar, returns the existing state for an unchanged extent, or freezes one shallow state copy while retaining the existing domain and extent index identities.",
+        "adversarialWitness": "Resize the cross axis of a maximum-size linear state and verify domain and extent-index identity are retained while generation changes exactly once.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Cross-axis geometry is independent of item cardinality and may not traverse the domain or extent index."
+        }
+      }
+    },
+    {
       "id": "linear.measure",
       "inherits": "linear-v1",
       "source": "packages/virtual/src/linear-layout.ts",
@@ -550,48 +592,6 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Sparse measurements may not visit unchanged extents."
-        }
-      }
-    },
-    {
-      "id": "linear.cross-extent",
-      "inherits": "constant-v1",
-      "source": "packages/virtual/src/linear-layout.ts",
-      "benchmarkIDs": [
-        "VAL-019:linear-cross-extent-work"
-      ],
-      "specificationCeiling": "O(1)",
-      "contract": {
-        "variables": [
-          {
-            "name": "nItem",
-            "meaning": "linear item count retained by the state",
-            "ceiling": "maxItems"
-          }
-        ],
-        "time": {
-          "bound": "O(1)",
-          "kind": "worst-case",
-          "runtimeState": "trusted"
-        },
-        "space": {
-          "auxiliary": "O(1)",
-          "output": "O(1)",
-          "retained": "O(1)"
-        },
-        "resources": {
-          "allocations": "O(1)",
-          "cacheEntries": "0",
-          "listeners": "0",
-          "observers": "0",
-          "timers": "0",
-          "subscriptions": "0"
-        },
-        "proof": "Cross-extent reconfiguration validates one scalar, returns the existing state for an unchanged extent, or freezes one shallow state copy while retaining the existing domain and extent index identities.",
-        "adversarialWitness": "Resize the cross axis of a maximum-size linear state and verify domain and extent-index identity are retained while generation changes exactly once.",
-        "fullScan": {
-          "allowed": false,
-          "rationale": "Cross-axis geometry is independent of item cardinality and may not traverse the domain or extent index."
         }
       }
     },

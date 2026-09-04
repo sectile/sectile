@@ -31,6 +31,14 @@
       "replacement": { "package": "@sectile/tabular", "subpath": "./virtual" }
     },
     {
+      "id": "WI-010:data-table-virtual-cross-extent",
+      "change": "signature-changed",
+      "before": { "subpath": "./virtual" },
+      "symbols": ["DataTableVirtualAdapterOptions.crossExtent", "DataTable linear row crossExtent placeholder"],
+      "replacement": { "package": "@sectile/tabular", "subpath": "./virtual" },
+      "removalReason": "DataTable virtualization now requires the host's surface-local cross extent so row placements and contentSize match the effective virtual surface width."
+    },
+    {
       "id": "WI-032:data-grid-selection-expression-closure",
       "change": "signature-changed",
       "before": { "subpath": "./data-grid" },

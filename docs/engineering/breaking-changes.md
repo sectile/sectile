@@ -55,6 +55,10 @@
 | WI-002 | @sectile/core | `./tooltip` | `Result and machine-update declaration closure` | @sectile/core/tooltip |
 | WI-002 | @sectile/terminal | `./tooltip` | `Core Result declaration closure` | @sectile/terminal/tooltip |
 | WI-002 | @sectile/form | `./values` | `Core Result declaration closure` | @sectile/form/values |
+| WI-003 | @sectile/dom | `./virtual` | `VirtualizerOptions.root`, `VirtualizerOptions.scrollport`, `VirtualizerOptions.surface`, `VirtualizerOptions.viewportInsets`, `VirtualizerConnection.registerFrame`, `VirtualizerConnection.setViewportInsets`, `virtualContentStyle`, `virtualSurfaceStyle` | @sectile/dom/virtual |
+| WI-004 | @sectile/vue | `./virtual-core` | `VirtualizerContent`, `VirtualizerContentProps`, `UseVirtualizerOptions.root`, `UseVirtualizerReturn.root`, `VirtualizerRootExpose.root` | @sectile/vue/virtual/core |
+| WI-006 | @sectile/vue | `./virtual/list` | `VirtualListKeyResolver`, `VirtualListEstimate`, `VirtualListProps.getKey`, `VirtualListProps.itemSize`, `VirtualListProps.estimateSize`, `VirtualList default slot`, `VirtualList slot key`, `VirtualListExpose.root`, `VirtualListExpose.scrollTo` | @sectile/vue/virtual/list |
+| WI-007 | @sectile/vue | `./virtual/grid` | `VirtualGridProps.getKey`, `VirtualGridProps.itemSize`, `VirtualGridProps.estimateSize`, `VirtualGridProps.laneCount`, `VirtualGridProps.minLaneSize`, `VirtualGridProps.maxLaneCount`, `VirtualGridProps.laneGap`, `VirtualGrid default slot`, `VirtualGrid slot key`, `VirtualGridExpose.root`, `VirtualGridExpose.scrollTo` | @sectile/vue/virtual/grid |
 | WI-008 | @sectile/terminal | `./combobox` | `Combobox controller declaration closure` | @sectile/terminal/combobox |
 | WI-008 | @sectile/dom | `./slider` | `Slider controller declaration closure` | @sectile/dom/slider |
 | WI-008 | @sectile/terminal | `./slider` | `Slider controller declaration closure` | @sectile/terminal/slider |
@@ -62,6 +66,7 @@
 | WI-008 | @sectile/terminal | `./tree-grid` | `TreeGrid controller declaration closure` | @sectile/terminal/tree-grid |
 | WI-008 | @sectile/dom | `./tree-view` | `TreeView controller declaration closure` | @sectile/dom/tree-view |
 | WI-008 | @sectile/terminal | `./tree-view` | `TreeView controller declaration closure` | @sectile/terminal/tree-view |
+| WI-008 | @sectile/vue | `./virtual/masonry` | `VirtualMasonryProps.getKey`, `VirtualMasonryProps.itemSize`, `VirtualMasonryProps.estimateSize`, `VirtualMasonryProps.laneCount`, `VirtualMasonryProps.minLaneSize`, `VirtualMasonryProps.maxLaneCount`, `VirtualMasonryProps.laneGap`, `VirtualMasonry default slot`, `VirtualMasonry slot key`, `VirtualMasonryExpose.root`, `VirtualMasonryExpose.scrollTo` | @sectile/vue/virtual/masonry |
 | WI-008 | @sectile/dom | `./window-splitter` | `WindowSplitter controller declaration closure` | @sectile/dom/window-splitter |
 | WI-008 | @sectile/terminal | `./window-splitter` | `WindowSplitter controller declaration closure` | @sectile/terminal/window-splitter |
 | WI-009 | @sectile/vue | `./cascade-list` | `stable item-domain reconciliation declaration closure` | @sectile/vue/cascade-list |
@@ -70,6 +75,8 @@
 | WI-009 | @sectile/core | `./adapter-runtime` | `tryReconcileCollectionIdentities` | @sectile/core/adapter-runtime |
 | WI-009 | @sectile/form | `./error` | `FormErrorCode form-event-invalid`, `Core Result declaration closure` | @sectile/form/error |
 | WI-009 | @sectile/form | `.` | `FormErrorCode form-event-invalid`, `typed field-state commands`, `local StandardSchema declaration closure` | @sectile/form |
+| WI-009 | @sectile/vue | `./virtual/spatial` | `VirtualSpatialProps.getKey`, `VirtualSpatialProps.measureSize`, `VirtualSpatial default slot`, `VirtualSpatial slot key`, `VirtualSpatialExpose.root`, `VirtualSpatialExpose.scrollTo` | @sectile/vue/virtual/spatial |
+| WI-010 | @sectile/tabular | `./virtual` | `DataTableVirtualAdapterOptions.crossExtent`, `DataTable linear row crossExtent placeholder` | @sectile/tabular/virtual |
 | WI-013 | @sectile/terminal | `./checkbox` | `Checkbox controller declaration closure` | @sectile/terminal/checkbox |
 | WI-013 | @sectile/dom | `./rating` | `Rating controller declaration closure` | @sectile/dom/rating |
 | WI-013 | @sectile/terminal | `./rating` | `Rating controller declaration closure` | @sectile/terminal/rating |

@@ -156,7 +156,7 @@ import { createForm } from '@sectile/dom/form'
 
 ## Virtualization host
 
-`@sectile/dom/virtual` connects any `@sectile/virtual` layout strategy to a scroll element. The connection owns browser scheduling, not the logical collection or application markup.
+`@sectile/dom/virtual` connects any `@sectile/virtual` layout strategy to an explicit scrollport and surface. The connection owns browser scheduling, frame geometry, measurement, and physical scroll effects; the Virtual package continues to own layout semantics.
 
 ```sh
 pnpm add @sectile/core @sectile/virtual @sectile/dom
@@ -166,31 +166,35 @@ pnpm add @sectile/core @sectile/virtual @sectile/dom
 import {
   createAxisMeasurementResolver,
   createVirtualizer,
-  virtualContentStyle,
   virtualItemStyle,
+  virtualSurfaceStyle,
 } from '@sectile/dom/virtual'
 import { linearLayoutStrategy } from '@sectile/virtual/linear-layout'
 
 const virtualizer = createVirtualizer({
-  root: scrollElement,
+  scrollport: scrollElement,
+  surface: surfaceElement,
   state: linearState,
   strategy: linearLayoutStrategy,
   overscan: 240,
+  viewportInsets: { top: 48 },
   measure: createAxisMeasurementResolver('vertical'),
   onStateChange(state) {
     linearState = state
   },
   onPlanChange(plan, connection) {
-    Object.assign(contentElement.style, virtualContentStyle(plan))
+    Object.assign(surfaceElement.style, virtualSurfaceStyle(plan))
     reconcileItems(plan.placements, (element, placement) => {
       Object.assign(element.style, virtualItemStyle(placement, { width: true }))
       return connection.registerItem(element, placement.id)
     })
   },
 })
+
+const unregisterHeader = virtualizer.registerFrame(headerElement)
 ```
 
-Scroll and resize notifications are coalesced into one animation frame. Item rectangles are read as one batch, the strategy applies one measurement generation, anchor correction is written, and the next plan is then published. `measure()` accepts explicit strategy measurements for track grids and other layouts whose geometry is not one rectangle per item. `mutate()` applies domain or geometry changes through the same anchor-preserving path, while `scrollTo()` requests an identity even when it is currently outside the render window.
+Scroll, frame invalidation, measurements, and layout mutations are coalesced into one animation-frame transaction. `registerFrame()` tracks ordinary header or footer geometry without inserting those elements into the Virtual item domain. Item rectangles are read as one batch, the strategy applies one measurement generation, frame and layout anchor correction are composed, and the next plan is then published. `measure()` accepts explicit strategy measurements for track grids and other layouts whose geometry is not one rectangle per item. `mutate()` applies domain or geometry changes through the same anchor-preserving path, while `scrollTo()` requests an identity even when it is currently outside the render window.
 
 `createAxisMeasurementResolver()` reads the physical border-box rectangle with `getBoundingClientRect()`, matching the physical coordinates in a layout plan. A custom resolver receives the originating `ResizeObserverEntry` when content-box, device-pixel, or writing-mode-aware measurements are required. Reassigning a recycled element to another identity discards any observation queued for its previous identity.
 

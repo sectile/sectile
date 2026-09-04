@@ -187,28 +187,31 @@ Portal 파트의 `defer`는 같은 mount 또는 update tick 안에서 뒤늦게 
 
 ## 가상화 collection
 
-`@sectile/vue/virtual/core`는 타입이 보존되는 `useVirtualizer` composable과 세 가지 headless 파트를 제공합니다. 선언형 layout은 `list`, `grid`, `masonry`, `spatial` 진입점을 각각 사용합니다. `VirtualizerRoot`는 scroll viewport, `VirtualizerContent`는 전체 content 크기, `VirtualizerItem`은 placement 하나의 배치와 측정을 맡습니다.
+선언형 collection은 `@sectile/vue/virtual/list`, `grid`, `masonry`, `spatial`의 focused entry point를 사용합니다. 네 컴포넌트 모두 `items`, `getID`, `header` / `item` / `empty` / `footer` slot과 `scrollport`, `surface`, `state`, `plan`, `phase`, `scrollToID()`, `refresh()`, `flush()` expose 계약을 공유합니다. List, Grid, Masonry는 명시적인 size policy를 사용하고, Grid와 Masonry는 lane policy를 추가로 사용합니다. Spatial은 `sizeOwnership: 'declared' | 'mounted'`로 크기 소유권을 정합니다.
+
+직접 layout을 조립할 때는 `@sectile/vue/virtual/core`의 `useVirtualizer`, `VirtualizerRoot`, `VirtualizerHeader`, `VirtualizerSurface`, `VirtualizerItem`, `VirtualizerFooter`를 사용합니다. Root는 scrollport이고 Surface는 layout 좌표의 원점이면서 plan 크기를 소유합니다. Header와 Footer는 item domain 바깥에 남습니다.
 
 ```sh
-pnpm add @sectile/core @sectile/virtual @sectile/vue vue
+pnpm add @sectile/core @sectile/virtual @sectile/dom @sectile/vue vue
 ```
 
 ```vue
 <script setup lang="ts">
 import { shallowRef } from 'vue'
 import { createSequence } from '@sectile/core/sequence'
+import { createAxisMeasurementResolver } from '@sectile/dom/virtual'
 import { createExtentIndex } from '@sectile/virtual/extent-index'
 import {
   createLinearLayout,
   linearLayoutStrategy,
 } from '@sectile/virtual/linear-layout'
 import {
-  createAxisMeasurementResolver,
-  VirtualizerContent,
+  VirtualizerFooter,
+  VirtualizerHeader,
   VirtualizerItem,
   VirtualizerRoot,
+  VirtualizerSurface,
 } from '@sectile/vue/virtual/core'
-import { ListboxItem, ListboxRoot } from '@sectile/vue/listbox'
 
 const items = Array.from({ length: 100_000 }, (_, index) => `item-${index}`)
 const extents = createExtentIndex(items.map(() => ({
@@ -226,36 +229,34 @@ const measure = createAxisMeasurementResolver('vertical')
 <template>
   <VirtualizerRoot
     :default-state="layout"
-    class="virtual-listbox"
+    class="virtual-list"
     :strategy="linearLayoutStrategy"
     :measure="measure"
     :overscan="240"
     @state-change="layout = $event"
     v-slot="{ placements, scrollTo }"
   >
-    <ListboxRoot
-      :items="items"
-      @highlight="id => id && scrollTo(id)"
-    >
-      <VirtualizerContent>
-        <VirtualizerItem
-          v-for="placement in placements"
-          :key="placement.id"
-          :placement="placement"
-          size="width"
-          as-child
-        >
-          <ListboxItem :value="placement.id">
-            {{ placement.id }}
-          </ListboxItem>
-        </VirtualizerItem>
-      </VirtualizerContent>
-    </ListboxRoot>
+    <VirtualizerHeader>
+      <button @click="scrollTo('item-99999', 'end')">끝으로 이동</button>
+    </VirtualizerHeader>
+
+    <VirtualizerSurface>
+      <VirtualizerItem
+        v-for="placement in placements"
+        :key="placement.id"
+        :placement="placement"
+        size="width"
+      >
+        {{ placement.id }}
+      </VirtualizerItem>
+    </VirtualizerSurface>
+
+    <VirtualizerFooter>목록 끝</VirtualizerFooter>
   </VirtualizerRoot>
 </template>
 
 <style scoped>
-.virtual-listbox {
+.virtual-list {
   width: 20rem;
   height: 24rem;
   overflow: auto;
@@ -263,11 +264,9 @@ const measure = createAxisMeasurementResolver('vertical')
 </style>
 ```
 
-`size="width"`는 cross axis 너비만 고정하므로 item 높이는 content에 따라 달라지고 측정할 수 있습니다. 가로 layout은 보통 `size="height"`를 사용합니다. 크기가 고정된 2차원 region은 `both`, 응용 프로그램이 크기를 소유하면 기본값 `none`을 사용합니다.
+`size="width"`는 placement의 cross-axis width를 적용하고 height는 content가 정하도록 두므로 실제 DOM 크기를 측정할 수 있습니다. 가로 layout은 보통 `size="height"`, 고정된 2차원 region은 `both`, application이 크기를 직접 소유하는 경우에는 `none`을 사용합니다.
 
-`VirtualizerRoot`는 `defaultState`로 초기화한 뒤 현재 layout state를 소유하고, 확정된 state마다 `stateChange`를 보냅니다. Frame 내부 측정과 anchor 보정은 transient state에서 한 번에 끝냅니다. Mount된 layout은 슬롯 method로 변경하고, layout 자체를 교체하려면 root를 다시 mount합니다.
-
-`strategy`, `measure`, `initialViewport`는 생성 시점 option입니다. Mount된 root는 처음 받은 값으로 활성 connection을 유지하며 변경 요청에는 경고를 냅니다. `overscan`은 반응형으로 유지됩니다. 완전한 generic 타입, 수동 grid-track 측정, 사용자 정의 RTL 좌표, geometry mutation을 응용 프로그램 코드에서 직접 다뤄야 하면 `useVirtualizer`를 사용합니다. Composable의 `state` ref와 `overscan` source는 반응형이고 strategy와 host integration callback은 connection마다 고정됩니다. SSR plan에는 결정적인 `initialViewport`를 전달합니다. 생략하면 mount 뒤에 초기 window를 렌더링합니다.
+`VirtualizerRoot`는 `defaultState`로 초기화한 뒤 활성 layout을 소유하고 확정된 state를 `stateChange`로 보냅니다. `strategy`, `measure`, `initialViewport`는 생성 시점 option이며 `overscan`과 `viewportInsets`는 반응형입니다. Frame invalidation, item measurement, layout mutation, anchor 보정은 DOM connection에서 합성한 뒤 다음 plan을 공개합니다. SSR에서 첫 range까지 렌더해야 한다면 결정적인 `initialViewport`를 전달하고, 생략하면 브라우저 mount 뒤에 첫 plan을 만듭니다.
 
 ## SSR과 hydration 계약
 

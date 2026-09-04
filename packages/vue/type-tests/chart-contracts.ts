@@ -17,7 +17,7 @@ import type {
   UseChartOptions,
   UseChartResult,
 } from '../.verification-dist/chart.js';
-import type { VirtualListKeyResolver } from '../.verification-dist/virtual-list.js';
+import type { VirtualListIDResolver } from '../.verification-dist/virtual-list.js';
 
 type ID = 1 | 2 | 'time' | 'value' | 'series';
 type Datum = { readonly id: 1 | 2; readonly recordedAt: Date | number; readonly amount: number };
@@ -62,9 +62,7 @@ selection satisfies ChartSelection<ID>;
 const temporalAccessor: NonNullable<ChartCartesianLayerProps<Datum, ID>['getX']> = (datum) => datum.recordedAt;
 void temporalAccessor;
 
-const stringKey: VirtualListKeyResolver<{ readonly id: number }> = (value) => String(value.id);
-void stringKey;
-
-// @ts-expect-error Vue virtual-list keys remain textual.
-const numericKey: VirtualListKeyResolver<{ readonly id: number }> = (value) => value.id;
-void numericKey;
+const stringID: VirtualListIDResolver<{ readonly id: number }, string> = (value) => String(value.id);
+const numericID: VirtualListIDResolver<{ readonly id: number }, number> = (value) => value.id;
+void stringID;
+void numericID;

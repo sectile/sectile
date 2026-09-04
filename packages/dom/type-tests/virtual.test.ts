@@ -49,22 +49,9 @@ const stable: StableID = 2;
 void point;
 void stable;
 
-createVirtualizer<State, ID, Measurement, Mutation>({
-  scrollport,
-  surface,
-  state: { generation: 0 },
-  strategy,
-  // @ts-expect-error The legacy root option was replaced by explicit scrollport and surface owners.
-  root: scrollport,
-});
-
 // @ts-expect-error A virtualizer requires an explicit surface coordinate owner.
 createVirtualizer<State, ID, Measurement, Mutation>({
   scrollport,
   state: { generation: 0 },
   strategy,
 });
-
-// @ts-expect-error virtualContentStyle was replaced by virtualSurfaceStyle.
-import { virtualContentStyle } from '@sectile/dom/virtual';
-void virtualContentStyle;

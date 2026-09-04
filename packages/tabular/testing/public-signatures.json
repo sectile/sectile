@@ -35,7 +35,7 @@
       "types": "dist/virtual.d.ts"
     }
   ],
-  "fingerprint": "02b77d16feef40406d219cecf24c41c4fece96832b9d3167b8b387ffdad9cafe",
+  "fingerprint": "2987e546476f5b9a9fead474b04a0dc8220d13905103b84c8595f3aa56ae7186",
   "files": [
     {
       "path": "dist/contracts.d.ts",
@@ -79,7 +79,7 @@
     },
     {
       "path": "dist/virtual.d.ts",
-      "sha256": "6b7f9c272fa3dce662b5dffa4408e0b679c283cc666f9d5ae4e5d9d156d5c450"
+      "sha256": "562143810597157d5aa544638dd53036436a561c41ba11af82a0652e4011dc31"
     }
   ]
 }

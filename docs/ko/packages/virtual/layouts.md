@@ -15,7 +15,7 @@ description: 가로와 세로가 큰 격자, 높이가 다른 카드, 넓은 좌
 
 트랙 격자는 행 높이와 열 너비를 각각 관리합니다. 셀이 여러 행이나 열을 차지하는 병합 영역도 같은 좌표계에 둘 수 있습니다. Vue의 `VirtualizerRoot`에는 `trackGridLayoutStrategy`를 연결합니다.
 
-상품 카드처럼 화면 너비에 맞춰 열 수가 바뀌고 세로 방향으로만 이어지는 화면에는 `VirtualGrid`가 더 간단합니다. `minLaneSize`를 전달하면 viewport 너비에 맞춰 열 수를 계산합니다.
+상품 카드처럼 세로 방향으로만 이어지는 화면에는 `VirtualGrid`가 더 간단합니다. `{ kind: 'responsive', minExtent: 180, maxCount: 6, gap: 12 }` 같은 반응형 `lanePolicy`를 사용하면 실제 surface 너비에서 lane geometry를 계산합니다.
 
 ## 벽돌형
 
@@ -23,7 +23,7 @@ description: 가로와 세로가 큰 격자, 높이가 다른 카드, 넓은 좌
 
 <VirtualExample kind="masonry" />
 
-`VirtualMasonry`는 화면 너비와 `minLaneSize`로 열 수를 정합니다. 각 카드의 높이가 측정되면 영향을 받는 뒤쪽 카드만 다시 배치합니다.
+`VirtualMasonry`도 Grid와 같은 `lanePolicy`를 사용합니다. mount된 카드 높이로 layout을 보정하려면 estimated 또는 measured `sizePolicy`를 사용하고, 모든 카드 크기가 같다면 fixed policy를 선택합니다.
 
 ## 자유 좌표
 
@@ -31,7 +31,7 @@ description: 가로와 세로가 큰 격자, 높이가 다른 카드, 넓은 좌
 
 <VirtualExample kind="spatial" />
 
-`VirtualSpatial`에는 `getRect`로 x, y, 너비, 높이를 전달합니다. Sectile은 앱의 좌표를 유지한 채 현재 화면과 겹치는 항목을 빠르게 찾습니다.
+`VirtualSpatial`에는 `getRect`로 x, y, 너비, 높이를 전달합니다. 그 크기를 계속 앱이 소유하면 `sizeOwnership: 'declared'`, x·y는 앱이 소유하되 mount된 DOM 크기로 width·height를 바꾸려면 `'mounted'`를 사용합니다. surface가 이동하는 것만으로 application rectangle을 다시 쓰지는 않습니다.
 
 ## 선택 기준
 

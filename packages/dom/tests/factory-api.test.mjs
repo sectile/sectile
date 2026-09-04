@@ -53,7 +53,6 @@ test('virtualization is exposed only through its optional subpath', async () => 
 
   const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.createVirtualizer, undefined);
-  assert.equal(rootModule.virtualContentStyle, undefined);
 
   const virtualModule = await import('../.verification-dist/virtual.js');
   assert.equal(typeof virtualModule.createVirtualizer, 'function');

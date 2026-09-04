@@ -1,11 +1,11 @@
 ---
 title: DOM connection
-description: Connect Virtual layout state to existing DOM scrolling, rendering, and real-size measurement.
+description: Connect Virtual layout state to an explicit scrollport and surface with browser measurement and scroll correction.
 ---
 
 # DOM connection
 
-`@sectile/dom/virtual` connects an existing DOM surface to Virtual layout. It reads scrolling, observes real element sizes, and applies scroll correction after changes.
+`@sectile/dom/virtual` connects a physical scrollport and a layout surface to Virtual state. The scrollport owns browser scrolling; the surface is the coordinate origin and receives the layout plan's content size. Optional header and footer regions remain outside the item domain.
 
 ## Install and import
 
@@ -17,8 +17,8 @@ pnpm add @sectile/dom @sectile/virtual
 import {
   createAxisMeasurementResolver,
   createVirtualizer,
-  virtualContentStyle,
   virtualItemStyle,
+  virtualSurfaceStyle,
 } from '@sectile/dom/virtual'
 ```
 
@@ -26,16 +26,18 @@ import {
 
 ```ts
 const virtualizer = createVirtualizer({
-  root: scrollElement,
+  scrollport: scrollElement,
+  surface: surfaceElement,
   state: layout,
   strategy: linearLayoutStrategy,
   overscan: 240,
+  viewportInsets: { top: 48 },
   measure: createAxisMeasurementResolver('vertical'),
   onStateChange(next) {
     layout = next
   },
   onPlanChange(plan, connection) {
-    Object.assign(contentElement.style, virtualContentStyle(plan))
+    Object.assign(surfaceElement.style, virtualSurfaceStyle(plan))
 
     for (const placement of plan.placements) {
       const element = getOrCreateRow(placement.id)
@@ -44,20 +46,27 @@ const virtualizer = createVirtualizer({
     }
   },
 })
+
+const unregisterHeader = virtualizer.registerFrame(headerElement)
 ```
 
-Keep only the returned placements in the DOM during `onPlanChange`. Connecting an element to its stable ID with `registerItem()` routes size changes back into the same layout state.
+Keep only the returned placements in the surface during `onPlanChange`. `registerItem()` connects a mounted element to its stable ID so size changes feed the owning layout. `registerFrame()` marks ordinary header or footer DOM as frame geometry; it does not add that element to placements, measurements, or anchors. Call its returned disposer when the frame element unmounts.
+
+`viewportInsets` is for persistent occlusion such as sticky or overlay UI. It is explicit input; the connection does not infer sticky behavior from computed styles.
 
 ## Common methods
 
 | Method | Role |
 | --- | --- |
+| `registerFrame(element)` | Observe a bounded frame region outside the item domain |
 | `registerItem(element, id)` | Connect a DOM element to a placement ID |
 | `measure(batch)` | Apply application-supplied measurements |
 | `mutate(change)` | Apply item, track, or coordinate changes |
 | `scrollTo(id, alignment)` | Move to an item by ID |
 | `setOverscan(value)` | Change offscreen preparation distance |
-| `refresh()` | Refresh viewport and measurements on the next frame |
-| `disconnect()` | End event and observer connections |
+| `setViewportInsets(value)` | Change persistent viewport occlusion |
+| `refresh()` | Invalidate frame and viewport geometry for the next frame |
+| `flush()` | Publish pending work immediately and return the resulting plan |
+| `disconnect()` | End listeners, observers, scheduled work, and registrations |
 
-Provide `readViewport` and `writeScroll` for right-to-left scrolling or an application-specific coordinate system.
+Provide `readViewport` and `writeScroll` for right-to-left scrolling or an application-specific physical coordinate model. Virtual layout queries remain surface-local; physical clamping occurs only when the DOM connection writes scroll coordinates.

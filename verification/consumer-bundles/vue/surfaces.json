@@ -1702,9 +1702,11 @@
       "classification": "optional-domain",
       "platform": "browser",
       "runtimeExports": [
-        "VirtualizerContent",
+        "VirtualizerFooter",
+        "VirtualizerHeader",
         "VirtualizerItem",
         "VirtualizerRoot",
+        "VirtualizerSurface",
         "useVirtualizer"
       ],
       "typeBearing": true,

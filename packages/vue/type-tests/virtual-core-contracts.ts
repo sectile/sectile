@@ -50,7 +50,3 @@ VirtualizerFooter satisfies object;
 declare const exposed: VirtualizerRootExpose;
 exposed.scrollport satisfies ShallowRef<HTMLElement | null | undefined>;
 exposed.surface satisfies ShallowRef<HTMLElement | null | undefined>;
-
-// @ts-expect-error The removed content component has no compatibility export.
-import { VirtualizerContent } from '../.verification-dist/virtual-core.js';
-void VirtualizerContent;

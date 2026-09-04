@@ -218,53 +218,6 @@
       }
     },
     {
-      "id": "virtual.item-projection",
-      "inherits": "lifecycle-v1",
-      "source": "packages/vue/src/internal/virtual-collection.ts",
-      "benchmarkIDs": [
-        "vue:mounted-virtual-projection"
-      ],
-      "specificationCeiling": "O(kPlacement)",
-      "contract": {
-        "variables": [
-          {
-            "name": "kPlacement",
-            "meaning": "placements emitted by the active Virtual plan",
-            "ceiling": "virtual query result ceiling"
-          },
-          {
-            "name": "nMounted",
-            "meaning": "currently mounted projected item elements",
-            "ceiling": "kPlacement"
-          }
-        ],
-        "time": {
-          "bound": "O(kPlacement)",
-          "kind": "worst-case",
-          "runtimeState": "mounted"
-        },
-        "space": {
-          "auxiliary": "O(kPlacement)",
-          "output": "O(kPlacement)",
-          "retained": "O(nMounted)"
-        },
-        "resources": {
-          "allocations": "O(kPlacement)",
-          "cacheEntries": "O(nMounted)",
-          "listeners": "0",
-          "observers": "0",
-          "timers": "0",
-          "subscriptions": "0"
-        },
-        "proof": "The shared Vue projector visits each emitted placement once, creates the native item VNode directly, and retains one element, registration disposer, and stable function ref per mounted identity. DOM owns item observation and measurement batching.",
-        "adversarialWitness": "A maximum render window mounts kPlacement distinct identities, then replaces the window so every cached registration is released and replaced without creating per-placement Sectile component instances.",
-        "fullScan": {
-          "allowed": false,
-          "rationale": "Projection work is bounded by emitted placements and may not traverse unmounted collection items."
-        }
-      }
-    },
-    {
       "id": "virtual.grid-reconfigure",
       "inherits": "linear-v1",
       "source": "packages/vue/src/virtual-grid.ts",
@@ -317,6 +270,53 @@
         "fullScan": {
           "allowed": true,
           "rationale": "A lane-count change or a structural regrouping at the start can change every dense row aggregate; same-width frame-origin changes and bounded value windows do not take this full-rebuild branch."
+        }
+      }
+    },
+    {
+      "id": "virtual.item-projection",
+      "inherits": "lifecycle-v1",
+      "source": "packages/vue/src/internal/virtual-collection.ts",
+      "benchmarkIDs": [
+        "vue:mounted-virtual-projection"
+      ],
+      "specificationCeiling": "O(kPlacement)",
+      "contract": {
+        "variables": [
+          {
+            "name": "kPlacement",
+            "meaning": "placements emitted by the active Virtual plan",
+            "ceiling": "virtual query result ceiling"
+          },
+          {
+            "name": "nMounted",
+            "meaning": "currently mounted projected item elements",
+            "ceiling": "kPlacement"
+          }
+        ],
+        "time": {
+          "bound": "O(kPlacement)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(kPlacement)",
+          "output": "O(kPlacement)",
+          "retained": "O(nMounted)"
+        },
+        "resources": {
+          "allocations": "O(kPlacement)",
+          "cacheEntries": "O(nMounted)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "The shared Vue projector visits each emitted placement once, creates the native item VNode directly, and retains one element, registration disposer, and stable function ref per mounted identity. DOM owns item observation and measurement batching.",
+        "adversarialWitness": "A maximum render window mounts kPlacement distinct identities, then replaces the window so every cached registration is released and replaced without creating per-placement Sectile component instances.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Projection work is bounded by emitted placements and may not traverse unmounted collection items."
         }
       }
     },

@@ -156,7 +156,7 @@ import { createForm } from '@sectile/dom/form'
 
 ## 가상화 host
 
-`@sectile/dom/virtual`은 모든 `@sectile/virtual` layout strategy를 scroll element에 연결합니다. Connection은 브라우저 scheduling을 맡고, 논리 collection과 markup은 응용 프로그램이 관리합니다.
+`@sectile/dom/virtual`은 `@sectile/virtual` layout strategy를 명시적인 scrollport와 surface에 연결합니다. Connection은 브라우저 scheduling, frame geometry, measurement, 물리 scroll effect를 맡고, layout semantics는 계속 Virtual이 소유합니다.
 
 ```sh
 pnpm add @sectile/core @sectile/virtual @sectile/dom
@@ -166,31 +166,35 @@ pnpm add @sectile/core @sectile/virtual @sectile/dom
 import {
   createAxisMeasurementResolver,
   createVirtualizer,
-  virtualContentStyle,
   virtualItemStyle,
+  virtualSurfaceStyle,
 } from '@sectile/dom/virtual'
 import { linearLayoutStrategy } from '@sectile/virtual/linear-layout'
 
 const virtualizer = createVirtualizer({
-  root: scrollElement,
+  scrollport: scrollElement,
+  surface: surfaceElement,
   state: linearState,
   strategy: linearLayoutStrategy,
   overscan: 240,
+  viewportInsets: { top: 48 },
   measure: createAxisMeasurementResolver('vertical'),
   onStateChange(state) {
     linearState = state
   },
   onPlanChange(plan, connection) {
-    Object.assign(contentElement.style, virtualContentStyle(plan))
+    Object.assign(surfaceElement.style, virtualSurfaceStyle(plan))
     reconcileItems(plan.placements, (element, placement) => {
       Object.assign(element.style, virtualItemStyle(placement, { width: true }))
       return connection.registerItem(element, placement.id)
     })
   },
 })
+
+const unregisterHeader = virtualizer.registerFrame(headerElement)
 ```
 
-Scroll과 resize 알림은 한 animation frame으로 합칩니다. Item rect를 한꺼번에 읽고 strategy에 한 세대의 measurement batch로 적용한 뒤 anchor를 보정하고 다음 plan을 공개합니다. `measure()`는 여러 rect가 하나의 item을 구성하는 track grid 등에 명시적인 strategy measurement를 전달합니다. `mutate()`는 domain이나 geometry 변경에도 같은 anchor 보정 경로를 적용하며, `scrollTo()`는 현재 render window 밖에 있는 ID도 요청할 수 있습니다.
+Scroll, frame invalidation, measurement, layout mutation은 한 animation-frame transaction으로 합칩니다. `registerFrame()`은 일반 header/footer geometry를 관찰하지만 그 element를 Virtual item domain에는 넣지 않습니다. Item rect를 한꺼번에 읽고 strategy에 한 세대의 measurement batch로 적용한 뒤 frame correction과 layout anchor correction을 합성하고 다음 plan을 공개합니다. `measure()`는 여러 rect가 하나의 item을 구성하는 track grid 등에 명시적인 strategy measurement를 전달합니다. `mutate()`는 domain이나 geometry 변경에도 같은 anchor 보정 경로를 적용하며, `scrollTo()`는 현재 render window 밖에 있는 ID도 요청할 수 있습니다.
 
 `createAxisMeasurementResolver()`는 layout plan의 물리 좌표와 일치하도록 `getBoundingClientRect()`로 물리 border-box rect를 읽습니다. Content-box, device-pixel, writing-mode 기반 측정이 필요하면 custom resolver에 전달되는 원래 `ResizeObserverEntry`를 사용합니다. 재활용한 element를 다른 identity에 할당하면 이전 identity에서 대기하던 observation은 폐기합니다.
 

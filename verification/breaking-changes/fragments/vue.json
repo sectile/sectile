@@ -31,8 +31,40 @@
       "change": "signature-changed",
       "before": { "subpath": "./virtual-core" },
       "symbols": ["VirtualizerContent", "VirtualizerContentProps", "UseVirtualizerOptions.root", "UseVirtualizerReturn.root", "VirtualizerRootExpose.root"],
-      "replacement": { "package": "@sectile/vue", "subpath": "./virtual-core" },
+      "replacement": { "package": "@sectile/vue", "subpath": "./virtual/core" },
       "removalReason": "Use VirtualizerRoot with explicit scrollport and surface refs plus VirtualizerHeader, VirtualizerSurface, VirtualizerItem, and VirtualizerFooter. Host operations return a virtualizer-not-connected Result until both physical elements are mounted."
+    },
+    {
+      "id": "WI-006:virtual-list-surface-contract",
+      "change": "signature-changed",
+      "before": { "subpath": "./virtual/list" },
+      "symbols": ["VirtualListKeyResolver", "VirtualListEstimate", "VirtualListProps.getKey", "VirtualListProps.itemSize", "VirtualListProps.estimateSize", "VirtualList default slot", "VirtualList slot key", "VirtualListExpose.root", "VirtualListExpose.scrollTo"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./virtual/list" },
+      "removalReason": "Use StableID-aware getID, required sizePolicy, the named item slot, and the common scrollport/surface/scrollToID expose contract."
+    },
+    {
+      "id": "WI-007:virtual-grid-surface-contract",
+      "change": "signature-changed",
+      "before": { "subpath": "./virtual/grid" },
+      "symbols": ["VirtualGridProps.getKey", "VirtualGridProps.itemSize", "VirtualGridProps.estimateSize", "VirtualGridProps.laneCount", "VirtualGridProps.minLaneSize", "VirtualGridProps.maxLaneCount", "VirtualGridProps.laneGap", "VirtualGrid default slot", "VirtualGrid slot key", "VirtualGridExpose.root", "VirtualGridExpose.scrollTo"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./virtual/grid" },
+      "removalReason": "Use getID with required sizePolicy and lanePolicy, the named item slot, and the common scrollport/surface/scrollToID expose contract."
+    },
+    {
+      "id": "WI-008:virtual-masonry-surface-contract",
+      "change": "signature-changed",
+      "before": { "subpath": "./virtual/masonry" },
+      "symbols": ["VirtualMasonryProps.getKey", "VirtualMasonryProps.itemSize", "VirtualMasonryProps.estimateSize", "VirtualMasonryProps.laneCount", "VirtualMasonryProps.minLaneSize", "VirtualMasonryProps.maxLaneCount", "VirtualMasonryProps.laneGap", "VirtualMasonry default slot", "VirtualMasonry slot key", "VirtualMasonryExpose.root", "VirtualMasonryExpose.scrollTo"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./virtual/masonry" },
+      "removalReason": "Use getID with required sizePolicy and lanePolicy, the named item slot, and the common scrollport/surface/scrollToID expose contract."
+    },
+    {
+      "id": "WI-009:virtual-spatial-size-ownership",
+      "change": "signature-changed",
+      "before": { "subpath": "./virtual/spatial" },
+      "symbols": ["VirtualSpatialProps.getKey", "VirtualSpatialProps.measureSize", "VirtualSpatial default slot", "VirtualSpatial slot key", "VirtualSpatialExpose.root", "VirtualSpatialExpose.scrollTo"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./virtual/spatial" },
+      "removalReason": "Use getID, required sizeOwnership ('declared' or 'mounted'), the named item slot, and the common scrollport/surface/scrollToID expose contract."
     },
     {
       "id": "WI-009:checkbox-group-domain",

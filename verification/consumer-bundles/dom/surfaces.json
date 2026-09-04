@@ -1352,8 +1352,8 @@
       "runtimeExports": [
         "createAxisMeasurementResolver",
         "createVirtualizer",
-        "virtualContentStyle",
-        "virtualItemStyle"
+        "virtualItemStyle",
+        "virtualSurfaceStyle"
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/virtual",

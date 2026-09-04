@@ -13,8 +13,8 @@ Headless Vue components backed by Sectile DOM semantics.
 Components expose stable `data-scope`, `data-part`, and `data-state` attributes. Styling, themes, spacing, and animation remain application responsibilities.
 
 `@sectile/vue/virtual/core` provides the typed `useVirtualizer` composable and
-`VirtualizerRoot`, `VirtualizerContent`, and `VirtualizerItem` headless parts.
-`VirtualizerItem` supports `asChild`, so existing collection items keep their
-semantic element while receiving virtual placement and measurement refs. Install
-`@sectile/virtual` separately when using this subpath; the rest of `@sectile/vue`
-does not require it.
+`VirtualizerRoot`, `VirtualizerHeader`, `VirtualizerSurface`, `VirtualizerItem`,
+and `VirtualizerFooter` headless parts. `VirtualizerItem` supports `asChild`, so
+existing collection items keep their semantic element while receiving virtual
+placement and measurement refs. Install `@sectile/virtual` separately when using
+this subpath; the rest of `@sectile/vue` does not require it.

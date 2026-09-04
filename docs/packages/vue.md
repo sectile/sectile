@@ -187,28 +187,31 @@ Portal parts accept `defer` when their target is rendered by Vue later in the sa
 
 ## Virtualized collections
 
-`@sectile/vue/virtual/core` provides a typed `useVirtualizer` composable and three headless parts. Declarative layouts use the separate `list`, `grid`, `masonry`, and `spatial` entry points. `VirtualizerRoot` connects the scroll viewport, `VirtualizerContent` projects the full content size, and `VirtualizerItem` positions and measures a placement.
+Declarative collections live at the focused `@sectile/vue/virtual/list`, `grid`, `masonry`, and `spatial` entry points. They share `items`, `getID`, the `header` / `item` / `empty` / `footer` slots, and the exposed `scrollport`, `surface`, `state`, `plan`, `phase`, `scrollToID()`, `refresh()`, and `flush()` contract. List, Grid, and Masonry use explicit size policies; Grid and Masonry also use lane policies; Spatial uses `sizeOwnership: 'declared' | 'mounted'`.
+
+For custom composition, `@sectile/vue/virtual/core` provides `useVirtualizer` plus `VirtualizerRoot`, `VirtualizerHeader`, `VirtualizerSurface`, `VirtualizerItem`, and `VirtualizerFooter`. The root is the scrollport, the surface is the layout coordinate origin and owns plan size, and header/footer remain outside the item domain.
 
 ```sh
-pnpm add @sectile/core @sectile/virtual @sectile/vue vue
+pnpm add @sectile/core @sectile/virtual @sectile/dom @sectile/vue vue
 ```
 
 ```vue
 <script setup lang="ts">
 import { shallowRef } from 'vue'
 import { createSequence } from '@sectile/core/sequence'
+import { createAxisMeasurementResolver } from '@sectile/dom/virtual'
 import { createExtentIndex } from '@sectile/virtual/extent-index'
 import {
   createLinearLayout,
   linearLayoutStrategy,
 } from '@sectile/virtual/linear-layout'
 import {
-  createAxisMeasurementResolver,
-  VirtualizerContent,
+  VirtualizerFooter,
+  VirtualizerHeader,
   VirtualizerItem,
   VirtualizerRoot,
+  VirtualizerSurface,
 } from '@sectile/vue/virtual/core'
-import { ListboxItem, ListboxRoot } from '@sectile/vue/listbox'
 
 const items = Array.from({ length: 100_000 }, (_, index) => `item-${index}`)
 const extents = createExtentIndex(items.map(() => ({
@@ -226,36 +229,34 @@ const measure = createAxisMeasurementResolver('vertical')
 <template>
   <VirtualizerRoot
     :default-state="layout"
-    class="virtual-listbox"
+    class="virtual-list"
     :strategy="linearLayoutStrategy"
     :measure="measure"
     :overscan="240"
     @state-change="layout = $event"
     v-slot="{ placements, scrollTo }"
   >
-    <ListboxRoot
-      :items="items"
-      @highlight="id => id && scrollTo(id)"
-    >
-      <VirtualizerContent>
-        <VirtualizerItem
-          v-for="placement in placements"
-          :key="placement.id"
-          :placement="placement"
-          size="width"
-          as-child
-        >
-          <ListboxItem :value="placement.id">
-            {{ placement.id }}
-          </ListboxItem>
-        </VirtualizerItem>
-      </VirtualizerContent>
-    </ListboxRoot>
+    <VirtualizerHeader>
+      <button @click="scrollTo('item-99999', 'end')">Jump to end</button>
+    </VirtualizerHeader>
+
+    <VirtualizerSurface>
+      <VirtualizerItem
+        v-for="placement in placements"
+        :key="placement.id"
+        :placement="placement"
+        size="width"
+      >
+        {{ placement.id }}
+      </VirtualizerItem>
+    </VirtualizerSurface>
+
+    <VirtualizerFooter>End of list</VirtualizerFooter>
   </VirtualizerRoot>
 </template>
 
 <style scoped>
-.virtual-listbox {
+.virtual-list {
   width: 20rem;
   height: 24rem;
   overflow: auto;
@@ -263,11 +264,9 @@ const measure = createAxisMeasurementResolver('vertical')
 </style>
 ```
 
-`size="width"` fixes only the cross-axis width; the item height remains content-driven and observable. Horizontal layouts normally use `size="height"`. Fixed two-dimensional regions may use `both`, while application-owned sizing uses the default `none`.
+`size="width"` applies the placement's cross-axis width while leaving height content-driven and measurable. Horizontal layouts normally use `size="height"`; fixed two-dimensional regions can use `both`, and application-owned sizing can use `none`.
 
-`VirtualizerRoot` owns its current layout state after `defaultState` initializes it and reports each committed state through `stateChange`. The parent does not have to accept a frame-local measurement proposal before anchor correction can finish. Use the slot methods to mutate the mounted layout, or remount the root to replace it.
-
-`strategy`, `measure`, and `initialViewport` are construction-time options; changing them on a mounted root produces a warning and does not replace the active connection. `overscan` remains reactive. Use `useVirtualizer` directly when full generic types, manual grid-track measurements, custom RTL coordinates, or geometry mutations must stay available to application code. Its `state` ref and `overscan` source are reactive; strategy and host integration callbacks are fixed for each connection. Pass a deterministic `initialViewport` to produce an SSR plan. If it is omitted, the initial window renders after mount instead of guessing a server viewport.
+`VirtualizerRoot` owns its active layout after `defaultState` initializes it and emits committed states through `stateChange`. `strategy`, `measure`, and `initialViewport` are construction-time options; `overscan` and `viewportInsets` remain reactive. Frame invalidation, item measurements, layout mutations, and anchor correction are composed by the DOM connection before the next plan is published. Pass a deterministic `initialViewport` for SSR when the server must render the first range; otherwise the first browser plan is created after mount.
 
 ## SSR and hydration contract
 
