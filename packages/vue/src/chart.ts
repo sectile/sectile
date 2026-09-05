@@ -39,6 +39,7 @@ import {
   type DOMChartWheelMode,
   type DOMChartWheelModifier,
 } from '@sectile/dom/chart';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 import {
   defineComponent,
   getCurrentScope,
@@ -484,10 +485,10 @@ const ChartRootRuntime = defineComponent({
     let mounted = false;
     let definitionAccepted = false;
     const controlled = Object.freeze({
-      activeDatum: props.activeDatum !== undefined,
-      cursor: props.cursor !== undefined,
-      selection: props.modelValue !== undefined,
-      view: props.view !== undefined,
+      activeDatum: useControlledStateInvariant('ChartRoot', 'activeDatum', () => props.activeDatum),
+      cursor: useControlledStateInvariant('ChartRoot', 'cursor', () => props.cursor),
+      selection: useControlledStateInvariant('ChartRoot', 'modelValue', () => props.modelValue),
+      view: useControlledStateInvariant('ChartRoot', 'view', () => props.view),
     });
 
     const report = (error: unknown): void => {
@@ -522,19 +523,15 @@ const ChartRootRuntime = defineComponent({
       }
       if (failure !== undefined) throw failure[0];
     };
+    const publishRootCommand = (command: ChartCommand): void => { emit('command', command); };
+    const publishRootProposal = (command: ChartCommand): void => {
+      if (command.type === 'active-change-requested') emit('update:activeDatum', command.id);
+      else if (command.type === 'cursor-change-requested') emit('update:cursor', command.id);
+      else if (command.type === 'selection-change-requested') emit('update:modelValue', command.selection);
+      else if (command.type === 'view-change-requested') emit('update:view', command.view);
+    };
     const onCommand = (command: ChartCommand): void => {
-      let failure: readonly [unknown] | undefined;
-      try { publishSnapshot(); }
-      catch (error) { failure ??= [error]; }
-      try { emit('command', command); }
-      catch (error) { failure ??= [error]; }
-      try {
-        if (command.type === 'active-change-requested') emit('update:activeDatum', command.id);
-        else if (command.type === 'cursor-change-requested') emit('update:cursor', command.id);
-        else if (command.type === 'selection-change-requested') emit('update:modelValue', command.selection);
-        else if (command.type === 'view-change-requested') emit('update:view', command.view);
-      } catch (error) { failure ??= [error]; }
-      if (failure !== undefined) throw failure[0];
+      publishVueChartCommand(command, publishSnapshot, publishRootCommand, publishRootProposal);
     };
     const connect = (): void => {
       const owner = controller.value;
@@ -1260,6 +1257,27 @@ function requiredControlAxis(axis: StableID | undefined, inheritedAxis: StableID
   return resolved;
 }
 
+function publishVueChartCommand<ID extends StableID>(
+  command: ChartCommand<ID>,
+  publishSnapshot: () => void,
+  publishCommand: (command: ChartCommand<ID>) => void,
+  publishProposal: (command: ChartCommand<ID>) => void,
+  publishChange?: (command: ChartCommand<ID>) => void,
+): void {
+  let failure: readonly [unknown] | undefined;
+  try { publishSnapshot(); }
+  catch (error) { failure ??= [error]; }
+  try { publishCommand(command); }
+  catch (error) { failure ??= [error]; }
+  try { publishProposal(command); }
+  catch (error) { failure ??= [error]; }
+  if (publishChange !== undefined) {
+    try { publishChange(command); }
+    catch (error) { failure ??= [error]; }
+  }
+  if (failure !== undefined) throw failure[0];
+}
+
 function bindController<ID extends StableID>(
   controller: ChartController<ID>,
   options: UseChartStateOptions<ID>,
@@ -1300,32 +1318,21 @@ function bindController<ID extends StableID>(
     }
     if (failure !== undefined) throw failure[0];
   };
+  const publishComposableCommand = (command: ChartCommand<ID>): void => { options.onCommand?.(command); };
+  const publishComposableProposal = (command: ChartCommand<ID>): void => {
+    if (command.type === 'active-change-requested' && options.activeDatum !== undefined) options.activeDatum.value = command.id;
+    else if (command.type === 'cursor-change-requested' && options.cursor !== undefined) options.cursor.value = command.id;
+    else if (command.type === 'selection-change-requested' && options.selection !== undefined) options.selection.value = command.selection;
+    else if (command.type === 'view-change-requested' && options.view !== undefined) options.view.value = command.view;
+  };
+  const publishComposableChange = (command: ChartCommand<ID>): void => {
+    if (command.type === 'active-change-requested') options.onActiveDatumChange?.(command.id);
+    else if (command.type === 'cursor-change-requested') options.onCursorChange?.(command.id);
+    else if (command.type === 'selection-change-requested') options.onSelectionChange?.(command.selection);
+    else if (command.type === 'view-change-requested') options.onViewChange?.(command.view);
+  };
   const unsubscribeCommands = controller.subscribeCommands((command) => {
-    let failure: readonly [unknown] | undefined;
-    if (command.type === 'active-change-requested' && options.activeDatum !== undefined) {
-      try { options.activeDatum.value = command.id; }
-      catch (error) { failure ??= [error]; }
-    } else if (command.type === 'cursor-change-requested' && options.cursor !== undefined) {
-      try { options.cursor.value = command.id; }
-      catch (error) { failure ??= [error]; }
-    } else if (command.type === 'selection-change-requested' && options.selection !== undefined) {
-      try { options.selection.value = command.selection; }
-      catch (error) { failure ??= [error]; }
-    } else if (command.type === 'view-change-requested' && options.view !== undefined) {
-      try { options.view.value = command.view; }
-      catch (error) { failure ??= [error]; }
-    }
-    try { publish(); }
-    catch (error) { failure ??= [error]; }
-    try { options.onCommand?.(command); }
-    catch (error) { failure ??= [error]; }
-    try {
-      if (command.type === 'active-change-requested') options.onActiveDatumChange?.(command.id);
-      else if (command.type === 'cursor-change-requested') options.onCursorChange?.(command.id);
-      else if (command.type === 'selection-change-requested') options.onSelectionChange?.(command.selection);
-      else if (command.type === 'view-change-requested') options.onViewChange?.(command.view);
-    } catch (error) { failure ??= [error]; }
-    if (failure !== undefined) throw failure[0];
+    publishVueChartCommand(command, publish, publishComposableCommand, publishComposableProposal, publishComposableChange);
   });
   const unsubscribeSnapshots = controller.subscribeSnapshots(() => { publish(); });
   const result: UseChartResult<ID> = {

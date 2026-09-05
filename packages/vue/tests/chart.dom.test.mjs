@@ -52,6 +52,21 @@ const initial = Object.freeze([
   Object.freeze({ id: 1, month: new Date(0), revenue: 12 }),
   Object.freeze({ id: '2', month: 1_000, revenue: 18 }),
 ]);
+const controlledChartDefinition = {
+  coordinate: { kind: 'cartesian', axes: [
+    { id: 'x', orientation: 'x', scale: 'temporal', field: 'month' },
+    { id: 'y', orientation: 'y', scale: 'linear', field: 'revenue' },
+  ] },
+  layers: [{ id: 'series', kind: 'line', data: initial, xAxis: 'x', yAxis: 'y' }],
+};
+
+function controlledChartDeclarations() {
+  return h(ChartCartesian, null, () => [
+    h(ChartXAxis, { id: 'x', scale: 'temporal', field: 'month' }, () => h(ChartAxisView)),
+    h(ChartYAxis, { id: 'y', scale: 'linear', field: 'revenue' }),
+    h(ChartLine, { id: 'series', data: initial, xAxis: 'x', yAxis: 'y' }),
+  ]);
+}
 
 function mockRenderer(projections) {
   return {
@@ -118,6 +133,129 @@ test('declarative ChartRoot batches layer replacement and inherits axis scope fo
   await nextTick();
   assert.equal(host.querySelector('[data-part="root"]').getAttribute('aria-label'), 'Quarterly revenue chart');
   app.unmount(); host.remove();
+});
+
+test('ChartRoot warns when controlled ownership shape changes without a remount', async () => {
+  const selection = shallowRef(undefined);
+  const activeDatum = shallowRef(undefined);
+  const cursor = shallowRef(undefined);
+  const view = shallowRef(undefined);
+  const warnings = [];
+  const originalWarn = console.warn;
+  let controller = null;
+  const host = document.createElement('div');
+  document.body.append(host);
+  console.warn = (message) => warnings.push(String(message));
+  const app = createApp({
+    render: () => h(ChartRoot, {
+      modelValue: selection.value,
+      activeDatum: activeDatum.value,
+      cursor: cursor.value,
+      view: view.value,
+    }, {
+      default: (slot) => {
+        controller = slot.controller ?? controller;
+        return controlledChartDeclarations();
+      },
+    }),
+  });
+  try {
+    app.mount(host);
+    await nextTick(); await nextTick();
+    selection.value = { type: 'points', ids: [1] };
+    activeDatum.value = null;
+    cursor.value = null;
+    view.value = null;
+    await nextTick(); await nextTick();
+    assert.equal(warnings.length, 4);
+    for (const property of ['modelValue', 'activeDatum', 'cursor', 'view']) {
+      assert.ok(warnings.some((message) => message.includes(`cannot switch ${property}`)), property);
+    }
+    controller.dispatch({ type: 'set-cursor', id: '2' });
+    assert.equal(controller.getSnapshot().state.cursor, '2', 'ownership remains uncontrolled after the unsupported switch');
+  } finally {
+    console.warn = originalWarn;
+    app.unmount();
+    host.remove();
+  }
+});
+
+test('ChartRoot publishes every controlled request after the generic command callback', async () => {
+  const seed = createChartController({ definition: controlledChartDefinition, viewCapabilities: [{ axisID: 'x' }] });
+  const selection = shallowRef({ type: 'points', ids: [1] });
+  const activeDatum = shallowRef(1);
+  const cursor = shallowRef(1);
+  const view = shallowRef(seed.getSnapshot().state.view);
+  seed.dispose();
+  const observed = [];
+  let controller = null;
+  const ownerValue = (slice) => slice === 'activeDatum' ? activeDatum.value
+    : slice === 'cursor' ? cursor.value
+      : slice === 'selection' ? selection.value : view.value;
+  const committedValue = (slice) => slice === 'activeDatum' ? controller.getSnapshot().state.activeDatum
+    : slice === 'cursor' ? controller.getSnapshot().state.cursor
+      : slice === 'selection' ? controller.getSnapshot().state.selection : controller.getSnapshot().state.view;
+  const recordChange = (slice, requested) => observed.push({
+    phase: 'change', slice, requested, owner: ownerValue(slice), committed: committedValue(slice),
+  });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h(ChartRoot, {
+      modelValue: selection.value,
+      activeDatum: activeDatum.value,
+      cursor: cursor.value,
+      view: view.value,
+      'onUpdate:modelValue': (next) => { selection.value = next; recordChange('selection', next); },
+      'onUpdate:activeDatum': (next) => { activeDatum.value = next; recordChange('activeDatum', next); },
+      'onUpdate:cursor': (next) => { cursor.value = next; recordChange('cursor', next); },
+      'onUpdate:view': (next) => { view.value = next; recordChange('view', next); },
+      onCommand: (command) => {
+        const slice = command.type === 'active-change-requested' ? 'activeDatum'
+          : command.type === 'cursor-change-requested' ? 'cursor'
+            : command.type === 'selection-change-requested' ? 'selection'
+              : command.type === 'view-change-requested' ? 'view' : null;
+        if (slice === null) return;
+        const requested = command.type === 'selection-change-requested' ? command.selection
+          : command.type === 'view-change-requested' ? command.view : command.id;
+        observed.push({ phase: 'command', slice, requested, owner: ownerValue(slice), committed: committedValue(slice) });
+      },
+    }, {
+      default: (slot) => {
+        controller = slot.controller ?? controller;
+        return controlledChartDeclarations();
+      },
+    }),
+  });
+  app.mount(host);
+  await nextTick(); await nextTick();
+  assert.ok(controller);
+
+  const scenarios = [
+    { slice: 'activeDatum', event: { type: 'set-active', id: '2' } },
+    { slice: 'cursor', event: { type: 'set-cursor', id: '2' } },
+    { slice: 'selection', event: { type: 'set-selection', selection: { type: 'points', ids: ['2'] } } },
+    { slice: 'view', event: { type: 'zoom-axis-view', axisID: 'x', factor: 2, phase: 'settled' } },
+  ];
+  for (const scenario of scenarios) {
+    observed.length = 0;
+    const beforeOwner = ownerValue(scenario.slice);
+    const beforeCommitted = committedValue(scenario.slice);
+    const result = controller.dispatch(scenario.event);
+    assert.equal(result.ok, true);
+    assert.deepEqual(observed.map(({ phase, slice }) => [phase, slice]), [
+      ['command', scenario.slice], ['change', scenario.slice],
+    ]);
+    assert.deepEqual(observed[0].owner, beforeOwner);
+    assert.deepEqual(observed[0].committed, beforeCommitted);
+    assert.deepEqual(observed[1].owner, observed[1].requested);
+    assert.deepEqual(observed[1].committed, beforeCommitted);
+    await nextTick(); await nextTick();
+    assert.deepEqual(committedValue(scenario.slice), ownerValue(scenario.slice));
+  }
+
+  app.unmount();
+  host.remove();
 });
 
 test('direct gestures require a declared visible or external control alternative', async () => {

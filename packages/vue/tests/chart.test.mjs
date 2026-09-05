@@ -94,7 +94,72 @@ test('controlled view publishes requests while defaultView remains controller-ow
   seed.dispose(); chart.dispose(); uncontrolled.dispose();
 });
 
-test('Chart callbacks observe published controlled refs and cannot block sibling callbacks', async () => {
+test('useChart publishes every controlled request after the generic command callback', async () => {
+  const seed = useChart({ definition: cartesianDefinition(), viewCapabilities: [{ axisID: 10 }] });
+  const activeDatum = shallowRef(1);
+  const cursor = shallowRef(1);
+  const selection = shallowRef({ type: 'points', ids: [1] });
+  const view = shallowRef(seed.snapshot.value.state.view);
+  seed.dispose();
+  const observed = [];
+  let chart;
+  const ownerValue = (slice) => slice === 'activeDatum' ? activeDatum.value
+    : slice === 'cursor' ? cursor.value
+      : slice === 'selection' ? selection.value : view.value;
+  const committedValue = (slice) => slice === 'activeDatum' ? chart.snapshot.value.state.activeDatum
+    : slice === 'cursor' ? chart.snapshot.value.state.cursor
+      : slice === 'selection' ? chart.snapshot.value.state.selection : chart.snapshot.value.state.view;
+  const recordChange = (slice, requested) => observed.push({
+    phase: 'change', slice, requested, owner: ownerValue(slice), committed: committedValue(slice),
+  });
+  chart = useChart({
+    definition: cartesianDefinition(),
+    viewCapabilities: [{ axisID: 10 }],
+    activeDatum,
+    cursor,
+    selection,
+    view,
+    onCommand: (command) => {
+      const slice = command.type === 'active-change-requested' ? 'activeDatum'
+        : command.type === 'cursor-change-requested' ? 'cursor'
+          : command.type === 'selection-change-requested' ? 'selection'
+            : command.type === 'view-change-requested' ? 'view' : null;
+      if (slice === null) return;
+      const requested = command.type === 'selection-change-requested' ? command.selection
+        : command.type === 'view-change-requested' ? command.view : command.id;
+      observed.push({ phase: 'command', slice, requested, owner: ownerValue(slice), committed: committedValue(slice) });
+    },
+    onActiveDatumChange: (value) => recordChange('activeDatum', value),
+    onCursorChange: (value) => recordChange('cursor', value),
+    onSelectionChange: (value) => recordChange('selection', value),
+    onViewChange: (value) => recordChange('view', value),
+  });
+
+  const scenarios = [
+    { slice: 'activeDatum', dispatch: () => chart.dispatch({ type: 'set-active', id: '2' }) },
+    { slice: 'cursor', dispatch: () => chart.dispatch({ type: 'set-cursor', id: '2' }) },
+    { slice: 'selection', dispatch: () => chart.dispatch({ type: 'set-selection', selection: { type: 'points', ids: ['2'] } }) },
+    { slice: 'view', dispatch: () => chart.dispatch({ type: 'zoom-axis-view', axisID: 10, factor: 2, phase: 'settled' }) },
+  ];
+  for (const scenario of scenarios) {
+    observed.length = 0;
+    const beforeOwner = ownerValue(scenario.slice);
+    const beforeCommitted = committedValue(scenario.slice);
+    scenario.dispatch();
+    assert.deepEqual(observed.map(({ phase, slice }) => [phase, slice]), [
+      ['command', scenario.slice], ['change', scenario.slice],
+    ]);
+    assert.deepEqual(observed[0].owner, beforeOwner);
+    assert.deepEqual(observed[0].committed, beforeCommitted);
+    assert.deepEqual(observed[1].owner, observed[1].requested);
+    assert.deepEqual(observed[1].committed, beforeCommitted);
+    await nextTick();
+    assert.deepEqual(committedValue(scenario.slice), ownerValue(scenario.slice));
+  }
+  chart.dispose();
+});
+
+test('Chart callbacks preserve first failure without blocking the controlled proposal', async () => {
   const cursor = shallowRef(1);
   const commandError = new Error('application command failed');
   const changeError = new Error('application cursor change failed');
@@ -131,7 +196,7 @@ test('Chart callbacks observe published controlled refs and cannot block sibling
   );
   assert.equal(cursor.value, '2');
   assert.deepEqual(observed, [
-    { callback: 'command', requested: '2', controlled: '2', committed: 1 },
+    { callback: 'command', requested: '2', controlled: 1, committed: 1 },
     { callback: 'change', requested: '2', controlled: '2', committed: 1 },
   ]);
 
