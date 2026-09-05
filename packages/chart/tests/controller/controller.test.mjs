@@ -165,6 +165,33 @@ test('controller owns declarative definitions and axis-domain view capabilities'
   assert.notEqual(externalSecond, externalFirst);
 });
 
+test('definition-backed controllers reject raw model patches without changing resolved semantics', () => {
+  const controller = createChartController({
+    definition: definition([
+      { id: 1, recordedAt: 0, amount: 4 },
+      { id: 2, recordedAt: 1_000, amount: 8 },
+    ]),
+  });
+  const initialModel = controller.getModel();
+  const initialDefinition = controller.getDefinition();
+  const initialSnapshot = controller.getSnapshot();
+  const initialProjection = controller.project({ viewport: { width: 320, height: 180 } }).value;
+
+  const patched = controller.applyPatch({
+    operations: [{ type: 'insert', layerID: 'series', index: 2, data: [{ id: 3, x: 2_000, y: 12 }] }],
+  });
+
+  assert.equal(patched.ok, false);
+  assert.equal(patched.error.class, 'transition-rejection');
+  assert.equal(patched.error.code, 'chart-patch-invalid');
+  assert.match(patched.error.message, /replaceDefinition/);
+  assert.equal(controller.getModel(), initialModel);
+  assert.equal(controller.getDefinition(), initialDefinition);
+  assert.equal(controller.getSnapshot(), initialSnapshot);
+  assert.equal(controller.getDefinition().diagnostics.resolvedDatums, 2);
+  assert.equal(controller.project({ viewport: { width: 320, height: 180 } }).value, initialProjection);
+});
+
 test('CHT-05: declarative projection cache is equivalent and bypasses ineligible inputs', () => {
   const controller = createChartController({
     definition: definition([

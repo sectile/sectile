@@ -78,6 +78,8 @@ Outside Vue, call `controller.replaceDefinition(nextDefinition)` after replacing
 
 `ChartModel` and `ChartPatch` are advanced APIs for systems that already produce incremental chart operations. Most applications should use definitions so Sectile can recalculate axes when values change.
 
+`controller.applyPatch()` is accepted only by a controller created from a raw `model`. A controller that owns a declarative definition rejects raw patches; update it with `replaceDefinition()` so axes, resolved layers, diagnostics, and projection state are recomputed as one accepted generation.
+
 Raw model limits are checked from layer and operation metadata before Sectile reads datum elements or allocates packed geometry. Patch operations are evaluated in declaration order, and every intermediate datum count must remain within `maxDatums`; a later removal does not make an earlier over-ceiling insert valid.
 
 ## Handle invalid data before showing it

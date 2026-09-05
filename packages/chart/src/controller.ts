@@ -212,11 +212,17 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
   ): ChartResult<RevisionSnapshot<ChartState<ID>>> {
     const ready = this.#ready(expectedRevision);
     if (!ready.ok) return ready;
+    if (this.#definition !== null) {
+      return chartFail(
+        'transition-rejection',
+        'chart-patch-invalid',
+        'Raw Chart model patches require a model-backed controller. Use replaceDefinition() for definition-backed controllers.',
+      );
+    }
     const nextModel = tryApplyChartPatch(this.#model, patch);
     if (!nextModel.ok) return nextModel;
     if (nextModel.value === this.#model) return chartOK(this.#snapshot);
-    const definition = this.#definition === null ? null : Object.freeze({ ...this.#definition, model: nextModel.value });
-    return this.#commitModel(nextModel.value, this.#snapshot.state.view, definition, this.#viewCapabilities);
+    return this.#commitModel(nextModel.value, this.#snapshot.state.view, null, this.#viewCapabilities);
   }
 
   public syncControlledValues(values: ChartControlledValues<ID>): ChartResult<RevisionSnapshot<ChartState<ID>>> {

@@ -76,7 +76,7 @@ Lowering the backing resolution may make the image less sharp. It does not chang
 
 - Replace a layer's array when its query result changes; keep the same array for unchanged layers.
 - Keep record IDs stable so selection and cursor survive replacement.
-- Use low-level patches only when your data source already emits incremental chart operations and axis ranges do not need recalculation.
+- Use low-level patches only with a raw-model controller when your data source already emits incremental chart operations. Definition-backed controllers use `replaceDefinition()` so axis ranges and other resolved definition state are recalculated together.
 - Prepare hit-test queries before the first pointer event when the first hover must have no setup delay.
 - Disconnect DOM charts and dispose controllers and renderers created by your application.
 
