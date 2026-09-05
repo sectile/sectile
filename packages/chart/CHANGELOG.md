@@ -1,5 +1,14 @@
 # @sectile/chart
 
+## 0.15.1
+
+### Changes
+
+- fix(chart): allocate visible representative demand (78526ebc)
+- fix(chart): surface projection failures (5853f84c)
+- fix(chart): reconcile controlled domain ownership (48f989a4)
+- fix(chart): reject raw patches on definitions (04380d31)
+
 ## 0.15.0
 
 ### Changes

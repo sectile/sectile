@@ -1,44 +1,34 @@
 {
   "schemaVersion": 1,
-  "releaseTag": "release-2026-09-05.1",
+  "releaseTag": "release-2026-09-05.2",
   "packages": [
     {
-      "name": "@sectile/virtual",
-      "directory": "virtual",
-      "previousVersion": "0.14.2",
-      "version": "0.15.0",
-      "bump": "minor",
-      "tag": "@sectile/virtual@0.15.0",
-      "direct": true,
-      "dependencies": []
-    },
-    {
-      "name": "@sectile/tabular",
-      "directory": "tabular",
-      "previousVersion": "0.14.2",
-      "version": "0.15.0",
-      "bump": "minor",
-      "tag": "@sectile/tabular@0.15.0",
+      "name": "@sectile/chart",
+      "directory": "chart",
+      "previousVersion": "0.15.0",
+      "version": "0.15.1",
+      "bump": "patch",
+      "tag": "@sectile/chart@0.15.1",
       "direct": true,
       "dependencies": []
     },
     {
       "name": "@sectile/dom",
       "directory": "dom",
-      "previousVersion": "0.15.1",
-      "version": "0.16.0",
-      "bump": "minor",
-      "tag": "@sectile/dom@0.16.0",
+      "previousVersion": "0.16.0",
+      "version": "0.16.1",
+      "bump": "patch",
+      "tag": "@sectile/dom@0.16.1",
       "direct": true,
       "dependencies": []
     },
     {
       "name": "@sectile/vue",
       "directory": "vue",
-      "previousVersion": "0.15.1",
-      "version": "0.16.0",
-      "bump": "minor",
-      "tag": "@sectile/vue@0.16.0",
+      "previousVersion": "0.16.0",
+      "version": "0.16.1",
+      "bump": "patch",
+      "tag": "@sectile/vue@0.16.1",
       "direct": true,
       "dependencies": []
     }

@@ -1,5 +1,14 @@
 # @sectile/vue
 
+## 0.16.1
+
+### Changes
+
+- perf(dom): bound menu item registration (3b445d20)
+- fix(vue): align chart controlled publication (8da799e1)
+- fix(vue): restore focus on retained popup reopen (38ef91d2)
+- fix(chart): surface projection failures (5853f84c)
+
 ## 0.16.0
 
 ### Changes

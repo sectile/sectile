@@ -1,5 +1,16 @@
 # @sectile/dom
 
+## 0.16.1
+
+### Changes
+
+- test(dom): refresh chart signature evidence (b2ffb10e)
+- perf(dom): bound menu item registration (3b445d20)
+- fix(dom): roll back WebGL renderer resources (88cc1fe0)
+- fix(dom): complete compound chart interactions (62ea945d)
+- fix(chart): surface projection failures (5853f84c)
+- fix(chart): reconcile controlled domain ownership (48f989a4)
+
 ## 0.16.0
 
 ### Changes
