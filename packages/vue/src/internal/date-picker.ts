@@ -19,6 +19,7 @@ import {
 } from './form-control.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from './controlled-state.js';
+import { usePresence } from './presence.js';
 import { useHostPortalTarget } from '../host-provider.js';
 import { useTemporalReferenceDate } from '../temporal-provider.js';
 import type { PickerCapabilityConnection, PickerFamilyCapability } from './picker-capability.js';
@@ -162,6 +163,7 @@ interface Context {
   readonly strategy: ComputedRef<NonNullable<PickerPositionOptions['strategy']>>;
   readonly state: ComputedRef<PickerRootSlotProps>;
   register(part: PickerInputPart | 'anchor' | 'content' | 'grid' | 'trigger', element?: HTMLElement): void;
+  refresh(): void;
   registerCell(element: HTMLElement, value: DateValue): void;
   move(unit: PickerNavigationUnit, direction: -1 | 1): void;
   handleGridKey(event: KeyboardEvent): void;
@@ -294,6 +296,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           const anchor = elements.get('anchor');
           if (anchor !== undefined) base['anchor'] = anchor;
           Object.assign(base, {
+            manageVisibility: false,
             position: runtimeProps.position, side: runtimeProps.side, align: runtimeProps.align, sideOffset: runtimeProps.sideOffset,
             collisionPadding: runtimeProps.collisionPadding, avoidCollisions: runtimeProps.avoidCollisions,
             hideWhenDetached: runtimeProps.hideWhenDetached, strategy: runtimeProps.strategy,
@@ -349,6 +352,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           if (element === undefined) elements.delete(part); else elements.set(part, element);
           scheduleConnect();
         },
+        refresh: () => connection.value?.refresh(),
         registerCell: (element, value) => connection.value?.setCellAttributes(element, value),
         move: (unit, direction) => {
           const repetitions = granularity === 'year' && unit === 'year' ? yearPageSize : 1;
@@ -451,11 +455,24 @@ export const PickerAnchor = /* @__PURE__ */ defineComponent({
 export const PickerContent = /* @__PURE__ */ defineComponent({
   name: 'SectilePickerContent', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: PickerRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('PickerContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.register('content', node instanceof HTMLElement ? node : undefined),
-    role: root.inline ? 'group' : 'dialog', 'aria-modal': root.inline ? undefined : 'false', hidden: root.inline ? false : !root.state.value.open, 'data-scope': root.scope, 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
-    style: !root.inline && root.position.value ? { position: root.strategy.value } : undefined,
-  }), { default: () => slots['default']?.(root.state.value) }); },
+  setup(props, { attrs, slots }) {
+    const root = useRoot('PickerContent');
+    const element = shallowRef<HTMLElement>();
+    const open = computed(() => root.inline || root.state.value.open);
+    const present = usePresence(open, element);
+    watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' });
+    return (): VNodeChild => {
+      const exiting = !root.inline && !open.value && present.value;
+      return h(Primitive, mergeProps(attrs, {
+        as: props.as, asChild: props.asChild,
+        elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.register('content', content); },
+        role: root.inline ? 'group' : 'dialog', 'aria-modal': root.inline ? undefined : 'false', hidden: root.inline ? false : !present.value,
+        ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
+        'data-scope': root.scope, 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
+        style: !root.inline && root.position.value ? { position: root.strategy.value } : undefined,
+      }), { default: () => slots['default']?.(root.state.value) });
+    };
+  },
 });
 
 export const PickerPortal = /* @__PURE__ */ defineComponent({

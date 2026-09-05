@@ -12,6 +12,7 @@ import {
   type DOMLayerManager,
 } from './layer-manager.js';
 import { acquireModalEffects, type ModalEffects } from './modal-effects.js';
+import { createHiddenBinding, type HiddenBinding } from './hidden-binding.js';
 import {
   createInteractOutsideEvent,
   isEventInside,
@@ -89,6 +90,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
   readonly #pointerDown: (event: PointerEvent) => void;
   readonly #layerID: string;
   readonly #layers: DOMLayerManager;
+  readonly #visibility: HiddenBinding | undefined;
   #modalEffects: ModalEffects | undefined;
   #initialFocusApplied = false;
   #tabDirection: 'forward' | 'backward' = 'forward';
@@ -98,6 +100,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
   public constructor(options: DOMPopupOptions<State, Event, Command>, runtime: ControlledComponentController<State, Event, Command, boolean>) {
     this.#options = options;
     this.#runtime = runtime;
+    this.#visibility = options.manageVisibility === false ? undefined : createHiddenBinding(options.root);
     this.#layerID = createDOMLayerID();
     this.#layers = getDOMLayerManager(options.root);
     this.#click = (): void => { this.handleEvent(options.toggle); };
@@ -202,6 +205,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     this.#modalEffects?.release();
     this.#modalEffects = undefined;
     this.#removeFocusGuards();
+    this.#visibility?.disconnect();
   }
   #isOpen(): boolean { return this.#options.read(this.#runtime.getSnapshot().state); }
   #refresh(previous: boolean | undefined): void {
@@ -243,7 +247,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
       this.#modalEffects = undefined;
       this.#removeFocusGuards();
     }
-    if (this.#options.manageVisibility !== false) this.#options.root.hidden = !open;
+    this.#visibility?.setHidden(!open);
     if (this.#options.trigger !== undefined && this.#options.triggerMode !== 'focus-hover') this.#options.trigger.setAttribute('aria-expanded', String(open));
     if (!open) this.#initialFocusApplied = false;
     if (open) this.#applyInitialFocus();

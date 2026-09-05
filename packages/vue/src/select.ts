@@ -256,11 +256,13 @@ export const SelectContent = defineComponent({
   name: 'SectileSelectContent', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('SelectContent'); const element = shallowRef<HTMLElement>(); const open = computed(() => root.state.value.open); const present = usePresence(open, element); watch(present, () => root.refresh()); return (): VNodeChild => {
+  setup(props, { attrs, slots }) { const root = useRoot('SelectContent'); const element = shallowRef<HTMLElement>(); const open = computed(() => root.state.value.open); const present = usePresence(open, element); watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' }); return (): VNodeChild => {
     if (root.unmountOnExit.value && !present.value) return null;
+    const exiting = !root.state.value.open && present.value;
     return h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); },
       id: root.contentID, role: 'listbox', hidden: !present.value, 'aria-label': root.label.value,
+      ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
       style: root.position.value
         ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
         : undefined,

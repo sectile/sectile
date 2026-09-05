@@ -126,6 +126,7 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'dom:./identity',
     'dom:./listbox',
     'dom:./popover',
+    'dom:./presence',
     'form:./form',
     'tabular:./data-table',
     'temporal:./calendar',

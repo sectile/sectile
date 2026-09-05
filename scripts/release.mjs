@@ -9,11 +9,13 @@ import {
   classifyReleaseBranch,
   filterPackageCommits,
   formatCommitList,
+  formatIndependentReleaseNotes,
   formatReleaseNotes,
   parseGitLog,
   parseReleaseArguments,
   parseReleaseConfirmation,
   parseStableVersion,
+  shouldPromptForRelease,
   prependChangelog,
   prependChangelogChanges,
   recommendBump,
@@ -28,6 +30,7 @@ import {
   independentReleaseBaselineTag,
   planIndependentVersions,
   releaseManifestFile,
+  releaseSetSequence,
 } from './lib/release-set.mjs';
 import { publishedPackageDirectories } from './lib/published-packages.mjs';
 import { execFileSyncPortable } from './lib/portable-process.mjs';
@@ -176,7 +179,18 @@ function packageCommits(root, entry, baseTag) {
   return output === '' ? [] : parseGitLog(output);
 }
 
-async function inspectIndependentRelease(root, releaseTag = createReleaseSetTag()) {
+function nextReleaseSetTag(root, date = new Date()) {
+  const first = createReleaseSetTag(date);
+  const prefix = first.slice(0, first.lastIndexOf('.') + 1);
+  const tags = run(root, 'git', ['tag', '--list', `${prefix}*`], { capture: true })
+    .split('\n')
+    .filter(Boolean);
+  let sequence = 0;
+  for (const tag of tags) sequence = Math.max(sequence, releaseSetSequence(tag) ?? 0);
+  return createReleaseSetTag(date, sequence + 1);
+}
+
+async function inspectIndependentRelease(root, releaseTag = nextReleaseSetTag(root)) {
   assertIndependentBaseline(root);
   const packages = await independentReleaseEntries(root);
   const byName = new Map(packages.map((entry) => [entry.name, entry]));
@@ -189,7 +203,7 @@ async function inspectIndependentRelease(root, releaseTag = createReleaseSetTag(
       baseTag,
       commits,
       name: source.name,
-      recommendation: Object.freeze(recommendBump(commits)),
+      recommendation: Object.freeze(recommendBump(commits, source.manifest.version)),
       source,
     }));
   }
@@ -255,12 +269,8 @@ function updateIndependentPackages(root, plan) {
   writeFileSync(join(root, releaseManifestFile), `${JSON.stringify(plan.manifest, null, 2)}\n`);
 }
 
-async function confirmReleasePlan() {
-  assert.equal(
-    process.stdin.isTTY && process.stdout.isTTY,
-    true,
-    'release confirmation requires an interactive terminal; inspect the plan with pnpm release:plan',
-  );
+async function confirmReleasePlan(yes) {
+  if (!shouldPromptForRelease(yes, process.stdin.isTTY === true, process.stdout.isTTY === true)) return true;
   const prompt = createInterface({ input: process.stdin, output: process.stdout });
   try {
     while (true) {
@@ -275,7 +285,7 @@ async function confirmReleasePlan() {
   }
 }
 
-async function prepareIndependentRelease(root, installDependencies) {
+async function prepareIndependentRelease(root, installDependencies, yes) {
   const repository = githubRepository(run(root, 'git', ['remote', 'get-url', 'origin'], { capture: true }));
   run(root, 'git', ['fetch', 'origin', 'main', '--tags']);
   const sourceHead = run(root, 'git', ['rev-parse', 'HEAD'], { capture: true });
@@ -287,7 +297,7 @@ async function prepareIndependentRelease(root, installDependencies) {
   console.log(renderIndependentRecommendations(context));
   const plan = createIndependentPlan(context);
   console.log(`\nrecommended release plan:\n${renderIndependentPlan(plan)}`);
-  if (!await confirmReleasePlan()) {
+  if (!await confirmReleasePlan(yes)) {
     console.log('\nrelease cancelled');
     return undefined;
   }
@@ -310,9 +320,7 @@ async function prepareIndependentRelease(root, installDependencies) {
   ]);
   run(root, 'git', ['commit', '-m', `chore(release): ${plan.releaseTag}`]);
   const releaseCommit = run(root, 'git', ['rev-parse', 'HEAD'], { capture: true });
-  const notes = `Sectile ${plan.releaseTag}\n\n## Packages\n\n${plan.entries
-    .map(({ name, previousVersion, version }) => `- ${name}: ${previousVersion} -> ${version}`)
-    .join('\n')}\n`;
+  const notes = formatIndependentReleaseNotes(plan.releaseTag, plan.entries);
   return Object.freeze({
     repository,
     remoteHead,
@@ -324,7 +332,7 @@ async function prepareIndependentRelease(root, installDependencies) {
   });
 }
 
-async function prepareRelease(root, installDependencies) {
+async function prepareRelease(root, installDependencies, yes) {
   const packages = releasePackages(root);
   const repository = githubRepository(run(root, 'git', ['remote', 'get-url', 'origin'], { capture: true }));
   for (const { manifestPath } of packages) {
@@ -352,7 +360,7 @@ async function prepareRelease(root, installDependencies) {
     return undefined;
   }
 
-  const recommendation = recommendBump(commits);
+  const recommendation = recommendBump(commits, previousVersion);
   const version = bumpVersion(previousVersion, recommendation.bump);
   const tag = `v${version}`;
   console.log(`release base: ${baseTag}`);
@@ -360,7 +368,7 @@ async function prepareRelease(root, installDependencies) {
   console.log(`commits:\n${formatCommitList(commits)}`);
   console.log(`recommended bump: ${recommendation.bump} (${recommendation.reason})`);
   console.log(`\nrecommended release plan:\nrelease tag: ${tag}`);
-  if (!await confirmReleasePlan()) {
+  if (!await confirmReleasePlan(yes)) {
     console.log('\nrelease cancelled');
     return undefined;
   }
@@ -391,7 +399,7 @@ function publishRelease(root, release) {
   console.log(`released ${release.tag} from ${release.repository}; dispatched npm publication through GitHub Actions OIDC`);
 }
 
-function prepareIsolatedRelease(worktree) {
+function prepareIsolatedRelease(worktree, yes) {
   const workerScript = join(worktree.worktreeRoot, 'scripts', 'release.mjs');
   assert.equal(
     readFileSync(workerScript, 'utf8').includes(isolatedResultEnvironment),
@@ -401,7 +409,7 @@ function prepareIsolatedRelease(worktree) {
   const resultPath = join(worktree.temporaryRoot, 'result.json');
   const result = spawnSync(
     process.execPath,
-    [workerScript],
+    [workerScript, ...(yes ? ['--yes'] : [])],
     {
       cwd: worktree.worktreeRoot,
       env: { ...process.env, [isolatedResultEnvironment]: resultPath },
@@ -413,12 +421,12 @@ function prepareIsolatedRelease(worktree) {
   return JSON.parse(readFileSync(resultPath, 'utf8'));
 }
 
-async function releaseFromDirtyWorkspace() {
+async function releaseFromDirtyWorkspace(yes) {
   const sourceHead = run(workspaceRoot, 'git', ['rev-parse', 'HEAD'], { capture: true });
   const worktree = createReleaseWorktree(workspaceRoot, sourceHead);
   try {
     console.log(`verifying committed ${sourceHead.slice(0, 12)} in isolated worktree ${worktree.worktreeRoot}`);
-    const release = prepareIsolatedRelease(worktree);
+    const release = prepareIsolatedRelease(worktree, yes);
     if (release === null) return;
 
     assert.equal(
@@ -479,15 +487,15 @@ async function releaseFromDirtyWorkspace() {
 }
 
 async function main() {
-  const { allowDirty, dryRun } = parseReleaseArguments(process.argv.slice(2));
+  const { allowDirty, dryRun, yes } = parseReleaseArguments(process.argv.slice(2));
   const isolatedResultPath = process.env[isolatedResultEnvironment];
   if (isolatedResultPath !== undefined) {
     delete process.env[isolatedResultEnvironment];
     assert.equal(releaseWorktreeStatus(workspaceRoot), '', 'isolated release worktree must start clean');
     const track = selectReleaseTrack(dryRun, independentReleaseActive(workspaceRoot));
     const release = track === 'independent'
-      ? await prepareIndependentRelease(workspaceRoot, true)
-      : await prepareRelease(workspaceRoot, true);
+      ? await prepareIndependentRelease(workspaceRoot, true, yes)
+      : await prepareRelease(workspaceRoot, true, yes);
     writeFileSync(isolatedResultPath, `${JSON.stringify(release ?? null)}\n`);
     return;
   }
@@ -507,13 +515,13 @@ async function main() {
   }
 
   if (dirtyStatus !== '') {
-    await releaseFromDirtyWorkspace();
+    await releaseFromDirtyWorkspace(yes);
     return;
   }
 
   const release = track === 'independent'
-    ? await prepareIndependentRelease(workspaceRoot, false)
-    : await prepareRelease(workspaceRoot, false);
+    ? await prepareIndependentRelease(workspaceRoot, false, yes)
+    : await prepareRelease(workspaceRoot, false, yes);
   if (release !== undefined) publishRelease(workspaceRoot, release);
 }
 

@@ -9,6 +9,7 @@ export const releaseBumps = Object.freeze(['patch', 'minor', 'major']);
 export function parseReleaseArguments(args) {
   let allowDirty = false;
   let dryRun = false;
+  let yes = false;
   for (const argument of args.filter((candidate) => candidate !== '--')) {
     if (argument === '--allow-dirty') {
       allowDirty = true;
@@ -18,9 +19,26 @@ export function parseReleaseArguments(args) {
       dryRun = true;
       continue;
     }
+    if (argument === '--yes') {
+      yes = true;
+      continue;
+    }
     throw new Error(`unexpected release argument: ${argument}; pnpm release does not accept bump or package overrides`);
   }
-  return Object.freeze({ allowDirty, dryRun });
+  return Object.freeze({ allowDirty, dryRun, yes });
+}
+
+export function shouldPromptForRelease(yes, stdinTTY, stdoutTTY) {
+  assert.equal(typeof yes, 'boolean', 'release yes marker must be boolean');
+  assert.equal(typeof stdinTTY, 'boolean', 'release stdin TTY marker must be boolean');
+  assert.equal(typeof stdoutTTY, 'boolean', 'release stdout TTY marker must be boolean');
+  if (yes) return false;
+  assert.equal(
+    stdinTTY && stdoutTTY,
+    true,
+    'release confirmation requires an interactive terminal; inspect the plan with pnpm release:plan or pass --yes',
+  );
+  return true;
 }
 
 export function parseReleaseConfirmation(input) {
@@ -70,9 +88,10 @@ export function classifyReleaseBranch(localHead, remoteHead, remoteIsAncestor) {
   return remoteIsAncestor ? 'ahead' : 'blocked';
 }
 
-export function recommendBump(commits) {
+export function recommendBump(commits, currentVersion) {
+  const [major] = parseStableVersion(currentVersion);
   const breaking = commits.find(({ subject, body }) => breakingSubjectPattern.test(subject) || breakingBodyPattern.test(body));
-  if (breaking !== undefined) return { bump: 'major', reason: breaking.subject };
+  if (breaking !== undefined) return { bump: major === 0 ? 'minor' : 'major', reason: breaking.subject };
 
   const feature = commits.find(({ subject }) => featureSubjectPattern.test(subject));
   if (feature !== undefined) return { bump: 'minor', reason: feature.subject };
@@ -98,6 +117,24 @@ export function formatCommitList(commits) {
 
 export function formatReleaseNotes(baseTag, commits) {
   return `## Changes since ${baseTag}\n\n${formatCommitList(commits)}\n`;
+}
+
+export function formatIndependentReleaseNotes(releaseTag, entries) {
+  assert.ok(entries.length > 0, 'independent release notes require at least one package');
+  const commits = [];
+  const seen = new Set();
+  for (const entry of entries) {
+    for (const commit of entry.commits ?? []) {
+      if (seen.has(commit.hash)) continue;
+      seen.add(commit.hash);
+      commits.push(commit);
+    }
+  }
+  const packages = entries
+    .map(({ name, previousVersion, version }) => `- ${name}: ${previousVersion} -> ${version}`)
+    .join('\n');
+  const changes = commits.length === 0 ? '- No direct package commits.' : formatCommitList(commits);
+  return `Sectile ${releaseTag}\n\n## Packages\n\n${packages}\n\n## Changes\n\n${changes}\n`;
 }
 
 export function filterPackageCommits(commits, directory, changedPathsByHash) {

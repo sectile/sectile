@@ -710,6 +710,21 @@
       "fixtureModes": []
     },
     {
+      "subpath": "./presence",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createPresence"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./progress",
       "classification": "named-subpath",
       "platform": "browser",

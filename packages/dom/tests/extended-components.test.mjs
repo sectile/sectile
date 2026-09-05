@@ -65,6 +65,30 @@ test('DOM select handles keyboard and typeahead events on a portalled popup', ()
   select.disconnect();
 });
 
+test('DOM select restores exact hidden ownership and opt-out never restores consumer state', () => {
+  const root = new FakeElement();
+  const trigger = new FakeElement();
+  const popup = new FakeElement();
+  popup.setAttribute('hidden', 'until-found');
+  popup.hidden = true;
+  const select = createSelect({ root, trigger, popup, items: ['alpha'] });
+
+  assert.equal(popup.getAttribute('hidden'), '');
+  select.handleEvent('open');
+  assert.equal(popup.getAttribute('hidden'), null);
+  select.disconnect();
+  assert.equal(popup.getAttribute('hidden'), 'until-found');
+
+  const unmanagedPopup = new FakeElement();
+  unmanagedPopup.setAttribute('hidden', 'until-found');
+  unmanagedPopup.hidden = true;
+  const unmanaged = createSelect({ root: new FakeElement(), trigger: new FakeElement(), popup: unmanagedPopup, items: ['alpha'], manageVisibility: false });
+  unmanagedPopup.removeAttribute('hidden');
+  unmanagedPopup.hidden = false;
+  unmanaged.disconnect();
+  assert.equal(unmanagedPopup.getAttribute('hidden'), null);
+});
+
 test('DOM toggle group projects pressed buttons and toggles single values', () => {
   const root = new FakeElement();
   const group = createToggleGroup({ root, items: ['bold', 'italic'], defaultValue: ['bold'] });

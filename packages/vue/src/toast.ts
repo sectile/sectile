@@ -7,6 +7,7 @@ import { createToast, createToastState, type ToastConnection, type ToastInput, t
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostPortalTarget } from './host-provider.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import { usePresence } from './internal/presence.js';
 
 export interface ToastProviderProps {
   readonly toasts?: readonly ToastInput<string>[];
@@ -34,6 +35,11 @@ export interface ToastPortalProps { readonly to?: string | HTMLElement; readonly
 export interface ToastRootProps extends ToastPartProps { readonly value: string }
 export interface ToastRootSlotProps { readonly toast: ToastItem<string> | null; readonly open: boolean }
 
+type ToastRegistrationConnection = Omit<ToastConnection<string>, 'setToastAttributes' | 'setCloseButtonAttributes'> & {
+  setToastAttributes(element: HTMLElement | undefined, id: string): void;
+  setCloseButtonAttributes(element: HTMLButtonElement | undefined, id: string): void;
+};
+
 interface ToastContext {
   readonly state: ShallowRef<{ readonly items: readonly ToastItem<string>[]; readonly paused: boolean }>;
   readonly activeIDs: ShallowRef<ReadonlySet<string>>;
@@ -46,8 +52,9 @@ interface ToastContext {
   update(id: string, toast: Partial<Omit<ToastInput<string>, 'id'>>): void;
   dismiss(id: string): void;
   dismissAll(): void;
-  registerItem(element: HTMLElement, id: string): void;
-  registerClose(element: HTMLButtonElement, id: string): void;
+  finishExit(id: string): void;
+  registerItem(element: HTMLElement | undefined, id: string): void;
+  registerClose(element: HTMLButtonElement | undefined, id: string): void;
 }
 const key = Symbol('SectileToastProvider');
 
@@ -79,44 +86,33 @@ export const ToastProvider = defineComponent({
     let activeItems = [...initialState.items];
     let viewport: { readonly root: HTMLElement; readonly label: string } | undefined;
     const exiting = new Map<string, ToastItem<string>>();
-    const elements = new Map<string, HTMLElement>();
-    const exitCleanups = new Map<string, () => void>();
 
     const finishExit = (id: string): void => {
-      exitCleanups.get(id)?.(); exitCleanups.delete(id); exiting.delete(id); elements.delete(id);
+      if (activeIDs.value.has(id) || !exiting.delete(id)) return;
       state.value = { ...state.value, items: Object.freeze(state.value.items.filter((item) => item.id !== id)) };
-    };
-    const scheduleExit = (id: string): void => {
-      if (exitCleanups.has(id)) return;
-      const element = elements.get(id); if (element === undefined) return;
-      const start = setTimeout(() => {
-        const duration = motionDuration(element);
-        if (duration === 0) { finishExit(id); return; }
-        const done = (event: Event): void => { if (event.target === element) finishExit(id); };
-        element.addEventListener('animationend', done); element.addEventListener('transitionend', done);
-        const fallback = setTimeout(() => finishExit(id), duration + 50);
-        exitCleanups.set(id, () => { clearTimeout(fallback); element.removeEventListener('animationend', done); element.removeEventListener('transitionend', done); });
-      }, 0);
-      exitCleanups.set(id, () => { clearTimeout(start); });
     };
     const refresh = (): void => {
       const next = connection.value?.getSnapshot().state; if (next === undefined) return;
       const nextIDs = new Set(next.items.map((item) => item.id));
       for (const item of activeItems) if (!nextIDs.has(item.id)) exiting.set(item.id, item);
-      for (const item of next.items) { exiting.delete(item.id); exitCleanups.get(item.id)?.(); exitCleanups.delete(item.id); }
+      for (const item of next.items) exiting.delete(item.id);
       activeItems = [...next.items]; activeIDs.value = nextIDs;
-      const byID = new Map([...next.items, ...exiting.values()].map((item) => [item.id, item]));
-      const ordered = [
-        ...state.value.items.map((item) => byID.get(item.id)).filter((item): item is ToastItem<string> => item !== undefined),
-        ...next.items.filter((item) => !state.value.items.some((previous) => previous.id === item.id)),
-      ];
+      const ordered: ToastItem<string>[] = [];
+      let activeIndex = 0;
+      for (const previous of state.value.items) {
+        const exitingItem = exiting.get(previous.id);
+        if (exitingItem !== undefined) { ordered.push(exitingItem); continue; }
+        if (!nextIDs.has(previous.id)) continue;
+        const active = next.items[activeIndex];
+        if (active !== undefined) { ordered.push(active); activeIndex += 1; }
+      }
+      for (; activeIndex < next.items.length; activeIndex += 1) ordered.push(next.items[activeIndex]!);
       state.value = { items: Object.freeze(ordered), paused: next.paused };
-      for (const id of exiting.keys()) scheduleExit(id);
     };
     const connect = (root: HTMLElement, label: string): void => {
       viewport = { root, label }; connection.value?.disconnect();
       connection.value = createToast({
-        root, ...(controlled ? { items: props.toasts as readonly ToastInput<string>[] } : { initialToasts: props.initialToasts }),
+        root, ...(controlled ? { items: props.toasts as readonly ToastInput<string>[] } : { initialToasts: activeItems.map(toInput) }),
         label, closeLabel: props.closeLabel, defaultDurationMs: props.defaultDurationMs, maxVisible: props.maxVisible,
         hotkey: props.hotkey, pauseOnWindowBlur: props.pauseOnWindowBlur, dismissOnEscape: props.dismissOnEscape,
         swipeDirection: props.swipeDirection, swipeThreshold: props.swipeThreshold, manageVisibility: false,
@@ -127,7 +123,13 @@ export const ToastProvider = defineComponent({
       root.querySelectorAll<HTMLButtonElement>('[data-sectile-toast-close]').forEach((node) => { const id = node.dataset['sectileToastClose']; if (id !== undefined) connection.value?.setCloseButtonAttributes(node, id); });
       refresh();
     };
-    const disconnect = (): void => { connection.value?.disconnect(); connection.value = undefined; for (const cleanup of exitCleanups.values()) cleanup(); exitCleanups.clear(); };
+    const disconnect = (): void => {
+      connection.value?.disconnect();
+      connection.value = undefined;
+      viewport = undefined;
+      exiting.clear();
+      state.value = { ...state.value, items: Object.freeze([...activeItems]) };
+    };
     const send = (event: (target: ToastConnection<string>) => void): void => { const target = connection.value; if (target === undefined) pending.push(event); else event(target); refresh(); };
     const context: ToastContext = {
       state, activeIDs, connection, closeLabel, swipeDirection, connect, disconnect,
@@ -135,13 +137,14 @@ export const ToastProvider = defineComponent({
       update: (id, toast) => send((target) => { target.updateToast(id, toast); }),
       dismiss: (id) => send((target) => { target.dismiss(id); }),
       dismissAll: () => send((target) => { target.dismissAll(); }),
-      registerItem: (element, id) => { elements.set(id, element); connection.value?.setToastAttributes(element, id); if (!activeIDs.value.has(id)) scheduleExit(id); },
-      registerClose: (element, id) => connection.value?.setCloseButtonAttributes(element, id),
+      finishExit,
+      registerItem: (element, id) => (connection.value as ToastRegistrationConnection | undefined)?.setToastAttributes(element, id),
+      registerClose: (element, id) => (connection.value as ToastRegistrationConnection | undefined)?.setCloseButtonAttributes(element, id),
     };
     provide(key, context);
     watch(() => props.toasts, (items) => { if (!controlled || items === undefined || connection.value === undefined) return; const result = connection.value.syncItems(items); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
     watch([() => props.closeLabel, () => props.hotkey, () => props.pauseOnWindowBlur, () => props.dismissOnEscape, () => props.swipeDirection, () => props.swipeThreshold, () => props.defaultDurationMs, () => props.maxVisible], () => { if (viewport !== undefined) connect(viewport.root, viewport.label); });
-    onBeforeUnmount(disconnect);
+    onBeforeUnmount(() => { disconnect(); pending.length = 0; exiting.clear(); });
     return (): VNodeChild => h(Fragment as Component, null, slots['default']?.({ toasts: state.value.items, paused: state.value.paused, toast: context.push, update: context.update, dismiss: context.dismiss, dismissAll: context.dismissAll }) ?? []);
   },
 });
@@ -174,22 +177,69 @@ export const ToastViewport = defineComponent({
   props: { label: { type: String, default: 'Notifications' }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'ol' }, asChild: { type: Boolean, default: false } },
   setup(props, { attrs, slots }) {
     const root = useProvider('ToastViewport'); const element = shallowRef<HTMLElement>();
-    onMounted(() => { if (element.value !== undefined) root.connect(element.value, props.label); });
+    let mounted = false;
+    const register = (candidate: unknown): void => {
+      const next = candidate instanceof HTMLElement ? candidate : undefined;
+      if (element.value === next) return;
+      element.value = next;
+      if (!mounted) return;
+      if (next === undefined) root.disconnect();
+      else root.connect(next, props.label);
+    };
+    onMounted(() => { mounted = true; if (element.value !== undefined) root.connect(element.value, props.label); });
+    onBeforeUnmount(() => { mounted = false; root.disconnect(); element.value = undefined; });
     watch(() => props.label, (label) => { if (element.value !== undefined) root.connect(element.value, label); });
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (candidate: unknown) => { if (candidate instanceof HTMLElement) element.value = candidate; }, tabindex: -1, role: 'region', 'aria-label': props.label, 'aria-live': 'polite', 'data-scope': 'toast', 'data-part': 'viewport', 'data-paused': String(root.state.value.paused) }), slots);
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: register, tabindex: -1, role: 'region', 'aria-label': props.label, 'aria-live': 'polite', 'data-scope': 'toast', 'data-part': 'viewport', 'data-paused': String(root.state.value.paused) }), slots);
   },
 });
 
 const toastRootKey = Symbol('SectileToastRoot');
-interface ToastRootContext { readonly id: string; readonly item: ComputedRef<ToastItem<string> | null> }
+interface ToastRootContext { readonly id: ComputedRef<string>; readonly item: ComputedRef<ToastItem<string> | null> }
 export const ToastRoot = defineComponent({
   name: 'SectileToastRoot', inheritAttrs: false,
   props: { value: { type: String, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'li' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: ToastRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
-    const provider = useProvider('ToastRoot'); const item = computed(() => provider.state.value.items.find((candidate) => candidate.id === props.value) ?? null); const open = computed(() => provider.activeIDs.value.has(props.value));
-    provide(toastRootKey, { id: props.value, item });
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => { if (element instanceof HTMLElement) provider.registerItem(element, props.value); }, hidden: item.value === null, role: item.value?.kind === 'error' ? 'alert' : 'status', 'data-sectile-toast-item': props.value, 'data-scope': 'toast', 'data-part': 'root', 'data-state': open.value ? 'open' : 'closed', 'data-swipe-direction': provider.swipeDirection.value, 'data-kind': item.value?.kind }), { default: () => slots['default']?.({ toast: item.value, open: open.value }) });
+    const provider = useProvider('ToastRoot');
+    const id = computed(() => props.value);
+    const item = computed(() => provider.state.value.items.find((candidate) => candidate.id === id.value) ?? null);
+    const open = computed(() => provider.activeIDs.value.has(id.value));
+    const element = shallowRef<HTMLElement>();
+    const present = usePresence(open, element);
+    let registeredID: string | undefined;
+    const register = (candidate: unknown): void => {
+      const next = candidate instanceof HTMLElement ? candidate : undefined;
+      if (element.value === next && registeredID === (next === undefined ? undefined : id.value)) return;
+      if (registeredID !== undefined) provider.registerItem(undefined, registeredID);
+      element.value = next;
+      registeredID = next === undefined ? undefined : id.value;
+      if (next !== undefined) provider.registerItem(next, id.value);
+    };
+    watch(id, (next) => {
+      if (element.value === undefined || registeredID === next) return;
+      if (registeredID !== undefined) provider.registerItem(undefined, registeredID);
+      registeredID = next;
+      provider.registerItem(element.value, next);
+    });
+    watch([open, present], ([active, rendered]) => {
+      if (!active && !rendered) provider.finishExit(id.value);
+    }, { flush: 'post' });
+    onBeforeUnmount(() => {
+      if (registeredID !== undefined) provider.registerItem(undefined, registeredID);
+      registeredID = undefined;
+      element.value = undefined;
+    });
+    provide(toastRootKey, { id, item });
+    return (): VNodeChild => {
+      const exiting = !open.value && present.value;
+      return h(Primitive, mergeProps(attrs, {
+        as: props.as, asChild: props.asChild, elementRef: register, hidden: !present.value,
+        ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
+        role: item.value?.kind === 'error' ? 'alert' : 'status', 'data-sectile-toast-item': id.value,
+        'data-scope': 'toast', 'data-part': 'root', 'data-state': open.value ? 'open' : 'closed',
+        'data-swipe-direction': provider.swipeDirection.value, 'data-kind': item.value?.kind,
+      }), { default: () => slots['default']?.({ toast: item.value, open: open.value }) });
+    };
   },
 });
 
@@ -198,13 +248,34 @@ export const ToastDescription = toastTextPart('SectileToastDescription', 'descri
 export const ToastClose = defineComponent({
   name: 'SectileToastClose', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },
-  setup(props, { attrs, slots }) { const provider = useProvider('ToastClose'); const root = useToastRoot('ToastClose'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => { if (element instanceof HTMLButtonElement) provider.registerClose(element, root.id); }, type: props.as === 'button' ? 'button' : undefined, 'aria-label': provider.closeLabel.value, 'data-sectile-toast-close': root.id, 'data-scope': 'toast', 'data-part': 'close' }), slots); },
+  setup(props, { attrs, slots }) {
+    const provider = useProvider('ToastClose'); const root = useToastRoot('ToastClose');
+    const element = shallowRef<HTMLButtonElement>();
+    let registeredID: string | undefined;
+    const register = (candidate: unknown): void => {
+      const next = candidate instanceof HTMLButtonElement ? candidate : undefined;
+      if (element.value === next && registeredID === (next === undefined ? undefined : root.id.value)) return;
+      if (registeredID !== undefined) provider.registerClose(undefined, registeredID);
+      element.value = next;
+      registeredID = next === undefined ? undefined : root.id.value;
+      if (next !== undefined) provider.registerClose(next, root.id.value);
+    };
+    watch(root.id, (next) => {
+      if (element.value === undefined || registeredID === next) return;
+      if (registeredID !== undefined) provider.registerClose(undefined, registeredID);
+      registeredID = next;
+      provider.registerClose(element.value, next);
+    });
+    onBeforeUnmount(() => {
+      if (registeredID !== undefined) provider.registerClose(undefined, registeredID);
+      registeredID = undefined;
+      element.value = undefined;
+    });
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: register, type: props.as === 'button' ? 'button' : undefined, 'aria-label': provider.closeLabel.value, 'data-sectile-toast-close': root.id.value, 'data-scope': 'toast', 'data-part': 'close' }), slots);
+  },
 });
 
 function toastTextPart(name: string, part: 'title' | 'description') { return defineComponent({ name, inheritAttrs: false, props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: part === 'title' ? 'h2' : 'p' }, asChild: { type: Boolean, default: false } }, setup(props, { attrs, slots }) { const root = useToastRoot(name); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, 'data-scope': 'toast', 'data-part': part }), { default: () => slots['default']?.() ?? (part === 'title' ? root.item.value?.title : root.item.value?.description) }); } }); }
 function useProvider(part: string): ToastContext { const context = inject<ToastContext>(key); if (context === undefined) throw new TypeError(`${part} must be used inside ToastProvider.`); return context; }
 function useToastRoot(part: string): ToastRootContext { const context = inject<ToastRootContext>(toastRootKey); if (context === undefined) throw new TypeError(`${part} must be used inside ToastRoot.`); return context; }
 function toInput(item: ToastItem<string>): ToastInput<string> { return Object.freeze({ id: item.id, title: item.title, ...(item.description === null ? {} : { description: item.description }), kind: item.kind, durationMs: item.durationMs }); }
-function motionDuration(element: HTMLElement): number { const view = element.ownerDocument?.defaultView; if (view === null || view === undefined) return 0; const style = view.getComputedStyle(element); return Math.max(totalMotion(style.animationDuration, style.animationDelay), totalMotion(style.transitionDuration, style.transitionDelay)); }
-function totalMotion(durations: string, delays: string): number { const durationValues = durations.split(',').map(timeMs); const delayValues = delays.split(',').map(timeMs); return durationValues.reduce((maximum, duration, index) => Math.max(maximum, duration + (delayValues[index % Math.max(1, delayValues.length)] ?? 0)), 0); }
-function timeMs(value: string): number { const text = value.trim(); return text.endsWith('ms') ? Number.parseFloat(text) || 0 : (Number.parseFloat(text) || 0) * 1_000; }

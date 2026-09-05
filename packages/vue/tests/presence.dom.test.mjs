@@ -19,7 +19,8 @@ const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import
 const { SelectContent, SelectItem, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectViewport } = await import('../.verification-dist/select.js');
 const { ComboboxContent, ComboboxInput, ComboboxRoot } = await import('../.verification-dist/combobox.js');
 const { CascadeSelectContent, CascadeSelectRoot, CascadeSelectTrigger } = await import('../.verification-dist/cascade-select.js');
-const { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem } = await import('../.verification-dist/menu.js');
+const { DatePickerContent, DatePickerGrid, DatePickerRoot, DatePickerTrigger } = await import('../.verification-dist/date-picker.js');
+const { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem, MenuSubContent } = await import('../.verification-dist/menu.js');
 const { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } = await import('../.verification-dist/popover.js');
 const { TooltipContent, TooltipPortal, TooltipRoot, TooltipTrigger } = await import('../.verification-dist/tooltip.js');
 const { ToastClose, ToastPortal, ToastProvider, ToastRoot, ToastTitle, ToastViewport } = await import('../.verification-dist/toast.js');
@@ -34,17 +35,45 @@ const PopupSurface = defineComponent({
   },
 });
 
-test('dialog keeps closed content present until its exit motion completes', async () => {
+test('dialog projects closed presence before measuring exit motion and quarantines retained surfaces', async () => {
   const host = document.createElement('div'); document.body.append(host); const open = ref(false);
-  const app = createApp({ render: () => h(DialogRoot, { open: open.value, modal: false, 'onUpdate:open': (value) => { open.value = value; } }, { default: () => h(DialogContent, { style: { transitionDuration: '50ms' } }, { default: () => h(DialogClose, null, { default: () => 'Close' }) }) }) });
-  app.mount(host); await nextTick(); const content = host.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, true);
+  const motion = { transitionProperty: 'opacity, transform', transitionDuration: '5ms, 20ms' };
+  const app = createApp({ render: () => h(DialogRoot, { open: open.value, modal: false, 'onUpdate:open': (value) => { open.value = value; } }, { default: () => [
+    h(DialogOverlay, { style: motion }),
+    h(DialogContent, { style: motion }, { default: () => h(DialogClose, null, { default: () => 'Close' }) }),
+  ] }) });
+  app.mount(host); await nextTick();
+  const content = host.querySelector('[data-part="content"]'); const overlay = host.querySelector('[data-part="overlay"]');
+  assert.ok(content instanceof HTMLElement); assert.ok(overlay instanceof HTMLElement); assert.equal(content.hidden, true);
   open.value = true; await nextTick(); await nextTick();
   const close = host.querySelector('[data-part="close"]'); assert.ok(close instanceof HTMLButtonElement); assert.equal(document.activeElement, close);
   open.value = false; await nextTick();
-  assert.equal(content.dataset.state, 'closed'); assert.equal(content.hidden, false);
-  content.dispatchEvent(new Event('transitionend', { bubbles: true })); await nextTick();
-  assert.equal(content.hidden, true);
+  assert.equal(content.dataset.state, 'closed'); assert.equal(content.hidden, false); assert.equal(content.inert, true); assert.equal(content.getAttribute('aria-hidden'), 'true');
+  assert.equal(overlay.hidden, false); assert.equal(overlay.inert, true); assert.equal(overlay.getAttribute('aria-hidden'), 'true');
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  content.dispatchEvent(new Event('transitionend', { bubbles: true })); overlay.dispatchEvent(new Event('transitionend', { bubbles: true }));
+  await nextTick(); await nextTick();
+  assert.equal(content.hidden, true); assert.equal(content.inert, false); assert.equal(content.getAttribute('aria-hidden'), null); assert.equal(overlay.hidden, true);
   app.unmount(); host.remove();
+});
+
+test('dialog reopen cancels the prior exit and preserves the retained content node', async () => {
+  const host = document.createElement('div'); document.body.append(host); const open = ref(true);
+  const app = createApp({ render: () => h(DialogRoot, { open: open.value, modal: false, 'onUpdate:open': (value) => { open.value = value; } }, { default: () => h(DialogContent, { style: { transitionProperty: 'all', transitionDuration: '100ms' } }, { default: () => 'Retained' }) }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const content = host.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement);
+    open.value = false; await nextTick();
+    assert.equal(content.hidden, false); assert.equal(content.inert, true); assert.equal(content.getAttribute('aria-hidden'), 'true');
+    open.value = true; await nextTick();
+    const reopened = host.querySelector('[data-part="content"]');
+    assert.equal(reopened, content); assert.equal(content.hidden, false); assert.equal(content.inert, false); assert.equal(content.getAttribute('aria-hidden'), null);
+    content.dispatchEvent(new Event('transitionend', { bubbles: true })); await nextTick();
+    assert.equal(content.hidden, false); assert.equal(content.dataset.state, 'open');
+  } finally {
+    app.unmount(); host.remove();
+  }
 });
 
 test('controlled toast retains its closed item through exit motion and then removes it', async () => {
@@ -125,61 +154,198 @@ test('component-backed popup parts keep their connection and focus across reacti
   }
 });
 
-test('portalled Select keeps typeahead, selection, and positioning connected', async () => {
+test('portalled Select keeps typeahead, selection, and exit presence connected', async () => {
   const host = document.createElement('div'); const portal = document.createElement('div'); document.body.append(host, portal);
-  const inserted = capturePositionedContentInsertions(portal);
   const selected = ref(null); const open = ref(false); const highlighted = ref(null);
   const app = createApp({ render: () => h(SelectRoot, {
     items: ['alpha', 'beta', 'gamma'], modelValue: selected.value, open: open.value,
-    unmountOnExit: true, hideWhenDetached: false,
+    unmountOnExit: true, position: false,
     textValue: (id) => ({ alpha: 'Apple', beta: 'Banana', gamma: 'Grape' })[id],
     'onUpdate:modelValue': (value) => { selected.value = value; }, 'onUpdate:open': (value) => { open.value = value; },
     onHighlight: (value) => { highlighted.value = value; },
   }, { default: () => [
     h(SelectTrigger, null, { default: () => 'Choose' }),
-    h(SelectPortal, { to: portal }, { default: () => h(SelectContent, null, { default: () => h(SelectViewport, null, { default: () => ['alpha', 'beta', 'gamma'].map((value) => h(SelectItem, { value }, { default: () => h(SelectItemText, null, { default: () => value }) })) }) }) }),
+    h(SelectPortal, { to: portal }, { default: () => h(SelectContent, { style: { transitionProperty: 'opacity', transitionDuration: '20ms' } }, { default: () => h(SelectViewport, null, { default: () => ['alpha', 'beta', 'gamma'].map((value) => h(SelectItem, { value }, { default: () => h(SelectItemText, null, { default: () => value }) })) }) }) }),
   ] }) });
   app.mount(host);
   try {
     await nextTick(); const trigger = host.querySelector('[data-part="trigger"]'); assert.ok(trigger instanceof HTMLButtonElement);
-    trigger.click(); await nextTick(); await new Promise((resolve) => setTimeout(resolve, 0));
-    const content = portal.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, false); assert.equal(content.style.position, 'absolute');
-    assert.deepEqual(inserted, [{ scope: 'select', position: 'absolute', visibility: 'hidden' }]);
-    assert.equal(content.style.visibility, '');
+    trigger.click(); await nextTick(); await nextTick();
+    const content = portal.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, false); assert.equal(content.style.position, '');
     content.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true })); await nextTick();
     assert.equal(highlighted.value, 'beta');
     content.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); await nextTick();
     assert.equal(selected.value, 'beta'); assert.equal(open.value, false);
+    assert.equal(portal.querySelector('[data-part="content"]'), content); assert.equal(content.hidden, false); assert.equal(content.inert, true); assert.equal(content.getAttribute('aria-hidden'), 'true');
+    await new Promise((resolve) => setTimeout(resolve, 25)); content.dispatchEvent(new Event('transitionend', { bubbles: true })); await nextTick(); await nextTick();
+    assert.equal(portal.querySelector('[data-part="content"]'), null);
   } finally {
     app.unmount(); host.remove(); portal.remove();
   }
 });
 
-test('Combobox, CascadeSelect, and MenuButton share Select positioning defaults and manual opt-out', async () => {
-  const host = document.createElement('div'); const portal = document.createElement('div'); document.body.append(host, portal); const position = ref(true);
+test('MenuButton content and submenu retain presence through exit motion', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const items = [{ id: 'file', parentID: null }, { id: 'new', parentID: 'file' }];
+  const motion = { transitionProperty: 'opacity', transitionDuration: '20ms' };
+  const app = createApp({ render: () => h(MenuButtonRoot, {
+    items, defaultOpen: true, position: false,
+  }, { default: () => [
+    h(MenuButtonTrigger, null, { default: () => 'Actions' }),
+    h(MenuButtonContent, { style: motion }, { default: () => [
+      h(MenuItem, { value: 'file' }, { default: () => 'File' }),
+      h(MenuSubContent, { for: 'file', style: motion }, { default: () => h(MenuItem, { value: 'new' }, { default: () => 'New' }) }),
+    ] }),
+  ] }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const trigger = host.querySelector('[data-part="trigger"]');
+    const content = host.querySelector('[data-part="content"]');
+    const file = host.querySelector('[data-sectile-menu-id="file"]');
+    const child = host.querySelector('[data-sectile-menu-id="new"]');
+    const submenu = host.querySelector('[data-part="sub-content"]');
+    assert.ok(trigger instanceof HTMLButtonElement); assert.ok(content instanceof HTMLElement);
+    assert.ok(file instanceof HTMLElement); assert.ok(child instanceof HTMLElement); assert.ok(submenu instanceof HTMLElement);
+    assert.equal(content.hidden, false); assert.equal(submenu.hidden, true);
+
+    file.click(); await nextTick(); await nextTick();
+    assert.equal(submenu.dataset.state, 'open'); assert.equal(submenu.hidden, false);
+    assert.equal(document.activeElement, child);
+
+    trigger.click(); await nextTick();
+    assert.equal(content.dataset.state, 'closed'); assert.equal(content.hidden, false); assert.equal(content.inert, true); assert.equal(content.getAttribute('aria-hidden'), 'true');
+    assert.equal(submenu.dataset.state, 'closed'); assert.equal(submenu.hidden, false); assert.equal(submenu.inert, true); assert.equal(submenu.getAttribute('aria-hidden'), 'true');
+
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    content.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    submenu.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    await nextTick(); await nextTick();
+    assert.equal(content.hidden, true); assert.equal(content.inert, false); assert.equal(content.getAttribute('aria-hidden'), null);
+    assert.equal(submenu.hidden, true); assert.equal(submenu.inert, false); assert.equal(submenu.getAttribute('aria-hidden'), null);
+
+    trigger.click(); await nextTick(); await nextTick();
+    assert.equal(content.dataset.state, 'open'); assert.equal(content.hidden, false);
+    assert.equal(document.activeElement, file);
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('Combobox, CascadeSelect, and DatePicker content retain presence through exit motion', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const comboboxOpen = ref(true); const cascadeOpen = ref(true); const pickerOpen = ref(true);
+  const motion = { transitionProperty: 'opacity', transitionDuration: '20ms' };
   const app = createApp({ render: () => [
     h(ComboboxRoot, {
-      items: [{ id: 'seoul', label: 'Seoul' }], defaultOpen: true,
+      items: [{ id: 'seoul', label: 'Seoul' }], open: comboboxOpen.value, position: false,
+      'onUpdate:open': (value) => { comboboxOpen.value = value; },
+    }, { default: () => [h(ComboboxInput), h(ComboboxContent, { style: motion })] }),
+    h(CascadeSelectRoot, {
+      nodes: [{ id: 'asia', parentID: null }, { id: 'seoul', parentID: 'asia' }], open: cascadeOpen.value, position: false,
+      'onUpdate:open': (value) => { cascadeOpen.value = value; },
+    }, { default: () => [h(CascadeSelectTrigger), h(CascadeSelectContent, { style: motion })] }),
+    h(DatePickerRoot, {
+      open: pickerOpen.value, position: false, referenceDate: { year: 2026, month: 9, day: 5 },
+      'onUpdate:open': (value) => { pickerOpen.value = value; },
+    }, { default: () => [
+      h(DatePickerTrigger),
+      h(DatePickerContent, { style: motion }, { default: () => h(DatePickerGrid) }),
+    ] }),
+  ] });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const contents = [
+      host.querySelector('[data-scope="combobox"][data-part="content"]'),
+      host.querySelector('[data-scope="cascade-select"][data-part="content"]'),
+      host.querySelector('[data-scope="date"][data-part="content"]'),
+    ];
+    for (const content of contents) {
+      assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, false);
+    }
+
+    comboboxOpen.value = false; cascadeOpen.value = false; pickerOpen.value = false;
+    await nextTick();
+    for (const content of contents) {
+      assert.equal(content.dataset.state, 'closed'); assert.equal(content.hidden, false);
+      assert.equal(content.inert, true); assert.equal(content.getAttribute('aria-hidden'), 'true');
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    for (const content of contents) content.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    await nextTick(); await nextTick();
+    for (const content of contents) {
+      assert.equal(content.hidden, true); assert.equal(content.inert, false); assert.equal(content.getAttribute('aria-hidden'), null);
+    }
+
+    comboboxOpen.value = true; cascadeOpen.value = true; pickerOpen.value = true;
+    await nextTick(); await nextTick();
+    for (const content of contents) {
+      assert.equal(content.dataset.state, 'open'); assert.equal(content.hidden, false);
+    }
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('Combobox, CascadeSelect, MenuButton, and DatePicker share Select positioning defaults and manual opt-out', async () => {
+  const host = document.createElement('div'); const portal = document.createElement('div'); document.body.append(host, portal); const position = ref(true);
+  const selectOpen = ref(true); const comboboxOpen = ref(true); const cascadeOpen = ref(true); const menuOpen = ref(true); const pickerOpen = ref(true);
+  const app = createApp({ render: () => [
+    h(SelectRoot, {
+      items: ['seoul'], open: selectOpen.value,
       position: position.value, side: 'top', strategy: 'fixed', avoidCollisions: false,
+      'onUpdate:open': (value) => { selectOpen.value = value; },
+    }, { default: () => [h(SelectTrigger), h(SelectPortal, { to: portal }, { default: () => h(SelectContent) })] }),
+    h(ComboboxRoot, {
+      items: [{ id: 'seoul', label: 'Seoul' }], open: comboboxOpen.value,
+      position: position.value, side: 'top', strategy: 'fixed', avoidCollisions: false,
+      'onUpdate:open': (value) => { comboboxOpen.value = value; },
     }, { default: () => [h(ComboboxInput), h(Teleport, { to: portal }, h(ComboboxContent))] }),
     h(CascadeSelectRoot, {
-      nodes: [{ id: 'asia', parentID: null }, { id: 'seoul', parentID: 'asia' }], defaultOpen: true,
+      nodes: [{ id: 'asia', parentID: null }, { id: 'seoul', parentID: 'asia' }], open: cascadeOpen.value,
       position: position.value, side: 'top', strategy: 'fixed', avoidCollisions: false,
+      'onUpdate:open': (value) => { cascadeOpen.value = value; },
     }, { default: () => [h(CascadeSelectTrigger), h(Teleport, { to: portal }, h(CascadeSelectContent))] }),
     h(MenuButtonRoot, {
-      items: [{ id: 'seoul', parentID: null }], defaultOpen: true,
+      items: [{ id: 'seoul', parentID: null }], open: menuOpen.value,
       position: position.value, side: 'top', strategy: 'fixed', avoidCollisions: false,
+      'onUpdate:open': (value) => { menuOpen.value = value; },
     }, { default: () => [h(MenuButtonTrigger), h(Teleport, { to: portal }, h(MenuButtonContent, null, { default: () => h(MenuItem, { value: 'seoul' }) }))] }),
+    h(DatePickerRoot, {
+      open: pickerOpen.value, position: position.value, side: 'top', strategy: 'fixed', avoidCollisions: false,
+      referenceDate: { year: 2026, month: 9, day: 5 },
+      'onUpdate:open': (value) => { pickerOpen.value = value; },
+    }, { default: () => [
+      h(DatePickerTrigger),
+      h(Teleport, { to: portal }, h(DatePickerContent, null, { default: () => h(DatePickerGrid) })),
+    ] }),
   ] });
   app.mount(host);
   try {
     await nextTick(); await nextTick(); await new Promise((resolve) => setTimeout(resolve, 0));
     const contents = portal.querySelectorAll('[data-part="content"]');
-    assert.equal(contents.length, 3);
+    assert.equal(contents.length, 5);
     assert.equal(host.querySelectorAll('[data-part="content"]').length, 0);
     for (const content of contents) {
       assert.equal(content.style.position, 'fixed');
       assert.equal(content.style.visibility, '');
+      assert.equal(content.dataset.side, 'top');
+    }
+
+    selectOpen.value = false; comboboxOpen.value = false; cascadeOpen.value = false; menuOpen.value = false; pickerOpen.value = false;
+    await nextTick(); await nextTick();
+    for (const content of contents) {
+      assert.equal(content.hidden, true);
+      assert.equal(content.dataset.positionRoute, undefined);
+    }
+
+    selectOpen.value = true; comboboxOpen.value = true; cascadeOpen.value = true; menuOpen.value = true; pickerOpen.value = true;
+    await nextTick(); await nextTick(); await new Promise((resolve) => setTimeout(resolve, 0));
+    for (const content of contents) {
+      assert.equal(content.hidden, false);
+      assert.equal(content.style.position, 'fixed');
       assert.equal(content.dataset.side, 'top');
     }
 

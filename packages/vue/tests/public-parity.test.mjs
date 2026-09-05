@@ -9,11 +9,12 @@ test('Vue exposes every public DOM component family', async () => {
     readPackage('../../dom/package.json'),
     readPackage('../package.json'),
   ]);
-  const ignored = new Set(['.', './package.json', './form', './identity', './position', './tabular', './virtual']);
+  const ignored = new Set(['.', './package.json', './form', './identity', './position', './presence', './tabular', './virtual']);
   const domSubpaths = Object.keys(domPackage.exports).filter((subpath) => !ignored.has(subpath));
   const missing = domSubpaths.filter((subpath) => vuePackage.exports[subpath] === undefined);
 
   assert.deepEqual(missing, []);
+  assert.equal(vuePackage.exports['./presence'], undefined);
   assert.equal(vuePackage.exports['./tabular'], undefined);
   assert.notEqual(vuePackage.exports['./data-table'], undefined);
   assert.notEqual(vuePackage.exports['./data-grid'], undefined);

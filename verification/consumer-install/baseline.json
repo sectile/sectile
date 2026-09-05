@@ -140,25 +140,25 @@
       }
     },
     "dom": {
-      "tarballBytes": 257739,
-      "unpackedBytes": 1298028,
-      "unpackedFiles": 309,
+      "tarballBytes": 274405,
+      "unpackedBytes": 1360783,
+      "unpackedFiles": 318,
       "categories": {
         "runtimeJS": {
-          "files": 102,
-          "bytes": 595676
+          "files": 105,
+          "bytes": 628301
         },
         "declarations": {
-          "files": 102,
-          "bytes": 260937
+          "files": 105,
+          "bytes": 262567
         },
         "sourceMaps": {
-          "files": 102,
-          "bytes": 425974
+          "files": 105,
+          "bytes": 454237
         },
         "other": {
           "files": 3,
-          "bytes": 15441
+          "bytes": 15678
         }
       }
     },

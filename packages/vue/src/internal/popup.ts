@@ -355,6 +355,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' });
       return (): VNodeChild => {
         if (root.unmountOnExit.value && !present.value) return null;
+        const exiting = !root.open.value && present.value;
         return h(Primitive, mergeProps(attrs, {
           as: props.as, asChild: props.asChild,
           elementRef: (candidate: unknown) => {
@@ -363,6 +364,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
             root.registerElement('content', node);
           },
           id: root.contentID, role: config.role, hidden: !present.value, dir: direction.value,
+          ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
           style: config.positioned === true && root.position.value
             ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
             : undefined,
@@ -408,8 +410,10 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const present = usePresence(root.open, element);
       return (): VNodeChild => {
         if (root.unmountOnExit.value && !present.value) return null;
+        const exiting = !root.open.value && present.value;
         return h(Primitive, mergeProps(attrs, {
           as: props.as, asChild: props.asChild, elementRef: (candidate: unknown) => { const node = candidate instanceof HTMLElement ? candidate : undefined; element.value = node; root.registerElement('overlay', node); }, hidden: !present.value, 'aria-hidden': 'true',
+          ...(exiting ? { inert: true } : {}),
           'data-scope': config.scope, 'data-part': 'overlay', 'data-state': root.open.value ? 'open' : 'closed',
           'data-side': config.directional === true ? root.side.value : undefined,
           'data-swipe-direction': config.directional === true ? swipeDirection(root.side.value) : undefined,

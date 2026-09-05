@@ -3,7 +3,7 @@ import {
   shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import {
-  createCombobox, type ComboboxConnection, type ComboboxItem as ComboboxItemDefinition, type ComboboxPolicies,
+  createCombobox, type ComboboxConnection, type ComboboxItem as ComboboxItemDefinition, type ComboboxOptions, type ComboboxPolicies,
 } from '@sectile/dom/combobox';
 import type {
   PositionBoundary,
@@ -17,6 +17,9 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useNativeInputFormControl } from './internal/form-control.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import { usePresence } from './internal/presence.js';
+
+type ComboboxRendererOptions = ComboboxOptions<string> & { readonly manageVisibility?: boolean };
 
 export interface ComboboxRootProps extends Omit<PositionOptions, 'arrowPadding'> {
   readonly items: readonly ComboboxItemDefinition<string>[];
@@ -124,6 +127,7 @@ export const ComboboxRoot = defineComponent({
       if (controlled.value && requestedValue !== value) emit('update:modelValue', value);
       connection.value = createCombobox({
         input: input.value, ...(popup.value === undefined ? {} : { popup: popup.value }), items: props.items,
+        manageVisibility: false,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(controlled.value ? { value } : { defaultValue: value }),
         defaultHighlightedValue: reconciled.current,
@@ -152,7 +156,7 @@ export const ComboboxRoot = defineComponent({
         onOpenChange: ({ value }) => { localOpen.value = value; emit('update:open', value); },
         onHighlightedValueChange: ({ value }) => { highlighted.value = value; emit('highlight', value); },
         onAccept: (id) => emit('accept', id), onUpdate: refresh,
-      });
+      } as ComboboxRendererOptions);
       connection.value.setInputAttributes(props.label); connection.value.setPopupAttributes(props.label); refreshItems(); refresh();
     };
     let mounted = false;
@@ -239,14 +243,26 @@ export const ComboboxContent = defineComponent({
   name: 'SectileComboboxContent', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: ComboboxRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('ComboboxContent'); const element = shallowRef<HTMLElement>(); const registerContent = (node: unknown): void => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); }; return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: registerContent,
-    role: 'listbox', hidden: !root.state.value.open, 'aria-label': root.label.value,
-    style: root.position.value
-      ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
-      : undefined,
-    'data-scope': 'combobox', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
-  }), { default: () => slots['default']?.(root.state.value) }); },
+  setup(props, { attrs, slots }) {
+    const root = useRoot('ComboboxContent');
+    const element = shallowRef<HTMLElement>();
+    const open = computed(() => root.state.value.open);
+    const present = usePresence(open, element);
+    watch(present, async () => { await nextTick(); root.connection.value?.render(); }, { flush: 'post' });
+    const registerContent = (node: unknown): void => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); };
+    return (): VNodeChild => {
+      const exiting = !open.value && present.value;
+      return h(Primitive, mergeProps(attrs, {
+        as: props.as, asChild: props.asChild, elementRef: registerContent,
+        role: 'listbox', hidden: !present.value, 'aria-label': root.label.value,
+        ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
+        style: root.position.value
+          ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
+          : undefined,
+        'data-scope': 'combobox', 'data-part': 'content', 'data-state': open.value ? 'open' : 'closed',
+      }), { default: () => slots['default']?.(root.state.value) });
+    };
+  },
 });
 
 export const ComboboxItem = defineComponent({

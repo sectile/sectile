@@ -31,6 +31,21 @@ test('independent release plans are read-only and isolate compatible package pat
   assert.match(unsupported.stderr, /does not accept bump or package overrides/u);
 });
 
+test('independent release plans increment the same-day release-set sequence', (context) => {
+  const root = releaseFixture(context);
+  writeFileSync(join(root, 'packages', 'form', 'source.txt'), 'changed\n');
+  git(root, ['add', '.']);
+  git(root, ['commit', '-m', 'fix(form): repair validation']);
+
+  const first = runRelease(root, ['--dry-run']);
+  const match = /release tag: (release-\d{4}-\d{2}-\d{2}\.1)/u.exec(first);
+  assert.notEqual(match, null);
+  git(root, ['tag', match[1]]);
+
+  const second = runRelease(root, ['--dry-run']);
+  assert.ok(second.includes(`release tag: ${match[1].replace(/\.1$/u, '.2')}`));
+});
+
 test('independent release plans propagate pre-1 minor dependency changes', (context) => {
   const root = releaseFixture(context);
   writeFileSync(join(root, 'packages', 'core', 'source.txt'), 'changed\n');

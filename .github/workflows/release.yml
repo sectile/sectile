@@ -49,6 +49,8 @@ jobs:
           path: release-artifacts/*.tgz
           if-no-files-found: error
           retention-days: 7
+      - name: Build release documentation dependencies
+        run: pnpm --recursive --workspace-concurrency=1 --filter @sectile/docs^... build
       - name: Build release documentation
         run: pnpm --filter @sectile/docs build
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
@@ -79,6 +81,7 @@ jobs:
           git fetch origin main
           git restore --source=origin/main -- \
             scripts/publish-packages.mjs \
+            scripts/release-metadata.mjs \
             scripts/lib/npm-registry-artifact.mjs \
             scripts/lib/npm-publish-auth.mjs \
             scripts/lib/packed-package-contract.mjs \
@@ -96,7 +99,8 @@ jobs:
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             echo "GitHub release ${RELEASE_TAG} already exists"
           else
-            gh release create "$RELEASE_TAG" --verify-tag --notes-from-tag --title "$RELEASE_TAG"
+            RELEASE_TITLE="$(node scripts/release-metadata.mjs title "$RELEASE_TAG")"
+            gh release create "$RELEASE_TAG" --verify-tag --notes-from-tag --title "$RELEASE_TITLE"
           fi
         env:
           GH_TOKEN: ${{ github.token }}

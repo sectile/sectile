@@ -1,6 +1,6 @@
 {
   "name": "@sectile/dom",
-  "version": "0.14.2",
+  "version": "0.15.1",
   "description": "DOM host adapters for Sectile semantic interaction machines.",
   "license": "MIT",
   "type": "module",
@@ -170,6 +170,11 @@
       "types": "./dist/position.d.ts",
       "import": "./dist/position.js",
       "default": "./dist/position.js"
+    },
+    "./presence": {
+      "types": "./dist/presence.d.ts",
+      "import": "./dist/presence.js",
+      "default": "./dist/presence.js"
     },
     "./toast": {
       "types": "./dist/toast.d.ts",

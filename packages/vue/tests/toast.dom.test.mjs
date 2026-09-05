@@ -16,7 +16,7 @@ Object.assign(globalThis, {
 });
 
 const { createApp, defineComponent, h, nextTick, ref } = await import('vue');
-const { ToastDescription, ToastProvider, ToastRoot, ToastTitle, ToastViewport, useToast } = await import('../.verification-dist/toast.js');
+const { ToastClose, ToastDescription, ToastProvider, ToastRoot, ToastTitle, ToastViewport, useToast } = await import('../.verification-dist/toast.js');
 
 async function settle() {
   await nextTick();
@@ -86,6 +86,88 @@ test('controlled Vue toast accepts timeout removal after its internal countdown'
   await new Promise((resolve) => setTimeout(resolve, 150));
   await settle();
   assert.deepEqual(toasts.value, []);
+});
+
+test('controlled Vue toast handles reorder, concurrent exits, and same-ID reactivation without stale removal', async (t) => {
+  const a = { id: 'a', title: 'A', durationMs: null };
+  const b = { id: 'b', title: 'B', durationMs: null };
+  const toasts = ref([a, b]);
+  const { app, host } = mount(() => h(ToastProvider, { toasts: toasts.value }, {
+    default: ({ toasts: items }) => h(ToastViewport, null, {
+      default: () => items.map((item) => h(ToastRoot, { key: item.id, value: item.id, style: { transitionProperty: 'opacity', transitionDuration: '5ms' } }, {
+        default: () => [h(ToastTitle), h(ToastClose)],
+      })),
+    }),
+  }));
+  t.after(() => unmount(app, host));
+  await settle();
+
+  const firstA = host.querySelector('[data-sectile-toast-item="a"]');
+  const firstB = host.querySelector('[data-sectile-toast-item="b"]');
+  assert.ok(firstA instanceof HTMLElement); assert.ok(firstB instanceof HTMLElement);
+  toasts.value = [b, a];
+  await settle();
+  assert.deepEqual([...host.querySelectorAll('[data-sectile-toast-item]')].map((item) => item.dataset.sectileToastItem), ['b', 'a']);
+  assert.equal(host.querySelector('[data-sectile-toast-item="a"]'), firstA);
+  assert.equal(host.querySelector('[data-sectile-toast-item="b"]'), firstB);
+
+  toasts.value = [];
+  await settle();
+  assert.equal(firstA.dataset.state, 'closed'); assert.equal(firstB.dataset.state, 'closed');
+  assert.equal(firstA.hidden, false); assert.equal(firstB.hidden, false);
+  assert.equal(firstA.inert, true); assert.equal(firstB.inert, true);
+  assert.equal(firstA.getAttribute('aria-hidden'), 'true'); assert.equal(firstB.getAttribute('aria-hidden'), 'true');
+
+  toasts.value = [{ ...a, title: 'A again' }];
+  await settle();
+  assert.equal(host.querySelector('[data-sectile-toast-item="a"]'), firstA);
+  assert.equal(firstA.dataset.state, 'open'); assert.equal(firstA.inert, false); assert.equal(firstA.getAttribute('aria-hidden'), null);
+
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  firstB.dispatchEvent(new Event('transitionend', { bubbles: true }));
+  firstA.dispatchEvent(new Event('transitionend', { bubbles: true }));
+  await settle();
+  assert.equal(host.querySelector('[data-sectile-toast-item="b"]'), null);
+  assert.equal(host.querySelector('[data-sectile-toast-item="a"]'), firstA);
+  assert.equal(firstA.dataset.state, 'open');
+});
+
+test('uncontrolled Vue toast survives viewport replacement without resurrecting exited items', async (t) => {
+  let toast;
+  const showViewport = ref(true);
+  const viewportKey = ref(0);
+  const Consumer = defineComponent({ setup() { toast = useToast(); return () => null; } });
+  const { app, host } = mount(() => h(ToastProvider, { defaultDurationMs: null }, {
+    default: ({ toasts }) => [
+      h(Consumer),
+      showViewport.value
+        ? h(ToastViewport, { key: viewportKey.value }, {
+            default: () => toasts.map((item) => h(ToastRoot, { key: item.id, value: item.id }, { default: () => [h(ToastTitle), h(ToastClose)] })),
+          })
+        : null,
+    ],
+  }));
+  t.after(() => unmount(app, host));
+  await settle();
+  toast.toast({ id: 'kept', title: 'Kept', durationMs: null });
+  await settle();
+  assert.ok(host.querySelector('[data-sectile-toast-item="kept"]') instanceof HTMLElement);
+
+  showViewport.value = false;
+  await settle();
+  assert.equal(host.querySelector('[data-part="viewport"]'), null);
+  assert.equal(toast.toasts.value.map((item) => item.id).includes('kept'), true);
+
+  viewportKey.value += 1;
+  showViewport.value = true;
+  await settle();
+  assert.ok(host.querySelector('[data-sectile-toast-item="kept"]') instanceof HTMLElement);
+  assert.deepEqual(toast.toasts.value.map((item) => item.id), ['kept']);
+
+  toast.dismiss('kept');
+  await settle();
+  assert.equal(host.querySelector('[data-sectile-toast-item="kept"]'), null);
+  assert.deepEqual(toast.toasts.value, []);
 });
 
 test('useToast rejects setup outside ToastProvider', () => {

@@ -131,6 +131,10 @@
       "types": "dist/position.d.ts"
     },
     {
+      "subpath": "./presence",
+      "types": "dist/presence.d.ts"
+    },
+    {
       "subpath": "./progress",
       "types": "dist/progress.d.ts"
     },
@@ -287,7 +291,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "13378ad9391e221610b1f76e854285c04245214b8b25018cd50fe6b940f03e79",
+  "fingerprint": "8a0fcaa13f063a0626aff71ddbe9b663d49429e360c8a88cbbac8c6a856f783b",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -508,6 +512,10 @@
     {
       "path": "dist/position.d.ts",
       "sha256": "34ef2f09524321ca16bf579d49b65e40fbf5226b76c8d2be032870fa70c90c4b"
+    },
+    {
+      "path": "dist/presence.d.ts",
+      "sha256": "31325b84ba2b9797b733f7a9736f9264e2db4c0c1cc6fb5e13cc2dbf3dea3a91"
     },
     {
       "path": "dist/progress.d.ts",

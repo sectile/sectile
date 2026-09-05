@@ -4,6 +4,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import { createHiddenBinding, type HiddenBinding } from './internal/hidden-binding.js';
 export type { ToastInput, ToastItem, ToastKind } from '@sectile/core/toast';
 export { createToastState } from '@sectile/core/toast';
 
@@ -67,7 +68,8 @@ class DOMToast<ID extends StableID> implements ToastConnection<ID> {
   readonly #runtime: SemanticController<ToastState<ID>, ToastEvent<ID>, ToastCommand<ID>>;
   readonly #toasts = new Map<ID, HTMLElement>();
   readonly #closes = new Map<ID, { readonly element: HTMLButtonElement; readonly click: () => void }>();
-  readonly #touchActions = new Map<HTMLElement, string>();
+  readonly #touchActions = new Map<HTMLElement, { readonly previous: string; readonly applied: string }>();
+  readonly #visibility = new Map<HTMLElement, HiddenBinding>();
   readonly #mouseenter: () => void;
   readonly #mouseleave: () => void;
   readonly #focusin: () => void;
@@ -167,26 +169,67 @@ class DOMToast<ID extends StableID> implements ToastConnection<ID> {
   public dismiss(id: ID): boolean { return this.handleEvent({ type: 'dismiss', id }); }
   public dismissAll(): boolean { return this.handleEvent('dismiss-all'); }
   public syncItems(items: readonly ToastInput<ID>[]): Result<RevisionSnapshot<ToastState<ID>>> { const result = this.#runtime.replace(trySynchronizeToastState(this.getSnapshot().state, items, this.#options)); if (result.ok) { this.#refresh(); this.#options.onUpdate?.(); } return result; }
-  public setToastAttributes(element: HTMLElement, id: ID): void { for (const [candidate, registered] of this.#toasts) if (candidate !== id && registered === element) this.#toasts.delete(candidate); this.#toasts.set(id, element); const style = element.style as CSSStyleDeclaration | undefined; if (style !== undefined && !this.#touchActions.has(element)) { this.#touchActions.set(element, style.touchAction); if (style.touchAction === '') style.touchAction = optionsTouchAction(this.#options.swipeDirection ?? 'right'); } this.#refresh(); }
-  public setCloseButtonAttributes(element: HTMLButtonElement, id: ID): void {
-    for (const [candidate, registered] of this.#closes) if (candidate !== id && registered.element === element) { registered.element.removeEventListener('click', registered.click); this.#closes.delete(candidate); }
-    const previous = this.#closes.get(id); if (previous !== undefined) previous.element.removeEventListener('click', previous.click);
-    const click = (): void => { this.dismiss(id); }; element.addEventListener('click', click); this.#closes.set(id, { element, click }); this.#refresh();
+  public setToastAttributes(element: HTMLElement | undefined, id: ID): void {
+    const current = this.#toasts.get(id);
+    if (current === element) { this.#refresh(); return; }
+    if (current !== undefined) this.#releaseToast(id, current);
+    if (element === undefined) { this.#refresh(); return; }
+    for (const [candidate, registered] of [...this.#toasts]) {
+      if (candidate !== id && registered === element) this.#releaseToast(candidate, registered);
+    }
+    this.#toasts.set(id, element);
+    if (this.#options.manageVisibility !== false) this.#visibility.set(element, createHiddenBinding(element));
+    if (element.style.touchAction === '') {
+      const previous = element.style.touchAction;
+      element.style.touchAction = optionsTouchAction(this.#options.swipeDirection ?? 'right');
+      this.#touchActions.set(element, { previous, applied: element.style.touchAction });
+    }
+    this.#refresh();
+  }
+  public setCloseButtonAttributes(element: HTMLButtonElement | undefined, id: ID): void {
+    const current = this.#closes.get(id);
+    if (current?.element === element) { this.#refresh(); return; }
+    if (current !== undefined) this.#releaseClose(id, current.element);
+    if (element === undefined) { this.#refresh(); return; }
+    for (const [candidate, registered] of [...this.#closes]) {
+      if (candidate !== id && registered.element === element) this.#releaseClose(candidate, registered.element);
+    }
+    const click = (): void => { this.dismiss(id); };
+    element.addEventListener('click', click);
+    this.#closes.set(id, { element, click });
+    this.#refresh();
   }
   public disconnect(): void {
     if (this.#timer !== null) clearInterval(this.#timer);
     this.#options.root.removeEventListener('mouseenter', this.#mouseenter); this.#options.root.removeEventListener('mouseleave', this.#mouseleave); this.#options.root.removeEventListener('focusin', this.#focusin); this.#options.root.removeEventListener('focusout', this.#focusout);
     this.#options.root.ownerDocument?.removeEventListener?.('keydown', this.#keydown, true); this.#options.root.removeEventListener('pointerdown', this.#pointerdown); this.#options.root.removeEventListener('pointermove', this.#pointermove); this.#options.root.removeEventListener('pointerup', this.#pointerup); this.#options.root.removeEventListener('pointercancel', this.#pointercancel); this.#options.root.ownerDocument?.defaultView?.removeEventListener?.('blur', this.#windowBlur); this.#options.root.ownerDocument?.defaultView?.removeEventListener?.('focus', this.#windowFocus);
-    for (const registration of this.#closes.values()) registration.element.removeEventListener('click', registration.click);
-    for (const [element, touchAction] of this.#touchActions) element.style.touchAction = touchAction;
-    this.#closes.clear(); this.#toasts.clear(); this.#touchActions.clear();
+    for (const [id, registration] of [...this.#closes]) this.#releaseClose(id, registration.element);
+    for (const [id, element] of [...this.#toasts]) this.#releaseToast(id, element);
+  }
+  #releaseToast(id: ID, element: HTMLElement): void {
+    if (this.#toasts.get(id) !== element) return;
+    this.#toasts.delete(id);
+    if (this.#swipe?.element === element) this.#swipe = undefined;
+    this.#visibility.get(element)?.disconnect();
+    this.#visibility.delete(element);
+    const touchAction = this.#touchActions.get(element);
+    if (touchAction !== undefined) {
+      if (element.style.touchAction === touchAction.applied) element.style.touchAction = touchAction.previous;
+      this.#touchActions.delete(element);
+    }
+  }
+  #releaseClose(id: ID, element: HTMLButtonElement): void {
+    const registration = this.#closes.get(id);
+    if (registration === undefined || registration.element !== element) return;
+    registration.element.removeEventListener('click', registration.click);
+    this.#closes.delete(id);
   }
   #refresh(): void {
     const state = this.getSnapshot().state;
     this.#options.root.dataset['paused'] = String(state.paused);
     for (const [id, element] of this.#toasts) {
       const item = state.items.find((candidate) => candidate.id === id);
-      if (this.#options.manageVisibility !== false) element.hidden = item === undefined;
+      this.#visibility.get(element)?.setHidden(item === undefined);
       element.dataset['state'] = item === undefined ? 'closed' : 'open';
       if (item === undefined) continue;
       element.setAttribute('role', item.kind === 'error' ? 'alert' : 'status'); element.dataset['kind'] = item.kind;

@@ -289,6 +289,47 @@ test('DOM date picker can keep an inline calendar open while value remains uncon
   assert.equal(closeRequests, 1);
 });
 
+test('DOM popup picker families restore exact hidden baselines on disconnect', () => {
+  const date = createDateValue(2026, 8, 18);
+  const dateRange = createDateRange(date, createDateValue(2026, 8, 21));
+  const dateTime = createDateTimeValue(date, createTimeValue(9, 30));
+  const dateTimeRange = createDateTimeRange(
+    dateTime,
+    createDateTimeValue(createDateValue(2026, 8, 21), createTimeValue(17, 45)),
+  );
+  const factories = [
+    (root, manageVisibility) => createDatePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: date, ...manageVisibility }),
+    (root, manageVisibility) => createDateRangePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: dateRange, ...manageVisibility }),
+    (root, manageVisibility) => createDateTimePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: dateTime, ...manageVisibility }),
+    (root, manageVisibility) => createDateTimeRangePicker({ root, grid: new FakeElement(), trigger: new FakeElement(), defaultValue: dateTimeRange, ...manageVisibility }),
+  ];
+
+  for (const create of factories) {
+    const root = new FakeElement();
+    root.setAttribute('hidden', 'until-found');
+    root.hidden = true;
+    const picker = create(root, {});
+    assert.equal(root.getAttribute('hidden'), '');
+    picker.handleEvent('open');
+    assert.equal(root.getAttribute('hidden'), null);
+    picker.disconnect();
+    assert.equal(root.getAttribute('hidden'), 'until-found');
+
+    const unmanaged = new FakeElement();
+    unmanaged.setAttribute('hidden', 'until-found');
+    unmanaged.hidden = true;
+    const rendererOwned = create(unmanaged, { manageVisibility: false });
+    assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+    rendererOwned.handleEvent('open');
+    rendererOwned.refresh();
+    assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+    rendererOwned.handleEvent('close');
+    assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+    rendererOwned.disconnect();
+    assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+  }
+});
+
 test('DOM controlled range picker exposes highlight changes and stays open after commit', () => {
   const initialHighlight = createDateValue(2026, 8, 22);
   let value = createDateRange(
@@ -562,7 +603,8 @@ class FakeElement {
   addEventListener(type, listener) { const values = this.listeners.get(type) ?? new Set(); values.add(listener); this.listeners.set(type, values); }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
   emit(type, event) { for (const listener of this.listeners.get(type) ?? []) listener(event); }
-  setAttribute(name, value) { this.attributes.set(name, value); }
+  setAttribute(name, value) { this.attributes.set(name, String(value)); }
+  getAttribute(name) { return this.attributes.get(name) ?? null; }
   removeAttribute(name) { this.attributes.delete(name); }
   contains() { return false; }
   querySelector() { return null; }

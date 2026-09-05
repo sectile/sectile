@@ -31,6 +31,7 @@ import {
   type PositionConnection,
 } from './internal/position-connection.js';
 import type { PositionOptions } from './position.js';
+import { createHiddenBinding, type HiddenBinding } from './internal/hidden-binding.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -270,6 +271,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   readonly #controller: ComboboxController<ID>;
   readonly #input: TextElement;
   readonly #popup: HTMLElement | undefined;
+  readonly #visibility: HiddenBinding | undefined;
   readonly #getItemElementID: (id: ID) => string;
   readonly #onAccept: ((id: ID) => void) | undefined;
   readonly #onTransition: ((details: ComboboxTransitionDetails<ID>) => void) | undefined;
@@ -286,6 +288,10 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
     this.labels = options.controller.labels;
     this.#input = options.input;
     this.#popup = options.popup;
+    const manageVisibility = (options as ComboboxConnectionOptions<ID> & { readonly manageVisibility?: boolean }).manageVisibility;
+    this.#visibility = this.#popup === undefined || manageVisibility === false
+      ? undefined
+      : createHiddenBinding(this.#popup);
     this.#getItemElementID = options.getItemElementID
       ?? ((id): string => `sectile-combobox-${stableIDElementToken(id)}`);
     this.#onAccept = options.onAccept;
@@ -369,7 +375,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   public setPopupAttributes(label?: string): void {
     if (this.#popup === undefined) return;
     this.#popup.setAttribute('role', 'listbox');
-    this.#popup.hidden = !this.#controller.getSnapshot().state.popupOpen;
+    this.#visibility?.setHidden(!this.#controller.getSnapshot().state.popupOpen);
     if (label === undefined) this.#popup.removeAttribute('aria-label');
     else this.#popup.setAttribute('aria-label', label);
   }
@@ -428,6 +434,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   public disconnect(): void {
     this.#layer?.disconnect();
     this.#position.disconnect();
+    this.#visibility?.disconnect();
     this.#binding.disconnect();
     this.#input.removeEventListener('keydown', this.#handleKeydown);
     this.#popup?.removeEventListener('click', this.#handleClick);

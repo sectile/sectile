@@ -30,8 +30,10 @@ try {
   const packDirectory = suppliedTarballDirectory ?? join(temporaryRoot, 'packs');
   await mkdir(packDirectory, { recursive: true });
   const packageNames = publishedPackageDirectories;
+  const sourceManifests = {};
   for (const packageName of packageNames) {
     const manifest = JSON.parse(await readFile(resolve(repoRoot, `packages/${packageName}/package.json`), 'utf8'));
+    sourceManifests[packageName] = manifest;
     const thirdPartyRuntime = Object.keys(manifest.dependencies ?? {})
       .filter((dependency) => !dependency.startsWith('@sectile/'));
     assert.deepEqual(thirdPartyRuntime, [], `${packageName}: third-party runtime dependency remains`);
@@ -39,8 +41,9 @@ try {
   const tarballs = {};
   for (const packageName of packageNames) {
     if (suppliedTarballDirectory === null) await run('pnpm', ['--filter', `@sectile/${packageName}`, 'pack', '--pack-destination', packDirectory], repoRoot);
-    const candidates = (await readdir(packDirectory)).filter((name) => name.startsWith(`sectile-${packageName}-`) && name.endsWith('.tgz'));
-    assert.equal(candidates.length, 1, `${packageName}: expected one packed tarball`);
+    const expectedTarball = `sectile-${packageName}-${sourceManifests[packageName].version}.tgz`;
+    const candidates = (await readdir(packDirectory)).filter((name) => name === expectedTarball);
+    assert.equal(candidates.length, 1, `${packageName}: expected current packed tarball ${expectedTarball}`);
     tarballs[packageName] = join(packDirectory, candidates[0]);
   }
   const packages = {};
@@ -97,6 +100,12 @@ async function inspectVueInstall(root, packageManager, tarballs) {
   await run(process.execPath, ['--input-type=module', '-e', [
     "const { stableIDElementToken } = await import('@sectile/dom/identity');",
     "if (stableIDElementToken('%') === stableIDElementToken('-25')) throw new Error('DOM identity encoding collision');",
+  ].join(' ')], directory);
+  await run(process.execPath, ['--input-type=module', '-e', [
+    "const { createPresence } = await import('@sectile/dom/presence');",
+    "const presence = createPresence({ open: false });",
+    "if (presence.getPresent() !== false) throw new Error('DOM presence initial state mismatch');",
+    "presence.disconnect();",
   ].join(' ')], directory);
   const optionalDomains = [
     {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readdir, readFile, rm, rmdir } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   assertPackedDependencyRanges,
@@ -251,12 +251,16 @@ function writeProcessOutput(result) {
 
 async function packPackages(packageEntries, destination, versions) {
   const packed = [];
+  const destinationRoot = resolve(destination);
   for (const entry of packageEntries) {
-    const before = new Set(await readdir(destination));
-    run('pnpm', ['pack', '--pack-destination', destination], { cwd: entry.packageRoot, capture: true });
-    const files = (await readdir(destination)).filter((file) => file.endsWith('.tgz') && !before.has(file));
-    assert.equal(files.length, 1, `${entry.manifest.name} did not produce exactly one tarball`);
-    const tarball = join(destination, files[0]);
+    const output = run('pnpm', ['pack', '--pack-destination', destinationRoot], { cwd: entry.packageRoot, capture: true });
+    const reportedPath = output.split(/\r?\n/u).map((line) => line.trim()).filter(Boolean).at(-1);
+    assert.notEqual(reportedPath, undefined, `${entry.manifest.name} did not report a tarball path`);
+    const tarball = resolve(entry.packageRoot, reportedPath);
+    assert.equal(dirname(tarball), destinationRoot, `${entry.manifest.name} packed outside the requested destination`);
+    assert.equal(tarball.endsWith('.tgz'), true, `${entry.manifest.name} reported a non-tarball pack result`);
+    assert.equal((await readdir(destinationRoot)).includes(basename(tarball)), true,
+      `${entry.manifest.name} reported a missing tarball`);
     await inspectPackedPackage(tarball, { sourceManifest: entry.manifest, workspaceVersions: versions });
     packed.push({ ...entry, tarball });
   }
