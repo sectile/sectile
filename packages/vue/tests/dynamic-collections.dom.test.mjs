@@ -163,6 +163,32 @@ test('Vue cascade select clears a controlled leaf removed from its tree', async 
   unmount(app, host);
 });
 
+test('Vue menu bulk mount keeps item registration projection work linear', async () => {
+  const size = 256;
+  const items = Array.from({ length: size }, (_, index) => ({ id: `item-${index}`, parentID: null }));
+  const originalSetAttribute = HTMLElement.prototype.setAttribute;
+  let menuItemRoleWrites = 0;
+  HTMLElement.prototype.setAttribute = function setAttribute(name, value) {
+    if (name === 'role' && value === 'menuitem') menuItemRoleWrites += 1;
+    return originalSetAttribute.call(this, name, value);
+  };
+  let mounted;
+  try {
+    mounted = mount(() => h(MenuRoot, { items, defaultHighlightedValue: 'item-0' }, {
+      default: () => items.map(({ id }) => h(MenuItem, { value: id }, { default: () => id })),
+    }));
+    await settle();
+    const elements = [...mounted.host.querySelectorAll('[data-sectile-menu-id]')];
+    assert.equal(elements.length, size);
+    assert.equal(elements[0].tabIndex, 0);
+    assert.equal(elements[size - 1].tabIndex, -1);
+    assert.ok(menuItemRoleWrites <= size * 4, `menuitem role writes ${menuItemRoleWrites} exceeded linear bound`);
+  } finally {
+    HTMLElement.prototype.setAttribute = originalSetAttribute;
+    if (mounted !== undefined) unmount(mounted.app, mounted.host);
+  }
+});
+
 test('Vue menu unregisters a conditionally removed submenu from DOM ownership', async () => {
   const showSubmenu = ref(true);
   const items = [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }];

@@ -76,7 +76,7 @@ export function createMenuControl<ID extends StableID>(options: MenuControlOptio
 }
 
 class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
-  readonly #options: ResolvedMenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>; readonly #policies: MenuPolicies<ID>; readonly #elements = new Map<ID, HTMLElement>(); readonly #submenus = new Map<ID, HTMLElement>();
+  readonly #options: ResolvedMenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>; readonly #policies: MenuPolicies<ID>; readonly #elements = new Map<ID, HTMLElement>(); readonly #elementOwners = new WeakMap<HTMLElement, ID>(); readonly #submenus = new Map<ID, HTMLElement>();
   readonly #rootVisibility: HiddenBinding | undefined; readonly #submenuVisibility = new Map<ID, HiddenBinding>(); readonly #submenuIDs = new Map<ID, { readonly element: HTMLElement; readonly previous: string | null; readonly applied: string }>(); readonly #submenuControlIDs = new Map<ID, string>();
   #nextSubmenuID = 0;
   #pendingFocus: ID | undefined;
@@ -123,19 +123,23 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     if (current !== undefined) {
       this.#clearSubmenuControl(id, current);
       this.#elements.delete(id);
+      if (this.#elementOwners.get(current) === id) this.#elementOwners.delete(current);
       this.#disconnectSubmenuPosition(id);
     }
     if (element !== undefined) {
-      for (const [candidate, registered] of this.#elements) {
-        if (candidate === id || registered !== element) continue;
-        this.#clearSubmenuControl(candidate, registered);
+      const candidate = this.#elementOwners.get(element);
+      if (candidate !== undefined && candidate !== id && this.#elements.get(candidate) === element) {
+        this.#clearSubmenuControl(candidate, element);
         this.#elements.delete(candidate);
         this.#disconnectSubmenuPosition(candidate);
       }
       this.#elements.set(id, element);
+      this.#elementOwners.set(element, id);
       this.#connectSubmenuPosition(id);
+      this.#projectItem(id, element, this.getSnapshot().state);
+      this.#submenuPositions.get(id)?.update();
     }
-    this.#refresh();
+    this.#focusPending();
   }
   public setSubmenuAttributes(element: HTMLElement | undefined, parentID: ID): void {
     if (!this.#tree.has(parentID) || this.#tree.isLeaf(parentID)) return;
@@ -176,6 +180,20 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     this.#elements.clear();
     this.#submenuControlIDs.clear();
   }
+  #projectItem(id: ID, element: HTMLElement, state: MenuState<ID>): void {
+    element.dataset['level'] = String(this.#tree.depthOf(id) ?? 0);
+    if (this.#options.kind === 'navigation-menu') element.removeAttribute('role'); else element.setAttribute('role', 'menuitem');
+    if (this.#policies.disabled?.(id) === true) element.setAttribute('aria-disabled', 'true'); else element.removeAttribute('aria-disabled');
+    if (this.#tree.isLeaf(id) === false) {
+      element.setAttribute('aria-haspopup', 'menu'); element.setAttribute('aria-expanded', String(state.openPath.includes(id)));
+      const submenu = this.#submenus.get(id);
+      if (submenu !== undefined) {
+        element.setAttribute('aria-controls', submenu.id);
+        this.#submenuControlIDs.set(id, submenu.id);
+      }
+    }
+    element.tabIndex = state.cursor.current === id ? 0 : -1;
+  }
   #refresh(): void {
     const state = this.getSnapshot().state;
     if (this.#pendingFocus !== undefined && state.cursor.current !== this.#pendingFocus) this.#pendingFocus = undefined;
@@ -184,20 +202,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     if (this.#options.label !== undefined) this.#options.root.setAttribute('aria-label', this.#options.label);
     this.#rootVisibility?.setHidden(!state.open);
     this.#options.trigger?.setAttribute('aria-haspopup', 'menu'); this.#options.trigger?.setAttribute('aria-expanded', String(state.open));
-    for (const [id, element] of this.#elements) {
-      element.dataset['level'] = String(this.#tree.depthOf(id) ?? 0);
-      if (this.#options.kind === 'navigation-menu') element.removeAttribute('role'); else element.setAttribute('role', 'menuitem');
-      if (this.#policies.disabled?.(id) === true) element.setAttribute('aria-disabled', 'true'); else element.removeAttribute('aria-disabled');
-      if (this.#tree.isLeaf(id) === false) {
-        element.setAttribute('aria-haspopup', 'menu'); element.setAttribute('aria-expanded', String(state.openPath.includes(id)));
-        const submenu = this.#submenus.get(id);
-        if (submenu !== undefined) {
-          element.setAttribute('aria-controls', submenu.id);
-          this.#submenuControlIDs.set(id, submenu.id);
-        }
-      }
-      element.tabIndex = state.cursor.current === id ? 0 : -1;
-    }
+    for (const [id, element] of this.#elements) this.#projectItem(id, element, state);
     for (const [parentID, submenu] of this.#submenus) {
       const open = state.open && state.openPath.includes(parentID);
       submenu.dataset['level'] = String((this.#tree.depthOf(parentID) ?? 0) + 1);

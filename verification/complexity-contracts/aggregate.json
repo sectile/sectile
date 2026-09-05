@@ -25552,6 +25552,68 @@
     {
       "package": "dom",
       "surface": "hot",
+      "id": "menu.item-registration",
+      "source": "packages/dom/src/internal/menu-control.ts",
+      "benchmarkIDs": [
+        "VAL-009:dom-menu-item-registration-work"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nRegistered",
+            "meaning": "item elements already registered by this menu connection",
+            "ceiling": "menu tree item ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "expected",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(nRegistered)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "O(nRegistered)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "WeakMap and Map lookup are expected O(1)",
+          "the item identity belongs to the canonical menu tree"
+        ],
+        "ceilings": [
+          "menu tree item ceiling"
+        ],
+        "benchmarkIDs": [
+          "VAL-009:dom-menu-item-registration-work"
+        ],
+        "deterministicWork": [
+          "one reverse element-owner lookup and bounded map updates",
+          "one touched-item attribute projection and no registered-domain sweep"
+        ],
+        "resourceRationale": "The existing ID-to-element registry remains the strong owner; the reverse WeakMap adds one non-retaining ownership entry per mounted element and no lifecycle resource.",
+        "proof": "setItemAttributes resolves duplicate host ownership through one WeakMap lookup, repairs at most the current ID and one prior owner, projects only the newly registered element, updates only its submenu position when present, and retries only pending focus.",
+        "adversarialWitness": "Sequentially register a maximum flat leaf domain of distinct elements, then transfer one existing element to another ID; projection writes stay constant per registration and replacement never scans prior registrations.",
+        "evidence": [
+          "VAL-009"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Incremental item registration may touch only the requested ID, a reverse-lookup prior owner, and the newly registered element."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
       "id": "position.connect",
       "source": "packages/dom/src/internal/positioning/engine.ts",
       "benchmarkIDs": [

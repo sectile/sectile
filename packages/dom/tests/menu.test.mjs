@@ -29,6 +29,50 @@ test('DOM menu button owns trigger, nested popup path, and invocation', () => {
   assert.equal(trigger.attributes.get('aria-expanded'), 'false');
 });
 
+test('DOM menu item registration performs constant projection work per flat item', () => {
+  for (const size of [64, 512, 2_048]) {
+    const root = new FakeElement();
+    const items = Array.from({ length: size }, (_, index) => ({ id: `item-${index}`, parentID: null }));
+    const elements = items.map(() => new CountingElement());
+    const menu = createMenu({ root, items });
+
+    for (let index = 0; index < size; index += 1) menu.setItemAttributes(elements[index], items[index].id);
+
+    const projectionWrites = elements.reduce((total, element) => total + element.projectionWrites, 0);
+    assert.equal(projectionWrites, size * 2, `size ${size}`);
+    menu.disconnect();
+  }
+});
+
+test('DOM menu item replacement preserves one host owner and unregisters the previous host', () => {
+  const root = new FakeElement();
+  const shared = new FakeElement();
+  const replacement = new FakeElement();
+  const menu = createMenu({
+    root,
+    items: [{ id: 'a', parentID: null }, { id: 'b', parentID: null }],
+    disabledItems: ['b'],
+  });
+
+  menu.setItemAttributes(shared, 'a');
+  menu.setItemAttributes(shared, 'b');
+  root.emit('click', { target: shared });
+  assert.equal(menu.getSnapshot().state.cursor.current, 'b');
+
+  menu.handleEvent('first');
+  menu.setItemAttributes(replacement, 'b');
+  root.emit('click', { target: shared });
+  assert.equal(menu.getSnapshot().state.cursor.current, 'a');
+  root.emit('click', { target: replacement });
+  assert.equal(menu.getSnapshot().state.cursor.current, 'b');
+
+  menu.setItemAttributes(undefined, 'b');
+  menu.handleEvent('first');
+  root.emit('click', { target: replacement });
+  assert.equal(menu.getSnapshot().state.cursor.current, 'a');
+  menu.disconnect();
+});
+
 test('DOM menu button owns disabled, edge, typeahead, and controlled open state', () => {
   let now = 0;
   let external = false;
@@ -383,4 +427,10 @@ class FakeElement {
   contains(target) { return target === this; }
   focus() {}
   getBoundingClientRect() { return this.rect; }
+}
+
+class CountingElement extends FakeElement {
+  projectionWrites = 0;
+  setAttribute(name, value) { this.projectionWrites += 1; super.setAttribute(name, value); }
+  removeAttribute(name) { this.projectionWrites += 1; super.removeAttribute(name); }
 }
