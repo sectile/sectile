@@ -166,6 +166,11 @@ export interface PackedVisibleSelection {
   readonly overflow: boolean;
 }
 
+export interface PackedVisibleDemand {
+  readonly visibleDatums: number;
+  readonly visitedNodes: number;
+}
+
 export function createPackedChartLayerOwner<ID extends StableID>(
   input: PackedLayerInput<ID>,
   maxDatums: number,
@@ -371,6 +376,24 @@ export function selectPackedOrderedEnvelope(
   return Object.freeze({ indices: Uint32Array.from(ordered), visitedNodes, visibleDatums, aggregated: true });
 }
 
+export function measurePackedOrderedVisibleDemand(
+  owner: PackedChartLayerOwner,
+  minimumX: number,
+  maximumX: number,
+): PackedVisibleDemand {
+  if (owner.profile !== 'ordered-series' || owner.size === 0 || maximumX < minimumX) {
+    return Object.freeze({ visibleDatums: 0, visitedNodes: 0 });
+  }
+  let start = lowerBoundPackedX(owner, minimumX);
+  let end = upperBoundPackedX(owner, maximumX);
+  if (start > 0) start -= 1;
+  if (end < owner.size) end += 1;
+  return Object.freeze({
+    visibleDatums: Math.max(0, end - start),
+    visitedNodes: Math.ceil(Math.log2(Math.max(1, owner.size))) * 2,
+  });
+}
+
 export function selectPackedAggregateFrontier(
   owner: PackedChartLayerOwner,
   maximumRepresentatives: number,
@@ -457,6 +480,31 @@ export function selectPackedVisibleIndices(
     stack.push(node * 2 + 1, node * 2);
   }
   return Object.freeze({ indices: Uint32Array.from(indices), visitedNodes, visibleDatums, overflow });
+}
+
+export function measurePackedVisibleDemand(
+  owner: PackedChartLayerOwner,
+  bounds: PackedSelectionBounds,
+): PackedVisibleDemand {
+  if (owner.size === 0) return Object.freeze({ visibleDatums: 0, visitedNodes: 0 });
+  const hierarchy = owner.index.hierarchy;
+  const lookup = new Map<number, Float64Array>();
+  const stack = [1];
+  let visitedNodes = 0;
+  let visibleDatums = 0;
+  while (stack.length > 0) {
+    const node = stack.pop() as number;
+    const values = hierarchyNode(hierarchy, lookup, node);
+    visitedNodes += 1;
+    const count = values[7] as number;
+    if (count === 0 || !intersectsSelection(owner.profile, values, bounds)) continue;
+    if (containedBySelection(owner.profile, values, bounds) || node >= hierarchy.leafCount) {
+      visibleDatums += count;
+      continue;
+    }
+    stack.push(node * 2 + 1, node * 2);
+  }
+  return Object.freeze({ visibleDatums, visitedNodes });
 }
 
 function createPackedValueStore(values: Float64Array, stride: number): PackedValueStore {

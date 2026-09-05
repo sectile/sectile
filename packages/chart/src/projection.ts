@@ -3,6 +3,8 @@ import { unwrap } from '@sectile/core/result';
 import type { ChartRepresentative, ChartViewState } from './contract.js';
 import type { ChartDefinitionState, ResolvedChartLayer } from './definition.js';
 import {
+  measurePackedOrderedVisibleDemand,
+  measurePackedVisibleDemand,
   readPackedLayerValue,
   selectPackedAggregateFrontier,
   selectPackedOrderedEnvelope,
@@ -437,31 +439,27 @@ function tryCreateDefinitionProjection<ID extends StableID>(
     : chartOK(undefined);
   if (!layoutResult.ok) return layoutResult;
   const data = getChartModelData<ID>(model);
-  const quotas = representativeQuotas(data.layers, model.size, maximum);
-  for (let index = 0; index < source.layers.length; index += 1) {
-    const semantics = source.layers[index] as ResolvedChartLayer<ID>;
-    const layer = data.layers[index] as PackedChartLayer<ID>;
-    const quota = quotas[index] as number;
-    const radialEmpty = layer.index.kind === 'radial' && layer.index.total === 0;
-    if ((semantics.kind === 'pie' || semantics.kind === 'donut') && !radialEmpty && quota < layer.owner.size) {
-      return exactCeiling(semantics.id, layer.owner.size, quota);
-    }
-  }
   const axisLayouts = new Map<ID, ChartAxisLayout<ID>>();
   if (layoutResult.value !== undefined) for (const axis of layoutResult.value.axes) axisLayouts.set(axis.axis.id, axis);
+  const quotaPlan = planDefinitionRepresentativeQuotas(source.layers, data.layers, axisLayouts, maximum);
+  if (!quotaPlan.ok) return quotaPlan;
   const batches: ChartProjectionBatch[] = [];
   const dataBatches: ChartDataBatch[] = [];
   const layerRevisions: ChartProjectionLayerRevision<ID>[] = [];
   let representedDatums = 0;
   let emittedPrimitives = 0;
   let aggregateRepresentatives = 0;
-  let visitedIndexNodes = 0;
+  let visitedIndexNodes = quotaPlan.value.visitedIndexNodes;
+  let carriedQuota = 0;
   for (let index = 0; index < source.layers.length; index += 1) {
     const semantics = source.layers[index] as ResolvedChartLayer<ID>;
     const layer = data.layers[index] as PackedChartLayer<ID>;
-    const quota = quotas[index] as number;
+    const demand = quotaPlan.value.demands[index] as DefinitionLayerDemand;
+    const baseQuota = quotaPlan.value.quotas[index] as number;
+    const availableQuota = demand.reducible ? baseQuota + carriedQuota : baseQuota;
+    const quota = demand.reducible ? Math.min(demand.visibleDatums, availableQuota) : availableQuota;
     const projected = projectDefinitionLayer(
-      model, layer, semantics, index, quota, axisLayouts, input.viewport, transform,
+      model, layer, semantics, index, quota, demand.visibleDatums, axisLayouts, input.viewport, transform,
     );
     if (!projected.ok) return projected;
     if (projected.value.batch !== null) batches.push(projected.value.batch);
@@ -470,6 +468,7 @@ function tryCreateDefinitionProjection<ID extends StableID>(
     emittedPrimitives += projected.value.emittedPrimitives;
     aggregateRepresentatives += projected.value.aggregateRepresentatives;
     visitedIndexNodes += projected.value.visitedIndexNodes;
+    if (demand.reducible) carriedQuota = availableQuota - projected.value.emittedPrimitives;
     layerRevisions.push(Object.freeze({ layerID: semantics.id, ...projected.value.revision }));
   }
   const frozenBatches = Object.freeze(batches);
@@ -503,6 +502,91 @@ function tryCreateDefinitionProjection<ID extends StableID>(
   return chartOK(projection);
 }
 
+interface DefinitionLayerDemand {
+  readonly visibleDatums: number;
+  readonly visitedIndexNodes: number;
+  readonly reducible: boolean;
+}
+
+interface DefinitionRepresentativeQuotaPlan {
+  readonly demands: readonly DefinitionLayerDemand[];
+  readonly quotas: Uint32Array;
+  readonly visitedIndexNodes: number;
+}
+
+function planDefinitionRepresentativeQuotas<ID extends StableID>(
+  semanticsLayers: readonly ResolvedChartLayer<ID>[],
+  layers: readonly PackedChartLayer<ID>[],
+  axes: ReadonlyMap<ID, ChartAxisLayout<ID>>,
+  maximum: number,
+): ChartResult<DefinitionRepresentativeQuotaPlan> {
+  const demands: DefinitionLayerDemand[] = [];
+  const reducibleDemands = new Uint32Array(layers.length);
+  let exactDatums = 0;
+  let reducibleDatums = 0;
+  let visitedIndexNodes = 0;
+  for (let index = 0; index < layers.length; index += 1) {
+    const semantics = semanticsLayers[index] as ResolvedChartLayer<ID>;
+    const layer = layers[index] as PackedChartLayer<ID>;
+    const measured = measureDefinitionLayerDemand(layer, semantics, axes);
+    if (!measured.ok) return measured;
+    demands.push(measured.value);
+    visitedIndexNodes += measured.value.visitedIndexNodes;
+    if (measured.value.reducible) {
+      reducibleDemands[index] = measured.value.visibleDatums;
+      reducibleDatums += measured.value.visibleDatums;
+      continue;
+    }
+    const remaining = maximum - exactDatums;
+    if (measured.value.visibleDatums > remaining) {
+      return exactCeiling(semantics.id, measured.value.visibleDatums, remaining);
+    }
+    exactDatums += measured.value.visibleDatums;
+  }
+  const quotas = representativeDemandQuotas(reducibleDemands, reducibleDatums, maximum - exactDatums);
+  for (let index = 0; index < demands.length; index += 1) {
+    const demand = demands[index] as DefinitionLayerDemand;
+    if (!demand.reducible) quotas[index] = demand.visibleDatums;
+  }
+  return chartOK(Object.freeze({ demands: Object.freeze(demands), quotas, visitedIndexNodes }));
+}
+
+function measureDefinitionLayerDemand<ID extends StableID>(
+  layer: PackedChartLayer<ID>,
+  semantics: ResolvedChartLayer<ID>,
+  axes: ReadonlyMap<ID, ChartAxisLayout<ID>>,
+): ChartResult<DefinitionLayerDemand> {
+  const reducible = semantics.kind === 'line' || semantics.projection !== 'exact';
+  if (semantics.kind === 'pie' || semantics.kind === 'donut') {
+    if (layer.index.kind !== 'radial') return invalidProjection('Radial layer index is unavailable.');
+    return chartOK(Object.freeze({
+      visibleDatums: layer.index.total === 0 ? 0 : layer.owner.size,
+      visitedIndexNodes: 1,
+      reducible: false,
+    }));
+  }
+  const xAxis = semantics.xAxis === undefined ? undefined : axes.get(semantics.xAxis);
+  const yAxis = semantics.yAxis === undefined ? undefined : axes.get(semantics.yAxis);
+  if (xAxis === undefined || yAxis === undefined) return invalidProjection('Cartesian layer axes are unavailable in the plot layout.');
+  if (semantics.kind === 'line') {
+    const domain = geometryDomain(xAxis);
+    const measured = measurePackedOrderedVisibleDemand(layer.owner, domain.minimum, domain.maximum);
+    return chartOK(Object.freeze({
+      visibleDatums: measured.visibleDatums,
+      visitedIndexNodes: measured.visitedNodes,
+      reducible,
+    }));
+  }
+  const bounds = cartesianSelectionBounds(xAxis, yAxis);
+  const selectionBounds = semantics.kind === 'heatmap' ? heatmapSelectionBounds(semantics, bounds) : bounds;
+  const measured = measurePackedVisibleDemand(layer.owner, selectionBounds);
+  return chartOK(Object.freeze({
+    visibleDatums: measured.visibleDatums,
+    visitedIndexNodes: measured.visitedNodes,
+    reducible,
+  }));
+}
+
 interface DefinitionLayerProjection {
   readonly batch: ChartProjectionBatch | null;
   readonly dataBatch: ChartDataBatch | null;
@@ -519,6 +603,7 @@ function projectDefinitionLayer<ID extends StableID>(
   semantics: ResolvedChartLayer<ID>,
   layerIndex: number,
   quota: number,
+  visibleDemand: number,
   axes: ReadonlyMap<ID, ChartAxisLayout<ID>>,
   viewport: ChartViewport,
   transform: ChartViewTransform,
@@ -527,6 +612,7 @@ function projectDefinitionLayer<ID extends StableID>(
   if (semantics.kind === 'pie' || semantics.kind === 'donut') {
     if (layer.index.kind !== 'radial') return invalidProjection('Radial layer index is unavailable.');
     if (layer.index.total === 0) return chartOK({ batch: null, dataBatch: null, representedDatums: 0, emittedPrimitives: 0, aggregateRepresentatives: 0, visitedIndexNodes: 1, revision });
+    if (quota < visibleDemand) return exactCeiling(semantics.id, visibleDemand, quota);
     const selected = Uint32Array.from({ length: layer.owner.size }, (_, index) => index);
     const batch = projectArcs(layer, layerIndex, selected, viewport, transform);
     if (!batch.ok) return batch;
@@ -538,16 +624,11 @@ function projectDefinitionLayer<ID extends StableID>(
   if (xAxis === undefined || yAxis === undefined) return invalidProjection('Cartesian layer axes are unavailable in the plot layout.');
   const xScale = geometryScale(xAxis);
   const yScale = geometryScale(yAxis);
-  const cartesianBounds: PackedSelectionBounds = Object.freeze({
-    minimumX: xAxis.descriptor.geometryDomain.minimum,
-    maximumX: xAxis.descriptor.geometryDomain.maximum,
-    minimumY: yAxis.descriptor.geometryDomain.minimum,
-    maximumY: yAxis.descriptor.geometryDomain.maximum,
-  });
+  const cartesianBounds = cartesianSelectionBounds(xAxis, yAxis);
   if (semantics.kind === 'line') {
     const domain = geometryDomain(xAxis);
     const selected = selectPackedOrderedEnvelope(layer.owner, domain.minimum, domain.maximum, Math.max(1, Math.floor(xAxis.descriptor.range.end - xAxis.descriptor.range.start)), quota);
-    if (selected.indices.length === 0 && layer.owner.size > 0) return exactCeiling(semantics.id, selected.visibleDatums, quota);
+    if (selected.indices.length === 0 && visibleDemand > 0) return exactCeiling(semantics.id, visibleDemand, quota);
     const batch = projectPolyline(layer, layerIndex, selected.indices, xScale, yScale, transform);
     const lineRevision = batchRevision(layer, selected.aggregated ? selected.indices.length : 0);
     if (!batch.ok) return batch;
@@ -590,6 +671,18 @@ function projectDefinitionLayer<ID extends StableID>(
   if (!batch.ok) return batch;
   const decorated = decorateExactBatch(model, batch.value, revision);
   return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, revision), representedDatums: selected.length, emittedPrimitives: selected.length, aggregateRepresentatives: 0, visitedIndexNodes: visible.visitedNodes, revision });
+}
+
+function cartesianSelectionBounds<ID extends StableID>(
+  xAxis: ChartAxisLayout<ID>,
+  yAxis: ChartAxisLayout<ID>,
+): PackedSelectionBounds {
+  return Object.freeze({
+    minimumX: xAxis.descriptor.geometryDomain.minimum,
+    maximumX: xAxis.descriptor.geometryDomain.maximum,
+    minimumY: yAxis.descriptor.geometryDomain.minimum,
+    maximumY: yAxis.descriptor.geometryDomain.maximum,
+  });
 }
 
 function heatmapSelectionBounds<ID extends StableID>(
@@ -956,6 +1049,31 @@ function projectionBounds(bounds: ChartModelData['cartesianBounds']): Bounds {
   if (minimumX === maximumX) { minimumX -= 0.5; maximumX += 0.5; }
   if (minimumY === maximumY) { minimumY -= 0.5; maximumY += 0.5; }
   return { x: { minimum: minimumX, maximum: maximumX }, y: { minimum: minimumY, maximum: maximumY } };
+}
+
+function representativeDemandQuotas(
+  demands: Uint32Array,
+  total: number,
+  maximum: number,
+): Uint32Array {
+  const quotas = new Uint32Array(demands.length);
+  if (total === 0 || maximum === 0) return quotas;
+  if (maximum >= total) {
+    quotas.set(demands);
+    return quotas;
+  }
+  let assigned = 0;
+  for (let index = 0; index < demands.length; index += 1) {
+    const demand = demands[index] as number;
+    const quota = Math.min(demand, Math.floor(maximum * demand / total));
+    quotas[index] = quota;
+    assigned += quota;
+  }
+  for (let index = 0; assigned < maximum && index < demands.length; index += 1) {
+    const demand = demands[index] as number;
+    if ((quotas[index] as number) < demand) { quotas[index] = (quotas[index] as number) + 1; assigned += 1; }
+  }
+  return quotas;
 }
 
 function representativeQuotas(

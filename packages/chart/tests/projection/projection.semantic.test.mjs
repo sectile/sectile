@@ -7,6 +7,7 @@ import {
   tryCreateChartProjection,
 } from '../../.verification-dist/projection.js';
 import { hitTestChartProjection } from '../../.verification-dist/query.js';
+import { createChartAxisViewState } from '../../.verification-dist/view.js';
 
 const axes = [
   { id: 'x', orientation: 'x', scale: 'linear' },
@@ -160,6 +161,172 @@ test('uses a bounded retained envelope for ordered series without fabricated ide
     viewport: { width: 80, height: 180 }, insets: { top: 8, right: 8, bottom: 24, left: 24 }, maximumRepresentatives: data.length,
   });
   assert.deepEqual(rasterEnvelope(projection.batches[0].positions, 80), rasterEnvelope(exact.batches[0].positions, 80));
+});
+
+test('allocates exact representative ceilings from current-view demand across layers', () => {
+  const offscreen = (count) => Array.from({ length: count }, (_, index) => ({
+    id: `off-${index}`, x: 100 + index, y: index % 10,
+  }));
+  const visible = Array.from({ length: 10 }, (_, index) => ({ id: `visible-${index}`, x: index, y: index }));
+  const scatterProjection = (offscreenCount) => {
+    const source = createChartDefinition({
+      coordinate: { kind: 'cartesian', axes },
+      layers: [
+        { id: 'offscreen', kind: 'scatter', xAxis: 'x', yAxis: 'y', data: offscreen(offscreenCount) },
+        { id: 'visible', kind: 'scatter', xAxis: 'x', yAxis: 'y', data: visible },
+      ],
+    });
+    const view = createChartAxisViewState(source.axes, [{
+      axisID: 'x', initial: { kind: 'continuous', minimum: 0, maximum: 10 },
+    }]);
+    return createChartProjection(source, { viewport: { width: 300, height: 200 }, view, maximumRepresentatives: 10 });
+  };
+
+  const scatter = scatterProjection(90);
+  assert.equal(scatter.batches.find((batch) => batch.layerIndex === 1)?.identityIndices.length, 10);
+  assert.equal(scatter.diagnostics.emittedPrimitives, 10);
+  assert.equal(scatter.diagnostics.fullSourceScans, 0);
+
+  const categories = Array.from({ length: 10 }, (_, index) => `C${index}`);
+  const bars = createChartDefinition({
+    coordinate: { kind: 'cartesian', axes: [
+      { id: 'x', orientation: 'x', scale: 'linear', field: 'x', domain: { kind: 'numeric', minimum: 0, maximum: 200 } },
+      { id: 'category', orientation: 'x', scale: 'categorical', field: 'category', domain: { kind: 'categorical', values: categories } },
+      { id: 'y', orientation: 'y', scale: 'linear', field: 'y' },
+    ] },
+    layers: [
+      { id: 'offscreen', kind: 'scatter', xAxis: 'x', yAxis: 'y', data: offscreen(90) },
+      { id: 'bars', kind: 'bar', xAxis: 'category', yAxis: 'y', data: categories.map((category, index) => ({ id: `bar-${index}`, category, y: index + 1 })) },
+    ],
+  });
+  const barView = createChartAxisViewState(bars.axes, [{
+    axisID: 'x', initial: { kind: 'continuous', minimum: 0, maximum: 10 },
+  }]);
+  const barProjection = createChartProjection(bars, { viewport: { width: 300, height: 200 }, view: barView, maximumRepresentatives: 10 });
+  assert.equal(barProjection.batches.find((batch) => batch.layerIndex === 1)?.identityIndices.length, 10);
+  assert.equal(barProjection.diagnostics.emittedPrimitives, 10);
+
+  const heatmap = createChartDefinition({
+    coordinate: { kind: 'cartesian', axes },
+    layers: [
+      { id: 'offscreen', kind: 'scatter', xAxis: 'x', yAxis: 'y', data: offscreen(90) },
+      { id: 'heat', kind: 'heatmap', xAxis: 'x', yAxis: 'y', data: visible.map((datum, index) => ({ ...datum, value: index + 1 })) },
+    ],
+  });
+  const heatView = createChartAxisViewState(heatmap.axes, [{
+    axisID: 'x', initial: { kind: 'continuous', minimum: 0, maximum: 10 },
+  }]);
+  const heatProjection = createChartProjection(heatmap, { viewport: { width: 300, height: 200 }, view: heatView, maximumRepresentatives: 10 });
+  assert.equal(heatProjection.batches.find((batch) => batch.layerIndex === 1)?.identityIndices.length, 10);
+  assert.equal(heatProjection.diagnostics.emittedPrimitives, 10);
+
+  const small = scatterProjection(1_024);
+  const large = scatterProjection(65_536);
+  assert.equal(large.diagnostics.fullSourceScans, 0);
+  assert.equal(large.diagnostics.emittedPrimitives, 10);
+  assert.ok(large.diagnostics.visitedIndexNodes <= small.diagnostics.visitedIndexNodes + 4);
+});
+
+test('keeps reducible line and aggregate detail independent of offscreen source cardinality', () => {
+  const offscreen = Array.from({ length: 8_192 }, (_, index) => ({ id: `off-${index}`, x: 10_000 + index, y: index % 16 }));
+
+  const lineAxes = [
+    { id: 'x', orientation: 'x', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: 20_000 } },
+    { id: 'y', orientation: 'y', scale: 'linear', domain: { kind: 'numeric', minimum: -120, maximum: 120 } },
+  ];
+  const lineData = Array.from({ length: 4_096 }, (_, index) => ({ id: `line-${index}`, x: index, y: Math.sin(index / 8) * 100 }));
+  const lineSource = (mixed) => createChartDefinition({
+    coordinate: { kind: 'cartesian', axes: lineAxes },
+    layers: [
+      ...(mixed ? [{ id: 'offscreen', kind: 'scatter', xAxis: 'x', yAxis: 'y', data: offscreen }] : []),
+      { id: 'line', kind: 'line', xAxis: 'x', yAxis: 'y', data: lineData },
+    ],
+  });
+  const projectLine = (source) => createChartProjection(source, {
+    viewport: { width: 80, height: 180 }, insets: { top: 8, right: 8, bottom: 24, left: 24 },
+    view: createChartAxisViewState(source.axes, [
+      { axisID: 'x', initial: { kind: 'continuous', minimum: 0, maximum: 1_024 } },
+      { axisID: 'y', initial: { kind: 'continuous', minimum: -120, maximum: 120 } },
+    ]),
+    maximumRepresentatives: 192,
+  });
+  const lineOnly = projectLine(lineSource(false)).batches.find((batch) => batch.type === 'polyline');
+  const lineMixedProjection = projectLine(lineSource(true));
+  const lineMixed = lineMixedProjection.batches.find((batch) => batch.type === 'polyline');
+  assert.deepEqual(lineMixed?.positions, lineOnly?.positions);
+  assert.equal(lineMixedProjection.diagnostics.fullSourceScans, 0);
+
+  const densityAxes = [
+    { id: 'x', orientation: 'x', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: 20_000 } },
+    { id: 'y', orientation: 'y', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: 32 } },
+  ];
+  const densityData = Array.from({ length: 1_024 }, (_, index) => ({ id: `density-${index}`, x: index % 32, y: Math.floor(index / 32) }));
+  const densitySource = (mixed) => createChartDefinition({
+    coordinate: { kind: 'cartesian', axes: densityAxes },
+    layers: [
+      ...(mixed ? [{ id: 'offscreen', kind: 'scatter', xAxis: 'x', yAxis: 'y', data: offscreen }] : []),
+      { id: 'density', kind: 'scatter', projection: 'density', xAxis: 'x', yAxis: 'y', data: densityData },
+    ],
+  });
+  const projectDensity = (source) => createChartProjection(source, {
+    viewport: { width: 320, height: 180 },
+    view: createChartAxisViewState(source.axes, [
+      { axisID: 'x', initial: { kind: 'continuous', minimum: 0, maximum: 32 } },
+      { axisID: 'y', initial: { kind: 'continuous', minimum: 0, maximum: 32 } },
+    ]),
+    maximumRepresentatives: 32,
+  });
+  const densityOnly = projectDensity(densitySource(false)).batches.find((batch) => batch.reduction === 'density');
+  const densityMixed = projectDensity(densitySource(true)).batches.find((batch) => batch.reduction === 'density');
+  assert.deepEqual(densityMixed?.cells, densityOnly?.cells);
+
+  const heatAxes = [
+    { id: 'x', orientation: 'x', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: 20_000 } },
+    { id: 'y', orientation: 'y', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: 16 } },
+  ];
+  const heatData = Array.from({ length: 256 }, (_, index) => ({ id: `heat-${index}`, x: index % 16, y: Math.floor(index / 16), value: index + 1 }));
+  const heatSource = (mixed) => createChartDefinition({
+    coordinate: { kind: 'cartesian', axes: heatAxes },
+    layers: [
+      ...(mixed ? [{ id: 'offscreen', kind: 'scatter', xAxis: 'x', yAxis: 'y', data: offscreen }] : []),
+      { id: 'heat', kind: 'heatmap', xAxis: 'x', yAxis: 'y', projection: { kind: 'aggregate', reduction: 'sum' }, data: heatData },
+    ],
+  });
+  const projectHeat = (source) => createChartProjection(source, {
+    viewport: { width: 240, height: 160 },
+    view: createChartAxisViewState(source.axes, [
+      { axisID: 'x', initial: { kind: 'continuous', minimum: 0, maximum: 16 } },
+      { axisID: 'y', initial: { kind: 'continuous', minimum: 0, maximum: 16 } },
+    ]),
+    maximumRepresentatives: 16,
+  });
+  const heatOnly = projectHeat(heatSource(false)).batches.find((batch) => batch.reduction === 'sum');
+  const heatMixed = projectHeat(heatSource(true)).batches.find((batch) => batch.reduction === 'sum');
+  assert.deepEqual(heatMixed?.cells, heatOnly?.cells);
+});
+
+test('reserves exact visible demand and forwards unused reducible quota', () => {
+  const source = createChartDefinition({
+    coordinate: { kind: 'cartesian', axes: [
+      { id: 'x', orientation: 'x', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: 255 } },
+      { id: 'y', orientation: 'y', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: 255 } },
+    ] },
+    layers: [
+      { id: 'line', kind: 'line', xAxis: 'x', yAxis: 'y', data: Array.from({ length: 256 }, (_, index) => ({ id: `line-${index}`, x: index, y: index % 2 === 0 ? 32 : 224 })) },
+      { id: 'density', kind: 'scatter', projection: 'density', xAxis: 'x', yAxis: 'y', data: Array.from({ length: 256 }, (_, index) => ({ id: `density-${index}`, x: index % 16, y: Math.floor(index / 16) })) },
+      { id: 'exact', kind: 'scatter', xAxis: 'x', yAxis: 'y', data: Array.from({ length: 10 }, (_, index) => ({ id: `exact-${index}`, x: 32 + index, y: 32 + index })) },
+    ],
+  });
+  const projection = createChartProjection(source, {
+    viewport: { width: 4, height: 256 },
+    insets: { top: 0, right: 0, bottom: 0, left: 0 },
+    maximumRepresentatives: 74,
+  });
+  const exact = projection.batches.find((batch) => batch.layerIndex === 2);
+  const density = projection.batches.find((batch) => batch.reduction === 'density');
+  assert.equal(exact?.identityIndices.length, 10);
+  assert.ok((density?.representatives?.length ?? 0) > 32);
+  assert.ok(projection.diagnostics.emittedPrimitives <= 74);
 });
 
 function rasterEnvelope(positions, width) {
