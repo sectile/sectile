@@ -291,7 +291,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "8a0fcaa13f063a0626aff71ddbe9b663d49429e360c8a88cbbac8c6a856f783b",
+  "fingerprint": "a82065afe2d6f38844a3b14aa7ed41501a590383a48fda8a471c81c52b1e1ba1",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -319,7 +319,7 @@
     },
     {
       "path": "dist/chart.d.ts",
-      "sha256": "981acc12d40e06c203707e9b4269e744ef3148e0353bb56dcb12f6bd7e510042"
+      "sha256": "f1dd55a042fc59eef4429f2aa66f4b246b099a7fdf64a15c6385059e6f2ab495"
     },
     {
       "path": "dist/checkbox-group.d.ts",
