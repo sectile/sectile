@@ -163,6 +163,75 @@ test('DOM Chart restores frame publication after a projection callback error', (
   connection.disconnect();
 });
 
+test('DOM Chart preserves the last successful projection and reports later projection failures', () => {
+  const value = fixture();
+  const projectionError = Object.freeze({
+    class: 'resource-rejection',
+    code: 'chart-projection-ceiling-exceeded',
+    message: 'projection rejected for test',
+  });
+  let rejectProjection = false;
+  const source = value.controller;
+  const controller = new Proxy(source, {
+    get(target, property) {
+      if (property === 'project') return (input) => rejectProjection
+        ? { ok: false, error: projectionError }
+        : target.project(input);
+      const member = Reflect.get(target, property, target);
+      return typeof member === 'function' ? member.bind(target) : member;
+    },
+  });
+  const errors = [];
+  const connection = createDOMChart({
+    root: value.root,
+    canvas: value.canvas,
+    controller,
+    renderer: value.renderer,
+    onProjectionError: (error) => errors.push(error),
+  });
+  const previous = connection.getProjection();
+  const rendered = value.renders.length;
+
+  rejectProjection = true;
+  source.replaceModel({ layers: [{ id: 'points', profile: 'point', data: [
+    { id: 1, x: 0, y: 0 }, { id: '1', x: 1, y: 1 }, { id: 2, x: 2, y: 2 },
+  ] }] });
+  assert.equal(connection.getLifecycleDiagnostics().frames, 1);
+  connection.refresh();
+
+  assert.equal(connection.getLifecycleDiagnostics().frames, 0);
+  assert.equal(connection.getProjection(), previous);
+  assert.equal(value.renders.length, rendered);
+  assert.deepEqual(errors, [projectionError]);
+  connection.disconnect();
+});
+
+test('later DOM Chart projection failures throw when no error callback handles them', () => {
+  const value = fixture();
+  const source = value.controller;
+  let rejectProjection = false;
+  const controller = new Proxy(source, {
+    get(target, property) {
+      if (property === 'project') return (input) => rejectProjection
+        ? { ok: false, error: { class: 'resource-rejection', code: 'chart-projection-ceiling-exceeded', message: 'projection rejected for test' } }
+        : target.project(input);
+      const member = Reflect.get(target, property, target);
+      return typeof member === 'function' ? member.bind(target) : member;
+    },
+  });
+  const connection = createDOMChart({
+    root: value.root, canvas: value.canvas, controller, renderer: value.renderer,
+  });
+  const previous = connection.getProjection();
+  rejectProjection = true;
+  assert.throws(
+    () => connection.refresh(),
+    (error) => error?.code === 'chart-projection-ceiling-exceeded',
+  );
+  assert.equal(connection.getProjection(), previous);
+  connection.disconnect();
+});
+
 test('fallible DOM Chart construction is total for malformed host and renderer shapes', () => {
   assert.doesNotThrow(() => {
     const malformed = tryCreateDOMChart({ root: {}, canvas: {}, controller: {} });
@@ -215,6 +284,54 @@ test('failed DOM Chart construction rolls back every acquired host resource', ()
   const result = tryCreateDOMChart({ root: value.root, canvas: value.canvas, controller, renderer });
   assert.equal(result.ok, false);
   assert.equal(result.error.code, 'invalid-boundary');
+  assert.equal(listeners, 0);
+  assert.equal(observers, 0);
+  assert.equal(subscriptions, 0);
+  assert.equal(value.root.hasAttribute('role'), false);
+  assert.equal(value.canvas.hasAttribute('aria-hidden'), false);
+  assert.equal(value.root.querySelector('[role="listbox"]'), null);
+  assert.equal(value.root.querySelector('svg'), null);
+  assert.equal(value.disconnected(), 0, 'borrowed renderer remains caller-owned');
+});
+
+test('initial DOM Chart projection failure stays typed and rolls back acquired host resources', () => {
+  const value = fixture();
+  let listeners = 0;
+  for (const target of [value.root, value.canvas]) {
+    const add = target.addEventListener.bind(target);
+    const remove = target.removeEventListener.bind(target);
+    target.addEventListener = (...args) => { listeners += 1; return add(...args); };
+    target.removeEventListener = (...args) => { listeners -= 1; return remove(...args); };
+  }
+  let observers = 0;
+  value.window.ResizeObserver = class {
+    observe() { observers += 1; }
+    disconnect() { observers -= 1; }
+  };
+  let subscriptions = 0;
+  const projectionError = Object.freeze({
+    class: 'resource-rejection',
+    code: 'chart-projection-ceiling-exceeded',
+    message: 'initial projection rejected for test',
+  });
+  const controller = new Proxy(value.controller, {
+    get(target, property) {
+      if (property === 'project') return () => ({ ok: false, error: projectionError });
+      if (property === 'subscribeCommands') return (listener) => {
+        subscriptions += 1;
+        const unsubscribe = target.subscribeCommands(listener);
+        return () => { subscriptions -= 1; unsubscribe(); };
+      };
+      const member = Reflect.get(target, property, target);
+      return typeof member === 'function' ? member.bind(target) : member;
+    },
+  });
+
+  const result = tryCreateDOMChart({
+    root: value.root, canvas: value.canvas, controller, renderer: value.renderer,
+  });
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.error, projectionError);
   assert.equal(listeners, 0);
   assert.equal(observers, 0);
   assert.equal(subscriptions, 0);

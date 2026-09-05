@@ -26,7 +26,7 @@ import type {
 } from '@sectile/chart/interaction';
 import type { ChartLimits, ChartModel, ChartPatch } from '@sectile/chart/model';
 import type { ChartProjection } from '@sectile/chart/projection';
-import type { ChartResult } from '@sectile/chart/result';
+import type { ChartError, ChartResult } from '@sectile/chart/result';
 import type { ChartScaleKind } from '@sectile/chart/scale';
 import type { ChartAxisViewCapability } from '@sectile/chart/view';
 import type { ResolvedChartAxis } from '@sectile/chart/layout';
@@ -549,6 +549,14 @@ const ChartRootRuntime = defineComponent({
           ...(assembled === null ? {} : { navigation: assembled.navigation }),
           onCommand: (command: ChartCommand) => { dom.onCommand?.(command); },
           onProjectionChange: (next) => { projection.value = next; dom.onProjectionChange?.(next); },
+          onProjectionError: (projectionError: ChartError) => {
+            let failure: readonly [unknown] | undefined;
+            try { dom.onProjectionError?.(projectionError); }
+            catch (error) { failure ??= [error]; }
+            try { report(projectionError); }
+            catch (error) { failure ??= [error]; }
+            if (failure !== undefined) throw failure[0];
+          },
         });
         projection.value = connection.value.getProjection();
       } catch (error) { report(error); }

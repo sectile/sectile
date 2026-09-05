@@ -38,6 +38,7 @@ const {
   ChartRenderer,
   ChartResetView,
   ChartRoot,
+  ChartScatter,
   ChartViewControls,
   ChartXAxis,
   ChartYAxis,
@@ -139,6 +140,44 @@ test('direct gestures require a declared visible or external control alternative
   assert.equal(errors.length, 1);
   assert.match(String(errors[0]), /ChartViewControls|ChartExternalViewControls/);
   app.unmount(); host.remove();
+});
+
+test('ChartRoot surfaces later DOM projection failures through its existing onError contract', async () => {
+  const data = shallowRef(Object.freeze([{ id: 1, x: 0, y: 0 }]));
+  const projections = [];
+  const errors = [];
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h(ChartRoot, {
+      dom: {
+        renderer: mockRenderer(projections),
+        renderPolicy: { type: 'fixed', renderScale: 1, maximumRepresentatives: 1 },
+      },
+      onError: (error) => errors.push(error),
+    }, () => [
+      h(ChartCartesian, null, () => [
+        h(ChartXAxis, { id: 'x', scale: 'linear' }),
+        h(ChartYAxis, { id: 'y', scale: 'linear' }),
+        h(ChartScatter, { id: 'series', data: data.value, xAxis: 'x', yAxis: 'y' }),
+      ]),
+      h(ChartPlot, null, () => h(ChartRenderer)),
+    ]),
+  });
+
+  app.mount(host);
+  await nextTick(); await nextTick();
+  assert.equal(errors.length, 0);
+  assert.equal(projections.length, 1);
+
+  data.value = Object.freeze([{ id: 1, x: 0, y: 0 }, { id: 2, x: 1, y: 1 }]);
+  await nextTick(); await nextTick();
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0].code, 'chart-projection-ceiling-exceeded');
+  assert.equal(projections.length, 1, 'the last successful visual projection is preserved');
+
+  app.unmount();
+  host.remove();
 });
 
 test('granular provider selectors publish only their selected changes and release on unmount', async () => {

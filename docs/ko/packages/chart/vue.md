@@ -128,6 +128,8 @@ const dom = {
 
 기본 슬롯은 현재 `state`, `projection`, `definition` 값을 제공합니다. 차트 가까이에 툴팁이나 상태 표시를 만들 때 사용하세요. 페이지의 다른 컴포넌트에서는 `useChartSelector`, `useChartLayerSelector`, `useChartAxisSelector`로 필요한 값만 읽을 수 있습니다.
 
+DOM 투영 오류도 `ChartRoot`의 기존 `onError`로 전달됩니다. 첫 투영에 실패하면 DOM 연결이 정상 상태로 남지 않습니다. 이미 한 번 성공한 뒤의 투영 오류는 마지막으로 성공한 화면을 유지하고, 이후 갱신이 성공하면 새 화면으로 바뀝니다. `dom.onProjectionError`도 지정했다면 DOM 경계의 콜백을 먼저 실행한 다음 같은 오류를 `ChartRoot.onError`에 전달합니다.
+
 여러 차트 영역이나 컴포넌트 트리에서 하나의 컨트롤러를 공유해야 할 때만 `ChartProvider`나 `createChartComponents(controller)`를 사용하세요.
 
 서버 렌더링 중에는 `ChartRoot`가 브라우저 자원을 만들지 않습니다. 서버와 첫 클라이언트 렌더링에 같은 차트 구성과 제어 상태를 전달하세요. 크기 측정과 Canvas 그리기는 하이드레이션 뒤 시작합니다.

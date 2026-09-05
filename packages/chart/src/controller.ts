@@ -324,7 +324,8 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     const view = input.view ?? this.#snapshot.state.view ?? undefined;
     const transform = input.viewTransform ?? IDENTITY_CHART_VIEW_TRANSFORM;
     const insets = input.insets === undefined ? DEFAULT_CHART_PLOT_INSETS : input.insets;
-    const cacheable = input.xScale === undefined && input.yScale === undefined && input.previous === undefined
+    const cacheable = cacheSafeViewport(input.viewport)
+      && input.xScale === undefined && input.yScale === undefined && input.previous === undefined
       && input.view === undefined && validCacheInsets(insets);
     if (cacheable && this.#projectionCache !== null
       && sameProjectionRequest(this.#projectionCache, this.#model, input, transform, view, insets)) {
@@ -685,6 +686,10 @@ function sameProjectionRequest<ID extends StableID>(
     && cache.insetTop === insets.top && cache.insetRight === insets.right
     && cache.insetBottom === insets.bottom && cache.insetLeft === insets.left
     && cache.view === view;
+}
+
+function cacheSafeViewport(viewport: unknown): viewport is ChartProjectionInput['viewport'] {
+  return viewport !== null && typeof viewport === 'object';
 }
 
 function validCacheInsets(insets: unknown): insets is ChartPlotInsets {

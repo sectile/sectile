@@ -1,5 +1,6 @@
 import type { ChartDefinition } from '@sectile/chart/definition';
 import type { ChartSelection } from '@sectile/chart/interaction';
+import type { ChartError } from '@sectile/chart/result';
 import type { ChartViewState } from '@sectile/chart/contract';
 import {
   createChartComponents,
@@ -26,11 +27,13 @@ declare const options: UseChartOptions<ID>;
 declare const result: UseChartResult<ID>;
 declare const props: ChartRootProps<ID>;
 declare const provider: ChartProviderProps<ID>;
+declare const projectionError: ChartError;
 
 options.cursor?.value satisfies ID | null | undefined;
 result.controller.dispatch({ type: 'set-cursor', id: 1 });
 props.cursor satisfies ID | null | undefined;
 props.view satisfies ChartViewState<ID> | null | undefined;
+props.dom?.onProjectionError?.(projectionError);
 provider.controller satisfies UseChartResult<ID>['controller'];
 const components: ChartComponents<ID> = createChartComponents(result.controller);
 components.Root satisfies ChartComponents<ID>['Root'];

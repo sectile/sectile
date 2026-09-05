@@ -82,6 +82,8 @@ In a single-page application, run the same two cleanup calls when the route or o
 
 `onCommand` runs after the command's required render scheduling, focus, or announcement effect. `onProjectionChange` runs after renderer, navigation, and accessibility publication. A callback error does not roll back committed controller state or skip the remaining required host work; the first synchronous error is rethrown after those phases finish.
 
+Projection failures use a separate failure contract. If the initial projection fails, `tryCreateDOMChart()` returns the typed Chart error and the connection rolls back its acquired resources; `createDOMChart()` throws that result error. After a successful projection exists, a later failure keeps the last successful visual projection in place. Set `onProjectionError` to receive the typed error and handle that state. Without that callback, an explicit `refresh()` or `flush()` that encounters the failure throws it instead of silently discarding it.
+
 ## Choose a renderer
 
 `auto` uses WebGL2 when available and falls back to Canvas2D. It is the right default for most applications. Choose `canvas2d` when diagnosing compatibility, or `webgl2` when the application must fail instead of using the slower fallback.

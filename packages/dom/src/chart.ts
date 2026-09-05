@@ -1,9 +1,10 @@
 import type { Result, StableID } from '@sectile/core';
 import { tryNormalizeStableIDs } from '@sectile/core/identity';
-import { unwrap } from '@sectile/core/result';
+import { SectileResultError, unwrap } from '@sectile/core/result';
 import type { ChartController } from '@sectile/chart/controller';
 import type { ChartCommand } from '@sectile/chart/interaction';
 import type { ChartProjection, ChartProjectionBatch, ChartViewport } from '@sectile/chart/projection';
+import type { ChartError, ChartErrorCode } from '@sectile/chart/result';
 import { Canvas2DChartRenderer } from './internal/chart-canvas-renderer.js';
 import { DOMChart } from './internal/chart-connection.js';
 import { WebGL2ChartRenderer } from './internal/chart-webgl2-renderer.js';
@@ -152,6 +153,7 @@ export interface DOMChartOptions<ID extends StableID = StableID> {
   readonly getAccessibleDatumLabel?: (id: ID, index: number) => string;
   readonly onCommand?: (command: ChartCommand<ID>) => void;
   readonly onProjectionChange?: (projection: ChartProjection<ID>) => void;
+  readonly onProjectionError?: (error: ChartError) => void;
   readonly navigation?: DOMChartNavigation<ID>;
 }
 
@@ -189,7 +191,7 @@ export function createDOMChart<ID extends StableID>(options: DOMChartOptions<ID>
   return unwrap(tryCreateDOMChart(options));
 }
 
-export function tryCreateDOMChart<ID extends StableID>(options: DOMChartOptions<ID>): Result<DOMChartConnection<ID>> {
+export function tryCreateDOMChart<ID extends StableID>(options: DOMChartOptions<ID>): Result<DOMChartConnection<ID>, ChartErrorCode> {
   let renderer: ChartRenderer | undefined;
   let ownsRenderer = false;
   try {
@@ -218,10 +220,21 @@ export function tryCreateDOMChart<ID extends StableID>(options: DOMChartOptions<
     renderer = rendererResult.value;
     ownsRenderer = !borrowedRenderer;
     return { ok: true, value: new DOMChart(options, renderer, ownsRenderer, policy.value, accessibilityLimit, view, navigation.value) };
-  } catch {
+  } catch (error) {
     if (ownsRenderer && renderer !== undefined) {
       try { renderer.disconnect(); }
       catch { /* Construction failure remains the primary error. */ }
+    }
+    if (error instanceof SectileResultError) {
+      return {
+        ok: false,
+        error: {
+          class: error.class,
+          code: error.code as ChartErrorCode,
+          message: error.message,
+          ...(error.details === undefined ? {} : { details: error.details }),
+        },
+      };
     }
     return invalidRenderer('DOM Chart construction failed.');
   }

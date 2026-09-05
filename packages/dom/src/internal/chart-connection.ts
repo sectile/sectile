@@ -1,4 +1,5 @@
 import type { Result, StableID } from '@sectile/core';
+import { SectileResultError } from '@sectile/core/result';
 import { chartSelectionContains, type ChartCommand, type ChartSelection } from '@sectile/chart/interaction';
 import type { ChartController } from '@sectile/chart/controller';
 import type { ChartProjection, ChartViewport } from '@sectile/chart/projection';
@@ -151,6 +152,10 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
 
   public refresh(): void {
     if (!this.#active) return;
+    if (this.#frame !== 0) {
+      this.#view.cancelAnimationFrame(this.#frame);
+      this.#frame = 0;
+    }
     this.#viewport = this.#measureViewport();
     const startedAt = this.#view.performance.now();
     const projected = this.controller.project({
@@ -159,7 +164,13 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
         maximumRepresentatives: this.#policy.maximumRepresentatives,
       }),
     });
-    if (!projected.ok) return;
+    if (!projected.ok) {
+      if (this.#projection === null || this.#options.onProjectionError === undefined) {
+        throw new SectileResultError(projected.error);
+      }
+      this.#options.onProjectionError(projected.error);
+      return;
+    }
     this.#projection = projected.value;
     let failure: readonly [unknown] | undefined;
     try { this.#renderer.render(projected.value); }

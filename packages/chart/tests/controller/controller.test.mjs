@@ -270,6 +270,19 @@ test('controlled view domain reconciliation requests owner acceptance before set
   seed.dispose();
 });
 
+test('projection failures remain typed and identical after the controller cache is warm', () => {
+  const controller = createChartController(options());
+  const cold = controller.project({});
+  assert.equal(cold.ok, false);
+  assert.equal(cold.error.code, 'chart-projection-invalid');
+
+  const warmed = controller.project({ viewport: { width: 320, height: 180 } });
+  assert.equal(warmed.ok, true);
+
+  const warm = controller.project({});
+  assert.deepEqual(warm, cold);
+});
+
 test('CHT-05: declarative projection cache is equivalent and bypasses ineligible inputs', () => {
   const controller = createChartController({
     definition: definition([

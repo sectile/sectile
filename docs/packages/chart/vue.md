@@ -130,6 +130,8 @@ The default slot exposes current `state`, `projection`, and `definition` values 
 
 Controlled refs and committed snapshots are published before command and change callbacks run. A callback error does not undo the publication or prevent the other matching callback from running; imperative composables rethrow the first synchronous callback error after publication completes.
 
+`ChartRoot` also routes DOM projection failures to its existing `onError` prop. An initial projection failure prevents the DOM connection from becoming usable. If a later projection fails, the last successful projection remains rendered until a future refresh succeeds. A `dom.onProjectionError` callback, when supplied, runs at the DOM boundary before the same failure is passed to `ChartRoot.onError`.
+
 Use `ChartProvider` or `createChartComponents(controller)` only when one controller must be shared across several chart roots or component subtrees.
 
 During server rendering, `ChartRoot` does not create browser resources. Pass the same chart components and controlled values on the server and the first client render. Measurement and Canvas drawing start after hydration.
