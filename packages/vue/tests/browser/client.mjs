@@ -1,5 +1,6 @@
 import { createSSRApp, nextTick } from 'vue';
 import { createHydrationFixture } from './hydration-fixture.mjs';
+import { runPopupPresenceFocusScenarios } from './popup-presence-focus-fixture.mjs';
 import { runTabularVirtualScenarios } from './tabular-virtual-fixture.mjs?wi=15e';
 
 const warnings = [];
@@ -135,6 +136,14 @@ if ([...group?.querySelectorAll('[role="meter"]') ?? []].map((element) => elemen
   failures.push('updated group values');
 }
 if (warnings.length > 0) failures.push('Vue hydration warnings');
+let popupPresenceFocus;
+try {
+  popupPresenceFocus = await runPopupPresenceFocusScenarios();
+  for (const [scenario, evidence] of Object.entries(popupPresenceFocus)) if (!evidence.ok) failures.push(scenario);
+} catch (error) {
+  failures.push(`popup presence focus exception: ${error instanceof Error ? error.message : String(error)}`);
+  popupPresenceFocus = Object.freeze({});
+}
 let tabularVirtual;
 try {
   tabularVirtual = await runTabularVirtualScenarios();
@@ -170,6 +179,7 @@ const result = Object.freeze({
     emailBeforeInputCanceled,
     emailValue: emailInput instanceof HTMLInputElement ? emailInput.value : null,
   }),
+  popupPresenceFocus,
   tabularVirtual,
 });
 window.__SECTILE_BROWSER_RESULT__ = result;

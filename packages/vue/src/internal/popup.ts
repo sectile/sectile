@@ -351,8 +351,11 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const root = useRoot('Content');
       const direction = useHostDirection();
       const element = shallowRef<HTMLElement>();
-      const present = usePresence(root.open, element);
-      watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' });
+      const retainedReopen = shallowRef(0);
+      const present = usePresence(root.open, element, () => { retainedReopen.value += 1; });
+      const refreshAfterRender = async (): Promise<void> => { await nextTick(); root.refresh(); };
+      watch(present, refreshAfterRender, { flush: 'post' });
+      watch(retainedReopen, refreshAfterRender, { flush: 'post' });
       return (): VNodeChild => {
         if (root.unmountOnExit.value && !present.value) return null;
         const exiting = !root.open.value && present.value;
