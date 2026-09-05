@@ -143,6 +143,14 @@ interface AxisUniforms {
   readonly logarithmic: boolean;
 }
 
+interface WebGLBaseResources {
+  readonly pointProgram: WebGLProgram;
+  readonly lineProgram: WebGLProgram;
+  readonly rectangleProgram: WebGLProgram;
+  readonly arcProgram: WebGLProgram;
+  readonly quadBuffer: WebGLBuffer;
+}
+
 export class WebGL2ChartRenderer implements ChartRenderer {
   public readonly capabilities: ChartRendererCapabilities;
   readonly #canvas: HTMLCanvasElement;
@@ -167,8 +175,13 @@ export class WebGL2ChartRenderer implements ChartRenderer {
   };
   readonly #onContextRestored = (): void => {
     if (!this.#active) return;
+    try { this.#initialize(); }
+    catch (error) {
+      this.#lost = true;
+      this.#diagnostics = Object.freeze({ ...this.#diagnostics, liveResources: 0 });
+      throw error;
+    }
     this.#lost = false;
-    this.#initialize();
     if (this.#lastProjection !== null) this.render(this.#lastProjection);
   };
 
@@ -181,9 +194,20 @@ export class WebGL2ChartRenderer implements ChartRenderer {
       webgl2: true,
       asynchronousGPUTiming: gl.getExtension('EXT_disjoint_timer_query_webgl2') !== null,
     });
-    this.#initialize();
-    canvas.addEventListener('webglcontextlost', this.#onContextLost);
-    canvas.addEventListener('webglcontextrestored', this.#onContextRestored);
+    let initialized = false;
+    try {
+      this.#initialize();
+      initialized = true;
+      canvas.addEventListener('webglcontextlost', this.#onContextLost);
+      canvas.addEventListener('webglcontextrestored', this.#onContextRestored);
+    } catch (error) {
+      canvas.removeEventListener('webglcontextlost', this.#onContextLost);
+      canvas.removeEventListener('webglcontextrestored', this.#onContextRestored);
+      if (initialized) this.#deleteResources();
+      this.#active = false;
+      this.#diagnostics = Object.freeze({ ...this.#diagnostics, liveResources: 0 });
+      throw error;
+    }
   }
 
   public render(projection: ChartProjection, batches: readonly ChartProjectionBatch[] = projection.batches): void {
@@ -250,14 +274,12 @@ export class WebGL2ChartRenderer implements ChartRenderer {
   }
 
   #initialize(): void {
-    const gl = this.#gl;
-    this.#pointProgram = createProgram(gl, VERTEX_POINT, FRAGMENT_POINT);
-    this.#lineProgram = createProgram(gl, VERTEX_POINT, FRAGMENT_COLOR);
-    this.#rectangleProgram = createProgram(gl, VERTEX_RECTANGLE, FRAGMENT_COLOR);
-    this.#arcProgram = createProgram(gl, VERTEX_ARC, FRAGMENT_ARC);
-    this.#quadBuffer = requiredBuffer(gl);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.#quadBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, QUAD, gl.STATIC_DRAW);
+    const resources = createBaseResources(this.#gl);
+    this.#pointProgram = resources.pointProgram;
+    this.#lineProgram = resources.lineProgram;
+    this.#rectangleProgram = resources.rectangleProgram;
+    this.#arcProgram = resources.arcProgram;
+    this.#quadBuffer = resources.quadBuffer;
     this.#diagnostics = Object.freeze({ mode: 'webgl2', uploadedBytes: 0, drawCalls: 0, liveResources: this.#baseResourceCount() });
   }
 
@@ -506,35 +528,72 @@ function updateBuffer(gl: WebGL2RenderingContext, previous: UploadArray, next: U
   return { bytes: changedBytes, full: false, partial: true };
 }
 
-function createProgram(gl: WebGL2RenderingContext, vertexSource: string, fragmentSource: string): WebGLProgram {
-  const vertex = createShader(gl, gl.VERTEX_SHADER, vertexSource);
-  const fragment = createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
-  const program = gl.createProgram();
-  if (program === null) throw new Error('WebGL2 chart program allocation failed.');
-  gl.attachShader(program, vertex);
-  gl.attachShader(program, fragment);
-  gl.linkProgram(program);
-  gl.deleteShader(vertex);
-  gl.deleteShader(fragment);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    const message = gl.getProgramInfoLog(program) ?? 'unknown link error';
-    gl.deleteProgram(program);
-    throw new Error(`WebGL2 chart program link failed: ${message}`);
+function createBaseResources(gl: WebGL2RenderingContext): WebGLBaseResources {
+  let pointProgram: WebGLProgram | undefined;
+  let lineProgram: WebGLProgram | undefined;
+  let rectangleProgram: WebGLProgram | undefined;
+  let arcProgram: WebGLProgram | undefined;
+  let quadBuffer: WebGLBuffer | undefined;
+  try {
+    pointProgram = createProgram(gl, VERTEX_POINT, FRAGMENT_POINT);
+    lineProgram = createProgram(gl, VERTEX_POINT, FRAGMENT_COLOR);
+    rectangleProgram = createProgram(gl, VERTEX_RECTANGLE, FRAGMENT_COLOR);
+    arcProgram = createProgram(gl, VERTEX_ARC, FRAGMENT_ARC);
+    quadBuffer = requiredBuffer(gl);
+    gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, QUAD, gl.STATIC_DRAW);
+    return Object.freeze({ pointProgram, lineProgram, rectangleProgram, arcProgram, quadBuffer });
+  } catch (error) {
+    if (quadBuffer !== undefined) gl.deleteBuffer(quadBuffer);
+    if (arcProgram !== undefined) gl.deleteProgram(arcProgram);
+    if (rectangleProgram !== undefined) gl.deleteProgram(rectangleProgram);
+    if (lineProgram !== undefined) gl.deleteProgram(lineProgram);
+    if (pointProgram !== undefined) gl.deleteProgram(pointProgram);
+    throw error;
   }
-  return program;
+}
+
+function createProgram(gl: WebGL2RenderingContext, vertexSource: string, fragmentSource: string): WebGLProgram {
+  let vertex: WebGLShader | undefined;
+  let fragment: WebGLShader | undefined;
+  let program: WebGLProgram | undefined;
+  try {
+    vertex = createShader(gl, gl.VERTEX_SHADER, vertexSource);
+    fragment = createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+    program = gl.createProgram() ?? undefined;
+    if (program === undefined) throw new Error('WebGL2 chart program allocation failed.');
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      const message = gl.getProgramInfoLog(program) ?? 'unknown link error';
+      throw new Error(`WebGL2 chart program link failed: ${message}`);
+    }
+    return program;
+  } catch (error) {
+    if (program !== undefined) gl.deleteProgram(program);
+    throw error;
+  } finally {
+    if (fragment !== undefined) gl.deleteShader(fragment);
+    if (vertex !== undefined) gl.deleteShader(vertex);
+  }
 }
 
 function createShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader {
   const shader = gl.createShader(type);
   if (shader === null) throw new Error('WebGL2 chart shader allocation failed.');
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    const message = gl.getShaderInfoLog(shader) ?? 'unknown compile error';
+  try {
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      const message = gl.getShaderInfoLog(shader) ?? 'unknown compile error';
+      throw new Error(`WebGL2 chart shader compile failed: ${message}`);
+    }
+    return shader;
+  } catch (error) {
     gl.deleteShader(shader);
-    throw new Error(`WebGL2 chart shader compile failed: ${message}`);
+    throw error;
   }
-  return shader;
 }
 
 function requiredBuffer(gl: WebGL2RenderingContext): WebGLBuffer {

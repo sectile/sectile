@@ -26,19 +26,65 @@ function fixture() {
 function webglFixture() {
   const calls = [];
   let resource = 0;
+  const failure = { kind: null, at: 0 };
+  const ordinals = new Map();
+  const totals = {
+    shaders: { created: 0, deleted: 0 },
+    programs: { created: 0, deleted: 0 },
+    buffers: { created: 0, deleted: 0 },
+  };
+  const shouldFail = (kind) => {
+    const ordinal = (ordinals.get(kind) ?? 0) + 1;
+    ordinals.set(kind, ordinal);
+    return failure.kind === kind && failure.at === ordinal;
+  };
+  const setFailure = (kind = null, at = 0) => {
+    failure.kind = kind;
+    failure.at = at;
+    ordinals.clear();
+  };
+  const resourceCounts = () => ({
+    shaders: { ...totals.shaders },
+    programs: { ...totals.programs },
+    buffers: { ...totals.buffers },
+  });
   const gl = {
     VERTEX_SHADER: 1, FRAGMENT_SHADER: 2, COMPILE_STATUS: 3, LINK_STATUS: 4,
     ARRAY_BUFFER: 5, STATIC_DRAW: 6, DYNAMIC_DRAW: 7, FLOAT: 8, UNSIGNED_BYTE: 9,
     COLOR_BUFFER_BIT: 10, BLEND: 11, SRC_ALPHA: 12, ONE_MINUS_SRC_ALPHA: 13,
     POINTS: 14, LINE_STRIP: 15, TRIANGLES: 16,
     getExtension: () => null,
-    createShader: () => ({ id: ++resource }), shaderSource() {}, compileShader() {},
-    getShaderParameter: () => true, getShaderInfoLog: () => '', deleteShader() {},
-    createProgram: () => ({ id: ++resource }), attachShader() {}, linkProgram() {},
-    getProgramParameter: () => true, getProgramInfoLog: () => '',
-    deleteProgram: () => calls.push(['deleteProgram']),
-    createBuffer: () => ({ id: ++resource }), deleteBuffer: () => calls.push(['deleteBuffer']),
-    bindBuffer() {}, bufferData: (_target, data) => calls.push(['bufferData', data.byteLength]),
+    createShader: () => {
+      if (shouldFail('shader-allocation')) return null;
+      totals.shaders.created += 1;
+      return { id: ++resource, compileFailed: false };
+    },
+    shaderSource() {},
+    compileShader: (shader) => { shader.compileFailed = shouldFail('shader-compile'); },
+    getShaderParameter: (shader) => !shader.compileFailed,
+    getShaderInfoLog: () => 'synthetic shader failure',
+    deleteShader: () => { totals.shaders.deleted += 1; calls.push(['deleteShader']); },
+    createProgram: () => {
+      if (shouldFail('program-allocation')) return null;
+      totals.programs.created += 1;
+      return { id: ++resource, linkFailed: false };
+    },
+    attachShader() {},
+    linkProgram: (program) => { program.linkFailed = shouldFail('program-link'); },
+    getProgramParameter: (program) => !program.linkFailed,
+    getProgramInfoLog: () => 'synthetic link failure',
+    deleteProgram: () => { totals.programs.deleted += 1; calls.push(['deleteProgram']); },
+    createBuffer: () => {
+      if (shouldFail('buffer-allocation')) return null;
+      totals.buffers.created += 1;
+      return { id: ++resource };
+    },
+    deleteBuffer: () => { totals.buffers.deleted += 1; calls.push(['deleteBuffer']); },
+    bindBuffer() {},
+    bufferData: (_target, data) => {
+      if (shouldFail('buffer-upload')) throw new Error('synthetic buffer upload failure');
+      calls.push(['bufferData', data.byteLength]);
+    },
     bufferSubData: (_target, offset, data) => calls.push(['bufferSubData', offset, data.byteLength]),
     viewport() {}, clearColor() {}, clear() {}, enable() {}, blendFunc() {},
     useProgram() {}, getUniformLocation: () => ({}), uniform1f() {}, uniform2f() {},
@@ -53,10 +99,13 @@ function webglFixture() {
     width: 200, height: 160,
     ownerDocument: { createElement: () => ({ getContext: () => gl }) },
     getContext: (kind) => kind === 'webgl2' ? gl : null,
-    addEventListener: (...args) => calls.push(['addEventListener', ...args]),
+    addEventListener: (...args) => {
+      calls.push(['addEventListener', ...args]);
+      if (shouldFail('listener-install')) throw new Error('synthetic listener installation failure');
+    },
     removeEventListener: (...args) => calls.push(['removeEventListener', ...args]),
   };
-  return { calls, canvas };
+  return { calls, canvas, setFailure, resourceCounts };
 }
 
 const revision = Object.freeze({ identity: 0, order: 0, value: 0, geometry: 0, aggregate: 0, style: 0, level: 0 });
@@ -94,6 +143,31 @@ function projection() {
     batches: [],
     dataBatches,
   };
+}
+
+const webglInitializationFailures = Object.freeze([
+  ...Array.from({ length: 8 }, (_, index) => ['shader-allocation', index + 1]),
+  ...Array.from({ length: 8 }, (_, index) => ['shader-compile', index + 1]),
+  ...Array.from({ length: 4 }, (_, index) => ['program-allocation', index + 1]),
+  ...Array.from({ length: 4 }, (_, index) => ['program-link', index + 1]),
+  ['buffer-allocation', 1],
+  ['buffer-upload', 1],
+]);
+
+function assertBalancedResources(counts, label) {
+  for (const type of ['shaders', 'programs', 'buffers']) {
+    assert.equal(counts[type].created, counts[type].deleted, `${label}: ${type}`);
+  }
+}
+
+function assertBalancedResourceDelta(before, after, label) {
+  for (const type of ['shaders', 'programs', 'buffers']) {
+    assert.equal(
+      after[type].created - before[type].created,
+      after[type].deleted - before[type].deleted,
+      `${label}: ${type}`,
+    );
+  }
 }
 
 test('Canvas2D consumes all six semantic profiles in data space with per-primitive colors', () => {
@@ -160,6 +234,51 @@ test('WebGL2 applies a bounded partial upload only when the changed range crosse
   assert.equal(renderer.getDiagnostics().uploadedBytes, 8);
   assert.deepEqual(calls.findLast(([name]) => name === 'bufferSubData').slice(1), [8_000, 8]);
   renderer.disconnect();
+});
+
+test('WebGL2 construction rolls back every partial base-resource failure', () => {
+  for (const [kind, at] of webglInitializationFailures) {
+    const value = webglFixture();
+    value.setFailure(kind, at);
+    const result = tryCreateChartRenderer(value.canvas, { mode: 'webgl2' });
+    assert.equal(result.ok, false, `${kind}:${at}`);
+    assert.equal(result.error.code, 'invalid-boundary', `${kind}:${at}`);
+    assertBalancedResources(value.resourceCounts(), `${kind}:${at}`);
+  }
+
+  const listenerFailure = webglFixture();
+  listenerFailure.setFailure('listener-install', 2);
+  const result = tryCreateChartRenderer(listenerFailure.canvas, { mode: 'webgl2' });
+  assert.equal(result.ok, false);
+  assertBalancedResources(listenerFailure.resourceCounts(), 'listener-install:2');
+  assert.equal(listenerFailure.calls.filter(([name]) => name === 'removeEventListener').length, 2);
+});
+
+test('WebGL2 restoration rolls back every partial replacement and stays lost after failure', () => {
+  for (const [kind, at] of webglInitializationFailures) {
+    const value = webglFixture();
+    const renderer = createChartRenderer(value.canvas, { mode: 'webgl2' });
+    renderer.render(projection());
+    const lost = value.calls.find(([name, type]) => name === 'addEventListener' && type === 'webglcontextlost')[2];
+    const restored = value.calls.find(([name, type]) => name === 'addEventListener' && type === 'webglcontextrestored')[2];
+    lost({ preventDefault() {} });
+    assert.equal(renderer.getDiagnostics().liveResources, 0, `${kind}:${at}: lost`);
+
+    value.setFailure(kind, at);
+    const before = value.resourceCounts();
+    assert.throws(() => restored(), undefined, `${kind}:${at}`);
+    const after = value.resourceCounts();
+    assertBalancedResourceDelta(before, after, `${kind}:${at}`);
+    assert.equal(renderer.getDiagnostics().liveResources, 0, `${kind}:${at}: failed restore`);
+
+    const uploads = value.calls.filter(([name]) => name === 'bufferData').length;
+    const retained = value.resourceCounts();
+    renderer.render(projection());
+    renderer.flush();
+    assert.equal(value.calls.filter(([name]) => name === 'bufferData').length, uploads, `${kind}:${at}: lost render`);
+    assert.deepEqual(value.resourceCounts(), retained, `${kind}:${at}: lost resources`);
+    renderer.disconnect();
+  }
 });
 
 test('WebGL2 invalidates lost resources, restores the last projection, and ignores callbacks after disconnect', () => {
