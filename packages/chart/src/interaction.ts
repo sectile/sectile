@@ -157,7 +157,6 @@ export function reduceChartEvent<ID extends StableID>(
     if (!reduced.value.changed) return transition(state, [phase], false);
     if (controlled.view === true) return transition(state, [
       Object.freeze({ type: 'view-change-requested', view: reduced.value.state, phase: reduced.value.phase }),
-      phase,
     ], false);
     return changedState(state, { view: reduced.value.state }, [phase]);
   }
@@ -268,7 +267,10 @@ function validSelectionBounds<ID extends StableID>(axis: import('./contract.js')
 function reconcileSelection<ID extends StableID>(
   model: ChartModelState<ID>, selection: ChartSelection<ID>, view: ChartViewState<ID> | null,
 ): ChartResult<ChartSelection<ID>> {
-  if (selection.type !== 'points') return normalizeSelection(model, selection, view);
+  if (selection.type !== 'points') {
+    const normalized = normalizeSelection(model, selection, view);
+    return normalized.ok && sameSelection(selection, normalized.value) ? chartOK(selection) : normalized;
+  }
   const ids = selection.ids.filter((id) => model.indexOf(id) >= 0);
   return ids.length === selection.ids.length
     ? chartOK(selection)
@@ -292,7 +294,35 @@ function freezeState<ID extends StableID>(
 
 function sameState<ID extends StableID>(left: ChartState<ID>, right: ChartState<ID>): boolean {
   return left.generation === right.generation && left.activeDatum === right.activeDatum && left.cursor === right.cursor
-    && sameSelection(left.selection, right.selection) && left.view === right.view;
+    && sameSelection(left.selection, right.selection) && sameViewState(left.view, right.view);
+}
+
+function sameViewState<ID extends StableID>(left: ChartViewState<ID> | null, right: ChartViewState<ID> | null): boolean {
+  if (left === right) return true;
+  if (left === null || right === null || left.revision !== right.revision || left.axes.length !== right.axes.length) return false;
+  for (let index = 0; index < left.axes.length; index += 1) {
+    const a = left.axes[index];
+    const b = right.axes[index];
+    if (a === undefined || b === undefined || a.axisID !== b.axisID || a.orientation !== b.orientation || a.scale !== b.scale
+      || !sameViewWindow(a.base, b.base) || !sameViewWindow(a.initial ?? a.visible, b.initial ?? b.visible)
+      || !sameViewWindow(a.visible, b.visible) || a.minimumSpan !== b.minimumSpan || a.maximumSpan !== b.maximumSpan
+      || a.update !== b.update || a.followingEnd !== b.followingEnd || a.revision !== b.revision) return false;
+    if (a.categories === undefined || b.categories === undefined) {
+      if (a.categories !== b.categories) return false;
+    } else {
+      if (a.categories.length !== b.categories.length) return false;
+      for (let category = 0; category < a.categories.length; category += 1) {
+        if (a.categories[category] !== b.categories[category]) return false;
+      }
+    }
+  }
+  return true;
+}
+
+function sameViewWindow(left: import('./contract.js').ChartAxisViewWindow, right: import('./contract.js').ChartAxisViewWindow): boolean {
+  return left.kind === right.kind && (left.kind === 'continuous' && right.kind === 'continuous'
+    ? left.minimum === right.minimum && left.maximum === right.maximum
+    : left.kind === 'categorical' && right.kind === 'categorical' && left.start === right.start && left.end === right.end);
 }
 
 function normalizeView<ID extends StableID>(view: ChartViewState<ID> | null): ChartResult<ChartViewState<ID> | null> {

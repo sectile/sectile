@@ -402,7 +402,7 @@ test('zero accessibility limit disables built-in datum keyboard and focus projec
   connection.disconnect();
 });
 
-function navigableFixture() {
+function navigableFixture(controlled = false) {
   const value = fixture();
   const view = Object.freeze({ revision: 0, axes: Object.freeze([Object.freeze({
     axisID: 'x', orientation: 'x', scale: 'linear',
@@ -413,7 +413,7 @@ function navigableFixture() {
   })]) });
   const source = createChartController({
     model: value.controller.getModel().toModel(),
-    initialValues: { view },
+    ...(controlled ? { controlled: { view } } : { initialValues: { view } }),
   });
   const scale = {
     normalize: (datum) => datum,
@@ -442,7 +442,7 @@ function navigableFixture() {
       return typeof result === 'function' ? result.bind(target) : result;
     },
   });
-  return { ...value, controller };
+  return { ...value, controller, source, initialView: view };
 }
 
 test('direct gestures require a declared single-pointer control alternative', () => {
@@ -500,6 +500,24 @@ test('opt-in axis navigation derives touch action, conditionally cancels wheel, 
   assert.equal(value.canvas.style.touchAction, '');
   connection.disconnect();
   assert.deepEqual(connection.getLifecycleDiagnostics(), { listeners: 0, observers: 0, frames: 0, timers: 0, subscriptions: 0, overlayNodes: 0 });
+});
+
+test('controlled view settlement is announced only after owner synchronization', () => {
+  const value = navigableFixture(true);
+  const connection = createDOMChart({
+    root: value.root, canvas: value.canvas, controller: value.controller, renderer: value.renderer,
+  });
+  const status = value.root.querySelector('[role="status"]');
+  const requested = value.source.dispatch({
+    type: 'zoom-axis-view', axisID: 'x', factor: 2, phase: 'settled',
+  }).value;
+  const proposal = requested.commands.find((command) => command.type === 'view-change-requested').view;
+
+  assert.equal(status.textContent, '');
+  const accepted = value.source.syncControlledValues({ view: proposal });
+  assert.equal(accepted.ok, true);
+  assert.equal(status.textContent, 'Timeline range 35 to 65');
+  connection.disconnect();
 });
 
 test('pan and emulated pinch own one pointer mode, capture pointers, and release at settlement', () => {

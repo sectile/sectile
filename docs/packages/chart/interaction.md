@@ -69,4 +69,6 @@ Selection, cursor, active record, and all visible axis ranges can be controlled 
 
 A shared `view` value keeps several charts with matching axis IDs on the same range. When data changes, `update: 'preserve'` keeps the current range, `reset` returns to the new full range, and `follow-end` keeps a live time window attached to the newest values.
 
+A domain change is reconciled before controlled state is handed back to the owner. If a record referenced by controlled selection, cursor, or active state disappears, or a controlled `view` must move to the new axis domain under its update policy, the controller commits the domain-valid candidate and emits the matching change request. Synchronize that requested value instead of continuing to pass state from the old domain. Controlled view settlement is published only after the owner accepts a synchronized view, so DOM range announcements describe the committed range rather than a proposal.
+
 If a selected or active record disappears after an update, Sectile removes its ID from the interaction state. Call `controller.dispose()` when an application-created controller is no longer used.

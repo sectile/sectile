@@ -45,6 +45,42 @@ test('CHT-04: controlled ownership remains shape-stable and converges only throu
   assert.equal(controller.syncControlledValues({}).error.code, 'chart-controller-invalid');
 });
 
+test('controlled identity state reconciles to a new model domain and requests owner convergence', () => {
+  const controller = createChartController({
+    ...options(),
+    controlled: {
+      activeDatum: '1',
+      cursor: '1',
+      selection: { type: 'points', ids: ['1'] },
+    },
+  });
+  const commands = [];
+  controller.subscribeCommands((command) => commands.push(command));
+
+  const replaced = controller.replaceModel({
+    layers: [{ id: 'points', profile: 'point', data: [{ id: 1, x: 0, y: 0 }] }],
+  });
+  assert.equal(replaced.ok, true);
+  assert.equal(replaced.value.state.activeDatum, null);
+  assert.equal(replaced.value.state.cursor, null);
+  assert.deepEqual(replaced.value.state.selection, { type: 'points', ids: [] });
+  assert.deepEqual(commands.map((command) => command.type), [
+    'active-change-requested', 'cursor-change-requested', 'selection-change-requested', 'render-requested',
+  ]);
+
+  const stale = controller.syncControlledValues({
+    activeDatum: '1', cursor: '1', selection: { type: 'points', ids: ['1'] },
+  });
+  assert.equal(stale.ok, false);
+  assert.equal(stale.error.code, 'chart-datum-missing');
+
+  const accepted = controller.syncControlledValues({
+    activeDatum: null, cursor: null, selection: { type: 'points', ids: [] },
+  });
+  assert.equal(accepted.ok, true);
+  assert.equal(accepted.value, replaced.value);
+});
+
 test('initial values seed state without claiming controlled ownership', () => {
   const controller = createChartController({ ...options(), initialValues: { cursor: 1 } });
   assert.equal(controller.getSnapshot().state.cursor, 1);
@@ -190,6 +226,48 @@ test('definition-backed controllers reject raw model patches without changing re
   assert.equal(controller.getSnapshot(), initialSnapshot);
   assert.equal(controller.getDefinition().diagnostics.resolvedDatums, 2);
   assert.equal(controller.project({ viewport: { width: 320, height: 180 } }).value, initialProjection);
+});
+
+test('controlled view domain reconciliation requests owner acceptance before settlement', () => {
+  const initialDefinition = definition([
+    { id: 1, recordedAt: 0, amount: 4 },
+    { id: 2, recordedAt: 1_000, amount: 8 },
+  ]);
+  const capabilities = [{ axisID: 7, update: 'follow-end' }];
+  const seed = createChartController({ definition: initialDefinition, viewCapabilities: capabilities });
+  const ownerView = seed.getSnapshot().state.view;
+  const controller = createChartController({
+    definition: initialDefinition,
+    viewCapabilities: capabilities,
+    controlled: { view: ownerView },
+  });
+  const commands = [];
+  controller.subscribeCommands((command) => commands.push(command));
+
+  const replaced = controller.replaceDefinition(definition([
+    { id: 1, recordedAt: 0, amount: 4 },
+    { id: 2, recordedAt: 1_000, amount: 8 },
+    { id: 3, recordedAt: 2_000, amount: 12 },
+  ]));
+  assert.equal(replaced.ok, true);
+  assert.deepEqual(replaced.value.state.view.axes[0].base, { kind: 'continuous', minimum: 0, maximum: 2_000 });
+  assert.deepEqual(replaced.value.state.view.axes[0].visible, { kind: 'continuous', minimum: 1_000, maximum: 2_000 });
+  assert.deepEqual(commands.map((command) => command.type), ['view-change-requested', 'render-requested']);
+  const proposal = commands.find((command) => command.type === 'view-change-requested');
+  assert.equal(proposal.phase, 'settled');
+
+  const stale = controller.syncControlledValues({ view: ownerView });
+  assert.equal(stale.ok, false);
+  assert.equal(stale.error.code, 'chart-view-invalid');
+
+  const accepted = controller.syncControlledValues({ view: proposal.view });
+  assert.equal(accepted.ok, true);
+  assert.equal(accepted.value, replaced.value);
+  assert.deepEqual(commands.map((command) => command.type), [
+    'view-change-requested', 'render-requested', 'view-phase',
+  ]);
+  assert.equal(commands.at(-1).phase, 'settled');
+  seed.dispose();
 });
 
 test('CHT-05: declarative projection cache is equivalent and bypasses ineligible inputs', () => {

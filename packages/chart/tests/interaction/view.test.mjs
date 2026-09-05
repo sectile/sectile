@@ -205,7 +205,7 @@ test('chart interaction preserves controlled view ownership and emits semantic p
     type: 'zoom-axis-view', axisID: 'linear', factor: 2, phase: 'end',
   }, { view: true }).value;
   assert.equal(transition.state, state);
-  assert.deepEqual(transition.commands.map((command) => command.type), ['view-change-requested', 'view-phase']);
+  assert.deepEqual(transition.commands.map((command) => command.type), ['view-change-requested']);
   assert.equal(transition.commands[0].phase, 'end');
 
   const regional = reduceChartEvent(model, state, {
@@ -231,14 +231,18 @@ test('controller view ownership converges only through controlled synchronizatio
     ] }] },
     controlled: { view },
   });
+  const commands = [];
+  controller.subscribeCommands((command) => commands.push(command.type));
   const request = controller.dispatch({ type: 'zoom-axis-view', axisID: 'linear', factor: 2 }).value;
   assert.equal(request.snapshot.revision, 0);
   assert.notEqual(request.snapshot.state.view, view);
   assert.deepEqual(request.snapshot.state.view, view);
+  assert.deepEqual(commands, ['view-change-requested']);
   const requestedView = request.commands.find((command) => command.type === 'view-change-requested').view;
   const synced = controller.syncControlledValues({ view: requestedView }).value;
   assert.equal(synced.revision, 1);
   assert.notEqual(synced.state.view, requestedView);
   assert.deepEqual(synced.state.view, requestedView);
+  assert.deepEqual(commands, ['view-change-requested', 'render-requested', 'view-phase']);
   assert.equal(controller.syncControlledValues({}).error.code, 'chart-controller-invalid');
 });

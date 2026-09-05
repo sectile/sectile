@@ -35,6 +35,7 @@ import {
   tryCreateChartAxisViewState,
   reconcileChartAxisViewState,
   type ChartAxisViewCapability,
+  type ChartViewPhase,
 } from './view.js';
 
 const MAX_CHART_PUBLICATIONS_PER_DRAIN = 1_024;
@@ -143,6 +144,7 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
   #publicationCount = 0;
   #drainingPublications = false;
   #projectionCache: ProjectionCache<ID> | null = null;
+  #pendingViewAcceptance: PendingViewAcceptance<ID> | null = null;
   #disposed = false;
 
   public constructor(
@@ -174,7 +176,12 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     const nextModel = tryReplaceChartModel(this.#model, input);
     if (!nextModel.ok) return nextModel;
     if (nextModel.value === this.#model && this.#definition === null) return chartOK(this.#snapshot);
-    return this.#commitModel(nextModel.value, null, null, Object.freeze([]));
+    return this.#commitModel(
+      nextModel.value,
+      this.#controlled.view === true ? this.#snapshot.state.view : null,
+      null,
+      Object.freeze([]),
+    );
   }
 
   public replaceDefinition<Datum>(
@@ -190,11 +197,15 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     if (!next.ok) return next;
     const capabilities = freezeCapabilities(viewCapabilities);
     let view = this.#snapshot.state.view;
-    if (capabilities.length === 0) view = null;
+    if (capabilities.length === 0) {
+      if (this.#controlled.view !== true) view = null;
+    }
     else if (view === null) {
-      const created = tryCreateChartAxisViewState(next.value.axes, capabilities);
-      if (!created.ok) return created;
-      view = created.value;
+      if (this.#controlled.view !== true) {
+        const created = tryCreateChartAxisViewState(next.value.axes, capabilities);
+        if (!created.ok) return created;
+        view = created.value;
+      }
     }
     else {
       const reconciled = reconcileChartAxisViewState(view, next.value.axes, capabilities);
@@ -230,30 +241,47 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     if (values === null || typeof values !== 'object' || !sameControlledShape(values, this.#controlled)) {
       return invalidController('Controlled chart value shape must remain stable for the controller lifetime.');
     }
+    const pendingView = this.#pendingViewAcceptance;
+    const incomingView = this.#controlled.view === true ? values.view ?? null : null;
+    if (pendingView?.requireDomainMatch === true && !sameViewDomain(incomingView, pendingView.proposed)) {
+      return chartFail(
+        'transition-rejection',
+        'chart-view-invalid',
+        'Controlled Chart view must match the current reconciled definition domain before it can be accepted.',
+      );
+    }
     const next = reconcileChartState(this.#snapshot.state, this.#model, values);
     if (!next.ok) return next;
-    if (next.value === this.#snapshot.state) {
-      this.#controlledValues = controlledValuesFromState(this.#snapshot.state, this.#controlled);
-      return chartOK(this.#snapshot);
-    }
-    if (this.#snapshot.revision === Number.MAX_SAFE_INTEGER) return revisionExhausted();
-    const reserved = this.#reservePublication();
-    if (!reserved.ok) return reserved;
-    const projectionViewChanged = next.value.view !== this.#snapshot.state.view;
-    const cursorChanged = next.value.cursor !== this.#snapshot.state.cursor;
-    const commands: ChartCommand<ID>[] = [Object.freeze({
-      type: 'render-requested',
-      generation: next.value.generation,
-    })];
-    if (cursorChanged && next.value.cursor !== null) {
+    const previousState = this.#snapshot.state;
+    const acceptedViewPhases = pendingView !== null && this.#controlled.view === true
+      && !sameChartView(incomingView, pendingView.previous)
+      ? pendingView.phases
+      : [];
+    const stateChanged = next.value !== previousState;
+    const commands: ChartCommand<ID>[] = [];
+    if (stateChanged) commands.push(Object.freeze({ type: 'render-requested', generation: next.value.generation }));
+    if (stateChanged && next.value.cursor !== previousState.cursor && next.value.cursor !== null) {
       commands.push(Object.freeze({ type: 'focus-datum', id: next.value.cursor }));
       commands.push(Object.freeze({ type: 'announce-datum', id: next.value.cursor }));
     }
-    this.#snapshot = createRevisionSnapshot(next.value, this.#snapshot.revision + 1);
+    for (const phase of acceptedViewPhases) {
+      commands.push(Object.freeze({ type: 'view-phase', axisID: phase.axisID, phase: phase.phase, changed: true }));
+    }
+    if (!stateChanged && commands.length === 0) {
+      this.#controlledValues = controlledValuesFromState(previousState, this.#controlled);
+      this.#pendingViewAcceptance = null;
+      return chartOK(this.#snapshot);
+    }
+    if (stateChanged && this.#snapshot.revision === Number.MAX_SAFE_INTEGER) return revisionExhausted();
+    const reserved = this.#reservePublication();
+    if (!reserved.ok) return reserved;
+    const projectionViewChanged = stateChanged && !sameChartView(next.value.view, previousState.view);
+    if (stateChanged) this.#snapshot = createRevisionSnapshot(next.value, this.#snapshot.revision + 1);
     const committedSnapshot = this.#snapshot;
-    this.#controlledValues = controlledValuesFromState(next.value, this.#controlled);
+    this.#controlledValues = controlledValuesFromState(committedSnapshot.state, this.#controlled);
+    this.#pendingViewAcceptance = null;
     if (projectionViewChanged) this.#projectionCache = null;
-    this.#publish(this.#publication(committedSnapshot, commands, true));
+    this.#publish(this.#publication(committedSnapshot, commands, stateChanged));
     return chartOK(committedSnapshot);
   }
 
@@ -271,8 +299,17 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     if (reduced.value.changed && this.#snapshot.revision === Number.MAX_SAFE_INTEGER) return revisionExhausted();
     const reserved = this.#reservePublication();
     if (!reserved.ok) return reserved;
+    const requestedView = reduced.value.commands.find((command) => command.type === 'view-change-requested');
+    if (requestedView?.type === 'view-change-requested' && 'axisID' in event) {
+      this.#pendingViewAcceptance = Object.freeze({
+        previous: this.#controlledValues.view ?? null,
+        proposed: requestedView.view,
+        phases: Object.freeze([Object.freeze({ axisID: event.axisID, phase: requestedView.phase })]),
+        requireDomainMatch: false,
+      });
+    }
     if (reduced.value.changed) {
-      const projectionViewChanged = reduced.value.state.view !== this.#snapshot.state.view;
+      const projectionViewChanged = !sameChartView(reduced.value.state.view, this.#snapshot.state.view);
       this.#snapshot = createRevisionSnapshot(reduced.value.state, this.#snapshot.revision + 1);
       if (projectionViewChanged) this.#projectionCache = null;
     }
@@ -333,6 +370,7 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     this.#listeners.clear();
     this.#snapshotListeners.clear();
     this.#projectionCache = null;
+    this.#pendingViewAcceptance = null;
     if (!this.#drainingPublications) {
       this.#publicationQueue.length = 0;
       this.#publicationHead = 0;
@@ -347,10 +385,32 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     capabilities: readonly ChartAxisViewCapability<ID>[] = this.#viewCapabilities,
   ): ChartResult<RevisionSnapshot<ChartState<ID>>> {
     if (this.#snapshot.revision === Number.MAX_SAFE_INTEGER) return revisionExhausted();
-    const state = reconcileChartState(this.#snapshot.state, model, this.#controlled.view === true
-      ? this.#controlledValues
-      : { ...this.#controlledValues, view });
+    const previousState = this.#snapshot.state;
+    const state = reconcileChartState(previousState, model, { view });
     if (!state.ok) return state;
+    const commands: ChartCommand<ID>[] = [];
+    if (this.#controlled.activeDatum === true && state.value.activeDatum !== (this.#controlledValues.activeDatum ?? null)) {
+      commands.push(Object.freeze({ type: 'active-change-requested', id: state.value.activeDatum }));
+    }
+    if (this.#controlled.cursor === true && state.value.cursor !== (this.#controlledValues.cursor ?? null)) {
+      commands.push(Object.freeze({ type: 'cursor-change-requested', id: state.value.cursor }));
+    }
+    if (this.#controlled.selection === true && !sameChartSelection(state.value.selection, this.#controlledValues.selection)) {
+      commands.push(Object.freeze({ type: 'selection-change-requested', selection: state.value.selection }));
+    }
+    let pendingView: PendingViewAcceptance<ID> | null = null;
+    if (this.#controlled.view === true && !sameChartView(state.value.view, this.#controlledValues.view ?? null)
+      && state.value.view !== null) {
+      const phases = changedViewPhases(this.#controlledValues.view ?? null, state.value.view, 'settled');
+      commands.push(Object.freeze({ type: 'view-change-requested', view: state.value.view, phase: 'settled' }));
+      pendingView = Object.freeze({
+        previous: this.#controlledValues.view ?? null,
+        proposed: state.value.view,
+        phases,
+        requireDomainMatch: true,
+      });
+    }
+    commands.push(Object.freeze({ type: 'render-requested', generation: model.generation }));
     const reserved = this.#reservePublication();
     if (!reserved.ok) return reserved;
     this.#model = model;
@@ -359,10 +419,8 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     this.#projectionCache = null;
     this.#snapshot = createRevisionSnapshot(state.value, this.#snapshot.revision + 1);
     const committedSnapshot = this.#snapshot;
-    this.#controlledValues = controlledValuesFromState(state.value, this.#controlled);
-    this.#publish(this.#publication(committedSnapshot, [
-      Object.freeze({ type: 'render-requested', generation: model.generation }),
-    ], true));
+    this.#pendingViewAcceptance = pendingView;
+    this.#publish(this.#publication(committedSnapshot, commands, true));
     return chartOK(committedSnapshot);
   }
 
@@ -453,6 +511,101 @@ interface ChartPublication<ID extends StableID> {
   readonly notifySnapshot: boolean;
   readonly snapshotListeners: readonly ((snapshot: RevisionSnapshot<ChartState<ID>>) => void)[];
   readonly commandListeners: readonly ((command: ChartCommand<ID>) => void)[];
+}
+
+interface PendingViewPhase<ID extends StableID> {
+  readonly axisID: ID;
+  readonly phase: ChartViewPhase;
+}
+
+interface PendingViewAcceptance<ID extends StableID> {
+  readonly previous: ChartState<ID>['view'];
+  readonly proposed: ChartState<ID>['view'];
+  readonly phases: readonly PendingViewPhase<ID>[];
+  readonly requireDomainMatch: boolean;
+}
+
+function sameChartSelection<ID extends StableID>(
+  left: import('./interaction.js').ChartSelection<ID>,
+  right: import('./interaction.js').ChartSelection<ID> | undefined,
+): boolean {
+  if (right === undefined || left.type !== right.type) return false;
+  if (left.type === 'axis-interval' && right.type === 'axis-interval') {
+    return left.axisID === right.axisID && left.start === right.start && left.end === right.end;
+  }
+  if (left.type === 'domain-region' && right.type === 'domain-region') {
+    return left.xAxisID === right.xAxisID && left.xStart === right.xStart && left.xEnd === right.xEnd
+      && left.yAxisID === right.yAxisID && left.yStart === right.yStart && left.yEnd === right.yEnd;
+  }
+  if (left.type !== 'points' || right.type !== 'points' || left.ids.length !== right.ids.length) return false;
+  for (let index = 0; index < left.ids.length; index += 1) if (left.ids[index] !== right.ids[index]) return false;
+  return true;
+}
+
+function sameChartView<ID extends StableID>(left: ChartState<ID>['view'], right: ChartState<ID>['view']): boolean {
+  if (left === right) return true;
+  if (left === null || right === null || left.revision !== right.revision || left.axes.length !== right.axes.length) return false;
+  for (let index = 0; index < left.axes.length; index += 1) {
+    const a = left.axes[index];
+    const b = right.axes[index];
+    if (a === undefined || b === undefined || !sameChartAxisView(a, b)) return false;
+  }
+  return true;
+}
+
+function sameViewDomain<ID extends StableID>(left: ChartState<ID>['view'], right: ChartState<ID>['view']): boolean {
+  if (left === right) return true;
+  if (left === null || right === null || left.axes.length !== right.axes.length) return false;
+  for (let index = 0; index < left.axes.length; index += 1) {
+    const a = left.axes[index];
+    const b = right.axes[index];
+    if (a === undefined || b === undefined || !sameChartAxisDomain(a, b)) return false;
+  }
+  return true;
+}
+
+function changedViewPhases<ID extends StableID>(
+  previous: ChartState<ID>['view'],
+  next: NonNullable<ChartState<ID>['view']>,
+  phase: ChartViewPhase,
+): readonly PendingViewPhase<ID>[] {
+  const previousAxes = new Map(previous?.axes.map((axis) => [axis.axisID, axis]) ?? []);
+  const phases: PendingViewPhase<ID>[] = [];
+  for (const axis of next.axes) {
+    const prior = previousAxes.get(axis.axisID);
+    if (prior === undefined || !sameChartAxisView(prior, axis)) phases.push(Object.freeze({ axisID: axis.axisID, phase }));
+  }
+  return Object.freeze(phases);
+}
+
+function sameChartAxisView<ID extends StableID>(
+  left: NonNullable<ChartState<ID>['view']>['axes'][number],
+  right: NonNullable<ChartState<ID>['view']>['axes'][number],
+): boolean {
+  return sameChartAxisDomain(left, right) && sameViewWindow(left.visible, right.visible)
+    && left.followingEnd === right.followingEnd && left.revision === right.revision;
+}
+
+function sameChartAxisDomain<ID extends StableID>(
+  left: NonNullable<ChartState<ID>['view']>['axes'][number],
+  right: NonNullable<ChartState<ID>['view']>['axes'][number],
+): boolean {
+  if (left.axisID !== right.axisID || left.orientation !== right.orientation || left.scale !== right.scale
+    || !sameViewWindow(left.base, right.base) || !sameViewWindow(left.initial ?? left.visible, right.initial ?? right.visible)
+    || left.minimumSpan !== right.minimumSpan || left.maximumSpan !== right.maximumSpan || left.update !== right.update) return false;
+  if (left.categories === undefined || right.categories === undefined) return left.categories === right.categories;
+  if (left.categories.length !== right.categories.length) return false;
+  for (let index = 0; index < left.categories.length; index += 1) if (left.categories[index] !== right.categories[index]) return false;
+  return true;
+}
+
+function sameViewWindow(
+  left: import('./contract.js').ChartAxisViewWindow,
+  right: import('./contract.js').ChartAxisViewWindow,
+): boolean {
+  return left.kind === right.kind && (left.kind === 'continuous' && right.kind === 'continuous'
+    ? left.minimum === right.minimum && left.maximum === right.maximum
+    : left.kind === 'categorical' && right.kind === 'categorical' && left.start === right.start && left.end === right.end);
 }
 
 function sameCapabilities<ID extends StableID>(
