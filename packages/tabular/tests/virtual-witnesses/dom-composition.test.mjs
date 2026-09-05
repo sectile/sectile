@@ -74,8 +74,11 @@ test('TAB-VIW-01: raw Virtual consumes adapter state strategy and locators witho
   };
   const adapter = createDataGridVirtualAdapter({ projection, rowExtents: { kind: 'uniform', extent: { kind: 'estimated', value: 30 } }, columnExtents: { kind: 'uniform', extent: { kind: 'estimated', value: 100 } } });
   const root = new FakeElement();
+  const surface = new FakeElement();
+  root.append(surface);
   const virtualizer = createVirtualizer({
-    root,
+    scrollport: root,
+    surface,
     state: adapter.state,
     strategy: adapter.strategy,
     readViewport: () => ({ x: 0, y: 0, width: 100, height: 30 }),
@@ -95,6 +98,8 @@ test('TAB-VIW-02: off-window reveal uses adapter locator then registration compl
   focused = null;
   timeline = [];
   const root = new FakeElement();
+  const surface = new FakeElement();
+  root.append(surface);
   let adapter;
   let connection;
   let virtualizer;
@@ -109,7 +114,7 @@ test('TAB-VIW-02: off-window reveal uses adapter locator then registration compl
       assert.notEqual(located, null);
       assert.equal(virtualizer.scrollTo(located.id).ok, true);
       timeline.push('scroll');
-      root.append(second);
+      surface.append(second);
       assert.equal(connection.registerCell(second, { cell: command.cell, expectedProjectionGeneration: command.expectedProjectionGeneration }).ok, true);
       timeline.push('register');
     },
@@ -117,7 +122,8 @@ test('TAB-VIW-02: off-window reveal uses adapter locator then registration compl
   assert.equal(connection.synchronizeView(response(connection.controller)).ok, true);
   adapter = createDataGridVirtualAdapter({ projection: connection.getProjection(), rowExtents: { kind: 'uniform', extent: { kind: 'estimated', value: 30 } }, columnExtents: { kind: 'uniform', extent: { kind: 'estimated', value: 100 } } });
   virtualizer = createVirtualizer({
-    root,
+    scrollport: root,
+    surface,
     state: adapter.state,
     strategy: adapter.strategy,
     readViewport: () => ({ x: 0, y: 0, width: 100, height: 30 }),

@@ -8,13 +8,13 @@
       "id": "TAB-VIW-01",
       "title": "TAB-VIW-01: raw Virtual consumes adapter state strategy and locators without an application mapper",
       "file": "tests/virtual-witnesses/dom-composition.test.mjs",
-      "sha256": "963b17b1d1aafc8231b41b591aab6c060ccd458cfa2ab24ee27633ecf7f370cc"
+      "sha256": "eb9a39e7ba3db998243f260bde4d04afe7480ec75edf9bf897eb5680267ba062"
     },
     {
       "id": "TAB-VIW-02",
       "title": "TAB-VIW-02: off-window reveal uses adapter locator then registration completes DOM focus",
       "file": "tests/virtual-witnesses/dom-composition.test.mjs",
-      "sha256": "963b17b1d1aafc8231b41b591aab6c060ccd458cfa2ab24ee27633ecf7f370cc"
+      "sha256": "eb9a39e7ba3db998243f260bde4d04afe7480ec75edf9bf897eb5680267ba062"
     }
   ],
   "expectedFailures": [
