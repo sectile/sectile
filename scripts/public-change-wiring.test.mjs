@@ -13,28 +13,15 @@ test('full deterministic verification retains every public-change gate independe
   const result = spawnSync(process.execPath, ['scripts/verify.mjs', '--full', '--explain'], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   const plan = JSON.parse(result.stdout);
-  assert.deepEqual(
-    manifest.checks.map((check) => ({
-      check,
-      stage: ({
-        'public-signatures': 'public signatures',
-        'breaking-changes': 'breaking changes',
-        'workstream-ownership': 'workstream ownership',
-        'consumer-bundles': 'consumer bundles',
-        'consumer-install': 'consumer install',
-      })[check],
-    })),
-    [
-      { check: 'public-signatures', stage: 'public signatures' },
-      { check: 'breaking-changes', stage: 'breaking changes' },
-      { check: 'workstream-ownership', stage: 'workstream ownership' },
-      { check: 'consumer-bundles', stage: 'consumer bundles' },
-      { check: 'consumer-install', stage: 'consumer install' },
-    ],
-  );
-  for (const command of ['public signatures', 'breaking changes', 'workstream ownership', 'consumer bundles', 'consumer install']) {
-    assert.ok(plan.commands.includes(command), `missing full verification command: ${command}`);
+  const unitIDs = new Set(plan.units.map(({ id }) => id));
+  for (const check of ['public-signatures', 'breaking-changes', 'workstream-ownership', 'consumer-install']) {
+    assert.ok(unitIDs.has(check), `missing full verification unit: ${check}`);
   }
+  const bundleUnits = plan.units.filter(({ id }) => id.startsWith('consumer-bundles:'));
+  const bundlePackages = new Set(bundleUnits.map(({ id }) => id.split(':')[1]));
+  assert.deepEqual(bundlePackages, new Set(['core', 'chart', 'form', 'temporal', 'virtual', 'terminal', 'tabular', 'dom', 'vue']));
+  assert.ok(bundleUnits.some(({ id }) => id === 'consumer-bundles:vue:1-of-4'));
+  assert.ok(bundleUnits.some(({ id }) => id === 'consumer-bundles:virtual'));
   assert.ok(plan.stages.includes('consumer verification'));
   assert.equal(plan.stages.includes('public change gates'), false);
 });

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { bundleFixture, deriveFixtures } from './bundle.mjs';
-import { validateBaseline, validateCurrentResults } from './check.mjs';
+import { selectFixtureShard, validateBaseline, validateCurrentResults } from './check.mjs';
 import {
   PACKAGE_NAMES,
   deriveSurfaceFragment,
@@ -13,10 +13,19 @@ import {
 
 const repoRoot = resolve('.');
 const mode = process.argv[2] ?? 'check';
-assert.ok(mode === 'record' || mode === 'check', 'Usage: run.mjs <record|check> [package ...]');
-const requestedPackages = process.argv.slice(3).map(normalizePackageName);
+assert.ok(mode === 'record' || mode === 'check', 'Usage: run.mjs <record|check> [package ...] [--shard=<index>/<count>]');
+const arguments_ = process.argv.slice(3).filter((argument) => argument !== '--');
+const shardArguments = arguments_.filter((argument) => argument.startsWith('--shard='));
+assert.ok(shardArguments.length <= 1, 'consumer bundle verification accepts at most one --shard option');
+const unexpectedArguments = arguments_.filter((argument) => argument.startsWith('--') && !argument.startsWith('--shard='));
+assert.deepEqual(unexpectedArguments, [], `unexpected consumer bundle arguments: ${unexpectedArguments.join(', ')}`);
+const shard = shardArguments.length === 0 ? undefined : parseShard(shardArguments[0].slice('--shard='.length));
+const requestedPackages = arguments_.filter((argument) => !argument.startsWith('--')).map(normalizePackageName);
 const packageNames = requestedPackages.length === 0 ? PACKAGE_NAMES : Object.freeze([...new Set(requestedPackages)]);
-if (mode === 'record') assert.deepEqual(packageNames, PACKAGE_NAMES, 'record requires the complete package surface set');
+if (mode === 'record') {
+  assert.deepEqual(packageNames, PACKAGE_NAMES, 'record requires the complete package surface set');
+  assert.equal(shard, undefined, 'record does not accept --shard');
+}
 
 const allFragments = await loadSurfaceFragments(repoRoot);
 const fragments = allFragments.filter((entry) => packageNames.includes(entry.package));
@@ -26,7 +35,8 @@ for (const packageName of packageNames) {
   validateSurfaceFragment(fragment, await deriveSurfaceFragment(repoRoot, packageName));
 }
 
-const fixtures = deriveFixtures(fragments);
+const allFixtures = deriveFixtures(fragments);
+const fixtures = shard === undefined ? allFixtures : selectFixtureShard(allFixtures, shard);
 const concurrency = readConcurrency();
 let completedFixtures = 0;
 const results = (await mapWithConcurrency(fixtures, concurrency, async (fixture) => {
@@ -42,6 +52,7 @@ validateCurrentResults(fixtures, results);
 const report = Object.freeze({
   schemaVersion: 1,
   packages: Object.freeze([...packageNames]),
+  shard,
   fixtures: Object.freeze(fixtures),
   results: Object.freeze(results),
 });
@@ -57,10 +68,22 @@ console.log(JSON.stringify({
   status: 'passed',
   mode,
   packages: packageNames,
+  shard: shard ?? null,
   surfaces: fragments.reduce((total, fragment) => total + fragment.surfaces.length, 0),
   fixtures: fixtures.length,
   bundles: results.length,
 }));
+
+function parseShard(value) {
+  const match = /^(\d+)\/(\d+)$/u.exec(value);
+  assert.ok(match !== null, `invalid consumer bundle shard: ${value}; expected <index>/<count>`);
+  const index = Number(match[1]);
+  const count = Number(match[2]);
+  assert.ok(Number.isSafeInteger(index) && index >= 1, `invalid consumer bundle shard index: ${value}`);
+  assert.ok(Number.isSafeInteger(count) && count >= 1, `invalid consumer bundle shard count: ${value}`);
+  assert.ok(index <= count, `consumer bundle shard index exceeds count: ${value}`);
+  return Object.freeze({ index, count });
+}
 
 function normalizePackageName(value) {
   const packageName = value.startsWith('@sectile/') ? value.slice('@sectile/'.length) : value;

@@ -1,4 +1,4 @@
-import { mkdirSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { withArtifactSession } from './lib/artifact-session.mjs';
@@ -13,6 +13,8 @@ import { runVerificationSteps } from './lib/verification-runner.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const publicationPackDirectory = join(root, '.tasks', 'verification', 'publication-packs');
+const consumerBundleBaselinePath = join(root, 'verification', 'consumer-bundles', 'baseline.json');
+const consumerBundleTargetFixturesPerUnit = 32;
 const formConsumerPackages = Object.freeze(['core', 'form', 'temporal', 'dom', 'terminal', 'vue']);
 const rawArguments = process.argv.slice(2).filter((argument) => argument !== '--');
 const quietRequested = rawArguments.includes('--quiet');
@@ -23,12 +25,22 @@ const releaseRequested = rawArguments.includes('--release');
 const explainRequested = rawArguments.includes('--explain');
 const continueOnFailure = rawArguments.includes('--continue');
 const exactRequested = rawArguments.includes('--exact');
-const targetArguments = rawArguments.filter((argument) => !argument.startsWith('--'));
-const knownFlags = new Set(['--quiet', '--verbose', '--compat', '--full', '--release', '--explain', '--continue', '--exact']);
-const unknownFlags = rawArguments.filter((argument) => argument.startsWith('--') && !knownFlags.has(argument));
+const listUnitsRequested = rawArguments.includes('--list-units');
+const unitOptionIndex = rawArguments.indexOf('--unit');
+const unitRequested = unitOptionIndex === -1 ? null : rawArguments[unitOptionIndex + 1];
+if (unitOptionIndex !== -1 && (unitRequested === undefined || unitRequested.startsWith('--'))) {
+  throw new Error('--unit requires one verification unit ID');
+}
+const parsedArguments = unitOptionIndex === -1
+  ? rawArguments
+  : rawArguments.filter((_, index) => index !== unitOptionIndex && index !== unitOptionIndex + 1);
+const targetArguments = parsedArguments.filter((argument) => !argument.startsWith('--'));
+const knownFlags = new Set(['--quiet', '--verbose', '--compat', '--full', '--release', '--explain', '--continue', '--exact', '--list-units']);
+const unknownFlags = parsedArguments.filter((argument) => argument.startsWith('--') && !knownFlags.has(argument));
 if (unknownFlags.length > 0) throw new Error(`unexpected verification flags: ${unknownFlags.join(', ')}`);
 if (quietRequested && verbose) throw new Error('verification cannot be both quiet and verbose');
 if (fullRequested && releaseRequested) throw new Error('verification cannot be both full and release certification');
+if (listUnitsRequested && unitRequested !== null) throw new Error('--list-units cannot be combined with --unit');
 if (compatibility && (fullRequested || releaseRequested)) {
   throw new Error('compatibility verification cannot be combined with full or release certification');
 }
@@ -124,8 +136,18 @@ const packagePipelines = Object.freeze({
   ],
 });
 
-const steps = compatibility ? compatibilitySteps() : verificationSteps();
-if (explainRequested) {
+const plannedSteps = compatibility ? compatibilitySteps() : verificationSteps();
+const plannedUnits = verificationUnits(plannedSteps);
+const selectedUnit = unitRequested === null ? null : selectVerificationUnit(plannedUnits, unitRequested);
+const steps = selectedUnit === null ? plannedSteps : [unitStep(selectedUnit)];
+if (listUnitsRequested) {
+  process.stdout.write(`${JSON.stringify({
+    mode: modeLabel,
+    target: targetLabel,
+    units: plannedUnits.map(describeUnit),
+  }, null, 2)}\n`);
+  process.exitCode = 0;
+} else if (explainRequested) {
   process.stdout.write(`${JSON.stringify({
     mode: modeLabel,
     target: targetLabel,
@@ -139,6 +161,8 @@ if (explainRequested) {
     workspaceGates: [...workspaceGates],
     certificationPerformance: releaseRequested,
     failFast: !continueOnFailure,
+    selectedUnit: selectedUnit?.id ?? null,
+    units: plannedUnits.map(describeUnit),
     stages: steps.map(({ label }) => label),
     commands: steps.flatMap(({ commands }) => commands.map(({ detail }) => detail)),
   }, null, 2)}\n`);
@@ -159,22 +183,22 @@ function verificationSteps() {
     ? fullPackageWaveSteps((name) => packagePipelines[name])
     : packageSteps((name) => packagePipelines[name]);
   if (selectedPackages.has('@sectile/tabular')) {
-    result.push(packageScriptStep('Tabular raw Virtual witnesses', '@sectile/tabular', ['test:virtual:witnesses']));
+    result.push(packageScriptStep('tabular:virtual-witnesses', 'Tabular raw Virtual witnesses', '@sectile/tabular', ['test:virtual:witnesses']));
   }
   const reproducibleBuilds = reproducibleBuildStep();
   if (reproducibleBuilds !== null) result.push(reproducibleBuilds);
   const publicationArtifacts = publicationArtifactStep();
   if (publicationArtifacts !== null) result.push(publicationArtifacts);
   if (selectedPackages.has('@sectile/form')) {
-    result.push(commandStep('Form packed consumer verification', process.execPath, [
+    result.push(commandStep('form:packed-consumer', 'Form packed consumer verification', process.execPath, [
       join(root, 'verification', 'consumer-install', 'form.mjs'),
       `--tarball-directory=${publicationPackDirectory}`,
-    ]));
+    ], { requires: ['publication-artifacts'] }));
   }
   if (includeDocumentation) {
     const documentationScripts = ['generate:check', 'typecheck', 'test'];
     if (buildDocumentationSite) documentationScripts.push('build');
-    result.push(packageScriptStep('documentation verification', '@sectile/docs', documentationScripts));
+    result.push(packageScriptStep('documentation', 'documentation verification', '@sectile/docs', documentationScripts));
   }
   if (fullRepositoryVerification) result.push(...workspaceContractSteps({ includePerformance: releaseRequested }));
   else result.push(...affectedWorkspaceContractSteps());
@@ -186,7 +210,7 @@ function reproducibleBuildStep() {
     .filter(({ name }) => selectedPackages.has(name))
     .map(({ directory }) => directory);
   if (packageNames.length === 0) return null;
-  return commandStep('reproducible package builds', process.execPath, [
+  return commandStep('reproducible-builds', 'reproducible package builds', process.execPath, [
     join(root, 'scripts', 'check-reproducible-builds.mjs'),
     '--prepared',
     ...packageNames,
@@ -198,7 +222,7 @@ function publicationArtifactStep() {
   const packageNames = fullRepositoryVerification
     ? graph.order.map(({ directory }) => directory)
     : formConsumerPackages;
-  return commandStep('prepare publication artifacts', process.execPath, [
+  return commandStep('publication-artifacts', 'prepare publication artifacts', process.execPath, [
     join(root, 'scripts', 'publish-packages.mjs'),
     '--pack-only',
     '--prepared',
@@ -210,7 +234,7 @@ function publicationArtifactStep() {
 function compatibilitySteps() {
   const result = packageSteps(() => ['test', 'build']);
   if (selectedPackages.has('@sectile/tabular')) {
-    result.push(packageScriptStep('Tabular raw Virtual witnesses', '@sectile/tabular', ['test:virtual:witnesses']));
+    result.push(packageScriptStep('tabular:virtual-witnesses', 'Tabular raw Virtual witnesses', '@sectile/tabular', ['test:virtual:witnesses']));
   }
   return result;
 }
@@ -220,9 +244,9 @@ function packageSteps(pipelineFor) {
   for (const entry of graph.order) {
     if (!dependencyClosure.has(entry.name)) continue;
     if (selectedPackages.has(entry.name)) {
-      result.push(packageScriptStep(`verify ${entry.name}`, entry.name, pipelineFor(entry.name)));
+      result.push(packageScriptStep(`package:${entry.directory}`, `verify ${entry.name}`, entry.name, pipelineFor(entry.name)));
     } else {
-      result.push(packageScriptStep(`prepare ${entry.name}`, entry.name, ['build']));
+      result.push(packageScriptStep(`prepare:${entry.directory}`, `prepare ${entry.name}`, entry.name, ['build']));
     }
   }
   return result;
@@ -238,49 +262,47 @@ function fullPackageWaveSteps(pipelineFor) {
     );
     depthByPackage.set(entry.name, depth);
     if (!selectedPackages.has(entry.name)) continue;
-    waves[depth] ??= { lanes: [], packages: [] };
+    waves[depth] ??= { units: [], packages: [] };
     waves[depth].packages.push(entry.name);
-    waves[depth].lanes.push(packageScriptCommands(entry.name, pipelineFor(entry.name)));
+    waves[depth].units.push(verificationUnit(
+      `package:${entry.directory}`,
+      `verify ${entry.name}`,
+      packageScriptCommands(entry.name, pipelineFor(entry.name)),
+    ));
   }
-  return waves.filter(Boolean).map(({ lanes, packages }, index) => parallelLaneStep(
+  return waves.filter(Boolean).map(({ units, packages }, index) => parallelUnitStep(
+    `package-wave:${index + 1}`,
     `verify package wave ${index + 1}: ${packages.join(', ')}`,
-    lanes,
+    units,
   ));
 }
 
 function workspaceContractSteps({ includePerformance }) {
   const crossHostTests = crossHostTestPaths();
   const result = [
-    commandStep('validation artifact coverage', 'pnpm', ['check:validation-artifacts']),
-    commandStep('cross-host verification', process.execPath, ['--test', '--test-concurrency=1', ...crossHostTests]),
-    commandStep('tooling verification', 'pnpm', ['test:tooling']),
-    commandStep('semantic authority', 'pnpm', ['check:semantic-authority']),
-    commandStep('complexity contracts', process.execPath, [join(root, 'scripts', 'check-complexity-contracts.mjs')]),
-    commandStep('algorithm reuse inventory', 'pnpm', ['check:algorithm-reuse']),
-    commandStep('representation crossovers', 'pnpm', ['check:crossovers']),
-    commandStep('entrypoint migrations', 'pnpm', ['check:entrypoint-migrations']),
-    commandStep('published source maps', process.execPath, [join(root, 'scripts', 'source-map-policy.mjs'), 'check']),
-    commandStep('workspace boundaries', 'pnpm', ['check:boundaries']),
-    commandStep('public signatures', 'pnpm', ['check:signatures']),
-    commandStep('component completeness', 'pnpm', ['check:components']),
-    commandStep('Form scenario completeness', 'pnpm', ['check:form-scenarios']),
-    commandStep('component public API', process.execPath, [
+    commandStep('validation-artifacts', 'validation artifact coverage', 'pnpm', ['check:validation-artifacts']),
+    commandStep('cross-host', 'cross-host verification', process.execPath, ['--test', '--test-concurrency=1', ...crossHostTests]),
+    commandStep('tooling', 'tooling verification', 'pnpm', ['test:tooling']),
+    commandStep('semantic-authority', 'semantic authority', 'pnpm', ['check:semantic-authority']),
+    commandStep('complexity', 'complexity contracts', process.execPath, [join(root, 'scripts', 'check-complexity-contracts.mjs')]),
+    commandStep('algorithm-reuse', 'algorithm reuse inventory', 'pnpm', ['check:algorithm-reuse']),
+    commandStep('representation-crossovers', 'representation crossovers', 'pnpm', ['check:crossovers']),
+    commandStep('entrypoint-migrations', 'entrypoint migrations', 'pnpm', ['check:entrypoint-migrations']),
+    commandStep('source-maps', 'published source maps', process.execPath, [join(root, 'scripts', 'source-map-policy.mjs'), 'check']),
+    commandStep('workspace-boundaries', 'workspace boundaries', 'pnpm', ['check:boundaries']),
+    commandStep('public-signatures', 'public signatures', 'pnpm', ['check:signatures']),
+    commandStep('component-completeness', 'component completeness', 'pnpm', ['check:components']),
+    commandStep('form-scenarios', 'Form scenario completeness', 'pnpm', ['check:form-scenarios']),
+    commandStep('component-public-api', 'component public API', process.execPath, [
       join(root, 'scripts', 'check-component-public-api.mjs'),
     ]),
-    commandStep('breaking changes', process.execPath, [join(root, 'scripts', 'check-breaking-changes.mjs')]),
-    commandStep('workstream ownership', process.execPath, [join(root, 'scripts', 'check-workstream-ownership.mjs')]),
-    parallelStep('consumer verification', [
-      commandEntry('consumer bundles', process.execPath, [join(root, 'scripts', 'consumer-bundles', 'run.mjs'), 'check']),
-      commandEntry('consumer install', process.execPath, [
-        join(root, 'scripts', 'consumer-install', 'run.mjs'),
-        'check',
-        `--tarball-directory=${publicationPackDirectory}`,
-      ]),
-    ]),
-    commandStep('lifecycle retention', 'pnpm', ['check:lifecycle-retention']),
+    commandStep('breaking-changes', 'breaking changes', process.execPath, [join(root, 'scripts', 'check-breaking-changes.mjs')]),
+    commandStep('workstream-ownership', 'workstream ownership', process.execPath, [join(root, 'scripts', 'check-workstream-ownership.mjs')]),
+    consumerVerificationStep(),
+    commandStep('lifecycle-retention', 'lifecycle retention', 'pnpm', ['check:lifecycle-retention']),
   ];
   if (includePerformance) {
-    result.splice(result.length - 1, 0, commandStep('performance certification', 'pnpm', ['performance:certify:prepared']));
+    result.splice(result.length - 1, 0, commandStep('performance-certification', 'performance certification', 'pnpm', ['performance:certify:prepared']));
   }
   return result;
 }
@@ -290,21 +312,79 @@ function affectedWorkspaceContractSteps() {
   const add = (gate, step) => {
     if (workspaceGates.has(gate)) result.push(step);
   };
-  add('cross-host', commandStep('cross-host verification', process.execPath, ['--test', '--test-concurrency=1', ...crossHostTestPaths()]));
-  add('tooling', commandStep('tooling verification', 'pnpm', ['test:tooling']));
-  add('semantic-authority', commandStep('semantic authority', 'pnpm', ['check:semantic-authority']));
-  add('complexity', commandStep('complexity contracts', 'pnpm', ['check:complexity']));
-  add('algorithm-reuse', commandStep('algorithm reuse inventory', 'pnpm', ['check:algorithm-reuse']));
-  add('representation-crossovers', commandStep('representation crossovers', 'pnpm', ['check:crossovers']));
-  add('entrypoint-migrations', commandStep('entrypoint migrations', 'pnpm', ['check:entrypoint-migrations']));
-  add('public-signatures', commandStep('public signatures', 'pnpm', ['check:signatures']));
-  add('consumer-bundles', commandStep('affected consumer bundles', process.execPath, [
+  add('cross-host', commandStep('cross-host', 'cross-host verification', process.execPath, ['--test', '--test-concurrency=1', ...crossHostTestPaths()]));
+  add('tooling', commandStep('tooling', 'tooling verification', 'pnpm', ['test:tooling']));
+  add('semantic-authority', commandStep('semantic-authority', 'semantic authority', 'pnpm', ['check:semantic-authority']));
+  add('complexity', commandStep('complexity', 'complexity contracts', 'pnpm', ['check:complexity']));
+  add('algorithm-reuse', commandStep('algorithm-reuse', 'algorithm reuse inventory', 'pnpm', ['check:algorithm-reuse']));
+  add('representation-crossovers', commandStep('representation-crossovers', 'representation crossovers', 'pnpm', ['check:crossovers']));
+  add('entrypoint-migrations', commandStep('entrypoint-migrations', 'entrypoint migrations', 'pnpm', ['check:entrypoint-migrations']));
+  add('public-signatures', commandStep('public-signatures', 'public signatures', 'pnpm', ['check:signatures']));
+  if (workspaceGates.has('consumer-bundles')) {
+    for (const { name, directory } of graph.order.filter(({ name }) => selectedPackages.has(name))) {
+      result.push(commandStep(
+        `consumer-bundles:${directory}`,
+        `consumer bundles ${name}`,
+        process.execPath,
+        [join(root, 'scripts', 'consumer-bundles', 'run.mjs'), 'check', directory],
+      ));
+    }
+  }
+  add('form-scenarios', commandStep('form-scenarios', 'Form scenario completeness', 'pnpm', ['check:form-scenarios']));
+  return result;
+}
+
+function consumerVerificationStep() {
+  const bundleUnits = consumerBundleUnits(graph.order);
+  const installUnit = verificationUnit('consumer-install', 'consumer install', [commandEntry(
+    'consumer install',
+    process.execPath,
+    [
+      join(root, 'scripts', 'consumer-install', 'run.mjs'),
+      'check',
+      `--tarball-directory=${publicationPackDirectory}`,
+    ],
+  )], { requires: ['publication-artifacts'] });
+  const bundleCommand = commandEntry('consumer bundles', process.execPath, [
     join(root, 'scripts', 'consumer-bundles', 'run.mjs'),
     'check',
-    ...graph.order.filter(({ name }) => selectedPackages.has(name)).map(({ directory }) => directory),
-  ]));
-  add('form-scenarios', commandStep('Form scenario completeness', 'pnpm', ['check:form-scenarios']));
-  return result;
+  ]);
+  const installCommand = installUnit.commands[0];
+  return Object.freeze({
+    id: 'consumer-verification',
+    label: 'consumer verification',
+    commands: Object.freeze([bundleCommand, installCommand]),
+    lanes: Object.freeze([
+      Object.freeze([bundleCommand]),
+      Object.freeze([installCommand]),
+    ]),
+    parallel: true,
+    units: Object.freeze([...bundleUnits, installUnit]),
+  });
+}
+
+function consumerBundleUnits(entries) {
+  const baseline = JSON.parse(readFileSync(consumerBundleBaselinePath, 'utf8'));
+  return Object.freeze(entries.flatMap(({ name, directory }) => {
+    const fixtureCount = baseline.fixtures.filter((fixture) => fixture.package === directory).length;
+    if (fixtureCount === 0) throw new Error(`${name}: consumer bundle baseline has no fixtures`);
+    const shardCount = Math.max(1, Math.ceil(fixtureCount / consumerBundleTargetFixturesPerUnit));
+    return Array.from({ length: shardCount }, (_, index) => {
+      const shardIndex = index + 1;
+      const suffix = shardCount === 1 ? '' : `:${shardIndex}-of-${shardCount}`;
+      const shardArguments = shardCount === 1 ? [] : [`--shard=${shardIndex}/${shardCount}`];
+      return verificationUnit(
+        `consumer-bundles:${directory}${suffix}`,
+        `consumer bundles ${name}${shardCount === 1 ? '' : ` shard ${shardIndex}/${shardCount}`}`,
+        [commandEntry(`consumer bundles ${name}${shardCount === 1 ? '' : ` shard ${shardIndex}/${shardCount}`}`, process.execPath, [
+          join(root, 'scripts', 'consumer-bundles', 'run.mjs'),
+          'check',
+          directory,
+          ...shardArguments,
+        ])],
+      );
+    });
+  }));
 }
 
 function crossHostTestPaths() {
@@ -314,11 +394,8 @@ function crossHostTestPaths() {
     .map((file) => join(root, 'verification', 'cross-host', file));
 }
 
-function packageScriptStep(label, packageName, scripts) {
-  return Object.freeze({
-    commands: Object.freeze(packageScriptCommands(packageName, scripts)),
-    label,
-  });
+function packageScriptStep(id, label, packageName, scripts) {
+  return unitStep(verificationUnit(id, label, packageScriptCommands(packageName, scripts)));
 }
 
 function packageScriptCommands(packageName, scripts) {
@@ -329,24 +406,70 @@ function packageScriptCommands(packageName, scripts) {
   ));
 }
 
-function commandStep(label, command, args) {
+function commandStep(id, label, command, args, options = {}) {
+  return unitStep(verificationUnit(id, label, [commandEntry(label, command, args)], options));
+}
+
+function verificationUnit(id, label, commands, { requires = [] } = {}) {
   return Object.freeze({
-    commands: Object.freeze([commandEntry(label, command, args)]),
+    id,
     label,
+    commands: Object.freeze(commands),
+    requires: Object.freeze(requires),
   });
 }
 
-function parallelStep(label, commands) {
-  return parallelLaneStep(label, commands.map((command) => [command]));
+function unitStep(unit) {
+  return Object.freeze({ ...unit, units: Object.freeze([unit]) });
 }
 
-function parallelLaneStep(label, lanes) {
-  const frozenLanes = Object.freeze(lanes.map((lane) => Object.freeze(lane)));
+function parallelUnitStep(id, label, units) {
+  return parallelUnitLanesStep(id, label, units.map((unit) => [unit]));
+}
+
+function parallelUnitLanesStep(id, label, unitLanes) {
+  const frozenUnitLanes = Object.freeze(unitLanes.map((lane) => Object.freeze(lane)));
+  const units = Object.freeze(frozenUnitLanes.flat());
+  const frozenLanes = Object.freeze(frozenUnitLanes.map((lane) => Object.freeze(lane.flatMap((unit) => unit.commands))));
   return Object.freeze({
+    id,
     commands: Object.freeze(frozenLanes.flat()),
     label,
     lanes: frozenLanes,
     parallel: true,
+    units,
+  });
+}
+
+function verificationUnits(steps_) {
+  const units = steps_.flatMap((step) => step.units ?? [step]);
+  const ids = new Set();
+  for (const unit of units) {
+    if (ids.has(unit.id)) throw new Error(`duplicate verification unit ID: ${unit.id}`);
+    ids.add(unit.id);
+  }
+  for (const unit of units) {
+    for (const requiredID of unit.requires) {
+      if (!ids.has(requiredID)) throw new Error(`verification unit ${unit.id} requires missing unit ${requiredID}`);
+    }
+  }
+  return Object.freeze(units);
+}
+
+function selectVerificationUnit(units, id) {
+  const unit = units.find((candidate) => candidate.id === id);
+  if (unit === undefined) {
+    throw new Error(`unknown verification unit: ${id}; expected ${units.map(({ id: unitID }) => unitID).join(', ')}`);
+  }
+  return unit;
+}
+
+function describeUnit(unit) {
+  return Object.freeze({
+    id: unit.id,
+    label: unit.label,
+    requires: unit.requires,
+    commands: unit.commands.map(({ detail }) => detail),
   });
 }
 
@@ -397,7 +520,7 @@ async function runVerification() {
   };
   writeVerificationReport(report('running'));
   if (verbose) console.log(`verification: ${modeLabel} (${targetLabel}) on ${process.version}`);
-  cleanGeneratedOutputs();
+  if (selectedUnit === null) cleanGeneratedOutputs();
 
   const result = await runVerificationSteps(steps, {
     continueOnFailure,

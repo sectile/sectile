@@ -2,15 +2,17 @@ import assert from 'node:assert/strict';
 
 export function validateBaseline(baseline, current) {
   assert.equal(baseline.schemaVersion, 1, 'unsupported consumer bundle baseline');
-  const targeted = current.fixtures.length !== baseline.fixtures.length;
-  const expectedFixtures = targeted
-    ? baseline.fixtures.filter((fixture) => current.packages.includes(fixture.package))
-    : baseline.fixtures;
+  const packageFixtures = current.packages === undefined
+    ? baseline.fixtures
+    : baseline.fixtures.filter((fixture) => current.packages.includes(fixture.package));
+  const expectedFixtures = current.shard === undefined
+    ? packageFixtures
+    : selectFixtureShard(packageFixtures, current.shard);
   assert.deepEqual(current.fixtures, expectedFixtures, 'consumer fixture coverage drifted; review surfaces and record a baseline');
-  const expectedIDs = new Set(current.fixtures.map(({ id }) => id));
+  const expectedIDs = new Set(expectedFixtures.map(({ id }) => id));
   const expected = new Map(
     baseline.results
-      .filter((entry) => !targeted || expectedIDs.has(entry.id))
+      .filter((entry) => expectedIDs.has(entry.id))
       .map((entry) => [`${entry.bundler}:${entry.id}`, entry]),
   );
   assert.equal(current.results.length, expected.size, 'consumer bundle result count drifted');
@@ -98,6 +100,20 @@ export function validateGranularClosures(results) {
       }
     }
   }
+}
+
+export function selectFixtureShard(fixtures, shard) {
+  assert.ok(Number.isSafeInteger(shard.index) && shard.index >= 1, 'consumer bundle shard index must be a positive integer');
+  assert.ok(Number.isSafeInteger(shard.count) && shard.count >= 1, 'consumer bundle shard count must be a positive integer');
+  assert.ok(shard.index <= shard.count, 'consumer bundle shard index exceeds shard count');
+  const groupKeys = [...new Set(fixtures.map(fixtureShardGroup))].sort();
+  assert.ok(shard.count <= groupKeys.length, 'consumer bundle shard count exceeds fixture groups');
+  const selectedGroups = new Set(groupKeys.filter((_, index) => index % shard.count === shard.index - 1));
+  return Object.freeze(fixtures.filter((fixture) => selectedGroups.has(fixtureShardGroup(fixture))));
+}
+
+function fixtureShardGroup(fixture) {
+  return fixture.pair ?? fixture.id;
 }
 
 function libraryModules(modules) {

@@ -65,7 +65,9 @@ docs, or baseline recording during ordinary implementation.
 
 `pnpm verify` derives affected packages and conditional workspace gates from the upstream diff and fails fast by default. `pnpm verify -- <package>` anchors that analysis to the requested package and expands only when its changed runtime surface affects dependents; add `--exact` to force package-only verification. Use `--explain` to inspect the plan without executing it and `--continue` only when collecting multiple failures is intentional.
 
-`pnpm verify:full` runs the complete deterministic repository contract suite without the production documentation-site build or statistical performance certification. The documentation site builds when documentation is an affected target and during `pnpm verify:release`; release verification also adds explicit repository-wide performance certification and may reuse artifacts already produced by deterministic package builds.
+Deterministic verification units are the canonical execution boundary for broad close work. Run `pnpm verify:prepare` once when the selected units consume built workspace artifacts, inspect stable unit IDs with `pnpm verify:units`, then execute one unit at a time with `pnpm verify:unit -- <id>`. Unit execution does not clean the workspace or implicitly execute another verification unit. The unit catalog exposes explicit `requires` dependencies when one verification unit needs another artifact-producing unit first. Consumer-bundle verification is package-scoped and automatically sharded when a package exceeds the fixture budget (`consumer-bundles:<package>:<index>-of-<count>`), while small packages keep `consumer-bundles:<package>`. Root/direct closure pairs stay in the same deterministic shard.
+
+`pnpm verify:full` is an aggregate convenience wrapper over the deterministic unit plan, not a task-local or agent iteration boundary. It remains available for explicit one-command repository-wide runs and preserves dependency-wave parallelism. The documentation site builds when documentation is an affected target and during `pnpm verify:release`; release verification also adds explicit repository-wide performance certification and may reuse artifacts already produced by deterministic package builds.
 
 ### Close
 
@@ -81,7 +83,7 @@ Close then owns execution, diagnosis, fixes, and reruns in dependency order:
 6. consumer bundle, tree-shaking, pack, install, declaration, and source maps;
 7. browser, SSR, hydration, focus, ARIA, and lifecycle verification;
 8. generated documentation and inventory refresh;
-9. full deterministic repository verification and clean-worktree review.
+9. every required deterministic verification unit, executed individually in dependency order, then clean-worktree review; use `pnpm verify:full` only when an explicit aggregate repository-wide run is required.
 
 Statistical performance certification is separate from ordinary and full deterministic verification. Certification rigor may be applied to one selected workload shard (owner, type, domain, scale, evidence) or to the full catalog. Run full-catalog certification only for release certification, nightly or dedicated benchmark execution, or an explicit full-performance request. A timing regression is diagnostic evidence to classify; do not optimize unrelated code merely to restore a noisy global baseline.
 

@@ -70,11 +70,24 @@ test('verification CLI separates affected, full deterministic, and release certi
   ]);
   assert.equal(full.stages.includes('performance certification'), false);
   assert.equal(full.stages.includes('consumer verification'), true);
-  assert.equal(full.stages.includes('consumer bundles'), false);
   assert.equal(full.commands.includes('consumer bundles'), true);
   assert.equal(full.commands.includes('consumer install'), true);
+  assert.ok(full.units.some(({ id }) => id === 'package:vue'));
+  assert.ok(full.units.some(({ id }) => id === 'consumer-bundles:vue:1-of-4'));
+  assert.ok(full.units.some(({ id }) => id === 'consumer-bundles:vue:4-of-4'));
+  assert.ok(full.units.some(({ id }) => id === 'public-signatures'));
   assert.equal(full.certificationPerformance, false);
   assert.equal(full.documentationSiteBuild, false);
+
+  const bundleUnit = explain(['--full', '--unit', 'consumer-bundles:vue:1-of-4']);
+  assert.equal(bundleUnit.selectedUnit, 'consumer-bundles:vue:1-of-4');
+  assert.deepEqual(bundleUnit.stages, ['consumer bundles @sectile/vue shard 1/4']);
+  assert.deepEqual(bundleUnit.commands, ['consumer bundles @sectile/vue shard 1/4']);
+
+  const installUnit = explain(['--full', '--unit', 'consumer-install']);
+  assert.equal(installUnit.selectedUnit, 'consumer-install');
+  assert.deepEqual(installUnit.stages, ['consumer install']);
+  assert.deepEqual(installUnit.units.find(({ id }) => id === 'consumer-install').requires, ['publication-artifacts']);
 
   const release = explain(['--release']);
   assert.equal(release.stages.includes('performance certification'), true);
@@ -83,6 +96,20 @@ test('verification CLI separates affected, full deterministic, and release certi
 
   const docs = explain(['docs']);
   assert.equal(docs.documentationSiteBuild, true);
+});
+
+test('verification unit CLI lists stable units and rejects unknown IDs', () => {
+  const listed = spawnSync(process.execPath, ['scripts/verify.mjs', '--full', '--list-units'], { encoding: 'utf8' });
+  assert.equal(listed.status, 0, listed.stderr);
+  const units = JSON.parse(listed.stdout).units;
+  assert.ok(units.some(({ id }) => id === 'package:virtual'));
+  assert.ok(units.some(({ id }) => id === 'consumer-bundles:vue:1-of-4'));
+  assert.ok(units.some(({ id }) => id === 'consumer-bundles:virtual'));
+  assert.equal(new Set(units.map(({ id }) => id)).size, units.length);
+
+  const unknown = spawnSync(process.execPath, ['scripts/verify.mjs', '--full', '--unit', 'missing:unit', '--explain'], { encoding: 'utf8' });
+  assert.notEqual(unknown.status, 0);
+  assert.match(unknown.stderr, /unknown verification unit: missing:unit/u);
 });
 
 function explain(arguments_) {

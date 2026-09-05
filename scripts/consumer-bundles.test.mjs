@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { deriveFixtures } from './consumer-bundles/bundle.mjs';
-import { validateBaseline, validateCurrentResults, validateGranularClosures } from './consumer-bundles/check.mjs';
+import {
+  selectFixtureShard,
+  validateBaseline,
+  validateCurrentResults,
+  validateGranularClosures,
+} from './consumer-bundles/check.mjs';
 
 test('intentional uncovered public subpath changes fixture coverage', () => {
   const fragments = [{ package: 'core', surfaces: [{
@@ -65,6 +70,51 @@ test('targeted consumer bundle checks compare only selected package fixtures', (
     results: [chart],
   };
   assert.doesNotThrow(() => validateBaseline(baseline, current));
+});
+
+test('consumer bundle shards are deterministic and keep root/direct pairs together', () => {
+  const fixtures = [
+    { id: 'core:./a:named', package: 'core', mode: 'named' },
+    { id: 'core:./a:root-named', package: 'core', mode: 'root-named', pair: 'core:./a:named' },
+    { id: 'core:./b:side-effect', package: 'core', mode: 'side-effect' },
+    { id: 'core:./c:named', package: 'core', mode: 'named' },
+  ];
+  const first = selectFixtureShard(fixtures, { index: 1, count: 2 });
+  const second = selectFixtureShard(fixtures, { index: 2, count: 2 });
+  const firstIDs = new Set(first.map(({ id }) => id));
+  const secondIDs = new Set(second.map(({ id }) => id));
+  assert.equal(firstIDs.has('core:./a:named'), firstIDs.has('core:./a:root-named'));
+  assert.equal(secondIDs.has('core:./a:named'), secondIDs.has('core:./a:root-named'));
+  assert.deepEqual(
+    [...first, ...second].map(({ id }) => id).sort(),
+    fixtures.map(({ id }) => id).sort(),
+  );
+});
+
+test('sharded baseline validation requires the exact deterministic fixture shard', () => {
+  const fixtures = [
+    { id: 'core:./a:named', package: 'core', mode: 'named' },
+    { id: 'core:./a:root-named', package: 'core', mode: 'root-named', pair: 'core:./a:named' },
+    { id: 'core:./b:side-effect', package: 'core', mode: 'side-effect' },
+    { id: 'core:./c:named', package: 'core', mode: 'named' },
+  ];
+  const results = fixtures.map((fixture) => fixtureResult(fixture.id, fixture.mode, [], 0));
+  const baseline = { schemaVersion: 1, fixtures, results };
+  const shard = { index: 1, count: 2 };
+  const selected = selectFixtureShard(fixtures, shard);
+  const selectedIDs = new Set(selected.map(({ id }) => id));
+  const current = {
+    schemaVersion: 1,
+    packages: ['core'],
+    shard,
+    fixtures: selected,
+    results: results.filter(({ id }) => selectedIDs.has(id)),
+  };
+  assert.doesNotThrow(() => validateBaseline(baseline, current));
+  assert.throws(
+    () => validateBaseline(baseline, { ...current, fixtures: current.fixtures.slice(1) }),
+    /consumer fixture coverage drifted/u,
+  );
 });
 
 test('intentional temporal and virtual sibling closures fail', () => {
