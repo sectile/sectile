@@ -337,13 +337,17 @@ export class ChartNavigationAdapter<ID extends StableID> {
     action: (axis: ChartAxisLayout<ID>) => ChartViewAction<ID> | null,
   ): boolean {
     let changed = false;
+    let failure: readonly [unknown] | undefined;
     for (const axis of axes) {
       const next = action(axis);
       if (next === null) continue;
-      const update = this.#controller.dispatch(next);
-      if (!update.ok) continue;
-      if (update.value.commands.some((command) => command.type === 'view-phase' && command.changed)) changed = true;
+      try {
+        const update = this.#controller.dispatch(next);
+        if (!update.ok) continue;
+        if (update.value.commands.some((command) => command.type === 'view-phase' && command.changed)) changed = true;
+      } catch (error) { failure ??= [error]; }
     }
+    if (failure !== undefined) throw failure[0];
     return changed;
   }
 

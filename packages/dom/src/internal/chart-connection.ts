@@ -262,8 +262,12 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     if (this.#navigation.consumeClick()) return;
     const hit = this.#hitAt(event.clientX, event.clientY);
     if (hit === null) return;
-    this.controller.dispatch({ type: 'set-selection', selection: { type: 'points', ids: [hit] } });
-    this.controller.dispatch({ type: 'set-cursor', id: hit });
+    let failure: readonly [unknown] | undefined;
+    try { this.controller.dispatch({ type: 'set-selection', selection: { type: 'points', ids: [hit] } }); }
+    catch (error) { failure ??= [error]; }
+    try { this.controller.dispatch({ type: 'set-cursor', id: hit }); }
+    catch (error) { failure ??= [error]; }
+    if (failure !== undefined) throw failure[0];
   };
   readonly #handleKeyDown = (event: KeyboardEvent): void => {
     if (this.#navigation.handleKeyDown(event)) return;

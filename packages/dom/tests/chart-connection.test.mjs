@@ -123,6 +123,41 @@ test('DOM Chart completes required command effects before callback errors escape
   connection.disconnect();
 });
 
+test('DOM Chart click completes selection and cursor before the first callback error escapes', () => {
+  const value = fixture();
+  const firstError = new Error('selection publication failed');
+  const secondError = new Error('cursor publication failed');
+  let clickListener;
+  let renderRequests = 0;
+  const addEventListener = value.canvas.addEventListener.bind(value.canvas);
+  value.canvas.addEventListener = (type, listener, options) => {
+    if (type === 'click') clickListener = listener;
+    addEventListener(type, listener, options);
+  };
+  const connection = createDOMChart({
+    root: value.root,
+    canvas: value.canvas,
+    controller: value.controller,
+    renderer: value.renderer,
+    onCommand: (command) => {
+      if (command.type === 'render-requested') {
+        renderRequests += 1;
+        if (renderRequests === 1) throw firstError;
+      }
+      if (command.type === 'focus-datum') throw secondError;
+    },
+  });
+  const point = connection.getProjection().batches.find((batch) => batch.type === 'point');
+  const click = new value.window.MouseEvent('click', { clientX: point.positions[0], clientY: point.positions[1] });
+
+  assert.equal(typeof clickListener, 'function');
+  assert.throws(() => clickListener(click), (error) => error === firstError);
+  assert.deepEqual(value.controller.getSnapshot().state.selection, { type: 'points', ids: [1] });
+  assert.equal(value.controller.getSnapshot().state.cursor, 1);
+  assert.equal(renderRequests, 2);
+  connection.disconnect();
+});
+
 test('DOM Chart restores frame publication after a projection callback error', () => {
   const value = fixture();
   const callbackError = new Error('projection callback failed');
@@ -519,15 +554,19 @@ test('zero accessibility limit disables built-in datum keyboard and focus projec
   connection.disconnect();
 });
 
-function navigableFixture(controlled = false) {
+function navigableFixture(controlled = false, dualAxes = false) {
   const value = fixture();
-  const view = Object.freeze({ revision: 0, axes: Object.freeze([Object.freeze({
-    axisID: 'x', orientation: 'x', scale: 'linear',
+  const axisView = (axisID, orientation) => Object.freeze({
+    axisID, orientation, scale: 'linear',
     base: Object.freeze({ kind: 'continuous', minimum: 0, maximum: 100 }),
     initial: Object.freeze({ kind: 'continuous', minimum: 20, maximum: 80 }),
     visible: Object.freeze({ kind: 'continuous', minimum: 20, maximum: 80 }),
     update: 'preserve', followingEnd: false, revision: 0,
-  })]) });
+  });
+  const view = Object.freeze({
+    revision: 0,
+    axes: Object.freeze([axisView('x', 'x'), ...(dualAxes ? [axisView('y', 'y')] : [])]),
+  });
   const source = createChartController({
     model: value.controller.getModel().toModel(),
     ...(controlled ? { controlled: { view } } : { initialValues: { view } }),
@@ -536,6 +575,14 @@ function navigableFixture(controlled = false) {
     normalize: (datum) => datum,
     invert: (pixel) => pixel,
   };
+  const axisLayout = (axisID, orientation, label) => ({
+    axis: { id: axisID, orientation, scale: 'linear', domain: { kind: 'linear', minimum: 20, maximum: 80 }, ticks: 2, label },
+    descriptor: {
+      axisID, orientation, kind: 'linear', domain: { kind: 'linear', minimum: 20, maximum: 80 },
+      geometryDomain: { minimum: 20, maximum: 80 }, range: orientation === 'x' ? { start: 0, end: 100 } : { start: 100, end: 0 },
+    },
+    scale, geometryScale: scale, ticks: [{ value: 20, position: 0 }, { value: 80, position: 100 }],
+  });
   const projection = {
     generation: 0, profile: 'point', coordinate: 'cartesian',
     viewport: { width: 100, height: 100, devicePixelRatio: 1 },
@@ -545,11 +592,7 @@ function navigableFixture(controlled = false) {
       viewport: { width: 100, height: 100 },
       insets: { top: 0, right: 0, bottom: 0, left: 0 },
       plot: { x: 0, y: 0, width: 100, height: 100 },
-      axes: [{
-        axis: { id: 'x', orientation: 'x', scale: 'linear', domain: { kind: 'linear', minimum: 20, maximum: 80 }, ticks: 2, label: 'Timeline' },
-        descriptor: { axisID: 'x', orientation: 'x', kind: 'linear', domain: { kind: 'linear', minimum: 20, maximum: 80 }, geometryDomain: { minimum: 20, maximum: 80 }, range: { start: 0, end: 100 } },
-        scale, geometryScale: scale, ticks: [{ value: 20, position: 0 }, { value: 80, position: 100 }],
-      }],
+      axes: [axisLayout('x', 'x', 'Timeline'), ...(dualAxes ? [axisLayout('y', 'y', 'Value')] : [])],
     },
   };
   const controller = new Proxy(source, {
@@ -617,6 +660,42 @@ test('opt-in axis navigation derives touch action, conditionally cancels wheel, 
   assert.equal(value.canvas.style.touchAction, '');
   connection.disconnect();
   assert.deepEqual(connection.getLifecycleDiagnostics(), { listeners: 0, observers: 0, frames: 0, timers: 0, subscriptions: 0, overlayNodes: 0 });
+});
+
+test('multi-axis navigation completes every axis before the first callback error escapes', () => {
+  const value = navigableFixture(false, true);
+  const firstError = new Error('first axis publication failed');
+  const secondError = new Error('second axis publication failed');
+  const errors = [firstError, secondError];
+  let changedPhases = 0;
+  let keydownListener;
+  const addEventListener = value.root.addEventListener.bind(value.root);
+  value.root.addEventListener = (type, listener, options) => {
+    if (type === 'keydown') keydownListener = listener;
+    addEventListener(type, listener, options);
+  };
+  const connection = createDOMChart({
+    root: value.root,
+    canvas: value.canvas,
+    controller: value.controller,
+    renderer: value.renderer,
+    navigation: { axes: ['x', 'y'], keyboard: true, controlAlternative: 'external' },
+    onCommand: (command) => {
+      if (command.type !== 'view-phase' || !command.changed) return;
+      const error = errors[changedPhases];
+      changedPhases += 1;
+      if (error !== undefined) throw error;
+    },
+  });
+  const keydown = new value.window.KeyboardEvent('keydown', { key: '+', cancelable: true });
+
+  assert.equal(typeof keydownListener, 'function');
+  assert.throws(() => keydownListener(keydown), (error) => error === firstError);
+  assert.equal(changedPhases, 2);
+  const [x, y] = value.source.getSnapshot().state.view.axes;
+  assert.ok(x.visible.maximum - x.visible.minimum < 60);
+  assert.ok(y.visible.maximum - y.visible.minimum < 60);
+  connection.disconnect();
 });
 
 test('controlled view settlement is announced only after owner synchronization', () => {
