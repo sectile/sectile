@@ -1,5 +1,15 @@
 # @sectile/dom
 
+## 0.16.0
+
+### Changes
+
+- chore(virtual): integrate latest main (feabacae)
+- perf(dom): restore virtual focused tree shaking (35d6c4d6)
+- test(dom): align virtual public type fixture (24948a36)
+- chore(virtual): complete surface migration delivery (084a9713)
+- feat(dom): add virtual surface frame connection (3bb5fdd3)
+
 ## 0.15.1
 
 ### Changes

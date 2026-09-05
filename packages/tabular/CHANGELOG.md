@@ -1,5 +1,15 @@
 # @sectile/tabular
 
+## 0.15.0
+
+### Changes
+
+- test(tabular): refresh virtual witness evidence (6c61c2db)
+- test(tabular): align raw virtual surface witnesses (cb1a3908)
+- test(tabular): refresh implementation evidence (d9eaf8d3)
+- chore(virtual): complete surface migration delivery (084a9713)
+- feat(tabular)!: align virtual surface geometry (635759b2)
+
 ## 0.14.2
 
 ### Changes

@@ -1,5 +1,27 @@
 # @sectile/vue
 
+## 0.16.0
+
+### Changes
+
+- chore(virtual): integrate latest main (feabacae)
+- test(vue): stabilize virtualizer state fixture (2601cede)
+- test(vue): align controlled tabular fixture (cd1034ea)
+- test(vue): bound tabular fixture access (95beb930)
+- test(vue): pin browser verification host (72758419)
+- test(vue): align layout host fixtures (f1244695)
+- test(vue): model virtual list scroll range (e53fb8e8)
+- fix(vue): preserve virtual exposed refs (c65ab970)
+- chore(virtual): complete surface migration delivery (084a9713)
+- feat(tabular)!: align virtual surface geometry (635759b2)
+- feat(vue)!: migrate virtual spatial contract (90a9b674)
+- feat(vue)!: migrate virtual masonry contract (38027ec4)
+- feat(vue)!: migrate virtual grid contract (2645e32c)
+- feat(vue)!: rebuild virtual list contract (a714961e)
+- feat(vue)!: add shared virtual host kernel (19db86b3)
+- feat(vue): add virtual surface anatomy (852adfd0)
+- feat(virtual): add collection projection owner (c17ec9e4)
+
 ## 0.15.1
 
 ### Changes

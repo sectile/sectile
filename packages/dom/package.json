@@ -1,6 +1,6 @@
 {
   "name": "@sectile/dom",
-  "version": "0.15.1",
+  "version": "0.16.0",
   "description": "DOM host adapters for Sectile semantic interaction machines.",
   "license": "MIT",
   "type": "module",

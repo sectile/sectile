@@ -1,5 +1,15 @@
 # @sectile/virtual
 
+## 0.15.0
+
+### Changes
+
+- chore(virtual): ratchet package footprint (712a9a00)
+- chore(virtual): complete surface migration delivery (084a9713)
+- feat(vue)!: rebuild virtual list contract (a714961e)
+- feat(virtual): add collection projection owner (c17ec9e4)
+- feat(virtual): add surface frame algebra (140f60a7)
+
 ## 0.14.2
 
 ### Changes
