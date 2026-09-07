@@ -67,11 +67,11 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "758d59ddc88fabcb04148b89edaef89a6a04e27cbd0c0f3221b04f54496c6e33",
+  "fingerprint": "47c8c2bee6d3fa68630ad7de61d0961cdae80453d4f1d0681848c4317e0519ff",
   "files": [
     {
       "path": "dist/calendar.d.ts",
-      "sha256": "b6f536dfe8ae473ecdad735defe7dbaedfb669bd4f79add6dcdef3b469aa475b"
+      "sha256": "a03e13d8380282f483be78081b5feeabc884a2df71214cb9a3782cc0c1998ed7"
     },
     {
       "path": "dist/date-field.d.ts",
@@ -103,7 +103,7 @@
     },
     {
       "path": "dist/error.d.ts",
-      "sha256": "2707140b4e7712e08dfd82ba934843f222ae4ff5b5ecd64417a9fac9d6acabce"
+      "sha256": "b42d0d6964ed685f223b69033921a4d7dfc69ef51ccf29f007bbe851fff70749"
     },
     {
       "path": "dist/index.d.ts",
@@ -111,11 +111,11 @@
     },
     {
       "path": "dist/month-picker.d.ts",
-      "sha256": "f19b27f1067e1c3bcde4a5de0860ae022eebce70c110d70e189b745b69191c13"
+      "sha256": "b1834a8f58fee7ceef9e6edee085b9ffbdeb7e243942fee76abb8db1ac80c368"
     },
     {
       "path": "dist/month-range-picker.d.ts",
-      "sha256": "7731e3ef2873edb2c09d5776e6144ce7bb75fcda6c4235f694c6c63ed51f46ed"
+      "sha256": "f93710198a758addc944fda155de2807d3b308745fdc1b91a5a240de61cb5e56"
     },
     {
       "path": "dist/range-calendar.d.ts",
@@ -131,11 +131,11 @@
     },
     {
       "path": "dist/year-picker.d.ts",
-      "sha256": "3b87b652e3ef5def8b1f86d5824ebac759da71081ca636b236e4a47ed1ceab45"
+      "sha256": "d5b614f5a526ece15c3004d8f0717be505f12110d256ab50fa272ac03488a355"
     },
     {
       "path": "dist/year-range-picker.d.ts",
-      "sha256": "916f9aae1e51102815dec2433b1aa8642d5310ea688cd6b8c911872674d1319c"
+      "sha256": "a30317327a327874636631aa1d499752fb722d4e974960927f835e2a34b9a5a7"
     }
   ]
 }

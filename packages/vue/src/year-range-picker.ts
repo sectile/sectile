@@ -37,9 +37,9 @@ export const YearRangePickerEndInput = createPickerInput('end-input', 'SectileYe
 export const YearRangePickerPreviousPage = specializePickerRootPart('date-range', createPickerMove('year', -1, 'SectileYearRangePickerPreviousPage', 'previous-page'));
 export const YearRangePickerNextPage = specializePickerRootPart('date-range', createPickerMove('year', 1, 'SectileYearRangePickerNextPage', 'next-page'));
 
+export type { YearRangePickerValue } from '@sectile/temporal/year-range-picker';
+export type { YearPickerValue } from '@sectile/temporal/year-picker';
 export type {
-  DateRange as YearRangePickerValue,
-  DateValue as YearPickerValue,
   PickerPartProps as YearRangePickerPartProps,
   PickerPortalProps as YearRangePickerPortalProps,
   PickerYearCellSlotProps as YearRangePickerCellSlotProps,

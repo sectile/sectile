@@ -12,6 +12,8 @@ import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time
 import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
 import type { DateTimeRange, DateTimeValue } from '@sectile/dom/temporal/date-time-field';
 import { createCalendarMonth, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
+import { createMonthPickerValue } from '@sectile/temporal/month-picker';
+import { createYearPickerValue } from '@sectile/temporal/year-picker';
 import type { FormSubmissionRegistration } from './form-control.js';
 import {
   hiddenInputSubmissionCapabilities,
@@ -336,12 +338,12 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       };
       const selectMonth = (value: CalendarMonthValue): void => {
         connection.value?.handleEvent(granularity === 'month'
-          ? { type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: { ...value, day: 1 } }
+          ? { type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: createMonthPickerValue(value.year, value.month) }
           : { type: 'select-month', value });
         refresh();
       };
       const selectYear = (value: PickerYearValue): void => {
-        connection.value?.handleEvent({ type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: { year: value.year, month: 1, day: 1 } });
+        connection.value?.handleEvent({ type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: createYearPickerValue(value.year) });
         refresh();
       };
       provide<Context>(key, {

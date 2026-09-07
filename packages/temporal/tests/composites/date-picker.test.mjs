@@ -5,7 +5,10 @@ import { createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '.
 import { createCalendarMonth, createCalendarWeek, createCalendarYear } from '../../.verification-dist/calendar.js';
 import { applyDatePickerEvent, createDatePickerState } from '../../.verification-dist/date-picker.js';
 import { applyDateRangePickerEvent, createDateRangePickerState } from '../../.verification-dist/date-range-picker.js';
-import { createYearPickerPage, tryCreateYearPickerPage } from '../../.verification-dist/year-picker.js';
+import { applyMonthPickerEvent, createMonthPickerState, createMonthPickerValue } from '../../.verification-dist/month-picker.js';
+import { applyMonthRangePickerEvent, createMonthRangePickerState } from '../../.verification-dist/month-range-picker.js';
+import { applyYearPickerEvent, createYearPickerPage, createYearPickerState, createYearPickerValue, tryCreateYearPickerPage } from '../../.verification-dist/year-picker.js';
+import { applyYearRangePickerEvent, createYearRangePickerState } from '../../.verification-dist/year-range-picker.js';
 import { applyDateTimePickerEvent, createDateTimePickerState } from '../../.verification-dist/date-time-picker.js';
 import { applyDateTimeRangePickerEvent, createDateTimeRangePickerState } from '../../.verification-dist/date-time-range-picker.js';
 import { createTimeValue } from '../../.verification-dist/time-field.js';
@@ -20,6 +23,36 @@ test('date picker moves by semantic calendar units and selects atomically', () =
   assert.equal(formatDateValue(selected.value.state.value), '2024-02-29');
   assert.equal(selected.value.state.open, false);
   assert.deepEqual(selected.value.commands.map(({ type }) => type), ['value-committed', 'highlight-changed', 'open-changed']);
+});
+
+test('month and year pickers normalize committed values in Temporal', () => {
+  assert.deepEqual(createMonthPickerValue(2026, 9), date(2026, 9, 1));
+  let month = createMonthPickerState({ value: date(2026, 8, 15), highlighted: date(2026, 8, 15), open: true });
+  assert.equal(formatDateValue(month.value), '2026-08-01');
+  const selectedMonth = applyMonthPickerEvent(month, { type: 'select-month', value: { year: 2026, month: 9 } });
+  assert.equal(formatDateValue(selectedMonth.value.state.value), '2026-09-01');
+  assert.equal(selectedMonth.value.commands.some(({ type }) => type === 'value-committed'), true);
+
+  assert.deepEqual(createYearPickerValue(2026), date(2026, 1, 1));
+  let year = createYearPickerState({ value: date(2026, 8, 15), highlighted: date(2026, 8, 15), open: true });
+  assert.equal(formatDateValue(year.value), '2026-01-01');
+  const selectedYear = applyYearPickerEvent(year, { type: 'select-year', value: { year: 2027 } });
+  assert.equal(formatDateValue(selectedYear.value.state.value), '2027-01-01');
+  assert.equal(selectedYear.value.commands.some(({ type }) => type === 'value-committed'), true);
+});
+
+test('month and year range pickers normalize both committed endpoints', () => {
+  let month = createMonthRangePickerState({ calendar: { highlighted: date(2026, 8, 15), open: true } });
+  month = applyMonthRangePickerEvent(month, { type: 'select-month', value: { year: 2026, month: 8 } }).value.state;
+  const monthRange = applyMonthRangePickerEvent(month, { type: 'select-month', value: { year: 2026, month: 10 } });
+  assert.equal(formatDateValue(monthRange.value.state.value.start), '2026-08-01');
+  assert.equal(formatDateValue(monthRange.value.state.value.end), '2026-10-01');
+
+  let year = createYearRangePickerState({ calendar: { highlighted: date(2026, 8, 15), open: true } });
+  year = applyYearRangePickerEvent(year, { type: 'select-year', value: { year: 2025 } }).value.state;
+  const yearRange = applyYearRangePickerEvent(year, { type: 'select-year', value: { year: 2027 } });
+  assert.equal(formatDateValue(yearRange.value.state.value.start), '2025-01-01');
+  assert.equal(formatDateValue(yearRange.value.state.value.end), '2027-01-01');
 });
 
 test('year picker projects a compact page around the active year', () => {

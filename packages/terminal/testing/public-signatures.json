@@ -287,7 +287,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "da64a7187dbb91d1c10bb6efd5351226f08a3d6caf65f15d841eca5648b5078a",
+  "fingerprint": "bebc0fa837693650a9a16ae405393ec737fc45e5c8d625ab37d349f3d3e8e4e4",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -443,11 +443,11 @@
     },
     {
       "path": "dist/month-picker.d.ts",
-      "sha256": "a3e359da29df27e01e9fd32670999c3291f79878391f8dd2b7ef61990c97b5b2"
+      "sha256": "aa78f3f82d926abfb17446061e7c60ff2b42546ebb8d522deef94f7f9f6da00e"
     },
     {
       "path": "dist/month-range-picker.d.ts",
-      "sha256": "5dd84448ae7d423c834cb78c387299a0f0eeacb184718ee54ad27bec7a1d091e"
+      "sha256": "7d19da41fa70641a77a9743111430e7c7ccc27c6f53687af8db6b06ce8fb0a59"
     },
     {
       "path": "dist/multi-thumb-slider.d.ts",
@@ -583,11 +583,11 @@
     },
     {
       "path": "dist/year-picker.d.ts",
-      "sha256": "830a5bcde3f0fb26463c8f5d9c7ed736efc8b794d98eaff1067bb3462418e0cd"
+      "sha256": "134e0356283f371a37114da818cf58d0bf83c967ae7515b010365891ee413c5f"
     },
     {
       "path": "dist/year-range-picker.d.ts",
-      "sha256": "4c9159b809bf90730aff5348ed05d12a58a6d63b131986e9f48b3ee2f4a24882"
+      "sha256": "3b385919ed3a97ec691aa18e31ddad165f8e9824836100f98b368427d5ef6fda"
     }
   ]
 }

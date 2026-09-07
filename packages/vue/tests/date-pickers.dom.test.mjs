@@ -95,6 +95,7 @@ test('Vue period pickers keep granularity-specific text and keyboard movement', 
   const host = document.createElement('div');
   document.body.append(host);
   const monthUpdates = [];
+  const yearUpdates = [];
   const app = createApp({
     render: () => h('div', [
       h(MonthPickerRoot, {
@@ -112,7 +113,7 @@ test('Vue period pickers keep granularity-specific text and keyboard movement', 
           }),
         ],
       }),
-      h(YearPickerRoot, { defaultValue: { year: 2028, month: 1, day: 1 }, defaultOpen: true }, {
+      h(YearPickerRoot, { defaultValue: { year: 2028, month: 8, day: 15 }, defaultOpen: true, 'onUpdate:modelValue': (value) => yearUpdates.push(value) }, {
         default: ({ years }) => [
           h(YearPickerInput),
           h(YearPickerTrigger),
@@ -149,6 +150,7 @@ test('Vue period pickers keep granularity-specific text and keyboard movement', 
   const initialYearPage = Array.from(yearGrid?.querySelectorAll('[data-sectile-picker-year]') ?? [], (cell) => cell.dataset.sectilePickerYear);
   host.querySelector('[data-sectile-picker-year="2023"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   await settle();
+  assert.deepEqual(yearUpdates.at(-1), { year: 2023, month: 1, day: 1 });
   assert.deepEqual(Array.from(yearGrid?.querySelectorAll('[data-sectile-picker-year]') ?? [], (cell) => cell.dataset.sectilePickerYear), initialYearPage);
 
   yearGrid?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));

@@ -7,7 +7,11 @@ import { createTimeField } from '../.verification-dist/time-field.js';
 import { createTimeRangeField } from '../.verification-dist/time-range-field.js';
 import { createDateTimeField } from '../.verification-dist/date-time-field.js';
 import { createDatePicker } from '../.verification-dist/date-picker.js';
+import { createMonthPicker } from '../.verification-dist/month-picker.js';
+import { createYearPicker } from '../.verification-dist/year-picker.js';
 import { createDateRangePicker } from '../.verification-dist/date-range-picker.js';
+import { createMonthRangePicker } from '../.verification-dist/month-range-picker.js';
+import { createYearRangePicker } from '../.verification-dist/year-range-picker.js';
 import { createDateRangeField } from '../.verification-dist/date-range-field.js';
 import { createDateTimePicker } from '../.verification-dist/date-time-picker.js';
 import { createDateTimeRangePicker } from '../.verification-dist/date-time-range-picker.js';
@@ -64,6 +68,36 @@ test('terminal date picker projects supported boundary months without throwing',
     assert.equal(month.some((cell) => cell.year === value.year && cell.month === value.month && cell.day === value.day), true);
     assert.equal(month.some((cell) => cell.outsideSupportedRange === true), true);
   }
+});
+
+test('terminal month and year picker hosts publish Temporal-normalized values', () => {
+  const monthChanges = [];
+  const month = createMonthPicker({ defaultValue: createDateValue(2026, 8, 15), onValueChange: (value) => monthChanges.push(value) });
+  assert.equal(formatDateValue(month.getSnapshot().state.value), '2026-08-01');
+  assert.equal(month.handleEvent({ type: 'select-month', value: { year: 2026, month: 9 } }), true);
+  assert.equal(formatDateValue(month.getSnapshot().state.value), '2026-09-01');
+  assert.deepEqual(monthChanges.map(formatDateValue), ['2026-09-01']);
+
+  const yearChanges = [];
+  const year = createYearPicker({ defaultValue: createDateValue(2026, 8, 15), onValueChange: (value) => yearChanges.push(value) });
+  assert.equal(formatDateValue(year.getSnapshot().state.value), '2026-01-01');
+  assert.equal(year.handleEvent({ type: 'select', value: createDateValue(2027, 8, 15) }), true);
+  assert.equal(formatDateValue(year.getSnapshot().state.value), '2027-01-01');
+  assert.deepEqual(yearChanges.map(formatDateValue), ['2027-01-01']);
+});
+
+test('terminal month and year range picker hosts publish normalized endpoint ranges', () => {
+  const month = createMonthRangePicker({ defaultHighlightedValue: createDateValue(2026, 8, 15) });
+  assert.equal(month.handleEvent({ type: 'select-month', value: { year: 2026, month: 8 } }), true);
+  assert.equal(month.handleEvent({ type: 'select-month', value: { year: 2026, month: 10 } }), true);
+  assert.equal(formatDateValue(month.getSnapshot().state.value.start), '2026-08-01');
+  assert.equal(formatDateValue(month.getSnapshot().state.value.end), '2026-10-01');
+
+  const year = createYearRangePicker({ defaultHighlightedValue: createDateValue(2026, 8, 15) });
+  assert.equal(year.handleEvent({ type: 'select', value: createDateValue(2025, 8, 15) }), true);
+  assert.equal(year.handleEvent({ type: 'select', value: createDateValue(2027, 8, 15) }), true);
+  assert.equal(formatDateValue(year.getSnapshot().state.value.start), '2025-01-01');
+  assert.equal(formatDateValue(year.getSnapshot().state.value.end), '2027-01-01');
 });
 
 test('terminal controlled range picker exposes highlight changes and stays open after commit', () => {

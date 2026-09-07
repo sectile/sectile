@@ -18,6 +18,8 @@ import {
   type DatePickerRootSlotProps,
   type DatePickerValueChangeHandler,
 } from '@sectile/vue/temporal/date-picker';
+import { MonthPickerRoot, type MonthPickerValue } from '@sectile/vue/temporal/month-picker';
+import { YearPickerRoot, type YearPickerValue } from '@sectile/vue/temporal/year-picker';
 import { DateTimeField } from '@sectile/vue/temporal/date-time-field';
 import type { DateTimeRange } from '@sectile/vue/temporal/date-time-range-picker';
 import { MenuButtonRoot, MenuRoot } from '@sectile/vue/menu';
@@ -59,6 +61,8 @@ type Equal<Left, Right> =
     : false;
 
 declare const date: DateValue;
+declare const monthPickerValue: MonthPickerValue;
+declare const yearPickerValue: YearPickerValue;
 declare const dateTimeRange: DateTimeRange;
 declare const datePickerPolicies: DatePickerPolicies;
 declare const dateFieldPolicies: NonNullable<DateFieldOptions['policies']>;
@@ -166,6 +170,8 @@ h(MeterGroupSegment, { id: 'used' });
 // @ts-expect-error MeterGroup segment id is required.
 h(MeterGroupSegment, {});
 h(DatePickerRoot, { modelValue: date, policies: datePickerPolicies });
+h(MonthPickerRoot, { modelValue: monthPickerValue });
+h(YearPickerRoot, { modelValue: yearPickerValue });
 h(NumberField, { policies: numberFieldPolicies });
 h(DateField, { policies: dateFieldPolicies });
 h(TimeField, { policies: timeFieldPolicies });

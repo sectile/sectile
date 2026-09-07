@@ -36,8 +36,8 @@ export const MonthPickerInput = createPickerInput('input', 'SectileMonthPickerIn
 export const MonthPickerPreviousYear = specializePickerRootPart('date', createPickerMove('year', -1, 'SectileMonthPickerPreviousYear'));
 export const MonthPickerNextYear = specializePickerRootPart('date', createPickerMove('year', 1, 'SectileMonthPickerNextYear'));
 
+export type { MonthPickerValue } from '@sectile/temporal/month-picker';
 export type {
-  DateValue as MonthPickerValue,
   PickerMonthCellSlotProps as MonthPickerCellSlotProps,
   PickerPartProps as MonthPickerPartProps,
   PickerPortalProps as MonthPickerPortalProps,
