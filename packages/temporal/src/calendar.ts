@@ -8,6 +8,7 @@ import {
   addDateYears,
   compareDateValues,
   dateDayOfWeek,
+  daysInMonth,
   formatDateValue,
   type DateValue,
   tryCreateDateValue,
@@ -24,6 +25,12 @@ export interface CalendarMonthValue {
   readonly year: number;
   readonly month: number;
 }
+
+export interface CalendarPaddingValue extends DateValue {
+  readonly outsideSupportedRange: true;
+}
+
+export type CalendarDateValue = DateValue | CalendarPaddingValue;
 
 export interface CalendarState {
   readonly value: DateValue | null;
@@ -170,45 +177,35 @@ export function applyCalendarEvent(state: CalendarState, event: CalendarEvent, p
   return createMachineUpdate(calendarState(state.value, eligible.value, view, state.viewMode), [{ type: 'highlight-changed', value: eligible.value }]);
 }
 
-export function createCalendarWeek(value: DateValue, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): readonly DateValue[] {
+export function createCalendarWeek(value: DateValue, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): readonly CalendarDateValue[] {
   return unwrap(tryCreateCalendarWeek(value, weekStartsOn));
 }
 
-export function tryCreateCalendarWeek(value: DateValue, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): TemporalResult<readonly DateValue[]> {
+export function tryCreateCalendarWeek(value: DateValue, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): TemporalResult<readonly CalendarDateValue[]> {
   const valid = tryCreateDateValue(value.year, value.month, value.day);
   if (!valid.ok) return valid;
   if (!Number.isSafeInteger(weekStartsOn) || weekStartsOn < 1 || weekStartsOn > 7) return fail('construction', 'invalid-week-start', 'Week start must be an ISO weekday from 1 through 7.');
   const offset = (dateDayOfWeek(valid.value) - weekStartsOn + 7) % 7;
-  const start = addDateDays(valid.value, -offset);
-  if (!start.ok) return start;
-  const days: DateValue[] = [];
-  for (let index = 0; index < 7; index += 1) {
-    const day = addDateDays(start.value, index);
-    if (!day.ok) return day;
-    days.push(day.value);
-  }
+  const start = addCalendarProjectionDays(valid.value, -offset);
+  const days: CalendarDateValue[] = [];
+  for (let index = 0; index < 7; index += 1) days.push(addCalendarProjectionDays(start, index));
   return ok(freezeArray(days));
 }
 
-export function createCalendarMonth(view: CalendarView, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): readonly (readonly DateValue[])[] {
+export function createCalendarMonth(view: CalendarView, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): readonly (readonly CalendarDateValue[])[] {
   return unwrap(tryCreateCalendarMonth(view, weekStartsOn));
 }
 
-export function tryCreateCalendarMonth(view: CalendarView, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): TemporalResult<readonly (readonly DateValue[])[]> {
+export function tryCreateCalendarMonth(view: CalendarView, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): TemporalResult<readonly (readonly CalendarDateValue[])[]> {
   const first = tryCreateDateValue(view.year, view.month, 1);
   if (!first.ok) return first;
   if (!Number.isSafeInteger(weekStartsOn) || weekStartsOn < 1 || weekStartsOn > 7) return fail('construction', 'invalid-week-start', 'Week start must be an ISO weekday from 1 through 7.');
   const offset = (dateDayOfWeek(first.value) - weekStartsOn + 7) % 7;
-  const start = addDateDays(first.value, -offset);
-  if (!start.ok) return start;
-  const rows: DateValue[][] = [];
+  const start = addCalendarProjectionDays(first.value, -offset);
+  const rows: CalendarDateValue[][] = [];
   for (let row = 0; row < 6; row += 1) {
-    const cells: DateValue[] = [];
-    for (let column = 0; column < 7; column += 1) {
-      const value = addDateDays(start.value, row * 7 + column);
-      if (!value.ok) return value;
-      cells.push(value.value);
-    }
+    const cells: CalendarDateValue[] = [];
+    for (let column = 0; column < 7; column += 1) cells.push(addCalendarProjectionDays(start, row * 7 + column));
     rows.push(cells);
   }
   return ok(freezeArray(rows.map((row) => freezeArray(row))));
@@ -230,13 +227,36 @@ export function tryCreateCalendarYear(year: number): TemporalResult<readonly (re
   return ok(freezeArray(rows.map((row) => freezeArray(row))));
 }
 
-export function isCalendarValueAvailable(value: DateValue, policies: CalendarPolicies = {}): boolean {
+export function isCalendarValueAvailable(value: CalendarDateValue, policies: CalendarPolicies = {}): boolean {
+  if ('outsideSupportedRange' in value) return false;
   return !(policies.min !== undefined && compareDateValues(value, policies.min) < 0)
     && !(policies.max !== undefined && compareDateValues(value, policies.max) > 0)
     && policies.unavailable?.(value) !== true;
 }
 
-export function calendarID(value: DateValue): string { return formatDateValue(value); }
+export function calendarID(value: CalendarDateValue): string { return formatDateValue(value); }
+
+function addCalendarProjectionDays(value: CalendarDateValue, amount: number): CalendarDateValue {
+  let year = value.year;
+  let month = value.month;
+  let day = value.day;
+  const direction = amount < 0 ? -1 : 1;
+  for (let remaining = Math.abs(amount); remaining > 0; remaining -= 1) {
+    day += direction;
+    if (direction > 0 && day > daysInMonth(year, month)) {
+      day = 1;
+      month += 1;
+      if (month > 12) { month = 1; year += 1; }
+    } else if (direction < 0 && day < 1) {
+      month -= 1;
+      if (month < 1) { month = 12; year -= 1; }
+      day = daysInMonth(year, month);
+    }
+  }
+  return year >= 1 && year <= 9_999
+    ? Object.freeze({ year, month, day })
+    : Object.freeze({ year, month, day, outsideSupportedRange: true });
+}
 
 function commit(value: DateValue | null, state: CalendarState, policies: CalendarPolicies): TemporalResult<CalendarUpdate> {
   if (value === null) {

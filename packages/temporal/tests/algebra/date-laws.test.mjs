@@ -17,6 +17,7 @@ import {
   createCalendarMonth,
   createCalendarState,
   createCalendarWeek,
+  isCalendarValueAvailable,
   tryCreateCalendarState,
 } from '../../.verification-dist/calendar.js';
 
@@ -67,6 +68,25 @@ test('TMP-05: week and month projections have fixed contiguous cardinality', () 
       assert.equal(differenceInDateDays(values[index], values[index - 1]), 1);
     }
   }
+});
+
+test('calendar boundary projections preserve fixed grids with non-selectable padding dates', () => {
+  const lowerMonth = createCalendarMonth({ year: 1, month: 1 }, 7).flat();
+  const upperMonth = createCalendarMonth({ year: 9_999, month: 12 }, 1).flat();
+  const lowerWeek = createCalendarWeek(date(1, 1, 1), 7);
+  const upperWeek = createCalendarWeek(date(9_999, 12, 31), 1);
+
+  for (const values of [lowerMonth, upperMonth]) assert.equal(values.length, 42);
+  for (const values of [lowerWeek, upperWeek]) assert.equal(values.length, 7);
+
+  const lowerPadding = lowerMonth.find((value) => value.year === 0);
+  const upperPadding = upperMonth.find((value) => value.year === 10_000);
+  assert.equal(lowerPadding?.outsideSupportedRange, true);
+  assert.equal(upperPadding?.outsideSupportedRange, true);
+  assert.equal(isCalendarValueAvailable(lowerPadding), false);
+  assert.equal(isCalendarValueAvailable(upperPadding), false);
+  assert.equal(lowerMonth.some((value) => value.year === 1 && value.month === 1 && value.day === 1), true);
+  assert.equal(upperMonth.some((value) => value.year === 9_999 && value.month === 12 && value.day === 31), true);
 });
 
 test('TMP-06: empty calendars require an injected reference date', () => {

@@ -6,6 +6,7 @@ import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDa
 import { createTimeField } from '../.verification-dist/time-field.js';
 import { createTimeRangeField } from '../.verification-dist/time-range-field.js';
 import { createDateTimeField } from '../.verification-dist/date-time-field.js';
+import { createDatePicker } from '../.verification-dist/date-picker.js';
 import { createDateRangePicker } from '../.verification-dist/date-range-picker.js';
 import { createDateRangeField } from '../.verification-dist/date-range-field.js';
 import { createDateTimePicker } from '../.verification-dist/date-time-picker.js';
@@ -53,6 +54,16 @@ test('terminal date-time field carries time segments across civil day boundaries
   for (let index = 0; index < 14; index += 1) field.handleKeyboardInput({ key: 'right' });
   field.handleKeyboardInput({ key: 'up' });
   assert.equal(formatDateTimeValue(field.getValue()), '2024-02-01T00:15');
+});
+
+test('terminal date picker projects supported boundary months without throwing', () => {
+  for (const [value, weekStartsOn] of [[createDateValue(1, 1, 1), 7], [createDateValue(9_999, 12, 31), 1]]) {
+    const picker = createDatePicker({ defaultValue: value, defaultHighlightedValue: value, defaultOpen: true, policies: { weekStartsOn } });
+    const month = picker.getMonth().flat();
+    assert.equal(month.length, 42);
+    assert.equal(month.some((cell) => cell.year === value.year && cell.month === value.month && cell.day === value.day), true);
+    assert.equal(month.some((cell) => cell.outsideSupportedRange === true), true);
+  }
 });
 
 test('terminal controlled range picker exposes highlight changes and stays open after commit', () => {

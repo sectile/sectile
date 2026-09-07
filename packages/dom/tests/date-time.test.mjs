@@ -247,6 +247,22 @@ test('controlled DOM picker preserves active field composition during external v
   assert.equal(input.attributes.get('aria-invalid'), 'false');
 });
 
+test('DOM date picker projects supported boundary months without throwing', () => {
+  for (const [value, weekStartsOn] of [[createDateValue(1, 1, 1), 7], [createDateValue(9_999, 12, 31), 1]]) {
+    const picker = createDatePicker({
+      root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement(),
+      defaultValue: value, defaultHighlightedValue: value, policies: { weekStartsOn },
+    });
+    const month = picker.getMonth().flat();
+    assert.equal(month.length, 42);
+    const padding = month.find((cell) => cell.outsideSupportedRange === true);
+    assert.notEqual(padding, undefined);
+    const element = new FakeElement();
+    picker.setCellAttributes(element, padding);
+    assert.equal(element.attributes.get('aria-disabled'), 'true');
+  }
+});
+
 test('DOM date picker projects unavailable dates as disabled cells', () => {
   const picker = createDatePicker({
     root: new FakeElement(),
