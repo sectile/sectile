@@ -1,5 +1,11 @@
 # @sectile/form
 
+## 0.14.4
+
+### Changes
+
+- fix(form): preserve repeated values and cleared issue ownership (9590b912)
+
 ## 0.14.3
 
 ### Changes

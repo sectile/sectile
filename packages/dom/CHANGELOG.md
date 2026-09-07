@@ -1,5 +1,11 @@
 # @sectile/dom
 
+## 0.16.3
+
+### Changes
+
+- fix(form): preserve repeated values and cleared issue ownership (9590b912)
+
 ## 0.16.2
 
 ### Changes

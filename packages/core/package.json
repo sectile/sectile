@@ -1,6 +1,6 @@
 {
   "name": "@sectile/core",
-  "version": "0.14.3",
+  "version": "0.14.4",
   "description": "Renderer-neutral interaction semantics with explicit laws, failures, and costs.",
   "license": "MIT",
   "type": "module",

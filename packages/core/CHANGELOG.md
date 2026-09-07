@@ -1,5 +1,11 @@
 # @sectile/core
 
+## 0.14.4
+
+### Changes
+
+- fix(core): enforce sequence limits and reuse layer validation (b80e23b2)
+
 ## 0.14.3
 
 ### Changes

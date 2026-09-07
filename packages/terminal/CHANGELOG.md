@@ -1,5 +1,11 @@
 # @sectile/terminal
 
+## 0.14.4
+
+### Changes
+
+- fix(terminal): preserve committed callback ownership and publication (26952788)
+
 ## 0.14.3
 
 ### Changes
