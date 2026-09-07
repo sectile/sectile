@@ -22578,6 +22578,67 @@
     {
       "package": "core",
       "surface": "hot",
+      "id": "layer-stack.ignored-dismissal",
+      "source": "packages/core/src/layer-stack.ts",
+      "benchmarkIDs": [
+        "GH-30:canonical-layer-dismissal"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "accepted layer count",
+            "ceiling": "100000"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "O(1)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Only canonical factory-owned immutable states take the trusted path; WeakMap membership is expected constant time.",
+          "The dismissal is ignored by the top layer policy or the stack is empty; changed transitions retain their existing linear work."
+        ],
+        "ceilings": [
+          "Zero layer copies, full layer maps and identity Map writes on the trusted ignored path."
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "Constructor, open, close and dismissal-produced states at 16, 4096 and 100000 scale retain their owner and emit no commands without collection validation."
+        ],
+        "resourceRationale": "Reuse the shared weak canonical registry with one entry per live owner; it does not keep old states alive. Shallow close results inherit trust only from trusted predecessors.",
+        "proof": "applyLayerStackEvent validates foreign input fully; canonical input bypasses reconstruction and reads only the top layer and dismissal policy. tryCreateLayerStackState binds its normalized immutable output; closeFrom conditionally propagates provenance.",
+        "adversarialWitness": "Large canonical stacks and all state producers; frozen invalid foreign states and mutation of shallow foreign survivors continue to reject.",
+        "evidence": [
+          "packages/core/tests/runtime/layer-stack.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "For this trusted no-op, owner provenance and top policy fully determine the result. External and changed paths are separate."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
       "id": "layer-stack.reject-oversize",
       "source": "packages/core/src/layer-stack.ts",
       "benchmarkIDs": [
@@ -23586,6 +23647,68 @@
         "fullScan": {
           "allowed": true,
           "rationale": "Explicit full ordered output requires n entries."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
+      "id": "sequence.patch-limits",
+      "source": "packages/core/src/structures/sequence.ts",
+      "benchmarkIDs": [
+        "GH-29:move-policy-boundary"
+      ],
+      "specificationCeiling": "O(1 + s)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "s",
+            "meaning": "identities materialized and validated for a changed policy",
+            "ceiling": "zero for over-limit moves or unchanged-policy no-ops; input and output cardinality otherwise"
+          }
+        ],
+        "time": {
+          "bound": "O(1 + s)",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1 + s)",
+          "output": "O(1 + s)",
+          "retained": "O(1 + s)"
+        },
+        "resources": {
+          "allocations": "O(1 + s)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "This entry covers policy changes and move rejection/no-op boundaries. Unchanged-policy nonempty patches retain existing overlay and density bounds.",
+          "Stable ID validation retains its configured code-unit ceiling; ID index operations are expected constant time."
+        ],
+        "ceilings": [
+          "Over-limit moves reject from size before identity access or materialization, independent of overlay history.",
+          "A data no-op reuses the original owner only when its effective policy is unchanged."
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "16, 4096 and 100000-item move rejections perform zero identity reads; sparse/dense/inverse-move histories have equivalent failures."
+        ],
+        "resourceRationale": "A changed resource policy is an explicit normalization boundary producing a validated owner and truthful limits. Rejected cardinality uses scalar checks only; no new persistent cache is added.",
+        "proof": "tryApplySequencePatch checks size-preserving moves against maxItems before representation selection. Policy changes use materialized validation, including same-position and zero-count moves. The materialized helper always reaches tryCreateSequence.",
+        "adversarialWitness": "Sparse and dense moves, inverse-move history, zero-count/same-position moves, tightened ID ceilings, exact limits, raised policies, empty and shrinking splices.",
+        "evidence": [
+          "packages/core/tests/structures/sequence.reference-law.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Changed policy owners are explicitly materialized and revalidated. Known over-limit cardinality and unchanged-policy no-ops remain constant work."
         }
       }
     },

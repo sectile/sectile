@@ -97,6 +97,73 @@ test('LayerStack accepts the inclusive Sequence ceiling and validates supported 
   ]) assert.equal(tryCreateLayerStackState(input).ok, false);
 });
 
+test('canonical ignored dismissals do constant work across all LayerStack owner paths', () => {
+  const ignored = { type: 'dismiss-top', reason: 'escape' };
+  for (const size of [16, 4_096, 100_000]) {
+    const base = createLayerStackState(Array.from({ length: size - 1 }, (_, id) => ({ id, mode: 'tooltip' })));
+    const opened = applyLayerStackEvent(base, { type: 'open-layer', layer: { id: size, mode: 'tooltip' } }).value.state;
+    const closed = applyLayerStackEvent(opened, { type: 'close-layer', id: size }).value.state;
+    const dismissible = applyLayerStackEvent(base, { type: 'open-layer', layer: { id: size } }).value.state;
+    const dismissed = applyLayerStackEvent(dismissible, ignored).value.state;
+    for (const state of [base, opened, closed, dismissed]) {
+      const freeze = Object.freeze;
+      const map = Array.prototype.map;
+      const set = Map.prototype.set;
+      let copies = 0; let fullMaps = 0; let indexWrites = 0;
+      Object.freeze = (value) => {
+        if (value && Object.hasOwn(value, 'parentID') && Object.hasOwn(value, 'dismissOnEscape')) copies += 1;
+        return freeze(value);
+      };
+      Array.prototype.map = function (...args) { if (this === state.layers) fullMaps += 1; return Reflect.apply(map, this, args); };
+      Map.prototype.set = function (...args) { indexWrites += 1; return Reflect.apply(set, this, args); };
+      try {
+        for (let repeat = 0; repeat < 3; repeat += 1) {
+          const result = applyLayerStackEvent(state, ignored);
+          assert.equal(result.ok, true);
+          assert.equal(result.value.state, state);
+          assert.deepEqual(result.value.commands, []);
+        }
+      } finally { Object.freeze = freeze; Array.prototype.map = map; Map.prototype.set = set; }
+      assert.deepEqual({ copies, fullMaps, indexWrites }, { copies: 0, fullMaps: 0, indexWrites: 0 });
+    }
+  }
+  const empty = createLayerStackState();
+  assert.equal(applyLayerStackEvent(empty, ignored).value.state, empty);
+});
+
+test('LayerStack provenance never trusts frozen foreign states or mutable layer aliases', () => {
+  const ignored = { type: 'dismiss-top', reason: 'escape' };
+  for (const layers of [
+    [{ id: 'a' }, { id: 'a' }], [{ id: 'a', mode: 'invalid' }],
+    [{ id: 'a', parentID: 'missing' }], [{ id: 'a', parentID: 'a' }],
+    [{ id: 'a', dismissOnEscape: 'no' }],
+  ]) {
+    const expected = tryCreateLayerStackState(layers);
+    assert.equal(expected.ok, false);
+    const foreign = Object.freeze({ layers: Object.freeze(layers.map((layer) => Object.freeze(layer))) });
+    const result = applyLayerStackEvent(foreign, ignored);
+    assert.equal(result.error.class, 'transition-rejection');
+    assert.equal(result.error.code, expected.error.code);
+  }
+  for (const closeKind of ['ignored', 'close', 'dismiss']) {
+    const retained = { id: 'retained', parentID: null, mode: 'tooltip', dismissOnEscape: false, dismissOnInteractOutside: true };
+    const foreign = Object.freeze({ layers: [retained] });
+    let next = foreign;
+    if (closeKind === 'ignored') {
+      assert.equal(applyLayerStackEvent(foreign, ignored).value.state, foreign);
+    } else {
+      foreign.layers.push({ id: 'removed', parentID: null, mode: 'non-modal', dismissOnEscape: true, dismissOnInteractOutside: true });
+      const result = applyLayerStackEvent(foreign, closeKind === 'close' ? { type: 'close-layer', id: 'removed' } : ignored);
+      assert.equal(result.ok, true);
+      next = result.value.state;
+      assert.equal(next.layers[0], retained);
+    }
+    assert.equal(applyLayerStackEvent(next, ignored).ok, true);
+    retained.mode = 'invalid';
+    assert.equal(applyLayerStackEvent(next, ignored).error.code, 'layer-mode-invalid');
+  }
+});
+
 test('LAY-01: layer construction rejects duplicate, missing-chain, and self-parent models', () => {
   assert.equal(tryCreateLayerStackState([{ id: 'a' }, { id: 'a' }]).ok, false);
   assert.equal(tryCreateLayerStackState([{ id: 'a', parentID: 'missing' }]).ok, false);

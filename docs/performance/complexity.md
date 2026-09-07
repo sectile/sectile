@@ -8,7 +8,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 380 | 26 | 57 |
+| core | 380 | 26 | 59 |
 | chart | 80 | 0 | 14 |
 | dom | 424 | 181 | 26 |
 | form | 21 | 0 | 7 |
@@ -62,6 +62,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:index-span.contains | trusted | `O(log a)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:index-span.set-algebra | trusted | `O(a + bSpan)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | VAL-016, VAL-017 |
 | core:index-span.transform | trusted | `O(a)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | VAL-016, VAL-017 |
+| core:layer-stack.ignored-dismissal | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/runtime/layer-stack.test.mjs |
 | core:layer-stack.reject-oversize | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/runtime/layer-stack.test.mjs |
 | core:metric-index.construct | external | `O(x log x * d)` worst-case | `O(x*d)` | `O(1)` | `O(x*d + x)` | allowed | VAL-016, VAL-017 |
 | core:metric-index.lookup-distance | trusted | `O(d)` worst-case | `O(1)` | `O(d)` | `O(1)` | allowed | VAL-016, VAL-017 |
@@ -77,6 +78,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:sequence.construct | external | `O(n + k)` expected | `O(n)` | `O(n)` | `O(n)` | allowed | VAL-016, VAL-017 |
 | core:sequence.index-of | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:sequence.materialize | external | `O(n + k)` worst-case | `O(n + dPatch)` | `O(n + k)` | `O(n + k)` | allowed | VAL-016, VAL-017 |
+| core:sequence.patch-limits | trusted | `O(1 + s)` expected | `O(1 + s)` | `O(1 + s)` | `O(1 + s)` | allowed | packages/core/tests/structures/sequence.reference-law.test.mjs |
 | core:sequence.patch-lookup | trusted | `O(dPatch)` expected | `O(dPatch)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:text.replace | external | `O(nText + nInsert + nOut)` worst-case | `O(1)` | `O(nOut)` | `O(nOut)` | allowed | VAL-016, VAL-017 |
 | core:text.replace-canonical | trusted | `O(nInsert + nOut)` worst-case | `O(1)` | `O(nOut)` | `O(nOut)` | allowed | VAL-016, VAL-017 |

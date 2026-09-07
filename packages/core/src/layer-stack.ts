@@ -1,5 +1,5 @@
 import { createMachineUpdate, type MachineUpdate } from './internal/kernel/machine.js';
-import { fail, ok } from './internal/kernel/foundation.js';
+import { bindCanonicalState, fail, hasCanonicalState, ok } from './internal/kernel/foundation.js';
 import { DEFAULT_MAX_SEQUENCE_ITEMS } from './internal/kernel/indexed-sequence.js';
 import { unwrap } from './result.js';
 import { tryCreateSequence } from './structures/sequence.js';
@@ -73,15 +73,17 @@ export function tryCreateLayerStackState<ID extends StableID = StableID>(
     }
     layers.push(normalized.value);
   }
-  return ok(Object.freeze({ layers: Object.freeze(layers) }));
+  return ok(bindCanonicalState(tryCreateLayerStackState, Object.freeze({ layers: Object.freeze(layers) })));
 }
 
 export function applyLayerStackEvent<ID extends StableID>(
   state: LayerStackState<ID>,
   event: LayerStackEvent<ID>,
 ): Result<LayerStackUpdate<ID>> {
-  const valid = tryCreateLayerStackState(state.layers);
-  if (!valid.ok) return transitionFailure(valid);
+  if (!hasCanonicalState(tryCreateLayerStackState, state)) {
+    const valid = tryCreateLayerStackState(state.layers);
+    if (!valid.ok) return transitionFailure(valid);
+  }
 
   if (event.type === 'open-layer') {
     if (state.layers.some((layer) => layer.id === event.layer.id)) {
@@ -157,13 +159,16 @@ function closeFrom<ID extends StableID>(
     end += 1;
   }
   const closing = state.layers.slice(index, end).reverse();
+  const next = Object.freeze({
+    layers: Object.freeze([
+      ...state.layers.slice(0, index),
+      ...state.layers.slice(end),
+    ]),
+  });
+  // Shallow copies of foreign layers can still alias mutable records.
+  if (hasCanonicalState(tryCreateLayerStackState, state)) bindCanonicalState(tryCreateLayerStackState, next);
   return createMachineUpdate(
-    Object.freeze({
-      layers: Object.freeze([
-        ...state.layers.slice(0, index),
-        ...state.layers.slice(end),
-      ]),
-    }),
+    next,
     closing.map((layer, commandIndex) => ({
       type: 'layer-closed' as const,
       id: layer.id,

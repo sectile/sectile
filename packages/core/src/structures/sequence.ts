@@ -113,7 +113,14 @@ export function tryApplySequencePatch<ID extends StableID>(
   const idCeilingError = validateSafeCeiling(maxIDCodeUnits, 'maxIDCodeUnits', 1);
   if (idCeilingError !== null) return { ok: false, error: idCeilingError };
   const size = sequence.size;
-  if (maxIDCodeUnits < sequence.maxIDCodeUnits) {
+  // Moves preserve cardinality even when their order change is empty.
+  if (patch.type === 'move' && size > maxItems) {
+    return fail('resource-rejection', 'item-ceiling-exceeded', 'Sequence exceeds maxItems.', {
+      size, maxItems,
+    });
+  }
+  // Explicit policy changes establish a newly validated owner and its metadata.
+  if (maxItems !== sequence.maxItems || maxIDCodeUnits !== sequence.maxIDCodeUnits) {
     return applyMaterializedSequencePatch(sequence, patch, maxItems, maxIDCodeUnits);
   }
   if (patch.type === 'splice') {
@@ -235,7 +242,6 @@ function applyMaterializedSequencePatch<ID extends StableID>(
       || patch.to < 0
       || patch.to > ids.length - patch.count
     ) return invalidPatch(patch, ids.length);
-    if (patch.count === 0 || patch.from === patch.to) return ok(sequence);
     moveSequenceArray(ids, patch.from, patch.to, patch.count);
   }
   const result = tryCreateSequence(ids, { maxItems, maxIDCodeUnits });

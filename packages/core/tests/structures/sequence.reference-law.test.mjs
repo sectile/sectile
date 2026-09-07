@@ -152,6 +152,78 @@ test('patches revalidate retained IDs when the ID ceiling is lowered', () => {
   assert.equal(result.error.code, 'id-code-unit-ceiling-exceeded');
 });
 
+test('move resource ceilings are independent of density, history and no-op order', () => {
+  const ids = Array.from({ length: 16 }, (_, index) => `id-${index}`);
+  const source = createSequence(ids, { maxItems: 32, maxIDCodeUnits: 32 });
+  const sparse = { type: 'move', from: 0, to: 15, count: 1 };
+  const forward = applySequencePatch(source, sparse);
+  const roundTrip = applySequencePatch(forward, { type: 'move', from: 15, to: 0, count: 1 });
+  assert.deepEqual(roundTrip.ids, ids);
+  const moves = [sparse, { type: 'move', from: 0, to: 12, count: 4 },
+    { type: 'move', from: 0, to: 0, count: 1 }, { type: 'move', from: 16, to: 0, count: 0 }];
+  for (const move of moves) {
+    const expected = tryApplySequencePatch(source, move, { maxItems: 8 });
+    assert.equal(expected.ok, false);
+    assert.equal(expected.error.class, 'resource-rejection');
+    assert.equal(expected.error.code, 'item-ceiling-exceeded');
+    assert.deepEqual(expected.error.details, { size: 16, maxItems: 8 });
+    assert.deepEqual(tryApplySequencePatch(roundTrip, move, { maxItems: 8 }), expected);
+    const exact = applySequencePatch(source, move, { maxItems: 16 });
+    assert.equal(exact.size, 16);
+    assert.equal(exact.maxItems, 16);
+    assert.equal(exact.maxIDCodeUnits, 32);
+  }
+  const unchanged = { type: 'move', from: 0, to: 0, count: 1 };
+  assert.equal(applySequencePatch(source, unchanged), source);
+  assert.equal(applySequencePatch(roundTrip, unchanged, { maxItems: 32, maxIDCodeUnits: 32 }), roundTrip);
+  for (const maxItems of [16, 64]) {
+    const next = applySequencePatch(source, { type: 'splice', index: 0, deleteCount: 0, inserted: [] }, { maxItems });
+    assert.deepEqual(next.ids, ids);
+    assert.equal(next.maxItems, maxItems);
+  }
+  const shrunk = applySequencePatch(source, { type: 'splice', index: 0, deleteCount: 8, inserted: [] }, { maxItems: 8 });
+  assert.deepEqual(shrunk.ids, ids.slice(8));
+  assert.equal(shrunk.maxItems, 8);
+  assert.deepEqual(source.ids, ids);
+  assert.deepEqual(roundTrip.ids, ids);
+});
+
+test('no-op moves validate tightened ID ceilings and expose changed policy', () => {
+  const source = createSequence(['a', 'long-id'], { maxItems: 8, maxIDCodeUnits: 32 });
+  for (const move of [
+    { type: 'move', from: 0, to: 0, count: 1 },
+    { type: 'move', from: 0, to: 2, count: 0 },
+  ]) {
+    const rejected = tryApplySequencePatch(source, move, { maxIDCodeUnits: 1 });
+    assert.equal(rejected.ok, false);
+    assert.equal(rejected.error.code, 'id-code-unit-ceiling-exceeded');
+    for (const maxIDCodeUnits of [7, 64]) {
+      const next = applySequencePatch(source, move, { maxIDCodeUnits });
+      assert.deepEqual(next.ids, source.ids);
+      assert.equal(next.maxItems, 8);
+      assert.equal(next.maxIDCodeUnits, maxIDCodeUnits);
+    }
+  }
+  assert.equal(source.maxIDCodeUnits, 32);
+});
+
+test('over-limit moves reject before reading or materializing identities', () => {
+  for (const size of [16, 4_096, 100_000]) {
+    const source = createSequence(Array.from({ length: size }, (_, index) => index));
+    let reads = 0;
+    const boundary = {
+      size, maxItems: source.maxItems, maxIDCodeUnits: source.maxIDCodeUnits,
+      get ids() { reads += 1; throw new Error('must reject before identity materialization'); },
+      at() { reads += 1; throw new Error('must reject before identity reads'); },
+    };
+    for (const count of [0, 1, size]) {
+      const result = tryApplySequencePatch(boundary, { type: 'move', from: 0, to: 0, count }, { maxItems: size - 1 });
+      assert.equal(result.error.code, 'item-ceiling-exceeded');
+      assert.equal(reads, 0);
+    }
+  }
+});
+
 test('incremental move patches preserve every valid post-removal destination', () => {
   for (let size = 0; size <= 9; size += 1) {
     const ids = canonicalIDs(size);
