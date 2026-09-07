@@ -3756,7 +3756,7 @@
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
       "path": "packages/terminal/src/toast.ts",
-      "line": 26,
+      "line": 32,
       "evidence": ".find(",
       "rule": "terminal-platform-policy",
       "classification": "result-proportional",

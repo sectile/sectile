@@ -28372,6 +28372,72 @@
     {
       "package": "terminal",
       "surface": "hot",
+      "id": "layer-stack.close-callbacks",
+      "source": "packages/terminal/src/layer-stack.ts",
+      "benchmarkIDs": [
+        "GH-31:layer-callback-generations"
+      ],
+      "specificationCeiling": "O(k)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "k",
+            "meaning": "closed layers in the committed transition",
+            "ceiling": "accepted Core layer count, at most 100000"
+          },
+          {
+            "name": "n",
+            "meaning": "live registered callbacks after the transition and reentrant work",
+            "ceiling": "accepted Core layer count"
+          }
+        ],
+        "time": {
+          "bound": "O(k)",
+          "kind": "expected",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(k)",
+          "output": "O(1)",
+          "retained": "O(n)"
+        },
+        "resources": {
+          "allocations": "O(k)",
+          "cacheEntries": "O(n)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Core transition computation and arbitrary application callback work have separate bounds.",
+          "Map lookup/deletion is expected constant time."
+        ],
+        "ceilings": [
+          "Every old registry entry is detached before the first callback; only live replacement registrations remain afterward."
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "Repeated same-ID replacement churn confirms zero old entries at first callback, two replacement entries after the cascade, and zero after actual replacement dismissal."
+        ],
+        "resourceRationale": "One transient callback vector replaces the former ID vector. It belongs only to the current synchronous cascade; the existing map owns current registrations. Errors do not prevent draining.",
+        "proof": "The executor maps committed commands to detached old callbacks in one pass, then drains that snapshot preserving the first thrown value. Later callbacks never re-read the mutable registry.",
+        "adversarialWitness": "Leaf callbacks replace both ancestor and initiating IDs; normal and throwing callbacks, undefined errors, reentrant close attempts and 64 churn cycles.",
+        "evidence": [
+          "packages/terminal/tests/layer-stack.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Only the k removed registrations are visited, never unrelated live registrations."
+        }
+      }
+    },
+    {
+      "package": "terminal",
+      "surface": "hot",
       "id": "screen.measure",
       "source": "packages/terminal/src/screen.ts",
       "benchmarkIDs": [
@@ -28656,6 +28722,79 @@
         "fullScan": {
           "allowed": true,
           "rationale": "A mutable caller-owned row array requires one complete shallow snapshot to isolate the previous frame."
+        }
+      }
+    },
+    {
+      "package": "terminal",
+      "surface": "hot",
+      "id": "toast.callback-publication",
+      "source": "packages/terminal/src/toast.ts",
+      "benchmarkIDs": [
+        "GH-17:toast-committed-publication"
+      ],
+      "specificationCeiling": "O(1 + n + k + p)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "toast items searched for the single announcement, zero without an announcement",
+            "ceiling": "accepted toast count"
+          },
+          {
+            "name": "k",
+            "meaning": "committed toast commands",
+            "ceiling": "dismissed items plus at most one announcement"
+          },
+          {
+            "name": "p",
+            "meaning": "facade subscribers notified",
+            "ceiling": "live owner subscriptions"
+          }
+        ],
+        "time": {
+          "bound": "O(1 + n + k + p)",
+          "kind": "expected",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1 + k + p)",
+          "output": "O(k)",
+          "retained": "O(1 + p)"
+        },
+        "resources": {
+          "allocations": "O(1 + k + p)",
+          "cacheEntries": "O(1)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(p)"
+        },
+        "assumptions": [
+          "Core semantic state storage/computation and arbitrary consumer callback work are separate.",
+          "An immutable announcement item is captured during host effect preparation; no previous-state cache is retained."
+        ],
+        "ceilings": [
+          "All committed effects are attempted before first failure escapes; rejected operations do not publish.",
+          "Nested latest-revision facade publication is not repeated by the outer call."
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "Announce, item-change, subscriber and onUpdate failures each preserve the first thrown value and complete the remaining publication phases.",
+          "Overflow, timeout and dismiss-all drain their command outputs; same-ID reentrancy retains the original announcement payload."
+        ],
+        "resourceRationale": "Private prepared host effects retain only immutable command payloads for their synchronous dispatch. One revision scalar deduplicates publication. Facade destroy owns subscriber cleanup.",
+        "proof": "Core's existing controller publication drains host effects and notification. Terminal completes facade publication after a committed throw, records revisions before callback execution, and suppresses stale outer item notification after nested transitions.",
+        "adversarialWitness": "Multiple command failures, thrown Error/undefined/null, rejected mutations, nested announcements/item callbacks and changed same-ID announcement data.",
+        "evidence": [
+          "packages/terminal/tests/toast.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "An announcement resolves its item once; effect and observer walks are proportional to emitted commands and subscribers."
         }
       }
     },

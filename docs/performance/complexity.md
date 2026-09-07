@@ -14,7 +14,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | form | 21 | 0 | 7 |
 | tabular | 33 | 0 | 8 |
 | temporal | 99 | 24 | 2 |
-| terminal | 347 | 177 | 6 |
+| terminal | 347 | 177 | 8 |
 | virtual | 114 | 0 | 27 |
 | vue | 740 | 319 | 9 |
 
@@ -146,10 +146,12 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | temporal:calendar.transition | trusted | `O(cCalendar)` worst-case | `O(cCalendar)` | `O(cCalendar)` | `O(cCalendar)` | allowed | VAL-016, VAL-017 |
 | temporal:field.transition | external | `O(sSegment)` worst-case | `O(sSegment)` | `O(sSegment)` | `O(sSegment)` | allowed | VAL-016, VAL-017 |
 | terminal:component.dispatch | trusted | `O(nDomain + cCommand)` worst-case | `O(nDomain + cCommand)` | `O(cCommand)` | `O(nDomain)` | allowed | VAL-016, VAL-017 |
+| terminal:layer-stack.close-callbacks | connected | `O(k)` expected | `O(k)` | `O(1)` | `O(n)` | forbidden | packages/terminal/tests/layer-stack.test.mjs |
 | terminal:screen.measure | connected | `O(q + e + t)` expected | `O(p + d + t)` | `O(p)` | `O(1)` | allowed | packages/terminal/tests/screen.test.mjs |
 | terminal:screen.render | connected | `O(rRow + rRow * cColumn)` worst-case | `O(rRow + rRow * cColumn)` | `O(rRow + rRow * cColumn)` | `O(rRow + rRow * cColumn)` | allowed | packages/terminal/tests/screen.test.mjs |
 | terminal:screen.traverse | connected | `O(v)` worst-case | `O(d + a)` | `O(1)` | `O(1)` | allowed | packages/terminal/tests/screen.test.mjs |
 | terminal:screen.writer-snapshot | external | `O(rRow)` worst-case | `O(1)` | `O(rRow)` | `O(rRow)` | allowed | packages/terminal/tests/screen.test.mjs |
+| terminal:toast.callback-publication | connected | `O(1 + n + k + p)` expected | `O(1 + k + p)` | `O(k)` | `O(1 + p)` | allowed | packages/terminal/tests/toast.test.mjs |
 | terminal:tty.keyboard-close | connected | `O(lInput)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/terminal/tests/keyboard.test.mjs |
 | virtual:collection.extents.reconcile | trusted | `O(jChanged log nItem)` worst-case | `O(jChanged)` | `O(jChanged)` | `O(jChanged)` | forbidden | VAL-003 |
 | virtual:collection.lanes.resolve | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-003 |

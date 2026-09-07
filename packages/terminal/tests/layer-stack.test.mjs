@@ -80,6 +80,50 @@ for (const [label, firstError] of [
   });
 }
 
+test('terminal cascade snapshots preserve same-ID replacement ownership during reentrant churn', () => {
+  const scope = createLayerStack();
+  let registry;
+  const set = Map.prototype.set;
+  Map.prototype.set = function (key, value) {
+    if (typeof value === 'function' && key === 'root') registry = this;
+    return Reflect.apply(set, this, [key, value]);
+  };
+  try {
+    for (const throwing of [false, true]) {
+      for (let cycle = 0; cycle < 32; cycle += 1) {
+        const trace = [];
+        const firstError = cycle % 2 === 0 ? new Error('first close failure') : undefined;
+        assert.equal(scope.open({ layer: { id: 'root' }, close: () => trace.push('root-old') }), true);
+        assert.equal(scope.open({ layer: { id: 'child', parentID: 'root' }, close: () => {
+          trace.push('child-old');
+          assert.equal(scope.isTop('child'), true);
+          if (throwing) throw new Error('later close failure');
+        } }), true);
+        assert.equal(scope.open({ layer: { id: 'leaf', parentID: 'child' }, close: () => {
+          trace.push('leaf-old');
+          assert.equal(scope.close('child'), false);
+          assert.equal(registry.size, 0, 'all old ownership is detached before callbacks');
+          assert.equal(scope.open({ layer: { id: 'root' }, close: () => trace.push('root-new') }), true);
+          assert.equal(scope.open({ layer: { id: 'child', parentID: 'root' }, close: () => trace.push('child-new') }), true);
+          if (throwing) throw firstError;
+        } }), true);
+        if (throwing) assert.throws(() => scope.close('root'), (error) => Object.is(error, firstError));
+        else assert.equal(scope.close('root'), true);
+        assert.deepEqual(trace, ['leaf-old', 'child-old']);
+        assert.deepEqual(scope.state.layers.map((layer) => layer.id), ['root', 'child']);
+        assert.equal(registry.size, 2);
+        assert.equal(scope.dismissTop('escape'), true);
+        assert.equal(scope.dismissTop('escape'), true);
+        assert.deepEqual(trace, ['leaf-old', 'child-old', 'child-new', 'root-new']);
+        assert.equal(scope.close('root'), false);
+        assert.equal(scope.dismissTop('escape'), false);
+        assert.deepEqual(scope.state.layers, []);
+        assert.equal(registry.size, 0);
+      }
+    }
+  } finally { Map.prototype.set = set; }
+});
+
 for (const reason of ['escape', 'interact-outside']) {
   test(`terminal ${reason} dismissal releases a throwing callback and accepts a fresh registration`, () => {
     const scope = createLayerStack();

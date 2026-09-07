@@ -5,6 +5,7 @@ import {
   type LayerDismissReason,
   type LayerInput,
   type LayerStackState,
+  type LayerStackCommand,
 } from '@sectile/core/layer-stack';
 import type { Result } from '@sectile/core/result';
 
@@ -49,7 +50,7 @@ class ManagedTerminalLayerScope implements TerminalLayerScope {
     const result = applyLayerStackEvent(this.#state, { type: 'close-layer', id });
     if (!result.ok) return false;
     this.#state = result.value.state;
-    this.#execute(result.value.commands.map((command) => command.id), id, 'ancestor-closed');
+    this.#execute(result.value.commands, id, 'ancestor-closed');
     return true;
   }
 
@@ -57,25 +58,28 @@ class ManagedTerminalLayerScope implements TerminalLayerScope {
     const result = applyLayerStackEvent(this.#state, { type: 'dismiss-top', reason });
     if (!result.ok || result.value.commands.length === 0) return false;
     this.#state = result.value.state;
-    this.#execute(result.value.commands.map((command) => command.id), undefined, reason);
+    this.#execute(result.value.commands, undefined, reason);
     return true;
   }
 
   public isTop(id: string): boolean { return getTopLayer(this.#state)?.id === id; }
 
   #execute(
-    ids: readonly string[],
+    commands: readonly LayerStackCommand<string>[],
     initiatingID: string | undefined,
     reason: LayerDismissReason | 'ancestor-closed',
   ): void {
-    // Every callback completes an already-committed closure; drain before rethrowing.
-    let failed = false;
-    let firstError: unknown;
-    for (const id of ids) {
+    // Detach the entire committed generation before application code can reuse an ID.
+    const callbacks = commands.map(({ id }) => {
       const close = this.#close.get(id);
       this.#close.delete(id);
+      return id === initiatingID ? undefined : close;
+    });
+    let failed = false;
+    let firstError: unknown;
+    for (const close of callbacks) {
       try {
-        if (id !== initiatingID) close?.(reason);
+        close?.(reason);
       } catch (error) {
         if (!failed) {
           failed = true;
