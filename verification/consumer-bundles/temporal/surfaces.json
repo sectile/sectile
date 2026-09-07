@@ -184,9 +184,11 @@
       "runtimeExports": [
         "applyMonthPickerEvent",
         "createMonthPickerState",
+        "createMonthPickerValue",
         "createMonthPickerYear",
         "isMonthPickerValueAvailable",
         "tryCreateMonthPickerState",
+        "tryCreateMonthPickerValue",
         "tryCreateMonthPickerYear"
       ],
       "typeBearing": true,
@@ -289,8 +291,10 @@
         "applyYearPickerEvent",
         "createYearPickerPage",
         "createYearPickerState",
+        "createYearPickerValue",
         "tryCreateYearPickerPage",
-        "tryCreateYearPickerState"
+        "tryCreateYearPickerState",
+        "tryCreateYearPickerValue"
       ],
       "typeBearing": true,
       "optionalPeer": null,
