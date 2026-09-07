@@ -51,8 +51,10 @@ export function applyTimeRangeFieldEvent(state: TimeRangeFieldState, event: Time
   const active = event.endpoint; const changed = applyTimeFieldEvent(active === 'start' ? valid.value.start : valid.value.end, event.event, endpointPolicies(policies)); if (!changed.ok) return changed;
   const start = active === 'start' ? changed.value.state : valid.value.start; const end = active === 'end' ? changed.value.state : valid.value.end;
   const next = completeRange(start.value, end.value); if (!next.ok) return next;
+  const committing = event.event === 'commit' || typeof event.event === 'object' && event.event.type === 'set-value';
+  if (committing && policies.required === true && next.value === null) return fail('transition-rejection', 'time-range-field-value-required', 'Time range field requires a range.');
   const commands: TimeRangeFieldCommand[] = changed.value.commands.filter((command) => command.type === 'input-state-changed').map((command) => ({ type: 'input-state-changed', endpoint: active, value: command.value }));
-  if ((event.event === 'commit' || typeof event.event === 'object' && event.event.type === 'set-value') && !sameRange(valid.value.value, next.value)) commands.push({ type: 'range-committed', value: next.value });
+  if (committing && !sameRange(valid.value.value, next.value)) commands.push({ type: 'range-committed', value: next.value });
   return composeState(start, end, active, commands);
 }
 

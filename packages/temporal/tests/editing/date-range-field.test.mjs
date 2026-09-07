@@ -28,3 +28,18 @@ test('date range field rejects inverted endpoint changes atomically', () => {
   assert.equal(rejected.error.code, 'inverted-date-range-field');
   assert.equal(formatDateValue(state.value.end), '2026-08-28');
 });
+
+test('required date range field rejects clearing a committed range', () => {
+  const state = createDateRangeFieldState({ value: { start: date(2026, 8, 22), end: date(2026, 8, 28) } });
+  const direct = applyDateRangeFieldEvent(state, { type: 'field', endpoint: 'start', event: { type: 'set-value', value: null } }, { required: true });
+  assert.equal(direct.ok, false);
+  assert.equal(direct.error.code, 'date-range-field-value-required');
+  assert.equal(formatDateValue(state.value.start), '2026-08-22');
+
+  const cleared = applyDateRangeFieldEvent(state, { type: 'field', endpoint: 'start', event: { type: 'text', event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: 10, text: '', selection: { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 0 } } } }, { required: true });
+  assert.equal(cleared.ok, true);
+  assert.equal(formatDateValue(cleared.value.state.value.start), '2026-08-22');
+  const committed = applyDateRangeFieldEvent(cleared.value.state, { type: 'field', endpoint: 'start', event: 'commit' }, { required: true });
+  assert.equal(committed.ok, false);
+  assert.equal(committed.error.code, 'date-range-field-value-required');
+});

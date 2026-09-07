@@ -19,3 +19,18 @@ test('time range field rejects inverted endpoint changes atomically', () => {
   assert.equal(rejected.error.code, 'inverted-time-range-field');
   assert.equal(formatTimeValue(state.value.end), '17:45');
 });
+
+test('required time range field rejects clearing a committed range', () => {
+  const state = createTimeRangeFieldState({ value: { start: time(9, 30), end: time(17, 45) } });
+  const direct = applyTimeRangeFieldEvent(state, { type: 'field', endpoint: 'start', event: { type: 'set-value', value: null } }, { required: true });
+  assert.equal(direct.ok, false);
+  assert.equal(direct.error.code, 'time-range-field-value-required');
+  assert.equal(formatTimeValue(state.value.start), '09:30');
+
+  const cleared = applyTimeRangeFieldEvent(state, { type: 'field', endpoint: 'start', event: { type: 'text', event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: 5, text: '', selection: { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 0 } } } }, { required: true });
+  assert.equal(cleared.ok, true);
+  assert.equal(formatTimeValue(cleared.value.state.value.start), '09:30');
+  const committed = applyTimeRangeFieldEvent(cleared.value.state, { type: 'field', endpoint: 'start', event: 'commit' }, { required: true });
+  assert.equal(committed.ok, false);
+  assert.equal(committed.error.code, 'time-range-field-value-required');
+});
