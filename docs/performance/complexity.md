@@ -131,10 +131,10 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | form:field.get | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(fField)` | forbidden | VAL-016, VAL-017 |
 | form:field.ids-by-issue-source | trusted | `O(uSource)` worst-case | `O(uSource)` | `O(uSource)` | `O(fField + iIssue)` | forbidden | VAL-016, VAL-017 |
 | form:field.update | trusted | `O(iIssue + rAffected + aField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIssue + rAffected + aField + fField/64 + iFieldIssue)` | `O(iIssue)` | `O(fField + iIssue + rRelation)` | forbidden | VAL-016, VAL-017 |
-| form:issues.clear-related-server | trusted | `O(iIssue + rAffected + aField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIssue + rAffected + aField + fField/64)` | `O(iIssue)` | `O(fField + iIssue + rRelation)` | allowed | VAL-016, VAL-017 |
+| form:issues.clear-related-server | trusted | `O(iIssue + rAffected + aField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIssue + rAffected + aField + fField/64)` | `O(iIssue)` | `O(fField + iIssue + rRelation)` | allowed | packages/form/tests/state/form.test.mjs |
 | form:issues.replace-source | trusted | `O(iIssue + iIncoming + iRemoved + rAffected + aField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIssue + iIncoming + iRemoved + rAffected + aField + fField/64)` | `O(iIssue + iIncoming)` | `O(fField + iIssue + rRelation)` | forbidden | VAL-016, VAL-017 |
 | form:state.construct | external | `O(fField + uID + iIssue)` worst-case | `O(fField)` | `O(fField)` | `O(fField)` | allowed | VAL-016, VAL-017 |
-| form:values.construct | external | `O(eEntry + pSegment + oNode)` worst-case | `O(pSegment + oNode)` | `O(oNode)` | `O(oNode)` | allowed | VAL-016, VAL-017 |
+| form:values.construct | external | `O(eEntry + pSegment + oNode)` worst-case | `O(pSegment + oNode)` | `O(oNode)` | `O(oNode)` | allowed | packages/form/tests/state/form.test.mjs, packages/dom/tests/form.test.mjs |
 | tabular:data-table.changed-slice | external | `O(sChanged)` worst-case | `O(sChanged)` | `O(sChanged)` | `O(sChanged + sOther)` | forbidden | VAL-016, VAL-017 |
 | tabular:grid-profile.move | trusted | `O(sAxis)` worst-case | `O(1)` | `O(1)` | `O(nCell)` | forbidden | VAL-016, VAL-017 |
 | tabular:header.projection-validation | external | `O(c + h)` worst-case | `O(c + h)` | `O(c)` | `O(c)` | allowed | VAL-016, VAL-017 |

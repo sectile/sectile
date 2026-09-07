@@ -57,6 +57,7 @@ test('form values build immutable nested objects, indexed arrays, and repeated l
     { path: ['addresses', 1, 'city'], value: 'Busan' },
     { path: 'roles', value: 'admin' },
     { path: 'roles', value: 'reviewer' },
+    { path: 'roles', value: 'editor' },
     { path: 'profile.note', value: '' },
   ]);
 
@@ -66,10 +67,40 @@ test('form values build immutable nested objects, indexed arrays, and repeated l
     { city: 'Seoul' },
     { city: 'Busan' },
   ]);
-  assert.deepEqual(values.roles, ['admin', 'reviewer']);
+  assert.deepEqual(values.roles, ['admin', 'reviewer', 'editor']);
   assert.equal(Object.isFrozen(values), true);
   assert.equal(Object.isFrozen(values.addresses), true);
   assert.equal(Object.isFrozen(values.roles), true);
+});
+
+test('repeated FormData leaves remain ordered, bounded and distinct from structural arrays', () => {
+  for (const count of [3, 16, 4_096]) {
+    const data = new FormData();
+    for (let index = 0; index < count; index += 1) {
+      data.append('tags', String(index));
+      data.append('settings.tags', String(index));
+    }
+    const values = createFormValues([...data.entries()].map(([path, value]) => ({ path, value })));
+    const expected = Array.from({ length: count }, (_, index) => String(index));
+    assert.deepEqual(values.tags, expected);
+    assert.deepEqual(values.settings.tags, expected);
+    assert.equal(Object.isFrozen(values.tags), true);
+    assert.equal(Object.isFrozen(values.settings.tags), true);
+    assert.equal(Object.isFrozen(values.settings), true);
+  }
+  const entries = ['red', 'green', 'blue'].map((value) => ({ path: 'tags', value }));
+  assert.equal(tryCreateFormValues(entries, { maxEntries: 3, maxOutputNodes: 5, maxPathCodeUnits: 12 }).ok, true);
+  for (const [limits, code] of [
+    [{ maxEntries: 2 }, 'form-entry-ceiling-exceeded'],
+    [{ maxOutputNodes: 4 }, 'form-output-node-ceiling-exceeded'],
+    [{ maxPathCodeUnits: 11 }, 'form-path-code-unit-ceiling-exceeded'],
+  ]) assert.equal(tryCreateFormValues(entries, limits).error.code, code);
+  for (const descendant of ['tags[0]', 'tags.name']) {
+    const child = { path: descendant, value: 'nested' };
+    for (const input of [[...entries, child], [child, ...entries]]) {
+      assert.equal(tryCreateFormValues(input).error.code, 'form-value-path-collision');
+    }
+  }
 });
 
 test('form values preserve opaque values and reject leaf-container collisions', () => {
@@ -462,6 +493,7 @@ test('VAL-033: related server issue clearing changes only affected field identit
     fields,
     issues: [{
       id: 'related-server',
+      fieldId: 'unmounted-primary',
       message: 'Check both fields.',
       source: 'server',
       relatedFieldIds: ['field-0', 'field-1'],
@@ -479,6 +511,63 @@ test('VAL-033: related server issue clearing changes only affected field identit
 
   assert.equal(changedFieldIdentities, 2);
   assert.equal(changed.allIssues.length, 0);
+  assert.deepEqual(changed.issues, []);
+  const registered = applyFormEvent(changed, { type: 'register-field', field: { id: 'unmounted-primary' } }).value.state;
+  assert.deepEqual(registered.allIssues, []);
+  assert.equal(registered.valid, true);
+});
+
+test('related server issue removal stays coherent through submission, registration and reorder', () => {
+  for (const fieldId of [undefined, 'unmounted', 'primary']) {
+    let state = createFormState({ fields: [{ id: 'primary' }, { id: 'related' }, { id: 'untouched' }] });
+    const step = (event) => {
+      const result = applyFormEvent(state, event);
+      assert.equal(result.ok, true, JSON.stringify(result));
+      state = result.value.state;
+    };
+    step({ type: 'validation-started', trigger: 'submit', intent: 'submission' });
+    step({ type: 'validation-completed', generation: state.validation.generation, trigger: 'submit', intent: 'submission' });
+    step({ type: 'submit-started', generation: state.submission.generation });
+    step({ type: 'submit-failed', generation: state.submission.generation, issues: [{
+      id: 'conflict', source: 'server', message: 'Check both values.',
+      ...(fieldId === undefined ? {} : { fieldId }), relatedFieldIds: ['related'],
+    }] });
+    assert.equal(state.valid, false);
+    assert.equal(getFormField(state, 'related').relatedIssues.length, 1);
+    const untouched = getFormField(state, 'untouched');
+    step({ type: 'field-value-changed', id: 'related' });
+    const cleared = () => {
+      assert.equal(state.valid, true);
+      assert.deepEqual(state.issues, []);
+      assert.deepEqual(state.allIssues, []);
+      assert.deepEqual(getFormIssuesBySource(state, 'server'), []);
+      assert.deepEqual(getFormField(state, 'related').relatedIssues, []);
+    };
+    cleared();
+    assert.equal(getFormField(state, 'untouched'), untouched);
+    assert.equal(state.validation.status, 'idle');
+    assert.equal(state.submission.status, 'idle');
+    step({ type: 'register-field', field: { id: 'unrelated' } });
+    cleared();
+    step({ type: 'reorder-fields', ids: ['unrelated', 'untouched', 'related', 'primary'] });
+    cleared();
+  }
+});
+
+test('clearing a global related server issue preserves unrelated issues and sources', () => {
+  const initial = createFormState({ fields: [{ id: 'related' }, { id: 'other' }], issues: [
+    { id: 'removed', fieldId: 'unmounted', relatedFieldIds: ['related'], source: 'server', message: 'Remove.' },
+    { id: 'server-kept', fieldId: 'other', source: 'server', message: 'Keep server.' },
+    { id: 'schema-kept', relatedFieldIds: ['related'], source: 'schema', message: 'Keep schema.' },
+  ] });
+  const changed = applyFormEvent(initial, { type: 'field-value-changed', id: 'related' }).value.state;
+  assert.equal(getFormField(changed, 'other'), getFormField(initial, 'other'));
+  assert.deepEqual(changed.issues.map((issue) => issue.id), ['schema-kept']);
+  assert.deepEqual(getFormIssuesBySource(changed, 'server').map((issue) => issue.id), ['server-kept']);
+  assert.deepEqual(getFormIssuesBySource(changed, 'schema').map((issue) => issue.id), ['schema-kept']);
+  const later = applyFormEvent(changed, { type: 'register-field', field: { id: 'extra' } }).value.state;
+  assert.deepEqual(new Set(later.allIssues.map((issue) => issue.id)), new Set(['server-kept', 'schema-kept']));
+  assert.equal(later.valid, false);
 });
 
 test('submission failures do not create validation issues or move field focus', () => {
@@ -574,19 +663,25 @@ test('FRM-05: construction ceilings fail before unbounded output and deep paths 
 test('FRM-06: only library-owned branches and repeated wrappers are frozen', () => {
   const callerArray = [];
   const callerObject = { mutable: true };
+  const callerFile = new File(['contents'], 'attachment.txt');
   const values = createFormValues([
     { path: 'single.array', value: callerArray },
     { path: 'single.object', value: callerObject },
     { path: 'repeated', value: callerArray },
     { path: 'repeated', value: callerObject },
+    { path: 'repeated', value: callerFile },
   ]);
   assert.equal(values.single.array, callerArray);
   assert.equal(values.single.object, callerObject);
-  assert.deepEqual(values.repeated, [callerArray, callerObject]);
+  assert.deepEqual(values.repeated, [callerArray, callerObject, callerFile]);
+  assert.equal(values.repeated[0], callerArray);
+  assert.equal(values.repeated[1], callerObject);
+  assert.equal(values.repeated[2], callerFile);
   assert.equal(Object.isFrozen(values.single), true);
   assert.equal(Object.isFrozen(values.repeated), true);
   assert.equal(Object.isFrozen(callerArray), false);
   assert.equal(Object.isFrozen(callerObject), false);
+  assert.equal(Object.isFrozen(callerFile), false);
   callerArray.push('still mutable');
   callerObject.mutable = false;
   assert.deepEqual(callerArray, ['still mutable']);

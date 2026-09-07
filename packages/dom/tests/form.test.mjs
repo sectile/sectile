@@ -163,6 +163,38 @@ test('DOM Form reads successful native controls through FormData and observes su
   }
 });
 
+test('DOM Form submits three same-name native values without a form-values issue', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const element = document.createElement('form');
+    const inputs = [];
+    for (const name of ['tags', 'settings.tags']) {
+      for (const value of ['red', 'green', 'blue']) {
+        const input = document.createElement('input');
+        input.type = 'checkbox'; input.name = name; input.value = value; input.checked = true;
+        inputs.push(input); element.append(input);
+      }
+    }
+    document.body.append(element);
+    let values; let submissions = 0;
+    const form = createForm({
+      form: element,
+      participants: [{ id: 'tags', element: inputs[0] }, { id: 'settings-tags', element: inputs[3] }],
+      onSubmit(details) { details.event.preventDefault(); submissions += 1; values = details.values; },
+    });
+    element.requestSubmit();
+    assert.equal(submissions, 1);
+    assert.deepEqual(values.tags, ['red', 'green', 'blue']);
+    assert.deepEqual(values.settings.tags, ['red', 'green', 'blue']);
+    assert.equal(Object.isFrozen(values.tags), true);
+    assert.equal(form.state.validation.status, 'valid');
+    assert.equal(form.state.submission.status, 'succeeded');
+    assert.deepEqual(form.state.allIssues, []);
+    form.destroy();
+  } finally { dom.restore(); }
+});
+
 test('DOM Form owns async managed submission, duplicate suppression, and server failure', async () => {
   const dom = installDOM();
   try {

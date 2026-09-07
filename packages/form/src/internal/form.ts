@@ -585,7 +585,6 @@ export function tryCreateFormValues<Value = unknown>(
       const reserved = reserveNodes(2);
       if (reserved !== null) return reserved;
       const next = [existing, entryValue];
-      branches.add(next);
       repeated.set(canonical, next);
       writeContainer(container, leaf, next);
     } else {
@@ -595,6 +594,8 @@ export function tryCreateFormValues<Value = unknown>(
     }
   }
 
+  // Repeated leaves are owned wrappers, not traversable structural branches.
+  for (const values of repeated.values()) Object.freeze(values);
   freezeBranches(root, branches);
   return ok(root);
 }
@@ -1350,8 +1351,8 @@ function fieldValueChanged<ID extends StableID>(
   for (const issueID of relatedIssueIDs) {
     const issue = issueStore.allByID.get(issueID);
     if (issue === undefined) continue;
-    if (issue.fieldId === undefined) removesGlobalIssue = true;
-    else affected.add(issue.fieldId);
+    if (issueStore.byID.has(issueID)) removesGlobalIssue = true;
+    if (issue.fieldId !== undefined) affected.add(issue.fieldId);
     for (const relatedID of issue.relatedFieldIds ?? []) affected.add(relatedID);
   }
   const replacements = new Map<ID, FormFieldState<ID>>();

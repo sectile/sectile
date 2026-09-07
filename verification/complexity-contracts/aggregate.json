@@ -27371,11 +27371,10 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The field-to-server-issue inverse index identifies removed issue IDs directly. Only their primary and related fields copy field chunks; the canonical allIssues array is materialized once because its observable full output changes.",
+        "proof": "The field-to-server-issue inverse index identifies removed issue IDs directly. Existing global by-ID membership determines global removal even when a defined primary field is unregistered. Only primary and related fields copy field chunks; changed global and allIssues snapshots are rebuilt coherently so later structural projection cannot resurrect removed issues.",
         "adversarialWitness": "Changing one field in a 10k-field Form with one related server issue updates only associated field chunks and the one canonical issue output without scanning unrelated fields.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "packages/form/tests/state/form.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -27615,11 +27614,11 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Construction validates each bounded entry and path once, allocates each library-owned output node once, then freezes owned branches with an iterative stack.",
+        "proof": "Construction validates each bounded entry and path once and allocates every output node once. Structural branches and repeated-leaf wrappers have separate ownership roles: wrappers remain leaves during collision checks and are frozen explicitly once, then structural branches are frozen with an iterative stack without traversing opaque caller values.",
         "adversarialWitness": "A maximum-depth path and maximum entry set reaches every declared ceiling without recursive traversal or freezing caller-owned leaf containers.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "packages/form/tests/state/form.test.mjs",
+          "packages/dom/tests/form.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
