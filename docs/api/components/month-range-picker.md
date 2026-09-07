@@ -398,18 +398,15 @@ type MonthRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<ty
 
 #### `MonthRangePickerValue`
 
-| Name | Type | Required |
-| --- | --- | --- |
-| `start` | `DateValue` | Yes |
-| `end` | `DateValue` | Yes |
+```ts
+type MonthRangePickerValue = DateRange
+```
 
 #### `MonthPickerValue`
 
-| Name | Type | Required |
-| --- | --- | --- |
-| `year` | `number` | Yes |
-| `month` | `number` | Yes |
-| `day` | `number` | Yes |
+```ts
+type MonthPickerValue = DateValue
+```
 
 ## Parts
 

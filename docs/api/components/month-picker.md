@@ -397,11 +397,9 @@ type MonthPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof 
 
 #### `MonthPickerValue`
 
-| Name | Type | Required |
-| --- | --- | --- |
-| `year` | `number` | Yes |
-| `month` | `number` | Yes |
-| `day` | `number` | Yes |
+```ts
+type MonthPickerValue = DateValue
+```
 
 ## Parts
 

@@ -404,11 +404,9 @@ type YearPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof Y
 
 #### `YearPickerValue`
 
-| Name | Type | Required |
-| --- | --- | --- |
-| `year` | `number` | Yes |
-| `month` | `number` | Yes |
-| `day` | `number` | Yes |
+```ts
+type YearPickerValue = DateValue
+```
 
 ## Parts
 

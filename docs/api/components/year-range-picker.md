@@ -405,18 +405,15 @@ type YearRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typ
 
 #### `YearRangePickerValue`
 
-| Name | Type | Required |
-| --- | --- | --- |
-| `start` | `DateValue` | Yes |
-| `end` | `DateValue` | Yes |
+```ts
+type YearRangePickerValue = DateRange
+```
 
 #### `YearPickerValue`
 
-| Name | Type | Required |
-| --- | --- | --- |
-| `year` | `number` | Yes |
-| `month` | `number` | Yes |
-| `day` | `number` | Yes |
+```ts
+type YearPickerValue = DateValue
+```
 
 ## Parts
 

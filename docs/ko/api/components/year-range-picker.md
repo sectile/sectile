@@ -405,18 +405,15 @@ type YearRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typ
 
 #### `YearRangePickerValue`
 
-| 이름 | 타입 | 필수 |
-| --- | --- | --- |
-| `start` | `DateValue` | 필수 |
-| `end` | `DateValue` | 필수 |
+```ts
+type YearRangePickerValue = DateRange
+```
 
 #### `YearPickerValue`
 
-| 이름 | 타입 | 필수 |
-| --- | --- | --- |
-| `year` | `number` | 필수 |
-| `month` | `number` | 필수 |
-| `day` | `number` | 필수 |
+```ts
+type YearPickerValue = DateValue
+```
 
 ## 파트
 

@@ -398,18 +398,15 @@ type MonthRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<ty
 
 #### `MonthRangePickerValue`
 
-| 이름 | 타입 | 필수 |
-| --- | --- | --- |
-| `start` | `DateValue` | 필수 |
-| `end` | `DateValue` | 필수 |
+```ts
+type MonthRangePickerValue = DateRange
+```
 
 #### `MonthPickerValue`
 
-| 이름 | 타입 | 필수 |
-| --- | --- | --- |
-| `year` | `number` | 필수 |
-| `month` | `number` | 필수 |
-| `day` | `number` | 필수 |
+```ts
+type MonthPickerValue = DateValue
+```
 
 ## 파트
 

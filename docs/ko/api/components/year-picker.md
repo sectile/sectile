@@ -404,11 +404,9 @@ type YearPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof Y
 
 #### `YearPickerValue`
 
-| 이름 | 타입 | 필수 |
-| --- | --- | --- |
-| `year` | `number` | 필수 |
-| `month` | `number` | 필수 |
-| `day` | `number` | 필수 |
+```ts
+type YearPickerValue = DateValue
+```
 
 ## 파트
 
