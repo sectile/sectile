@@ -1,5 +1,11 @@
 # @sectile/vue
 
+## 0.16.5
+
+### Changes
+
+- fix(vue): route period paging through Temporal navigation (e0a13204)
+
 ## 0.16.4
 
 ### Changes
