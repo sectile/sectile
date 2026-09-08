@@ -1,5 +1,11 @@
 # @sectile/form
 
+## 0.14.6
+
+### Changes
+
+- fix(form): bound deep path lookup and issue relation output (590c13fc)
+
 ## 0.14.5
 
 ### Changes

@@ -1,5 +1,12 @@
 # @sectile/temporal
 
+## 0.14.7
+
+### Changes
+
+- test(temporal): model calendar availability scan work (c12f40a6)
+- fix(temporal): reject unsafe year page intervals (4bd13de0)
+
 ## 0.14.6
 
 ### Changes
