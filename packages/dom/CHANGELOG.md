@@ -1,5 +1,13 @@
 # @sectile/dom
 
+## 0.16.4
+
+### Changes
+
+- perf(dom): keep period picker reducers out of base bundles (585606a6)
+- fix(temporal): unify period picker value contracts (e26f481c)
+- fix(temporal): preserve boundary calendar projections (6e28d1c0)
+
 ## 0.16.3
 
 ### Changes

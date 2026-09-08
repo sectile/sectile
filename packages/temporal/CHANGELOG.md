@@ -1,5 +1,13 @@
 # @sectile/temporal
 
+## 0.14.4
+
+### Changes
+
+- fix(temporal): unify period picker value contracts (e26f481c)
+- fix(temporal): preserve boundary calendar projections (6e28d1c0)
+- fix(temporal): enforce required range fields (43dae6b2)
+
 ## 0.14.3
 
 ### Changes

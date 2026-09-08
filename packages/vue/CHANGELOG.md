@@ -1,5 +1,11 @@
 # @sectile/vue
 
+## 0.16.3
+
+### Changes
+
+- fix(temporal): unify period picker value contracts (e26f481c)
+
 ## 0.16.2
 
 ### Changes

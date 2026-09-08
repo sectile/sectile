@@ -1,5 +1,12 @@
 # @sectile/terminal
 
+## 0.14.5
+
+### Changes
+
+- fix(temporal): unify period picker value contracts (e26f481c)
+- fix(temporal): preserve boundary calendar projections (6e28d1c0)
+
 ## 0.14.4
 
 ### Changes

@@ -1,44 +1,44 @@
 {
   "schemaVersion": 1,
-  "releaseTag": "release-2026-09-07.2",
+  "releaseTag": "release-2026-09-08.1",
   "packages": [
     {
-      "name": "@sectile/core",
-      "directory": "core",
+      "name": "@sectile/temporal",
+      "directory": "temporal",
       "previousVersion": "0.14.3",
       "version": "0.14.4",
       "bump": "patch",
-      "tag": "@sectile/core@0.14.4",
-      "direct": true,
-      "dependencies": []
-    },
-    {
-      "name": "@sectile/form",
-      "directory": "form",
-      "previousVersion": "0.14.3",
-      "version": "0.14.4",
-      "bump": "patch",
-      "tag": "@sectile/form@0.14.4",
+      "tag": "@sectile/temporal@0.14.4",
       "direct": true,
       "dependencies": []
     },
     {
       "name": "@sectile/terminal",
       "directory": "terminal",
-      "previousVersion": "0.14.3",
-      "version": "0.14.4",
+      "previousVersion": "0.14.4",
+      "version": "0.14.5",
       "bump": "patch",
-      "tag": "@sectile/terminal@0.14.4",
+      "tag": "@sectile/terminal@0.14.5",
       "direct": true,
       "dependencies": []
     },
     {
       "name": "@sectile/dom",
       "directory": "dom",
+      "previousVersion": "0.16.3",
+      "version": "0.16.4",
+      "bump": "patch",
+      "tag": "@sectile/dom@0.16.4",
+      "direct": true,
+      "dependencies": []
+    },
+    {
+      "name": "@sectile/vue",
+      "directory": "vue",
       "previousVersion": "0.16.2",
       "version": "0.16.3",
       "bump": "patch",
-      "tag": "@sectile/dom@0.16.3",
+      "tag": "@sectile/vue@0.16.3",
       "direct": true,
       "dependencies": []
     }
