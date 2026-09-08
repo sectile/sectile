@@ -5,10 +5,10 @@ import { createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '.
 import { createCalendarMonth, createCalendarWeek, createCalendarYear } from '../../.verification-dist/calendar.js';
 import { applyDatePickerEvent, createDatePickerState } from '../../.verification-dist/date-picker.js';
 import { applyDateRangePickerEvent, createDateRangePickerState } from '../../.verification-dist/date-range-picker.js';
-import { applyMonthPickerEvent, createMonthPickerState, createMonthPickerValue } from '../../.verification-dist/month-picker.js';
-import { applyMonthRangePickerEvent, createMonthRangePickerState } from '../../.verification-dist/month-range-picker.js';
-import { applyYearPickerEvent, createYearPickerPage, createYearPickerState, createYearPickerValue, tryCreateYearPickerPage, MAX_YEAR_PICKER_PAGE_SIZE } from '../../.verification-dist/year-picker.js';
-import { applyYearRangePickerEvent, createYearRangePickerState } from '../../.verification-dist/year-range-picker.js';
+import { applyMonthPickerEvent, createMonthPickerState, createMonthPickerValue, tryCreateMonthPickerState, tryCreateMonthPickerValue } from '../../.verification-dist/month-picker.js';
+import { applyMonthRangePickerEvent, createMonthRangePickerState, tryCreateMonthRangePickerState } from '../../.verification-dist/month-range-picker.js';
+import { applyYearPickerEvent, createYearPickerPage, createYearPickerState, createYearPickerValue, tryCreateYearPickerPage, tryCreateYearPickerState, tryCreateYearPickerValue, MAX_YEAR_PICKER_PAGE_SIZE } from '../../.verification-dist/year-picker.js';
+import { applyYearRangePickerEvent, createYearRangePickerState, tryCreateYearRangePickerState } from '../../.verification-dist/year-range-picker.js';
 import { applyDateTimePickerEvent, createDateTimePickerState } from '../../.verification-dist/date-time-picker.js';
 import { applyDateTimeRangePickerEvent, createDateTimeRangePickerState } from '../../.verification-dist/date-time-range-picker.js';
 import { createTimeValue } from '../../.verification-dist/time-field.js';
@@ -53,6 +53,77 @@ test('month and year range pickers normalize both committed endpoints', () => {
   const yearRange = applyYearRangePickerEvent(year, { type: 'select-year', value: { year: 2027 } });
   assert.equal(formatDateValue(yearRange.value.state.value.start), '2025-01-01');
   assert.equal(formatDateValue(yearRange.value.state.value.end), '2027-01-01');
+});
+
+test('period Result boundaries preserve canonical errors and atomic state for invalid values', () => {
+  const reference = date(2026, 8, 15);
+  for (const [unit, create, tryCreate, apply, createRange, tryRange, applyRange, normalize] of [
+    ['month', createMonthPickerState, tryCreateMonthPickerState, applyMonthPickerEvent, createMonthRangePickerState, tryCreateMonthRangePickerState, applyMonthRangePickerEvent, (value) => tryCreateMonthPickerValue(value.year, value.month)],
+    ['year', createYearPickerState, tryCreateYearPickerState, applyYearPickerEvent, createYearRangePickerState, tryCreateYearRangePickerState, applyYearRangePickerEvent, (value) => tryCreateYearPickerValue(value.year)],
+  ]) {
+    const invalid = [0, 10_000, NaN, Infinity, 2026.5].map((year) => ({ year, month: 1, day: 1 }));
+    if (unit === 'month') invalid.push(...[0, 13, NaN, Infinity, 1.5].map((month) => ({ year: 2026, month, day: 1 })));
+    const state = create({ value: reference, highlighted: reference, open: true });
+    const range = createRange({ value: { start: reference, end: reference }, anchor: reference, calendar: { highlighted: reference, open: true } });
+    const before = structuredClone(state);
+    const beforeRange = structuredClone(range);
+    for (const value of invalid) {
+      const failure = normalize(value);
+      assert.equal(failure.ok, false);
+      const transitionFailure = { ok: false, error: { ...failure.error, class: 'transition-rejection' } };
+      assert.deepEqual(tryCreate({ value, highlighted: reference }), failure);
+      for (const type of [`select-${unit}`, 'select', 'set-value']) {
+        const cell = type === 'select-year' ? { year: value.year } : type === 'select-month' ? { year: value.year, month: value.month } : value;
+        assert.deepEqual(apply(state, { type, value: cell }), transitionFailure, `${unit} ${type}`);
+        if (type !== 'set-value') assert.deepEqual(applyRange(range, { type, value: cell }), transitionFailure, `${unit} range ${type}`);
+      }
+      for (const input of [
+        { value: { start: value, end: reference } },
+        { value: { start: reference, end: value } },
+        { anchor: value },
+      ]) {
+        assert.deepEqual(tryRange({ ...input, calendar: { highlighted: reference } }), failure, `${unit} range constructor`);
+        const invalidState = { ...range, ...input };
+        const previous = structuredClone(invalidState);
+        assert.deepEqual(applyRange(invalidState, 'select-highlighted'), transitionFailure);
+        assert.deepEqual(invalidState, previous);
+      }
+      const invalidState = { ...state, value };
+      assert.deepEqual(apply(invalidState, 'select-highlighted'), transitionFailure);
+      assert.deepEqual(invalidState, { ...state, value });
+      assert.deepEqual(state, before);
+      assert.deepEqual(range, beforeRange);
+    }
+    // Construction and successful updates keep the same first-day / January-1 values.
+    const canonical = normalize(reference).value;
+    assert.deepEqual(range.value, { start: canonical, end: canonical });
+    assert.deepEqual(range.anchor, canonical);
+    assert.deepEqual(apply(state, 'select-highlighted').value.state.value, canonical);
+    assert.deepEqual(apply(state, { type: 'set-value', value: reference }).value.state.value, canonical);
+    assert.equal(apply(state, { type: 'set-value', value: null }).value.state.value, null);
+    assert.deepEqual(applyRange(range, 'select-highlighted').value.state.value, { start: canonical, end: canonical });
+    assert.equal(tryRange({ value: null, anchor: null, referenceDate: reference }).ok, true);
+  }
+});
+
+test('year page cells compose with Result transitions at both civil-date boundaries', () => {
+  for (const year of [1, 9999]) {
+    const reference = date(year, 1, 1);
+    const state = createYearPickerState({ value: reference, highlighted: reference });
+    const range = createYearRangePickerState({ anchor: reference, calendar: { highlighted: reference } });
+    const before = structuredClone(state);
+    const beforeRange = structuredClone(range);
+    for (const cell of createYearPickerPage(year).flat()) {
+      const expected = tryCreateYearPickerValue(cell.year);
+      for (const [apply, current] of [[applyYearPickerEvent, state], [applyYearRangePickerEvent, range]]) {
+        const result = apply(current, { type: 'select-year', value: cell });
+        if (expected.ok) assert.equal(result.ok, true);
+        else assert.deepEqual(result, { ok: false, error: { ...expected.error, class: 'transition-rejection' } });
+      }
+      assert.deepEqual(state, before);
+      assert.deepEqual(range, beforeRange);
+    }
+  }
 });
 
 test('period navigation uses canonical month and year grid strides in scalar and range pickers', () => {

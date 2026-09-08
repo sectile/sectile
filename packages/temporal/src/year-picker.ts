@@ -71,12 +71,18 @@ export function tryCreateYearPickerState(input: YearPickerStateInput = {}): Temp
 
 export function applyYearPickerEvent(state: YearPickerState, event: YearPickerEvent, policies: YearPickerPolicies = {}): TemporalResult<YearPickerUpdate> {
   const valid = tryCreateYearPickerState(state);
-  if (!valid.ok) return valid;
+  if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   if (typeof event === 'object' && event.type === 'navigate-period') return applyPeriodPickerNavigation(valid.value, event, policies);
-  if (event === 'select-highlighted') return applyDatePickerEvent(valid.value, { type: 'select', value: createYearPickerValue(valid.value.highlighted.year) }, policies);
-  if (typeof event === 'object' && event.type === 'select-year') return applyDatePickerEvent(valid.value, { type: 'select', value: createYearPickerValue(event.value.year) }, policies);
+  if (event === 'select-highlighted' || (typeof event === 'object' && event.type === 'select-year')) {
+    const requested = event === 'select-highlighted' ? valid.value.highlighted : event.value;
+    const value = tryCreateYearPickerValue(requested.year);
+    if (!value.ok) return { ok: false, error: { ...value.error, class: 'transition-rejection' } };
+    return applyDatePickerEvent(valid.value, { type: 'select', value: value.value }, policies);
+  }
   if (typeof event === 'object' && (event.type === 'select' || event.type === 'set-value') && event.value !== null) {
-    return applyDatePickerEvent(valid.value, { ...event, value: createYearPickerValue(event.value.year) }, policies);
+    const value = tryCreateYearPickerValue(event.value.year);
+    if (!value.ok) return { ok: false, error: { ...value.error, class: 'transition-rejection' } };
+    return applyDatePickerEvent(valid.value, { ...event, value: value.value }, policies);
   }
   return applyDatePickerEvent(valid.value, event, policies);
 }

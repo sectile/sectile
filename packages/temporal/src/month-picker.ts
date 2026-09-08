@@ -41,16 +41,18 @@ export function tryCreateMonthPickerState(input: MonthPickerStateInput = {}): Te
 
 export function applyMonthPickerEvent(state: MonthPickerState, event: MonthPickerEvent, policies: MonthPickerPolicies = {}): TemporalResult<MonthPickerUpdate> {
   const valid = tryCreateMonthPickerState(state);
-  if (!valid.ok) return valid;
+  if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   if (typeof event === 'object' && event.type === 'navigate-period') return applyPeriodPickerNavigation(valid.value, event, policies);
-  if (event === 'select-highlighted') {
-    return applyDatePickerEvent(valid.value, { type: 'select', value: createMonthPickerValue(valid.value.highlighted.year, valid.value.highlighted.month) }, policies);
-  }
-  if (typeof event === 'object' && event.type === 'select-month') {
-    return applyDatePickerEvent(valid.value, { type: 'select', value: createMonthPickerValue(event.value.year, event.value.month) }, policies);
+  if (event === 'select-highlighted' || (typeof event === 'object' && event.type === 'select-month')) {
+    const requested = event === 'select-highlighted' ? valid.value.highlighted : event.value;
+    const value = tryCreateMonthPickerValue(requested.year, requested.month);
+    if (!value.ok) return { ok: false, error: { ...value.error, class: 'transition-rejection' } };
+    return applyDatePickerEvent(valid.value, { type: 'select', value: value.value }, policies);
   }
   if (typeof event === 'object' && (event.type === 'select' || event.type === 'set-value') && event.value !== null) {
-    return applyDatePickerEvent(valid.value, { ...event, value: createMonthPickerValue(event.value.year, event.value.month) }, policies);
+    const value = tryCreateMonthPickerValue(event.value.year, event.value.month);
+    if (!value.ok) return { ok: false, error: { ...value.error, class: 'transition-rejection' } };
+    return applyDatePickerEvent(valid.value, { ...event, value: value.value }, policies);
   }
   return applyDatePickerEvent(valid.value, event, policies);
 }

@@ -125,6 +125,50 @@ test('DOM and terminal required ranges preserve committed values and suppress re
   }
 });
 
+test('DOM and terminal period hosts reject invalid values without publishing changes', async () => {
+  const reference = date(2026, 8, 15);
+  const invalid = { year: 0, month: 1, day: 1 };
+  for (const host of ['dom', 'terminal']) {
+    for (const [family, prefix, unit, range] of [
+      ['month-picker', 'MonthPicker', 'month', false], ['year-picker', 'YearPicker', 'year', false],
+      ['month-range-picker', 'MonthRangePicker', 'month', true], ['year-range-picker', 'YearRangePicker', 'year', true],
+    ]) {
+      const exports = await import(`@sectile/${host}/${host === 'dom' ? 'temporal/' : ''}${family}`);
+      const value = range ? { start: reference, end: reference } : reference;
+      const rejectedValue = range ? { start: reference, end: invalid } : invalid;
+      const notifications = [];
+      const options = {
+        ...(host === 'dom' ? { root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement() } : {}),
+        value, defaultHighlightedValue: reference, defaultOpen: true,
+        onValueChange: (next) => notifications.push(['value', next]),
+        onHighlightedValueChange: (next) => notifications.push(['highlight', next]),
+        onOpenChange: (next) => notifications.push(['open', next]),
+        onUpdate: () => notifications.push(['update']),
+      };
+      const rejected = exports[`tryCreate${prefix}`]({ ...options, value: rejectedValue });
+      assert.equal(rejected.ok, false, `${host} ${family} construction`);
+      assert.equal(rejected.error.code, 'invalid-date-year');
+      const picker = exports[`create${prefix}`](options);
+      try {
+        notifications.length = 0;
+        const before = picker.getSnapshot();
+        for (const event of [
+          { type: `select-${unit}`, value: unit === 'month' ? { year: 0, month: 1 } : { year: 0 } },
+          { type: 'select', value: invalid },
+          ...(!range ? [{ type: 'set-value', value: invalid }] : []),
+        ]) assert.equal(picker.handleEvent(event), false, `${host} ${family} ${event.type}`);
+        const synchronized = picker.syncControlledValues({ value: rejectedValue });
+        assert.equal(synchronized.ok, false, `${host} ${family} controlled value`);
+        assert.equal(synchronized.error.code, 'invalid-date-year');
+        assert.deepEqual(picker.getSnapshot(), before);
+        assert.deepEqual(notifications, []);
+      } finally {
+        if (host === 'dom') picker.disconnect();
+      }
+    }
+  }
+});
+
 test('DOM and terminal date pickers preserve navigation, availability, and selection', () => {
   const value = date(2026, 8, 21);
   const options = { defaultValue: value, defaultHighlightedValue: value, defaultOpen: true, policies: { unavailable: (candidate) => candidate.day === 22 || candidate.day === 23 } };
