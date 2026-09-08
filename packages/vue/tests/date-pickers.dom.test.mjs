@@ -218,6 +218,137 @@ test('Vue period cells expose the availability of their canonical scalar and ran
   }
 });
 
+test('Vue period paging controls match canonical navigation and publish one highlight', async () => {
+  for (const [path, prefix, unit, range] of [
+    ['month-picker', 'MonthPicker', 'month', false],
+    ['year-picker', 'YearPicker', 'year', false],
+    ['month-range-picker', 'MonthRangePicker', 'month', true],
+    ['year-range-picker', 'YearRangePicker', 'year', true],
+  ]) {
+    const family = await import(`../.verification-dist/${path}.js`);
+    const temporal = await import(`@sectile/temporal/${path}`);
+    for (const direction of [-1, 1]) {
+      const reference = { year: 2026, month: 8, day: 15 };
+      const target = { year: 2026 + direction * (unit === 'month' ? 1 : 12), month: unit === 'month' ? 8 : 1, day: 1 };
+      const cases = [
+        ['unrestricted', reference, {}, false],
+        ['controlled highlight', reference, {}, true],
+        ['exact canonical bounds', reference, { min: target, max: target }, false],
+        ['mid-period boundary', reference, direction > 0
+          ? { min: { ...target, day: 15 } }
+          : { max: { year: target.year - 1, month: 12, day: 31 } }, false],
+        ['canonical dates unavailable', reference, { unavailable: (value) => value.day === 1, maxScan: 3 }, false],
+        ['civil-date boundary', { ...reference, year: direction > 0 ? 9999 : 1 }, {}, false],
+      ];
+      for (const [scenario, initial, policies, controlled] of cases) {
+        const value = range ? { start: initial, end: initial } : initial;
+        const calendar = { highlighted: initial, open: true, viewMode: 'year' };
+        const state = temporal[`create${prefix}State`](range ? { value, calendar } : { value, ...calendar });
+        const expected = temporal[`apply${prefix}Event`](state, {
+          type: 'navigate-period', unit, direction: direction > 0 ? 'next-page' : 'previous-page', referenceYear: initial.year,
+        }, policies);
+        const host = document.createElement('div');
+        document.body.append(host);
+        const highlighted = ref(initial);
+        const highlights = [];
+        const changes = [];
+        const opens = [];
+        let snapshot;
+        const control = `${prefix}${direction > 0 ? 'Next' : 'Previous'}${unit === 'month' ? 'Year' : 'Page'}`;
+        const app = createApp({ render: () => h(family[`${prefix}Root`], {
+          defaultValue: value, defaultOpen: true, position: false, policies,
+          ...(controlled ? { highlightedValue: highlighted.value } : { defaultHighlightedValue: initial }),
+          'onUpdate:highlightedValue': (next) => highlights.push(next),
+          'onUpdate:modelValue': (next) => changes.push(next),
+          'onUpdate:open': (next) => opens.push(next),
+        }, { default: (current) => {
+          snapshot = current;
+          return [
+            h(family[`${prefix}Trigger`]),
+            h(family[`${prefix}Content`], null, { default: () => [
+              h(family[control]),
+              h(family[`${prefix}Grid`], null, { default: () => (unit === 'month' ? current.months : current.years).flat()
+                .map((cell) => h(family[`${prefix}Cell`], { key: `${cell.year}-${cell.month ?? ''}`, value: cell })) }),
+            ] }),
+          ];
+        } }) });
+        const label = `${path} ${direction} ${scenario}`;
+        try {
+          app.mount(host);
+          await settle();
+          highlights.length = changes.length = opens.length = 0;
+          const before = JSON.parse(JSON.stringify(snapshot));
+          const part = `${direction > 0 ? 'next' : 'previous'}-${unit === 'month' ? 'year' : 'page'}`;
+          const button = host.querySelector(`[data-scope="${path}"][data-part="${part}"]`);
+          assert.ok(button, label);
+          button.click();
+          await settle();
+          if (expected.ok) {
+            const next = range ? expected.value.state.calendar : expected.value.state;
+            assert.deepEqual(highlights, [next.highlighted], label);
+            if (controlled) {
+              assert.deepEqual(snapshot.highlightedValue, initial, label);
+              highlighted.value = next.highlighted;
+              await settle();
+            }
+            assert.deepEqual(snapshot.highlightedValue, next.highlighted, label);
+            assert.deepEqual(snapshot.view, next.view, label);
+            const cell = host.querySelector(`[data-scope="${path}"][data-part="cell"][data-highlighted]`);
+            assert.ok(cell, label);
+            assert.equal(cell.disabled, false, label);
+            assert.equal(cell.getAttribute('aria-disabled'), 'false', label);
+            assert.equal(cell.getAttribute('tabindex'), '0', label);
+            assert.deepEqual(snapshot.value, before.value, label);
+            assert.equal(snapshot.open, before.open, label);
+          } else {
+            assert.deepEqual(highlights, [], label);
+            assert.deepEqual(JSON.parse(JSON.stringify(snapshot)), before, label);
+          }
+          assert.deepEqual(changes, [], label);
+          assert.deepEqual(opens, [], label);
+        } finally {
+          app.unmount();
+          host.remove();
+        }
+      }
+    }
+  }
+});
+
+test('Vue day picker year controls preserve date-based movement', async () => {
+  const family = await import('../.verification-dist/date-picker.js');
+  for (const direction of [-1, 1]) {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const reference = { year: 2026, month: 8, day: 15 };
+    const highlights = [];
+    const changes = [];
+    const app = createApp({ render: () => h(family.DatePickerRoot, {
+      defaultValue: reference, defaultHighlightedValue: reference, defaultOpen: true, position: false,
+      policies: { unavailable: (value) => value.day === 1 },
+      'onUpdate:highlightedValue': (value) => highlights.push(value),
+      'onUpdate:modelValue': (value) => changes.push(value),
+    }, { default: () => [
+      h(family.DatePickerTrigger),
+      h(family.DatePickerContent, null, { default: () => [
+        h(family[`DatePicker${direction > 0 ? 'Next' : 'Previous'}Year`]), h(family.DatePickerGrid),
+      ] }),
+    ] }) });
+    try {
+      app.mount(host);
+      await settle();
+      highlights.length = changes.length = 0;
+      host.querySelector(`[data-part="${direction > 0 ? 'next' : 'previous'}-year"]`).click();
+      await settle();
+      assert.deepEqual(highlights, [{ ...reference, year: reference.year + direction }]);
+      assert.deepEqual(changes, []);
+    } finally {
+      app.unmount();
+      host.remove();
+    }
+  }
+});
+
 test('Vue calendar reprojects cells after month navigation', async () => {
   const host = document.createElement('div');
   document.body.append(host);

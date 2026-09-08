@@ -364,8 +364,15 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         refresh: () => connection.value?.refresh(),
         registerCell: (element, value) => connection.value?.setCellAttributes(element, value),
         move: (unit, direction) => {
-          const repetitions = granularity === 'year' && unit === 'year' ? yearPageSize : 1;
-          moveBy(unit, direction * repetitions);
+          if (granularity !== 'day' && unit === 'year') {
+            connection.value?.handleEvent({
+              type: 'navigate-period', unit: granularity,
+              direction: direction < 0 ? 'previous-page' : 'next-page', referenceYear: periodReferenceYear,
+            });
+            refresh();
+            return;
+          }
+          moveBy(unit, direction);
         },
         handleGridKey: (event) => {
           if ((granularity === 'day' && state.value.viewMode !== 'year') || event.altKey || event.ctrlKey || event.metaKey) return;
