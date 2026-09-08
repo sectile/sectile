@@ -15,6 +15,10 @@ import { createTimeField as createTerminalTimeField } from '@sectile/terminal/ti
 import { createDatePicker as createTerminalDatePicker } from '@sectile/terminal/date-picker';
 import { createDateTimePicker as createTerminalDateTimePicker } from '@sectile/terminal/date-time-picker';
 import { createDateTimeRangePicker as createTerminalDateTimeRangePicker } from '@sectile/terminal/date-time-range-picker';
+import { createDateRangeField as createDOMDateRangeField } from '@sectile/dom/temporal/date-range-field';
+import { createTimeRangeField as createDOMTimeRangeField } from '@sectile/dom/temporal/time-range-field';
+import { createDateRangeField as createTerminalDateRangeField } from '@sectile/terminal/date-range-field';
+import { createTimeRangeField as createTerminalTimeRangeField } from '@sectile/terminal/time-range-field';
 
 const date = (year, month, day) => createDateValue(year, month, day);
 const time = (hour, minute) => createTimeValue(hour, minute);
@@ -68,6 +72,57 @@ test('DOM and terminal date-time fields preserve controlled value ownership', ()
   assert.equal(DOM.syncControlledValues({ value: DOMProposal }).ok, true);
   assert.equal(terminal.syncControlledValues({ value: terminalProposal }).ok, true);
   assert.deepEqual(observe(DOM.getSnapshot()), observe(terminal.getSnapshot()));
+});
+
+test('DOM and terminal required ranges preserve committed values and suppress rejected clear callbacks', () => {
+  for (const [kind, createDOM, createTerminal, value, textLength] of [
+    ['date', createDOMDateRangeField, createTerminalDateRangeField, { start: date(2026, 9, 1), end: date(2026, 9, 2) }, 10],
+    ['time', createDOMTimeRangeField, createTerminalTimeRangeField, { start: time(9, 0), end: time(17, 0) }, 5],
+  ]) {
+    for (const required of [true, false]) {
+      for (const endpoint of ['start', 'end']) {
+        for (const mode of ['direct', 'commit']) {
+          const startInput = new FakeInput();
+          const endInput = new FakeInput();
+          const DOMChanges = [];
+          const terminalChanges = [];
+          const options = { defaultValue: value, required };
+          const DOM = createDOM({ ...options, startInput, endInput, onValueChange: (next) => DOMChanges.push(next) });
+          const terminal = createTerminal({ ...options, onValueChange: (next) => terminalChanges.push(next) });
+          const label = `${kind} ${endpoint} ${mode} required=${required}`;
+          try {
+            assert.equal(startInput.required, required, label);
+            assert.equal(endInput.required, required, label);
+            if (mode === 'commit') {
+              const edit = { type: 'field', endpoint, event: { type: 'text', event: {
+                type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: textLength,
+                text: '', selection: { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 0 },
+              } } };
+              assert.equal(DOM.handleEvent(edit), true, label);
+              assert.equal(terminal.handleEvent(edit), true, label);
+              assert.deepEqual(DOMChanges, [], label);
+              assert.deepEqual(terminalChanges, [], label);
+            }
+            const previousDOM = DOM.getSnapshot();
+            const previousTerminal = terminal.getSnapshot();
+            const clear = { type: 'field', endpoint, event: mode === 'direct' ? { type: 'set-value', value: null } : 'commit' };
+            assert.equal(DOM.handleEvent(clear), !required, label);
+            assert.equal(terminal.handleEvent(clear), !required, label);
+            assert.deepEqual(DOM.getValue(), required ? value : null, label);
+            assert.deepEqual(terminal.getValue(), required ? value : null, label);
+            assert.deepEqual(DOMChanges, required ? [] : [null], label);
+            assert.deepEqual(terminalChanges, required ? [] : [null], label);
+            if (required) {
+              assert.deepEqual(DOM.getSnapshot(), previousDOM, label);
+              assert.deepEqual(terminal.getSnapshot(), previousTerminal, label);
+            }
+          } finally {
+            DOM.disconnect();
+          }
+        }
+      }
+    }
+  }
 });
 
 test('DOM and terminal date pickers preserve navigation, availability, and selection', () => {
