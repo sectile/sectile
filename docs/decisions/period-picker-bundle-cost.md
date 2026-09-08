@@ -52,6 +52,14 @@ Temporal now ships 63 files rather than 60. The additional internal period kerne
 
 The install comparison retains ceil(value * 1.05) + 32. Unpacked size changes from 170230 to 192612 bytes. The source-map owner independently uses npm dry-run packaging, so its package metadata/compressed sizes differ: tarball 31286 to 35544 (ceiling 32867 to 37338), unpacked 170236 to 192623 (ceiling 178764 to 202271). Its formula remains ceil(value * 1.05) + 16. These scoped updates accept required shipped functionality while preserving all file, import, map-path, dependency and installation checks.
 
+## Certification footprint alignment
+
+The user approved the remaining Temporal certification footprint update on 2026-09-08 before publication. The complete ten-process certification run `2026-09-08T07-02-58-781Z-261668-26e0e25c` reported only `package-footprint:temporal` as a regression: 164681 to 187103 dist bytes, an increase of 22422 bytes (13.62%). Timing, allocation and retained-heap comparisons reported no regression. The 187103-byte total is the same 86329 JavaScript + 39072 declaration + 61702 external-map bytes already reviewed above; it is not an additional runtime change.
+
+Only `provenance.packageFootprint.temporal` in the active certification environment's full-catalog baseline is updated to 187103. Its environment directory is `verification/performance/baselines/933652c83112df2b038ebf25ee0f49bb867b465e448838e959f3227b14ab8380`, and the baseline is `all-owners__all-types__all-domains__all-scales__all-evidence.json`. This leaf is an approved footprint comparison reference; the original timing sample provenance, build fingerprint, timestamps, runner calibration, workload metrics, other package values and statistical policies remain intact. With the observed 0.05 runner band, the integer-byte ceiling changes from 172915 to 196458. The existing calibration-derived comparison formula is unchanged.
+
+This is a cold verification-contract correction, with no product algorithm, API, allocation or lifecycle change. The original failed run is preserved. Validation uses the existing full certification command and staged diff review to prove the new result and the one-leaf scope; it does not replace timing measurements with current values or widen their tolerances.
+
 ## Evidence ownership
 
 The existing consumer baseline receives only these reviewed results. Consumer fixtures and all other rows remain unchanged. Existing package interaction and declaration suites protect behavior. scripts/consumer-bundles.test.mjs verifies actual base factories plus valid/invalid closure examples, and scripts/consumer-bundles/check.mjs applies the closure guard to measured results. Diagnostic attribution and batch measurement helpers stay in ignored .tmp output; they are not new production or package commands.
