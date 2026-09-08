@@ -1,5 +1,11 @@
 # @sectile/temporal
 
+## 0.14.6
+
+### Changes
+
+- fix(temporal): preserve period picker Result boundaries (dfcc5880)
+
 ## 0.14.5
 
 ### Changes
