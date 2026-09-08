@@ -67,7 +67,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "47c8c2bee6d3fa68630ad7de61d0961cdae80453d4f1d0681848c4317e0519ff",
+  "fingerprint": "54109b8085cdb1e988976b0f2a6e4703c4ba96f75cf370c3e3aa1b2270a82034",
   "files": [
     {
       "path": "dist/calendar.d.ts",
@@ -103,19 +103,23 @@
     },
     {
       "path": "dist/error.d.ts",
-      "sha256": "b42d0d6964ed685f223b69033921a4d7dfc69ef51ccf29f007bbe851fff70749"
+      "sha256": "856e30e42a8a7e6ea387899c4c540d280b5a1dc982fd576d076d84faaa965ec4"
     },
     {
       "path": "dist/index.d.ts",
       "sha256": "753092d66c32ad81b8e5b782b6e905964fa5151a0a8d2850a9f0bf2fd2207a17"
     },
     {
+      "path": "dist/internal/period-picker.d.ts",
+      "sha256": "8fa11a185700c090c55ae0c261f61e7d21802f3660e0c9532ebdeae733012da3"
+    },
+    {
       "path": "dist/month-picker.d.ts",
-      "sha256": "b1834a8f58fee7ceef9e6edee085b9ffbdeb7e243942fee76abb8db1ac80c368"
+      "sha256": "e73442a4aff695ee05bd586a171b0ec91679be39c2e3a0c0dc4e1e0b0a33a777"
     },
     {
       "path": "dist/month-range-picker.d.ts",
-      "sha256": "f93710198a758addc944fda155de2807d3b308745fdc1b91a5a240de61cb5e56"
+      "sha256": "831937b252b86aba45de75b42685097a27a33fb54a5b05681c5a7a51b4f9fb61"
     },
     {
       "path": "dist/range-calendar.d.ts",
@@ -131,11 +135,11 @@
     },
     {
       "path": "dist/year-picker.d.ts",
-      "sha256": "d5b614f5a526ece15c3004d8f0717be505f12110d256ab50fa272ac03488a355"
+      "sha256": "543ab2ebdb33302f95fddae924e7901003473e647886b705d6a63ef50ed1e997"
     },
     {
       "path": "dist/year-range-picker.d.ts",
-      "sha256": "a30317327a327874636631aa1d499752fb722d4e974960927f835e2a34b9a5a7"
+      "sha256": "7c310f567fa928b5f1e746ca5ab8ae96ac960e7164c59e041297a019391b883d"
     }
   ]
 }

@@ -1,5 +1,7 @@
 import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from './error.js';
+import { applyPeriodRangePickerNavigation, type PeriodPickerNavigationEvent } from './internal/period-picker.js';
+export type { PeriodPickerNavigationEvent } from './internal/period-picker.js';
 import type { DateRange } from './date-field.js';
 import { createMonthPickerValue } from './month-picker.js';
 import {
@@ -15,7 +17,7 @@ import type { DatePickerPolicies } from './date-picker.js';
 
 export type MonthRangePickerValue = DateRange;
 export type MonthRangePickerCommand = DateRangePickerCommand;
-export type MonthRangePickerEvent = DateRangePickerEvent;
+export type MonthRangePickerEvent = DateRangePickerEvent | PeriodPickerNavigationEvent;
 export type MonthRangePickerState = DateRangePickerState;
 export type MonthRangePickerStateInput = DateRangePickerStateInput;
 export type MonthRangePickerUpdate = DateRangePickerUpdate;
@@ -33,6 +35,7 @@ export function tryCreateMonthRangePickerState(input: MonthRangePickerStateInput
 export function applyMonthRangePickerEvent(state: MonthRangePickerState, event: MonthRangePickerEvent, policies: DatePickerPolicies = {}): TemporalResult<MonthRangePickerUpdate> {
   const valid = tryCreateMonthRangePickerState(state);
   if (!valid.ok) return valid;
+  if (typeof event === 'object' && event.type === 'navigate-period') return applyPeriodRangePickerNavigation(valid.value, event, policies);
   if (event === 'select-highlighted') return applyDateRangePickerEvent(valid.value, { type: 'select', value: createMonthPickerValue(valid.value.calendar.highlighted.year, valid.value.calendar.highlighted.month) }, policies);
   if (typeof event === 'object' && event.type === 'select-month') return applyDateRangePickerEvent(valid.value, { type: 'select', value: createMonthPickerValue(event.value.year, event.value.month) }, policies);
   if (typeof event === 'object' && event.type === 'select') return applyDateRangePickerEvent(valid.value, { type: 'select', value: createMonthPickerValue(event.value.year, event.value.month) }, policies);

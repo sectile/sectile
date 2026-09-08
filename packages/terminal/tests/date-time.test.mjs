@@ -70,6 +70,26 @@ test('terminal date picker projects supported boundary months without throwing',
   }
 });
 
+test('terminal period picker keyboards navigate cells and commit canonical values', () => {
+  for (const [create, unit, range] of [
+    [createMonthPicker, 'month', false], [createYearPicker, 'year', false],
+    [createMonthRangePicker, 'month', true], [createYearRangePicker, 'year', true],
+  ]) {
+    const changes = [];
+    const picker = create({ defaultHighlightedValue: createDateValue(2026, 8, 15), defaultOpen: true, onValueChange: (value) => changes.push(value) });
+    assert.equal(picker.handleKeyboardInput({ key: 'right' }), true);
+    let snapshot = picker.getSnapshot().state;
+    const next = unit === 'month' ? createDateValue(2026, 9, 1) : createDateValue(2027, 1, 1);
+    assert.deepEqual((range ? snapshot.calendar : snapshot).highlighted, next);
+    assert.equal(picker.handleKeyboardInput({ key: 'enter' }), true);
+    if (range) assert.equal(picker.handleKeyboardInput({ key: 'space' }), true);
+    assert.deepEqual(changes.at(-1), range ? { start: next, end: next } : next);
+    assert.equal(picker.handleKeyboardInput({ key: 'down' }), true);
+    snapshot = picker.getSnapshot().state;
+    assert.deepEqual((range ? snapshot.calendar : snapshot).highlighted, unit === 'month' ? createDateValue(2026, 12, 1) : createDateValue(2031, 1, 1));
+  }
+});
+
 test('terminal month and year picker hosts publish Temporal-normalized values', () => {
   const monthChanges = [];
   const month = createMonthPicker({ defaultValue: createDateValue(2026, 8, 15), onValueChange: (value) => monthChanges.push(value) });

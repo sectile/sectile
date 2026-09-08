@@ -288,6 +288,7 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
+        "MAX_YEAR_PICKER_PAGE_SIZE",
         "applyYearPickerEvent",
         "createYearPickerPage",
         "createYearPickerState",

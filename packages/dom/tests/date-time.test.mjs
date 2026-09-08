@@ -209,6 +209,38 @@ test('DOM date picker composes an editable date field with calendar selection', 
   assert.equal(input.readOnly, false);
 });
 
+test('DOM period cell values project canonical availability and period keyboard input', () => {
+  for (const [create, unit, range] of [
+    [createMonthPicker, 'month', false], [createYearPicker, 'year', false],
+    [createMonthRangePicker, 'month', true], [createYearRangePicker, 'year', true],
+  ]) {
+    const grid = new FakeElement();
+    const value = unit === 'month' ? { year: 2026, month: 9 } : { year: 2026 };
+    const picker = create({ root: new FakeElement(), trigger: new FakeElement(), grid,
+      defaultHighlightedValue: createDateValue(2026, 8, 15), defaultOpen: true,
+      policies: { min: createDateValue(2026, 9, 15) },
+    });
+    try {
+      const cell = new FakeElement();
+      picker.setCellAttributes(cell, value);
+      assert.equal(cell.attributes.get('aria-disabled'), 'true');
+      assert.equal(cell.dataset.datePickerId, unit === 'month' ? '2026-09-01' : '2026-01-01');
+      grid.emit('keydown', keyboard('ArrowRight'));
+      const state = picker.getSnapshot().state;
+      assert.deepEqual((range ? state.calendar : state).highlighted, unit === 'month' ? createDateValue(2026, 10, 1) : createDateValue(2027, 1, 1));
+      const available = unit === 'month' ? { year: 2026, month: 10 } : { year: 2027 };
+      picker.setCellAttributes(cell, available);
+      assert.equal(cell.attributes.get('aria-disabled'), 'false');
+      assert.equal(cell.tabIndex, 0);
+      if (unit === 'year') {
+        picker.setCellAttributes(cell, { year: 10_000 });
+        assert.equal(cell.attributes.get('aria-disabled'), 'true');
+        assert.equal(cell.tabIndex, -1);
+      }
+    } finally { picker.disconnect(); }
+  }
+});
+
 test('DOM month and year picker hosts publish Temporal-normalized values', () => {
   const host = () => ({ root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement() });
   const monthChanges = [];

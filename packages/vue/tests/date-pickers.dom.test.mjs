@@ -165,6 +165,59 @@ test('Vue period pickers keep granularity-specific text and keyboard movement', 
   host.remove();
 });
 
+test('Vue period cells expose the availability of their canonical scalar and range commits', async () => {
+  for (const [path, prefix, unit, range] of [
+    ['month-picker', 'MonthPicker', 'month', false],
+    ['year-picker', 'YearPicker', 'year', false],
+    ['month-range-picker', 'MonthRangePicker', 'month', true],
+    ['year-range-picker', 'YearRangePicker', 'year', true],
+  ]) {
+    const family = await import(`../.verification-dist/${path}.js`);
+    const cellValue = unit === 'month' ? { year: 2026, month: 9 } : { year: 2026 };
+    const canonical = { year: 2026, month: unit === 'month' ? 9 : 1, day: 1 };
+    const midpoint = { year: 2026, month: unit === 'month' ? 9 : 7, day: 15 };
+    for (const [policies, available] of [
+      [{ min: midpoint }, false],
+      [{ unavailable: (value) => value.day === 1 }, false],
+      [{ max: { year: 2025, month: 12, day: 31 } }, false],
+      [{ min: canonical, max: midpoint }, true],
+    ]) {
+      const host = document.createElement('div');
+      document.body.append(host);
+      const changes = [];
+      const app = createApp({ render: () => h(family[`${prefix}Root`], {
+        defaultHighlightedValue: midpoint, defaultOpen: true, position: false, policies,
+        'onUpdate:modelValue': (value) => changes.push(value),
+      }, { default: () => [
+        h(family[`${prefix}Trigger`]),
+        h(family[`${prefix}Content`], null, { default: () => h(family[`${prefix}Grid`], null, {
+          default: () => h(family[`${prefix}Cell`], { value: cellValue }, () => 'period'),
+        }) }),
+      ] }) });
+      try {
+        app.mount(host);
+        await settle();
+        const cell = host.querySelector(`[data-scope="${path}"][data-part="cell"]`);
+        const grid = host.querySelector(`[data-scope="${path}"][data-part="grid"]`);
+        assert.ok(cell, path);
+        assert.equal(cell.disabled, !available, path);
+        assert.equal(cell.getAttribute('aria-disabled'), String(!available), path);
+        cell.click();
+        await settle();
+        grid.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        await settle();
+        grid.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+        await settle();
+        if (available) assert.deepEqual(changes.at(-1), range ? { start: canonical, end: canonical } : canonical);
+        else assert.deepEqual(changes, [], path);
+      } finally {
+        app.unmount();
+        host.remove();
+      }
+    }
+  }
+});
+
 test('Vue calendar reprojects cells after month navigation', async () => {
   const host = document.createElement('div');
   document.body.append(host);

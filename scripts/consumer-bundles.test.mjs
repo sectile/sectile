@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { deriveFixtures } from './consumer-bundles/bundle.mjs';
+import { resolve } from 'node:path';
+import { bundleFixture, deriveFixtures } from './consumer-bundles/bundle.mjs';
 import {
   selectFixtureShard,
   validateBaseline,
@@ -130,6 +131,29 @@ test('intentional temporal and virtual sibling closures fail', () => {
   assert.throws(() => validateGranularClosures([
     fixtureResult('vue:./temporal/year-picker:named', 'named', ['@sectile/dom/dist/date-time-picker.js'], 1),
   ]), /retained sibling DOM/u);
+});
+
+test('base date picker factories tree-shake period capabilities in both bundlers', async () => {
+  for (const [family, exportName] of [['date-picker', 'createDatePicker'], ['date-range-picker', 'createDateRangePicker']]) {
+    const fixture = {
+      id: `dom:./temporal/${family}:named`, package: 'dom', subpath: `./temporal/${family}`,
+      source: `@sectile/dom/temporal/${family}`, exportName, mode: 'named', platform: 'browser', pair: null,
+    };
+    const results = await Promise.all(['esbuild', 'vite'].map((bundler) => bundleFixture(resolve('.'), fixture, bundler)));
+    validateGranularClosures(results);
+    assert.ok(results.every((result) => result.modules.includes(`@sectile/dom/dist/${family}.js`)));
+  }
+});
+
+test('base date hosts exclude period behavior while period hosts retain their own capabilities', () => {
+  for (const id of ['dom:./temporal/date-picker:named', 'dom:./temporal/date-range-picker:named', 'temporal:./calendar:named']) {
+    assert.doesNotThrow(() => validateGranularClosures([fixtureResult(id, 'named', ['@sectile/temporal/dist/calendar.js'], 1)]));
+    for (const owner of ['dom', 'temporal']) {
+      const modules = [`@sectile/${owner}/dist/internal/period-picker.js`];
+      assert.throws(() => validateGranularClosures([fixtureResult(id, 'named', modules, 1)]), /base date host retained period-only behavior/u);
+      assert.doesNotThrow(() => validateGranularClosures([fixtureResult('dom:./temporal/month-range-picker:named', 'named', modules, 1)]));
+    }
+  }
 });
 
 test('passive Chart tick imports exclude controller ownership while root imports retain their own closure', () => {

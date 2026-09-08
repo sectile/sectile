@@ -95,7 +95,8 @@ export type TemporalOwnErrorCode =
   | 'unsupported-date-field-event'
   | 'unsupported-date-range-picker-set-value'
   | 'unsupported-date-time-field-event'
-  | 'unsupported-time-field-event';
+  | 'unsupported-time-field-event'
+  | 'year-picker-page-size-exceeded';
 
 export type TemporalErrorCode = CoreErrorCode | TemporalOwnErrorCode;
 export type TemporalError<Code extends TemporalErrorCode = TemporalErrorCode> = SectileError<Code>;

@@ -64,6 +64,13 @@ export function validateGranularClosures(results) {
     spatial: 'spatial-layout',
   });
   for (const result of results.filter(({ mode }) => mode === 'named')) {
+    if (/^(?:dom:\.\/temporal\/(?:date|date-range)-picker|temporal:\.\/calendar):named$/u.test(result.id)) {
+      assert.deepEqual(
+        result.modules.filter((path) => /^@sectile\/(?:dom|temporal)\/dist\/internal\/period-picker\.js$/u.test(path)),
+        [],
+        `${result.bundler}:${result.id}: base date host retained period-only behavior`,
+      );
+    }
     if (result.source === '@sectile/vue/chart' && result.exportName === 'ChartAxisTicks') {
       assert.deepEqual(
         result.modules.filter((path) => /^@sectile\/(?:chart|dom)\/dist\//u.test(path)),

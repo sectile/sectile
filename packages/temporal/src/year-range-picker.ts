@@ -1,5 +1,7 @@
 import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from './error.js';
+import { applyPeriodRangePickerNavigation, type PeriodPickerNavigationEvent } from './internal/period-picker.js';
+export type { PeriodPickerNavigationEvent } from './internal/period-picker.js';
 import type { DateRange } from './date-field.js';
 import {
   applyDateRangePickerEvent,
@@ -15,7 +17,7 @@ import { createYearPickerValue, type YearPickerCellValue } from './year-picker.j
 
 export type YearRangePickerValue = DateRange;
 export type YearRangePickerCommand = DateRangePickerCommand;
-export type YearRangePickerEvent = DateRangePickerEvent | { readonly type: 'select-year'; readonly value: YearPickerCellValue };
+export type YearRangePickerEvent = DateRangePickerEvent | PeriodPickerNavigationEvent | { readonly type: 'select-year'; readonly value: YearPickerCellValue };
 export type YearRangePickerState = DateRangePickerState;
 export type YearRangePickerStateInput = DateRangePickerStateInput;
 export type YearRangePickerUpdate = DateRangePickerUpdate;
@@ -33,6 +35,7 @@ export function tryCreateYearRangePickerState(input: YearRangePickerStateInput =
 export function applyYearRangePickerEvent(state: YearRangePickerState, event: YearRangePickerEvent, policies: DatePickerPolicies = {}): TemporalResult<YearRangePickerUpdate> {
   const valid = tryCreateYearRangePickerState(state);
   if (!valid.ok) return valid;
+  if (typeof event === 'object' && event.type === 'navigate-period') return applyPeriodRangePickerNavigation(valid.value, event, policies);
   if (event === 'select-highlighted') return applyDateRangePickerEvent(valid.value, { type: 'select', value: createYearPickerValue(valid.value.calendar.highlighted.year) }, policies);
   if (typeof event === 'object' && event.type === 'select-year') return applyDateRangePickerEvent(valid.value, { type: 'select', value: createYearPickerValue(event.value.year) }, policies);
   if (typeof event === 'object' && event.type === 'select') return applyDateRangePickerEvent(valid.value, { type: 'select', value: createYearPickerValue(event.value.year) }, policies);

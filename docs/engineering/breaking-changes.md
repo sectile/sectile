@@ -4,6 +4,19 @@
 
 | Work item | Package | Previous surface | Symbols | Replacement or removal |
 |---|---|---|---|---|
+| WI-001 | @sectile/temporal | `./date-picker` | `DatePickerEvent`, `TemporalErrorCode` | @sectile/temporal/date-picker |
+| WI-001 | @sectile/temporal | `./date-range-picker` | `DateRangePickerEvent`, `TemporalErrorCode` | @sectile/temporal/date-range-picker |
+| WI-001 | @sectile/temporal | `./date-time-picker` | `DateTimePickerEvent`, `TemporalErrorCode` | @sectile/temporal/date-time-picker |
+| WI-001 | @sectile/temporal | `./date-time-range-picker` | `DateTimeRangePickerEvent`, `TemporalErrorCode` | @sectile/temporal/date-time-range-picker |
+| WI-001 | @sectile/temporal | `./month-picker` | `MonthPickerEvent`, `TemporalErrorCode` | @sectile/temporal/month-picker |
+| WI-001 | @sectile/temporal | `./month-range-picker` | `MonthRangePickerEvent`, `TemporalErrorCode` | @sectile/temporal/month-range-picker |
+| WI-001 | @sectile/temporal | `./range-calendar` | `RangeCalendarEvent`, `TemporalErrorCode` | @sectile/temporal/range-calendar |
+| WI-001 | @sectile/temporal | `.` | `PeriodPickerNavigationEvent`, `TemporalErrorCode` | @sectile/temporal |
+| WI-001 | @sectile/temporal | `./year-range-picker` | `YearRangePickerEvent`, `TemporalErrorCode` | @sectile/temporal/year-range-picker |
+| WI-001 | @sectile/terminal | `./month-picker` | `toMonthPickerEvent`, `MonthPickerConnection` | @sectile/terminal/month-picker |
+| WI-001 | @sectile/terminal | `./month-range-picker` | `MonthRangePickerConnection` | @sectile/terminal/month-range-picker |
+| WI-001 | @sectile/terminal | `./year-picker` | `toYearPickerEvent`, `YearPickerConnection` | @sectile/terminal/year-picker |
+| WI-001 | @sectile/terminal | `./year-range-picker` | `YearRangePickerConnection` | @sectile/terminal/year-range-picker |
 | WI-002 | @sectile/terminal | `./alert-dialog` | `Core Result declaration closure` | @sectile/terminal/alert-dialog |
 | WI-002 | @sectile/core | `./checkbox` | `Result and machine-update declaration closure` | @sectile/core/checkbox |
 | WI-002 | @sectile/dom | `./checkbox` | `Core Result declaration closure` | @sectile/dom/checkbox |
@@ -56,7 +69,14 @@
 | WI-002 | @sectile/core | `./tooltip` | `Result and machine-update declaration closure` | @sectile/core/tooltip |
 | WI-002 | @sectile/terminal | `./tooltip` | `Core Result declaration closure` | @sectile/terminal/tooltip |
 | WI-002 | @sectile/form | `./values` | `Core Result declaration closure` | @sectile/form/values |
+| WI-003 | @sectile/temporal | `./year-picker` | `MAX_YEAR_PICKER_PAGE_SIZE`, `createYearPickerPage`, `tryCreateYearPickerPage`, `YearPickerEvent`, `TemporalErrorCode` | @sectile/temporal/year-picker |
 | WI-003 | @sectile/dom | `./virtual` | `module side-effect import @sectile/virtual`, `VirtualizerOptions.root`, `VirtualizerOptions.scrollport`, `VirtualizerOptions.surface`, `VirtualizerOptions.viewportInsets`, `VirtualizerConnection.registerFrame`, `VirtualizerConnection.setViewportInsets`, `virtualContentStyle`, `virtualSurfaceStyle` | @sectile/dom/virtual |
+| WI-003 | @sectile/temporal | `./calendar` | `TemporalErrorCode` | @sectile/temporal/calendar |
+| WI-003 | @sectile/temporal | `./date-field` | `TemporalErrorCode` | @sectile/temporal/date-field |
+| WI-003 | @sectile/temporal | `./date-range-field` | `TemporalErrorCode` | @sectile/temporal/date-range-field |
+| WI-003 | @sectile/temporal | `./date-time-field` | `TemporalErrorCode` | @sectile/temporal/date-time-field |
+| WI-003 | @sectile/temporal | `./time-field` | `TemporalErrorCode` | @sectile/temporal/time-field |
+| WI-003 | @sectile/temporal | `./time-range-field` | `TemporalErrorCode` | @sectile/temporal/time-range-field |
 | WI-008 | @sectile/terminal | `./combobox` | `Combobox controller declaration closure` | @sectile/terminal/combobox |
 | WI-008 | @sectile/dom | `./slider` | `Slider controller declaration closure` | @sectile/dom/slider |
 | WI-008 | @sectile/terminal | `./slider` | `Slider controller declaration closure` | @sectile/terminal/slider |

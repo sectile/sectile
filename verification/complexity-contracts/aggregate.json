@@ -6182,7 +6182,7 @@
       "subpath": "./temporal/month-picker",
       "exportName": "createMonthPicker",
       "kind": "function",
-      "aliasOf": "dom:./temporal/date-picker:createDatePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -6191,7 +6191,7 @@
       "subpath": "./temporal/month-picker",
       "exportName": "createMonthPickerYear",
       "kind": "function",
-      "aliasOf": "dom:./temporal/date-picker:createCalendarYear",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -6200,7 +6200,7 @@
       "subpath": "./temporal/month-picker",
       "exportName": "tryCreateMonthPicker",
       "kind": "function",
-      "aliasOf": "dom:./temporal/date-picker:tryCreateDatePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -6209,7 +6209,7 @@
       "subpath": "./temporal/month-range-picker",
       "exportName": "createMonthRangePicker",
       "kind": "function",
-      "aliasOf": "dom:./temporal/date-range-picker:createDateRangePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -6218,7 +6218,7 @@
       "subpath": "./temporal/month-range-picker",
       "exportName": "createMonthRangePickerYear",
       "kind": "function",
-      "aliasOf": "dom:./temporal/date-picker:createCalendarYear",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -6227,7 +6227,7 @@
       "subpath": "./temporal/month-range-picker",
       "exportName": "tryCreateMonthRangePicker",
       "kind": "function",
-      "aliasOf": "dom:./temporal/date-range-picker:tryCreateDateRangePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -6308,7 +6308,7 @@
       "subpath": "./temporal/year-picker",
       "exportName": "createYearPicker",
       "kind": "function",
-      "aliasOf": "dom:./temporal/date-picker:createDatePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -6317,7 +6317,7 @@
       "subpath": "./temporal/year-picker",
       "exportName": "tryCreateYearPicker",
       "kind": "function",
-      "aliasOf": "dom:./temporal/date-picker:tryCreateDatePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -6326,7 +6326,7 @@
       "subpath": "./temporal/year-range-picker",
       "exportName": "createYearRangePicker",
       "kind": "function",
-      "aliasOf": "dom:./temporal/date-range-picker:createDateRangePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -6335,7 +6335,7 @@
       "subpath": "./temporal/year-range-picker",
       "exportName": "tryCreateYearRangePicker",
       "kind": "function",
-      "aliasOf": "dom:./temporal/date-range-picker:tryCreateDateRangePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9251,7 +9251,7 @@
       "subpath": "./month-picker",
       "exportName": "applyMonthPickerEvent",
       "kind": "function",
-      "aliasOf": "temporal:./date-picker:applyDatePickerEvent",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9260,7 +9260,16 @@
       "subpath": "./month-picker",
       "exportName": "createMonthPickerState",
       "kind": "function",
-      "aliasOf": "temporal:./date-picker:createDatePickerState",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "temporal:./month-picker:createMonthPickerValue",
+      "package": "temporal",
+      "subpath": "./month-picker",
+      "exportName": "createMonthPickerValue",
+      "kind": "function",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9287,7 +9296,16 @@
       "subpath": "./month-picker",
       "exportName": "tryCreateMonthPickerState",
       "kind": "function",
-      "aliasOf": "temporal:./date-picker:tryCreateDatePickerState",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "temporal:./month-picker:tryCreateMonthPickerValue",
+      "package": "temporal",
+      "subpath": "./month-picker",
+      "exportName": "tryCreateMonthPickerValue",
+      "kind": "function",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9305,7 +9323,7 @@
       "subpath": "./month-range-picker",
       "exportName": "applyMonthRangePickerEvent",
       "kind": "function",
-      "aliasOf": "temporal:./date-range-picker:applyDateRangePickerEvent",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9314,7 +9332,7 @@
       "subpath": "./month-range-picker",
       "exportName": "createMonthRangePickerState",
       "kind": "function",
-      "aliasOf": "temporal:./date-range-picker:createDateRangePickerState",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9332,7 +9350,7 @@
       "subpath": "./month-range-picker",
       "exportName": "tryCreateMonthRangePickerState",
       "kind": "function",
-      "aliasOf": "temporal:./date-range-picker:tryCreateDateRangePickerState",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9525,12 +9543,21 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "temporal:./year-picker:MAX_YEAR_PICKER_PAGE_SIZE",
+      "package": "temporal",
+      "subpath": "./year-picker",
+      "exportName": "MAX_YEAR_PICKER_PAGE_SIZE",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
       "key": "temporal:./year-picker:applyYearPickerEvent",
       "package": "temporal",
       "subpath": "./year-picker",
       "exportName": "applyYearPickerEvent",
       "kind": "function",
-      "aliasOf": "temporal:./date-picker:applyDatePickerEvent",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9548,7 +9575,16 @@
       "subpath": "./year-picker",
       "exportName": "createYearPickerState",
       "kind": "function",
-      "aliasOf": "temporal:./date-picker:createDatePickerState",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "temporal:./year-picker:createYearPickerValue",
+      "package": "temporal",
+      "subpath": "./year-picker",
+      "exportName": "createYearPickerValue",
+      "kind": "function",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9566,7 +9602,16 @@
       "subpath": "./year-picker",
       "exportName": "tryCreateYearPickerState",
       "kind": "function",
-      "aliasOf": "temporal:./date-picker:tryCreateDatePickerState",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "temporal:./year-picker:tryCreateYearPickerValue",
+      "package": "temporal",
+      "subpath": "./year-picker",
+      "exportName": "tryCreateYearPickerValue",
+      "kind": "function",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9575,7 +9620,7 @@
       "subpath": "./year-range-picker",
       "exportName": "applyYearRangePickerEvent",
       "kind": "function",
-      "aliasOf": "temporal:./date-range-picker:applyDateRangePickerEvent",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9593,7 +9638,7 @@
       "subpath": "./year-range-picker",
       "exportName": "createYearRangePickerState",
       "kind": "function",
-      "aliasOf": "temporal:./date-range-picker:createDateRangePickerState",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -9611,7 +9656,7 @@
       "subpath": "./year-range-picker",
       "exportName": "tryCreateYearRangePickerState",
       "kind": "function",
-      "aliasOf": "temporal:./date-range-picker:tryCreateDateRangePickerState",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -10331,7 +10376,7 @@
       "subpath": "./month-picker",
       "exportName": "createMonthPicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:createDatePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -10340,7 +10385,7 @@
       "subpath": "./month-picker",
       "exportName": "toMonthPickerEvent",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:toDatePickerEvent",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -10349,7 +10394,7 @@
       "subpath": "./month-picker",
       "exportName": "tryCreateMonthPicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:tryCreateDatePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -10358,7 +10403,7 @@
       "subpath": "./month-range-picker",
       "exportName": "createMonthRangePicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-range-picker:createDateRangePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -10367,7 +10412,7 @@
       "subpath": "./month-range-picker",
       "exportName": "tryCreateMonthRangePicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-range-picker:tryCreateDateRangePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -11213,7 +11258,7 @@
       "subpath": "./year-picker",
       "exportName": "createYearPicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:createDatePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -11222,7 +11267,7 @@
       "subpath": "./year-picker",
       "exportName": "toYearPickerEvent",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:toDatePickerEvent",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -11231,7 +11276,7 @@
       "subpath": "./year-picker",
       "exportName": "tryCreateYearPicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:tryCreateDatePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -11240,7 +11285,7 @@
       "subpath": "./year-range-picker",
       "exportName": "createYearRangePicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-range-picker:createDateRangePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -11249,7 +11294,7 @@
       "subpath": "./year-range-picker",
       "exportName": "tryCreateYearRangePicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-range-picker:tryCreateDateRangePicker",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {
@@ -11600,7 +11645,7 @@
       "subpath": ".",
       "exportName": "createMonthPicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:createDatePicker",
+      "aliasOf": "terminal:./month-picker:createMonthPicker",
       "inherits": "public-callable-v1"
     },
     {
@@ -11609,7 +11654,7 @@
       "subpath": ".",
       "exportName": "createMonthRangePicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-range-picker:createDateRangePicker",
+      "aliasOf": "terminal:./month-range-picker:createMonthRangePicker",
       "inherits": "public-callable-v1"
     },
     {
@@ -11933,7 +11978,7 @@
       "subpath": ".",
       "exportName": "createYearPicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:createDatePicker",
+      "aliasOf": "terminal:./year-picker:createYearPicker",
       "inherits": "public-callable-v1"
     },
     {
@@ -11942,7 +11987,7 @@
       "subpath": ".",
       "exportName": "createYearRangePicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-range-picker:createDateRangePicker",
+      "aliasOf": "terminal:./year-range-picker:createYearRangePicker",
       "inherits": "public-callable-v1"
     },
     {
@@ -12032,7 +12077,7 @@
       "subpath": ".",
       "exportName": "toMonthPickerEvent",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:toDatePickerEvent",
+      "aliasOf": "terminal:./month-picker:toMonthPickerEvent",
       "inherits": "public-callable-v1"
     },
     {
@@ -12149,7 +12194,7 @@
       "subpath": ".",
       "exportName": "toYearPickerEvent",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:toDatePickerEvent",
+      "aliasOf": "terminal:./year-picker:toYearPickerEvent",
       "inherits": "public-callable-v1"
     },
     {
@@ -12428,7 +12473,7 @@
       "subpath": ".",
       "exportName": "tryCreateMonthPicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:tryCreateDatePicker",
+      "aliasOf": "terminal:./month-picker:tryCreateMonthPicker",
       "inherits": "public-callable-v1"
     },
     {
@@ -12437,7 +12482,7 @@
       "subpath": ".",
       "exportName": "tryCreateMonthRangePicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-range-picker:tryCreateDateRangePicker",
+      "aliasOf": "terminal:./month-range-picker:tryCreateMonthRangePicker",
       "inherits": "public-callable-v1"
     },
     {
@@ -12725,7 +12770,7 @@
       "subpath": ".",
       "exportName": "tryCreateYearPicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-picker:tryCreateDatePicker",
+      "aliasOf": "terminal:./year-picker:tryCreateYearPicker",
       "inherits": "public-callable-v1"
     },
     {
@@ -12734,7 +12779,7 @@
       "subpath": ".",
       "exportName": "tryCreateYearRangePicker",
       "kind": "function",
-      "aliasOf": "terminal:./date-range-picker:tryCreateDateRangePicker",
+      "aliasOf": "terminal:./year-range-picker:tryCreateYearRangePicker",
       "inherits": "public-callable-v1"
     },
     {
@@ -28253,6 +28298,129 @@
         "fullScan": {
           "allowed": true,
           "rationale": "Reconciliation must compare the next identity domain once; it cannot repeatedly scan it per unbounded edit."
+        }
+      }
+    },
+    {
+      "package": "temporal",
+      "surface": "hot",
+      "id": "calendar.page-years",
+      "source": "packages/temporal/src/year-picker.ts",
+      "benchmarkIDs": [
+        "ISSUE-040:year-page-allocation-work"
+      ],
+      "specificationCeiling": "O(pPage)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "pPage",
+            "meaning": "requested year cells",
+            "ceiling": "MAX_YEAR_PICKER_PAGE_SIZE = 9999"
+          }
+        ],
+        "time": {
+          "bound": "O(pPage)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(pPage)",
+          "output": "O(pPage)",
+          "retained": "O(pPage)"
+        },
+        "resources": {
+          "allocations": "O(pPage)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "A page is an immutable four-column year-cell projection."
+        ],
+        "ceilings": [
+          "MAX_YEAR_PICKER_PAGE_SIZE = 9999; default page size 12."
+        ],
+        "benchmarkIDs": [
+          "ISSUE-040:year-page-allocation-work"
+        ],
+        "deterministicWork": [
+          "Oversized safe integers return a typed resource rejection before any row or cell is frozen; accepted cells equal pageSize exactly."
+        ],
+        "resourceRationale": "The public construction boundary checks the output cardinality before entering the allocation loop. Rejected sizes perform constant work and allocate no projection.",
+        "proof": "Safe-integer shape validation and the explicit 9999-cell resource ceiling precede row/cell construction. Accepted pages emit each cell once with four columns.",
+        "adversarialWitness": "The production factory rejects 10000, 1000000 and MAX_SAFE_INTEGER while an allocation guard aborts any attempted row/cell freeze; the maximum accepted page retains exact frozen cardinality and ordering.",
+        "evidence": [
+          "packages/temporal/tests/composites/date-picker.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Accepted output cardinality is explicit and bounded; rejected cardinalities are never iterated."
+        }
+      }
+    },
+    {
+      "package": "temporal",
+      "surface": "hot",
+      "id": "calendar.period-navigation",
+      "source": "packages/temporal/src/internal/period-picker.ts",
+      "benchmarkIDs": [
+        "ISSUE-038:period-navigation-work"
+      ],
+      "specificationCeiling": "O(sScan)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "sScan",
+            "meaning": "canonical period candidates checked",
+            "ceiling": "maxScan, default 366, bounded also by supported civil years"
+          }
+        ],
+        "time": {
+          "bound": "O(sScan)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(sScan)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Library-owned navigation work is measured separately from application availability callback cost."
+        ],
+        "ceilings": [
+          "maxScan defaults to 366; period candidates also stop at supported civil-date boundaries."
+        ],
+        "benchmarkIDs": [
+          "ISSUE-038:period-navigation-work"
+        ],
+        "deterministicWork": [
+          "An all-unavailable three-candidate scan invokes the predicate exactly three times and preserves the original state on rejection."
+        ],
+        "resourceRationale": "Navigation keeps one candidate date at a time and emits one final highlight update; it materializes no grid or field projection.",
+        "proof": "Temporal computes period-grid strides and scans only canonical first-day or January-1 dates under the explicit scan policy; hosts translate key vocabulary.",
+        "adversarialWitness": "The production month picker with an always-unavailable predicate and maxScan 3 makes exactly three predicate calls and returns calendar-scan-exhausted without modifying the original state.",
+        "evidence": [
+          "packages/temporal/tests/composites/date-picker.test.mjs",
+          "packages/dom/tests/date-time.test.mjs",
+          "packages/terminal/tests/date-time.test.mjs",
+          "packages/vue/tests/date-pickers.dom.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Eligibility scans stop at maxScan or the finite civil-date domain; no calendar cell projection is materialized."
         }
       }
     },

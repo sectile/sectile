@@ -5,6 +5,50 @@
   "kind": "internal-operations",
   "operations": [
     {
+      "id": "calendar.page-years",
+      "inherits": "linear-v1",
+      "source": "packages/temporal/src/year-picker.ts",
+      "benchmarkIDs": ["ISSUE-040:year-page-allocation-work"],
+      "specificationCeiling": "O(pPage)",
+      "contract": {
+        "variables": [{ "name": "pPage", "meaning": "requested year cells", "ceiling": "MAX_YEAR_PICKER_PAGE_SIZE = 9999" }],
+        "time": { "bound": "O(pPage)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(pPage)", "output": "O(pPage)", "retained": "O(pPage)" },
+        "resources": { "allocations": "O(pPage)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["A page is an immutable four-column year-cell projection."],
+        "ceilings": ["MAX_YEAR_PICKER_PAGE_SIZE = 9999; default page size 12."],
+        "evidence": ["packages/temporal/tests/composites/date-picker.test.mjs"],
+        "benchmarkIDs": ["ISSUE-040:year-page-allocation-work"],
+        "deterministicWork": ["Oversized safe integers return a typed resource rejection before any row or cell is frozen; accepted cells equal pageSize exactly."],
+        "resourceRationale": "The public construction boundary checks the output cardinality before entering the allocation loop. Rejected sizes perform constant work and allocate no projection.",
+        "proof": "Safe-integer shape validation and the explicit 9999-cell resource ceiling precede row/cell construction. Accepted pages emit each cell once with four columns.",
+        "adversarialWitness": "The production factory rejects 10000, 1000000 and MAX_SAFE_INTEGER while an allocation guard aborts any attempted row/cell freeze; the maximum accepted page retains exact frozen cardinality and ordering.",
+        "fullScan": { "allowed": true, "rationale": "Accepted output cardinality is explicit and bounded; rejected cardinalities are never iterated." }
+      }
+    },
+    {
+      "id": "calendar.period-navigation",
+      "inherits": "linear-v1",
+      "source": "packages/temporal/src/internal/period-picker.ts",
+      "benchmarkIDs": ["ISSUE-038:period-navigation-work"],
+      "specificationCeiling": "O(sScan)",
+      "contract": {
+        "variables": [{ "name": "sScan", "meaning": "canonical period candidates checked", "ceiling": "maxScan, default 366, bounded also by supported civil years" }],
+        "time": { "bound": "O(sScan)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(sScan)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["Library-owned navigation work is measured separately from application availability callback cost."],
+        "ceilings": ["maxScan defaults to 366; period candidates also stop at supported civil-date boundaries."],
+        "evidence": ["packages/temporal/tests/composites/date-picker.test.mjs", "packages/dom/tests/date-time.test.mjs", "packages/terminal/tests/date-time.test.mjs", "packages/vue/tests/date-pickers.dom.test.mjs"],
+        "benchmarkIDs": ["ISSUE-038:period-navigation-work"],
+        "deterministicWork": ["An all-unavailable three-candidate scan invokes the predicate exactly three times and preserves the original state on rejection."],
+        "resourceRationale": "Navigation keeps one candidate date at a time and emits one final highlight update; it materializes no grid or field projection.",
+        "proof": "Temporal computes period-grid strides and scans only canonical first-day or January-1 dates under the explicit scan policy; hosts translate key vocabulary.",
+        "adversarialWitness": "The production month picker with an always-unavailable predicate and maxScan 3 makes exactly three predicate calls and returns calendar-scan-exhausted without modifying the original state.",
+        "fullScan": { "allowed": true, "rationale": "Eligibility scans stop at maxScan or the finite civil-date domain; no calendar cell projection is materialized." }
+      }
+    },
+    {
       "id": "calendar.transition",
       "inherits": "linear-v1",
       "source": "packages/temporal/src/calendar.ts",

@@ -1,5 +1,7 @@
 import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from './error.js';
+import { applyPeriodPickerNavigation, type PeriodPickerNavigationEvent } from './internal/period-picker.js';
+export type { PeriodPickerNavigationEvent } from './internal/period-picker.js';
 import { createDateValue, tryCreateDateValue, type DateValue } from './date-field.js';
 import {
   applyDatePickerEvent,
@@ -14,7 +16,7 @@ import {
 export type MonthPickerValue = DateValue;
 export type MonthPickerState = DatePickerState;
 export type MonthPickerStateInput = DatePickerStateInput;
-export type MonthPickerEvent = DatePickerEvent;
+export type MonthPickerEvent = DatePickerEvent | PeriodPickerNavigationEvent;
 export type MonthPickerCommand = DatePickerCommand;
 export type MonthPickerPolicies = DatePickerPolicies;
 export type MonthPickerUpdate = DatePickerUpdate;
@@ -40,6 +42,7 @@ export function tryCreateMonthPickerState(input: MonthPickerStateInput = {}): Te
 export function applyMonthPickerEvent(state: MonthPickerState, event: MonthPickerEvent, policies: MonthPickerPolicies = {}): TemporalResult<MonthPickerUpdate> {
   const valid = tryCreateMonthPickerState(state);
   if (!valid.ok) return valid;
+  if (typeof event === 'object' && event.type === 'navigate-period') return applyPeriodPickerNavigation(valid.value, event, policies);
   if (event === 'select-highlighted') {
     return applyDatePickerEvent(valid.value, { type: 'select', value: createMonthPickerValue(valid.value.highlighted.year, valid.value.highlighted.month) }, policies);
   }

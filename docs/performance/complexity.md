@@ -10,11 +10,11 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 |---|---:|---:|---:|
 | core | 380 | 26 | 59 |
 | chart | 80 | 0 | 14 |
-| dom | 424 | 181 | 26 |
+| dom | 424 | 171 | 26 |
 | form | 21 | 0 | 8 |
 | tabular | 33 | 0 | 8 |
-| temporal | 99 | 24 | 2 |
-| terminal | 347 | 177 | 8 |
+| temporal | 104 | 12 | 4 |
+| terminal | 347 | 167 | 8 |
 | virtual | 114 | 0 | 27 |
 | vue | 740 | 319 | 9 |
 
@@ -144,6 +144,8 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | tabular:source.resolve-warm | trusted | `O(kRow)` worst-case | `O(kRow)` | `O(kRow)` | `O(nRecord)` | forbidden | VAL-016, VAL-017 |
 | tabular:virtual.locate | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(nRow + nColumn)` | forbidden | VAL-016, VAL-017 |
 | tabular:virtual.reconcile-table | trusted | `O(nRow + j)` worst-case | `O(nRow)` | `O(nRow + j)` | `O(nRow)` | allowed | VAL-016, VAL-017 |
+| temporal:calendar.page-years | external | `O(pPage)` worst-case | `O(pPage)` | `O(pPage)` | `O(pPage)` | allowed | packages/temporal/tests/composites/date-picker.test.mjs |
+| temporal:calendar.period-navigation | external | `O(sScan)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | packages/temporal/tests/composites/date-picker.test.mjs, packages/dom/tests/date-time.test.mjs, packages/terminal/tests/date-time.test.mjs, packages/vue/tests/date-pickers.dom.test.mjs |
 | temporal:calendar.transition | trusted | `O(cCalendar)` worst-case | `O(cCalendar)` | `O(cCalendar)` | `O(cCalendar)` | allowed | VAL-016, VAL-017 |
 | temporal:field.transition | external | `O(sSegment)` worst-case | `O(sSegment)` | `O(sSegment)` | `O(sSegment)` | allowed | VAL-016, VAL-017 |
 | terminal:component.dispatch | trusted | `O(nDomain + cCommand)` worst-case | `O(nDomain + cCommand)` | `O(cCommand)` | `O(nDomain)` | allowed | VAL-016, VAL-017 |

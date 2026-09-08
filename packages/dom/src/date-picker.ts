@@ -16,12 +16,13 @@ import { currentReferenceDate } from './internal/reference-date.js';
 import { createPickerPosition, type PickerPositionOptions } from './internal/picker-position.js';
 import type { PositionConnection } from './internal/position-connection.js';
 import { createHiddenBinding, type HiddenBinding } from './internal/hidden-binding.js';
+import type { PeriodPickerHost, PeriodPickerEvent } from './internal/period-picker.js';
 
 export type { PickerPositionOptions } from './internal/picker-position.js';
 
 type DatePickerStateFactory = (input: DatePickerStateInput) => ReturnType<typeof tryCreateDatePickerState>;
 type DatePickerReducer = (state: DatePickerState, event: DatePickerEvent, policies: DatePickerPolicies) => ReturnType<typeof applyDatePickerEvent>;
-interface InternalDatePickerOptions extends DatePickerOptions { readonly stateFactory?: DatePickerStateFactory; readonly reducer?: DatePickerReducer }
+interface InternalDatePickerOptions extends DatePickerOptions, Partial<PeriodPickerHost<DatePickerState>> { readonly stateFactory?: DatePickerStateFactory; readonly reducer?: DatePickerReducer }
 
 export interface DatePickerOptions extends PickerPositionOptions {
   readonly root: HTMLElement;
@@ -85,12 +86,14 @@ class DOMDatePicker implements DatePickerConnection {
   readonly #visibility: HiddenBinding | undefined;
   #syncingField = false;
   #active = true;
+  readonly #keyEvent: ReturnType<PeriodPickerHost<DatePickerState>['createKeyEvent']>;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
-  readonly #keydown = (event: KeyboardEvent): void => { const semantic = keyEvent(event); if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
+  readonly #keydown = (event: KeyboardEvent): void => { const semantic = this.#keyEvent(event); if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
   readonly #click = (event: MouseEvent): void => { const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-date-picker-id]') : null; if (target !== null && this.options.grid.contains(target)) { const parsed = target.dataset['datePickerId']?.split('-').map(Number); if (parsed?.length === 3) this.handleEvent({ type: 'select', value: { year: parsed[0] as number, month: parsed[1] as number, day: parsed[2] as number } }); } };
   public constructor(options: DatePickerOptions, runtime: DOMTemporalController<DatePickerState, DatePickerEvent, DatePickerCommand>, controls: { value: boolean; highlighted: boolean; open: boolean }, stateFactory: DatePickerStateFactory) {
     this.options = options;
     this.runtime = runtime;
+    this.#keyEvent = (options as InternalDatePickerOptions).createKeyEvent?.(runtime.getSnapshot().state.highlighted.year) ?? keyEvent;
     this.controls = controls;
     this.stateFactory = stateFactory;
     const manageVisibility = (options as DatePickerOptions & { readonly manageVisibility?: boolean }).manageVisibility;
@@ -129,8 +132,17 @@ class DOMDatePicker implements DatePickerConnection {
   public getWeek(): readonly DateValue[] { return createCalendarWeek(this.getSnapshot().state.highlighted, this.options.policies?.weekStartsOn); }
   public getYear(): readonly (readonly CalendarMonthValue[])[] { return createCalendarYear(this.getSnapshot().state.view.year); }
   public syncControlledValues(values: DatePickerControlledValues): DOMTemporalResult<RevisionSnapshot<DatePickerState>> { if (this.controls.value !== (values.value !== undefined) || this.controls.highlighted !== (values.highlightedValue !== undefined) || this.controls.open !== (values.open !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date picker values must preserve their construction-time shape.' } }; const state = this.getSnapshot().state; const highlighted = this.controls.highlighted ? values.highlightedValue as DateValue : state.highlighted; const result = this.runtime.replace(this.stateFactory({ value: this.controls.value ? values.value as DateValue | null : state.value, highlighted, view: { year: highlighted.year, month: highlighted.month }, viewMode: state.viewMode, open: this.controls.open ? values.open as boolean : state.open })); if (result.ok) { this.refresh(); this.options.onUpdate?.(); } return result; }
-  public setCellAttributes(element: HTMLElement, value: DateValue): void { const state = this.getSnapshot().state; const available = isCalendarValueAvailable(value, this.options.policies); element.dataset['datePickerId'] = calendarID(value); element.setAttribute('role', 'gridcell'); element.setAttribute('aria-selected', String(state.value !== null && compareDateValues(state.value, value) === 0)); setDatePickerCellAvailability(element, available); element.tabIndex = compareDateValues(state.highlighted, value) === 0 ? 0 : -1; }
-  public handleEvent(event: DatePickerEvent): boolean { const result = this.runtime.handle(event); if (result.ok) { this.refresh(); this.options.onUpdate?.(); if (result.commands.some((command) => command.type === 'open-changed' && !command.open)) this.options.trigger.focus(); else if (result.commands.some((command) => command.type === 'highlight-changed')) queueMicrotask(() => { if (this.#active) this.options.grid.querySelector<HTMLElement>('[tabindex="0"]')?.focus(); }); } return result.ok; }
+  public setCellAttributes(element: HTMLElement, value: DateValue): void {
+    const state = this.getSnapshot().state;
+    const project = (this.options as InternalDatePickerOptions).projectCell;
+    if (project !== undefined) { project(element, value, state, this.options.policies); return; }
+    element.setAttribute('role', 'gridcell');
+    element.dataset['datePickerId'] = calendarID(value);
+    element.setAttribute('aria-selected', String(state.value !== null && compareDateValues(state.value, value) === 0));
+    setDatePickerCellAvailability(element, isCalendarValueAvailable(value, this.options.policies));
+    element.tabIndex = compareDateValues(state.highlighted, value) === 0 ? 0 : -1;
+  }
+  public handleEvent(event: DatePickerEvent | PeriodPickerEvent): boolean { const result = this.runtime.handle(event as DatePickerEvent); if (result.ok) { this.refresh(); this.options.onUpdate?.(); if (result.commands.some((command) => command.type === 'open-changed' && !command.open)) this.options.trigger.focus(); else if (result.commands.some((command) => command.type === 'highlight-changed')) queueMicrotask(() => { if (this.#active) this.options.grid.querySelector<HTMLElement>('[tabindex="0"]')?.focus(); }); } return result.ok; }
   public refresh(): void {
     const state = this.getSnapshot().state;
     this.#visibility?.setHidden(!state.open);

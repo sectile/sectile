@@ -1,5 +1,22 @@
 {
   "schemaVersion": 1,
   "package": "@sectile/temporal",
-  "entries": []
+  "entries": [
+    { "id": "WI-001:period-navigation-root", "change": "signature-changed", "before": { "subpath": "." }, "symbols": ["PeriodPickerNavigationEvent", "TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "." }, "removalReason": "The root remains type-only; period subpaths own navigation events and year pages expose their 9999-cell resource ceiling." },
+    { "id": "WI-003:year-page-error-calendar", "change": "signature-changed", "before": { "subpath": "./calendar" }, "symbols": ["TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./calendar" } },
+    { "id": "WI-003:year-page-error-date-field", "change": "signature-changed", "before": { "subpath": "./date-field" }, "symbols": ["TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./date-field" }, "removalReason": "Temporal error unions include year-picker-page-size-exceeded for deterministic allocation-limit handling." },
+    { "id": "WI-001:period-navigation-date-picker", "change": "signature-changed", "before": { "subpath": "./date-picker" }, "symbols": ["DatePickerEvent", "TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./date-picker" } },
+    { "id": "WI-003:year-page-error-date-range-field", "change": "signature-changed", "before": { "subpath": "./date-range-field" }, "symbols": ["TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./date-range-field" } },
+    { "id": "WI-001:period-navigation-date-range-picker", "change": "signature-changed", "before": { "subpath": "./date-range-picker" }, "symbols": ["DateRangePickerEvent", "TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./date-range-picker" } },
+    { "id": "WI-003:year-page-error-date-time-field", "change": "signature-changed", "before": { "subpath": "./date-time-field" }, "symbols": ["TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./date-time-field" } },
+    { "id": "WI-001:period-navigation-date-time-picker", "change": "signature-changed", "before": { "subpath": "./date-time-picker" }, "symbols": ["DateTimePickerEvent", "TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./date-time-picker" } },
+    { "id": "WI-001:period-navigation-date-time-range-picker", "change": "signature-changed", "before": { "subpath": "./date-time-range-picker" }, "symbols": ["DateTimeRangePickerEvent", "TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./date-time-range-picker" } },
+    { "id": "WI-001:period-navigation-month-picker", "change": "signature-changed", "before": { "subpath": "./month-picker" }, "symbols": ["MonthPickerEvent", "TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./month-picker" } },
+    { "id": "WI-001:period-navigation-month-range-picker", "change": "signature-changed", "before": { "subpath": "./month-range-picker" }, "symbols": ["MonthRangePickerEvent", "TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./month-range-picker" } },
+    { "id": "WI-001:period-navigation-range-calendar", "change": "signature-changed", "before": { "subpath": "./range-calendar" }, "symbols": ["RangeCalendarEvent", "TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./range-calendar" } },
+    { "id": "WI-003:year-page-error-time-field", "change": "signature-changed", "before": { "subpath": "./time-field" }, "symbols": ["TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./time-field" } },
+    { "id": "WI-003:year-page-error-time-range-field", "change": "signature-changed", "before": { "subpath": "./time-range-field" }, "symbols": ["TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./time-range-field" } },
+    { "id": "WI-003:bounded-year-picker", "change": "signature-changed", "before": { "subpath": "./year-picker" }, "symbols": ["MAX_YEAR_PICKER_PAGE_SIZE", "createYearPickerPage", "tryCreateYearPickerPage", "YearPickerEvent", "TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./year-picker" }, "removalReason": "Year pages accept 1 through 9999 cells, default to 12, and reject larger requests before projection allocation." },
+    { "id": "WI-001:period-navigation-year-range-picker", "change": "signature-changed", "before": { "subpath": "./year-range-picker" }, "symbols": ["YearRangePickerEvent", "TemporalErrorCode"], "replacement": { "package": "@sectile/temporal", "subpath": "./year-range-picker" } }
+  ]
 }

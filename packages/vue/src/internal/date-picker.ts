@@ -12,8 +12,8 @@ import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time
 import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
 import type { DateTimeRange, DateTimeValue } from '@sectile/dom/temporal/date-time-field';
 import { createCalendarMonth, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
-import { createMonthPickerValue } from '@sectile/temporal/month-picker';
-import { createYearPickerValue } from '@sectile/temporal/year-picker';
+import { createMonthPickerValue, tryCreateMonthPickerValue } from '@sectile/temporal/month-picker';
+import { createYearPickerValue, tryCreateYearPickerValue } from '@sectile/temporal/year-picker';
 import type { FormSubmissionRegistration } from './form-control.js';
 import {
   hiddenInputSubmissionCapabilities,
@@ -219,6 +219,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       const localValue = shallowRef<PickerValue>(runtimeProps.modelValue !== undefined ? runtimeProps.modelValue : runtimeProps.defaultValue);
       const localOpen = shallowRef(runtimeProps.open ?? runtimeProps.defaultOpen);
       const localHighlight = shallowRef<DateValue>(runtimeProps.highlightedValue ?? runtimeProps.defaultHighlightedValue ?? dateOf(localValue.value) ?? referenceDate.value);
+      const periodReferenceYear = localHighlight.value.year;
       const yearPageStart = shallowRef(localHighlight.value.year - Math.floor(yearPageSize / 2));
       const dates = shallowRef<readonly (readonly DateValue[])[]>(monthFor(localHighlight.value));
       const months = shallowRef<readonly (readonly CalendarMonthValue[])[]>(yearFor(localHighlight.value.year));
@@ -249,6 +250,12 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       });
       const periodAvailable = (value: CalendarMonthValue | PickerYearValue): boolean => {
         const policies = runtimeProps.policies as PeriodPolicies | undefined;
+        if (granularity !== 'day') {
+          const canonical = 'month' in value
+            ? tryCreateMonthPickerValue(value.year, value.month)
+            : tryCreateYearPickerValue(value.year);
+          return canonical.ok && isCalendarValueAvailable(canonical.value, policies);
+        }
         if ('month' in value) return monthAvailable(value, policies);
         return Array.from({ length: 12 }, (_entry, index) => index + 1)
           .some((month) => monthAvailable({ year: value.year, month }, policies));
@@ -362,25 +369,36 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         },
         handleGridKey: (event) => {
           if ((granularity === 'day' && state.value.viewMode !== 'year') || event.altKey || event.ctrlKey || event.metaKey) return;
-          const navigationGranularity = granularity === 'day' ? 'month' : granularity;
-          const columns = navigationGranularity === 'month' ? 3 : 4;
           const highlighted = state.value.highlightedValue;
-          let movement: { readonly unit: PickerNavigationUnit; readonly delta: number } | undefined;
-          if (event.key === 'ArrowLeft') movement = { unit: navigationGranularity, delta: -1 };
-          else if (event.key === 'ArrowRight') movement = { unit: navigationGranularity, delta: 1 };
-          else if (event.key === 'ArrowUp') movement = { unit: navigationGranularity, delta: -columns };
-          else if (event.key === 'ArrowDown') movement = { unit: navigationGranularity, delta: columns };
-          else if (event.key === 'PageUp') movement = { unit: 'year', delta: navigationGranularity === 'year' ? -yearPageSize : -1 };
-          else if (event.key === 'PageDown') movement = { unit: 'year', delta: navigationGranularity === 'year' ? yearPageSize : 1 };
-          else if (event.key === 'Home') movement = { unit: navigationGranularity, delta: navigationGranularity === 'month' ? 1 - highlighted.month : -((highlighted.year - years.value[0]![0]!.year) % columns) };
-          else if (event.key === 'End') movement = { unit: navigationGranularity, delta: navigationGranularity === 'month' ? 12 - highlighted.month : columns - 1 - ((highlighted.year - years.value[0]![0]!.year) % columns) };
-          else if (event.key === 'Enter' || event.key === ' ') {
+          if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             event.stopImmediatePropagation();
-            if (navigationGranularity === 'month') selectMonth({ year: highlighted.year, month: highlighted.month });
-            else selectYear({ year: highlighted.year });
+            if (granularity === 'year') selectYear({ year: highlighted.year });
+            else selectMonth({ year: highlighted.year, month: highlighted.month });
             return;
-          } else return;
+          }
+          if (granularity !== 'day') {
+            const direction = event.key === 'ArrowLeft' ? 'previous' : event.key === 'ArrowRight' ? 'next'
+              : event.key === 'ArrowUp' ? 'above' : event.key === 'ArrowDown' ? 'below'
+                : event.key === 'PageUp' ? 'previous-page' : event.key === 'PageDown' ? 'next-page'
+                  : event.key === 'Home' ? 'start' : event.key === 'End' ? 'end' : null;
+            if (direction === null) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            connection.value?.handleEvent({ type: 'navigate-period', unit: granularity, direction, referenceYear: periodReferenceYear });
+            refresh();
+            return;
+          }
+          let movement: { readonly unit: PickerNavigationUnit; readonly delta: number };
+          if (event.key === 'ArrowLeft') movement = { unit: 'month', delta: -1 };
+          else if (event.key === 'ArrowRight') movement = { unit: 'month', delta: 1 };
+          else if (event.key === 'ArrowUp') movement = { unit: 'month', delta: -3 };
+          else if (event.key === 'ArrowDown') movement = { unit: 'month', delta: 3 };
+          else if (event.key === 'PageUp') movement = { unit: 'year', delta: -1 };
+          else if (event.key === 'PageDown') movement = { unit: 'year', delta: 1 };
+          else if (event.key === 'Home') movement = { unit: 'month', delta: 1 - highlighted.month };
+          else if (event.key === 'End') movement = { unit: 'month', delta: 12 - highlighted.month };
+          else return;
           event.preventDefault();
           event.stopImmediatePropagation();
           if (movement.delta !== 0) moveBy(movement.unit, movement.delta);
