@@ -1,5 +1,7 @@
 # Form path ownership index
 
+Historical #39 decision. The current lookup representation and evidence are in [Form path and output bounds](form-path-and-output-bounds.md).
+
 Accepted for GitHub #39 on 2026-09-08.
 
 Form owns path-to-field resolution. A canonical field-name/order generation performs its first query directly over existing field chunks and builds a first-owner-by-name map on its second query. Further queries probe the exact normalized path and then its dot/bracket boundary prefixes, longest first. The first field in current registration order wins equal names.

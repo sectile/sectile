@@ -11,7 +11,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core | 380 | 26 | 59 |
 | chart | 80 | 0 | 14 |
 | dom | 424 | 171 | 26 |
-| form | 21 | 0 | 8 |
+| form | 21 | 0 | 9 |
 | tabular | 33 | 0 | 8 |
 | temporal | 104 | 12 | 4 |
 | terminal | 347 | 167 | 8 |
@@ -128,13 +128,14 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:virtual.disconnect | connected | `O(nMounted + kPlacement + rFrame)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-004, VAL-010 |
 | dom:virtual.frame | connected | `O(rFrame + eChanged + kPlacement)` worst-case | `O(eChanged + kPlacement)` | `O(kPlacement)` | `O(nMounted + kPlacement + rFrame)` | forbidden | VAL-004, VAL-010 |
 | dom:virtual.scroll | connected | `O(kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(kPlacement)` | forbidden | VAL-004, VAL-010 |
-| form:field.batch-path-owner | trusted | `O(fField*lPath + nNameCodeUnits + pPath*lPath*dPath)` expected | `O(lPath + fField)` | `O(1)` | `O(fField)` | allowed | packages/form/tests/state/form.test.mjs, packages/dom/tests/form.test.mjs, docs/decisions/form-path-owner-index.md |
+| form:field.batch-path-owner | trusted | `O(fField*lPath + nNameCodeUnits + pPath*lPath)` expected | `O(lPath + nNameCodeUnits + fField)` | `O(1)` | `O(nNameCodeUnits + fField)` | allowed | packages/form/tests/state/form.test.mjs, packages/dom/tests/form.test.mjs, docs/decisions/form-path-owner-index.md |
 | form:field.get | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(fField)` | forbidden | VAL-016, VAL-017 |
 | form:field.ids-by-issue-source | trusted | `O(uSource)` worst-case | `O(uSource)` | `O(uSource)` | `O(fField + iIssue)` | forbidden | VAL-016, VAL-017 |
 | form:field.update | trusted | `O(iIssue + rAffected + aField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIssue + rAffected + aField + fField/64 + iFieldIssue)` | `O(iIssue)` | `O(fField + iIssue + rRelation)` | forbidden | VAL-016, VAL-017 |
 | form:issues.clear-related-server | trusted | `O(iIssue + rAffected + aField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIssue + rAffected + aField + fField/64)` | `O(iIssue)` | `O(fField + iIssue + rRelation)` | allowed | packages/form/tests/state/form.test.mjs |
+| form:issues.output-budget | external | `O(1 + iInput + iRemoved)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | packages/form/tests/state/form.test.mjs, docs/decisions/form-path-and-output-bounds.md |
 | form:issues.replace-source | trusted | `O(iIssue + iIncoming + iRemoved + rAffected + aField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIssue + iIncoming + iRemoved + rAffected + aField + fField/64)` | `O(iIssue + iIncoming)` | `O(fField + iIssue + rRelation)` | forbidden | VAL-016, VAL-017 |
-| form:state.construct | external | `O(fField + uID + iIssue)` worst-case | `O(fField)` | `O(fField)` | `O(fField)` | allowed | VAL-016, VAL-017 |
+| form:state.construct | external | `O(fField + uID + iIssue + rRelation)` worst-case | `O(fField + iIssue + rRelation)` | `O(fField + iIssue + rRelation)` | `O(fField + iIssue + rRelation)` | allowed | packages/form/tests/state/form.test.mjs |
 | form:values.construct | external | `O(eEntry + pSegment + oNode)` worst-case | `O(pSegment + oNode)` | `O(oNode)` | `O(oNode)` | allowed | packages/form/tests/state/form.test.mjs, packages/dom/tests/form.test.mjs |
 | tabular:data-table.changed-slice | external | `O(sChanged)` worst-case | `O(sChanged)` | `O(sChanged)` | `O(sChanged + sOther)` | forbidden | VAL-016, VAL-017 |
 | tabular:grid-profile.move | trusted | `O(sAxis)` worst-case | `O(1)` | `O(1)` | `O(nCell)` | forbidden | VAL-016, VAL-017 |

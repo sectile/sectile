@@ -475,6 +475,70 @@ test('ISSUE-039: proportional path batches have linear owner work and reuse meta
   assert.ok(totals[2] <= totals[1] * 2.1);
 });
 
+test('deep path ownership hashes disjoint tokens rather than repeated full prefixes', () => {
+  for (const depth of [128, 256, 512, 1024]) {
+    const paths = Array.from({ length: 50 }, (_, path) => ['root', ...Array.from({ length: depth - 1 }, (_, index) => `segment${index}payload${path}`)]);
+    const deepName = paths[0].join('.');
+    const state = createFormState({ fields: [{ id: 'root-id', name: 'root' }, { id: 'deep-id', name: deepName }] });
+    getFormFieldIDByPath(state, 'root.warm');
+    getFormFieldIDByPath(state, 'root.warm');
+    const slice = String.prototype.slice;
+    const get = Map.prototype.get;
+    let slices = 0;
+    let slicedCodeUnits = 0;
+    let probes = 0;
+    String.prototype.slice = function(...args) {
+      const result = slice.apply(this, args);
+      slices += 1;
+      slicedCodeUnits += result.length;
+      return result;
+    };
+    Map.prototype.get = function(key) { probes += 1; return get.call(this, key); };
+    try {
+      for (const [index, path] of paths.entries()) assert.equal(getFormFieldIDByPath(state, path), index === 0 ? 'deep-id' : 'root-id');
+    } finally {
+      String.prototype.slice = slice;
+      Map.prototype.get = get;
+    }
+    const inputCodeUnits = paths.reduce((sum, path) => sum + path.join('.').length, 0);
+    assert.ok(slicedCodeUnits <= inputCodeUnits, `${depth}: ${slicedCodeUnits} sliced code units`);
+    assert.ok(slices <= depth + 100, `${depth}: ${slices} slices`);
+    assert.ok(probes <= depth + 100, `${depth}: ${probes} probes`);
+  }
+  // A fully shared deep branch still hashes only disjoint token bytes.
+  const prefix = ['root', ...Array.from({ length: 1022 }, (_, index) => `shared${index}`)];
+  const paths = Array.from({ length: 50 }, (_, index) => [...prefix, `tail${index}`]);
+  const shared = createFormState({ fields: [{ id: 'root', name: 'root' }, { id: 'shared', name: prefix.join('.') }] });
+  getFormFieldIDByPath(shared, 'root.warm');
+  getFormFieldIDByPath(shared, 'root.warm');
+  const get = Map.prototype.get;
+  const slice = String.prototype.slice;
+  let hashedCodeUnits = 0;
+  let slicedCodeUnits = 0;
+  Map.prototype.get = function(key) {
+    if (typeof key === 'string') hashedCodeUnits += key.length;
+    return get.call(this, key);
+  };
+  String.prototype.slice = function(...args) {
+    const result = slice.apply(this, args);
+    slicedCodeUnits += result.length;
+    return result;
+  };
+  try {
+    for (const path of paths) assert.equal(getFormFieldIDByPath(shared, path), 'shared');
+  } finally {
+    Map.prototype.get = get;
+    String.prototype.slice = slice;
+  }
+  const encodedCodeUnits = paths.reduce((sum, path) => sum + path.join('.').length, 0);
+  assert.ok(hashedCodeUnits <= encodedCodeUnits);
+  assert.ok(slicedCodeUnits <= encodedCodeUnits);
+  const external = { fields: [{ id: 'before', name: 'root' }] };
+  assert.equal(getFormFieldIDByPath(external, ['root', 'child']), 'before');
+  external.fields[0] = { id: 'after', name: 'root' };
+  assert.equal(getFormFieldIDByPath(external, ['root', 'child']), 'after');
+});
+
 // FRM-09
 test('multi-field server issues stay canonical and clear when a related value changes', () => {
   const issue = {
@@ -709,6 +773,92 @@ test('FRM-04: malformed path, value, and state construction returns typed failur
     assert.equal(result.ok, false);
     assert.equal(result.error.code, code);
   }
+});
+
+test('FRM-05: relation slots consume the output budget before caller elements are read', () => {
+  for (const size of [1, 10, 1000, 250_000]) {
+    let reads = 0;
+    const ids = new Proxy(Array.from({ length: size }, (_, index) => index + 1), {
+      get(target, key, receiver) {
+        if (typeof key === 'string' && /^\d+$/.test(key)) reads += 1;
+        return Reflect.get(target, key, receiver);
+      },
+    });
+    const issue = { id: 'issue', source: 'server', message: 'Related fields', relatedFieldIds: ids };
+    const rejected = tryCreateFormState({ issues: [issue] }, { maxEntries: 1, maxOutputNodes: size });
+    assert.equal(rejected.ok, false);
+    assert.equal(rejected.error.class, 'resource-rejection');
+    assert.equal(rejected.error.code, 'form-output-node-ceiling-exceeded');
+    assert.equal(reads, 0);
+    if (size === 250_000) {
+      assert.equal(tryCreateFormState({ issues: [issue] }).ok, false);
+      assert.equal(reads, 0);
+      const transition = applyFormEvent(createFormState(), { type: 'replace-issues', source: 'server', issues: [issue] });
+      assert.equal(transition.ok, false);
+      assert.equal(transition.error.code, 'form-output-node-ceiling-exceeded');
+      assert.equal(reads, 0);
+      continue;
+    }
+    const accepted = tryCreateFormState({ issues: [issue] }, { maxEntries: 1, maxOutputNodes: size + 1 });
+    assert.equal(accepted.ok, true);
+    assert.equal(accepted.value.allIssues[0].relatedFieldIds.length, size);
+    assert.equal(reads, size);
+    assert.equal(Object.isFrozen(accepted.value.allIssues[0].relatedFieldIds), true);
+    const fieldOwned = tryCreateFormState({ fields: [{ id: 'field', issues: [issue] }] }, { maxEntries: 2, maxOutputNodes: size + 1 });
+    assert.equal(fieldOwned.ok, false);
+    assert.equal(fieldOwned.error.code, 'form-output-node-ceiling-exceeded');
+  }
+});
+
+test('Form issue mutations preserve the state output budget and reject relation growth atomically', () => {
+  for (const size of [1, 10, 1000]) {
+    const state = createFormState({ fields: [{ id: 'field' }] }, { maxOutputNodes: size + 2 });
+    for (const makeEvent of [
+      (issue) => ({ type: 'replace-issues', source: 'server', issues: [issue] }),
+      (issue) => ({ type: 'register-field', field: { id: 'field', issues: [issue] } }),
+      (issue) => ({ type: 'replace-field-issues', id: 'field', source: 'server', issues: [issue] }),
+      (issue) => ({ type: 'upsert-field-issue', id: 'field', issue }),
+    ]) {
+      const issue = { id: 'issue', source: 'server', message: 'Relations', relatedFieldIds: Array.from({ length: size }, (_, index) => index + 1) };
+      const accepted = applyFormEvent(state, makeEvent(issue));
+      assert.equal(accepted.ok, true);
+      const canonical = accepted.value.state;
+      assert.equal(canonical.allIssues[0].relatedFieldIds.length, size);
+      // Replacement frees the previous record and relation slots before reserving the new input.
+      assert.equal(applyFormEvent(canonical, makeEvent(issue)).ok, true);
+      let reads = 0;
+      const large = new Proxy([...issue.relatedFieldIds, size + 1], {
+        get(target, key, receiver) {
+          if (typeof key === 'string' && /^\d+$/.test(key)) reads += 1;
+          return Reflect.get(target, key, receiver);
+        },
+      });
+      const before = structuredClone(canonical);
+      const rejected = applyFormEvent(canonical, makeEvent({ ...issue, relatedFieldIds: large }));
+      assert.equal(rejected.ok, false);
+      assert.equal(rejected.error.class, 'resource-rejection');
+      assert.equal(rejected.error.code, 'form-output-node-ceiling-exceeded');
+      assert.equal(reads, 0);
+      assert.deepEqual(canonical, before);
+    }
+  }
+  let state = createFormState({ fields: [{ id: 'field' }] }, { maxOutputNodes: 6 });
+  const put = (id, relatedFieldIds) => ({ type: 'upsert-field-issue', id: 'field', issue: { id, relatedFieldIds, source: 'server', message: 'Related' } });
+  state = applyFormEvent(state, put('one', [1, 2])).value.state;
+  state = applyFormEvent(state, { type: 'set-field-meta', id: 'field', meta: { touched: true } }).value.state;
+  state = applyFormEvent(state, put('two', [3])).value.state;
+  assert.equal(applyFormEvent(state, put('three', [])).ok, false);
+  state = applyFormEvent(state, { type: 'remove-field-issue', id: 'field', issueId: 'one' }).value.state;
+  assert.equal(applyFormEvent(state, put('three', [4, 5])).ok, true);
+  state = applyFormEvent(state, 'reset').value.state;
+  assert.equal(applyFormEvent(state, put('large', [1, 2, 3, 4, 5])).ok, false);
+  const duplicate = applyFormEvent(state, put('duplicate', [1, 1]));
+  assert.equal(duplicate.ok, false);
+  assert.equal(duplicate.error.code, 'form-issue-related-field-id-duplicate');
+  const pending = createFormState({ submission: { generation: 1, status: 'submitting', count: 1, failure: null } }, { maxOutputNodes: 2 });
+  const failed = applyFormEvent(pending, { type: 'submit-failed', generation: 1, issues: [{ id: 'server', source: 'server', message: 'Failed', relatedFieldIds: [1, 2] }] });
+  assert.equal(failed.ok, false);
+  assert.equal(failed.error.code, 'form-output-node-ceiling-exceeded');
 });
 
 test('FRM-05: construction ceilings fail before unbounded output and deep paths stay iterative', () => {

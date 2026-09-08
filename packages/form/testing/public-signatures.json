@@ -27,7 +27,7 @@
       "types": "dist/values.d.ts"
     }
   ],
-  "fingerprint": "c87ee8083a1413424b356b58ef52983a2a563404c2619d82d335090202c39f6b",
+  "fingerprint": "a0a5739e64bfd197b4677c2b0f108421477b71a71d178766c018d36b98d11d48",
   "files": [
     {
       "path": "dist/error.d.ts",
@@ -39,7 +39,7 @@
     },
     {
       "path": "dist/internal/form.d.ts",
-      "sha256": "dd6c71b0ed215940c1d392756fe52117ae7404980352c3642f2da3cdb1e278c4"
+      "sha256": "5eb58c809f24740ce29b20f40bc41bd09edac5afaec3b3217219fc47eb0fc554"
     },
     {
       "path": "dist/path.d.ts",

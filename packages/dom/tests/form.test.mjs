@@ -919,6 +919,11 @@ test('DOM Form routes descendant issues to the longest registered field path', (
       validate: () => ({
         issues: [
           { path: ['profile', 'email', 'domain'], relatedPaths: [['profile', 'preferences']], message: 'Use an approved domain.' },
+          ...Array.from({ length: 50 }, (_, index) => ({
+            path: ['profile', 'email', ...Array.from({ length: 1022 }, (_, segment) => `nested${segment}`)],
+            relatedPaths: [['profile', ...Array.from({ length: 1023 }, (_, segment) => `related${segment}`)]],
+            message: `Review nested value ${index}.`,
+          })),
           { path: ['unowned'], message: 'Review the form.' },
         ],
       }),
@@ -927,9 +932,9 @@ test('DOM Form routes descendant issues to the longest registered field path', (
     formElement.requestSubmit();
 
     assert.equal(form.state.fields.find((field) => field.id === 'profile').issues.length, 0);
-    assert.equal(form.state.fields.find((field) => field.id === 'email').issues.length, 1);
-    assert.deepEqual(form.state.fields.find((field) => field.id === 'email').issues[0].relatedFieldIds, ['profile']);
-    assert.equal(form.state.fields.find((field) => field.id === 'profile').relatedIssues.length, 1);
+    assert.equal(form.state.fields.find((field) => field.id === 'email').issues.length, 51);
+    assert.equal(form.state.fields.find((field) => field.id === 'email').issues.every((issue) => issue.relatedFieldIds.length === 1 && issue.relatedFieldIds[0] === 'profile'), true);
+    assert.equal(form.state.fields.find((field) => field.id === 'profile').relatedIssues.length, 51);
     assert.equal(form.state.issues.length, 1);
     assert.equal(document.activeElement, email);
   } finally {

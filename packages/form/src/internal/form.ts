@@ -275,9 +275,14 @@ class FormDeltaSet<Value> {
   public values(): IterableIterator<Value> { return this.#index.materialize().keys(); }
 }
 
+interface FormPathOwnerNode<ID extends StableID> {
+  owner: ID | null;
+  children: Map<string, FormPathOwnerNode<ID>> | null;
+}
+
 interface FormPathOwnerCache<ID extends StableID> {
   queried: boolean;
-  byName: ReadonlyMap<string, ID> | null;
+  root: FormPathOwnerNode<ID> | null;
 }
 
 interface FormFieldStore<ID extends StableID> {
@@ -295,9 +300,11 @@ interface FormFieldStore<ID extends StableID> {
 interface FormStatePrivate<ID extends StableID> {
   readonly fields: FormFieldStore<ID>;
   readonly issues: FormIssueStore<ID>;
+  readonly maxOutputNodes: number;
 }
 
 interface FormIssueStore<ID extends StableID> {
+  readonly outputNodes: number;
   readonly values: readonly FormIssue<ID>[];
   readonly byID: ReadonlyMap<StableID, FormIssue<ID>>;
   readonly bySource: ReadonlyMap<FormIssueSource, readonly FormIssue<ID>[]>;
@@ -322,6 +329,7 @@ export interface FormConstructionLimits {
   readonly maxEntries: number;
   readonly maxPathSegments: number;
   readonly maxArrayIndex: number;
+  /** Field/issue records plus related-ID slots; retained by canonical Form states for later issue mutations. */
   readonly maxOutputNodes: number;
   readonly maxPathCodeUnits: number;
 }
@@ -736,8 +744,11 @@ export function tryCreateFormState<ID extends StableID = StableID>(
   if (stateEntries > limits.value.maxEntries) {
     return formCeiling('form-entry-ceiling-exceeded', stateEntries, limits.value.maxEntries);
   }
-  if (stateEntries > limits.value.maxOutputNodes) {
-    return formCeiling('form-output-node-ceiling-exceeded', stateEntries, limits.value.maxOutputNodes);
+  let output = reserveIssueRelations(checkedIssues, stateEntries, limits.value.maxOutputNodes);
+  if (!output.ok) return output;
+  for (const field of checkedFields) {
+    output = reserveIssueRelations(field.issues ?? [], output.value, limits.value.maxOutputNodes);
+    if (!output.ok) return output;
   }
   const fieldIDs = tryNormalizeStableIDs<ID>(checkedFields.map((field) => field.id));
   if (!fieldIDs.ok) return fieldIdentityError(fieldIDs.error.code);
@@ -808,7 +819,7 @@ export function tryCreateFormState<ID extends StableID = StableID>(
     submission,
     fields: projectedFields,
     issues: Object.freeze(globalIssues),
-  });
+  }, limits.value.maxOutputNodes);
   if (validation.status === 'valid' && !state.valid) {
     return fail(
       'construction',
@@ -856,23 +867,49 @@ export function getFormFieldIDByPath<ID extends StableID>(
     cache.queried = true;
     return scanPathOwner(store.chunks, issueName);
   }
-  if (cache.byName === null) {
-    const byName = new Map<string, ID>();
-    for (const chunk of store.chunks) {
-      for (const field of chunk) {
-        if (field.name !== null && !byName.has(field.name)) byName.set(field.name, field.id);
+  cache.root ??= createPathOwnerIndex(store.chunks);
+  let node = cache.root;
+  let owner: ID | null = null;
+  for (let start = 0; start < issueName.length && node.children !== null;) {
+    const end = pathOwnerTokenEnd(issueName, start);
+    const next = node.children.get(issueName.slice(start, end));
+    if (next === undefined) break;
+    node = next;
+    if (node.owner !== null) owner = node.owner;
+    start = end;
+  }
+  return owner;
+}
+
+function createPathOwnerIndex<ID extends StableID>(chunks: readonly (readonly FormFieldState<ID>[])[]): FormPathOwnerNode<ID> {
+  const root: FormPathOwnerNode<ID> = { owner: null, children: null };
+  for (const fields of chunks) {
+    for (const field of fields) {
+      if (field.name === null) continue;
+      let node = root;
+      for (let start = 0; start < field.name.length;) {
+        const end = pathOwnerTokenEnd(field.name, start);
+        const token = field.name.slice(start, end);
+        node.children ??= new Map();
+        let next = node.children.get(token);
+        if (next === undefined) {
+          next = { owner: null, children: null };
+          node.children.set(token, next);
+        }
+        node = next;
+        start = end;
       }
+      node.owner ??= field.id;
     }
-    cache.byName = byName;
   }
-  const exact = cache.byName.get(issueName);
-  if (exact !== undefined) return exact;
-  for (let end = issueName.length - 1; end >= 0; end -= 1) {
-    if (issueName[end] !== '.' && issueName[end] !== '[') continue;
-    const owner = cache.byName.get(issueName.slice(0, end));
-    if (owner !== undefined) return owner;
-  }
-  return null;
+  return root;
+}
+
+// Delimiters stay attached to the following token, preserving raw name ownership.
+function pathOwnerTokenEnd(name: string, start: number): number {
+  let end = start + 1;
+  while (end < name.length && name[end] !== '.' && name[end] !== '[') end += 1;
+  return end;
 }
 
 function scanPathOwner<ID extends StableID>(chunks: readonly (readonly FormFieldState<ID>[])[], issueName: string): ID | null {
@@ -1056,12 +1093,14 @@ function registerField<ID extends StableID>(
   state: FormState<ID>,
   input: FormFieldInput<ID>,
 ): Result<FormUpdate<ID>> {
+  const store = fieldStoreOf(state);
+  const current = getStoredField(store, input?.id);
+  const budget = reserveIssueReplacement(state, input?.issues ?? [], issueOutputNodes(current?.issues ?? []), current === undefined ? 1 : 0);
+  if (!budget.ok) return budget;
   const normalized = normalizeField(input);
   if (!normalized.ok) return transitionError(normalized);
   const ownership = validateFieldIssueOwnership(state, normalized.value, input.id);
   if (!ownership.ok) return ownership;
-  const store = fieldStoreOf(state);
-  const current = getStoredField(store, input.id);
   if (current !== undefined && sameField(current, normalized.value)) return update(state);
   const currentFields = materializeFields(store);
   if (current !== undefined) {
@@ -1145,6 +1184,8 @@ function replaceFieldIssues<ID extends StableID>(
   const store = fieldStoreOf(state);
   const current = getStoredField(store, id);
   if (current === undefined) return missingField();
+  const budget = reserveIssueReplacement(state, input, issueOutputNodes(current.issues, source));
+  if (!budget.ok) return budget;
   if (input.some((issue) => issue.source !== source)) {
     return fail(
       'transition-rejection',
@@ -1176,10 +1217,12 @@ function upsertFieldIssue<ID extends StableID>(
   const store = fieldStoreOf(state);
   const current = getStoredField(store, id);
   if (current === undefined) return missingField();
+  const index = current.issues.findIndex((candidate) => candidate.id === input?.id);
+  const budget = reserveIssueReplacement(state, [input], index < 0 ? 0 : issueOutputNodes([current.issues[index]!]));
+  if (!budget.ok) return budget;
   const normalized = normalizeIssues([input], id);
   if (!normalized.ok) return transitionError(normalized);
   const issue = normalized.value[0]!;
-  const index = current.issues.findIndex((candidate) => candidate.id === issue.id);
   const issues = [...current.issues];
   if (index < 0) issues.push(issue);
   else issues[index] = issue;
@@ -1280,6 +1323,8 @@ function replaceIssues<ID extends StableID>(
   source: FormIssueSource,
   inputIssues: readonly FormIssue<ID>[],
 ): Result<FormUpdate<ID>> {
+  const budget = reserveIssueReplacement(state, inputIssues, issueOutputNodes(issueStoreOf(state).allBySource.get(source) ?? []));
+  if (!budget.ok) return budget;
   if (inputIssues.some((issue) => issue.source !== source)) {
     return fail(
       'transition-rejection',
@@ -1673,6 +1718,36 @@ function normalizeField<ID extends StableID>(
   }));
 }
 
+function issueOutputNodes<ID extends StableID>(issues: readonly FormIssue<ID>[], source?: FormIssueSource): number {
+  let nodes = 0;
+  for (const issue of issues) {
+    if (source === undefined || issue.source === source) nodes += 1 + (issue.relatedFieldIds?.length ?? 0);
+  }
+  return nodes;
+}
+
+function reserveIssueRelations<ID extends StableID>(input: readonly FormIssue<ID>[], nodes: number, ceiling: number): Result<number> {
+  if (nodes > ceiling) return formCeiling('form-output-node-ceiling-exceeded', nodes, ceiling);
+  if (!Array.isArray(input)) return fail('construction', 'form-state-input-invalid', 'Form issues must be an array.');
+  for (const issue of input) {
+    if (issue === null || typeof issue !== 'object' || Array.isArray(issue)) return fail('construction', 'form-issue-invalid', 'Every Form issue must be an object.');
+    const related = issue.relatedFieldIds ?? [];
+    if (!Array.isArray(related)) return fail('construction', 'form-issue-related-field-id-invalid', 'Related Form field identifiers must be valid stable IDs.');
+    if (related.length > ceiling - nodes) return formCeiling('form-output-node-ceiling-exceeded', nodes + related.length, ceiling);
+    nodes += related.length;
+  }
+  return ok(nodes);
+}
+
+function reserveIssueReplacement<ID extends StableID>(state: FormState<ID>, input: readonly FormIssue<ID>[], removedNodes: number, addedFields = 0): Result<number> {
+  if (!Array.isArray(input)) return fail('transition-rejection', 'form-state-input-invalid', 'Form issues must be an array.');
+  const current = formStatePrivate.get(state)!;
+  const retained = current.fields.size + current.issues.outputNodes - removedNodes + addedFields;
+  if (input.length > current.maxOutputNodes - retained) return formCeiling('form-output-node-ceiling-exceeded', retained + input.length, current.maxOutputNodes);
+  const result = reserveIssueRelations(input, retained + input.length, current.maxOutputNodes);
+  return !result.ok && result.error.class !== 'resource-rejection' ? transitionError(result) : result;
+}
+
 function normalizeIssues<ID extends StableID>(
   input: readonly FormIssue<ID>[],
   fieldId: ID | undefined,
@@ -1805,7 +1880,7 @@ function createFieldStore<ID extends StableID>(
   }
   return Object.freeze({
     size: fields.length,
-    pathOwners: { queried: false, byName: null },
+    pathOwners: { queried: false, root: null },
     chunks: Object.freeze(chunks.map((chunk) => Object.freeze(chunk))),
     indexByID,
     issueOwnerByID: FormDeltaIndex.from(issueOwnerByID),
@@ -1892,6 +1967,7 @@ function createFormIssueStore<ID extends StableID>(
     serverIssueIDsByField.set(id, Object.freeze(issueIDs));
   }
   return Object.freeze({
+    outputNodes: issueOutputNodes(allValues),
     values,
     byID,
     bySource,
@@ -1944,6 +2020,7 @@ function removeFormIssues<ID extends StableID>(
     else relatedIssueIDsByField.set(id, remaining);
   }
   return Object.freeze({
+    outputNodes: issueOutputNodes(allValues),
     values,
     byID,
     bySource,
@@ -2033,7 +2110,7 @@ function createFieldStoreFromChunks<ID extends StableID>(
   for (const [id, next] of replacements) {
     const current = getStoredField(previous, id);
     if (current === undefined || current === next) continue;
-    if (current.name !== next.name && pathOwners === previous.pathOwners) pathOwners = { queried: false, byName: null };
+    if (current.name !== next.name && pathOwners === previous.pathOwners) pathOwners = { queried: false, root: null };
     touchedCount += Number(next.touched) - Number(current.touched);
     dirtyCount += Number(next.dirty) - Number(current.dirty);
     invalidCount += Number(!next.valid) - Number(!current.valid);
@@ -2089,12 +2166,13 @@ function buildState<ID extends StableID>(input: {
   readonly submission: FormSubmissionState;
   readonly fields: readonly FormFieldState<ID>[];
   readonly issues: readonly FormIssue<ID>[];
-}): FormState<ID> {
+}, maxOutputNodes = DEFAULT_FORM_CONSTRUCTION_LIMITS.maxOutputNodes): FormState<ID> {
   const fields = createFieldStore(input.fields);
   return buildStateFromStores(
     input,
     fields,
     createFormIssueStore(input.issues, fields),
+    maxOutputNodes,
   );
 }
 
@@ -2102,6 +2180,7 @@ function buildStateFromStores<ID extends StableID>(
   input: Omit<Parameters<typeof buildState<ID>>[0], 'fields' | 'issues'>,
   fields: FormFieldStore<ID>,
   issues: FormIssueStore<ID>,
+  maxOutputNodes: number,
 ): FormState<ID> {
   let state!: FormState<ID>;
   state = Object.freeze({
@@ -2115,7 +2194,7 @@ function buildStateFromStores<ID extends StableID>(
     issues: issues.values,
     allIssues: issues.allValues,
   });
-  formStatePrivate.set(state, { fields, issues } as FormStatePrivate<StableID>);
+  formStatePrivate.set(state, { fields, issues, maxOutputNodes } as FormStatePrivate<StableID>);
   return state;
 }
 
@@ -2141,7 +2220,7 @@ function deriveState<ID extends StableID>(
   return buildStateFromStores({
     validation,
     submission,
-  }, fields, issues);
+  }, fields, issues, formStatePrivate.get(state)!.maxOutputNodes);
 }
 
 function deriveWithIssueProjection<ID extends StableID>(

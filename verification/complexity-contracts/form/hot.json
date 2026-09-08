@@ -9,26 +9,26 @@
       "inherits": "linear-v1",
       "source": "packages/form/src/internal/form.ts",
       "benchmarkIDs": ["ISSUE-039:form-path-owner-work"],
-      "specificationCeiling": "O(fField*lPath + nNameCodeUnits + pPath*lPath*dPath)",
+      "specificationCeiling": "O(fField*lPath + nNameCodeUnits + pPath*lPath)",
       "contract": {
         "variables": [
           { "name": "fField", "meaning": "registered fields in one name/order generation", "ceiling": "maxEntries" },
           { "name": "nNameCodeUnits", "meaning": "total registered name code units hashed when building the index", "ceiling": "sum of registered name lengths" },
           { "name": "pPath", "meaning": "primary and related path lookups for that generation", "ceiling": "validation result cardinality" },
           { "name": "lPath", "meaning": "maximum normalized issue path code units", "ceiling": "maxPathCodeUnits" },
-          { "name": "dPath", "meaning": "maximum dot/bracket prefix boundaries per path", "ceiling": "maxPathSegments" }
+          { "name": "dPath", "meaning": "maximum lexical dot/bracket tokens per encoded path", "ceiling": "dPath <= lPath" }
         ],
-        "time": { "bound": "O(fField*lPath + nNameCodeUnits + pPath*lPath*dPath)", "kind": "expected", "runtimeState": "trusted" },
-        "space": { "auxiliary": "O(lPath + fField)", "output": "O(1)", "retained": "O(fField)" },
-        "resources": { "allocations": "O(fField + pPath*dPath)", "cacheEntries": "O(fField)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
-        "assumptions": ["Canonical immutable Form field-name/order generation; expected Map operations include name and prefix hashing."],
-        "ceilings": ["At most maxEntries registered fields; normalized paths obey maxPathSegments and maxPathCodeUnits."],
+        "time": { "bound": "O(fField*lPath + nNameCodeUnits + pPath*lPath)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(lPath + nNameCodeUnits + fField)", "output": "O(1)", "retained": "O(nNameCodeUnits + fField)" },
+        "resources": { "allocations": "O(nNameCodeUnits + fField + pPath*dPath)", "cacheEntries": "O(nNameCodeUnits + fField)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["Canonical immutable Form field-name/order generation; expected Map operations hash disjoint lexical tokens, not full path prefixes."],
+        "ceilings": ["Normalized paths obey maxPathSegments and maxPathCodeUnits; name-index size is proportional to registered names."],
         "evidence": ["packages/form/tests/state/form.test.mjs", "packages/dom/tests/form.test.mjs", "docs/decisions/form-path-owner-index.md"],
         "benchmarkIDs": ["ISSUE-039:form-path-owner-work"],
-        "deterministicWork": ["Proportional 250/500/1000-field/path batches perform no more than eight owner operations per field; metadata patches add zero scans or insertions."],
-        "resourceRationale": "The lazy name map retains only existing name and ID strings with its immutable name/order generation, and no prior field or state objects.",
-        "proof": "The first lookup scans existing chunks. The second builds a first-owner-by-name map once. Further lookups probe only exact and descending dot/bracket boundary prefixes. Non-name metadata and issue patches share this private cache; structural order/name changes create a fresh cache with no parent-state references.",
-        "adversarialWitness": "The production helper resolves proportional 250/500/1000-field batches within eight owner operations per field; metadata-only updates add no field scans or index insertions. Differential fixtures cover first duplicate ownership, reorder, rename, register, unregister, dot, bracket, invalid and missing paths.",
+        "deterministicWork": ["Proportional 250/500/1000-field/path batches stay below eight owner operations per field; metadata changes add no scans or insertions. Fifty paths at depths 128/256/512/1024 slice at most their total encoded code units; the deep-owner/root-owner witness performs at most depth + 100 probes."],
+        "resourceRationale": "A generation retains a token tree containing names and IDs, never prior states or field objects. Leaves allocate no child map. The first query scans existing chunks without allocating a retained index.",
+        "proof": "The first query scans existing chunks. The second builds a tree split at raw dot/bracket boundaries, retaining the separator on the following token and the first owner for duplicates. A query advances through non-overlapping tokens once, retains its longest owner, and stops at a missing edge or leaf. Metadata-only changes share the same cache; name/order changes invalidate it.",
+        "adversarialWitness": "Deep and shallow production queries are checked against the uncached external-state scan, including mutable external inputs. The 1024-segment fifty-path witness prevents repeated prefix hashing; DOM maps deep primary and related paths through this same export.",
         "fullScan": { "allowed": true, "rationale": "At most one initial scan and one index construction per queried canonical name/order generation; external noncanonical states remain uncached to preserve mutable-input behavior." }
       }
     },
@@ -159,7 +159,7 @@
           {
             "name": "rRelation",
             "meaning": "all retained primary and related issue-to-field references",
-            "ceiling": "maxIssueFieldRelations"
+            "ceiling": "canonical state's maxOutputNodes (default 200000), shared with field and issue records"
           },
           {
             "name": "aField",
@@ -216,7 +216,7 @@
           {
             "name": "rRelation",
             "meaning": "all retained primary and related issue-to-field references",
-            "ceiling": "maxIssueFieldRelations"
+            "ceiling": "canonical state's maxOutputNodes (default 200000), shared with field and issue records"
           },
           {
             "name": "aField",
@@ -262,6 +262,23 @@
       }
     },
     {
+      "id": "issues.output-budget",
+      "inherits": "linear-v1",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": ["FRM-05:relation-output-work"],
+      "specificationCeiling": "O(1 + iInput + iRemoved)",
+      "contract": {
+        "variables": [{ "name": "iInput", "meaning": "incoming field and issue records inspected by preflight", "ceiling": "maxOutputNodes" }, { "name": "iRemoved", "meaning": "canonical issue records being replaced", "ceiling": "maxOutputNodes" }],
+        "time": { "bound": "O(1 + iInput + iRemoved)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1 + iInput)", "cacheEntries": "O(1)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "evidence": ["packages/form/tests/state/form.test.mjs", "docs/decisions/form-path-and-output-bounds.md"],
+        "proof": "Constructor preflight adds field/issue records and raw relation vector lengths before normalization. Canonical issue stores cache normalized record-plus-relation totals; mutations subtract removed records and reserve incoming lengths against the retained maxOutputNodes ceiling. No rejected relation vector is enumerated or copied.",
+        "adversarialWitness": "FRM-05 counts zero caller-element reads for over-budget relation vectors at 1, 10, 1000 and 250000 entries. Inclusive boundaries, cumulative insertion, replacement, reset, metadata and submit-failed keep the same private ceiling and preserve state on rejection.",
+        "fullScan": { "allowed": true, "rationale": "Only incoming record metadata and replaced canonical records are inspected; relation contents are validated only after reservation succeeds." }
+      }
+    },
+    {
       "id": "issues.replace-source",
       "inherits": "linear-v1",
       "source": "packages/form/src/internal/form.ts",
@@ -289,7 +306,7 @@
           {
             "name": "rRelation",
             "meaning": "all retained primary and related issue-to-field references",
-            "ceiling": "maxIssueFieldRelations"
+            "ceiling": "canonical state's maxOutputNodes (default 200000), shared with field and issue records"
           },
           {
             "name": "aField",
@@ -345,7 +362,7 @@
       "benchmarkIDs": [
         "VAL-030:form-construct-work"
       ],
-      "specificationCeiling": "O(fField + uID + iIssue)",
+      "specificationCeiling": "O(fField + uID + iIssue + rRelation)",
       "contract": {
         "variables": [
           {
@@ -361,29 +378,35 @@
           {
             "name": "iIssue",
             "meaning": "issues supplied during construction",
-            "ceiling": "maxIssues"
+            "ceiling": "maxEntries and maxOutputNodes"
+          },
+          {
+            "name": "rRelation",
+            "meaning": "input related-ID slots reserved before normalization and canonical relation indexing",
+            "ceiling": "remaining maxOutputNodes after field and issue records"
           }
         ],
         "time": {
-          "bound": "O(fField + uID + iIssue)",
+          "bound": "O(fField + uID + iIssue + rRelation)",
           "kind": "worst-case",
           "runtimeState": "external"
         },
         "space": {
-          "auxiliary": "O(fField)",
-          "output": "O(fField)",
-          "retained": "O(fField)"
+          "auxiliary": "O(fField + iIssue + rRelation)",
+          "output": "O(fField + iIssue + rRelation)",
+          "retained": "O(fField + iIssue + rRelation)"
         },
         "resources": {
-          "allocations": "O(fField)",
-          "cacheEntries": "O(fField)",
+          "allocations": "O(fField + iIssue + rRelation)",
+          "cacheEntries": "O(fField + iIssue + rRelation)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Core stable-ID normalization and the Form field/issue store each visit construction input once while building retained indexes and 64-entry chunks.",
-        "adversarialWitness": "A maximum-size unique field and issue list performs one bounded validation/indexing pass.",
+        "proof": "Preflight reserves record counts and relation lengths before stable-ID normalization, projection and retained indexing. Each accepted layer visits bounded field/issue/relation input a constant number of times; canonical stores retain the output count and configured ceiling for later mutations.",
+        "evidence": ["packages/form/tests/state/form.test.mjs"],
+        "adversarialWitness": "FRM-05 accepts inclusive record-plus-relation budgets and rejects an over-budget 250000-ID vector before reading any relation element; normal related issue projection and duplicate validation remain intact.",
         "fullScan": {
           "allowed": true,
           "rationale": "External construction must validate and index every supplied field and issue exactly once per declared layer."
