@@ -1,5 +1,12 @@
 # @sectile/dom
 
+## 0.16.5
+
+### Changes
+
+- fix(temporal): complete period picker behavior and bound year pages (abee0134)
+- perf(form): index repeated field path lookups (c1365bf6)
+
 ## 0.16.4
 
 ### Changes

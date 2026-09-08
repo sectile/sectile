@@ -1,5 +1,11 @@
 # @sectile/terminal
 
+## 0.14.6
+
+### Changes
+
+- fix(temporal): complete period picker behavior and bound year pages (abee0134)
+
 ## 0.14.5
 
 ### Changes

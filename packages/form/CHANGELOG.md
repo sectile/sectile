@@ -1,5 +1,11 @@
 # @sectile/form
 
+## 0.14.5
+
+### Changes
+
+- perf(form): index repeated field path lookups (c1365bf6)
+
 ## 0.14.4
 
 ### Changes
