@@ -46,7 +46,12 @@ export function tryCreateYearPickerPage(year: number, pageSize = 12): TemporalRe
   if (!Number.isSafeInteger(pageSize) || pageSize < 1) return fail('construction', 'invalid-year-picker-page-size', 'Year picker page size must be a positive safe integer.');
   if (pageSize > MAX_YEAR_PICKER_PAGE_SIZE) return fail('resource-rejection', 'year-picker-page-size-exceeded', 'Year picker page size exceeds its supported cell ceiling.', { pageSize, ceiling: MAX_YEAR_PICKER_PAGE_SIZE });
   const columns = 4;
-  const start = year - Math.floor(pageSize / 2);
+  const before = Math.floor(pageSize / 2);
+  const after = pageSize - before - 1;
+  if (year < Number.MIN_SAFE_INTEGER + before || year > Number.MAX_SAFE_INTEGER - after) {
+    return fail('construction', 'invalid-year-picker-year', 'Year picker page must contain only safe-integer years.', { year, pageSize });
+  }
+  const start = year - before;
   const rows: YearPickerCellValue[][] = [];
   for (let row = 0; row < Math.ceil(pageSize / columns); row += 1) {
     const values: YearPickerCellValue[] = [];

@@ -242,6 +242,42 @@ test('ISSUE-040: year pages reject excessive cardinality before projection alloc
   }
 });
 
+test('year pages reject unsafe intervals before allocation and preserve exact boundary cells', async () => {
+  const { tryCreateYearRangePickerPage, createYearRangePickerPage } = await import('../../.verification-dist/year-range-picker.js');
+  for (const [tryPage, createPage] of [[tryCreateYearPickerPage, createYearPickerPage], [tryCreateYearRangePickerPage, createYearRangePickerPage]]) {
+    for (const size of [1, 2, 3, 12, MAX_YEAR_PICKER_PAGE_SIZE]) {
+      const before = Math.floor(size / 2);
+      const after = size - before - 1;
+      const firstCenter = Number.MIN_SAFE_INTEGER + before;
+      const lastCenter = Number.MAX_SAFE_INTEGER - after;
+      for (const center of [firstCenter, lastCenter, 1, 9999]) {
+        const result = tryPage(center, size);
+        assert.equal(result.ok, true);
+        const years = result.value.flat().map(({ year }) => year);
+        assert.equal(years.length, size);
+        assert.equal(new Set(years).size, size);
+        assert.equal(years.every(Number.isSafeInteger), true);
+        assert.equal(years.every((year, index) => year === center - before + index), true);
+      }
+      for (const center of [firstCenter - 1, lastCenter + 1]) {
+        const freeze = Object.freeze;
+        let allocations = 0;
+        Object.freeze = (value) => {
+          if (Array.isArray(value) || (value !== null && typeof value === 'object' && Object.hasOwn(value, 'year'))) allocations += 1;
+          return freeze(value);
+        };
+        let result;
+        try { result = tryPage(center, size); } finally { Object.freeze = freeze; }
+        assert.equal(allocations, 0);
+        assert.equal(result.ok, false);
+        assert.equal(result.error.class, 'construction');
+        assert.equal(result.error.code, 'invalid-year-picker-year');
+        assert.throws(() => createPage(center, size), { code: 'invalid-year-picker-year' });
+      }
+    }
+  }
+});
+
 test('date picker month projection is a stable six by seven grid', () => {
   const month = createCalendarMonth({ year: 2026, month: 8 });
   assert.equal(month.length, 6);

@@ -3657,7 +3657,7 @@
       "detector": "whole-state-validation",
       "category": "whole-domain-validation",
       "path": "packages/temporal/src/year-picker.ts",
-      "line": 73,
+      "line": 78,
       "evidence": "const valid = tryCreateYearPickerState(",
       "rule": "temporal-bounded-domain",
       "classification": "bounded-small",
