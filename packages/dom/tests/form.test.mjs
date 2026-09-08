@@ -918,7 +918,7 @@ test('DOM Form routes descendant issues to the longest registered field path', (
       ],
       validate: () => ({
         issues: [
-          { path: ['profile', 'email', 'domain'], message: 'Use an approved domain.' },
+          { path: ['profile', 'email', 'domain'], relatedPaths: [['profile', 'preferences']], message: 'Use an approved domain.' },
           { path: ['unowned'], message: 'Review the form.' },
         ],
       }),
@@ -928,6 +928,8 @@ test('DOM Form routes descendant issues to the longest registered field path', (
 
     assert.equal(form.state.fields.find((field) => field.id === 'profile').issues.length, 0);
     assert.equal(form.state.fields.find((field) => field.id === 'email').issues.length, 1);
+    assert.deepEqual(form.state.fields.find((field) => field.id === 'email').issues[0].relatedFieldIds, ['profile']);
+    assert.equal(form.state.fields.find((field) => field.id === 'profile').relatedIssues.length, 1);
     assert.equal(form.state.issues.length, 1);
     assert.equal(document.activeElement, email);
   } finally {

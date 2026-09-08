@@ -275,8 +275,14 @@ class FormDeltaSet<Value> {
   public values(): IterableIterator<Value> { return this.#index.materialize().keys(); }
 }
 
+interface FormPathOwnerCache<ID extends StableID> {
+  queried: boolean;
+  byName: ReadonlyMap<string, ID> | null;
+}
+
 interface FormFieldStore<ID extends StableID> {
   readonly size: number;
+  readonly pathOwners: FormPathOwnerCache<ID>;
   readonly chunks: readonly (readonly FormFieldState<ID>[])[];
   readonly indexByID: ReadonlyMap<ID, number>;
   readonly issueOwnerByID: FormDeltaIndex<StableID, ID>;
@@ -842,18 +848,39 @@ export function getFormFieldIDByPath<ID extends StableID>(
   const normalized = tryCreateFormFieldPath(path);
   if (!normalized.ok) return null;
   const issueName = encodeSegments(normalized.value);
-  let owner: FormFieldState<ID> | undefined;
   const privateState = formStatePrivate.get(state);
-  const fields = privateState === undefined
-    ? state.fields
-    : materializeFields(privateState.fields as FormFieldStore<ID>);
-  for (const candidate of fields) {
-    if (
-      candidate.name === null
-      || !ownsIssuePath(candidate.name, issueName)
-    ) continue;
-    if (owner === undefined || candidate.name.length > (owner.name?.length ?? 0)) {
-      owner = candidate;
+  if (privateState === undefined) return scanPathOwner([state.fields], issueName);
+  const store = privateState.fields as FormFieldStore<ID>;
+  const cache = store.pathOwners;
+  if (!cache.queried) {
+    cache.queried = true;
+    return scanPathOwner(store.chunks, issueName);
+  }
+  if (cache.byName === null) {
+    const byName = new Map<string, ID>();
+    for (const chunk of store.chunks) {
+      for (const field of chunk) {
+        if (field.name !== null && !byName.has(field.name)) byName.set(field.name, field.id);
+      }
+    }
+    cache.byName = byName;
+  }
+  const exact = cache.byName.get(issueName);
+  if (exact !== undefined) return exact;
+  for (let end = issueName.length - 1; end >= 0; end -= 1) {
+    if (issueName[end] !== '.' && issueName[end] !== '[') continue;
+    const owner = cache.byName.get(issueName.slice(0, end));
+    if (owner !== undefined) return owner;
+  }
+  return null;
+}
+
+function scanPathOwner<ID extends StableID>(chunks: readonly (readonly FormFieldState<ID>[])[], issueName: string): ID | null {
+  let owner: FormFieldState<ID> | undefined;
+  for (const fields of chunks) {
+    for (const candidate of fields) {
+      if (candidate.name === null || !ownsIssuePath(candidate.name, issueName)) continue;
+      if (owner === undefined || candidate.name.length > (owner.name?.length ?? 0)) owner = candidate;
     }
   }
   return owner?.id ?? null;
@@ -1778,6 +1805,7 @@ function createFieldStore<ID extends StableID>(
   }
   return Object.freeze({
     size: fields.length,
+    pathOwners: { queried: false, byName: null },
     chunks: Object.freeze(chunks.map((chunk) => Object.freeze(chunk))),
     indexByID,
     issueOwnerByID: FormDeltaIndex.from(issueOwnerByID),
@@ -2001,9 +2029,11 @@ function createFieldStoreFromChunks<ID extends StableID>(
   let touchedCount = previous.touchedCount;
   let dirtyCount = previous.dirtyCount;
   let invalidCount = previous.invalidCount;
+  let pathOwners = previous.pathOwners;
   for (const [id, next] of replacements) {
     const current = getStoredField(previous, id);
     if (current === undefined || current === next) continue;
+    if (current.name !== next.name && pathOwners === previous.pathOwners) pathOwners = { queried: false, byName: null };
     touchedCount += Number(next.touched) - Number(current.touched);
     dirtyCount += Number(next.dirty) - Number(current.dirty);
     invalidCount += Number(!next.valid) - Number(!current.valid);
@@ -2035,6 +2065,7 @@ function createFieldStoreFromChunks<ID extends StableID>(
   }
   return Object.freeze({
     size: previous.size,
+    pathOwners,
     chunks: Object.freeze(chunks.map((chunk) => Object.freeze(chunk))),
     indexByID: previous.indexByID,
     issueOwnerByID: previous.issueOwnerByID.update(issueOwnerChanges),

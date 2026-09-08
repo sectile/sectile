@@ -5,6 +5,34 @@
   "kind": "internal-operations",
   "operations": [
     {
+      "id": "field.batch-path-owner",
+      "inherits": "linear-v1",
+      "source": "packages/form/src/internal/form.ts",
+      "benchmarkIDs": ["ISSUE-039:form-path-owner-work"],
+      "specificationCeiling": "O(fField*lPath + nNameCodeUnits + pPath*lPath*dPath)",
+      "contract": {
+        "variables": [
+          { "name": "fField", "meaning": "registered fields in one name/order generation", "ceiling": "maxEntries" },
+          { "name": "nNameCodeUnits", "meaning": "total registered name code units hashed when building the index", "ceiling": "sum of registered name lengths" },
+          { "name": "pPath", "meaning": "primary and related path lookups for that generation", "ceiling": "validation result cardinality" },
+          { "name": "lPath", "meaning": "maximum normalized issue path code units", "ceiling": "maxPathCodeUnits" },
+          { "name": "dPath", "meaning": "maximum dot/bracket prefix boundaries per path", "ceiling": "maxPathSegments" }
+        ],
+        "time": { "bound": "O(fField*lPath + nNameCodeUnits + pPath*lPath*dPath)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(lPath + fField)", "output": "O(1)", "retained": "O(fField)" },
+        "resources": { "allocations": "O(fField + pPath*dPath)", "cacheEntries": "O(fField)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["Canonical immutable Form field-name/order generation; expected Map operations include name and prefix hashing."],
+        "ceilings": ["At most maxEntries registered fields; normalized paths obey maxPathSegments and maxPathCodeUnits."],
+        "evidence": ["packages/form/tests/state/form.test.mjs", "packages/dom/tests/form.test.mjs", "docs/decisions/form-path-owner-index.md"],
+        "benchmarkIDs": ["ISSUE-039:form-path-owner-work"],
+        "deterministicWork": ["Proportional 250/500/1000-field/path batches perform no more than eight owner operations per field; metadata patches add zero scans or insertions."],
+        "resourceRationale": "The lazy name map retains only existing name and ID strings with its immutable name/order generation, and no prior field or state objects.",
+        "proof": "The first lookup scans existing chunks. The second builds a first-owner-by-name map once. Further lookups probe only exact and descending dot/bracket boundary prefixes. Non-name metadata and issue patches share this private cache; structural order/name changes create a fresh cache with no parent-state references.",
+        "adversarialWitness": "The production helper resolves proportional 250/500/1000-field batches within eight owner operations per field; metadata-only updates add no field scans or index insertions. Differential fixtures cover first duplicate ownership, reorder, rename, register, unregister, dot, bracket, invalid and missing paths.",
+        "fullScan": { "allowed": true, "rationale": "At most one initial scan and one index construction per queried canonical name/order generation; external noncanonical states remain uncached to preserve mutable-input behavior." }
+      }
+    },
+    {
       "id": "field.get",
       "inherits": "constant-v1",
       "source": "packages/form/src/internal/form.ts",

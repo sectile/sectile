@@ -400,6 +400,81 @@ test('issue replacement preserves other sources and unregistered server issues',
   );
 });
 
+test('path owner index preserves longest boundary and duplicate order through field changes', () => {
+  let state = createFormState({ fields: [
+    { id: 'root', name: 'account' }, { id: 'first', name: 'account.items' },
+    { id: 'second', name: 'account.items' }, { id: 'indexed', name: 'account.items[0]' },
+    { id: 'leaf', name: 'account.items[0].value' }, { id: 'numeric', name: 'account.items.0' },
+    { id: 'other', name: 'accounting' }, { id: 'unnamed' },
+  ] });
+  const paths = ['account', 'account.value', 'account.items', 'account.items[0].value.deep',
+    'account.items[1].value', 'account.items.0.value', 'account.itemsMore', 'accounting.x',
+    'absent', 'account[0].x', ['account', 'items', 0, 'value'], '', 'account..value'];
+  const check = () => {
+    const external = { ...state };
+    for (let pass = 0; pass < 3; pass += 1) {
+      for (const path of paths) assert.equal(getFormFieldIDByPath(state, path), getFormFieldIDByPath(external, path), String(path));
+    }
+  };
+  check();
+  assert.equal(getFormFieldIDByPath(state, 'account.items'), 'first');
+  const original = state;
+  for (const event of [
+    { type: 'set-field-meta', id: 'first', meta: { name: 'renamed' } },
+    { type: 'register-field', field: { id: 'new', name: 'account.items[1]' } },
+    { type: 'unregister-field', id: 'leaf' },
+    { type: 'set-field-meta', id: 'first', meta: { name: 'account.items' } },
+  ]) {
+    const result = applyFormEvent(state, event);
+    assert.equal(result.ok, true);
+    state = result.value.state;
+    check();
+  }
+  state = applyFormEvent(state, { type: 'reorder-fields', ids: state.fields.map(({ id }) => id).reverse() }).value.state;
+  check();
+  assert.equal(getFormFieldIDByPath(state, 'account.items'), 'second');
+  assert.equal(getFormFieldIDByPath(original, 'account.items'), 'first');
+});
+
+test('ISSUE-039: proportional path batches have linear owner work and reuse metadata generations', () => {
+  const totals = [];
+  for (const size of [250, 500, 1_000]) {
+    let state = createFormState({ fields: Array.from({ length: size }, (_, index) => ({ id: `id-${index}`, name: `field${index}` })) });
+    const startsWith = String.prototype.startsWith;
+    const get = Map.prototype.get;
+    const has = Map.prototype.has;
+    const set = Map.prototype.set;
+    let scans = 0;
+    let lookups = 0;
+    let inserts = 0;
+    const named = (key) => typeof key === 'string' && startsWith.call(key, 'field');
+    String.prototype.startsWith = function(prefix, ...args) { if (named(prefix)) scans += 1; return startsWith.call(this, prefix, ...args); };
+    Map.prototype.get = function(key) { if (named(key)) lookups += 1; return get.call(this, key); };
+    Map.prototype.has = function(key) { if (named(key)) lookups += 1; return has.call(this, key); };
+    Map.prototype.set = function(key, value) { if (named(key)) inserts += 1; return set.call(this, key, value); };
+    try {
+      for (let index = 0; index < size; index += 1) assert.equal(getFormFieldIDByPath(state, `field${index}.value`), `id-${index}`);
+      const work = scans + lookups + inserts;
+      totals.push(work);
+      assert.ok(work <= size * 8, `${size} fields: ${work} owner operations`);
+      assert.equal(inserts, size);
+      const previousScans = scans;
+      const previousInserts = inserts;
+      state = applyFormEvent(state, { type: 'set-field-meta', id: 'id-0', meta: { touched: true } }).value.state;
+      assert.equal(getFormFieldIDByPath(state, 'field0.value'), 'id-0');
+      assert.equal(scans, previousScans);
+      assert.equal(inserts, previousInserts);
+    } finally {
+      String.prototype.startsWith = startsWith;
+      Map.prototype.get = get;
+      Map.prototype.has = has;
+      Map.prototype.set = set;
+    }
+  }
+  assert.ok(totals[1] <= totals[0] * 2.1);
+  assert.ok(totals[2] <= totals[1] * 2.1);
+});
+
 // FRM-09
 test('multi-field server issues stay canonical and clear when a related value changes', () => {
   const issue = {
