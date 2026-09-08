@@ -28432,37 +28432,36 @@
       "benchmarkIDs": [
         "VAL-005:calendar-transition-work"
       ],
-      "specificationCeiling": "O(cCalendar)",
+      "specificationCeiling": "O(sScan)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
-            "name": "cCalendar",
-            "meaning": "rendered calendar cells",
-            "ceiling": "calendar visible-cell ceiling"
+            "name": "sScan",
+            "meaning": "availability candidates examined, or one for a non-scanning branch",
+            "ceiling": "maxScan (default 366), also bounded by the civil-date domain; select-month stays inside its month"
           }
         ],
         "time": {
-          "bound": "O(cCalendar)",
+          "bound": "O(sScan)",
           "kind": "worst-case",
-          "runtimeState": "trusted"
+          "runtimeState": "external"
         },
         "space": {
-          "auxiliary": "O(cCalendar)",
-          "output": "O(cCalendar)",
-          "retained": "O(cCalendar)"
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
         },
         "resources": {
-          "allocations": "O(cCalendar)",
-          "cacheEntries": "O(cCalendar)",
+          "allocations": "O(sScan)",
+          "cacheEntries": "0",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
         "assumptions": [
-          "hash lookup is expected O(1)",
-          "external input is validated exactly once at its boundary"
+          "Library work excludes application availability callback cost. Direct selection, set-value and set-view-mode use constant work."
         ],
         "ceilings": [
           "operation item and output ceilings"
@@ -28471,19 +28470,17 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "TMP-07 counts exactly maxScan unavailable predicate calls in both directions at ceilings 1, 3, 16, 42, 366, 1000 and 10000; early success stops after three candidates."
         ],
-        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "A calendar transition derives at most one bounded visible calendar projection.",
-        "adversarialWitness": "All visible cells require disabled/range metadata projection.",
+        "resourceRationale": "The reducer retains a single candidate and emits a constant-sized update; visible grid projections are separate operations.",
+        "proof": "applyCalendarEvent validates fixed-size state/policies, performs the requested date arithmetic, then findEligible advances one candidate per iteration up to maxScan or a civil boundary. findEligibleInMonth additionally bounds its search to the requested month. Neither path materializes a week/month/year grid.",
+        "adversarialWitness": "An all-unavailable policy at year 5000 reaches each requested ceiling without crossing a civil boundary, returns calendar-scan-exhausted and preserves the input state.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "packages/temporal/tests/algebra/date-laws.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "The bounded visible output itself contains cCalendar cells."
+          "rationale": "Availability scanning is explicitly bounded by maxScan and the supported date domain, independently of rendered-cell cardinality."
         }
       }
     },

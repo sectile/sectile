@@ -111,14 +111,29 @@ test('calendar canonicalizes mutable value inputs before storing them', () => {
   assert.notEqual(state.value, input);
 });
 
-test('TMP-07: unavailable scans stop at the declared ceiling', () => {
-  const state = createCalendarState({ referenceDate: date(2026, 8, 26) });
-  const moved = applyCalendarEvent(state, 'next-day', {
-    unavailable: () => true,
-    maxScan: 4,
+test('TMP-07: unavailable scans perform exactly the declared candidate work', () => {
+  const state = createCalendarState({ referenceDate: date(5000, 1, 1) });
+  const before = structuredClone(state);
+  for (const event of ['previous-day', 'next-day']) {
+    for (const maxScan of [1, 3, 16, 42, 366, 1000, 10_000]) {
+      let calls = 0;
+      const moved = applyCalendarEvent(state, event, {
+        unavailable: () => { calls += 1; return true; }, maxScan,
+      });
+      assert.equal(moved.ok, false);
+      assert.equal(moved.error.class, 'resource-rejection');
+      assert.equal(moved.error.code, 'calendar-scan-exhausted');
+      assert.equal(calls, maxScan);
+      assert.deepEqual(state, before);
+    }
+  }
+  let calls = 0;
+  const accepted = applyCalendarEvent(state, 'next-day', {
+    unavailable: () => ++calls < 3, maxScan: 10_000,
   });
-  assert.equal(moved.ok, false);
-  assert.equal(moved.error.code, 'calendar-scan-exhausted');
+  assert.equal(accepted.ok, true);
+  assert.equal(calls, 3);
+  assert.equal(accepted.value.commands.length, 1);
 });
 
 test('TMP-08: supported year boundaries reject overflow without mutation', () => {

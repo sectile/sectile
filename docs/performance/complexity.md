@@ -146,7 +146,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | tabular:virtual.reconcile-table | trusted | `O(nRow + j)` worst-case | `O(nRow)` | `O(nRow + j)` | `O(nRow)` | allowed | VAL-016, VAL-017 |
 | temporal:calendar.page-years | external | `O(pPage)` worst-case | `O(pPage)` | `O(pPage)` | `O(pPage)` | allowed | packages/temporal/tests/composites/date-picker.test.mjs |
 | temporal:calendar.period-navigation | external | `O(sScan)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | packages/temporal/tests/composites/date-picker.test.mjs, packages/dom/tests/date-time.test.mjs, packages/terminal/tests/date-time.test.mjs, packages/vue/tests/date-pickers.dom.test.mjs |
-| temporal:calendar.transition | trusted | `O(cCalendar)` worst-case | `O(cCalendar)` | `O(cCalendar)` | `O(cCalendar)` | allowed | VAL-016, VAL-017 |
+| temporal:calendar.transition | external | `O(sScan)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | packages/temporal/tests/algebra/date-laws.test.mjs |
 | temporal:field.transition | external | `O(sSegment)` worst-case | `O(sSegment)` | `O(sSegment)` | `O(sSegment)` | allowed | VAL-016, VAL-017 |
 | terminal:component.dispatch | trusted | `O(nDomain + cCommand)` worst-case | `O(nDomain + cCommand)` | `O(cCommand)` | `O(nDomain)` | allowed | VAL-016, VAL-017 |
 | terminal:layer-stack.close-callbacks | connected | `O(k)` expected | `O(k)` | `O(1)` | `O(n)` | forbidden | packages/terminal/tests/layer-stack.test.mjs |
