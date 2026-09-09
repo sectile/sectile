@@ -71,25 +71,25 @@
       }
     },
     "tabular": {
-      "tarballBytes": 61069,
-      "unpackedBytes": 282668,
-      "unpackedFiles": 48,
+      "tarballBytes": 67615,
+      "unpackedBytes": 315306,
+      "unpackedFiles": 54,
       "categories": {
         "runtimeJS": {
-          "files": 15,
-          "bytes": 137126
+          "files": 17,
+          "bytes": 154869
         },
         "declarations": {
-          "files": 15,
-          "bytes": 41244
+          "files": 17,
+          "bytes": 44298
         },
         "sourceMaps": {
-          "files": 15,
-          "bytes": 99511
+          "files": 17,
+          "bytes": 111598
         },
         "other": {
           "files": 3,
-          "bytes": 4787
+          "bytes": 4541
         }
       }
     },

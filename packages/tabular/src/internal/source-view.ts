@@ -11,7 +11,7 @@ export function nextClientViewRevision(
   currentViewRevision: number,
 ): TabularResult<number> {
   return sourceGeneration === currentSourceGeneration
-    ? nextRevision(currentViewRevision, 'Client view revision')
+    ? nextRevision(currentViewRevision)
     : ok(1);
 }
 

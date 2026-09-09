@@ -52,7 +52,7 @@ export function prepareControlledDataTableState(
   if (values.query !== undefined && values.query !== current.query) {
     const query = canonicalizeTabularStateQuery(model, values.query);
     if (!query.ok) return query;
-    const queryRevision = nextRevision(next.queryRevision, 'Query revision');
+    const queryRevision = nextRevision(next.queryRevision);
     if (!queryRevision.ok) return queryRevision;
     next = Object.freeze({
       ...next,
@@ -77,7 +77,7 @@ export function prepareControlledDataTableState(
       || !sameIDs(current.columnState.pinnedStart, columnState.value.pinnedStart)
       || !sameIDs(current.columnState.pinnedEnd, columnState.value.pinnedEnd);
     const projectionGeneration = changed
-      ? nextRevision(next.projectionGeneration, 'Projection generation')
+      ? nextRevision(next.projectionGeneration)
       : ok(next.projectionGeneration);
     if (!projectionGeneration.ok) return projectionGeneration;
     next = Object.freeze({
@@ -95,7 +95,7 @@ export function prepareControlledDataTableState(
   if (values.expansion !== undefined && values.expansion !== current.expansion) {
     const expansion = canonicalizeTabularExpansion(values.expansion, model.limits);
     if (!expansion.ok) return expansion;
-    const expansionRevision = nextRevision(next.expansionRevision, 'Expansion revision');
+    const expansionRevision = nextRevision(next.expansionRevision);
     if (!expansionRevision.ok) return expansionRevision;
     next = Object.freeze({ ...next, expansion: expansion.value, expansionRevision: expansionRevision.value });
     requestNeeded = true;
@@ -126,7 +126,7 @@ function sameIDs(left: readonly string[], right: readonly string[]): boolean {
 }
 
 export function issueDataTableRequest(state: TabularState): TabularResult<{ readonly state: TabularState; readonly commands: readonly TabularCommand[] }> {
-  const requestRevision = nextRevision(state.requestRevision, 'Request revision');
+  const requestRevision = nextRevision(state.requestRevision);
   if (!requestRevision.ok) return requestRevision;
   const request = Object.freeze({
     protocolVersion: 1 as const,

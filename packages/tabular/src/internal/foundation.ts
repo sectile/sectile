@@ -15,11 +15,11 @@ export function fail<T = never>(
   return failResult<T, TabularErrorCode>(errorClass, code, message, details);
 }
 
-export function nextRevision(value: number, label: string): TabularResult<number> {
-  if (!Number.isSafeInteger(value) || value < 0 || value === Number.MAX_SAFE_INTEGER) {
-    return fail('resource-rejection', 'revision-ceiling-reached', `${label} is exhausted.`, { revision: value });
-  }
-  return ok(value + 1);
+export function nextRevision(value: number): TabularResult<number> {
+  const next = value + 1;
+  return value >= 0 && Number.isSafeInteger(next)
+    ? ok(next)
+    : fail('resource-rejection', 'revision-ceiling-reached', 'Revision exhausted.');
 }
 
 export function validateID(

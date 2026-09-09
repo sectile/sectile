@@ -7,12 +7,12 @@
     {
       "group": "model",
       "tests": 7,
-      "sha256": "f0f9b468a2b10735969bf4e1205e37a17ed0980c9a7d44787dbc4cd9a367d9b7"
+      "sha256": "9dbd31a9277f39c71986015a247e444db7bba1942e69a6622b46df216da6a707"
     },
     {
       "group": "source",
-      "tests": 13,
-      "sha256": "76839243c19cb3d675982dc89ae4ee18407da3400582d075b763208c1852b7a9"
+      "tests": 18,
+      "sha256": "54f0c8d45ecc45a4a6d7c79993e63c573cead2baba513ee6f49beff8b53265c2"
     },
     {
       "group": "columns",
@@ -31,13 +31,13 @@
     },
     {
       "group": "profiles",
-      "tests": 17,
-      "sha256": "f55713e1e5e2d9a50af169b4b18db6bf34db130584c27529d12d488b252c3a32"
+      "tests": 23,
+      "sha256": "27ab12d1045db6a5470853af44b772ca9863d779faee13b595426a8de96e42ce"
     },
     {
       "group": "virtual",
-      "tests": 7,
-      "sha256": "5bef07118512f8e3a4da451b0799b32de051cd50defe03864660ab6824230dc5"
+      "tests": 8,
+      "sha256": "f44ff6352b504658e99f5b97d40f5971e32c88559567f64c201997c75c02b26e"
     },
     {
       "group": "virtual-witnesses",
@@ -73,16 +73,16 @@
     "generationChurn": {
       "generations": 10000,
       "retainedStages": 1,
-      "tailGrowthBytes": 14184,
+      "tailGrowthBytes": 1432,
       "ceilingBytes": 8388608
     }
   },
   "footprint": {
-    "javascriptBytes": 137447,
-    "declarationBytes": 41278,
-    "sourceMapBytes": 99813,
+    "javascriptBytes": 154869,
+    "declarationBytes": 44298,
+    "sourceMapBytes": 111598,
     "packedBytes": 55011,
-    "declarationFiles": 15,
+    "declarationFiles": 17,
     "publicSubpaths": 9
   },
   "consumerScenarios": [

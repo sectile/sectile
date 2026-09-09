@@ -57,20 +57,20 @@
     },
     {
       "package": "tabular",
-      "javascriptFiles": 15,
-      "declarationFiles": 15,
-      "sourceMapFiles": 15,
+      "javascriptFiles": 17,
+      "declarationFiles": 17,
+      "sourceMapFiles": 17,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 137126,
-        "declarations": 41244,
-        "sourceMaps": 99511,
-        "total": 277881
+        "javascript": 154869,
+        "declarations": 44298,
+        "sourceMaps": 111598,
+        "total": 310765
       },
       "packed": {
-        "tarballBytes": 60426,
-        "unpackedBytes": 282684,
-        "files": 48
+        "tarballBytes": 66853,
+        "unpackedBytes": 315326,
+        "files": 54
       }
     },
     {

@@ -2,7 +2,7 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all 9 package source trees.
 
-Findings: 456; migration owners: WI-020, WI-027, WI-040.
+Findings: 457; migration owners: WI-020, WI-027, WI-040.
 
 ## Classifications
 
@@ -10,7 +10,7 @@ Findings: 456; migration owners: WI-020, WI-027, WI-040.
 |---|---:|
 | bounded-small | 14 |
 | migration-required | 60 |
-| result-proportional | 172 |
+| result-proportional | 173 |
 | reuse | 210 |
 
 ## Categories
@@ -18,10 +18,10 @@ Findings: 456; migration owners: WI-020, WI-027, WI-040.
 | Category | Count |
 |---|---:|
 | controller-connection-rebuild | 36 |
-| discarded-canonical-index | 58 |
+| discarded-canonical-index | 60 |
 | measurement-authority | 30 |
 | private-algorithm-bypass | 2 |
-| raw-full-domain-scan | 282 |
+| raw-full-domain-scan | 281 |
 | repeated-immutable-view | 13 |
 | whole-domain-validation | 35 |
 
@@ -32,27 +32,27 @@ Findings: 456; migration owners: WI-020, WI-027, WI-040.
 | WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/cascade-choice.ts:249` | raw-identity-lookup |
 | WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/menu.ts:22` | raw-identity-lookup |
 | WI-020 | core-composite-derived-views | `packages/core/src/internal/composites/tree-grid.ts:435` | immutable-view-construction |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:755` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:785` | derived-index-construction |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:833` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:850` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:945` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1189` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1198` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1198` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1220` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1251` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1328` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1583` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1826` | derived-index-construction |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1992` | derived-index-construction |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2010` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2017` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2160` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2161` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2232` | derived-index-construction |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2484` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2724` | linear-membership |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:768` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:798` | derived-index-construction |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:846` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:863` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:958` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1208` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1217` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1217` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1242` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1273` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1359` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1624` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:1902` | derived-index-construction |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2068` | derived-index-construction |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2086` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2093` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2236` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2237` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2308` | derived-index-construction |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2560` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2800` | linear-membership |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/accordion.ts:158` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/carousel.ts:131` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/cascade-list.ts:203` | controller-rebuild |

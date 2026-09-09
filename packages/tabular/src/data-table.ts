@@ -131,7 +131,7 @@ export function applyDataTableEvent(
       currentRevision: snapshot.revision,
     });
   }
-  const revision = nextRevision(snapshot.revision, 'DataTable revision');
+  const revision = nextRevision(snapshot.revision);
   if (!revision.ok) return revision;
   const reduced = reduceDataTableEvent(model, snapshot.state, event);
   if (!reduced.ok) return reduced;
@@ -229,7 +229,7 @@ class DataTableRuntime implements DataTableController {
     if (!accessState.ok) return accessState;
     const projectionChanged = !sameProjection(this.#snapshot.state, view.value, columnState.value);
     const projectionGeneration = projectionChanged
-      ? nextRevision(this.#snapshot.state.projectionGeneration, 'Projection generation')
+      ? nextRevision(this.#snapshot.state.projectionGeneration)
       : ok(this.#snapshot.state.projectionGeneration);
     if (!projectionGeneration.ok) return projectionGeneration;
     const state = Object.freeze({
@@ -303,7 +303,7 @@ class DataTableRuntime implements DataTableController {
   }
 
   #replaceState(state: TabularState): TabularResult<TabularSnapshot> {
-    const revision = nextRevision(this.#snapshot.revision, 'DataTable revision');
+    const revision = nextRevision(this.#snapshot.revision);
     if (!revision.ok) return revision;
     this.#snapshot = Object.freeze({ revision: revision.value, state });
     return ok(this.#snapshot);
@@ -412,7 +412,7 @@ function reduceDataTableEvent(
     if (!columnState.ok) return columnState;
     const changed = !sameColumnProjection(state.columnState, columnState.value);
     const projectionGeneration = changed
-      ? nextRevision(state.projectionGeneration, 'Projection generation')
+      ? nextRevision(state.projectionGeneration)
       : ok(state.projectionGeneration);
     if (!projectionGeneration.ok) return projectionGeneration;
     return ok(Object.freeze({
@@ -431,7 +431,7 @@ function reduceDataTableEvent(
   if (event.type === 'set-query') {
     const query = canonicalizeTabularStateQuery(model, event.query);
     if (!query.ok) return query;
-    const queryRevision = nextRevision(state.queryRevision, 'Query revision');
+    const queryRevision = nextRevision(state.queryRevision);
     if (!queryRevision.ok) return queryRevision;
     return requestAfter(Object.freeze({
       ...state,
@@ -444,13 +444,13 @@ function reduceDataTableEvent(
   if (event.type === 'set-expansion') {
     const expansion = canonicalizeTabularExpansion(event.expansion, model.limits);
     if (!expansion.ok) return expansion;
-    const expansionRevision = nextRevision(state.expansionRevision, 'Expansion revision');
+    const expansionRevision = nextRevision(state.expansionRevision);
     return expansionRevision.ok
       ? requestAfter(Object.freeze({ ...state, expansion: expansion.value, expansionRevision: expansionRevision.value }))
       : expansionRevision;
   }
   if (event.type === 'replace-source') {
-    const sourceGeneration = nextRevision(state.sourceGeneration, 'Source generation');
+    const sourceGeneration = nextRevision(state.sourceGeneration);
     if (!sourceGeneration.ok) return sourceGeneration;
     return requestAfter(Object.freeze({
       ...state,

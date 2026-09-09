@@ -132,8 +132,8 @@ export interface GridProfileController {
   dispose(): void;
 }
 
-export function nextGridProfileRevision(revision: number): TabularResult<number> {
-  return nextRevision(revision, 'Grid profile revision');
+function nextGridProfileRevision(revision: number): TabularResult<number> {
+  return nextRevision(revision);
 }
 
 export function createGridProfileController(
@@ -308,7 +308,7 @@ class GridProfileRuntime implements GridProfileController {
     if (!prepared.ok) return prepared;
     const revision = nextGridProfileRevision(this.#snapshot.revision);
     if (!revision.ok) return revision;
-    const tabularRevision = nextRevision(this.#snapshot.tabular.revision, 'DataTable revision');
+    const tabularRevision = nextRevision(this.#snapshot.tabular.revision);
     if (!tabularRevision.ok) return tabularRevision;
     const preparedSnapshot = Object.freeze({
       revision: tabularRevision.value,
