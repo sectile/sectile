@@ -226,17 +226,20 @@ function reconcileGridAdapter(
   if (privateState === undefined || !compatibleGridState(adapter.state, currentState)) return generationMismatch(adapter.state.generation, currentState.generation);
   const target = gridDomain(nextProjection, privateState.rowExtents, privateState.columnExtents, privateState.limits);
   if (!target.ok) return target;
-  const unionRows = unionTracks(currentState.rows, target.value.rows);
-  const unionColumns = unionTracks(currentState.columns, target.value.columns);
+  const unionRows = boundedTrackUnion(currentState.rows, target.value.rows, currentState.maxTracks);
+  const unionColumns = boundedTrackUnion(currentState.columns, target.value.columns, currentState.maxTracks);
+  const planned = unionRows === null || unionColumns === null
+    ? boundedGridReplacementMutations(currentState, target.value.rows, target.value.columns, target.value.regions)
+    : Object.freeze([
+        ...(sameTracks(currentState.rows, unionRows) ? [] : [{ type: 'replace-row-tracks' as const, tracks: unionRows }]),
+        ...(sameTracks(currentState.columns, unionColumns) ? [] : [{ type: 'replace-column-tracks' as const, tracks: unionColumns }]),
+        ...(sameRegions(currentState.regions, target.value.regions) ? [] : [{ type: 'replace-regions' as const, regions: target.value.regions }]),
+        ...(sameTracks(unionRows, target.value.rows) ? [] : [{ type: 'replace-row-tracks' as const, tracks: target.value.rows }]),
+        ...(sameTracks(unionColumns, target.value.columns) ? [] : [{ type: 'replace-column-tracks' as const, tracks: target.value.columns }]),
+      ]);
   const mutations: GridVirtualMutation[] = [];
   let state = currentState;
-  for (const mutation of [
-    ...(sameTracks(state.rows, unionRows) ? [] : [{ type: 'replace-row-tracks' as const, tracks: unionRows }]),
-    ...(sameTracks(state.columns, unionColumns) ? [] : [{ type: 'replace-column-tracks' as const, tracks: unionColumns }]),
-    ...(sameRegions(state.regions, target.value.regions) ? [] : [{ type: 'replace-regions' as const, regions: target.value.regions }]),
-    ...(sameTracks(unionRows, target.value.rows) ? [] : [{ type: 'replace-row-tracks' as const, tracks: target.value.rows }]),
-    ...(sameTracks(unionColumns, target.value.columns) ? [] : [{ type: 'replace-column-tracks' as const, tracks: target.value.columns }]),
-  ]) {
+  for (const mutation of planned) {
     const applied = tryApplyPartitionedTrackGridMutation(state, mutation);
     if (!applied.ok) return applied;
     mutations.push(Object.freeze(mutation));
@@ -448,7 +451,11 @@ function compatibleGridState(expected: GridVirtualState, current: GridVirtualSta
 
 type TrackSource<ID extends string> = readonly PartitionedTrack<ID>[] | VirtualIndexedView<PartitionedTrack<ID>>;
 
-function unionTracks<ID extends string>(current: TrackSource<ID>, target: readonly PartitionedTrack<ID>[]): readonly PartitionedTrack<ID>[] {
+function boundedTrackUnion<ID extends string>(
+  current: TrackSource<ID>,
+  target: readonly PartitionedTrack<ID>[],
+  maxTracks: number,
+): readonly PartitionedTrack<ID>[] | null {
   const targetMap = new Map(target.map((track) => [track.id, track]));
   const currentIDs = new Set<ID>();
   const output: PartitionedTrack<ID>[] = [];
@@ -456,8 +463,38 @@ function unionTracks<ID extends string>(current: TrackSource<ID>, target: readon
     currentIDs.add(track.id);
     output.push(targetMap.get(track.id) ?? track);
   }
-  for (const track of target) if (!currentIDs.has(track.id)) output.push(track);
+  for (const track of target) {
+    if (currentIDs.has(track.id)) continue;
+    if (output.length === maxTracks) return null;
+    output.push(track);
+  }
   return Object.freeze(output);
+}
+
+function boundedGridReplacementMutations(
+  current: GridVirtualState,
+  targetRows: readonly PartitionedTrack<TabularRowID>[],
+  targetColumns: readonly PartitionedTrack<TabularColumnID>[],
+  targetRegions: readonly PartitionedTrackGridRegion<TabularCellID, TabularRowID, TabularColumnID>[],
+): readonly GridVirtualMutation[] {
+  const rowsChanged = !sameTracks(current.rows, targetRows);
+  const columnsChanged = !sameTracks(current.columns, targetColumns);
+  if (!rowsChanged && !columnsChanged) {
+    return sameRegions(current.regions, targetRegions)
+      ? Object.freeze([])
+      : Object.freeze([{ type: 'replace-regions', regions: targetRegions }]);
+  }
+  const targetRowIDs = new Set(targetRows.map((track) => track.id));
+  const targetColumnIDs = new Set(targetColumns.map((track) => track.id));
+  const bridgeRegions = Object.freeze(current.regions.filter((region) => (
+    targetRowIDs.has(region.row) && targetColumnIDs.has(region.column)
+  )));
+  return Object.freeze([
+    ...(sameRegions(current.regions, bridgeRegions) ? [] : [{ type: 'replace-regions' as const, regions: bridgeRegions }]),
+    ...(rowsChanged ? [{ type: 'replace-row-tracks' as const, tracks: targetRows }] : []),
+    ...(columnsChanged ? [{ type: 'replace-column-tracks' as const, tracks: targetColumns }] : []),
+    ...(sameRegions(bridgeRegions, targetRegions) ? [] : [{ type: 'replace-regions' as const, regions: targetRegions }]),
+  ]);
 }
 
 function sameTracks<ID extends string>(left: TrackSource<ID>, right: TrackSource<ID>): boolean {

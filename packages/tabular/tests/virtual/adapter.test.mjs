@@ -6,8 +6,10 @@ import {
   createDataTreeGridVirtualAdapter,
   reconcileDataGridVirtualAdapter,
   reconcileDataTableVirtualAdapter,
+  reconcileDataTreeGridVirtualAdapter,
   tryCreateDataGridVirtualAdapter,
   tryCreateDataTableVirtualAdapter,
+  tryCreateDataTreeGridVirtualAdapter,
 } from '../../.verification-dist/virtual.js';
 
 const exact = (value) => ({ kind: 'exact', value });
@@ -197,4 +199,83 @@ test('TAB-VIR-07: table and grid locators reuse production indexes without array
     Array.prototype.indexOf = originalIndexOf;
   }
   assert.equal(scans, 0);
+});
+
+test('TAB-VIR-08: grid reconciliation stays within endpoint track ceilings', () => {
+  const limits = { maxProjectedCells: 2 };
+  const oneColumn = { start: [], center: ['name'], end: [] };
+  const options = {
+    rowExtents: { kind: 'uniform', extent: estimated(20) },
+    columnExtents: { kind: 'uniform', extent: estimated(80) },
+    limits,
+  };
+  const assertBounded = (result) => {
+    assert.equal(result.ok, true);
+    for (const mutation of result.value.mutations) {
+      if (mutation.type === 'replace-row-tracks' || mutation.type === 'replace-column-tracks') {
+        assert.ok(mutation.tracks.length <= limits.maxProjectedCells);
+      } else if (mutation.type === 'replace-regions') {
+        assert.ok(mutation.regions.length <= limits.maxProjectedCells);
+      }
+    }
+  };
+
+  const sharedCurrentProjection = gridProjection(['shared', 'old'], oneColumn, 10);
+  const sharedNextProjection = gridProjection(['shared', 'new'], oneColumn, 11);
+  const sharedCurrent = tryCreateDataGridVirtualAdapter({ ...options, projection: sharedCurrentProjection });
+  const sharedTarget = tryCreateDataGridVirtualAdapter({ ...options, projection: sharedNextProjection });
+  assert.equal(sharedCurrent.ok, true);
+  assert.equal(sharedTarget.ok, true);
+  const measured = sharedCurrent.value.strategy.tryMeasure(sharedCurrent.value.state, {
+    generation: sharedCurrent.value.state.generation,
+    measurements: [
+      { axis: 'row', id: 'shared', extent: exact(37) },
+      { axis: 'column', id: 'name', extent: exact(144) },
+    ],
+    anchor: null,
+  });
+  assert.equal(measured.ok, true);
+  const shared = reconcileDataGridVirtualAdapter(sharedCurrent.value, measured.value.state, sharedNextProjection);
+  assertBounded(shared);
+  assert.deepEqual(shared.value.state.rows.toArray().map((track) => track.id), ['shared', 'new']);
+  assert.equal(shared.value.state.rows.toArray().find((track) => track.id === 'shared').extent.value, 37);
+  assert.equal(shared.value.state.columns.toArray().find((track) => track.id === 'name').extent.value, 144);
+
+  const rowCurrentProjection = gridProjection(['r1', 'r2'], oneColumn, 12);
+  const rowNextProjection = gridProjection(['r3', 'r4'], oneColumn, 13);
+  const rowCurrent = tryCreateDataGridVirtualAdapter({ ...options, projection: rowCurrentProjection });
+  const rowTarget = tryCreateDataGridVirtualAdapter({ ...options, projection: rowNextProjection });
+  assert.equal(rowCurrent.ok, true);
+  assert.equal(rowTarget.ok, true);
+  const rowsReconciled = reconcileDataGridVirtualAdapter(rowCurrent.value, rowCurrent.value.state, rowNextProjection);
+  assertBounded(rowsReconciled);
+  assert.deepEqual(rowsReconciled.value.state.rows.toArray().map((track) => track.id), ['r3', 'r4']);
+
+  const currentColumns = { start: [], center: ['c1', 'c2'], end: [] };
+  const nextColumns = { start: [], center: ['c3', 'c4'], end: [] };
+  const columnCurrentProjection = gridProjection(['r1'], currentColumns, 14);
+  const columnNextProjection = gridProjection(['r1'], nextColumns, 15);
+  const columnCurrent = tryCreateDataGridVirtualAdapter({ ...options, projection: columnCurrentProjection });
+  const columnTarget = tryCreateDataGridVirtualAdapter({ ...options, projection: columnNextProjection });
+  assert.equal(columnCurrent.ok, true);
+  assert.equal(columnTarget.ok, true);
+  const columnsReconciled = reconcileDataGridVirtualAdapter(columnCurrent.value, columnCurrent.value.state, columnNextProjection);
+  assertBounded(columnsReconciled);
+  assert.deepEqual(columnsReconciled.value.state.columns.toArray().map((track) => track.id), ['c3', 'c4']);
+
+  const treeCurrent = tryCreateDataTreeGridVirtualAdapter({ ...options, projection: rowCurrentProjection });
+  const treeTarget = tryCreateDataTreeGridVirtualAdapter({ ...options, projection: rowNextProjection });
+  assert.equal(treeCurrent.ok, true);
+  assert.equal(treeTarget.ok, true);
+  const treeReconciled = reconcileDataTreeGridVirtualAdapter(treeCurrent.value, treeCurrent.value.state, rowNextProjection);
+  assertBounded(treeReconciled);
+  assert.deepEqual(treeReconciled.value.state.rows.toArray().map((track) => track.id), ['r3', 'r4']);
+
+  const overCeiling = reconcileDataGridVirtualAdapter(
+    rowCurrent.value,
+    rowCurrent.value.state,
+    gridProjection(['r3', 'r4', 'r5'], oneColumn, 16),
+  );
+  assert.equal(overCeiling.ok, false);
+  assert.equal(overCeiling.error.code, 'projected-cell-ceiling-exceeded');
 });

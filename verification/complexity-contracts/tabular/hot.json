@@ -399,6 +399,85 @@
           "rationale": "Reconciliation must compare the next identity domain once; it cannot repeatedly scan it per unbounded edit."
         }
       }
+    },
+    {
+      "id": "virtual.reconcile-track-grid",
+      "inherits": "linear-v1",
+      "source": "packages/tabular/src/virtual.ts",
+      "benchmarkIDs": [
+        "VAL-005:tabular-grid-reconcile-endpoint-ceiling"
+      ],
+      "specificationCeiling": "O(rCurrent + rTarget + cCurrent + cTarget + gCurrent + gTarget)",
+      "contract": {
+        "variables": [
+          {
+            "name": "rCurrent",
+            "meaning": "current row-track cardinality",
+            "ceiling": "maxProjectedCells"
+          },
+          {
+            "name": "rTarget",
+            "meaning": "target row-track cardinality",
+            "ceiling": "maxProjectedCells"
+          },
+          {
+            "name": "cCurrent",
+            "meaning": "current column-track cardinality",
+            "ceiling": "maxProjectedCells"
+          },
+          {
+            "name": "cTarget",
+            "meaning": "target column-track cardinality",
+            "ceiling": "maxProjectedCells"
+          },
+          {
+            "name": "gCurrent",
+            "meaning": "current projected grid-region cardinality",
+            "ceiling": "maxProjectedCells"
+          },
+          {
+            "name": "gTarget",
+            "meaning": "target projected grid-region cardinality",
+            "ceiling": "maxProjectedCells"
+          }
+        ],
+        "time": {
+          "bound": "O(rCurrent + rTarget + cCurrent + cTarget + gCurrent + gTarget)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(rCurrent + rTarget + cCurrent + cTarget + gCurrent)",
+          "output": "O(rTarget + cTarget + gCurrent + gTarget)",
+          "retained": "O(rTarget + cTarget + gTarget)"
+        },
+        "resources": {
+          "allocations": "O(rCurrent + rTarget + cCurrent + cTarget + gCurrent + gTarget)",
+          "cacheEntries": "0 additional retained entries",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Virtual replace-track mutations preserve measured extents for stable row and column IDs",
+          "current and target endpoint states independently satisfy the retained maxTracks and maxRegions ceilings"
+        ],
+        "ceilings": [
+          "bounded track unions stop before exceeding maxTracks",
+          "fallback bridge regions are a subset of the current region domain",
+          "every emitted row/column track replacement is an endpoint-sized domain"
+        ],
+        "proof": "Reconciliation attempts the existing union bridge only while each union fits maxTracks. If either union would exceed the retained track ceiling, the adapter keeps only regions whose row and column IDs exist in both endpoints, directly replaces endpoint-sized row and column tracks through Virtual's extent-preserving mutations, then installs target regions. A constant number of complete endpoint/region traversals is performed and no intermediate Virtual track state exceeds maxTracks.",
+        "adversarialWitness": "TAB-VIR-08 reconciles disjoint two-row and disjoint two-column endpoints at maxProjectedCells=2, where the old union cardinality is four. Both direct target constructions and DataGrid/DataTreeGrid reconciliations succeed, every emitted track/region mutation remains at or below two items, and a shared measured row/column retains its exact extent through the bounded fallback.",
+        "deterministicWork": [
+          "packages/tabular/tests/virtual/adapter.test.mjs TAB-VIR-08"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Grid reconciliation must compare current and target track domains and may filter the current region set once to construct a ceiling-safe bridge; it may not construct or retain a track domain larger than the endpoint ceiling."
+        }
+      }
     }
   ]
 }

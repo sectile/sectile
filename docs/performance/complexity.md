@@ -12,7 +12,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | chart | 80 | 0 | 14 |
 | dom | 424 | 171 | 26 |
 | form | 21 | 0 | 9 |
-| tabular | 33 | 0 | 8 |
+| tabular | 33 | 0 | 9 |
 | temporal | 104 | 12 | 4 |
 | terminal | 347 | 167 | 8 |
 | virtual | 114 | 0 | 27 |
@@ -145,6 +145,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | tabular:source.resolve-warm | trusted | `O(kRow + dContext)` worst-case | `O(kRow + dContext)` | `O(kRow + dContext)` | `O(nProjected)` | forbidden | VAL-016, VAL-017 |
 | tabular:virtual.locate | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(nRow + nColumn)` | forbidden | VAL-016, VAL-017 |
 | tabular:virtual.reconcile-table | trusted | `O(nRow + j)` worst-case | `O(nRow)` | `O(nRow + j)` | `O(nRow)` | allowed | VAL-016, VAL-017 |
+| tabular:virtual.reconcile-track-grid | trusted | `O(rCurrent + rTarget + cCurrent + cTarget + gCurrent + gTarget)` worst-case | `O(rCurrent + rTarget + cCurrent + cTarget + gCurrent)` | `O(rTarget + cTarget + gCurrent + gTarget)` | `O(rTarget + cTarget + gTarget)` | allowed | VAL-016, VAL-017 |
 | temporal:calendar.page-years | external | `O(pPage)` worst-case | `O(pPage)` | `O(pPage)` | `O(pPage)` | allowed | packages/temporal/tests/composites/date-picker.test.mjs |
 | temporal:calendar.period-navigation | external | `O(sScan)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | packages/temporal/tests/composites/date-picker.test.mjs, packages/dom/tests/date-time.test.mjs, packages/terminal/tests/date-time.test.mjs, packages/vue/tests/date-pickers.dom.test.mjs |
 | temporal:calendar.transition | external | `O(sScan)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | packages/temporal/tests/algebra/date-laws.test.mjs |
