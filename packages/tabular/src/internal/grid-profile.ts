@@ -1,6 +1,9 @@
 import { type DataTableController, type DataTableEvent, type DataTableOptions, tryCreateDataTable } from '../data-table.js';
+import { synchronizeTabularView } from '../source.js';
 import { scanGridAxis } from '@sectile/core/grid';
 import { fail, ok } from './foundation.js';
+import { dataTableModelOf, prepareControlledDataTableState, projectDataTableState } from './data-table-state.js';
+import { createPreparedViewResponse, visibleRowIndexOf } from './source-view.js';
 import type {
   TabularCellAddress,
   TabularColumnSchema,
@@ -234,19 +237,25 @@ class GridProfileRuntime implements GridProfileController {
       interaction.edit.kind === 'editing' ? interaction.edit.cell : null,
     );
     if (this.#snapshot === operationBase) this.#snapshot = operationSnapshot;
-    this.#notifyInteraction(operationBase, reconciled.cursor, reconciled.edit);
-    this.#emitAll(commands);
+    this.#publishInteraction(operationBase, reconciled.cursor, reconciled.edit, commands);
     return ok(Object.freeze({ snapshot: operationSnapshot, commands }));
   }
 
   public synchronizeView(response: TabularViewResponse): TabularResult<GridProfileState> {
     if (this.#disposed) return gridProfileDisposed('synchronize view responses');
     const interactionBefore = this.#snapshot;
-    const profile = validateProfileRows(this.#kind, response.rows);
+    const pending = this.#snapshot.tabular.state.requestState.pendingRequest;
+    if (pending === null) return fail('transition-rejection', 'stale-request', 'No request is pending for this response.');
+    const currentView = this.#snapshot.tabular.state.acceptedViewState.kind === 'none'
+      ? null
+      : this.#snapshot.tabular.state.acceptedViewState.view;
+    const prepared = synchronizeTabularView(pending, response, currentView, this.#options.limits);
+    if (!prepared.ok) return prepared;
+    const profile = validateProfileRows(this.#kind, prepared.value.rows);
     if (!profile.ok) return profile;
     const previousBase = this.#base.getProjection();
     const previous = this.#domainFor(this.#snapshot, previousBase);
-    const synchronized = this.#base.synchronizeView(response);
+    const synchronized = this.#base.synchronizeView(createPreparedViewResponse(pending, currentView, prepared.value));
     if (!synchronized.ok) return synchronized;
     let cursor = this.#snapshot.cursor;
     let edit = this.#snapshot.edit;
@@ -270,37 +279,61 @@ class GridProfileRuntime implements GridProfileController {
     const reconciled = reconcileInteractionState(this.#kind, previous, this.#domainFor(candidate, nextBase), candidate, this.#options, 'cell-removed');
     const interaction = this.#resolveInteraction(reconciled.cursor, reconciled.edit, reconciled.commands);
     this.#snapshot = freezeState(this.#snapshot.revision + 1, synchronized.value, interaction.cursor.current, interaction.edit.kind === 'editing' ? interaction.edit.cell : null);
-    this.#notifyInteraction(interactionBefore, reconciled.cursor, reconciled.edit);
-    this.#emitAll(interaction.commands);
+    this.#publishInteraction(interactionBefore, reconciled.cursor, reconciled.edit, interaction.commands);
     return ok(this.#snapshot);
   }
 
   public syncControlledValues(values: GridProfileControlledValues): TabularResult<GridProfileState> {
     if (this.#disposed) return gridProfileDisposed('synchronize controlled values');
-    if ((values.cursor !== undefined) !== this.#controlledCursor || (values.edit !== undefined) !== this.#controlledEdit) {
+    const inputCursor = values.cursor;
+    const inputEdit = values.edit;
+    if ((inputCursor !== undefined) !== this.#controlledCursor || (inputEdit !== undefined) !== this.#controlledEdit) {
       return fail('transition-rejection', 'invalid-controlled-shape', 'Controlled grid values must preserve construction-time cursor and edit ownership.');
     }
-    const cursor = values.cursor === undefined ? ok(this.#snapshot.cursor) : normalizeCursor(values.cursor);
+    const cursor = inputCursor === undefined ? ok(this.#snapshot.cursor) : normalizeCursor(inputCursor);
     if (!cursor.ok) return cursor;
-    const edit = values.edit === undefined ? ok(this.#snapshot.edit) : normalizeEdit(values.edit);
+    const edit = inputEdit === undefined ? ok(this.#snapshot.edit) : normalizeEdit(inputEdit);
     if (!edit.ok) return edit;
     const previousBase = this.#base.getProjection();
     const previous = this.#domainFor(this.#snapshot, previousBase);
     const { cursor: _cursor, edit: _edit, ...tabularValues } = values;
-    const previousRequestID = this.#snapshot.tabular.state.requestState.pendingRequest?.requestID ?? null;
-    const synchronized = this.#withoutBaseEmission(() => this.#base.syncControlledValues(tabularValues));
-    if (!synchronized.ok) return synchronized;
+    const model = dataTableModelOf(this.#base);
+    const prepared = prepareControlledDataTableState(model, this.#snapshot.tabular.state, tabularValues);
+    if (!prepared.ok) return prepared;
+    const preparedSnapshot = Object.freeze({
+      revision: this.#snapshot.tabular.revision + 1,
+      state: prepared.value.state,
+    });
     const candidate = freezeState(
       this.#snapshot.revision,
-      synchronized.value,
+      preparedSnapshot,
       cursor.value.current,
       edit.value.kind === 'editing' ? edit.value.cell : null,
     );
-    const nextBase = this.#base.getProjection();
+    const nextBase = projectDataTableState(prepared.value.state);
     const nextDomain = this.#domainFor(candidate, nextBase);
     const valid = validateInteractionState(this.#kind, nextDomain, cursor.value, edit.value, this.#options);
     if (!valid.ok) return valid;
     const reconciled = reconcileInteractionState(this.#kind, previous, nextDomain, candidate, this.#options, 'cell-removed');
+    const canonicalValues: TabularControlledValues = Object.freeze({
+      ...(tabularValues.query === undefined ? {} : { query: prepared.value.state.query }),
+      ...(tabularValues.rowSelection === undefined ? {} : { rowSelection: prepared.value.state.rowSelection }),
+      ...(tabularValues.columnState === undefined ? {} : { columnState: prepared.value.state.columnState }),
+      ...(tabularValues.accessState === undefined ? {} : { accessState: prepared.value.state.accessState }),
+      ...(tabularValues.expansion === undefined ? {} : { expansion: prepared.value.state.expansion }),
+    });
+    const previousRequestID = this.#snapshot.tabular.state.requestState.pendingRequest?.requestID ?? null;
+    let synchronized: TabularResult<TabularSnapshot>;
+    let publicationError: unknown;
+    let publicationFailed = false;
+    try {
+      synchronized = this.#withoutBaseEmission(() => this.#base.syncControlledValues(canonicalValues));
+    } catch (error) {
+      publicationFailed = true;
+      publicationError = error;
+      synchronized = ok(this.#base.getSnapshot());
+    }
+    if (!synchronized.ok) return synchronized;
     const nextCursor = this.#controlledCursor ? cursor.value : reconciled.cursor;
     const nextEdit = this.#controlledEdit ? edit.value : reconciled.edit;
     this.#snapshot = freezeState(this.#snapshot.revision + 1, synchronized.value, nextCursor.current, nextEdit.kind === 'editing' ? nextEdit.cell : null);
@@ -309,7 +342,11 @@ class GridProfileRuntime implements GridProfileController {
       ? Object.freeze([Object.freeze({ type: 'request-view' as const, request: pending })])
       : Object.freeze([]);
     const interactionCommands = this.#controlledCursor || this.#controlledEdit ? Object.freeze([]) : reconciled.commands;
-    this.#emitAll(Object.freeze([...interactionCommands, ...baseCommands]));
+    try { this.#emitAll(Object.freeze([...interactionCommands, ...baseCommands])); }
+    catch (error) {
+      if (!publicationFailed) { publicationFailed = true; publicationError = error; }
+    }
+    if (publicationFailed) throw publicationError;
     return ok(this.#snapshot);
   }
 
@@ -366,8 +403,7 @@ class GridProfileRuntime implements GridProfileController {
       interaction.cursor.current,
       interaction.edit.kind === 'editing' ? interaction.edit.cell : null,
     );
-    this.#notifyInteraction(interactionBefore, result.value.cursor, result.value.edit);
-    this.#emitAll(interaction.commands);
+    this.#publishInteraction(interactionBefore, result.value.cursor, result.value.edit, interaction.commands);
     return ok(Object.freeze({ snapshot: this.#snapshot, commands: interaction.commands }));
   }
 
@@ -410,12 +446,21 @@ class GridProfileRuntime implements GridProfileController {
     return this.#domain;
   }
 
-  #emit(command: GridProfileCommand): void {
-    for (const listener of this.#listeners) listener(command);
-  }
+  #emit(command: GridProfileCommand): void { this.#emitAll([command]); }
 
   #emitAll(commands: readonly GridProfileCommand[]): void {
-    for (const command of commands) this.#emit(command);
+    const listeners = [...this.#listeners];
+    let firstError: unknown;
+    let failed = false;
+    for (const command of commands) {
+      for (const listener of listeners) {
+        try { listener(command); }
+        catch (error) {
+          if (!failed) { failed = true; firstError = error; }
+        }
+      }
+    }
+    if (failed) throw firstError;
   }
 
   #withoutBaseEmission<Value>(operation: () => Value): Value {
@@ -438,8 +483,36 @@ class GridProfileRuntime implements GridProfileController {
   }
 
   #notifyInteraction(previous: GridProfileState, cursor: GridCursorState, edit: GridEditState): void {
-    if (!sameCursor(previous.cursor, cursor)) this.#options.onCursorChange?.(cursor);
-    if (!sameEdit(previous.edit, edit)) this.#options.onEditStateChange?.(edit);
+    let firstError: unknown;
+    let failed = false;
+    if (!sameCursor(previous.cursor, cursor)) {
+      try { this.#options.onCursorChange?.(cursor); }
+      catch (error) { failed = true; firstError = error; }
+    }
+    if (!sameEdit(previous.edit, edit)) {
+      try { this.#options.onEditStateChange?.(edit); }
+      catch (error) {
+        if (!failed) { failed = true; firstError = error; }
+      }
+    }
+    if (failed) throw firstError;
+  }
+
+  #publishInteraction(
+    previous: GridProfileState,
+    cursor: GridCursorState,
+    edit: GridEditState,
+    commands: readonly GridProfileCommand[],
+  ): void {
+    let firstError: unknown;
+    let failed = false;
+    try { this.#emitAll(commands); }
+    catch (error) { failed = true; firstError = error; }
+    try { this.#notifyInteraction(previous, cursor, edit); }
+    catch (error) {
+      if (!failed) { failed = true; firstError = error; }
+    }
+    if (failed) throw firstError;
   }
 }
 
@@ -515,13 +588,18 @@ function createProfileDomain(
   const cells: TabularCellAddress[] = [];
   const cellsByRow = new Map<TabularRowID | TabularGroupID, ReadonlyMap<TabularColumnID, TabularCellAddress>>();
   const rowByID = new Map<TabularRowID | TabularGroupID, GridProfileRow>();
-  const rowIndexByID = new Map<TabularRowID | TabularGroupID, number>();
+  const acceptedView = state.tabular.state.acceptedViewState.kind === 'none' ? null : state.tabular.state.acceptedViewState.view;
+  const retainedRowIndexes = kind === 'data-grid' && acceptedView !== null
+    ? visibleRowIndexOf(acceptedView).indexes
+    : null;
+  const mutableRowIndexes = retainedRowIndexes === null
+    ? new Map<TabularRowID | TabularGroupID, number>()
+    : null;
+  const rowIndexByID: ReadonlyMap<TabularRowID | TabularGroupID, number> = retainedRowIndexes ?? mutableRowIndexes!;
   const columnIndexByID = new Map<TabularColumnID, number>();
   for (let index = 0; index < orderedColumns.length; index += 1) columnIndexByID.set(orderedColumns[index]!, index);
-  const rows = profileRows(kind, base.rows, orderedColumns, cells, cellsByRow, rowByID, rowIndexByID);
-  const schema = state.tabular.state.acceptedViewState.kind === 'none'
-    ? Object.freeze([])
-    : state.tabular.state.acceptedViewState.view.columnSchema.columns;
+  const rows = profileRows(kind, base.rows, orderedColumns, cells, cellsByRow, rowByID, mutableRowIndexes);
+  const schema = acceptedView?.columnSchema.columns ?? Object.freeze([]);
   const editableColumnIDs = new Set(schema.filter((column) => column.capabilities?.includes('edit') === true).map((column) => column.id));
   return Object.freeze({
     generation: base.generation,
@@ -544,7 +622,7 @@ function profileRows(
   cells: TabularCellAddress[],
   cellsByRow: Map<TabularRowID | TabularGroupID, ReadonlyMap<TabularColumnID, TabularCellAddress>>,
   rowByID: Map<TabularRowID | TabularGroupID, GridProfileRow>,
-  rowIndexByID: Map<TabularRowID | TabularGroupID, number>,
+  rowIndexByID: Map<TabularRowID | TabularGroupID, number> | null,
 ): readonly GridProfileRow[] {
   const output: GridProfileRow[] = [];
   const ancestors: TabularGroupID[] = [];
@@ -570,7 +648,7 @@ function profileRows(
       depth,
       cells: Object.freeze(rowCells),
     });
-    rowIndexByID.set(row.id, output.length);
+    rowIndexByID?.set(row.id, output.length);
     rowByID.set(row.id, profile);
     cellsByRow.set(row.id, byColumn);
     cells.push(...rowCells);

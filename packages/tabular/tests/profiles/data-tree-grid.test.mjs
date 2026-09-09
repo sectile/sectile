@@ -79,6 +79,21 @@ test('TAB-TGR-03: row expansion is source intent and malformed ancestry rejects 
   assert.equal(malformedController.getSnapshot(), before);
 });
 
+test('ISSUE-060: tree-grid profile traversal starts only after source row ceilings', () => {
+  const controller = createDataTreeGrid({ columns, limits: { maxRows: 1 } });
+  const base = response(controller, rows);
+  let kindReads = 0;
+  const oversizedRows = rows.slice(1).map((row) => ({
+    get kind() { kindReads += 1; return row.kind; },
+    id: row.id,
+    cells: row.cells,
+  }));
+  const rejected = controller.synchronizeView({ ...base, rows: oversizedRows });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'row-ceiling-exceeded');
+  assert.equal(kindReads, 0);
+});
+
 test('TAB-TGR-04: tree profile emits no renderer reveal commands', () => {
   const controller = createDataTreeGrid({ columns });
   const observed = [];
@@ -87,6 +102,19 @@ test('TAB-TGR-04: tree profile emits no renderer reveal commands', () => {
   controller.dispatch({ type: 'focus-cell', cell: { rowID: 'r1', columnID: 'name' } });
   controller.dispatch({ type: 'begin-edit' });
   assert.equal(observed.some(({ type }) => type.includes('reveal')), false);
+});
+
+test('ISSUE-064: DataTreeGrid uses the shared completion-safe command publisher', () => {
+  const controller = createDataTreeGrid({ columns });
+  assert.equal(controller.synchronizeView(response(controller, rows)).ok, true);
+  const trace = [];
+  const error = new Error('tree observer failed');
+  controller.subscribeCommands((command) => { trace.push(`first:${command.type}`); throw error; });
+  controller.subscribeCommands((command) => trace.push(`second:${command.type}`));
+  const cell = { rowID: 'r1', columnID: 'name' };
+  assert.throws(() => controller.dispatch({ type: 'begin-edit', cell }), (cause) => cause === error);
+  assert.deepEqual(trace, ['first:begin-edit', 'second:begin-edit']);
+  assert.deepEqual(controller.getSnapshot().edit, { kind: 'editing', cell });
 });
 
 test('disposed DataTreeGrid rejects mutation and reconnection without state changes', () => {

@@ -76,6 +76,25 @@ test('TAB-GRD-03: hierarchical views reject before changing the flat profile sta
   assert.equal(controller.getSnapshot(), before);
 });
 
+test('ISSUE-060: grid profile validation only inspects bounded canonical response rows', () => {
+  const controller = createDataGrid({ columns, limits: { maxRows: 1 } });
+  const base = resolve(controller);
+  let kindReads = 0;
+  const rows = base.rows.slice(0, 2).map((row) => ({
+    get kind() { kindReads += 1; return row.kind; },
+    id: row.id,
+    cells: row.cells,
+  }));
+  const oversized = controller.synchronizeView({ ...base, rows });
+  assert.equal(oversized.ok, false);
+  assert.equal(oversized.error.code, 'row-ceiling-exceeded');
+  assert.equal(kindReads, 0);
+
+  const malformed = controller.synchronizeView({ ...base, rows: null });
+  assert.equal(malformed.ok, false);
+  assert.equal(malformed.error.code, 'row-ceiling-exceeded');
+});
+
 test('TAB-GRD-04: removed edit targets cancel before cursor recovery and source reset', () => {
   const controller = createDataGrid({ columns });
   assert.equal(controller.synchronizeView(resolve(controller)).ok, true);
@@ -155,6 +174,113 @@ test('TAB-GRD-06: projection cells and indexes are retained across adjacent move
   const afterMove = controller.getProjection();
   assert.equal(afterMove.rows, first.rows);
   assert.equal(afterMove.rows[1].cells[0], first.rows[1].cells[0]);
+});
+
+test('ISSUE-059: failed controlled Grid synchronization leaves the shared base and requests untouched', () => {
+  const visible = { order: ['name', 'score'], hidden: [], pinnedStart: [], pinnedEnd: [] };
+  const hidden = { ...visible, hidden: ['name'] };
+  const cell = { rowID: 'r1', columnID: 'name' };
+  const controller = createDataGrid({
+    columns,
+    controlled: { columnState: true, cursor: true },
+    initialValues: { columnState: visible, cursor: { current: null } },
+  });
+  assert.equal(controller.synchronizeView(resolve(controller)).ok, true);
+  assert.equal(controller.syncControlledValues({ columnState: visible, cursor: { current: cell } }).ok, true);
+  const before = controller.getSnapshot();
+  const beforeProjection = controller.getProjection();
+  const rejected = controller.syncControlledValues({ columnState: hidden, cursor: { current: cell } });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'invalid-edit-target');
+  assert.equal(controller.getSnapshot(), before);
+  assert.deepEqual(controller.getProjection().columns, beforeProjection.columns);
+
+  const query = controller.getSnapshot().tabular.state.query;
+  const requestController = createDataGrid({
+    columns,
+    controlled: { query: true, cursor: true },
+    initialValues: { query, cursor: { current: null } },
+  });
+  assert.equal(requestController.synchronizeView(resolve(requestController)).ok, true);
+  const currentQuery = requestController.getSnapshot().tabular.state.query;
+  assert.equal(requestController.syncControlledValues({ query: currentQuery, cursor: { current: cell } }).ok, true);
+  let requests = 0;
+  assert.equal(requestController.attachRequestExecutor(() => { requests += 1; }).ok, true);
+  requests = 0;
+  const requestBefore = requestController.getSnapshot();
+  const nextQuery = { ...currentQuery, sort: [{ id: 'name', columnID: 'name', direction: 'ascending', comparator: 'text' }] };
+  const requestRejected = requestController.syncControlledValues({
+    query: nextQuery,
+    cursor: { current: { rowID: 'missing', columnID: 'name' } },
+  });
+  assert.equal(requestRejected.ok, false);
+  assert.equal(requestRejected.error.code, 'invalid-edit-target');
+  assert.equal(requests, 0);
+  assert.equal(requestController.getSnapshot(), requestBefore);
+});
+
+test('ISSUE-064: committed Grid publication completes callbacks and a stable observer cohort', () => {
+  const trace = [];
+  const cursorError = new Error('cursor callback failed');
+  const controller = createDataGrid({
+    columns,
+    onCursorChange() { trace.push('cursor'); throw cursorError; },
+    onEditStateChange() { trace.push('edit'); },
+  });
+  assert.equal(controller.synchronizeView(resolve(controller)).ok, true);
+  controller.subscribeCommands((command) => trace.push(`command:${command.type}`));
+  const cell = { rowID: 'r1', columnID: 'name' };
+  assert.throws(
+    () => controller.dispatch({ type: 'begin-edit', cell }),
+    (error) => error === cursorError,
+  );
+  assert.deepEqual(trace, ['command:begin-edit', 'cursor', 'edit']);
+  assert.deepEqual(controller.getSnapshot().cursor.current, cell);
+  assert.deepEqual(controller.getSnapshot().edit, { kind: 'editing', cell });
+
+  const observers = createDataGrid({ columns });
+  assert.equal(observers.synchronizeView(resolve(observers)).ok, true);
+  const delivered = [];
+  const observerError = new Error('observer failed');
+  let stopSecond = () => undefined;
+  let failOnce = true;
+  observers.subscribeCommands((command) => {
+    delivered.push(`first:${command.type}`);
+    if (command.type === 'begin-edit') {
+      stopSecond();
+      observers.subscribeCommands((next) => delivered.push(`late:${next.type}`));
+      if (failOnce) { failOnce = false; throw observerError; }
+    }
+  });
+  stopSecond = observers.subscribeCommands((command) => delivered.push(`second:${command.type}`));
+  observers.subscribeCommands((command) => delivered.push(`third:${command.type}`));
+  assert.throws(
+    () => observers.dispatch({ type: 'begin-edit', cell }),
+    (error) => error === observerError,
+  );
+  assert.deepEqual(delivered, ['first:begin-edit', 'second:begin-edit', 'third:begin-edit']);
+  delivered.length = 0;
+  assert.equal(observers.dispatch({ type: 'commit-edit', value: 'done' }).ok, true);
+  assert.deepEqual(delivered, ['first:commit-edit', 'third:commit-edit', 'late:commit-edit']);
+
+  const multiple = createDataGrid({ columns });
+  assert.equal(multiple.synchronizeView(resolve(multiple)).ok, true);
+  assert.equal(multiple.dispatch({ type: 'begin-edit', cell }).ok, true);
+  const multiTrace = [];
+  const multiError = new Error('cancel observer failed');
+  multiple.subscribeCommands((command) => {
+    multiTrace.push(`first:${command.type}`);
+    if (command.type === 'cancel-edit') throw multiError;
+  });
+  multiple.subscribeCommands((command) => multiTrace.push(`second:${command.type}`));
+  assert.throws(
+    () => multiple.dispatch({ type: 'replace-source' }),
+    (error) => error === multiError,
+  );
+  assert.deepEqual(multiTrace, [
+    'first:cancel-edit', 'second:cancel-edit',
+    'first:request-view', 'second:request-view',
+  ]);
 });
 
 test('controlled DataGrid callback synchronization preserves the latest shared-base revision', () => {

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source.js';
+import { createContextParentIndexes, sliceVisibleRows } from '../../.verification-dist/internal/source-view.js';
 
 const records = [
   { id: 'r1', name: 'Beta', team: 'A', score: 2 },
@@ -178,6 +179,93 @@ test('TAB-ADV-06: sliced descendants retain context-only ancestors outside the a
     ['r1', false],
   ]);
   assert.deepEqual(result.value.visibleRowCount, { kind: 'known', value: 5 });
+});
+
+test('ISSUE-050: warm window slicing reads only output rows and retained ancestors', () => {
+  const flat = Array.from({ length: 10_000 }, (_, index) => ({ kind: 'leaf', id: `row-${index}`, cells: {} }));
+  let flatReads = 0;
+  const observedFlat = new Proxy(flat, {
+    get(target, key, receiver) {
+      if (typeof key === 'string' && /^\d+$/u.test(key)) flatReads += 1;
+      return Reflect.get(target, key, receiver);
+    },
+  });
+  const flatSlice = sliceVisibleRows({ rows: observedFlat, contextParentIndexes: null }, 9_990, 10_000);
+  assert.equal(flatSlice.length, 10);
+  assert.ok(flatReads <= 10, `late flat window read ${flatReads} rows`);
+
+  const nested = [
+    { kind: 'group', id: 'g0', parentGroupID: null, depth: 0, expanded: true, cells: {} },
+    { kind: 'group', id: 'g1', parentGroupID: 'g0', depth: 1, expanded: true, cells: {} },
+    ...Array.from({ length: 9_998 }, (_, index) => ({ kind: 'leaf', id: `leaf-${index}`, cells: {} })),
+  ];
+  const parents = createContextParentIndexes(nested);
+  let nestedReads = 0;
+  const observedNested = new Proxy(nested, {
+    get(target, key, receiver) {
+      if (typeof key === 'string' && /^\d+$/u.test(key)) nestedReads += 1;
+      return Reflect.get(target, key, receiver);
+    },
+  });
+  const nestedSlice = sliceVisibleRows({ rows: observedNested, contextParentIndexes: parents }, 9_999, 10_000);
+  assert.deepEqual(nestedSlice.map(({ id, contextOnly }) => [id, contextOnly ?? false]), [
+    ['g0', true], ['g1', true], ['leaf-9997', false],
+  ]);
+  assert.ok(nestedReads <= 3, `late nested window read ${nestedReads} rows`);
+});
+
+test('ISSUE-053: grouped expansion enforces the row budget before leaf materialization', () => {
+  const largeRecords = Array.from({ length: 1_000 }, (_, index) => ({ id: `row-${index}`, value: index }));
+  let valueReads = 0;
+  const boundedSource = createClientTabularSource({
+    records: largeRecords,
+    columnSchema: { revision: 0, columns: [{ id: 'value' }], headers: [] },
+    getRowID: (record) => record.id,
+    getValue: (record) => { valueReads += 1; return record.value; },
+    policies: {
+      grouping: {
+        all: () => ({ groupID: 'group:all', label: 'all' }),
+      },
+    },
+    limits: { maxRows: 1, maxScanRecords: 1_000 },
+  });
+  const expanded = resolveClientTabularRequest(boundedSource, {
+    protocolVersion: 1,
+    requestID: 1,
+    sourceGeneration: 0,
+    queryRevision: 1,
+    expansionRevision: 1,
+    query: {
+      sort: [], filters: [],
+      groups: [{ id: 'all', columnID: 'value', policy: 'all' }],
+      aggregates: [], pivots: [],
+    },
+    expansion: ['group:all'],
+    access: { kind: 'window', start: 0, count: 1 },
+    columnSchemaRevision: 0,
+  });
+  assert.equal(expanded.ok, false);
+  assert.equal(expanded.error.code, 'row-ceiling-exceeded');
+  assert.equal(valueReads, 0);
+
+  const collapsed = resolveClientTabularRequest(boundedSource, {
+    protocolVersion: 1,
+    requestID: 2,
+    sourceGeneration: 0,
+    queryRevision: 1,
+    expansionRevision: 2,
+    query: {
+      sort: [], filters: [],
+      groups: [{ id: 'all', columnID: 'value', policy: 'all' }],
+      aggregates: [], pivots: [],
+    },
+    expansion: [],
+    access: { kind: 'window', start: 0, count: 1 },
+    columnSchemaRevision: 0,
+  });
+  assert.equal(collapsed.ok, true);
+  assert.equal(valueReads, 0);
+  assert.deepEqual(collapsed.value.rows.map((row) => row.id), ['group:all']);
 });
 
 test('TAB-ADV-07: client grouping does not fabricate empty groups after filtering', () => {

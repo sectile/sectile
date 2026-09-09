@@ -60,6 +60,26 @@ test('TAB-TBL-03: response envelopes, abandonment, and stale requests are failur
   assert.equal(table.getSnapshot().state.requestState.kind, 'idle');
 });
 
+test('ISSUE-051: DataTable reconciles selection from the validated removal snapshot exactly once', () => {
+  const table = createDataTable({
+    columns,
+    initialValues: { rowSelection: { kind: 'explicit-rows', rowIDs: ['a'] } },
+  });
+  const pending = table.getSnapshot().state.requestState.pendingRequest;
+  const resolved = resolveClientTabularRequest(source, pending);
+  assert.equal(resolved.ok, true);
+  let reads = 0;
+  const response = { ...resolved.value };
+  Object.defineProperty(response, 'removedRowIDs', {
+    enumerable: true,
+    get() { reads += 1; return reads === 1 ? [] : ['a']; },
+  });
+  const synchronized = table.synchronizeView(response);
+  assert.equal(synchronized.ok, true);
+  assert.equal(reads, 1);
+  assert.deepEqual(table.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: ['a'] });
+});
+
 test('TAB-TBL-04: DataTable value commit is application intent without cell cursor or edit authority', () => {
   const table = createDataTable({ columns });
   const commands = [];
@@ -100,6 +120,45 @@ test('TAB-TBL-05: controlled query proposes once and requests only after externa
   assert.equal(synchronized.ok, true);
   assert.equal(table.getSnapshot().state.query.sort[0].id, 'name');
   assert.deepEqual(commands, ['request-view']);
+});
+
+test('ISSUE-049: committed query changes reset page and window access across ownership modes', () => {
+  const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
+  const next = { ...query, sort: [{ id: 'name', columnID: 'name', direction: 'ascending', comparator: 'text' }] };
+  const page = { kind: 'page', page: 3, itemsPerPage: 10, visibleRowCount: null, pagination: null };
+  const window = {
+    kind: 'window',
+    window: { revision: 0, requestGeneration: 0, start: 90, size: 10, total: null, pending: null },
+  };
+
+  for (const accessState of [page, window]) {
+    const uncontrolled = createDataTable({ columns, initialValues: { accessState } });
+    const changed = uncontrolled.dispatch({ type: 'set-query', query: next });
+    assert.equal(changed.ok, true);
+    const request = uncontrolled.getSnapshot().state.requestState.pendingRequest;
+    assert.equal(request.access.kind, accessState.kind);
+    if (request.access.kind === 'page') assert.equal(request.access.page, 1);
+    else assert.equal(request.access.start, 0);
+
+    const controlled = createDataTable({
+      columns,
+      controlled: { query: true },
+      initialValues: { query, accessState },
+    });
+    const before = controlled.getSnapshot();
+    const proposed = controlled.dispatch({ type: 'set-query', query: next });
+    assert.equal(proposed.ok, true);
+    assert.equal(controlled.getSnapshot().state.query, before.state.query);
+    assert.deepEqual(controlled.getSnapshot().state.accessState, before.state.accessState);
+    assert.equal(controlled.getSnapshot().state.requestState.pendingRequest?.requestID, before.state.requestState.pendingRequest?.requestID);
+
+    const synchronized = controlled.syncControlledValues({ query: next });
+    assert.equal(synchronized.ok, true);
+    const synchronizedRequest = controlled.getSnapshot().state.requestState.pendingRequest;
+    assert.equal(synchronizedRequest.access.kind, accessState.kind);
+    if (synchronizedRequest.access.kind === 'page') assert.equal(synchronizedRequest.access.page, 1);
+    else assert.equal(synchronizedRequest.access.start, 0);
+  }
 });
 
 test('TAB-TBL-07: command delivery snapshots observers, completes channels, and rolls back failed attachment', () => {
@@ -194,6 +253,62 @@ test('controlled DataTable callbacks preserve synchronous owner revisions and ac
   assert.equal(table.getSnapshot().revision, 2);
   assert.equal(requests.length, 1);
   assert.equal(requests[0].requestID, table.getSnapshot().state.requestState.pendingRequest.requestID);
+});
+
+test('ISSUE-062: range selection uses the retained visible leaf index instead of rebuilding the view', () => {
+  const size = 10_000;
+  const records = Array.from({ length: size }, (_, index) => ({ id: `row-${index}`, name: `Row ${index}` }));
+  const largeSource = createClientTabularSource({
+    records,
+    columnSchema: { revision: 0, columns: [{ id: 'name' }], headers: [] },
+    getRowID: (record) => record.id,
+    getValue: (record) => record.name,
+    limits: { maxScanRecords: size, maxRows: size },
+  });
+  const table = createDataTable({
+    columns: [{ id: 'name' }],
+    limits: { maxRows: size },
+    initialValues: {
+      accessState: { kind: 'page', page: 1, itemsPerPage: size, visibleRowCount: null, pagination: null },
+    },
+  });
+  const pending = table.getSnapshot().state.requestState.pendingRequest;
+  const response = resolveClientTabularRequest(largeSource, pending);
+  assert.equal(response.ok, true);
+  assert.equal(table.synchronizeView(response.value).ok, true);
+  const acceptedRows = table.getSnapshot().state.acceptedViewState.view.rows;
+  const filter = Array.prototype.filter;
+  const indexOf = Array.prototype.indexOf;
+  let fullViewFilters = 0;
+  let fullArraySearches = 0;
+  Array.prototype.filter = function(...args) {
+    if (this === acceptedRows) fullViewFilters += 1;
+    return filter.apply(this, args);
+  };
+  Array.prototype.indexOf = function(...args) {
+    if (this.length === size) fullArraySearches += 1;
+    return indexOf.apply(this, args);
+  };
+  try {
+    const selected = table.dispatch({
+      type: 'set-row-selection-range',
+      anchorRowID: `row-${size - 2}`,
+      rowID: `row-${size - 1}`,
+      selected: true,
+    });
+    assert.equal(selected.ok, true);
+    assert.deepEqual(table.getSnapshot().state.rowSelection.rowIDs, [`row-${size - 2}`, `row-${size - 1}`]);
+    const stale = table.dispatch({
+      type: 'set-row-selection-range', anchorRowID: 'missing', rowID: `row-${size - 1}`, selected: true,
+    });
+    assert.equal(stale.ok, false);
+    assert.equal(stale.error.code, 'invalid-selection-range');
+  } finally {
+    Array.prototype.filter = filter;
+    Array.prototype.indexOf = indexOf;
+  }
+  assert.equal(fullViewFilters, 0);
+  assert.equal(fullArraySearches, 0);
 });
 
 test('TAB-TBL-06: row range events use accepted leaf order and reject stale endpoints', () => {

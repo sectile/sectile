@@ -40,8 +40,8 @@ const DEFAULT_QUERY_LIMITS: Pick<
 });
 
 type QueryLimits = typeof DEFAULT_QUERY_LIMITS;
-const QUERY_LIMITS = Symbol('sectile.tabular.query-limits');
-type CanonicalQuery = TabularQuery & { readonly [QUERY_LIMITS]: QueryLimits };
+const queryLimits = new WeakMap<object, QueryLimits>();
+type CanonicalQuery = TabularQuery;
 
 export function createTabularQuery(
   input: TabularQueryInput = {},
@@ -57,18 +57,29 @@ export function tryCreateTabularQuery(
   if (input === null || typeof input !== 'object' || Array.isArray(input)) {
     return fail('construction', 'invalid-query-descriptor', 'Tabular query input must be an object.');
   }
-  if (QUERY_LIMITS in input && sameQueryLimits((input as CanonicalQuery)[QUERY_LIMITS], limits)) {
-    return ok(input as CanonicalQuery);
-  }
-  const sort = normalizeSort(input.sort ?? [], limits);
+  const currentLimits = queryLimits.get(input);
+  if (currentLimits !== undefined && sameQueryLimits(currentLimits, limits)) return ok(input as CanonicalQuery);
+  let sortInput: readonly TabularSort[];
+  let filterInput: readonly TabularFilter[];
+  let groupInput: readonly TabularGroup[];
+  let aggregateInput: readonly TabularAggregate[];
+  let pivotInput: readonly TabularPivot[];
+  try {
+    sortInput = input.sort ?? [];
+    filterInput = input.filters ?? [];
+    groupInput = input.groups ?? [];
+    aggregateInput = input.aggregates ?? [];
+    pivotInput = input.pivots ?? [];
+  } catch { return fail('construction', 'invalid-query-descriptor', 'Query slice properties must be readable.'); }
+  const sort = normalizeSort(sortInput, limits);
   if (!sort.ok) return sort;
-  const filters = normalizeFilters(input.filters ?? [], limits);
+  const filters = normalizeFilters(filterInput, limits);
   if (!filters.ok) return filters;
-  const groups = normalizeGroups(input.groups ?? [], limits);
+  const groups = normalizeGroups(groupInput, limits);
   if (!groups.ok) return groups;
-  const aggregates = normalizeAggregates(input.aggregates ?? [], limits);
+  const aggregates = normalizeAggregates(aggregateInput, limits);
   if (!aggregates.ok) return aggregates;
-  const pivots = normalizePivots(input.pivots ?? [], aggregates.value, limits);
+  const pivots = normalizePivots(pivotInput, aggregates.value, limits);
   if (!pivots.ok) return pivots;
   return ok(canonicalQuery({
     sort: sort.value,
@@ -123,9 +134,9 @@ function replaceQuerySlice<Key extends keyof TabularQuery>(
 }
 
 function canonicalQuery(query: TabularQuery, limits: QueryLimits): CanonicalQuery {
-  const result = { ...query } as TabularQuery & { [QUERY_LIMITS]?: QueryLimits };
-  Object.defineProperty(result, QUERY_LIMITS, { value: limits, enumerable: false });
-  return Object.freeze(result) as CanonicalQuery;
+  const result = Object.freeze({ ...query });
+  queryLimits.set(result, limits);
+  return result;
 }
 
 function sameQueryLimits(left: QueryLimits, right: QueryLimits): boolean {
@@ -143,14 +154,19 @@ function normalizeSort(input: readonly TabularSort[], limits: QueryLimits): Tabu
   for (const descriptor of input) {
     const base = validateDescriptorBase(descriptor, ids, limits);
     if (!base.ok) return base;
-    const column = validateID(descriptor.columnID, 'sort.columnID', limits);
-    if (column !== null) return { ok: false, error: column };
-    const policy = validatePolicy(descriptor.comparator, 'sort.comparator', limits);
-    if (!policy.ok) return policy;
-    if (descriptor.direction !== 'ascending' && descriptor.direction !== 'descending') {
-      return fail('construction', 'invalid-query-descriptor', 'Sort direction must be ascending or descending.', { id: descriptor.id });
-    }
-    result.push(Object.freeze({ ...descriptor }));
+    try {
+      const columnID = descriptor.columnID;
+      const comparator = descriptor.comparator;
+      const direction = descriptor.direction;
+      const column = validateID(columnID, 'sort.columnID', limits);
+      if (column !== null) return { ok: false, error: column };
+      const policy = validatePolicy(comparator, 'sort.comparator', limits);
+      if (!policy.ok) return policy;
+      if (direction !== 'ascending' && direction !== 'descending') {
+        return fail('construction', 'invalid-query-descriptor', 'Sort direction must be ascending or descending.', { id: base.value });
+      }
+      result.push(Object.freeze({ id: base.value, columnID, direction, comparator }));
+    } catch { return unreadableDescriptor(); }
   }
   return ok(Object.freeze(result));
 }
@@ -164,23 +180,37 @@ function normalizeFilters(input: readonly TabularFilter[], limits: QueryLimits):
   for (const descriptor of input) {
     const base = validateDescriptorBase(descriptor, ids, limits);
     if (!base.ok) return base;
-    if (descriptor.scope !== 'global' && descriptor.scope !== 'column') {
-      return fail('construction', 'invalid-query-descriptor', 'Filter scope must be global or column.', { id: descriptor.id });
-    }
-    if (descriptor.scope === 'column') {
-      const column = validateID(descriptor.columnID, 'filter.columnID', limits);
-      if (column !== null) return { ok: false, error: column };
-    } else if (descriptor.columnID !== undefined) {
-      return fail('construction', 'invalid-query-descriptor', 'Global filters cannot identify one column.', { id: descriptor.id });
-    }
-    const policy = validatePolicy(descriptor.predicate, 'filter.predicate', limits);
-    if (!policy.ok) return policy;
-    if (descriptor.enabled !== undefined && typeof descriptor.enabled !== 'boolean') {
-      return fail('construction', 'invalid-query-descriptor', 'Filter enabled must be boolean.', { id: descriptor.id });
-    }
-    const value = normalizeQueryValue(descriptor.value, limits);
-    if (!value.ok) return value;
-    result.push(Object.freeze({ ...descriptor, value: value.value, enabled: descriptor.enabled ?? true }));
+    try {
+      const scope = descriptor.scope;
+      const columnID = descriptor.columnID;
+      const predicate = descriptor.predicate;
+      const enabled = descriptor.enabled;
+      const inputValue = descriptor.value;
+      if (scope !== 'global' && scope !== 'column') {
+        return fail('construction', 'invalid-query-descriptor', 'Filter scope must be global or column.', { id: base.value });
+      }
+      if (scope === 'column') {
+        const column = validateID(columnID, 'filter.columnID', limits);
+        if (column !== null) return { ok: false, error: column };
+      } else if (columnID !== undefined) {
+        return fail('construction', 'invalid-query-descriptor', 'Global filters cannot identify one column.', { id: base.value });
+      }
+      const policy = validatePolicy(predicate, 'filter.predicate', limits);
+      if (!policy.ok) return policy;
+      if (enabled !== undefined && typeof enabled !== 'boolean') {
+        return fail('construction', 'invalid-query-descriptor', 'Filter enabled must be boolean.', { id: base.value });
+      }
+      const value = normalizeQueryValue(inputValue, limits);
+      if (!value.ok) return value;
+      result.push(Object.freeze({
+        id: base.value,
+        scope,
+        ...(columnID === undefined ? {} : { columnID }),
+        predicate,
+        value: value.value,
+        enabled: enabled ?? true,
+      }));
+    } catch { return unreadableDescriptor(); }
   }
   return ok(Object.freeze(result));
 }
@@ -194,11 +224,15 @@ function normalizeGroups(input: readonly TabularGroup[], limits: QueryLimits): T
   for (const descriptor of input) {
     const base = validateDescriptorBase(descriptor, ids, limits);
     if (!base.ok) return base;
-    const column = validateID(descriptor.columnID, 'group.columnID', limits);
-    if (column !== null) return { ok: false, error: column };
-    const policy = validatePolicy(descriptor.policy, 'group.policy', limits);
-    if (!policy.ok) return policy;
-    result.push(Object.freeze({ ...descriptor }));
+    try {
+      const columnID = descriptor.columnID;
+      const policyKey = descriptor.policy;
+      const column = validateID(columnID, 'group.columnID', limits);
+      if (column !== null) return { ok: false, error: column };
+      const policy = validatePolicy(policyKey, 'group.policy', limits);
+      if (!policy.ok) return policy;
+      result.push(Object.freeze({ id: base.value, columnID, policy: policyKey }));
+    } catch { return unreadableDescriptor(); }
   }
   return ok(Object.freeze(result));
 }
@@ -212,11 +246,15 @@ function normalizeAggregates(input: readonly TabularAggregate[], limits: QueryLi
   for (const descriptor of input) {
     const base = validateDescriptorBase(descriptor, ids, limits);
     if (!base.ok) return base;
-    const column = validateID(descriptor.columnID, 'aggregate.columnID', limits);
-    if (column !== null) return { ok: false, error: column };
-    const policy = validatePolicy(descriptor.policy, 'aggregate.policy', limits);
-    if (!policy.ok) return policy;
-    result.push(Object.freeze({ ...descriptor }));
+    try {
+      const columnID = descriptor.columnID;
+      const policyKey = descriptor.policy;
+      const column = validateID(columnID, 'aggregate.columnID', limits);
+      if (column !== null) return { ok: false, error: column };
+      const policy = validatePolicy(policyKey, 'aggregate.policy', limits);
+      if (!policy.ok) return policy;
+      result.push(Object.freeze({ id: base.value, columnID, policy: policyKey }));
+    } catch { return unreadableDescriptor(); }
   }
   return ok(Object.freeze(result));
 }
@@ -235,16 +273,29 @@ function normalizePivots(
   for (const descriptor of input) {
     const base = validateDescriptorBase(descriptor, ids, limits);
     if (!base.ok) return base;
-    const column = validateID(descriptor.columnID, 'pivot.columnID', limits);
-    if (column !== null) return { ok: false, error: column };
-    const policy = validatePolicy(descriptor.valuePolicy, 'pivot.valuePolicy', limits);
-    if (!policy.ok) return policy;
-    if (!Array.isArray(descriptor.aggregateIDs) || descriptor.aggregateIDs.length === 0
-      || new Set(descriptor.aggregateIDs).size !== descriptor.aggregateIDs.length
-      || descriptor.aggregateIDs.some((id) => !aggregateDomain.has(id))) {
-      return fail('construction', 'invalid-query-descriptor', 'Pivot aggregate IDs must be unique existing aggregate descriptors.', { id: descriptor.id });
-    }
-    result.push(Object.freeze({ ...descriptor, aggregateIDs: Object.freeze([...descriptor.aggregateIDs]) }));
+    try {
+      const columnID = descriptor.columnID;
+      const valuePolicy = descriptor.valuePolicy;
+      const aggregateIDs = descriptor.aggregateIDs;
+      const column = validateID(columnID, 'pivot.columnID', limits);
+      if (column !== null) return { ok: false, error: column };
+      const policy = validatePolicy(valuePolicy, 'pivot.valuePolicy', limits);
+      if (!policy.ok) return policy;
+      if (!Array.isArray(aggregateIDs) || aggregateIDs.length === 0 || aggregateIDs.length > aggregateDomain.size) {
+        return fail('construction', 'invalid-query-descriptor', 'Pivot aggregate IDs must be unique existing aggregate descriptors.', { id: base.value });
+      }
+      const seen = new Set<string>();
+      const normalizedIDs: TabularDescriptorID[] = [];
+      for (let index = 0; index < aggregateIDs.length; index += 1) {
+        const element = Object.getOwnPropertyDescriptor(aggregateIDs, index);
+        if (element === undefined || !('value' in element) || seen.has(element.value) || !aggregateDomain.has(element.value)) {
+          return fail('construction', 'invalid-query-descriptor', 'Pivot aggregate IDs must be unique existing aggregate descriptors.', { id: base.value });
+        }
+        seen.add(element.value);
+        normalizedIDs.push(element.value);
+      }
+      result.push(Object.freeze({ id: base.value, columnID, valuePolicy, aggregateIDs: Object.freeze(normalizedIDs) }));
+    } catch { return unreadableDescriptor(); }
   }
   return ok(Object.freeze(result));
 }
@@ -253,15 +304,22 @@ function validateDescriptorBase(
   descriptor: { readonly id: TabularDescriptorID } | null,
   ids: Set<string>,
   limits: QueryLimits,
-): TabularResult<true> {
+): TabularResult<TabularDescriptorID> {
   if (descriptor === null || typeof descriptor !== 'object' || Array.isArray(descriptor)) {
     return fail('construction', 'invalid-query-descriptor', 'Every query descriptor must be an object.');
   }
-  const id = validateID(descriptor.id, 'descriptor.id', limits);
+  let value: TabularDescriptorID;
+  try { value = descriptor.id; }
+  catch { return fail('construction', 'invalid-query-descriptor', 'Query descriptor properties must be readable.'); }
+  const id = validateID(value, 'descriptor.id', limits);
   if (id !== null) return { ok: false, error: id };
-  if (ids.has(descriptor.id)) return fail('construction', 'duplicate-identity', 'Descriptor IDs must be unique within their ordered list.', { id: descriptor.id });
-  ids.add(descriptor.id);
-  return ok(true);
+  if (ids.has(value)) return fail('construction', 'duplicate-identity', 'Descriptor IDs must be unique within their ordered list.', { id: value });
+  ids.add(value);
+  return ok(value);
+}
+
+function unreadableDescriptor<T>(): TabularResult<T> {
+  return fail('construction', 'invalid-query-descriptor', 'Query descriptor properties must be readable.');
 }
 
 function validatePolicy(value: TabularPolicyKey, label: string, limits: QueryLimits): TabularResult<true> {
@@ -298,15 +356,22 @@ function normalizeQueryValue(value: unknown, limits: QueryLimits): TabularResult
     if (stack.has(current)) return fail('construction', 'invalid-query-value', 'Cyclic query values are invalid.');
     stack.add(current);
     if (Array.isArray(current)) {
+      if (current.length > limits.maxQueryValueNodes - nodes) {
+        stack.delete(current);
+        return ceiling('query-value-node-ceiling-exceeded', nodes + current.length, limits.maxQueryValueNodes);
+      }
+      const result: TabularQueryValue[] = [];
       for (let index = 0; index < current.length; index += 1) {
-        if (!Object.hasOwn(current, index)) {
+        const descriptor = Object.getOwnPropertyDescriptor(current, index);
+        if (descriptor === undefined) {
           stack.delete(current);
           return fail('construction', 'invalid-query-value', 'Sparse query arrays are invalid.');
         }
-      }
-      const result: TabularQueryValue[] = [];
-      for (const item of current) {
-        const normalized = visit(item, depth + 1);
+        if (!('value' in descriptor)) {
+          stack.delete(current);
+          return fail('construction', 'invalid-query-value', 'Query arrays cannot contain accessors.');
+        }
+        const normalized = visit(descriptor.value, depth + 1);
         if (!normalized.ok) {
           stack.delete(current);
           return normalized;

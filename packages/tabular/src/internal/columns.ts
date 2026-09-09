@@ -15,12 +15,11 @@ export interface TabularColumnPartitions {
   readonly end: readonly TabularColumnID[];
 }
 
-const COLUMN_DOMAIN = Symbol('sectile.tabular.column-domain');
-const HEADER_DOMAIN = Symbol('sectile.tabular.header-domain');
-type CanonicalColumnState = TabularColumnState & {
-  readonly [COLUMN_DOMAIN]: readonly TabularColumnDefinition[];
-  readonly [HEADER_DOMAIN]: readonly TabularHeaderNode[];
-};
+const columnDomains = new WeakMap<object, {
+  readonly columns: readonly TabularColumnDefinition[];
+  readonly headers: readonly TabularHeaderNode[];
+}>();
+type CanonicalColumnState = TabularColumnState;
 
 export function createTabularColumnState(
   columns: readonly TabularColumnDefinition[],
@@ -42,9 +41,8 @@ export function canonicalizeTabularColumnState(
   if (state === null || typeof state !== 'object' || Array.isArray(state)) {
     return fail('construction', 'invalid-controlled-shape', 'Column state must be an object.');
   }
-  if (COLUMN_DOMAIN in state
-    && (state as CanonicalColumnState)[COLUMN_DOMAIN] === columns
-    && (state as CanonicalColumnState)[HEADER_DOMAIN] === headers) return ok(state);
+  const current = columnDomains.get(state);
+  if (current?.columns === columns && current.headers === headers) return ok(state);
   const domain = new Set(columns.map((column) => column.id));
   if (!Array.isArray(state.order) || state.order.length !== domain.size
     || new Set(state.order).size !== state.order.length
@@ -116,13 +114,9 @@ function markColumnState(
   columns: readonly TabularColumnDefinition[],
   headers: readonly TabularHeaderNode[],
 ): CanonicalColumnState {
-  const result = { ...state } as TabularColumnState & {
-    [COLUMN_DOMAIN]?: readonly TabularColumnDefinition[];
-    [HEADER_DOMAIN]?: readonly TabularHeaderNode[];
-  };
-  Object.defineProperty(result, COLUMN_DOMAIN, { value: columns, enumerable: false });
-  Object.defineProperty(result, HEADER_DOMAIN, { value: headers, enumerable: false });
-  return Object.freeze(result) as CanonicalColumnState;
+  const result = Object.freeze({ ...state });
+  columnDomains.set(result, { columns, headers });
+  return result;
 }
 
 export function validateTabularHeaderProjection(

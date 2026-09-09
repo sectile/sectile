@@ -246,30 +246,45 @@ function applyIndexChanges<Key, Value>(
 class FormDeltaSet<Value> {
   readonly #index: FormDeltaIndex<Value, true>;
   readonly #size: number;
+  readonly #overlayEntries: number;
 
-  private constructor(index: FormDeltaIndex<Value, true>, size: number) {
+  private constructor(index: FormDeltaIndex<Value, true>, size: number, overlayEntries: number) {
     this.#index = index;
     this.#size = size;
+    this.#overlayEntries = overlayEntries;
   }
 
   public static from<Value>(values: Iterable<Value>): FormDeltaSet<Value> {
     const entries = new Map(Array.from(values, (value) => [value, true] as const));
-    return new FormDeltaSet(FormDeltaIndex.from(entries), entries.size);
+    return new FormDeltaSet(FormDeltaIndex.from(entries), entries.size, 0);
   }
 
   public update(add: Iterable<Value>, remove: Iterable<Value>): FormDeltaSet<Value> {
+    const requested = new Map<Value, true | typeof deletedIndexValue>();
+    for (const value of remove) requested.set(value, deletedIndexValue);
+    for (const value of add) requested.set(value, true);
+    if (requested.size === 0) return this;
     const changes = new Map<Value, true | typeof deletedIndexValue>();
-    for (const value of remove) changes.set(value, deletedIndexValue);
-    for (const value of add) changes.set(value, true);
-    if (changes.size === 0) return this;
     let size = this.#size;
-    for (const [value, next] of changes) {
+    for (const [value, next] of requested) {
       const contained = this.#index.has(value);
-      if (contained && next === deletedIndexValue) size -= 1;
-      else if (!contained && next === true) size += 1;
+      if (contained && next === deletedIndexValue) {
+        size -= 1;
+        changes.set(value, next);
+      } else if (!contained && next === true) {
+        size += 1;
+        changes.set(value, next);
+      }
     }
+    if (changes.size === 0) return this;
     if (size === 0) return FormDeltaSet.from([]);
-    return new FormDeltaSet(this.#index.update(changes), size);
+    const overlayEntries = this.#overlayEntries + changes.size;
+    if (overlayEntries > size) {
+      const compacted = this.#index.materialize();
+      applyIndexChanges(compacted, changes);
+      return FormDeltaSet.from(compacted.keys());
+    }
+    return new FormDeltaSet(this.#index.update(changes), size, overlayEntries);
   }
 
   public values(): IterableIterator<Value> { return this.#index.materialize().keys(); }
@@ -722,29 +737,27 @@ export function tryCreateFormState<ID extends StableID = StableID>(
     );
   }
 
-  const inputFields = input.fields === undefined ? [] : input.fields;
-  const inputIssues = input.issues === undefined ? [] : input.issues;
+  const providedFields = input.fields;
+  const providedIssues = input.issues;
+  const inputFields = providedFields === undefined ? [] : providedFields;
+  const inputIssues = providedIssues === undefined ? [] : providedIssues;
   if (!Array.isArray(inputFields) || !Array.isArray(inputIssues)) {
     return fail('construction', 'form-state-input-invalid', 'Form fields and issues must be arrays.');
   }
-  const checkedFields = inputFields as readonly FormFieldInput<ID>[];
-  const checkedIssues = inputIssues as readonly FormIssue<ID>[];
-  let stateEntries = inputFields.length + inputIssues.length;
-  for (const field of checkedFields) {
-    if (field === null || typeof field !== 'object' || Array.isArray(field)) {
-      return fail('construction', 'form-state-input-invalid', 'Every Form field input must be an object.');
-    }
-    if (field.issues !== undefined) {
-      if (!Array.isArray(field.issues)) {
-        return fail('construction', 'form-state-input-invalid', 'Form field issues must be an array.');
-      }
-      stateEntries += field.issues.length;
-    }
+  const checkedIssues = snapshotIssueInputs(inputIssues as readonly FormIssue<ID>[]);
+  if (!checkedIssues.ok) return checkedIssues;
+  const checkedFields: FormFieldInput<ID>[] = [];
+  for (const inputField of inputFields as readonly FormFieldInput<ID>[]) {
+    const field = snapshotFieldInput(inputField);
+    if (!field.ok) return field;
+    checkedFields.push(field.value);
   }
+  let stateEntries = checkedFields.length + checkedIssues.value.length;
+  for (const field of checkedFields) stateEntries += field.issues?.length ?? 0;
   if (stateEntries > limits.value.maxEntries) {
     return formCeiling('form-entry-ceiling-exceeded', stateEntries, limits.value.maxEntries);
   }
-  let output = reserveIssueRelations(checkedIssues, stateEntries, limits.value.maxOutputNodes);
+  let output = reserveIssueRelations(checkedIssues.value, stateEntries, limits.value.maxOutputNodes);
   if (!output.ok) return output;
   for (const field of checkedFields) {
     output = reserveIssueRelations(field.issues ?? [], output.value, limits.value.maxOutputNodes);
@@ -763,7 +776,7 @@ export function tryCreateFormState<ID extends StableID = StableID>(
     fields.push(field.value);
   }
 
-  const issues = normalizeIssues<ID>(checkedIssues, undefined);
+  const issues = normalizeIssues<ID>(checkedIssues.value, undefined);
   if (!issues.ok) return issues;
   const issueIds = [
     ...issues.value.map((issue) => issue.id),
@@ -1093,20 +1106,23 @@ function registerField<ID extends StableID>(
   state: FormState<ID>,
   input: FormFieldInput<ID>,
 ): Result<FormUpdate<ID>> {
+  const captured = snapshotFieldInput(input);
+  if (!captured.ok) return transitionError(captured);
+  const fieldInput = captured.value;
   const store = fieldStoreOf(state);
-  const current = getStoredField(store, input?.id);
-  const budget = reserveIssueReplacement(state, input?.issues ?? [], issueOutputNodes(current?.issues ?? []), current === undefined ? 1 : 0);
+  const current = getStoredField(store, fieldInput.id);
+  const budget = reserveIssueReplacement(state, fieldInput.issues ?? [], issueOutputNodes(current?.issues ?? []), current === undefined ? 1 : 0);
   if (!budget.ok) return budget;
-  const normalized = normalizeField(input);
+  const normalized = normalizeField(fieldInput);
   if (!normalized.ok) return transitionError(normalized);
-  const ownership = validateFieldIssueOwnership(state, normalized.value, input.id);
+  const ownership = validateFieldIssueOwnership(state, normalized.value, fieldInput.id);
   if (!ownership.ok) return ownership;
   if (current !== undefined && sameField(current, normalized.value)) return update(state);
   const currentFields = materializeFields(store);
   if (current !== undefined) {
     const next = deriveWithIssueProjection(
       state,
-      currentFields.map((field) => field.id === input.id ? normalized.value : field),
+      currentFields.map((field) => field.id === fieldInput.id ? normalized.value : field),
       state.issues,
     );
     return update(afterIssueMutation(state, next));
@@ -1181,19 +1197,22 @@ function replaceFieldIssues<ID extends StableID>(
   source: FormIssueSource,
   input: readonly FormIssue<ID>[],
 ): Result<FormUpdate<ID>> {
+  const captured = snapshotIssueInputs(input);
+  if (!captured.ok) return transitionError(captured);
+  const issueInput = captured.value;
   const store = fieldStoreOf(state);
   const current = getStoredField(store, id);
   if (current === undefined) return missingField();
-  const budget = reserveIssueReplacement(state, input, issueOutputNodes(current.issues, source));
+  const budget = reserveIssueReplacement(state, issueInput, issueOutputNodes(current.issues, source));
   if (!budget.ok) return budget;
-  if (input.some((issue) => issue.source !== source)) {
+  if (issueInput.some((issue) => issue.source !== source)) {
     return fail(
       'transition-rejection',
       'form-issue-source-mismatch',
       'Every replacement issue must match the requested source.',
     );
   }
-  const normalized = normalizeIssues(input, id);
+  const normalized = normalizeIssues(issueInput, id);
   if (!normalized.ok) return transitionError(normalized);
   if (normalized.value.some((issue) => current.issues.some(
     (candidate) => candidate.id === issue.id && candidate.source !== source,
@@ -1214,13 +1233,16 @@ function upsertFieldIssue<ID extends StableID>(
   id: ID,
   input: FormIssue<ID>,
 ): Result<FormUpdate<ID>> {
+  const captured = snapshotIssueInputs([input]);
+  if (!captured.ok) return transitionError(captured);
+  const issueInput = captured.value[0]!;
   const store = fieldStoreOf(state);
   const current = getStoredField(store, id);
   if (current === undefined) return missingField();
-  const index = current.issues.findIndex((candidate) => candidate.id === input?.id);
-  const budget = reserveIssueReplacement(state, [input], index < 0 ? 0 : issueOutputNodes([current.issues[index]!]));
+  const index = current.issues.findIndex((candidate) => candidate.id === issueInput.id);
+  const budget = reserveIssueReplacement(state, captured.value, index < 0 ? 0 : issueOutputNodes([current.issues[index]!]));
   if (!budget.ok) return budget;
-  const normalized = normalizeIssues([input], id);
+  const normalized = normalizeIssues(captured.value, id);
   if (!normalized.ok) return transitionError(normalized);
   const issue = normalized.value[0]!;
   const issues = [...current.issues];
@@ -1323,16 +1345,25 @@ function replaceIssues<ID extends StableID>(
   source: FormIssueSource,
   inputIssues: readonly FormIssue<ID>[],
 ): Result<FormUpdate<ID>> {
-  const budget = reserveIssueReplacement(state, inputIssues, issueOutputNodes(issueStoreOf(state).allBySource.get(source) ?? []));
+  const captured = snapshotIssueInputs(inputIssues);
+  return captured.ok ? replaceIssuesCaptured(state, source, captured.value) : transitionError(captured);
+}
+
+function replaceIssuesCaptured<ID extends StableID>(
+  state: FormState<ID>,
+  source: FormIssueSource,
+  issueInput: readonly FormIssue<ID>[],
+): Result<FormUpdate<ID>> {
+  const budget = reserveIssueReplacement(state, issueInput, issueOutputNodes(issueStoreOf(state).allBySource.get(source) ?? []));
   if (!budget.ok) return budget;
-  if (inputIssues.some((issue) => issue.source !== source)) {
+  if (issueInput.some((issue) => issue.source !== source)) {
     return fail(
       'transition-rejection',
       'form-issue-source-mismatch',
       'Every replacement issue must match the requested source.',
     );
   }
-  const normalized = normalizeIssues(inputIssues, undefined);
+  const normalized = normalizeIssues(issueInput, undefined);
   if (!normalized.ok) return transitionError(normalized);
   const store = fieldStoreOf(state);
   const incomingByField = new Map<ID, FormIssue<ID>[]>();
@@ -1480,6 +1511,13 @@ function startValidation<ID extends StableID>(
     );
   }
   const submission = intent === 'submission';
+  if (submission && state.submission.count === Number.MAX_SAFE_INTEGER) {
+    return fail(
+      'resource-rejection',
+      'form-submit-count-invalid',
+      'Form submit count cannot advance beyond the safe-integer ceiling.',
+    );
+  }
   const current = submission ? withoutIssueSource(state, 'server') : state;
   return update(deriveState(current, {
     validation: createValidationState(
@@ -1580,7 +1618,10 @@ function submitFailed<ID extends StableID>(
       'Form submission can fail only while pending.',
     );
   }
-  if (issues.some((issue) => issue.source !== 'server')) {
+  const captured = snapshotIssueInputs(issues);
+  if (!captured.ok) return transitionError(captured);
+  const issueInput = captured.value;
+  if (issueInput.some((issue) => issue.source !== 'server')) {
     return fail(
       'transition-rejection',
       'form-submit-issue-source-invalid',
@@ -1589,18 +1630,18 @@ function submitFailed<ID extends StableID>(
   }
   const failure = normalizeSubmissionFailure(failureInput);
   if (!failure.ok) return transitionError(failure);
-  if (failure.value === null && issues.length === 0) {
+  if (failure.value === null && issueInput.length === 0) {
     return fail(
       'transition-rejection',
       'form-submit-failure-empty',
       'A failed Form submission requires a failure message or server issue.',
     );
   }
-  const replaced = replaceIssues(state, 'server', issues);
+  const replaced = replaceIssuesCaptured(state, 'server', issueInput);
   if (!replaced.ok) return replaced;
   const issueState = replaced.value.state;
   const failed = deriveState(issueState, {
-    ...(issues.length === 0 ? {} : {
+    ...(issueInput.length === 0 ? {} : {
       validation: createValidationState(
         validation.generation,
         'invalid',
@@ -1682,6 +1723,44 @@ function reinitialize<ID extends StableID>(
   }, projectedFields, createFormIssueStore(globalIssues, projectedFields)));
 }
 
+function snapshotIssueInputs<ID extends StableID>(
+  input: readonly FormIssue<ID>[],
+): Result<readonly FormIssue<ID>[]> {
+  if (!Array.isArray(input)) return fail('construction', 'form-state-input-invalid', 'Form issues must be an array.');
+  const output: FormIssue<ID>[] = [];
+  for (const candidate of input) {
+    if (candidate === null || typeof candidate !== 'object' || Array.isArray(candidate)) {
+      return fail('construction', 'form-issue-invalid', 'Every Form issue must be an object.');
+    }
+    const relatedFieldIds = candidate.relatedFieldIds;
+    if (relatedFieldIds !== undefined && !Array.isArray(relatedFieldIds)) {
+      return fail('construction', 'form-issue-related-field-id-invalid', 'Related Form field identifiers must be valid stable IDs.');
+    }
+    output.push({
+      id: candidate.id,
+      message: candidate.message,
+      source: candidate.source,
+      fieldId: candidate.fieldId,
+      relatedFieldIds,
+    });
+  }
+  return ok(output);
+}
+
+function snapshotFieldInput<ID extends StableID>(input: FormFieldInput<ID>): Result<FormFieldInput<ID>> {
+  if (input === null || typeof input !== 'object' || Array.isArray(input)) {
+    return fail('construction', 'form-state-input-invalid', 'Every Form field input must be an object.');
+  }
+  const issues = snapshotIssueInputs(input.issues ?? []);
+  return issues.ok ? ok({
+    id: input.id,
+    name: input.name,
+    touched: input.touched,
+    dirty: input.dirty,
+    issues: issues.value,
+  } as FormFieldInput<ID>) : issues;
+}
+
 function normalizeField<ID extends StableID>(
   input: FormFieldInput<ID>,
   validateID = true,
@@ -1728,13 +1807,10 @@ function issueOutputNodes<ID extends StableID>(issues: readonly FormIssue<ID>[],
 
 function reserveIssueRelations<ID extends StableID>(input: readonly FormIssue<ID>[], nodes: number, ceiling: number): Result<number> {
   if (nodes > ceiling) return formCeiling('form-output-node-ceiling-exceeded', nodes, ceiling);
-  if (!Array.isArray(input)) return fail('construction', 'form-state-input-invalid', 'Form issues must be an array.');
   for (const issue of input) {
-    if (issue === null || typeof issue !== 'object' || Array.isArray(issue)) return fail('construction', 'form-issue-invalid', 'Every Form issue must be an object.');
-    const related = issue.relatedFieldIds ?? [];
-    if (!Array.isArray(related)) return fail('construction', 'form-issue-related-field-id-invalid', 'Related Form field identifiers must be valid stable IDs.');
-    if (related.length > ceiling - nodes) return formCeiling('form-output-node-ceiling-exceeded', nodes + related.length, ceiling);
-    nodes += related.length;
+    const relations = issue.relatedFieldIds?.length ?? 0;
+    if (relations > ceiling - nodes) return formCeiling('form-output-node-ceiling-exceeded', nodes + relations, ceiling);
+    nodes += relations;
   }
   return ok(nodes);
 }

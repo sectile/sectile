@@ -305,37 +305,52 @@ function normalizeColumns(
     if (column === null || typeof column !== 'object') {
       return fail('construction', 'invalid-column-definition', 'Every column must be an object.');
     }
-    const idError = validateID(column.id, 'columnID', limits);
-    if (idError !== null) return { ok: false, error: idError };
-    if (ids.has(column.id)) {
-      return fail('construction', 'duplicate-identity', 'Column identities must be unique.', { id: column.id });
+    try {
+      const id = column.id;
+      const label = column.label;
+      const inputCapabilities = column.capabilities;
+      const initialVisible = column.initialVisible;
+      const initialPin = column.initialPin;
+      const headerNodeID = column.headerNodeID;
+      const idError = validateID(id, 'columnID', limits);
+      if (idError !== null) return { ok: false, error: idError };
+      if (ids.has(id)) return fail('construction', 'duplicate-identity', 'Column identities must be unique.', { id });
+      ids.add(id);
+      const fallbackHeaderID = headerNodeID ?? id;
+      const fallbackIDError = validateID(fallbackHeaderID, 'headerNodeID', limits);
+      if (fallbackIDError !== null) return { ok: false, error: fallbackIDError };
+      if (fallbackHeaderIDs.has(fallbackHeaderID)) {
+        return fail('construction', 'duplicate-identity', 'Fallback header identities must be unique.', { id: fallbackHeaderID });
+      }
+      fallbackHeaderIDs.add(fallbackHeaderID);
+      if (label !== undefined && typeof label !== 'string') {
+        return fail('construction', 'invalid-column-definition', 'Column label must be a string.', { id });
+      }
+      const capabilities = inputCapabilities ?? [];
+      const validCapabilities = new Set(['sort', 'filter', 'group', 'aggregate', 'pivot', 'edit']);
+      if (!Array.isArray(capabilities) || capabilities.some((value) => !validCapabilities.has(value))) {
+        return fail('construction', 'invalid-column-definition', 'Column capabilities are invalid.', { id });
+      }
+      if (new Set(capabilities).size !== capabilities.length) {
+        return fail('construction', 'duplicate-identity', 'Column capabilities must be unique.', { id });
+      }
+      if (initialVisible !== undefined && typeof initialVisible !== 'boolean') {
+        return fail('construction', 'invalid-column-definition', 'initialVisible must be boolean.', { id });
+      }
+      if (initialPin !== undefined && !['start', 'center', 'end'].includes(initialPin)) {
+        return fail('construction', 'invalid-column-definition', 'initialPin must be a logical pin region.', { id });
+      }
+      result.push(Object.freeze({
+        id,
+        ...(label === undefined ? {} : { label }),
+        capabilities: Object.freeze([...capabilities]),
+        ...(initialVisible === undefined ? {} : { initialVisible }),
+        ...(initialPin === undefined ? {} : { initialPin }),
+        ...(headerNodeID === undefined ? {} : { headerNodeID }),
+      }));
+    } catch {
+      return fail('construction', 'invalid-column-definition', 'Column properties must be readable.');
     }
-    ids.add(column.id);
-    const fallbackHeaderID = column.headerNodeID ?? column.id;
-    const fallbackIDError = validateID(fallbackHeaderID, 'headerNodeID', limits);
-    if (fallbackIDError !== null) return { ok: false, error: fallbackIDError };
-    if (fallbackHeaderIDs.has(fallbackHeaderID)) {
-      return fail('construction', 'duplicate-identity', 'Fallback header identities must be unique.', { id: fallbackHeaderID });
-    }
-    fallbackHeaderIDs.add(fallbackHeaderID);
-    if (column.label !== undefined && typeof column.label !== 'string') {
-      return fail('construction', 'invalid-column-definition', 'Column label must be a string.', { id: column.id });
-    }
-    const capabilities = column.capabilities ?? [];
-    const validCapabilities = new Set(['sort', 'filter', 'group', 'aggregate', 'pivot', 'edit']);
-    if (!Array.isArray(capabilities) || capabilities.some((value) => !validCapabilities.has(value))) {
-      return fail('construction', 'invalid-column-definition', 'Column capabilities are invalid.', { id: column.id });
-    }
-    if (new Set(capabilities).size !== capabilities.length) {
-      return fail('construction', 'duplicate-identity', 'Column capabilities must be unique.', { id: column.id });
-    }
-    if (column.initialVisible !== undefined && typeof column.initialVisible !== 'boolean') {
-      return fail('construction', 'invalid-column-definition', 'initialVisible must be boolean.', { id: column.id });
-    }
-    if (column.initialPin !== undefined && !['start', 'center', 'end'].includes(column.initialPin)) {
-      return fail('construction', 'invalid-column-definition', 'initialPin must be a logical pin region.', { id: column.id });
-    }
-    result.push(Object.freeze({ ...column, capabilities: Object.freeze([...capabilities]) }));
   }
   return ok(Object.freeze(result));
 }
@@ -353,28 +368,40 @@ function normalizeHeaders(
     if (depth > limits.maxGroupDepth) {
       return fail('resource-rejection', 'group-depth-ceiling-exceeded', 'Header depth exceeds the configured ceiling.');
     }
-    const idError = validateID(node?.id, 'headerNodeID', limits);
-    if (idError !== null) return { ok: false, error: idError };
-    if (headerIDs.has(node.id)) return fail('construction', 'duplicate-identity', 'Header identities must be unique.', { id: node.id });
-    headerIDs.add(node.id);
-    if (node.kind === 'column') {
-      if (!columnIDs.has(node.columnID) || leafColumns.has(node.columnID)) {
-        return fail('construction', leafColumns.has(node.columnID) ? 'duplicate-identity' : 'invalid-header-node',
-          'Header leaves must reference one existing column exactly once.', { columnID: node.columnID });
+    if (node === null || typeof node !== 'object' || Array.isArray(node)) {
+      return fail('construction', 'invalid-header-node', 'Every header node must be an object.');
+    }
+    try {
+      const id = node.id;
+      const kind = node.kind;
+      const label = node.label;
+      const idError = validateID(id, 'headerNodeID', limits);
+      if (idError !== null) return { ok: false, error: idError };
+      if (headerIDs.has(id)) return fail('construction', 'duplicate-identity', 'Header identities must be unique.', { id });
+      headerIDs.add(id);
+      if (kind === 'column') {
+        const columnID = node.columnID;
+        if (!columnIDs.has(columnID) || leafColumns.has(columnID)) {
+          return fail('construction', leafColumns.has(columnID) ? 'duplicate-identity' : 'invalid-header-node',
+            'Header leaves must reference one existing column exactly once.', { columnID });
+        }
+        leafColumns.add(columnID);
+        return ok(Object.freeze({ kind, id, columnID, ...(label === undefined ? {} : { label }) }));
       }
-      leafColumns.add(node.columnID);
-      return ok(Object.freeze({ ...node }));
+      const inputChildren = kind === 'group' ? node.children : null;
+      if (kind !== 'group' || !Array.isArray(inputChildren) || inputChildren.length === 0) {
+        return fail('construction', 'invalid-header-node', 'Header groups require at least one child.');
+      }
+      const children: TabularHeaderNode[] = [];
+      for (const child of inputChildren) {
+        const childResult = visit(child, depth + 1);
+        if (!childResult.ok) return childResult;
+        children.push(childResult.value);
+      }
+      return ok(Object.freeze({ kind, id, ...(label === undefined ? {} : { label }), children: Object.freeze(children) }));
+    } catch {
+      return fail('construction', 'invalid-header-node', 'Header properties must be readable.');
     }
-    if (node.kind !== 'group' || !Array.isArray(node.children) || node.children.length === 0) {
-      return fail('construction', 'invalid-header-node', 'Header groups require at least one child.');
-    }
-    const children: TabularHeaderNode[] = [];
-    for (const child of node.children) {
-      const childResult = visit(child, depth + 1);
-      if (!childResult.ok) return childResult;
-      children.push(childResult.value);
-    }
-    return ok(Object.freeze({ ...node, children: Object.freeze(children) }));
   };
   const result: TabularHeaderNode[] = [];
   for (const header of headers) {

@@ -217,6 +217,59 @@ test('indexed issue commands update only the selected owner and retained source 
   assert.equal(cleared.value.state.valid, true);
 });
 
+test('ISSUE-047: source-owner enumeration compacts history to current cardinality', () => {
+  const countEntries = (action) => {
+    const iterate = Map.prototype[Symbol.iterator];
+    let entries = 0;
+    Map.prototype[Symbol.iterator] = function(...args) {
+      const iterator = iterate.apply(this, args);
+      return {
+        [Symbol.iterator]() { return this; },
+        next() {
+          const result = iterator.next();
+          if (!result.done) entries += 1;
+          return result;
+        },
+      };
+    };
+    try { return { value: action(), entries }; }
+    finally { Map.prototype[Symbol.iterator] = iterate; }
+  };
+
+  for (const size of [10, 100, 1000]) {
+    const initial = createFormState({
+      fields: Array.from({ length: size }, (_, index) => ({
+        id: `field-${index}`,
+        issues: [{ id: `server-${index}`, source: 'server', message: 'Server issue.' }],
+      })),
+    });
+    const shrunk = applyFormEvent(initial, {
+      type: 'replace-issues',
+      source: 'server',
+      issues: [{ id: 'remaining', fieldId: 'field-0', source: 'server', message: 'Still invalid.' }],
+    });
+    assert.equal(shrunk.ok, true);
+    const afterShrink = countEntries(() => getFormFieldIDsByIssueSource(shrunk.value.state, 'server'));
+    assert.deepEqual(afterShrink.value, ['field-0']);
+    assert.ok(afterShrink.entries <= 3, `${size}: dense shrink replayed ${afterShrink.entries} map entries`);
+
+    const grown = applyFormEvent(shrunk.value.state, {
+      type: 'replace-issues',
+      source: 'server',
+      issues: Array.from({ length: size }, (_, index) => ({
+        id: `grown-${index}`,
+        fieldId: `field-${index}`,
+        source: 'server',
+        message: 'Grown issue.',
+      })),
+    });
+    assert.equal(grown.ok, true);
+    const afterGrow = countEntries(() => getFormFieldIDsByIssueSource(grown.value.state, 'server'));
+    assert.equal(afterGrow.value.length, size);
+    assert.ok(afterGrow.entries <= size * 3, `${size}: growth replayed ${afterGrow.entries} map entries`);
+  }
+});
+
 test('form registry preserves order and derives aggregate field state', () => {
   let state = createFormState({
     fields: [
@@ -810,6 +863,59 @@ test('FRM-05: relation slots consume the output budget before caller elements ar
   }
 });
 
+test('FRM-05: output budgeting and normalization consume one caller snapshot', () => {
+  const large = [1, 2, 3, 4];
+  const issueWithRelations = (first, second) => {
+    let reads = 0;
+    return {
+      issue: {
+        id: 'issue',
+        source: 'server',
+        message: 'Snapshot relations.',
+        get relatedFieldIds() {
+          reads += 1;
+          return reads === 1 ? first : second;
+        },
+      },
+      reads: () => reads,
+    };
+  };
+
+  const firstSmall = issueWithRelations([], large);
+  const accepted = tryCreateFormState({ issues: [firstSmall.issue] }, { maxEntries: 1, maxOutputNodes: 1 });
+  assert.equal(accepted.ok, true);
+  assert.equal(firstSmall.reads(), 1);
+  assert.deepEqual(accepted.value.allIssues[0].relatedFieldIds ?? [], []);
+
+  const firstLarge = issueWithRelations(large, []);
+  const rejected = tryCreateFormState({ issues: [firstLarge.issue] }, { maxEntries: 1, maxOutputNodes: 1 });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'form-output-node-ceiling-exceeded');
+  assert.equal(firstLarge.reads(), 1);
+
+  const state = createFormState({}, { maxOutputNodes: 1 });
+  const transitionInput = issueWithRelations([], large);
+  const transitioned = applyFormEvent(state, { type: 'replace-issues', source: 'server', issues: [transitionInput.issue] });
+  assert.equal(transitioned.ok, true);
+  assert.equal(transitionInput.reads(), 1);
+  assert.deepEqual(transitioned.value.state.allIssues[0].relatedFieldIds ?? [], []);
+
+  let fieldIssueReads = 0;
+  const field = {
+    id: 'field',
+    get issues() {
+      fieldIssueReads += 1;
+      return fieldIssueReads === 1
+        ? []
+        : [{ id: 'late', source: 'server', message: 'Must not be reread.' }];
+    },
+  };
+  const registered = applyFormEvent(state, { type: 'register-field', field });
+  assert.equal(registered.ok, true);
+  assert.equal(fieldIssueReads, 1);
+  assert.deepEqual(registered.value.state.fields[0].issues, []);
+});
+
 test('Form issue mutations preserve the state output budget and reject relation growth atomically', () => {
   for (const size of [1, 10, 1000]) {
     const state = createFormState({ fields: [{ id: 'field' }] }, { maxOutputNodes: size + 2 });
@@ -998,6 +1104,36 @@ test('constructors reject duplicate fields and malformed issue ownership', () =>
       issues: [{ ...requiredIssue, fieldId: 'other' }],
     }],
   }).ok, false);
+});
+
+test('ISSUE-048: submission attempt count rejects overflow and accepts the final safe value', () => {
+  const maximum = createFormState({
+    submission: { generation: 0, status: 'idle', count: Number.MAX_SAFE_INTEGER, failure: null },
+  });
+  const before = structuredClone(maximum);
+  const rejected = applyFormEvent(maximum, { type: 'validation-started', trigger: 'submit', intent: 'submission' });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.class, 'resource-rejection');
+  assert.equal(rejected.error.code, 'form-submit-count-invalid');
+  assert.deepEqual(maximum, before);
+
+  const interaction = applyFormEvent(maximum, { type: 'validation-started', trigger: 'input', intent: 'interaction' });
+  assert.equal(interaction.ok, true);
+  assert.equal(interaction.value.state.submission.count, Number.MAX_SAFE_INTEGER);
+
+  const penultimate = createFormState({
+    submission: { generation: 0, status: 'idle', count: Number.MAX_SAFE_INTEGER - 1, failure: null },
+  });
+  const accepted = applyFormEvent(penultimate, { type: 'validation-started', trigger: 'submit', intent: 'submission' });
+  assert.equal(accepted.ok, true);
+  assert.equal(accepted.value.state.submission.count, Number.MAX_SAFE_INTEGER);
+  assert.equal(Number.isSafeInteger(accepted.value.state.submission.count), true);
+  assert.equal(tryCreateFormState({
+    validation: accepted.value.state.validation,
+    submission: accepted.value.state.submission,
+    fields: accepted.value.state.fields,
+    issues: accepted.value.state.issues,
+  }).ok, true);
 });
 
 test('FRM-01, FRM-02: form generations reject stale validation and submission results atomically', () => {

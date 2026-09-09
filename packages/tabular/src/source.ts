@@ -1,5 +1,6 @@
 import { unwrap } from '@sectile/core/result';
 import { fail, ok, validateID } from './internal/foundation.js';
+import { createContextParentIndexes, preparedViewOf, retainRemovedRowIDs, sliceVisibleRows } from './internal/source-view.js';
 import { tryCreateTabularModel } from './model.js';
 import { tryCreateTabularQuery } from './query.js';
 import type {
@@ -9,6 +10,7 @@ import type {
   TabularColumnSchema,
   TabularComparisonPolicy,
   TabularCount,
+  TabularGroupID,
   TabularLimits,
   TabularRequest,
   TabularResolvedRow,
@@ -191,68 +193,104 @@ export function synchronizeTabularView(
   currentView: TabularView | null = null,
   limitsInput?: Partial<TabularLimits>,
 ): TabularResult<TabularView> {
-  const schema = validateColumnSchema(response?.columnSchema, limitsInput);
+  if (response === null || typeof response !== 'object') {
+    return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular response must be an object.');
+  }
+  const prepared = preparedViewOf(response, request, currentView);
+  if (prepared !== undefined) return ok(prepared);
+  let protocolVersion: unknown;
+  let requestID: unknown;
+  let sourceGeneration: unknown;
+  let queryRevision: unknown;
+  let expansionRevision: unknown;
+  let viewRevision: unknown;
+  let accessInput: unknown;
+  let matchingLeafCountInput: unknown;
+  let visibleRowCountInput: unknown;
+  let rowsInput: unknown;
+  let removedRowIDsInput: unknown;
+  let columnSchemaInput: unknown;
+  try {
+    protocolVersion = response.protocolVersion;
+    requestID = response.requestID;
+    sourceGeneration = response.sourceGeneration;
+    queryRevision = response.queryRevision;
+    expansionRevision = response.expansionRevision;
+    viewRevision = response.viewRevision;
+    accessInput = response.access;
+    matchingLeafCountInput = response.matchingLeafCount;
+    visibleRowCountInput = response.visibleRowCount;
+    rowsInput = response.rows;
+    removedRowIDsInput = response.removedRowIDs;
+    columnSchemaInput = response.columnSchema;
+  } catch {
+    return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular response properties must be readable.');
+  }
+  const schema = validateColumnSchema(columnSchemaInput as TabularColumnSchema, limitsInput);
   if (!schema.ok) return transitionFailure(schema);
   const limits = schema.value.limits;
   const requestError = validateRequest(request, limits);
   if (requestError !== null) return transitionFailure(requestError);
-  if (response.protocolVersion !== 1
-    || response.requestID !== request.requestID
-    || response.sourceGeneration !== request.sourceGeneration
-    || response.queryRevision !== request.queryRevision
-    || response.expansionRevision !== request.expansionRevision
-    || !sameAccess(response.access, request.access)) {
+  const access = normalizeAccess(accessInput);
+  if (!access.ok) return access;
+  if (protocolVersion !== 1
+    || requestID !== request.requestID
+    || sourceGeneration !== request.sourceGeneration
+    || queryRevision !== request.queryRevision
+    || expansionRevision !== request.expansionRevision
+    || !sameAccess(access.value, request.access)) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Response does not echo the active request envelope.');
   }
-  if (!isNonNegativeSafeInteger(response.viewRevision)
+  if (typeof viewRevision !== 'number' || !isNonNegativeSafeInteger(viewRevision)
     || (currentView !== null
-      && currentView.sourceGeneration === response.sourceGeneration
-      && response.viewRevision <= currentView.viewRevision)) {
+      && currentView.sourceGeneration === sourceGeneration
+      && viewRevision <= currentView.viewRevision)) {
     return fail('transition-rejection', 'stale-view-revision', 'Response view revision must be strictly newer in its source generation.', {
-      viewRevision: response.viewRevision,
+      viewRevision,
       currentViewRevision: currentView?.viewRevision ?? null,
     });
   }
   if (schema.value.schema.revision < request.columnSchemaRevision) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Response column schema revision predates the request.');
   }
-  const matchingLeafCount = validateCount(response.matchingLeafCount, 'matchingLeafCount');
+  const matchingLeafCount = validateCount(matchingLeafCountInput, 'matchingLeafCount');
   if (!matchingLeafCount.ok) return matchingLeafCount;
-  const visibleRowCount = validateCount(response.visibleRowCount, 'visibleRowCount');
+  const visibleRowCount = validateCount(visibleRowCountInput, 'visibleRowCount');
   if (!visibleRowCount.ok) return visibleRowCount;
-  if (request.access.kind === 'page' && response.visibleRowCount.kind !== 'known') {
+  if (request.access.kind === 'page' && visibleRowCount.value.kind !== 'known') {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Page responses require a known visible row count.');
   }
-  if (!Array.isArray(response.rows) || response.rows.length > limits.maxRows) {
+  if (!Array.isArray(rowsInput) || rowsInput.length > limits.maxRows) {
     return fail('resource-rejection', 'row-ceiling-exceeded', 'Response rows exceed the configured ceiling.');
   }
-  if (response.rows.length * schema.value.schema.columns.length > limits.maxProjectedCells) {
+  if (rowsInput.length * schema.value.schema.columns.length > limits.maxProjectedCells) {
     return fail('resource-rejection', 'projected-cell-ceiling-exceeded', 'Response projected cells exceed the configured ceiling.');
   }
-  const rows = normalizeRows(response.rows, schema.value.schema.columns, limits);
+  const rows = normalizeRows(rowsInput as readonly TabularRow[], schema.value.schema.columns, limits);
   if (!rows.ok) return rows;
-  const removed = normalizeIDs(response.removedRowIDs, 'removedRowID', limits);
+  const removed = normalizeIDs(removedRowIDsInput as readonly string[], 'removedRowID', limits, limits.maxScanRecords);
   if (!removed.ok) return removed;
   const crossInvariant = validateResponseCrossInvariants(
     request,
-    rows.value,
+    rows.value.rows,
     removed.value,
     matchingLeafCount.value,
     visibleRowCount.value,
   );
   if (crossInvariant !== null) return crossInvariant;
-  return ok(Object.freeze({
-    requestID: response.requestID,
-    sourceGeneration: response.sourceGeneration,
-    queryRevision: response.queryRevision,
-    expansionRevision: response.expansionRevision,
-    viewRevision: response.viewRevision,
-    access: Object.freeze({ ...response.access }),
+  const view = Object.freeze({
+    requestID: requestID as number,
+    sourceGeneration: sourceGeneration as number,
+    queryRevision: queryRevision as number,
+    expansionRevision: expansionRevision as number,
+    viewRevision: viewRevision as number,
+    access: access.value,
     matchingLeafCount: matchingLeafCount.value,
     visibleRowCount: visibleRowCount.value,
-    rows: rows.value,
+    rows: rows.value.rows,
     columnSchema: schema.value.schema,
-  }));
+  });
+  return ok(retainRemovedRowIDs(view, removed.value, rows.value.indexes));
 }
 
 function resolveClient<RecordValue>(
@@ -272,7 +310,7 @@ function resolveClient<RecordValue>(
   const matchingLeafCount = projected.value.query.filtered.length;
   const range = sliceRange(request.access, projection.rows.length);
   if (!range.ok) return range;
-  const rows = sliceVisibleRows(projection.rows, range.value.start, range.value.end);
+  const rows = sliceVisibleRows(projection, range.value.start, range.value.end);
   return ok(Object.freeze({
     protocolVersion: 1,
     requestID: request.requestID,
@@ -386,6 +424,7 @@ interface ClientPivotRuntime<RecordValue> {
 interface ClientProjection {
   readonly rows: readonly TabularResolvedRow[];
   readonly schema: TabularColumnSchema;
+  readonly contextParentIndexes: Int32Array | null;
 }
 
 interface ClientPreparedProjection<RecordValue> {
@@ -398,6 +437,13 @@ interface ClientPreparedProjection<RecordValue> {
   readonly groupIDs: ReadonlySet<string>;
   readonly leafRows: Map<string, TabularResolvedRow>;
   readonly groupCells: Map<string, Readonly<Record<string, TabularWireValue>>>;
+}
+
+interface ClientGroupProjectionBuild<RecordValue> {
+  readonly rows: TabularResolvedRow[];
+  readonly leafRows: Map<string, TabularResolvedRow>;
+  readonly groupCells: Map<string, Readonly<Record<string, TabularWireValue>>>;
+  readonly maxRows: number;
 }
 
 function prepareClientProjection<RecordValue>(
@@ -453,7 +499,7 @@ function projectClientExpansion<RecordValue>(
       if (!row.ok) return row;
       rows.push(row.value);
     }
-    return ok(Object.freeze({ rows: Object.freeze(rows), schema: prepared.schema }));
+    return ok(Object.freeze({ rows: Object.freeze(rows), schema: prepared.schema, contextParentIndexes: null }));
   }
   const requestedExpansion = new Set(expansion);
   for (const groupID of requestedExpansion) {
@@ -461,16 +507,24 @@ function projectClientExpansion<RecordValue>(
       return fail('transition-rejection', 'response-envelope-mismatch', 'Expansion identifies an unknown group.', { groupID });
     }
   }
-  const rows: TabularResolvedRow[] = [];
+  const build: ClientGroupProjectionBuild<RecordValue> = {
+    rows: [],
+    leafRows: new Map(),
+    groupCells: new Map(),
+    maxRows: limits.maxRows,
+  };
   for (const group of prepared.groups) {
-    const flattened = flattenClientGroup(prepared, group, requestedExpansion, null);
-    if (!flattened.ok) return flattened;
-    rows.push(...flattened.value);
-    if (rows.length > limits.maxRows) {
-      return fail('resource-rejection', 'row-ceiling-exceeded', 'Grouped visible rows exceed the configured ceiling.');
-    }
+    const appended = appendClientGroup(prepared, group, requestedExpansion, null, build);
+    if (!appended.ok) return appended;
   }
-  return ok(Object.freeze({ rows: Object.freeze(rows), schema: prepared.schema }));
+  for (const [id, row] of build.leafRows) prepared.leafRows.set(id, row);
+  for (const [id, cells] of build.groupCells) prepared.groupCells.set(id, cells);
+  const rows = Object.freeze(build.rows);
+  return ok(Object.freeze({
+    rows,
+    schema: prepared.schema,
+    contextParentIndexes: createContextParentIndexes(rows),
+  }));
 }
 
 function resolveClientPivots<RecordValue>(
@@ -588,45 +642,52 @@ function buildClientGroups<RecordValue>(
   return ok(Object.freeze(result));
 }
 
-function flattenClientGroup<RecordValue>(
+function appendClientGroup<RecordValue>(
   prepared: ClientPreparedProjection<RecordValue>,
   group: ClientGroupNode<RecordValue>,
   expansion: ReadonlySet<string>,
   parentGroupID: string | null,
-): TabularResult<readonly TabularResolvedRow[]> {
-  const cells = clientGroupCells(prepared, group);
+  build: ClientGroupProjectionBuild<RecordValue>,
+): TabularResult<true> {
+  if (build.rows.length >= build.maxRows) {
+    return fail('resource-rejection', 'row-ceiling-exceeded', 'Grouped visible rows exceed the configured ceiling.');
+  }
+  const cells = clientGroupCells(prepared, group, build.groupCells);
   if (!cells.ok) return cells;
   const expanded = expansion.has(group.id);
-  const rows: TabularResolvedRow[] = [Object.freeze({
+  build.rows.push(Object.freeze({
     kind: 'group',
     id: group.id,
     parentGroupID,
     depth: group.depth,
     expanded,
     cells: cells.value,
-  })];
-  if (!expanded) return ok(Object.freeze(rows));
+  }));
+  if (!expanded) return ok(true);
   if (group.children.length > 0) {
     for (const child of group.children) {
-      const flattened = flattenClientGroup(prepared, child, expansion, group.id);
-      if (!flattened.ok) return flattened;
-      rows.push(...flattened.value);
+      const appended = appendClientGroup(prepared, child, expansion, group.id, build);
+      if (!appended.ok) return appended;
     }
   } else {
     for (const item of group.records) {
-      const leaf = clientLeafRow(prepared, item);
+      if (build.rows.length >= build.maxRows) {
+        return fail('resource-rejection', 'row-ceiling-exceeded', 'Grouped visible rows exceed the configured ceiling.');
+      }
+      const leaf = clientLeafRow(prepared, item, build.leafRows);
       if (!leaf.ok) return leaf;
-      rows.push(leaf.value);
+      build.rows.push(leaf.value);
     }
   }
-  return ok(Object.freeze(rows));
+  return ok(true);
 }
 
 function clientGroupCells<RecordValue>(
   prepared: ClientPreparedProjection<RecordValue>,
   group: ClientGroupNode<RecordValue>,
+  pending: Map<string, Readonly<Record<string, TabularWireValue>>>,
 ): TabularResult<Readonly<Record<string, TabularWireValue>>> {
-  const cached = prepared.groupCells.get(group.id);
+  const cached = prepared.groupCells.get(group.id) ?? pending.get(group.id);
   if (cached !== undefined) return ok(cached);
   const source = prepared.source;
   const cells: Record<string, TabularWireValue> = {};
@@ -668,18 +729,19 @@ function clientGroupCells<RecordValue>(
   const groupDescriptor = prepared.query.groups[group.depth]!;
   Object.defineProperty(cells, groupDescriptor.columnID, { value: group.label, enumerable: true, writable: false, configurable: true });
   Object.freeze(cells);
-  prepared.groupCells.set(group.id, cells);
+  pending.set(group.id, cells);
   return ok(cells);
 }
 
 function clientLeafRow<RecordValue>(
   prepared: ClientPreparedProjection<RecordValue>,
   item: ClientRecordItem<RecordValue>,
+  pending?: Map<string, TabularResolvedRow>,
 ): TabularResult<TabularResolvedRow> {
-  const cached = prepared.leafRows.get(item.rowID);
+  const cached = prepared.leafRows.get(item.rowID) ?? pending?.get(item.rowID);
   if (cached !== undefined) return ok(cached);
   const row = createClientLeafRow(prepared.source, item, prepared.schema.columns);
-  if (row.ok) prepared.leafRows.set(item.rowID, row.value);
+  if (row.ok) (pending ?? prepared.leafRows).set(item.rowID, row.value);
   return row;
 }
 
@@ -734,57 +796,85 @@ function validateColumnSchema(
   input: TabularColumnSchema,
   limitsInput?: Partial<TabularLimits>,
 ): TabularResult<{ readonly schema: TabularColumnSchema; readonly limits: TabularLimits }> {
-  if (input === null || typeof input !== 'object' || !isNonNegativeSafeInteger(input.revision)) {
-    return fail('construction', 'invalid-source', 'Column schema requires a non-negative revision.');
+  if (input === null || typeof input !== 'object') return fail('construction', 'invalid-source', 'Column schema requires a non-negative revision.');
+  try {
+    const revision = input.revision;
+    const columns = input.columns;
+    const headers = input.headers;
+    if (!isNonNegativeSafeInteger(revision)) return fail('construction', 'invalid-source', 'Column schema requires a non-negative revision.');
+    const model = tryCreateTabularModel({
+      columns,
+      headers,
+      ...(limitsInput === undefined ? {} : { limits: limitsInput }),
+    });
+    if (!model.ok) return model;
+    return ok(Object.freeze({
+      schema: Object.freeze({ revision, columns: model.value.columns, headers: model.value.headers }),
+      limits: model.value.limits,
+    }));
+  } catch {
+    return fail('construction', 'invalid-source', 'Column schema properties must be readable.');
   }
-  const model = tryCreateTabularModel({
-    columns: input.columns,
-    headers: input.headers,
-    ...(limitsInput === undefined ? {} : { limits: limitsInput }),
-  });
-  if (!model.ok) return model;
-  return ok(Object.freeze({
-    schema: Object.freeze({ revision: input.revision, columns: model.value.columns, headers: model.value.headers }),
-    limits: model.value.limits,
-  }));
 }
 
 function normalizeRows(
   input: readonly TabularRow[],
   columns: readonly TabularColumnDefinition[],
   limits: TabularLimits,
-): TabularResult<readonly TabularResolvedRow[]> {
+): TabularResult<{ readonly rows: readonly TabularResolvedRow[]; readonly indexes: ReadonlyMap<TabularRowID | TabularGroupID, number> }> {
   const columnPaths = columns.map((column) => Object.freeze({
     id: column.id,
     segments: parseCellPath(column.id, limits.maxQueryValueDepth),
   }));
-  const ids = new Set<string>();
+  const indexes = new Map<TabularRowID | TabularGroupID, number>();
   const result: TabularResolvedRow[] = [];
   for (const row of input) {
-    if (row === null || typeof row !== 'object' || (row.kind !== 'leaf' && row.kind !== 'group')) {
+    if (row === null || typeof row !== 'object') {
       return fail('transition-rejection', 'response-envelope-mismatch', 'Every response row must be a leaf or group.');
     }
-    const idError = validateID(row.id, row.kind === 'leaf' ? 'rowID' : 'groupID', limits);
-    if (idError !== null) return { ok: false, error: { ...idError, class: 'transition-rejection' } };
-    if (ids.has(row.id)) return fail('transition-rejection', 'duplicate-identity', 'Response row identities must be unique.', { id: row.id });
-    ids.add(row.id);
-    if (row.kind === 'group' && (!isNonNegativeSafeInteger(row.depth) || row.depth > limits.maxGroupDepth)) {
-      return fail('resource-rejection', 'group-depth-ceiling-exceeded', 'Response group depth exceeds the configured ceiling.');
-    }
-    if (row.cells === null || typeof row.cells !== 'object' || Array.isArray(row.cells)) {
-      return fail('transition-rejection', 'response-envelope-mismatch', 'Response row cells must be a record.');
-    }
-    const normalized = normalizeWireValue(row.cells, limits);
-    if (!normalized.ok) return normalized;
-    const cells = normalized.value as Readonly<Record<string, TabularWireValue>>;
-    for (const column of columnPaths) {
-      if (!hasCellValue(cells, column.id, column.segments)) {
-        return fail('transition-rejection', 'response-envelope-mismatch', 'Every response row requires one value for every schema column.', { rowID: row.id, columnID: column.id });
+    try {
+      const kind = row.kind;
+      if (kind !== 'leaf' && kind !== 'group') {
+        return fail('transition-rejection', 'response-envelope-mismatch', 'Every response row must be a leaf or group.');
       }
+      const id = row.id;
+      const cellsInput = row.cells;
+      const contextOnly = row.contextOnly;
+      const idError = validateID(id, kind === 'leaf' ? 'rowID' : 'groupID', limits);
+      if (idError !== null) return { ok: false, error: { ...idError, class: 'transition-rejection' } };
+      if (indexes.has(id)) return fail('transition-rejection', 'duplicate-identity', 'Response row identities must be unique.', { id });
+      indexes.set(id, result.length);
+      let parentGroupID: string | null = null;
+      let depth = 0;
+      let expanded = false;
+      if (kind === 'group') {
+        const group = row as Extract<TabularRow, { readonly kind: 'group' }>;
+        parentGroupID = group.parentGroupID;
+        depth = group.depth;
+        expanded = group.expanded;
+        if (!isNonNegativeSafeInteger(depth) || depth > limits.maxGroupDepth) {
+          return fail('resource-rejection', 'group-depth-ceiling-exceeded', 'Response group depth exceeds the configured ceiling.');
+        }
+      }
+      if (cellsInput === null || typeof cellsInput !== 'object' || Array.isArray(cellsInput)) {
+        return fail('transition-rejection', 'response-envelope-mismatch', 'Response row cells must be a record.');
+      }
+      const normalized = normalizeWireValue(cellsInput, limits);
+      if (!normalized.ok) return normalized;
+      const cells = normalized.value as Readonly<Record<string, TabularWireValue>>;
+      for (const column of columnPaths) {
+        if (!hasCellValue(cells, column.id, column.segments)) {
+          return fail('transition-rejection', 'response-envelope-mismatch', 'Every response row requires one value for every schema column.', { rowID: id, columnID: column.id });
+        }
+      }
+      result.push(kind === 'leaf'
+        ? Object.freeze({ kind, id, cells, ...(contextOnly === undefined ? {} : { contextOnly }) })
+        : Object.freeze({ kind, id, parentGroupID, depth, expanded, cells, ...(contextOnly === undefined ? {} : { contextOnly }) }));
+    } catch {
+      return fail('transition-rejection', 'response-envelope-mismatch', 'Response row properties must be readable.');
     }
-    result.push(Object.freeze({ ...row, cells }));
   }
-  return ok(Object.freeze(result));
+  return ok(Object.freeze({ rows: Object.freeze(result), indexes }));
 }
 
 type CellPathSegment = string | number;
@@ -856,10 +946,16 @@ function normalizeWireValue(value: unknown, limits: TabularLimits): TabularResul
     if (typeof current !== 'object' || stack.has(current)) return fail('construction', 'invalid-query-value', 'Wire value is outside the JSON-like algebra.');
     stack.add(current);
     if (Array.isArray(current)) {
+      if (current.length > limits.maxQueryValueNodes - nodes) {
+        stack.delete(current);
+        return fail('resource-rejection', 'query-value-node-ceiling-exceeded', 'Wire value exceeds its node ceiling.');
+      }
       const output: TabularWireValue[] = [];
       for (let index = 0; index < current.length; index += 1) {
-        if (!Object.hasOwn(current, index)) return fail('construction', 'invalid-query-value', 'Sparse wire arrays are invalid.');
-        const item = visit(current[index], depth + 1);
+        const descriptor = Object.getOwnPropertyDescriptor(current, index);
+        if (descriptor === undefined) return fail('construction', 'invalid-query-value', 'Sparse wire arrays are invalid.');
+        if (!('value' in descriptor)) return fail('construction', 'invalid-query-value', 'Wire arrays cannot contain accessors.');
+        const item = visit(descriptor.value, depth + 1);
         if (!item.ok) return item;
         output.push(item.value);
       }
@@ -887,31 +983,64 @@ function normalizeWireValue(value: unknown, limits: TabularLimits): TabularResul
   return visit(value, 0);
 }
 
-function normalizeIDs(input: readonly string[], label: string, limits: TabularLimits): TabularResult<readonly string[]> {
+function normalizeIDs(
+  input: readonly string[],
+  label: string,
+  limits: TabularLimits,
+  ceiling?: number,
+): TabularResult<readonly string[]> {
   if (!Array.isArray(input)) return fail('transition-rejection', 'response-envelope-mismatch', `${label} list must be an array.`);
+  const length = input.length;
+  if (ceiling !== undefined && length > ceiling) {
+    return fail('resource-rejection', 'scan-record-ceiling-exceeded', `${label} list exceeds the configured source cardinality ceiling.`, { actual: length, ceiling });
+  }
   const ids = new Set<string>();
-  for (const id of input) {
+  const output: string[] = [];
+  for (let index = 0; index < length; index += 1) {
+    const descriptor = Object.getOwnPropertyDescriptor(input, index);
+    if (descriptor === undefined || !('value' in descriptor)) {
+      return fail('transition-rejection', 'response-envelope-mismatch', `${label} list must contain readable data elements.`);
+    }
+    const id = descriptor.value;
     const error = validateID(id, label, limits);
     if (error !== null) return { ok: false, error: { ...error, class: 'transition-rejection' } };
     if (ids.has(id)) return fail('transition-rejection', 'duplicate-identity', `${label} list must be unique.`, { id });
     ids.add(id);
+    output.push(id);
   }
-  return ok(Object.freeze([...input]));
+  return ok(Object.freeze(output));
+}
+
+function normalizeAccess(access: unknown): TabularResult<TabularAccessRange> {
+  if (access === null || typeof access !== 'object' || Array.isArray(access)) {
+    return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular access kind is invalid.');
+  }
+  try {
+    const value = access as TabularAccessRange;
+    const kind = value.kind;
+    if (kind === 'page') {
+      const page = value.page;
+      const itemsPerPage = value.itemsPerPage;
+      return Number.isSafeInteger(page) && page >= 1 && Number.isSafeInteger(itemsPerPage) && itemsPerPage >= 1
+        ? ok(Object.freeze({ kind, page, itemsPerPage }))
+        : fail('transition-rejection', 'response-envelope-mismatch', 'Page access requires positive safe page and itemsPerPage values.');
+    }
+    if (kind === 'window') {
+      const start = value.start;
+      const count = value.count;
+      return isNonNegativeSafeInteger(start) && isNonNegativeSafeInteger(count) && start <= Number.MAX_SAFE_INTEGER - count
+        ? ok(Object.freeze({ kind, start, count }))
+        : fail('transition-rejection', 'response-envelope-mismatch', 'Window access requires a safe non-negative range.');
+    }
+  } catch {
+    return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular access properties must be readable.');
+  }
+  return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular access kind is invalid.');
 }
 
 function validateAccess(access: TabularAccessRange): TabularResult<never> | null {
-  if (access?.kind === 'page') {
-    return Number.isSafeInteger(access.page) && access.page >= 1 && Number.isSafeInteger(access.itemsPerPage) && access.itemsPerPage >= 1
-      ? null
-      : fail('transition-rejection', 'response-envelope-mismatch', 'Page access requires positive safe page and itemsPerPage values.');
-  }
-  if (access?.kind === 'window') {
-    return isNonNegativeSafeInteger(access.start) && isNonNegativeSafeInteger(access.count)
-      && access.start <= Number.MAX_SAFE_INTEGER - access.count
-      ? null
-      : fail('transition-rejection', 'response-envelope-mismatch', 'Window access requires a safe non-negative range.');
-  }
-  return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular access kind is invalid.');
+  const normalized = normalizeAccess(access);
+  return normalized.ok ? null : normalized;
 }
 
 function sliceRange(access: TabularAccessRange, total: number): TabularResult<{ readonly start: number; readonly end: number }> {
@@ -925,28 +1054,21 @@ function sliceRange(access: TabularAccessRange, total: number): TabularResult<{ 
   return ok(Object.freeze({ start, end: Math.min(total, start + count) }));
 }
 
-function sliceVisibleRows(
-  rows: readonly TabularResolvedRow[],
-  start: number,
-  end: number,
-): readonly TabularResolvedRow[] {
-  if (start === 0 || start === end) return Object.freeze(rows.slice(start, end));
-  const ancestors: TabularResolvedRow[] = [];
-  for (let index = 0; index < start; index += 1) {
-    const row = rows[index]!;
-    if (row.kind !== 'group') continue;
-    ancestors.length = row.depth;
-    ancestors[row.depth] = row;
+function validateCount(count: unknown, label: string): TabularResult<TabularCount> {
+  if (count === null || typeof count !== 'object' || Array.isArray(count)) {
+    return fail('transition-rejection', 'response-envelope-mismatch', `${label} must be a known non-negative safe count or unknown.`);
   }
-  const first = rows[start];
-  const requiredDepth = first?.kind === 'group' ? first.depth : ancestors.length;
-  const context = ancestors.slice(0, requiredDepth).map((row) => Object.freeze({ ...row, contextOnly: true as const }));
-  return Object.freeze([...context, ...rows.slice(start, end)]);
-}
-
-function validateCount(count: TabularCount, label: string): TabularResult<TabularCount> {
-  if (count?.kind === 'unknown') return ok(Object.freeze({ kind: 'unknown' }));
-  if (count?.kind === 'known' && isNonNegativeSafeInteger(count.value)) return ok(Object.freeze({ kind: 'known', value: count.value }));
+  try {
+    const value = count as TabularCount;
+    const kind = value.kind;
+    if (kind === 'unknown') return ok(Object.freeze({ kind }));
+    if (kind === 'known') {
+      const numeric = value.value;
+      if (isNonNegativeSafeInteger(numeric)) return ok(Object.freeze({ kind, value: numeric }));
+    }
+  } catch {
+    return fail('transition-rejection', 'response-envelope-mismatch', `${label} properties must be readable.`);
+  }
   return fail('transition-rejection', 'response-envelope-mismatch', `${label} must be a known non-negative safe count or unknown.`);
 }
 

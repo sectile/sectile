@@ -78,7 +78,7 @@ for (const recordCount of [1_000, 10_000, 100_000]) {
     ...baseRequest,
     requestID: 2,
     query: structuredClone(baseRequest.query),
-    access: { kind: 'window', start: 1, count: 100 },
+    access: { kind: 'window', start: Math.max(0, cold.value.matchingLeafCount.value - 100), count: 100 },
   });
   const warmCompleted = performance.now();
   assert.equal(warm.ok, true);
@@ -124,6 +124,7 @@ for (const recordCount of [1_000, 10_000, 100_000]) {
   });
 }
 
+const descriptorAxes = measureDescriptorAxes();
 const generationChurn = measureGenerationChurn();
 const virtualReconciliation = measureVirtualReconciliation();
 
@@ -135,6 +136,7 @@ const evidence = {
   environment: { node: process.version, platform: process.platform, architecture: process.arch },
   timingPolicy: 'informational-no-threshold',
   scales,
+  descriptorAxes,
   generationChurn,
   virtualReconciliation,
 };
@@ -147,6 +149,69 @@ function round(value) {
 
 function counterDelta(current, previous) {
   return Object.fromEntries(Object.keys(current).map((key) => [key, current[key] - previous[key]]));
+}
+
+function measureDescriptorAxes() {
+  const recordCount = 1_000;
+  const records = Array.from({ length: recordCount }, (_, index) => ({ id: `axis-${index}`, value: index }));
+  const evidence = [];
+  for (const axis of ['filter', 'sort', 'group', 'aggregate', 'pivot']) {
+    for (const descriptorCount of [1, 8]) {
+      const counters = { filter: 0, sort: 0, group: 0, aggregateElements: 0, pivotElements: 0 };
+      const source = createClientTabularSource({
+        records,
+        columnSchema: { revision: 0, columns: [{ id: 'value' }], headers: [] },
+        getRowID: (record) => record.id,
+        getValue: (record) => record.value,
+        policies: {
+          predicates: { all: () => { counters.filter += 1; return true; } },
+          comparators: { equal: () => { counters.sort += 1; return 0; } },
+          grouping: { all: (_record, _descriptor, depth) => { counters.group += 1; return { groupID: `group:${depth}`, label: depth }; } },
+          aggregation: { sum: (groupRecords) => { counters.aggregateElements += groupRecords.length; return 0; } },
+          pivot: {
+            one: (sourceRecords, descriptor) => {
+              counters.pivotElements += sourceRecords.length;
+              return [{
+                column: { id: `pivot:${descriptor.id}` },
+                header: { kind: 'column', id: `header:${descriptor.id}`, columnID: `pivot:${descriptor.id}` },
+                aggregateID: 'sum',
+                matches: () => false,
+              }];
+            },
+          },
+        },
+      });
+      const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
+      if (axis === 'filter') query.filters = Array.from({ length: descriptorCount }, (_, index) => ({ id: `f${index}`, scope: 'global', predicate: 'all', value: null }));
+      if (axis === 'sort') query.sort = Array.from({ length: descriptorCount }, (_, index) => ({ id: `s${index}`, columnID: 'value', direction: 'ascending', comparator: 'equal' }));
+      if (axis === 'group') query.groups = Array.from({ length: descriptorCount }, (_, index) => ({ id: `g${index}`, columnID: 'value', policy: 'all' }));
+      if (axis === 'aggregate') {
+        query.groups = [{ id: 'g', columnID: 'value', policy: 'all' }];
+        query.aggregates = Array.from({ length: descriptorCount }, (_, index) => ({ id: `a${index}`, columnID: 'value', policy: 'sum' }));
+      }
+      if (axis === 'pivot') {
+        query.groups = [{ id: 'g', columnID: 'value', policy: 'all' }];
+        query.aggregates = [{ id: 'sum', columnID: 'value', policy: 'sum' }];
+        query.pivots = Array.from({ length: descriptorCount }, (_, index) => ({ id: `p${index}`, columnID: 'value', valuePolicy: 'one', aggregateIDs: ['sum'] }));
+      }
+      const started = performance.now();
+      const resolved = resolveClientTabularRequest(source, {
+        protocolVersion: 1,
+        requestID: 1,
+        sourceGeneration: 0,
+        queryRevision: 1,
+        expansionRevision: 0,
+        query,
+        expansion: [],
+        access: { kind: 'window', start: 0, count: 1 },
+        columnSchemaRevision: 0,
+      });
+      const completed = performance.now();
+      assert.equal(resolved.ok, true);
+      evidence.push({ axis, descriptorCount, recordCount, counters, durationMs: round(completed - started) });
+    }
+  }
+  return evidence;
 }
 
 function measureGenerationChurn() {

@@ -137,12 +137,12 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | form:issues.replace-source | trusted | `O(iIssue + iIncoming + iRemoved + rAffected + aField*(fField/64 + 64 + iFieldIssue))` worst-case | `O(iIssue + iIncoming + iRemoved + rAffected + aField + fField/64)` | `O(iIssue + iIncoming)` | `O(fField + iIssue + rRelation)` | forbidden | VAL-016, VAL-017 |
 | form:state.construct | external | `O(fField + uID + iIssue + rRelation)` worst-case | `O(fField + iIssue + rRelation)` | `O(fField + iIssue + rRelation)` | `O(fField + iIssue + rRelation)` | allowed | packages/form/tests/state/form.test.mjs |
 | form:values.construct | external | `O(eEntry + pSegment + oNode)` worst-case | `O(pSegment + oNode)` | `O(oNode)` | `O(oNode)` | allowed | packages/form/tests/state/form.test.mjs, packages/dom/tests/form.test.mjs |
-| tabular:data-table.changed-slice | external | `O(sChanged)` worst-case | `O(sChanged)` | `O(sChanged)` | `O(sChanged + sOther)` | forbidden | VAL-016, VAL-017 |
+| tabular:data-table.changed-slice | external | `O(sChanged + sRange)` worst-case | `O(sChanged + kRange)` | `O(sChanged + kRange)` | `O(sChanged + sOther + nView)` | forbidden | VAL-016, VAL-017 |
 | tabular:grid-profile.move | trusted | `O(sAxis)` worst-case | `O(1)` | `O(1)` | `O(nCell)` | forbidden | VAL-016, VAL-017 |
 | tabular:header.projection-validation | external | `O(c + h)` worst-case | `O(c + h)` | `O(c)` | `O(c)` | allowed | VAL-016, VAL-017 |
-| tabular:source.resolve-cold | external | `O(nRecord log nRecord + kRow)` worst-case | `O(nRecord)` | `O(kRow)` | `O(nRecord)` | allowed | VAL-016, VAL-017 |
-| tabular:source.resolve-invalidation | external | `O(nRecord log nRecord + kRow)` worst-case | `O(nRecord)` | `O(kRow)` | `O(nRecord)` | allowed | VAL-016, VAL-017 |
-| tabular:source.resolve-warm | trusted | `O(kRow)` worst-case | `O(kRow)` | `O(kRow)` | `O(nRecord)` | forbidden | VAL-016, VAL-017 |
+| tabular:source.resolve-cold | external | `O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)` worst-case | `O(nRecord*(1+gGroup) + kRow + dContext)` | `O(kRow + dContext)` | `O(nRecord*(1+gGroup+cColumn) + cPivotColumn)` | allowed | VAL-016, VAL-017 |
+| tabular:source.resolve-invalidation | external | `O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)` worst-case | `O(nRecord*(1+gGroup) + kRow + dContext)` | `O(kRow + dContext)` | `O(nRecord*(1+gGroup+cColumn) + cPivotColumn)` | allowed | VAL-016, VAL-017 |
+| tabular:source.resolve-warm | trusted | `O(kRow + dContext)` worst-case | `O(kRow + dContext)` | `O(kRow + dContext)` | `O(nProjected)` | forbidden | VAL-016, VAL-017 |
 | tabular:virtual.locate | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(nRow + nColumn)` | forbidden | VAL-016, VAL-017 |
 | tabular:virtual.reconcile-table | trusted | `O(nRow + j)` worst-case | `O(nRow)` | `O(nRow + j)` | `O(nRow)` | allowed | VAL-016, VAL-017 |
 | temporal:calendar.page-years | external | `O(pPage)` worst-case | `O(pPage)` | `O(pPage)` | `O(pPage)` | allowed | packages/temporal/tests/composites/date-picker.test.mjs |

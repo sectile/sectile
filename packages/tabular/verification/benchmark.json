@@ -4,8 +4,8 @@
   "status": "passed",
   "seed": "sectile-tabular-benchmark-v1",
   "environment": {
-    "node": "v24.19.0",
-    "platform": "win32",
+    "node": "v24.20.0",
+    "platform": "linux",
     "architecture": "x64"
   },
   "timingPolicy": "informational-no-threshold",
@@ -43,11 +43,11 @@
         }
       },
       "timingsMs": {
-        "construct": 1.02,
-        "resolve": 3.194,
-        "warm": 0.09,
-        "queryInvalidation": 2.293,
-        "total": 6.597
+        "construct": 1.251,
+        "resolve": 4.769,
+        "warm": 0.061,
+        "queryInvalidation": 2.867,
+        "total": 8.948
       }
     },
     {
@@ -83,11 +83,11 @@
         }
       },
       "timingsMs": {
-        "construct": 0.093,
-        "resolve": 13.019,
-        "warm": 0.071,
-        "queryInvalidation": 6.311,
-        "total": 19.494
+        "construct": 0.091,
+        "resolve": 14.251,
+        "warm": 0.044,
+        "queryInvalidation": 6.811,
+        "total": 21.197
       }
     },
     {
@@ -123,12 +123,144 @@
         }
       },
       "timingsMs": {
-        "construct": 0.175,
-        "resolve": 125.72,
-        "warm": 0.07,
-        "queryInvalidation": 79.496,
-        "total": 205.461
+        "construct": 0.349,
+        "resolve": 198.165,
+        "warm": 0.057,
+        "queryInvalidation": 115.195,
+        "total": 313.766
       }
+    }
+  ],
+  "descriptorAxes": [
+    {
+      "axis": "filter",
+      "descriptorCount": 1,
+      "recordCount": 1000,
+      "counters": {
+        "filter": 1000,
+        "sort": 0,
+        "group": 0,
+        "aggregateElements": 0,
+        "pivotElements": 0
+      },
+      "durationMs": 1.218
+    },
+    {
+      "axis": "filter",
+      "descriptorCount": 8,
+      "recordCount": 1000,
+      "counters": {
+        "filter": 8000,
+        "sort": 0,
+        "group": 0,
+        "aggregateElements": 0,
+        "pivotElements": 0
+      },
+      "durationMs": 1.057
+    },
+    {
+      "axis": "sort",
+      "descriptorCount": 1,
+      "recordCount": 1000,
+      "counters": {
+        "filter": 0,
+        "sort": 999,
+        "group": 0,
+        "aggregateElements": 0,
+        "pivotElements": 0
+      },
+      "durationMs": 0.956
+    },
+    {
+      "axis": "sort",
+      "descriptorCount": 8,
+      "recordCount": 1000,
+      "counters": {
+        "filter": 0,
+        "sort": 7992,
+        "group": 0,
+        "aggregateElements": 0,
+        "pivotElements": 0
+      },
+      "durationMs": 0.658
+    },
+    {
+      "axis": "group",
+      "descriptorCount": 1,
+      "recordCount": 1000,
+      "counters": {
+        "filter": 0,
+        "sort": 0,
+        "group": 1000,
+        "aggregateElements": 0,
+        "pivotElements": 0
+      },
+      "durationMs": 0.862
+    },
+    {
+      "axis": "group",
+      "descriptorCount": 8,
+      "recordCount": 1000,
+      "counters": {
+        "filter": 0,
+        "sort": 0,
+        "group": 8000,
+        "aggregateElements": 0,
+        "pivotElements": 0
+      },
+      "durationMs": 1.354
+    },
+    {
+      "axis": "aggregate",
+      "descriptorCount": 1,
+      "recordCount": 1000,
+      "counters": {
+        "filter": 0,
+        "sort": 0,
+        "group": 1000,
+        "aggregateElements": 1000,
+        "pivotElements": 0
+      },
+      "durationMs": 0.436
+    },
+    {
+      "axis": "aggregate",
+      "descriptorCount": 8,
+      "recordCount": 1000,
+      "counters": {
+        "filter": 0,
+        "sort": 0,
+        "group": 1000,
+        "aggregateElements": 8000,
+        "pivotElements": 0
+      },
+      "durationMs": 0.433
+    },
+    {
+      "axis": "pivot",
+      "descriptorCount": 1,
+      "recordCount": 1000,
+      "counters": {
+        "filter": 0,
+        "sort": 0,
+        "group": 1000,
+        "aggregateElements": 1000,
+        "pivotElements": 1000
+      },
+      "durationMs": 0.65
+    },
+    {
+      "axis": "pivot",
+      "descriptorCount": 8,
+      "recordCount": 1000,
+      "counters": {
+        "filter": 0,
+        "sort": 0,
+        "group": 1000,
+        "aggregateElements": 1000,
+        "pivotElements": 8000
+      },
+      "durationMs": 0.676
     }
   ],
   "generationChurn": {
@@ -136,11 +268,11 @@
     "recordsPerGeneration": 64,
     "retainedStages": 1,
     "heapUsedBytes": {
-      "before": 42391840,
-      "middle": 42391072,
-      "after": 42405256
+      "before": 44979928,
+      "middle": 44965200,
+      "after": 44966632
     },
-    "tailGrowthBytes": 14184,
+    "tailGrowthBytes": 1432,
     "ceilingBytes": 8388608,
     "status": "passed"
   },
@@ -150,31 +282,31 @@
       "scenarios": [
         {
           "name": "reverse",
-          "durationMs": 2.071,
+          "durationMs": 1.736,
           "mutationCount": 1,
           "extentCallbackCount": 0,
-          "retainedHeapDeltaBytes": 28160
+          "retainedHeapDeltaBytes": 48632
         },
         {
           "name": "rotation",
-          "durationMs": 0.306,
+          "durationMs": 0.445,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "large-filter",
-          "durationMs": 0.284,
+          "durationMs": 0.393,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "mixed",
-          "durationMs": 0.466,
+          "durationMs": 0.475,
           "mutationCount": 1,
           "extentCallbackCount": 2,
-          "retainedHeapDeltaBytes": 28456
+          "retainedHeapDeltaBytes": 21904
         }
       ]
     },
@@ -183,31 +315,31 @@
       "scenarios": [
         {
           "name": "reverse",
-          "durationMs": 4.873,
+          "durationMs": 5.952,
           "mutationCount": 1,
           "extentCallbackCount": 0,
-          "retainedHeapDeltaBytes": 431160
+          "retainedHeapDeltaBytes": 671176
         },
         {
           "name": "rotation",
-          "durationMs": 1.447,
+          "durationMs": 2.334,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "large-filter",
-          "durationMs": 1.644,
+          "durationMs": 2.078,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "mixed",
-          "durationMs": 4.178,
+          "durationMs": 5.755,
           "mutationCount": 1,
           "extentCallbackCount": 2,
-          "retainedHeapDeltaBytes": 405040
+          "retainedHeapDeltaBytes": 397992
         }
       ]
     },
@@ -216,31 +348,31 @@
       "scenarios": [
         {
           "name": "reverse",
-          "durationMs": 69.234,
+          "durationMs": 95.745,
           "mutationCount": 1,
           "extentCallbackCount": 0,
-          "retainedHeapDeltaBytes": 4961016
+          "retainedHeapDeltaBytes": 4937480
         },
         {
           "name": "rotation",
-          "durationMs": 16.178,
+          "durationMs": 19.57,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "large-filter",
-          "durationMs": 20.375,
+          "durationMs": 26.481,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "mixed",
-          "durationMs": 65.261,
+          "durationMs": 74.365,
           "mutationCount": 1,
           "extentCallbackCount": 2,
-          "retainedHeapDeltaBytes": 3089832
+          "retainedHeapDeltaBytes": 3091664
         }
       ]
     }

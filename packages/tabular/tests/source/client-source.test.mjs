@@ -221,6 +221,40 @@ test('TAB-SRC-08: authoritative deletion deltas require unique valid row identit
   const malformed = synchronizeTabularView(active, { ...resolved.value, removedRowIDs: [''] });
   assert.equal(malformed.ok, false);
   assert.equal(malformed.error.code, 'invalid-id');
+
+  let descriptorReads = 0;
+  const oversized = new Proxy(['removed:a', 'removed:b'], {
+    getOwnPropertyDescriptor(target, key) { descriptorReads += 1; return Reflect.getOwnPropertyDescriptor(target, key); },
+  });
+  const bounded = synchronizeTabularView(
+    active,
+    { ...resolved.value, removedRowIDs: oversized },
+    null,
+    { maxScanRecords: 1 },
+  );
+  assert.equal(bounded.ok, false);
+  assert.equal(bounded.error.class, 'resource-rejection');
+  assert.equal(bounded.error.code, 'scan-record-ceiling-exceeded');
+  assert.equal(descriptorReads, 0);
+});
+
+test('ISSUE-056: response row identity is captured once before canonicalization', () => {
+  const active = request();
+  const resolved = resolveClientTabularRequest(source(), active);
+  assert.equal(resolved.ok, true);
+  let reads = 0;
+  const row = {
+    kind: 'leaf',
+    get id() { reads += 1; return reads === 1 ? 'r2' : 'r1'; },
+    cells: resolved.value.rows[1].cells,
+  };
+  const accepted = synchronizeTabularView(active, {
+    ...resolved.value,
+    rows: [resolved.value.rows[0], row, ...resolved.value.rows.slice(2)],
+  });
+  assert.equal(accepted.ok, true);
+  assert.equal(reads, 1);
+  assert.deepEqual(accepted.value.rows.map(({ id }) => id), ['r1', 'r2', 'r3', 'r4']);
 });
 
 test('TAB-SRC-11: response cross-invariants reject overlap, impossible counts, and incomplete ranges', () => {
@@ -253,6 +287,60 @@ test('TAB-SRC-11: response cross-invariants reject overlap, impossible counts, a
   });
   assert.equal(incomplete.ok, false);
   assert.equal(incomplete.error.code, 'response-envelope-mismatch');
+});
+
+test('ISSUE-052: cold source work exposes each configurable descriptor axis', () => {
+  const axisRecords = Array.from({ length: 10 }, (_, index) => ({ id: `axis-${index}`, value: index }));
+  const run = (axis, count) => {
+    const counters = { filter: 0, sort: 0, group: 0, aggregateElements: 0, pivotElements: 0 };
+    const axisSource = createClientTabularSource({
+      records: axisRecords,
+      columnSchema: { revision: 0, columns: [{ id: 'value' }], headers: [] },
+      getRowID: (record) => record.id,
+      getValue: (record) => record.value,
+      policies: {
+        predicates: { all: () => { counters.filter += 1; return true; } },
+        comparators: { equal: () => { counters.sort += 1; return 0; } },
+        grouping: { all: (_record, _descriptor, depth) => { counters.group += 1; return { groupID: `group:${depth}`, label: depth }; } },
+        aggregation: { sum: (items) => { counters.aggregateElements += items.length; return 0; } },
+        pivot: {
+          one: (items, descriptor) => {
+            counters.pivotElements += items.length;
+            return [{
+              column: { id: `pivot:${descriptor.id}` },
+              header: { kind: 'column', id: `header:${descriptor.id}`, columnID: `pivot:${descriptor.id}` },
+              aggregateID: 'sum', matches: () => false,
+            }];
+          },
+        },
+      },
+    });
+    const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
+    if (axis === 'filter') query.filters = Array.from({ length: count }, (_, index) => ({ id: `f${index}`, scope: 'global', predicate: 'all', value: null }));
+    if (axis === 'sort') query.sort = Array.from({ length: count }, (_, index) => ({ id: `s${index}`, columnID: 'value', direction: 'ascending', comparator: 'equal' }));
+    if (axis === 'group') query.groups = Array.from({ length: count }, (_, index) => ({ id: `g${index}`, columnID: 'value', policy: 'all' }));
+    if (axis === 'aggregate') {
+      query.groups = [{ id: 'g', columnID: 'value', policy: 'all' }];
+      query.aggregates = Array.from({ length: count }, (_, index) => ({ id: `a${index}`, columnID: 'value', policy: 'sum' }));
+    }
+    if (axis === 'pivot') {
+      query.groups = [{ id: 'g', columnID: 'value', policy: 'all' }];
+      query.aggregates = [{ id: 'sum', columnID: 'value', policy: 'sum' }];
+      query.pivots = Array.from({ length: count }, (_, index) => ({ id: `p${index}`, columnID: 'value', valuePolicy: 'one', aggregateIDs: ['sum'] }));
+    }
+    const result = resolveClientTabularRequest(axisSource, {
+      protocolVersion: 1, requestID: 1, sourceGeneration: 0, queryRevision: 1, expansionRevision: 0,
+      query, expansion: [], access: { kind: 'window', start: 0, count: 1 }, columnSchemaRevision: 0,
+    });
+    assert.equal(result.ok, true);
+    return counters;
+  };
+  assert.equal(run('filter', 4).filter, 40);
+  const sort = run('sort', 4).sort;
+  assert.ok(sort > 0 && sort % 4 === 0);
+  assert.equal(run('group', 4).group, 40);
+  assert.equal(run('aggregate', 4).aggregateElements, 40);
+  assert.equal(run('pivot', 4).pivotElements, 40);
 });
 
 test('TAB-SRC-12: initial client schema bootstrap advances later request echo monotonically', () => {
@@ -442,4 +530,18 @@ test('TAB-SRC-10: response columns resolve nested object and array cell paths wh
   });
   assert.equal(malformed.ok, false);
   assert.equal(malformed.error.code, 'response-envelope-mismatch');
+
+  let getterReads = 0;
+  const accessorItems = [null];
+  Object.defineProperty(accessorItems, 0, { enumerable: true, configurable: true, get() { getterReads += 1; throw new Error('must not execute'); } });
+  const accessor = synchronizeTabularView(active, {
+    ...response,
+    rows: [{
+      kind: 'leaf', id: 'nested',
+      cells: { profile: { name: 'Nested' }, items: accessorItems, 'profile.name': 'Direct' },
+    }],
+  });
+  assert.equal(accessor.ok, false);
+  assert.equal(accessor.error.code, 'invalid-query-value');
+  assert.equal(getterReads, 0);
 });

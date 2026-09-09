@@ -27318,12 +27318,11 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "ISSUE-047 instruments production Map iteration after dense shrink and regrowth; query replay stays <= 3 * uSource and repeated enumeration never depends on the discarded historical owner cardinality."
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The canonical source-owner delta index enumerates only owners of the requested source and materializes the explicit returned snapshot.",
-        "adversarialWitness": "One issue source owned by every registered field emits every owner once without inspecting unrelated issue sources.",
+        "proof": "The canonical source-owner delta set retains at most one current-owner cardinality of pending overlay entries; once cumulative effective changes exceed the current set size it compacts to the current set. Between compactions the retained base is therefore at most twice the current owner count and materialization replays at most one additional current-owner cardinality before emitting the explicit snapshot.",
+        "adversarialWitness": "Dense 10/100/1000-owner source replacement down to one owner compacts before enumeration, while regrowth to the full current owner set keeps replay work within three map entries per current owner.",
         "evidence": [
           "VAL-016",
           "VAL-017"
@@ -27833,7 +27832,7 @@
       "benchmarkIDs": [
         "VAL-030:data-table-changed-slice-work"
       ],
-      "specificationCeiling": "O(sChanged)",
+      "specificationCeiling": "O(sChanged + sRange)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
@@ -27843,24 +27842,39 @@
             "ceiling": "the matching Tabular slice resource ceiling"
           },
           {
+            "name": "sRange",
+            "meaning": "accepted row positions spanned between two range-selection endpoints; zero for other events",
+            "ceiling": "sRange <= nView <= maxRows"
+          },
+          {
+            "name": "kRange",
+            "meaning": "leaf IDs emitted from the spanned range after group/context rows are excluded",
+            "ceiling": "kRange <= sRange"
+          },
+          {
+            "name": "nView",
+            "meaning": "rows in the current accepted view retained for endpoint lookup",
+            "ceiling": "nView <= maxRows"
+          },
+          {
             "name": "sOther",
             "meaning": "all unchanged canonical Tabular slice cardinality",
             "ceiling": "Tabular state resource ceilings"
           }
         ],
         "time": {
-          "bound": "O(sChanged)",
+          "bound": "O(sChanged + sRange)",
           "kind": "worst-case",
           "runtimeState": "external"
         },
         "space": {
-          "auxiliary": "O(sChanged)",
-          "output": "O(sChanged)",
-          "retained": "O(sChanged + sOther)"
+          "auxiliary": "O(sChanged + kRange)",
+          "output": "O(sChanged + kRange)",
+          "retained": "O(sChanged + sOther + nView)"
         },
         "resources": {
-          "allocations": "O(sChanged)",
-          "cacheEntries": "0",
+          "allocations": "O(sChanged + kRange)",
+          "cacheEntries": "O(nView)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
@@ -27877,12 +27891,11 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "ISSUE-062 exercises the shared indexed range kernel at 1k/10k/100k with two Map.get calls and six row reads, plus a public DataTable late-range witness with zero full-view filter/indexOf work."
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Each DataTable event and controlled synchronization dispatches to exactly one owner-local canonicalizer; unchanged canonical slices are reused by identity and are not traversed.",
-        "adversarialWitness": "A one-ID expansion update beside maximum-size canonical query, selection, and column slices visits the expansion only.",
+        "proof": "Ordinary slice updates visit only their owner-local canonicalizer. Response normalization retains one row-ID-to-position index that replaces the former transient duplicate-ID Set; range events perform two expected-O(1) endpoint lookups, scan only the endpoint span, and materialize only leaf IDs from that span. DataGrid reuses the same accepted-view row index instead of retaining a duplicate flat-row index.",
+        "adversarialWitness": "Two-row tail ranges over 1k, 10k, and 100k accepted domains perform exactly two index lookups and six accepted-row reads in the shared production kernel; the DataTable integration performs no accepted-view filter/map or full-size Array.indexOf.",
         "evidence": [
           "VAL-016",
           "VAL-017"
@@ -28039,42 +28052,81 @@
       "benchmarkIDs": [
         "tabular:resolve:cold:100000"
       ],
-      "specificationCeiling": "O(nRecord log nRecord)",
+      "specificationCeiling": "O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
             "name": "nRecord",
             "meaning": "source record count",
-            "ceiling": "source record ceiling"
+            "ceiling": "maxScanRecords"
+          },
+          {
+            "name": "fFilter",
+            "meaning": "enabled filter descriptor count",
+            "ceiling": "maxFilterRules"
+          },
+          {
+            "name": "sSort",
+            "meaning": "sort comparator descriptor count",
+            "ceiling": "maxSortRules"
+          },
+          {
+            "name": "gGroup",
+            "meaning": "group descriptor depth",
+            "ceiling": "maxGroupDescriptors"
+          },
+          {
+            "name": "aAggregate",
+            "meaning": "aggregate descriptor count",
+            "ceiling": "maxAggregateDescriptors"
+          },
+          {
+            "name": "pPivot",
+            "meaning": "pivot descriptor count",
+            "ceiling": "maxPivotDescriptors"
+          },
+          {
+            "name": "cPivotColumn",
+            "meaning": "materialized pivot column count",
+            "ceiling": "maxPivotColumns"
+          },
+          {
+            "name": "cColumn",
+            "meaning": "resolved schema column count",
+            "ceiling": "maxColumns"
           },
           {
             "name": "kRow",
-            "meaning": "returned page or window rows",
-            "ceiling": "kRow <= nRecord"
+            "meaning": "returned access rows excluding context ancestors",
+            "ceiling": "requested access capacity"
+          },
+          {
+            "name": "dContext",
+            "meaning": "context-only ancestor rows returned with the access slice",
+            "ceiling": "maxGroupDepth"
           }
         ],
         "time": {
-          "bound": "O(nRecord log nRecord + kRow)",
+          "bound": "O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)",
           "kind": "worst-case",
           "runtimeState": "external"
         },
         "space": {
-          "auxiliary": "O(nRecord)",
-          "output": "O(kRow)",
-          "retained": "O(nRecord)"
+          "auxiliary": "O(nRecord*(1+gGroup) + kRow + dContext)",
+          "output": "O(kRow + dContext)",
+          "retained": "O(nRecord*(1+gGroup+cColumn) + cPivotColumn)"
         },
         "resources": {
-          "allocations": "O(nRecord + kRow)",
-          "cacheEntries": "O(nRecord)",
+          "allocations": "O(nRecord*(1+fFilter+gGroup+cColumn+pPivot) + kRow + dContext)",
+          "cacheEntries": "O(nRecord*(1+gGroup+cColumn) + cPivotColumn)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
         "assumptions": [
-          "hash lookup is expected O(1)",
-          "external input is validated exactly once at its boundary"
+          "Application predicate/comparator/group/aggregate/pivot callback internals are external cost; the contract counts library traversals, callback invocations and argument materialization."
         ],
         "ceilings": [
           "operation item and output ceilings"
@@ -28083,12 +28135,12 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "packages/tabular/tests/source/client-source.test.mjs ISSUE-052",
+          "packages/tabular/benchmarks/tabular.mjs descriptorAxes"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Cold normalization/filter/group/projection are linear and comparator sorting dominates at n log n before access slicing.",
-        "adversarialWitness": "Every record passes filters and reverse-order sort requires comparison work before a one-row window.",
+        "proof": "Cold resolution normalizes nRecord identities; each enabled filter can visit all records; every sort comparison can walk sSort comparators; pivot discovery materializes the source-record argument once per pivot descriptor; grouping can revisit all records at each group depth; group-cell projection scales with schema columns, aggregate descriptors and materialized pivot columns. Access slicing then emits only kRow plus dContext rows.",
+        "adversarialWitness": "ISSUE-052 holds nRecord=10 and independently sets filter/sort/group/aggregate/pivot descriptor counts to four: filters and groups perform exactly 40 callbacks, aggregate and pivot policy inputs contain exactly 40 record elements, and equality sorting invokes every comparator descriptor per element comparison. The package benchmark repeats each descriptor axis at counts 1 and 8 with nRecord=1000.",
         "evidence": [
           "VAL-016",
           "VAL-017"
@@ -28107,42 +28159,81 @@
       "benchmarkIDs": [
         "tabular:resolve:invalidate:100000"
       ],
-      "specificationCeiling": "O(nRecord log nRecord)",
+      "specificationCeiling": "O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
             "name": "nRecord",
-            "meaning": "source record count",
-            "ceiling": "source record ceiling"
+            "meaning": "current normalized source record count",
+            "ceiling": "maxScanRecords"
+          },
+          {
+            "name": "fFilter",
+            "meaning": "enabled filter descriptor count",
+            "ceiling": "maxFilterRules"
+          },
+          {
+            "name": "sSort",
+            "meaning": "sort comparator descriptor count",
+            "ceiling": "maxSortRules"
+          },
+          {
+            "name": "gGroup",
+            "meaning": "group descriptor depth",
+            "ceiling": "maxGroupDescriptors"
+          },
+          {
+            "name": "aAggregate",
+            "meaning": "aggregate descriptor count",
+            "ceiling": "maxAggregateDescriptors"
+          },
+          {
+            "name": "pPivot",
+            "meaning": "pivot descriptor count",
+            "ceiling": "maxPivotDescriptors"
+          },
+          {
+            "name": "cPivotColumn",
+            "meaning": "materialized pivot column count",
+            "ceiling": "maxPivotColumns"
+          },
+          {
+            "name": "cColumn",
+            "meaning": "resolved schema column count",
+            "ceiling": "maxColumns"
           },
           {
             "name": "kRow",
-            "meaning": "returned page or window rows",
-            "ceiling": "kRow <= nRecord"
+            "meaning": "returned access rows excluding context ancestors",
+            "ceiling": "requested access capacity"
+          },
+          {
+            "name": "dContext",
+            "meaning": "context-only ancestor rows returned with the access slice",
+            "ceiling": "maxGroupDepth"
           }
         ],
         "time": {
-          "bound": "O(nRecord log nRecord + kRow)",
+          "bound": "O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)",
           "kind": "worst-case",
           "runtimeState": "external"
         },
         "space": {
-          "auxiliary": "O(nRecord)",
-          "output": "O(kRow)",
-          "retained": "O(nRecord)"
+          "auxiliary": "O(nRecord*(1+gGroup) + kRow + dContext)",
+          "output": "O(kRow + dContext)",
+          "retained": "O(nRecord*(1+gGroup+cColumn) + cPivotColumn)"
         },
         "resources": {
-          "allocations": "O(nRecord + kRow)",
-          "cacheEntries": "O(nRecord)",
+          "allocations": "O(nRecord*(1+fFilter+gGroup+cColumn+pPivot) + kRow + dContext)",
+          "cacheEntries": "O(nRecord*(1+gGroup+cColumn) + cPivotColumn)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
         "assumptions": [
-          "hash lookup is expected O(1)",
-          "external input is validated exactly once at its boundary"
+          "Application callback internals are external cost; changed query/source generations rebuild the same descriptor-sensitive library stages modeled by source.resolve-cold."
         ],
         "ceilings": [
           "operation item and output ceilings"
@@ -28151,12 +28242,12 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "packages/tabular/tests/source/client-source.test.mjs ISSUE-052",
+          "packages/tabular/tests/advanced/grouping.test.mjs ISSUE-053"
         ],
-        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "A source generation rebuilds normalization plus query stages; a query revision reuses normalized identities but rebuilds filtering, grouping, pivot discovery, and sorting before slicing.",
-        "adversarialWitness": "Alternating query revisions over a reverse-ordered 100k-record source rebuild and sort the current query stage on every resolve.",
+        "resourceRationale": "Grouped expansion reserves the shared visible-row budget before each group/leaf projection. New leaf/group cache entries are staged locally and merged into the retained query stage only after the complete projection succeeds, so resource rejection does not retain speculative output.",
+        "proof": "A source generation may rebuild normalization and every query/projection stage; a query revision reuses row identities but rebuilds descriptor-sensitive filtering, sorting, grouping, pivot discovery and projection. An expansion revision reuses the prepared query and emits grouped rows under one remaining maxRows budget. The cold worst-case formula therefore remains a safe bound for every invalidation mode.",
+        "adversarialWitness": "ISSUE-052 varies descriptor counts at fixed records. ISSUE-053 expands a 1,000-record single group under maxRows=1 and rejects before the first leaf/cell projection rather than materializing the subtree.",
         "evidence": [
           "VAL-016",
           "VAL-017"
@@ -28175,34 +28266,39 @@
       "benchmarkIDs": [
         "tabular:resolve:warm:100000"
       ],
-      "specificationCeiling": "O(kRow)",
+      "specificationCeiling": "O(kRow + dContext)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
           {
-            "name": "nRecord",
-            "meaning": "source record count",
-            "ceiling": "source record ceiling"
+            "name": "nProjected",
+            "meaning": "rows in the retained projection",
+            "ceiling": "ungrouped <= maxScanRecords; grouped <= maxRows"
           },
           {
             "name": "kRow",
-            "meaning": "returned page or window rows",
-            "ceiling": "kRow <= nRecord"
+            "meaning": "requested page/window rows",
+            "ceiling": "requested access capacity"
+          },
+          {
+            "name": "dContext",
+            "meaning": "context-only ancestors required at the slice boundary",
+            "ceiling": "maxGroupDepth"
           }
         ],
         "time": {
-          "bound": "O(kRow)",
+          "bound": "O(kRow + dContext)",
           "kind": "worst-case",
           "runtimeState": "trusted"
         },
         "space": {
-          "auxiliary": "O(kRow)",
-          "output": "O(kRow)",
-          "retained": "O(nRecord)"
+          "auxiliary": "O(kRow + dContext)",
+          "output": "O(kRow + dContext)",
+          "retained": "O(nProjected)"
         },
         "resources": {
-          "allocations": "O(kRow)",
-          "cacheEntries": "O(nRecord)",
+          "allocations": "O(kRow + dContext)",
+          "cacheEntries": "O(nProjected)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
@@ -28219,12 +28315,12 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "packages/tabular/tests/advanced/grouping.test.mjs ISSUE-050",
+          "packages/tabular/benchmarks/tabular.mjs late warm access"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Equal source, query, and expansion revisions reuse the single retained projection; resolve validates the envelope and slices only the requested output window.",
-        "adversarialWitness": "A 100k-record retained projection returns a 100-row window without invoking identity, filter, sort, group, pivot, aggregate, or full-projection work.",
+        "proof": "Equal source, query, and expansion revisions reuse one retained projection. Flat projections slice directly. Grouped projections retain one 32-bit parent index per row, so a window boundary walks only its ancestor chain and then copies the requested rows; no prefix scan is performed.",
+        "adversarialWitness": "ISSUE-050 slices the final 10 rows of a 10k flat projection with at most ten numeric row reads and a final nested leaf with exactly two retained ancestor reads plus one output row. The package warm benchmark uses a late offset rather than start=1.",
         "evidence": [
           "VAL-016",
           "VAL-017"

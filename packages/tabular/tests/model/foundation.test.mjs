@@ -188,6 +188,79 @@ test('TAB-MOD-06: every state slice is canonical, bounded, and detached from cal
   assert.equal(bounded.error.code, 'selection-id-ceiling-exceeded');
 });
 
+test('ISSUE-056: model and page access canonicalization retain the validated caller snapshot', () => {
+  let columnIDReads = 0;
+  const column = {
+    get id() { columnIDReads += 1; return columnIDReads === 1 ? 'name' : ''; },
+    label: 'Name',
+  };
+  let headerIDReads = 0;
+  const header = {
+    kind: 'column',
+    get id() { headerIDReads += 1; return headerIDReads === 1 ? 'header:name' : ''; },
+    columnID: 'name',
+  };
+  const modelResult = tryCreateTabularModel({ columns: [column], headers: [header] });
+  assert.equal(modelResult.ok, true);
+  assert.equal(columnIDReads, 1);
+  assert.equal(headerIDReads, 1);
+  assert.equal(modelResult.value.columns[0].id, 'name');
+  assert.equal(modelResult.value.headers[0].id, 'header:name');
+
+  const model = modelResult.value;
+  let pageReads = 0;
+  const accessState = {
+    kind: 'page',
+    get page() { pageReads += 1; return pageReads === 1 ? 1 : 0; },
+    itemsPerPage: 25,
+    visibleRowCount: null,
+    pagination: null,
+  };
+  const state = tryCreateTabularState(model, { accessState });
+  assert.equal(state.ok, true);
+  assert.equal(pageReads, 1);
+  assert.equal(state.value.accessState.page, 1);
+});
+
+test('ISSUE-057: public canonical objects do not expose transferable trust markers', () => {
+  const model = createTabularModel({ columns: [{ id: 'name' }], limits: { maxSelectionIDs: 1 } });
+  const state = tryCreateTabularState(model).value;
+  for (const value of [state.query, state.rowSelection, state.columnState, state.expansion]) {
+    assert.deepEqual(Object.getOwnPropertySymbols(value), []);
+  }
+  const transplant = (from, to) => {
+    for (const symbol of Object.getOwnPropertySymbols(from)) {
+      Object.defineProperty(to, symbol, Object.getOwnPropertyDescriptor(from, symbol));
+    }
+    return to;
+  };
+
+  const expansion = tryCreateTabularState(model, {
+    expansion: transplant(state.expansion, ['group-a', 'group-b']),
+  });
+  assert.equal(expansion.ok, false);
+  assert.equal(expansion.error.code, 'selection-id-ceiling-exceeded');
+
+  const columnState = tryCreateTabularState(model, {
+    columnState: transplant(state.columnState, { order: ['missing'], hidden: [], pinnedStart: [], pinnedEnd: [] }),
+  });
+  assert.equal(columnState.ok, false);
+  assert.equal(columnState.error.code, 'invalid-controlled-shape');
+
+  const rowSelection = tryCreateTabularState(model, {
+    rowSelection: transplant(state.rowSelection, { kind: 'explicit-rows', rowIDs: ['row-a', 'row-b'] }),
+  });
+  assert.equal(rowSelection.ok, false);
+  assert.equal(rowSelection.error.code, 'selection-id-ceiling-exceeded');
+
+  assert.equal(tryCreateTabularState(model, {
+    query: state.query,
+    rowSelection: state.rowSelection,
+    columnState: state.columnState,
+    expansion: state.expansion,
+  }).ok, true);
+});
+
 test('TAB-MOD-07: fallback headers and explicit group topology are complete unique and contiguous', () => {
   const invalidFallback = tryCreateTabularModel({ columns: [{ id: 'a', headerNodeID: '' }] });
   assert.equal(invalidFallback.ok, false);

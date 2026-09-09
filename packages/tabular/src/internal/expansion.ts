@@ -1,10 +1,8 @@
 import { fail, ok, validateID } from './foundation.js';
 import type { TabularGroupID, TabularLimits, TabularResult } from '../contracts.js';
 
-const EXPANSION_LIMITS = Symbol('sectile.tabular.expansion-limits');
-type CanonicalExpansion = readonly TabularGroupID[] & {
-  readonly [EXPANSION_LIMITS]: Pick<TabularLimits, 'maxSelectionIDs' | 'maxIDCodeUnits'>;
-};
+const expansionLimits = new WeakMap<object, Pick<TabularLimits, 'maxSelectionIDs' | 'maxIDCodeUnits'>>();
+type CanonicalExpansion = readonly TabularGroupID[];
 
 export function canonicalizeTabularExpansion(
   expansion: readonly TabularGroupID[],
@@ -13,12 +11,10 @@ export function canonicalizeTabularExpansion(
   if (!Array.isArray(expansion)) {
     return fail('construction', 'invalid-controlled-shape', 'Expansion must be an array.');
   }
-  if (EXPANSION_LIMITS in expansion) {
-    const current = (expansion as CanonicalExpansion)[EXPANSION_LIMITS];
-    if (current.maxSelectionIDs === limits.maxSelectionIDs && current.maxIDCodeUnits === limits.maxIDCodeUnits) {
-      return ok(expansion);
-    }
-  }
+  const current = expansionLimits.get(expansion);
+  if (current !== undefined
+    && current.maxSelectionIDs === limits.maxSelectionIDs
+    && current.maxIDCodeUnits === limits.maxIDCodeUnits) return ok(expansion);
   if (expansion.length > limits.maxSelectionIDs) {
     return fail('resource-rejection', 'selection-id-ceiling-exceeded', 'Expansion IDs exceed the configured selection identity ceiling.', {
       actual: expansion.length,
@@ -32,7 +28,7 @@ export function canonicalizeTabularExpansion(
     if (seen.has(id)) return fail('construction', 'duplicate-identity', 'Expansion IDs must be unique.', { id });
     seen.add(id);
   }
-  const result = [...expansion] as TabularGroupID[] & { [EXPANSION_LIMITS]?: typeof limits };
-  Object.defineProperty(result, EXPANSION_LIMITS, { value: limits, enumerable: false });
-  return ok(Object.freeze(result) as CanonicalExpansion);
+  const result = Object.freeze([...expansion]) as CanonicalExpansion;
+  expansionLimits.set(result, limits);
+  return ok(result);
 }

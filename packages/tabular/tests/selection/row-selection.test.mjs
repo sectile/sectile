@@ -7,6 +7,7 @@ import {
   reconcileAuthoritativeRowRemoval,
   reconcileRowSelectionBinding,
   selectAllMatchingRows,
+  setIndexedVisibleRowSelectionRange,
   setVisibleRowSelectionRange,
   toggleExplicitRowSelection,
 } from '../../.verification-dist/internal/selection.js';
@@ -99,4 +100,43 @@ test('TAB-SEL-08: all-matching ranges update exclusions and reject hidden endpoi
   assert.equal(rejected.ok, false);
   assert.equal(rejected.error.code, 'invalid-selection-range');
   assert.deepEqual(selected.value.excludedRowIDs, ['a']);
+});
+
+test('ISSUE-062: indexed range work depends on the selected interval, not visible cardinality', () => {
+  class CountingMap extends Map {
+    gets = 0;
+    get(key) {
+      this.gets += 1;
+      return super.get(key);
+    }
+  }
+  for (const size of [1_000, 10_000, 100_000]) {
+    const sourceRows = Array.from({ length: size }, (_, index) => ({
+      kind: 'leaf', id: `row-${index}`, cells: {},
+    }));
+    let rowReads = 0;
+    const rows = new Proxy(sourceRows, {
+      get(target, key, receiver) {
+        if (typeof key === 'string' && /^\d+$/u.test(key)) rowReads += 1;
+        return Reflect.get(target, key, receiver);
+      },
+    });
+    const indexes = new CountingMap();
+    for (let index = 0; index < size; index += 1) indexes.set(`row-${index}`, index);
+    const initial = createExplicitRowSelection([], limits);
+    assert.equal(initial.ok, true);
+    const selected = setIndexedVisibleRowSelectionRange(
+      initial.value,
+      rows,
+      indexes,
+      `row-${size - 2}`,
+      `row-${size - 1}`,
+      true,
+      limits,
+    );
+    assert.equal(selected.ok, true);
+    assert.deepEqual(selected.value.rowIDs, [`row-${size - 2}`, `row-${size - 1}`]);
+    assert.equal(indexes.gets, 2);
+    assert.equal(rowReads, 6);
+  }
 });

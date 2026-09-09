@@ -9,39 +9,48 @@ export function canonicalizeTabularAccessState(
   if (state === null || typeof state !== 'object' || Array.isArray(state)) {
     return fail('construction', 'invalid-controlled-shape', 'Access state must be an object.');
   }
-  if (state.kind === 'window') {
-    const window = tryCreateCollectionWindowState(state.window);
-    return window.ok
-      ? ok(Object.freeze({ kind: 'window' as const, window: window.value }))
-      : fail('construction', 'invalid-controlled-shape', window.error.message, window.error.details);
+  try {
+    const kind = state.kind;
+    if (kind === 'window') {
+      const windowInput = state.window;
+      const window = tryCreateCollectionWindowState(windowInput);
+      return window.ok
+        ? ok(Object.freeze({ kind, window: window.value }))
+        : fail('construction', 'invalid-controlled-shape', window.error.message, window.error.details);
+    }
+    if (kind !== 'page') {
+      return fail('construction', 'invalid-controlled-shape', 'Access state kind must be page or window.');
+    }
+    const page = state.page;
+    const itemsPerPage = state.itemsPerPage;
+    const visibleRowCount = state.visibleRowCount;
+    const currentPagination = state.pagination;
+    if (!Number.isSafeInteger(page) || page <= 0 || !Number.isSafeInteger(itemsPerPage) || itemsPerPage <= 0) {
+      return fail('construction', 'invalid-controlled-shape', 'Page and itemsPerPage must be positive safe integers.');
+    }
+    if (visibleRowCount === null) {
+      return currentPagination === null
+        ? ok(Object.freeze({ kind, page, itemsPerPage, visibleRowCount, pagination: null }))
+        : fail('construction', 'invalid-controlled-shape', 'Unknown visible row count cannot carry pagination state.');
+    }
+    if (!Number.isSafeInteger(visibleRowCount) || visibleRowCount < 0) {
+      return fail('construction', 'invalid-controlled-shape', 'Visible row count must be null or a non-negative safe integer.');
+    }
+    const pagination = tryCreatePaginationState(
+      createPaginationModel({ total: visibleRowCount, itemsPerPage }),
+      page,
+      itemsPerPage,
+    );
+    if (!pagination.ok) {
+      return fail('construction', 'invalid-controlled-shape', pagination.error.message, pagination.error.details);
+    }
+    if (currentPagination === null
+      || currentPagination.page !== pagination.value.page
+      || currentPagination.itemsPerPage !== pagination.value.itemsPerPage) {
+      return fail('construction', 'invalid-controlled-shape', 'Visible row count and pagination state must describe the same page.');
+    }
+    return ok(Object.freeze({ kind, page, itemsPerPage, visibleRowCount, pagination: pagination.value }));
+  } catch {
+    return fail('construction', 'invalid-controlled-shape', 'Access state properties must be readable.');
   }
-  if (state.kind !== 'page') {
-    return fail('construction', 'invalid-controlled-shape', 'Access state kind must be page or window.');
-  }
-  if (!Number.isSafeInteger(state.page) || state.page <= 0
-    || !Number.isSafeInteger(state.itemsPerPage) || state.itemsPerPage <= 0) {
-    return fail('construction', 'invalid-controlled-shape', 'Page and itemsPerPage must be positive safe integers.');
-  }
-  if (state.visibleRowCount === null) {
-    return state.pagination === null
-      ? ok(Object.freeze({ ...state, pagination: null }))
-      : fail('construction', 'invalid-controlled-shape', 'Unknown visible row count cannot carry pagination state.');
-  }
-  if (!Number.isSafeInteger(state.visibleRowCount) || state.visibleRowCount < 0) {
-    return fail('construction', 'invalid-controlled-shape', 'Visible row count must be null or a non-negative safe integer.');
-  }
-  const pagination = tryCreatePaginationState(
-    createPaginationModel({ total: state.visibleRowCount, itemsPerPage: state.itemsPerPage }),
-    state.page,
-    state.itemsPerPage,
-  );
-  if (!pagination.ok) {
-    return fail('construction', 'invalid-controlled-shape', pagination.error.message, pagination.error.details);
-  }
-  if (state.pagination === null
-    || state.pagination.page !== pagination.value.page
-    || state.pagination.itemsPerPage !== pagination.value.itemsPerPage) {
-    return fail('construction', 'invalid-controlled-shape', 'Visible row count and pagination state must describe the same page.');
-  }
-  return ok(Object.freeze({ ...state, pagination: pagination.value }));
 }

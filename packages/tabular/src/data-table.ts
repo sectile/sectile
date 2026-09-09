@@ -5,12 +5,20 @@ import { canonicalizeTabularAccessState } from './internal/access.js';
 import { canonicalizeTabularExpansion } from './internal/expansion.js';
 import { fail, ok } from './internal/foundation.js';
 import {
+  issueDataTableRequest,
+  prepareControlledDataTableState,
+  projectDataTableState,
+  resetAccessForQuery,
+  retainDataTableModel,
+} from './internal/data-table-state.js';
+import { removedRowIDsOf, visibleRowIndexOf } from './internal/source-view.js';
+import {
   canonicalizeRowSelection,
   createGroupLeafSelectionTarget,
   reconcileAuthoritativeRowRemoval,
   reconcileRowSelectionBinding,
   selectAllMatchingRows,
-  setVisibleRowSelectionRange,
+  setIndexedVisibleRowSelectionRange,
   toggleExplicitRowSelection,
 } from './internal/selection.js';
 import { canonicalizeTabularStateQuery, tryCreateTabularModel, tryCreateTabularState } from './model.js';
@@ -106,7 +114,7 @@ export function tryCreateDataTable(options: DataTableOptions): TabularResult<Dat
   if (!model.ok) return model;
   const state = tryCreateTabularState(model.value);
   if (!state.ok) return state;
-  const requested = issueRequest(state.value);
+  const requested = issueDataTableRequest(state.value);
   if (!requested.ok) return requested;
   return ok(new DataTableRuntime(options, model.value, Object.freeze({ revision: 0, state: requested.value.state })));
 }
@@ -144,20 +152,12 @@ class DataTableRuntime implements DataTableController {
     this.#options = options;
     this.#model = model;
     this.#snapshot = snapshot;
+    retainDataTableModel(this, model);
   }
 
   public getSnapshot(): TabularSnapshot { return this.#snapshot; }
 
-  public getProjection(): DataTableProjection {
-    const state = this.#snapshot.state;
-    return Object.freeze({
-      generation: state.projectionGeneration,
-      rows: state.acceptedViewState.kind === 'none' ? Object.freeze([]) : state.acceptedViewState.view.rows,
-      columns: projectTabularColumnPartitions(state.columnState),
-      rowSelection: state.rowSelection,
-      expansion: state.expansion,
-    });
-  }
+  public getProjection(): DataTableProjection { return projectDataTableState(this.#snapshot.state); }
 
   public dispatch(event: DataTableEvent, expectedRevision: number = this.#snapshot.revision): TabularResult<DataTableUpdate> {
     if (this.#disposed) return dataTableDisposed('dispatch events');
@@ -232,7 +232,7 @@ class DataTableRuntime implements DataTableController {
       columnState: columnState.value,
       accessState: accessState.value,
       columnSchemaRevision: view.value.columnSchema.revision,
-      rowSelection: reconcileAuthoritativeRowRemoval(this.#snapshot.state.rowSelection, response.removedRowIDs),
+      rowSelection: reconcileAuthoritativeRowRemoval(this.#snapshot.state.rowSelection, removedRowIDsOf(view.value)),
       requestState: Object.freeze({ kind: 'ready' as const, pendingRequest: null }),
       acceptedViewState: Object.freeze({ kind: 'current' as const, view: view.value }),
       projectionGeneration: projectionChanged
@@ -244,57 +244,10 @@ class DataTableRuntime implements DataTableController {
 
   public syncControlledValues(values: TabularControlledValues): TabularResult<TabularSnapshot> {
     if (this.#disposed) return dataTableDisposed('synchronize controlled values');
-    const current = this.#snapshot.state;
-    for (const key of ['query', 'rowSelection', 'columnState', 'accessState', 'expansion'] as const) {
-      if ((values[key] !== undefined) !== this.#model.controlled[key]) {
-        return fail('transition-rejection', 'invalid-controlled-shape', 'Controlled values must preserve construction-time ownership.', { key });
-      }
-    }
-    let next = current;
-    let requestNeeded = false;
-    if (values.query !== undefined && values.query !== current.query) {
-      const query = canonicalizeTabularStateQuery(this.#model, values.query);
-      if (!query.ok) return query;
-      next = Object.freeze({ ...next, query: query.value, queryRevision: next.queryRevision + 1,
-        rowSelection: reconcileRowSelectionBinding(next.rowSelection, next.sourceGeneration, next.queryRevision + 1, false) });
-      requestNeeded = true;
-    }
-    if (values.rowSelection !== undefined) {
-      const selection = canonicalizeRowSelection(values.rowSelection, this.#model.limits);
-      if (!selection.ok) return selection;
-      next = Object.freeze({ ...next, rowSelection: selection.value });
-    }
-    if (values.columnState !== undefined) {
-      const schema = activeColumnSchema(this.#model, current);
-      const columnState = canonicalizeTabularColumnState(values.columnState, schema.columns, schema.headers);
-      if (!columnState.ok) return columnState;
-      next = Object.freeze({
-      ...next,
-      columnState: columnState.value,
-      projectionGeneration: sameColumnProjection(current.columnState, columnState.value)
-        ? next.projectionGeneration
-        : next.projectionGeneration + 1,
-      });
-    }
-    if (values.accessState !== undefined && values.accessState !== current.accessState) {
-      const accessState = canonicalizeTabularAccessState(values.accessState);
-      if (!accessState.ok) return accessState;
-      next = Object.freeze({ ...next, accessState: accessState.value });
-      requestNeeded = true;
-    }
-    if (values.expansion !== undefined && values.expansion !== current.expansion) {
-      const expansion = canonicalizeTabularExpansion(values.expansion, this.#model.limits);
-      if (!expansion.ok) return expansion;
-      next = Object.freeze({ ...next, expansion: expansion.value, expansionRevision: next.expansionRevision + 1 });
-      requestNeeded = true;
-    }
-    if (requestNeeded) {
-      const request = issueRequest(next);
-      if (!request.ok) return request;
-      next = request.value.state;
-    }
-    const replaced = this.#replaceState(next);
-    if (replaced.ok && requestNeeded) this.#emit([{ type: 'request-view', request: next.requestState.pendingRequest! }]);
+    const prepared = prepareControlledDataTableState(this.#model, this.#snapshot.state, values);
+    if (!prepared.ok) return prepared;
+    const replaced = this.#replaceState(prepared.value.state);
+    if (replaced.ok && prepared.value.commands.length > 0) this.#emit(prepared.value.commands);
     return replaced;
   }
 
@@ -432,12 +385,12 @@ function reduceDataTableEvent(
     return selection.ok ? ok(Object.freeze({ state: Object.freeze({ ...state, rowSelection: selection.value }), commands: Object.freeze([]) })) : selection;
   }
   if (event.type === 'set-row-selection-range') {
-    const visibleRowIDs = state.acceptedViewState.kind === 'none'
-      ? Object.freeze([])
-      : Object.freeze(state.acceptedViewState.view.rows.filter((row) => row.kind === 'leaf').map((row) => row.id));
-    const selection = setVisibleRowSelectionRange(
+    const view = state.acceptedViewState.kind === 'none' ? null : state.acceptedViewState.view;
+    const visible = view === null ? null : visibleRowIndexOf(view);
+    const selection = setIndexedVisibleRowSelectionRange(
       state.rowSelection,
-      visibleRowIDs,
+      view?.rows ?? [],
+      visible?.indexes ?? new Map(),
       event.anchorRowID,
       event.rowID,
       event.selected,
@@ -477,7 +430,7 @@ function reduceDataTableEvent(
       query: query.value,
       queryRevision,
       rowSelection: reconcileRowSelectionBinding(state.rowSelection, state.sourceGeneration, queryRevision, false),
-      accessState: state.accessState.kind === 'page' ? Object.freeze({ ...state.accessState, page: 1, visibleRowCount: null, pagination: null }) : state.accessState,
+      accessState: model.controlled.query ? state.accessState : resetAccessForQuery(state.accessState),
     }));
   }
   if (event.type === 'set-expansion') {
@@ -509,34 +462,8 @@ function activeColumnSchema(model: TabularModel, state: TabularState): Pick<Tabu
 }
 
 function requestAfter(state: TabularState): TabularResult<{ readonly state: TabularState; readonly commands: readonly DataTableCommand[] }> {
-  const requested = issueRequest(state);
+  const requested = issueDataTableRequest(state);
   return requested.ok ? ok(Object.freeze({ state: requested.value.state, commands: requested.value.commands })) : requested;
-}
-
-function issueRequest(state: TabularState): TabularResult<{ readonly state: TabularState; readonly commands: readonly DataTableCommand[] }> {
-  if (state.requestRevision === Number.MAX_SAFE_INTEGER) return fail('resource-rejection', 'revision-ceiling-reached', 'Request revision is exhausted.');
-  const request: TabularRequest = Object.freeze({
-    protocolVersion: 1,
-    requestID: state.requestRevision + 1,
-    sourceGeneration: state.sourceGeneration,
-    queryRevision: state.queryRevision,
-    expansionRevision: state.expansionRevision,
-    query: state.query,
-    expansion: state.expansion,
-    access: state.accessState.kind === 'page'
-      ? Object.freeze({ kind: 'page', page: state.accessState.page, itemsPerPage: state.accessState.itemsPerPage })
-      : Object.freeze({ kind: 'window', start: state.accessState.window.start, count: state.accessState.window.size }),
-    columnSchemaRevision: state.columnSchemaRevision,
-  });
-  const next = Object.freeze({
-    ...state,
-    requestRevision: request.requestID,
-    requestState: Object.freeze({ kind: 'pending' as const, pendingRequest: request }),
-    acceptedViewState: state.acceptedViewState.kind === 'current'
-      ? Object.freeze({ kind: 'stale' as const, view: state.acceptedViewState.view })
-      : state.acceptedViewState,
-  });
-  return ok(Object.freeze({ state: next, commands: Object.freeze([{ type: 'request-view' as const, request }]) }));
 }
 
 function synchronizeAccess(state: TabularAccessState, view: { readonly visibleRowCount: { readonly kind: string; readonly value?: number } }): TabularResult<TabularAccessState> {

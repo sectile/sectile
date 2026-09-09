@@ -107,6 +107,90 @@ test('TAB-QRY-04: value depth, node, and UTF-16 budgets have distinct failures',
   assert.equal(text.error.code, 'query-value-code-unit-ceiling-exceeded');
 });
 
+test('ISSUE-054: query descriptors retain one validated snapshot and pivot references preflight cardinality', () => {
+  let columnReads = 0;
+  const sort = {
+    id: 'sort',
+    get columnID() { columnReads += 1; return columnReads === 1 ? 'name' : 'missing'; },
+    direction: 'ascending',
+    comparator: 'text',
+  };
+  const captured = tryCreateTabularQuery({ sort: [sort] });
+  assert.equal(captured.ok, true);
+  assert.equal(columnReads, 1);
+  assert.equal(captured.value.sort[0].columnID, 'name');
+
+  let aggregateReads = 0;
+  const pivot = {
+    id: 'pivot', columnID: 'quarter', valuePolicy: 'quarter',
+    get aggregateIDs() { aggregateReads += 1; return aggregateReads === 1 ? ['sum'] : ['missing']; },
+  };
+  const pivotResult = tryCreateTabularQuery({
+    aggregates: [{ id: 'sum', columnID: 'value', policy: 'sum' }],
+    pivots: [pivot],
+  });
+  assert.equal(pivotResult.ok, true);
+  assert.equal(aggregateReads, 1);
+  assert.deepEqual(pivotResult.value.pivots[0].aggregateIDs, ['sum']);
+
+  let elementReads = 0;
+  const accessorIDs = ['sum'];
+  Object.defineProperty(accessorIDs, 0, { enumerable: true, configurable: true, get() { elementReads += 1; throw new Error('must not execute'); } });
+  const accessor = tryCreateTabularQuery({
+    aggregates: [{ id: 'sum', columnID: 'value', policy: 'sum' }],
+    pivots: [{ id: 'pivot', columnID: 'quarter', valuePolicy: 'quarter', aggregateIDs: accessorIDs }],
+  });
+  assert.equal(accessor.ok, false);
+  assert.equal(accessor.error.code, 'invalid-query-descriptor');
+  assert.equal(elementReads, 0);
+
+  let descriptorReads = 0;
+  const oversizedIDs = new Proxy(Array.from({ length: 1000 }, (_, index) => `aggregate-${index}`), {
+    getOwnPropertyDescriptor(target, key) { descriptorReads += 1; return Reflect.getOwnPropertyDescriptor(target, key); },
+  });
+  const oversized = tryCreateTabularQuery({
+    aggregates: [{ id: 'sum', columnID: 'value', policy: 'sum' }],
+    pivots: [{ id: 'pivot', columnID: 'quarter', valuePolicy: 'quarter', aggregateIDs: oversizedIDs }],
+  });
+  assert.equal(oversized.ok, false);
+  assert.equal(oversized.error.code, 'invalid-query-descriptor');
+  assert.equal(descriptorReads, 0);
+});
+
+test('ISSUE-055: array query values reject before oversized scans and never invoke accessors', () => {
+  const limits = {
+    maxIDCodeUnits: 100,
+    maxSortRules: 4,
+    maxFilterRules: 4,
+    maxGroupDescriptors: 4,
+    maxAggregateDescriptors: 4,
+    maxPivotDescriptors: 4,
+    maxQueryValueDepth: 8,
+    maxQueryValueCodeUnits: 1000,
+    maxQueryValueNodes: 4,
+  };
+  let descriptorReads = 0;
+  const oversized = new Proxy(Array.from({ length: 1000 }, () => null), {
+    getOwnPropertyDescriptor(target, key) { descriptorReads += 1; return Reflect.getOwnPropertyDescriptor(target, key); },
+  });
+  const preflight = tryCreateTabularQuery({
+    filters: [{ id: 'f', scope: 'global', predicate: 'p', value: oversized }],
+  }, limits);
+  assert.equal(preflight.ok, false);
+  assert.equal(preflight.error.code, 'query-value-node-ceiling-exceeded');
+  assert.equal(descriptorReads, 0);
+
+  let getterReads = 0;
+  const accessor = [null];
+  Object.defineProperty(accessor, 0, { enumerable: true, configurable: true, get() { getterReads += 1; throw new Error('must not execute'); } });
+  const rejected = tryCreateTabularQuery({
+    filters: [{ id: 'f', scope: 'global', predicate: 'p', value: accessor }],
+  }, { ...limits, maxQueryValueNodes: 10 });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'invalid-query-value');
+  assert.equal(getterReads, 0);
+});
+
 test('TAB-QRY-05: update and reset events preserve prior state on rejection', () => {
   const query = createTabularQuery(complete);
   const rejected = applyTabularQueryEvent(query, { type: 'set-aggregates', aggregates: [] });

@@ -118,8 +118,9 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "The canonical source-owner delta index enumerates only owners of the requested source and materializes the explicit returned snapshot.",
-        "adversarialWitness": "One issue source owned by every registered field emits every owner once without inspecting unrelated issue sources.",
+        "proof": "The canonical source-owner delta set retains at most one current-owner cardinality of pending overlay entries; once cumulative effective changes exceed the current set size it compacts to the current set. Between compactions the retained base is therefore at most twice the current owner count and materialization replays at most one additional current-owner cardinality before emitting the explicit snapshot.",
+        "adversarialWitness": "Dense 10/100/1000-owner source replacement down to one owner compacts before enumeration, while regrowth to the full current owner set keeps replay work within three map entries per current owner.",
+        "deterministicWork": ["ISSUE-047 instruments production Map iteration after dense shrink and regrowth; query replay stays <= 3 * uSource and repeated enumeration never depends on the discarded historical owner cardinality."],
         "fullScan": {
           "allowed": false,
           "rationale": "Canonical queries reuse the retained source-owner index; only forged input falls back to complete validation/projection."
