@@ -21,6 +21,25 @@ test('Vue Tabular source is owned by the controller and starts only after mount'
   app.unmount(); host.remove();
 });
 
+test('Vue Tabular source cancellation during setup abandons the queued initial request', async () => {
+  let calls = 0; let source; let setupRequestKind; let setupPending;
+  const app = createApp({ setup() {
+    source = useDataTable({ source: async (request) => { calls += 1; return response(request); } });
+    source.cancel();
+    setupRequestKind = source.requestState.value.kind;
+    setupPending = source.requestState.value.pendingRequest;
+    const DataTable = createDataTableComponents(source);
+    return () => h(DataTable.Provider, null, { default: () => h(DataTable.Root) });
+  } });
+  const host = document.createElement('div'); document.body.append(host); app.mount(host);
+  await nextTick(); await Promise.resolve(); await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(setupRequestKind, 'idle'); assert.equal(setupPending, null);
+  assert.equal(calls, 0); assert.equal(source.status.value, 'idle'); assert.equal(source.requestState.value.pendingRequest, null);
+  source.reload(); await waitFor(() => source.status.value, 'success');
+  assert.equal(calls, 1);
+  app.unmount(); host.remove();
+});
+
 test('Vue Tabular source cancels stale work and exposes resolver errors without rendering policy', async () => {
   let release; let source; let controller;
   const app = createApp({ setup() { controller = useDataTable({ source: (request, { signal }) => new Promise((resolve) => { release = () => resolve(response(request, signal.aborted ? 'stale' : 'late')); }) }); source = controller; const DataTable = createDataTableComponents(controller); return () => h(DataTable.Provider, null, { default: () => h(DataTable.Root) }); } });

@@ -205,12 +205,14 @@ export function useProfileSource<State, Event, Command>(
   const abandon = (requestID: number): void => { controller.abandonRequest(requestID); };
   const cancel = (): void => {
     const current = active;
+    const pending = queued;
     active = null;
     queued = null;
     if (current !== null) {
       current.abort.abort();
       abandon(current.requestID);
     }
+    if (pending !== null && pending.requestID !== current?.requestID) abandon(pending.requestID);
     if (!disposed) setStatus('idle');
   };
   const execute = (request: TabularRequest): void => {
