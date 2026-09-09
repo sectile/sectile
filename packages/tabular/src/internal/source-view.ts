@@ -1,7 +1,18 @@
-import type { TabularRequest, TabularResolvedRow, TabularRowID, TabularView, TabularViewResponse } from '../contracts.js';
+import { nextRevision, ok } from './foundation.js';
+import type { TabularRequest, TabularResolvedRow, TabularResult, TabularRowID, TabularView, TabularViewResponse } from '../contracts.js';
 
 export interface VisibleRowIndex {
   readonly indexes: ReadonlyMap<TabularRowID, number>;
+}
+
+export function nextClientViewRevision(
+  currentSourceGeneration: number,
+  sourceGeneration: number,
+  currentViewRevision: number,
+): TabularResult<number> {
+  return sourceGeneration === currentSourceGeneration
+    ? nextRevision(currentViewRevision, 'Client view revision')
+    : ok(1);
 }
 
 const emptyVisibleRowIndex = Object.freeze({ indexes: new Map<TabularRowID, number>() });

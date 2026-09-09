@@ -3,7 +3,7 @@ import { unwrap } from '@sectile/core/result';
 import { canonicalizeTabularColumnState, projectTabularColumnPartitions, reconcileTabularColumns } from './internal/columns.js';
 import { canonicalizeTabularAccessState } from './internal/access.js';
 import { canonicalizeTabularExpansion } from './internal/expansion.js';
-import { fail, ok } from './internal/foundation.js';
+import { fail, nextRevision, ok } from './internal/foundation.js';
 import {
   issueDataTableRequest,
   prepareControlledDataTableState,
@@ -131,11 +131,12 @@ export function applyDataTableEvent(
       currentRevision: snapshot.revision,
     });
   }
-  if (snapshot.revision === Number.MAX_SAFE_INTEGER) return fail('resource-rejection', 'revision-ceiling-reached', 'DataTable revision is exhausted.');
+  const revision = nextRevision(snapshot.revision, 'DataTable revision');
+  if (!revision.ok) return revision;
   const reduced = reduceDataTableEvent(model, snapshot.state, event);
   if (!reduced.ok) return reduced;
   return ok(Object.freeze({
-    snapshot: Object.freeze({ revision: snapshot.revision + 1, state: reduced.value.state }),
+    snapshot: Object.freeze({ revision: revision.value, state: reduced.value.state }),
     commands: reduced.value.commands,
   }));
 }
@@ -227,6 +228,10 @@ class DataTableRuntime implements DataTableController {
     const accessState = synchronizeAccess(this.#snapshot.state.accessState, view.value);
     if (!accessState.ok) return accessState;
     const projectionChanged = !sameProjection(this.#snapshot.state, view.value, columnState.value);
+    const projectionGeneration = projectionChanged
+      ? nextRevision(this.#snapshot.state.projectionGeneration, 'Projection generation')
+      : ok(this.#snapshot.state.projectionGeneration);
+    if (!projectionGeneration.ok) return projectionGeneration;
     const state = Object.freeze({
       ...this.#snapshot.state,
       columnState: columnState.value,
@@ -235,9 +240,7 @@ class DataTableRuntime implements DataTableController {
       rowSelection: reconcileAuthoritativeRowRemoval(this.#snapshot.state.rowSelection, removedRowIDsOf(view.value)),
       requestState: Object.freeze({ kind: 'ready' as const, pendingRequest: null }),
       acceptedViewState: Object.freeze({ kind: 'current' as const, view: view.value }),
-      projectionGeneration: projectionChanged
-        ? this.#snapshot.state.projectionGeneration + 1
-        : this.#snapshot.state.projectionGeneration,
+      projectionGeneration: projectionGeneration.value,
     });
     return this.#replaceState(state);
   }
@@ -300,8 +303,9 @@ class DataTableRuntime implements DataTableController {
   }
 
   #replaceState(state: TabularState): TabularResult<TabularSnapshot> {
-    if (this.#snapshot.revision === Number.MAX_SAFE_INTEGER) return fail('resource-rejection', 'revision-ceiling-reached', 'DataTable revision is exhausted.');
-    this.#snapshot = Object.freeze({ revision: this.#snapshot.revision + 1, state });
+    const revision = nextRevision(this.#snapshot.revision, 'DataTable revision');
+    if (!revision.ok) return revision;
+    this.#snapshot = Object.freeze({ revision: revision.value, state });
     return ok(this.#snapshot);
   }
 
@@ -406,13 +410,16 @@ function reduceDataTableEvent(
     const schema = activeColumnSchema(model, state);
     const columnState = canonicalizeTabularColumnState(event.columnState, schema.columns, schema.headers);
     if (!columnState.ok) return columnState;
+    const changed = !sameColumnProjection(state.columnState, columnState.value);
+    const projectionGeneration = changed
+      ? nextRevision(state.projectionGeneration, 'Projection generation')
+      : ok(state.projectionGeneration);
+    if (!projectionGeneration.ok) return projectionGeneration;
     return ok(Object.freeze({
       state: Object.freeze({
         ...state,
         columnState: columnState.value,
-        projectionGeneration: sameColumnProjection(state.columnState, columnState.value)
-          ? state.projectionGeneration
-          : state.projectionGeneration + 1,
+        projectionGeneration: projectionGeneration.value,
       }),
       commands: Object.freeze([]),
     }));
@@ -424,29 +431,36 @@ function reduceDataTableEvent(
   if (event.type === 'set-query') {
     const query = canonicalizeTabularStateQuery(model, event.query);
     if (!query.ok) return query;
-    const queryRevision = state.queryRevision + 1;
+    const queryRevision = nextRevision(state.queryRevision, 'Query revision');
+    if (!queryRevision.ok) return queryRevision;
     return requestAfter(Object.freeze({
       ...state,
       query: query.value,
-      queryRevision,
-      rowSelection: reconcileRowSelectionBinding(state.rowSelection, state.sourceGeneration, queryRevision, false),
+      queryRevision: queryRevision.value,
+      rowSelection: reconcileRowSelectionBinding(state.rowSelection, state.sourceGeneration, queryRevision.value, false),
       accessState: model.controlled.query ? state.accessState : resetAccessForQuery(state.accessState),
     }));
   }
   if (event.type === 'set-expansion') {
     const expansion = canonicalizeTabularExpansion(event.expansion, model.limits);
-    return expansion.ok
-      ? requestAfter(Object.freeze({ ...state, expansion: expansion.value, expansionRevision: state.expansionRevision + 1 }))
-      : expansion;
+    if (!expansion.ok) return expansion;
+    const expansionRevision = nextRevision(state.expansionRevision, 'Expansion revision');
+    return expansionRevision.ok
+      ? requestAfter(Object.freeze({ ...state, expansion: expansion.value, expansionRevision: expansionRevision.value }))
+      : expansionRevision;
   }
-  if (event.type === 'replace-source') return requestAfter(Object.freeze({
-    ...state,
-    sourceGeneration: state.sourceGeneration + 1,
-    rowSelection: reconcileRowSelectionBinding(state.rowSelection, state.sourceGeneration + 1, state.queryRevision, true),
-    expansion: Object.freeze([]),
-    expansionRevision: 0,
-    acceptedViewState: Object.freeze({ kind: 'none' }),
-  }));
+  if (event.type === 'replace-source') {
+    const sourceGeneration = nextRevision(state.sourceGeneration, 'Source generation');
+    if (!sourceGeneration.ok) return sourceGeneration;
+    return requestAfter(Object.freeze({
+      ...state,
+      sourceGeneration: sourceGeneration.value,
+      rowSelection: reconcileRowSelectionBinding(state.rowSelection, sourceGeneration.value, state.queryRevision, true),
+      expansion: Object.freeze([]),
+      expansionRevision: 0,
+      acceptedViewState: Object.freeze({ kind: 'none' }),
+    }));
+  }
   if (event.type === 'reset') {
     const initial = tryCreateTabularState(model);
     return initial.ok ? requestAfter(initial.value) : initial;

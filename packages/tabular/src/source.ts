@@ -1,6 +1,6 @@
 import { unwrap } from '@sectile/core/result';
 import { fail, ok, validateID } from './internal/foundation.js';
-import { createContextParentIndexes, preparedViewOf, retainRemovedRowIDs, sliceVisibleRows } from './internal/source-view.js';
+import { createContextParentIndexes, nextClientViewRevision, preparedViewOf, retainRemovedRowIDs, sliceVisibleRows } from './internal/source-view.js';
 import { tryCreateTabularModel } from './model.js';
 import { tryCreateTabularQuery } from './query.js';
 import type {
@@ -73,8 +73,9 @@ class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
     if (this.#viewSourceGeneration >= 0 && request.sourceGeneration < this.#viewSourceGeneration) {
       return fail('transition-rejection', 'stale-source-generation', 'Client source generation cannot move backward.');
     }
-    const viewRevision = request.sourceGeneration === this.#viewSourceGeneration ? this.#viewRevision + 1 : 1;
-    const response = resolveClient(this, request, viewRevision);
+    const viewRevision = nextClientViewRevision(this.#viewSourceGeneration, request.sourceGeneration, this.#viewRevision);
+    if (!viewRevision.ok) return viewRevision;
+    const response = resolveClient(this, request, viewRevision.value);
     if (response.ok) {
       this.#viewSourceGeneration = request.sourceGeneration;
       this.#viewRevision = response.value.viewRevision;

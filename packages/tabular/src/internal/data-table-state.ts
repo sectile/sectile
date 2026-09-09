@@ -1,7 +1,7 @@
 import { canonicalizeTabularAccessState } from './access.js';
 import { canonicalizeTabularColumnState, projectTabularColumnPartitions, type TabularColumnPartitions } from './columns.js';
 import { canonicalizeTabularExpansion } from './expansion.js';
-import { fail, ok } from './foundation.js';
+import { fail, nextRevision, ok } from './foundation.js';
 import { canonicalizeRowSelection, reconcileRowSelectionBinding } from './selection.js';
 import { canonicalizeTabularStateQuery } from '../model.js';
 import type {
@@ -52,12 +52,13 @@ export function prepareControlledDataTableState(
   if (values.query !== undefined && values.query !== current.query) {
     const query = canonicalizeTabularStateQuery(model, values.query);
     if (!query.ok) return query;
-    const queryRevision = next.queryRevision + 1;
+    const queryRevision = nextRevision(next.queryRevision, 'Query revision');
+    if (!queryRevision.ok) return queryRevision;
     next = Object.freeze({
       ...next,
       query: query.value,
-      queryRevision,
-      rowSelection: reconcileRowSelectionBinding(next.rowSelection, next.sourceGeneration, queryRevision, false),
+      queryRevision: queryRevision.value,
+      rowSelection: reconcileRowSelectionBinding(next.rowSelection, next.sourceGeneration, queryRevision.value, false),
       ...(!model.controlled.accessState ? { accessState: resetAccessForQuery(next.accessState) } : {}),
     });
     requestNeeded = true;
@@ -75,10 +76,14 @@ export function prepareControlledDataTableState(
       || !sameIDs(current.columnState.hidden, columnState.value.hidden)
       || !sameIDs(current.columnState.pinnedStart, columnState.value.pinnedStart)
       || !sameIDs(current.columnState.pinnedEnd, columnState.value.pinnedEnd);
+    const projectionGeneration = changed
+      ? nextRevision(next.projectionGeneration, 'Projection generation')
+      : ok(next.projectionGeneration);
+    if (!projectionGeneration.ok) return projectionGeneration;
     next = Object.freeze({
       ...next,
       columnState: columnState.value,
-      projectionGeneration: changed ? next.projectionGeneration + 1 : next.projectionGeneration,
+      projectionGeneration: projectionGeneration.value,
     });
   }
   if (values.accessState !== undefined && values.accessState !== current.accessState) {
@@ -90,7 +95,9 @@ export function prepareControlledDataTableState(
   if (values.expansion !== undefined && values.expansion !== current.expansion) {
     const expansion = canonicalizeTabularExpansion(values.expansion, model.limits);
     if (!expansion.ok) return expansion;
-    next = Object.freeze({ ...next, expansion: expansion.value, expansionRevision: next.expansionRevision + 1 });
+    const expansionRevision = nextRevision(next.expansionRevision, 'Expansion revision');
+    if (!expansionRevision.ok) return expansionRevision;
+    next = Object.freeze({ ...next, expansion: expansion.value, expansionRevision: expansionRevision.value });
     requestNeeded = true;
   }
   return requestNeeded ? issueDataTableRequest(next) : ok(Object.freeze({ state: next, commands: Object.freeze([]) }));
@@ -119,10 +126,11 @@ function sameIDs(left: readonly string[], right: readonly string[]): boolean {
 }
 
 export function issueDataTableRequest(state: TabularState): TabularResult<{ readonly state: TabularState; readonly commands: readonly TabularCommand[] }> {
-  if (state.requestRevision === Number.MAX_SAFE_INTEGER) return fail('resource-rejection', 'revision-ceiling-reached', 'Request revision is exhausted.');
+  const requestRevision = nextRevision(state.requestRevision, 'Request revision');
+  if (!requestRevision.ok) return requestRevision;
   const request = Object.freeze({
     protocolVersion: 1 as const,
-    requestID: state.requestRevision + 1,
+    requestID: requestRevision.value,
     sourceGeneration: state.sourceGeneration,
     queryRevision: state.queryRevision,
     expansionRevision: state.expansionRevision,

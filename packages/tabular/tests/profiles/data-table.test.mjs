@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createDataTable, tryCreateDataTable } from '../../.verification-dist/data-table.js';
+import { applyDataTableEvent, createDataTable, tryCreateDataTable } from '../../.verification-dist/data-table.js';
+import { prepareControlledDataTableState } from '../../.verification-dist/internal/data-table-state.js';
+import { createTabularModel, tryCreateTabularState } from '../../.verification-dist/model.js';
 import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source.js';
 
 const columns = [{ id: 'name', capabilities: ['sort', 'edit'] }, { id: 'score' }];
@@ -120,6 +122,86 @@ test('TAB-TBL-05: controlled query proposes once and requests only after externa
   assert.equal(synchronized.ok, true);
   assert.equal(table.getSnapshot().state.query.sort[0].id, 'name');
   assert.deepEqual(commands, ['request-view']);
+});
+
+test('TAB-TBL-08: request-basis and projection counters stop at the safe-integer ceiling', () => {
+  const maximum = Number.MAX_SAFE_INTEGER;
+  const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
+  const model = createTabularModel({ columns });
+  const initial = tryCreateTabularState(model);
+  assert.equal(initial.ok, true);
+  const eventCases = [
+    ['queryRevision', { type: 'set-query', query }],
+    ['expansionRevision', { type: 'set-expansion', expansion: [] }],
+    ['sourceGeneration', { type: 'replace-source' }],
+    ['projectionGeneration', {
+      type: 'set-column-state',
+      columnState: { order: ['score', 'name'], hidden: [], pinnedStart: [], pinnedEnd: [] },
+    }],
+  ];
+  for (const [counter, event] of eventCases) {
+    const state = Object.freeze({ ...initial.value, [counter]: maximum });
+    const snapshot = Object.freeze({ revision: 0, state });
+    const rejected = applyDataTableEvent(model, snapshot, event, 0);
+    assert.equal(rejected.ok, false, `${counter} exhaustion was accepted`);
+    assert.equal(rejected.error.class, 'resource-rejection');
+    assert.equal(rejected.error.code, 'revision-ceiling-reached');
+    assert.equal(snapshot.state[counter], maximum);
+    assert.equal(snapshot.state.requestRevision, 0);
+  }
+
+  for (const [counter, event] of eventCases) {
+    const state = Object.freeze({ ...initial.value, [counter]: maximum - 1 });
+    const accepted = applyDataTableEvent(model, Object.freeze({ revision: 0, state }), event, 0);
+    assert.equal(accepted.ok, true, `${counter} final safe increment was rejected`);
+    assert.equal(accepted.value.snapshot.state[counter], maximum);
+    assert.equal(Number.isSafeInteger(accepted.value.snapshot.state[counter]), true);
+    const request = accepted.value.commands.find((command) => command.type === 'request-view')?.request;
+    if (request === undefined) continue;
+    for (const value of [request.requestID, request.sourceGeneration, request.queryRevision, request.expansionRevision]) {
+      assert.equal(Number.isSafeInteger(value), true);
+    }
+    const freshSource = createClientTabularSource({
+      records: [{ id: 'a', name: 'Alpha', score: 1 }, { id: 'b', name: 'Beta', score: 2 }],
+      columnSchema: { revision: 0, columns, headers: [] },
+      getRowID: (record) => record.id,
+      getValue: (record, columnID) => record[columnID],
+    });
+    assert.equal(resolveClientTabularRequest(freshSource, request).ok, true);
+  }
+
+  const controlledCases = [
+    {
+      counter: 'queryRevision',
+      model: createTabularModel({ columns, controlled: { query: true }, initialValues: { query } }),
+      values: { query: { ...query } },
+    },
+    {
+      counter: 'expansionRevision',
+      model: createTabularModel({ columns, controlled: { expansion: true }, initialValues: { expansion: [] } }),
+      values: { expansion: ['group'] },
+    },
+    {
+      counter: 'projectionGeneration',
+      model: createTabularModel({
+        columns,
+        controlled: { columnState: true },
+        initialValues: { columnState: { order: ['name', 'score'], hidden: [], pinnedStart: [], pinnedEnd: [] } },
+      }),
+      values: { columnState: { order: ['score', 'name'], hidden: [], pinnedStart: [], pinnedEnd: [] } },
+    },
+  ];
+  for (const { counter, model: controlledModel, values } of controlledCases) {
+    const state = tryCreateTabularState(controlledModel);
+    assert.equal(state.ok, true);
+    const rejected = prepareControlledDataTableState(
+      controlledModel,
+      Object.freeze({ ...state.value, [counter]: maximum }),
+      values,
+    );
+    assert.equal(rejected.ok, false, `controlled ${counter} exhaustion was accepted`);
+    assert.equal(rejected.error.code, 'revision-ceiling-reached');
+  }
 });
 
 test('ISSUE-049: committed query changes reset page and window access across ownership modes', () => {

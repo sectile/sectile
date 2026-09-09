@@ -1,7 +1,7 @@
 import { type DataTableController, type DataTableEvent, type DataTableOptions, tryCreateDataTable } from '../data-table.js';
 import { synchronizeTabularView } from '../source.js';
 import { scanGridAxis } from '@sectile/core/grid';
-import { fail, ok } from './foundation.js';
+import { fail, nextRevision, ok } from './foundation.js';
 import { dataTableModelOf, prepareControlledDataTableState, projectDataTableState } from './data-table-state.js';
 import { createPreparedViewResponse, visibleRowIndexOf } from './source-view.js';
 import type {
@@ -132,6 +132,10 @@ export interface GridProfileController {
   dispose(): void;
 }
 
+export function nextGridProfileRevision(revision: number): TabularResult<number> {
+  return nextRevision(revision, 'Grid profile revision');
+}
+
 export function createGridProfileController(
   kind: GridProfileKind,
   options: GridProfileOptions,
@@ -253,6 +257,8 @@ class GridProfileRuntime implements GridProfileController {
     if (!prepared.ok) return prepared;
     const profile = validateProfileRows(this.#kind, prepared.value.rows);
     if (!profile.ok) return profile;
+    const revision = nextGridProfileRevision(this.#snapshot.revision);
+    if (!revision.ok) return revision;
     const previousBase = this.#base.getProjection();
     const previous = this.#domainFor(this.#snapshot, previousBase);
     const synchronized = this.#base.synchronizeView(createPreparedViewResponse(pending, currentView, prepared.value));
@@ -278,7 +284,7 @@ class GridProfileRuntime implements GridProfileController {
     );
     const reconciled = reconcileInteractionState(this.#kind, previous, this.#domainFor(candidate, nextBase), candidate, this.#options, 'cell-removed');
     const interaction = this.#resolveInteraction(reconciled.cursor, reconciled.edit, reconciled.commands);
-    this.#snapshot = freezeState(this.#snapshot.revision + 1, synchronized.value, interaction.cursor.current, interaction.edit.kind === 'editing' ? interaction.edit.cell : null);
+    this.#snapshot = freezeState(revision.value, synchronized.value, interaction.cursor.current, interaction.edit.kind === 'editing' ? interaction.edit.cell : null);
     this.#publishInteraction(interactionBefore, reconciled.cursor, reconciled.edit, interaction.commands);
     return ok(this.#snapshot);
   }
@@ -300,8 +306,12 @@ class GridProfileRuntime implements GridProfileController {
     const model = dataTableModelOf(this.#base);
     const prepared = prepareControlledDataTableState(model, this.#snapshot.tabular.state, tabularValues);
     if (!prepared.ok) return prepared;
+    const revision = nextGridProfileRevision(this.#snapshot.revision);
+    if (!revision.ok) return revision;
+    const tabularRevision = nextRevision(this.#snapshot.tabular.revision, 'DataTable revision');
+    if (!tabularRevision.ok) return tabularRevision;
     const preparedSnapshot = Object.freeze({
-      revision: this.#snapshot.tabular.revision + 1,
+      revision: tabularRevision.value,
       state: prepared.value.state,
     });
     const candidate = freezeState(
@@ -336,7 +346,7 @@ class GridProfileRuntime implements GridProfileController {
     if (!synchronized.ok) return synchronized;
     const nextCursor = this.#controlledCursor ? cursor.value : reconciled.cursor;
     const nextEdit = this.#controlledEdit ? edit.value : reconciled.edit;
-    this.#snapshot = freezeState(this.#snapshot.revision + 1, synchronized.value, nextCursor.current, nextEdit.kind === 'editing' ? nextEdit.cell : null);
+    this.#snapshot = freezeState(revision.value, synchronized.value, nextCursor.current, nextEdit.kind === 'editing' ? nextEdit.cell : null);
     const pending = synchronized.value.state.requestState.pendingRequest;
     const baseCommands: readonly GridProfileCommand[] = pending !== null && pending.requestID !== previousRequestID
       ? Object.freeze([Object.freeze({ type: 'request-view' as const, request: pending })])
@@ -357,10 +367,12 @@ class GridProfileRuntime implements GridProfileController {
 
   public abandonRequest(requestID: number): TabularResult<GridProfileState> {
     if (this.#disposed) return gridProfileDisposed('abandon requests');
+    const revision = nextGridProfileRevision(this.#snapshot.revision);
+    if (!revision.ok) return revision;
     const abandoned = this.#base.abandonRequest(requestID);
     if (!abandoned.ok) return abandoned;
     this.#snapshot = freezeState(
-      this.#snapshot.revision + 1,
+      revision.value,
       abandoned.value,
       this.#snapshot.cursor.current,
       this.#snapshot.edit.kind === 'editing' ? this.#snapshot.edit.cell : null,
@@ -424,8 +436,8 @@ class GridProfileRuntime implements GridProfileController {
     if (!Number.isSafeInteger(expectedRevision) || expectedRevision !== this.#snapshot.revision) {
       return fail('transition-rejection', 'stale-revision', 'Expected grid profile revision is stale.', { expectedRevision, currentRevision: this.#snapshot.revision });
     }
-    if (expectedRevision === Number.MAX_SAFE_INTEGER) return fail('resource-rejection', 'revision-ceiling-reached', 'Grid profile revision is exhausted.');
-    return ok(true);
+    const revision = nextGridProfileRevision(expectedRevision);
+    return revision.ok ? ok(true) : revision;
   }
 
   #domainFor(

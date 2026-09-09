@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { nextClientViewRevision } from '../../.verification-dist/internal/source-view.js';
 import {
   createClientTabularSource,
   resolveClientTabularRequest,
@@ -90,6 +91,20 @@ test('TAB-SRC-02: client source revisions advance strictly per source generation
   const independent = resolveClientTabularRequest(local, request({ requestID: 1, sourceGeneration: 5 }));
   assert.equal(first.ok && second.ok && independent.ok, true);
   assert.deepEqual([first.value.viewRevision, second.value.viewRevision, independent.value.viewRevision], [1, 2, 1]);
+});
+
+test('TAB-SRC-13: client view revisions use the final safe value and reject exhaustion', () => {
+  const maximum = Number.MAX_SAFE_INTEGER;
+  const finalSafe = nextClientViewRevision(7, 7, maximum - 1);
+  assert.equal(finalSafe.ok, true);
+  assert.equal(finalSafe.value, maximum);
+  const exhausted = nextClientViewRevision(7, 7, maximum);
+  assert.equal(exhausted.ok, false);
+  assert.equal(exhausted.error.class, 'resource-rejection');
+  assert.equal(exhausted.error.code, 'revision-ceiling-reached');
+  const reset = nextClientViewRevision(7, 8, maximum);
+  assert.equal(reset.ok, true);
+  assert.equal(reset.value, 1);
 });
 
 test('TAB-SRC-03: response synchronization rejects stale or mismatched envelopes atomically', () => {

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createDataGrid } from '../../.verification-dist/data-grid.js';
+import { nextGridProfileRevision } from '../../.verification-dist/internal/grid-profile.js';
 import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source.js';
 
 const columns = [
@@ -341,6 +342,17 @@ test('TAB-GRD-07: controlled cursor and edit proposals wait for owner sync inclu
   assert.equal(controller.syncControlledValues({ cursor: { current: null }, edit: { kind: 'navigation' } }).ok, true);
   assert.equal(controller.getSnapshot().cursor.current, null);
   assert.deepEqual(controller.getSnapshot().edit, { kind: 'navigation' });
+});
+
+test('TAB-GRD-09: grid profile revisions stop at the safe-integer ceiling', () => {
+  const maximum = Number.MAX_SAFE_INTEGER;
+  const finalSafe = nextGridProfileRevision(maximum - 1);
+  assert.equal(finalSafe.ok, true);
+  assert.equal(finalSafe.value, maximum);
+  const exhausted = nextGridProfileRevision(maximum);
+  assert.equal(exhausted.ok, false);
+  assert.equal(exhausted.error.class, 'resource-rejection');
+  assert.equal(exhausted.error.code, 'revision-ceiling-reached');
 });
 
 test('TAB-GRD-08: async first-view default cursor is applied exactly once', () => {
