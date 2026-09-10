@@ -265,6 +265,13 @@ export function tryDecodeTabularCellID(
   if (typeof cellID !== 'string' || !cellID.startsWith('c1:')) {
     return fail('construction', 'invalid-cell-codec', 'Cell ID has an unsupported codec version.');
   }
+  const maxIDCodeUnits = limits.maxIDCodeUnits;
+  if (Number.isSafeInteger(maxIDCodeUnits) && maxIDCodeUnits > 0) {
+    const payloadCodeUnits = cellID.length - 5 - (String(maxIDCodeUnits).length * 2);
+    if (payloadCodeUnits > 0 && Math.ceil(payloadCodeUnits / 2) > maxIDCodeUnits) {
+      return fail('construction', 'invalid-cell-codec', 'Cell ID exceeds the configured codec length.');
+    }
+  }
   const first = parseLength(cellID, 3);
   if (first === null) return fail('construction', 'invalid-cell-codec', 'Cell ID row length is malformed.');
   const rowStart = first.end;

@@ -109,6 +109,34 @@ test('TAB-MOD-04: cell IDs round-trip without collisions across delimiter and Un
   }
 });
 
+test('TAB-MOD-08: cell ID decoding preflights the bounded raw representation', () => {
+  for (const maxIDCodeUnits of [1, 9, 10, 99, 100, 1_024]) {
+    const rowID = 'r'.repeat(maxIDCodeUnits);
+    const columnID = 'c'.repeat(maxIDCodeUnits);
+    const cellID = encodeTabularCellID({ rowID, columnID }, { maxIDCodeUnits });
+    assert.equal(cellID.length, 5 + (2 * maxIDCodeUnits) + (2 * String(maxIDCodeUnits).length));
+    const decoded = tryDecodeTabularCellID(cellID, { maxIDCodeUnits });
+    assert.equal(decoded.ok, true);
+    assert.deepEqual(decoded.value, { rowID, columnID });
+  }
+
+  const oversized = `c1:${'9'.repeat(1_000_000)}:`;
+  const indexOf = String.prototype.indexOf;
+  let indexOfCalls = 0;
+  String.prototype.indexOf = function(...args) {
+    indexOfCalls += 1;
+    return indexOf.apply(this, args);
+  };
+  try {
+    const rejected = tryDecodeTabularCellID(oversized, { maxIDCodeUnits: 1 });
+    assert.equal(rejected.ok, false);
+    assert.equal(rejected.error.code, 'invalid-cell-codec');
+  } finally {
+    String.prototype.indexOf = indexOf;
+  }
+  assert.equal(indexOfCalls, 0);
+});
+
 test('TAB-MOD-05: controlled ownership is fixed and stale revisions reject atomically', () => {
   const query = Object.freeze({ sort: [], filters: [], groups: [], aggregates: [], pivots: [] });
   const model = createTabularModel({
