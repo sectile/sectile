@@ -136,6 +136,91 @@ test('DOM DataTable preserves native structure, form output, and disposable regi
   assert.equal(commands.some((command) => command.type === 'request-view'), false);
 });
 
+test('DOM DataTable retains one projected-row index across registration refresh and cell registration', () => {
+  for (const size of [100, 500, 1_000]) {
+    const window = new Window();
+    const document = window.document;
+    const table = document.createElement('table');
+    const projectionColumns = [{ id: 'value' }];
+    const records = Array.from({ length: size }, (_, index) => ({ id: `r${index}`, value: index }));
+    const connection = createDataTable({
+      columns: projectionColumns,
+      table,
+      initialValues: {
+        accessState: {
+          kind: 'window',
+          window: { revision: 0, requestGeneration: 0, start: 0, size, total: null, pending: null },
+        },
+      },
+    });
+    const response = clientResponse(connection.controller, records, {
+      revision: 0, columns: projectionColumns, headers: [],
+    });
+    assert.equal(connection.synchronizeView(response).ok, true);
+    const projectedRows = connection.getProjection().rows;
+    assert.equal(projectedRows.length, size);
+
+    const originalFind = Array.prototype.find;
+    const originalSet = Map.prototype.set;
+    let projectedRowPredicates = 0;
+    let projectedRowIndexWrites = 0;
+    Array.prototype.find = function(predicate, thisArg) {
+      if (this !== projectedRows) return originalFind.call(this, predicate, thisArg);
+      return originalFind.call(this, (value, index, array) => {
+        projectedRowPredicates += 1;
+        return predicate.call(thisArg, value, index, array);
+      });
+    };
+    Map.prototype.set = function(key, value) {
+      if (value !== null && typeof value === 'object' && value.id === key && (value.kind === 'leaf' || value.kind === 'group')) {
+        projectedRowIndexWrites += 1;
+      }
+      return originalSet.call(this, key, value);
+    };
+    try {
+      const elements = [];
+      for (let index = 0; index < size; index += 1) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        elements.push({ row, cell });
+        assert.equal(connection.registerRow(row, { rowID: `r${index}` }).ok, true);
+      }
+      connection.refresh();
+      for (let index = 0; index < size; index += 1) {
+        assert.equal(connection.registerCell(elements[index].cell, { cell: { rowID: `r${index}`, columnID: 'value' } }).ok, true);
+      }
+    } finally {
+      Array.prototype.find = originalFind;
+      Map.prototype.set = originalSet;
+    }
+    assert.equal(projectedRowPredicates, 0, `projected row scan at size ${size}`);
+    assert.equal(projectedRowIndexWrites, size, `row index writes at size ${size}`);
+
+    assert.equal(connection.requestView().ok, true);
+    const replacement = clientResponse(connection.controller, [{ id: 'replacement', value: 1 }], {
+      revision: 0, columns: projectionColumns, headers: [],
+    });
+    let replacementIndexWrites = 0;
+    Map.prototype.set = function(key, value) {
+      if (value !== null && typeof value === 'object' && value.id === key && (value.kind === 'leaf' || value.kind === 'group')) {
+        replacementIndexWrites += 1;
+      }
+      return originalSet.call(this, key, value);
+    };
+    try {
+      assert.equal(connection.synchronizeView({ ...replacement, viewRevision: 2 }).ok, true);
+    } finally {
+      Map.prototype.set = originalSet;
+    }
+    assert.equal(replacementIndexWrites, 1);
+    const stale = connection.registerRow(document.createElement('tr'), { rowID: 'r0' });
+    assert.equal(stale.ok, false);
+    assert.equal(stale.error.code, 'profile-view-mismatch');
+    assert.equal(connection.registerRow(document.createElement('tr'), { rowID: 'replacement' }).ok, true);
+    connection.disconnect();
+  }
+});
+
 test('DOM DataTable header metrics follow contiguous projected intervals after legal reorder hide and pin', () => {
   const window = new Window();
   const document = window.document;

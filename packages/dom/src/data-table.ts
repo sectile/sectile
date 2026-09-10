@@ -15,6 +15,7 @@ import type {
   TabularGroupID,
   TabularQuery,
   TabularResult,
+  TabularRow,
   TabularRowID,
   TabularSnapshot,
   TabularViewResponse,
@@ -30,7 +31,6 @@ import {
   clearAttributes,
   columnIndex,
   domFailure,
-  findProjectedRow,
   headerElementID,
   leafHeaderID,
   ok,
@@ -170,7 +170,9 @@ class DOMDataTable implements DataTableConnection {
   readonly #columnSizes: ColumnSizeStore;
   readonly #rows = new Map<string, { readonly element: HTMLTableRowElement; readonly options: DataTableRowOptions }>();
   readonly #cells = new Map<string, { readonly element: HTMLTableCellElement; readonly options: DataTableCellOptions }>();
+  readonly #projectedRowsByID = new Map<string, TabularRow>();
   readonly #refreshers = new Set<() => void>();
+  #projectedRows: readonly TabularRow[] | null = null;
   readonly #unsubscribeCommands: () => void;
   #projectionGeneration: number;
   #selectionAnchor: TabularDOMRowSelectionAnchor | null = null;
@@ -256,13 +258,7 @@ class DOMDataTable implements DataTableConnection {
   }
 
   public setRowAttributes(element: HTMLTableRowElement, options: DataTableRowOptions): void {
-    const row = findProjectedRow(this.getSnapshot(), options.rowID);
-    element.setAttribute('data-part', 'row');
-    element.setAttribute('data-row-id', options.rowID);
-    if (row?.kind === 'group') {
-      element.setAttribute('aria-level', String(row.depth + 1));
-      element.setAttribute('aria-expanded', String(row.expanded));
-    } else clearAttributes(element, ['aria-level', 'aria-expanded']);
+    this.#setRowAttributes(element, options, this.#projectedRow(this.getProjection(), options.rowID));
   }
 
   public setCellAttributes(element: HTMLTableCellElement, options: DataTableCellOptions): void {
@@ -276,20 +272,23 @@ class DOMDataTable implements DataTableConnection {
   }
 
   public registerRow(element: HTMLTableRowElement, options: DataTableRowOptions): TabularResult<() => void> {
-    const valid = validateRegistrationGeneration(this.getProjection().generation, options);
+    const projection = this.getProjection();
+    const valid = validateRegistrationGeneration(projection.generation, options);
     if (!valid.ok) return valid;
-    if (findProjectedRow(this.getSnapshot(), options.rowID) === undefined) return domFailure('profile-view-mismatch', 'Registered DataTable row is not projected.', { rowID: options.rowID });
+    const row = this.#projectedRow(projection, options.rowID);
+    if (row === undefined) return domFailure('profile-view-mismatch', 'Registered DataTable row is not projected.', { rowID: options.rowID });
     const current = this.#rows.get(options.rowID);
     if (current !== undefined && current.element !== element) return domFailure('profile-view-mismatch', 'DataTable row is already registered.', { rowID: options.rowID });
     this.#rows.set(options.rowID, { element, options });
-    this.setRowAttributes(element, options);
+    this.#setRowAttributes(element, options, row);
     return ok(this.#scope.retain(() => { if (this.#rows.get(options.rowID)?.element === element) this.#rows.delete(options.rowID); }));
   }
 
   public registerCell(element: HTMLTableCellElement, options: DataTableCellOptions): TabularResult<() => void> {
-    const valid = validateRegistrationGeneration(this.getProjection().generation, options);
+    const projection = this.getProjection();
+    const valid = validateRegistrationGeneration(projection.generation, options);
     if (!valid.ok) return valid;
-    if (!this.#hasCell(options.cell)) return domFailure('profile-view-mismatch', 'Registered DataTable cell is not projected.', { cell: options.cell });
+    if (!this.#hasCell(projection, options.cell)) return domFailure('profile-view-mismatch', 'Registered DataTable cell is not projected.', { cell: options.cell });
     const key = JSON.stringify([options.cell.rowID, options.cell.columnID]);
     const current = this.#cells.get(key);
     if (current !== undefined && current.element !== element) return domFailure('profile-view-mismatch', 'DataTable cell is already registered.', { cell: options.cell });
@@ -448,13 +447,19 @@ class DOMDataTable implements DataTableConnection {
 
   public refresh(): void {
     if (!this.#scope.active) return;
-    const generation = this.getProjection().generation;
+    const projection = this.getProjection();
+    const generation = projection.generation;
     if (generation !== this.#projectionGeneration) {
       this.#projectionGeneration = generation;
       this.#selectionAnchor = null;
     }
     this.setTableAttributes();
-    for (const registration of this.#rows.values()) this.setRowAttributes(registration.element, registration.options);
+    if (this.#rows.size > 0) {
+      this.#ensureProjectedRows(projection.rows);
+      for (const registration of this.#rows.values()) {
+        this.#setRowAttributes(registration.element, registration.options, this.#projectedRowsByID.get(registration.options.rowID));
+      }
+    }
     for (const registration of this.#cells.values()) this.setCellAttributes(registration.element, registration.options);
     for (const refresh of this.#refreshers) refresh();
   }
@@ -465,6 +470,8 @@ class DOMDataTable implements DataTableConnection {
     this.#unsubscribeCommands();
     this.#rows.clear();
     this.#cells.clear();
+    this.#projectedRowsByID.clear();
+    this.#projectedRows = null;
     this.#refreshers.clear();
     this.#selectionAnchor = null;
     clearAttributes(this.#options.table, ['data-scope', 'data-part']);
@@ -476,8 +483,29 @@ class DOMDataTable implements DataTableConnection {
     this.#options.onSnapshotChange?.(this.getSnapshot());
   }
 
-  #hasCell(cell: TabularCellAddress): boolean {
-    return findProjectedRow(this.getSnapshot(), cell.rowID) !== undefined && columnIndex(this.getSnapshot(), cell.columnID) > 0;
+  #setRowAttributes(element: HTMLTableRowElement, options: DataTableRowOptions, row: TabularRow | undefined): void {
+    element.setAttribute('data-part', 'row');
+    element.setAttribute('data-row-id', options.rowID);
+    if (row?.kind === 'group') {
+      element.setAttribute('aria-level', String(row.depth + 1));
+      element.setAttribute('aria-expanded', String(row.expanded));
+    } else clearAttributes(element, ['aria-level', 'aria-expanded']);
+  }
+
+  #projectedRow(projection: DataTableProjection, rowID: string): TabularRow | undefined {
+    this.#ensureProjectedRows(projection.rows);
+    return this.#projectedRowsByID.get(rowID);
+  }
+
+  #ensureProjectedRows(rows: readonly TabularRow[]): void {
+    if (this.#projectedRows === rows) return;
+    this.#projectedRows = rows;
+    this.#projectedRowsByID.clear();
+    for (const row of rows) this.#projectedRowsByID.set(row.id, row);
+  }
+
+  #hasCell(projection: DataTableProjection, cell: TabularCellAddress): boolean {
+    return this.#projectedRow(projection, cell.rowID) !== undefined && columnIndex(this.getSnapshot(), cell.columnID) > 0;
   }
 }
 

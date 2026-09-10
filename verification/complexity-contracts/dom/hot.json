@@ -859,6 +859,59 @@
       }
     },
     {
+      "id": "tabular.row-indexed-lookup",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/data-table.ts",
+      "benchmarkIDs": [
+        "VAL-004:dom-tabular-row-index"
+      ],
+      "specificationCeiling": "O(nRow + qRow)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nRow",
+            "meaning": "rows in the current accepted DataTable projection",
+            "ceiling": "Tabular accepted-view row ceiling"
+          },
+          {
+            "name": "qRow",
+            "meaning": "row-identity queries from row registration, cell registration, and registered-row refresh",
+            "ceiling": "connection-owned host operations"
+          }
+        ],
+        "time": {
+          "bound": "O(nRow + qRow)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(nRow)"
+        },
+        "resources": {
+          "allocations": "O(nRow)",
+          "cacheEntries": "O(nRow)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Accepted Tabular row arrays and row identities are canonical and immutable for their retained view identity."
+        ],
+        "proof": "The DOM DataTable connection builds one Map from row ID to canonical projected row when projection.rows identity changes. Row registration resolves once and passes the resolved row directly to ARIA projection; cell registration and later row refreshes reuse Map.get. Repeated reads over the same accepted rows perform no projected-row array scan, and disconnect clears the index and its retained row references.",
+        "adversarialWitness": "The DOM Tabular production-path regression uses 100, 500, and 1,000 accepted rows. The first row lookup for each accepted view writes exactly nRow index entries; the remaining row registrations, one full refresh, and one cell registration per row perform zero accepted-row Array.find predicate evaluations and no second index build. Replacing the view while rows remain registered rebuilds exactly one new entry and rejects an old row identity.",
+        "deterministicWork": [
+          "packages/dom/tests/tabular.test.mjs DOM DataTable retains one projected-row index across registration refresh and cell registration"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "One accepted-view identity change may scan its rows once to build the connection-owned index; ordinary row and cell registration or refresh cannot rescan the projection."
+        }
+      }
+    },
+    {
       "id": "text.native-reconcile",
       "inherits": "linear-v1",
       "source": "packages/dom/src/internal/text-element.ts",
