@@ -640,6 +640,94 @@ test('DOM DataGrid retains indexed row and column projection across dense cell r
   }
 });
 
+test('DOM Tabular Grid resolves cell event targets by ancestry without registry scans', () => {
+  for (const size of [1_000, 10_000]) {
+    const window = new Window();
+    const document = window.document;
+    const root = document.createElement('div');
+    document.body.append(root);
+    const projectionColumns = Array.from({ length: size }, (_, index) => ({ id: `c${index}` }));
+    const record = Object.fromEntries([['id', 'r0'], ...projectionColumns.map((column, index) => [column.id, index])]);
+    const connection = createDataGrid({ columns: projectionColumns, root });
+    assert.equal(connection.synchronizeView(clientResponse(connection.controller, [record], {
+      revision: 0, columns: projectionColumns, headers: [],
+    })).ok, true);
+
+    const cells = [];
+    const fragment = document.createDocumentFragment();
+    let releaseLast;
+    for (let index = 0; index < size; index += 1) {
+      const cell = document.createElement('div');
+      cells.push(cell);
+      fragment.append(cell);
+      const registered = connection.registerCell(cell, { cell: { rowID: 'r0', columnID: `c${index}` } });
+      assert.equal(registered.ok, true);
+      if (index === size - 1) releaseLast = registered.value;
+    }
+    root.append(fragment);
+    const lastCell = cells.at(-1);
+    const target = document.createElement('input');
+    lastCell.append(target);
+
+    const contains = cells.map((cell) => cell.contains);
+    let containsCalls = 0;
+    for (let index = 0; index < cells.length; index += 1) {
+      cells[index].contains = function(...args) {
+        containsCalls += 1;
+        return contains[index].apply(this, args);
+      };
+    }
+    try {
+      target.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      assert.deepEqual(connection.getSnapshot().cursor.current, { rowID: 'r0', columnID: `c${size - 1}` });
+      for (let iteration = 0; iteration < 20; iteration += 1) {
+        target.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      }
+      target.dispatchEvent(new window.FocusEvent('focusin', { bubbles: true }));
+      lastCell.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    } finally {
+      for (let index = 0; index < cells.length; index += 1) cells[index].contains = contains[index];
+    }
+    assert.equal(containsCalls, 0, `registered-cell contains scan at ${size} cells`);
+
+    assert.equal(typeof releaseLast, 'function');
+    releaseLast();
+    cells[0].dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    assert.deepEqual(connection.getSnapshot().cursor.current, { rowID: 'r0', columnID: 'c0' });
+    target.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    assert.deepEqual(connection.getSnapshot().cursor.current, { rowID: 'r0', columnID: 'c0' });
+
+    const replacement = document.createElement('div');
+    const replacementTarget = document.createElement('button');
+    replacement.append(replacementTarget);
+    root.append(replacement);
+    const registeredReplacement = connection.registerCell(replacement, { cell: { rowID: 'r0', columnID: `c${size - 1}` } });
+    assert.equal(registeredReplacement.ok, true);
+    replacementTarget.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    assert.deepEqual(connection.getSnapshot().cursor.current, { rowID: 'r0', columnID: `c${size - 1}` });
+    connection.disconnect();
+  }
+
+  const window = new Window();
+  const document = window.document;
+  const root = document.createElement('div');
+  document.body.append(root);
+  const tree = createDataTreeGrid({ columns, root });
+  assert.equal(tree.synchronizeView(treeResponse(tree.controller)).ok, true);
+  const cell = document.createElement('div');
+  const target = document.createElement('button');
+  cell.append(target);
+  root.append(cell);
+  assert.equal(tree.registerCell(cell, { cell: { rowID: 'r1', columnID: 'name' } }).ok, true);
+  let containsCalls = 0;
+  const contains = cell.contains;
+  cell.contains = function(...args) { containsCalls += 1; return contains.apply(this, args); };
+  target.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  assert.deepEqual(tree.getSnapshot().cursor.current, { rowID: 'r1', columnID: 'name' });
+  assert.equal(containsCalls, 0);
+  tree.disconnect();
+});
+
 test('DOM DataGrid lookup invalidation rebuilds only changed projection domains', () => {
   const rowCount = 12;
   const columnCount = 12;

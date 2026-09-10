@@ -26834,6 +26834,72 @@
     {
       "package": "dom",
       "surface": "hot",
+      "id": "tabular.grid-event-target",
+      "source": "packages/dom/src/internal/tabular-grid-dom.ts",
+      "benchmarkIDs": [
+        "VAL-007:dom-tabular-grid-event-target"
+      ],
+      "specificationCeiling": "O(hTarget)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "hTarget",
+            "meaning": "DOM target-to-grid-root ancestry depth",
+            "ceiling": "live host ancestry depth"
+          },
+          {
+            "name": "kCell",
+            "meaning": "live registered DataGrid or DataTreeGrid cell elements",
+            "ceiling": "mounted projected cell count"
+          }
+        ],
+        "time": {
+          "bound": "O(hTarget)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(kCell)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "O(kCell)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Root click and focusin targets are Nodes whose light-DOM parent chain reaches the owning Tabular Grid root or terminates outside it.",
+          "The forward cell-registration Map remains the canonical live ownership check; the reverse WeakMap does not strongly retain cell elements."
+        ],
+        "ceilings": [
+          "The reverse ownership index has at most one weak entry per live registered cell element."
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "packages/dom/tests/tabular.test.mjs DOM Tabular Grid resolves cell event targets by ancestry without registry scans"
+        ],
+        "resourceRationale": "Cell registration adds one weak reverse ownership entry alongside the existing strong forward registration. Event routing allocates no registry-sized structure, and release or disconnect removes strong ownership so weak entries cannot retain detached cells.",
+        "proof": "DOMTabularGrid stores each live cell registration in both the canonical key-to-registration Map and an element-keyed WeakMap. Event target resolution walks parentNode from the target toward the grid root and accepts a reverse hit only while the canonical forward Map still points at the same registration. Release invalidates both directions when still owned; replacement cannot reactivate a stale registration. No registered-cell iteration or Element.contains call occurs in the event path.",
+        "adversarialWitness": "The production-path regression registers 1,000 and 10,000 DataGrid cells, targets a nested input in the last cell, and observes zero registered-cell contains calls across repeated click, focusin, and direct-cell routing. Releasing the last registration prevents its stale descendant from moving the cursor, a replacement element restores routing, and the shared DataTreeGrid path resolves a nested descendant with the same zero-scan behavior.",
+        "evidence": [
+          "packages/dom/tests/tabular.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Cell event routing must depend on target ancestry depth, never the number of unrelated registered cells."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
       "id": "tabular.grid-indexed-projection",
       "source": "packages/dom/src/internal/tabular-grid-dom.ts",
       "benchmarkIDs": [
@@ -26885,7 +26951,7 @@
         "assumptions": [
           "Tabular GridProfile rows are dense over the canonical visible start/center/end column partitions, so DOM cell membership is the conjunction of projected row and projected column identity rather than a second retained r*c cell index.",
           "Projected row arrays identify row and tree-hierarchy generations; canonical GridProfile tree rows with the same parent identity are one sibling set at one depth.",
-          "Equivalent replacement column partitions may be compared once and rebound without rebuilding the DOM column index; accepted column-schema revisions identify editable-column capability generations."
+          "Tabular projection generations identify row/column projection changes; accepted column-schema revisions identify editable-column capability generations."
         ],
         "ceilings": [
           "The retained row lookup contains at most r entries and the retained signed column index contains at most c entries."
@@ -26898,7 +26964,7 @@
           "packages/dom/tests/tabular.test.mjs DOM DataGrid lookup invalidation rebuilds only changed projection domains",
           "packages/dom/tests/tabular.test.mjs DOM DataTreeGrid retains sibling metadata across row registration and refresh"
         ],
-        "resourceRationale": "One changed row projection builds row positions and, for DataTreeGrid, sibling set sizes and positions in O(r). One real column/schema change builds O(c) signed column entries, while an equivalent replacement performs one O(c) equality pass. Stable row and cell host projection uses expected O(1) Map lookups and disconnect releases all retained entries.",
+        "resourceRationale": "One changed row projection builds row positions and, for DataTreeGrid, sibling set sizes and positions in O(r). A changed Tabular projection generation or accepted column-schema revision builds O(c) signed column entries once; stable generation/schema reads reuse them in O(1). Stable row and cell host projection uses expected O(1) Map lookups and disconnect releases all retained entries.",
         "proof": "DOMTabularGrid indexes canonical GridProfile rows by row ID with row index and precomputed tree sibling metadata. It indexes each visible column with one signed 1-based value whose magnitude is aria-colindex and whose sign carries editability for the accepted schema revision. registerRow, registerCell, setRowAttributes, setCellAttributes, refresh, reveal checks, and space-key row selection reuse those indexes. The host does not rescan projection.rows, row.cells, or the accepted column schema per registered cell, and it does not rebuild an ordered-column array per cell.",
         "adversarialWitness": "The production-path regressions register dense DataGrid cells at 10x20, 20x40, and 40x80 and observe zero projected-row, row-cell, accepted-schema, or column-partition scans during bulk registration plus refresh. Row-only view replacement rebuilds exactly r row lookup entries and zero equivalent column entries; a real column reorder rebuilds exactly r row entries and c column entries once, while hidden columns cease resolving. DataTreeGrid runs 100, 500, and 1,000 flat sibling rows with zero per-row hierarchy scans during registration and refresh, exact aria-setsize/aria-posinset values, and one r-entry hierarchy rebuild after view replacement.",
         "evidence": [
