@@ -111,20 +111,20 @@
     },
     {
       "package": "dom",
-      "javascriptFiles": 105,
-      "declarationFiles": 105,
-      "sourceMapFiles": 105,
+      "javascriptFiles": 106,
+      "declarationFiles": 106,
+      "sourceMapFiles": 106,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 628301,
-        "declarations": 262567,
-        "sourceMaps": 454237,
-        "total": 1345105
+        "javascript": 653148,
+        "declarations": 267161,
+        "sourceMaps": 476789,
+        "total": 1397098
       },
       "packed": {
-        "tarballBytes": 271260,
-        "unpackedBytes": 1360833,
-        "files": 318
+        "tarballBytes": 284941,
+        "unpackedBytes": 1412905,
+        "files": 321
       }
     },
     {
