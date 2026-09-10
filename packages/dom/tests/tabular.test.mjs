@@ -546,6 +546,260 @@ test('DOM DataGrid projects ARIA, emits one reveal, restores focus, and tears do
   assert.equal(root.hasAttribute('role'), false);
 });
 
+test('DOM DataGrid retains indexed row and column projection across dense cell registration and refresh', () => {
+  for (const [rowCount, columnCount] of [[10, 20], [20, 40], [40, 80]]) {
+    const window = new Window();
+    const document = window.document;
+    const root = document.createElement('div');
+    const projectionColumns = Array.from({ length: columnCount }, (_, index) => ({
+      id: `c${index}`,
+      capabilities: index % 2 === 0 ? ['edit'] : [],
+    }));
+    const records = Array.from({ length: rowCount }, (_, rowIndex) => Object.fromEntries([
+      ['id', `r${rowIndex}`],
+      ...projectionColumns.map((column, columnIndex) => [column.id, rowIndex * columnCount + columnIndex]),
+    ]));
+    const connection = createDataGrid({
+      columns: projectionColumns,
+      root,
+      initialValues: {
+        accessState: {
+          kind: 'window',
+          window: { revision: 0, requestGeneration: 0, start: 0, size: rowCount, total: null, pending: null },
+        },
+      },
+    });
+    assert.equal(connection.synchronizeView(clientResponse(connection.controller, records, {
+      revision: 0, columns: projectionColumns, headers: [],
+    })).ok, true);
+
+    const projection = connection.getProjection();
+    const accepted = connection.getSnapshot().tabular.state.acceptedViewState;
+    assert.notEqual(accepted.kind, 'none');
+    const schemaColumns = accepted.view.columnSchema.columns;
+    const rowCellDomains = new Set(projection.rows.map((row) => row.cells));
+    const columnPartitions = new Set([projection.columns.start, projection.columns.center, projection.columns.end]);
+    const some = Array.prototype.some;
+    const find = Array.prototype.find;
+    const findIndex = Array.prototype.findIndex;
+    const filter = Array.prototype.filter;
+    const indexOf = Array.prototype.indexOf;
+    const iterator = Array.prototype[Symbol.iterator];
+    let rowDomainScans = 0;
+    let cellDomainScans = 0;
+    let schemaDomainScans = 0;
+    let columnDomainScans = 0;
+    let columnDomainIterations = 0;
+    const classify = (receiver) => {
+      if (receiver === projection.rows) rowDomainScans += 1;
+      else if (rowCellDomains.has(receiver)) cellDomainScans += 1;
+      else if (receiver === schemaColumns) schemaDomainScans += 1;
+    };
+    Array.prototype.some = function(...args) { classify(this); return some.apply(this, args); };
+    Array.prototype.find = function(...args) { classify(this); return find.apply(this, args); };
+    Array.prototype.findIndex = function(...args) { classify(this); return findIndex.apply(this, args); };
+    Array.prototype.filter = function(...args) { classify(this); return filter.apply(this, args); };
+    Array.prototype.indexOf = function(...args) {
+      if (columnPartitions.has(this)) columnDomainScans += 1;
+      return indexOf.apply(this, args);
+    };
+    Array.prototype[Symbol.iterator] = function(...args) {
+      if (columnPartitions.has(this)) columnDomainIterations += 1;
+      return iterator.apply(this, args);
+    };
+    const cells = [];
+    try {
+      for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+        for (let columnIndex = 0; columnIndex < columnCount; columnIndex += 1) {
+          const element = document.createElement('div');
+          cells.push(element);
+          assert.equal(connection.registerCell(element, {
+            cell: { rowID: `r${rowIndex}`, columnID: `c${columnIndex}` },
+          }).ok, true);
+        }
+      }
+      connection.refresh();
+    } finally {
+      Array.prototype.some = some;
+      Array.prototype.find = find;
+      Array.prototype.findIndex = findIndex;
+      Array.prototype.filter = filter;
+      Array.prototype.indexOf = indexOf;
+      Array.prototype[Symbol.iterator] = iterator;
+    }
+    assert.equal(rowDomainScans, 0, `row domain rescanned at ${rowCount}x${columnCount}`);
+    assert.equal(cellDomainScans, 0, `row cell domain rescanned at ${rowCount}x${columnCount}`);
+    assert.equal(schemaDomainScans, 0, `schema domain rescanned at ${rowCount}x${columnCount}`);
+    assert.equal(columnDomainScans, 0, `column domain searched at ${rowCount}x${columnCount}`);
+    assert.equal(columnDomainIterations, 0, `column partitions recopied at ${rowCount}x${columnCount}`);
+    const last = cells.at(-1);
+    assert.equal(last.getAttribute('aria-rowindex'), String(rowCount));
+    assert.equal(last.getAttribute('aria-colindex'), String(columnCount));
+    assert.equal(last.getAttribute('aria-readonly'), String((columnCount - 1) % 2 !== 0));
+    connection.disconnect();
+  }
+});
+
+test('DOM DataGrid lookup invalidation rebuilds only changed projection domains', () => {
+  const rowCount = 12;
+  const columnCount = 12;
+  const window = new Window();
+  const document = window.document;
+  const root = document.createElement('div');
+  const projectionColumns = Array.from({ length: columnCount }, (_, index) => ({ id: `c${index}`, capabilities: ['edit'] }));
+  const records = Array.from({ length: rowCount }, (_, rowIndex) => Object.fromEntries([
+    ['id', `r${rowIndex}`],
+    ...projectionColumns.map((column, columnIndex) => [column.id, rowIndex * columnCount + columnIndex]),
+  ]));
+  const connection = createDataGrid({
+    columns: projectionColumns,
+    root,
+    initialValues: {
+      accessState: {
+        kind: 'window',
+        window: { revision: 0, requestGeneration: 0, start: 0, size: rowCount, total: null, pending: null },
+      },
+    },
+  });
+  assert.equal(connection.synchronizeView(clientResponse(connection.controller, records, {
+    revision: 0, columns: projectionColumns, headers: [],
+  })).ok, true);
+  const first = document.createElement('div');
+  assert.equal(connection.registerCell(first, { cell: { rowID: 'r0', columnID: 'c0' } }).ok, true);
+
+  assert.equal(connection.controller.requestView().ok, true);
+  const rowOnlyResponse = clientResponse(connection.controller, records.map((record) => ({ ...record })), {
+    revision: 0, columns: projectionColumns.map((column) => ({ ...column })), headers: [],
+  });
+  assert.equal(connection.controller.synchronizeView({ ...rowOnlyResponse, viewRevision: 2 }).ok, true);
+  connection.getProjection();
+  const set = Map.prototype.set;
+  let rowWrites = 0;
+  let columnWrites = 0;
+  Map.prototype.set = function(key, value) {
+    if (Array.isArray(value) && value.length === 4 && value[0]?.rowID === key) rowWrites += 1;
+    if (typeof key === 'string' && key.startsWith('c') && typeof value === 'number') columnWrites += 1;
+    return set.call(this, key, value);
+  };
+  try {
+    connection.refresh();
+    connection.refresh();
+  } finally {
+    Map.prototype.set = set;
+  }
+  assert.equal(rowWrites, rowCount, 'row-only view replacement should rebuild row lookup exactly once');
+  assert.equal(columnWrites, 0, 'row-only view replacement should retain the equivalent column index');
+
+  const reversed = projectionColumns.map((column) => column.id).reverse();
+  assert.equal(connection.controller.dispatch({
+    type: 'set-column-state',
+    columnState: { order: reversed, hidden: [], pinnedStart: [], pinnedEnd: [] },
+  }).ok, true);
+  connection.getProjection();
+  rowWrites = 0;
+  columnWrites = 0;
+  Map.prototype.set = function(key, value) {
+    if (Array.isArray(value) && value.length === 4 && value[0]?.rowID === key) rowWrites += 1;
+    if (typeof key === 'string' && key.startsWith('c') && typeof value === 'number') columnWrites += 1;
+    return set.call(this, key, value);
+  };
+  try {
+    connection.refresh();
+    connection.refresh();
+  } finally {
+    Map.prototype.set = set;
+  }
+  assert.equal(rowWrites, rowCount, 'column reorder should refresh row projections exactly once');
+  assert.equal(columnWrites, columnCount, 'column reorder should rebuild the column index exactly once');
+  assert.equal(first.getAttribute('aria-colindex'), String(columnCount));
+
+  assert.equal(connection.controller.dispatch({
+    type: 'set-column-state',
+    columnState: { order: reversed, hidden: ['c0'], pinnedStart: [], pinnedEnd: [] },
+  }).ok, true);
+  connection.refresh();
+  const hidden = connection.registerCell(document.createElement('div'), { cell: { rowID: 'r0', columnID: 'c0' } });
+  assert.equal(hidden.ok, false);
+  assert.equal(hidden.error.code, 'profile-view-mismatch');
+  assert.equal(connection.requestRevealCell({ rowID: 'r0', columnID: 'c0' }), false);
+  assert.equal(first.hasAttribute('aria-colindex'), false);
+
+  assert.equal(connection.requestView().ok, true);
+  const readonlyColumns = projectionColumns.map((column) => ({ ...column, capabilities: [] }));
+  const schemaResponse = clientResponse(connection.controller, records, { revision: 1, columns: readonlyColumns, headers: [] });
+  assert.equal(connection.synchronizeView({ ...schemaResponse, viewRevision: 3 }).ok, true);
+  const editable = document.createElement('div');
+  assert.equal(connection.registerCell(editable, { cell: { rowID: 'r0', columnID: 'c1' } }).ok, true);
+  assert.equal(editable.getAttribute('aria-readonly'), 'true');
+  connection.disconnect();
+});
+
+test('DOM DataTreeGrid retains sibling metadata across row registration and refresh', () => {
+  for (const size of [100, 500, 1_000]) {
+    const window = new Window();
+    const document = window.document;
+    const root = document.createElement('div');
+    const rows = Array.from({ length: size }, (_, index) => ({
+      kind: 'leaf', id: `r${index}`, cells: { name: `Row ${index}`, score: index },
+    }));
+    const connection = createDataTreeGrid({
+      columns,
+      root,
+      initialValues: {
+        accessState: {
+          kind: 'window',
+          window: { revision: 0, requestGeneration: 0, start: 0, size, total: null, pending: null },
+        },
+      },
+    });
+    assert.equal(connection.synchronizeView(treeResponse(connection.controller, rows)).ok, true);
+    const projection = connection.getProjection();
+    const filter = Array.prototype.filter;
+    const findIndex = Array.prototype.findIndex;
+    const some = Array.prototype.some;
+    let rowDomainScans = 0;
+    const count = (receiver) => { if (receiver === projection.rows) rowDomainScans += 1; };
+    Array.prototype.filter = function(...args) { count(this); return filter.apply(this, args); };
+    Array.prototype.findIndex = function(...args) { count(this); return findIndex.apply(this, args); };
+    Array.prototype.some = function(...args) { count(this); return some.apply(this, args); };
+    const elements = [];
+    try {
+      for (let index = 0; index < size; index += 1) {
+        const element = document.createElement('div');
+        elements.push(element);
+        assert.equal(connection.registerRow(element, { rowID: `r${index}` }).ok, true);
+      }
+      connection.refresh();
+    } finally {
+      Array.prototype.filter = filter;
+      Array.prototype.findIndex = findIndex;
+      Array.prototype.some = some;
+    }
+    assert.equal(rowDomainScans, 0, `tree row domain rescanned at ${size} siblings`);
+    assert.equal(elements[0].getAttribute('aria-setsize'), String(size));
+    assert.equal(elements[0].getAttribute('aria-posinset'), '1');
+    assert.equal(elements.at(-1).getAttribute('aria-posinset'), String(size));
+
+    assert.equal(connection.controller.requestView().ok, true);
+    assert.equal(connection.controller.synchronizeView(treeResponse(connection.controller, rows.map((row) => ({ ...row })), 2)).ok, true);
+    connection.getProjection();
+    const set = Map.prototype.set;
+    let rowLookupWrites = 0;
+    Map.prototype.set = function(key, value) {
+      if (Array.isArray(value) && value.length === 4 && value[0]?.rowID === key) rowLookupWrites += 1;
+      return set.call(this, key, value);
+    };
+    try {
+      connection.refresh();
+      connection.refresh();
+    } finally {
+      Map.prototype.set = set;
+    }
+    assert.equal(rowLookupWrites, size, `tree hierarchy lookup should rebuild exactly once at ${size} siblings`);
+    connection.disconnect();
+  }
+});
+
 test('DOM DataTreeGrid projects hierarchy, disclosure, row reveal, and invalid-part failures', () => {
   const window = new Window();
   const document = window.document;

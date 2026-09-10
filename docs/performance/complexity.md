@@ -10,7 +10,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 |---|---:|---:|---:|
 | core | 380 | 26 | 59 |
 | chart | 80 | 0 | 14 |
-| dom | 424 | 171 | 28 |
+| dom | 424 | 171 | 29 |
 | form | 21 | 0 | 9 |
 | tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |
@@ -124,6 +124,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:position.schedule | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | dom:position.update | connected | `O(aDom + cAnchor)` worst-case | `O(aDom + cAnchor)` | `O(1)` | `O(aDom)` | forbidden | VAL-016, VAL-017 |
 | dom:tabular.cell-header-indexed-projection | connected | `O(c + h + qCell + qHeader)` worst-case | `O(c + h)` | `O(1)` | `O(c + h)` | allowed | packages/dom/tests/tabular.test.mjs |
+| dom:tabular.grid-indexed-projection | connected | `O(r + c + qRow + qCell)` worst-case | `O(r + c)` | `O(1)` | `O(r + c)` | allowed | packages/dom/tests/tabular.test.mjs |
 | dom:tabular.header-metrics | trusted | `O(c + h)` worst-case | `O(c + h)` | `O(h)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | dom:tabular.row-indexed-lookup | connected | `O(nRow + qRow)` worst-case | `O(1)` | `O(1)` | `O(nRow)` | allowed | VAL-016, VAL-017 |
 | dom:text.native-reconcile | connected | `O(n)` worst-case | `O(1)` | `O(n)` | `O(1)` | allowed | VAL-016, VAL-017 |

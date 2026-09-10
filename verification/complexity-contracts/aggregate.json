@@ -26834,6 +26834,85 @@
     {
       "package": "dom",
       "surface": "hot",
+      "id": "tabular.grid-indexed-projection",
+      "source": "packages/dom/src/internal/tabular-grid-dom.ts",
+      "benchmarkIDs": [
+        "VAL-006:dom-tabular-grid-index"
+      ],
+      "specificationCeiling": "O(r + c + qRow + qCell)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "r",
+            "meaning": "rows in the current DataGrid or DataTreeGrid projection",
+            "ceiling": "Tabular accepted-view row ceiling"
+          },
+          {
+            "name": "c",
+            "meaning": "visible projected columns and accepted column definitions",
+            "ceiling": "Tabular maxColumns"
+          },
+          {
+            "name": "qRow",
+            "meaning": "row registration, row ARIA projection, tree hierarchy projection, and row reveal queries",
+            "ceiling": "connection-owned row host operations"
+          },
+          {
+            "name": "qCell",
+            "meaning": "cell registration, cell ARIA projection, and cell reveal queries",
+            "ceiling": "connection-owned cell host operations"
+          }
+        ],
+        "time": {
+          "bound": "O(r + c + qRow + qCell)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(r + c)",
+          "output": "O(1)",
+          "retained": "O(r + c)"
+        },
+        "resources": {
+          "allocations": "O(r + c)",
+          "cacheEntries": "O(r + c)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Tabular GridProfile rows are dense over the canonical visible start/center/end column partitions, so DOM cell membership is the conjunction of projected row and projected column identity rather than a second retained r*c cell index.",
+          "Projected row arrays identify row and tree-hierarchy generations; canonical GridProfile tree rows with the same parent identity are one sibling set at one depth.",
+          "Equivalent replacement column partitions may be compared once and rebound without rebuilding the DOM column index; accepted column-schema revisions identify editable-column capability generations."
+        ],
+        "ceilings": [
+          "The retained row lookup contains at most r entries and the retained signed column index contains at most c entries."
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "packages/dom/tests/tabular.test.mjs DOM DataGrid retains indexed row and column projection across dense cell registration and refresh",
+          "packages/dom/tests/tabular.test.mjs DOM DataGrid lookup invalidation rebuilds only changed projection domains",
+          "packages/dom/tests/tabular.test.mjs DOM DataTreeGrid retains sibling metadata across row registration and refresh"
+        ],
+        "resourceRationale": "One changed row projection builds row positions and, for DataTreeGrid, sibling set sizes and positions in O(r). One real column/schema change builds O(c) signed column entries, while an equivalent replacement performs one O(c) equality pass. Stable row and cell host projection uses expected O(1) Map lookups and disconnect releases all retained entries.",
+        "proof": "DOMTabularGrid indexes canonical GridProfile rows by row ID with row index and precomputed tree sibling metadata. It indexes each visible column with one signed 1-based value whose magnitude is aria-colindex and whose sign carries editability for the accepted schema revision. registerRow, registerCell, setRowAttributes, setCellAttributes, refresh, reveal checks, and space-key row selection reuse those indexes. The host does not rescan projection.rows, row.cells, or the accepted column schema per registered cell, and it does not rebuild an ordered-column array per cell.",
+        "adversarialWitness": "The production-path regressions register dense DataGrid cells at 10x20, 20x40, and 40x80 and observe zero projected-row, row-cell, accepted-schema, or column-partition scans during bulk registration plus refresh. Row-only view replacement rebuilds exactly r row lookup entries and zero equivalent column entries; a real column reorder rebuilds exactly r row entries and c column entries once, while hidden columns cease resolving. DataTreeGrid runs 100, 500, and 1,000 flat sibling rows with zero per-row hierarchy scans during registration and refresh, exact aria-setsize/aria-posinset values, and one r-entry hierarchy rebuild after view replacement.",
+        "evidence": [
+          "packages/dom/tests/tabular.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A changed row or column projection may scan its bounded domain once to rebuild the connection-owned index; ordinary row/cell registration and refresh cannot rescan those domains."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
       "id": "tabular.header-metrics",
       "source": "packages/dom/src/internal/tabular-dom.ts",
       "benchmarkIDs": [

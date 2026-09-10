@@ -1,12 +1,10 @@
 import type {
   TabularCellAddress,
-  TabularColumnDefinition,
   TabularColumnID,
   TabularHeaderNode,
   TabularHeaderNodeID,
   TabularQuery,
   TabularResult,
-  TabularRow,
   TabularRowID,
   TabularRowSelection,
   TabularSnapshot,
@@ -253,19 +251,6 @@ export function currentView(snapshot: TabularSnapshot): TabularView | null {
   return snapshot.state.acceptedViewState.kind === 'none' ? null : snapshot.state.acceptedViewState.view;
 }
 
-export function projectedColumns(snapshot: TabularSnapshot): readonly TabularColumnDefinition[] {
-  const view = currentView(snapshot);
-  return view?.columnSchema.columns ?? [];
-}
-
-export function projectedRows(snapshot: TabularSnapshot): readonly TabularRow[] {
-  return currentView(snapshot)?.rows ?? [];
-}
-
-export function findProjectedRow(snapshot: TabularSnapshot, rowID: string): TabularRow | undefined {
-  return projectedRows(snapshot).find((row) => row.id === rowID);
-}
-
 export function orderedColumnIDs(snapshot: TabularSnapshot): readonly TabularColumnID[] {
   const state = snapshot.state.columnState;
   const hidden = new Set(state.hidden);
@@ -277,14 +262,6 @@ export function orderedColumnIDs(snapshot: TabularSnapshot): readonly TabularCol
     ...visible.filter((id) => !start.has(id) && !end.has(id)),
     ...visible.filter((id) => end.has(id)),
   ]);
-}
-
-export function columnIndex(snapshot: TabularSnapshot, columnID: TabularColumnID): number {
-  return orderedColumnIDs(snapshot).indexOf(columnID) + 1;
-}
-
-export function rowIndex(snapshot: TabularSnapshot, rowID: string): number {
-  return projectedRows(snapshot).findIndex((row) => row.id === rowID) + 1;
 }
 
 export function rowSelected(selection: TabularRowSelection, rowID: TabularRowID): boolean {
@@ -496,11 +473,6 @@ export function resolveHeaderReference(
 
 export function headerElementID(headerNodeID: TabularHeaderNodeID): string {
   return `sectile-tabular-header-${stableIDElementToken(headerNodeID)}`;
-}
-
-export function leafHeaderID(snapshot: TabularSnapshot, columnID: TabularColumnID): string | null {
-  const metric = headerMetrics(snapshot).find((entry) => entry.columnID === columnID);
-  return metric === undefined ? null : headerElementID(metric.headerNodeID);
 }
 
 export function setColumnInlineSize(
