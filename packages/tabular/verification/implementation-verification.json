@@ -7,12 +7,12 @@
     {
       "group": "model",
       "tests": 8,
-      "sha256": "269b37505d5c527f6d8cc980d8c01958a61bf0ff4d19cf73a01106101b4b0ec5"
+      "sha256": "c74ae690d917cfa764d63cbd3fc65532e459a197108797f90cec0886a8696453"
     },
     {
       "group": "source",
       "tests": 18,
-      "sha256": "54f0c8d45ecc45a4a6d7c79993e63c573cead2baba513ee6f49beff8b53265c2"
+      "sha256": "78b83e13d2c2959629d78ad0d61e97fcd685cbc34f02f6ece41b7abdaeee1c83"
     },
     {
       "group": "columns",
@@ -32,7 +32,7 @@
     {
       "group": "profiles",
       "tests": 24,
-      "sha256": "6c41c05877f8713211e5326fea15fc2ec645c24b5f9faa8eaa188ad18764307b"
+      "sha256": "7cd3aecdceda08d13e79c4d64272742d7b736e7255d37abd9b774a7743860127"
     },
     {
       "group": "virtual",
@@ -78,9 +78,9 @@
     }
   },
   "footprint": {
-    "javascriptBytes": 156190,
-    "declarationBytes": 44298,
-    "sourceMapBytes": 112373,
+    "javascriptBytes": 156905,
+    "declarationBytes": 44401,
+    "sourceMapBytes": 112754,
     "packedBytes": 55011,
     "declarationFiles": 17,
     "publicSubpaths": 9

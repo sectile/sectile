@@ -1,4 +1,5 @@
 import { unwrap } from '@sectile/core/result';
+import { deriveSafeTabularPageStart } from './internal/access.js';
 import { fail, ok, validateID } from './internal/foundation.js';
 import { createContextParentIndexes, nextClientViewRevision, preparedViewOf, retainRemovedRowIDs, sliceVisibleRows } from './internal/source-view.js';
 import { tryCreateTabularModel } from './model.js';
@@ -1022,9 +1023,12 @@ function normalizeAccess(access: unknown): TabularResult<TabularAccessRange> {
     if (kind === 'page') {
       const page = value.page;
       const itemsPerPage = value.itemsPerPage;
-      return Number.isSafeInteger(page) && page >= 1 && Number.isSafeInteger(itemsPerPage) && itemsPerPage >= 1
-        ? ok(Object.freeze({ kind, page, itemsPerPage }))
-        : fail('transition-rejection', 'response-envelope-mismatch', 'Page access requires positive safe page and itemsPerPage values.');
+      if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(itemsPerPage) || itemsPerPage < 1) {
+        return fail('transition-rejection', 'response-envelope-mismatch', 'Page access requires positive safe page and itemsPerPage values.');
+      }
+      return deriveSafeTabularPageStart(page, itemsPerPage) === null
+        ? fail('transition-rejection', 'response-envelope-mismatch', 'Page access requires a safe derived start.')
+        : ok(Object.freeze({ kind, page, itemsPerPage }));
     }
     if (kind === 'window') {
       const start = value.start;
@@ -1047,9 +1051,9 @@ function validateAccess(access: TabularAccessRange): TabularResult<never> | null
 function sliceRange(access: TabularAccessRange, total: number): TabularResult<{ readonly start: number; readonly end: number }> {
   const invalid = validateAccess(access);
   if (invalid !== null) return invalid;
-  const start = access.kind === 'page' ? (access.page - 1) * access.itemsPerPage : access.start;
+  const start = access.kind === 'page' ? deriveSafeTabularPageStart(access.page, access.itemsPerPage) : access.start;
   const count = access.kind === 'page' ? access.itemsPerPage : access.count;
-  if (!Number.isSafeInteger(start) || start > total || (access.kind === 'page' && access.page !== 1 && start >= total)) {
+  if (start === null || start > total || (access.kind === 'page' && access.page !== 1 && start >= total)) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Requested access range starts outside the resolved projection.', { start, total });
   }
   return ok(Object.freeze({ start, end: Math.min(total, start + count) }));
@@ -1100,10 +1104,10 @@ function validateResponseCrossInvariants(
     });
   }
   const start = request.access.kind === 'page'
-    ? (request.access.page - 1) * request.access.itemsPerPage
+    ? deriveSafeTabularPageStart(request.access.page, request.access.itemsPerPage)
     : request.access.start;
   const capacity = request.access.kind === 'page' ? request.access.itemsPerPage : request.access.count;
-  if (!Number.isSafeInteger(start) || observable.length > capacity) {
+  if (start === null || observable.length > capacity) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Returned rows exceed the requested access range.');
   }
   if (visibleRowCount.kind === 'known') {

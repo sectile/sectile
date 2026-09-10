@@ -3,6 +3,13 @@ import { createPaginationModel, tryCreatePaginationState } from '@sectile/core/p
 import { fail, ok } from './foundation.js';
 import type { TabularAccessState, TabularResult } from '../contracts.js';
 
+export function deriveSafeTabularPageStart(page: number, itemsPerPage: number): number | null {
+  if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(itemsPerPage) || itemsPerPage < 1) return null;
+  const pageIndex = page - 1;
+  if (pageIndex > Math.floor(Number.MAX_SAFE_INTEGER / itemsPerPage)) return null;
+  return pageIndex * itemsPerPage;
+}
+
 export function canonicalizeTabularAccessState(
   state: TabularAccessState,
 ): TabularResult<TabularAccessState> {
@@ -27,6 +34,9 @@ export function canonicalizeTabularAccessState(
     const currentPagination = state.pagination;
     if (!Number.isSafeInteger(page) || page <= 0 || !Number.isSafeInteger(itemsPerPage) || itemsPerPage <= 0) {
       return fail('construction', 'invalid-controlled-shape', 'Page and itemsPerPage must be positive safe integers.');
+    }
+    if (deriveSafeTabularPageStart(page, itemsPerPage) === null) {
+      return fail('construction', 'invalid-controlled-shape', 'Page access must have a safe derived start.');
     }
     if (visibleRowCount === null) {
       return currentPagination === null

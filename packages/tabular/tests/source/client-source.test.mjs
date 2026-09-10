@@ -107,6 +107,38 @@ test('TAB-SRC-13: client view revisions use the final safe value and reject exha
   assert.equal(reset.value, 1);
 });
 
+test('ISSUE-073: source request and response validation reject unsafe page starts while accepting the last safe boundary', () => {
+  const itemsPerPage = 2;
+  const lastSafePage = Math.floor(Number.MAX_SAFE_INTEGER / itemsPerPage) + 1;
+  const unsafePage = lastSafePage + 1;
+  const unsafeRequest = request({ access: { kind: 'page', page: unsafePage, itemsPerPage } });
+  const invalid = resolveClientTabularRequest(source(), unsafeRequest);
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'response-envelope-mismatch');
+
+  const base = resolveClientTabularRequest(source(), request());
+  assert.equal(base.ok, true);
+  const rejectedResponse = synchronizeTabularView(unsafeRequest, {
+    ...base.value,
+    access: unsafeRequest.access,
+  });
+  assert.equal(rejectedResponse.ok, false);
+  assert.equal(rejectedResponse.error.code, 'response-envelope-mismatch');
+
+  const boundaryRequest = request({ access: { kind: 'page', page: lastSafePage, itemsPerPage } });
+  const start = (lastSafePage - 1) * itemsPerPage;
+  assert.equal(start, Number.MAX_SAFE_INTEGER - 1);
+  const acceptedResponse = synchronizeTabularView(boundaryRequest, {
+    ...base.value,
+    access: boundaryRequest.access,
+    rows: [],
+    matchingLeafCount: { kind: 'known', value: start },
+    visibleRowCount: { kind: 'known', value: start },
+  });
+  assert.equal(acceptedResponse.ok, true);
+  assert.equal(acceptedResponse.value.rows.length, 0);
+});
+
 test('TAB-SRC-03: response synchronization rejects stale or mismatched envelopes atomically', () => {
   const active = request({ requestID: 7, sourceGeneration: 2 });
   const response = resolveClientTabularRequest(source(), active);

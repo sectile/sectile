@@ -254,6 +254,40 @@ test('TAB-TBL-08: request-basis and projection counters stop at the safe-integer
   }
 });
 
+test('ISSUE-073: unsafe page starts reject before request publication and the last safe boundary remains publishable', () => {
+  const itemsPerPage = 2;
+  const lastSafePage = Math.floor(Number.MAX_SAFE_INTEGER / itemsPerPage) + 1;
+  const unsafePage = lastSafePage + 1;
+  const unsafeAccess = { kind: 'page', page: unsafePage, itemsPerPage, visibleRowCount: null, pagination: null };
+
+  const constructed = tryCreateDataTable({ columns, initialValues: { accessState: unsafeAccess } });
+  assert.equal(constructed.ok, false);
+  assert.equal(constructed.error.code, 'invalid-controlled-shape');
+
+  const table = createDataTable({ columns });
+  const commands = [];
+  table.subscribeCommands((command) => commands.push(command));
+  const before = table.getSnapshot();
+  const rejected = table.dispatch({ type: 'set-access', accessState: unsafeAccess });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'invalid-controlled-shape');
+  assert.equal(table.getSnapshot(), before);
+  assert.deepEqual(commands, []);
+
+  const accepted = table.dispatch({
+    type: 'set-access',
+    accessState: { kind: 'page', page: lastSafePage, itemsPerPage, visibleRowCount: null, pagination: null },
+  });
+  assert.equal(accepted.ok, true);
+  const request = table.getSnapshot().state.requestState.pendingRequest;
+  assert.equal(request.access.kind, 'page');
+  assert.equal(request.access.page, lastSafePage);
+  assert.equal((request.access.page - 1) * request.access.itemsPerPage, Number.MAX_SAFE_INTEGER - 1);
+  assert.equal(Number.isSafeInteger((request.access.page - 1) * request.access.itemsPerPage), true);
+  assert.equal(commands.length, 1);
+  assert.equal(commands[0].type, 'request-view');
+});
+
 test('ISSUE-049: committed query changes reset page and window access across ownership modes', () => {
   const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
   const next = { ...query, sort: [{ id: 'name', columnID: 'name', direction: 'ascending', comparator: 'text' }] };

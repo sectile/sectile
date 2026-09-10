@@ -200,6 +200,7 @@ test('TAB-MOD-06: every state slice is canonical, bounded, and detached from cal
     [{ query: { sort: [{ id: 'x', columnID: 'missing', direction: 'ascending', comparator: 'text' }], filters: [], groups: [], aggregates: [], pivots: [] } }, 'invalid-query-descriptor'],
     [{ columnState: { order: ['name', 'missing'], hidden: [], pinnedStart: [], pinnedEnd: [] } }, 'invalid-controlled-shape'],
     [{ accessState: { kind: 'page', page: 0, itemsPerPage: 25, visibleRowCount: null, pagination: null } }, 'invalid-controlled-shape'],
+    [{ accessState: { kind: 'page', page: Number.MAX_SAFE_INTEGER, itemsPerPage: 2, visibleRowCount: null, pagination: null } }, 'invalid-controlled-shape'],
     [{ expansion: ['same', 'same'] }, 'duplicate-identity'],
   ];
   for (const [initialValues, code] of invalidCases) {
