@@ -812,6 +812,77 @@
       }
     },
     {
+      "id": "tabular.cell-header-indexed-projection",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/data-table.ts",
+      "benchmarkIDs": [
+        "VAL-005:dom-tabular-cell-header-index"
+      ],
+      "specificationCeiling": "O(c + h + qCell + qHeader)",
+      "contract": {
+        "variables": [
+          {
+            "name": "c",
+            "meaning": "visible projected column count",
+            "ceiling": "Tabular maxColumns"
+          },
+          {
+            "name": "h",
+            "meaning": "canonical or fallback header node count",
+            "ceiling": "Tabular header topology ceiling"
+          },
+          {
+            "name": "qCell",
+            "meaning": "cell membership and headers-link projection queries",
+            "ceiling": "connection-owned registered cell operations"
+          },
+          {
+            "name": "qHeader",
+            "meaning": "header reference projection queries",
+            "ceiling": "connection-owned header projection operations"
+          }
+        ],
+        "time": {
+          "bound": "O(c + h + qCell + qHeader)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(c + h)",
+          "output": "O(1)",
+          "retained": "O(c + h)"
+        },
+        "resources": {
+          "allocations": "O(c + h)",
+          "cacheEntries": "O(c + h)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Tabular owns the canonical start/center/end column partitions and retains their identity for repeated projection reads over one column state.",
+          "Accepted column-schema revisions identify header-topology generations; an equivalent partition identity replacement may be compared once and rebound without rebuilding DOM header state."
+        ],
+        "ceilings": [
+          "The retained column index and leaf-header IDs contain at most c entries; retained header metric and element-ID maps contain at most h entries."
+        ],
+        "resourceRationale": "A real projected-column or accepted schema-revision change rebuilds one bounded column/header index. An identity-only equivalent partition replacement performs one O(c) equality pass without rebuilding header state. Stable cell and header projection performs expected O(1) Map lookup work and disconnect clears all retained entries.",
+        "proof": "The connection consumes Tabular's retained start/center/end partitions directly, builds one columnID-to-index Map, and passes that owner-derived index into the DOM header-metric projection exactly once per real column/schema change. Header metrics, header element IDs, and leaf header IDs are retained by identity. registerCell, setCellAttributes, setHeaderCellAttributes, and refresh then use Map lookups; none reconstruct semantic pin/hide ordering or the complete header domain per element.",
+        "adversarialWitness": "The production-path regression registers 25, 100, and 200 cells in one accepted row. The first lookup performs exactly c column-index writes and one c-item fallback-header materialization with zero raw scans of the retained semantic column order; one refresh and c header lookups add no rebuild work. A row-only accepted-view replacement with an equivalent partition and schema revision performs zero index/header rebuilds. A real column reorder, after Tabular prepares its semantic partition, and a later schema-revision replacement each rebuild exactly once and remain stable afterward.",
+        "deterministicWork": [
+          "packages/dom/tests/tabular.test.mjs DOM DataTable retains one column and header projection across cell registration and refresh"
+        ],
+        "evidence": [
+          "packages/dom/tests/tabular.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "One current projection/schema identity change may derive the bounded column/header domain once; per-cell and per-header host projection cannot rebuild it."
+        }
+      }
+    },
+    {
       "id": "tabular.header-metrics",
       "inherits": "linear-v1",
       "source": "packages/dom/src/internal/tabular-dom.ts",

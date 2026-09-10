@@ -291,7 +291,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "7a222daf80f6373d6c5ac8f47e17b7a1becff27e1b3d27adec7ab035663f6f98",
+  "fingerprint": "59e35dfea0a172930cff9e8269a7095ed1eb2b1d87ad405da3a8f856e6de5aa8",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -447,7 +447,7 @@
     },
     {
       "path": "dist/internal/tabular-dom.d.ts",
-      "sha256": "94ae1a7348139a88248086cb4cdaab578b5674e14b9eb4b8ccbef255a286fd19"
+      "sha256": "78a89f4041387551f2d3896b6b14f22d9fb89a6237b968700e419aacf2bc3bff"
     },
     {
       "path": "dist/internal/tabular-grid-dom.d.ts",

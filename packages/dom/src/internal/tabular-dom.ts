@@ -431,10 +431,17 @@ export function queryWithFilter(
 }
 
 export function headerMetrics(snapshot: TabularSnapshot): readonly TabularHeaderMetrics[] {
-  const view = currentView(snapshot);
   const columns = orderedColumnIDs(snapshot);
   const columnIndexes = new Map<TabularColumnID, number>();
   for (let index = 0; index < columns.length; index += 1) columnIndexes.set(columns[index]!, index + 1);
+  return headerMetricsFromColumnIndexes(snapshot, columnIndexes);
+}
+
+export function headerMetricsFromColumnIndexes(
+  snapshot: TabularSnapshot,
+  columnIndexes: ReadonlyMap<TabularColumnID, number>,
+): readonly TabularHeaderMetrics[] {
+  const view = currentView(snapshot);
   const source: readonly TabularHeaderNode[] = view?.columnSchema.headers.length
     ? view.columnSchema.headers
     : (view?.columnSchema.columns ?? []).map((column) => ({

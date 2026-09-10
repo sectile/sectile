@@ -29,15 +29,13 @@ import {
   bindEvent,
   bindRowSelectionActivation,
   clearAttributes,
-  columnIndex,
   domFailure,
   headerElementID,
-  leafHeaderID,
+  headerMetricsFromColumnIndexes,
   ok,
   queryWithFilter,
   queryWithSort,
   readEditorValue,
-  resolveHeaderReference,
   rowSelected,
   rowSelectionActivation,
   setEditorAttributes,
@@ -54,6 +52,7 @@ import {
   type TabularDOMEditorValueParser,
   type TabularDOMHeaderReference,
   type TabularDOMRegistrationOptions,
+  type TabularHeaderMetrics,
   type TabularDOMRowSelectionAnchor,
 } from './internal/tabular-dom.js';
 
@@ -171,8 +170,15 @@ class DOMDataTable implements DataTableConnection {
   readonly #rows = new Map<string, { readonly element: HTMLTableRowElement; readonly options: DataTableRowOptions }>();
   readonly #cells = new Map<string, { readonly element: HTMLTableCellElement; readonly options: DataTableCellOptions }>();
   readonly #projectedRowsByID = new Map<string, TabularRow>();
+  readonly #projectedColumnIndexes = new Map<TabularColumnID, number>();
+  readonly #headerMetricsByNodeID = new Map<string, TabularHeaderMetrics>();
+  readonly #headerMetricsByColumnID = new Map<TabularColumnID, TabularHeaderMetrics>();
+  readonly #headerElementIDsByNodeID = new Map<string, string>();
+  readonly #leafHeaderIDsByColumnID = new Map<TabularColumnID, string>();
   readonly #refreshers = new Set<() => void>();
   #projectedRows: readonly TabularRow[] | null = null;
+  #projectedColumns: DataTableProjection['columns'] | null = null;
+  #projectedColumnSchemaRevision: number | null = null;
   readonly #unsubscribeCommands: () => void;
   #projectionGeneration: number;
   #selectionAnchor: TabularDOMRowSelectionAnchor | null = null;
@@ -232,11 +238,16 @@ class DOMDataTable implements DataTableConnection {
   }
 
   public setHeaderCellAttributes(element: HTMLTableCellElement, options: DataTableHeaderCellOptions): void {
-    const resolved = resolveHeaderReference(this.getSnapshot(), options);
-    const metric = resolved.metric;
+    const snapshot = this.getSnapshot();
+    const projection = this.getProjection();
+    this.#ensureProjectedColumns(projection, snapshot);
+    const metric = options.columnID === undefined
+      ? this.#headerMetricsByNodeID.get(options.headerNodeID)
+      : this.#headerMetricsByColumnID.get(options.columnID);
+    const headerNodeID = metric?.headerNodeID ?? (options.columnID === undefined ? options.headerNodeID : options.columnID);
     element.setAttribute('data-part', 'column-header');
-    element.setAttribute('data-header-node-id', resolved.headerNodeID);
-    element.id = headerElementID(resolved.headerNodeID);
+    element.setAttribute('data-header-node-id', headerNodeID);
+    element.id = this.#headerElementIDsByNodeID.get(headerNodeID) ?? headerElementID(headerNodeID);
     if (metric === undefined) {
       element.colSpan = 1;
       element.rowSpan = 1;
@@ -251,7 +262,7 @@ class DOMDataTable implements DataTableConnection {
       return;
     }
     element.scope = 'col';
-    const sort = this.getSnapshot().state.query.sort.find((entry) => entry.columnID === metric.columnID);
+    const sort = snapshot.state.query.sort.find((entry) => entry.columnID === metric.columnID);
     if (sort === undefined) element.removeAttribute('aria-sort');
     else element.setAttribute('aria-sort', sort.direction);
     setColumnInlineSize(element, metric.columnID, this.#columnSizes.getState());
@@ -262,13 +273,10 @@ class DOMDataTable implements DataTableConnection {
   }
 
   public setCellAttributes(element: HTMLTableCellElement, options: DataTableCellOptions): void {
-    element.setAttribute('data-part', 'cell');
-    element.setAttribute('data-row-id', options.cell.rowID);
-    element.setAttribute('data-column-id', options.cell.columnID);
-    const headerID = leafHeaderID(this.getSnapshot(), options.cell.columnID);
-    if (headerID === null) element.removeAttribute('headers');
-    else element.setAttribute('headers', headerID);
-    setColumnInlineSize(element, options.cell.columnID, this.#columnSizes.getState());
+    const snapshot = this.getSnapshot();
+    const projection = this.getProjection();
+    this.#ensureProjectedColumns(projection, snapshot);
+    this.#setCellAttributes(element, options, this.#leafHeaderIDsByColumnID.get(options.cell.columnID));
   }
 
   public registerRow(element: HTMLTableRowElement, options: DataTableRowOptions): TabularResult<() => void> {
@@ -286,14 +294,15 @@ class DOMDataTable implements DataTableConnection {
 
   public registerCell(element: HTMLTableCellElement, options: DataTableCellOptions): TabularResult<() => void> {
     const projection = this.getProjection();
+    const snapshot = this.getSnapshot();
     const valid = validateRegistrationGeneration(projection.generation, options);
     if (!valid.ok) return valid;
-    if (!this.#hasCell(projection, options.cell)) return domFailure('profile-view-mismatch', 'Registered DataTable cell is not projected.', { cell: options.cell });
+    if (!this.#hasCell(projection, snapshot, options.cell)) return domFailure('profile-view-mismatch', 'Registered DataTable cell is not projected.', { cell: options.cell });
     const key = JSON.stringify([options.cell.rowID, options.cell.columnID]);
     const current = this.#cells.get(key);
     if (current !== undefined && current.element !== element) return domFailure('profile-view-mismatch', 'DataTable cell is already registered.', { cell: options.cell });
     this.#cells.set(key, { element, options });
-    this.setCellAttributes(element, options);
+    this.#setCellAttributes(element, options, this.#leafHeaderIDsByColumnID.get(options.cell.columnID));
     return ok(this.#scope.retain(() => { if (this.#cells.get(key)?.element === element) this.#cells.delete(key); }));
   }
 
@@ -448,6 +457,7 @@ class DOMDataTable implements DataTableConnection {
   public refresh(): void {
     if (!this.#scope.active) return;
     const projection = this.getProjection();
+    const snapshot = this.getSnapshot();
     const generation = projection.generation;
     if (generation !== this.#projectionGeneration) {
       this.#projectionGeneration = generation;
@@ -460,7 +470,12 @@ class DOMDataTable implements DataTableConnection {
         this.#setRowAttributes(registration.element, registration.options, this.#projectedRowsByID.get(registration.options.rowID));
       }
     }
-    for (const registration of this.#cells.values()) this.setCellAttributes(registration.element, registration.options);
+    if (this.#cells.size > 0) {
+      this.#ensureProjectedColumns(projection, snapshot);
+      for (const registration of this.#cells.values()) {
+        this.#setCellAttributes(registration.element, registration.options, this.#leafHeaderIDsByColumnID.get(registration.options.cell.columnID));
+      }
+    }
     for (const refresh of this.#refreshers) refresh();
   }
 
@@ -471,7 +486,14 @@ class DOMDataTable implements DataTableConnection {
     this.#rows.clear();
     this.#cells.clear();
     this.#projectedRowsByID.clear();
+    this.#projectedColumnIndexes.clear();
+    this.#headerMetricsByNodeID.clear();
+    this.#headerMetricsByColumnID.clear();
+    this.#headerElementIDsByNodeID.clear();
+    this.#leafHeaderIDsByColumnID.clear();
     this.#projectedRows = null;
+    this.#projectedColumns = null;
+    this.#projectedColumnSchemaRevision = null;
     this.#refreshers.clear();
     this.#selectionAnchor = null;
     clearAttributes(this.#options.table, ['data-scope', 'data-part']);
@@ -492,6 +514,15 @@ class DOMDataTable implements DataTableConnection {
     } else clearAttributes(element, ['aria-level', 'aria-expanded']);
   }
 
+  #setCellAttributes(element: HTMLTableCellElement, options: DataTableCellOptions, headerID: string | undefined): void {
+    element.setAttribute('data-part', 'cell');
+    element.setAttribute('data-row-id', options.cell.rowID);
+    element.setAttribute('data-column-id', options.cell.columnID);
+    if (headerID === undefined) element.removeAttribute('headers');
+    else element.setAttribute('headers', headerID);
+    setColumnInlineSize(element, options.cell.columnID, this.#columnSizes.getState());
+  }
+
   #projectedRow(projection: DataTableProjection, rowID: string): TabularRow | undefined {
     this.#ensureProjectedRows(projection.rows);
     return this.#projectedRowsByID.get(rowID);
@@ -504,9 +535,52 @@ class DOMDataTable implements DataTableConnection {
     for (const row of rows) this.#projectedRowsByID.set(row.id, row);
   }
 
-  #hasCell(projection: DataTableProjection, cell: TabularCellAddress): boolean {
-    return this.#projectedRow(projection, cell.rowID) !== undefined && columnIndex(this.getSnapshot(), cell.columnID) > 0;
+  #ensureProjectedColumns(projection: DataTableProjection, snapshot: TabularSnapshot): void {
+    const schemaRevision = snapshot.state.acceptedViewState.kind === 'none'
+      ? null
+      : snapshot.state.columnSchemaRevision;
+    if (this.#projectedColumns === projection.columns && this.#projectedColumnSchemaRevision === schemaRevision) return;
+    if (this.#projectedColumns !== null
+      && this.#projectedColumnSchemaRevision === schemaRevision
+      && sameProjectedColumns(this.#projectedColumns, projection.columns)) {
+      this.#projectedColumns = projection.columns;
+      return;
+    }
+    this.#projectedColumns = projection.columns;
+    this.#projectedColumnSchemaRevision = schemaRevision;
+    this.#projectedColumnIndexes.clear();
+    this.#headerMetricsByNodeID.clear();
+    this.#headerMetricsByColumnID.clear();
+    this.#headerElementIDsByNodeID.clear();
+    this.#leafHeaderIDsByColumnID.clear();
+    let index = 1;
+    for (const columns of [projection.columns.start, projection.columns.center, projection.columns.end]) {
+      for (const columnID of columns) this.#projectedColumnIndexes.set(columnID, index++);
+    }
+    for (const metric of headerMetricsFromColumnIndexes(snapshot, this.#projectedColumnIndexes)) {
+      this.#headerMetricsByNodeID.set(metric.headerNodeID, metric);
+      const elementID = headerElementID(metric.headerNodeID);
+      this.#headerElementIDsByNodeID.set(metric.headerNodeID, elementID);
+      if (metric.columnID !== null) {
+        this.#headerMetricsByColumnID.set(metric.columnID, metric);
+        this.#leafHeaderIDsByColumnID.set(metric.columnID, elementID);
+      }
+    }
   }
+
+  #hasCell(projection: DataTableProjection, snapshot: TabularSnapshot, cell: TabularCellAddress): boolean {
+    if (this.#projectedRow(projection, cell.rowID) === undefined) return false;
+    this.#ensureProjectedColumns(projection, snapshot);
+    return this.#projectedColumnIndexes.has(cell.columnID);
+  }
+}
+
+function sameProjectedColumns(left: DataTableProjection['columns'], right: DataTableProjection['columns']): boolean {
+  return sameIDs(left.start, right.start) && sameIDs(left.center, right.center) && sameIDs(left.end, right.end);
+}
+
+function sameIDs(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((id, index) => id === right[index]);
 }
 
 export type {

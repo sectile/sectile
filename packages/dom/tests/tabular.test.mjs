@@ -221,6 +221,125 @@ test('DOM DataTable retains one projected-row index across registration refresh 
   }
 });
 
+test('DOM DataTable retains one column and header projection across cell registration and refresh', () => {
+  for (const size of [25, 100, 200]) {
+    const window = new Window();
+    const document = window.document;
+    const table = document.createElement('table');
+    const projectionColumns = Array.from({ length: size }, (_, index) => ({ id: `c${index}`, headerNodeID: `h${index}` }));
+    const record = Object.fromEntries([['id', 'r0'], ...projectionColumns.map((column, index) => [column.id, index])]);
+    const connection = createDataTable({ columns: projectionColumns, table });
+    assert.equal(connection.synchronizeView(clientResponse(connection.controller, [record], {
+      revision: 0, columns: projectionColumns, headers: [],
+    })).ok, true);
+    const cells = projectionColumns.map(() => document.createElement('td'));
+    const filter = Array.prototype.filter;
+    const set = Map.prototype.set;
+    const initialOrder = connection.getSnapshot().state.columnState.order;
+    let rawColumnFilterInputs = 0;
+    let columnIndexWrites = 0;
+    let headerMetricWrites = 0;
+    Array.prototype.filter = function(...args) {
+      if (this === initialOrder) rawColumnFilterInputs += this.length;
+      return filter.apply(this, args);
+    };
+    Map.prototype.set = function(key, value) {
+      if (typeof key === 'string' && key.startsWith('c') && typeof value === 'number') columnIndexWrites += 1;
+      if (value !== null && typeof value === 'object' && 'headerNodeID' in value && 'columnIndex' in value && 'colSpan' in value) headerMetricWrites += 1;
+      return set.call(this, key, value);
+    };
+    try {
+      for (let index = 0; index < size; index += 1) {
+        assert.equal(connection.registerCell(cells[index], { cell: { rowID: 'r0', columnID: `c${index}` } }).ok, true);
+      }
+      assert.equal(rawColumnFilterInputs, 0, `registration rescanned semantic column order at size ${size}`);
+      assert.equal(columnIndexWrites, size, `registration rebuilt column index at size ${size}`);
+      assert.equal(headerMetricWrites, size * 2, `registration rebuilt header metrics at size ${size}`);
+      connection.refresh();
+      for (let index = 0; index < size; index += 1) {
+        const header = document.createElement('th');
+        connection.setHeaderCellAttributes(header, { columnID: `c${index}` });
+        assert.equal(header.id, `sectile-tabular-header-s%3Ah${index}`);
+      }
+      assert.equal(rawColumnFilterInputs, 0, `stable projection rescanned semantic column order at size ${size}`);
+      assert.equal(columnIndexWrites, size, `stable projection rebuilt column index at size ${size}`);
+      assert.equal(headerMetricWrites, size * 2, `stable projection rebuilt header metrics at size ${size}`);
+    } finally {
+      Array.prototype.filter = filter;
+      Map.prototype.set = set;
+    }
+
+    assert.equal(connection.requestView().ok, true);
+    const equivalentColumns = projectionColumns.map((column) => ({ ...column }));
+    const equivalentResponse = clientResponse(connection.controller, [record], {
+      revision: 0, columns: equivalentColumns, headers: [],
+    });
+    let equivalentHeaderMetricWrites = 0;
+    Map.prototype.set = function(key, value) {
+      if (value !== null && typeof value === 'object' && 'headerNodeID' in value && 'columnIndex' in value && 'colSpan' in value) equivalentHeaderMetricWrites += 1;
+      return set.call(this, key, value);
+    };
+    try {
+      assert.equal(connection.synchronizeView({ ...equivalentResponse, viewRevision: 2 }).ok, true);
+    } finally {
+      Map.prototype.set = set;
+    }
+    assert.equal(equivalentHeaderMetricWrites, 0, `row-only view replacement rebuilt DOM header metrics at size ${size}`);
+
+    const reversed = projectionColumns.map((column) => column.id).reverse();
+    assert.equal(connection.controller.dispatch({
+      type: 'set-column-state',
+      columnState: { order: reversed, hidden: [], pinnedStart: [], pinnedEnd: [] },
+    }).ok, true);
+    connection.getProjection();
+    const changedOrder = connection.getSnapshot().state.columnState.order;
+    let invalidationFilterInputs = 0;
+    let invalidationIndexWrites = 0;
+    let invalidationHeaderMetricWrites = 0;
+    Array.prototype.filter = function(...args) {
+      if (this === changedOrder) invalidationFilterInputs += this.length;
+      return filter.apply(this, args);
+    };
+    Map.prototype.set = function(key, value) {
+      if (typeof key === 'string' && key.startsWith('c') && typeof value === 'number') invalidationIndexWrites += 1;
+      if (value !== null && typeof value === 'object' && 'headerNodeID' in value && 'columnIndex' in value && 'colSpan' in value) invalidationHeaderMetricWrites += 1;
+      return set.call(this, key, value);
+    };
+    try {
+      connection.refresh();
+      assert.equal(invalidationFilterInputs, 0, `DOM column change rescanned semantic order at size ${size}`);
+      assert.equal(invalidationIndexWrites, size, `column change did not rebuild index exactly once at size ${size}`);
+      assert.equal(invalidationHeaderMetricWrites, size * 2, `column change did not rebuild header metrics exactly once at size ${size}`);
+      connection.refresh();
+      assert.equal(invalidationFilterInputs, 0, `stable refresh rescanned semantic order after invalidation at size ${size}`);
+      assert.equal(invalidationIndexWrites, size, `stable refresh rebuilt index after invalidation at size ${size}`);
+      assert.equal(invalidationHeaderMetricWrites, size * 2, `stable refresh rebuilt header metrics after invalidation at size ${size}`);
+    } finally {
+      Array.prototype.filter = filter;
+      Map.prototype.set = set;
+    }
+
+    assert.equal(connection.requestView().ok, true);
+    const replacementColumns = projectionColumns.map((column, index) => ({ ...column, headerNodeID: `next-h${index}` }));
+    const replacementResponse = clientResponse(connection.controller, [record], {
+      revision: 1, columns: replacementColumns, headers: [],
+    });
+    let schemaReplacementHeaderMetricWrites = 0;
+    Map.prototype.set = function(key, value) {
+      if (value !== null && typeof value === 'object' && 'headerNodeID' in value && 'columnIndex' in value && 'colSpan' in value) schemaReplacementHeaderMetricWrites += 1;
+      return set.call(this, key, value);
+    };
+    try {
+      assert.equal(connection.synchronizeView({ ...replacementResponse, viewRevision: 3 }).ok, true);
+    } finally {
+      Map.prototype.set = set;
+    }
+    assert.equal(schemaReplacementHeaderMetricWrites, size * 2, `schema replacement did not rebuild DOM header metrics exactly once at size ${size}`);
+    assert.equal(cells[0].getAttribute('headers'), 'sectile-tabular-header-s%3Anext-h0');
+    connection.disconnect();
+  }
+});
+
 test('DOM DataTable header metrics follow contiguous projected intervals after legal reorder hide and pin', () => {
   const window = new Window();
   const document = window.document;
