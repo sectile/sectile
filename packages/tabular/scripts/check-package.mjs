@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { checkAllGroupEvidence } from './lib/evidence.mjs';
 
 const manifest = JSON.parse(await readFile('package.json', 'utf8'));
 assert.deepEqual(manifest.files, ['dist']);
@@ -25,6 +26,7 @@ const virtualModule = await import('../dist/virtual.js');
 assert.equal(typeof virtualModule.createDataTableVirtualAdapter, 'function');
 assert.equal(typeof virtualModule.createDataGridVirtualAdapter, 'function');
 assert.equal(typeof virtualModule.createDataTreeGridVirtualAdapter, 'function');
+await checkAllGroupEvidence();
 
 let javascriptBytes = 0;
 let declarationBytes = 0;

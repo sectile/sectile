@@ -443,7 +443,7 @@ test('ISSUE-062: range selection uses the retained visible leaf index instead of
   assert.equal(fullArraySearches, 0);
 });
 
-test('TAB-TBL-06: row range events use accepted leaf order and reject stale endpoints', () => {
+test('TAB-TBL-10: row range events use accepted leaf order and reject stale endpoints', () => {
   const table = createDataTable({ columns });
   const pending = table.getSnapshot().state.requestState.pendingRequest;
   const response = resolveClientTabularRequest(source, pending);

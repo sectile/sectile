@@ -6,8 +6,8 @@
   "deterministicEvidence": [
     {
       "group": "model",
-      "tests": 7,
-      "sha256": "9dbd31a9277f39c71986015a247e444db7bba1942e69a6622b46df216da6a707"
+      "tests": 8,
+      "sha256": "269b37505d5c527f6d8cc980d8c01958a61bf0ff4d19cf73a01106101b4b0ec5"
     },
     {
       "group": "source",
@@ -21,23 +21,23 @@
     },
     {
       "group": "selection",
-      "tests": 6,
-      "sha256": "132d9d3c7f6a7ee21f3ab4714fada6dd53f3fb52f749b25bfbf64c3f41875d7c"
+      "tests": 8,
+      "sha256": "5bf52caf8c1183cbc9d1f63757bb6c6f628e244df73da1425bcbf8d9fd67df53"
     },
     {
       "group": "advanced",
       "tests": 7,
-      "sha256": "3097cb5d27b29b913e17a327962d8e913a61c6f6269295d5f6bd18491a076df5"
+      "sha256": "e869397d4763a0d3e2f3b5b276de9c737f74801cb014907c14f3492ef70b1216"
     },
     {
       "group": "profiles",
-      "tests": 23,
-      "sha256": "27ab12d1045db6a5470853af44b772ca9863d779faee13b595426a8de96e42ce"
+      "tests": 24,
+      "sha256": "6c41c05877f8713211e5326fea15fc2ec645c24b5f9faa8eaa188ad18764307b"
     },
     {
       "group": "virtual",
-      "tests": 8,
-      "sha256": "f44ff6352b504658e99f5b97d40f5971e32c88559567f64c201997c75c02b26e"
+      "tests": 9,
+      "sha256": "ca716a91c8e01dc27337540e903a356405e0f6462c865b90434c2e8514e89487"
     },
     {
       "group": "virtual-witnesses",
@@ -78,9 +78,9 @@
     }
   },
   "footprint": {
-    "javascriptBytes": 154869,
+    "javascriptBytes": 156190,
     "declarationBytes": 44298,
-    "sourceMapBytes": 111598,
+    "sourceMapBytes": 112373,
     "packedBytes": 55011,
     "declarationFiles": 17,
     "publicSubpaths": 9

@@ -73,30 +73,30 @@
   ],
   "packedDependencyClosure": {
     "status": "passed",
-    "files": 316,
-    "imports": 493
+    "files": 321,
+    "imports": 496
   },
-  "deterministicEvidenceFingerprint": "e97da7ad1ccf6984226b18ea3f941814e57ad9df3d29f0ecebb78a9ba6c3d27d",
+  "deterministicEvidenceFingerprint": "e9cdd3c2d04dbabd90a502bf70209c2842bc26d87e8d739cd209494fd26ede7d",
   "evidence": [
     {
       "path": "docs/ko/packages/tabular.md",
-      "sha256": "c576306f7751dc57ce995e5587715cb64a6d5861a1b8c3cb9a3982e6cdbcc048"
+      "sha256": "a1b5fd1a15915ceb180887066265d9eb80446b1371aea1d4a1b7702b8d48069c"
     },
     {
       "path": "docs/packages/tabular.md",
-      "sha256": "a60b76774d2fb3c05b21f6133bfb44c21be977518380ffdf91e557172e98f422"
+      "sha256": "bd6f75271670e4f2ef07b8f25279c4d9e2e224f2aea58b63912c1a6682050d27"
     },
     {
       "path": "packages/core/testing/public-api.json",
-      "sha256": "1802bb4dc8ccfd7221b2420796b937984f2ba1b35ed7db7fa82f18406f9a8aca"
+      "sha256": "dba14b163f6ee429587c05b74aec9f4bb5167f9c53ae4e1fbf9282eb7b7fc7ab"
     },
     {
       "path": "packages/core/testing/semantic-api.json",
-      "sha256": "e160d5bef9c3d0b9785ef7f48e6f8f6126c14c09b254557878a38bb5e07189a9"
+      "sha256": "6992a6fa3cda4d204c4c5b2461b11bb42a8b9cf171557ed29dcf7a5e38ab8341"
     },
     {
       "path": "packages/dom/testing/public-signatures.json",
-      "sha256": "8607427d8502e0a1058d238fccb38ce0ef33a488b377372a65d29bdd993a74a8"
+      "sha256": "1ced2eb391646feb96d3947163fd2b2a31da8932f94077db1774732d8e529c96"
     },
     {
       "path": "packages/dom/verification/browser.json",
@@ -108,7 +108,7 @@
     },
     {
       "path": "packages/tabular/verification/advanced.json",
-      "sha256": "3097cb5d27b29b913e17a327962d8e913a61c6f6269295d5f6bd18491a076df5"
+      "sha256": "e869397d4763a0d3e2f3b5b276de9c737f74801cb014907c14f3492ef70b1216"
     },
     {
       "path": "packages/tabular/verification/architecture.json",
@@ -116,7 +116,7 @@
     },
     {
       "path": "packages/tabular/verification/benchmark.json",
-      "sha256": "db3fcaf53adca477e72b245d744f5d7703b15291c9eb134c834ed398a6617f30"
+      "sha256": "fa4692d373057338761a6e7abce22e5aaa708eda2e7cf183fd5f417836d78ad7"
     },
     {
       "path": "packages/tabular/verification/columns.json",
@@ -124,75 +124,75 @@
     },
     {
       "path": "packages/tabular/verification/implementation-verification.json",
-      "sha256": "e97da7ad1ccf6984226b18ea3f941814e57ad9df3d29f0ecebb78a9ba6c3d27d"
+      "sha256": "e9cdd3c2d04dbabd90a502bf70209c2842bc26d87e8d739cd209494fd26ede7d"
     },
     {
       "path": "packages/tabular/verification/model.json",
-      "sha256": "77746642774572c2e29727ec723802d4895c6dbe593aa0f861d9001888fa2276"
+      "sha256": "269b37505d5c527f6d8cc980d8c01958a61bf0ff4d19cf73a01106101b4b0ec5"
     },
     {
       "path": "packages/tabular/verification/profiles.json",
-      "sha256": "314d78e41bd20da5df225de3d355651a8d2d5b5e801ba9b4c5fe9df4278b7aa7"
+      "sha256": "6c41c05877f8713211e5326fea15fc2ec645c24b5f9faa8eaa188ad18764307b"
     },
     {
       "path": "packages/tabular/verification/selection.json",
-      "sha256": "132d9d3c7f6a7ee21f3ab4714fada6dd53f3fb52f749b25bfbf64c3f41875d7c"
+      "sha256": "5bf52caf8c1183cbc9d1f63757bb6c6f628e244df73da1425bcbf8d9fd67df53"
     },
     {
       "path": "packages/tabular/verification/source.json",
-      "sha256": "76839243c19cb3d675982dc89ae4ee18407da3400582d075b763208c1852b7a9"
+      "sha256": "54f0c8d45ecc45a4a6d7c79993e63c573cead2baba513ee6f49beff8b53265c2"
     },
     {
       "path": "packages/tabular/verification/virtual-witnesses.json",
-      "sha256": "4b28c486b42813dbcc9738901eb3443cdf2b2b6f4c38850911f77502a454c38c"
+      "sha256": "b637069b4c700a3c017b37cb2ff2db728e7eefff9d6fa53ea6077024614cd4c8"
     },
     {
       "path": "packages/tabular/verification/virtual.json",
-      "sha256": "f02c97ed36a2c670191a8761a6fe6e4274d877f74d59446fca5f91f93334edf4"
+      "sha256": "ca716a91c8e01dc27337540e903a356405e0f6462c865b90434c2e8514e89487"
     },
     {
       "path": "packages/virtual/testing/law-evidence.json",
-      "sha256": "c3b7beb195815a526be14def2757aba09ea59ff019bb71a407328d623e846afc"
+      "sha256": "866bf7ba694c5ee957b679d464af0c7fde970daa2cfb4b3639fcc6e05c614c94"
     },
     {
       "path": "packages/virtual/testing/public-signatures.json",
-      "sha256": "4754248e4d119fba8c1224f32b3f8dbd467ffa147928237d5de81714c3b7de67"
+      "sha256": "880545e182a0a9c8e7787a52a800a7ca246d72836b4a4d686499a63f213be301"
     },
     {
       "path": "packages/vue/tests/data-grid.test.mjs",
-      "sha256": "4c31ffb8f421c53fe4ea9777881725d1ad715883299a489399da47981754dffc"
+      "sha256": "de9d274aa3ebb55ae74f21fecdf6cf2c20ecdf834fb4f0be925620afee8e7730"
     },
     {
       "path": "packages/vue/tests/data-table.test.mjs",
-      "sha256": "696d0fb325c7e84f2c585291d7881d80d4383b0e2b3a6e04221940479e63761c"
+      "sha256": "4e2f42a6054b4919fd72613568295cecc3e91695ce7856af5a8e26edaf7522ff"
     },
     {
       "path": "packages/vue/tests/data-tree-grid.test.mjs",
-      "sha256": "7bc32e109a596e1769d151d2b449cd5479c31b8e748b486b97b80c77958d8a40"
+      "sha256": "e61ef360ad61a64d28984c747b228fdf51f90ff3a9f72e2f67e443affc05a98c"
     },
     {
       "path": "packages/vue/tests/tabular-source.test.mjs",
-      "sha256": "84b5c9ced7bb38e57ee0ca24b34562a316ca429c363eb19ece414eb2ddd64c7a"
+      "sha256": "a5dba61ca57712210b86c9519e2a0f1afd40322f379e1de45c556b96d03155af"
     },
     {
       "path": "packages/vue/tests/tabular-ssr.test.mjs",
-      "sha256": "9fea2044661fd5f146ee80c05e483644c503df000825427e60f8c6190e35766b"
+      "sha256": "0eb5ba00768e206d6298593d4661a0a970f6781ab5164c6883f710ddb51eb589"
     },
     {
       "path": "packages/vue/type-tests/tabular-components.ts",
-      "sha256": "fb1134a3e52e3976c391b5a4bf6046c8e432d8f1950c3159500bc68b2fb5ba0b"
+      "sha256": "4c3d02e91063a8da7d4d60e2f6595cfe39a45a496990ec31a8ff4dc8d979c651"
     },
     {
       "path": "packages/vue/verification/tabular-virtual-browser.json",
-      "sha256": "e16c7405b4ab7b02231b7b9c670d93cf48f737f09c8790b8acd609dea2af2295"
+      "sha256": "3e2d2ba044b1aedea92e49e5e477c7c97b84bdf686b5f7097105f220556f8946"
     },
     {
       "path": "verification/component-completeness.json",
-      "sha256": "20602b410775786a8a2ce8a848a0a18fe6dbc1938f8ce79958e4f2b7b86727a3"
+      "sha256": "9633249052c68b6d3b7c471eb2969f166fba5ad32f1f718238eb8f0dacee12ad"
     },
     {
       "path": "verification/component-evidence.json",
-      "sha256": "bd329f45ba25e85334fec9fee37ee9368df43044a05d011ca005d19cfc88d021"
+      "sha256": "09a5c6de8235d3945b184e252fa9a94d99df5d582369c4acb18ab6f5a51fc56f"
     },
     {
       "path": "verification/component-public-api.json",
@@ -200,11 +200,11 @@
     },
     {
       "path": "verification/consumer-install/tabular.json",
-      "sha256": "f5f29e8c867d3277ccab55c90191dc72a96d97d8c5cad2a1d0acb70724b9ec5e"
+      "sha256": "517dcd2d7a085e9fdb2a7dd5378603de195062ed4dd4b153e3609be34dd90424"
     },
     {
       "path": "verification/tabular/architecture.json",
-      "sha256": "60a586aca98d34afcba78f7ff6d469a22544c833efd989a1986c58031c2c89f5"
+      "sha256": "8c0785ffba543b6d7bcfe10cd60820d663aec362418c336df1cd16ad09a3fed9"
     }
   ]
 }
