@@ -279,3 +279,95 @@ test('TAB-VIR-08: grid reconciliation stays within endpoint track ceilings', () 
   assert.equal(overCeiling.ok, false);
   assert.equal(overCeiling.error.code, 'projected-cell-ceiling-exceeded');
 });
+
+test('TAB-VIR-09: projection ceilings reject before identity and extent materialization', () => {
+  const count = 100_000;
+  const tableReads = { value: 0 };
+  const gridReads = { value: 0 };
+  const tableRows = Array.from({ length: count }, (_, index) => {
+    const entry = {};
+    Object.defineProperty(entry, 'id', {
+      enumerable: true,
+      get() { tableReads.value += 1; return `r${index}`; },
+    });
+    return entry;
+  });
+  const gridRows = Array.from({ length: count }, (_, index) => {
+    const entry = {};
+    Object.defineProperty(entry, 'rowID', {
+      enumerable: true,
+      get() { gridReads.value += 1; return `r${index}`; },
+    });
+    return entry;
+  });
+  let extentCalls = 0;
+  const rowExtents = { kind: 'by-id', getExtent: () => { extentCalls += 1; return exact(20); } };
+  const columnExtents = { kind: 'by-id', getExtent: () => { extentCalls += 1; return exact(80); } };
+  const oneColumn = { start: [], center: ['name'], end: [] };
+  const limits = { maxProjectedCells: 1 };
+
+  const oversizedTable = { generation: 2, rows: tableRows };
+  const tableCreate = tryCreateDataTableVirtualAdapter({ projection: oversizedTable, rowExtents, crossExtent: 320, limits });
+  assert.equal(tableCreate.ok, false);
+  assert.equal(tableCreate.error.code, 'item-ceiling-exceeded');
+  assert.equal(tableReads.value, 0);
+  assert.equal(extentCalls, 0);
+
+  const currentTable = tryCreateDataTableVirtualAdapter({
+    projection: tableProjection(['r0']), rowExtents, crossExtent: 320, limits,
+  });
+  assert.equal(currentTable.ok, true);
+  const tableCallsAfterCreate = extentCalls;
+  const tableReconcile = reconcileDataTableVirtualAdapter(currentTable.value, currentTable.value.state, oversizedTable);
+  assert.equal(tableReconcile.ok, false);
+  assert.equal(tableReconcile.error.code, 'item-ceiling-exceeded');
+  assert.equal(tableReads.value, 0);
+  assert.equal(extentCalls, tableCallsAfterCreate);
+
+  const oversizedGrid = { generation: 2, rows: gridRows, columns: oneColumn };
+  for (const create of [tryCreateDataGridVirtualAdapter, tryCreateDataTreeGridVirtualAdapter]) {
+    const result = create({ projection: oversizedGrid, rowExtents, columnExtents, limits });
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'projected-cell-ceiling-exceeded');
+  }
+  assert.equal(gridReads.value, 0);
+  assert.equal(extentCalls, tableCallsAfterCreate);
+
+  const currentGridProjection = gridProjection(['r0'], oneColumn, 1);
+  const currentGrid = tryCreateDataGridVirtualAdapter({ projection: currentGridProjection, rowExtents, columnExtents, limits });
+  const currentTree = tryCreateDataTreeGridVirtualAdapter({ projection: currentGridProjection, rowExtents, columnExtents, limits });
+  assert.equal(currentGrid.ok, true);
+  assert.equal(currentTree.ok, true);
+  const gridCallsAfterCreate = extentCalls;
+  for (const [adapter, reconcile] of [
+    [currentGrid.value, reconcileDataGridVirtualAdapter],
+    [currentTree.value, reconcileDataTreeGridVirtualAdapter],
+  ]) {
+    const result = reconcile(adapter, adapter.state, oversizedGrid);
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'projected-cell-ceiling-exceeded');
+  }
+  assert.equal(gridReads.value, 0);
+  assert.equal(extentCalls, gridCallsAfterCreate);
+
+  let columnReads = 0;
+  const oversizedColumns = new Array(2);
+  for (let index = 0; index < oversizedColumns.length; index += 1) {
+    Object.defineProperty(oversizedColumns, index, {
+      enumerable: true,
+      get() { columnReads += 1; return index === 0 ? 'name' : 'score'; },
+    });
+  }
+  const twoColumnProjection = gridProjection(['r0'], { start: [], center: [], end: [] }, 3);
+  twoColumnProjection.columns = { start: [], center: oversizedColumns, end: [] };
+  const columnRejected = tryCreateDataGridVirtualAdapter({ projection: twoColumnProjection, rowExtents, columnExtents, limits });
+  assert.equal(columnRejected.ok, false);
+  assert.equal(columnRejected.error.code, 'projected-cell-ceiling-exceeded');
+  assert.equal(columnReads, 0);
+
+  assert.equal(tryCreateDataTableVirtualAdapter({
+    projection: tableProjection(['r0']), rowExtents, crossExtent: 320, limits,
+  }).ok, true);
+  assert.equal(tryCreateDataGridVirtualAdapter({ projection: currentGridProjection, rowExtents, columnExtents, limits }).ok, true);
+  assert.equal(tryCreateDataTreeGridVirtualAdapter({ projection: currentGridProjection, rowExtents, columnExtents, limits }).ok, true);
+});

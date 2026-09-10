@@ -351,6 +351,56 @@
       }
     },
     {
+      "id": "virtual.projection-preflight",
+      "inherits": "constant-v1",
+      "source": "packages/tabular/src/virtual.ts",
+      "benchmarkIDs": [
+        "VAL-002:tabular-virtual-projection-preflight"
+      ],
+      "specificationCeiling": "O(1) before resource rejection",
+      "contract": {
+        "variables": [
+          {
+            "name": "nRow",
+            "meaning": "caller-provided projected row cardinality",
+            "ceiling": "maxProjectedCells"
+          },
+          {
+            "name": "nColumn",
+            "meaning": "caller-provided projected column cardinality across all pin partitions",
+            "ceiling": "maxProjectedCells"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "DataTable create/reconcile checks projected row array length before ID mapping. Grid create/reconcile reads row and partition array lengths, checks row/column ceilings, uses division for the projected-cell ceiling, and checks non-empty partition count before mapping row IDs, concatenating column IDs, invoking extent policies, or creating regions.",
+        "adversarialWitness": "TAB-VIR-09 presents 100k accessor-backed rows at maxProjectedCells=1 to DataTable, DataGrid, and DataTreeGrid create/reconcile and observes zero ID and extent-policy reads. An accessor-backed two-column domain also rejects with zero column element reads; exact-bound one-row/one-column controls remain accepted.",
+        "deterministicWork": [
+          "packages/tabular/tests/virtual/adapter.test.mjs TAB-VIR-09"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Inputs rejectable from projection cardinality must fail before translating or scanning their identity, extent, or region domains."
+        }
+      }
+    },
+    {
       "id": "virtual.reconcile-table",
       "inherits": "linear-v1",
       "source": "packages/tabular/src/virtual.ts",

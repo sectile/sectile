@@ -8,49 +8,55 @@
       "id": "TAB-VIR-01",
       "title": "TAB-VIR-01: DataTable reconciliation preserves measured stable identities across insert remove and reorder",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "4c64891b531669e5f84079b6258b1e1f512e553e0eb5a86428b63250c12a90b6"
+      "sha256": "7663cfac09623d8c022ecdbbcff08ec0f4a049bb24cb68f00a16f24568e7f278"
     },
     {
       "id": "TAB-VIR-02",
       "title": "TAB-VIR-02: reconciliation rejects stale unrelated Virtual state without conflating projection generation",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "4c64891b531669e5f84079b6258b1e1f512e553e0eb5a86428b63250c12a90b6"
+      "sha256": "7663cfac09623d8c022ecdbbcff08ec0f4a049bb24cb68f00a16f24568e7f278"
     },
     {
       "id": "TAB-VIR-03",
       "title": "TAB-VIR-03: partitioned Grid adapter survives measurement and center to pinned mutation without strategy replacement",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "4c64891b531669e5f84079b6258b1e1f512e553e0eb5a86428b63250c12a90b6"
+      "sha256": "7663cfac09623d8c022ecdbbcff08ec0f4a049bb24cb68f00a16f24568e7f278"
     },
     {
       "id": "TAB-VIR-04",
       "title": "TAB-VIR-04: partition and projected-cell ceilings remain distinct",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "4c64891b531669e5f84079b6258b1e1f512e553e0eb5a86428b63250c12a90b6"
+      "sha256": "7663cfac09623d8c022ecdbbcff08ec0f4a049bb24cb68f00a16f24568e7f278"
     },
     {
       "id": "TAB-VIR-05",
       "title": "TAB-VIR-05: by-id extent callbacks fail through a typed coordinate boundary",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "4c64891b531669e5f84079b6258b1e1f512e553e0eb5a86428b63250c12a90b6"
+      "sha256": "7663cfac09623d8c022ecdbbcff08ec0f4a049bb24cb68f00a16f24568e7f278"
     },
     {
       "id": "TAB-VIR-06",
       "title": "TAB-VIR-06: sparse repair is bounded and bulk replacement reuses stable measurements",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "4c64891b531669e5f84079b6258b1e1f512e553e0eb5a86428b63250c12a90b6"
+      "sha256": "7663cfac09623d8c022ecdbbcff08ec0f4a049bb24cb68f00a16f24568e7f278"
     },
     {
       "id": "TAB-VIR-07",
       "title": "TAB-VIR-07: table and grid locators reuse production indexes without array scans or cell maps",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "4c64891b531669e5f84079b6258b1e1f512e553e0eb5a86428b63250c12a90b6"
+      "sha256": "7663cfac09623d8c022ecdbbcff08ec0f4a049bb24cb68f00a16f24568e7f278"
     },
     {
       "id": "TAB-VIR-08",
       "title": "TAB-VIR-08: grid reconciliation stays within endpoint track ceilings",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "4c64891b531669e5f84079b6258b1e1f512e553e0eb5a86428b63250c12a90b6"
+      "sha256": "7663cfac09623d8c022ecdbbcff08ec0f4a049bb24cb68f00a16f24568e7f278"
+    },
+    {
+      "id": "TAB-VIR-09",
+      "title": "TAB-VIR-09: projection ceilings reject before identity and extent materialization",
+      "file": "tests/virtual/adapter.test.mjs",
+      "sha256": "7663cfac09623d8c022ecdbbcff08ec0f4a049bb24cb68f00a16f24568e7f278"
     }
   ],
   "expectedFailures": [

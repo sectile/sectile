@@ -12,7 +12,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | chart | 80 | 0 | 14 |
 | dom | 424 | 171 | 26 |
 | form | 21 | 0 | 9 |
-| tabular | 33 | 0 | 9 |
+| tabular | 33 | 0 | 10 |
 | temporal | 104 | 12 | 4 |
 | terminal | 347 | 167 | 8 |
 | virtual | 114 | 0 | 27 |
@@ -144,6 +144,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | tabular:source.resolve-invalidation | external | `O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)` worst-case | `O(nRecord*(1+gGroup) + kRow + dContext)` | `O(kRow + dContext)` | `O(nRecord*(1+gGroup+cColumn) + cPivotColumn)` | allowed | VAL-016, VAL-017 |
 | tabular:source.resolve-warm | trusted | `O(kRow + dContext)` worst-case | `O(kRow + dContext)` | `O(kRow + dContext)` | `O(nProjected)` | forbidden | VAL-016, VAL-017 |
 | tabular:virtual.locate | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(nRow + nColumn)` | forbidden | VAL-016, VAL-017 |
+| tabular:virtual.projection-preflight | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | tabular:virtual.reconcile-table | trusted | `O(nRow + j)` worst-case | `O(nRow)` | `O(nRow + j)` | `O(nRow)` | allowed | VAL-016, VAL-017 |
 | tabular:virtual.reconcile-track-grid | trusted | `O(rCurrent + rTarget + cCurrent + cTarget + gCurrent + gTarget)` worst-case | `O(rCurrent + rTarget + cCurrent + cTarget + gCurrent)` | `O(rTarget + cTarget + gCurrent + gTarget)` | `O(rTarget + cTarget + gTarget)` | allowed | VAL-016, VAL-017 |
 | temporal:calendar.page-years | external | `O(pPage)` worst-case | `O(pPage)` | `O(pPage)` | `O(pPage)` | allowed | packages/temporal/tests/composites/date-picker.test.mjs |

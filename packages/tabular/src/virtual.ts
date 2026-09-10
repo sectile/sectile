@@ -134,7 +134,10 @@ export function createDataTableVirtualAdapter(options: DataTableVirtualAdapterOp
 export function tryCreateDataTableVirtualAdapter(options: DataTableVirtualAdapterOptions): TabularVirtualResult<DataTableVirtualAdapter> {
   const limits = normalizeLimits(options.limits);
   if (!limits.ok) return limits;
-  const ids = options.projection.rows.map((row) => row.id);
+  const projectedRows = options.projection.rows;
+  const bounded = preflightTableRows(projectedRows.length, limits.value.maxProjectedCells);
+  if (!bounded.ok) return bounded;
+  const ids = projectedRows.map((row) => row.id);
   const sequence = tryCreateSequence(ids, { maxItems: limits.value.maxProjectedCells });
   if (!sequence.ok) return sequence;
   const extents = createExtentDomain(ids, options.rowExtents, limits.value.maxProjectedCells, 'row');
@@ -154,7 +157,10 @@ export function reconcileDataTableVirtualAdapter(
 ): TabularVirtualResult<DataTableVirtualReconciliation> {
   const privateState = tablePrivate.get(adapter);
   if (privateState === undefined || !compatibleLinearState(adapter.state, currentState)) return generationMismatch(adapter.state.generation, currentState.generation);
-  const target = nextProjection.rows.map((row) => row.id);
+  const projectedRows = nextProjection.rows;
+  const bounded = preflightTableRows(projectedRows.length, privateState.limits.maxProjectedCells);
+  if (!bounded.ok) return bounded;
+  const target = projectedRows.map((row) => row.id);
   const reconciled = reconcileLinear(currentState, target, privateState.rowExtents);
   if (!reconciled.ok) return reconciled;
   const next = createTableAdapter(nextProjection.generation, reconciled.value.state, privateState.rowExtents, privateState.limits);
@@ -299,12 +305,18 @@ function gridDomain(
   columnPolicy: TabularVirtualExtentPolicy<TabularColumnID>,
   limits: TabularVirtualLimits,
 ): TabularVirtualResult<{ readonly rows: readonly PartitionedTrack<TabularRowID>[]; readonly columns: readonly PartitionedTrack<TabularColumnID>[]; readonly regions: readonly PartitionedTrackGridRegion<TabularCellID, TabularRowID, TabularColumnID>[] }> {
-  const rowIDs = projection.rows.map((row) => row.rowID);
-  const columnIDs = [...projection.columns.start, ...projection.columns.center, ...projection.columns.end];
-  if (rowIDs.length > limits.maxProjectedCells || columnIDs.length > limits.maxProjectedCells) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Projected tracks exceed the configured ceiling.');
-  if (rowIDs.length * columnIDs.length > limits.maxProjectedCells) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Projected cells exceed the configured ceiling.');
-  const partitions = [projection.columns.start, projection.columns.center, projection.columns.end].filter((ids) => ids.length > 0).length;
+  const projectedRows = projection.rows;
+  const startColumns = projection.columns.start;
+  const centerColumns = projection.columns.center;
+  const endColumns = projection.columns.end;
+  const rowCount = projectedRows.length;
+  const columnCount = startColumns.length + centerColumns.length + endColumns.length;
+  if (rowCount > limits.maxProjectedCells || columnCount > limits.maxProjectedCells) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Projected tracks exceed the configured ceiling.');
+  if (rowCount > 0 && columnCount > Math.floor(limits.maxProjectedCells / rowCount)) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Projected cells exceed the configured ceiling.');
+  const partitions = Number(startColumns.length > 0) + Number(centerColumns.length > 0) + Number(endColumns.length > 0);
   if (partitions > limits.maxPartitions) return failure('resource-rejection', 'partition-ceiling-exceeded', 'Logical pin partitions exceed the configured ceiling.');
+  const rowIDs = projectedRows.map((row) => row.rowID);
+  const columnIDs = [...startColumns, ...centerColumns, ...endColumns];
   const rows: PartitionedTrack<TabularRowID>[] = [];
   for (let index = 0; index < rowIDs.length; index += 1) {
     const id = rowIDs[index]!;
@@ -317,14 +329,14 @@ function gridDomain(
     const id = columnIDs[index]!;
     const extent = tryExtentFor(columnPolicy, id, index, 'column');
     if (!extent.ok) return extent;
-    const partition = index < projection.columns.start.length
+    const partition = index < startColumns.length
       ? 'start' as const
-      : index < projection.columns.start.length + projection.columns.center.length
+      : index < startColumns.length + centerColumns.length
         ? 'center' as const
         : 'end' as const;
     columns.push(Object.freeze({ id, partition, extent: extent.value }));
   }
-  const regions = projection.rows.flatMap((row) => columnIDs.map((columnID) => Object.freeze({ id: encodeTabularCellID({ rowID: row.rowID, columnID }), row: row.rowID, column: columnID })));
+  const regions = projectedRows.flatMap((row) => columnIDs.map((columnID) => Object.freeze({ id: encodeTabularCellID({ rowID: row.rowID, columnID }), row: row.rowID, column: columnID })));
   return success(Object.freeze({ rows: Object.freeze(rows), columns: Object.freeze(columns), regions: Object.freeze(regions) }));
 }
 
@@ -422,6 +434,12 @@ function replaceLinear(state: LinearLayoutState<TabularRowID>, target: readonly 
   const applied = tryApplyLinearPatch(state, mutation);
   if (!applied.ok) return applied;
   return success(Object.freeze({ mutations: Object.freeze([mutation]), state: applied.value.state }));
+}
+
+function preflightTableRows(rowCount: number, maxProjectedCells: number): TabularVirtualResult<true> {
+  return rowCount <= maxProjectedCells
+    ? success(true)
+    : failure('resource-rejection', 'item-ceiling-exceeded', 'Sequence exceeds maxItems.', { size: rowCount, maxItems: maxProjectedCells });
 }
 
 function normalizeLimits(input: Partial<TabularVirtualLimits> | undefined): TabularVirtualResult<TabularVirtualLimits> {
