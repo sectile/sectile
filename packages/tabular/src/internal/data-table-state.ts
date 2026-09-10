@@ -17,6 +17,7 @@ import type {
 } from '../contracts.js';
 
 const models = new WeakMap<object, TabularModel>();
+const EMPTY_PROJECTED_ROWS = Object.freeze([]) as readonly TabularRow[];
 
 export function retainDataTableModel(controller: object, model: TabularModel): void {
   models.set(controller, model);
@@ -114,7 +115,7 @@ export interface DataTableStateProjection {
 export function projectDataTableState(state: TabularState): DataTableStateProjection {
   return Object.freeze({
     generation: state.projectionGeneration,
-    rows: state.acceptedViewState.kind === 'none' ? Object.freeze([]) : state.acceptedViewState.view.rows,
+    rows: state.acceptedViewState.kind === 'none' ? EMPTY_PROJECTED_ROWS : state.acceptedViewState.view.rows,
     columns: projectTabularColumnPartitions(state.columnState),
     rowSelection: state.rowSelection,
     expansion: state.expansion,

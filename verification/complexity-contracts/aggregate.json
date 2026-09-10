@@ -27909,6 +27909,68 @@
     {
       "package": "tabular",
       "surface": "hot",
+      "id": "data-table.get-projection-retained",
+      "source": "packages/tabular/src/internal/data-table-state.ts",
+      "benchmarkIDs": [
+        "VAL-003:data-table-retained-projection-read"
+      ],
+      "specificationCeiling": "O(1) for unchanged materialized column state",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "c",
+            "meaning": "canonical column-state order cardinality",
+            "ceiling": "c <= maxColumns"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(c)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "one WeakMap entry per live immutable column-state identity",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "The first projection read for a new immutable column-state identity materializes its O(c) partition arrays once."
+        ],
+        "ceilings": [
+          "safe-integer and package resource ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "packages/tabular/tests/profiles/data-table.test.mjs TAB-TBL-09",
+          "packages/tabular/tests/profiles/data-grid.test.mjs TAB-GRD-06"
+        ],
+        "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
+        "proof": "Column partitions are retained in the column owner by immutable column-state identity, and the no-view row domain uses one frozen singleton. Repeated reads over the same state perform one WeakMap lookup and construct only the small top-level projection wrapper; stale partitions cannot survive a column-state identity change and old entries are collectible with their WeakMap keys.",
+        "adversarialWitness": "TAB-TBL-09 performs repeated unchanged reads at 100, 1,000, and 10,000 columns with zero order-filter scans, then changes order/pinning and observes exactly one three-partition rebuild before subsequent O(1) reads. TAB-GRD-06 confirms pre-view Grid reads reuse the same empty-row and derived column-domain identities.",
+        "evidence": [
+          "VAL-016",
+          "VAL-017"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "An unchanged trusted projection read must not rescan the canonical column order."
+        }
+      }
+    },
+    {
+      "package": "tabular",
+      "surface": "hot",
       "id": "grid-profile.move",
       "source": "packages/tabular/src/internal/grid-profile.ts",
       "benchmarkIDs": [

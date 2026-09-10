@@ -19,6 +19,7 @@ const columnDomains = new WeakMap<object, {
   readonly columns: readonly TabularColumnDefinition[];
   readonly headers: readonly TabularHeaderNode[];
 }>();
+const projectedColumnPartitions = new WeakMap<object, TabularColumnPartitions>();
 type CanonicalColumnState = TabularColumnState;
 
 export function createTabularColumnState(
@@ -192,12 +193,16 @@ export function pinTabularColumn(
 }
 
 export function projectTabularColumnPartitions(state: TabularColumnState): TabularColumnPartitions {
+  const retained = projectedColumnPartitions.get(state);
+  if (retained !== undefined) return retained;
   const hidden = new Set(state.hidden);
   const start = new Set(state.pinnedStart);
   const end = new Set(state.pinnedEnd);
-  return Object.freeze({
+  const partitions = Object.freeze({
     start: Object.freeze(state.order.filter((id) => !hidden.has(id) && start.has(id))),
     center: Object.freeze(state.order.filter((id) => !hidden.has(id) && !start.has(id) && !end.has(id))),
     end: Object.freeze(state.order.filter((id) => !hidden.has(id) && end.has(id))),
   });
+  projectedColumnPartitions.set(state, partitions);
+  return partitions;
 }

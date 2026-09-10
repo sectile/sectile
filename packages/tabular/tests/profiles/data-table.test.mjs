@@ -124,6 +124,56 @@ test('TAB-TBL-05: controlled query proposes once and requests only after externa
   assert.deepEqual(commands, ['request-view']);
 });
 
+test('TAB-TBL-09: unchanged projection reads retain column partitions across domain sizes', () => {
+  const filter = Array.prototype.filter;
+  for (const size of [100, 1_000, 10_000]) {
+    const largeColumns = Array.from({ length: size }, (_, index) => ({ id: `c${index}` }));
+    const table = createDataTable({ columns: largeColumns, limits: { maxColumns: size } });
+    const first = table.getProjection();
+    const order = table.getSnapshot().state.columnState.order;
+    let orderScans = 0;
+    Array.prototype.filter = function(...args) {
+      if (this === order) orderScans += 1;
+      return filter.apply(this, args);
+    };
+    try {
+      const second = table.getProjection();
+      const third = table.getProjection();
+      assert.equal(second.columns, first.columns);
+      assert.equal(third.columns, first.columns);
+      assert.equal(second.rows, first.rows);
+      assert.equal(third.rows, first.rows);
+    } finally {
+      Array.prototype.filter = filter;
+    }
+    assert.equal(orderScans, 0, `${size} unchanged columns rescanned`);
+  }
+
+  const table = createDataTable({ columns });
+  const initial = table.getProjection();
+  const changed = table.dispatch({
+    type: 'set-column-state',
+    columnState: { order: ['score', 'name'], hidden: [], pinnedStart: ['score'], pinnedEnd: [] },
+  });
+  assert.equal(changed.ok, true);
+  const changedOrder = table.getSnapshot().state.columnState.order;
+  let rebuildScans = 0;
+  Array.prototype.filter = function(...args) {
+    if (this === changedOrder) rebuildScans += 1;
+    return filter.apply(this, args);
+  };
+  try {
+    const rebuilt = table.getProjection();
+    const retained = table.getProjection();
+    assert.notEqual(rebuilt.columns, initial.columns);
+    assert.equal(retained.columns, rebuilt.columns);
+    assert.deepEqual(rebuilt.columns, { start: ['score'], center: ['name'], end: [] });
+  } finally {
+    Array.prototype.filter = filter;
+  }
+  assert.equal(rebuildScans, 3);
+});
+
 test('TAB-TBL-08: request-basis and projection counters stop at the safe-integer ceiling', () => {
   const maximum = Number.MAX_SAFE_INTEGER;
   const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };

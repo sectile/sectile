@@ -12,7 +12,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | chart | 80 | 0 | 14 |
 | dom | 424 | 171 | 26 |
 | form | 21 | 0 | 9 |
-| tabular | 33 | 0 | 10 |
+| tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |
 | terminal | 347 | 167 | 8 |
 | virtual | 114 | 0 | 27 |
@@ -138,6 +138,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | form:state.construct | external | `O(fField + uID + iIssue + rRelation)` worst-case | `O(fField + iIssue + rRelation)` | `O(fField + iIssue + rRelation)` | `O(fField + iIssue + rRelation)` | allowed | packages/form/tests/state/form.test.mjs |
 | form:values.construct | external | `O(eEntry + pSegment + oNode)` worst-case | `O(pSegment + oNode)` | `O(oNode)` | `O(oNode)` | allowed | packages/form/tests/state/form.test.mjs, packages/dom/tests/form.test.mjs |
 | tabular:data-table.changed-slice | external | `O(sChanged + sRange)` worst-case | `O(sChanged + kRange)` | `O(sChanged + kRange)` | `O(sChanged + sOther + nView)` | forbidden | VAL-016, VAL-017 |
+| tabular:data-table.get-projection-retained | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(c)` | forbidden | VAL-016, VAL-017 |
 | tabular:grid-profile.move | trusted | `O(sAxis)` worst-case | `O(1)` | `O(1)` | `O(nCell)` | forbidden | VAL-016, VAL-017 |
 | tabular:header.projection-validation | external | `O(c + h)` worst-case | `O(c + h)` | `O(c)` | `O(c)` | allowed | VAL-016, VAL-017 |
 | tabular:source.resolve-cold | external | `O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)` worst-case | `O(nRecord*(1+gGroup) + kRow + dContext)` | `O(kRow + dContext)` | `O(nRecord*(1+gGroup+cColumn) + cPivotColumn)` | allowed | VAL-016, VAL-017 |

@@ -160,6 +160,10 @@ test('TAB-GRD-06: projection cells and indexes are retained across adjacent move
     columns,
     isCellDisabled: () => { disabledChecks += 1; return false; },
   });
+  const pendingFirst = controller.getProjection();
+  const pendingSecond = controller.getProjection();
+  assert.equal(pendingSecond.rows, pendingFirst.rows);
+  assert.equal(pendingSecond.columns, pendingFirst.columns);
   assert.equal(controller.synchronizeView(resolve(controller)).ok, true);
   const first = controller.getProjection();
   const second = controller.getProjection();
