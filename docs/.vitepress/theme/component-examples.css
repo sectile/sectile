@@ -228,7 +228,9 @@
   .demo-collection-field:disabled { color: var(--demo-disabled); background: var(--demo-soft); cursor: not-allowed; }
   .demo-collection-surface { display: grid; width: 100%; gap: 0.1rem; padding: 0.25rem; border: 1px solid var(--demo-border); border-radius: 0.65rem; color: var(--demo-text); background: var(--demo-surface); }
   .demo-collection-surface[hidden] { display: none; }
+  .catalog-combobox-content { z-index: 40; width: var(--sectile-position-anchor-width, 100%); max-width: var(--sectile-position-available-width, calc(100vw - 1rem)); max-height: var(--sectile-position-available-height, min(24rem, calc(100vh - 1rem))); overflow-y: auto; box-shadow: var(--sectile-shadow-floating); }
   .demo-collection-option { display: flex; min-height: 2.7rem; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.55rem 0.65rem; border-radius: 0.4rem; color: var(--demo-text); background: transparent; cursor: pointer; outline: 0; transition: background-color 100ms ease; }
+  .demo-collection-option[hidden], .demo-collection-empty[hidden] { display: none; }
   .demo-collection-option--detailed { min-height: 3.25rem; }
   .demo-collection-option:hover:not([aria-disabled="true"]):not([data-disabled]) { background: var(--demo-soft); }
   .demo-collection-option[data-highlighted]:not([aria-disabled="true"]):not([data-disabled]):not([data-selected]):not([data-state="checked"]) { background: var(--demo-soft); }
@@ -1115,6 +1117,11 @@
 }
 
 .component-example-stage[data-component='select']:has(.demo-select__trigger[data-state='open']) {
+  min-height: 25rem;
+  align-items: start;
+}
+
+.component-example-stage[data-component='combobox']:has(.catalog-combobox-content[data-state='open']) {
   min-height: 25rem;
   align-items: start;
 }

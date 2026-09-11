@@ -48,6 +48,8 @@ interface Context {
   readonly strategy: ComputedRef<PositionStrategy>;
   readonly label: ComputedRef<string | undefined>;
   readonly connection: ComputedRef<ComboboxConnection<string> | undefined>;
+  matchesItem(id: string): boolean;
+  hasMatches(): boolean;
   registerInput(element?: HTMLInputElement): void;
   registerPopup(element?: HTMLElement): void;
   registerItem(element: HTMLElement, id: string, disabled: boolean): void;
@@ -98,6 +100,28 @@ export const ComboboxRoot = defineComponent({
       inputValue: props.inputValue ?? localInput.value, highlightedValue: highlighted.value,
       open: props.open ?? localOpen.value, disabled: props.disabled, readonly: props.readonly,
     }));
+    const itemLabels = computed(() => new Map(props.items.map((item) => [item.id, item.label] as const)));
+    const matchingQuery = computed(() => {
+      const fallback = state.value.inputValue;
+      const text = connection.value?.getSnapshot().state.text;
+      return text === undefined
+        ? fallback
+        : text.composition === null
+          ? text.snapshot.text
+          : text.composition.baseline.text;
+    });
+    const matchesItem = (id: string): boolean => {
+      const label = itemLabels.value.get(id);
+      if (label === undefined) return false;
+      const matches = props.policies?.matches;
+      return matches === undefined || matches(label, matchingQuery.value, id);
+    };
+    const hasMatches = (): boolean => {
+      for (const item of props.items) {
+        if (matchesItem(item.id)) return true;
+      }
+      return false;
+    };
     const refresh = (): void => {
       const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return;
       localValue.value = snapshot.selection.selected[0] ?? null; localInput.value = snapshot.text.snapshot.text;
@@ -172,6 +196,7 @@ export const ComboboxRoot = defineComponent({
     provide<Context>(key, {
       state, position: computed(() => props.position), strategy: computed(() => props.strategy),
       label: computed(() => props.label), connection: computed(() => connection.value),
+      matchesItem, hasMatches,
       registerInput: (element) => { const changed = input.value !== element; input.value = element; if (changed) scheduleConnect(); }, registerPopup: (element) => { const changed = popup.value !== element; popup.value = element; if (changed) scheduleConnect(); },
       registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, { id, disabled }),
     });
@@ -276,7 +301,8 @@ export const ComboboxItem = defineComponent({
     }));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerItem(node, props.value, state.value.disabled); },
-      role: 'option', 'aria-selected': String(state.value.selected), 'aria-disabled': state.value.disabled ? 'true' : undefined,
+      role: 'option', hidden: !root.matchesItem(props.value),
+      'aria-selected': String(state.value.selected), 'aria-disabled': state.value.disabled ? 'true' : undefined,
       'data-sectile-combobox-id': props.value, 'data-disabled': state.value.disabled ? 'true' : undefined,
       'data-scope': 'combobox', 'data-part': 'item', 'data-selected': state.value.selected ? '' : undefined,
       'data-highlighted': state.value.highlighted ? '' : undefined,
@@ -288,7 +314,8 @@ export const ComboboxEmpty = defineComponent({
   name: 'SectileComboboxEmpty', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: ComboboxRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('ComboboxEmpty'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, role: 'status', 'data-scope': 'combobox', 'data-part': 'empty',
+    as: props.as, asChild: props.asChild, role: 'status', hidden: root.hasMatches(),
+    'data-scope': 'combobox', 'data-part': 'empty',
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
 

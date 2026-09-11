@@ -175,6 +175,11 @@ const code = computed(() => {
 });
 const state = computed(() => ({ component: props.component, scenario: props.scenario, parts: parts[props.component] ?? [] }));
 const isScenario = (...values: readonly string[]) => values.includes(props.scenario);
+const comboboxPolicies = computed(() => ({
+  matches: isScenario('contains')
+    ? (label: string, query: string): boolean => label.toLowerCase().includes(query.toLowerCase())
+    : (label: string, query: string): boolean => label.toLowerCase().startsWith(query.toLowerCase()),
+}));
 const unavailableBookingDates = new Set(['2026-08-27', '2026-08-29']);
 const dateKey = (value: DateValue): string => `${value.year}-${String(value.month).padStart(2, '0')}-${String(value.day).padStart(2, '0')}`;
 const dateRangePickerPolicies = computed(() => ({
@@ -655,8 +660,9 @@ const recordAction = (value: string): void => {
         <span class="catalog-field-label">Add an environment</span>
         <ComboboxRoot
           :items="environments"
-          :default-input-value="isScenario('contains') ? 'age' : 'pro'"
+          :default-input-value="isScenario('contains') ? 'agi' : 'pro'"
           :default-open="preview"
+          :policies="comboboxPolicies"
           class="demo-collection-root"
         >
           <ComboboxInput
@@ -664,7 +670,7 @@ const recordAction = (value: string): void => {
             aria-label="Search environments"
             placeholder="Search environments…"
           />
-          <ComboboxContent class="demo-collection-surface">
+          <ComboboxContent class="demo-collection-surface catalog-combobox-content">
             <ComboboxItem
               v-for="item in environments"
               :key="item.id"

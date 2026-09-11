@@ -18,7 +18,7 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref } = await import('vue');
-const { ComboboxInput, ComboboxRoot } = await import('../.verification-dist/combobox.js');
+const { ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxRoot } = await import('../.verification-dist/combobox.js');
 
 test('Vue combobox synchronizes controlled input values through the DOM connection', async () => {
   const host = document.createElement('div');
@@ -42,6 +42,59 @@ test('Vue combobox synchronizes controlled input values through the DOM connecti
   inputValue.value = 'Alpha';
   await nextTick();
   assert.equal(input.value, 'Alpha');
+
+  app.unmount();
+  host.remove();
+});
+
+test('Vue combobox projects filter policy into option and empty visibility', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const items = [
+    { id: 'alpha', label: 'Alpha' },
+    { id: 'beta', label: 'Beta' },
+    { id: 'alpine', label: 'Alpine' },
+  ];
+  const app = createApp({
+    render: () => h(ComboboxRoot, {
+      items,
+      defaultInputValue: 'al',
+      defaultOpen: true,
+      position: false,
+      policies: { matches: (label, query) => label.toLowerCase().startsWith(query.toLowerCase()) },
+    }, {
+      default: () => [
+        h(ComboboxInput),
+        h(ComboboxContent, null, {
+          default: () => [
+            ...items.map((item) => h(ComboboxItem, { value: item.id }, { default: () => item.label })),
+            h(ComboboxEmpty, null, { default: () => 'No matches' }),
+          ],
+        }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const options = [...host.querySelectorAll('[data-scope="combobox"][data-part="item"]')];
+  const empty = host.querySelector('[data-scope="combobox"][data-part="empty"]');
+  const input = host.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+  assert.ok(empty instanceof HTMLElement);
+  assert.deepEqual(options.map((option) => [option.textContent, option.hidden]), [
+    ['Alpha', false],
+    ['Beta', true],
+    ['Alpine', false],
+  ]);
+  assert.equal(empty.hidden, true);
+
+  input.value = 'zzz';
+  input.setSelectionRange(3, 3);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+  await nextTick();
+  assert.equal(options.every((option) => option.hidden), true);
+  assert.equal(empty.hidden, false);
 
   app.unmount();
   host.remove();
