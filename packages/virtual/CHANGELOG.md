@@ -1,5 +1,31 @@
 # @sectile/virtual
 
+## 0.15.2
+
+### Changes
+
+- fix(virtual): snapshot surface frame transforms (d49f633b)
+- fix(virtual): retain unchanged measurement generations (ea059acd)
+- fix(virtual): bound raw collection resolver work (e65a4eeb)
+- perf(virtual): retain masonry packing on geometry changes (fa9074c7)
+- perf(virtual): retain sparse regions on track append (7c05403a)
+- perf(virtual): repair structural spatial updates (3a938214)
+- perf(virtual): repair sparse spatial updates (19600c80)
+- perf(virtual): avoid previous region materialization (7bd6f6ff)
+- perf(virtual): retain tracks on region replacement (81b8f571)
+- perf(virtual): bound sparse region validation (04356679)
+- fix(virtual): capture measurement anchors once (2df7de43)
+- fix(virtual): align masonry measurement repair (6b5c666b)
+- fix(virtual): snapshot extent index inputs (b477ceff)
+- fix(virtual): snapshot partitioned measurements (e0d1c8ee)
+- fix(virtual): snapshot spatial items once (269cdbd8)
+- perf(virtual): preflight spatial splice patches (4d9f15f5)
+- fix(virtual): validate scroll target viewports (ec591500)
+- perf(virtual): preflight trusted collection patches (5ec25420)
+- fix(virtual): reject non-finite gap geometry (4026eaaa)
+- fix(virtual): preserve safe track search midpoints (45b8c4d2)
+- fix(virtual): reject non-finite extent aggregates (b8bcfe00)
+
 ## 0.15.1
 
 ### Changes

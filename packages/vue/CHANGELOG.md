@@ -1,5 +1,12 @@
 # @sectile/vue
 
+## 0.16.6
+
+### Changes
+
+- fix(vue): project combobox filter visibility (f77c401d)
+- fix(vue): abandon queued tabular requests on cancel (ebba9f5b)
+
 ## 0.16.5
 
 ### Changes

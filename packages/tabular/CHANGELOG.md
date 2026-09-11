@@ -1,5 +1,26 @@
 # @sectile/tabular
 
+## 0.15.2
+
+### Changes
+
+- fix(tabular): retain preflighted source records (4c82efb0)
+- fix(tabular): contain limit accessor failures (e24caf4f)
+- perf(tabular): reuse policy record snapshots (dd4cc3e8)
+- fix(tabular): require own policy registrations (6aeff1c8)
+- chore(tabular): refresh model implementation evidence (bdfa7958)
+- fix(tabular): retain one model input snapshot (76229b76)
+- test(tabular): cover model metadata read skew (51a1767c)
+- fix(tabular): reject unsafe derived page ranges (beb0abf8)
+- fix(verification): enforce Tabular evidence freshness (fccb2180)
+- perf(tabular): retain unchanged column projections (8202c448)
+- fix(tabular): preflight virtual projection ceilings (98bb461e)
+- fix(tabular): preflight encoded cell ID length (24f33d2e)
+- chore(tabular): converge verification artifacts (3b820c99)
+- fix(tabular): guard safe-integer revision exhaustion (a3e0ee05)
+- fix(tabular): bound virtual grid reconciliation (4c06d7e4)
+- fix: resolve form and tabular runtime defects (931cc750)
+
 ## 0.15.1
 
 ### Changes

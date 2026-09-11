@@ -1,5 +1,12 @@
 # @sectile/core
 
+## 0.14.5
+
+### Changes
+
+- fix(core): snapshot geometry factory scalars (09940938)
+- fix(core): reject non-finite derived rectangles (08fa2570)
+
 ## 0.14.4
 
 ### Changes

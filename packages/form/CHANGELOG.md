@@ -1,5 +1,11 @@
 # @sectile/form
 
+## 0.14.7
+
+### Changes
+
+- fix: resolve form and tabular runtime defects (931cc750)
+
 ## 0.14.6
 
 ### Changes

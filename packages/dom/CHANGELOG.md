@@ -1,5 +1,14 @@
 # @sectile/dom
 
+## 0.16.7
+
+### Changes
+
+- perf(dom): index Tabular Grid event targets (93162298)
+- perf(dom): index Tabular Grid projection (8995c20d)
+- perf(dom): retain DataTable column projection (18879993)
+- perf(dom): index projected DataTable rows (9ba58879)
+
 ## 0.16.6
 
 ### Changes
