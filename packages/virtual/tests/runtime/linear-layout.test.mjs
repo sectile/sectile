@@ -200,6 +200,83 @@ test('VRT-02, VRT-03: measurements preserve the anchor and reject stale generati
   assert.equal(tryApplyLinearMeasurements(changed.state, { generation: plan.generation, measurements: [] }).ok, false);
 });
 
+test('ISSUE-099: unchanged measurements preserve state, generation, and current work', () => {
+  const cases = [
+    {
+      state: createLinearLayout(domain(2, 'linear-noop'), createExtentIndex([exact(10), exact(20)]), { crossExtent: 100 }),
+      apply: tryApplyLinearMeasurements,
+      noOp: [{ index: 0, extent: exact(10) }],
+      changed: [{ index: 1, extent: exact(25) }],
+      mixed: [{ index: 0, extent: exact(10) }, { index: 1, extent: exact(25) }],
+      knowledgeState: createLinearLayout(domain(1, 'linear-kind'), createExtentIndex([estimated(10)]), { crossExtent: 100 }),
+      knowledge: [{ index: 0, extent: exact(10) }],
+    },
+    {
+      state: createMasonryLayout(domain(2, 'masonry-noop'), createExtentIndex([exact(10), exact(20)]), { laneCount: 1, laneExtent: 100 }),
+      apply: tryApplyMasonryMeasurements,
+      noOp: [{ index: 0, extent: exact(10) }],
+      changed: [{ index: 1, extent: exact(25) }],
+      mixed: [{ index: 0, extent: exact(10) }, { index: 1, extent: exact(25) }],
+      knowledgeState: createMasonryLayout(domain(1, 'masonry-kind'), createExtentIndex([estimated(10)]), { laneCount: 1, laneExtent: 100 }),
+      knowledge: [{ index: 0, extent: exact(10) }],
+    },
+    {
+      state: createTrackGridLayout(
+        createExtentIndex([exact(10), exact(20)]),
+        createExtentIndex([exact(30)]),
+        [{ id: 'grid-noop', row: 0, column: 0 }],
+      ),
+      apply: tryApplyGridMeasurements,
+      noOp: [{ axis: 'row', index: 0, extent: exact(10) }],
+      changed: [{ axis: 'column', index: 0, extent: exact(35) }],
+      mixed: [
+        { axis: 'row', index: 0, extent: exact(10) },
+        { axis: 'column', index: 0, extent: exact(35) },
+      ],
+      knowledgeState: createTrackGridLayout(
+        createExtentIndex([estimated(10)]),
+        createExtentIndex([exact(30)]),
+        [{ id: 'grid-kind', row: 0, column: 0 }],
+      ),
+      knowledge: [{ axis: 'row', index: 0, extent: exact(10) }],
+    },
+  ];
+
+  for (const fixture of cases) {
+    const noOp = fixture.apply(fixture.state, {
+      generation: fixture.state.generation,
+      measurements: fixture.noOp,
+    });
+    assert.equal(noOp.ok, true);
+    assert.equal(noOp.value.state, fixture.state);
+    assert.equal(noOp.value.state.generation, fixture.state.generation);
+    assert.deepEqual(noOp.value.scrollDelta, { x: 0, y: 0 });
+
+    const followup = fixture.apply(noOp.value.state, {
+      generation: fixture.state.generation,
+      measurements: fixture.changed,
+    });
+    assert.equal(followup.ok, true);
+    assert.equal(followup.value.state.generation, fixture.state.generation + 1);
+
+    const mixed = fixture.apply(fixture.state, {
+      generation: fixture.state.generation,
+      measurements: fixture.mixed,
+    });
+    assert.equal(mixed.ok, true);
+    assert.notEqual(mixed.value.state, fixture.state);
+    assert.equal(mixed.value.state.generation, fixture.state.generation + 1);
+
+    const knowledge = fixture.apply(fixture.knowledgeState, {
+      generation: fixture.knowledgeState.generation,
+      measurements: fixture.knowledge,
+    });
+    assert.equal(knowledge.ok, true);
+    assert.notEqual(knowledge.value.state, fixture.knowledgeState);
+    assert.equal(knowledge.value.state.generation, fixture.knowledgeState.generation + 1);
+  }
+});
+
 test('ISSUE-091: built-in measurements capture one anchor for the full transition', () => {
   const changingBatch = (generation, measurements, first, second) => {
     let reads = 0;

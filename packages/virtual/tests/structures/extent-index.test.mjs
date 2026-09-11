@@ -115,8 +115,16 @@ test('EXT-03, EXT-05: measurement updates preserve untouched geometry', () => {
   assert.equal(before.totalExtent, 60);
   assert.equal(after.totalExtent, 62);
   const unchanged = after.update([{ index: 0, extent: exact(12) }]).value;
+  assert.equal(unchanged, after);
   assert.equal(unchanged.extentAt(0), after.extentAt(0));
-  const knowledgeChanged = createExtentIndex([estimated(10)]).update([{ index: 0, extent: exact(10) }]).value;
+  const duplicateNoop = after.update([
+    { index: 0, extent: exact(13) },
+    { index: 0, extent: exact(12) },
+  ]).value;
+  assert.equal(duplicateNoop, after);
+  const knowledgeBefore = createExtentIndex([estimated(10)]);
+  const knowledgeChanged = knowledgeBefore.update([{ index: 0, extent: exact(10) }]).value;
+  assert.notEqual(knowledgeChanged, knowledgeBefore);
   assert.equal(knowledgeChanged.extentAt(0).kind, 'exact');
   const duplicate = before.update([
     { index: 2, extent: exact(31) },

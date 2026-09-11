@@ -4,7 +4,7 @@ import { tryCreateSequence } from '@sectile/core/sequence';
 import type { VirtualResult } from './error.js';
 import { tryCreateExtentIndex, type Extent, type ExtentIndex } from './extent-index.js';
 import { blockedTrackRepairBound, createBlockedVector, type BlockedVector, useBlockedTrackRepair } from './internal/blocked-vector.js';
-import { fail, ok } from './internal/foundation.js';
+import { fail, noOp, ok } from './internal/foundation.js';
 import { recordRepairDiagnostics } from './internal/repair-diagnostics.js';
 import {
   alignedScrollOffset,
@@ -373,7 +373,7 @@ export function tryApplyPartitionedTrackGridMeasurements<
   if (batch.generation !== state.generation) {
     return fail('transition-rejection', 'virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
   }
-  if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+  if (batch.measurements.length === 0) return noOp(state);
   const data = getInternals(state);
   if (!data.ok) return data;
   const seen = new Set<string>();
@@ -403,7 +403,7 @@ export function tryApplyPartitionedTrackGridMeasurements<
     else columnChanges.push([index, updated as PartitionedTrack<ColumnID>]);
     gridMeasurements.push(Object.freeze({ axis, index, extent }));
   }
-  if (gridMeasurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+  if (gridMeasurements.length === 0) return noOp(state);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
   const anchor = batch.anchor;

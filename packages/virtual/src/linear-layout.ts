@@ -4,7 +4,7 @@ import { canRequestCollectionWindow, type CollectionWindowEvent, type Collection
 import { tryApplySequencePatch, tryCreateSequence, type Sequence, type SequencePatch } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
 import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
-import { fail, ok } from './internal/foundation.js';
+import { fail, noOp, ok } from './internal/foundation.js';
 import { isFiniteTrackContentExtent, trackContentExtent, trackRange, trackSpan } from './internal/track.js';
 import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
@@ -222,13 +222,14 @@ export function applyLinearMeasurements<ID extends StableID>(state: LinearLayout
 
 export function tryApplyLinearMeasurements<ID extends StableID>(state: LinearLayoutState<ID>, batch: VirtualMeasurementBatch<LinearMeasurement, ID>): VirtualResult<VirtualLayoutMutation<LinearLayoutState<ID>>> {
   if (batch.generation !== state.generation) return fail('transition-rejection', 'virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
-  if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
-  const generation = nextGeneration(state.generation);
-  if (!generation.ok) return generation;
+  if (batch.measurements.length === 0) return noOp(state);
   const anchor = batch.anchor;
-  const before = anchorRect(state, anchor);
   const updated = state.extents.update(batch.measurements as readonly ExtentUpdate[]);
   if (!updated.ok) return updated;
+  if (updated.value === state.extents) return noOp(state);
+  const generation = nextGeneration(state.generation);
+  if (!generation.ok) return generation;
+  const before = anchorRect(state, anchor);
   const next = freezeState({ ...state, extents: updated.value, generation: generation.value });
   return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
 }

@@ -9,7 +9,7 @@ import {
 import { unwrap } from '@sectile/core/result';
 import { createRect, isFiniteRect } from '@sectile/core/geometry';
 import { blockedRepairBound, createBlockedVector, createOwnedBlockedVector, type BlockedVector, useBlockedRepair } from './internal/blocked-vector.js';
-import { fail, ok, preflightSequenceSplice } from './internal/foundation.js';
+import { fail, noOp, ok, preflightSequenceSplice } from './internal/foundation.js';
 import { recordRepairDiagnostics } from './internal/repair-diagnostics.js';
 import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
@@ -211,7 +211,7 @@ export function applySpatialMeasurements<ID extends StableID>(state: SpatialLayo
 
 export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialLayoutState<ID>, batch: VirtualMeasurementBatch<SpatialMeasurement<ID>, ID>): VirtualResult<VirtualLayoutMutation<SpatialLayoutState<ID>>> {
   if (batch.generation !== state.generation) return fail('transition-rejection', 'virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
-  if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+  if (batch.measurements.length === 0) return noOp(state);
   const data = getInternals(state);
   if (!data.ok) return data;
   const replacements = new Map<ID, SpatialItem<ID>>();
@@ -223,7 +223,7 @@ export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialL
     const rect = createRect(measurement.rect);
     if (!sameRect(current.rect, rect)) replacements.set(measurement.id, Object.freeze({ ...current, rect }));
   }
-  if (replacements.size === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+  if (replacements.size === 0) return noOp(state);
   const anchor = batch.anchor;
   const before = anchorRect(state, anchor);
   const generation = nextGeneration(state.generation);
@@ -309,7 +309,7 @@ function tryApplySpatialUpdate<ID extends StableID>(
     }, { maxItems: state.maxItems });
     if (!changed.ok) return changed;
     domain = changed.value;
-  } else if (changes.size === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+  } else if (changes.size === 0) return noOp(state);
   const before = anchorRect(state, anchor);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
@@ -331,7 +331,7 @@ function tryApplySpatialPatch<ID extends StableID>(
     }
     const domain = tryApplySequencePatch(state.domain, patch, { maxItems: state.maxItems });
     if (!domain.ok) return domain;
-    if (domain.value === state.domain) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+    if (domain.value === state.domain) return noOp(state);
     const data = getInternals(state);
     if (!data.ok) return data;
     const before = anchorRect(state, anchor);
@@ -383,7 +383,7 @@ function tryApplySpatialPatch<ID extends StableID>(
       const inserted = frozenInserted[index]!;
       if (!sameSpatialItem(current, inserted)) changes.set(inserted.id, inserted);
     }
-    if (changes.size === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+    if (changes.size === 0) return noOp(state);
     const before = anchorRect(state, anchor);
     const generation = nextGeneration(state.generation);
     if (!generation.ok) return generation;

@@ -144,7 +144,7 @@ function createIndex(root: Node | null, maxItems: number): ExtentIndex {
     offsetAt: (index: number): number | null => offsetAt(root, index),
     indexAtOffset: (offset: number): number | null => locateOffset(root, offset)?.index ?? null,
     locateOffset: (offset: number): ExtentLocation | null => locateOffset(root, offset),
-    update: (updates: readonly ExtentUpdate[]): VirtualResult<ExtentIndex> => updateIndex(root, maxItems, updates),
+    update: (updates: readonly ExtentUpdate[]): VirtualResult<ExtentIndex> => updateIndex(index, root, maxItems, updates),
     splice: (
       start: number,
       deleteCount: number,
@@ -158,6 +158,7 @@ function createIndex(root: Node | null, maxItems: number): ExtentIndex {
 }
 
 function updateIndex(
+  current: ExtentIndex,
   root: Node | null,
   maxItems: number,
   updates: readonly ExtentUpdate[],
@@ -187,7 +188,7 @@ function updateIndex(
   }
   const sorted = ordered ? changes : [...new Map(changes)].sort(([left], [right]) => left - right);
   const next = root === null ? null : updateNode(root, 0, sorted, 0, sorted.length);
-  return createCheckedIndex(next, maxItems);
+  return next === root ? ok(current) : createCheckedIndex(next, maxItems);
 }
 
 function spliceIndex(

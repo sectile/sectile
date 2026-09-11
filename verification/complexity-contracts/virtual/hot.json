@@ -392,6 +392,68 @@
       }
     },
     {
+      "id": "extent.update",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/extent-index.ts",
+      "benchmarkIDs": [
+        "VAL-029:extent-update-noop-work"
+      ],
+      "specificationCeiling": "O(jUpdate log nItem)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "retained extent count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "jUpdate",
+            "meaning": "submitted extent updates",
+            "ceiling": "caller update batch cardinality"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "distinct retained extents whose final canonical kind/value changes",
+            "ceiling": "jChanged <= min(nItem, jUpdate)"
+          }
+        ],
+        "time": {
+          "bound": "O(jUpdate log nItem)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(jUpdate + jChanged log nItem)",
+          "output": "O(1)",
+          "retained": "O(jChanged log nItem)"
+        },
+        "resources": {
+          "allocations": "O(jUpdate + jChanged log nItem)",
+          "cacheEntries": "O(jChanged log nItem)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "ceilings": [
+          "maxItems"
+        ],
+        "deterministicWork": [
+          "packages/virtual/tests/structures/extent-index.test.mjs EXT-03/EXT-05"
+        ],
+        "resourceRationale": "Validation canonicalizes the submitted update batch; changed leaves/path nodes are retained only for effective final kind/value changes, while a canonical no-op returns the existing ExtentIndex owner.",
+        "proof": "Validated updates are sorted/deduplicated once, updateNode descends only paths containing submitted indexes, and unchanged leaf/run entries return their existing nodes so an unchanged root returns the existing ExtentIndex identity.",
+        "adversarialWitness": "EXT-03/EXT-05 submits same-value and duplicate-index updates whose final canonical value equals the retained extent and proves owner identity is preserved, while estimated(10) to exact(10) produces a distinct owner.",
+        "evidence": [
+          "VAL-029"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Sparse updates may not scan unrelated extent entries."
+        }
+      }
+    },
+    {
       "id": "indexed-view.at",
       "inherits": "constant-v1",
       "source": "packages/virtual/src/internal/blocked-vector.ts",
@@ -558,7 +620,8 @@
       "benchmarkIDs": [
         "virtual:linear:measure:100000:1",
         "virtual:linear:measure:100000:32",
-        "virtual:linear:measure:100000:100000"
+        "virtual:linear:measure:100000:100000",
+        "VAL-029:measurement-noop-generation"
       ],
       "specificationCeiling": "O(jChanged log nItem)",
       "contract": {
@@ -592,8 +655,14 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Each changed extent path-copies one balanced prefix-index path; anchor reads are logarithmic.",
-        "adversarialWitness": "Changed extents occupy disjoint leaves so no copied index path is shared.",
+        "deterministicWork": [
+          "packages/virtual/tests/runtime/linear-layout.test.mjs ISSUE-099"
+        ],
+        "proof": "ExtentIndex canonicalizes the measurement batch and path-copies only effective changes. If the canonical root is unchanged, Linear returns the existing layout state before generation publication; changed extent paths and anchor reads remain logarithmic.",
+        "adversarialWitness": "ISSUE-099 submits a non-empty same-kind/same-value batch and proves state/generation identity is retained, then mixes one unchanged and one changed extent and proves exactly one new generation; estimated-to-exact equal geometry remains a real change.",
+        "evidence": [
+          "VAL-029"
+        ],
         "fullScan": {
           "allowed": false,
           "rationale": "Sparse measurements may not visit unchanged extents."
@@ -783,7 +852,8 @@
       "inherits": "linear-v1",
       "source": "packages/virtual/src/masonry-layout.ts",
       "benchmarkIDs": [
-        "VAL-017:masonry-measure-work"
+        "VAL-017:masonry-measure-work",
+        "VAL-029:measurement-noop-generation"
       ],
       "specificationCeiling": "O(nItem log lLane + jChanged log nItem)",
       "contract": {
@@ -822,8 +892,14 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Extent updates path-copy index paths and cascading lane placement recomputes from the first changed item.",
-        "adversarialWitness": "Changing the first item under balanced shortest-lane placement reflows every later item.",
+        "deterministicWork": [
+          "packages/virtual/tests/runtime/linear-layout.test.mjs ISSUE-099"
+        ],
+        "proof": "ExtentIndex canonicalizes the measurement batch first. An unchanged canonical owner returns the existing Masonry state before generation or placement publication; an effective change path-copies extent paths and may cascade lane placement recomputation from the first changed item.",
+        "adversarialWitness": "ISSUE-099 proves a non-empty same-kind/same-value batch retains state/generation, while an estimated-to-exact transition remains a real change; changing the first effective item under balanced shortest-lane placement can still reflow every later item.",
+        "evidence": [
+          "VAL-029"
+        ],
         "fullScan": {
           "allowed": true,
           "rationale": "Cascading shortest-lane ownership can make every later placement observably change."
@@ -1688,7 +1764,8 @@
       "inherits": "linear-v1",
       "source": "packages/virtual/src/track-grid-layout.ts",
       "benchmarkIDs": [
-        "VAL-017:track-measure-work"
+        "VAL-017:track-measure-work",
+        "VAL-029:measurement-noop-generation"
       ],
       "specificationCeiling": "O(jChanged log nTrack)",
       "contract": {
@@ -1722,8 +1799,14 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Measurements partition by axis and path-copy only changed row/column extent-index paths while retaining the region index.",
-        "adversarialWitness": "Changed tracks occupy disjoint leaves across both axes.",
+        "deterministicWork": [
+          "packages/virtual/tests/runtime/linear-layout.test.mjs ISSUE-099"
+        ],
+        "proof": "Measurements partition by axis and each ExtentIndex path-copies only effective changes. If both resulting extent owners are unchanged, Track Grid returns the existing state before generation publication while retaining the region index.",
+        "adversarialWitness": "ISSUE-099 proves a non-empty unchanged row measurement preserves state/generation, a mixed unchanged-row/changed-column batch publishes exactly once, and an estimated-to-exact row transition remains a real change.",
+        "evidence": [
+          "VAL-029"
+        ],
         "fullScan": {
           "allowed": false,
           "rationale": "Track measurement must retain and reuse the region interval index."

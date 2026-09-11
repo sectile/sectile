@@ -1,9 +1,15 @@
 import type { ErrorClass } from '@sectile/core';
+import { ZERO_POINT } from '@sectile/core/geometry';
 import { failResult, okResult } from '@sectile/core/result';
 import type { VirtualError, VirtualErrorCode, VirtualResult } from '../error.js';
+import type { VirtualLayoutMutation } from '../layout.js';
 
 export function ok<T>(value: T): VirtualResult<T> {
   return okResult<T, VirtualErrorCode>(value);
+}
+
+export function noOp<State>(state: State): VirtualResult<VirtualLayoutMutation<State>> {
+  return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
 }
 
 export function fail<T = never, Code extends VirtualErrorCode = VirtualErrorCode>(

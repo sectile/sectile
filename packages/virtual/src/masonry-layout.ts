@@ -3,7 +3,7 @@ import type { VirtualResult } from './error.js';
 import { tryApplySequencePatch, tryCreateSequence, type Sequence, type SequencePatch } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
 import { tryCreateExtentIndex, tryCreateUniformExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
-import { fail, ok } from './internal/foundation.js';
+import { fail, noOp, ok } from './internal/foundation.js';
 import { uniformExtentMetadata } from './internal/extent-index-metadata.js';
 import { masonryInternals, registerMasonryInternals } from './internal/masonry-internals.js';
 import { extentValue } from './internal/track.js';
@@ -233,7 +233,7 @@ export function applyMasonryMeasurements<ID extends StableID>(state: MasonryLayo
 export function tryApplyMasonryMeasurements<ID extends StableID>(state: MasonryLayoutState<ID>, batch: VirtualMeasurementBatch<MasonryMeasurement, ID>): VirtualResult<VirtualLayoutMutation<MasonryLayoutState<ID>>> {
   if (batch.generation !== state.generation) return fail('transition-rejection', 'virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
   const inputMeasurements = batch.measurements;
-  if (inputMeasurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+  if (inputMeasurements.length === 0) return noOp(state);
   const measurements: MasonryMeasurement[] = [];
   for (const measurement of inputMeasurements) {
     try {
@@ -243,11 +243,12 @@ export function tryApplyMasonryMeasurements<ID extends StableID>(state: MasonryL
     }
   }
   const anchor = batch.anchor;
-  const before = anchorRect(state, anchor);
   const updated = state.extents.update(measurements as readonly ExtentUpdate[]);
   if (!updated.ok) return updated;
+  if (updated.value === state.extents) return noOp(state);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
+  const before = anchorRect(state, anchor);
   const data = getInternals(state);
   if (!data.ok) return data;
   const next = createState(
@@ -294,7 +295,7 @@ export function tryApplyMasonryMutation<ID extends StableID>(state: MasonryLayou
       && value.flow === state.flow
       && value.laneExtent === state.laneExtent
       && value.laneGap === state.laneGap) {
-      return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+      return noOp(state);
     }
     partial = { domain: state.domain, extents: state.extents, ...value };
     if (!packingChanged) recomputeStart = -1;

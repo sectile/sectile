@@ -8,7 +8,7 @@ import {
   type SequencePatch,
 } from '@sectile/core/sequence';
 import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
-import { fail, ok } from './internal/foundation.js';
+import { fail, noOp, ok } from './internal/foundation.js';
 import { findRegionOverlap } from './internal/region-overlap.js';
 import { recordRepairDiagnostics } from './internal/repair-diagnostics.js';
 import { isFiniteTrackContentExtent, trackContentExtent, trackRange, trackSpan, type TrackRange } from './internal/track.js';
@@ -284,7 +284,7 @@ export function applyGridMeasurements<ID extends StableID>(state: TrackGridLayou
 
 export function tryApplyGridMeasurements<ID extends StableID>(state: TrackGridLayoutState<ID>, batch: VirtualMeasurementBatch<GridTrackMeasurement, ID>): VirtualResult<VirtualLayoutMutation<TrackGridLayoutState<ID>>> {
   if (batch.generation !== state.generation) return gridTransitionFailure('virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
-  if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+  if (batch.measurements.length === 0) return noOp(state);
   const rowUpdates: ExtentUpdate[] = [];
   const columnUpdates: ExtentUpdate[] = [];
   for (const measurement of batch.measurements) {
@@ -295,9 +295,10 @@ export function tryApplyGridMeasurements<ID extends StableID>(state: TrackGridLa
   if (!rows.ok) return rows;
   const columns = state.columns.update(columnUpdates);
   if (!columns.ok) return columns;
+  const anchor = batch.anchor;
+  if (rows.value === state.rows && columns.value === state.columns) return noOp(state);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const anchor = batch.anchor;
   const before = anchorRect(state, anchor);
   const grid = getInternals(state);
   if (!grid.ok) return grid;
@@ -384,7 +385,7 @@ export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridL
       rows.value === state.rows
       && columns.value === state.columns
       && domain.value === dense.domain
-    ) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+    ) return noOp(state);
     return denseGridMutationResult(state, domain.value, rows.value, columns.value, before, anchor);
   }
   if (mutation.type === 'patch-dense-regions') {
