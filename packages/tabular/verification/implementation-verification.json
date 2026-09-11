@@ -7,7 +7,7 @@
     {
       "group": "model",
       "tests": 8,
-      "sha256": "261104fe7e02bddad687751eb77d8189b90e1d97bbe41c5fb07c9ba49f733440"
+      "sha256": "de6e4f98626348eb8b6af7311c374a8187c303c6ba249876660c54893d6290c8"
     },
     {
       "group": "source",
@@ -78,9 +78,9 @@
     }
   },
   "footprint": {
-    "javascriptBytes": 156905,
+    "javascriptBytes": 157136,
     "declarationBytes": 44401,
-    "sourceMapBytes": 112754,
+    "sourceMapBytes": 112873,
     "packedBytes": 55011,
     "declarationFiles": 17,
     "publicSubpaths": 9
