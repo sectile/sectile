@@ -303,6 +303,98 @@ test('ISSUE-075: client policy dispatch resolves only own registry entries', () 
   for (const count of Object.values(calls)) assert.ok(count > 0);
 });
 
+test('ISSUE-076: pivot and aggregate policies share one frozen record snapshot per current owner', () => {
+  const recordIDs = records.map((record) => record.id);
+  const assertBatch = (inputs, start, count, previous = null) => {
+    const batch = inputs.slice(start);
+    assert.equal(batch.length, count);
+    assert.equal(new Set(batch).size, 1);
+    const snapshot = batch[0];
+    assert.equal(Object.isFrozen(snapshot), true);
+    assert.deepEqual(snapshot.map((record) => record.id), recordIDs);
+    if (previous !== null) assert.notEqual(snapshot, previous);
+    return snapshot;
+  };
+  const rejectMutation = (items) => {
+    let rejected = false;
+    try { items.push(items[0]); } catch (error) { rejected = error instanceof TypeError; }
+    assert.equal(rejected, true);
+  };
+  const grouping = (_record, _descriptor, depth) => ({ groupID: `group:${depth}:all`, label: 'All' });
+
+  const pivotInputs = [];
+  const pivotSource = createClientTabularSource({
+    records,
+    columnSchema,
+    getRowID: (record) => record.id,
+    getValue: (record, columnID) => record[columnID],
+    policies: {
+      grouping: { all: grouping },
+      aggregation: { count: (items) => items.length },
+      pivot: {
+        capture: (items, descriptor) => {
+          pivotInputs.push(items);
+          if (pivotInputs.length === 1) rejectMutation(items);
+          return [{
+            column: { id: `pivot:${descriptor.id}` },
+            header: { kind: 'column', id: `header:pivot:${descriptor.id}`, columnID: `pivot:${descriptor.id}` },
+            aggregateID: 'count',
+            matches: () => false,
+          }];
+        },
+      },
+    },
+  });
+  const pivotQuery = (count) => ({
+    sort: [], filters: [],
+    groups: [{ id: 'group', columnID: 'team', policy: 'all' }],
+    aggregates: [{ id: 'count', columnID: 'score', policy: 'count' }],
+    pivots: Array.from({ length: count }, (_, index) => ({
+      id: `p${index}`, columnID: 'team', valuePolicy: 'capture', aggregateIDs: ['count'],
+    })),
+  });
+  assert.equal(resolveClientTabularRequest(pivotSource, request({ queryRevision: 1, query: pivotQuery(1) })).ok, true);
+  const firstPivotSnapshot = assertBatch(pivotInputs, 0, 1);
+  const pivotStart = pivotInputs.length;
+  assert.equal(resolveClientTabularRequest(pivotSource, request({
+    requestID: 2, sourceGeneration: 1, queryRevision: 1, query: pivotQuery(8),
+  })).ok, true);
+  assertBatch(pivotInputs, pivotStart, 8, firstPivotSnapshot);
+
+  const aggregateInputs = [];
+  const aggregateSource = createClientTabularSource({
+    records,
+    columnSchema,
+    getRowID: (record) => record.id,
+    getValue: (record, columnID) => record[columnID],
+    policies: {
+      grouping: { all: grouping },
+      aggregation: {
+        capture: (items) => {
+          aggregateInputs.push(items);
+          if (aggregateInputs.length === 1) rejectMutation(items);
+          return items.length;
+        },
+      },
+    },
+  });
+  const aggregateQuery = (count) => ({
+    sort: [], filters: [],
+    groups: [{ id: 'group', columnID: 'team', policy: 'all' }],
+    aggregates: Array.from({ length: count }, (_, index) => ({
+      id: `a${index}`, columnID: 'score', policy: 'capture',
+    })),
+    pivots: [],
+  });
+  assert.equal(resolveClientTabularRequest(aggregateSource, request({ queryRevision: 1, query: aggregateQuery(1) })).ok, true);
+  const firstAggregateSnapshot = assertBatch(aggregateInputs, 0, 1);
+  const aggregateStart = aggregateInputs.length;
+  assert.equal(resolveClientTabularRequest(aggregateSource, request({
+    requestID: 2, queryRevision: 2, query: aggregateQuery(8),
+  })).ok, true);
+  assertBatch(aggregateInputs, aggregateStart, 8, firstAggregateSnapshot);
+});
+
 test('TAB-SRC-06: every response envelope coordinate and ordering rule rejects independently', () => {
   const active = request({ requestID: 7, sourceGeneration: 2, queryRevision: 3, expansionRevision: 4 });
   const resolved = resolveClientTabularRequest(source(), active);

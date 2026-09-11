@@ -219,7 +219,7 @@
       "benchmarkIDs": [
         "tabular:resolve:cold:100000"
       ],
-      "specificationCeiling": "O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)",
+      "specificationCeiling": "O(nRecord*(1+fFilter+cColumn+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + pPivot + kRow + dContext)",
       "contract": {
         "variables": [
           { "name": "nRecord", "meaning": "source record count", "ceiling": "maxScanRecords" },
@@ -234,7 +234,7 @@
           { "name": "dContext", "meaning": "context-only ancestor rows returned with the access slice", "ceiling": "maxGroupDepth" }
         ],
         "time": {
-          "bound": "O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)",
+          "bound": "O(nRecord*(1+fFilter+cColumn+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + pPivot + kRow + dContext)",
           "kind": "worst-case",
           "runtimeState": "external"
         },
@@ -244,7 +244,7 @@
           "retained": "O(nRecord*(1+gGroup+cColumn) + cPivotColumn)"
         },
         "resources": {
-          "allocations": "O(nRecord*(1+fFilter+gGroup+cColumn+pPivot) + kRow + dContext)",
+          "allocations": "O(nRecord*(1+fFilter+gGroup+cColumn) + aAggregate + pPivot + kRow + dContext)",
           "cacheEntries": "O(nRecord*(1+gGroup+cColumn) + cPivotColumn)",
           "listeners": "0",
           "observers": "0",
@@ -252,9 +252,9 @@
           "subscriptions": "0"
         },
         "assumptions": ["Application predicate/comparator/group/aggregate/pivot callback internals are external cost; the contract counts library traversals, callback invocations and argument materialization."],
-        "proof": "Cold resolution normalizes nRecord identities; each enabled filter can visit all records; every sort comparison can walk sSort comparators; pivot discovery materializes the source-record argument once per pivot descriptor; grouping can revisit all records at each group depth; group-cell projection scales with schema columns, aggregate descriptors and materialized pivot columns. Access slicing then emits only kRow plus dContext rows.",
-        "adversarialWitness": "ISSUE-052 holds nRecord=10 and independently sets filter/sort/group/aggregate/pivot descriptor counts to four: filters and groups perform exactly 40 callbacks, aggregate and pivot policy inputs contain exactly 40 record elements, and equality sorting invokes every comparator descriptor per element comparison. The package benchmark repeats each descriptor axis at counts 1 and 8 with nRecord=1000.",
-        "deterministicWork": ["packages/tabular/tests/source/client-source.test.mjs ISSUE-052", "packages/tabular/benchmarks/tabular.mjs descriptorAxes"],
+        "proof": "Cold resolution normalizes nRecord identities; each enabled filter can visit all records; every sort comparison can walk sSort comparators; pivot discovery materializes one frozen ordered record-value bridge for the current query evaluation and reuses it across pPivot callbacks; grouping can revisit all records at each group depth; each group-cell evaluation materializes at most one frozen full-group aggregate bridge reused across aAggregate callbacks, while pivot matcher subsets and callback counts remain descriptor-dependent. Access slicing then emits only kRow plus dContext rows.",
+        "adversarialWitness": "ISSUE-052 holds nRecord=10 and independently varies filter/sort/group/aggregate/pivot descriptor counts to expose unavoidable callback axes. ISSUE-076 varies pivot and aggregate descriptor counts from 1 to 8 and observes exactly one frozen full-record callback-array identity per current query/group owner; source/query invalidation produces a fresh identity and attempted mutation cannot affect later callbacks. The package benchmark repeats each descriptor axis at counts 1 and 8 with nRecord=1000.",
+        "deterministicWork": ["packages/tabular/tests/source/client-source.test.mjs ISSUE-052", "packages/tabular/tests/source/client-source.test.mjs ISSUE-076", "packages/tabular/benchmarks/tabular.mjs descriptorAxes"],
         "fullScan": {
           "allowed": true,
           "rationale": "Cold resolution must inspect the external snapshot before producing the first query index."
@@ -268,7 +268,7 @@
       "benchmarkIDs": [
         "tabular:resolve:invalidate:100000"
       ],
-      "specificationCeiling": "O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)",
+      "specificationCeiling": "O(nRecord*(1+fFilter+cColumn+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + pPivot + kRow + dContext)",
       "contract": {
         "variables": [
           { "name": "nRecord", "meaning": "current normalized source record count", "ceiling": "maxScanRecords" },
@@ -283,7 +283,7 @@
           { "name": "dContext", "meaning": "context-only ancestor rows returned with the access slice", "ceiling": "maxGroupDepth" }
         ],
         "time": {
-          "bound": "O(nRecord*(1+fFilter+cColumn+pPivot+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + kRow + dContext)",
+          "bound": "O(nRecord*(1+fFilter+cColumn+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + pPivot + kRow + dContext)",
           "kind": "worst-case",
           "runtimeState": "external"
         },
@@ -293,7 +293,7 @@
           "retained": "O(nRecord*(1+gGroup+cColumn) + cPivotColumn)"
         },
         "resources": {
-          "allocations": "O(nRecord*(1+fFilter+gGroup+cColumn+pPivot) + kRow + dContext)",
+          "allocations": "O(nRecord*(1+fFilter+gGroup+cColumn) + aAggregate + pPivot + kRow + dContext)",
           "cacheEntries": "O(nRecord*(1+gGroup+cColumn) + cPivotColumn)",
           "listeners": "0",
           "observers": "0",
@@ -301,9 +301,9 @@
           "subscriptions": "0"
         },
         "assumptions": ["Application callback internals are external cost; changed query/source generations rebuild the same descriptor-sensitive library stages modeled by source.resolve-cold."],
-        "proof": "A source generation may rebuild normalization and every query/projection stage; a query revision reuses row identities but rebuilds descriptor-sensitive filtering, sorting, grouping, pivot discovery and projection. An expansion revision reuses the prepared query and emits grouped rows under one remaining maxRows budget. The cold worst-case formula therefore remains a safe bound for every invalidation mode.",
-        "adversarialWitness": "ISSUE-052 varies descriptor counts at fixed records. ISSUE-053 expands a 1,000-record single group under maxRows=1 and rejects before the first leaf/cell projection rather than materializing the subtree.",
-        "deterministicWork": ["packages/tabular/tests/source/client-source.test.mjs ISSUE-052", "packages/tabular/tests/advanced/grouping.test.mjs ISSUE-053"],
+        "proof": "A source generation may rebuild normalization and every query/projection stage; a query revision reuses row identities but rebuilds descriptor-sensitive filtering, sorting, grouping, pivot discovery and projection. Pivot and full-group aggregate callback bridges are local to that current query/group evaluation, so invalidation receives fresh frozen snapshots without retaining a cross-generation cache. An expansion revision reuses the prepared query and emits grouped rows under one remaining maxRows budget. The cold worst-case formula therefore remains a safe bound for every invalidation mode.",
+        "adversarialWitness": "ISSUE-052 varies descriptor counts at fixed records. ISSUE-053 expands a 1,000-record single group under maxRows=1 and rejects before the first leaf/cell projection rather than materializing the subtree. ISSUE-076 proves descriptor counts 1 and 8 share one frozen callback snapshot within an owner and source/query invalidation uses a distinct snapshot identity.",
+        "deterministicWork": ["packages/tabular/tests/source/client-source.test.mjs ISSUE-052", "packages/tabular/tests/source/client-source.test.mjs ISSUE-076", "packages/tabular/tests/advanced/grouping.test.mjs ISSUE-053"],
         "resourceRationale": "Grouped expansion reserves the shared visible-row budget before each group/leaf projection. New leaf/group cache entries are staged locally and merged into the retained query stage only after the complete projection succeeds, so resource rejection does not retain speculative output.",
         "fullScan": {
           "allowed": true,

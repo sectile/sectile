@@ -547,12 +547,15 @@ function resolveClientPivots<RecordValue>(
   const columnIDs = new Set(columns.map((column) => column.id));
   const aggregateByID = new Map(query.aggregates.map((aggregate) => [aggregate.id, aggregate]));
   const pivots: ClientPivotRuntime<RecordValue>[] = [];
+  const policyRecords = query.pivots.length === 0
+    ? null
+    : Object.freeze(records.map((item) => item.record));
   for (const descriptor of query.pivots) {
     const policy = getOwnPolicy(source.options.policies?.pivot, descriptor.valuePolicy);
     if (policy === undefined) return fail('construction', 'missing-policy-key', 'Pivot value policy is not registered.', { policy: descriptor.valuePolicy });
     let values: readonly TabularPivotValue<RecordValue>[];
     try {
-      values = policy(records.map((item) => item.record), descriptor, source.options.getValue);
+      values = policy(policyRecords!, descriptor, source.options.getValue);
     } catch (error) {
       return policyFailure(descriptor.valuePolicy, error);
     }
@@ -715,12 +718,15 @@ function clientGroupCells<RecordValue>(
     if (!normalized.ok) return normalized;
     Object.defineProperty(cells, pivot.value.column.id, { value: normalized.value, enumerable: true, writable: false, configurable: true });
   }
+  const aggregateRecords = prepared.query.aggregates.length === 0
+    ? null
+    : Object.freeze(group.records.map((item) => item.record));
   for (const descriptor of prepared.query.aggregates) {
     const policy = getOwnPolicy(source.options.policies?.aggregation, descriptor.policy);
     if (policy === undefined) return fail('construction', 'missing-policy-key', 'Aggregation policy is not registered.', { policy: descriptor.policy });
     let value: TabularWireValue;
     try {
-      value = policy(group.records.map((item) => item.record), descriptor, source.options.getValue);
+      value = policy(aggregateRecords!, descriptor, source.options.getValue);
     } catch (error) {
       return policyFailure(descriptor.policy, error);
     }
