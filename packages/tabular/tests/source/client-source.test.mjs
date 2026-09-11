@@ -395,6 +395,55 @@ test('ISSUE-076: pivot and aggregate policies share one frozen record snapshot p
   assertBatch(aggregateInputs, aggregateStart, 8, firstAggregateSnapshot);
 });
 
+test('ISSUE-078: source construction retains the single preflighted record snapshot', () => {
+  const small = [{ id: 'small', value: 1 }];
+  const large = Array.from({ length: 32 }, (_, index) => ({ id: `large-${index}`, value: index }));
+  let recordReads = 0;
+  let rowIDPropertyReads = 0;
+  let getValuePropertyReads = 0;
+  let rowIDCalls = 0;
+  const local = createClientTabularSource({
+    get records() {
+      recordReads += 1;
+      return recordReads === 1 ? small : large;
+    },
+    columnSchema: { revision: 0, columns: [{ id: 'value' }], headers: [] },
+    get getRowID() {
+      rowIDPropertyReads += 1;
+      return (record) => { rowIDCalls += 1; return record.id; };
+    },
+    get getValue() {
+      getValuePropertyReads += 1;
+      return (record) => record.value;
+    },
+    limits: { maxScanRecords: 1 },
+  });
+  assert.deepEqual([recordReads, rowIDPropertyReads, getValuePropertyReads], [1, 1, 1]);
+
+  small.push({ id: 'late', value: 2 });
+  const resolved = resolveClientTabularRequest(local, request({ access: { kind: 'window', start: 0, count: 10 } }));
+  assert.equal(resolved.ok, true);
+  assert.equal(rowIDCalls, 1);
+  assert.deepEqual(resolved.value.matchingLeafCount, { kind: 'known', value: 1 });
+  assert.deepEqual(resolved.value.rows.map((row) => row.id), ['small']);
+  assert.equal(recordReads, 1);
+
+  let oversizedReads = 0;
+  let rejectedRowIDCalls = 0;
+  assert.throws(() => createClientTabularSource({
+    get records() {
+      oversizedReads += 1;
+      return oversizedReads === 1 ? large : small;
+    },
+    columnSchema: { revision: 0, columns: [{ id: 'value' }], headers: [] },
+    getRowID: (record) => { rejectedRowIDCalls += 1; return record.id; },
+    getValue: (record) => record.value,
+    limits: { maxScanRecords: 1 },
+  }), (error) => error.code === 'scan-record-ceiling-exceeded');
+  assert.equal(oversizedReads, 1);
+  assert.equal(rejectedRowIDCalls, 0);
+});
+
 test('TAB-SRC-06: every response envelope coordinate and ordering rule rejects independently', () => {
   const active = request({ requestID: 7, sourceGeneration: 2, queryRevision: 3, expansionRevision: 4 });
   const resolved = resolveClientTabularRequest(source(), active);

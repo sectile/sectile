@@ -148,23 +148,51 @@ export function createClientTabularSource<RecordValue>(
 function tryCreateClientTabularSource<RecordValue>(
   options: TabularClientSourceOptions<RecordValue>,
 ): TabularResult<ClientSource<RecordValue>> {
-  if (options === null || typeof options !== 'object' || !Array.isArray(options.records)
-    || typeof options.getRowID !== 'function' || typeof options.getValue !== 'function') {
+  if (options === null || typeof options !== 'object') {
     return fail('construction', 'invalid-source', 'Client source options require records, getRowID, and getValue.');
   }
-  const schema = validateColumnSchema(options.columnSchema, options.limits);
+  let recordsInput: readonly RecordValue[];
+  let recordCount: number;
+  let columnSchema: TabularColumnSchema;
+  let getRowID: TabularClientSourceOptions<RecordValue>['getRowID'];
+  let getValue: TabularClientSourceOptions<RecordValue>['getValue'];
+  let policies: TabularClientSourceOptions<RecordValue>['policies'];
+  let limitsInput: TabularClientSourceOptions<RecordValue>['limits'];
+  try {
+    recordsInput = options.records;
+    columnSchema = options.columnSchema;
+    getRowID = options.getRowID;
+    getValue = options.getValue;
+    policies = options.policies;
+    limitsInput = options.limits;
+    if (!Array.isArray(recordsInput) || typeof getRowID !== 'function' || typeof getValue !== 'function') {
+      return fail('construction', 'invalid-source', 'Client source options require records, getRowID, and getValue.');
+    }
+    recordCount = recordsInput.length;
+  } catch {
+    return fail('construction', 'invalid-source', 'Client source options must be readable.');
+  }
+  const schema = validateColumnSchema(columnSchema, limitsInput);
   if (!schema.ok) return schema;
   const limits = schema.value.limits;
-  if (options.records.length > limits.maxScanRecords) {
+  if (recordCount > limits.maxScanRecords) {
     return fail('resource-rejection', 'scan-record-ceiling-exceeded', 'Client records exceed the scan ceiling.', {
-      actual: options.records.length,
+      actual: recordCount,
       ceiling: limits.maxScanRecords,
     });
   }
+  const records = new Array<RecordValue>(recordCount);
+  try {
+    for (let index = 0; index < recordCount; index += 1) records[index] = recordsInput[index]!;
+  } catch {
+    return fail('construction', 'invalid-source', 'Client records must be readable.');
+  }
   const source = new ClientSourceRuntime(Object.freeze({
-    ...options,
-    records: Object.freeze([...options.records]),
+    records: Object.freeze(records),
     columnSchema: schema.value.schema,
+    getRowID,
+    getValue,
+    ...(policies === undefined ? {} : { policies }),
   }), limits);
   return ok(source);
 }
