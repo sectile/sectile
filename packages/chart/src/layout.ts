@@ -15,10 +15,11 @@ import { chartFail, chartOK } from './internal/result.js';
 import type { ChartViewport } from './projection.js';
 import type { ChartResult } from './result.js';
 import {
-  createCategoricalScale,
   createLinearScale,
-  createLogarithmicScale,
-  createTemporalScale,
+  tryCreateCategoricalScale,
+  tryCreateLinearScale,
+  tryCreateLogarithmicScale,
+  tryCreateTemporalScale,
   type ChartRange,
   type ChartScale,
   type ChartScaleKind,
@@ -274,8 +275,13 @@ function resolveAxisDomain<Datum, ID extends StableID>(
     minimum = axis.scale === 'logarithmic' ? 1 : 0;
     maximum = axis.scale === 'logarithmic' ? 10 : 1;
   } else if (minimum === maximum) {
-    if (axis.scale === 'logarithmic') { minimum /= 10; maximum *= 10; }
-    else { minimum -= 0.5; maximum += 0.5; }
+    const expanded = expandSingletonDomain(axis.scale, minimum);
+    if (expanded === null) return invalidDomain(axis.id, 'Automatic continuous axis domain cannot be represented safely.');
+    minimum = expanded.minimum;
+    maximum = expanded.maximum;
+  }
+  if (!validContinuousDomain(axis.scale, minimum, maximum)) {
+    return invalidDomain(axis.id, 'Automatic continuous axis domain must be finite, increasing, and scale-compatible.');
   }
   return chartOK(Object.freeze({
     kind: axis.scale === 'temporal' ? 'temporal' as const : 'numeric' as const,
@@ -288,11 +294,43 @@ function scaleFor<ID extends StableID>(
   axis: ResolvedChartAxis<ID>,
   range: ChartRange,
 ): ChartResult<ChartScale> {
-  if (axis.domain.kind === 'categorical') return chartOK(createCategoricalScale({ values: axis.domain.values }, range));
+  if (axis.domain.kind === 'categorical') return tryCreateCategoricalScale({ values: axis.domain.values }, range);
   const domain = { minimum: axis.domain.minimum, maximum: axis.domain.maximum };
-  if (axis.scale === 'logarithmic') return chartOK(createLogarithmicScale(domain, range));
-  if (axis.scale === 'temporal') return chartOK(createTemporalScale(domain, range));
-  return chartOK(createLinearScale(domain, range));
+  if (axis.scale === 'logarithmic') return tryCreateLogarithmicScale(domain, range);
+  if (axis.scale === 'temporal') return tryCreateTemporalScale(domain, range);
+  return tryCreateLinearScale(domain, range);
+}
+
+function expandSingletonDomain(
+  scale: ChartScaleKind,
+  value: number,
+): Readonly<{ minimum: number; maximum: number }> | null {
+  let minimum: number;
+  let maximum: number;
+  if (scale === 'logarithmic') {
+    minimum = value / 10;
+    maximum = value * 10;
+    if (!(minimum > 0) || minimum >= value) minimum = value;
+    if (!Number.isFinite(maximum) || maximum <= value) maximum = value;
+  } else {
+    minimum = value - 0.5;
+    maximum = value + 0.5;
+    if (!(minimum < value && maximum > value && Number.isFinite(minimum) && Number.isFinite(maximum))) {
+      const delta = Math.max(0.5, Math.abs(value) * Number.EPSILON);
+      minimum = value - delta;
+      maximum = value + delta;
+      if (!Number.isFinite(minimum) || minimum >= value) minimum = value;
+      if (!Number.isFinite(maximum) || maximum <= value) maximum = value;
+    }
+  }
+  return validContinuousDomain(scale, minimum, maximum)
+    ? Object.freeze({ minimum, maximum })
+    : null;
+}
+
+function validContinuousDomain(scale: ChartScaleKind, minimum: number, maximum: number): boolean {
+  return Number.isFinite(minimum) && Number.isFinite(maximum) && minimum < maximum
+    && (scale !== 'logarithmic' || minimum > 0);
 }
 
 function invalidDomain<ID extends StableID, T>(axisID: ID, message: string): ChartResult<T> {

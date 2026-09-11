@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createChartController } from '../../.verification-dist/controller.js';
 import { createChartDefinition, tryCreateChartDefinition } from '../../.verification-dist/definition.js';
+import { tryCreateChartPlotLayout } from '../../.verification-dist/layout.js';
+import { tryCreateChartProjection } from '../../.verification-dist/projection.js';
+import { tryCreateLinearScale, tryCreateLogarithmicScale, tryCreateTemporalScale } from '../../.verification-dist/scale.js';
 
 test('resolves Date and epoch values into identical Cartesian domains and geometry', () => {
   const create = (observedAt) => createChartDefinition({
@@ -18,6 +22,73 @@ test('resolves Date and epoch values into identical Cartesian domains and geomet
   assert.deepEqual(dates.axes, epochs.axes);
   assert.deepEqual(dates.model.toModel(), epochs.model.toModel());
   assert.equal(dates.model.toModel().layers[0].data[1].x, 1_000);
+});
+
+test('singleton automatic domains remain finite, increasing, and scale-valid at numeric boundaries', () => {
+  const createSingleton = (scale, value) => tryCreateChartDefinition({
+    coordinate: { kind: 'cartesian', axes: [
+      { id: 'x', orientation: 'x', scale, field: 'x' },
+      { id: 'y', orientation: 'y', scale: 'linear', field: 'y' },
+    ] },
+    layers: [{ id: 'point', kind: 'scatter', xAxis: 'x', yAxis: 'y', data: [{ id: 'a', x: value, y: 1 }] }],
+  });
+  const scaleFor = (scale, domain) => scale === 'logarithmic'
+    ? tryCreateLogarithmicScale(domain, { start: 0, end: 100 })
+    : scale === 'temporal'
+      ? tryCreateTemporalScale(domain, { start: 0, end: 100 })
+      : tryCreateLinearScale(domain, { start: 0, end: 100 });
+
+  for (const [scale, value] of [
+    ['linear', 2 ** 53],
+    ['linear', -(2 ** 53)],
+    ['linear', Number.MAX_VALUE],
+    ['linear', -Number.MAX_VALUE],
+    ['temporal', 2 ** 53],
+    ['temporal', -(2 ** 53)],
+    ['temporal', Number.MAX_VALUE],
+    ['temporal', -Number.MAX_VALUE],
+    ['logarithmic', Number.MIN_VALUE],
+    ['logarithmic', Number.MAX_VALUE],
+  ]) {
+    const result = createSingleton(scale, value);
+    assert.equal(result.ok, true);
+    const domain = result.value.axes[0].domain;
+    assert.notEqual(domain.kind, 'categorical');
+    assert.equal(Number.isFinite(domain.minimum), true);
+    assert.equal(Number.isFinite(domain.maximum), true);
+    assert.ok(domain.minimum < domain.maximum);
+    assert.ok(domain.minimum <= value && domain.maximum >= value);
+    if (scale === 'logarithmic') assert.ok(domain.minimum > 0);
+    assert.equal(scaleFor(scale, domain).ok, true);
+    const projected = tryCreateChartProjection(result.value, { viewport: { width: 320, height: 180 } });
+    assert.equal(projected.ok, true);
+  }
+
+  const ordinary = createSingleton('linear', 1e15);
+  assert.equal(ordinary.ok, true);
+  assert.deepEqual(ordinary.value.axes[0].domain, {
+    kind: 'numeric', minimum: 999_999_999_999_999.5, maximum: 1_000_000_000_000_000.5,
+  });
+
+  const controller = createChartController({ definition: {
+    coordinate: { kind: 'cartesian', axes: [
+      { id: 'x', orientation: 'x', scale: 'linear', field: 'x' },
+      { id: 'y', orientation: 'y', scale: 'linear', field: 'y' },
+    ] },
+    layers: [{ id: 'point', kind: 'scatter', xAxis: 'x', yAxis: 'y', data: [{ id: 'a', x: 2 ** 53, y: 1 }] }],
+  } });
+  const controllerDomain = controller.getDefinition().axes[0].domain;
+  assert.ok(controllerDomain.minimum < controllerDomain.maximum);
+  assert.equal(controller.project({ viewport: { width: 320, height: 180 } }).ok, true);
+
+  let defensive;
+  assert.doesNotThrow(() => {
+    defensive = tryCreateChartPlotLayout([
+      { id: 'x', orientation: 'x', scale: 'linear', domain: { kind: 'numeric', minimum: 1, maximum: 1 }, ticks: 0 },
+    ], { width: 320, height: 180 });
+  });
+  assert.equal(defensive.ok, false);
+  assert.equal(defensive.error.code, 'chart-scale-invalid');
 });
 
 test('compiles categorical bars with a zero baseline and time/category heatmap edges', () => {
