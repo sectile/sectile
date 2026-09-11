@@ -419,6 +419,9 @@ export function trackGridScrollTarget<ID extends StableID>(state: TrackGridLayou
 }
 
 export function tryTrackGridScrollTarget<ID extends StableID>(state: TrackGridLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualResult<VirtualPoint> {
+  const normalized = normalizeQuery({ viewport });
+  if (!normalized.ok) return normalized;
+  const canonicalViewport = normalized.value.viewport;
   const grid = getInternals(state);
   if (!grid.ok) return grid;
   const denseIndex = grid.value.dense?.domain.indexOf(id) ?? null;
@@ -429,8 +432,8 @@ export function tryTrackGridScrollTarget<ID extends StableID>(state: TrackGridLa
   if (rect === null) return fail('transition-rejection', 'virtual-layout-scroll-target-invalid', 'Scroll target must exist in the grid region domain.', { id });
   const size = contentSize(state);
   return ok(Object.freeze({
-    x: alignedScrollOffset(rect.x, rect.width, viewport.x, viewport.width, size.width, alignment),
-    y: alignedScrollOffset(rect.y, rect.height, viewport.y, viewport.height, size.height, alignment),
+    x: alignedScrollOffset(rect.x, rect.width, canonicalViewport.x, canonicalViewport.width, size.width, alignment),
+    y: alignedScrollOffset(rect.y, rect.height, canonicalViewport.y, canonicalViewport.height, size.height, alignment),
   }));
 }
 

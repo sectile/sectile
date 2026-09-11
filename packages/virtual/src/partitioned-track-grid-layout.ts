@@ -544,6 +544,7 @@ export function tryPartitionedTrackGridScrollTarget<
 ): VirtualResult<VirtualPoint> {
   const normalized = normalizeQuery({ viewport });
   if (!normalized.ok) return normalized;
+  const canonicalViewport = normalized.value.viewport;
   const data = getInternals(state);
   if (!data.ok) return data;
   const region = state.regions[data.value.regionIndex.get(id) ?? -1];
@@ -559,8 +560,8 @@ export function tryPartitionedTrackGridScrollTarget<
   const contentWidth = data.value.grid.columns.totalExtent + gapExtent(state.columns.size, state.columnGap);
   const contentHeight = data.value.grid.rows.totalExtent + gapExtent(state.rows.size, state.rowGap);
   return ok(Object.freeze({
-    x: columnPinned ? viewport.x : alignedScrollOffset(rect.x, rect.width, viewport.x, viewport.width, contentWidth, alignment),
-    y: rowPinned ? viewport.y : alignedScrollOffset(rect.y, rect.height, viewport.y, viewport.height, contentHeight, alignment),
+    x: columnPinned ? canonicalViewport.x : alignedScrollOffset(rect.x, rect.width, canonicalViewport.x, canonicalViewport.width, contentWidth, alignment),
+    y: rowPinned ? canonicalViewport.y : alignedScrollOffset(rect.y, rect.height, canonicalViewport.y, canonicalViewport.height, contentHeight, alignment),
   }));
 }
 

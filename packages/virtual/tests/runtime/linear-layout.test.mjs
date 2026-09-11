@@ -18,6 +18,7 @@ import {
   snapshotLinearLayout,
   tryApplyLinearMeasurements,
   tryCreateLinearLayout,
+  tryLinearScrollTarget,
   trySetLinearCrossExtent,
 } from '../../.verification-dist/linear-layout.js';
 import {
@@ -27,6 +28,7 @@ import {
   queryTrackGridLayout,
   restoreTrackGridLayout,
   tryCreateTrackGridLayout,
+  tryTrackGridScrollTarget,
   snapshotTrackGridLayout,
   trackGridRegionRect,
 } from '../../.verification-dist/track-grid-layout.js';
@@ -38,6 +40,7 @@ import {
   queryMasonryLayout,
   restoreMasonryLayout,
   snapshotMasonryLayout,
+  tryMasonryScrollTarget,
 } from '../../.verification-dist/masonry-layout.js';
 import {
   applySpatialMeasurements,
@@ -48,6 +51,7 @@ import {
   snapshotSpatialLayout,
   spatialRectAt,
   tryRestoreSpatialLayout,
+  trySpatialScrollTarget,
 } from '../../.verification-dist/spatial-layout.js';
 
 const estimated = (value) => ({ kind: 'estimated', value });
@@ -218,6 +222,44 @@ test('VRT-04: deleting the active anchor preserves the next surviving row', () =
 test('VRT-05: target scrolling returns an explicit two-dimensional offset', () => {
   const state = createLinearLayout(domain(20), createExtentIndex(Array(20).fill(exact(10))), { crossExtent: 100 });
   assert.deepEqual(linearScrollTarget(state, 'item-15', { x: 0, y: 0, width: 100, height: 50 }, 'center'), { x: 0, y: 130 });
+});
+
+test('ISSUE-084: built-in scroll targets share the query viewport geometry boundary', () => {
+  const linear = createLinearLayout(domain(1), createExtentIndex([exact(10)]), { crossExtent: 10 });
+  const masonry = createMasonryLayout(domain(1), createExtentIndex([exact(10)]), { laneCount: 1, laneExtent: 10 });
+  const spatial = createSpatialLayout([{ id: 'spatial', rect: { x: 0, y: 0, width: 10, height: 10 } }]);
+  const grid = createTrackGridLayout(
+    createExtentIndex([exact(10)]),
+    createExtentIndex([exact(10)]),
+    [{ id: 'cell', row: 0, column: 0 }],
+  );
+  const invalidViewports = [
+    { x: Number.NaN, y: 0, width: 10, height: 10 },
+    { x: 0, y: 0, width: 10, height: -1 },
+  ];
+  const direct = [
+    (viewport) => tryLinearScrollTarget(linear, 'item-0', viewport),
+    (viewport) => tryMasonryScrollTarget(masonry, 'item-0', viewport),
+    (viewport) => trySpatialScrollTarget(spatial, 'spatial', viewport),
+    (viewport) => tryTrackGridScrollTarget(grid, 'cell', viewport),
+  ];
+  for (const viewport of invalidViewports) {
+    for (const invoke of direct) {
+      const result = invoke(viewport);
+      assert.equal(result.ok, false);
+      assert.equal(result.error.code, 'virtual-layout-geometry-invalid');
+    }
+    const strategyResult = linearLayoutStrategyFor().tryScrollTarget(linear, 'item-0', viewport);
+    assert.equal(strategyResult.ok, false);
+    assert.equal(strategyResult.error.code, 'virtual-layout-geometry-invalid');
+  }
+
+  const validViewport = { x: 0, y: 0, width: 10, height: 10 };
+  for (const invoke of direct) {
+    const result = invoke(validViewport);
+    assert.equal(result.ok, true);
+    assert.equal(Number.isFinite(result.value.x) && Number.isFinite(result.value.y), true);
+  }
 });
 
 test('ISSUE-079: linear layouts only consume finite canonical extent aggregates', () => {

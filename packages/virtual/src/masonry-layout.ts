@@ -308,6 +308,9 @@ export function masonryScrollTarget<ID extends StableID>(state: MasonryLayoutSta
 }
 
 export function tryMasonryScrollTarget<ID extends StableID>(state: MasonryLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualResult<VirtualPoint> {
+  const normalized = normalizeQuery({ viewport });
+  if (!normalized.ok) return normalized;
+  const canonicalViewport = normalized.value.viewport;
   const data = getInternals(state);
   if (!data.ok) return data;
   const index = state.domain.indexOf(id);
@@ -320,8 +323,8 @@ export function tryMasonryScrollTarget<ID extends StableID>(state: MasonryLayout
   const rect = placementRect(state, data.value.contentMain, logical);
   const size = contentSize(state, data.value.contentMain);
   return ok(Object.freeze(state.axis === 'vertical'
-    ? { x: viewport.x, y: alignedScrollOffset(rect.y, rect.height, viewport.y, viewport.height, size.height, alignment) }
-    : { x: alignedScrollOffset(rect.x, rect.width, viewport.x, viewport.width, size.width, alignment), y: viewport.y }));
+    ? { x: canonicalViewport.x, y: alignedScrollOffset(rect.y, rect.height, canonicalViewport.y, canonicalViewport.height, size.height, alignment) }
+    : { x: alignedScrollOffset(rect.x, rect.width, canonicalViewport.x, canonicalViewport.width, size.width, alignment), y: canonicalViewport.y }));
 }
 
 export function masonryRectAt<ID extends StableID>(state: MasonryLayoutState<ID>, id: ID): VirtualRect | null {

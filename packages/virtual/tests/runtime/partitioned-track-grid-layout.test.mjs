@@ -12,6 +12,7 @@ import {
   tryApplyPartitionedTrackGridMeasurements,
   tryApplyPartitionedTrackGridMutation,
   tryCreatePartitionedTrackGridLayout,
+  tryPartitionedTrackGridScrollTarget,
 } from '../../.verification-dist/partitioned-track-grid-layout.js';
 import { readRepairDiagnostics } from '../../.verification-dist/internal/repair-diagnostics.js';
 
@@ -57,6 +58,21 @@ test('ISSUE-081: partitioned track grids reject non-finite derived gap geometry'
   assert.equal(boundary.ok, true);
   const plan = queryPartitionedTrackGridLayout(boundary.value, { viewport: { x: 0, y: 0, width: 1, height: 1 } });
   assert.equal(Number.isFinite(plan.contentSize.height), true);
+});
+
+test('ISSUE-084: partitioned scroll targets reject invalid viewport geometry', () => {
+  const state = fixture();
+  for (const viewport of [
+    { x: Number.POSITIVE_INFINITY, y: 0, width: 10, height: 10 },
+    { x: 0, y: 0, width: -1, height: 10 },
+  ]) {
+    const result = tryPartitionedTrackGridScrollTarget(state, 'body-middle', viewport);
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'virtual-layout-geometry-invalid');
+  }
+  const valid = tryPartitionedTrackGridScrollTarget(state, 'body-middle', { x: 0, y: 0, width: 10, height: 10 });
+  assert.equal(valid.ok, true);
+  assert.equal(Number.isFinite(valid.value.x) && Number.isFinite(valid.value.y), true);
 });
 
 test('PTG-01: logical partitions project to viewport edges with deterministic overlap layers', () => {

@@ -264,13 +264,16 @@ export function linearScrollTarget<ID extends StableID>(state: LinearLayoutState
 }
 
 export function tryLinearScrollTarget<ID extends StableID>(state: LinearLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualResult<VirtualPoint> {
+  const normalized = normalizeQuery({ viewport });
+  if (!normalized.ok) return normalized;
+  const canonicalViewport = normalized.value.viewport;
   const index = state.domain.indexOf(id);
   const rect = index === null ? null : rectAt(state, index);
   if (rect === null) return fail('transition-rejection', 'virtual-layout-scroll-target-invalid', 'Scroll target must exist in the linear domain.', { id });
   const content = sizeOf(state);
   return ok(Object.freeze(state.axis === 'vertical'
-    ? { x: viewport.x, y: alignedScrollOffset(rect.y, rect.height, viewport.y, viewport.height, content.height, alignment) }
-    : { x: alignedScrollOffset(rect.x, rect.width, viewport.x, viewport.width, content.width, alignment), y: viewport.y }));
+    ? { x: canonicalViewport.x, y: alignedScrollOffset(rect.y, rect.height, canonicalViewport.y, canonicalViewport.height, content.height, alignment) }
+    : { x: alignedScrollOffset(rect.x, rect.width, canonicalViewport.x, canonicalViewport.width, content.width, alignment), y: canonicalViewport.y }));
 }
 
 export function linearRectAt<ID extends StableID>(state: LinearLayoutState<ID>, index: number): VirtualRect | null {

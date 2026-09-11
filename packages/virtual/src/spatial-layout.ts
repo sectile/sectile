@@ -416,13 +416,16 @@ export function spatialScrollTarget<ID extends StableID>(state: SpatialLayoutSta
 }
 
 export function trySpatialScrollTarget<ID extends StableID>(state: SpatialLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualResult<VirtualPoint> {
+  const normalized = normalizeQuery({ viewport });
+  if (!normalized.ok) return normalized;
+  const canonicalViewport = normalized.value.viewport;
   const data = getInternals(state);
   if (!data.ok) return data;
   const item = state.domain.contains(id) ? spatialItemByID(data.value, id) : undefined;
   if (item === undefined) return fail('transition-rejection', 'virtual-layout-scroll-target-invalid', 'Scroll target must exist in the spatial domain.', { id });
   return ok(Object.freeze({
-    x: alignedScrollOffset(item.rect.x, item.rect.width, viewport.x, viewport.width, data.value.contentSize.width, alignment),
-    y: alignedScrollOffset(item.rect.y, item.rect.height, viewport.y, viewport.height, data.value.contentSize.height, alignment),
+    x: alignedScrollOffset(item.rect.x, item.rect.width, canonicalViewport.x, canonicalViewport.width, data.value.contentSize.width, alignment),
+    y: alignedScrollOffset(item.rect.y, item.rect.height, canonicalViewport.y, canonicalViewport.height, data.value.contentSize.height, alignment),
   }));
 }
 
