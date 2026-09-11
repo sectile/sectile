@@ -236,8 +236,12 @@ export function applySpatialMutation<ID extends StableID>(state: SpatialLayoutSt
   return unwrap(tryApplySpatialMutation(state, mutation, anchor));
 }
 
+function invalidSpatialMutation(message: string, details?: Readonly<Record<string, unknown>>): VirtualResult<never> {
+  return fail('transition-rejection', 'virtual-layout-mutation-invalid', message, details);
+}
+
 export function tryApplySpatialMutation<ID extends StableID>(state: SpatialLayoutState<ID>, mutation: SpatialMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualResult<VirtualLayoutMutation<SpatialLayoutState<ID>>> {
-  if (mutation.type !== 'replace' && mutation.type !== 'update' && mutation.type !== 'patch') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial mutation type is unsupported.', { mutation });
+  if (mutation.type !== 'replace' && mutation.type !== 'update' && mutation.type !== 'patch') return invalidSpatialMutation('Spatial mutation type is unsupported.', { mutation });
   if (mutation.type === 'patch') return tryApplySpatialPatch(state, mutation, anchor);
   if (mutation.type === 'update') return tryApplySpatialUpdate(state, mutation, anchor);
   return replaceSpatialItems(state, mutation.items, anchor);
@@ -264,51 +268,55 @@ function tryApplySpatialUpdate<ID extends StableID>(
   mutation: Extract<SpatialMutation<ID>, { readonly type: 'update' }>,
   anchor: VirtualAnchor<ID> | null,
 ): VirtualResult<VirtualLayoutMutation<SpatialLayoutState<ID>>> {
-  const upsert = mutation.upsert ?? [];
   const remove = mutation.remove ?? [];
-  const removed = new Set(remove);
-  if (removed.size !== remove.length) return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial removal IDs must be unique.');
-  for (const id of removed) {
-    if (!state.domain.contains(id)) return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial removals must reference existing IDs.', { id });
+  const changes = new Map<ID, SpatialItem<ID> | null>();
+  for (const id of remove) {
+    if (changes.has(id)) return invalidSpatialMutation('Spatial removal IDs must be unique.');
+    if (!state.domain.contains(id)) return invalidSpatialMutation('Spatial removals must reference existing IDs.', { id });
+    changes.set(id, null);
   }
-
-  const updated = new Map<ID, SpatialItem<ID>>();
-  let membershipChanged = remove.length > 0;
-  for (const input of upsert) {
+  const added: ID[] = [];
+  for (const input of mutation.upsert ?? []) {
     const canonical = canonicalizeSpatialItem(input, 'transition-rejection');
     if (!canonical.ok) return canonical;
     const item = canonical.value;
-    if (updated.has(item.id) || removed.has(item.id)) {
-      return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial upserts must be unique and disjoint from removals.', { id: item.id });
+    if (changes.has(item.id)) {
+      return invalidSpatialMutation('Spatial upserts must be unique and disjoint from removals.', { id: item.id });
     }
-    updated.set(item.id, item);
-    if (!state.domain.contains(item.id)) membershipChanged = true;
+    changes.set(item.id, item);
+    if (!state.domain.contains(item.id)) added.push(item.id);
   }
 
-  if (!membershipChanged) {
-    const data = getInternals(state);
-    if (!data.ok) return data;
-    const changes = new Map<ID, SpatialItem<ID>>();
-    for (const item of updated.values()) {
-      const current = spatialItemByID(data.value, item.id)!;
-      if (!sameSpatialItem(current, item)) changes.set(item.id, item);
+  const data = getInternals(state);
+  if (!data.ok) return data;
+  for (const [id, item] of changes) {
+    if (item === null) continue;
+    const current = spatialItemByID(data.value, id);
+    if (current !== undefined && sameSpatialItem(current, item)) changes.delete(id);
+  }
+  const structural = remove.length > 0 || added.length > 0;
+  let domain = state.domain;
+  if (structural) {
+    for (const id of remove) {
+      const changed = tryApplySequencePatch(domain, {
+        type: 'splice', index: domain.indexOf(id)!, deleteCount: 1, inserted: [],
+      }, { maxItems: state.maxItems });
+      if (!changed.ok) return changed;
+      domain = changed.value;
     }
-    if (changes.size === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
-    const before = anchorRect(state, anchor);
-    const generation = nextGeneration(state.generation);
-    if (!generation.ok) return generation;
-    const next = applySpatialValueChanges(state, data.value, changes, generation.value);
-    return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
-  }
-
-  const items: SpatialItem<ID>[] = [];
-  for (const item of state.items.iterate()) {
-    if (removed.has(item.id)) continue;
-    items.push(updated.get(item.id) ?? item);
-    updated.delete(item.id);
-  }
-  for (const item of updated.values()) items.push(item);
-  return replaceSpatialItems(state, items, anchor);
+    const changed = tryApplySequencePatch(domain, {
+      type: 'splice', index: domain.size, deleteCount: 0, inserted: added,
+    }, { maxItems: state.maxItems });
+    if (!changed.ok) return changed;
+    domain = changed.value;
+  } else if (changes.size === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+  const before = anchorRect(state, anchor);
+  const generation = nextGeneration(state.generation);
+  if (!generation.ok) return generation;
+  const next = structural
+    ? applySpatialOverlayChanges(state, data.value, domain, changes, generation.value)
+    : applySpatialValueChanges(state, data.value, changes as ReadonlyMap<ID, SpatialItem<ID>>, generation.value);
+  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
 }
 
 function tryApplySpatialPatch<ID extends StableID>(
@@ -319,7 +327,7 @@ function tryApplySpatialPatch<ID extends StableID>(
   const patch = mutation.patch;
   if (patch.type === 'move') {
     if (mutation.inserted.length !== 0) {
-      return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial move patches do not accept inserted items.');
+      return invalidSpatialMutation('Spatial move patches do not accept inserted items.');
     }
     const domain = tryApplySequencePatch(state.domain, patch, { maxItems: state.maxItems });
     if (!domain.ok) return domain;
@@ -340,7 +348,7 @@ function tryApplySpatialPatch<ID extends StableID>(
     }));
   }
   if (patch.inserted.length !== mutation.inserted.length) {
-    return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial inserted items must match the patched identities.');
+    return invalidSpatialMutation('Spatial inserted items must match the patched identities.');
   }
   const preflight = preflightSequenceSplice(
     state.domain,
@@ -807,7 +815,7 @@ function canonicalizeSpatialItem<ID extends StableID>(
 ): VirtualResult<SpatialItem<ID>> {
   const id = item.id;
   if (expectedID !== undefined && id !== expectedID) {
-    return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial inserted items must match the patched identities.');
+    return invalidSpatialMutation('Spatial inserted items must match the patched identities.');
   }
   const inputRect = item.rect;
   const rect = Object.freeze({

@@ -1317,7 +1317,8 @@
       "inherits": "linear-v1",
       "source": "packages/virtual/src/spatial-layout.ts",
       "benchmarkIDs": [
-        "VAL-025:spatial-update-work"
+        "VAL-025:spatial-update-work",
+        "VAL-039:spatial-update-structural-work"
       ],
       "specificationCeiling": "O(jChanged*dSequence + jChanged log jChanged + rRepair + pOverlay)",
       "contract": {
@@ -1329,8 +1330,8 @@
           },
           {
             "name": "jChanged",
-            "meaning": "changed existing-ID update upserts",
-            "ceiling": "jChanged <= nItem"
+            "meaning": "removed IDs, new upserts, and changed existing upserts",
+            "ceiling": "jChanged <= maxItems"
           },
           {
             "name": "pOverlay",
@@ -1339,12 +1340,12 @@
           },
           {
             "name": "dSequence",
-            "meaning": "bounded Sequence patch depth used for membership checks",
+            "meaning": "bounded Sequence patch depth used for membership edits and lookups",
             "ceiling": "dSequence <= 32"
           },
           {
             "name": "rRepair",
-            "meaning": "selected blocked-vector and packed-tree repair bound",
+            "meaning": "selected blocked-vector and packed-tree repair bound for membership-preserving value changes",
             "ceiling": "rRepair < nItem / 2"
           }
         ],
@@ -1356,10 +1357,10 @@
         "space": {
           "auxiliary": "O(jChanged + rRepair + pOverlay)",
           "output": "O(1)",
-          "retained": "O(rRepair + pOverlay)"
+          "retained": "O(jChanged + rRepair + pOverlay + dSequence)"
         },
         "resources": {
-          "allocations": "O(jChanged + rRepair + pOverlay)",
+          "allocations": "O(jChanged + rRepair + pOverlay + dSequence)",
           "cacheEntries": "O(rRepair + pOverlay)",
           "listeners": "0",
           "observers": "0",
@@ -1367,8 +1368,9 @@
           "subscriptions": "0"
         },
         "assumptions": [
-          "the update preserves spatial domain membership",
-          "the active Spatial state and retained indexes are canonical"
+          "the active Spatial state and retained indexes are canonical",
+          "the Core Sequence delta remains below its own materialization crossover",
+          "the Spatial repair remains below its packed-tree or structural-overlay rebuild crossover"
         ],
         "ceilings": [
           "maxItems",
@@ -1378,15 +1380,80 @@
         "deterministicWork": [
           "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-095"
         ],
-        "resourceRationale": "Existing-ID updates canonicalize only declared upserts, then reuse the retained blocked-vector/packed-tree repair owner or the bounded structural overlay. Dense changes cross the same deterministic repair boundary and rebuild once.",
-        "proof": "Each declared upsert is captured once, membership is resolved through the retained Sequence, unchanged values are dropped, and changed values enter applySpatialBaseChanges or applySpatialOverlayChanges without enumerating unchanged Spatial items. Base repair sorts only changed indexes and path-copies touched vector/tree partitions; overlay repair copies only its bounded delta.",
-        "adversarialWitness": "ISSUE-095 changes one existing item in a 4,096-item owner and records zero rebuilt items, then changes 1,024 existing items and records the selected full rebuild. The benchmark holds jChanged=1 while nItem grows from 1k to 100k.",
+        "resourceRationale": "Existing-ID updates reuse blocked-vector/packed-tree repair. Membership changes patch only declared Sequence identities and retain removed/new/changed geometry in the bounded structural overlay.",
+        "proof": "Each declared upsert is captured once. Membership-preserving changes enter applySpatialBaseChanges or the existing overlay repair. Structural updates remove only declared IDs from the retained Sequence, append only new upsert IDs, and pass removed/new/changed geometry to applySpatialOverlayChanges; unchanged Spatial items and packed-tree leaves are not enumerated.",
+        "adversarialWitness": "ISSUE-095 covers one existing geometry update and a remove/change/add structural update over 4,096 items with zero rebuilt items. Benchmarks hold the changed set fixed while nItem grows from 1k to 100k.",
         "evidence": [
-          "VAL-025"
+          "VAL-025",
+          "VAL-039"
         ],
         "fullScan": {
           "allowed": false,
-          "rationale": "Incremental existing-ID updates may visit only declared changes plus bounded repair/overlay state, never every unchanged spatial item."
+          "rationale": "Below the declared owner crossovers, update may visit only declared identities plus bounded Sequence, repair, and overlay state."
+        }
+      }
+    },
+    {
+      "id": "spatial.update.rebuild",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/spatial-layout.ts",
+      "benchmarkIDs": [
+        "VAL-039:spatial-update-rebuild-work"
+      ],
+      "specificationCeiling": "O(nItem log nItem + jChanged*dSequence)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "resulting spatial item count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "jChanged",
+            "meaning": "removed IDs, new upserts, and changed existing upserts",
+            "ceiling": "jChanged <= maxItems"
+          },
+          {
+            "name": "dSequence",
+            "meaning": "bounded Sequence patch depth before its owner crossover",
+            "ceiling": "dSequence <= 32"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem log nItem + jChanged*dSequence)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nItem + jChanged)",
+          "output": "O(1)",
+          "retained": "O(nItem)"
+        },
+        "resources": {
+          "allocations": "O(nItem + jChanged)",
+          "cacheEntries": "O(nItem)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "ceilings": [
+          "maxItems",
+          "Sequence patch depth 32",
+          "structural overlay limit min(256, ceil(nItem / 64))"
+        ],
+        "deterministicWork": [
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-095"
+        ],
+        "resourceRationale": "A boundary-shrinking geometry change, structural-overlay saturation, or the Core Sequence owner's own bounded materialization crossover selects one full owner rebuild rather than retaining unbounded delta state.",
+        "proof": "When applySpatialOverlayChanges selects rebuild, materializeSpatialItems visits the resulting domain once and createOwnedState builds one new blocked vector and packed spatial tree. Dense membership-preserving value changes likewise reuse applySpatialBaseChanges' existing rebuild crossover.",
+        "adversarialWitness": "ISSUE-095 adds enough new IDs to exceed the structural overlay bound and verifies one rebuild containing the complete resulting domain.",
+        "evidence": [
+          "VAL-039"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A full scan is allowed only after a documented Sequence or Spatial owner crossover selects rebuild."
         }
       }
     },

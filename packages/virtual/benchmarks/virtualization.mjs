@@ -380,11 +380,19 @@ for (const itemCount of [1_000, 10_000, 100_000]) {
     }],
   }).state.generation);
 }
-const spatialInsertRemoveMs = measureColdMilliseconds((sample) => applySpatialMutation(spatialState, {
-  type: 'update',
-  remove: [`spatial-${sample}`],
-  upsert: [{ id: `spatial-added-${sample}`, rect: { x: 10, y: 20, width: 30, height: 40 } }],
-}).state.generation);
+const spatialInsertRemoveByItemsMs = {};
+for (const itemCount of [1_000, 10_000, 100_000]) {
+  const state = itemCount === strategySize
+    ? spatialState
+    : createSpatialLayout(spatialItems.slice(0, itemCount));
+  const removeID = state.domain.at(itemCount >>> 1);
+  spatialInsertRemoveByItemsMs[itemCount] = measureColdMilliseconds((sample) => applySpatialMutation(state, {
+    type: 'update',
+    remove: [removeID],
+    upsert: [{ id: `spatial-added-${itemCount}`, rect: { x: 10 + sample, y: 20, width: 30, height: 40 } }],
+  }).state.generation);
+}
+const spatialInsertRemoveMs = spatialInsertRemoveByItemsMs[strategySize];
 
 const result = {
   benchmark: 'sectile-virtualization-vs-pretext',
@@ -442,6 +450,7 @@ const result = {
     move32Ms: spatialMove32Ms,
     insert1Ms: spatialInsert1Ms,
     updateExisting1ByItemsMs: spatialUpdateExistingByItemsMs,
+    insertRemove1ByItemsMs: spatialInsertRemoveByItemsMs,
     insertRemove1Ms: spatialInsertRemoveMs,
   },
   integration: {

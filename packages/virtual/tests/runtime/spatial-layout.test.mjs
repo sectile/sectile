@@ -380,6 +380,44 @@ test('ISSUE-095: existing-ID updates use bounded repair and retain dense rebuild
   }).state;
   assert.equal(same, sparse);
 
+  const structuralItem = {
+    ...items[2_048],
+    rect: { ...items[2_048].rect, width: 21 },
+  };
+  const added = { id: 'added', rect: { x: 5, y: 5, width: 3, height: 3 } };
+  const structural = applySpatialMutation(state, {
+    type: 'update',
+    remove: ['item-1000'],
+    upsert: [structuralItem, added],
+  }).state;
+  const structuralWork = readRepairDiagnostics(structural);
+  assert.equal(structuralWork?.mode, 'incremental');
+  assert.equal(structuralWork?.changed, 3);
+  assert.equal(structuralWork?.rebuiltItems, 0);
+  assert.ok(structuralWork.copiedEntries <= structuralWork.repairBound);
+  assert.equal(structural.domain.contains('item-1000'), false);
+  assert.equal(structural.domain.at(structural.domain.size - 1), added.id);
+  assert.deepEqual(spatialRectAt(structural, structuralItem.id), structuralItem.rect);
+  assert.deepEqual(spatialRectAt(structural, added.id), added.rect);
+  const structuralViewport = { x: 0, y: 0, width: 704, height: 832 };
+  assert.deepEqual(
+    querySpatialLayout(structural, { viewport: structuralViewport }).placements,
+    querySpatialLayout(createSpatialLayout(structural.items.toArray()), { viewport: structuralViewport }).placements,
+  );
+
+  const denseAdded = Array.from({ length: 67 }, (_, index) => ({
+    id: `dense-added-${index}`,
+    rect: { x: index % 20, y: index % 20, width: 1, height: 1 },
+  }));
+  const denseStructural = applySpatialMutation(state, {
+    type: 'update',
+    upsert: denseAdded,
+  }).state;
+  const denseStructuralWork = readRepairDiagnostics(denseStructural);
+  assert.equal(denseStructuralWork?.mode, 'rebuild');
+  assert.equal(denseStructuralWork?.changed, denseAdded.length);
+  assert.equal(denseStructuralWork?.rebuiltItems, count + denseAdded.length);
+
   const denseUpserts = Array.from({ length: 1_024 }, (_, index) => ({
     ...items[index],
     rect: { ...items[index].rect, height: 14 },
