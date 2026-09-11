@@ -251,6 +251,64 @@ test('ISSUE-056: model and page access canonicalization retain the validated cal
   assert.equal(state.value.accessState.page, 1);
 });
 
+test('ISSUE-074: column and header metadata retain the single validated snapshot', () => {
+  let headerNodeIDReads = 0;
+  let initialPinReads = 0;
+  let headerIDReads = 0;
+  let headerColumnIDReads = 0;
+  const result = tryCreateTabularModel({
+    columns: [{
+      id: 'name',
+      get headerNodeID() {
+        headerNodeIDReads += 1;
+        return headerNodeIDReads === 1 ? 'header:name' : '';
+      },
+      get initialPin() {
+        initialPinReads += 1;
+        return initialPinReads === 1 ? 'start' : 'bogus';
+      },
+    }],
+    headers: [{
+      kind: 'column',
+      get id() {
+        headerIDReads += 1;
+        return headerIDReads === 1 ? 'header:name' : '';
+      },
+      get columnID() {
+        headerColumnIDReads += 1;
+        return headerColumnIDReads === 1 ? 'name' : 'missing';
+      },
+    }],
+  });
+  assert.equal(result.ok, true);
+  assert.deepEqual(
+    [headerNodeIDReads, initialPinReads, headerIDReads, headerColumnIDReads],
+    [1, 1, 1, 1],
+  );
+  assert.deepEqual(result.value.columns[0], {
+    id: 'name',
+    capabilities: [],
+    initialPin: 'start',
+    headerNodeID: 'header:name',
+  });
+  assert.deepEqual(result.value.headers[0], {
+    kind: 'column',
+    id: 'header:name',
+    columnID: 'name',
+  });
+  assert.equal(Object.isFrozen(result.value.columns[0]), true);
+  assert.equal(Object.isFrozen(result.value.headers[0]), true);
+
+  const state = tryCreateTabularState(result.value);
+  assert.equal(state.ok, true);
+  assert.deepEqual(state.value.columnState, {
+    order: ['name'],
+    hidden: [],
+    pinnedStart: ['name'],
+    pinnedEnd: [],
+  });
+});
+
 test('ISSUE-057: public canonical objects do not expose transferable trust markers', () => {
   const model = createTabularModel({ columns: [{ id: 'name' }], limits: { maxSelectionIDs: 1 } });
   const state = tryCreateTabularState(model).value;
