@@ -99,7 +99,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | chart:projection.clone | trusted | `O(bBuffer + vView)` worst-case | `O(vView)` | `O(bBuffer + vView)` | `O(bBuffer + vView)` | allowed | VAL-016, VAL-017 |
 | chart:projection.create | trusted | `O(nLayer + kRepresentative)` worst-case | `O(nLayer + kRepresentative)` | `O(kRepresentative)` | `O(kRepresentative)` | forbidden | VAL-016, VAL-017 |
 | chart:projection.create.semantic | trusted | `O(nLayer + nAxis + nTick + log nDatum + qIndex + kRepresentative)` expected | `O(nLayer + nAxis + nTick + kRepresentative)` | `O(nAxis + nTick + kRepresentative)` | `O(kRepresentative)` | forbidden | VAL-016, VAL-017 |
-| chart:projection.hit-test.indexed | trusted | `O(log kRepresentative + cCandidate + lLine log mLine + h log h)` expected | `O(log kRepresentative + h)` | `O(h)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| chart:projection.hit-test.indexed | trusted | `O(log kRepresentative + cCandidate + lLine log mLine + h log k + k log k)` expected | `O(log kRepresentative + k)` | `O(k)` | `O(1)` | forbidden | VAL-033 |
 | chart:projection.query-index.build | trusted | `O(kRepresentative log kRepresentative)` worst-case | `O(kRepresentative)` | `O(1)` | `O(kRepresentative)` | allowed | VAL-016, VAL-017 |
 | chart:scale.affine | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-032 |
 | chart:view.transition.axis-domain | trusted | `O(nAxis)` worst-case | `O(nAxis)` | `O(nAxis)` | `O(nAxis)` | forbidden | VAL-016, VAL-017 |

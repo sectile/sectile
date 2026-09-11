@@ -43,6 +43,7 @@ export interface ChartHitTestDiagnostics {
   readonly visitedIndexNodes: number;
   readonly testedPrimitives: number;
   readonly searchedPartitions: number;
+  readonly retainedCandidates: number;
 }
 
 export interface ChartHitTestInspection<ID extends StableID = StableID> {
@@ -67,7 +68,12 @@ export function inspectChartProjectionHitTest<ID extends StableID>(
   projection: ChartProjection<ID>,
   input: ChartHitTestInput,
 ): ChartHitTestInspection<ID> {
-  const diagnostics: MutableDiagnostics = { visitedIndexNodes: 0, testedPrimitives: 0, searchedPartitions: 0 };
+  const diagnostics: MutableDiagnostics = {
+    visitedIndexNodes: 0,
+    testedPrimitives: 0,
+    searchedPartitions: 0,
+    retainedCandidates: 0,
+  };
   const hits = unwrap(tryHitTestChartProjectionWithDiagnostics(projection, input, diagnostics));
   return Object.freeze({ hits, diagnostics: Object.freeze({ ...diagnostics }) });
 }
@@ -105,12 +111,32 @@ interface MutableDiagnostics {
   visitedIndexNodes: number;
   testedPrimitives: number;
   searchedPartitions: number;
+  retainedCandidates: number;
+}
+
+interface HitCandidate {
+  batchIndex: number;
+  primitiveIndex: number;
+  endpoint: 0 | 1;
+  distanceSquared: number;
+  primaryDistance: number;
+  secondaryDistance: number;
+  layerIndex: number;
+  sequence: number;
+}
+
+interface HitCollector<ID extends StableID> {
+  readonly projection: ChartProjection<ID>;
+  readonly maximumHits: number;
+  readonly candidates: HitCandidate[];
+  readonly diagnostics: MutableDiagnostics | null;
+  sequence: number;
 }
 
 function queryNode<ID extends StableID>(
   projection: ChartProjection<ID>, index: ProjectionQueryIndex, nodeIndex: number,
   x: number, y: number, radius: number, acceptedKinds: number,
-  hits: MutableHit<ID>[], diagnostics: MutableDiagnostics | null,
+  hits: HitCollector<ID>, diagnostics: MutableDiagnostics | null,
 ): void {
   const node = index.nodes[nodeIndex] as QueryNode;
   if (diagnostics !== null) diagnostics.visitedIndexNodes += 1;
@@ -131,15 +157,8 @@ function queryNode<ID extends StableID>(
     const batch = projection.batches[batchIndex] as ChartProjectionBatch;
     const exact = exactHit(batch, primitiveIndex, x, y, radius);
     if (exact === null) continue;
-    const hit = hitFor(projection, batchIndex, primitiveIndex, exact.endpoint, exact.distanceSquared);
-    if (hit !== null) hits.push(hit);
+    retainHit(hits, batchIndex, primitiveIndex, exact.endpoint, exact.distanceSquared, exact.distanceSquared, 0);
   }
-}
-
-interface RankedHit<ID extends StableID> {
-  readonly hit: MutableHit<ID>;
-  readonly primaryDistance: number;
-  readonly secondaryDistance: number;
 }
 
 function automaticHits<ID extends StableID>(
@@ -149,27 +168,26 @@ function automaticHits<ID extends StableID>(
 ): readonly ChartHit<ID>[] {
   if (!insidePlot(projection, x, y)) return Object.freeze([]);
 
-  const areas: MutableHit<ID>[] = [];
-  if (index.root >= 0) queryNode(projection, index, index.root, x, y, 0, AREA_KIND_MASK, areas, diagnostics);
-  if (areas.length > 0) return finalizeHits(areas, maximumHits, compareHits);
+  const hits = createHitCollector(projection, maximumHits, diagnostics);
+  if (index.root >= 0) queryNode(projection, index, index.root, x, y, 0, AREA_KIND_MASK, hits, diagnostics);
+  if (hits.candidates.length > 0) return finalizeHits(hits);
 
-  const lines = nearestPolylineHits(projection, x, y, diagnostics);
-  if (lines.length > 0) return finalizeRankedHits(lines, maximumHits);
+  nearestPolylineHits(projection, x, y, hits, diagnostics);
+  if (hits.candidates.length > 0) return finalizeHits(hits);
 
-  const bars = nearestBarHits(projection, index, x, y, diagnostics);
-  if (bars.length > 0) return finalizeRankedHits(bars, maximumHits);
+  nearestBarHits(projection, index, x, y, hits, diagnostics);
+  if (hits.candidates.length > 0) return finalizeHits(hits);
 
-  const points: MutableHit<ID>[] = [];
   if (index.root >= 0) queryNode(
-    projection, index, index.root, x, y, nearestRadius, POINT_KIND_MASK, points, diagnostics,
+    projection, index, index.root, x, y, nearestRadius, POINT_KIND_MASK, hits, diagnostics,
   );
-  return finalizeHits(points, maximumHits, compareHits);
+  return finalizeHits(hits);
 }
 
 function nearestPolylineHits<ID extends StableID>(
-  projection: ChartProjection<ID>, x: number, y: number, diagnostics: MutableDiagnostics | null,
-): RankedHit<ID>[] {
-  const hits: RankedHit<ID>[] = [];
+  projection: ChartProjection<ID>, x: number, y: number,
+  hits: HitCollector<ID>, diagnostics: MutableDiagnostics | null,
+): void {
   for (let batchIndex = 0; batchIndex < projection.batches.length; batchIndex += 1) {
     const batch = projection.batches[batchIndex] as ChartProjectionBatch;
     if (batch.type !== 'polyline' || batch.identityIndices.length === 0) continue;
@@ -189,12 +207,11 @@ function nearestPolylineHits<ID extends StableID>(
       appendPolylineCoordinateHits(projection, batch, batchIndex, batch.positions[right * 2] as number, x, y, hits, diagnostics);
     }
   }
-  return hits;
 }
 
 function appendPolylineCoordinateHits<ID extends StableID>(
   projection: ChartProjection<ID>, batch: Extract<ChartProjectionBatch, { readonly type: 'polyline' }>, batchIndex: number,
-  coordinate: number, x: number, y: number, hits: RankedHit<ID>[], diagnostics: MutableDiagnostics | null,
+  coordinate: number, x: number, y: number, hits: HitCollector<ID>, diagnostics: MutableDiagnostics | null,
 ): void {
   const count = batch.identityIndices.length;
   const start = lowerBoundPosition(batch.positions, count, coordinate);
@@ -206,24 +223,21 @@ function appendPolylineCoordinateHits<ID extends StableID>(
     const primitive = Math.min(vertex, Math.max(0, count - 2));
     const endpoint: 0 | 1 = vertex > primitive ? 1 : 0;
     const distanceSquared = squared(x - px) + squared(y - py);
-    const hit = hitFor(projection, batchIndex, primitive, endpoint, distanceSquared);
-    if (hit !== null) hits.push({ hit, primaryDistance: Math.abs(x - px), secondaryDistance: Math.abs(y - py) });
+    retainHit(hits, batchIndex, primitive, endpoint, distanceSquared, Math.abs(x - px), Math.abs(y - py));
   }
 }
 
 function nearestBarHits<ID extends StableID>(
   projection: ChartProjection<ID>, index: ProjectionQueryIndex,
-  x: number, y: number, diagnostics: MutableDiagnostics | null,
-): RankedHit<ID>[] {
-  const hits: RankedHit<ID>[] = [];
+  x: number, y: number, hits: HitCollector<ID>, diagnostics: MutableDiagnostics | null,
+): void {
   appendNearestBarAxisHits(projection, index, index.verticalBarOrder, 0, x, y, hits, diagnostics);
   appendNearestBarAxisHits(projection, index, index.horizontalBarOrder, 1, y, x, hits, diagnostics);
-  return hits;
 }
 
 function appendNearestBarAxisHits<ID extends StableID>(
   projection: ChartProjection<ID>, index: ProjectionQueryIndex, order: Uint32Array, axisOffset: 0 | 1,
-  coordinate: number, secondaryCoordinate: number, hits: RankedHit<ID>[], diagnostics: MutableDiagnostics | null,
+  coordinate: number, secondaryCoordinate: number, hits: HitCollector<ID>, diagnostics: MutableDiagnostics | null,
 ): void {
   if (order.length === 0) return;
   if (diagnostics !== null) diagnostics.searchedPartitions += 1;
@@ -246,7 +260,7 @@ function appendNearestBarAxisHits<ID extends StableID>(
 function appendBarCenterHits<ID extends StableID>(
   projection: ChartProjection<ID>, index: ProjectionQueryIndex, order: Uint32Array, axisOffset: 0 | 1,
   center: number, coordinate: number, secondaryCoordinate: number,
-  hits: RankedHit<ID>[], diagnostics: MutableDiagnostics | null,
+  hits: HitCollector<ID>, diagnostics: MutableDiagnostics | null,
 ): void {
   const start = lowerBoundRecords(index.bounds, order, axisOffset, center);
   const end = upperBoundRecords(index.bounds, order, axisOffset, center);
@@ -263,9 +277,111 @@ function appendBarCenterHits<ID extends StableID>(
     const primaryDistance = Math.abs(coordinate - center);
     const batchIndex = index.batchIndices[record] as number;
     const primitiveIndex = index.primitiveIndices[record] as number;
-    const hit = hitFor(projection, batchIndex, primitiveIndex, 0, squared(primaryDistance) + squared(secondaryDistance));
-    if (hit !== null) hits.push({ hit, primaryDistance, secondaryDistance });
+    retainHit(
+      hits,
+      batchIndex,
+      primitiveIndex,
+      0,
+      squared(primaryDistance) + squared(secondaryDistance),
+      primaryDistance,
+      secondaryDistance,
+    );
   }
+}
+
+function createHitCollector<ID extends StableID>(
+  projection: ChartProjection<ID>, maximumHits: number, diagnostics: MutableDiagnostics | null,
+): HitCollector<ID> {
+  return { projection, maximumHits, candidates: [], diagnostics, sequence: 0 };
+}
+
+function retainHit<ID extends StableID>(
+  collector: HitCollector<ID>, batchIndex: number, primitiveIndex: number, endpoint: 0 | 1,
+  distanceSquared: number, primaryDistance: number, secondaryDistance: number,
+): void {
+  if (!hasPublicHit(collector.projection, batchIndex, primitiveIndex, endpoint)) return;
+  const layerIndex = (collector.projection.batches[batchIndex] as ChartProjectionBatch).layerIndex;
+  const sequence = collector.sequence;
+  collector.sequence += 1;
+  const heap = collector.candidates;
+  if (heap.length < collector.maximumHits) {
+    heap.push({ batchIndex, primitiveIndex, endpoint, distanceSquared, primaryDistance, secondaryDistance, layerIndex, sequence });
+    if (collector.diagnostics !== null) collector.diagnostics.retainedCandidates = Math.max(collector.diagnostics.retainedCandidates, heap.length);
+    siftHitUp(heap, heap.length - 1);
+    return;
+  }
+  const worst = heap[0] as HitCandidate;
+  if (compareHitValues(primaryDistance, secondaryDistance, layerIndex, primitiveIndex, sequence, worst) >= 0) return;
+  worst.batchIndex = batchIndex;
+  worst.primitiveIndex = primitiveIndex;
+  worst.endpoint = endpoint;
+  worst.distanceSquared = distanceSquared;
+  worst.primaryDistance = primaryDistance;
+  worst.secondaryDistance = secondaryDistance;
+  worst.layerIndex = layerIndex;
+  worst.sequence = sequence;
+  siftHitDown(heap, 0);
+}
+
+function hasPublicHit<ID extends StableID>(
+  projection: ChartProjection<ID>, batchIndex: number, primitiveIndex: number, endpoint: 0 | 1,
+): boolean {
+  const batch = projection.batches[batchIndex] as ChartProjectionBatch;
+  const representativeIndex = batch.type === 'polyline'
+    ? Math.min(batch.identityIndices.length - 1, primitiveIndex + endpoint)
+    : primitiveIndex;
+  if (batch.representatives?.[representativeIndex] !== undefined) return true;
+  return projection.identities[identityFor(batch, primitiveIndex, endpoint)] !== undefined;
+}
+
+function siftHitUp(heap: HitCandidate[], start: number): void {
+  let index = start;
+  while (index > 0) {
+    const parent = (index - 1) >> 1;
+    if (compareHitCandidates(heap[index] as HitCandidate, heap[parent] as HitCandidate) <= 0) return;
+    const current = heap[index] as HitCandidate;
+    heap[index] = heap[parent] as HitCandidate;
+    heap[parent] = current;
+    index = parent;
+  }
+}
+
+function siftHitDown(heap: HitCandidate[], start: number): void {
+  let index = start;
+  while (true) {
+    const left = index * 2 + 1;
+    if (left >= heap.length) return;
+    const right = left + 1;
+    let worst = left;
+    if (right < heap.length && compareHitCandidates(heap[right] as HitCandidate, heap[left] as HitCandidate) > 0) worst = right;
+    if (compareHitCandidates(heap[worst] as HitCandidate, heap[index] as HitCandidate) <= 0) return;
+    const current = heap[index] as HitCandidate;
+    heap[index] = heap[worst] as HitCandidate;
+    heap[worst] = current;
+    index = worst;
+  }
+}
+
+function compareHitCandidates(left: HitCandidate, right: HitCandidate): number {
+  return compareHitValues(
+    left.primaryDistance,
+    left.secondaryDistance,
+    left.layerIndex,
+    left.primitiveIndex,
+    left.sequence,
+    right,
+  );
+}
+
+function compareHitValues(
+  primaryDistance: number, secondaryDistance: number, layerIndex: number,
+  primitiveIndex: number, sequence: number, right: HitCandidate,
+): number {
+  return primaryDistance - right.primaryDistance
+    || secondaryDistance - right.secondaryDistance
+    || right.layerIndex - layerIndex
+    || primitiveIndex - right.primitiveIndex
+    || sequence - right.sequence;
 }
 
 function hitFor<ID extends StableID>(
@@ -287,26 +403,20 @@ function hitFor<ID extends StableID>(
     : { kind: 'datum', id, identityIndex, layerIndex: batch.layerIndex, batchIndex, primitiveIndex, distanceSquared };
 }
 
-function finalizeHits<ID extends StableID>(
-  hits: MutableHit<ID>[], maximumHits: number,
-  compare: (left: MutableHit<ID>, right: MutableHit<ID>) => number,
-): readonly ChartHit<ID>[] {
-  hits.sort(compare);
-  if (hits.length > maximumHits) hits.length = maximumHits;
-  return Object.freeze(hits.map((hit) => Object.freeze(hit)));
-}
-
-function finalizeRankedHits<ID extends StableID>(hits: RankedHit<ID>[], maximumHits: number): readonly ChartHit<ID>[] {
-  hits.sort(compareRankedHits);
-  if (hits.length > maximumHits) hits.length = maximumHits;
-  return Object.freeze(hits.map(({ hit }) => Object.freeze(hit)));
-}
-
-function compareRankedHits<ID extends StableID>(left: RankedHit<ID>, right: RankedHit<ID>): number {
-  return left.primaryDistance - right.primaryDistance
-    || left.secondaryDistance - right.secondaryDistance
-    || right.hit.layerIndex - left.hit.layerIndex
-    || left.hit.primitiveIndex - right.hit.primitiveIndex;
+function finalizeHits<ID extends StableID>(collector: HitCollector<ID>): readonly ChartHit<ID>[] {
+  collector.candidates.sort(compareHitCandidates);
+  const hits: MutableHit<ID>[] = [];
+  for (const candidate of collector.candidates) {
+    const hit = hitFor(
+      collector.projection,
+      candidate.batchIndex,
+      candidate.primitiveIndex,
+      candidate.endpoint,
+      candidate.distanceSquared,
+    );
+    if (hit !== null) hits.push(Object.freeze(hit));
+  }
+  return Object.freeze(hits);
 }
 
 function insidePlot(projection: ChartProjection, x: number, y: number): boolean {
@@ -444,10 +554,6 @@ function intersects(node: QueryNode, x: number, y: number, radius: number): bool
 function intersectsBounds(bounds: Float32Array, offset: number, x: number, y: number, radius: number): boolean {
   return (bounds[offset] as number) <= x + radius && (bounds[offset + 2] as number) >= x - radius
     && (bounds[offset + 1] as number) <= y + radius && (bounds[offset + 3] as number) >= y - radius;
-}
-
-function compareHits<ID extends StableID>(left: MutableHit<ID>, right: MutableHit<ID>): number {
-  return left.distanceSquared - right.distanceSquared || right.layerIndex - left.layerIndex || left.primitiveIndex - right.primitiveIndex;
 }
 
 function normalizedAngle(angle: number): number {

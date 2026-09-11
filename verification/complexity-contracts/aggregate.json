@@ -25165,9 +25165,11 @@
       "id": "projection.hit-test.indexed",
       "source": "packages/chart/src/query.ts",
       "benchmarkIDs": [
-        "chart:query:hit-test"
+        "chart:query:hit-test",
+        "chart:query:hit-test-dense",
+        "VAL-033:chart-query-bounded-top-k"
       ],
-      "specificationCeiling": "O(log kRepresentative + cCandidate + lLine log mLine + h log h)",
+      "specificationCeiling": "O(log kRepresentative + cCandidate + lLine log mLine + h log k + k log k)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
@@ -25193,22 +25195,27 @@
           },
           {
             "name": "h",
-            "meaning": "exact hits",
+            "meaning": "exact or tied candidates that resolve to public hits",
             "ceiling": "cCandidate"
+          },
+          {
+            "name": "k",
+            "meaning": "requested and retained hit count",
+            "ceiling": "maximumHits <= 256"
           }
         ],
         "time": {
-          "bound": "O(log kRepresentative + cCandidate + lLine log mLine + h log h)",
+          "bound": "O(log kRepresentative + cCandidate + lLine log mLine + h log k + k log k)",
           "kind": "expected",
           "runtimeState": "trusted"
         },
         "space": {
-          "auxiliary": "O(log kRepresentative + h)",
-          "output": "O(h)",
+          "auxiliary": "O(log kRepresentative + k)",
+          "output": "O(k)",
           "retained": "O(1)"
         },
         "resources": {
-          "allocations": "O(h)",
+          "allocations": "O(k)",
           "cacheEntries": "0",
           "listeners": "0",
           "observers": "0",
@@ -25217,7 +25224,8 @@
         },
         "assumptions": [
           "prepareChartProjectionQueries or an earlier hit test built the projection BVH and categorical bar orders before any consumer-owned clone mutation",
-          "ordered-series projected X coordinates remain nondecreasing"
+          "ordered-series projected X coordinates remain nondecreasing",
+          "maximumHits is validated before query-index construction and never exceeds 256"
         ],
         "ceilings": [
           "operation item and output ceilings"
@@ -25226,19 +25234,17 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "inspectChartProjectionHitTest reports retainedCandidates <= maximumHits while testedPrimitives may grow to every dense or tied candidate"
         ],
-        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Filled areas use exact BVH candidates; ordered lines use one binary search per bounded layer plus equal-X candidates; categorical bars use retained center orders; scatter points use the bounded-radius BVH. Deterministic diagnostics count visited nodes, tested primitives, and searched line or bar partitions.",
-        "adversarialWitness": "Dense overlapping geometry or repeated X/category coordinates visits every tied candidate; separated points, lines, and categories retain logarithmic lookup plus bounded leaves.",
+        "resourceRationale": "The query collector allocates at most one mutable candidate record per requested hit slot, overwrites the worst slot after the heap is full, and materializes at most k public hit objects after ranking.",
+        "proof": "Filled areas and scatter use indexed exact candidates; ordered lines use one binary search per bounded layer plus equal-X candidates; categorical bars use retained center orders. Every resolvable hit is compared against a max-heap of at most k candidates, replacement mutates an existing slot, and only the final k candidates are sorted and materialized.",
+        "adversarialWitness": "Dense overlapping points and repeated-X/repeated-center fixtures test every tied candidate while retainedCandidates stays at maximumHits; separated geometry retains logarithmic lookup plus bounded leaves.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "VAL-033"
         ],
         "fullScan": {
           "allowed": false,
-          "rationale": "Pointer queries use retained spatial, ordered-X, or categorical-center indexes instead of scanning unrelated projected primitives."
+          "rationale": "Pointer queries use retained spatial, ordered-X, or categorical-center indexes instead of scanning unrelated projected primitives; dense overlap may still force all relevant candidates to be tested."
         }
       }
     },

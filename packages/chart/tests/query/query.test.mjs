@@ -6,6 +6,7 @@ import { createChartProjection } from '../../.verification-dist/projection.js';
 import {
   hitTestChartProjection,
   inspectChartProjectionHitTest,
+  prepareChartProjectionQueries,
   tryHitTestChartProjection,
 } from '../../.verification-dist/query.js';
 
@@ -37,6 +38,82 @@ test('hit ordering prefers distance then visually later layers', () => {
   ]);
   const hits = hitTestChartProjection(projection, { x: 0, y: 100, radius: 1, maximumHits: 2 });
   assert.deepEqual(hits.map((hit) => hit.id), ['1', 1]);
+});
+
+test('maximumHits bounds dense exact-hit retention across cardinalities', () => {
+  for (const size of [1_000, 4_000, 16_000, 64_000, 128_000]) {
+    const data = Array.from({ length: size }, (_, id) => ({ id, x: 0, y: 0 }));
+    const projection = createChartProjection(
+      createChartModel({ layers: [{ id: 'points', profile: 'point', data }] }, { maxDatums: size }),
+      { viewport: { width: 100, height: 100 }, maximumRepresentatives: size },
+    );
+    prepareChartProjectionQueries(projection);
+    const batch = projection.batches[0];
+    const inspected = inspectChartProjectionHitTest(projection, {
+      x: batch.positions[0],
+      y: batch.positions[1],
+      radius: 0,
+      maximumHits: 1,
+    });
+    assert.equal(inspected.diagnostics.testedPrimitives, size);
+    assert.equal(inspected.diagnostics.retainedCandidates, 1);
+    assert.equal(inspected.hits.length, 1);
+    assert.equal(inspected.hits[0].id, 0);
+  }
+
+  const data = Array.from({ length: 1_024 }, (_, id) => ({ id, x: 0, y: 0 }));
+  const projection = createChartProjection(
+    createChartModel({ layers: [{ id: 'points', profile: 'point', data }] }, { maxDatums: data.length }),
+    { viewport: { width: 100, height: 100 }, maximumRepresentatives: data.length },
+  );
+  const batch = projection.batches[0];
+  const inspected = inspectChartProjectionHitTest(projection, {
+    x: batch.positions[0],
+    y: batch.positions[1],
+    radius: 0,
+    maximumHits: 7,
+  });
+  assert.equal(inspected.diagnostics.retainedCandidates, 7);
+  assert.deepEqual(inspected.hits.map((hit) => hit.id), [0, 1, 2, 3, 4, 5, 6]);
+});
+
+test('ranked ties retain only requested line and bar candidates', () => {
+  const lineSize = 2_048;
+  const lineData = Array.from({ length: lineSize }, (_, id) => ({ id, x: 0, y: id }));
+  const line = createChartProjection(
+    createChartModel({ layers: [{ id: 'line', profile: 'ordered-series', data: lineData }] }, { maxDatums: lineSize }),
+    { viewport: { width: 100, height: 100 }, maximumRepresentatives: lineSize },
+  );
+  prepareChartProjectionQueries(line);
+  const lineBatch = line.batches[0];
+  const target = lineSize >>> 1;
+  const lineInspection = inspectChartProjectionHitTest(line, {
+    x: lineBatch.positions[target * 2],
+    y: lineBatch.positions[target * 2 + 1],
+    maximumHits: 1,
+  });
+  assert.equal(lineInspection.diagnostics.testedPrimitives, lineSize);
+  assert.equal(lineInspection.diagnostics.retainedCandidates, 1);
+  assert.equal(lineInspection.hits[0].id, target);
+
+  const barCount = 1_024;
+  const bars = projectDefinition({ kind: 'cartesian', axes: [
+    { id: 'category', orientation: 'x', scale: 'categorical', field: 'category' },
+    { id: 'value', orientation: 'y', scale: 'linear', field: 'value' },
+  ] }, [{ id: 'bars', kind: 'bar', xAxis: 'category', yAxis: 'value', data: [
+    ...Array.from({ length: barCount }, (_, id) => ({ id: `a-${id}`, category: 'A', value: 1 })),
+    { id: 'b', category: 'B', value: 100 },
+  ] }]);
+  prepareChartProjectionQueries(bars);
+  const barBatch = bars.batches[0];
+  const barInspection = inspectChartProjectionHitTest(bars, {
+    x: barBatch.rectangles[0] + barBatch.rectangles[2] / 2,
+    y: bars.layout.plot.y,
+    maximumHits: 1,
+  });
+  assert.equal(barInspection.diagnostics.testedPrimitives, barCount);
+  assert.equal(barInspection.diagnostics.retainedCandidates, 1);
+  assert.equal(barInspection.hits[0].id, 'a-0');
 });
 
 test('line queries assign the plot to nearest X regions with Y as the series tie-breaker', () => {
@@ -144,4 +221,12 @@ test('query ceilings and invalid coordinates fail before index construction', ()
   const projection = project([{ id: 'p', profile: 'point', data: [{ id: 1, x: 0, y: 0 }] }]);
   assert.equal(tryHitTestChartProjection(projection, { x: Number.NaN, y: 0 }).error.code, 'chart-query-invalid');
   assert.equal(tryHitTestChartProjection(projection, { x: 0, y: 0, maximumHits: 257 }).error.code, 'chart-query-invalid');
+  const empty = inspectChartProjectionHitTest(projection, { x: 0, y: 0, maximumHits: 0 });
+  assert.deepEqual(empty.hits, []);
+  assert.deepEqual(empty.diagnostics, {
+    visitedIndexNodes: 0,
+    testedPrimitives: 0,
+    searchedPartitions: 0,
+    retainedCandidates: 0,
+  });
 });

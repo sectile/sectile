@@ -21,6 +21,7 @@ export function* createChartWorkloadGroups({ quick, selection }) {
     }
     if (wants(selection, 'chart', 'query', 'query', size)) {
       yield workloadGroup(() => queryWorkloads(size, quick));
+      yield workloadGroup(() => denseQueryWorkloads(size, quick));
     }
   }
   if (
@@ -114,6 +115,34 @@ async function queryWorkloads(size, quick) {
         y: (iteration * 130_363) % input.viewport.height,
       }).length),
   ];
+}
+
+async function denseQueryWorkloads(size, quick) {
+  const [{ createChartModel }, { createChartProjection }, { prepareChartProjectionQueries, hitTestChartProjection }] = await Promise.all([
+    import('../../../packages/chart/dist/model.js'),
+    import('../../../packages/chart/dist/projection.js'),
+    import('../../../packages/chart/dist/query.js'),
+  ]);
+  const data = Array.from({ length: size }, (_, id) => ({ id, x: 0, y: 0 }));
+  const model = createChartModel({ layers: [{ id: 'points', profile: 'point', data }] }, { maxDatums: size });
+  const projection = createChartProjection(model, {
+    viewport: { width: 1_920, height: 1_080, devicePixelRatio: 2 },
+    maximumRepresentatives: size,
+  });
+  prepareChartProjectionQueries(projection);
+  const batch = projection.batches[0];
+  return [timed(
+    `chart:query:hit-test-dense:${size}`,
+    'chart-query',
+    { size, operation: 'hit-test-dense', maximumHits: 1 },
+    quick ? 1 : 50,
+    () => hitTestChartProjection(projection, {
+      x: batch.positions[0],
+      y: batch.positions[1],
+      radius: 0,
+      maximumHits: 1,
+    }).length,
+  )];
 }
 
 async function viewWorkload(quick) {
