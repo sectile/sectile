@@ -124,34 +124,28 @@ export interface VirtualItemStyleOptions {
   readonly height?: boolean;
 }
 
-interface FramePreparation {
-  readonly previousFrame: VirtualSurfaceFrame;
-  readonly nextFrame: VirtualSurfaceFrame;
-  readonly scrollportViewport: VirtualRect;
-  readonly frameDirty: boolean;
-  readonly viewportDirty: boolean;
-}
+type FramePreparation = readonly [
+  previousFrame: VirtualSurfaceFrame,
+  nextFrame: VirtualSurfaceFrame,
+  scrollportViewport: VirtualRect,
+  dirty: boolean,
+];
 
-interface ItemRegistration<ID extends StableID> {
-  readonly id: ID;
-  readonly element: HTMLElement;
-  readonly token: object;
-}
+type ItemRegistration<ID extends StableID> = readonly [
+  id: ID,
+  element: HTMLElement,
+  token: object,
+];
 
-interface VirtualScrollHost {
-  readonly target: VirtualScrollport;
-  readonly ownerDocument: Document;
-  readonly geometryTarget: HTMLElement | null;
-  readonly readViewport: () => VirtualRect;
-  readonly writeScroll: (point: VirtualPoint) => void;
-  readonly clampScroll: (point: VirtualPoint) => VirtualPoint;
-  readonly readSurfaceFrame: (
-    surface: HTMLElement,
-    viewportInsets: VirtualInsets,
-  ) => VirtualSurfaceFrame;
-  readonly connect: (onScroll: () => void, onResize: () => void) => void;
-  readonly disconnect: (onScroll: () => void, onResize: () => void) => void;
-}
+type VirtualScrollHost = readonly [
+  ownerDocument: Document,
+  scrollport: VirtualScrollport,
+  geometryTarget: HTMLElement | null,
+  view: Window | null,
+  scrollElement: Element,
+  viewportElement: Element,
+  surface: HTMLElement,
+];
 
 export function createVirtualizer<
   State,
@@ -213,14 +207,12 @@ class DOMVirtualizer<
   Measurement,
   Mutation,
 > implements VirtualizerConnection<State, ID, Measurement, Mutation> {
-  readonly #scrollport: VirtualScrollport;
   readonly #host: VirtualScrollHost;
-  readonly #surface: HTMLElement;
   readonly #strategy: VirtualLayoutStrategy<State, ID, Measurement, Mutation>;
   readonly #measure:
     VirtualMeasurementResolver<State, ID, Measurement> | undefined;
-  readonly #readViewport: () => VirtualRect;
-  readonly #writeScroll: (point: VirtualPoint) => void;
+  readonly #readViewport: VirtualViewportReader | undefined;
+  readonly #writeScroll: VirtualScrollWriter | undefined;
   readonly #environment: VirtualizerEnvironment;
   readonly #onPlanChange:
     | ((
@@ -240,7 +232,7 @@ class DOMVirtualizer<
   readonly #pendingEntries = new Map<Element, ResizeObserverEntry>();
   readonly #placementByID = new Map<ID, VirtualPlacement<ID>>();
   readonly #handleScroll: () => void;
-  readonly #handleViewportResize: () => void;
+  readonly #handleResize: () => void;
   #state: State;
   #plan: VirtualLayoutPlan<ID>;
   #overscan: number | Partial<VirtualInsets> | undefined;
@@ -248,70 +240,55 @@ class DOMVirtualizer<
   #surfaceFrame: VirtualSurfaceFrame;
   #scheduledFrame: number | null = null;
   #scheduleGeneration = 0;
-  #geometryDirty = false;
-  #viewportDirty = false;
+  #dirty = 0;
   #disconnected = false;
 
   public constructor(
     options: VirtualizerOptions<State, ID, Measurement, Mutation>,
   ) {
-    const host = createVirtualScrollHost(options.scrollport, options.surface);
-    this.#scrollport = host.target;
+    const host = createScrollHost(options.scrollport, options.surface);
     this.#host = host;
-    this.#surface = options.surface;
     this.#state = options.state;
     this.#strategy = options.strategy;
     this.#overscan = options.overscan;
     this.#measure = options.measure;
-    const readViewport = options.readViewport;
-    const writeScroll = options.writeScroll;
-    this.#readViewport = readViewport === undefined
-      ? host.readViewport
-      : (): VirtualRect => readViewport(this.#scrollport);
-    this.#writeScroll = writeScroll === undefined
-      ? host.writeScroll
-      : (point): void => { writeScroll(this.#scrollport, point); };
+    this.#readViewport = options.readViewport;
+    this.#writeScroll = options.writeScroll;
     this.#environment = options.environment
-      ?? browserEnvironment(host.ownerDocument);
+      ?? browserEnvironment(host[0]);
     this.#onPlanChange = options.onPlanChange;
     this.#onStateChange = options.onStateChange;
     this.#onError = options.onError;
     this.#viewportInsets = normalizeViewportInsets(options.viewportInsets);
-    this.#surfaceFrame = host.readSurfaceFrame(
-      this.#surface,
-      this.#viewportInsets,
-    );
+    this.#surfaceFrame = readHostSurfaceFrame(host, this.#viewportInsets);
     this.#plan = unwrap(this.#query(
       this.#state,
       this.#overscan,
       this.#surfaceFrame,
-      this.#readViewport(),
+      this.#readPhysicalViewport(),
     ));
     this.#handleScroll = (): void => {
       if (this.#disconnected) return;
-      this.#viewportDirty = true;
+      this.#dirty |= 1;
       this.#schedule();
     };
-    this.#handleViewportResize = (): void => {
+    this.#handleResize = this.#invalidateGeometry.bind(this);
+    const geometryObserver = this.#environment.createResizeObserver((entries): void => {
       if (this.#disconnected) return;
-      this.#invalidateGeometry();
-    };
-    const observers = createObserverPair(
-      this.#environment,
-      (entries): void => {
-        if (this.#disconnected) return;
-        for (const entry of entries) {
-          if (
-            entry.target === this.#host.geometryTarget
-            || entry.target === this.#surface
-            || this.#frameRegistrations.has(entry.target as HTMLElement)
-          ) {
-            this.#invalidateGeometry();
-            return;
-          }
+      for (const entry of entries) {
+        if (
+          entry.target === this.#host[2]
+          || entry.target === this.#host[6]
+          || this.#frameRegistrations.has(entry.target as HTMLElement)
+        ) {
+          this.#invalidateGeometry();
+          return;
         }
-      },
-      (entries): void => {
+      }
+    });
+    this.#geometryObserver = geometryObserver;
+    try {
+      this.#itemObserver = this.#environment.createResizeObserver((entries): void => {
         if (this.#disconnected) return;
         for (const entry of entries) {
           if (this.#itemIDs.has(entry.target)) {
@@ -319,16 +296,20 @@ class DOMVirtualizer<
           }
         }
         if (this.#pendingEntries.size > 0) this.#schedule();
-      },
-    );
-    this.#geometryObserver = observers.geometry;
-    this.#itemObserver = observers.items;
+      });
+    } catch (error) {
+      geometryObserver.disconnect();
+      throw error;
+    }
     try {
-      this.#host.connect(this.#handleScroll, this.#handleViewportResize);
-      if (this.#host.geometryTarget !== null) {
-        this.#geometryObserver.observe(this.#host.geometryTarget);
+      this.#host[1].addEventListener('scroll', this.#handleScroll, {
+        passive: true,
+      });
+      this.#host[3]?.addEventListener('resize', this.#handleResize);
+      if (this.#host[2] !== null) {
+        this.#geometryObserver.observe(this.#host[2]);
       }
-      this.#geometryObserver.observe(this.#surface);
+      this.#geometryObserver.observe(this.#host[6]);
       this.#indexPlacements(this.#plan);
       this.#onPlanChange?.(this.#plan, this);
     } catch (error) {
@@ -349,21 +330,21 @@ class DOMVirtualizer<
     this.#requireConnected();
     if (
       Object.is(state, this.#state)
-      && !this.#geometryDirty
-      && !this.#viewportDirty
+      && this.#dirty === 0
     ) return { ok: true, value: this.#plan };
     this.#cancelScheduled();
     if (!Object.is(state, this.#state)) this.#pendingEntries.clear();
     const prepared = this.#prepareFrame(this.#viewportInsets);
     if (!prepared.ok) return prepared;
-    return this.#finishFrame(prepared.value, {
+    return this.#finishFrame(
+      prepared.value,
       state,
-      stateChanged: !Object.is(state, this.#state),
-      scrollDelta: ZERO_POINT,
-      overscan: this.#overscan,
-      viewportInsets: this.#viewportInsets,
-      forceQuery: true,
-    });
+      !Object.is(state, this.#state),
+      ZERO_POINT,
+      this.#overscan,
+      this.#viewportInsets,
+      true,
+    );
   }
 
   public setOverscan(
@@ -372,24 +353,24 @@ class DOMVirtualizer<
     this.#requireConnected();
     if (
       sameOverscan(this.#overscan, overscan)
-      && !this.#geometryDirty
-      && !this.#viewportDirty
+      && this.#dirty === 0
     ) return { ok: true, value: this.#plan };
     this.#cancelScheduled();
     const prepared = this.#prepareFrame(this.#viewportInsets);
     if (!prepared.ok) return prepared;
     const measured = this.#resolveMeasurements(this.#state, [], false);
-    if (!measured.ok) return this.#failureAs(measured);
+    if (!measured.ok) return measured;
     const state = measured.value?.state ?? this.#state;
     const scrollDelta = measured.value?.scrollDelta ?? ZERO_POINT;
-    return this.#finishFrame(prepared.value, {
+    return this.#finishFrame(
+      prepared.value,
       state,
-      stateChanged: !Object.is(state, this.#state),
+      !Object.is(state, this.#state),
       scrollDelta,
       overscan,
-      viewportInsets: this.#viewportInsets,
-      forceQuery: true,
-    });
+      this.#viewportInsets,
+      true,
+    );
   }
 
   public setViewportInsets(
@@ -401,33 +382,33 @@ class DOMVirtualizer<
     if (!normalized.ok) return normalized;
     if (
       sameInsets(this.#viewportInsets, normalized.value)
-      && !this.#geometryDirty
-      && !this.#viewportDirty
+      && this.#dirty === 0
     ) return { ok: true, value: this.#plan };
     this.#cancelScheduled();
     const prepared = this.#prepareFrame(normalized.value);
     if (!prepared.ok) return prepared;
     const measured = this.#resolveMeasurements(this.#state, [], false);
-    if (!measured.ok) return this.#failureAs(measured);
+    if (!measured.ok) return measured;
     const state = measured.value?.state ?? this.#state;
     const scrollDelta = measured.value?.scrollDelta ?? ZERO_POINT;
-    return this.#finishFrame(prepared.value, {
+    return this.#finishFrame(
+      prepared.value,
       state,
-      stateChanged: !Object.is(state, this.#state),
+      !Object.is(state, this.#state),
       scrollDelta,
-      overscan: this.#overscan,
-      viewportInsets: normalized.value,
-      forceQuery: true,
-    });
+      this.#overscan,
+      normalized.value,
+      true,
+    );
   }
 
   public registerFrame(element: HTMLElement): () => void {
     this.#requireConnected();
-    requireOwnedElement(element, this.#host.ownerDocument, 'Virtualizer frame');
-    if (element === this.#host.geometryTarget || element === this.#surface) {
+    requireOwned(element, this.#host[0]);
+    if (element === this.#host[2] || element === this.#host[6]) {
       return (): void => {};
     }
-    const token = Object.freeze({});
+    const token = {};
     const hadRegistration = this.#frameRegistrations.has(element);
     if (!hadRegistration) this.#geometryObserver.observe(element);
     this.#frameRegistrations.set(element, token);
@@ -444,31 +425,27 @@ class DOMVirtualizer<
 
   public registerItem(element: HTMLElement, id: ID): () => void {
     this.#requireConnected();
-    requireOwnedElement(element, this.#host.ownerDocument, 'Virtualizer item');
-    const token = Object.freeze({});
+    requireOwned(element, this.#host[0]);
+    const token = {};
     const previousForID = this.#items.get(id);
     const previousForElement = this.#itemIDs.get(element);
     if (
       previousForID !== undefined
-      && previousForID.element !== element
+      && previousForID[1] !== element
     ) this.#removeItemRegistration(previousForID);
     if (
       previousForElement !== undefined
-      && previousForElement.id !== id
+      && previousForElement[0] !== id
     ) this.#removeItemRegistration(previousForElement);
     const existing = this.#items.get(id);
-    const registration: ItemRegistration<ID> = Object.freeze({
-      id,
-      element,
-      token,
-    });
+    const registration: ItemRegistration<ID> = [id, element, token];
     this.#items.set(id, registration);
     this.#itemIDs.set(element, registration);
     if (this.#measure !== undefined && existing === undefined) {
       this.#itemObserver.observe(element);
     }
     return (): void => {
-      if (this.#items.get(id)?.token !== token) return;
+      if (this.#items.get(id)?.[2] !== token) return;
       this.#removeItemRegistration(registration);
     };
   }
@@ -479,7 +456,7 @@ class DOMVirtualizer<
     this.#requireConnected();
     this.#cancelScheduled();
     const prepared = this.#prepareFrame(this.#viewportInsets);
-    if (!prepared.ok) return this.#failureAs(prepared);
+    if (!prepared.ok) return prepared;
     const measured = this.#resolveMeasurements(
       this.#state,
       measurements,
@@ -487,17 +464,18 @@ class DOMVirtualizer<
     );
     if (!measured.ok) return measured;
     if (measured.value === null) {
-      throw new TypeError('Explicit measurement must produce a layout result.');
+      throw new TypeError('measurement result');
     }
-    const finished = this.#finishFrame(prepared.value, {
-      state: measured.value.state,
-      stateChanged: !Object.is(measured.value.state, this.#state),
-      scrollDelta: measured.value.scrollDelta,
-      overscan: this.#overscan,
-      viewportInsets: this.#viewportInsets,
-      forceQuery: false,
-    });
-    if (!finished.ok) return this.#failureAs(finished);
+    const finished = this.#finishFrame(
+      prepared.value,
+      measured.value.state,
+      !Object.is(measured.value.state, this.#state),
+      measured.value.scrollDelta,
+      this.#overscan,
+      this.#viewportInsets,
+      false,
+    );
+    if (!finished.ok) return finished;
     return { ok: true, value: measured.value };
   }
 
@@ -507,9 +485,9 @@ class DOMVirtualizer<
     this.#requireConnected();
     this.#cancelScheduled();
     const prepared = this.#prepareFrame(this.#viewportInsets);
-    if (!prepared.ok) return this.#failureAs(prepared);
+    if (!prepared.ok) return prepared;
     const measured = this.#resolveMeasurements(this.#state, [], false);
-    if (!measured.ok) return this.#failureAs(measured);
+    if (!measured.ok) return measured;
     const measuredState = measured.value?.state ?? this.#state;
     const measuredDelta = measured.value?.scrollDelta ?? ZERO_POINT;
     const mutated = this.#strategy.tryMutate(measuredState, {
@@ -521,16 +499,17 @@ class DOMVirtualizer<
       measuredDelta,
       mutated.value.scrollDelta,
     );
-    if (!combined.ok) return this.#failureAs(combined);
-    const finished = this.#finishFrame(prepared.value, {
-      state: mutated.value.state,
-      stateChanged: !Object.is(mutated.value.state, this.#state),
-      scrollDelta: combined.value,
-      overscan: this.#overscan,
-      viewportInsets: this.#viewportInsets,
-      forceQuery: false,
-    });
-    if (!finished.ok) return this.#failureAs(finished);
+    if (!combined.ok) return combined;
+    const finished = this.#finishFrame(
+      prepared.value,
+      mutated.value.state,
+      !Object.is(mutated.value.state, this.#state),
+      combined.value,
+      this.#overscan,
+      this.#viewportInsets,
+      false,
+    );
+    if (!finished.ok) return finished;
     return mutated;
   }
 
@@ -541,15 +520,12 @@ class DOMVirtualizer<
     this.#requireConnected();
     this.#cancelScheduled();
     const prepared = this.#prepareFrame(this.#viewportInsets);
-    if (!prepared.ok) return this.#failureAs(prepared);
+    if (!prepared.ok) return prepared;
     const measured = this.#resolveMeasurements(this.#state, [], false);
-    if (!measured.ok) return this.#failureAs(measured);
+    if (!measured.ok) return measured;
     const state = measured.value?.state ?? this.#state;
     const viewport = this.#tryVirtual(() =>
-      toVirtualViewport(
-        prepared.value.scrollportViewport,
-        prepared.value.nextFrame,
-      ));
+      toVirtualViewport(prepared.value[2], prepared.value[1]));
     if (!viewport.ok) return viewport;
     const target = this.#strategy.tryScrollTarget(
       state,
@@ -559,23 +535,23 @@ class DOMVirtualizer<
     );
     if (!target.ok) return this.#report(target);
     const physicalTarget = this.#tryVirtual(() =>
-      toScrollportPoint(target.value, prepared.value.nextFrame));
+      toScrollportPoint(target.value, prepared.value[1]));
     if (!physicalTarget.ok) return physicalTarget;
     const scrolled = this.#queryAfterScroll(
       state,
       this.#overscan,
-      prepared.value.nextFrame,
-      prepared.value.scrollportViewport,
+      prepared.value[1],
+      prepared.value[2],
       physicalTarget.value,
     );
-    if (!scrolled.ok) return this.#failureAs(scrolled);
-    const { plan, viewport: finalViewport } = scrolled.value;
+    if (!scrolled.ok) return scrolled;
+    const [plan, finalViewport] = scrolled.value;
     this.#commitFrame(
       state,
       !Object.is(state, this.#state),
       this.#overscan,
       this.#viewportInsets,
-      prepared.value.nextFrame,
+      prepared.value[1],
       plan,
     );
     return {
@@ -602,7 +578,8 @@ class DOMVirtualizer<
     if (this.#disconnected) return;
     this.#disconnected = true;
     this.#cancelScheduled();
-    this.#host.disconnect(this.#handleScroll, this.#handleViewportResize);
+    this.#host[1].removeEventListener('scroll', this.#handleScroll);
+    this.#host[3]?.removeEventListener('resize', this.#handleResize);
     this.#geometryObserver.disconnect();
     this.#itemObserver.disconnect();
     this.#frameRegistrations.clear();
@@ -610,14 +587,35 @@ class DOMVirtualizer<
     this.#itemIDs.clear();
     this.#pendingEntries.clear();
     this.#placementByID.clear();
-    this.#geometryDirty = false;
-    this.#viewportDirty = false;
+    this.#dirty = 0;
+  }
+
+  #readPhysicalViewport(): VirtualRect {
+    const readViewport = this.#readViewport;
+    if (readViewport !== undefined) return readViewport(this.#host[1]);
+    const scroll = this.#host[4];
+    const viewport = this.#host[5];
+    return {
+      x: Math.max(0, scroll.scrollLeft),
+      y: Math.max(0, scroll.scrollTop),
+      width: Math.max(0, viewport.clientWidth),
+      height: Math.max(0, viewport.clientHeight),
+    };
+  }
+
+  #writePhysicalScroll(point: VirtualPoint): void {
+    const writeScroll = this.#writeScroll;
+    if (writeScroll !== undefined) return writeScroll(this.#host[1], point);
+    (this.#host[3] ?? this.#host[2])!.scrollTo({
+      left: point.x,
+      top: point.y,
+      behavior: this.#host[3] === null ? 'auto' : 'instant',
+    });
   }
 
   #invalidateGeometry(): void {
     if (this.#disconnected) return;
-    this.#geometryDirty = true;
-    this.#viewportDirty = true;
+    this.#dirty = 3;
     this.#schedule();
   }
 
@@ -645,40 +643,39 @@ class DOMVirtualizer<
     const prepared = this.#prepareFrame(this.#viewportInsets);
     if (!prepared.ok) return prepared;
     const measured = this.#resolveMeasurements(this.#state, [], false);
-    if (!measured.ok) return this.#failureAs(measured);
+    if (!measured.ok) return measured;
     const state = measured.value?.state ?? this.#state;
     const scrollDelta = measured.value?.scrollDelta ?? ZERO_POINT;
-    return this.#finishFrame(prepared.value, {
+    return this.#finishFrame(
+      prepared.value,
       state,
-      stateChanged: !Object.is(state, this.#state),
+      !Object.is(state, this.#state),
       scrollDelta,
-      overscan: this.#overscan,
-      viewportInsets: this.#viewportInsets,
+      this.#overscan,
+      this.#viewportInsets,
       forceQuery,
-    });
+    );
   }
 
   #prepareFrame(
     viewportInsets: VirtualInsets,
   ): DOMVirtualResult<FramePreparation> {
     return this.#tryVirtual(() => {
-      const frameDirty = this.#geometryDirty;
-      const viewportDirty = this.#viewportDirty;
+      const frameDirty = (this.#dirty & 2) !== 0;
       const nextFrame = frameDirty
-        ? this.#host.readSurfaceFrame(this.#surface, viewportInsets)
+        ? readHostSurfaceFrame(this.#host, viewportInsets)
         : sameInsets(this.#viewportInsets, viewportInsets)
           ? this.#surfaceFrame
           : createVirtualSurfaceFrame({
               origin: this.#surfaceFrame.origin,
               viewportInsets,
             });
-      return Object.freeze({
-        previousFrame: this.#surfaceFrame,
+      return [
+        this.#surfaceFrame,
         nextFrame,
-        scrollportViewport: this.#readViewport(),
-        frameDirty,
-        viewportDirty,
-      });
+        this.#readPhysicalViewport(),
+        this.#dirty !== 0,
+      ] as const;
     });
   }
 
@@ -695,14 +692,14 @@ class DOMVirtualizer<
       for (const entry of entries) {
         const registration = this.#itemIDs.get(entry.target);
         if (registration === undefined) continue;
-        const current = this.#items.get(registration.id);
-        const placement = this.#placementByID.get(registration.id);
+        const current = this.#items.get(registration[0]);
+        const placement = this.#placementByID.get(registration[0]);
         if (
-          current?.token !== registration.token
+          current?.[2] !== registration[2]
           || placement === undefined
         ) continue;
         const value = this.#measure({
-          element: registration.element,
+          element: registration[1],
           entry,
           placement,
           state,
@@ -729,75 +726,61 @@ class DOMVirtualizer<
 
   #finishFrame(
     prepared: FramePreparation,
-    input: Readonly<{
-      state: State;
-      stateChanged: boolean;
-      scrollDelta: VirtualPoint;
-      overscan: number | Partial<VirtualInsets> | undefined;
-      viewportInsets: VirtualInsets;
-      forceQuery: boolean;
-    }>,
+    state: State,
+    stateChanged: boolean,
+    scrollDelta: VirtualPoint,
+    overscan: number | Partial<VirtualInsets> | undefined,
+    viewportInsets: VirtualInsets,
+    forceQuery: boolean,
   ): DOMVirtualResult<VirtualLayoutPlan<ID>> {
     const frameDelta = this.#plan.anchor === null
       ? { ok: true as const, value: ZERO_POINT }
-      : this.#tryVirtual(() => surfaceFrameScrollDelta(
-          prepared.previousFrame,
-          prepared.nextFrame,
-        ));
+      : this.#tryVirtual(() => surfaceFrameScrollDelta(prepared[0], prepared[1]));
     if (!frameDelta.ok) return frameDelta;
-    const combined = this.#tryAddPoints(
-      input.scrollDelta,
-      frameDelta.value,
-    );
+    const combined = this.#tryAddPoints(scrollDelta, frameDelta.value);
     if (!combined.ok) return combined;
-    const scrollChanged = !isZeroPoint(combined.value);
     let plan: DOMVirtualResult<VirtualLayoutPlan<ID>>;
-    if (scrollChanged) {
+    if (combined.value.x !== 0 || combined.value.y !== 0) {
       const target = this.#tryAddPoints(
-        Object.freeze({
-          x: prepared.scrollportViewport.x,
-          y: prepared.scrollportViewport.y,
-        }),
+        { x: prepared[2].x, y: prepared[2].y },
         combined.value,
       );
       if (!target.ok) return target;
       const scrolled = this.#queryAfterScroll(
-        input.state,
-        input.overscan,
-        prepared.nextFrame,
-        prepared.scrollportViewport,
+        state,
+        overscan,
+        prepared[1],
+        prepared[2],
         target.value,
       );
-      if (!scrolled.ok) return this.#failureAs(scrolled);
-      plan = { ok: true, value: scrolled.value.plan };
+      if (!scrolled.ok) return scrolled;
+      plan = { ok: true, value: scrolled.value[0] };
     } else {
       const viewport = this.#tryVirtual(() =>
-        toVirtualViewport(prepared.scrollportViewport, prepared.nextFrame));
+        toVirtualViewport(prepared[2], prepared[1]));
       if (!viewport.ok) return viewport;
-      const shouldQuery = input.forceQuery
-        || input.stateChanged
-        || prepared.frameDirty
-        || prepared.viewportDirty
-        || !sameOverscan(this.#overscan, input.overscan)
-        || !sameInsets(this.#viewportInsets, input.viewportInsets)
+      const shouldQuery = forceQuery
+        || stateChanged
+        || prepared[3]
+        || !sameOverscan(this.#overscan, overscan)
+        || !sameInsets(this.#viewportInsets, viewportInsets)
         || !sameRect(this.#plan.viewport, viewport.value);
       if (!shouldQuery) {
-        this.#geometryDirty = false;
-        this.#viewportDirty = false;
+        this.#dirty = 0;
         return { ok: true, value: this.#plan };
       }
-      plan = this.#strategy.tryQuery(input.state, {
+      plan = this.#strategy.tryQuery(state, {
         viewport: viewport.value,
-        ...(input.overscan === undefined ? {} : { overscan: input.overscan }),
+        ...(overscan === undefined ? {} : { overscan }),
       });
       if (!plan.ok) return this.#report(plan);
     }
     this.#commitFrame(
-      input.state,
-      input.stateChanged,
-      input.overscan,
-      input.viewportInsets,
-      prepared.nextFrame,
+      state,
+      stateChanged,
+      overscan,
+      viewportInsets,
+      prepared[1],
       plan.value,
     );
     return plan;
@@ -809,28 +792,25 @@ class DOMVirtualizer<
     frame: VirtualSurfaceFrame,
     previousViewport: VirtualRect,
     target: VirtualPoint,
-  ): DOMVirtualResult<Readonly<{
-    plan: VirtualLayoutPlan<ID>;
-    viewport: VirtualRect;
-  }>> {
+  ): DOMVirtualResult<readonly [VirtualLayoutPlan<ID>, VirtualRect]> {
     const previousX = previousViewport.x;
     const previousY = previousViewport.y;
     const queried = this.#tryVirtual(() => {
       let accepted = false;
       try {
-        this.#writeScroll(this.#host.clampScroll(target));
-        const viewport = this.#readViewport();
+        this.#writePhysicalScroll(clampHostScroll(this.#host, target));
+        const viewport = this.#readPhysicalViewport();
         const plan = this.#strategy.tryQuery(state, {
           viewport: toVirtualViewport(viewport, frame),
           ...(overscan === undefined ? {} : { overscan }),
         });
         if (!plan.ok) return plan;
         accepted = true;
-        return { ok: true as const, value: { plan: plan.value, viewport } };
+        return { ok: true as const, value: [plan.value, viewport] as const };
       } finally {
         // Restore through the same coordinate model before any failure is reported.
         if (!accepted) {
-          this.#writeScroll(Object.freeze({ x: previousX, y: previousY }));
+          this.#writePhysicalScroll(Object.freeze({ x: previousX, y: previousY }));
         }
       }
     });
@@ -849,8 +829,7 @@ class DOMVirtualizer<
     this.#overscan = overscan;
     this.#viewportInsets = viewportInsets;
     this.#surfaceFrame = surfaceFrame;
-    this.#geometryDirty = false;
-    this.#viewportDirty = false;
+    this.#dirty = 0;
     if (stateChanged) this.#onStateChange?.(state);
     this.#publish(plan);
   }
@@ -885,15 +864,15 @@ class DOMVirtualizer<
   }
 
   #removeItemRegistration(registration: ItemRegistration<ID>): void {
-    if (this.#items.get(registration.id)?.token === registration.token) {
-      this.#items.delete(registration.id);
+    if (this.#items.get(registration[0])?.[2] === registration[2]) {
+      this.#items.delete(registration[0]);
     }
-    if (this.#itemIDs.get(registration.element)?.token === registration.token) {
-      this.#itemIDs.delete(registration.element);
+    if (this.#itemIDs.get(registration[1])?.[2] === registration[2]) {
+      this.#itemIDs.delete(registration[1]);
     }
-    this.#pendingEntries.delete(registration.element);
+    this.#pendingEntries.delete(registration[1]);
     if (!this.#disconnected && this.#measure !== undefined) {
-      this.#itemObserver.unobserve(registration.element);
+      this.#itemObserver.unobserve(registration[1]);
     }
   }
 
@@ -909,12 +888,12 @@ class DOMVirtualizer<
         error: {
           class: 'construction',
           code: 'virtual-layout-geometry-invalid',
-          message: 'Virtualizer scroll corrections must remain finite.',
+          message: 'Scroll correction must be finite.',
           details: { left, right },
         },
       });
     }
-    return { ok: true, value: Object.freeze({ x, y }) };
+    return { ok: true, value: { x, y } };
   }
 
   #tryVirtual<T>(operation: () => T): DOMVirtualResult<T> {
@@ -932,13 +911,6 @@ class DOMVirtualizer<
     }
   }
 
-  #failureAs<T>(result: DOMVirtualResult<unknown>): DOMVirtualResult<T> {
-    if (result.ok) {
-      throw new TypeError('Expected a failed virtualizer result.');
-    }
-    return { ok: false, error: result.error };
-  }
-
   #report<T>(result: DOMVirtualResult<T>): DOMVirtualResult<T> {
     if (!result.ok) this.#onError?.(result.error);
     return result;
@@ -946,7 +918,7 @@ class DOMVirtualizer<
 
   #requireConnected(): void {
     if (this.#disconnected) {
-      throw new TypeError('Virtualizer connection is disconnected.');
+      throw new TypeError('disconnected');
     }
   }
 }
@@ -959,190 +931,76 @@ function normalizeViewportInsets(
   }).viewportInsets;
 }
 
-function createVirtualScrollHost(
+function createScrollHost(
   scrollport: VirtualScrollport,
   surface: HTMLElement,
 ): VirtualScrollHost {
-  return isDocumentScrollport(scrollport)
-    ? createDocumentScrollHost(scrollport, surface)
-    : createElementScrollHost(scrollport, surface);
-}
-
-function isDocumentScrollport(scrollport: VirtualScrollport): scrollport is Document {
-  return (scrollport as { readonly nodeType?: unknown }).nodeType === 9;
-}
-
-function createElementScrollHost(
-  scrollport: HTMLElement,
-  surface: HTMLElement,
-): VirtualScrollHost {
-  if (scrollport === surface) {
-    throw new TypeError('Virtualizer scrollport and surface must be distinct elements.');
+  const document = (scrollport as { readonly nodeType?: unknown }).nodeType === 9
+    ? scrollport as Document
+    : (scrollport as HTMLElement).ownerDocument;
+  const element = scrollport === document ? null : scrollport as HTMLElement;
+  requireOwned(surface, document);
+  if (element === surface) throw new TypeError('distinct elements');
+  const view = element === null ? document.defaultView : null;
+  const scrollingElement = element ?? document.scrollingElement;
+  if (scrollingElement === null || (element === null && view === null)) {
+    throw new TypeError('browser view and scrolling element');
   }
-  const ownerDocument = scrollport.ownerDocument;
-  requireOwnedElement(surface, ownerDocument, 'Virtualizer surface');
-  return Object.freeze({
-    target: scrollport,
-    ownerDocument,
-    geometryTarget: scrollport,
-    readViewport: (): VirtualRect => Object.freeze({
-      x: Math.max(0, finiteOrZero(scrollport.scrollLeft)),
-      y: Math.max(0, finiteOrZero(scrollport.scrollTop)),
-      width: Math.max(0, finiteOrZero(scrollport.clientWidth)),
-      height: Math.max(0, finiteOrZero(scrollport.clientHeight)),
-    }),
-    writeScroll: (point: VirtualPoint): void => {
-      scrollport.scrollTo({ left: point.x, top: point.y, behavior: 'auto' });
-    },
-    clampScroll: (point: VirtualPoint): VirtualPoint => clampElementScrollPoint(scrollport, point),
-    readSurfaceFrame: (
-      currentSurface: HTMLElement,
-      viewportInsets: VirtualInsets,
-    ): VirtualSurfaceFrame => readElementSurfaceFrame(scrollport, currentSurface, viewportInsets),
-    connect: (onScroll: () => void): void => {
-      scrollport.addEventListener('scroll', onScroll, { passive: true });
-    },
-    disconnect: (onScroll: () => void): void => {
-      scrollport.removeEventListener('scroll', onScroll);
-    },
-  });
-}
-
-function createDocumentScrollHost(
-  scrollport: Document,
-  surface: HTMLElement,
-): VirtualScrollHost {
-  const view = scrollport.defaultView;
-  const scrollingElement = scrollport.scrollingElement;
-  if (view === null || scrollingElement === null) {
-    throw new TypeError('Virtualizer document scrollport requires a browser view and scrolling element.');
-  }
-  requireOwnedElement(surface, scrollport, 'Virtualizer surface');
+  const root = element ?? document.documentElement;
   if (
-    surface === scrollingElement
-    || surface === scrollport.documentElement
-    || surface === scrollport.body
-  ) {
-    throw new TypeError('Virtualizer document scrollport and surface must have distinct physical owners.');
-  }
-  const readRawScrollX = (): number => documentRawScrollCoordinate(view.scrollX, scrollingElement.scrollLeft);
-  const readRawScrollY = (): number => documentRawScrollCoordinate(view.scrollY, scrollingElement.scrollTop);
-  const readScrollX = (): number => Math.max(0, readRawScrollX());
-  const readScrollY = (): number => Math.max(0, readRawScrollY());
-  return Object.freeze({
-    target: scrollport,
-    ownerDocument: scrollport,
-    geometryTarget: null,
-    readViewport: (): VirtualRect => Object.freeze({
-      x: readScrollX(),
-      y: readScrollY(),
-      width: documentViewportExtent(scrollport.documentElement.clientWidth, view.innerWidth),
-      height: documentViewportExtent(scrollport.documentElement.clientHeight, view.innerHeight),
-    }),
-    writeScroll: (point: VirtualPoint): void => {
-      view.scrollTo({ left: point.x, top: point.y, behavior: 'instant' });
-    },
-    clampScroll: (point: VirtualPoint): VirtualPoint => Object.freeze({
-      x: Math.max(0, point.x),
-      y: Math.max(0, point.y),
-    }),
-    readSurfaceFrame: (
-      currentSurface: HTMLElement,
-      viewportInsets: VirtualInsets,
-    ): VirtualSurfaceFrame => {
-      const surfaceRect = currentSurface.getBoundingClientRect();
-      return createVirtualSurfaceFrame({
-        origin: {
-          x: surfaceRect.left + readRawScrollX(),
-          y: surfaceRect.top + readRawScrollY(),
-        },
-        viewportInsets,
-      });
-    },
-    connect: (onScroll: () => void, onResize: () => void): void => {
-      scrollport.addEventListener('scroll', onScroll, { passive: true });
-      try {
-        view.addEventListener('resize', onResize);
-      } catch (error) {
-        scrollport.removeEventListener('scroll', onScroll);
-        throw error;
-      }
-    },
-    disconnect: (onScroll: () => void, onResize: () => void): void => {
-      scrollport.removeEventListener('scroll', onScroll);
-      view.removeEventListener('resize', onResize);
-    },
-  });
+    element === null
+    && (surface === scrollingElement || surface === root || surface === document.body)
+  ) throw new TypeError('distinct physical owners');
+  return [document, scrollport, element, view, scrollingElement, root, surface];
 }
 
-function readElementSurfaceFrame(
-  scrollport: HTMLElement,
-  surface: HTMLElement,
+function readHostSurfaceFrame(
+  host: VirtualScrollHost,
   viewportInsets: VirtualInsets,
 ): VirtualSurfaceFrame {
-  const scrollportRect = scrollport.getBoundingClientRect();
-  const surfaceRect = surface.getBoundingClientRect();
-  const clientLeft = finiteNonNegative(scrollport.clientLeft)
-    ? scrollport.clientLeft
-    : 0;
-  const clientTop = finiteNonNegative(scrollport.clientTop)
-    ? scrollport.clientTop
-    : 0;
+  const scroll = host[4];
+  const surfaceRect = host[6].getBoundingClientRect();
+  const geometry = host[2];
+  const scrollportRect = geometry?.getBoundingClientRect();
   return createVirtualSurfaceFrame({
     origin: {
       x: surfaceRect.left
-        - scrollportRect.left
-        - clientLeft
-        + finiteOrZero(scrollport.scrollLeft),
+        - (scrollportRect?.left ?? 0)
+        - Math.max(0, finiteOrZero(geometry?.clientLeft))
+        + finiteOrZero(scroll.scrollLeft),
       y: surfaceRect.top
-        - scrollportRect.top
-        - clientTop
-        + finiteOrZero(scrollport.scrollTop),
+        - (scrollportRect?.top ?? 0)
+        - Math.max(0, finiteOrZero(geometry?.clientTop))
+        + finiteOrZero(scroll.scrollTop),
     },
     viewportInsets,
   });
 }
 
-function clampElementScrollPoint(
-  scrollport: HTMLElement,
+function clampHostScroll(
+  host: VirtualScrollHost,
   point: VirtualPoint,
 ): VirtualPoint {
-  const maxX = finiteNonNegative(scrollport.scrollWidth)
+  const scrollport = host[2];
+  const maxX = scrollport !== null
+    && finiteNonNegative(scrollport.scrollWidth)
     && finiteNonNegative(scrollport.clientWidth)
     ? Math.max(0, scrollport.scrollWidth - scrollport.clientWidth)
     : null;
-  const maxY = finiteNonNegative(scrollport.scrollHeight)
+  const maxY = scrollport !== null
+    && finiteNonNegative(scrollport.scrollHeight)
     && finiteNonNegative(scrollport.clientHeight)
     ? Math.max(0, scrollport.scrollHeight - scrollport.clientHeight)
     : null;
-  const x = maxX === null
-    ? Math.max(0, point.x)
-    : Math.min(Math.max(0, point.x), maxX);
-  const y = maxY === null
-    ? Math.max(0, point.y)
-    : Math.min(Math.max(0, point.y), maxY);
-  return Object.freeze({ x, y });
+  return Object.freeze({
+    x: maxX === null ? Math.max(0, point.x) : Math.min(Math.max(0, point.x), maxX),
+    y: maxY === null ? Math.max(0, point.y) : Math.min(Math.max(0, point.y), maxY),
+  });
 }
 
-function documentRawScrollCoordinate(primary: unknown, fallback: unknown): number {
-  return typeof primary === 'number' && Number.isFinite(primary)
-    ? primary
-    : finiteOrZero(fallback);
-}
-
-function documentViewportExtent(primary: unknown, fallback: unknown): number {
-  if (finiteNonNegative(primary) && primary > 0) return primary;
-  return Math.max(0, finiteOrZero(fallback));
-}
-
-function requireOwnedElement(
-  element: HTMLElement,
-  ownerDocument: Document,
-  label: string,
-): void {
-  const candidate = (element as { readonly ownerDocument?: Document | null }).ownerDocument;
-  if (candidate !== undefined && candidate !== null && candidate !== ownerDocument) {
-    throw new TypeError(`${label} must belong to the scrollport document.`);
+function requireOwned(element: HTMLElement, ownerDocument: Document): void {
+  if (element.ownerDocument && element.ownerDocument !== ownerDocument) {
+    throw new TypeError('scrollport document');
   }
 }
 
@@ -1179,10 +1037,6 @@ function overscanSide(
   return overscan?.[side] ?? 0;
 }
 
-function isZeroPoint(point: VirtualPoint): boolean {
-  return point.x === 0 && point.y === 0;
-}
-
 function finiteNonNegative(value: unknown): value is number {
   return typeof value === 'number'
     && Number.isFinite(value)
@@ -1193,42 +1047,17 @@ function finiteOrZero(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0;
 }
 
-function createObserverPair(
-  environment: VirtualizerEnvironment,
-  geometryCallback: ResizeObserverCallback,
-  itemCallback: ResizeObserverCallback,
-): Readonly<{
-  geometry: ResizeObserver;
-  items: ResizeObserver;
-}> {
-  const geometry = environment.createResizeObserver(geometryCallback);
-  try {
-    return Object.freeze({
-      geometry,
-      items: environment.createResizeObserver(itemCallback),
-    });
-  } catch (error) {
-    geometry.disconnect();
-    throw error;
-  }
-}
-
 function browserEnvironment(ownerDocument: Document): VirtualizerEnvironment {
   const view = ownerDocument.defaultView;
   if (view === null || typeof view.ResizeObserver !== 'function') {
-    throw new TypeError(
-      'Virtualizer requires a browser window with ResizeObserver support.',
-    );
+    throw new TypeError('ResizeObserver');
   }
-  return Object.freeze({
-    requestFrame: (callback: FrameRequestCallback): number =>
-      view.requestAnimationFrame(callback),
-    cancelFrame: (handle: number): void => {
-      view.cancelAnimationFrame(handle);
-    },
+  return {
+    requestFrame: view.requestAnimationFrame.bind(view),
+    cancelFrame: view.cancelAnimationFrame.bind(view),
     createResizeObserver: (callback: ResizeObserverCallback): ResizeObserver =>
       new view.ResizeObserver(callback),
-  });
+  };
 }
 
 export type {
