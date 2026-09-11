@@ -40,6 +40,7 @@ import {
   queryMasonryLayout,
   restoreMasonryLayout,
   snapshotMasonryLayout,
+  tryApplyMasonryMeasurements,
   tryMasonryScrollTarget,
 } from '../../.verification-dist/masonry-layout.js';
 import {
@@ -380,6 +381,38 @@ test('VRT-01, VRT-05: masonry queries balanced lanes across axes and reverse flo
   assert.deepEqual(masonryRectAt(masonry, 'item-0'), { x: 0, y: 55, width: 100, height: 40 });
   assert.deepEqual(masonryRectAt(masonry, 'item-3'), { x: 0, y: 0, width: 100, height: 50 });
   assert.deepEqual(queryMasonryLayout(masonry, { viewport: { x: 105, y: 0, width: 105, height: 60 } }).placements.map(({ id }) => id), ['item-2']);
+});
+
+test('ISSUE-090: masonry repair starts from the extent snapshot actually committed', () => {
+  const masonry = createMasonryLayout(
+    domain(3),
+    createExtentIndex([exact(10), exact(10), exact(10)]),
+    { laneCount: 1, laneExtent: 100 },
+  );
+  let indexReads = 0;
+  let extentReads = 0;
+  const measured = tryApplyMasonryMeasurements(masonry, {
+    generation: masonry.generation,
+    measurements: [{
+      get index() { indexReads += 1; return indexReads === 1 ? 0 : 2; },
+      get extent() { extentReads += 1; return extentReads === 1 ? exact(30) : exact(10); },
+    }],
+  });
+  assert.equal(measured.ok, true);
+  assert.deepEqual([indexReads, extentReads], [1, 1]);
+  assert.deepEqual(measured.value.state.extents.extentAt(0), exact(30));
+  assert.deepEqual(masonryRectAt(measured.value.state, 'item-1'), { x: 0, y: 30, width: 100, height: 10 });
+  assert.deepEqual(masonryRectAt(measured.value.state, 'item-2'), { x: 0, y: 40, width: 100, height: 10 });
+
+  const unreadable = tryApplyMasonryMeasurements(masonry, {
+    generation: masonry.generation,
+    measurements: [{
+      get index() { throw new Error('index getter failed'); },
+      extent: exact(20),
+    }],
+  });
+  assert.equal(unreadable.ok, false);
+  assert.equal(unreadable.error.code, 'extent-index-update-invalid');
 });
 
 test('VRT-02, VRT-03, VRT-04: masonry measurements and responsive geometry preserve anchors', () => {

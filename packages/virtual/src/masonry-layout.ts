@@ -232,9 +232,18 @@ export function applyMasonryMeasurements<ID extends StableID>(state: MasonryLayo
 
 export function tryApplyMasonryMeasurements<ID extends StableID>(state: MasonryLayoutState<ID>, batch: VirtualMeasurementBatch<MasonryMeasurement, ID>): VirtualResult<VirtualLayoutMutation<MasonryLayoutState<ID>>> {
   if (batch.generation !== state.generation) return fail('transition-rejection', 'virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
-  if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+  const inputMeasurements = batch.measurements;
+  if (inputMeasurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+  const measurements: MasonryMeasurement[] = [];
+  for (const measurement of inputMeasurements) {
+    try {
+      measurements.push(Object.freeze({ index: measurement.index, extent: measurement.extent }));
+    } catch {
+      return fail('transition-rejection', 'extent-index-update-invalid', 'Masonry measurement properties must be readable.');
+    }
+  }
   const before = anchorRect(state, batch.anchor);
-  const updated = state.extents.update(batch.measurements as readonly ExtentUpdate[]);
+  const updated = state.extents.update(measurements as readonly ExtentUpdate[]);
   if (!updated.ok) return updated;
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
@@ -244,7 +253,7 @@ export function tryApplyMasonryMeasurements<ID extends StableID>(state: MasonryL
     { ...state, extents: updated.value, generation: generation.value },
     {
       previous: data.value,
-      recomputeStart: firstChangedExtentIndex(state.extents, batch.measurements),
+      recomputeStart: firstChangedExtentIndex(state.extents, updated.value, measurements),
     },
   );
   return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
@@ -436,11 +445,16 @@ function firstIndexAtOrAfter<ID extends StableID>(lane: readonly LogicalPlacemen
   return low;
 }
 
-function firstChangedExtentIndex(index: ExtentIndex, measurements: readonly MasonryMeasurement[]): number {
-  let first = index.size;
+function firstChangedExtentIndex(
+  previousIndex: ExtentIndex,
+  nextIndex: ExtentIndex,
+  measurements: readonly MasonryMeasurement[],
+): number {
+  let first = previousIndex.size;
   for (const measurement of measurements) {
-    const previous = index.extentAt(measurement.index);
-    if (previous === null || extentValue(previous) !== extentValue(measurement.extent)) {
+    const previous = previousIndex.extentAt(measurement.index);
+    const next = nextIndex.extentAt(measurement.index);
+    if (previous === null || next === null || extentValue(previous) !== extentValue(next)) {
       first = Math.min(first, measurement.index);
     }
   }
