@@ -90,7 +90,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:tree.visible | external | `O(n + k)` expected | `O(n)` | `O(k)` | `O(k)` | allowed | VAL-016, VAL-017 |
 | chart:controller.project.cached | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(kRepresentative)` | forbidden | VAL-016, VAL-017 |
 | chart:controller.publish | mounted | `O(q*(sSnapshot + cCommand*sCommand))` worst-case | `O(q*(sSnapshot + sCommand + cCommand))` | `O(q)` | `O(q*(sSnapshot + sCommand + cCommand))` | forbidden | VAL-016, VAL-017 |
-| chart:definition.preflight | external | `O(nLayer)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
+| chart:definition.preflight | external | `O(nLayer)` worst-case | `O(nLayer)` | `O(nLayer)` | `O(nLayer)` | allowed | VAL-007, VAL-031 |
 | chart:input.model-cardinality-preflight | external | `O(nLayer + qOperation)` worst-case | `O(nLayer + qOperation)` | `O(nLayer + qOperation)` | `O(nLayer + qOperation)` | allowed | VAL-016, VAL-017 |
 | chart:interaction.selection-contains | trusted | `O(s)` amortized | `O(s)` | `O(1)` | `O(s)` | allowed | VAL-016, VAL-017 |
 | chart:model.normalize | external | `O(nDatum + nLayer)` worst-case | `O(nDatum + nLayer)` | `O(nDatum + nLayer)` | `O(nDatum + nLayer)` | allowed | VAL-016, VAL-017 |

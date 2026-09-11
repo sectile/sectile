@@ -106,6 +106,58 @@ test('CHT-08: contains accessor failures and rejects ceilings before observation
   assert.equal(accepted.ok, true);
   assert.deepEqual(acceptedCalls, { identity: 2, x: 2, y: 2 });
 
+  const growingData = [{ id: 'seed', value: 1 }];
+  let growingDatumCalls = 0;
+  const datumGrowth = tryCreateChartDefinition({
+    coordinate: { kind: 'radial' },
+    layers: [{
+      id: 'share',
+      kind: 'pie',
+      data: growingData,
+      getId: (datum) => {
+        growingDatumCalls += 1;
+        if (growingDatumCalls < 4) growingData.push({ id: `extra-${growingDatumCalls}`, value: 1 });
+        return datum.id;
+      },
+    }],
+  }, { maxLayers: 1, maxDatums: 1 });
+  assert.equal(datumGrowth.ok, true);
+  assert.equal(growingDatumCalls, 1);
+  assert.equal(growingData.length, 2);
+  assert.equal(datumGrowth.value.diagnostics.resolvedDatums, 1);
+  assert.equal(datumGrowth.value.model.toModel().layers[0].data.length, 1);
+
+  const growingLayers = [];
+  let growingLayerCalls = 0;
+  const growLayers = (datum) => {
+    growingLayerCalls += 1;
+    if (growingLayerCalls < 4) {
+      const index = growingLayers.length;
+      growingLayers.push({
+        id: `late-${index}`,
+        kind: 'pie',
+        data: [{ id: `late-datum-${index}`, value: 1 }],
+        getId: growLayers,
+      });
+    }
+    return datum.id;
+  };
+  growingLayers.push({
+    id: 'initial',
+    kind: 'pie',
+    data: [{ id: 'initial-datum', value: 1 }],
+    getId: growLayers,
+  });
+  const layerGrowth = tryCreateChartDefinition({
+    coordinate: { kind: 'radial' },
+    layers: growingLayers,
+  }, { maxLayers: 1, maxDatums: 4 });
+  assert.equal(layerGrowth.ok, true);
+  assert.equal(growingLayerCalls, 1);
+  assert.equal(growingLayers.length, 2);
+  assert.equal(layerGrowth.value.diagnostics.resolvedLayers, 1);
+  assert.equal(layerGrowth.value.diagnostics.resolvedDatums, 1);
+
   let accessorFailure;
   assert.doesNotThrow(() => {
     accessorFailure = tryCreateChartDefinition({

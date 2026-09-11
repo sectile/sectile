@@ -76,6 +76,12 @@ interface PendingLayer<ID extends StableID> {
   readonly datums: readonly PendingDatum<ID>[];
 }
 
+interface PreparedDefinitionLayer<Datum, ID extends StableID> {
+  readonly definition: ChartLayerDefinition<Datum, ID>;
+  readonly data: readonly Datum[];
+  readonly size: number;
+}
+
 export function createChartDefinition<Datum, ID extends StableID>(
   input: ChartDefinition<Datum, ID>,
   limits: ChartLimits = {},
@@ -87,12 +93,16 @@ export function tryCreateChartDefinition<Datum, ID extends StableID>(
   input: ChartDefinition<Datum, ID>,
   limits: ChartLimits = {},
 ): ChartResult<ChartDefinitionState<ID>> {
-  if (input === null || typeof input !== 'object' || !Array.isArray(input.layers)) {
+  if (input === null || typeof input !== 'object') {
+    return invalidDefinition('Chart definition requires one coordinate and a layer array.');
+  }
+  const sourceLayers = input.layers;
+  if (!Array.isArray(sourceLayers)) {
     return invalidDefinition('Chart definition requires one coordinate and a layer array.');
   }
   const normalizedLimits = tryNormalizeChartLimits(limits, DEFAULT_CHART_LIMITS);
   if (!normalizedLimits.ok) return normalizedLimits;
-  const preflight = preflightDefinitionLayers(input.layers, normalizedLimits.value);
+  const preflight = preflightDefinitionLayers(sourceLayers, normalizedLimits.value);
   if (!preflight.ok) return preflight;
   const normalizedCoordinate = tryNormalizeChartCoordinate(input.coordinate, normalizedLimits.value);
   if (!normalizedCoordinate.ok) return normalizedCoordinate;
@@ -101,11 +111,18 @@ export function tryCreateChartDefinition<Datum, ID extends StableID>(
   if (coordinate.kind === 'cartesian') for (const axis of coordinate.axes) observations.set(axis.id, []);
   const pending: PendingLayer<ID>[] = [];
   let datumCount = 0;
-  for (const sourceLayer of input.layers) {
-    const layer = sourceLayer as unknown as ChartLayerDefinition<unknown, ID>;
+  for (const sourceLayer of preflight.value) {
+    const layer = sourceLayer.definition as unknown as ChartLayerDefinition<unknown, ID>;
     const compatible = tryValidateChartLayerCoordinate(coordinate, layer);
     if (!compatible.ok) return compatible;
-    const collected = collectLayer(coordinate, layer, observations, normalizedLimits.value.maxIDCodeUnits);
+    const collected = collectLayer(
+      coordinate,
+      layer,
+      sourceLayer.data as readonly unknown[],
+      sourceLayer.size,
+      observations,
+      normalizedLimits.value.maxIDCodeUnits,
+    );
     if (!collected.ok) return collected;
     pending.push(Object.freeze({ definition: layer, datums: collected.value }));
     datumCount += collected.value.length;
@@ -141,30 +158,37 @@ export function tryCreateChartDefinition<Datum, ID extends StableID>(
   }));
 }
 
-function preflightDefinitionLayers(
-  layers: readonly ChartLayerDefinition<unknown, StableID>[],
+function preflightDefinitionLayers<Datum, ID extends StableID>(
+  layers: readonly ChartLayerDefinition<Datum, ID>[],
   limits: Readonly<Required<ChartLimits>>,
-): ChartResult<true> {
-  if (layers.length > limits.maxLayers) {
+): ChartResult<readonly PreparedDefinitionLayer<Datum, ID>[]> {
+  const layerCount = layers.length;
+  if (layerCount > limits.maxLayers) {
     return chartFail('resource-rejection', 'chart-layer-ceiling-exceeded', 'Chart layer count exceeds its ceiling.', {
-      actual: layers.length,
+      actual: layerCount,
       ceiling: limits.maxLayers,
     });
   }
+  const prepared: PreparedDefinitionLayer<Datum, ID>[] = [];
   let datums = 0;
-  for (const layer of layers) {
-    if (layer === null || typeof layer !== 'object' || !Array.isArray(layer.data)) {
+  for (let index = 0; index < layerCount; index += 1) {
+    const layer = layers[index];
+    if (layer === undefined || layer === null || typeof layer !== 'object') {
       return invalidDefinition('Chart layer data must be an array.');
     }
-    datums += layer.data.length;
+    const data = layer.data;
+    if (!Array.isArray(data)) return invalidDefinition('Chart layer data must be an array.');
+    const size = data.length;
+    datums += size;
     if (datums > limits.maxDatums) {
       return chartFail('resource-rejection', 'chart-datum-ceiling-exceeded', 'Chart datum count exceeds its ceiling.', {
         actual: datums,
         ceiling: limits.maxDatums,
       });
     }
+    prepared.push({ definition: layer, data, size });
   }
-  return chartOK(true);
+  return chartOK(prepared);
 }
 
 export function replaceChartDefinition<Datum, ID extends StableID>(
@@ -191,10 +215,11 @@ export function tryReplaceChartDefinition<Datum, ID extends StableID>(
 function collectLayer<ID extends StableID>(
   coordinate: NormalizedChartCoordinateDefinition<unknown, ID>,
   layer: ChartLayerDefinition<unknown, ID>,
+  data: readonly unknown[],
+  size: number,
   observations: Map<ID, ChartAxisValue[]>,
   maxIDCodeUnits: number,
 ): ChartResult<readonly PendingDatum<ID>[]> {
-  if (!Array.isArray(layer.data)) return invalidDefinition('Chart layer data must be an array.');
   const output: PendingDatum<ID>[] = [];
   if (coordinate.kind === 'radial') {
     if (layer.kind !== 'pie' && layer.kind !== 'donut') return invalidDefinition('Radial coordinates accept only pie and donut layers.');
@@ -203,7 +228,8 @@ function collectLayer<ID extends StableID>(
     if (!finiteNonNegative(innerRadius) || !finitePositive(outerRadius) || innerRadius >= outerRadius || outerRadius > 1) {
       return invalidDefinition('Pie and donut radii must be finite, normalized, and increasing.');
     }
-    for (const datum of layer.data) {
+    for (let index = 0; index < size; index += 1) {
+      const datum = data[index];
       const id = tryResolveChartIdentity(datum, layer.getId, maxIDCodeUnits);
       if (!id.ok) return id;
       const value = tryResolveChartValue(datum, {
@@ -225,7 +251,8 @@ function collectLayer<ID extends StableID>(
     const vertical = (layer.orientation ?? 'vertical') === 'vertical';
     observations.get(vertical ? yAxis.id : xAxis.id)?.push(0);
   }
-  for (const datum of layer.data) {
+  for (let index = 0; index < size; index += 1) {
+    const datum = data[index];
     const id = tryResolveChartIdentity(datum, layer.getId, maxIDCodeUnits);
     if (!id.ok) return id;
     const x = resolveAxisValue(datum, layer.getX, xAxis, 'x');

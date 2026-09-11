@@ -24535,7 +24535,8 @@
       "id": "definition.preflight",
       "source": "packages/chart/src/definition.ts",
       "benchmarkIDs": [
-        "VAL-007:chart-definition-preflight"
+        "VAL-007:chart-definition-preflight",
+        "VAL-031:chart-definition-cardinality-work"
       ],
       "specificationCeiling": "O(nLayer)",
       "reviewedWeakening": null,
@@ -24543,8 +24544,8 @@
         "variables": [
           {
             "name": "nLayer",
-            "meaning": "declarative input layer count inspected before accessors",
-            "ceiling": "maxLayers or the first layer crossing maxDatums"
+            "meaning": "preflight-approved declarative layer count captured before accessors",
+            "ceiling": "maxLayers"
           }
         ],
         "time": {
@@ -24553,12 +24554,12 @@
           "runtimeState": "external"
         },
         "space": {
-          "auxiliary": "O(1)",
-          "output": "O(1)",
-          "retained": "O(1)"
+          "auxiliary": "O(nLayer)",
+          "output": "O(nLayer)",
+          "retained": "O(nLayer)"
         },
         "resources": {
-          "allocations": "O(1)",
+          "allocations": "O(nLayer)",
           "cacheEntries": "0",
           "listeners": "0",
           "observers": "0",
@@ -24566,29 +24567,30 @@
           "subscriptions": "0"
         },
         "assumptions": [
-          "hash lookup is expected O(1)",
-          "external input is validated exactly once at its boundary"
+          "maxLayers bounds prepared layer metadata and maxDatums bounds later accessor work",
+          "preflight captures layer/data references and data cardinality without reading datum elements"
         ],
         "ceilings": [
-          "operation item and output ceilings"
+          "maxLayers",
+          "maxDatums"
         ],
         "benchmarkIDs": [
-          "VAL-017:linear-work"
+          "VAL-007:chart-definition-preflight",
+          "VAL-031:chart-definition-cardinality-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "packages/chart/tests/model/definition.test.mjs CHT-08"
         ],
-        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Normalized limits are shared with model construction. The preflight reads only the layer array length and each data array length, accumulating the datum count before coordinate normalization, observations, accessors, or scale compilation.",
-        "adversarialWitness": "An over-ceiling definition with throwing identity and value accessors returns the layer or datum resource error with every accessor counter at zero; an accepted boundary visits each layer header once.",
+        "resourceRationale": "Preflight retains only one bounded prepared metadata record per approved layer; it never snapshots datum elements, while later accessor traversal is fixed to the approved per-layer sizes.",
+        "proof": "The owner captures the input layer array once, visits exactly its preflight layerCount by index, captures each approved layer/data reference and data length once, and accumulates maxDatums before any accessor runs. Collection consumes only this internal prepared owner and indexes each data array below its approved size, so callback appends cannot move either layer or datum iteration boundary.",
+        "adversarialWitness": "CHT-08 keeps initial over-ceiling accessors at zero calls, then lets accepted identity accessors append datums or layers on every bounded witness call; only the preflight-approved layer and datum positions are resolved and retained.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "VAL-007",
+          "VAL-031"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "Every accepted declarative layer contributes a data length to the global datum ceiling, so the bounded layer header array must be inspected once."
+          "rationale": "Every accepted declarative layer contributes one data cardinality to the global datum ceiling, so the bounded layer header domain is inspected exactly once while datum elements remain unread."
         }
       }
     },
