@@ -157,6 +157,73 @@ test('ISSUE-094: sparse region replacement skips the previous region view', () =
   assert.equal(state.generation, 0);
 });
 
+test('ISSUE-096: trailing track appends retain sparse region owners', () => {
+  const count = 4_096;
+  const rows = createUniformExtentIndex(count, exact(1), { maxItems: count + 1 });
+  const columns = createUniformExtentIndex(2, exact(2), { maxItems: 3 });
+  const regions = Array.from({ length: count }, (_, row) => ({ id: `item-${row}`, row, column: row & 1 }));
+  const state = createTrackGridLayout(rows, columns, regions, {
+    rowGap: 1,
+    columnGap: 1,
+    maxRegions: count,
+  });
+  const viewport = { x: 0, y: 0, width: 5, height: 8 };
+  const beforePlan = queryTrackGridLayout(state, { viewport });
+  const beforeRect = trackGridRegionRect(state, 'item-0');
+
+  const rowAppend = applyTrackGridMutation(state, {
+    type: 'splice-tracks',
+    axis: 'row',
+    index: state.rows.size,
+    deleteCount: 0,
+    inserted: [exact(3)],
+  });
+  const rowWork = readRepairDiagnostics(rowAppend.state);
+  assert.equal(rowAppend.state.regions, state.regions);
+  assert.deepEqual(rowWork, {
+    mode: 'incremental', changed: 1, touchedBlocks: 0,
+    copiedNodes: 0, copiedEntries: 0, rebuiltItems: 0, repairBound: 0,
+  });
+  assert.deepEqual(trackGridRegionRect(rowAppend.state, 'item-0'), beforeRect);
+  assert.equal(queryTrackGridLayout(rowAppend.state, { viewport }).contentSize.height, beforePlan.contentSize.height + 4);
+  assert.deepEqual(
+    queryTrackGridLayout(rowAppend.state, { viewport }).placements.map(({ id, index }) => [id, index]),
+    beforePlan.placements.map(({ id, index }) => [id, index]),
+  );
+
+  const columnAppend = applyTrackGridMutation(rowAppend.state, {
+    type: 'splice-tracks',
+    axis: 'column',
+    index: rowAppend.state.columns.size,
+    deleteCount: 0,
+    inserted: [exact(5)],
+  });
+  const columnWork = readRepairDiagnostics(columnAppend.state);
+  assert.equal(columnAppend.state.regions, state.regions);
+  assert.equal(columnWork?.copiedEntries, 0);
+  assert.equal(columnWork?.rebuiltItems, 0);
+  assert.equal(queryTrackGridLayout(columnAppend.state, { viewport }).contentSize.width, beforePlan.contentSize.width + 6);
+
+  const reversed = createTrackGridLayout(
+    createUniformExtentIndex(2, exact(10), { maxItems: 3 }),
+    createUniformExtentIndex(1, exact(20), { maxItems: 2 }),
+    [{ id: 'anchor', row: 0, column: 0 }],
+    { rowGap: 2, columnGap: 3, rowFlow: 'reverse', columnFlow: 'reverse' },
+  );
+  const anchor = { id: 'anchor', viewportOffset: { x: 0, y: 0 } };
+  const reversedBefore = trackGridRegionRect(reversed, anchor.id);
+  const reversedRow = applyTrackGridMutation(reversed, {
+    type: 'splice-tracks', axis: 'row', index: reversed.rows.size, deleteCount: 0, inserted: [exact(7)],
+  }, anchor);
+  const reversedAfterRow = trackGridRegionRect(reversedRow.state, anchor.id);
+  assert.deepEqual(reversedRow.scrollDelta, { x: 0, y: reversedAfterRow.y - reversedBefore.y });
+  assert.equal(reversedRow.scrollDelta.y, 9);
+  const reversedColumn = applyTrackGridMutation(reversedRow.state, {
+    type: 'splice-tracks', axis: 'column', index: reversedRow.state.columns.size, deleteCount: 0, inserted: [exact(5)],
+  }, anchor);
+  assert.deepEqual(reversedColumn.scrollDelta, { x: 8, y: 0 });
+});
+
 test('GRD-04: row and column measurements preserve the index, anchor, and generation contract', () => {
   const state = createTrackGridLayout(
     createExtentIndex([exact(10), exact(20), exact(30)]),

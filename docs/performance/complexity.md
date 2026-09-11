@@ -15,7 +15,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |
 | terminal | 347 | 167 | 8 |
-| virtual | 114 | 0 | 32 |
+| virtual | 114 | 0 | 33 |
 | vue | 740 | 319 | 9 |
 
 ## Variables
@@ -195,6 +195,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:track.create.regions | external | `O(nRegion log nRegion)` worst-case | `O(nRegion)` | `O(nRegion)` | `O(nRegion)` | allowed | VAL-022 |
 | virtual:track.measure | trusted | `O(jChanged log nTrack)` worst-case | `O(jChanged log nTrack)` | `O(1)` | `O(jChanged log nTrack)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.mutation.regions.replace | external | `O(jRegion log jRegion)` worst-case | `O(jRegion)` | `O(1)` | `O(jRegion)` | forbidden | VAL-024 |
+| virtual:track.mutation.tracks.append | external | `O(jTrack + log nTrack)` worst-case | `O(jTrack + log nTrack)` | `O(1)` | `O(jTrack + log nTrack)` | forbidden | VAL-026 |
 | virtual:track.query | trusted | `O(log nTrack + log nRegion + cCandidate + kPlacement log kPlacement)` worst-case | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | vue:chart.declaration-reconcile | mounted | `O(aAxis + lLayer + nDatum)` worst-case | `O(aAxis + lLayer + nDatum)` | `O(1)` | `O(aAxis + lLayer + nDatum)` | allowed | VAL-016, VAL-017 |
 | vue:chart.selector-bridge | mounted | `O(sState + sLayer*lLayer + sAxis*aAxis)` worst-case | `O(1)` | `O(1)` | `O(sState + sLayer + sAxis)` | forbidden | VAL-016, VAL-017 |

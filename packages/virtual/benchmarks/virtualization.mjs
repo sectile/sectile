@@ -195,6 +195,20 @@ const gridMeasurement32Us = measure(2_000, (iteration) => {
 const gridInsertTrackMs = measureColdMilliseconds(() => applyTrackGridMutation(gridState, {
   type: 'splice-tracks', axis: 'row', index: 0, deleteCount: 0, inserted: [exact(28)],
 }).state.generation);
+const gridAppendTrackByRegionsMs = {};
+for (const regionCount of [1_000, 10_000, 100_000]) {
+  const state = regionCount === strategySize
+    ? gridState
+    : createTrackGridLayout(
+        gridRows,
+        gridColumns,
+        gridRegions.slice(0, regionCount),
+        { maxRegions: strategySize },
+      );
+  gridAppendTrackByRegionsMs[regionCount] = measureColdMilliseconds(() => applyTrackGridMutation(state, {
+    type: 'splice-tracks', axis: 'row', index: strategySize, deleteCount: 0, inserted: [exact(28)],
+  }).state.generation);
+}
 const gridReplaceRegionByPreviousRegionsMs = {};
 for (const previousRegionCount of [1_000, 10_000, 100_000]) {
   const state = previousRegionCount === strategySize
@@ -412,6 +426,7 @@ const result = {
     queryUs: gridQueryUs,
     changedRowMeasurement32Us: gridMeasurement32Us,
     insertTrackMs: gridInsertTrackMs,
+    appendTrackByRegionsMs: gridAppendTrackByRegionsMs,
     replaceRegionByPreviousRegionsMs: gridReplaceRegionByPreviousRegionsMs,
     buildMs: gridBuildMs,
   },

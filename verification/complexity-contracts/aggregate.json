@@ -31912,6 +31912,83 @@
     {
       "package": "virtual",
       "surface": "hot",
+      "id": "track.mutation.tracks.append",
+      "source": "packages/virtual/src/track-grid-layout.ts",
+      "benchmarkIDs": [
+        "VAL-026:track-trailing-append-work"
+      ],
+      "specificationCeiling": "O(jTrack + log nTrack)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nTrack",
+            "meaning": "target row or column track count before append",
+            "ceiling": "ExtentIndex maxItems"
+          },
+          {
+            "name": "nRegion",
+            "meaning": "retained sparse region count",
+            "ceiling": "maxRegions"
+          },
+          {
+            "name": "jTrack",
+            "meaning": "appended track extent count",
+            "ceiling": "jTrack <= ExtentIndex maxItems - nTrack"
+          },
+          {
+            "name": "jAffected",
+            "meaning": "existing sparse regions affected by a trailing append",
+            "ceiling": "0"
+          }
+        ],
+        "time": {
+          "bound": "O(jTrack + log nTrack)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(jTrack + log nTrack)",
+          "output": "O(1)",
+          "retained": "O(jTrack + log nTrack)"
+        },
+        "resources": {
+          "allocations": "O(jTrack + log nTrack)",
+          "cacheEntries": "O(jTrack + log nTrack)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the active state is a canonical sparse Track Grid",
+          "deleteCount is zero and the append index equals the old target-track count"
+        ],
+        "ceilings": [
+          "ExtentIndex maxItems",
+          "maxRegions"
+        ],
+        "benchmarkIDs": [
+          "VAL-026:track-trailing-append-work"
+        ],
+        "deterministicWork": [
+          "packages/virtual/tests/runtime/track-grid-layout.test.mjs ISSUE-096"
+        ],
+        "resourceRationale": "The append path allocates only the changed ExtentIndex path and one new Track Grid state wrapper while retaining the sparse region view, region tree, and ID index.",
+        "proof": "Every canonical region has positive span and end <= old target-track count. Appending at that exact boundary cannot split or shift an existing region, so the mutation applies only the ExtentIndex splice and reuses GridInternals without materializing, transforming, validating, sorting, or rebuilding nRegion.",
+        "adversarialWitness": "ISSUE-096 appends one row and one column to a 4,096-region sparse owner, preserves region-view identity, and records zero copied/rebuilt region entries; the benchmark holds nTrack and jTrack fixed while nRegion grows from 1k to 100k.",
+        "evidence": [
+          "VAL-026"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "A provably region-neutral trailing append may not enumerate retained sparse regions."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
       "id": "track.query",
       "source": "packages/virtual/src/track-grid-layout.ts",
       "benchmarkIDs": [

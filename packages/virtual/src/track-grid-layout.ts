@@ -1,5 +1,5 @@
 import type { StableID } from '@sectile/core';
-import type { VirtualResult } from './error.js';
+import type { VirtualErrorCode, VirtualResult } from './error.js';
 import { unwrap } from '@sectile/core/result';
 import {
   tryApplySequencePatch,
@@ -283,12 +283,12 @@ export function applyGridMeasurements<ID extends StableID>(state: TrackGridLayou
 }
 
 export function tryApplyGridMeasurements<ID extends StableID>(state: TrackGridLayoutState<ID>, batch: VirtualMeasurementBatch<GridTrackMeasurement, ID>): VirtualResult<VirtualLayoutMutation<TrackGridLayoutState<ID>>> {
-  if (batch.generation !== state.generation) return fail('transition-rejection', 'virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
+  if (batch.generation !== state.generation) return gridTransitionFailure('virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
   if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
   const rowUpdates: ExtentUpdate[] = [];
   const columnUpdates: ExtentUpdate[] = [];
   for (const measurement of batch.measurements) {
-    if (measurement.axis !== 'row' && measurement.axis !== 'column') return fail('transition-rejection', 'virtual-layout-measurement-invalid', 'Grid measurements require a row or column axis.', { measurement });
+    if (measurement.axis !== 'row' && measurement.axis !== 'column') return gridTransitionFailure('virtual-layout-measurement-invalid', 'Grid measurements require a row or column axis.', { measurement });
     (measurement.axis === 'row' ? rowUpdates : columnUpdates).push(measurement);
   }
   const rows = state.rows.update(rowUpdates);
@@ -302,99 +302,132 @@ export function tryApplyGridMeasurements<ID extends StableID>(state: TrackGridLa
   const grid = getInternals(state);
   if (!grid.ok) return grid;
   const next = createState({ ...state, rows: rows.value, columns: columns.value, generation: generation.value }, null, grid.value);
-  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
+  return gridMutationResult(next, before, anchor);
 }
 
 export function applyTrackGridMutation<ID extends StableID>(state: TrackGridLayoutState<ID>, mutation: TrackGridMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualLayoutMutation<TrackGridLayoutState<ID>> {
   return unwrap(tryApplyTrackGridMutation(state, mutation, anchor));
 }
 
+function gridMutationResult<ID extends StableID>(
+  state: TrackGridLayoutState<ID>,
+  before: VirtualRect | null,
+  anchor: VirtualAnchor<ID> | null | undefined,
+): VirtualResult<VirtualLayoutMutation<TrackGridLayoutState<ID>>> {
+  return ok(Object.freeze({ state, scrollDelta: anchorDelta(before, anchorRect(state, anchor)) }));
+}
+
+function recordGridRepair(state: object, changed: number, repairBound: number): void {
+  recordRepairDiagnostics(state, {
+    mode: 'incremental', changed, touchedBlocks: 0,
+    copiedNodes: 0, copiedEntries: 0, rebuiltItems: 0, repairBound,
+  });
+}
+
+function gridTransitionFailure<Code extends VirtualErrorCode>(
+  code: Code,
+  message: string,
+  details?: Readonly<Record<string, unknown>>,
+): VirtualResult<never, Code> {
+  return fail('transition-rejection', code, message, details);
+}
+
+function invalidGridMutation(message: string, details?: Readonly<Record<string, unknown>>): VirtualResult<never> {
+  return gridTransitionFailure('virtual-layout-mutation-invalid', message, details);
+}
+
+function denseGridTracksInvalid(): VirtualResult<never> {
+  return gridTransitionFailure('virtual-layout-region-invalid', 'Dense grid tracks must contain every item.');
+}
+
+function denseGridFits(rows: ExtentIndex, columns: ExtentIndex, count: number): boolean {
+  return (columns.size > 0 || count === 0) && count <= rows.size * columns.size;
+}
+
+function denseGridMutationResult<ID extends StableID>(
+  state: TrackGridLayoutState<ID>,
+  domain: Sequence<ID>,
+  rows: ExtentIndex,
+  columns: ExtentIndex,
+  before: VirtualRect | null,
+  anchor: VirtualAnchor<ID> | null,
+): VirtualResult<VirtualLayoutMutation<TrackGridLayoutState<ID>>> {
+  const generation = nextGeneration(state.generation);
+  if (!generation.ok) return generation;
+  return gridMutationResult(
+    createDenseState({ ...state, rows, columns, generation: generation.value }, domain),
+    before,
+    anchor,
+  );
+}
+
 export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridLayoutState<ID>, mutation: TrackGridMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualResult<VirtualLayoutMutation<TrackGridLayoutState<ID>>> {
-  if (mutation.type !== 'replace-regions' && mutation.type !== 'patch-dense-regions' && mutation.type !== 'splice-tracks' && mutation.type !== 'reconfigure-dense') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Grid mutation type is unsupported.', { mutation });
+  if (mutation.type !== 'replace-regions' && mutation.type !== 'patch-dense-regions' && mutation.type !== 'splice-tracks' && mutation.type !== 'reconfigure-dense') return invalidGridMutation('Grid mutation type is unsupported.', { mutation });
   const before = anchorRect(state, anchor);
   const current = getInternals(state);
   if (!current.ok) return current;
+  const dense = current.value.dense;
   if (mutation.type === 'reconfigure-dense') {
-    if (current.value.dense === null) return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Dense grid reconfiguration requires a dense grid state.');
+    if (dense === null) return invalidGridMutation('Dense grid reconfiguration requires a dense grid state.');
     const rows = applyTrackPatch(state.rows, mutation.rowPatch);
     if (!rows.ok) return rows;
     const columns = applyTrackPatch(state.columns, mutation.columnPatch);
     if (!columns.ok) return columns;
     const domain = mutation.regionPatch === undefined
-      ? ok(current.value.dense.domain)
-      : tryApplySequencePatch(current.value.dense.domain, mutation.regionPatch, {
+      ? ok(dense.domain)
+      : tryApplySequencePatch(dense.domain, mutation.regionPatch, {
           maxItems: state.maxRegions,
         });
     if (!domain.ok) return domain;
-    if (
-      (columns.value.size === 0 && domain.value.size > 0)
-      || domain.value.size > rows.value.size * columns.value.size
-    ) {
-      return fail('transition-rejection', 'virtual-layout-region-invalid', 'Dense grid tracks must contain every item.');
-    }
+    if (!denseGridFits(rows.value, columns.value, domain.value.size)) return denseGridTracksInvalid();
     if (
       rows.value === state.rows
       && columns.value === state.columns
-      && domain.value === current.value.dense.domain
+      && domain.value === dense.domain
     ) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
-    const generation = nextGeneration(state.generation);
-    if (!generation.ok) return generation;
-    const next = createDenseState(
-      {
-        ...state,
-        rows: rows.value,
-        columns: columns.value,
-        generation: generation.value,
-      },
-      domain.value,
-    );
-    return ok(Object.freeze({
-      state: next,
-      scrollDelta: anchorDelta(before, anchorRect(next, anchor)),
-    }));
+    return denseGridMutationResult(state, domain.value, rows.value, columns.value, before, anchor);
   }
   if (mutation.type === 'patch-dense-regions') {
-    if (current.value.dense === null) return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Dense region patches require a dense grid state.');
-    const domain = tryApplySequencePatch(current.value.dense.domain, mutation.patch, {
+    if (dense === null) return invalidGridMutation('Dense region patches require a dense grid state.');
+    const domain = tryApplySequencePatch(dense.domain, mutation.patch, {
       maxItems: state.maxRegions,
     });
     if (!domain.ok) return domain;
-    if (state.columns.size === 0 && domain.value.size > 0 || domain.value.size > state.rows.size * state.columns.size) {
-      return fail('transition-rejection', 'virtual-layout-region-invalid', 'Dense grid tracks must contain every item.');
-    }
-    const generation = nextGeneration(state.generation);
-    if (!generation.ok) return generation;
-    const next = createDenseState({ ...state, generation: generation.value }, domain.value);
-    return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
+    if (!denseGridFits(state.rows, state.columns, domain.value.size)) return denseGridTracksInvalid();
+    return denseGridMutationResult(state, domain.value, state.rows, state.columns, before, anchor);
   }
   let rows = state.rows;
   let columns = state.columns;
   let regions: readonly GridRegion<ID>[];
   if (mutation.type === 'replace-regions') regions = mutation.regions;
   else {
-    regions = state.regions.toArray();
     const target = mutation.axis === 'row' ? rows : columns;
     const changed = target.splice(mutation.index, mutation.deleteCount, mutation.inserted);
     if (!changed.ok) return changed;
-    if (current.value.dense === null) {
+    if (mutation.axis === 'row') rows = changed.value;
+    else columns = changed.value;
+    if (
+      dense === null
+      && mutation.deleteCount === 0
+      && mutation.inserted.length > 0
+      && mutation.index === target.size
+    ) {
+      const generation = nextGeneration(state.generation);
+      if (!generation.ok) return generation;
+      const next = createState({ ...state, rows, columns, generation: generation.value }, null, current.value);
+      recordGridRepair(next, mutation.inserted.length, 0);
+      return gridMutationResult(next, before, anchor);
+    }
+    regions = state.regions.toArray();
+    if (dense === null) {
       const transformed = transformRegions(regions, mutation.axis, mutation.index, mutation.deleteCount, mutation.inserted.length);
       if (!transformed.ok) return transformed;
       regions = transformed.value;
     }
-    if (mutation.axis === 'row') rows = changed.value;
-    else columns = changed.value;
   }
-  if (current.value.dense !== null && mutation.type === 'splice-tracks') {
-    if (columns.size === 0 && current.value.dense.domain.size > 0 || current.value.dense.domain.size > rows.size * columns.size) {
-      return fail('transition-rejection', 'virtual-layout-region-invalid', 'Dense grid tracks must contain every item.');
-    }
-    const generation = nextGeneration(state.generation);
-    if (!generation.ok) return generation;
-    const next = createDenseState(
-      { ...state, rows, columns, generation: generation.value },
-      current.value.dense.domain,
-    );
-    return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
+  if (dense !== null && mutation.type === 'splice-tracks') {
+    if (!denseGridFits(rows, columns, dense.domain.size)) return denseGridTracksInvalid();
+    return denseGridMutationResult(state, dense.domain, rows, columns, before, anchor);
   }
   const validated = validateRegions(rows.size, columns.size, regions, state.maxRegions);
   if (!validated.ok) return validated.error.class === 'construction'
@@ -404,17 +437,9 @@ export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridL
   if (!generation.ok) return generation;
   const next = createState({ ...state, rows, columns, regions: regionArrayView(validated.value.map(({ value }) => value)), generation: generation.value }, validated.value);
   if (mutation.type === 'replace-regions') {
-    recordRepairDiagnostics(next, {
-      mode: 'incremental',
-      changed: validated.value.length,
-      touchedBlocks: 0,
-      copiedNodes: 0,
-      copiedEntries: 0,
-      rebuiltItems: 0,
-      repairBound: state.maxRegions,
-    });
+    recordGridRepair(next, validated.value.length, state.maxRegions);
   }
-  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
+  return gridMutationResult(next, before, anchor);
 }
 
 function applyTrackPatch(
@@ -444,7 +469,7 @@ export function tryTrackGridScrollTarget<ID extends StableID>(state: TrackGridLa
   const rect = denseIndex !== null
     ? denseRegionRect(state, denseIndex, grid.value.dense!.columnCount)
     : region === undefined ? null : regionRect(state, region.value);
-  if (rect === null) return fail('transition-rejection', 'virtual-layout-scroll-target-invalid', 'Scroll target must exist in the grid region domain.', { id });
+  if (rect === null) return gridTransitionFailure('virtual-layout-scroll-target-invalid', 'Scroll target must exist in the grid region domain.', { id });
   const size = contentSize(state);
   return ok(Object.freeze({
     x: alignedScrollOffset(rect.x, rect.width, canonicalViewport.x, canonicalViewport.width, size.width, alignment),
@@ -627,7 +652,7 @@ function transformRegions<ID extends StableID>(regions: readonly GridRegion<ID>[
     const end = start + span;
     const insertionSplitsRegion = deleteCount === 0 && start < index && index < end;
     const deletionTouchesRegion = deleteCount > 0 && start < removedEnd && end > index;
-    if (insertionSplitsRegion || deletionTouchesRegion) return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Track splice intersects a region; replace regions atomically to define the new spans.', { id: region.id, axis, index, deleteCount });
+    if (insertionSplitsRegion || deletionTouchesRegion) return invalidGridMutation('Track splice intersects a region; replace regions atomically to define the new spans.', { id: region.id, axis, index, deleteCount });
     const nextStart = start >= removedEnd ? start + delta : start;
     result.push(Object.freeze(axis === 'row' ? { ...region, row: nextStart } : { ...region, column: nextStart }));
   }
