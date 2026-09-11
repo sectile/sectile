@@ -199,6 +199,47 @@ test('COL-02: trusted patches match raw replacement while resolving only declare
   );
 });
 
+test('ISSUE-083: trusted patch scalar preflight rejects before inserted identity reads', () => {
+  let resolverCalls = 0;
+  const resolver = (value) => { resolverCalls += 1; return value.id; };
+  const previous = createVirtualCollection([item('a')], resolver, { maxItems: 1 });
+  resolverCalls = 0;
+
+  const insertedWithReads = () => {
+    let reads = 0;
+    const inserted = new Array(2);
+    Object.defineProperty(inserted, 0, { enumerable: true, get() { reads += 1; return 'b'; } });
+    Object.defineProperty(inserted, 1, { enumerable: true, get() { reads += 1; return 'c'; } });
+    return { inserted, reads: () => reads };
+  };
+
+  const oversized = insertedWithReads();
+  rejectsWithCode(
+    () => createVirtualCollectionPatch(previous, {
+      items: previous.items,
+      index: 1,
+      deleteCount: 0,
+      inserted: oversized.inserted,
+    }),
+    'item-ceiling-exceeded',
+  );
+  assert.equal(oversized.reads(), 0);
+  assert.equal(resolverCalls, 0);
+
+  const outOfRange = insertedWithReads();
+  rejectsWithCode(
+    () => createVirtualCollectionPatch(previous, {
+      items: previous.items,
+      index: 2,
+      deleteCount: 0,
+      inserted: outOfRange.inserted,
+    }),
+    'sequence-patch-invalid',
+  );
+  assert.equal(outOfRange.reads(), 0);
+  assert.equal(resolverCalls, 0);
+});
+
 test('COL-02: extent reconciliation preserves surviving measurements by stable identity', () => {
   const source = Object.freeze([item('a'), item('b'), item('c')]);
   const previous = createVirtualCollection(source, getID);

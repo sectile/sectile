@@ -168,11 +168,12 @@
         ],
         "deterministicWork": [
           "resolver calls equal inserted identities plus the declared value-change range",
-          "no unchanged source position is read"
+          "no unchanged source position is read",
+          "packages/virtual/tests/runtime/collection.test.mjs ISSUE-083"
         ],
-        "resourceRationale": "The trusted path retains one bounded Core Sequence patch, changed IDs, and an opaque update token.",
-        "proof": "Patch creation validates only the declared splice identities and value-change range, then Core applies one bounded structural patch; token application is constant time.",
-        "adversarialWitness": "A sparse patch inserts identities that collide with distant survivors and exercises every local validation without scanning unchanged values.",
+        "resourceRationale": "The trusted path retains one bounded Core Sequence patch, changed IDs, and an opaque update token. Scalar rejection occurs before an inserted snapshot is allocated.",
+        "proof": "Patch creation runs splice-range and resulting-cardinality scalar preflight first, then snapshots and validates only an accepted inserted/value-change range before Core applies one bounded structural patch; token application is constant time.",
+        "adversarialWitness": "ISSUE-083 proves that over-ceiling and out-of-range patches read zero inserted elements and invoke the resolver zero times. Accepted sparse patches retain the existing local identity checks without scanning unchanged values.",
         "evidence": [
           "VAL-003"
         ],
