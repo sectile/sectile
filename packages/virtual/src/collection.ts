@@ -11,7 +11,7 @@ import {
 } from '@sectile/core/sequence';
 import type { VirtualResult } from './error.js';
 import type { Extent, ExtentIndex, ExtentUpdate } from './extent-index.js';
-import { fail, ok } from './internal/foundation.js';
+import { fail, ok, preflightSequenceSplice } from './internal/foundation.js';
 
 export type VirtualCollectionIDResolver<
   Value,
@@ -362,7 +362,7 @@ export function tryCreateVirtualCollectionPatch<
       input,
     );
   }
-  const preflight = preflightTrustedCollectionSplice(
+  const preflight = preflightSequenceSplice(
     previous.domain,
     input.index,
     input.deleteCount,
@@ -1056,31 +1056,6 @@ function coreFailure<T>(error: SectileError): VirtualResult<T> {
     error.message,
     error.details,
   );
-}
-
-function preflightTrustedCollectionSplice<ID extends StableID>(
-  domain: Sequence<ID>,
-  index: number,
-  deleteCount: number,
-  insertedCount: number,
-): VirtualResult<true> {
-  const size = domain.size;
-  if (index > size || deleteCount > size - index) {
-    return fail(
-      'transition-rejection',
-      'sequence-patch-invalid',
-      'Sequence patch must identify a valid post-removal destination and source range.',
-      { index, deleteCount, insertedCount, size },
-    );
-  }
-  const retainedSize = size - deleteCount;
-  if (insertedCount > domain.maxItems - retainedSize) {
-    return fail('resource-rejection', 'item-ceiling-exceeded', 'Sequence exceeds maxItems.', {
-      size: retainedSize + insertedCount,
-      maxItems: domain.maxItems,
-    });
-  }
-  return ok(true);
 }
 
 function collectionInputFailure<T>(

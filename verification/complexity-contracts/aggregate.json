@@ -31332,12 +31332,11 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-085"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Declaration order is retained by the bounded Sequence patch chain while changed geometry is copied into a bounded owner-local overlay; order-only patches retain the packed tree unchanged.",
-        "adversarialWitness": "Repeated structural geometry changes fill the overlay bound and force one packed rebuild instead of extending retained or query work.",
+        "proof": "Scalar splice range/cardinality preflight runs before any inserted Spatial item is read; accepted declaration order is retained by the bounded Sequence patch chain while changed geometry is copied into a bounded owner-local overlay; order-only patches retain the packed tree unchanged.",
+        "adversarialWitness": "ISSUE-085 proves over-ceiling and out-of-range splices read zero inserted item fields before typed rejection. Repeated accepted structural geometry changes fill the overlay bound and force one packed rebuild instead of extending retained or query work.",
         "evidence": [
           "VAL-016",
           "VAL-017"

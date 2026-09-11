@@ -24,3 +24,28 @@ export function validateMaxItems(value: number): VirtualError | null {
     details: { maxItems: value },
   };
 }
+
+export function preflightSequenceSplice(
+  domain: { readonly size: number; readonly maxItems: number },
+  index: number,
+  deleteCount: number,
+  insertedCount: number,
+): VirtualResult<true> {
+  const size = domain.size;
+  if (index > size || deleteCount > size - index) {
+    return fail(
+      'transition-rejection',
+      'sequence-patch-invalid',
+      'Sequence patch must identify a valid post-removal destination and source range.',
+      { index, deleteCount, insertedCount, size },
+    );
+  }
+  const retainedSize = size - deleteCount;
+  if (insertedCount > domain.maxItems - retainedSize) {
+    return fail('resource-rejection', 'item-ceiling-exceeded', 'Sequence exceeds maxItems.', {
+      size: retainedSize + insertedCount,
+      maxItems: domain.maxItems,
+    });
+  }
+  return ok(true);
+}

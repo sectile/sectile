@@ -9,7 +9,7 @@ import {
 import { unwrap } from '@sectile/core/result';
 import { createRect, isFiniteRect } from '@sectile/core/geometry';
 import { blockedRepairBound, createBlockedVector, createOwnedBlockedVector, type BlockedVector, useBlockedRepair } from './internal/blocked-vector.js';
-import { fail, ok } from './internal/foundation.js';
+import { fail, ok, preflightSequenceSplice } from './internal/foundation.js';
 import { recordRepairDiagnostics } from './internal/repair-diagnostics.js';
 import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
@@ -314,10 +314,17 @@ function tryApplySpatialPatch<ID extends StableID>(
       scrollDelta: anchorDelta(before, anchorRect(next, anchor)),
     }));
   }
-  if (
-    patch.inserted.length !== mutation.inserted.length
-    || mutation.inserted.some((item, index) => item.id !== patch.inserted[index])
-  ) {
+  if (patch.inserted.length !== mutation.inserted.length) {
+    return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial inserted items must match the patched identities.');
+  }
+  const preflight = preflightSequenceSplice(
+    state.domain,
+    patch.index,
+    patch.deleteCount,
+    patch.inserted.length,
+  );
+  if (!preflight.ok) return preflight;
+  if (mutation.inserted.some((item, index) => item.id !== patch.inserted[index])) {
     return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial inserted items must match the patched identities.');
   }
   const frozenInserted: SpatialItem<ID>[] = [];

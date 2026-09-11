@@ -9,6 +9,7 @@ import {
   querySpatialLayout,
   spatialRectAt,
   tryApplySpatialMeasurements,
+  tryApplySpatialMutation,
 } from '../../.verification-dist/spatial-layout.js';
 import { readRepairDiagnostics } from '../../.verification-dist/internal/repair-diagnostics.js';
 
@@ -120,6 +121,36 @@ test('spatial splice patches preserve declaration order and validate inserted id
     patch: { type: 'splice', index: 0, deleteCount: 0, inserted: ['wrong'] },
     inserted: [{ id: 'different', rect: rect(0) }],
   }), /inserted items must match/);
+});
+
+test('ISSUE-085: spatial splice scalar preflight rejects before inserted item reads', () => {
+  const state = createSpatialLayout([
+    { id: 'a', rect: { x: 0, y: 0, width: 1, height: 1 } },
+  ], { maxItems: 1 });
+  let itemReads = 0;
+  const unreadItem = (id) => ({
+    get id() { itemReads += 1; return id; },
+    get rect() { itemReads += 1; return { x: 0, y: 0, width: 1, height: 1 }; },
+    get zIndex() { itemReads += 1; return 0; },
+  });
+
+  const oversized = tryApplySpatialMutation(state, {
+    type: 'patch',
+    patch: { type: 'splice', index: 1, deleteCount: 0, inserted: ['b', 'c'] },
+    inserted: [unreadItem('b'), unreadItem('c')],
+  });
+  assert.equal(oversized.ok, false);
+  assert.equal(oversized.error.code, 'item-ceiling-exceeded');
+  assert.equal(itemReads, 0);
+
+  const outOfRange = tryApplySpatialMutation(state, {
+    type: 'patch',
+    patch: { type: 'splice', index: 2, deleteCount: 0, inserted: ['b'] },
+    inserted: [unreadItem('b')],
+  });
+  assert.equal(outOfRange.ok, false);
+  assert.equal(outOfRange.error.code, 'sequence-patch-invalid');
+  assert.equal(itemReads, 0);
 });
 
 test('spatial move and permutation patches preserve geometry without rebuilding the packed tree', () => {
