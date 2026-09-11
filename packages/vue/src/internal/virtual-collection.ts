@@ -403,7 +403,10 @@ export function createVirtualCollectionExpose<State>(
   const emptyScrollport = shallowRef<HTMLElement | null>(null);
   const emptySurface = shallowRef<HTMLElement | null>(null);
   return shallowReactive({
-    get scrollport() { return root.value?.scrollport ?? emptyScrollport; },
+    get scrollport() {
+      return root.value?.scrollport as ShallowRef<HTMLElement | null | undefined> | undefined
+        ?? emptyScrollport;
+    },
     get surface() { return root.value?.surface ?? emptySurface; },
     get state() { return (root.value?.state as State | undefined) ?? initialState; },
     get plan() { return root.value?.plan ?? null; },

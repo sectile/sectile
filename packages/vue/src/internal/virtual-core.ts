@@ -36,6 +36,7 @@ import {
   type VirtualPoint,
   type VirtualRect,
   type VirtualScrollAlignment,
+  type VirtualScrollport,
   type VirtualScrollWriter,
   type VirtualViewportReader,
   type VirtualizerConnection,
@@ -58,7 +59,7 @@ export interface UseVirtualizerOptions<
 > {
   readonly state: Ref<State>;
   readonly strategy: VirtualLayoutStrategy<State, ID, Measurement, Mutation>;
-  readonly scrollport?: ShallowRef<HTMLElement | null | undefined>;
+  readonly scrollport?: ShallowRef<VirtualScrollport | null | undefined>;
   readonly surface?: ShallowRef<HTMLElement | null | undefined>;
   readonly overscan?: MaybeRefOrGetter<
     number | Partial<VirtualInsets> | undefined
@@ -82,7 +83,7 @@ export interface UseVirtualizerReturn<
   Measurement,
   Mutation,
 > {
-  readonly scrollport: ShallowRef<HTMLElement | null | undefined>;
+  readonly scrollport: ShallowRef<VirtualScrollport | null | undefined>;
   readonly surface: ShallowRef<HTMLElement | null | undefined>;
   readonly plan: ShallowRef<VirtualLayoutPlan<ID> | null>;
   readonly connection: ShallowRef<
@@ -105,10 +106,16 @@ export interface UseVirtualizerReturn<
 }
 
 export type VirtualizerItemSize = 'none' | 'width' | 'height' | 'both';
+export type VirtualizerScrollportTarget =
+  | 'root'
+  | 'document'
+  | HTMLElement
+  | Document;
 
 export interface VirtualizerRootProps {
   readonly defaultState: object;
   readonly strategy: VirtualLayoutStrategy<object, StableID, unknown, unknown>;
+  readonly scrollport?: VirtualizerScrollportTarget | null;
   readonly overscan?: number | Partial<VirtualInsets>;
   readonly viewportInsets?: number | Partial<VirtualInsets>;
   readonly initialViewport?: VirtualRect;
@@ -153,7 +160,7 @@ export interface VirtualizerItemProps {
 }
 
 export interface VirtualizerRootExpose extends VirtualizerRootSlotProps {
-  readonly scrollport: ShallowRef<HTMLElement | null | undefined>;
+  readonly scrollport: ShallowRef<VirtualScrollport | null | undefined>;
   readonly surface: ShallowRef<HTMLElement | null | undefined>;
 }
 
@@ -182,7 +189,7 @@ export function useVirtualizer<State, ID extends StableID, Measurement, Mutation
   options: UseVirtualizerOptions<State, ID, Measurement, Mutation>,
 ): UseVirtualizerReturn<State, ID, Measurement, Mutation> {
   const scrollport = options.scrollport
-    ?? shallowRef<HTMLElement | null | undefined>(null);
+    ?? shallowRef<VirtualScrollport | null | undefined>(null);
   const surface = options.surface
     ?? shallowRef<HTMLElement | null | undefined>(null);
   const plan = shallowRef<VirtualLayoutPlan<ID> | null>(null);
@@ -401,6 +408,10 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
       >,
       required: true,
     },
+    scrollport: {
+      type: [String, Object] as PropType<VirtualizerScrollportTarget | null>,
+      default: 'root',
+    },
     overscan: {
       type: [Number, Object] as PropType<number | Partial<VirtualInsets>>,
       default: undefined,
@@ -435,6 +446,7 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
   }>,
   setup(props, { attrs, emit, expose, slots }) {
     const state = shallowRef(props.defaultState);
+    let rootElement: HTMLElement | null = null;
     const virtualizer = useVirtualizer({
       state,
       strategy: props.strategy,
@@ -454,6 +466,14 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
         emit('error', error);
       },
     });
+    const resolveScrollport = (target: VirtualizerScrollportTarget | null): void => {
+      virtualizer.scrollport.value = target === 'root'
+        ? rootElement
+        : target === 'document'
+          ? rootElement?.ownerDocument ?? null
+          : target;
+    };
+    watch(() => props.scrollport, resolveScrollport, { flush: 'sync' });
     watch(
       () => props.defaultState,
       (value) => {
@@ -525,8 +545,8 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
           as: props.as,
           asChild: props.asChild,
           elementRef: (element: unknown) => {
-            virtualizer.scrollport.value =
-              element instanceof HTMLElement ? element : null;
+            rootElement = asHTMLElement(element);
+            resolveScrollport(props.scrollport);
           },
           'data-scope': 'virtualizer',
           'data-part': 'root',
@@ -552,7 +572,7 @@ export const VirtualizerHeader = /* @__PURE__ */ defineComponent({
     let element: HTMLElement | null = null;
     let unregister: (() => void) | undefined;
     const setElement = (value: unknown): void => {
-      const next = value instanceof HTMLElement ? value : null;
+      const next = asHTMLElement(value);
       if (element === next) return;
       unregister?.();
       unregister = undefined;
@@ -603,7 +623,7 @@ export const VirtualizerSurface = /* @__PURE__ */ defineComponent({
         : virtualSurfaceStyle(root.plan.value),
     );
     const setElement = (value: unknown): void => {
-      const next = value instanceof HTMLElement ? value : null;
+      const next = asHTMLElement(value);
       if (element === next) return;
       if (element !== null && root.surface.value === element) {
         root.surface.value = null;
@@ -662,7 +682,7 @@ export const VirtualizerItem = /* @__PURE__ */ defineComponent({
       }),
     );
     const setElement = (value: unknown): void => {
-      const next = value instanceof HTMLElement ? value : null;
+      const next = asHTMLElement(value);
       if (element === next) return;
       unregister?.();
       unregister = undefined;
@@ -710,7 +730,7 @@ export const VirtualizerFooter = /* @__PURE__ */ defineComponent({
     let element: HTMLElement | null = null;
     let unregister: (() => void) | undefined;
     const setElement = (value: unknown): void => {
-      const next = value instanceof HTMLElement ? value : null;
+      const next = asHTMLElement(value);
       if (element === next) return;
       unregister?.();
       unregister = undefined;
@@ -758,13 +778,19 @@ export function useVirtualizerSurfaceRegistration(
   return useVirtualizerSurface(part);
 }
 
+function asHTMLElement(value: unknown): HTMLElement | null {
+  return typeof value === 'object' && value !== null && 'offsetHeight' in value
+    ? value as HTMLElement
+    : null;
+}
+
 export function virtualizerNotConnected<T>(): VirtualizerOperationResult<T> {
   return {
     ok: false,
     error: {
       class: 'transition-rejection',
       code: 'virtualizer-not-connected',
-      message: 'Virtualizer requires mounted scrollport and surface elements.',
+      message: 'not connected',
     },
   };
 }

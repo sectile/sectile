@@ -1060,6 +1060,228 @@ test('useVirtualizer returns controlled not-connected results until both host el
   }
 });
 
+test('useVirtualizer reconnects physical targets with bounded registration work', async () => {
+  const first = document.createElement('div');
+  const second = document.createElement('div');
+  const surface = document.createElement('div');
+  const frame = document.createElement('div');
+  const item = document.createElement('div');
+  document.body.append(first, second, surface, frame, item);
+  const scrollport = shallowRef(first);
+  const surfaceRef = shallowRef(surface);
+  const environment = createTrackedVirtualizerEnvironment();
+  const plans = [];
+  const scope = effectScope();
+  let virtualizer;
+  scope.run(() => {
+    virtualizer = useVirtualizer({
+      state: shallowRef(Object.freeze({ value: 0, generation: 0 })),
+      strategy: createStrategy(1),
+      scrollport,
+      surface: surfaceRef,
+      measure: () => null,
+      environment,
+      onPlanChange: (plan) => plans.push(plan),
+    });
+  });
+
+  try {
+    await settle();
+    const unregisterFrame = virtualizer.registerFrame(frame);
+    const unregisterItem = virtualizer.registerItem(item, 'item');
+    assert.equal(environment.observers.length, 2);
+    assert.equal(environment.observers[0].observeCalls.filter((value) => value === frame).length, 1);
+    assert.equal(environment.observers[1].observeCalls.filter((value) => value === item).length, 1);
+
+    first.dispatchEvent(new browserWindow.Event('scroll'));
+    const staleFrame = environment.frames.at(-1);
+    assert.ok(staleFrame);
+
+    scrollport.value = second;
+    await settle();
+    assert.equal(environment.observers.length, 4);
+    assert.equal(environment.observers[0].disconnectCalls, 1);
+    assert.equal(environment.observers[1].disconnectCalls, 1);
+    assert.equal(environment.observers[2].observeCalls.filter((value) => value === frame).length, 1);
+    assert.equal(environment.observers[3].observeCalls.filter((value) => value === item).length, 1);
+    assert.equal(virtualizer.scrollport.value, second);
+
+    const observerCount = environment.observers.length;
+    scrollport.value = second;
+    await settle();
+    assert.equal(environment.observers.length, observerCount);
+
+    const planCount = plans.length;
+    staleFrame.callback();
+    assert.equal(plans.length, planCount);
+
+    scrollport.value = null;
+    await settle();
+    assert.equal(virtualizer.connection.value, undefined);
+    assert.equal(virtualizer.flush().ok, false);
+
+    unregisterFrame();
+    unregisterItem();
+  } finally {
+    scope.stop();
+    first.remove();
+    second.remove();
+    surface.remove();
+    frame.remove();
+    item.remove();
+  }
+});
+
+test('VirtualizerRoot resolves root, document, external, and null targets reactively', async () => {
+  const host = document.createElement('div');
+  const external = document.createElement('div');
+  document.body.append(host, external);
+  const root = ref();
+  const target = shallowRef('root');
+  const app = createApp({
+    render: () => h(VirtualizerRoot, {
+      ref: root,
+      scrollport: target.value,
+      defaultState: Object.freeze({ value: 0, generation: 0 }),
+      strategy: createStrategy(1),
+      initialViewport: Object.freeze({ x: 0, y: 0, width: 100, height: 80 }),
+    }, {
+      default: () => h(VirtualizerSurface, null, { default: () => 'surface' }),
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    const renderedRoot = host.querySelector('[data-part="root"]');
+    assert.equal(root.value.scrollport.value, renderedRoot);
+
+    target.value = 'document';
+    await settle();
+    assert.equal(root.value.scrollport.value, document);
+    const observerCount = FakeResizeObserver.observers.size;
+
+    target.value = document;
+    await settle();
+    assert.equal(root.value.scrollport.value, document);
+    assert.equal(FakeResizeObserver.observers.size, observerCount);
+
+    target.value = external;
+    await settle();
+    assert.equal(root.value.scrollport.value, external);
+
+    target.value = null;
+    await settle();
+    assert.equal(root.value.scrollport.value, null);
+    const disconnected = root.value.flush();
+    assert.equal(disconnected.ok, false);
+    assert.equal(disconnected.error.code, 'virtualizer-not-connected');
+  } finally {
+    app.unmount();
+    host.remove();
+    external.remove();
+  }
+});
+
+test('VirtualizerRoot explicit null never falls back to the rendered root', async () => {
+  const host = document.createElement('div');
+  const external = document.createElement('div');
+  document.body.append(host, external);
+  const root = ref();
+  const target = shallowRef(null);
+  const app = createApp({
+    render: () => h(VirtualizerRoot, {
+      ref: root,
+      scrollport: target.value,
+      defaultState: Object.freeze({ value: 0, generation: 0 }),
+      strategy: createStrategy(1),
+      initialViewport: Object.freeze({ x: 0, y: 0, width: 100, height: 80 }),
+    }, {
+      default: () => h(VirtualizerSurface, null, { default: () => 'surface' }),
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    assert.equal(root.value.scrollport.value, null);
+    assert.equal(root.value.flush().error.code, 'virtualizer-not-connected');
+
+    target.value = external;
+    await settle();
+    assert.equal(root.value.scrollport.value, external);
+    assert.equal(root.value.flush().ok, true);
+
+    target.value = null;
+    await settle();
+    assert.equal(root.value.scrollport.value, null);
+    assert.equal(root.value.flush().error.code, 'virtualizer-not-connected');
+  } finally {
+    app.unmount();
+    host.remove();
+    external.remove();
+  }
+});
+
+test('useVirtualizer accepts a document from another realm with its own surface', async () => {
+  const foreignWindow = createTestWindow({ url: 'https://frame.sectile.dev/' });
+  const foreignDocument = foreignWindow.document;
+  const surface = foreignDocument.createElement('div');
+  foreignDocument.body.append(surface);
+  const environment = createTrackedVirtualizerEnvironment();
+  const scope = effectScope();
+  let virtualizer;
+  scope.run(() => {
+    virtualizer = useVirtualizer({
+      state: shallowRef(Object.freeze({ value: 0, generation: 0 })),
+      strategy: createStrategy(1),
+      scrollport: shallowRef(foreignDocument),
+      surface: shallowRef(surface),
+      environment,
+    });
+  });
+
+  try {
+    await settle();
+    assert.equal(virtualizer.scrollport.value, foreignDocument);
+    assert.ok(virtualizer.connection.value);
+    assert.equal(virtualizer.flush().ok, true);
+  } finally {
+    scope.stop();
+    surface.remove();
+  }
+});
+
+test('VirtualizerRoot mounted-element detection is ambient-realm independent', async () => {
+  const foreignWindow = createTestWindow({ url: 'https://frame.sectile.dev/' });
+  const previousHTMLElement = globalThis.HTMLElement;
+  const host = document.createElement('div');
+  document.body.append(host);
+  const root = ref();
+  const app = createApp({
+    render: () => h(VirtualizerRoot, {
+      ref: root,
+      defaultState: Object.freeze({ value: 0, generation: 0 }),
+      strategy: createStrategy(1),
+      initialViewport: Object.freeze({ x: 0, y: 0, width: 100, height: 80 }),
+    }, {
+      default: () => h(VirtualizerSurface, null, { default: () => 'surface' }),
+    }),
+  });
+
+  try {
+    globalThis.HTMLElement = foreignWindow.HTMLElement;
+    app.mount(host);
+    await settle();
+    assert.equal(root.value.scrollport.value, host.querySelector('[data-part="root"]'));
+    assert.equal(root.value.flush().ok, true);
+  } finally {
+    globalThis.HTMLElement = previousHTMLElement;
+    app.unmount();
+    host.remove();
+  }
+});
+
 test('Vue low-level virtualizer keeps root, header, surface, and footer anatomy stable', async () => {
   const host = document.createElement('div');
   document.body.append(host);
@@ -1148,6 +1370,55 @@ test('Vue virtualizer owns frame-local state and keeps construction options fixe
 async function settle() {
   await nextTick();
   await nextTick();
+}
+
+function createTrackedVirtualizerEnvironment() {
+  let nextHandle = 1;
+  const frames = [];
+  const observers = [];
+  return {
+    frames,
+    observers,
+    requestFrame(callback) {
+      const record = {
+        handle: nextHandle++,
+        callback,
+        cancelled: false,
+      };
+      frames.push(record);
+      return record.handle;
+    },
+    cancelFrame(handle) {
+      const record = frames.find((entry) => entry.handle === handle);
+      if (record !== undefined) record.cancelled = true;
+    },
+    createResizeObserver(callback) {
+      const record = {
+        callback,
+        observeCalls: [],
+        unobserveCalls: [],
+        disconnectCalls: 0,
+        elements: new Set(),
+      };
+      const observer = {
+        observe(element) {
+          record.observeCalls.push(element);
+          record.elements.add(element);
+        },
+        unobserve(element) {
+          record.unobserveCalls.push(element);
+          record.elements.delete(element);
+        },
+        disconnect() {
+          record.disconnectCalls += 1;
+          record.elements.clear();
+        },
+      };
+      record.observer = observer;
+      observers.push(record);
+      return observer;
+    },
+  };
 }
 
 function createStrategy(multiplier) {

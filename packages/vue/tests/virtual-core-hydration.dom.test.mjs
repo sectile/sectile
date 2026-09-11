@@ -20,7 +20,7 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createSSRApp, h, nextTick } = await import('vue');
+const { createSSRApp, h, nextTick, ref } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
 const {
   VirtualizerFooter,
@@ -57,9 +57,12 @@ function mutation(state) {
   };
 }
 
-test('Virtualizer low-level frame anatomy is identical across SSR and hydration', async () => {
+test('Virtualizer document target is SSR-safe and hydrates without anatomy replacement', async () => {
+  const root = ref();
   const component = {
     render: () => h(VirtualizerRoot, {
+      ref: root,
+      scrollport: 'document',
       defaultState: Object.freeze({ generation: 0 }),
       strategy,
       initialViewport: Object.freeze({ x: 0, y: 0, width: 100, height: 80 }),
@@ -71,7 +74,20 @@ test('Virtualizer low-level frame anatomy is identical across SSR and hydration'
       ],
     }),
   };
-  const html = await renderToString(createSSRApp(component));
+  const documentDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  assert.ok(documentDescriptor);
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    get() {
+      throw new Error('Virtualizer SSR must not read the global document.');
+    },
+  });
+  let html;
+  try {
+    html = await renderToString(createSSRApp(component));
+  } finally {
+    Object.defineProperty(globalThis, 'document', documentDescriptor);
+  }
   assert.match(
     html,
     /data-part="root"[\s\S]*data-part="header"[\s\S]*data-part="surface"[\s\S]*data-part="footer"/u,
@@ -91,6 +107,7 @@ test('Virtualizer low-level frame anatomy is identical across SSR and hydration'
     const parts = [...host.querySelectorAll('[data-scope="virtualizer"]')]
       .map((element) => element.getAttribute('data-part'));
     assert.deepEqual(parts, ['root', 'header', 'surface', 'footer']);
+    assert.equal(root.value.scrollport.value, document);
     assert.deepEqual(warnings, []);
   } finally {
     app.unmount();

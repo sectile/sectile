@@ -201,9 +201,12 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       const total = extents.reduce((sum, extent) => sum + extent, 0)
         + gap * Math.max(0, extents.length - 1);
       const scrollport = root.value?.scrollport.value;
+      const elementScrollport = scrollport?.nodeType === 1
+        ? scrollport as HTMLElement
+        : null;
       const measuredViewportExtent = axis === 'vertical'
-        ? scrollport?.clientHeight ?? 0
-        : scrollport?.clientWidth ?? 0;
+        ? elementScrollport?.clientHeight ?? 0
+        : elementScrollport?.clientWidth ?? 0;
       const viewportExtent = measuredViewportExtent > 0
         ? measuredViewportExtent
         : axis === 'vertical'
