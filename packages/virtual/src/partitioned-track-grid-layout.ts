@@ -381,20 +381,27 @@ export function tryApplyPartitionedTrackGridMeasurements<
   const columnChanges: (readonly [number, PartitionedTrack<ColumnID>])[] = [];
   const gridMeasurements: { readonly axis: 'row' | 'column'; readonly index: number; readonly extent: Extent }[] = [];
   for (const measurement of batch.measurements) {
-    const key = `${measurement.axis}:${measurement.id}`;
+    const axis = measurement.axis;
+    const id = measurement.id;
+    const extentInput = measurement.extent;
+    const extentKind = extentInput.kind;
+    const extent = extentKind === 'unknown'
+      ? Object.freeze({ kind: extentKind, fallback: extentInput.fallback })
+      : Object.freeze({ kind: extentKind, value: extentInput.value });
+    const key = `${axis}:${id}`;
     if (seen.has(key)) return measurementFailure('Measurements must target each track at most once.', measurement);
     seen.add(key);
-    const index = measurement.axis === 'row'
-      ? data.value.rowIndex.get(measurement.id as RowID)
-      : data.value.columnIndex.get(measurement.id as ColumnID);
+    const index = axis === 'row'
+      ? data.value.rowIndex.get(id as RowID)
+      : data.value.columnIndex.get(id as ColumnID);
     if (index === undefined) return measurementFailure('Measurement target must exist in the active track domain.', measurement);
-    const source = measurement.axis === 'row' ? data.value.rows.at(index) : data.value.columns.at(index);
+    const source = axis === 'row' ? data.value.rows.at(index) : data.value.columns.at(index);
     if (source === undefined) return domainMismatch('Measurement track index is stale.');
-    if (sameExtent(source.extent, measurement.extent)) continue;
-    const updated = Object.freeze({ ...source, extent: Object.freeze({ ...measurement.extent }) });
-    if (measurement.axis === 'row') rowChanges.push([index, updated as PartitionedTrack<RowID>]);
+    if (sameExtent(source.extent, extent)) continue;
+    const updated = Object.freeze({ ...source, extent });
+    if (axis === 'row') rowChanges.push([index, updated as PartitionedTrack<RowID>]);
     else columnChanges.push([index, updated as PartitionedTrack<ColumnID>]);
-    gridMeasurements.push(Object.freeze({ axis: measurement.axis, index, extent: measurement.extent }));
+    gridMeasurements.push(Object.freeze({ axis, index, extent }));
   }
   if (gridMeasurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
   const generation = nextGeneration(state.generation);

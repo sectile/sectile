@@ -224,6 +224,45 @@ test('PTG-01: partitioned queries equal an independent full geometry scan', () =
   }
 });
 
+test('ISSUE-088: sparse measurements retain one axis identity and extent observation', () => {
+  const rows = Array.from({ length: 600 }, (_, index) => ({ id: `r${index}`, partition: 'center', extent: exact(10) }));
+  const columns = Array.from({ length: 600 }, (_, index) => ({ id: `c${index}`, partition: 'center', extent: exact(20) }));
+  const state = createPartitionedTrackGridLayout(rows, columns, [{ id: 'cell', row: 'r0', column: 'c0' }]);
+  let axisReads = 0;
+  let idReads = 0;
+  let extentReads = 0;
+  let kindReads = 0;
+  let valueReads = 0;
+  const extent = {
+    get kind() { kindReads += 1; return 'exact'; },
+    get value() { valueReads += 1; return valueReads === 1 ? 15 : 99; },
+  };
+  const measurement = {
+    get axis() { axisReads += 1; return axisReads === 1 ? 'row' : 'column'; },
+    get id() { idReads += 1; return idReads === 1 ? 'r0' : 'c0'; },
+    get extent() { extentReads += 1; return extentReads === 1 ? extent : exact(99); },
+  };
+  const measured = tryApplyPartitionedTrackGridMeasurements(state, {
+    generation: state.generation,
+    measurements: [measurement],
+  });
+  assert.equal(measured.ok, true);
+  assert.equal(readRepairDiagnostics(measured.value.state)?.mode, 'incremental');
+  assert.deepEqual([axisReads, idReads, extentReads, kindReads, valueReads], [1, 1, 1, 1, 1]);
+  assert.equal(measured.value.state.rows.at(0).id, 'r0');
+  assert.deepEqual(measured.value.state.rows.at(0).extent, exact(15));
+  assert.equal(measured.value.state.columns.at(0).id, 'c0');
+  assert.deepEqual(measured.value.state.columns.at(0).extent, exact(20));
+
+  const stable = tryApplyPartitionedTrackGridMeasurements(measured.value.state, {
+    generation: measured.value.state.generation,
+    measurements: [{ axis: 'row', id: 'r0', extent: exact(16) }],
+  });
+  assert.equal(stable.ok, true);
+  assert.equal(stable.value.state.rows.at(0).id, 'r0');
+  assert.deepEqual(stable.value.state.rows.at(0).extent, exact(16));
+});
+
 test('PTG-02: mixed-axis sparse batches commit once and dense batches rebuild', () => {
   const rows = Array.from({ length: 1_024 }, (_, index) => ({ id: `row-${index}`, partition: 'center', extent: exact(10) }));
   const columns = Array.from({ length: 64 }, (_, index) => ({ id: `column-${index}`, partition: 'center', extent: exact(12) }));
