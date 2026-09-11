@@ -11,6 +11,7 @@ import {
   createSize,
   insetRect,
   intersectRects,
+  isFiniteRect,
   outsetRect,
   pointDelta,
   rectContainsPoint,
@@ -50,6 +51,31 @@ test('intersection, containment, and bounds agree with scalar references', () =>
   assert.deepEqual(boundsOfRects(rects), rects.slice(1).reduce(boundRects, rects[0]));
   assert.equal(boundsOfRects([]), null);
   assert.equal(rectContainsPoint({ x: 0, y: 0, width: 10, height: 10 }, { x: 10, y: 10 }), true);
+});
+
+test('ISSUE-082: derived rectangle algebra rejects non-finite output without shrinking the valid boundary', () => {
+  const endpointOverflow = createRect({ x: 1e308, y: 0, width: 1e308, height: 1 });
+  for (const derive of [
+    () => boundRects(endpointOverflow, endpointOverflow),
+    () => boundsOfRects([endpointOverflow]),
+    () => intersectRects(endpointOverflow, endpointOverflow),
+  ]) {
+    assert.throws(derive, { code: 'invalid-boundary' });
+  }
+
+  const farLeft = createRect({ x: -1e308, y: 0, width: 1, height: 1 });
+  const farRight = createRect({ x: 1e308, y: 0, width: 1, height: 1 });
+  assert.throws(() => boundRects(farLeft, farRight), { code: 'invalid-boundary' });
+  assert.throws(() => boundsOfRects([farLeft, farRight]), { code: 'invalid-boundary' });
+
+  const halfMaximum = Number.MAX_VALUE / 2;
+  const left = createRect({ x: 0, y: 0, width: halfMaximum, height: 1 });
+  const right = createRect({ x: halfMaximum, y: 0, width: halfMaximum, height: 1 });
+  const bounds = boundRects(left, right);
+  assert.equal(isFiniteRect(bounds), true);
+  assert.equal(bounds.width, Number.MAX_VALUE);
+  assert.equal(isFiniteRect(boundsOfRects([left, right])), true);
+  assert.equal(isFiniteRect(intersectRects(createRect({ x: 0, y: 0, width: Number.MAX_VALUE, height: 1 }), createRect({ x: 0, y: 0, width: Number.MAX_VALUE, height: 1 }))), true);
 });
 
 test('inset, outset, overflow, clamp, alignment, and delta are deterministic', () => {

@@ -67,7 +67,7 @@ export function intersectRects(left: Rect, right: Rect): Rect | null {
   const y = Math.max(left.y, right.y);
   const width = Math.min(left.x + left.width, right.x + right.width) - x;
   const height = Math.min(left.y + left.height, right.y + right.height) - y;
-  return Object.freeze({ x, y, width: Math.max(0, width), height: Math.max(0, height) });
+  return createRect({ x, y, width: Math.max(0, width), height: Math.max(0, height) });
 }
 
 export function rectContainsPoint(rect: Rect, point: Point): boolean {
@@ -83,7 +83,7 @@ export function rectContainsRect(outer: Rect, inner: Rect): boolean {
 export function boundRects(left: Rect, right: Rect): Rect {
   const x = Math.min(left.x, right.x);
   const y = Math.min(left.y, right.y);
-  return Object.freeze({
+  return createRect({
     x,
     y,
     width: Math.max(left.x + left.width, right.x + right.width) - x,
@@ -110,7 +110,7 @@ export function boundsOfRects(rects: readonly Rect[], options: GeometryBoundsOpt
     right = Math.max(right, rect.x + rect.width);
     bottom = Math.max(bottom, rect.y + rect.height);
   }
-  return Object.freeze({ x: left, y: top, width: right - left, height: bottom - top });
+  return createRect({ x: left, y: top, width: right - left, height: bottom - top });
 }
 
 export function insetRect(rect: Rect, insets: Insets): Rect {
