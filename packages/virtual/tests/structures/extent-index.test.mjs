@@ -3,6 +3,8 @@ import test from 'node:test';
 import {
   createExtentIndex,
   createUniformExtentIndex,
+  tryCreateExtentIndex,
+  tryCreateUniformExtentIndex,
 } from '../../.verification-dist/extent-index.js';
 
 const exact = (value) => ({ kind: 'exact', value });
@@ -15,6 +17,33 @@ test('EXT-01, EXT-02: extent offsets are searchable prefix sums', () => {
   assert.deepEqual(index.locateOffset(29), { index: 1, itemOffset: 10, offsetWithin: 19, extent: exact(20) });
   assert.deepEqual(index.slice(1, 3), [exact(20), exact(30)]);
   assert.equal(index.indexAtOffset(60), null);
+});
+
+test('ISSUE-079: extent aggregates stay finite across construction and mutation boundaries', () => {
+  const overflow = tryCreateExtentIndex([exact(1e308), exact(1e308)]);
+  assert.equal(overflow.ok, false);
+  assert.equal(overflow.error.code, 'extent-invalid');
+
+  const uniformOverflow = tryCreateUniformExtentIndex(2, exact(1e308), { maxItems: 2 });
+  assert.equal(uniformOverflow.ok, false);
+  assert.equal(uniformOverflow.error.code, 'extent-invalid');
+
+  const halfMaximum = Number.MAX_VALUE / 2;
+  const boundary = tryCreateExtentIndex([exact(halfMaximum), exact(halfMaximum)]);
+  assert.equal(boundary.ok, true);
+  assert.equal(Number.isFinite(boundary.value.totalExtent), true);
+  assert.equal(Number.isFinite(boundary.value.offsetAt(2)), true);
+
+  const base = createExtentIndex([exact(1e308), exact(1)]);
+  const updated = base.update([{ index: 1, extent: exact(1e308) }]);
+  assert.equal(updated.ok, false);
+  assert.equal(updated.error.code, 'extent-invalid');
+  assert.equal(Number.isFinite(base.totalExtent), true);
+
+  const spliced = base.splice(1, 0, [exact(1e308)]);
+  assert.equal(spliced.ok, false);
+  assert.equal(spliced.error.code, 'extent-invalid');
+  assert.equal(Number.isFinite(base.totalExtent), true);
 });
 
 test('EXT-03, EXT-05: measurement updates preserve untouched geometry', () => {

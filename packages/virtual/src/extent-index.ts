@@ -86,7 +86,7 @@ export function tryCreateExtentIndex(
   }
   const validated = validateExtents(extents);
   if (!validated.ok) return validated;
-  return ok(createIndex(build(validated.value), maxItems));
+  return createCheckedIndex(build(validated.value), maxItems);
 }
 
 /**
@@ -123,7 +123,14 @@ export function tryCreateUniformExtentIndex(
   }
   const validated = validateExtent(extent);
   if (!validated.ok) return validated;
-  return ok(createIndex(size === 0 ? null : run(validated.value, size), maxItems));
+  return createCheckedIndex(size === 0 ? null : run(validated.value, size), maxItems);
+}
+
+function createCheckedIndex(root: Node | null, maxItems: number): VirtualResult<ExtentIndex> {
+  if (!Number.isFinite(root?.sum ?? 0)) {
+    return fail('construction', 'extent-invalid', 'Extent index aggregate must remain finite.');
+  }
+  return ok(createIndex(root, maxItems));
 }
 
 function createIndex(root: Node | null, maxItems: number): ExtentIndex {
@@ -172,7 +179,7 @@ function updateIndex(
   }
   const sorted = ordered ? changes : [...new Map(changes)].sort(([left], [right]) => left - right);
   const next = root === null ? null : updateNode(root, 0, sorted, 0, sorted.length);
-  return ok(createIndex(next, maxItems));
+  return createCheckedIndex(next, maxItems);
 }
 
 function spliceIndex(
@@ -210,11 +217,11 @@ function spliceIndex(
     && validated.value.every((extent) => sameExtent(extent, root.entry))
   ) {
     const nextSize = size - deleteCount + validated.value.length;
-    return ok(createIndex(nextSize === 0 ? null : run(root.entry, nextSize), maxItems));
+    return createCheckedIndex(nextSize === 0 ? null : run(root.entry, nextSize), maxItems);
   }
   const [before, remainder] = split(root, start);
   const [, after] = split(remainder, deleteCount);
-  return ok(createIndex(join(join(before, build(validated.value)), after), maxItems));
+  return createCheckedIndex(join(join(before, build(validated.value)), after), maxItems);
 }
 
 function moveIndex(
@@ -243,12 +250,12 @@ function moveIndex(
       { from, to, count, size },
     );
   }
-  if (root === null || count === 0 || from === to) return ok(createIndex(root, maxItems));
+  if (root === null || count === 0 || from === to) return createCheckedIndex(root, maxItems);
   const [before, remainder] = split(root, from);
   const [moved, after] = split(remainder, count);
   const withoutMoved = join(before, after);
   const [destinationBefore, destinationAfter] = split(withoutMoved, to);
-  return ok(createIndex(join(join(destinationBefore, moved), destinationAfter), maxItems));
+  return createCheckedIndex(join(join(destinationBefore, moved), destinationAfter), maxItems);
 }
 
 function extentAt(root: Node | null, index: number): Extent | null {

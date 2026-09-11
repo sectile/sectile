@@ -217,6 +217,20 @@ test('VRT-05: target scrolling returns an explicit two-dimensional offset', () =
   assert.deepEqual(linearScrollTarget(state, 'item-15', { x: 0, y: 0, width: 100, height: 50 }, 'center'), { x: 0, y: 130 });
 });
 
+test('ISSUE-079: linear layouts only consume finite canonical extent aggregates', () => {
+  const halfMaximum = Number.MAX_VALUE / 2;
+  const state = createLinearLayout(
+    domain(2),
+    createExtentIndex([exact(halfMaximum), exact(halfMaximum)]),
+    { crossExtent: 100 },
+  );
+  const viewport = { x: 0, y: 0, width: 100, height: 50 };
+  const plan = queryLinearLayout(state, { viewport });
+  assert.equal(Number.isFinite(plan.contentSize.height), true);
+  const target = linearScrollTarget(state, 'item-1', viewport, 'end');
+  assert.equal(Number.isFinite(target.y), true);
+});
+
 test('VRT-06: data loading remains a generation-bound collection-window concern', () => {
   const state = createLinearLayout(domain(100), createExtentIndex(Array(100).fill(exact(10))), { crossExtent: 100 });
   const plan = queryLinearLayout(state, { viewport: { x: 0, y: 500, width: 100, height: 50 }, overscan: 20 });
