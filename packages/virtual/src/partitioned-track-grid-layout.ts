@@ -495,11 +495,46 @@ export function tryApplyPartitionedTrackGridMutation<
 ): VirtualResult<VirtualLayoutMutation<PartitionedTrackGridLayoutState<ID, RowID, ColumnID>>> {
   const data = getInternals(state);
   if (!data.ok) return data;
+  if (mutation.type === 'replace-regions') {
+    const regions = freezeRegions(mutation.regions);
+    const generation = nextGeneration(state.generation);
+    if (!generation.ok) return generation;
+    const before = baseAnchorRect(state, anchor);
+    const numericRegions = mapRegionsToGrid(
+      regions,
+      data.value.rowIndex,
+      data.value.columnIndex,
+      data.value.rowPartitions,
+      data.value.columnPartitions,
+    );
+    if (!numericRegions.ok) return transitionResult(numericRegions);
+    const grid = tryCreateTrackGridLayout(
+      data.value.grid.rows,
+      data.value.grid.columns,
+      numericRegions.value,
+      {
+        rowGap: state.rowGap,
+        columnGap: state.columnGap,
+        maxRegions: state.maxRegions,
+      },
+    );
+    if (!grid.ok) return transitionResult(grid);
+    const next = createRegionState(state, data.value, regions, grid.value, generation.value);
+    recordRepairDiagnostics(next, {
+      mode: 'incremental',
+      changed: regions.length,
+      touchedBlocks: 0,
+      copiedNodes: 0,
+      copiedEntries: 0,
+      rebuiltItems: 0,
+      repairBound: state.maxRegions,
+    });
+    return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, baseAnchorRect(next, anchor)) }));
+  }
+
   let rows = data.value.rows.view.toArray();
   let columns = data.value.columns.view.toArray();
-  let regions = state.regions;
-  if (mutation.type === 'replace-regions') regions = freezeRegions(mutation.regions);
-  else if (mutation.type === 'replace-row-tracks') {
+  if (mutation.type === 'replace-row-tracks') {
     const normalized = normalizeTracks(mutation.tracks, state.maxTracks);
     if (!normalized.ok) return transitionResult(normalized);
     rows = preserveExtents(normalized.value, data.value.rows.view);
@@ -516,7 +551,7 @@ export function tryApplyPartitionedTrackGridMutation<
   const next = createState({
     rows,
     columns,
-    regions,
+    regions: state.regions,
     rowGap: state.rowGap,
     columnGap: state.columnGap,
     maxTracks: state.maxTracks,
@@ -613,6 +648,28 @@ function createMeasuredState<
   return state;
 }
 
+function createRegionState<
+  ID extends StableID,
+  RowID extends StableID,
+  ColumnID extends StableID,
+>(
+  previous: PartitionedTrackGridLayoutState<ID, RowID, ColumnID>,
+  data: PartitionedInternals<ID, RowID, ColumnID>,
+  regions: readonly PartitionedTrackGridRegion<ID, RowID, ColumnID>[],
+  grid: TrackGridLayoutState<ID>,
+  generation: number,
+): PartitionedTrackGridLayoutState<ID, RowID, ColumnID> {
+  const mutable = { ...previous, regions, generation };
+  Object.defineProperty(mutable, partitionedTrackGridLayoutStateBrand, { value: true });
+  const state = Object.freeze(mutable) as PartitionedTrackGridLayoutState<ID, RowID, ColumnID>;
+  internals.set(state, {
+    ...data,
+    grid,
+    regionIndex: new Map(regions.map((region, index) => [region.id, index])),
+  } as PartitionedInternals<StableID, StableID, StableID>);
+  return state;
+}
+
 function buildGrid<
   ID extends StableID,
   RowID extends StableID,
@@ -625,31 +682,15 @@ function buildGrid<
 ): VirtualResult<PartitionedInternals<ID, RowID, ColumnID>> {
   const rowIndex = new Map(rows.map((track, index) => [track.id, index]));
   const columnIndex = new Map(columns.map((track, index) => [track.id, index]));
-  const numericRegions: GridRegion<ID>[] = [];
-  for (const region of regions) {
-    const row = rowIndex.get(region.row);
-    const column = columnIndex.get(region.column);
-    const rowSpan = region.rowSpan ?? 1;
-    const columnSpan = region.columnSpan ?? 1;
-    if (row === undefined || column === undefined) {
-      return fail('construction', 'virtual-layout-region-invalid', 'Partitioned grid regions must reference existing row and column tracks.', { region });
-    }
-    if (!spanWithinPartition(rows, row, rowSpan) || !spanWithinPartition(columns, column, columnSpan)) {
-      return fail('construction', 'virtual-layout-region-invalid', 'Partitioned grid regions cannot span logical partition boundaries.', { region });
-    }
-    numericRegions.push(Object.freeze({
-      id: region.id,
-      row,
-      column,
-      ...(rowSpan === 1 ? {} : { rowSpan }),
-      ...(columnSpan === 1 ? {} : { columnSpan }),
-    }));
-  }
+  const rowPartitions = Object.freeze(rows.map((track) => track.partition));
+  const columnPartitions = Object.freeze(columns.map((track) => track.partition));
+  const numericRegions = mapRegionsToGrid(regions, rowIndex, columnIndex, rowPartitions, columnPartitions);
+  if (!numericRegions.ok) return numericRegions;
   const rowExtents = tryCreateExtentIndex(rows.map(({ extent }) => extent), { maxItems: input.maxTracks });
   if (!rowExtents.ok) return rowExtents;
   const columnExtents = tryCreateExtentIndex(columns.map(({ extent }) => extent), { maxItems: input.maxTracks });
   if (!columnExtents.ok) return columnExtents;
-  const grid = tryCreateTrackGridLayout(rowExtents.value, columnExtents.value, numericRegions, {
+  const grid = tryCreateTrackGridLayout(rowExtents.value, columnExtents.value, numericRegions.value, {
     rowGap: input.rowGap,
     columnGap: input.columnGap,
     maxRegions: input.maxRegions,
@@ -664,9 +705,46 @@ function buildGrid<
     columnRanges: partitionRanges(columns, columnExtents.value, input.columnGap),
     rows: createBlockedVector(rows),
     columns: createBlockedVector(columns),
-    rowPartitions: Object.freeze(rows.map((track) => track.partition)),
-    columnPartitions: Object.freeze(columns.map((track) => track.partition)),
+    rowPartitions,
+    columnPartitions,
   }));
+}
+
+function mapRegionsToGrid<
+  ID extends StableID,
+  RowID extends StableID,
+  ColumnID extends StableID,
+>(
+  regions: readonly PartitionedTrackGridRegion<ID, RowID, ColumnID>[],
+  rowIndex: ReadonlyMap<RowID, number>,
+  columnIndex: ReadonlyMap<ColumnID, number>,
+  rowPartitions: readonly TrackPartition[],
+  columnPartitions: readonly TrackPartition[],
+): VirtualResult<readonly GridRegion<ID>[]> {
+  const numericRegions: GridRegion<ID>[] = [];
+  for (const region of regions) {
+    const row = rowIndex.get(region.row);
+    const column = columnIndex.get(region.column);
+    const rowSpan = region.rowSpan ?? 1;
+    const columnSpan = region.columnSpan ?? 1;
+    if (row === undefined || column === undefined) {
+      return fail('construction', 'virtual-layout-region-invalid', 'Partitioned grid regions must reference existing row and column tracks.', { region });
+    }
+    if (
+      !spanWithinPartitionValues(rowPartitions, row, rowSpan)
+      || !spanWithinPartitionValues(columnPartitions, column, columnSpan)
+    ) {
+      return fail('construction', 'virtual-layout-region-invalid', 'Partitioned grid regions cannot span logical partition boundaries.', { region });
+    }
+    numericRegions.push(Object.freeze({
+      id: region.id,
+      row,
+      column,
+      ...(rowSpan === 1 ? {} : { rowSpan }),
+      ...(columnSpan === 1 ? {} : { columnSpan }),
+    }));
+  }
+  return ok(Object.freeze(numericRegions));
 }
 
 function normalizeTracks<ID extends StableID>(tracks: readonly PartitionedTrack<ID>[], maxTracks: number): VirtualResult<readonly PartitionedTrack<ID>[]> {
@@ -798,11 +876,10 @@ function freezeRegions<ID extends StableID, RowID extends StableID, ColumnID ext
   })));
 }
 
-function spanWithinPartition<ID extends StableID>(tracks: readonly PartitionedTrack<ID>[], start: number, span: number): boolean {
-  if (!Number.isSafeInteger(span) || span <= 0 || start + span > tracks.length) return false;
-  const partition = tracks[start]?.partition;
-  for (let index = start + 1; index < start + span; index += 1) if (tracks[index]?.partition !== partition) return false;
-  return partition !== undefined;
+function spanWithinPartitionValues(partitions: readonly TrackPartition[], start: number, span: number): boolean {
+  if (!Number.isSafeInteger(span) || span <= 0 || start + span > partitions.length) return false;
+  const partition = partitions[start];
+  return partition !== undefined && partitions[start + span - 1] === partition;
 }
 
 function getInternals<ID extends StableID, RowID extends StableID, ColumnID extends StableID>(

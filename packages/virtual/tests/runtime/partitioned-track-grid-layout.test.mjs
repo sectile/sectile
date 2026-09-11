@@ -143,6 +143,46 @@ test('ISSUE-091: partitioned measurements capture one anchor for the full transi
   assert.deepEqual(measured.value.scrollDelta, { x: 0, y: 0 });
 });
 
+test('ISSUE-093: region-only replacement retains every track owner', () => {
+  const rowCount = 4_096;
+  const rows = Array.from({ length: rowCount }, (_, index) => ({
+    id: `row-${index}`,
+    partition: 'center',
+    extent: exact(10),
+  }));
+  const columns = [{ id: 'column', partition: 'center', extent: exact(20) }];
+  const state = createPartitionedTrackGridLayout(
+    rows,
+    columns,
+    [{ id: 'before', row: 'row-0', column: 'column' }],
+    { maxTracks: rowCount, maxRegions: 4 },
+  );
+  const changed = applyPartitionedTrackGridMutation(state, {
+    type: 'replace-regions',
+    regions: [{ id: 'after', row: `row-${rowCount - 1}`, column: 'column' }],
+  }).state;
+
+  assert.equal(changed.rows, state.rows);
+  assert.equal(changed.columns, state.columns);
+  assert.deepEqual(changed.regions, [{ id: 'after', row: `row-${rowCount - 1}`, column: 'column' }]);
+  assert.equal(readRepairDiagnostics(changed)?.rebuiltItems, 0);
+  assert.equal(readRepairDiagnostics(changed)?.changed, 1);
+  assert.deepEqual(
+    queryPartitionedTrackGridLayout(changed, {
+      viewport: { x: 0, y: (rowCount - 2) * 10, width: 20, height: 30 },
+    }).placements.map(({ id }) => id),
+    ['after'],
+  );
+
+  const invalid = tryApplyPartitionedTrackGridMutation(state, {
+    type: 'replace-regions',
+    regions: [{ id: 'crossing', row: 'row-0', column: 'column', rowSpan: rowCount + 1 }],
+  });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'virtual-layout-region-invalid');
+  assert.equal(state.generation, 0);
+});
+
 test('PTG-03: stale measurement and cross-partition spans reject atomically', () => {
   const state = fixture();
   const measured = applyPartitionedTrackGridMeasurements(state, {

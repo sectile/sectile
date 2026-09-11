@@ -3,7 +3,7 @@ import { createSequence, tryApplySequencePatch } from '@sectile/core/sequence';
 import { createExtentIndex, createUniformExtentIndex } from '@sectile/virtual/extent-index';
 import { applyLinearMeasurements, createLinearLayout, queryLinearLayout, queryLinearWindow } from '@sectile/virtual/linear-layout';
 import { applyMasonryMeasurements, applyMasonryMutation, createMasonryLayout, queryMasonryLayout } from '@sectile/virtual/masonry-layout';
-import { applyPartitionedTrackGridMeasurements, createPartitionedTrackGridLayout, queryPartitionedTrackGridLayout } from '@sectile/virtual/partitioned-track-grid-layout';
+import { applyPartitionedTrackGridMeasurements, applyPartitionedTrackGridMutation, createPartitionedTrackGridLayout, queryPartitionedTrackGridLayout } from '@sectile/virtual/partitioned-track-grid-layout';
 import { applySpatialMeasurements, applySpatialMutation, createSpatialLayout, querySpatialLayout } from '@sectile/virtual/spatial-layout';
 import { applyGridMeasurements, applyTrackGridMutation, createTrackGridLayout, queryTrackGridLayout } from '@sectile/virtual/track-grid-layout';
 
@@ -241,6 +241,10 @@ const partitionedMeasurement32Us = measure(2_000, (iteration) => {
   }).state;
   sink += measuredPartitioned.generation;
 });
+const partitionedReplaceRegionMs = measureColdMilliseconds(() => applyPartitionedTrackGridMutation(partitionedState, {
+  type: 'replace-regions',
+  regions: [{ id: 'partitioned-replacement', row: 'partitioned-row-50000', column: 'partitioned-column-32' }],
+}).state.generation);
 
 const strategyDomain = createSequence(Array.from({ length: strategySize }, (_, index) => `strategy-${index}`), { maxItems: strategySize + 1 });
 const strategyExtents = createExtentIndex(Array.from({ length: strategySize }, (_, index) => estimated(24 + (index % 73))));
@@ -371,6 +375,7 @@ const result = {
     pinnedColumns: 2,
     queryUs: partitionedQueryUs,
     changedRowMeasurement32Us: partitionedMeasurement32Us,
+    replaceRegionMs: partitionedReplaceRegionMs,
     buildMs: partitionedBuildMs,
   },
   masonry: {

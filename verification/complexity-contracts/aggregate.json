@@ -31136,6 +31136,73 @@
     {
       "package": "virtual",
       "surface": "hot",
+      "id": "partitioned.regions.replace",
+      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "benchmarkIDs": [
+        "VAL-023:partitioned-region-replace-work"
+      ],
+      "specificationCeiling": "O(jRegion log jRegion)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nTrack",
+            "meaning": "retained partitioned row and column track count",
+            "ceiling": "maxTracks"
+          },
+          {
+            "name": "jRegion",
+            "meaning": "replacement region count",
+            "ceiling": "maxRegions"
+          }
+        ],
+        "time": {
+          "bound": "O(jRegion log jRegion)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(jRegion)",
+          "output": "O(1)",
+          "retained": "O(jRegion)"
+        },
+        "resources": {
+          "allocations": "O(jRegion)",
+          "cacheEntries": "O(jRegion)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the active track owners and identity maps are canonical",
+          "partition groups are retained as contiguous ranges"
+        ],
+        "ceilings": [
+          "maxTracks",
+          "maxRegions"
+        ],
+        "benchmarkIDs": [
+          "VAL-023:partitioned-region-replace-work"
+        ],
+        "deterministicWork": [
+          "packages/virtual/tests/runtime/partitioned-track-grid-layout.test.mjs ISSUE-093"
+        ],
+        "resourceRationale": "Region-only replacement retains all track owners and allocates only canonical replacement regions plus their delegated Track Grid region indexes.",
+        "proof": "Retained row/column maps resolve each replacement region directly, retained contiguous partition metadata validates span endpoints in constant work, and the delegated Track Grid validates only the replacement region set under the #92 nRegion log nRegion bound.",
+        "adversarialWitness": "ISSUE-093 replaces one region over thousands of retained tracks while row/column view identity is preserved and repair diagnostics report zero rebuilt track items.",
+        "evidence": [
+          "VAL-023"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Region-only replacement may scan the changed region set but must not enumerate the retained track domain."
+        }
+      }
+    },
+    {
+      "package": "virtual",
+      "surface": "hot",
       "id": "spatial.measure.incremental",
       "source": "packages/virtual/src/spatial-layout.ts",
       "benchmarkIDs": [

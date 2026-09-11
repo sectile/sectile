@@ -15,7 +15,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |
 | terminal | 347 | 167 | 8 |
-| virtual | 114 | 0 | 28 |
+| virtual | 114 | 0 | 29 |
 | vue | 740 | 319 | 9 |
 
 ## Variables
@@ -184,6 +184,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:partitioned.measure.incremental | trusted | `O(jChanged log nTrack + rRepair)` worst-case | `O(jChanged + rRepair)` | `O(1)` | `O(rRepair)` | forbidden | VAL-016, VAL-017 |
 | virtual:partitioned.measure.rebuild | trusted | `O(nTrack + nRegion log nRegion)` worst-case | `O(nTrack + nRegion)` | `O(nTrack + nRegion)` | `O(nTrack + nRegion)` | allowed | VAL-016, VAL-017 |
 | virtual:partitioned.query | trusted | `O(log nRegion + cCandidate + kPlacement log kPlacement)` expected | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| virtual:partitioned.regions.replace | external | `O(jRegion log jRegion)` worst-case | `O(jRegion)` | `O(1)` | `O(jRegion)` | forbidden | VAL-023 |
 | virtual:spatial.measure.incremental | trusted | `O(jChanged log jChanged + rRepair)` worst-case | `O(jChanged + rRepair)` | `O(1)` | `O(rRepair)` | forbidden | VAL-016, VAL-017 |
 | virtual:spatial.measure.rebuild | trusted | `O(nItem log nItem)` worst-case | `O(nItem)` | `O(nItem)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
 | virtual:spatial.patch.incremental | trusted | `O((jChanged + pOverlay) * dSequence)` worst-case | `O(jChanged + pOverlay)` | `O(1)` | `O(jChanged + pOverlay + dSequence)` | forbidden | VAL-016, VAL-017 |
