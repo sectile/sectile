@@ -42,6 +42,23 @@ function fixture() {
   );
 }
 
+test('ISSUE-081: partitioned track grids reject non-finite derived gap geometry', () => {
+  const rows = [
+    { id: 'a', partition: 'center', extent: exact(1) },
+    { id: 'b', partition: 'center', extent: exact(1) },
+    { id: 'c', partition: 'center', extent: exact(1) },
+  ];
+  const columns = [{ id: 'value', partition: 'center', extent: exact(1) }];
+  const invalid = tryCreatePartitionedTrackGridLayout(rows, columns, [], { rowGap: 1e308 });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'virtual-layout-geometry-invalid');
+
+  const boundary = tryCreatePartitionedTrackGridLayout(rows, columns, [], { rowGap: Number.MAX_VALUE / 2 });
+  assert.equal(boundary.ok, true);
+  const plan = queryPartitionedTrackGridLayout(boundary.value, { viewport: { x: 0, y: 0, width: 1, height: 1 } });
+  assert.equal(Number.isFinite(plan.contentSize.height), true);
+});
+
 test('PTG-01: logical partitions project to viewport edges with deterministic overlap layers', () => {
   const state = fixture();
   const viewport = { x: 60, y: 15, width: 180, height: 100 };

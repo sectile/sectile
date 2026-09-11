@@ -9,7 +9,7 @@ import {
 } from '@sectile/core/sequence';
 import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
 import { fail, ok } from './internal/foundation.js';
-import { trackContentExtent, trackRange, trackSpan, type TrackRange } from './internal/track.js';
+import { isFiniteTrackContentExtent, trackContentExtent, trackRange, trackSpan, type TrackRange } from './internal/track.js';
 import type { LinearFlow } from './linear-layout.js';
 import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
@@ -170,6 +170,9 @@ export function tryCreateTrackGridLayout<ID extends StableID>(
   const columnFlow = input.columnFlow ?? 'forward';
   const maxRegions = input.maxRegions ?? 1_000_000;
   if (!finiteNonNegative(rowGap) || !finiteNonNegative(columnGap) || !validFlow(rowFlow) || !validFlow(columnFlow)) return geometryFailure('Grid gaps and flows are invalid.');
+  if (!isFiniteTrackContentExtent(rows, rowGap) || !isFiniteTrackContentExtent(columns, columnGap)) {
+    return geometryFailure('Grid track and gap geometry must compose to finite content extents.');
+  }
   if (!Number.isSafeInteger(maxRegions) || maxRegions < 0) return fail('construction', 'invalid-max-items', 'maxRegions must be a non-negative safe integer.', { maxRegions });
   const indexed = validateRegions(rows.size, columns.size, regions, maxRegions);
   if (!indexed.ok) return indexed;

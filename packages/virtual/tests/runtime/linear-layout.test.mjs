@@ -17,6 +17,7 @@ import {
   setLinearCrossExtent,
   snapshotLinearLayout,
   tryApplyLinearMeasurements,
+  tryCreateLinearLayout,
   trySetLinearCrossExtent,
 } from '../../.verification-dist/linear-layout.js';
 import {
@@ -25,6 +26,7 @@ import {
   createTrackGridLayout,
   queryTrackGridLayout,
   restoreTrackGridLayout,
+  tryCreateTrackGridLayout,
   snapshotTrackGridLayout,
   trackGridRegionRect,
 } from '../../.verification-dist/track-grid-layout.js';
@@ -230,6 +232,28 @@ test('ISSUE-079: linear layouts only consume finite canonical extent aggregates'
   assert.equal(Number.isFinite(plan.contentSize.height), true);
   const target = linearScrollTarget(state, 'item-1', viewport, 'end');
   assert.equal(Number.isFinite(target.y), true);
+});
+
+test('ISSUE-081: finite gaps cannot publish non-finite Linear or Track Grid geometry', () => {
+  const extents = createExtentIndex([exact(1), exact(1), exact(1)]);
+  const linear = tryCreateLinearLayout(domain(3), extents, { gap: 1e308, crossExtent: 10 });
+  assert.equal(linear.ok, false);
+  assert.equal(linear.error.code, 'virtual-layout-geometry-invalid');
+
+  const grid = tryCreateTrackGridLayout(extents, createExtentIndex([exact(1)]), [], { rowGap: 1e308 });
+  assert.equal(grid.ok, false);
+  assert.equal(grid.error.code, 'virtual-layout-geometry-invalid');
+
+  const boundaryGap = Number.MAX_VALUE / 2;
+  const boundaryLinear = tryCreateLinearLayout(domain(3), extents, { gap: boundaryGap, crossExtent: 10 });
+  assert.equal(boundaryLinear.ok, true);
+  const linearPlan = queryLinearLayout(boundaryLinear.value, { viewport: { x: 0, y: 0, width: 10, height: 1 } });
+  assert.equal(Number.isFinite(linearPlan.contentSize.height), true);
+
+  const boundaryGrid = tryCreateTrackGridLayout(extents, createExtentIndex([exact(1)]), [], { rowGap: boundaryGap });
+  assert.equal(boundaryGrid.ok, true);
+  const gridPlan = queryTrackGridLayout(boundaryGrid.value, { viewport: { x: 0, y: 0, width: 1, height: 1 } });
+  assert.equal(Number.isFinite(gridPlan.contentSize.height), true);
 });
 
 test('VRT-06: data loading remains a generation-bound collection-window concern', () => {

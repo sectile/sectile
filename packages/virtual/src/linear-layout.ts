@@ -5,7 +5,7 @@ import { tryApplySequencePatch, tryCreateSequence, type Sequence, type SequenceP
 import { unwrap } from '@sectile/core/result';
 import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
 import { fail, ok } from './internal/foundation.js';
-import { trackContentExtent, trackRange, trackSpan } from './internal/track.js';
+import { isFiniteTrackContentExtent, trackContentExtent, trackRange, trackSpan } from './internal/track.js';
 import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
   type VirtualAnchor, type VirtualLayoutMutation, type VirtualLayoutPlan, type VirtualLayoutStrategy,
@@ -84,6 +84,9 @@ export function tryCreateLinearLayout<ID extends StableID>(domain: Sequence<ID>,
   if ((axis !== 'vertical' && axis !== 'horizontal') || (flow !== 'forward' && flow !== 'reverse')
     || !finiteNonNegative(gap) || !finiteNonNegative(crossOffset) || !finiteNonNegative(crossExtent)) {
     return geometryFailure('Linear axis, flow, gap, and cross geometry are invalid.');
+  }
+  if (!isFiniteTrackContentExtent(extents, gap)) {
+    return geometryFailure('Linear extent and gap geometry must compose to a finite content extent.');
   }
   return ok(freezeState({ domain, extents, axis, flow, gap, crossOffset, crossExtent, generation: 0 }));
 }

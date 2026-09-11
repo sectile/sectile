@@ -11,6 +11,10 @@ export function trackContentExtent(index: ExtentIndex, gap: number): number {
   return index.totalExtent + gap * Math.max(0, index.size - 1);
 }
 
+export function isFiniteTrackContentExtent(index: ExtentIndex, gap: number): boolean {
+  return Number.isFinite(trackContentExtent(index, gap));
+}
+
 export function trackRange(index: ExtentIndex, gap: number, flow: LinearFlow, visualStart: number, visualEnd: number): TrackRange {
   const content = trackContentExtent(index, gap);
   const start = flow === 'forward' ? visualStart : Math.max(0, content - visualEnd);
