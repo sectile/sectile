@@ -403,7 +403,7 @@ export function tryCreateChartProjection<ID extends StableID>(
     }),
     identities: model.identities,
     batches: Object.freeze(batches),
-    diagnostics: Object.freeze({ sourceDatums: model.size, representedDatums, emittedPrimitives }),
+    diagnostics: Object.freeze({ sourceDatums: model.size, representedDatums, emittedPrimitives, fullSourceScans: 0 }),
   }));
 }
 
@@ -1206,26 +1206,24 @@ function projectArcs<ID extends StableID>(
   layer: PackedChartLayer<ID>, layerIndex: number, selected: Uint32Array,
   viewport: ChartViewport, transform: ChartViewTransform,
 ): ChartResult<ChartArcBatch> {
+  if (layer.index.kind !== 'radial') return invalidProjection('Radial layer index is unavailable.');
   const arcs = new Float32Array(selected.length * CHART_ARC_STRIDE);
   const identities = new Uint32Array(selected.length);
-  const total = layer.index.kind === 'radial' ? layer.index.total : 0;
+  const total = layer.index.total;
   const radius = Math.min(viewport.width, viewport.height) / 2;
-  let cumulative = 0;
-  let selectedCursor = 0;
-  for (let source = 0; source < layer.identityIndices.length && selectedCursor < selected.length; source += 1) {
-    const value = readPackedLayerValue(layer.owner, source, 0);
-    const start = total === 0 ? 0 : cumulative / total * Math.PI * 2;
-    cumulative += value;
-    if (source !== selected[selectedCursor]) continue;
-    const target = selectedCursor * 6;
-    arcs[target] = viewport.width / 2 * transform.xScale + transform.xOffset;
-    arcs[target + 1] = viewport.height / 2 * transform.yScale + transform.yOffset;
-    arcs[target + 2] = readPackedLayerValue(layer.owner, source, 1) * radius * Math.min(transform.xScale, transform.yScale);
-    arcs[target + 3] = readPackedLayerValue(layer.owner, source, 2) * radius * Math.min(transform.xScale, transform.yScale);
-    arcs[target + 4] = start;
-    arcs[target + 5] = total === 0 ? 0 : cumulative / total * Math.PI * 2;
-    identities[selectedCursor] = layer.identityOffset + (layer.identityIndices[source] as number);
-    selectedCursor += 1;
+  const radialScale = Math.min(transform.xScale, transform.yScale);
+  const centerX = viewport.width / 2 * transform.xScale + transform.xOffset;
+  const centerY = viewport.height / 2 * transform.yScale + transform.yOffset;
+  for (let output = 0; output < selected.length; output += 1) {
+    const source = selected[output] as number;
+    const target = output * 6;
+    arcs[target] = centerX;
+    arcs[target + 1] = centerY;
+    arcs[target + 2] = readPackedLayerValue(layer.owner, source, 1) * radius * radialScale;
+    arcs[target + 3] = readPackedLayerValue(layer.owner, source, 2) * radius * radialScale;
+    arcs[target + 4] = total === 0 ? 0 : (layer.index.prefix[source] as number) / total * Math.PI * 2;
+    arcs[target + 5] = total === 0 ? 0 : (layer.index.prefix[source + 1] as number) / total * Math.PI * 2;
+    identities[output] = layer.identityOffset + (layer.identityIndices[source] as number);
   }
   return chartOK({ type: 'arc', layerIndex, arcs, identityIndices: identities });
 }

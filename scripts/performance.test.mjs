@@ -347,6 +347,7 @@ test('chart bulk allocation workloads avoid redundant amplification', async () =
   assert.equal(byID.get('chart:model:replace-layer:10000').iterations, 1);
   assert.equal(byID.get('chart:projection:semantic-bounded:10000').iterations, 1);
   assert.equal(byID.get('chart:projection:cold:10000').iterations, 5);
+  assert.equal(byID.get('chart:projection:radial-sampled:10000').iterations, 5);
 });
 
 test('workload groups defer fixture construction and preserve catalog order', async () => {

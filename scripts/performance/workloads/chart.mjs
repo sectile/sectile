@@ -16,6 +16,14 @@ export function* createChartWorkloadGroups({ quick, selection }) {
     ) {
       yield workloadGroup(() => controllerProjectionWorkloads(size, quick));
     }
+    if (
+      wants(selection, 'chart', 'projection', 'projection', size)
+      || wantsMetric(selection, `chart:projection:radial-sampled:${size}`, 'chart-projection', {
+        size, operation: 'radial-sampled', maximumRepresentatives: Math.min(size, 4_096),
+      })
+    ) {
+      yield workloadGroup(() => radialProjectionWorkloads(size, quick));
+    }
     if (wants(selection, 'chart', 'projection', 'projection', size)) {
       yield workloadGroup(() => semanticProjectionWorkloads(size));
     }
@@ -81,6 +89,31 @@ async function controllerProjectionWorkloads(size, quick) {
       return cloned.batches.length + (cloned.dataBatches?.length ?? 0);
     }),
   ];
+}
+
+async function radialProjectionWorkloads(size, quick) {
+  const [{ createChartModel }, { createChartProjection }] = await Promise.all([
+    import('../../../packages/chart/dist/model.js'),
+    import('../../../packages/chart/dist/projection.js'),
+  ]);
+  const maximumRepresentatives = Math.min(size, 4_096);
+  const data = Array.from({ length: size }, (_, id) => ({ id, value: id % 7 + 1 }));
+  const model = createChartModel({
+    layers: [{ id: 'radial', profile: 'radial-segment', data }],
+  }, { maxDatums: size });
+  const input = { viewport: { width: 1_920, height: 1_080, devicePixelRatio: 2 }, maximumRepresentatives };
+  return [timed(
+    `chart:projection:radial-sampled:${size}`,
+    'chart-projection',
+    { size, operation: 'radial-sampled', maximumRepresentatives },
+    quick ? 1 : 5,
+    () => {
+      const projection = createChartProjection(model, input);
+      if (projection.diagnostics.fullSourceScans !== 0) throw new TypeError('Raw radial projection performed a full source scan.');
+      if (projection.diagnostics.representedDatums !== maximumRepresentatives) throw new TypeError('Raw radial projection violated its representative ceiling.');
+      return projection.batches[0]?.identityIndices.length ?? 0;
+    },
+  )];
 }
 
 async function semanticProjectionWorkloads(size) {

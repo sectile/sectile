@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createChartModel } from '../../.verification-dist/model.js';
+import { applyChartPatch, createChartModel } from '../../.verification-dist/model.js';
 import {
   CHART_ARC_STRIDE,
   CHART_CELL_STRIDE,
@@ -39,6 +39,70 @@ test('representative ceilings bound emitted primitives deterministically', () =>
   assert.equal(projection.diagnostics.representedDatums, 3);
   assert.equal(projection.diagnostics.emittedPrimitives, 3);
   assert.deepEqual(projection.batches.flatMap((batch) => [...batch.identityIndices]), [0, 2, 4]);
+});
+
+test('sampled radial projection uses retained prefix boundaries without a source scan', () => {
+  const size = 10_001;
+  const maximumRepresentatives = 17;
+  const source = Array.from({ length: size }, (_, id) => ({
+    id,
+    value: id % 5 + 1,
+    innerRadius: 0.25,
+    outerRadius: 0.75,
+  }));
+  const radial = createChartModel({ layers: [{ id: 'radial', profile: 'radial-segment', data: source }] }, { maxDatums: size });
+  const input = {
+    viewport: { width: 320, height: 200 },
+    maximumRepresentatives,
+    viewTransform: { xScale: 0.75, xOffset: 4, yScale: 0.5, yOffset: -3 },
+  };
+  const selected = Array.from({ length: maximumRepresentatives }, (_, index) =>
+    Math.floor(index * (size - 1) / (maximumRepresentatives - 1)));
+  const assertProjection = (state, values) => {
+    const projection = createChartProjection(state, input);
+    const batch = projection.batches[0];
+    assert.equal(batch.type, 'arc');
+    assert.equal(projection.diagnostics.sourceDatums, size);
+    assert.equal(projection.diagnostics.representedDatums, maximumRepresentatives);
+    assert.equal(projection.diagnostics.fullSourceScans, 0);
+    assert.deepEqual([...batch.identityIndices], selected);
+    const prefix = new Float64Array(size + 1);
+    for (let index = 0; index < size; index += 1) prefix[index + 1] = prefix[index] + values[index].value;
+    const total = prefix[size];
+    const centerX = input.viewport.width / 2 * input.viewTransform.xScale + input.viewTransform.xOffset;
+    const centerY = input.viewport.height / 2 * input.viewTransform.yScale + input.viewTransform.yOffset;
+    const radiusScale = Math.min(input.viewport.width, input.viewport.height) / 2
+      * Math.min(input.viewTransform.xScale, input.viewTransform.yScale);
+    for (let output = 0; output < selected.length; output += 1) {
+      const sourceIndex = selected[output];
+      const offset = output * CHART_ARC_STRIDE;
+      assert.ok(Math.abs(batch.arcs[offset] - centerX) < 1e-5);
+      assert.ok(Math.abs(batch.arcs[offset + 1] - centerY) < 1e-5);
+      assert.ok(Math.abs(batch.arcs[offset + 2] - 0.25 * radiusScale) < 1e-5);
+      assert.ok(Math.abs(batch.arcs[offset + 3] - 0.75 * radiusScale) < 1e-5);
+      assert.ok(Math.abs(batch.arcs[offset + 4] - prefix[sourceIndex] / total * Math.PI * 2) < 1e-5);
+      assert.ok(Math.abs(batch.arcs[offset + 5] - prefix[sourceIndex + 1] / total * Math.PI * 2) < 1e-5);
+    }
+  };
+  assertProjection(radial, source);
+
+  const changed = [...source];
+  changed[5_000] = { ...changed[5_000], value: 50 };
+  const repaired = applyChartPatch(radial, {
+    operations: [{ type: 'replace', layerID: 'radial', index: 5_000, data: [changed[5_000]] }],
+  });
+  assertProjection(repaired, changed);
+
+  const zero = createChartModel({ layers: [{
+    id: 'zero', profile: 'radial-segment', data: Array.from({ length: 100 }, (_, id) => ({ id, value: 0 })),
+  }] });
+  const zeroBatch = createChartProjection(zero, {
+    viewport: { width: 100, height: 100 }, maximumRepresentatives: 7,
+  }).batches[0];
+  for (let index = 0; index < zeroBatch.arcs.length / CHART_ARC_STRIDE; index += 1) {
+    assert.equal(zeroBatch.arcs[index * CHART_ARC_STRIDE + 4], 0);
+    assert.equal(zeroBatch.arcs[index * CHART_ARC_STRIDE + 5], 0);
+  }
 });
 
 test('rejects invalid viewport and unbounded representative requests', () => {

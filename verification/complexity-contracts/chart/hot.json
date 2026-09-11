@@ -474,7 +474,9 @@
       "inherits": "linear-v1",
       "source": "packages/chart/src/projection.ts",
       "benchmarkIDs": [
-        "chart:projection:cold"
+        "chart:projection:cold",
+        "chart:projection:radial-sampled",
+        "VAL-038:chart-radial-representative-work"
       ],
       "specificationCeiling": "O(nLayer + kRepresentative)",
       "contract": {
@@ -508,8 +510,16 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Model construction precomputes bounds; projection allocates layer quotas and visits only selected representative indexes.",
-        "adversarialWitness": "A maximum-size layered model emits the configured representative ceiling.",
+        "deterministicWork": [
+          "raw radial projection reports sourceDatums independently from representedDatums and fullSourceScans remains zero when kRepresentative is below nSource",
+          "packages/chart/tests/projection/projection.test.mjs sampled radial prefix-boundary regression"
+        ],
+        "resourceRationale": "Projection reuses Chart-owned model bounds and the retained radial prefix; sampled radial projection allocates only representative-sized output and no second prefix or source-sized temporary state.",
+        "proof": "Model construction precomputes Cartesian bounds and a cumulative radial prefix. Projection allocates layer quotas and visits only selected representative indexes; a radial representative at source i reads exact cumulative boundaries from prefix[i] and prefix[i + 1] in constant time instead of reconstructing the prefix from source zero.",
+        "adversarialWitness": "A one-million-datum raw radial model projected with maximumRepresentatives=4096 emits 4096 representatives, reports zero full-source scans, preserves exact retained-prefix arc boundaries, and is covered by the chart:projection:radial-sampled timing workload across 10k, 100k, and 1m source cardinalities.",
+        "evidence": [
+          "VAL-038"
+        ],
         "fullScan": {
           "allowed": false,
           "rationale": "When the representative ceiling is below source cardinality, projection must skip unrepresented source datums."

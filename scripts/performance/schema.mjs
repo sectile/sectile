@@ -87,7 +87,7 @@ const METRIC_RULES = Object.freeze([
   rule(/^chart:model:normalize:/u, 'chart', 'construct', 'model'),
   rule(/^chart:model:(?:replace-layer|patch-layer-sparse):/u, 'chart', 'mutation', 'model'),
   rule(/^chart:projection:cold:/u, 'chart', 'projection', 'projection', PERFORMANCE_EVIDENCE),
-  rule(/^chart:projection:(?:cached|clone|semantic-bounded):/u, 'chart', 'projection', 'projection'),
+  rule(/^chart:projection:(?:cached|clone|radial-sampled|semantic-bounded):/u, 'chart', 'projection', 'projection'),
   rule(/^chart:query:/u, 'chart', 'query', 'query'),
   rule(/^chart:view:/u, 'chart', 'transition', 'view', PERFORMANCE_EVIDENCE),
 ]);
