@@ -305,6 +305,23 @@ const masonryInsertLateMs = measureColdMilliseconds((sample) => applyMasonryMuta
   patch: { type: 'splice', index: strategySize - 1, deleteCount: 0, inserted: [`masonry-late-${sample}`] },
   insertedExtents: [exact(44)],
 }).state.generation);
+const masonryGeometryNoopByItemsMs = {};
+const masonryProjectionByItemsMs = {};
+for (const itemCount of [1_000, 10_000, 100_000]) {
+  const state = itemCount === strategySize
+    ? masonryState
+    : createMasonryLayout(
+        createSequence(Array.from({ length: itemCount }, (_, index) => `masonry-geometry-${index}`), { maxItems: itemCount }),
+        createExtentIndex(Array.from({ length: itemCount }, (_, index) => estimated(24 + (index % 73)))),
+        { laneCount: 8, laneExtent: 160, laneGap: 12, itemGap: 12 },
+      );
+  masonryGeometryNoopByItemsMs[itemCount] = measureColdMilliseconds(() => applyMasonryMutation(state, {
+    type: 'geometry',
+  }).state.generation);
+  masonryProjectionByItemsMs[itemCount] = measureColdMilliseconds((sample) => applyMasonryMutation(state, {
+    type: 'geometry', laneExtent: 161 + sample,
+  }).state.generation);
+}
 const uniformMasonryExtent = exact(44);
 const uniformMasonryState = createMasonryLayout(
   strategyDomain,
@@ -448,6 +465,8 @@ const result = {
     changedMeasurement32Ms: masonryMeasurement32Ms,
     insertEarlyMs: masonryInsertEarlyMs,
     insertLateMs: masonryInsertLateMs,
+    geometryNoopByItemsMs: masonryGeometryNoopByItemsMs,
+    projectionOnlyByItemsMs: masonryProjectionByItemsMs,
     uniform: {
       queryUs: uniformMasonryQueryUs,
       buildMs: uniformMasonryBuildMs,

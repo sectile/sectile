@@ -266,7 +266,6 @@ export function applyMasonryMutation<ID extends StableID>(state: MasonryLayoutSt
 
 export function tryApplyMasonryMutation<ID extends StableID>(state: MasonryLayoutState<ID>, mutation: MasonryMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualResult<VirtualLayoutMutation<MasonryLayoutState<ID>>> {
   if (mutation.type !== 'items' && mutation.type !== 'geometry') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Masonry mutation type is unsupported.', { mutation });
-  const before = anchorRect(state, anchor);
   let partial: Omit<MasonryLayoutStateData<ID>, 'generation'>;
   let recomputeStart: number | null = null;
   if (mutation.type === 'items') {
@@ -284,19 +283,23 @@ export function tryApplyMasonryMutation<ID extends StableID>(state: MasonryLayou
       ? mutation.patch.index
       : Math.min(mutation.patch.from, mutation.patch.to);
   } else {
-    const geometry = normalizeGeometry({
-      axis: mutation.axis ?? state.axis,
-      flow: mutation.flow ?? state.flow,
-      laneCount: mutation.laneCount ?? state.laneCount,
-      laneExtent: mutation.laneExtent ?? state.laneExtent,
-      laneGap: mutation.laneGap ?? state.laneGap,
-      itemGap: mutation.itemGap ?? state.itemGap,
-      placementPolicy: mutation.placementPolicy ?? state.placementPolicy,
-      maxLanes: state.maxLanes,
-    });
+    const geometry = normalizeGeometry(mutation, state);
     if (!geometry.ok) return { ok: false, error: { ...geometry.error, class: 'transition-rejection' } };
-    partial = { domain: state.domain, extents: state.extents, ...geometry.value };
+    const value = geometry.value;
+    const packingChanged = value.laneCount !== state.laneCount
+      || value.itemGap !== state.itemGap
+      || value.placementPolicy !== state.placementPolicy;
+    if (!packingChanged
+      && value.axis === state.axis
+      && value.flow === state.flow
+      && value.laneExtent === state.laneExtent
+      && value.laneGap === state.laneGap) {
+      return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+    }
+    partial = { domain: state.domain, extents: state.extents, ...value };
+    if (!packingChanged) recomputeStart = -1;
   }
+  const before = anchorRect(state, anchor);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
   const data = recomputeStart === null ? null : getInternals(state);
@@ -359,6 +362,7 @@ function buildInternals<ID extends StableID>(
   state: MasonryLayoutState<ID>,
   reuse?: MasonryReuse<ID>,
 ): MasonryInternals<ID> {
+  if (reuse?.recomputeStart === -1) return reuse.previous;
   const uniform = (state.extents as ExtentIndex & { readonly [uniformExtentMetadata]?: number | null })[uniformExtentMetadata] ?? null;
   if (uniform !== null) {
     const rows = Math.ceil(state.domain.size / state.laneCount);
@@ -462,22 +466,27 @@ function firstChangedExtentIndex(
   return first;
 }
 
-function normalizeGeometry(input: MasonryLayoutInput): VirtualResult<Omit<MasonryLayoutStateData, 'domain' | 'extents' | 'generation'>> {
-  const axis = input.axis ?? 'vertical';
-  const flow = input.flow ?? 'forward';
-  const laneGap = input.laneGap ?? 0;
-  const itemGap = input.itemGap ?? 0;
-  const placementPolicy = input.placementPolicy ?? 'shortest';
-  const maxLanes = input.maxLanes ?? 4_096;
-  if (!Number.isSafeInteger(maxLanes) || maxLanes < 1) return fail('construction', 'invalid-max-items', 'maxLanes must be a positive safe integer.', { maxLanes });
-  if (input.laneCount > maxLanes) return fail('resource-rejection', 'item-ceiling-exceeded', 'Masonry lane count exceeds maxLanes.', { laneCount: input.laneCount, maxLanes });
+function normalizeGeometry(
+  input: Readonly<Partial<MasonryLayoutInput>>,
+  fallback?: MasonryLayoutInput,
+): VirtualResult<Omit<MasonryLayoutStateData, 'domain' | 'extents' | 'generation'>> {
+  const axis = input.axis ?? fallback?.axis ?? 'vertical';
+  const flow = input.flow ?? fallback?.flow ?? 'forward';
+  const laneCount = input.laneCount ?? fallback?.laneCount ?? 0;
+  const laneExtent = input.laneExtent ?? fallback?.laneExtent ?? Number.NaN;
+  const laneGap = input.laneGap ?? fallback?.laneGap ?? 0;
+  const itemGap = input.itemGap ?? fallback?.itemGap ?? 0;
+  const placementPolicy = input.placementPolicy ?? fallback?.placementPolicy ?? 'shortest';
+  const maxLanes = input.maxLanes ?? fallback?.maxLanes ?? 4_096;
+  if (!safeAtLeast(maxLanes, 1)) return fail('construction', 'invalid-max-items', 'maxLanes must be a positive safe integer.', { maxLanes });
+  if (laneCount > maxLanes) return fail('resource-rejection', 'item-ceiling-exceeded', 'Masonry lane count exceeds maxLanes.', { laneCount, maxLanes });
   if ((axis !== 'vertical' && axis !== 'horizontal') || (flow !== 'forward' && flow !== 'reverse')
-    || !Number.isSafeInteger(input.laneCount) || input.laneCount < 1 || !finitePositive(input.laneExtent)
+    || !safeAtLeast(laneCount, 1) || !Number.isFinite(laneExtent) || laneExtent <= 0
     || !finiteNonNegative(laneGap) || !finiteNonNegative(itemGap)
     || (placementPolicy !== 'shortest' && placementPolicy !== 'round-robin')) {
     return fail('construction', 'virtual-layout-geometry-invalid', 'Masonry axis, flow, lanes, gaps, and placement policy are invalid.');
   }
-  return ok(Object.freeze({ axis, flow, laneCount: input.laneCount, laneExtent: input.laneExtent, laneGap, itemGap, placementPolicy, maxLanes }));
+  return ok(Object.freeze({ axis, flow, laneCount, laneExtent, laneGap, itemGap, placementPolicy, maxLanes }));
 }
 
 function placementRect<ID extends StableID>(state: MasonryLayoutState<ID>, contentMain: number, placement: LogicalPlacement<ID>): VirtualRect {
@@ -537,7 +546,7 @@ function restoreHeap(heap: { lane: number; end: number }[]): void {
 function compareLane(left: { lane: number; end: number }, right: { lane: number; end: number }): number { return left.end - right.end || left.lane - right.lane; }
 
 function anchorRect<ID extends StableID>(state: MasonryLayoutState<ID>, anchor: VirtualAnchor<ID> | null | undefined): VirtualRect | null {
-  return anchor === null || anchor === undefined ? null : masonryRectAt(state, anchor.id);
+  return anchor == null ? null : masonryRectAt(state, anchor.id);
 }
 
 function contentSize<ID extends StableID>(state: MasonryLayoutState<ID>, contentMain: number): { readonly width: number; readonly height: number } {
@@ -557,14 +566,10 @@ function validSnapshotHeader<ID extends StableID>(snapshot: MasonryLayoutSnapsho
     && snapshot.kind === 'masonry'
     && Array.isArray(snapshot.ids)
     && Array.isArray(snapshot.extents)
-    && Number.isSafeInteger(snapshot.sequenceMaxItems)
-    && snapshot.sequenceMaxItems >= snapshot.ids.length
-    && Number.isSafeInteger(snapshot.sequenceMaxIDCodeUnits)
-    && snapshot.sequenceMaxIDCodeUnits > 0
-    && Number.isSafeInteger(snapshot.generation)
-    && snapshot.generation >= 0
-    && Number.isSafeInteger(snapshot.extentMaxItems)
-    && snapshot.extentMaxItems >= snapshot.extents.length;
+    && safeAtLeast(snapshot.sequenceMaxItems, snapshot.ids.length)
+    && safeAtLeast(snapshot.sequenceMaxIDCodeUnits, 1)
+    && safeAtLeast(snapshot.generation, 0)
+    && safeAtLeast(snapshot.extentMaxItems, snapshot.extents.length);
 }
 
 function uniformSnapshotExtent(extents: readonly Extent[]): Extent | undefined {
@@ -572,10 +577,7 @@ function uniformSnapshotExtent(extents: readonly Extent[]): Extent | undefined {
   if (first === undefined) return undefined;
   for (let index = 1; index < extents.length; index += 1) {
     const extent = extents[index]!;
-    if (first.kind !== extent.kind) return undefined;
-    if (first.kind === 'unknown') {
-      if (extent.kind !== 'unknown' || first.fallback !== extent.fallback) return undefined;
-    } else if (extent.kind === 'unknown' || first.value !== extent.value) return undefined;
+    if (first.kind !== extent.kind || extentValue(first) !== extentValue(extent)) return undefined;
   }
   return first;
 }
@@ -583,5 +585,5 @@ function snapshotFailure<T>(): VirtualResult<T> { return fail('construction', 'v
 
 function anchorDelta(before: VirtualRect | null, after: VirtualRect | null): VirtualPoint { return before === null || after === null ? ZERO_POINT : pointDelta(before, after); }
 function nextGeneration(generation: number): VirtualResult<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }
+function safeAtLeast(value: number, minimum: number): boolean { return Number.isSafeInteger(value) && value >= minimum; }
 function finiteNonNegative(value: number): boolean { return Number.isFinite(value) && value >= 0; }
-function finitePositive(value: number): boolean { return Number.isFinite(value) && value > 0; }

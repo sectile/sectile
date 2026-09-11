@@ -15,7 +15,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |
 | terminal | 347 | 167 | 8 |
-| virtual | 114 | 0 | 33 |
+| virtual | 114 | 0 | 35 |
 | vue | 740 | 319 | 9 |
 
 ## Variables
@@ -180,6 +180,8 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:masonry.formula.derive | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:masonry.formula.query | trusted | `O(vLane + cCandidate + kPlacement log kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:masonry.measure | trusted | `O(nItem log lLane + jChanged log nItem)` worst-case | `O(nItem + jChanged log nItem)` | `O(nItem)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
+| virtual:masonry.mutation.geometry.rebuild | external | `O(nItem log lLane)` worst-case | `O(nItem)` | `O(1)` | `O(nItem)` | allowed | VAL-027 |
+| virtual:masonry.mutation.geometry.reuse | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-027 |
 | virtual:masonry.query | trusted | `O(vLane log nItem + kPlacement log kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:partitioned.measure.incremental | trusted | `O(jChanged log nTrack + rRepair)` worst-case | `O(jChanged + rRepair)` | `O(1)` | `O(rRepair)` | forbidden | VAL-016, VAL-017 |
 | virtual:partitioned.measure.rebuild | trusted | `O(nTrack + nRegion log nRegion)` worst-case | `O(nTrack + nRegion)` | `O(nTrack + nRegion)` | `O(nTrack + nRegion)` | allowed | VAL-016, VAL-017 |

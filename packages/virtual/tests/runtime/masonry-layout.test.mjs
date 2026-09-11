@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSequence } from '@sectile/core/sequence';
 import { createExtentIndex, createUniformExtentIndex } from '../../.verification-dist/extent-index.js';
-import { masonryLayoutWork } from '../../.verification-dist/internal/masonry-internals.js';
+import { masonryInternals, masonryLayoutWork } from '../../.verification-dist/internal/masonry-internals.js';
 import {
   applyMasonryMeasurements,
   applyMasonryMutation,
@@ -13,6 +13,7 @@ import {
   restoreMasonryLayout,
   snapshotMasonryLayout,
   tryApplyMasonryMeasurements,
+  tryApplyMasonryMutation,
 } from '../../.verification-dist/masonry-layout.js';
 
 const exact = (value) => ({ kind: 'exact', value });
@@ -236,4 +237,92 @@ test('MRY-05: uniform masonry derives placements without retaining the full layo
   }).state;
   assert.equal(masonryLayoutWork(measured).representation, 'materialized');
   assert.equal(masonryLayoutWork(measured).recomputedPlacements, size);
+});
+
+test('ISSUE-097: geometry no-ops and projection-only changes retain logical packing', () => {
+  const count = 4_096;
+  const values = Array.from({ length: count }, (_, index) => 20 + (index % 17));
+  const input = {
+    axis: 'vertical',
+    flow: 'forward',
+    laneCount: 8,
+    laneExtent: 100,
+    laneGap: 5,
+    itemGap: 3,
+    placementPolicy: 'shortest',
+  };
+  const state = createMasonryLayout(domain(count), createExtentIndex(values.map(exact)), input);
+  const owner = masonryInternals(state);
+  assert.ok(owner !== undefined);
+
+  const omitted = applyMasonryMutation(state, { type: 'geometry' });
+  assert.equal(omitted.state, state);
+  assert.equal(omitted.state.generation, state.generation);
+  assert.deepEqual(omitted.scrollDelta, { x: 0, y: 0 });
+  assert.equal(masonryInternals(omitted.state), owner);
+
+  const explicit = applyMasonryMutation(state, { type: 'geometry', ...input });
+  assert.equal(explicit.state, state);
+  const currentExtent = state.extents.extentAt(0);
+  assert.ok(currentExtent !== null);
+  assert.equal(tryApplyMasonryMeasurements(explicit.state, {
+    generation: state.generation,
+    measurements: [{ index: 0, extent: currentExtent }],
+  }).ok, true);
+
+  const anchor = { id: 'item-1', viewportOffset: { x: 0, y: 0 } };
+  const beforeAnchor = masonryRectAt(state, anchor.id);
+  const projections = [
+    { mutation: { type: 'geometry', laneExtent: 101 }, input: { ...input, laneExtent: 101 } },
+    { mutation: { type: 'geometry', laneGap: 7 }, input: { ...input, laneGap: 7 } },
+    { mutation: { type: 'geometry', axis: 'horizontal' }, input: { ...input, axis: 'horizontal' } },
+    { mutation: { type: 'geometry', flow: 'reverse' }, input: { ...input, flow: 'reverse' } },
+  ];
+  const viewport = { x: 0, y: 0, width: 1_000_000, height: 1_000_000 };
+  for (const fixture of projections) {
+    const changed = applyMasonryMutation(state, fixture.mutation, anchor);
+    const nextOwner = masonryInternals(changed.state);
+    assert.equal(nextOwner, owner);
+    assert.equal(changed.state.generation, state.generation + 1);
+    assert.deepEqual(masonryLayoutWork(changed.state), masonryLayoutWork(state));
+    const afterAnchor = masonryRectAt(changed.state, anchor.id);
+    assert.deepEqual(changed.scrollDelta, {
+      x: afterAnchor.x - beforeAnchor.x,
+      y: afterAnchor.y - beforeAnchor.y,
+    });
+    const reference = createMasonryLayout(state.domain, state.extents, fixture.input);
+    assert.deepEqual(
+      queryMasonryLayout(changed.state, { viewport }).contentSize,
+      queryMasonryLayout(reference, { viewport }).contentSize,
+    );
+    for (const index of [0, 1, count - 1]) {
+      assert.deepEqual(masonryRectAt(changed.state, `item-${index}`), masonryRectAt(reference, `item-${index}`));
+    }
+  }
+
+  for (const fixture of [
+    { mutation: { type: 'geometry', laneCount: 7 }, input: { ...input, laneCount: 7 } },
+    { mutation: { type: 'geometry', itemGap: 4 }, input: { ...input, itemGap: 4 } },
+    { mutation: { type: 'geometry', placementPolicy: 'round-robin' }, input: { ...input, placementPolicy: 'round-robin' } },
+  ]) {
+    const changed = applyMasonryMutation(state, fixture.mutation).state;
+    assert.notEqual(masonryInternals(changed), owner);
+    assert.equal(masonryLayoutWork(changed).recomputedPlacements, count);
+    const reference = createMasonryLayout(state.domain, state.extents, fixture.input);
+    assert.deepEqual(
+      queryMasonryLayout(changed, { viewport }).placements.map(({ id, lane, rect }) => ({ id, lane, rect })),
+      queryMasonryLayout(reference, { viewport }).placements.map(({ id, lane, rect }) => ({ id, lane, rect })),
+    );
+  }
+
+  const uniform = createMasonryLayout(
+    domain(count),
+    createUniformExtentIndex(count, exact(24), { maxItems: count }),
+    input,
+  );
+  const uniformOwner = masonryInternals(uniform);
+  const uniformProjected = applyMasonryMutation(uniform, { type: 'geometry', laneExtent: 101 }).state;
+  assert.equal(masonryInternals(uniformProjected), uniformOwner);
+  assert.equal(masonryLayoutWork(uniformProjected).representation, 'uniform');
+  assert.equal(masonryLayoutWork(uniformProjected).retainedPlacements, 0);
 });

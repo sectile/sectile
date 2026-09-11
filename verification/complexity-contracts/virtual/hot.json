@@ -827,6 +827,131 @@
       }
     },
     {
+      "id": "masonry.mutation.geometry.rebuild",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/masonry-layout.ts",
+      "benchmarkIDs": [
+        "VAL-027:masonry-geometry-rebuild-work"
+      ],
+      "specificationCeiling": "O(nItem log lLane)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "materialized masonry item count",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "lLane",
+            "meaning": "resulting masonry lane count",
+            "ceiling": "maxLanes"
+          }
+        ],
+        "time": {
+          "bound": "O(nItem log lLane)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nItem)",
+          "output": "O(1)",
+          "retained": "O(nItem)"
+        },
+        "resources": {
+          "allocations": "O(nItem)",
+          "cacheEntries": "O(nItem)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "the normalized geometry changes laneCount, itemGap, or placementPolicy",
+          "the materialized shortest-lane heap path is bounded by maxLanes"
+        ],
+        "ceilings": [
+          "maxItems",
+          "maxLanes"
+        ],
+        "deterministicWork": [
+          "packages/virtual/tests/runtime/masonry-layout.test.mjs ISSUE-097"
+        ],
+        "resourceRationale": "Packing-affecting geometry changes replace the materialized logical placement/lane owner because lane ownership or main-axis starts may change for every later item.",
+        "proof": "Changing laneCount, itemGap, or placementPolicy routes through buildInternals without a retained owner; each materialized item is placed once and shortest-lane selection uses the existing bounded lane scan/heap strategy.",
+        "adversarialWitness": "ISSUE-097 changes each packing input independently and verifies a fresh logical owner with all materialized placements recomputed and equivalent to a fresh rebuild.",
+        "evidence": [
+          "VAL-027"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Packing-affecting geometry can change every materialized placement."
+        }
+      }
+    },
+    {
+      "id": "masonry.mutation.geometry.reuse",
+      "inherits": "constant-v1",
+      "source": "packages/virtual/src/masonry-layout.ts",
+      "benchmarkIDs": [
+        "VAL-027:masonry-geometry-reuse-work"
+      ],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nItem",
+            "meaning": "masonry item count whose logical packing is retained",
+            "ceiling": "maxItems"
+          },
+          {
+            "name": "jProjection",
+            "meaning": "changed projection-only geometry fields",
+            "ceiling": "jProjection <= 4"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "domain and extents are unchanged",
+          "laneCount, itemGap, and placementPolicy are unchanged"
+        ],
+        "ceilings": [
+          "seven normalized geometry fields",
+          "maxItems",
+          "maxLanes"
+        ],
+        "deterministicWork": [
+          "packages/virtual/tests/runtime/masonry-layout.test.mjs ISSUE-097"
+        ],
+        "resourceRationale": "Exact no-ops allocate no replacement Masonry state/placement owner; projection-only changes allocate one state wrapper while retaining the existing logical placement/lane internals.",
+        "proof": "The geometry owner compares the fixed normalized geometry fields before generation advancement. Equal geometry returns the existing state. Axis, flow, laneExtent, and laneGap changes reuse the retained MasonryInternals because placement lane/start/extent data does not depend on those projection fields.",
+        "adversarialWitness": "ISSUE-097 exercises exact omitted/explicit no-ops and isolated axis, flow, laneExtent, and laneGap changes on a 4,096-item materialized owner with stable state or retained internals identity and unchanged deterministic Masonry work counters; the benchmark holds geometry delta fixed while nItem grows from 1k to 100k.",
+        "evidence": [
+          "VAL-027"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "No-op and projection-only geometry mutations may not enumerate or rebuild logical placements."
+        }
+      }
+    },
+    {
       "id": "masonry.query",
       "inherits": "linear-v1",
       "source": "packages/virtual/src/masonry-layout.ts",
