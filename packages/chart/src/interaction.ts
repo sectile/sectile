@@ -227,33 +227,45 @@ function normalizeSelection<ID extends StableID>(
   model: ChartModelState<ID>, selection: ChartSelection<ID>, view: ChartViewState<ID> | null,
 ): ChartResult<ChartSelection<ID>> {
   if (selection === null || typeof selection !== 'object') return invalidInteraction('Chart selection is invalid.');
-  if (selection.type === 'axis-interval') {
-    const axis = view === null ? null : chartAxisView(view, selection.axisID);
-    if (axis === null || !validSelectionBounds(axis, selection.start, selection.end)) {
+  const type = selection.type;
+  if (type === 'axis-interval') {
+    const axisID = selection.axisID;
+    const start = selection.start;
+    const end = selection.end;
+    const axis = view === null ? null : chartAxisView(view, axisID);
+    if (axis === null || !validSelectionBounds(axis, start, end)) {
       return invalidInteraction('Chart axis selection must reference an enabled axis and contain finite ordered bounds.');
     }
-    return chartOK(Object.freeze({ type: 'axis-interval', axisID: selection.axisID, start: selection.start, end: selection.end }));
+    return chartOK(Object.freeze({ type, axisID, start, end }));
   }
-  if (selection.type === 'domain-region') {
-    const xAxis = view === null ? null : chartAxisView(view, selection.xAxisID);
-    const yAxis = view === null ? null : chartAxisView(view, selection.yAxisID);
+  if (type === 'domain-region') {
+    const xAxisID = selection.xAxisID;
+    const xStart = selection.xStart;
+    const xEnd = selection.xEnd;
+    const yAxisID = selection.yAxisID;
+    const yStart = selection.yStart;
+    const yEnd = selection.yEnd;
+    const xAxis = view === null ? null : chartAxisView(view, xAxisID);
+    const yAxis = view === null ? null : chartAxisView(view, yAxisID);
     if (xAxis === null || yAxis === null || (xAxis.orientation !== undefined && xAxis.orientation !== 'x')
       || (yAxis.orientation !== undefined && yAxis.orientation !== 'y')
-      || !validSelectionBounds(xAxis, selection.xStart, selection.xEnd)
-      || !validSelectionBounds(yAxis, selection.yStart, selection.yEnd)) {
+      || !validSelectionBounds(xAxis, xStart, xEnd)
+      || !validSelectionBounds(yAxis, yStart, yEnd)) {
       return invalidInteraction('Chart domain region must reference enabled axes and contain finite ordered bounds.');
     }
-    return chartOK(Object.freeze({ ...selection }));
+    return chartOK(Object.freeze({ type, xAxisID, xStart, xEnd, yAxisID, yStart, yEnd }));
   }
-  if (selection.type !== 'points' || !Array.isArray(selection.ids)) return invalidInteraction('Chart point selection must contain an identity array.');
+  if (type !== 'points') return invalidInteraction('Chart point selection must contain an identity array.');
+  const inputIDs = selection.ids;
+  if (!Array.isArray(inputIDs)) return invalidInteraction('Chart point selection must contain an identity array.');
   const seen = new Set<ID>();
   const ids: ID[] = [];
-  for (const id of selection.ids) {
+  for (const id of inputIDs) {
     if (model.indexOf(id) < 0) return missingDatum(id);
     if (seen.has(id)) return invalidInteraction('Chart point selection identities must be unique.');
     seen.add(id); ids.push(id);
   }
-  return chartOK(Object.freeze({ type: 'points', ids: Object.freeze(ids) }));
+  return chartOK(Object.freeze({ type, ids: Object.freeze(ids) }));
 }
 
 function validSelectionBounds<ID extends StableID>(axis: import('./contract.js').ChartAxisView<ID>, start: number, end: number): boolean {

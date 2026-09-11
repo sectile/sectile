@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createChartController } from '../../.verification-dist/controller.js';
+import { createChartController, tryCreateChartController } from '../../.verification-dist/controller.js';
+import { tryCreateChartState } from '../../.verification-dist/interaction.js';
 import { cloneChartProjection } from '../../.verification-dist/projection.js';
 import { createLinearScale } from '../../.verification-dist/scale.js';
 
@@ -179,6 +180,92 @@ const definition = (data) => ({
     { id: 'value', orientation: 'y', scale: 'linear', field: 'amount' },
   ] },
   layers: [{ kind: 'line', id: 'series', data, xAxis: 7, yAxis: 'value' }],
+});
+
+function skewedControllerSelection(type, fields) {
+  const reads = {};
+  const selection = {};
+  for (const [field, [first, later]] of Object.entries({ type: [type, 'points'], ...fields })) {
+    Object.defineProperty(selection, field, {
+      enumerable: true,
+      get() {
+        reads[field] = (reads[field] ?? 0) + 1;
+        return reads[field] === 1 ? first : later;
+      },
+    });
+  }
+  return { selection, reads };
+}
+
+test('controller selection boundaries retain the fields that passed validation', () => {
+  const data = [
+    { id: 1, recordedAt: 0, amount: 4 },
+    { id: 2, recordedAt: 1_000, amount: 8 },
+  ];
+  const viewCapabilities = [{ axisID: 7 }, { axisID: 'value' }];
+
+  const initialSelection = skewedControllerSelection('axis-interval', {
+    axisID: [7, 'missing'],
+    start: [100, Number.NaN],
+    end: [900, Number.NaN],
+  });
+  const created = tryCreateChartController({
+    definition: definition(data),
+    viewCapabilities,
+    initialValues: { selection: initialSelection.selection },
+  });
+  assert.equal(created.ok, true);
+  assert.deepEqual(initialSelection.reads, { type: 1, axisID: 1, start: 1, end: 1 });
+  assert.deepEqual(created.value.getSnapshot().state.selection, {
+    type: 'axis-interval', axisID: 7, start: 100, end: 900,
+  });
+  assert.equal(tryCreateChartState(created.value.getModel(), {
+    view: created.value.getSnapshot().state.view,
+    selection: created.value.getSnapshot().state.selection,
+  }).ok, true);
+
+  const region = skewedControllerSelection('domain-region', {
+    xAxisID: [7, 'missing-x'],
+    xStart: [100, Number.NaN],
+    xEnd: [900, Number.NaN],
+    yAxisID: ['value', 'missing-y'],
+    yStart: [4, Number.NaN],
+    yEnd: [8, Number.NaN],
+  });
+  const dispatched = created.value.dispatch({ type: 'set-selection', selection: region.selection });
+  assert.equal(dispatched.ok, true);
+  assert.deepEqual(region.reads, {
+    type: 1, xAxisID: 1, xStart: 1, xEnd: 1, yAxisID: 1, yStart: 1, yEnd: 1,
+  });
+  assert.deepEqual(dispatched.value.snapshot.state.selection, {
+    type: 'domain-region', xAxisID: 7, xStart: 100, xEnd: 900,
+    yAxisID: 'value', yStart: 4, yEnd: 8,
+  });
+  assert.equal(tryCreateChartState(created.value.getModel(), {
+    view: dispatched.value.snapshot.state.view,
+    selection: dispatched.value.snapshot.state.selection,
+  }).ok, true);
+
+  const controlled = createChartController({
+    definition: definition(data),
+    viewCapabilities,
+    controlled: { selection: { type: 'axis-interval', axisID: 7, start: 0, end: 500 } },
+  });
+  const syncedSelection = skewedControllerSelection('axis-interval', {
+    axisID: [7, 'missing'],
+    start: [200, Number.NaN],
+    end: [800, Number.NaN],
+  });
+  const synced = controlled.syncControlledValues({ selection: syncedSelection.selection });
+  assert.equal(synced.ok, true);
+  assert.deepEqual(syncedSelection.reads, { type: 1, axisID: 1, start: 1, end: 1 });
+  assert.deepEqual(synced.value.state.selection, {
+    type: 'axis-interval', axisID: 7, start: 200, end: 800,
+  });
+  assert.equal(tryCreateChartState(controlled.getModel(), {
+    view: synced.value.state.view,
+    selection: synced.value.state.selection,
+  }).ok, true);
 });
 
 test('controller owns declarative definitions and axis-domain view capabilities', () => {
