@@ -346,6 +346,57 @@ test('spatial value-only patches repair touched blocks without rebuilding the do
   assert.deepEqual(spatialRectAt(changed, changedItem.id), changedItem.rect);
 });
 
+test('ISSUE-095: existing-ID updates use bounded repair and retain dense rebuild crossover', () => {
+  const count = 4_096;
+  const items = Array.from({ length: count }, (_, index) => ({
+    id: `item-${index}`,
+    rect: { x: (index % 64) * 11, y: Math.floor(index / 64) * 13, width: 10, height: 12 },
+  }));
+  const state = createSpatialLayout(items);
+  const changedItem = {
+    ...items[2_048],
+    rect: { ...items[2_048].rect, width: 19 },
+  };
+  const sparse = applySpatialMutation(state, {
+    type: 'update',
+    upsert: [changedItem],
+  }).state;
+  const sparseWork = readRepairDiagnostics(sparse);
+  assert.equal(sparse.domain, state.domain);
+  assert.equal(sparseWork?.mode, 'incremental');
+  assert.equal(sparseWork?.changed, 1);
+  assert.equal(sparseWork?.rebuiltItems, 0);
+  assert.ok(sparseWork.copiedEntries <= sparseWork.repairBound);
+  assert.ok(sparseWork.copiedNodes <= sparseWork.repairBound);
+  assert.deepEqual(spatialRectAt(sparse, changedItem.id), changedItem.rect);
+  assert.deepEqual(
+    querySpatialLayout(sparse, { viewport: { x: 0, y: 300, width: 800, height: 300 } }).placements.map(({ id }) => id),
+    referenceQuery(sparse.items.toArray(), { x: 0, y: 300, width: 800, height: 300 }),
+  );
+
+  const same = applySpatialMutation(sparse, {
+    type: 'update',
+    upsert: [sparse.items.at(2_048)],
+  }).state;
+  assert.equal(same, sparse);
+
+  const denseUpserts = Array.from({ length: 1_024 }, (_, index) => ({
+    ...items[index],
+    rect: { ...items[index].rect, height: 14 },
+  }));
+  const dense = applySpatialMutation(state, {
+    type: 'update',
+    upsert: denseUpserts,
+  }).state;
+  const denseWork = readRepairDiagnostics(dense);
+  assert.equal(denseWork?.mode, 'rebuild');
+  assert.equal(denseWork?.changed, denseUpserts.length);
+  assert.equal(denseWork?.rebuiltItems, count);
+  const rebuilt = createSpatialLayout(dense.items.toArray());
+  const viewport = { x: 100, y: 0, width: 300, height: 500 };
+  assert.deepEqual(querySpatialLayout(dense, { viewport }).placements, querySpatialLayout(rebuilt, { viewport }).placements);
+});
+
 test('SPA-04: boundaries, zero-size rectangles, anchors, and stale generations are explicit', () => {
   const state = createSpatialLayout([
     { id: 'anchor', rect: { x: 10, y: 10, width: 20, height: 20 } },

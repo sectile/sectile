@@ -15,7 +15,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |
 | terminal | 347 | 167 | 8 |
-| virtual | 114 | 0 | 30 |
+| virtual | 114 | 0 | 31 |
 | vue | 740 | 319 | 9 |
 
 ## Variables
@@ -189,6 +189,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:spatial.measure.rebuild | trusted | `O(nItem log nItem)` worst-case | `O(nItem)` | `O(nItem)` | `O(nItem)` | allowed | VAL-016, VAL-017 |
 | virtual:spatial.patch.incremental | trusted | `O((jChanged + pOverlay) * dSequence)` worst-case | `O(jChanged + pOverlay)` | `O(1)` | `O(jChanged + pOverlay + dSequence)` | forbidden | VAL-016, VAL-017 |
 | virtual:spatial.query | trusted | `O(log nItem + (cCandidate + pOverlay) * dSequence + kPlacement log kPlacement)` expected | `O(log nItem + cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| virtual:spatial.update.incremental | external | `O(jChanged*dSequence + jChanged log jChanged + rRepair + pOverlay)` worst-case | `O(jChanged + rRepair + pOverlay)` | `O(1)` | `O(rRepair + pOverlay)` | forbidden | VAL-025 |
 | virtual:surface.frame-transform | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.create.regions | external | `O(nRegion log nRegion)` worst-case | `O(nRegion)` | `O(nRegion)` | `O(nRegion)` | allowed | VAL-022 |
 | virtual:track.measure | trusted | `O(jChanged log nTrack)` worst-case | `O(jChanged log nTrack)` | `O(1)` | `O(jChanged log nTrack)` | forbidden | VAL-016, VAL-017 |

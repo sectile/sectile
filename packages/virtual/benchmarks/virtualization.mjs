@@ -364,6 +364,22 @@ const spatialInsert1Ms = measureColdMilliseconds(() => applySpatialMutation(spat
   patch: { type: 'splice', index: 1, deleteCount: 0, inserted: [spatialOverlayItem.id] },
   inserted: [spatialOverlayItem],
 }).state.generation);
+const spatialUpdateExistingByItemsMs = {};
+for (const itemCount of [1_000, 10_000, 100_000]) {
+  const state = itemCount === strategySize
+    ? spatialState
+    : createSpatialLayout(spatialItems.slice(0, itemCount));
+  const index = itemCount >>> 1;
+  const item = state.items.at(index);
+  spatialUpdateExistingByItemsMs[itemCount] = measureColdMilliseconds((sample) => applySpatialMutation(state, {
+    type: 'update',
+    upsert: [{
+      id: item.id,
+      rect: { ...item.rect, width: item.rect.width + 1 + sample },
+      ...(item.zIndex === undefined ? {} : { zIndex: item.zIndex }),
+    }],
+  }).state.generation);
+}
 const spatialInsertRemoveMs = measureColdMilliseconds((sample) => applySpatialMutation(spatialState, {
   type: 'update',
   remove: [`spatial-${sample}`],
@@ -425,6 +441,7 @@ const result = {
     changedMeasurementDistributed32Ms: spatialDistributed32Ms,
     move32Ms: spatialMove32Ms,
     insert1Ms: spatialInsert1Ms,
+    updateExisting1ByItemsMs: spatialUpdateExistingByItemsMs,
     insertRemove1Ms: spatialInsertRemoveMs,
   },
   integration: {
