@@ -70,7 +70,7 @@
 | WI-002 | @sectile/terminal | `./tooltip` | `Core Result declaration closure` | @sectile/terminal/tooltip |
 | WI-002 | @sectile/form | `./values` | `Core Result declaration closure` | @sectile/form/values |
 | WI-003 | @sectile/temporal | `./year-picker` | `MAX_YEAR_PICKER_PAGE_SIZE`, `createYearPickerPage`, `tryCreateYearPickerPage`, `YearPickerEvent`, `TemporalErrorCode` | @sectile/temporal/year-picker |
-| WI-003 | @sectile/dom | `./virtual` | `module side-effect import @sectile/virtual`, `VirtualizerOptions.root`, `VirtualizerOptions.scrollport`, `VirtualizerOptions.surface`, `VirtualizerOptions.viewportInsets`, `VirtualizerConnection.registerFrame`, `VirtualizerConnection.setViewportInsets`, `virtualContentStyle`, `virtualSurfaceStyle` | @sectile/dom/virtual |
+| WI-003 | @sectile/dom | `./virtual` | `module side-effect import @sectile/virtual`, `VirtualizerOptions.root`, `VirtualizerOptions.scrollport`, `VirtualizerOptions.surface`, `VirtualizerOptions.viewportInsets`, `VirtualizerConnection.registerFrame`, `VirtualizerConnection.setViewportInsets`, `VirtualScrollport`, `VirtualViewportReader`, `VirtualScrollWriter`, `virtualContentStyle`, `virtualSurfaceStyle` | @sectile/dom/virtual |
 | WI-003 | @sectile/temporal | `./calendar` | `TemporalErrorCode` | @sectile/temporal/calendar |
 | WI-003 | @sectile/temporal | `./date-field` | `TemporalErrorCode` | @sectile/temporal/date-field |
 | WI-003 | @sectile/temporal | `./date-range-field` | `TemporalErrorCode` | @sectile/temporal/date-range-field |

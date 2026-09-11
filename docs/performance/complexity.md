@@ -130,9 +130,9 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:tabular.header-metrics | trusted | `O(c + h)` worst-case | `O(c + h)` | `O(h)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | dom:tabular.row-indexed-lookup | connected | `O(nRow + qRow)` worst-case | `O(1)` | `O(1)` | `O(nRow)` | allowed | VAL-016, VAL-017 |
 | dom:text.native-reconcile | connected | `O(n)` worst-case | `O(1)` | `O(n)` | `O(1)` | allowed | VAL-016, VAL-017 |
-| dom:virtual.disconnect | connected | `O(nMounted + kPlacement + rFrame)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-004, VAL-010 |
-| dom:virtual.frame | connected | `O(rFrame + eChanged + kPlacement)` worst-case | `O(eChanged + kPlacement)` | `O(kPlacement)` | `O(nMounted + kPlacement + rFrame)` | forbidden | VAL-004, VAL-010 |
-| dom:virtual.scroll | connected | `O(kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(kPlacement)` | forbidden | VAL-004, VAL-010 |
+| dom:virtual.disconnect | connected | `O(nMounted + kPlacement + rFrame)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-004, VAL-010, VAL-001 |
+| dom:virtual.frame | connected | `O(rFrame + eChanged + kPlacement)` worst-case | `O(eChanged + kPlacement)` | `O(kPlacement)` | `O(nMounted + kPlacement + rFrame)` | forbidden | VAL-004, VAL-010, VAL-001 |
+| dom:virtual.scroll | connected | `O(kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(kPlacement)` | forbidden | VAL-004, VAL-010, VAL-001 |
 | form:field.batch-path-owner | trusted | `O(fField*lPath + nNameCodeUnits + pPath*lPath)` expected | `O(lPath + nNameCodeUnits + fField)` | `O(1)` | `O(nNameCodeUnits + fField)` | allowed | packages/form/tests/state/form.test.mjs, packages/dom/tests/form.test.mjs, docs/decisions/form-path-owner-index.md |
 | form:field.get | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(fField)` | forbidden | VAL-016, VAL-017 |
 | form:field.ids-by-issue-source | trusted | `O(uSource)` worst-case | `O(uSource)` | `O(uSource)` | `O(fField + iIssue)` | forbidden | VAL-016, VAL-017 |

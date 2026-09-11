@@ -71,6 +71,304 @@ test('ordinary scroll reuses the cached surface frame without element geometry r
   connection.disconnect();
 });
 
+test('document scrollport projects restored fractional page scroll through its own realm', () => {
+  let observedViewport;
+  const fixture = createDocumentFixture({
+    pageX: 10.5,
+    pageY: 40.25,
+    surfaceX: 30.75,
+    surfaceY: 180.5,
+    width: 240.5,
+    height: 120.25,
+    tryQuery: (state, input) => {
+      observedViewport = input.viewport;
+      return success(plan(state, input.viewport));
+    },
+  });
+  const connection = createVirtualizer({
+    ...fixture.options,
+    viewportInsets: { top: 5.5, left: 2.25 },
+  });
+
+  assert.deepEqual(observedViewport, {
+    x: -18,
+    y: -134.75,
+    width: 238.25,
+    height: 114.75,
+  });
+  assert.equal(fixture.surface.geometryReads, 1);
+  assert.equal(fixture.document.listenerCount('scroll'), 1);
+  assert.equal(fixture.view.listenerCount('resize'), 1);
+  assert.equal(fixture.document.listenerOptions.get('scroll')?.passive, true);
+  assert.deepEqual(fixture.geometryObserver().observed, [fixture.surface]);
+  connection.disconnect();
+});
+
+test('document scrollport normalizes transient negative viewport offsets without shifting the surface origin', () => {
+  let observedViewport;
+  const fixture = createDocumentFixture({
+    pageX: -12.5,
+    pageY: -20.25,
+    surfaceX: 50,
+    surfaceY: 100,
+    tryQuery: (state, input) => {
+      observedViewport = input.viewport;
+      return success(plan(state, input.viewport));
+    },
+  });
+  const connection = createVirtualizer(fixture.options);
+
+  assert.deepEqual(observedViewport, {
+    x: -50,
+    y: -100,
+    width: 100,
+    height: 80,
+  });
+  assert.equal(fixture.surface.geometryReads, 1);
+  connection.disconnect();
+});
+
+test('ordinary document scroll reuses the cached frame without geometry or range reads', () => {
+  const counters = { query: 0, plan: 0 };
+  const fixture = createDocumentFixture({
+    pageY: 100,
+    surfaceY: 100,
+    tryQuery: (state, input) => {
+      counters.query += 1;
+      return success(plan(state, input.viewport));
+    },
+  });
+  const connection = createVirtualizer({
+    ...fixture.options,
+    onPlanChange: () => { counters.plan += 1; },
+  });
+  fixture.resetEvidence();
+  counters.query = 0;
+  counters.plan = 0;
+
+  fixture.setPageScroll(0, 140);
+  fixture.document.dispatch('scroll');
+  fixture.document.dispatch('scroll');
+  assert.equal(fixture.pendingFrames(), 1);
+  fixture.runFrame();
+
+  assert.equal(fixture.surface.geometryReads, 0);
+  assert.equal(fixture.scrollingElement.rangeReads, 0);
+  assert.equal(fixture.view.writes.length, 0);
+  assert.equal(counters.query, 1);
+  assert.equal(counters.plan, 1);
+  assert.equal(connection.getPlan().viewport.y, 40);
+  connection.disconnect();
+});
+
+test('document viewport resize coalesces with page scroll and refreshes the surface frame once', () => {
+  const counters = { query: 0, plan: 0 };
+  const fixture = createDocumentFixture({
+    pageY: 100,
+    surfaceY: 100,
+    tryQuery: (state, input) => {
+      counters.query += 1;
+      return success(plan(state, input.viewport));
+    },
+  });
+  const connection = createVirtualizer({
+    ...fixture.options,
+    onPlanChange: () => { counters.plan += 1; },
+  });
+  fixture.resetEvidence();
+  counters.query = 0;
+  counters.plan = 0;
+
+  fixture.document.documentElement.clientHeight = 64.5;
+  fixture.setPageScroll(0, 120.25);
+  fixture.view.dispatch('resize');
+  fixture.document.dispatch('scroll');
+  assert.equal(fixture.pendingFrames(), 1);
+  fixture.runFrame();
+
+  assert.equal(fixture.surface.geometryReads, 1);
+  assert.equal(fixture.scrollingElement.rangeReads, 0);
+  assert.equal(counters.query, 1);
+  assert.equal(counters.plan, 1);
+  assert.equal(connection.getPlan().viewport.height, 64.5);
+  connection.disconnect();
+});
+
+test('document target scrolling delegates maximum clamping to the browser and reads settled page coordinates', () => {
+  const fixture = createDocumentFixture({
+    pageY: 100,
+    surfaceY: 200,
+    maximumY: 600,
+    tryScrollTarget: () => success({ x: 0, y: 500 }),
+  });
+  const connection = createVirtualizer(fixture.options);
+  fixture.resetEvidence();
+
+  const result = connection.scrollTo('item', 'start');
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(fixture.view.writes, [{ left: 0, top: 700, behavior: 'instant' }]);
+  assert.equal(fixture.view.scrollY, 600);
+  assert.deepEqual(result.value, { x: 0, y: 600 });
+  assert.equal(connection.getPlan().viewport.y, 400);
+  assert.equal(fixture.scrollingElement.rangeReads, 0);
+  assert.equal(fixture.surface.geometryReads, 0);
+  connection.disconnect();
+});
+
+test('document measurement correction and rejected settlement share one rollback coordinate owner', () => {
+  let reject = false;
+  const fixture = createDocumentFixture({
+    pageY: 200,
+    surfaceY: 200,
+    placementIDs: ['item'],
+    tryQuery: (state, input) => reject
+      ? failure('virtual-layout-window-mismatch')
+      : success(plan(state, input.viewport, ['item'])),
+    tryMeasure: (state, batch) => {
+      assert.deepEqual(batch.measurements, [5]);
+      return mutation(Object.freeze({ generation: state.generation + 1 }), { x: 0, y: 5 });
+    },
+  });
+  const connection = createVirtualizer({
+    ...fixture.options,
+    measure: ({ entry }) => entry.measurement,
+  });
+  const item = new FakeElement();
+  item.ownerDocument = fixture.document;
+  connection.registerItem(item, 'item');
+  fixture.resetEvidence();
+
+  fixture.itemObserver().emit([{ target: item, measurement: 5 }]);
+  fixture.runFrame();
+  assert.deepEqual(fixture.view.writes, [{ left: 0, top: 205, behavior: 'instant' }]);
+  assert.equal(fixture.view.scrollY, 205);
+
+  fixture.resetEvidence();
+  reject = true;
+  fixture.itemObserver().emit([{ target: item, measurement: 5 }]);
+  fixture.runFrame();
+  assert.deepEqual(fixture.view.writes, [
+    { left: 0, top: 210, behavior: 'instant' },
+    { left: 0, top: 205, behavior: 'instant' },
+  ]);
+  assert.equal(fixture.view.scrollY, 205);
+  assert.equal(connection.getState().generation, 1);
+  connection.disconnect();
+});
+
+test('document refresh remeasures external page-flow movement without scroll polling', () => {
+  const fixture = createDocumentFixture({ pageY: 0, surfaceY: 300 });
+  const connection = createVirtualizer(fixture.options);
+  assert.equal(connection.getPlan().anchor, null);
+  fixture.resetEvidence();
+
+  fixture.surface.pageY = 350.5;
+  connection.refresh();
+  fixture.runFrame();
+
+  assert.equal(fixture.surface.geometryReads, 1);
+  assert.equal(connection.getPlan().viewport.y, -350.5);
+  assert.equal(fixture.view.writes.length, 0);
+  connection.disconnect();
+});
+
+test('document host rejects unusable and cross-document owners before retaining resources', () => {
+  const missingView = createDocumentFixture();
+  missingView.document.defaultView = null;
+  assert.throws(() => createVirtualizer(missingView.options), /browser view and scrolling element/u);
+  assert.equal(missingView.observerCount(), 0);
+  assert.equal(missingView.document.listenerCount('scroll'), 0);
+
+  const missingScroller = createDocumentFixture();
+  missingScroller.document.scrollingElement = null;
+  assert.throws(() => createVirtualizer(missingScroller.options), /browser view and scrolling element/u);
+  assert.equal(missingScroller.observerCount(), 0);
+
+  const crossDocument = createDocumentFixture();
+  crossDocument.surface.ownerDocument = new FakeDocument();
+  assert.throws(() => createVirtualizer(crossDocument.options), /scrollport document/u);
+  assert.equal(crossDocument.observerCount(), 0);
+
+  const collapsed = createDocumentFixture();
+  collapsed.options.surface = collapsed.document.documentElement;
+  assert.throws(() => createVirtualizer(collapsed.options), /distinct physical owners/u);
+  assert.equal(collapsed.observerCount(), 0);
+});
+
+test('document disconnect removes host listeners and makes queued callbacks inert', () => {
+  const counters = { query: 0, plan: 0 };
+  const fixture = createDocumentFixture({
+    tryQuery: (state, input) => {
+      counters.query += 1;
+      return success(plan(state, input.viewport));
+    },
+  });
+  const connection = createVirtualizer({
+    ...fixture.options,
+    onPlanChange: () => { counters.plan += 1; },
+  });
+  const staleFrame = fixture.peekFrame();
+  fixture.document.dispatch('scroll');
+  const queued = fixture.peekFrame();
+  fixture.resetEvidence();
+  counters.query = 0;
+  counters.plan = 0;
+
+  connection.disconnect();
+  connection.disconnect();
+  staleFrame?.(0);
+  queued?.(0);
+  fixture.document.dispatch('scroll');
+  fixture.view.dispatch('resize');
+
+  assert.equal(fixture.document.listenerCount('scroll'), 0);
+  assert.equal(fixture.view.listenerCount('resize'), 0);
+  assert.equal(fixture.geometryObserver().disconnected, true);
+  assert.equal(fixture.itemObserver().disconnected, true);
+  assert.equal(fixture.pendingFrames(), 0);
+  assert.deepEqual(counters, { query: 0, plan: 0 });
+});
+
+test('same-document document hosts scale with one constant listener pair per connection', () => {
+  for (const count of [1, 8, 32]) {
+    const shared = createDocumentHostSharedFixture();
+    const connections = [];
+    let queries = 0;
+    for (let index = 0; index < count; index += 1) {
+      const surface = shared.surface(100 + index * 600);
+      connections.push(createVirtualizer({
+        scrollport: shared.document,
+        surface,
+        state: Object.freeze({ generation: 0 }),
+        strategy: Object.freeze({
+          kind: 'test',
+          tryQuery: (state, input) => {
+            queries += 1;
+            return success(plan(state, input.viewport));
+          },
+          tryMeasure: (state) => mutation(state),
+          tryMutate: (state) => mutation(state),
+          tryScrollTarget: () => success({ x: 0, y: 0 }),
+        }),
+        environment: shared.environment,
+      }));
+    }
+    queries = 0;
+    shared.document.dispatch('scroll');
+    shared.document.dispatch('scroll');
+    assert.equal(shared.document.listenerCount('scroll'), count);
+    assert.equal(shared.view.listenerCount('resize'), count);
+    assert.equal(shared.pendingFrames(), count);
+    shared.runFrames();
+    assert.equal(queries, count);
+    for (const connection of connections) connection.disconnect();
+    assert.equal(shared.document.listenerCount('scroll'), 0);
+    assert.equal(shared.view.listenerCount('resize'), 0);
+    assert.equal(shared.pendingFrames(), 0);
+  }
+});
+
 test('frame movement before surface entry preserves the physical scroll position', () => {
   const counters = { state: 0, plan: 0 };
   const fixture = createFixture({ originY: 100, scrollTop: 10 });
@@ -646,6 +944,114 @@ function createFixture(options = {}) {
   };
 }
 
+function createDocumentFixture(options = {}) {
+  const document = new FakeDocument({
+    width: options.width ?? 100,
+    height: options.height ?? 80,
+    pageX: options.pageX ?? 0,
+    pageY: options.pageY ?? 0,
+    maximumX: options.maximumX ?? 1_000,
+    maximumY: options.maximumY ?? 1_000,
+  });
+  const surface = new FakeDocumentSurface(document, {
+    x: options.surfaceX ?? 0,
+    y: options.surfaceY ?? 0,
+    width: options.surfaceWidth ?? 100,
+    height: options.surfaceHeight ?? 500,
+  });
+  const observers = [];
+  const frames = new Map();
+  let nextFrame = 0;
+  const state = Object.freeze({ generation: 0 });
+  const placementIDs = options.placementIDs ?? ['item'];
+  const strategy = Object.freeze({
+    kind: 'test',
+    tryQuery: options.tryQuery ?? ((value, input) =>
+      success(plan(value, input.viewport, placementIDs))),
+    tryMeasure: options.tryMeasure ?? ((value) => mutation(value)),
+    tryMutate: options.tryMutate ?? ((value) => mutation(value)),
+    tryScrollTarget: options.tryScrollTarget ?? (() => success({ x: 0, y: 0 })),
+  });
+  const environment = {
+    requestFrame: (callback) => {
+      const id = ++nextFrame;
+      frames.set(id, callback);
+      return id;
+    },
+    cancelFrame: (id) => {
+      frames.delete(id);
+    },
+    createResizeObserver: (callback) => {
+      const observer = new FakeResizeObserver(callback);
+      observers.push(observer);
+      return observer;
+    },
+  };
+  return {
+    document,
+    view: document.defaultView,
+    scrollingElement: document.scrollingElement,
+    surface,
+    options: { scrollport: document, surface, state, strategy, environment },
+    geometryObserver: () => observers[0],
+    itemObserver: () => observers[1],
+    observerCount: () => observers.length,
+    pendingFrames: () => frames.size,
+    peekFrame: () => frames.values().next().value ?? null,
+    runFrame: () => {
+      const first = frames.entries().next().value;
+      assert.notEqual(first, undefined, 'expected a scheduled frame');
+      const [id, callback] = first;
+      frames.delete(id);
+      callback(0);
+    },
+    setPageScroll: (x, y) => {
+      document.defaultView.scrollX = x;
+      document.defaultView.scrollY = y;
+      document.scrollingElement.scrollLeft = x;
+      document.scrollingElement.scrollTop = y;
+    },
+    resetEvidence: () => {
+      surface.geometryReads = 0;
+      document.defaultView.writes.length = 0;
+      document.scrollingElement.rangeReads = 0;
+    },
+  };
+}
+
+function createDocumentHostSharedFixture() {
+  const document = new FakeDocument({ width: 100, height: 80, maximumY: 100_000 });
+  const observers = [];
+  const frames = new Map();
+  let nextFrame = 0;
+  return {
+    document,
+    view: document.defaultView,
+    surface: (pageY) => new FakeDocumentSurface(document, {
+      x: 0, y: pageY, width: 100, height: 500,
+    }),
+    environment: {
+      requestFrame: (callback) => {
+        const id = ++nextFrame;
+        frames.set(id, callback);
+        return id;
+      },
+      cancelFrame: (id) => { frames.delete(id); },
+      createResizeObserver: (callback) => {
+        const observer = new FakeResizeObserver(callback);
+        observers.push(observer);
+        return observer;
+      },
+    },
+    pendingFrames: () => frames.size,
+    runFrames: () => {
+      const pending = [...frames.values()];
+      frames.clear();
+      for (const callback of pending) callback(0);
+    },
+  };
+}
+
 function plan(state, localViewport, ids = ['item']) {
   const placements = ids.map((id, index) => {
     const placement = placementFor(id, index, index * 40);
@@ -718,6 +1124,130 @@ function failure(code) {
       message: code,
     },
   };
+}
+
+class FakeEventSource {
+  listeners = new Map();
+  listenerOptions = new Map();
+
+  addEventListener(type, listener, options) {
+    let listeners = this.listeners.get(type);
+    if (listeners === undefined) {
+      listeners = new Set();
+      this.listeners.set(type, listeners);
+    }
+    listeners.add(listener);
+    this.listenerOptions.set(type, options);
+  }
+
+  removeEventListener(type, listener) {
+    const listeners = this.listeners.get(type);
+    listeners?.delete(listener);
+    if (listeners?.size === 0) this.listeners.delete(type);
+    if (!this.listeners.has(type)) this.listenerOptions.delete(type);
+  }
+
+  listenerCount(type) {
+    return this.listeners.get(type)?.size ?? 0;
+  }
+
+  dispatch(type) {
+    for (const listener of [...(this.listeners.get(type) ?? [])]) listener();
+  }
+}
+
+class FakeScrollingElement {
+  rangeReads = 0;
+  scrollLeft = 0;
+  scrollTop = 0;
+
+  constructor(maximumX, maximumY, width, height) {
+    this.maximumX = maximumX;
+    this.maximumY = maximumY;
+    this.width = width;
+    this.height = height;
+  }
+
+  get scrollWidth() {
+    this.rangeReads += 1;
+    return this.maximumX + this.width;
+  }
+
+  get scrollHeight() {
+    this.rangeReads += 1;
+    return this.maximumY + this.height;
+  }
+}
+
+class FakeWindow extends FakeEventSource {
+  writes = [];
+  scrollX = 0;
+  scrollY = 0;
+
+  constructor(scrollingElement, options) {
+    super();
+    this.scrollingElement = scrollingElement;
+    this.innerWidth = options.width;
+    this.innerHeight = options.height;
+    this.maximumX = options.maximumX;
+    this.maximumY = options.maximumY;
+    this.scrollX = options.pageX;
+    this.scrollY = options.pageY;
+    scrollingElement.scrollLeft = options.pageX;
+    scrollingElement.scrollTop = options.pageY;
+  }
+
+  scrollTo({ left = this.scrollX, top = this.scrollY, behavior }) {
+    this.writes.push({ left, top, behavior });
+    this.scrollX = Math.min(Math.max(0, left), this.maximumX);
+    this.scrollY = Math.min(Math.max(0, top), this.maximumY);
+    this.scrollingElement.scrollLeft = this.scrollX;
+    this.scrollingElement.scrollTop = this.scrollY;
+  }
+}
+
+class FakeDocument extends FakeEventSource {
+  nodeType = 9;
+
+  constructor(options = {}) {
+    super();
+    const width = options.width ?? 100;
+    const height = options.height ?? 80;
+    const maximumX = options.maximumX ?? 1_000;
+    const maximumY = options.maximumY ?? 1_000;
+    this.documentElement = { clientWidth: width, clientHeight: height };
+    this.body = {};
+    this.scrollingElement = new FakeScrollingElement(maximumX, maximumY, width, height);
+    this.defaultView = new FakeWindow(this.scrollingElement, {
+      width,
+      height,
+      maximumX,
+      maximumY,
+      pageX: options.pageX ?? 0,
+      pageY: options.pageY ?? 0,
+    });
+  }
+}
+
+class FakeDocumentSurface {
+  geometryReads = 0;
+
+  constructor(document, rect) {
+    this.ownerDocument = document;
+    this.pageX = rect.x;
+    this.pageY = rect.y;
+    this.rect = { width: rect.width, height: rect.height };
+  }
+
+  getBoundingClientRect() {
+    this.geometryReads += 1;
+    return domRect(
+      this.pageX - this.ownerDocument.defaultView.scrollX,
+      this.pageY - this.ownerDocument.defaultView.scrollY,
+      this.rect.width,
+      this.rect.height,
+    );
+  }
 }
 
 class FakeResizeObserver {

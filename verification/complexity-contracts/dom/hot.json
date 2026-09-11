@@ -1169,7 +1169,8 @@
       "inherits": "lifecycle-v1",
       "source": "packages/dom/src/virtual.ts",
       "benchmarkIDs": [
-        "VAL-004:dom-virtual-disconnect-zero"
+        "VAL-004:dom-virtual-disconnect-zero",
+        "VAL-001:dom-document-virtual-disconnect-zero"
       ],
       "specificationCeiling": "O(nMounted + kPlacement + rFrame)",
       "contract": {
@@ -1203,7 +1204,7 @@
         "resources": {
           "allocations": "0",
           "cacheEntries": "-O(nMounted + kPlacement + rFrame)",
-          "listeners": "-1",
+          "listeners": "-O(1)",
           "observers": "-2",
           "timers": "-O(1)",
           "subscriptions": "0"
@@ -1218,19 +1219,22 @@
           "bounded frame-region count"
         ],
         "benchmarkIDs": [
-          "VAL-004:dom-virtual-disconnect-zero"
+          "VAL-004:dom-virtual-disconnect-zero",
+          "VAL-001:dom-document-virtual-disconnect-zero"
         ],
         "deterministicWork": [
-          "one listener removal and two observer disconnects",
-          "all connection-owned registries become empty",
-          "a pending frame is cancelled and stale callbacks observe the inactive generation"
+          "element mode removes one scroll listener; document mode removes one document scroll listener and one owning-view resize listener",
+          "two observers disconnect and all connection-owned registries become empty",
+          "a pending frame is cancelled and stale callbacks observe the inactive generation",
+          "1/8/32 same-document connections retain and release exactly one constant listener pair per document-host connection"
         ],
-        "resourceRationale": "Disconnect visits and releases only resources retained by one virtualizer connection.",
-        "proof": "The connection removes its stable scroll handler, disconnects both observers, cancels one pending frame, and clears each owner-local frame, item, pending-entry, and placement registry exactly once.",
-        "adversarialWitness": "Disconnect during simultaneous frame and item invalidation, then invoke captured observer and animation-frame callbacks and verify zero publication or resource recreation.",
+        "resourceRationale": "Disconnect visits and releases only resources retained by one virtualizer connection; document mode adds one constant viewport-resize listener to the existing scroll listener.",
+        "proof": "The resolved host removes its stable connection listeners, the connection disconnects both observers, cancels one pending frame, and clears each owner-local frame, item, pending-entry, and placement registry exactly once. No shared document registry retains disconnected owners.",
+        "adversarialWitness": "Disconnect document-host connections during queued scroll/resize work at 1, 8, and 32 same-document connections, invoke captured stale callbacks, and verify zero publication, pending frames, listeners, or resource recreation.",
         "evidence": [
           "VAL-004",
-          "VAL-010"
+          "VAL-010",
+          "VAL-001"
         ],
         "fullScan": {
           "allowed": false,
@@ -1244,7 +1248,8 @@
       "source": "packages/dom/src/virtual.ts",
       "benchmarkIDs": [
         "VAL-004:dom-virtual-frame-transaction",
-        "VAL-010:dom-virtual-frame-work"
+        "VAL-010:dom-virtual-frame-work",
+        "VAL-001:dom-document-virtual-frame-work"
       ],
       "specificationCeiling": "O(rFrame + eChanged + kPlacement)",
       "contract": {
@@ -1283,7 +1288,7 @@
         "resources": {
           "allocations": "O(eChanged + kPlacement)",
           "cacheEntries": "O(nMounted + kPlacement + rFrame)",
-          "listeners": "1",
+          "listeners": "O(1)",
           "observers": "2",
           "timers": "O(1)",
           "subscriptions": "0"
@@ -1299,20 +1304,23 @@
         ],
         "benchmarkIDs": [
           "VAL-004:dom-virtual-frame-transaction",
-          "VAL-010:dom-virtual-frame-work"
+          "VAL-010:dom-virtual-frame-work",
+          "VAL-001:dom-document-virtual-frame-work"
         ],
         "deterministicWork": [
-          "at most one scheduled animation frame per connection",
-          "one surface-frame read per geometry-invalidated transaction",
-          "one measurement batch, at most one correction write and one final query, and one accepted plan publication",
-          "a failed post-write query or viewport read adds one restoration write before error reporting and publishes no state or plan"
+          "at most one scheduled animation frame per connection across scroll, resize, frame, and item invalidation bursts",
+          "one surface-frame read per geometry-invalidated transaction; document ordinary scroll performs none",
+          "one measurement batch, at most one correction write and one final viewport/query settlement, and one accepted plan publication",
+          "a failed post-write query or viewport read adds one restoration write before error reporting and publishes no state or plan",
+          "document viewport resize adds only O(1) host invalidation before the existing bounded frame transaction"
         ],
-        "resourceRationale": "One connection retains two observers, one scroll listener, one pending frame, registered elements, changed entries, and the current placement index. Scroll settlement adds only constant transaction-local state.",
-        "proof": "Geometry and item callbacks coalesce into one generation-guarded frame; the transaction resolves only changed entries, composes frame and layout deltas, and performs one correction write and query. A rejected post-write query restores the two saved physical coordinates through the configured writer before error reporting. Accepted frames index each emitted placement once; ordinary uncorrected scroll adds no transaction allocation or geometry read.",
-        "adversarialWitness": "A header resize and changed mounted items still produce one successful write and query. Repeated mutation, measurement, inset, frame, and target-scroll rejections restore the old scroll/state/plan; custom RTL coordinates, host snapping, reused viewport objects, and throwing error callbacks preserve the same rollback boundary.",
+        "resourceRationale": "One connection retains two observers, one scroll listener in element mode or one scroll plus one resize listener in document mode, one pending frame, registered elements, changed entries, and the current placement index. Scroll settlement adds only constant transaction-local state.",
+        "proof": "The resolved host adapter turns browser events into the same generation-guarded transaction. Geometry and item callbacks coalesce into one frame; the transaction resolves only changed entries, composes frame and layout deltas, and performs at most one correction write and final query. A rejected post-write query restores the two saved physical coordinates through the same host writer before error reporting. Accepted frames index each emitted placement once.",
+        "adversarialWitness": "Document viewport resize, page scroll, frame invalidation, and changed mounted items in one generation still produce one scheduled transaction. Repeated mutation, measurement, inset, frame, and target-scroll rejections restore page scroll/state/plan; cross-document registrations reject before observer retention.",
         "evidence": [
           "VAL-004",
-          "VAL-010"
+          "VAL-010",
+          "VAL-001"
         ],
         "fullScan": {
           "allowed": false,
@@ -1326,7 +1334,8 @@
       "source": "packages/dom/src/virtual.ts",
       "benchmarkIDs": [
         "VAL-004:dom-virtual-scroll-frame-cache",
-        "VAL-010:dom-virtual-scroll-work"
+        "VAL-010:dom-virtual-scroll-work",
+        "VAL-001:dom-document-virtual-scroll-work"
       ],
       "specificationCeiling": "O(kPlacement)",
       "contract": {
@@ -1350,7 +1359,7 @@
         "resources": {
           "allocations": "O(kPlacement)",
           "cacheEntries": "O(kPlacement)",
-          "listeners": "1",
+          "listeners": "O(1)",
           "observers": "0 additional",
           "timers": "O(1)",
           "subscriptions": "0"
@@ -1364,19 +1373,23 @@
         ],
         "benchmarkIDs": [
           "VAL-004:dom-virtual-scroll-frame-cache",
-          "VAL-010:dom-virtual-scroll-work"
+          "VAL-010:dom-virtual-scroll-work",
+          "VAL-001:dom-document-virtual-scroll-work"
         ],
         "deterministicWork": [
-          "zero getBoundingClientRect calls on ordinary scroll",
-          "one physical viewport read and one owning query",
-          "one placement-index insertion per emitted placement"
+          "zero getBoundingClientRect calls on ordinary element or document scroll",
+          "document ordinary scroll performs zero physical scroll-range reads",
+          "one physical viewport read and one owning query per accepted scheduled frame",
+          "one placement-index insertion per emitted placement",
+          "event bursts schedule at most one frame per connection"
         ],
-        "resourceRationale": "Ordinary scroll reuses the connection frame and replaces only the current emitted placement index.",
-        "proof": "The stable scroll listener marks the viewport dirty, one coalesced frame reads scalar scroll offsets, projects through the cached frame, delegates one query, and indexes each returned placement once.",
-        "adversarialWitness": "A maximum-output viewport scrolls without any geometry invalidation and performs zero element rectangle reads.",
+        "resourceRationale": "Ordinary scroll reuses the connection frame and replaces only the current emitted placement index. Element mode retains one scroll listener; document mode retains one scroll listener plus one constant viewport-resize listener outside the scroll loop.",
+        "proof": "Construction resolves stable host operations once. The stable scroll listener marks only the viewport dirty, one coalesced frame reads scalar offsets/extents, projects through the cached surface frame, delegates one query, and indexes each returned placement once. Document mode neither rereads the surface rectangle nor reads document scroll range on this path.",
+        "adversarialWitness": "At 1, 8, and 32 same-document connections, a burst of page-scroll events schedules at most one frame per connection; each accepted frame performs no surface geometry/range read and one query, then disconnect releases every listener and pending frame.",
         "evidence": [
           "VAL-004",
-          "VAL-010"
+          "VAL-010",
+          "VAL-001"
         ],
         "fullScan": {
           "allowed": false,

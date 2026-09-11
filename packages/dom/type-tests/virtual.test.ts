@@ -2,6 +2,9 @@ import type { StableID } from '@sectile/core';
 import {
   createVirtualizer,
   virtualSurfaceStyle,
+  type VirtualScrollport,
+  type VirtualScrollWriter,
+  type VirtualViewportReader,
   type VirtualizerConnection,
   type VirtualizerOptions,
 } from '@sectile/dom/virtual';
@@ -18,6 +21,8 @@ type Measurement = number;
 type Mutation = { readonly type: 'replace' };
 
 declare const scrollport: HTMLElement;
+declare const documentScrollport: Document;
+declare const browserWindow: Window;
 declare const surface: HTMLElement;
 declare const frameRegion: HTMLElement;
 declare const strategy: VirtualLayoutStrategy<
@@ -37,6 +42,23 @@ const options = {
 
 const connection = createVirtualizer(options);
 connection satisfies VirtualizerConnection<State, ID, Measurement, Mutation>;
+
+const documentOptions = {
+  scrollport: documentScrollport,
+  surface,
+  state: { generation: 0 },
+  strategy,
+  readViewport: ((target) => ({ x: 0, y: 0, width: 100, height: 80 })) satisfies VirtualViewportReader,
+  writeScroll: ((target, targetPoint) => { void target; void targetPoint; }) satisfies VirtualScrollWriter,
+} satisfies VirtualizerOptions<State, ID, Measurement, Mutation>;
+createVirtualizer(documentOptions) satisfies VirtualizerConnection<State, ID, Measurement, Mutation>;
+const validElementScrollport: VirtualScrollport = scrollport;
+const validDocumentScrollport: VirtualScrollport = documentScrollport;
+void validElementScrollport;
+void validDocumentScrollport;
+// @ts-expect-error Window is not a parallel page-scroll target; use its Document.
+const invalidWindowScrollport: VirtualScrollport = browserWindow;
+void invalidWindowScrollport;
 connection.setViewportInsets({ top: 20 });
 connection.registerFrame(frameRegion)();
 connection.scrollTo(2, 'center') satisfies ReturnType<
