@@ -224,7 +224,8 @@ export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialL
     if (!sameRect(current.rect, rect)) replacements.set(measurement.id, Object.freeze({ ...current, rect }));
   }
   if (replacements.size === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
-  const before = anchorRect(state, batch.anchor);
+  const anchor = batch.anchor;
+  const before = anchorRect(state, anchor);
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
   const baseChanges: (readonly [number, SpatialItem<ID>])[] = [];
@@ -243,7 +244,7 @@ export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialL
         generation.value,
       )
     : applySpatialOverlayChanges(state, data.value, state.domain, replacements, generation.value);
-  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
+  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
 }
 
 export function applySpatialMutation<ID extends StableID>(state: SpatialLayoutState<ID>, mutation: SpatialMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualLayoutMutation<SpatialLayoutState<ID>> {

@@ -121,6 +121,28 @@ test('PTG-02: measurement follows track identity across reorder and partition mu
   }).placements.some(({ id }) => id === 'body-middle'), true);
 });
 
+test('ISSUE-091: partitioned measurements capture one anchor for the full transition', () => {
+  const state = fixture();
+  let anchorReads = 0;
+  const batch = {
+    generation: state.generation,
+    measurements: [{ axis: 'row', id: 'body-b', extent: exact(35) }],
+  };
+  Object.defineProperty(batch, 'anchor', {
+    enumerable: true,
+    get() {
+      anchorReads += 1;
+      return anchorReads === 1
+        ? { id: 'header-left', viewportOffset: { x: 0, y: 0 } }
+        : { id: 'body-middle', viewportOffset: { x: 0, y: 10 } };
+    },
+  });
+  const measured = tryApplyPartitionedTrackGridMeasurements(state, batch);
+  assert.equal(measured.ok, true);
+  assert.equal(anchorReads, 1);
+  assert.deepEqual(measured.value.scrollDelta, { x: 0, y: 0 });
+});
+
 test('PTG-03: stale measurement and cross-partition spans reject atomically', () => {
   const state = fixture();
   const measured = applyPartitionedTrackGridMeasurements(state, {

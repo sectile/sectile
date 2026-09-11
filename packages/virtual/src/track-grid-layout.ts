@@ -295,11 +295,12 @@ export function tryApplyGridMeasurements<ID extends StableID>(state: TrackGridLa
   if (!columns.ok) return columns;
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const before = anchorRect(state, batch.anchor);
+  const anchor = batch.anchor;
+  const before = anchorRect(state, anchor);
   const grid = getInternals(state);
   if (!grid.ok) return grid;
   const next = createState({ ...state, rows: rows.value, columns: columns.value, generation: generation.value }, null, grid.value);
-  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
+  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
 }
 
 export function applyTrackGridMutation<ID extends StableID>(state: TrackGridLayoutState<ID>, mutation: TrackGridMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualLayoutMutation<TrackGridLayoutState<ID>> {

@@ -242,7 +242,8 @@ export function tryApplyMasonryMeasurements<ID extends StableID>(state: MasonryL
       return fail('transition-rejection', 'extent-index-update-invalid', 'Masonry measurement properties must be readable.');
     }
   }
-  const before = anchorRect(state, batch.anchor);
+  const anchor = batch.anchor;
+  const before = anchorRect(state, anchor);
   const updated = state.extents.update(measurements as readonly ExtentUpdate[]);
   if (!updated.ok) return updated;
   const generation = nextGeneration(state.generation);
@@ -256,7 +257,7 @@ export function tryApplyMasonryMeasurements<ID extends StableID>(state: MasonryL
       recomputeStart: firstChangedExtentIndex(state.extents, updated.value, measurements),
     },
   );
-  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
+  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
 }
 
 export function applyMasonryMutation<ID extends StableID>(state: MasonryLayoutState<ID>, mutation: MasonryMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualLayoutMutation<MasonryLayoutState<ID>> {

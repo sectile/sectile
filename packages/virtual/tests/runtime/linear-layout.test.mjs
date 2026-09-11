@@ -27,6 +27,7 @@ import {
   createTrackGridLayout,
   queryTrackGridLayout,
   restoreTrackGridLayout,
+  tryApplyGridMeasurements,
   tryCreateTrackGridLayout,
   tryTrackGridScrollTarget,
   snapshotTrackGridLayout,
@@ -51,6 +52,7 @@ import {
   restoreSpatialLayout,
   snapshotSpatialLayout,
   spatialRectAt,
+  tryApplySpatialMeasurements,
   tryRestoreSpatialLayout,
   trySpatialScrollTarget,
 } from '../../.verification-dist/spatial-layout.js';
@@ -196,6 +198,77 @@ test('VRT-02, VRT-03: measurements preserve the anchor and reject stale generati
   });
   assert.deepEqual(changed.scrollDelta, { x: 0, y: 5 });
   assert.equal(tryApplyLinearMeasurements(changed.state, { generation: plan.generation, measurements: [] }).ok, false);
+});
+
+test('ISSUE-091: built-in measurements capture one anchor for the full transition', () => {
+  const changingBatch = (generation, measurements, first, second) => {
+    let reads = 0;
+    const batch = { generation, measurements };
+    Object.defineProperty(batch, 'anchor', {
+      enumerable: true,
+      get() {
+        reads += 1;
+        return reads === 1 ? first : second;
+      },
+    });
+    return { batch, reads: () => reads };
+  };
+  const point = { x: 0, y: 0 };
+
+  const linear = createLinearLayout(domain(2), createExtentIndex([exact(10), exact(10)]), { crossExtent: 100 });
+  const linearBatch = changingBatch(
+    linear.generation,
+    [{ index: 0, extent: exact(10) }],
+    { id: 'item-0', viewportOffset: point },
+    { id: 'item-1', viewportOffset: { x: 0, y: 10 } },
+  );
+  const linearResult = tryApplyLinearMeasurements(linear, linearBatch.batch);
+  assert.equal(linearResult.ok, true);
+  assert.equal(linearBatch.reads(), 1);
+  assert.deepEqual(linearResult.value.scrollDelta, { x: 0, y: 0 });
+
+  const masonry = createMasonryLayout(domain(2), createExtentIndex([exact(10), exact(10)]), { laneCount: 1, laneExtent: 100 });
+  const masonryBatch = changingBatch(
+    masonry.generation,
+    [{ index: 0, extent: exact(10) }],
+    { id: 'item-0', viewportOffset: point },
+    { id: 'item-1', viewportOffset: { x: 0, y: 10 } },
+  );
+  const masonryResult = tryApplyMasonryMeasurements(masonry, masonryBatch.batch);
+  assert.equal(masonryResult.ok, true);
+  assert.equal(masonryBatch.reads(), 1);
+  assert.deepEqual(masonryResult.value.scrollDelta, { x: 0, y: 0 });
+
+  const grid = createTrackGridLayout(
+    createExtentIndex([exact(10), exact(10)]),
+    createExtentIndex([exact(10)]),
+    [{ id: 'a', row: 0, column: 0 }, { id: 'b', row: 1, column: 0 }],
+  );
+  const gridBatch = changingBatch(
+    grid.generation,
+    [{ axis: 'row', index: 0, extent: exact(10) }],
+    { id: 'a', viewportOffset: point },
+    { id: 'b', viewportOffset: { x: 0, y: 10 } },
+  );
+  const gridResult = tryApplyGridMeasurements(grid, gridBatch.batch);
+  assert.equal(gridResult.ok, true);
+  assert.equal(gridBatch.reads(), 1);
+  assert.deepEqual(gridResult.value.scrollDelta, { x: 0, y: 0 });
+
+  const spatial = createSpatialLayout([
+    { id: 'a', rect: { x: 0, y: 0, width: 10, height: 10 } },
+    { id: 'b', rect: { x: 0, y: 20, width: 10, height: 10 } },
+  ]);
+  const spatialBatch = changingBatch(
+    spatial.generation,
+    [{ id: 'b', rect: { x: 0, y: 20, width: 20, height: 10 } }],
+    { id: 'a', viewportOffset: point },
+    { id: 'b', viewportOffset: { x: 0, y: 20 } },
+  );
+  const spatialResult = tryApplySpatialMeasurements(spatial, spatialBatch.batch);
+  assert.equal(spatialResult.ok, true);
+  assert.equal(spatialBatch.reads(), 1);
+  assert.deepEqual(spatialResult.value.scrollDelta, { x: 0, y: 0 });
 });
 
 test('VRT-04: sequence patches preserve surviving viewport anchors', () => {

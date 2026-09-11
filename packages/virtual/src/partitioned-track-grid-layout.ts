@@ -406,7 +406,8 @@ export function tryApplyPartitionedTrackGridMeasurements<
   if (gridMeasurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const before = baseAnchorRect(state, batch.anchor);
+  const anchor = batch.anchor;
+  const before = baseAnchorRect(state, anchor);
   let next: VirtualResult<PartitionedTrackGridLayoutState<ID, RowID, ColumnID>>;
   rowChanges.sort(([left], [right]) => left - right);
   columnChanges.sort(([left], [right]) => left - right);
@@ -468,7 +469,7 @@ export function tryApplyPartitionedTrackGridMeasurements<
     });
   }
   if (!next.ok) return transitionResult(next);
-  return ok(Object.freeze({ state: next.value, scrollDelta: anchorDelta(before, baseAnchorRect(next.value, batch.anchor)) }));
+  return ok(Object.freeze({ state: next.value, scrollDelta: anchorDelta(before, baseAnchorRect(next.value, anchor)) }));
 }
 
 export function applyPartitionedTrackGridMutation<

@@ -225,11 +225,12 @@ export function tryApplyLinearMeasurements<ID extends StableID>(state: LinearLay
   if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const before = anchorRect(state, batch.anchor);
+  const anchor = batch.anchor;
+  const before = anchorRect(state, anchor);
   const updated = state.extents.update(batch.measurements as readonly ExtentUpdate[]);
   if (!updated.ok) return updated;
   const next = freezeState({ ...state, extents: updated.value, generation: generation.value });
-  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
+  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
 }
 
 export function applyLinearPatch<ID extends StableID>(state: LinearLayoutState<ID>, input: LinearPatch<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualLayoutMutation<LinearLayoutState<ID>> {
