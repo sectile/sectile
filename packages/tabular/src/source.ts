@@ -360,7 +360,7 @@ function filterAndSortClientRecords<RecordValue>(
   let filtered = records;
   for (const descriptor of query.filters) {
     if (descriptor.enabled === false) continue;
-    const policy = source.options.policies?.predicates?.[descriptor.predicate];
+    const policy = getOwnPolicy(source.options.policies?.predicates, descriptor.predicate);
     if (policy === undefined) return fail('construction', 'missing-policy-key', 'Filter predicate policy is not registered.', { policy: descriptor.predicate });
     const next: ClientRecordItem<RecordValue>[] = [];
     for (const item of filtered) {
@@ -378,7 +378,7 @@ function filterAndSortClientRecords<RecordValue>(
     readonly policy: TabularComparisonPolicy<RecordValue>;
   }[] = [];
   for (const descriptor of query.sort) {
-    const policy = source.options.policies?.comparators?.[descriptor.comparator];
+    const policy = getOwnPolicy(source.options.policies?.comparators, descriptor.comparator);
     if (policy === undefined) return fail('construction', 'missing-policy-key', 'Sort comparator policy is not registered.', { policy: descriptor.comparator });
     comparatorPolicies.push(Object.freeze({ descriptor, policy }));
   }
@@ -548,7 +548,7 @@ function resolveClientPivots<RecordValue>(
   const aggregateByID = new Map(query.aggregates.map((aggregate) => [aggregate.id, aggregate]));
   const pivots: ClientPivotRuntime<RecordValue>[] = [];
   for (const descriptor of query.pivots) {
-    const policy = source.options.policies?.pivot?.[descriptor.valuePolicy];
+    const policy = getOwnPolicy(source.options.policies?.pivot, descriptor.valuePolicy);
     if (policy === undefined) return fail('construction', 'missing-policy-key', 'Pivot value policy is not registered.', { policy: descriptor.valuePolicy });
     let values: readonly TabularPivotValue<RecordValue>[];
     try {
@@ -597,7 +597,7 @@ function buildClientGroups<RecordValue>(
 ): TabularResult<readonly ClientGroupNode<RecordValue>[]> {
   const descriptor = query.groups[depth];
   if (descriptor === undefined) return ok(Object.freeze([]));
-  const policy = source.options.policies?.grouping?.[descriptor.policy];
+  const policy = getOwnPolicy(source.options.policies?.grouping, descriptor.policy);
   if (policy === undefined) {
     return fail('construction', 'missing-policy-key', 'Grouping policy is not registered.', { policy: descriptor.policy });
   }
@@ -697,7 +697,7 @@ function clientGroupCells<RecordValue>(
     Object.defineProperty(cells, column.id, { value: null, enumerable: true, writable: false, configurable: true });
   }
   for (const pivot of prepared.pivots) {
-    const policy = source.options.policies?.aggregation?.[pivot.aggregate.policy];
+    const policy = getOwnPolicy(source.options.policies?.aggregation, pivot.aggregate.policy);
     if (policy === undefined) return fail('construction', 'missing-policy-key', 'Pivot aggregation policy is not registered.', { policy: pivot.aggregate.policy });
     const matchingRecords: RecordValue[] = [];
     try {
@@ -716,7 +716,7 @@ function clientGroupCells<RecordValue>(
     Object.defineProperty(cells, pivot.value.column.id, { value: normalized.value, enumerable: true, writable: false, configurable: true });
   }
   for (const descriptor of prepared.query.aggregates) {
-    const policy = source.options.policies?.aggregation?.[descriptor.policy];
+    const policy = getOwnPolicy(source.options.policies?.aggregation, descriptor.policy);
     if (policy === undefined) return fail('construction', 'missing-policy-key', 'Aggregation policy is not registered.', { policy: descriptor.policy });
     let value: TabularWireValue;
     try {
@@ -1135,6 +1135,10 @@ function sameAccess(left: TabularAccessRange, right: TabularAccessRange): boolea
 
 function isNonNegativeSafeInteger(value: number): boolean {
   return Number.isSafeInteger(value) && value >= 0;
+}
+
+function getOwnPolicy<Policy>(registry: Readonly<Record<string, Policy>> | undefined, key: string): Policy | undefined {
+  return registry !== undefined && Object.hasOwn(registry, key) ? registry[key] : undefined;
 }
 
 function policyFailure<T>(policy: string, error: unknown): TabularResult<T> {

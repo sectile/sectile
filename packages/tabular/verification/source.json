@@ -38,79 +38,79 @@
       "id": "TAB-SRC-01",
       "title": "TAB-SRC-01: client pipeline filters, ordered stable-sorts, then slices access",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-02",
       "title": "TAB-SRC-02: client source revisions advance strictly per source generation",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-03",
       "title": "TAB-SRC-03: response synchronization rejects stale or mismatched envelopes atomically",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-04",
       "title": "TAB-SRC-04: page responses require known totals while windows allow unknown totals",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-05",
       "title": "TAB-SRC-05: identity, policy, scan, and wire failures are typed and failure-atomic",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-06",
       "title": "TAB-SRC-06: every response envelope coordinate and ordering rule rejects independently",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-07",
       "title": "TAB-SRC-07: page one may bootstrap an empty total while later unknown pages reject",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-08",
       "title": "TAB-SRC-08: authoritative deletion deltas require unique valid row identities",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-09",
       "title": "TAB-SRC-09: one current source, query, and expansion stage is retained by explicit revisions",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-10",
       "title": "TAB-SRC-10: response columns resolve nested object and array cell paths while direct keys win",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-11",
       "title": "TAB-SRC-11: response cross-invariants reject overlap, impossible counts, and incomplete ranges",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-12",
       "title": "TAB-SRC-12: initial client schema bootstrap advances later request echo monotonically",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     },
     {
       "id": "TAB-SRC-13",
       "title": "TAB-SRC-13: client view revisions use the final safe value and reject exhaustion",
       "file": "tests/source/client-source.test.mjs",
-      "sha256": "2de4d3825e7e8468eda433a0005e628f6e8b2d6f2eb38025406c184052ccecc5"
+      "sha256": "f648f09a3a790bdb3aac4c00d07212391beeb5953d96767fa9cea2600ac91582"
     }
   ],
   "expectedFailures": [

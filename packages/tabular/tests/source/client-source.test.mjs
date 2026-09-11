@@ -208,6 +208,101 @@ test('TAB-SRC-05: identity, policy, scan, and wire failures are typed and failur
   }), (error) => error.code === 'scan-record-ceiling-exceeded');
 });
 
+test('ISSUE-075: client policy dispatch resolves only own registry entries', () => {
+  const createPolicySource = (policies) => createClientTabularSource({
+    records,
+    columnSchema,
+    getRowID: (record) => record.id,
+    getValue: (record, columnID) => record[columnID],
+    policies,
+  });
+  const emptyQuery = () => ({ sort: [], filters: [], groups: [], aggregates: [], pivots: [] });
+  const expectMissing = (policies, query) => {
+    const result = resolveClientTabularRequest(createPolicySource(policies), request({ queryRevision: 1, query }));
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'missing-policy-key');
+  };
+  const groupingPolicy = (record, descriptor, depth, getValue) => {
+    const label = getValue(record, descriptor.columnID);
+    return { groupID: `group:${depth}:${label}`, label };
+  };
+  const aggregationPolicy = (items, descriptor, getValue) => items.reduce(
+    (total, record) => total + Number(getValue(record, descriptor.columnID)),
+    0,
+  );
+
+  for (const policy of ['toString', 'constructor', 'valueOf']) {
+    expectMissing({ predicates: {} }, {
+      ...emptyQuery(),
+      filters: [{ id: `filter-${policy}`, scope: 'global', predicate: policy, value: null }],
+    });
+  }
+  expectMissing({ comparators: {} }, {
+    ...emptyQuery(),
+    sort: [{ id: 'sort', columnID: 'name', direction: 'ascending', comparator: 'toString' }],
+  });
+  expectMissing({ grouping: {} }, {
+    ...emptyQuery(),
+    groups: [{ id: 'group', columnID: 'team', policy: 'toString' }],
+  });
+  expectMissing({ grouping: { own: groupingPolicy }, aggregation: {} }, {
+    ...emptyQuery(),
+    groups: [{ id: 'group', columnID: 'team', policy: 'own' }],
+    aggregates: [{ id: 'sum-score', columnID: 'score', policy: 'toString' }],
+  });
+  expectMissing({
+    grouping: { own: groupingPolicy },
+    aggregation: { own: aggregationPolicy },
+    pivot: {},
+  }, {
+    ...emptyQuery(),
+    groups: [{ id: 'group', columnID: 'team', policy: 'own' }],
+    aggregates: [{ id: 'sum-score', columnID: 'score', policy: 'own' }],
+    pivots: [{ id: 'pivot', columnID: 'team', valuePolicy: 'toString', aggregateIDs: ['sum-score'] }],
+  });
+
+  const calls = { predicate: 0, comparator: 0, grouping: 0, aggregation: 0, pivot: 0 };
+  const explicit = createPolicySource({
+    predicates: { toString: () => { calls.predicate += 1; return true; } },
+    comparators: { toString: () => { calls.comparator += 1; return 0; } },
+    grouping: {
+      toString: (record, descriptor, depth, getValue) => {
+        calls.grouping += 1;
+        return groupingPolicy(record, descriptor, depth, getValue);
+      },
+    },
+    aggregation: {
+      toString: (items, descriptor, getValue) => {
+        calls.aggregation += 1;
+        return aggregationPolicy(items, descriptor, getValue);
+      },
+    },
+    pivot: {
+      toString: () => {
+        calls.pivot += 1;
+        return [{
+          column: { id: 'pivot:all' },
+          header: { kind: 'column', id: 'header:pivot:all', columnID: 'pivot:all' },
+          aggregateID: 'sum-score',
+          matches: () => true,
+        }];
+      },
+    },
+  });
+  const ownResult = resolveClientTabularRequest(explicit, request({
+    queryRevision: 1,
+    query: {
+      filters: [{ id: 'filter', scope: 'global', predicate: 'toString', value: null }],
+      sort: [{ id: 'sort', columnID: 'score', direction: 'ascending', comparator: 'toString' }],
+      groups: [{ id: 'group', columnID: 'team', policy: 'toString' }],
+      aggregates: [{ id: 'sum-score', columnID: 'score', policy: 'toString' }],
+      pivots: [{ id: 'pivot', columnID: 'team', valuePolicy: 'toString', aggregateIDs: ['sum-score'] }],
+    },
+  }));
+  assert.equal(ownResult.ok, true);
+  for (const count of Object.values(calls)) assert.ok(count > 0);
+});
+
 test('TAB-SRC-06: every response envelope coordinate and ordering rule rejects independently', () => {
   const active = request({ requestID: 7, sourceGeneration: 2, queryRevision: 3, expansionRevision: 4 });
   const resolved = resolveClientTabularRequest(source(), active);
