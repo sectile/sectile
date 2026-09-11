@@ -24731,7 +24731,8 @@
       "id": "model.normalize",
       "source": "packages/chart/src/model.ts",
       "benchmarkIDs": [
-        "chart:model:normalize"
+        "chart:model:normalize",
+        "VAL-036:chart-model-datum-capture"
       ],
       "specificationCeiling": "O(nDatum + nLayer)",
       "reviewedWeakening": null,
@@ -24777,15 +24778,13 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "every required numeric field for one retained datum is observed exactly once before validation and packed publication"
         ],
-        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Normalization validates and packs each datum once, builds one Core identity sequence, and retains profile indexes whose packed hierarchy and auxiliary entries are linear in their owning layer.",
-        "adversarialWitness": "A maximum-size mixed-profile model emits every packed value and retains fewer than four hierarchy leaves per datum plus profile-specific linear entries.",
+        "resourceRationale": "Capture-once packing uses only fixed scalar locals per datum and removes redundant external property observations without adding retained state.",
+        "proof": "Normalization captures each profile scalar once, validates and writes those exact scalars into packed storage, builds one Core identity sequence, and retains profile indexes whose packed hierarchy and auxiliary entries are linear in their owning layer. Whole-model replacement, layer replacement, and patch packing share the same `packDatum` canonicalization owner.",
+        "adversarialWitness": "Getter-backed point, ordered-series, Cartesian segment, grid-cell, and radial datums return finite values on their first numeric-field observation and NaN thereafter; construction and replacement paths retain only the first validated observations with one read per field while the maximum-size mixed-profile bound remains linear.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "VAL-036"
         ],
         "fullScan": {
           "allowed": true,

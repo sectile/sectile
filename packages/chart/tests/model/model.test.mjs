@@ -32,6 +32,21 @@ function observeDatumReads(data) {
   };
 }
 
+function skewedNumericDatum(id, fields) {
+  const reads = {};
+  const datum = { id };
+  for (const [field, first] of Object.entries(fields)) {
+    Object.defineProperty(datum, field, {
+      enumerable: true,
+      get() {
+        reads[field] = (reads[field] ?? 0) + 1;
+        return reads[field] === 1 ? first : Number.NaN;
+      },
+    });
+  }
+  return { datum, reads };
+}
+
 test('CHT-01: model generations and dense indices preserve exact stable identity', () => {
   const state = createChartModel(allProfiles);
   assert.equal(state.generation, 0);
@@ -111,6 +126,53 @@ test('CHT-09: raw model and patch ceilings reject before datum observation', () 
   assert.equal(acceptedPatch.ok, true);
   assert.equal(acceptedInsertData.reads(), 2);
   assert.deepEqual(acceptedPatch.value.identities, [0, 2, 3]);
+});
+
+test('numeric datum fields are captured once before validation and packing', () => {
+  const cases = [
+    ['point', { x: 1, y: 2 }],
+    ['ordered-series', { x: 1, y: 2 }],
+    ['cartesian-segment', { x1: 0, y1: 1, x2: 2, y2: 3 }],
+    ['grid-cell', { column: 2, row: 3, value: 4 }],
+    ['radial-segment', { value: 5, innerRadius: 0.25, outerRadius: 1 }],
+  ];
+  for (const [profile, fields] of cases) {
+    const observed = skewedNumericDatum(`datum-${profile}`, fields);
+    const result = tryCreateChartModel({ layers: [{ id: profile, profile, data: [observed.datum] }] });
+    assert.equal(result.ok, true);
+    assert.deepEqual(observed.reads, Object.fromEntries(Object.keys(fields).map((field) => [field, 1])));
+    assert.deepEqual(result.value.toModel().layers[0].data[0], { id: `datum-${profile}`, ...fields });
+  }
+});
+
+test('model, layer, and patch replacement share capture-once datum packing', () => {
+  const initial = createChartModel({ layers: [{
+    id: 'points', profile: 'point', data: [{ id: 'a', x: 0, y: 0 }],
+  }] });
+  const replacementModel = skewedNumericDatum('a', { x: 3, y: 4 });
+  const replacedModel = tryReplaceChartModel(initial, { layers: [{
+    id: 'points', profile: 'point', data: [replacementModel.datum],
+  }] });
+  assert.equal(replacedModel.ok, true);
+  assert.deepEqual(replacementModel.reads, { x: 1, y: 1 });
+  assert.deepEqual(replacedModel.value.toModel().layers[0].data[0], { id: 'a', x: 3, y: 4 });
+
+  const replacementLayer = skewedNumericDatum('a', { x: 5, y: 6 });
+  const replacedLayer = tryReplaceChartLayer(initial, {
+    id: 'points', profile: 'point', data: [replacementLayer.datum],
+  });
+  assert.equal(replacedLayer.ok, true);
+  assert.deepEqual(replacementLayer.reads, { x: 1, y: 1 });
+  assert.deepEqual(replacedLayer.value.toModel().layers[0].data[0], { id: 'a', x: 5, y: 6 });
+
+  const patchDatum = skewedNumericDatum('a', { x: 7, y: 8 });
+  const patched = tryApplyChartPatch(initial, { operations: [{
+    type: 'replace', layerID: 'points', index: 0, data: [patchDatum.datum],
+  }] });
+  assert.equal(patched.ok, true);
+  assert.equal(patched.value.generation, 1);
+  assert.deepEqual(patchDatum.reads, { x: 1, y: 1 });
+  assert.deepEqual(patched.value.toModel().layers[0].data[0], { id: 'a', x: 7, y: 8 });
 });
 
 test('large valid inserts remain total without variadic argument expansion', () => {

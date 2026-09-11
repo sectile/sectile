@@ -747,32 +747,42 @@ function packDatum<ID extends StableID>(
 ): boolean {
   const value = datum as unknown as Record<string, unknown>;
   if (profile === 'point' || profile === 'ordered-series') {
-    if (!finite(value['x']) || !finite(value['y'])) return false;
-    values[offset] = value['x'];
-    values[offset + 1] = value['y'];
+    const x = value['x'];
+    const y = value['y'];
+    if (!finite(x) || !finite(y)) return false;
+    values[offset] = x;
+    values[offset + 1] = y;
     return true;
   }
   if (profile === 'cartesian-segment') {
-    if (!finite(value['x1']) || !finite(value['y1']) || !finite(value['x2']) || !finite(value['y2'])) return false;
-    values[offset] = value['x1'];
-    values[offset + 1] = value['y1'];
-    values[offset + 2] = value['x2'];
-    values[offset + 3] = value['y2'];
+    const x1 = value['x1'];
+    const y1 = value['y1'];
+    const x2 = value['x2'];
+    const y2 = value['y2'];
+    if (!finite(x1) || !finite(y1) || !finite(x2) || !finite(y2)) return false;
+    values[offset] = x1;
+    values[offset + 1] = y1;
+    values[offset + 2] = x2;
+    values[offset + 3] = y2;
     return true;
   }
   if (profile === 'grid-cell') {
-    if (!nonNegativeSafeInteger(value['column']) || !nonNegativeSafeInteger(value['row']) || !finite(value['value'])) return false;
-    values[offset] = value['column'];
-    values[offset + 1] = value['row'];
-    values[offset + 2] = value['value'];
+    const column = value['column'];
+    const row = value['row'];
+    const cellValue = value['value'];
+    if (!nonNegativeSafeInteger(column) || !nonNegativeSafeInteger(row) || !finite(cellValue)) return false;
+    values[offset] = column;
+    values[offset + 1] = row;
+    values[offset + 2] = cellValue;
     return true;
   }
+  const radialValue = value['value'];
   const innerRadius = value['innerRadius'] ?? 0;
   const outerRadius = value['outerRadius'] ?? 1;
-  if (!finite(value['value']) || (value['value'] as number) < 0
+  if (!finite(radialValue) || radialValue < 0
     || !finite(innerRadius) || !finite(outerRadius)
-    || (innerRadius as number) < 0 || (outerRadius as number) < (innerRadius as number)) return false;
-  values[offset] = value['value'];
+    || innerRadius < 0 || outerRadius < innerRadius) return false;
+  values[offset] = radialValue;
   values[offset + 1] = innerRadius;
   values[offset + 2] = outerRadius;
   return true;

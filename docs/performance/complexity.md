@@ -93,7 +93,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | chart:definition.preflight | external | `O(nLayer)` worst-case | `O(nLayer)` | `O(nLayer)` | `O(nLayer)` | allowed | VAL-007, VAL-031 |
 | chart:input.model-cardinality-preflight | external | `O(nLayer + qOperation)` worst-case | `O(nLayer + qOperation)` | `O(nLayer + qOperation)` | `O(nLayer + qOperation)` | allowed | VAL-016, VAL-017 |
 | chart:interaction.selection-contains | trusted | `O(s)` amortized | `O(s)` | `O(1)` | `O(s)` | allowed | VAL-016, VAL-017 |
-| chart:model.normalize | external | `O(nDatum + nLayer)` worst-case | `O(nDatum + nLayer)` | `O(nDatum + nLayer)` | `O(nDatum + nLayer)` | allowed | VAL-016, VAL-017 |
+| chart:model.normalize | external | `O(nDatum + nLayer)` worst-case | `O(nDatum + nLayer)` | `O(nDatum + nLayer)` | `O(nDatum + nLayer)` | allowed | VAL-036 |
 | chart:model.patch-layer.sparse | trusted | `O(jDatum + bBlock + bIndex)` worst-case | `O(bBlock + bIndex)` | `O(1)` | `O(bBlock + bIndex)` | allowed | VAL-016, VAL-017 |
 | chart:model.replace-layer | external | `O(sLayer + nLayer)` worst-case | `O(sLayer + nLayer)` | `O(sLayer + nLayer)` | `O(sLayer + nLayer)` | forbidden | VAL-016, VAL-017 |
 | chart:projection.clone | trusted | `O(bBuffer + vView)` worst-case | `O(vView)` | `O(bBuffer + vView)` | `O(bBuffer + vView)` | allowed | VAL-016, VAL-017 |
