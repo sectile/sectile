@@ -301,7 +301,12 @@ export function tryDecodeTabularCellID(
 }
 
 function normalizeLimits(input: Partial<TabularLimits> | undefined): TabularResult<TabularLimits> {
-  const result = { ...DEFAULT_TABULAR_LIMITS, ...input };
+  let result: TabularLimits;
+  try {
+    result = { ...DEFAULT_TABULAR_LIMITS, ...input };
+  } catch {
+    return fail('construction', 'invalid-limit', 'Tabular limits must be readable.');
+  }
   for (const [key, value] of Object.entries(result)) {
     if (!Number.isSafeInteger(value) || value <= 0) {
       return fail('construction', 'invalid-limit', 'Every Tabular limit must be a positive safe integer.', { key, value });

@@ -142,6 +142,53 @@ test('TAB-VIR-05: by-id extent callbacks fail through a typed coordinate boundar
   assert.deepEqual(columns.error.details, { axis: 'column', id: 'score', index: 1, message: 'column failed' });
 });
 
+test('ISSUE-077: Virtual adapter limit accessors fail through typed construction Results', () => {
+  const throwingLimits = () => {
+    const limits = {};
+    Object.defineProperty(limits, 'maxProjectedCells', {
+      enumerable: true,
+      get() { throw new Error('virtual limit getter executed'); },
+    });
+    return limits;
+  };
+  const cases = [
+    () => tryCreateDataTableVirtualAdapter({
+      projection: tableProjection(['r1']),
+      rowExtents: { kind: 'uniform', extent: exact(20) },
+      crossExtent: 320,
+      limits: throwingLimits(),
+    }),
+    () => tryCreateDataGridVirtualAdapter({
+      projection: gridProjection(['r1']),
+      rowExtents: { kind: 'uniform', extent: exact(20) },
+      columnExtents: { kind: 'uniform', extent: exact(80) },
+      limits: throwingLimits(),
+    }),
+    () => tryCreateDataTreeGridVirtualAdapter({
+      projection: gridProjection(['r1']),
+      rowExtents: { kind: 'uniform', extent: exact(20) },
+      columnExtents: { kind: 'uniform', extent: exact(80) },
+      limits: throwingLimits(),
+    }),
+  ];
+  for (const create of cases) {
+    let result;
+    assert.doesNotThrow(() => { result = create(); });
+    assert.equal(result.ok, false);
+    assert.equal(result.error.class, 'construction');
+    assert.equal(result.error.code, 'invalid-max-items');
+  }
+
+  const invalidScalar = tryCreateDataTableVirtualAdapter({
+    projection: tableProjection(['r1']),
+    rowExtents: { kind: 'uniform', extent: exact(20) },
+    crossExtent: 320,
+    limits: { maxProjectedCells: 0 },
+  });
+  assert.equal(invalidScalar.ok, false);
+  assert.equal(invalidScalar.error.code, 'invalid-max-items');
+});
+
 test('TAB-VIR-06: sparse repair is bounded and bulk replacement reuses stable measurements', () => {
   const ids = Array.from({ length: 128 }, (_, index) => `r${index}`);
   let extentCalls = 0;

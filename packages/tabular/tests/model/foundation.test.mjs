@@ -65,6 +65,26 @@ test('TAB-MOD-02: every resource limit is a positive safe integer', () => {
   }
 });
 
+test('ISSUE-077: model limit accessors fail through the typed construction boundary', () => {
+  const limits = {};
+  Object.defineProperty(limits, 'maxColumns', {
+    enumerable: true,
+    get() { throw new Error('model limit getter executed'); },
+  });
+  let result;
+  assert.doesNotThrow(() => {
+    result = tryCreateTabularModel({ columns: [], limits });
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.class, 'construction');
+  assert.equal(result.error.code, 'invalid-limit');
+
+  const valid = tryCreateTabularModel({ columns: [], limits: { maxColumns: 1 } });
+  assert.equal(valid.ok, true);
+  assert.equal(valid.value.limits.maxColumns, 1);
+  assert.equal(Object.isFrozen(valid.value.limits), true);
+});
+
 test('TAB-MOD-03: column and header identities reject malformed, duplicate, and over-depth input', () => {
   for (const id of ['', '\ud800', '\udc00']) {
     const result = tryCreateTabularModel({ columns: [{ id }] });

@@ -443,7 +443,12 @@ function preflightTableRows(rowCount: number, maxProjectedCells: number): Tabula
 }
 
 function normalizeLimits(input: Partial<TabularVirtualLimits> | undefined): TabularVirtualResult<TabularVirtualLimits> {
-  const limits = Object.freeze({ ...DEFAULT_LIMITS, ...input });
+  let limits: TabularVirtualLimits;
+  try {
+    limits = Object.freeze({ ...DEFAULT_LIMITS, ...input });
+  } catch {
+    return failure('construction', 'invalid-max-items', 'Virtual adapter ceilings must be readable.');
+  }
   for (const [key, value] of Object.entries(limits)) {
     if (!Number.isSafeInteger(value) || value <= 0) return failure('construction', 'invalid-max-items', 'Virtual adapter ceilings must be positive safe integers.', { key, value });
   }

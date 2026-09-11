@@ -62,61 +62,61 @@
       "id": "TAB-TBL-01",
       "title": "TAB-TBL-01: controller begins pending and one executor resolves the current native-table projection",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "23ea0316b2feeebdae16662531df3e0c48b612c1bde81e2e3df2b1cd01af1c4c"
+      "sha256": "00d20e8c5d2fd0f777c3c83730ae90d955b35a4df06b776cf4b25df1bb5cbe4c"
     },
     {
       "id": "TAB-TBL-02",
       "title": "TAB-TBL-02: observer and sole executor channels remain distinct and disposable",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "23ea0316b2feeebdae16662531df3e0c48b612c1bde81e2e3df2b1cd01af1c4c"
+      "sha256": "00d20e8c5d2fd0f777c3c83730ae90d955b35a4df06b776cf4b25df1bb5cbe4c"
     },
     {
       "id": "TAB-TBL-03",
       "title": "TAB-TBL-03: response envelopes, abandonment, and stale requests are failure-atomic",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "23ea0316b2feeebdae16662531df3e0c48b612c1bde81e2e3df2b1cd01af1c4c"
+      "sha256": "00d20e8c5d2fd0f777c3c83730ae90d955b35a4df06b776cf4b25df1bb5cbe4c"
     },
     {
       "id": "TAB-TBL-04",
       "title": "TAB-TBL-04: DataTable value commit is application intent without cell cursor or edit authority",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "23ea0316b2feeebdae16662531df3e0c48b612c1bde81e2e3df2b1cd01af1c4c"
+      "sha256": "00d20e8c5d2fd0f777c3c83730ae90d955b35a4df06b776cf4b25df1bb5cbe4c"
     },
     {
       "id": "TAB-TBL-05",
       "title": "TAB-TBL-05: controlled query proposes once and requests only after external synchronization",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "23ea0316b2feeebdae16662531df3e0c48b612c1bde81e2e3df2b1cd01af1c4c"
+      "sha256": "00d20e8c5d2fd0f777c3c83730ae90d955b35a4df06b776cf4b25df1bb5cbe4c"
     },
     {
       "id": "TAB-TBL-06",
       "title": "TAB-TBL-06: DataTable events and controlled sync share slice canonicalization failures",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "23ea0316b2feeebdae16662531df3e0c48b612c1bde81e2e3df2b1cd01af1c4c"
+      "sha256": "00d20e8c5d2fd0f777c3c83730ae90d955b35a4df06b776cf4b25df1bb5cbe4c"
     },
     {
       "id": "TAB-TBL-07",
       "title": "TAB-TBL-07: command delivery snapshots observers, completes channels, and rolls back failed attachment",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "23ea0316b2feeebdae16662531df3e0c48b612c1bde81e2e3df2b1cd01af1c4c"
+      "sha256": "00d20e8c5d2fd0f777c3c83730ae90d955b35a4df06b776cf4b25df1bb5cbe4c"
     },
     {
       "id": "TAB-TBL-08",
       "title": "TAB-TBL-08: request-basis and projection counters stop at the safe-integer ceiling",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "23ea0316b2feeebdae16662531df3e0c48b612c1bde81e2e3df2b1cd01af1c4c"
+      "sha256": "00d20e8c5d2fd0f777c3c83730ae90d955b35a4df06b776cf4b25df1bb5cbe4c"
     },
     {
       "id": "TAB-TBL-09",
       "title": "TAB-TBL-09: unchanged projection reads retain column partitions across domain sizes",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "23ea0316b2feeebdae16662531df3e0c48b612c1bde81e2e3df2b1cd01af1c4c"
+      "sha256": "00d20e8c5d2fd0f777c3c83730ae90d955b35a4df06b776cf4b25df1bb5cbe4c"
     },
     {
       "id": "TAB-TBL-10",
       "title": "TAB-TBL-10: row range events use accepted leaf order and reject stale endpoints",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "23ea0316b2feeebdae16662531df3e0c48b612c1bde81e2e3df2b1cd01af1c4c"
+      "sha256": "00d20e8c5d2fd0f777c3c83730ae90d955b35a4df06b776cf4b25df1bb5cbe4c"
     },
     {
       "id": "TAB-TGR-01",

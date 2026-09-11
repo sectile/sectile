@@ -7,7 +7,7 @@
     {
       "group": "model",
       "tests": 8,
-      "sha256": "de6e4f98626348eb8b6af7311c374a8187c303c6ba249876660c54893d6290c8"
+      "sha256": "2ce27ab08dec85e139c514f85a530d1754954c2f77c762f018ac9d75cc8545e9"
     },
     {
       "group": "source",
@@ -32,12 +32,12 @@
     {
       "group": "profiles",
       "tests": 24,
-      "sha256": "7cd3aecdceda08d13e79c4d64272742d7b736e7255d37abd9b774a7743860127"
+      "sha256": "b4395d238f866e89ff337d8d19dd611b280be07d7238d24c2672f69cc257d641"
     },
     {
       "group": "virtual",
       "tests": 9,
-      "sha256": "ca716a91c8e01dc27337540e903a356405e0f6462c865b90434c2e8514e89487"
+      "sha256": "28547ca10093850b759fa84632bd206a76fd41bc5e435426e8dce0f33b0ff227"
     },
     {
       "group": "virtual-witnesses",
@@ -78,9 +78,9 @@
     }
   },
   "footprint": {
-    "javascriptBytes": 157488,
+    "javascriptBytes": 157693,
     "declarationBytes": 44401,
-    "sourceMapBytes": 113122,
+    "sourceMapBytes": 113254,
     "packedBytes": 55011,
     "declarationFiles": 17,
     "publicSubpaths": 9

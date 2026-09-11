@@ -31,6 +31,21 @@ test('TAB-TBL-01: controller begins pending and one executor resolves the curren
   assert.equal(table.getProjection().generation, 1);
 });
 
+test('ISSUE-077: DataTable construction preserves the model limit Result boundary', () => {
+  const limits = {};
+  Object.defineProperty(limits, 'maxColumns', {
+    enumerable: true,
+    get() { throw new Error('table limit getter executed'); },
+  });
+  let result;
+  assert.doesNotThrow(() => {
+    result = tryCreateDataTable({ columns, limits });
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.class, 'construction');
+  assert.equal(result.error.code, 'invalid-limit');
+});
+
 test('TAB-TBL-02: observer and sole executor channels remain distinct and disposable', () => {
   const table = createDataTable({ columns });
   const observed = [];
