@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { tryCreateChartViewState } from '../../.verification-dist/contract.js';
 import { createChartDefinition } from '../../.verification-dist/definition.js';
 import { createChartController } from '../../.verification-dist/controller.js';
 import { createChartState, reduceChartEvent } from '../../.verification-dist/interaction.js';
@@ -66,6 +67,90 @@ test('continuous pan and anchored zoom obey inverse laws without boundary clampi
     assert.equal(panned.work.axisLookups, 1);
     assert.equal(panned.work.indexedAxes, 0);
   }
+});
+
+test('extreme finite pan and zoom preserve canonical view invariants', () => {
+  const initial = createChartAxisViewState(axes, [
+    { axisID: 'linear', initial: { kind: 'continuous', minimum: 20, maximum: 60 } },
+    { axisID: 'log', initial: { kind: 'continuous', minimum: 10, maximum: 100 } },
+    { axisID: 'time', initial: { kind: 'continuous', minimum: 1_000, maximum: 3_000 } },
+  ]);
+  const expected = new Map([
+    ['linear', [{ minimum: 60, maximum: 100 }, { minimum: 0, maximum: 40 }, { minimum: 0, maximum: 100 }]],
+    ['log', [{ minimum: 100, maximum: 1_000 }, { minimum: 1, maximum: 10 }, { minimum: 1, maximum: 1_000 }]],
+    ['time', [{ minimum: 2_000, maximum: 4_000 }, { minimum: 0, maximum: 2_000 }, { minimum: 0, maximum: 4_000 }]],
+  ]);
+  const assertWindow = (actual, target) => {
+    assert.equal(actual.kind, 'continuous');
+    assert.equal(Number.isFinite(actual.minimum) && Number.isFinite(actual.maximum), true);
+    const tolerance = (value) => Math.max(1e-9, Math.abs(value) * 1e-12);
+    assert.ok(Math.abs(actual.minimum - target.minimum) <= tolerance(target.minimum));
+    assert.ok(Math.abs(actual.maximum - target.maximum) <= tolerance(target.maximum));
+  };
+  for (const axisID of ['linear', 'log', 'time']) {
+    const [positiveTarget, negativeTarget, zoomTarget] = expected.get(axisID);
+    const positive = reduceChartViewAction(initial, { type: 'pan-axis-view', axisID, fraction: Number.MAX_VALUE });
+    assert.equal(positive.ok, true);
+    assertWindow(positive.value.axis.visible, positiveTarget);
+    assert.equal(tryCreateChartViewState(positive.value.state.axes, positive.value.state.revision).ok, true);
+
+    const negative = reduceChartViewAction(initial, { type: 'pan-axis-view', axisID, fraction: -Number.MAX_VALUE });
+    assert.equal(negative.ok, true);
+    assertWindow(negative.value.axis.visible, negativeTarget);
+    assert.equal(tryCreateChartViewState(negative.value.state.axes, negative.value.state.revision).ok, true);
+
+    const zoomedOut = reduceChartViewAction(initial, {
+      type: 'zoom-axis-view', axisID, factor: Number.MIN_VALUE, anchor: 0.5,
+    });
+    assert.equal(zoomedOut.ok, true);
+    assertWindow(zoomedOut.value.axis.visible, zoomTarget);
+    assert.equal(tryCreateChartViewState(zoomedOut.value.state.axes, zoomedOut.value.state.revision).ok, true);
+  }
+
+  const underflow = reduceChartViewAction(initial, {
+    type: 'zoom-axis-view', axisID: 'linear', factor: Number.MAX_VALUE, anchor: 0.5,
+  });
+  assert.equal(underflow.ok, false);
+  assert.equal(underflow.error.code, 'chart-view-invalid');
+
+  const bounded = createChartAxisViewState(axes, [{
+    axisID: 'linear', initial: { kind: 'continuous', minimum: 20, maximum: 60 }, minimumSpan: 10,
+  }]);
+  const minimumZoom = reduceChartViewAction(bounded, {
+    type: 'zoom-axis-view', axisID: 'linear', factor: Number.MAX_VALUE, anchor: 0.5,
+  });
+  assert.equal(minimumZoom.ok, true);
+  assert.deepEqual(minimumZoom.value.axis.visible, { kind: 'continuous', minimum: 35, maximum: 45 });
+  assert.equal(tryCreateChartViewState(minimumZoom.value.state.axes, minimumZoom.value.state.revision).ok, true);
+
+  const controller = createChartController({
+    definition: {
+      coordinate: { kind: 'cartesian', axes: [
+        { id: 'x', orientation: 'x', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: 100 } },
+        { id: 'y', orientation: 'y', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: 1 } },
+      ] },
+      layers: [{ id: 'line', kind: 'line', xAxis: 'x', yAxis: 'y', data: [
+        { id: 0, x: 0, y: 0 }, { id: 1, x: 100, y: 1 },
+      ] }],
+    },
+    viewCapabilities: [{ axisID: 'x', initial: { kind: 'continuous', minimum: 20, maximum: 60 } }],
+  });
+  const dispatched = controller.dispatch({
+    type: 'pan-axis-view', axisID: 'x', fraction: Number.MAX_VALUE, phase: 'settled',
+  });
+  assert.equal(dispatched.ok, true);
+  const committed = controller.getSnapshot().state.view;
+  assert.deepEqual(committed.axes[0].visible, { kind: 'continuous', minimum: 60, maximum: 100 });
+  assert.equal(tryCreateChartViewState(committed.axes, committed.revision).ok, true);
+  assert.equal(controller.project({ viewport: { width: 320, height: 180 } }).ok, true);
+
+  const beforeRejectedZoom = controller.getSnapshot();
+  const rejectedZoom = controller.dispatch({
+    type: 'zoom-axis-view', axisID: 'x', factor: Number.MAX_VALUE, anchor: 0.5, phase: 'settled',
+  });
+  assert.equal(rejectedZoom.ok, false);
+  assert.equal(rejectedZoom.error.code, 'chart-view-invalid');
+  assert.equal(controller.getSnapshot(), beforeRejectedZoom);
 });
 
 test('limits produce semantic no-ops and reset-to-latest restores sticky follow-end', () => {

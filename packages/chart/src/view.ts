@@ -120,7 +120,9 @@ export function reduceChartViewAction<ID extends StableID>(
     if (!finite(action.factor) || action.factor <= 0 || !finite(anchor) || anchor < 0 || anchor > 1) {
       return invalidView('Chart zoom factor must be positive and its normalized anchor must be between zero and one.');
     }
-    visible = zoomWindow(axis, action.factor, anchor);
+    const zoomed = zoomWindow(axis, action.factor, anchor);
+    if (zoomed === null) return invalidView('Chart zoom result cannot be represented as a valid axis window.');
+    visible = zoomed;
     mathOperations = axis.scale === 'logarithmic' ? 24 : 14;
   } else if (action.type === 'reset-axis-view') {
     if (action.to !== undefined && action.to !== 'initial' && action.to !== 'latest') return invalidView('Chart reset target is invalid.');
@@ -130,6 +132,7 @@ export function reduceChartViewAction<ID extends StableID>(
     } else visible = axis.initial ?? axis.base;
     mathOperations = 8;
   } else return invalidView('Chart view action type is invalid.');
+  if (!validDerivedWindow(axis, visible)) return invalidView('Chart view action produced an invalid axis window.');
   if (sameWindow(axis.visible, visible) && !(action.type === 'reset-axis-view' && action.to === 'latest')) {
     followingEnd = axis.followingEnd ?? false;
   }
@@ -227,16 +230,37 @@ type ChartCategoricalWindow = Extract<ChartAxisViewWindow, { readonly kind: 'cat
 
 function panWindow<ID extends StableID>(axis: ChartAxisView<ID>, fraction: number): ChartAxisViewWindow {
   const current = transformed(axis, axis.visible);
-  const shift = (current.end - current.start) * fraction;
+  const base = transformed(axis, axis.base);
+  const span = current.end - current.start;
+  if (fraction > 0 && fraction >= (base.end - current.end) / span) {
+    return fromTransformed(axis, { start: base.end - span, end: base.end });
+  }
+  if (fraction < 0 && fraction <= -(current.start - base.start) / span) {
+    return fromTransformed(axis, { start: base.start, end: base.start + span });
+  }
+  const shift = span * fraction;
   return fromTransformed(axis, constrainTransformed(axis, current.start + shift, current.end + shift, 0.5));
 }
 
-function zoomWindow<ID extends StableID>(axis: ChartAxisView<ID>, factor: number, anchor: number): ChartAxisViewWindow {
+function zoomWindow<ID extends StableID>(axis: ChartAxisView<ID>, factor: number, anchor: number): ChartAxisViewWindow | null {
   const current = transformed(axis, axis.visible);
-  const anchorValue = current.start + (current.end - current.start) * anchor;
-  const span = (current.end - current.start) / factor;
+  const base = transformed(axis, axis.base);
+  const currentSpan = current.end - current.start;
+  const baseSpan = base.end - base.start;
+  const limits = spanLimits(axis, baseSpan);
+  let span: number;
+  if (factor <= currentSpan / limits.maximum) span = limits.maximum;
+  else if (limits.minimum > 0 && factor >= currentSpan / limits.minimum) span = limits.minimum;
+  else {
+    span = currentSpan / factor;
+    if (!finite(span) || span <= 0) return null;
+    span = Math.max(limits.minimum, Math.min(limits.maximum, span));
+  }
+  const anchorValue = current.start + currentSpan * anchor;
   const start = anchorValue - span * anchor;
-  return fromTransformed(axis, constrainTransformed(axis, start, start + span, anchor));
+  const end = start + span;
+  if (!finite(start) || !finite(end) || end <= start) return null;
+  return fromTransformed(axis, constrainTransformed(axis, start, end, anchor));
 }
 
 function constrainWindow<ID extends StableID>(axis: ChartAxisView<ID>, window: ChartAxisViewWindow, anchor: number): ChartAxisViewWindow {
@@ -252,10 +276,9 @@ function constrainTransformed<ID extends StableID>(
 ): { readonly start: number; readonly end: number } {
   const base = transformed(axis, axis.base);
   const baseSpan = base.end - base.start;
-  const minimum = Math.min(baseSpan, axis.minimumSpan ?? (axis.scale === 'categorical' ? 1 : 0));
-  const maximum = Math.min(baseSpan, axis.maximumSpan ?? baseSpan);
+  const limits = spanLimits(axis, baseSpan);
   const requested = Math.max(0, inputEnd - inputStart);
-  const span = Math.max(minimum, Math.min(maximum, requested));
+  const span = Math.max(limits.minimum, Math.min(limits.maximum, requested));
   const anchored = inputStart + requested * anchor;
   let start = anchored - span * anchor;
   let end = start + span;
@@ -268,6 +291,26 @@ function constrainTransformed<ID extends StableID>(
     if (end > base.end) { end = base.end; start = Math.max(base.start, end - Math.max(1, Math.round(span))); }
   }
   return { start, end };
+}
+
+function spanLimits<ID extends StableID>(axis: ChartAxisView<ID>, baseSpan: number): { readonly minimum: number; readonly maximum: number } {
+  return {
+    minimum: Math.min(baseSpan, axis.minimumSpan ?? (axis.scale === 'categorical' ? 1 : 0)),
+    maximum: Math.min(baseSpan, axis.maximumSpan ?? baseSpan),
+  };
+}
+
+function validDerivedWindow<ID extends StableID>(axis: ChartAxisView<ID>, window: ChartAxisViewWindow): boolean {
+  if (!compatibleWindow(axis, window)) return false;
+  const base = transformed(axis, axis.base);
+  const visible = transformed(axis, window);
+  const baseSpan = base.end - base.start;
+  const span = visible.end - visible.start;
+  const limits = spanLimits(axis, baseSpan);
+  return finite(base.start) && finite(base.end) && finite(baseSpan) && baseSpan > 0
+    && finite(visible.start) && finite(visible.end) && finite(span) && span > 0
+    && visible.start >= base.start && visible.end <= base.end
+    && span >= limits.minimum && span <= limits.maximum;
 }
 
 function latestWindow<ID extends StableID>(axis: ChartAxisView<ID>): ChartAxisViewWindow {

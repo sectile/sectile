@@ -757,7 +757,8 @@
       "inherits": "linear-v1",
       "source": "packages/chart/src/view.ts",
       "benchmarkIDs": [
-        "chart:view:transition"
+        "chart:view:transition",
+        "VAL-034:chart-view-finite-transition"
       ],
       "specificationCeiling": "O(nAxis)",
       "contract": {
@@ -789,10 +790,17 @@
         "assumptions": [
           "view states originate from the validated Chart construction boundary",
           "axis identities and order do not change during one input transition",
+          "canonical transformed base/current bounds and spans are finite and increasing",
           "logarithmic math runs in log space and categorical math runs in integral slot space"
         ],
-        "proof": "A retained StableID index resolves one axis, scalar scale-specific math produces one window, and accepted transitions replace one axis record in an array bounded by maxAxes. No-op transitions return the prior state identity.",
-        "adversarialWitness": "One million alternating zoom transitions across 16 mixed axes retain one lookup per transition and report bounded scalar math while snapshot publication never exceeds the hard 16-axis ceiling.",
+        "deterministicWork": [
+          "packages/chart/tests/interaction/view.test.mjs extreme finite pan/zoom canonical-state regression"
+        ],
+        "proof": "A retained StableID index resolves one axis. Pan compares the finite action fraction with the remaining base movement ratio before multiplying; zoom compares its factor with finite minimum/maximum useful span thresholds before dividing. Only an in-bound request performs the ordinary scalar product/quotient, and one final scalar invariant guard rejects any unrepresentable derived window before publication. Accepted transitions replace one axis record in an array bounded by maxAxes; no-op transitions return the prior state identity.",
+        "adversarialWitness": "Number.MAX_VALUE positive/negative pans and Number.MIN_VALUE zoom-out requests on linear, temporal, and logarithmic windows remain finite and constructor-valid; an unrepresentable zero-minimum-span zoom-in returns chart-view-invalid, while an explicit minimum span clamps safely. One million ordinary alternating zoom transitions across 16 mixed axes retain one lookup per transition and bounded scalar work.",
+        "evidence": [
+          "VAL-034"
+        ],
         "fullScan": {
           "allowed": false,
           "rationale": "One input transition must not scan chart data or search axes linearly."

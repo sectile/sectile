@@ -102,7 +102,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | chart:projection.hit-test.indexed | trusted | `O(log kRepresentative + cCandidate + lLine log mLine + h log k + k log k)` expected | `O(log kRepresentative + k)` | `O(k)` | `O(1)` | forbidden | VAL-033 |
 | chart:projection.query-index.build | trusted | `O(kRepresentative log kRepresentative)` worst-case | `O(kRepresentative)` | `O(1)` | `O(kRepresentative)` | allowed | VAL-016, VAL-017 |
 | chart:scale.affine | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-032 |
-| chart:view.transition.axis-domain | trusted | `O(nAxis)` worst-case | `O(nAxis)` | `O(nAxis)` | `O(nAxis)` | forbidden | VAL-016, VAL-017 |
+| chart:view.transition.axis-domain | trusted | `O(nAxis)` worst-case | `O(nAxis)` | `O(nAxis)` | `O(nAxis)` | forbidden | VAL-034 |
 | dom:chart.canvas2d-render | connected | `O(a + k)` worst-case | `O(a)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | dom:chart.disconnect | connected | `O(r + u)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | dom:chart.navigation-dispatch | connected | `O(a + p)` worst-case | `O(a + p)` | `O(a)` | `O(a + p)` | forbidden | VAL-016, VAL-017 |
