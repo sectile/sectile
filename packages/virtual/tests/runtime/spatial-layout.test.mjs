@@ -153,6 +153,46 @@ test('ISSUE-085: spatial splice scalar preflight rejects before inserted item re
   assert.equal(itemReads, 0);
 });
 
+test('ISSUE-086: spatial construction and accepted splices retain one caller-item snapshot', () => {
+  let constructionIDReads = 0;
+  let constructionRectReads = 0;
+  let constructionXReads = 0;
+  let constructionZReads = 0;
+  const constructionRect = {
+    get x() { constructionXReads += 1; return constructionXReads === 1 ? 10 : Number.NaN; },
+    y: 20, width: 30, height: 40,
+  };
+  const constructed = createSpatialLayout([{
+    get id() { constructionIDReads += 1; return constructionIDReads === 1 ? 'canonical' : 'skewed'; },
+    get rect() { constructionRectReads += 1; return constructionRectReads === 1 ? constructionRect : { x: Number.NaN, y: 0, width: 1, height: 1 }; },
+    get zIndex() { constructionZReads += 1; return constructionZReads === 1 ? 7 : Number.MAX_SAFE_INTEGER + 1; },
+  }]);
+  assert.deepEqual([constructionIDReads, constructionRectReads, constructionXReads, constructionZReads], [1, 1, 1, 1]);
+  assert.equal(constructed.domain.at(0), 'canonical');
+  assert.equal(constructed.items.at(0).id, 'canonical');
+  assert.deepEqual(constructed.items.at(0).rect, { x: 10, y: 20, width: 30, height: 40 });
+  assert.equal(constructed.items.at(0).zIndex, 7);
+
+  const base = createSpatialLayout([{ id: 'base', rect: { x: 0, y: 0, width: 1, height: 1 } }]);
+  let patchIDReads = 0;
+  let patchRectReads = 0;
+  let patchZReads = 0;
+  const changed = applySpatialMutation(base, {
+    type: 'patch',
+    patch: { type: 'splice', index: 1, deleteCount: 0, inserted: ['inserted'] },
+    inserted: [{
+      get id() { patchIDReads += 1; return patchIDReads === 1 ? 'inserted' : 'skewed'; },
+      get rect() { patchRectReads += 1; return patchRectReads === 1 ? { x: 2, y: 3, width: 4, height: 5 } : { x: Number.NaN, y: 0, width: 1, height: 1 }; },
+      get zIndex() { patchZReads += 1; return patchZReads === 1 ? 2 : Number.MAX_SAFE_INTEGER + 1; },
+    }],
+  }).state;
+  assert.deepEqual([patchIDReads, patchRectReads, patchZReads], [1, 1, 1]);
+  assert.equal(changed.domain.at(1), 'inserted');
+  assert.equal(changed.items.at(1).id, 'inserted');
+  assert.deepEqual(changed.items.at(1).rect, { x: 2, y: 3, width: 4, height: 5 });
+  assert.equal(changed.items.at(1).zIndex, 2);
+});
+
 test('spatial move and permutation patches preserve geometry without rebuilding the packed tree', () => {
   const items = Array.from({ length: 4_096 }, (_, index) => ({
     id: `item-${index}`,

@@ -324,19 +324,15 @@ function tryApplySpatialPatch<ID extends StableID>(
     patch.inserted.length,
   );
   if (!preflight.ok) return preflight;
-  if (mutation.inserted.some((item, index) => item.id !== patch.inserted[index])) {
-    return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial inserted items must match the patched identities.');
-  }
   const frozenInserted: SpatialItem<ID>[] = [];
-  for (const item of mutation.inserted) {
-    if (!validRect(item.rect) || (item.zIndex !== undefined && !Number.isSafeInteger(item.zIndex))) {
-      return fail('transition-rejection', 'virtual-layout-geometry-invalid', 'Spatial items require finite non-negative rectangles and safe-integer z-indices.', { item });
-    }
-    frozenInserted.push(Object.freeze({
-      id: item.id,
-      rect: createRect(item.rect),
-      ...(item.zIndex === undefined || item.zIndex === 0 ? {} : { zIndex: item.zIndex }),
-    }));
+  for (let index = 0; index < mutation.inserted.length; index += 1) {
+    const canonical = canonicalizeSpatialItem(
+      mutation.inserted[index]!,
+      'transition-rejection',
+      patch.inserted[index],
+    );
+    if (!canonical.ok) return canonical;
+    frozenInserted.push(canonical.value);
   }
   const domain = tryApplySequencePatch(state.domain, patch, {
     maxItems: state.maxItems,
@@ -769,6 +765,33 @@ function spatialOverlayLimit(size: number): number {
   return size < 1_024 ? 0 : Math.min(256, Math.ceil(size / LEAF_SIZE));
 }
 
+function canonicalizeSpatialItem<ID extends StableID>(
+  item: SpatialItem<ID>,
+  errorClass: 'construction' | 'transition-rejection',
+  expectedID?: ID,
+): VirtualResult<SpatialItem<ID>> {
+  const id = item.id;
+  if (expectedID !== undefined && id !== expectedID) {
+    return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial inserted items must match the patched identities.');
+  }
+  const inputRect = item.rect;
+  const rect = Object.freeze({
+    x: inputRect.x,
+    y: inputRect.y,
+    width: inputRect.width,
+    height: inputRect.height,
+  });
+  const zIndex = item.zIndex;
+  if (!validRect(rect) || (zIndex !== undefined && !Number.isSafeInteger(zIndex))) {
+    return fail(errorClass, 'virtual-layout-geometry-invalid', 'Spatial items require finite non-negative rectangles and safe-integer z-indices.');
+  }
+  return ok(Object.freeze({
+    id,
+    rect: createRect(rect),
+    ...(zIndex === undefined || zIndex === 0 ? {} : { zIndex }),
+  }));
+}
+
 function validateItems<ID extends StableID>(
   items: readonly SpatialItem<ID>[],
   maxItems: number,
@@ -781,13 +804,14 @@ function validateItems<ID extends StableID>(
   const ids: ID[] = [];
   const frozen: SpatialItem<ID>[] = [];
   for (let index = 0; index < items.length; index += 1) {
-    const item = items[index]!;
+    const canonical = canonicalizeSpatialItem(items[index]!, 'construction');
+    if (!canonical.ok) return canonical;
+    const item = canonical.value;
     if (existingDomain !== undefined && existingDomain.at(index) !== item.id) {
       return fail('construction', 'virtual-layout-domain-mismatch', 'Spatial domain identities must align with item declaration order.', { index, id: item.id });
     }
-    if (!validRect(item.rect) || (item.zIndex !== undefined && (!Number.isSafeInteger(item.zIndex)))) return fail('construction', 'virtual-layout-geometry-invalid', 'Spatial items require finite non-negative rectangles and safe-integer z-indices.', { item });
     if (existingDomain === undefined) ids.push(item.id);
-    frozen.push(Object.freeze({ id: item.id, rect: createRect(item.rect), ...(item.zIndex === undefined || item.zIndex === 0 ? {} : { zIndex: item.zIndex }) }));
+    frozen.push(item);
   }
   const domain = existingDomain === undefined
     ? tryCreateSequence(ids, { maxItems: Math.max(1, maxItems) })
