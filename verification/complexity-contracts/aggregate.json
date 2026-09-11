@@ -29979,7 +29979,8 @@
       "id": "collection.project.raw",
       "source": "packages/virtual/src/collection.ts",
       "benchmarkIDs": [
-        "VAL-003:raw-collection-project-work"
+        "VAL-003:raw-collection-project-work",
+        "VAL-028:raw-collection-cardinality-work"
       ],
       "specificationCeiling": "O(nItem)",
       "reviewedWeakening": null,
@@ -30011,24 +30012,27 @@
         },
         "assumptions": [
           "raw arrays carry no trusted identity patch",
-          "each source position is resolved exactly once"
+          "the preflight-captured cardinality is the only resolver iteration boundary"
         ],
         "ceilings": [
           "maxItems",
           "maxIDCodeUnits"
         ],
         "benchmarkIDs": [
-          "VAL-003:raw-collection-project-work"
+          "VAL-003:raw-collection-project-work",
+          "VAL-028:raw-collection-cardinality-work"
         ],
         "deterministicWork": [
-          "exactly nItem ID resolver calls after ceiling validation",
-          "one Core Sequence construction"
+          "stable input performs exactly nItem ID resolver calls after ceiling validation",
+          "callback-induced cardinality drift rejects after at most nItem resolver calls and before resolving appended positions",
+          "one Core Sequence construction only after cardinality remains stable"
         ],
-        "resourceRationale": "Initial projection retains the application array reference and one Core Sequence identity owner.",
-        "proof": "Projection resolves every raw item once and Core validates and indexes each resulting stable identity once.",
-        "adversarialWitness": "A maximum-size raw array with the final identity invalid still requires complete preceding validation.",
+        "resourceRationale": "Initial projection retains the application array reference and one Core Sequence identity owner; callback mutation cannot expand package-owned resolver work beyond the accepted cardinality.",
+        "proof": "Projection captures the ceiling-validated source size once, resolves only indexes below that bound, and checks the live array length after the fixed resolver loop before Core validates and indexes the resulting stable identities.",
+        "adversarialWitness": "ISSUE-098 starts with one accepted item and a resolver that appends on every invocation; production resolution performs one callback and returns a typed input failure instead of following the moving array boundary.",
         "evidence": [
-          "VAL-003"
+          "VAL-003",
+          "VAL-028"
         ],
         "fullScan": {
           "allowed": true,

@@ -167,7 +167,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:collection.extents.reconcile | trusted | `O(jChanged log nItem)` worst-case | `O(jChanged)` | `O(jChanged)` | `O(jChanged)` | forbidden | VAL-003 |
 | virtual:collection.lanes.resolve | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-003 |
 | virtual:collection.patch.trusted | external | `O(jChanged)` worst-case | `O(jChanged)` | `O(1)` | `O(jChanged)` | forbidden | VAL-003 |
-| virtual:collection.project.raw | external | `O(nItem)` worst-case | `O(nItem)` | `O(1)` | `O(nItem)` | allowed | VAL-003 |
+| virtual:collection.project.raw | external | `O(nItem)` worst-case | `O(nItem)` | `O(1)` | `O(nItem)` | allowed | VAL-003, VAL-028 |
 | virtual:collection.replace.raw | external | `O(nItem + jChanged)` worst-case | `O(jChanged)` | `O(1)` | `O(jChanged)` | allowed | VAL-003 |
 | virtual:collection.value-extents.reconcile | trusted | `O(jChanged log nItem)` worst-case | `O(jChanged)` | `O(jChanged)` | `O(jChanged)` | forbidden | VAL-016, VAL-017 |
 | virtual:extent.lookup | trusted | `O(log n)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |

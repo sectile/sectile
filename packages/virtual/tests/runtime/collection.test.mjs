@@ -11,6 +11,7 @@ import {
   reconcileVirtualCollectionValueExtents,
   replaceVirtualCollection,
   resolveVirtualLaneGeometry,
+  tryCreateVirtualCollection,
   updateVirtualCollection,
   virtualSizePolicyRequiresMeasurement,
 } from '../../.verification-dist/collection.js';
@@ -61,6 +62,34 @@ test('COL-01: raw projection preserves StableID distinctions and enforces ceilin
     'item-ceiling-exceeded',
   );
   assert.equal(calls, 0);
+});
+
+test('ISSUE-098: raw resolvers cannot move the preflight cardinality boundary', () => {
+  const growing = [item('a')];
+  let calls = 0;
+  const created = tryCreateVirtualCollection(
+    growing,
+    (value, index) => {
+      calls += 1;
+      growing.push(item(`appended-${index}`));
+      return value.id;
+    },
+    { maxItems: 1 },
+  );
+  assert.equal(created.ok, false);
+  assert.equal(created.error.code, 'virtual-collection-input-invalid');
+  assert.equal(calls, 1);
+  assert.equal(growing.length, 2);
+
+  const stable = [item('a'), item('b'), item('c')];
+  calls = 0;
+  const stableResult = tryCreateVirtualCollection(stable, (value) => {
+    calls += 1;
+    return value.id;
+  }, { maxItems: 3 });
+  assert.equal(stableResult.ok, true);
+  assert.equal(calls, stable.length);
+  assert.deepEqual(stableResult.value.domain.ids, ['a', 'b', 'c']);
 });
 
 test('COL-01: raw replacements resolve only the changed value window and reuse semantic no-ops', () => {

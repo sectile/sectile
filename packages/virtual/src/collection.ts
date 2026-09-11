@@ -183,9 +183,10 @@ export function tryCreateVirtualCollection<
   const validated = validateProjectionInput(items, getID, options);
   if (!validated.ok) return validated;
   const ids = new Array<ID>(items.length);
-  for (let index = 0; index < items.length; index += 1) {
+  for (let index = 0; index < ids.length; index += 1) {
     ids[index] = getID(items[index] as Value, index);
   }
+  if (items.length !== ids.length) return collectionInputFailure('Items changed.', items);
   const domain = tryCreateSequence(ids, {
     maxItems: validated.value.maxItems,
     maxIDCodeUnits: validated.value.maxIDCodeUnits,
@@ -1105,15 +1106,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function finiteNonNegative(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+  return Number.isFinite(value as number) && (value as number) >= 0;
 }
 
 function finitePositive(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value) && value > 0;
+  return finiteNonNegative(value) && value > 0;
 }
 
 function positiveSafeInteger(value: unknown): value is number {
-  return typeof value === 'number'
-    && Number.isSafeInteger(value)
-    && value > 0;
+  return Number.isSafeInteger(value as number) && (value as number) > 0;
 }
