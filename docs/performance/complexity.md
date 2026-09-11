@@ -190,7 +190,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:spatial.query | trusted | `O(log nItem + (cCandidate + pOverlay) * dSequence + kPlacement log kPlacement)` expected | `O(log nItem + cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:surface.frame-transform | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:track.measure | trusted | `O(jChanged log nTrack)` worst-case | `O(jChanged log nTrack)` | `O(1)` | `O(jChanged log nTrack)` | forbidden | VAL-016, VAL-017 |
-| virtual:track.query | trusted | `O(log nRegion + cCandidate + kPlacement log kPlacement)` worst-case | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| virtual:track.query | trusted | `O(log nTrack + log nRegion + cCandidate + kPlacement log kPlacement)` worst-case | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | vue:chart.declaration-reconcile | mounted | `O(aAxis + lLayer + nDatum)` worst-case | `O(aAxis + lLayer + nDatum)` | `O(1)` | `O(aAxis + lLayer + nDatum)` | allowed | VAL-016, VAL-017 |
 | vue:chart.selector-bridge | mounted | `O(sState + sLayer*lLayer + sAxis*aAxis)` worst-case | `O(1)` | `O(1)` | `O(sState + sLayer + sAxis)` | forbidden | VAL-016, VAL-017 |
 | vue:collection.external-reconcile | external | `O(nOption + sSelected + dDisabled)` expected | `O(nOption + sSelected + dDisabled)` | `O(sSelected)` | `O(sSelected)` | allowed | VAL-016, VAL-017 |

@@ -1341,9 +1341,14 @@
       "benchmarkIDs": [
         "VAL-017:track-query-work"
       ],
-      "specificationCeiling": "O(log nRegion + cCandidate + kPlacement log kPlacement)",
+      "specificationCeiling": "O(log nTrack + log nRegion + cCandidate + kPlacement log kPlacement)",
       "contract": {
         "variables": [
+          {
+            "name": "nTrack",
+            "meaning": "maximum logical row or column track count",
+            "ceiling": "ExtentIndex maxItems"
+          },
           {
             "name": "nRegion",
             "meaning": "indexed sparse region count",
@@ -1361,7 +1366,7 @@
           }
         ],
         "time": {
-          "bound": "O(log nRegion + cCandidate + kPlacement log kPlacement)",
+          "bound": "O(log nTrack + log nRegion + cCandidate + kPlacement log kPlacement)",
           "kind": "worst-case",
           "runtimeState": "trusted"
         },
@@ -1378,8 +1383,9 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Range lookup prunes non-overlapping rows, filters candidates by columns, emits intersections, and restores domain order.",
-        "adversarialWitness": "Many row-spanning regions become candidates but only interleaved column intersections are emitted.",
+        "proof": "Row and column range lookup each binary-search the retained ExtentIndex over its full safe-integer cardinality; the region interval index then prunes non-overlapping rows, filters candidates by columns, emits intersections, and restores domain order.",
+        "adversarialWitness": "ISSUE-080 queries compact uniform track indexes across and above the 32-bit boundary and counts production range-kernel offset/extent reads on a 2^40-scale logical domain; range work remains logarithmic. Many row-spanning regions separately exercise candidate filtering with interleaved column intersections.",
+        "deterministicWork": ["packages/virtual/tests/runtime/linear-layout.test.mjs ISSUE-080"],
         "fullScan": {
           "allowed": false,
           "rationale": "Full work is allowed only when candidate/output cardinality itself reaches nRegion."

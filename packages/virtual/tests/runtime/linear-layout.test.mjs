@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createCollectionWindowState } from '@sectile/core/collection-window';
 import { createSequence } from '@sectile/core/sequence';
-import { createExtentIndex } from '../../.verification-dist/extent-index.js';
+import { createExtentIndex, createUniformExtentIndex } from '../../.verification-dist/extent-index.js';
+import { trackRange } from '../../.verification-dist/internal/track.js';
 import {
   applyLinearMeasurements,
   applyLinearPatch,
@@ -236,6 +237,37 @@ test('VRT-06: data loading remains a generation-bound collection-window concern'
   const plan = queryLinearLayout(state, { viewport: { x: 0, y: 500, width: 100, height: 50 }, overscan: 20 });
   const collection = createCollectionWindowState({ start: 50, size: 5, total: 100 });
   assert.deepEqual(collectionWindowEventForLinearPlan(plan, collection, domain(5, 'loaded')), { ok: true, value: { type: 'request-window', direction: 'after', anchor: 'loaded-4' } });
+});
+
+test('ISSUE-080: non-zero-gap track ranges preserve full safe-integer cardinalities', () => {
+  const sizes = [2 ** 32 - 1, 2 ** 32, 2 ** 32 + 1];
+  for (const size of sizes) {
+    const rows = createUniformExtentIndex(size, exact(1), { maxItems: size });
+    const columns = createUniformExtentIndex(1, exact(1), { maxItems: 1 });
+    const state = createTrackGridLayout(rows, columns, [], { rowGap: 1 });
+    const first = queryTrackGridLayout(state, { viewport: { x: 0, y: 0, width: 1, height: 1 } });
+    assert.deepEqual(first.rowRange, { start: 0, end: 1 });
+
+    const tailStart = 2 * (size - 1);
+    const tail = queryTrackGridLayout(state, { viewport: { x: 0, y: tailStart, width: 1, height: 1 } });
+    assert.deepEqual(tail.rowRange, { start: size - 1, end: size });
+  }
+
+  const size = 2 ** 40 + 1;
+  const source = createUniformExtentIndex(size, exact(1), { maxItems: size });
+  let offsetReads = 0;
+  let extentReads = 0;
+  const counted = {
+    size: source.size,
+    totalExtent: source.totalExtent,
+    offsetAt(index) { offsetReads += 1; return source.offsetAt(index); },
+    extentAt(index) { extentReads += 1; return source.extentAt(index); },
+  };
+  const tailStart = 2 * (size - 1);
+  assert.deepEqual(trackRange(counted, 1, 'forward', tailStart, tailStart + 1), { start: size - 1, end: size });
+  const stepCeiling = Math.ceil(Math.log2(size)) + 1;
+  assert.ok(offsetReads <= stepCeiling * 2, { offsetReads, stepCeiling });
+  assert.ok(extentReads <= stepCeiling, { extentReads, stepCeiling });
 });
 
 test('VRT-01, VRT-05: sparse track grids project merged, reversed, two-dimensional regions', () => {

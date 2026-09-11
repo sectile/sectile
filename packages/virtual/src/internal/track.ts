@@ -34,7 +34,7 @@ function firstIntersecting(index: ExtentIndex, gap: number, offset: number): num
   let low = 0;
   let high = index.size;
   while (low < high) {
-    const middle = (low + high) >>> 1;
+    const middle = low + Math.floor((high - low) / 2);
     const start = (index.offsetAt(middle) ?? 0) + gap * middle;
     const extent = index.extentAt(middle);
     const value = extent === null ? 0 : extentValue(extent);
@@ -62,7 +62,7 @@ function firstStartingAtOrAfter(index: ExtentIndex, gap: number, offset: number)
   let low = 0;
   let high = index.size;
   while (low < high) {
-    const middle = (low + high) >>> 1;
+    const middle = low + Math.floor((high - low) / 2);
     const start = (index.offsetAt(middle) ?? 0) + gap * middle;
     if (start < offset) low = middle + 1;
     else high = middle;
