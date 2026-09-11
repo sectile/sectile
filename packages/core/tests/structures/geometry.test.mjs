@@ -11,14 +11,18 @@ import {
   createSize,
   insetRect,
   intersectRects,
+  isFinitePoint,
   isFiniteRect,
+  isFiniteSize,
   outsetRect,
   pointDelta,
   rectContainsPoint,
   rectContainsRect,
   rectOverflow,
   rectanglesIntersect,
+  tryCreatePoint,
   tryCreateRect,
+  tryCreateSize,
 } from '../../.verification-dist/structures/geometry.js';
 
 test('finite geometry factories preserve fractional and negative coordinates', () => {
@@ -30,6 +34,41 @@ test('finite geometry factories preserve fractional and negative coordinates', (
     assert.equal(tryCreateRect({ x: value, y: 0, width: 1, height: 1 }).error.code, 'invalid-boundary');
   }
   assert.equal(tryCreateRect({ x: 0, y: 0, width: -1, height: 1 }).error.code, 'invalid-boundary');
+});
+
+test('ISSUE-087: finite geometry factories retain the scalar observation they validate', () => {
+  let pointReads = 0;
+  const point = tryCreatePoint({
+    get x() { pointReads += 1; return pointReads === 1 ? 1 : Number.NaN; },
+    y: 2,
+  });
+  assert.equal(point.ok, true);
+  assert.equal(pointReads, 1);
+  assert.equal(isFinitePoint(point.value), true);
+  assert.deepEqual(point.value, { x: 1, y: 2 });
+
+  let sizeReads = 0;
+  const size = tryCreateSize({
+    get width() { sizeReads += 1; return sizeReads === 1 ? 3 : -1; },
+    height: 4,
+  });
+  assert.equal(size.ok, true);
+  assert.equal(sizeReads, 1);
+  assert.equal(isFiniteSize(size.value), true);
+  assert.deepEqual(size.value, { width: 3, height: 4 });
+
+  let rectXReads = 0;
+  let rectWidthReads = 0;
+  const rect = tryCreateRect({
+    get x() { rectXReads += 1; return rectXReads === 1 ? 5 : Number.POSITIVE_INFINITY; },
+    y: 6,
+    get width() { rectWidthReads += 1; return rectWidthReads === 1 ? 7 : -1; },
+    height: 8,
+  });
+  assert.equal(rect.ok, true);
+  assert.deepEqual([rectXReads, rectWidthReads], [1, 1]);
+  assert.equal(isFiniteRect(rect.value), true);
+  assert.deepEqual(rect.value, { x: 5, y: 6, width: 7, height: 8 });
 });
 
 test('intersection, containment, and bounds agree with scalar references', () => {

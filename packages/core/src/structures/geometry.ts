@@ -23,20 +23,28 @@ export function createRect(input: Rect): Rect { return unwrap(tryCreateRect(inpu
 export function createInsets(input: number | Partial<Insets> = 0): Insets { return unwrap(tryCreateInsets(input)); }
 
 export function tryCreatePoint(input: Point): Result<Point> {
-  return isFinitePoint(input)
-    ? ok(Object.freeze({ x: input.x, y: input.y }))
+  const x = input.x;
+  const y = input.y;
+  return finite(x) && finite(y)
+    ? ok(Object.freeze({ x, y }))
     : invalid('Point coordinates must be finite numbers.', input);
 }
 
 export function tryCreateSize(input: Size): Result<Size> {
-  return isFiniteSize(input)
-    ? ok(Object.freeze({ width: input.width, height: input.height }))
+  const width = input.width;
+  const height = input.height;
+  return nonNegative(width) && nonNegative(height)
+    ? ok(Object.freeze({ width, height }))
     : invalid('Size extents must be finite non-negative numbers.', input);
 }
 
 export function tryCreateRect(input: Rect): Result<Rect> {
-  return isFiniteRect(input)
-    ? ok(Object.freeze({ x: input.x, y: input.y, width: input.width, height: input.height }))
+  const x = input.x;
+  const y = input.y;
+  const width = input.width;
+  const height = input.height;
+  return finite(x) && finite(y) && nonNegative(width) && nonNegative(height)
+    ? ok(Object.freeze({ x, y, width, height }))
     : invalid('Rect coordinates must be finite and extents must be finite non-negative numbers.', input);
 }
 
