@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createExtentIndex, createUniformExtentIndex } from '../../.verification-dist/extent-index.js';
 import { createRegionOverlapWork, findRegionOverlap } from '../../.verification-dist/internal/region-overlap.js';
+import { readRepairDiagnostics } from '../../.verification-dist/internal/repair-diagnostics.js';
 import {
   applyGridMeasurements,
   applyTrackGridMutation,
@@ -120,6 +121,40 @@ test('ISSUE-092: sparse region overlap validation stays subquadratic for wide ac
     { value: { id: 'right', row: 5, column: 2 }, index: 1, rowEnd: 6, columnEnd: 4 },
   ];
   assert.deepEqual(findRegionOverlap(overlapping)?.map(({ value }) => value.id), ['left', 'right']);
+});
+
+test('ISSUE-094: sparse region replacement skips the previous region view', () => {
+  const count = 4_096;
+  const rows = createUniformExtentIndex(count, exact(1), { maxItems: count });
+  const columns = createUniformExtentIndex(1, exact(1), { maxItems: 1 });
+  const previous = Array.from({ length: count }, (_, row) => ({ id: `old-${row}`, row, column: 0 }));
+  const state = createTrackGridLayout(rows, columns, previous, { maxRegions: count });
+  const changed = applyTrackGridMutation(state, {
+    type: 'replace-regions',
+    regions: [{ id: 'new', row: count - 1, column: 0 }],
+  }).state;
+
+  const work = readRepairDiagnostics(changed);
+  assert.equal(work?.changed, 1);
+  assert.equal(work?.copiedEntries, 0);
+  assert.equal(work?.rebuiltItems, 0);
+  assert.deepEqual(
+    queryTrackGridLayout(changed, {
+      viewport: { x: 0, y: count - 2, width: 1, height: 2 },
+    }).placements.map(({ id }) => id),
+    ['new'],
+  );
+
+  const invalid = tryApplyTrackGridMutation(state, {
+    type: 'replace-regions',
+    regions: [
+      { id: 'left', row: 0, column: 0 },
+      { id: 'overlap', row: 0, column: 0 },
+    ],
+  });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'virtual-layout-region-overlap');
+  assert.equal(state.generation, 0);
 });
 
 test('GRD-04: row and column measurements preserve the index, anchor, and generation contract', () => {

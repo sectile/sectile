@@ -195,6 +195,21 @@ const gridMeasurement32Us = measure(2_000, (iteration) => {
 const gridInsertTrackMs = measureColdMilliseconds(() => applyTrackGridMutation(gridState, {
   type: 'splice-tracks', axis: 'row', index: 0, deleteCount: 0, inserted: [exact(28)],
 }).state.generation);
+const gridReplaceRegionByPreviousRegionsMs = {};
+for (const previousRegionCount of [1_000, 10_000, 100_000]) {
+  const state = previousRegionCount === strategySize
+    ? gridState
+    : createTrackGridLayout(
+        gridRows,
+        gridColumns,
+        gridRegions.slice(0, previousRegionCount),
+        { maxRegions: strategySize },
+      );
+  gridReplaceRegionByPreviousRegionsMs[previousRegionCount] = measureColdMilliseconds(() => applyTrackGridMutation(state, {
+    type: 'replace-regions',
+    regions: [{ id: 'grid-replacement', row: strategySize - 1, column: 0 }],
+  }).state.generation);
+}
 
 const partitionedRows = Array.from({ length: strategySize }, (_, index) => Object.freeze({
   id: `partitioned-row-${index}`,
@@ -368,7 +383,14 @@ const result = {
     changedMeasurement32Us: virtualMeasurement32Us,
     idempotentMeasurement32Us,
   },
-  trackGrid: { items: strategySize, queryUs: gridQueryUs, changedRowMeasurement32Us: gridMeasurement32Us, insertTrackMs: gridInsertTrackMs, buildMs: gridBuildMs },
+  trackGrid: {
+    items: strategySize,
+    queryUs: gridQueryUs,
+    changedRowMeasurement32Us: gridMeasurement32Us,
+    insertTrackMs: gridInsertTrackMs,
+    replaceRegionByPreviousRegionsMs: gridReplaceRegionByPreviousRegionsMs,
+    buildMs: gridBuildMs,
+  },
   partitionedTrackGrid: {
     items: strategySize,
     pinnedRows: 2,

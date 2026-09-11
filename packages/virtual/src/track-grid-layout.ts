@@ -10,6 +10,7 @@ import {
 import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
 import { fail, ok } from './internal/foundation.js';
 import { findRegionOverlap } from './internal/region-overlap.js';
+import { recordRepairDiagnostics } from './internal/repair-diagnostics.js';
 import { isFiniteTrackContentExtent, trackContentExtent, trackRange, trackSpan, type TrackRange } from './internal/track.js';
 import type { LinearFlow } from './linear-layout.js';
 import {
@@ -368,9 +369,10 @@ export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridL
   }
   let rows = state.rows;
   let columns = state.columns;
-  let regions: readonly GridRegion<ID>[] = state.regions.toArray();
+  let regions: readonly GridRegion<ID>[];
   if (mutation.type === 'replace-regions') regions = mutation.regions;
   else {
+    regions = state.regions.toArray();
     const target = mutation.axis === 'row' ? rows : columns;
     const changed = target.splice(mutation.index, mutation.deleteCount, mutation.inserted);
     if (!changed.ok) return changed;
@@ -401,6 +403,17 @@ export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridL
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
   const next = createState({ ...state, rows, columns, regions: regionArrayView(validated.value.map(({ value }) => value)), generation: generation.value }, validated.value);
+  if (mutation.type === 'replace-regions') {
+    recordRepairDiagnostics(next, {
+      mode: 'incremental',
+      changed: validated.value.length,
+      touchedBlocks: 0,
+      copiedNodes: 0,
+      copiedEntries: 0,
+      rebuiltItems: 0,
+      repairBound: state.maxRegions,
+    });
+  }
   return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
 }
 
