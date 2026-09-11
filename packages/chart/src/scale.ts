@@ -141,18 +141,17 @@ export function tryCreateCategoricalScale<Value extends number | string>(
   }
   const frozenRange = freezeRange(range);
   const frozenValues = Object.freeze(values);
-  const span = frozenRange.end - frozenRange.start;
   const scale: ChartScale<Value> = {
     kind: 'categorical',
     range: frozenRange,
     normalize(value: Value): number | null {
       const index = indices.get(value);
-      return index === undefined ? null : frozenRange.start + ((index + 0.5) / frozenValues.length) * span;
+      return index === undefined ? null : interpolate(frozenRange.start, frozenRange.end, (index + 0.5) / frozenValues.length);
     },
     invert(position: number): Value | null {
       if (!finite(position)) return null;
-      const ratio = (position - frozenRange.start) / span;
-      if (ratio < 0 || ratio > 1) return null;
+      const ratio = relativePosition(position, frozenRange.start, frozenRange.end);
+      if (!finite(ratio) || ratio < 0 || ratio > 1) return null;
       const index = Math.min(frozenValues.length - 1, Math.floor(ratio * frozenValues.length));
       return frozenValues[index] ?? null;
     },
@@ -167,7 +166,10 @@ export function tryCreateCategoricalScale<Value extends number | string>(
       const ticks: ChartTick<Value>[] = [];
       for (let index = 0; index < frozenValues.length && ticks.length < maximum; index += step) {
         const value = frozenValues[index] as Value;
-        ticks.push(Object.freeze({ value, position: frozenRange.start + ((index + 0.5) / frozenValues.length) * span }));
+        ticks.push(Object.freeze({
+          value,
+          position: interpolate(frozenRange.start, frozenRange.end, (index + 0.5) / frozenValues.length),
+        }));
       }
       return chartOK(Object.freeze(ticks));
     },
@@ -210,7 +212,11 @@ export function tryCreateContinuousColorScale(
     stops: frozenStops,
     color(value: number): ChartColor | null {
       if (!finite(value)) return null;
-      const ratio = Math.max(0, Math.min(1, (value - frozenDomain.minimum) / (frozenDomain.maximum - frozenDomain.minimum)));
+      const ratio = value <= frozenDomain.minimum
+        ? 0
+        : value >= frozenDomain.maximum
+          ? 1
+          : relativePosition(value, frozenDomain.minimum, frozenDomain.maximum);
       let upper = 1;
       while (upper < frozenStops.length - 1 && ratio > (frozenStops[upper] as ChartColorStop).offset) upper += 1;
       const left = frozenStops[upper - 1] as ChartColorStop;
@@ -311,19 +317,21 @@ function createNumericScale(
     return invalidScale('Chart scale domain cannot be transformed into finite distinct bounds.');
   }
   const frozenRange = freezeRange(range);
-  const domainSpan = transformedMaximum - transformedMinimum;
-  const rangeSpan = frozenRange.end - frozenRange.start;
   const scale: ChartScale<number> = {
     kind,
     range: frozenRange,
     normalize(value: number): number | null {
       if (!finite(value)) return null;
       const transformed = forward(value);
-      return finite(transformed) ? frozenRange.start + ((transformed - transformedMinimum) / domainSpan) * rangeSpan : null;
+      if (!finite(transformed)) return null;
+      const ratio = relativePosition(transformed, transformedMinimum, transformedMaximum);
+      const position = interpolate(frozenRange.start, frozenRange.end, ratio);
+      return finite(position) ? position : null;
     },
     invert(position: number): number | null {
       if (!finite(position)) return null;
-      const transformed = transformedMinimum + ((position - frozenRange.start) / rangeSpan) * domainSpan;
+      const ratio = relativePosition(position, frozenRange.start, frozenRange.end);
+      const transformed = interpolate(transformedMinimum, transformedMaximum, ratio);
       const value = backward(transformed);
       return finite(value) ? value : null;
     },
@@ -348,8 +356,8 @@ function uniformTicks(domain: ChartNumericDomain, range: ChartRange, maximum: nu
   for (let index = 0; index < maximum; index += 1) {
     const ratio = index / (maximum - 1);
     ticks.push(Object.freeze({
-      value: domain.minimum + (domain.maximum - domain.minimum) * ratio,
-      position: range.start + (range.end - range.start) * ratio,
+      value: interpolate(domain.minimum, domain.maximum, ratio),
+      position: interpolate(range.start, range.end, ratio),
     }));
   }
   return Object.freeze(ticks);
@@ -372,7 +380,7 @@ function logarithmicTicks(
   for (let exponent = startExponent; exponent <= endExponent; exponent += 1) {
     const value = base ** exponent;
     const ratio = (exponent - domainStart) / domainSpan;
-    ticks.push(Object.freeze({ value, position: range.start + (range.end - range.start) * ratio }));
+    ticks.push(Object.freeze({ value, position: interpolate(range.start, range.end, ratio) }));
   }
   return Object.freeze(ticks);
 }
@@ -385,13 +393,13 @@ function uniformLogTicks(
 ): readonly ChartTick<number>[] {
   if (maximum === 1) return Object.freeze([Object.freeze({ value: domain.minimum, position: range.start })]);
   const minimum = Math.log(domain.minimum) / Math.log(base);
-  const span = Math.log(domain.maximum) / Math.log(base) - minimum;
+  const maximumValue = Math.log(domain.maximum) / Math.log(base);
   const ticks: ChartTick<number>[] = [];
   for (let index = 0; index < maximum; index += 1) {
     const ratio = index / (maximum - 1);
     ticks.push(Object.freeze({
-      value: base ** (minimum + span * ratio),
-      position: range.start + (range.end - range.start) * ratio,
+      value: base ** interpolate(minimum, maximumValue, ratio),
+      position: interpolate(range.start, range.end, ratio),
     }));
   }
   return Object.freeze(ticks);
@@ -446,8 +454,18 @@ function stableColorHash(value: number | string): number {
   return hash >>> 0;
 }
 
+function relativePosition(value: number, start: number, end: number): number {
+  const offset = value - start;
+  const span = end - start;
+  return finite(offset) && finite(span)
+    ? offset / span
+    : (value / 2 - start / 2) / (end / 2 - start / 2);
+}
+
 function interpolate(start: number, end: number, ratio: number): number {
-  return start + (end - start) * ratio;
+  return (start < 0 && end > 0) || (start > 0 && end < 0)
+    ? start * (1 - ratio) + end * ratio
+    : start + (end - start) * ratio;
 }
 
 function validCategory(value: unknown): value is number | string {

@@ -25308,6 +25308,61 @@
     {
       "package": "chart",
       "surface": "hot",
+      "id": "scale.affine",
+      "source": "packages/chart/src/scale.ts",
+      "benchmarkIDs": [
+        "VAL-032:chart-scale-finite-affine"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "ratio endpoints are finite and distinct at the owning scale boundary",
+          "ordinary finite differences use the direct arithmetic path"
+        ],
+        "ceilings": [
+          "finite IEEE-754 scalar operands"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "packages/chart/tests/scale/scale.test.mjs CHT-03"
+        ],
+        "resourceRationale": "One scale ratio/interpolation step uses only scalar locals and retains no owner state or host resources.",
+        "proof": "relativePosition performs one direct finite-difference ratio or one fixed halved fallback when subtraction overflows. interpolate performs one fixed branch between direct same-side affine arithmetic and weighted opposite-sign endpoint interpolation. Neither path depends on chart cardinality.",
+        "adversarialWitness": "CHT-03 maps Number.MAX_VALUE opposite-sign domains and ranges through linear, temporal, logarithmic, categorical, tick, and continuous-color paths while every accepted in-bound result remains finite.",
+        "evidence": [
+          "VAL-032"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Affine scale arithmetic operates on one scalar and two endpoints only."
+        }
+      }
+    },
+    {
+      "package": "chart",
+      "surface": "hot",
       "id": "view.transition.axis-domain",
       "source": "packages/chart/src/view.ts",
       "benchmarkIDs": [

@@ -9,7 +9,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
 | core | 380 | 26 | 59 |
-| chart | 80 | 0 | 14 |
+| chart | 80 | 0 | 15 |
 | dom | 424 | 171 | 30 |
 | form | 21 | 0 | 9 |
 | tabular | 33 | 0 | 11 |
@@ -101,6 +101,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | chart:projection.create.semantic | trusted | `O(nLayer + nAxis + nTick + log nDatum + qIndex + kRepresentative)` expected | `O(nLayer + nAxis + nTick + kRepresentative)` | `O(nAxis + nTick + kRepresentative)` | `O(kRepresentative)` | forbidden | VAL-016, VAL-017 |
 | chart:projection.hit-test.indexed | trusted | `O(log kRepresentative + cCandidate + lLine log mLine + h log h)` expected | `O(log kRepresentative + h)` | `O(h)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | chart:projection.query-index.build | trusted | `O(kRepresentative log kRepresentative)` worst-case | `O(kRepresentative)` | `O(1)` | `O(kRepresentative)` | allowed | VAL-016, VAL-017 |
+| chart:scale.affine | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-032 |
 | chart:view.transition.axis-domain | trusted | `O(nAxis)` worst-case | `O(nAxis)` | `O(nAxis)` | `O(nAxis)` | forbidden | VAL-016, VAL-017 |
 | dom:chart.canvas2d-render | connected | `O(a + k)` worst-case | `O(a)` | `O(1)` | `O(1)` | allowed | VAL-016, VAL-017 |
 | dom:chart.disconnect | connected | `O(r + u)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |

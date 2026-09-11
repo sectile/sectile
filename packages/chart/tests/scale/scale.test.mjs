@@ -29,6 +29,48 @@ test('CHT-03: linear and temporal scales round-trip finite values with bounded t
   }
 });
 
+test('CHT-03: keeps extreme finite domains and ranges within finite scale geometry', () => {
+  const boundary = Number.MAX_VALUE;
+  for (const createScale of [createLinearScale, createTemporalScale]) {
+    const scale = createScale(
+      { minimum: -boundary, maximum: boundary },
+      { start: -boundary, end: boundary },
+    );
+    assert.equal(scale.normalize(-boundary), -boundary);
+    assert.equal(scale.normalize(0), 0);
+    assert.equal(scale.normalize(boundary), boundary);
+    assert.equal(scale.invert(-boundary), -boundary);
+    assert.equal(scale.invert(0), 0);
+    assert.equal(scale.invert(boundary), boundary);
+    const ticks = scale.ticks(3);
+    assert.deepEqual(ticks.map((tick) => tick.value), [-boundary, 0, boundary]);
+    assert.deepEqual(ticks.map((tick) => tick.position), [-boundary, 0, boundary]);
+    assert.equal(ticks.every((tick) => Number.isFinite(tick.value) && Number.isFinite(tick.position)), true);
+  }
+
+  const categorical = createCategoricalScale({ values: ['left', 'right'] }, { start: -boundary, end: boundary });
+  const left = categorical.normalize('left');
+  const right = categorical.normalize('right');
+  assert.equal(Number.isFinite(left), true);
+  assert.equal(Number.isFinite(right), true);
+  assert.equal(categorical.invert(left), 'left');
+  assert.equal(categorical.invert(right), 'right');
+  assert.equal(categorical.ticks(2).every((tick) => Number.isFinite(tick.position)), true);
+
+  const continuous = createContinuousColorScale({ minimum: -boundary, maximum: boundary }, [
+    { offset: 0, color: [0, 0, 0, 1] },
+    { offset: 1, color: [1, 1, 1, 1] },
+  ]);
+  assert.deepEqual(continuous.color(0), [0.5, 0.5, 0.5, 1]);
+  assert.deepEqual(continuous.color(boundary), [1, 1, 1, 1]);
+
+  const logarithmic = createLogarithmicScale({ minimum: 1, maximum: 100 }, { start: -boundary, end: boundary });
+  const projected = logarithmic.normalize(10);
+  assert.equal(Number.isFinite(projected), true);
+  assert.ok(Math.abs((logarithmic.invert(projected) ?? 0) - 10) < 1e-10);
+  assert.equal(logarithmic.ticks(3).every((tick) => Number.isFinite(tick.value) && Number.isFinite(tick.position)), true);
+});
+
 test('projects continuous and stable ordinal renderer-neutral colors', () => {
   const continuous = createContinuousColorScale({ minimum: 0, maximum: 10 }, [
     { offset: 0, color: [0, 0, 0, 1] },
