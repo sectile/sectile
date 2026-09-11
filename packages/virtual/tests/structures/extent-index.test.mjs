@@ -46,6 +46,67 @@ test('ISSUE-079: extent aggregates stay finite across construction and mutation 
   assert.equal(Number.isFinite(base.totalExtent), true);
 });
 
+test('ISSUE-089: external extents and updates retain one validated observation', () => {
+  let createKindReads = 0;
+  let createValueReads = 0;
+  const changingCreate = {
+    get kind() { createKindReads += 1; return 'exact'; },
+    get value() { createValueReads += 1; return createValueReads === 1 ? 10 : Number.NaN; },
+  };
+  const created = tryCreateExtentIndex([changingCreate]);
+  assert.equal(created.ok, true);
+  assert.deepEqual([createKindReads, createValueReads], [1, 1]);
+  assert.equal(created.value.totalExtent, 10);
+  assert.deepEqual(created.value.extentAt(0), exact(10));
+
+  let uniformValueReads = 0;
+  const uniform = tryCreateUniformExtentIndex(2, {
+    kind: 'estimated',
+    get value() { uniformValueReads += 1; return uniformValueReads === 1 ? 6 : Number.NaN; },
+  }, { maxItems: 2 });
+  assert.equal(uniform.ok, true);
+  assert.equal(uniformValueReads, 1);
+  assert.equal(uniform.value.totalExtent, 12);
+  assert.deepEqual(uniform.value.extentAt(1), estimated(6));
+
+  const base = createExtentIndex([exact(10), exact(20)]);
+  let indexReads = 0;
+  let updateExtentReads = 0;
+  const changed = base.update([{
+    get index() { indexReads += 1; return indexReads === 1 ? 0 : 999; },
+    get extent() { updateExtentReads += 1; return updateExtentReads === 1 ? exact(99) : exact(123); },
+  }]);
+  assert.equal(changed.ok, true);
+  assert.deepEqual([indexReads, updateExtentReads], [1, 1]);
+  assert.deepEqual(changed.value.extentAt(0), exact(99));
+  assert.deepEqual(changed.value.extentAt(1), exact(20));
+
+  let invalidIndexReads = 0;
+  const invalid = base.update([{
+    get index() { invalidIndexReads += 1; return invalidIndexReads === 1 ? 999 : 0; },
+    extent: exact(1),
+  }]);
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'extent-index-update-invalid');
+  assert.equal(invalidIndexReads, 1);
+
+  const unreadable = base.update([{
+    get index() { throw new Error('index getter failed'); },
+    extent: exact(1),
+  }]);
+  assert.equal(unreadable.ok, false);
+  assert.equal(unreadable.error.code, 'extent-index-update-invalid');
+
+  let spliceValueReads = 0;
+  const spliced = base.splice(1, 0, [{
+    kind: 'exact',
+    get value() { spliceValueReads += 1; return spliceValueReads === 1 ? 5 : Number.NaN; },
+  }]);
+  assert.equal(spliced.ok, true);
+  assert.equal(spliceValueReads, 1);
+  assert.deepEqual(spliced.value.slice(0, 3), [exact(10), exact(5), exact(20)]);
+});
+
 test('EXT-03, EXT-05: measurement updates preserve untouched geometry', () => {
   const before = createExtentIndex([estimated(10), exact(20), { kind: 'unknown', fallback: 30 }]);
   const after = before.update([{ index: 0, extent: exact(12) }]).value;

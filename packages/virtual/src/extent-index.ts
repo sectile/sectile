@@ -166,16 +166,24 @@ function updateIndex(
   const changes: [number, Extent][] = [];
   let ordered = true;
   for (const update of updates) {
-    if (!Number.isSafeInteger(update.index) || update.index < 0 || update.index >= size) {
+    let index: number;
+    let extentInput: Extent;
+    try {
+      index = update.index;
+      extentInput = update.extent;
+    } catch {
+      return fail('transition-rejection', 'extent-index-update-invalid', 'Extent update properties must be readable.');
+    }
+    if (!Number.isSafeInteger(index) || index < 0 || index >= size) {
       return fail('transition-rejection', 'extent-index-update-invalid', 'Extent update index is outside the domain.', {
-        index: update.index,
+        index,
         size,
       });
     }
-    const validated = validateExtent(update.extent);
+    const validated = validateExtent(extentInput);
     if (!validated.ok) return validated;
-    if (changes.length > 0 && update.index <= changes[changes.length - 1]![0]) ordered = false;
-    changes.push([update.index, validated.value]);
+    if (changes.length > 0 && index <= changes[changes.length - 1]![0]) ordered = false;
+    changes.push([index, validated.value]);
   }
   const sorted = ordered ? changes : [...new Map(changes)].sort(([left], [right]) => left - right);
   const next = root === null ? null : updateNode(root, 0, sorted, 0, sorted.length);
@@ -493,15 +501,43 @@ function validateExtents(extents: readonly Extent[]): VirtualResult<readonly Ext
 }
 
 function validateExtent(extent: Extent): VirtualResult<Extent> {
-  const value = extent.kind === 'unknown' ? extent.fallback : extent.value;
+  let kind: Extent['kind'];
+  let value: number;
+  try {
+    kind = extent.kind;
+    value = kind === 'unknown'
+      ? (extent as Extract<Extent, { readonly kind: 'unknown' }>).fallback
+      : (extent as Exclude<Extent, { readonly kind: 'unknown' }>).value;
+  } catch {
+    return fail('construction', 'extent-invalid', 'Extent properties must be readable.');
+  }
   if (
-    (extent.kind !== 'exact' && extent.kind !== 'estimated' && extent.kind !== 'unknown')
+    (kind !== 'exact' && kind !== 'estimated' && kind !== 'unknown')
     || !Number.isFinite(value)
     || value < 0
   ) {
     return fail('construction', 'extent-invalid', 'Extent must have a non-negative finite effective value.');
   }
-  return ok(Object.isFrozen(extent) ? extent : Object.freeze({ ...extent }));
+  if (Object.isFrozen(extent) && isFrozenDataExtent(extent, kind, value)) return ok(extent);
+  return ok(kind === 'unknown'
+    ? Object.freeze({ kind, fallback: value })
+    : Object.freeze({ kind, value }));
+}
+
+function isFrozenDataExtent(extent: Extent, kind: Extent['kind'], value: number): boolean {
+  try {
+    const kindDescriptor = Object.getOwnPropertyDescriptor(extent, 'kind');
+    const scalarKey = kind === 'unknown' ? 'fallback' : 'value';
+    const scalarDescriptor = Object.getOwnPropertyDescriptor(extent, scalarKey);
+    return kindDescriptor !== undefined
+      && scalarDescriptor !== undefined
+      && 'value' in kindDescriptor
+      && 'value' in scalarDescriptor
+      && kindDescriptor.value === kind
+      && scalarDescriptor.value === value;
+  } catch {
+    return false;
+  }
 }
 
 function sameExtent(left: Extent, right: Extent): boolean {
