@@ -72,20 +72,20 @@ export function toVirtualViewport(
       scrollportViewport,
     );
   }
-  requireSurfaceFrame(frame);
-  const x = scrollportViewport.x + frame.viewportInsets.left - frame.origin.x;
-  const y = scrollportViewport.y + frame.viewportInsets.top - frame.origin.y;
+  const captured = captureSurfaceFrame(frame);
+  const x = scrollportViewport.x + captured.viewportInsets.left - captured.origin.x;
+  const y = scrollportViewport.y + captured.viewportInsets.top - captured.origin.y;
   const width = Math.max(
     0,
     scrollportViewport.width
-      - frame.viewportInsets.left
-      - frame.viewportInsets.right,
+      - captured.viewportInsets.left
+      - captured.viewportInsets.right,
   );
   const height = Math.max(
     0,
     scrollportViewport.height
-      - frame.viewportInsets.top
-      - frame.viewportInsets.bottom,
+      - captured.viewportInsets.top
+      - captured.viewportInsets.bottom,
   );
   return freezeRect(
     x,
@@ -106,10 +106,10 @@ export function toScrollportPoint(
       surfacePoint,
     );
   }
-  requireSurfaceFrame(frame);
+  const captured = captureSurfaceFrame(frame);
   return freezePoint(
-    surfacePoint.x + frame.origin.x - frame.viewportInsets.left,
-    surfacePoint.y + frame.origin.y - frame.viewportInsets.top,
+    surfacePoint.x + captured.origin.x - captured.viewportInsets.left,
+    surfacePoint.y + captured.origin.y - captured.viewportInsets.top,
     'Scrollport target projection must remain finite.',
   );
 }
@@ -118,30 +118,35 @@ export function surfaceFrameScrollDelta(
   previous: VirtualSurfaceFrame,
   next: VirtualSurfaceFrame,
 ): VirtualPoint {
-  requireSurfaceFrame(previous);
-  requireSurfaceFrame(next);
+  const before = captureSurfaceFrame(previous);
+  const after = captureSurfaceFrame(next);
   return freezePoint(
-    next.origin.x
-      - previous.origin.x
-      - (next.viewportInsets.left - previous.viewportInsets.left),
-    next.origin.y
-      - previous.origin.y
-      - (next.viewportInsets.top - previous.viewportInsets.top),
+    after.origin.x
+      - before.origin.x
+      - (after.viewportInsets.left - before.viewportInsets.left),
+    after.origin.y
+      - before.origin.y
+      - (after.viewportInsets.top - before.viewportInsets.top),
     'Virtual surface frame scroll delta must remain finite.',
   );
 }
 
-function requireSurfaceFrame(frame: VirtualSurfaceFrame): void {
-  if (
-    !isRecord(frame)
-    || !isFinitePoint(frame.origin)
-    || !isInsets(frame.viewportInsets)
-  ) {
-    geometryFailure(
-      'Virtual surface frames require finite origins and finite non-negative viewport insets.',
-      frame,
-    );
+function captureSurfaceFrame(frame: VirtualSurfaceFrame): VirtualSurfaceFrame {
+  try {
+    if (isRecord(frame)) {
+      const origin = frame.origin;
+      const viewportInsets = frame.viewportInsets;
+      if (origin !== undefined && viewportInsets !== undefined) {
+        return createVirtualSurfaceFrame({ origin, viewportInsets });
+      }
+    }
+  } catch {
+    // Map unreadable external geometry to the Virtual geometry boundary below.
   }
+  return geometryFailure(
+    'Virtual surface frames require finite origins and finite non-negative viewport insets.',
+    frame,
+  );
 }
 
 function freezePoint(
@@ -171,14 +176,6 @@ function freezeRect(
     return geometryFailure(message, { x, y, width, height });
   }
   return Object.freeze({ x, y, width, height });
-}
-
-function isInsets(value: unknown): value is VirtualInsets {
-  return isRecord(value)
-    && finiteNonNegative(value['top'])
-    && finiteNonNegative(value['right'])
-    && finiteNonNegative(value['bottom'])
-    && finiteNonNegative(value['left']);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

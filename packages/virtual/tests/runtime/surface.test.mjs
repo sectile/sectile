@@ -92,7 +92,83 @@ test('SUR-01: surface frames project viewport and target coordinates through one
   assert.equal(Object.isFrozen(frame.viewportInsets), true);
 });
 
+test('ISSUE-100: surface transforms capture caller geometry once per operation', () => {
+  let originReads = 0;
+  let insetReads = 0;
+  const pointFrame = {
+    get origin() {
+      originReads += 1;
+      return { x: 10 * originReads, y: 20 * originReads };
+    },
+    get viewportInsets() {
+      insetReads += 1;
+      return { top: 3 * insetReads, right: 4 * insetReads, bottom: 5 * insetReads, left: 2 * insetReads };
+    },
+  };
+  assert.deepEqual(toScrollportPoint({ x: 7, y: 11 }, pointFrame), { x: 15, y: 28 });
+  assert.equal(originReads, 1);
+  assert.equal(insetReads, 1);
+
+  let viewportOriginReads = 0;
+  let viewportInsetReads = 0;
+  const viewportFrame = {
+    get origin() {
+      viewportOriginReads += 1;
+      return { x: viewportOriginReads, y: viewportOriginReads };
+    },
+    get viewportInsets() {
+      viewportInsetReads += 1;
+      return {
+        top: viewportInsetReads,
+        right: viewportInsetReads,
+        bottom: viewportInsetReads,
+        left: viewportInsetReads,
+      };
+    },
+  };
+  const viewport = toVirtualViewport(
+    { x: 10, y: 20, width: 100, height: 100 },
+    viewportFrame,
+  );
+  assert.deepEqual(viewport, { x: 10, y: 20, width: 98, height: 98 });
+  assert.equal(viewportOriginReads, 1);
+  assert.equal(viewportInsetReads, 1);
+  assert.equal(Object.isFrozen(viewport), true);
+
+  const reads = { previousOrigin: 0, previousInsets: 0, nextOrigin: 0, nextInsets: 0 };
+  const previous = {
+    get origin() { reads.previousOrigin += 1; return { x: 10, y: 20 }; },
+    get viewportInsets() { reads.previousInsets += 1; return { top: 3, right: 0, bottom: 0, left: 2 }; },
+  };
+  const next = {
+    get origin() { reads.nextOrigin += 1; return { x: 15, y: 30 }; },
+    get viewportInsets() { reads.nextInsets += 1; return { top: 8, right: 0, bottom: 0, left: 4 }; },
+  };
+  assert.deepEqual(surfaceFrameScrollDelta(previous, next), { x: 3, y: 5 });
+  assert.deepEqual(reads, { previousOrigin: 1, previousInsets: 1, nextOrigin: 1, nextInsets: 1 });
+
+  let driftReads = 0;
+  const drifting = {
+    get origin() {
+      driftReads += 1;
+      return driftReads === 1 ? { x: 2, y: 3 } : null;
+    },
+    viewportInsets: { top: 0, right: 0, bottom: 0, left: 0 },
+  };
+  assert.deepEqual(toScrollportPoint({ x: 1, y: 1 }, drifting), { x: 3, y: 4 });
+  assert.equal(driftReads, 1);
+
+  assertGeometryFailure(() => toScrollportPoint(
+    { x: 0, y: 0 },
+    {
+      get origin() { throw new Error('unreadable'); },
+      viewportInsets: { top: 0, right: 0, bottom: 0, left: 0 },
+    },
+  ));
+});
+
 test('surface frame boundaries reject forged, negative, and overflowing geometry', () => {
+  assertGeometryFailure(() => toScrollportPoint({ x: 0, y: 0 }, {}));
   assertGeometryFailure(() => createVirtualSurfaceFrame({
     origin: { x: Number.NaN },
   }));

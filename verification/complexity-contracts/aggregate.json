@@ -31872,7 +31872,8 @@
       "id": "surface.frame-transform",
       "source": "packages/virtual/src/surface.ts",
       "benchmarkIDs": [
-        "VAL-001:surface-frame-laws"
+        "VAL-001:surface-frame-laws",
+        "VAL-030:surface-frame-snapshot-work"
       ],
       "specificationCeiling": "O(1)",
       "reviewedWeakening": null,
@@ -31898,7 +31899,7 @@
         },
         "assumptions": [
           "input cardinality is fixed to one point, rectangle, frame, or frame pair",
-          "external scalar geometry is validated at the operation boundary"
+          "each external frame's origin and viewportInsets are captured once at the operation boundary"
         ],
         "ceilings": [
           "finite IEEE-754 geometry"
@@ -31907,15 +31908,14 @@
           "VAL-017:constant-work"
         ],
         "deterministicWork": [
-          "a bounded number of scalar validation and arithmetic steps",
-          "one fixed-size frozen point, rectangle, or frame result"
+          "packages/virtual/tests/runtime/surface.test.mjs ISSUE-100",
+          "each external frame observes origin and viewportInsets once before fixed scalar arithmetic"
         ],
-        "resourceRationale": "Surface-frame transforms retain no owner state and create no host resources.",
-        "proof": "Each operation reads a fixed number of point, rectangle, and inset scalars and emits one fixed-size immutable value.",
-        "adversarialWitness": "Maximum finite asymmetric coordinates and a negative surface-local viewport do not increase deterministic work.",
+        "resourceRationale": "Surface-frame transforms retain no owner state and create no host resources; canonical geometry snapshots and the emitted result are fixed-size O(1) allocations.",
+        "proof": "Each transform captures origin and viewportInsets once from the external frame, canonicalizes those captured values through createVirtualSurfaceFrame and Core geometry, then performs arithmetic only against the immutable snapshot.",
+        "adversarialWitness": "ISSUE-100 supplies accessor-backed frame fields that change on every observation and unreadable geometry; counters remain one observation per frame field and invalid reads stay inside the typed Virtual geometry boundary.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "VAL-030"
         ],
         "fullScan": {
           "allowed": false,

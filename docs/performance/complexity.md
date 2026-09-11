@@ -194,7 +194,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:spatial.query | trusted | `O(log nItem + (cCandidate + pOverlay) * dSequence + kPlacement log kPlacement)` expected | `O(log nItem + cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | virtual:spatial.update.incremental | external | `O(jChanged*dSequence + jChanged log jChanged + rRepair + pOverlay)` worst-case | `O(jChanged + rRepair + pOverlay)` | `O(1)` | `O(jChanged + rRepair + pOverlay + dSequence)` | forbidden | VAL-025, VAL-039 |
 | virtual:spatial.update.rebuild | external | `O(nItem log nItem + jChanged*dSequence)` worst-case | `O(nItem + jChanged)` | `O(1)` | `O(nItem)` | allowed | VAL-039 |
-| virtual:surface.frame-transform | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
+| virtual:surface.frame-transform | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-030 |
 | virtual:track.create.regions | external | `O(nRegion log nRegion)` worst-case | `O(nRegion)` | `O(nRegion)` | `O(nRegion)` | allowed | VAL-022 |
 | virtual:track.measure | trusted | `O(jChanged log nTrack)` worst-case | `O(jChanged log nTrack)` | `O(1)` | `O(jChanged log nTrack)` | forbidden | VAL-029 |
 | virtual:track.mutation.regions.replace | external | `O(jRegion log jRegion)` worst-case | `O(jRegion)` | `O(1)` | `O(jRegion)` | forbidden | VAL-024 |
