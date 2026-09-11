@@ -252,6 +252,25 @@ test('ISSUE-056: model and page access canonicalization retain the validated cal
 });
 
 test('ISSUE-074: column and header metadata retain the single validated snapshot', () => {
+  let columnsReads = 0;
+  const capturedColumns = tryCreateTabularModel({
+    get columns() {
+      columnsReads += 1;
+      return columnsReads === 1 ? [{ id: 'only' }] : [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+    },
+    limits: { maxColumns: 1 },
+  });
+  assert.equal(capturedColumns.ok, true);
+  assert.equal(columnsReads, 1);
+  assert.deepEqual(capturedColumns.value.columns.map((column) => column.id), ['only']);
+  assert.equal(capturedColumns.value.limits.maxColumns, 1);
+
+  const unreadableColumns = {};
+  Object.defineProperty(unreadableColumns, 'columns', { get() { throw new Error('unreadable'); } });
+  const unreadable = tryCreateTabularModel(unreadableColumns);
+  assert.equal(unreadable.ok, false);
+  assert.equal(unreadable.error.code, 'invalid-column-definition');
+
   let headerNodeIDReads = 0;
   let initialPinReads = 0;
   let headerIDReads = 0;

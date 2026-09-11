@@ -63,19 +63,28 @@ export function createTabularModel(options: TabularOptions): TabularModel {
 }
 
 export function tryCreateTabularModel(options: TabularOptions): TabularResult<TabularModel> {
-  if (options === null || typeof options !== 'object' || !Array.isArray(options.columns)) {
+  if (options === null || typeof options !== 'object') {
+    return fail('construction', 'invalid-column-definition', 'Tabular columns must be an array.');
+  }
+  let inputColumns: readonly TabularColumnDefinition[];
+  try {
+    inputColumns = options.columns;
+  } catch {
+    return fail('construction', 'invalid-column-definition', 'Tabular columns must be readable.');
+  }
+  if (!Array.isArray(inputColumns)) {
     return fail('construction', 'invalid-column-definition', 'Tabular columns must be an array.');
   }
   const limitsResult = normalizeLimits(options.limits);
   if (!limitsResult.ok) return limitsResult;
   const limits = limitsResult.value;
-  if (options.columns.length > limits.maxColumns) {
+  if (inputColumns.length > limits.maxColumns) {
     return fail('resource-rejection', 'column-ceiling-exceeded', 'Column count exceeds the configured ceiling.', {
-      actual: options.columns.length,
+      actual: inputColumns.length,
       ceiling: limits.maxColumns,
     });
   }
-  const columnsResult = normalizeColumns(options.columns, limits);
+  const columnsResult = normalizeColumns(inputColumns, limits);
   if (!columnsResult.ok) return columnsResult;
   const headersResult = normalizeHeaders(options.headers ?? [], columnsResult.value, limits);
   if (!headersResult.ok) return headersResult;
