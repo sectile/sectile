@@ -177,7 +177,15 @@ const gridQueryUs = measure(20_000, (iteration) => {
   });
   sink += plan.placements.length;
 });
-const gridBuildMs = measureColdMilliseconds(() => createTrackGridLayout(gridRows, gridColumns, gridRegions).generation);
+const gridBuildRows = createUniformExtentIndex(1, estimated(32), { maxItems: 1 });
+const gridBuildColumns = createUniformExtentIndex(strategySize, exact(96), { maxItems: strategySize });
+const gridBuildRegions = Array.from({ length: strategySize }, (_, column) => ({ id: `grid-build-${column}`, row: 0, column }));
+const gridBuildMs = measureColdMilliseconds(() => createTrackGridLayout(
+  gridBuildRows,
+  gridBuildColumns,
+  gridBuildRegions,
+  { maxRegions: strategySize },
+).generation);
 let measuredGrid = gridState;
 const gridMeasurementVariants = [30, 34].map((value) => Array.from({ length: 32 }, (_, index) => ({ axis: 'row', index: 50_000 + index, extent: exact(value) })));
 const gridMeasurement32Us = measure(2_000, (iteration) => {

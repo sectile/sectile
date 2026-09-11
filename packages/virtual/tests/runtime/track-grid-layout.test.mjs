@@ -1,7 +1,8 @@
 /* Law evidence: GRD-01 GRD-02 GRD-03 GRD-04 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createExtentIndex } from '../../.verification-dist/extent-index.js';
+import { createExtentIndex, createUniformExtentIndex } from '../../.verification-dist/extent-index.js';
+import { createRegionOverlapWork, findRegionOverlap } from '../../.verification-dist/internal/region-overlap.js';
 import {
   applyGridMeasurements,
   applyTrackGridMutation,
@@ -81,6 +82,44 @@ test('GRD-03: overlap and region-splitting track mutations reject atomically', (
   assert.equal(rejected.ok, false);
   assert.equal(state.rows.size, 3);
   assert.deepEqual(trackGridRegionRect(state, 'merged'), { x: 0, y: 0, width: 10, height: 20 });
+});
+
+test('ISSUE-092: sparse region overlap validation stays subquadratic for wide active sets', () => {
+  const count = 4_096;
+  const rows = createUniformExtentIndex(1, exact(1), { maxItems: 1 });
+  const columns = createUniformExtentIndex(count, exact(1), { maxItems: count });
+  const regions = Array.from({ length: count }, (_, column) => ({ id: `wide-${column}`, row: 0, column }));
+  const created = tryCreateTrackGridLayout(rows, columns, regions, { maxRegions: count });
+  assert.equal(created.ok, true);
+  assert.equal(created.value.regions.size, count);
+
+  const sameRow = Array.from({ length: count }, (_, index) => ({
+    value: { id: `same-${index}`, row: 0, column: index * 2 },
+    index,
+    rowEnd: 1,
+    columnEnd: index * 2 + 1,
+  }));
+  const longSpan = Array.from({ length: count }, (_, index) => ({
+    value: { id: `span-${index}`, row: index, column: index * 2 },
+    index,
+    rowEnd: count + index + 1,
+    columnEnd: index * 2 + 1,
+  }));
+  const logarithmicCeiling = Math.ceil(Math.log2(count)) + 1;
+  for (const fixture of [sameRow, longSpan]) {
+    const work = createRegionOverlapWork();
+    assert.equal(findRegionOverlap(fixture, work), null);
+    assert.equal(work.insertions, count);
+    assert.ok(work.candidateChecks <= count - 1, work);
+    assert.ok(work.binarySearchSteps <= 2 * count * logarithmicCeiling, work);
+    assert.ok(work.treeSteps <= 3 * count * logarithmicCeiling, work);
+  }
+
+  const overlapping = [
+    { value: { id: 'left', row: 0, column: 0 }, index: 0, rowEnd: 10, columnEnd: 3 },
+    { value: { id: 'right', row: 5, column: 2 }, index: 1, rowEnd: 6, columnEnd: 4 },
+  ];
+  assert.deepEqual(findRegionOverlap(overlapping)?.map(({ value }) => value.id), ['left', 'right']);
 });
 
 test('GRD-04: row and column measurements preserve the index, anchor, and generation contract', () => {

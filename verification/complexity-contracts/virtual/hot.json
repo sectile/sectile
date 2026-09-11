@@ -1290,6 +1290,61 @@
       }
     },
     {
+      "id": "track.create.regions",
+      "inherits": "linear-v1",
+      "source": "packages/virtual/src/internal/region-overlap.ts",
+      "benchmarkIDs": [
+        "VAL-022:track-region-validation-work"
+      ],
+      "specificationCeiling": "O(nRegion log nRegion)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nRegion",
+            "meaning": "external sparse region count",
+            "ceiling": "maxRegions"
+          }
+        ],
+        "time": {
+          "bound": "O(nRegion log nRegion)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nRegion)",
+          "output": "O(nRegion)",
+          "retained": "O(nRegion)"
+        },
+        "resources": {
+          "allocations": "O(nRegion)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "ceilings": [
+          "maxRegions"
+        ],
+        "benchmarkIDs": [
+          "VAL-022:track-region-validation-work"
+        ],
+        "deterministicWork": [
+          "packages/virtual/tests/runtime/track-grid-layout.test.mjs ISSUE-092"
+        ],
+        "resourceRationale": "Sparse construction retains one canonical region/index entry per accepted region; column-start search and row-end ordering are construction-only auxiliary state.",
+        "proof": "Regions are sorted once by row and column. A row-end ordered stream removes expired regions, while a coordinate-compressed active-column segment tree performs one predecessor lookup, insertion, and later removal per region in logarithmic work.",
+        "adversarialWitness": "ISSUE-092 keeps thousands of valid column-disjoint regions simultaneously active on one row and across long row spans; candidate checks remain linear and indexed search/tree work remains nRegion log nRegion.",
+        "evidence": [
+          "VAL-022"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External sparse construction must validate and canonicalize every declared region exactly once."
+        }
+      }
+    },
+    {
       "id": "track.measure",
       "inherits": "linear-v1",
       "source": "packages/virtual/src/track-grid-layout.ts",

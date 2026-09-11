@@ -9,6 +9,7 @@ import {
 } from '@sectile/core/sequence';
 import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
 import { fail, ok } from './internal/foundation.js';
+import { findRegionOverlap } from './internal/region-overlap.js';
 import { isFiniteTrackContentExtent, trackContentExtent, trackRange, trackSpan, type TrackRange } from './internal/track.js';
 import type { LinearFlow } from './linear-layout.js';
 import {
@@ -593,13 +594,12 @@ function validateRegions<ID extends StableID>(rowCount: number, columnCount: num
     indexed.push(Object.freeze({ value, index, rowEnd: region.row + rowSpan, columnEnd: region.column + columnSpan }));
   }
   const sorted = [...indexed].sort(compareRegions);
-  const active: IndexedRegion<ID>[] = [];
-  for (const region of sorted) {
-    for (let index = active.length - 1; index >= 0; index -= 1) if (active[index]!.rowEnd <= region.value.row) active.splice(index, 1);
-    for (const other of active) if (other.value.column < region.columnEnd && region.value.column < other.columnEnd) {
-      return fail('construction', 'virtual-layout-region-overlap', 'Track-grid regions cannot overlap.', { left: other.value.id, right: region.value.id });
-    }
-    active.push(region);
+  const overlap = findRegionOverlap(sorted);
+  if (overlap !== null) {
+    return fail('construction', 'virtual-layout-region-overlap', 'Track-grid regions cannot overlap.', {
+      left: overlap[0].value.id,
+      right: overlap[1].value.id,
+    });
   }
   return ok(Object.freeze(indexed));
 }
