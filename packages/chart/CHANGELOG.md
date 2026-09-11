@@ -1,5 +1,18 @@
 # @sectile/chart
 
+## 0.15.3
+
+### Changes
+
+- perf(chart): bound radial projection sampling (55269ff3)
+- fix(chart): capture selection fields once (624ffed1)
+- fix(chart): capture datum fields once (2ea5f48c)
+- fix(chart): stabilize singleton automatic domains (60843119)
+- fix(chart): constrain extreme view transitions (8a09b5fa)
+- perf(chart): bound hit-test candidate retention (86e95c0f)
+- fix(chart): stabilize finite scale arithmetic (46d717bc)
+- fix(chart): bound definition accessor traversal (5dc734e9)
+
 ## 0.15.2
 
 ### Changes
