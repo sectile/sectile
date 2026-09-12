@@ -908,7 +908,10 @@ function repairSpatialTree<ID extends StableID>(
   if (from === to) return node;
   if (node.items !== null) {
     work.copiedNodes += 1;
-    const repaired = node.items.map((item) => ({ ...item, value: items.at(item.baseIndex)! }));
+    const repaired = node.items.map((item) => {
+      const value = items.at(item.baseIndex)!;
+      return { ...item, value, zIndex: value.zIndex ?? 0 };
+    });
     return Object.freeze({
       bounds: boundsOf(repaired, (item) => item.value.rect),
       items: Object.freeze(repaired),

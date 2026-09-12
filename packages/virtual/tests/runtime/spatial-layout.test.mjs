@@ -346,6 +346,57 @@ test('spatial value-only patches repair touched blocks without rebuilding the do
   assert.deepEqual(spatialRectAt(changed, changedItem.id), changedItem.rect);
 });
 
+test('ISSUE-120: sparse value repairs refresh packed z-index metadata', () => {
+  const count = 4_096;
+  const items = Array.from({ length: count }, (_, index) => ({
+    id: `item-${index}`,
+    rect: index < 2
+      ? { x: 0, y: 0, width: 10, height: 10 }
+      : {
+          x: 1_000 + (index % 64) * 11,
+          y: 1_000 + Math.floor(index / 64) * 13,
+          width: 10,
+          height: 12,
+        },
+    ...(index === 1 ? { zIndex: 1 } : {}),
+  }));
+  const state = createSpatialLayout(items, { maxItems: count });
+  const changedItem = { ...items[0], zIndex: 5 };
+  const viewport = { x: 0, y: 0, width: 20, height: 20 };
+
+  const assertSparseRepair = (changed) => {
+    const work = readRepairDiagnostics(changed);
+    assert.equal(work?.mode, 'incremental');
+    assert.equal(work?.changed, 1);
+    assert.equal(work?.rebuiltItems, 0);
+    assert.ok(work.copiedEntries <= work.repairBound);
+    assert.ok(work.copiedNodes <= work.repairBound);
+
+    const placements = querySpatialLayout(changed, { viewport }).placements;
+    const rebuilt = createSpatialLayout(changed.items.toArray(), { maxItems: count });
+    assert.deepEqual(placements, querySpatialLayout(rebuilt, { viewport }).placements);
+    assert.deepEqual(
+      placements.map(({ id, zIndex }) => [id, zIndex]),
+      [['item-1', 1], ['item-0', 5]],
+    );
+  };
+
+  const updated = applySpatialMutation(state, {
+    type: 'update',
+    upsert: [changedItem],
+  }).state;
+  assert.equal(updated.items.at(0).zIndex, 5);
+  assertSparseRepair(updated);
+
+  const patched = applySpatialMutation(state, {
+    type: 'patch',
+    patch: { type: 'splice', index: 0, deleteCount: 1, inserted: [changedItem.id] },
+    inserted: [changedItem],
+  }).state;
+  assert.equal(patched.items.at(0).zIndex, 5);
+  assertSparseRepair(patched);
+});
+
 test('ISSUE-095: existing-ID updates use bounded repair and retain dense rebuild crossover', () => {
   const count = 4_096;
   const items = Array.from({ length: count }, (_, index) => ({
