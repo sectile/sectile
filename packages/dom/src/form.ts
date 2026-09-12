@@ -540,13 +540,17 @@ export function tryCreateForm<
   };
   const reinitialize = (reinitializeOptions: FormReinitializeOptions = {}): void => {
     if (!active) return;
+    const canceledPendingValidation = state.validation.status === 'validating';
     validationController?.abort();
     validationController = null;
     validationSequence += 1;
     nativeResume = null;
     pendingReinitializations.clear();
     captureAllCurrentValues();
-    transition({ type: 'reinitialize', options: reinitializeOptions });
+    const transitionOptions = canceledPendingValidation && reinitializeOptions.preserve?.validation === true
+      ? { ...reinitializeOptions, preserve: { ...reinitializeOptions.preserve, validation: false } }
+      : reinitializeOptions;
+    transition({ type: 'reinitialize', options: transitionOptions });
     if (summary !== undefined) {
       const remaining = orderedIssues(state);
       if (renderSummaryContent) {

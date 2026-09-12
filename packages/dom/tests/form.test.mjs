@@ -770,6 +770,91 @@ test('DOM Form reinitializes the current participant values as a reversible dirt
   }
 });
 
+test('ISSUE-123: reinitialize cannot preserve a canceled submission validation as pending', async () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    document.body.append(formElement);
+    const resolvers = [];
+    let validationCalls = 0;
+    let submissions = 0;
+    const form = createForm({
+      form: formElement,
+      validate: () => {
+        validationCalls += 1;
+        return new Promise((resolve) => { resolvers.push(resolve); });
+      },
+      onSubmit: () => {
+        submissions += 1;
+        return { ok: true };
+      },
+    });
+
+    formElement.requestSubmit();
+    assert.equal(validationCalls, 1);
+    assert.equal(form.state.validation.status, 'validating');
+    assert.equal(form.state.validation.intent, 'submission');
+
+    form.reinitialize({ preserve: { validation: true } });
+    assert.equal(form.state.validation.status, 'idle');
+    assert.equal(form.state.validation.trigger, null);
+    assert.equal(form.state.validation.intent, null);
+
+    resolvers[0]({ issues: [{ message: 'Stale validation must stay canceled.' }] });
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(form.state.validation.status, 'idle');
+    assert.equal(form.state.issues.length, 0);
+    assert.equal(submissions, 0);
+
+    formElement.requestSubmit();
+    assert.equal(validationCalls, 2);
+    assert.equal(form.state.validation.status, 'validating');
+    resolvers[1]({});
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.equal(submissions, 1);
+    assert.equal(form.state.validation.status, 'valid');
+    assert.equal(form.state.submission.status, 'succeeded');
+    assert.equal(form.state.submission.count, 1);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('ISSUE-123: reinitialize still preserves settled validation metadata', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    document.body.append(formElement);
+    const form = createForm({
+      form: formElement,
+      validate: () => ({ issues: [{ message: 'Keep this settled issue.' }] }),
+    });
+
+    formElement.requestSubmit();
+    assert.equal(form.state.validation.status, 'invalid');
+    assert.equal(form.state.validation.trigger, 'submit');
+    assert.equal(form.state.validation.intent, 'submission');
+    assert.deepEqual(form.state.issues.map((issue) => [issue.source, issue.message]), [
+      ['validate', 'Keep this settled issue.'],
+    ]);
+
+    form.reinitialize({ preserve: { validation: true } });
+
+    assert.equal(form.state.validation.status, 'invalid');
+    assert.equal(form.state.validation.trigger, 'submit');
+    assert.equal(form.state.validation.intent, 'submission');
+    assert.deepEqual(form.state.issues.map((issue) => [issue.source, issue.message]), [
+      ['validate', 'Keep this settled issue.'],
+    ]);
+  } finally {
+    dom.restore();
+  }
+});
+
 test('DOM Form supports custom value snapshots and comparators', () => {
   const dom = installDOM();
   try {
