@@ -1,5 +1,12 @@
 # @sectile/dom
 
+## 0.17.0
+
+### Changes
+
+- perf(dom): restore virtual bundle budget (f0f49829)
+- feat(dom)!: support document virtual scrollports (7fdb9d81)
+
 ## 0.16.7
 
 ### Changes

@@ -1,14 +1,24 @@
 {
   "schemaVersion": 1,
-  "releaseTag": "release-2026-09-11.2",
+  "releaseTag": "release-2026-09-12.1",
   "packages": [
     {
-      "name": "@sectile/chart",
-      "directory": "chart",
-      "previousVersion": "0.15.2",
-      "version": "0.15.3",
-      "bump": "patch",
-      "tag": "@sectile/chart@0.15.3",
+      "name": "@sectile/dom",
+      "directory": "dom",
+      "previousVersion": "0.16.7",
+      "version": "0.17.0",
+      "bump": "minor",
+      "tag": "@sectile/dom@0.17.0",
+      "direct": true,
+      "dependencies": []
+    },
+    {
+      "name": "@sectile/vue",
+      "directory": "vue",
+      "previousVersion": "0.16.6",
+      "version": "0.17.0",
+      "bump": "minor",
+      "tag": "@sectile/vue@0.17.0",
       "direct": true,
       "dependencies": []
     }

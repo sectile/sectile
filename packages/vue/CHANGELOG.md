@@ -1,5 +1,13 @@
 # @sectile/vue
 
+## 0.17.0
+
+### Changes
+
+- feat(vue)!: expose high-level virtual scrollports (7cab8044)
+- feat(vue)!: support virtual scrollport targets (8bd2805e)
+- feat(dom)!: support document virtual scrollports (7fdb9d81)
+
 ## 0.16.6
 
 ### Changes
