@@ -5,37 +5,44 @@ description: Accepted coordinate, ownership, composition, and validation contrac
 
 # Virtual surface framing
 
-> Status: accepted design; runtime implementation and public API migration are pending.
+> Status: accepted and implemented.
 
-Virtualization owns the geometry of a bounded item surface. A scroll container may also contain a header, footer, toolbar, loading status, or other non-virtual regions. Those regions must not become synthetic virtual items, but their physical position still affects viewport queries, target scrolling, anchoring, and the browser scroll range.
+Virtualization owns the geometry of a bounded item surface. A browser host may scroll through an element container or through the page document, and ordinary header, footer, toolbar, loading status, or other non-virtual regions may sit around the surface in that physical flow. Those regions do not become synthetic virtual items, but their position can still affect viewport queries, target scrolling, anchoring, and the browser scroll range.
 
-This decision defines one coordinate contract for every Virtual layout and one host composition contract for DOM and Vue. It is intentionally derived from Sectile ownership and performance rules rather than the current high-level API. The migration will not retain compatibility aliases.
+This decision defines one coordinate contract for every Virtual layout and one host composition contract for DOM and Vue. The current public APIs implement this model; no application-owned window-scroll adapter is part of the contract.
 
 ## Decision
 
-A virtualized host consists of a **scrollport**, one **virtual surface**, and optional **frame regions** around that surface.
+A virtualized host consists of one **physical scrollport**, one **virtual surface**, and optional **frame regions** around that surface. The physical scrollport is either an `HTMLElement` scroll container or a `Document` representing page/window scrolling. `Window` is not a second public target type.
+
+Vue keeps one stable component anatomy independently of which physical target is selected:
 
 ```text
-scrollport                         data-part="root"
+root                              data-part="root"
 ├── header?                       data-part="header"
 ├── surface                       data-part="surface"
 │   ├── item...                   data-part="item"
 │   └── empty?                    data-part="empty"
 └── footer?                       data-part="footer"
+
+physical scrollport:
+  root mode      -> root HTMLElement
+  document mode  -> owner Document
+  external mode  -> explicit HTMLElement or Document
 ```
 
 The surface is both the local coordinate origin and the box that projects `VirtualLayoutPlan.contentSize`. A second content wrapper would duplicate those responsibilities, add a constant DOM node, and create ambiguity about which element owns placement coordinates. Bootstrap and empty phases reuse the same surface without applying a ready-plan size.
 
-Header and footer are ordinary flow regions inside the scrollport. Sticky positioning remains a CSS choice. Persistent occlusion from sticky or overlay content is declared explicitly through viewport insets; the host does not infer it from computed styles.
+Header and footer are ordinary flow regions around the surface. Sticky positioning remains a CSS choice. Persistent occlusion from sticky or overlay content is declared explicitly through viewport insets; the host does not infer it from computed styles.
 
 ## Terminology
 
 | Term | Meaning |
 | --- | --- |
-| **scrollport** | The host element that owns scroll offsets and visible client extents. |
+| **scrollport** | The selected physical browser scroll host: an `HTMLElement` or a `Document`. |
 | **surface** | The normal-flow element whose top-left establishes Virtual coordinate `(0, 0)`. |
 | **frame region** | A non-virtual element that can move the surface origin or change the scroll range, such as a header or footer. |
-| **viewport inset** | A persistent leading or trailing occlusion inside the scrollport, such as a sticky header. |
+| **viewport inset** | A persistent leading or trailing occlusion of the selected viewport, such as a sticky header. |
 | **placement** | A stable item identity and rectangle in surface-local coordinates. |
 | **anchor** | A visible virtual item whose screen coordinate may be preserved across a layout or frame change. |
 
@@ -48,9 +55,9 @@ The behavior is split by authority.
 | Owner | Responsibility |
 | --- | --- |
 | `@sectile/core` | Stable identity, `Sequence`, and generic immutable patch foundations. |
-| `@sectile/virtual` | Item-domain projection, extent and layout state, surface-frame algebra, viewport normalization, placement, anchoring, and target-scroll coordinates. |
-| `@sectile/dom` | Scrollport and surface measurement, ResizeObserver ownership, frame invalidation, scroll reads and writes, and resource cleanup. |
-| `@sectile/vue` | Reactive connection, slots, stable part anatomy, direct VNode projection, SSR, and hydration. |
+| `@sectile/virtual` | Browser-type-free item projection, extent and layout state, surface-frame algebra, viewport normalization, placement, anchoring, and target-scroll coordinates. |
+| `@sectile/dom` | Element/document host normalization, browser measurement and resources, frame invalidation, scroll reads and writes, and cleanup. |
+| `@sectile/vue` | Reactive root/document/external target selection, slots, stable part anatomy, direct VNode projection, SSR, and hydration; physical scrolling remains delegated to DOM. |
 | `@sectile/tabular` | Tabular row, column, region, and pinned-track semantics. It does not own host header or footer regions. |
 
 Portable identity validation, raw-array change discovery, extent reconciliation, responsive lane calculation, and layout-specific collection repair must not remain implemented in Vue. Vue may schedule those operations and render their result, but `@sectile/virtual` is the canonical owner.
@@ -213,7 +220,7 @@ The DOM anatomy must remain deterministic across server rendering, hydration, bo
 
 ## High-level Vue contract
 
-`VirtualList`, `VirtualGrid`, `VirtualMasonry`, and `VirtualSpatial` will share one host contract.
+`VirtualList`, `VirtualGrid`, `VirtualMasonry`, and `VirtualSpatial` share one host contract.
 
 ### Slots
 
@@ -226,7 +233,7 @@ $slots: {
 }
 ```
 
-The item renderer is a named slot rather than the default slot. This makes the item domain explicit and leaves header, empty, and footer as peers in the public anatomy. No compatibility default-slot alias will remain.
+The item renderer is a named slot rather than the default slot. This makes the item domain explicit and leaves header, empty, and footer as peers in the public anatomy. There is no compatibility default-slot alias.
 
 Item slot props expose `id`, not `key`. Stable domain identity and Vue’s VNode key are related at the rendering boundary but are not the same public concept.
 
@@ -257,7 +264,17 @@ Items continue to expose stable identity-independent projection attributes such 
 
 ### Common inputs
 
-The common high-level input shape is:
+The common high-level scroll target is:
+
+```ts
+export type VirtualizerScrollportTarget =
+  | 'root'
+  | 'document'
+  | HTMLElement
+  | Document
+```
+
+Omitting the high-level prop selects `'root'`. Explicit `null` leaves the physical host disconnected rather than falling back to root mode. The common input shape is:
 
 ```ts
 export interface VirtualCollectionBaseProps<
@@ -268,6 +285,7 @@ export interface VirtualCollectionBaseProps<
   readonly getID: (value: Value, index: number) => ID
   readonly overscan?: number | Partial<VirtualInsets>
   readonly viewportInsets?: number | Partial<VirtualInsets>
+  readonly scrollport?: VirtualizerScrollportTarget | null
   readonly maxItems?: number
   readonly initialViewport?: VirtualRect
   readonly itemAs?: string
@@ -284,7 +302,7 @@ List, Flow Grid, and Masonry extend the base with `sizePolicy`. Spatial instead 
 
 ### Explicit policies
 
-Implicit combinations of optional props will be replaced by discriminated policies. The target vocabulary is:
+Size and lane ownership are represented by discriminated policies:
 
 ```ts
 export type VirtualSizePolicy<Value> =
@@ -322,8 +340,8 @@ export type VirtualizerOperationResult<T> = Result<
 >
 
 export interface VirtualCollectionExpose<State, ID extends StableID> {
-  readonly scrollport: ShallowRef<HTMLElement | null>
-  readonly surface: ShallowRef<HTMLElement | null>
+  readonly scrollport: ShallowRef<VirtualScrollport | null | undefined>
+  readonly surface: ShallowRef<HTMLElement | null | undefined>
   readonly state: State
   readonly plan: VirtualLayoutPlan<ID> | null
   readonly phase: 'empty' | 'bootstrap' | 'ready'
@@ -342,7 +360,7 @@ The host-owned result adds an explicit not-connected failure to Virtual domain f
 
 ## Low-level Vue contract
 
-The low-level composition surface becomes:
+The low-level composition surface is:
 
 ```text
 VirtualizerRoot
@@ -353,13 +371,13 @@ VirtualizerFooter
 useVirtualizer
 ```
 
-`VirtualizerSurface` replaces the current `VirtualizerContent` role and prevents a split between a coordinate frame and a content-size wrapper. It registers the surface element and applies plan size. Header and footer register frame invalidation. Low-level parts support normal attributes, classes, `as`, and `asChild`; the high-level components keep one stable wrapper per optional frame region.
+`VirtualizerRoot` resolves `'root'`, `'document'`, an explicit `HTMLElement` or `Document`, or `null`, then delegates the physical behavior to DOM. `VirtualizerSurface` owns the coordinate surface and plan size. Header and footer register frame invalidation. Low-level parts support normal attributes, classes, `as`, and `asChild`; the high-level components keep one stable wrapper per optional frame region.
 
 High-level repeated item subtrees render their item element directly and register it through the shared host kernel. They do not allocate one `VirtualizerItem` Vue component instance per placement. `VirtualizerItem` remains available for custom low-level composition.
 
 ## DOM connection contract
 
-The DOM constructor names both physical owners.
+The DOM constructor names the selected physical scrollport and the Virtual surface.
 
 ```ts
 createVirtualizer({
@@ -372,10 +390,13 @@ createVirtualizer({
 })
 ```
 
-A single connection owns:
+`scrollport` is `HTMLElement | Document`. A document target uses its own `defaultView` and scrolling environment; no ambient `Window` is accepted as a parallel public target.
 
-- one passive scroll listener;
-- one geometry `ResizeObserver` for the scrollport, surface, and bounded frame regions;
+A single connection owns bounded resources:
+
+- one passive scroll listener on the selected physical target;
+- in document mode, one viewport-resize listener on that document's view;
+- one geometry `ResizeObserver` for the surface, bounded frame regions, and an element scrollport when present;
 - one item `ResizeObserver` for mounted measured items;
 - at most one scheduled frame;
 - item and element registration maps;
@@ -383,7 +404,7 @@ A single connection owns:
 - the cached surface frame; and
 - the current placement index.
 
-Ordinary scrolling must not call `getBoundingClientRect()`. It reads the current scroll offsets and combines them with the cached surface frame. Geometry reads occur only after frame invalidation or explicit refresh.
+Ordinary scrolling does not call `getBoundingClientRect()`. It reads the current physical viewport and combines it with the cached surface frame. Geometry reads occur only after owned frame invalidation or explicit `refresh()`. Unrelated page-flow movement that changes the surface position without such a signal is therefore an explicit `refresh()` boundary rather than a reason for document-wide mutation observation or continuous polling.
 
 Within one scheduled frame, processing order is fixed:
 
@@ -482,58 +503,54 @@ A frame change alone must not increment a Virtual layout generation. A footer re
 | Per-placement high-level component wrappers | Adds framework instances in the repeated hot subtree without semantic value. |
 | Built-in loading sentinel item | Conflates collection-window state with item geometry. |
 
-## Implementation sequence
+## Implementation record
 
-The migration is divided into reviewable transactions.
+The accepted model is implemented across the portable Virtual layer, the DOM host, and the Vue adapters:
 
-1. Add pure surface-frame algebra and permit finite negative viewport origins in `@sectile/virtual`.
-2. Move portable high-level collection projection and reconciliation from Vue into Virtual-owned exports.
-3. Change `@sectile/dom/virtual` to connect an explicit scrollport and surface, cache the frame, and compose frame and layout corrections.
-4. Replace the low-level Vue content contract with header, surface, item, and footer parts.
-5. Rebuild `VirtualList` on the shared host kernel as the reference high-level implementation.
-6. Migrate Grid, Masonry, and Spatial to the same kernel and remove duplicate Vue-owned portable logic.
-7. Validate Tabular pinned-track composition without adding frame semantics to Tabular.
-8. Update public signatures, breaking mappings, package evidence, examples, and English and Korean manuals.
+1. `@sectile/virtual` owns surface-frame algebra, finite negative viewport origins, portable collection projection, layout repair, anchoring, and target-scroll coordinates.
+2. `@sectile/dom/virtual` accepts `VirtualScrollport = HTMLElement | Document`, normalizes the physical host once, caches the surface frame, and composes frame and layout corrections through one physical owner.
+3. Low-level Vue exposes root, header, surface, item, and footer parts and resolves `'root' | 'document' | HTMLElement | Document | null` without adding browser coordinate policy.
+4. `VirtualList`, `VirtualGrid`, `VirtualMasonry`, and `VirtualSpatial` share the same scrollport target contract and stable frame anatomy.
+5. List bootstrap uses the projected viewport rather than element-only client geometry, and its default nested `overflow: auto` is limited to root mode.
+6. Grid and Masonry derive responsive lanes from the projected surface-local cross extent; Spatial rectangles stay surface-local.
+7. Public signatures, browser witnesses, bundle/complexity gates, and English/Korean manuals describe the same implemented contract.
 
-During implementation, each transaction runs only the narrowest affected production build and `git diff --check`. Tests, generated inventories, browser checks, package evidence, and measurements run at close.
+## Validation contract
 
-## Required evidence
+The maintained evidence covers:
 
-The final implementation must provide:
+- pure scrollport-to-surface projection and inverse target projection laws;
+- finite negative viewport origins across production layouts;
+- element and document DOM lifecycle churn with zero-resource cleanup and stale-callback rejection;
+- ordinary document scroll with a cached surface frame and no rectangle read;
+- bounded per-connection document scroll/resize resources and frame-coalesced event bursts;
+- measurement and frame correction through one transactional physical scroll owner;
+- Vue SSR/hydration with document target selection and no global-document requirement;
+- root/document/external/null target changes with stable anatomy and explicit no-fallback `null` behavior;
+- high-level List bootstrap, Grid/Masonry geometry, Spatial surface-local rectangles, and page-flow browser behavior;
+- Tabular composition with outer frame regions and pinned tracks kept distinct;
+- complexity, consumer bundle, declarations, tree-shaking, and package verification for affected public surfaces.
 
-- pure law coverage for scrollport-to-surface projection and inverse target projection;
-- negative-origin witnesses for Linear, Masonry, Track Grid, Partitioned Track Grid, and Spatial;
-- DOM lifecycle churn with zero-resource cleanup and stale-callback rejection;
-- one-publication evidence when frame and item measurements arrive in the same scheduled frame;
-- Vue type fixtures for common slots, `StableID`, policies, and exposed controls;
-- SSR and hydration evidence for empty, bootstrap, and ready anatomy;
-- browser scenarios for fixed, resized, sticky, and absent frame regions;
-- Tabular composition with both an outer header and pinned tracks;
-- complexity contracts for raw arrays, trusted patches, frame invalidation, and mounted measurement;
-- consumer bundle, install, declarations, tree-shaking, and source-map evidence for changed subpaths; and
-- a same-machine targeted performance comparison showing no geometry read on ordinary scroll.
+The implemented contract has these invariants:
 
-## Acceptance criteria
-
-The migration is complete only when all of the following hold.
-
-- All four high-level components expose the same header, item, empty, and footer contract.
+- All four high-level components expose the same header, item, empty, footer, and scrollport-selection contract.
 - The surface is the only Virtual coordinate origin and the only plan-size projection box.
 - Frame regions never enter item state, placements, measurements, anchors, snapshots, or content size.
 - A viewport may begin before the surface without invalid geometry.
-- `scrollToID()` accounts for surface origin and declared viewport insets.
-- Header changes preserve physical scroll before surface entry and item anchoring after entry.
+- `scrollToID()` accounts for surface origin and declared viewport insets for element and document hosts.
+- Header or unrelated frame changes preserve physical scroll before surface entry and item anchoring after entry.
 - Footer changes leave Virtual generation unchanged.
 - Empty and bootstrap content keep header and footer mounted.
-- Grid and Masonry use effective surface width for lane geometry.
-- Spatial frame movement performs no spatial-index repair.
+- Grid and Masonry use effective surface width for lane geometry; vertical page movement alone does not repack lanes.
+- Spatial host movement performs no spatial-index repair.
 - High-level item rendering adds no per-placement Sectile component instance.
-- Pinned Tabular tracks and outer frame regions remain distinct.
 - Disconnect releases every owned host resource.
-- Public documentation describes only the implemented API when the migration transaction closes.
+- Public documentation describes the implemented API rather than application-owned page-scroll adapters.
 
 ## Non-goals
 
 This decision does not solve browser physical scroll-range limits for extremely large logical surfaces. Logical-to-physical scroll mapping remains a separate projection problem.
+
+Document mode uses the layout viewport. It does not define `VisualViewport`, pinch-zoom, or virtual-keyboard semantics, and `Window` is not a parallel public scrollport type. A connection selects one physical scrollport rather than discovering a nested scroll chain. Unsignaled external page-flow movement remains an explicit `refresh()` case.
 
 It also does not add a generic loading state, pagination policy, sticky-positioning engine, or application toolbar semantics. Header and footer provide composition points; collection-window state and application behavior retain their existing owners.

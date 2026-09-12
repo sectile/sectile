@@ -44,8 +44,9 @@ function itemSlotProps(
 defineExpose({
   isAtEnd(threshold = 8) {
     const scrollport = list.value?.scrollport.value;
-    if (scrollport === null || scrollport === undefined) return true;
-    return scrollport.scrollHeight - scrollport.scrollTop - scrollport.clientHeight <= threshold;
+    if (scrollport === null || scrollport === undefined || scrollport.nodeType !== 1) return true;
+    const element = scrollport as HTMLElement;
+    return element.scrollHeight - element.scrollTop - element.clientHeight <= threshold;
   },
   scrollToID(id: ID, alignment?: 'start' | 'center' | 'end' | 'nearest') {
     return list.value?.scrollToID(id, alignment);

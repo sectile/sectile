@@ -90,6 +90,14 @@ Vue와 DOM 연결은 이 값을 실제 스크롤 영역에 적용합니다. 별�
 
 전체 갱신 순서는 [측정과 위치 유지](virtual/measurement.md)에서 확인할 수 있습니다.
 
+## 실제 스크롤 영역 정하기
+
+브라우저 연결에서는 Virtual 배치 모델을 바꾸지 않고 요소 스크롤 영역과 페이지 스크롤을 모두 사용할 수 있습니다. Vue에서 `scrollport`를 생략하면 컴포넌트 root가 기본 스크롤 영역이 됩니다. 일반 페이지 흐름을 사용하려면 `scrollport="document"`를 지정하고, 바깥 컨테이너가 스크롤을 소유한다면 `HTMLElement` 또는 `Document`를 직접 전달합니다. DOM 연결도 `VirtualScrollport = HTMLElement | Document`로 같은 물리 대상을 표현합니다.
+
+고정 또는 sticky UI가 viewport를 가린다면 `viewportInsets`로 크기를 명시합니다. Sectile은 CSS에서 가림 영역을 추론하지 않습니다. 이후 Virtual 바깥의 문서 흐름이 별도 resize나 등록된 frame 신호 없이 surface를 옮겼다면 `window` 스크롤 이벤트를 다시 전달하는 대신 `refresh()`로 위치·크기 정보를 다시 측정합니다.
+
+페이지와 외부 scrollport 예제, 브라우저 범위는 [Vue 연결](virtual/vue.md#페이지-스크롤-사용하기)과 [DOM 연결](virtual/dom.md#페이지-스크롤-사용하기)에서 확인할 수 있습니다.
+
 ## 데이터 구조에 맞는 배치 고르기
 
 | 화면 | 배치 또는 컴포넌트 | 자세히 |

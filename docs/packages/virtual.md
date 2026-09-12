@@ -90,6 +90,14 @@ The Vue and DOM integrations apply that correction to the physical scrollport. A
 
 See [Measurement and anchoring](virtual/measurement.md) for the full update sequence.
 
+## Choose where physical scrolling lives
+
+Browser integrations can use either an element scroll container or page scrolling without changing the Virtual layout model. In Vue, omit `scrollport` to keep the component root as the default scroll owner, use `scrollport="document"` for ordinary page flow, or pass an external `HTMLElement` or `Document`. The DOM integration accepts the same physical distinction as `VirtualScrollport = HTMLElement | Document`.
+
+Sticky or fixed UI that covers the viewport is declared with `viewportInsets`; Sectile does not infer that coverage from CSS. If unrelated page-flow content later moves the virtual surface without a resize or registered frame signal, call `refresh()` rather than forwarding `window` scroll events or building a second anchor adapter.
+
+See [Vue connection](virtual/vue.md#use-page-scrolling) and [DOM connection](virtual/dom.md#use-page-scrolling) for page and external-scrollport examples and their browser scope.
+
 ## Choose the layout that matches the data
 
 | Application surface | Layout or component | Details |
