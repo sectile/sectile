@@ -875,7 +875,10 @@ function normalizeRows(
       }
       const id = row.id;
       const cellsInput = row.cells;
-      const contextOnly = row.contextOnly;
+      const contextOnly = (row as { readonly contextOnly?: unknown }).contextOnly;
+      if (contextOnly !== undefined && (kind === 'leaf' || typeof contextOnly !== 'boolean')) {
+        return fail('transition-rejection', 'response-envelope-mismatch', 'contextOnly requires a group row.', { id });
+      }
       const idError = validateID(id, kind === 'leaf' ? 'rowID' : 'groupID', limits);
       if (idError !== null) return { ok: false, error: { ...idError, class: 'transition-rejection' } };
       if (indexes.has(id)) return fail('transition-rejection', 'duplicate-identity', 'Response row identities must be unique.', { id });
@@ -904,8 +907,8 @@ function normalizeRows(
         }
       }
       result.push(kind === 'leaf'
-        ? Object.freeze({ kind, id, cells, ...(contextOnly === undefined ? {} : { contextOnly }) })
-        : Object.freeze({ kind, id, parentGroupID, depth, expanded, cells, ...(contextOnly === undefined ? {} : { contextOnly }) }));
+        ? Object.freeze({ kind, id, cells })
+        : Object.freeze({ kind, id, parentGroupID, depth, expanded, cells, ...(contextOnly === undefined ? {} : { contextOnly: contextOnly as boolean }) }));
     } catch {
       return fail('transition-rejection', 'response-envelope-mismatch', 'Response row properties must be readable.');
     }
@@ -1123,37 +1126,58 @@ function validateResponseCrossInvariants(
   if (overlap !== undefined) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Returned and removed row identities must be disjoint.', { rowID: overlap });
   }
-  const observable = rows.filter((row) => row.contextOnly !== true);
-  const leafCount = observable.filter((row) => row.kind === 'leaf').length;
+  const start = request.access.kind === 'page'
+    ? deriveSafeTabularPageStart(request.access.page, request.access.itemsPerPage)
+    : request.access.start;
+  const capacity = request.access.kind === 'page' ? request.access.itemsPerPage : request.access.count;
+  if (start === null) return fail('transition-rejection', 'response-envelope-mismatch', 'Returned rows exceed the requested access range.');
+  let contextCount = 0;
+  let contextParent: TabularGroupID | null = null;
+  let observable = false;
+  let leafCount = 0;
+  for (const row of rows) {
+    if (row.kind === 'group' && row.contextOnly === true) {
+      if (observable || contextCount >= start || contextCount >= request.query.groups.length
+        || row.depth !== contextCount || row.parentGroupID !== contextParent) {
+        return fail('transition-rejection', 'response-envelope-mismatch', 'Invalid context-only ancestry.');
+      }
+      contextParent = row.id;
+      contextCount += 1;
+      continue;
+    }
+    if (!observable && contextCount > 0 && row.kind === 'group'
+      && (row.depth !== contextCount || row.parentGroupID !== contextParent)) {
+      return fail('transition-rejection', 'response-envelope-mismatch', 'Invalid context-only ancestry.');
+    }
+    observable = true;
+    if (row.kind === 'leaf') leafCount += 1;
+  }
+  const observableLength = rows.length - contextCount;
   if (matchingLeafCount.kind === 'known' && leafCount > matchingLeafCount.value) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Returned leaf rows exceed the matching leaf count.', {
       returnedLeafRows: leafCount,
       matchingLeafCount: matchingLeafCount.value,
     });
   }
-  if (visibleRowCount.kind === 'known' && observable.length > visibleRowCount.value) {
+  if (visibleRowCount.kind === 'known' && observableLength > visibleRowCount.value) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Returned visible rows exceed the visible row count.', {
-      returnedVisibleRows: observable.length,
+      returnedVisibleRows: observableLength,
       visibleRowCount: visibleRowCount.value,
     });
   }
-  const start = request.access.kind === 'page'
-    ? deriveSafeTabularPageStart(request.access.page, request.access.itemsPerPage)
-    : request.access.start;
-  const capacity = request.access.kind === 'page' ? request.access.itemsPerPage : request.access.count;
-  if (start === null || observable.length > capacity) {
+  if (observableLength > capacity) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Returned rows exceed the requested access range.');
   }
   if (visibleRowCount.kind === 'known') {
     const expected = start <= visibleRowCount.value
       ? Math.min(capacity, visibleRowCount.value - start)
       : -1;
-    if (observable.length !== expected) {
+    if (observableLength !== expected) {
       return fail('transition-rejection', 'response-envelope-mismatch', 'Returned rows do not fill the requested range within the known visible count.', {
         start,
         capacity,
         expected,
-        actual: observable.length,
+        actual: observableLength,
         visibleRowCount: visibleRowCount.value,
       });
     }

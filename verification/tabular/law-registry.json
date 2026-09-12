@@ -38,7 +38,7 @@
     { "id": "TAB-ADV-03", "name": "synthetic group identity separation" },
     { "id": "TAB-ADV-04", "name": "advanced policy failure atomicity" },
     { "id": "TAB-ADV-05", "name": "stable pivot column and aggregate projection" },
-    { "id": "TAB-ADV-06", "name": "context-only ancestry during access slicing" },
+    { "id": "TAB-ADV-06", "name": "context-only group ancestry during access slicing" },
     { "id": "TAB-ADV-07", "name": "empty client group removal" },
     { "id": "TAB-TBL-01", "name": "pending request and native table projection" },
     { "id": "TAB-TBL-02", "name": "observer and executor ownership separation" },

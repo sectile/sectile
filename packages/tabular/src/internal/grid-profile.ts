@@ -222,6 +222,7 @@ class GridProfileRuntime implements GridProfileController {
 
     const previousBase = this.#base.getProjection();
     const previous = this.#domainFor(this.#snapshot, previousBase);
+    if (targetsContextRow(previous, event)) return profileFailure('Context-only rows cannot be selected.');
     const changed = this.#withoutBaseEmission(() => this.#base.dispatch(event));
     if (!changed.ok) return changed;
     const candidate = freezeState(
@@ -650,7 +651,9 @@ function profileRows(
       parentRowID = ancestors.at(-1) ?? null;
       depth = ancestors.length;
     }
-    const rowCells = columns.map((columnID) => freezeCell({ rowID: row.id, columnID }));
+    const rowCells = row.kind === 'group' && row.contextOnly === true
+      ? []
+      : columns.map((columnID) => freezeCell({ rowID: row.id, columnID }));
     const byColumn = new Map<TabularColumnID, TabularCellAddress>();
     for (const cell of rowCells) byColumn.set(cell.columnID, cell);
     const profile = Object.freeze({
@@ -681,6 +684,18 @@ function validateProfileRows(kind: GridProfileKind, rows: readonly TabularRow[])
     ancestors[row.depth] = row.id;
   }
   return ok(true);
+}
+
+function targetsContextRow(domain: GridProfileDomain, event: GridProfileEvent): boolean {
+  const context = (rowID: TabularRowID | TabularGroupID): boolean => {
+    const row = domain.rowByID.get(rowID)?.row;
+    return row?.kind === 'group' && row.contextOnly === true;
+  };
+  if (event.type === 'toggle-row-selection') return context(event.rowID);
+  if (event.type === 'set-row-selection-range') return context(event.anchorRowID) || context(event.rowID);
+  if (event.type !== 'set-row-selection' || event.selection.kind !== 'explicit-rows') return false;
+  for (const rowID of event.selection.rowIDs) if (context(rowID)) return true;
+  return false;
 }
 
 function reconcileInteractionState(

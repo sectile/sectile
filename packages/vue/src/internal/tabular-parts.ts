@@ -218,7 +218,7 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
         rowID: props.row.id,
         'data-row-id': props.row.id,
         'data-row-kind': props.row.kind,
-        ...(props.row.contextOnly === true ? { 'data-context-only': '' } : {}),
+        ...(props.row.kind === 'group' && props.row.contextOnly === true ? { 'data-context-only': '' } : {}),
       }, { default: () => slots['default']?.() });
     },
   });

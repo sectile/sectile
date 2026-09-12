@@ -178,6 +178,7 @@ test('TAB-ADV-06: sliced descendants retain context-only ancestors outside the a
     ['1:team:A', true],
     ['r1', false],
   ]);
+  assert.deepEqual(result.value.rows.slice(0, 2).map(({ kind }) => kind), ['group', 'group']);
   assert.deepEqual(result.value.visibleRowCount, { kind: 'known', value: 5 });
 });
 

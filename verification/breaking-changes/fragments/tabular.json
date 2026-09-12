@@ -6,28 +6,28 @@
       "id": "WI-014:root-request-generation-contract",
       "change": "signature-changed",
       "before": { "subpath": "." },
-      "symbols": ["TabularLimits.maxLiveRequestGenerations", "TabularLimitErrorCode.live-request-generation-ceiling-exceeded", "TabularRowSelection declaration closure"],
+      "symbols": ["TabularLimits.maxLiveRequestGenerations", "TabularLimitErrorCode.live-request-generation-ceiling-exceeded", "TabularRowSelection declaration closure", "TabularLeafRow.contextOnly declaration closure"],
       "replacement": { "package": "@sectile/tabular", "subpath": "." }
     },
     {
       "id": "WI-014:model-request-generation-contract",
       "change": "signature-changed",
       "before": { "subpath": "./model" },
-      "symbols": ["TabularLimits.maxLiveRequestGenerations", "TabularLimitErrorCode.live-request-generation-ceiling-exceeded"],
+      "symbols": ["TabularLimits.maxLiveRequestGenerations", "TabularLimitErrorCode.live-request-generation-ceiling-exceeded", "TabularLeafRow.contextOnly declaration closure"],
       "replacement": { "package": "@sectile/tabular", "subpath": "./model" }
     },
     {
       "id": "WI-014:source-request-generation-contract",
       "change": "signature-changed",
       "before": { "subpath": "./source" },
-      "symbols": ["Partial<TabularLimits>.maxLiveRequestGenerations"],
+      "symbols": ["Partial<TabularLimits>.maxLiveRequestGenerations", "TabularLeafRow.contextOnly declaration closure"],
       "replacement": { "package": "@sectile/tabular", "subpath": "./source" }
     },
     {
       "id": "WI-010:data-table-virtual-cross-extent",
       "change": "signature-changed",
       "before": { "subpath": "./virtual" },
-      "symbols": ["TabularVirtualErrorCode.extent-policy-failed", "TabularRowSelection declaration closure", "DataTableVirtualAdapterOptions.crossExtent", "DataTable linear row crossExtent placeholder"],
+      "symbols": ["TabularVirtualErrorCode.extent-policy-failed", "TabularRowSelection declaration closure", "DataTableVirtualAdapterOptions.crossExtent", "DataTable linear row crossExtent placeholder", "TabularLeafRow.contextOnly declaration closure"],
       "replacement": { "package": "@sectile/tabular", "subpath": "./virtual" },
       "removalReason": "The Tabular virtual surface retains the current extent-policy and row-selection declaration changes while DataTable virtualization now requires the host's surface-local cross extent so row placements and contentSize match the effective virtual surface width."
     },
@@ -35,28 +35,28 @@
       "id": "WI-032:data-grid-selection-expression-closure",
       "change": "signature-changed",
       "before": { "subpath": "./data-grid" },
-      "symbols": ["TabularRowSelection declaration closure"],
+      "symbols": ["TabularRowSelection declaration closure", "TabularLeafRow.contextOnly declaration closure"],
       "replacement": { "package": "@sectile/tabular", "subpath": "./data-grid" }
     },
     {
       "id": "WI-032:data-table-selection-expression",
       "change": "signature-changed",
       "before": { "subpath": "./data-table" },
-      "symbols": ["rowSelectionContains", "TabularRowSelection declaration closure"],
+      "symbols": ["rowSelectionContains", "TabularRowSelection declaration closure", "TabularLeafRow.contextOnly declaration closure"],
       "replacement": { "package": "@sectile/tabular", "subpath": "./data-table" }
     },
     {
       "id": "WI-032:data-tree-grid-selection-expression-closure",
       "change": "signature-changed",
       "before": { "subpath": "./data-tree-grid" },
-      "symbols": ["TabularRowSelection declaration closure"],
+      "symbols": ["TabularRowSelection declaration closure", "TabularLeafRow.contextOnly declaration closure"],
       "replacement": { "package": "@sectile/tabular", "subpath": "./data-tree-grid" }
     },
     {
       "id": "WI-002:query-canonicalization-closure",
       "change": "signature-changed",
       "before": { "subpath": "./query" },
-      "symbols": ["Tabular query declaration closure"],
+      "symbols": ["Tabular query declaration closure", "TabularLeafRow.contextOnly declaration closure"],
       "replacement": { "package": "@sectile/tabular", "subpath": "./query" }
     }
   ]

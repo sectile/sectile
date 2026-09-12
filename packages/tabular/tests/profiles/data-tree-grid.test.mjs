@@ -59,6 +59,58 @@ test('TAB-TGR-02: group cells are read-only while leaf edit commands keep exact 
   assert.deepEqual(canceled.value.commands, [{ type: 'cancel-edit', cell, reason: 'escape' }]);
 });
 
+test('ISSUE-122: context-only ancestors remain structural and cannot become record interaction targets', () => {
+  const controller = createDataTreeGrid({
+    columns,
+    initialValues: {
+      query: {
+        sort: [], filters: [],
+        groups: [{ id: 'by-name', columnID: 'name', policy: 'group' }],
+        aggregates: [], pivots: [],
+      },
+      accessState: {
+        kind: 'window',
+        window: { revision: 0, requestGeneration: 0, start: 1, size: 1, total: null, pending: null },
+      },
+    },
+  });
+  const contextRows = [
+    { kind: 'group', id: 'group:a', parentGroupID: null, depth: 0, expanded: true, contextOnly: true, cells: { name: 'A', score: 3 } },
+    { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
+  ];
+  assert.equal(controller.synchronizeView(response(controller, contextRows)).ok, true);
+  assert.deepEqual(
+    controller.getProjection().rows.map(({ rowID, parentRowID, depth, cells }) => [rowID, parentRowID, depth, cells.length]),
+    [['group:a', null, 0, 0], ['r1', 'group:a', 1, 2]],
+  );
+
+  const contextCell = { rowID: 'group:a', columnID: 'name' };
+  const before = controller.getSnapshot();
+  const focus = controller.dispatch({ type: 'focus-cell', cell: contextCell });
+  assert.equal(focus.ok, false);
+  assert.equal(focus.error.code, 'invalid-edit-target');
+  assert.equal(controller.getSnapshot(), before);
+  const edit = controller.dispatch({ type: 'begin-edit', cell: contextCell });
+  assert.equal(edit.ok, false);
+  assert.equal(edit.error.code, 'invalid-edit-target');
+  assert.equal(controller.getSnapshot(), before);
+
+  for (const event of [
+    { type: 'toggle-row-selection', rowID: 'group:a' },
+    { type: 'set-row-selection', selection: { kind: 'explicit-rows', rowIDs: ['group:a'] } },
+    { type: 'set-row-selection-range', anchorRowID: 'group:a', rowID: 'r1', selected: true },
+  ]) {
+    const selected = controller.dispatch(event);
+    assert.equal(selected.ok, false);
+    assert.equal(selected.error.code, 'profile-view-mismatch');
+    assert.equal(controller.getSnapshot(), before);
+  }
+
+  const leafCell = { rowID: 'r1', columnID: 'name' };
+  assert.equal(controller.dispatch({ type: 'focus-cell', cell: leafCell }).ok, true);
+  assert.equal(controller.dispatch({ type: 'begin-edit' }).ok, true);
+});
+
 test('TAB-TGR-03: row expansion is source intent and malformed ancestry rejects atomically', () => {
   const controller = createDataTreeGrid({ columns });
   assert.equal(controller.synchronizeView(response(controller, rows)).ok, true);

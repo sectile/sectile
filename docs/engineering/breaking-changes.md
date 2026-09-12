@@ -32,7 +32,7 @@
 | WI-002 | @sectile/core | `./revision` | `createMachineUpdate` | @sectile/core/revision |
 | WI-002 | @sectile/form | `./path` | `Core Result declaration closure` | @sectile/form/path |
 | WI-002 | @sectile/terminal | `./popover` | `Core Result declaration closure` | @sectile/terminal/popover |
-| WI-002 | @sectile/tabular | `./query` | `Tabular query declaration closure` | @sectile/tabular/query |
+| WI-002 | @sectile/tabular | `./query` | `Tabular query declaration closure`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/query |
 | WI-002 | @sectile/vue | `./radio-group` | `RadioGroupIndicator.forcePresent` | @sectile/vue/radio-group |
 | WI-002 | @sectile/vue | `./rating` | `RatingIndicator.forcePresent` | @sectile/vue/rating |
 | WI-002 | @sectile/core | `./result` | `okResult`, `failResult` | @sectile/core/result |
@@ -104,7 +104,7 @@
 | WI-009 | @sectile/core | `./adapter-runtime` | `tryReconcileCollectionIdentities` | @sectile/core/adapter-runtime |
 | WI-009 | @sectile/form | `./error` | `FormErrorCode form-event-invalid`, `Core Result declaration closure` | @sectile/form/error |
 | WI-009 | @sectile/form | `.` | `FormErrorCode form-event-invalid`, `typed field-state commands`, `local StandardSchema declaration closure` | @sectile/form |
-| WI-010 | @sectile/tabular | `./virtual` | `TabularVirtualErrorCode.extent-policy-failed`, `TabularRowSelection declaration closure`, `DataTableVirtualAdapterOptions.crossExtent`, `DataTable linear row crossExtent placeholder` | @sectile/tabular/virtual |
+| WI-010 | @sectile/tabular | `./virtual` | `TabularVirtualErrorCode.extent-policy-failed`, `TabularRowSelection declaration closure`, `DataTableVirtualAdapterOptions.crossExtent`, `DataTable linear row crossExtent placeholder`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/virtual |
 | WI-013 | @sectile/terminal | `./checkbox` | `Checkbox controller declaration closure` | @sectile/terminal/checkbox |
 | WI-013 | @sectile/dom | `./rating` | `Rating controller declaration closure` | @sectile/dom/rating |
 | WI-013 | @sectile/terminal | `./rating` | `Rating controller declaration closure` | @sectile/terminal/rating |
@@ -115,12 +115,12 @@
 | WI-014 | @sectile/core | `./menu-button` | `Tree declaration closure` | @sectile/core/menu-button |
 | WI-014 | @sectile/core | `./menu` | `Tree declaration closure` | @sectile/core/menu |
 | WI-014 | @sectile/core | `./menubar` | `Tree declaration closure` | @sectile/core/menubar |
-| WI-014 | @sectile/tabular | `./model` | `TabularLimits.maxLiveRequestGenerations`, `TabularLimitErrorCode.live-request-generation-ceiling-exceeded` | @sectile/tabular/model |
+| WI-014 | @sectile/tabular | `./model` | `TabularLimits.maxLiveRequestGenerations`, `TabularLimitErrorCode.live-request-generation-ceiling-exceeded`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/model |
 | WI-014 | @sectile/core | `./navigation-menu` | `Tree declaration closure` | @sectile/core/navigation-menu |
 | WI-014 | @sectile/core | `./reorder` | `Grid declaration closure` | @sectile/core/reorder |
-| WI-014 | @sectile/tabular | `.` | `TabularLimits.maxLiveRequestGenerations`, `TabularLimitErrorCode.live-request-generation-ceiling-exceeded`, `TabularRowSelection declaration closure` | @sectile/tabular |
+| WI-014 | @sectile/tabular | `.` | `TabularLimits.maxLiveRequestGenerations`, `TabularLimitErrorCode.live-request-generation-ceiling-exceeded`, `TabularRowSelection declaration closure`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular |
 | WI-014 | @sectile/core | `.` | `Grid.domain`, `Tree.subtreeIntervalOf`, `TreeSubtreeInterval` | @sectile/core |
-| WI-014 | @sectile/tabular | `./source` | `Partial<TabularLimits>.maxLiveRequestGenerations` | @sectile/tabular/source |
+| WI-014 | @sectile/tabular | `./source` | `Partial<TabularLimits>.maxLiveRequestGenerations`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/source |
 | WI-014 | @sectile/core | `./tree` | `Tree.subtreeIntervalOf`, `TreeSubtreeInterval` | @sectile/core/tree |
 | WI-014 | @sectile/core | `./tree-view` | `Tree declaration closure` | @sectile/core/tree-view |
 | WI-017 | @sectile/dom | `./tabular` | `Tabular DOM activation declaration closure` | @sectile/dom/tabular |
@@ -145,9 +145,9 @@
 | WI-031 | @sectile/core | `./slider` | `QuantizedRange declaration closure` | @sectile/core/slider |
 | WI-031 | @sectile/core | `./spin-button` | `QuantizedRange declaration closure` | @sectile/core/spin-button |
 | WI-031 | @sectile/core | `./window-splitter` | `QuantizedRange declaration closure` | @sectile/core/window-splitter |
-| WI-032 | @sectile/tabular | `./data-grid` | `TabularRowSelection declaration closure` | @sectile/tabular/data-grid |
-| WI-032 | @sectile/tabular | `./data-table` | `rowSelectionContains`, `TabularRowSelection declaration closure` | @sectile/tabular/data-table |
-| WI-032 | @sectile/tabular | `./data-tree-grid` | `TabularRowSelection declaration closure` | @sectile/tabular/data-tree-grid |
+| WI-032 | @sectile/tabular | `./data-grid` | `TabularRowSelection declaration closure`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/data-grid |
+| WI-032 | @sectile/tabular | `./data-table` | `rowSelectionContains`, `TabularRowSelection declaration closure`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/data-table |
+| WI-032 | @sectile/tabular | `./data-tree-grid` | `TabularRowSelection declaration closure`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/data-tree-grid |
 | WI-034 | @sectile/virtual | `./layout` | `VirtualPoint, VirtualSize, VirtualRect, and VirtualInsets declaration closure` | @sectile/virtual/layout |
 | WI-034 | @sectile/virtual | `./linear-layout` | `Virtual geometry declaration closure` | @sectile/virtual/linear-layout |
 | WI-034 | @sectile/virtual | `./masonry-layout` | `Virtual geometry declaration closure` | @sectile/virtual/masonry-layout |

@@ -77,6 +77,19 @@ test('TAB-GRD-03: hierarchical views reject before changing the flat profile sta
   assert.equal(controller.getSnapshot(), before);
 });
 
+test('ISSUE-122: DataGrid rejects leaf context rows before they enter the flat profile', () => {
+  const controller = createDataGrid({ columns });
+  const base = resolve(controller);
+  const before = controller.getSnapshot();
+  const result = controller.synchronizeView({
+    ...base,
+    rows: [{ ...base.rows[0], contextOnly: true }, ...base.rows.slice(1)],
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, 'response-envelope-mismatch');
+  assert.equal(controller.getSnapshot(), before);
+});
+
 test('ISSUE-060: grid profile validation only inspects bounded canonical response rows', () => {
   const controller = createDataGrid({ columns, limits: { maxRows: 1 } });
   const base = resolve(controller);

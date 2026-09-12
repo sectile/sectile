@@ -68,7 +68,6 @@ export interface TabularLeafRow<Cells extends object = TabularCellRecord> {
   readonly kind: 'leaf';
   readonly id: TabularRowID;
   readonly cells: TabularWireCells<Cells>;
-  readonly contextOnly?: boolean;
 }
 
 export interface TabularGroupRow<Cells extends object = TabularCellRecord> {

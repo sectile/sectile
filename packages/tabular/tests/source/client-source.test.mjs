@@ -572,6 +572,58 @@ test('TAB-SRC-11: response cross-invariants reject overlap, impossible counts, a
   assert.equal(incomplete.error.code, 'response-envelope-mismatch');
 });
 
+test('ISSUE-122: leaf context flags cannot bypass access and count bounds', () => {
+  const active = request({ access: { kind: 'window', start: 0, count: 1 } });
+  const payload = resolveClientTabularRequest(source(), request({ access: { kind: 'window', start: 0, count: 2 } }));
+  assert.equal(payload.ok, true);
+  const result = synchronizeTabularView(active, {
+    ...payload.value,
+    access: active.access,
+    matchingLeafCount: { kind: 'known', value: 1 },
+    visibleRowCount: { kind: 'known', value: 1 },
+    rows: [
+      { ...payload.value.rows[0], contextOnly: true },
+      payload.value.rows[1],
+    ],
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, 'response-envelope-mismatch');
+});
+
+test('ISSUE-122: context-only group ancestry remains outside requested window capacity', () => {
+  const groupedSource = createClientTabularSource({
+    records,
+    columnSchema,
+    getRowID: (record) => record.id,
+    getValue: (record, columnID) => record[columnID],
+    policies: {
+      grouping: {
+        team: (record, _descriptor, depth) => ({ groupID: `${depth}:team:${record.team}`, label: record.team }),
+      },
+    },
+  });
+  const active = request({
+    queryRevision: 1,
+    expansionRevision: 1,
+    query: {
+      sort: [], filters: [],
+      groups: [{ id: 'team', columnID: 'team', policy: 'team' }],
+      aggregates: [], pivots: [],
+    },
+    expansion: ['0:team:A'],
+    access: { kind: 'window', start: 1, count: 1 },
+  });
+  const response = resolveClientTabularRequest(groupedSource, active);
+  assert.equal(response.ok, true);
+  assert.deepEqual(response.value.rows.map((row) => [row.kind, row.id, row.kind === 'group' ? row.contextOnly ?? false : false]), [
+    ['group', '0:team:A', true],
+    ['leaf', 'r1', false],
+  ]);
+  const accepted = synchronizeTabularView(active, response.value);
+  assert.equal(accepted.ok, true);
+  assert.deepEqual(accepted.value.rows.map((row) => row.id), ['0:team:A', 'r1']);
+});
+
 test('ISSUE-052: cold source work exposes each configurable descriptor axis', () => {
   const axisRecords = Array.from({ length: 10 }, (_, index) => ({ id: `axis-${index}`, value: index }));
   const run = (axis, count) => {
