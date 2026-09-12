@@ -10,6 +10,8 @@ import type { NumberFieldOptions } from '@sectile/dom/number-field';
 import type { TimeFieldOptions } from '@sectile/dom/temporal/time-field';
 import { DateField, type DateValue } from '@sectile/vue/temporal/date-field';
 import {
+  FormMessage,
+  FormSummary,
   defineFormSubmission as defineVueFormSubmission,
 } from '@sectile/vue/form';
 import {
@@ -34,16 +36,27 @@ import {
 import { MeterRoot, type MeterRootProps, type MeterRootSlotProps } from '@sectile/vue/meter';
 import { NumberField, type NumberFieldProps } from '@sectile/vue/number-field';
 import { PopoverRoot } from '@sectile/vue/popover';
-import { SelectRoot } from '@sectile/vue/select';
-import { ComboboxRoot } from '@sectile/vue/combobox';
-import { CascadeSelectRoot } from '@sectile/vue/cascade-select';
+import { AccordionContent } from '@sectile/vue/accordion';
+import { CarouselSlide } from '@sectile/vue/carousel';
+import { CheckboxIndicator } from '@sectile/vue/checkbox';
+import { DisclosureContent } from '@sectile/vue/disclosure';
+import { ListboxItemIndicator } from '@sectile/vue/listbox';
+import { NavigationMenuIndicator } from '@sectile/vue/navigation-menu';
+import { RadioGroupIndicator } from '@sectile/vue/radio-group';
+import { SelectItemIndicator, SelectRoot } from '@sectile/vue/select';
+import { ComboboxEmpty, ComboboxRoot } from '@sectile/vue/combobox';
+import { CascadeListItemIndicator } from '@sectile/vue/cascade-list';
+import { CascadeSelectItemIndicator, CascadeSelectRoot } from '@sectile/vue/cascade-select';
 import {
   SpinButtonInput,
   SpinButtonRoot,
   type SpinButtonInputProps,
 } from '@sectile/vue/spin-button';
 import { TimeField } from '@sectile/vue/temporal/time-field';
+import { TabsContent } from '@sectile/vue/tabs';
 import { TooltipRoot } from '@sectile/vue/tooltip';
+import { TreeGridEditor } from '@sectile/vue/tree-grid';
+import { TreeViewGroup } from '@sectile/vue/tree-view';
 import { useToast, type UseToastReturn } from '@sectile/vue/toast';
 import { VirtualGrid, type VirtualGridProps, type VirtualGridSlotProps } from '@sectile/vue/virtual/grid';
 import { VirtualList, type VirtualListProps, type VirtualListSlotProps } from '@sectile/vue/virtual/list';
@@ -124,6 +137,22 @@ createDOMForm({ form: formElement, ...rawDOMSubmission });
 createDOMForm({ form: formElement, ...schemaDOMSubmission });
 
 h(SelectRoot, { items: [], modelValue: null, defaultValue: null });
+h(CheckboxIndicator, { forcePresent: true });
+h(RadioGroupIndicator, { forcePresent: true });
+h(NavigationMenuIndicator, { open: false, forcePresent: true });
+h(ListboxItemIndicator, { forcePresent: true });
+h(SelectItemIndicator, { forcePresent: true });
+h(CascadeListItemIndicator, { forcePresent: true });
+h(CascadeSelectItemIndicator, { forcePresent: true });
+h(DisclosureContent, { forcePresent: true });
+h(AccordionContent, { forcePresent: true });
+h(TabsContent, { value: 'details', forcePresent: true });
+h(TreeViewGroup, { for: 'root', forcePresent: true });
+h(CarouselSlide, { value: 'slide-1', forcePresent: true });
+h(FormMessage, { forcePresent: true });
+h(FormSummary, { forcePresent: true });
+h(ComboboxEmpty, { forcePresent: true });
+h(TreeGridEditor, { for: 'name', forcePresent: true });
 h(ComboboxRoot, {
   items: [],
   position: true,

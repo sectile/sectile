@@ -28,6 +28,7 @@ import {
   useCompositeFormControl,
 } from './internal/form-control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import { useConditionalPresenceRegistry } from './internal/conditional-presence.js';
 import {
   cascadeBranchItems,
   cascadeChoicePartProps,
@@ -37,6 +38,7 @@ import {
   type CascadeChoiceColumnProps,
   type CascadeChoiceColumnSlotProps,
   type CascadeChoiceItemContext,
+  type CascadeChoiceItemIndicatorProps,
   type CascadeChoiceItemProps,
   type CascadeChoiceItemSlotProps,
   type CascadeChoicePartProps,
@@ -67,6 +69,7 @@ export type CascadeListColumnProps = CascadeChoiceColumnProps;
 export type CascadeListColumnSlotProps = CascadeChoiceColumnSlotProps;
 export type CascadeListItemProps = CascadeChoiceItemProps;
 export type CascadeListItemSlotProps = CascadeChoiceItemSlotProps;
+export type CascadeListItemIndicatorProps = CascadeChoiceItemIndicatorProps;
 export type CascadeListPartProps = CascadeChoicePartProps;
 
 interface RootContext extends CascadeChoiceRootContext<CascadeListRootSlotProps> {}
@@ -129,6 +132,11 @@ export const CascadeListRoot = defineComponent({
       disabled: props.disabled,
       readonly: props.readonly,
     }));
+    const selectedIDSet = computed<ReadonlySet<string>>(() => {
+      const value = props.modelValue !== undefined ? props.modelValue : localValue.value;
+      return value === null ? new Set() : new Set([value]);
+    });
+    const indicatorPresence = useConditionalPresenceRegistry(selectedIDSet);
     const refreshItems = (): void => {
       if (root.value === null || connection.value === undefined) return;
       root.value.querySelectorAll<HTMLElement>('[data-sectile-cascade-list-id]').forEach((element) => {
@@ -191,6 +199,7 @@ export const CascadeListRoot = defineComponent({
       textValue: computed(() => props.textValue ?? ((id: string) => id)),
       disabledItems: computed(() => new Set(props.disabledItems)),
       branchItems: branches,
+      indicatorPresence,
       registerColumn: (element, depth, label) => connection.value?.setColumnAttributes(
         element,
         depth === 0 ? null : state.value.path[depth - 1] ?? null,

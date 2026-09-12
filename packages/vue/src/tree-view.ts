@@ -11,6 +11,11 @@ import {
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { collectionBranchIDs, reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import {
+  conditionalPresenceProps,
+  useConditionalPresence,
+  type ConditionalPresenceProps,
+} from './internal/conditional-presence.js';
 
 export interface TreeViewRootProps {
   readonly nodes: readonly TreeNodeInput<string>[];
@@ -35,7 +40,7 @@ export type TreeViewEligiblePredicate<ID extends string = string> = NonNullable<
 export interface TreeViewRootSlotProps { readonly value: readonly string[]; readonly expandedValues: readonly string[]; readonly highlightedValue: string | null; readonly disabled: boolean; readonly: boolean }
 export interface TreeViewItemSlotProps extends Omit<TreeViewRootSlotProps, 'value'> { readonly value: string; readonly selectedValues: readonly string[]; readonly selected: boolean; readonly expanded: boolean; readonly highlighted: boolean; readonly disabled: boolean }
 export interface TreeViewPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface TreeViewGroupProps extends TreeViewPartProps { readonly for: string }
+export interface TreeViewGroupProps extends TreeViewPartProps, ConditionalPresenceProps { readonly for: string }
 
 interface Context {
   readonly state: ComputedRef<TreeViewRootSlotProps>;
@@ -175,15 +180,27 @@ export type TreeViewHighlightedValueChangeHandler = (value: string | null) => vo
 
 export const TreeViewGroup = defineComponent({
   name: 'SectileTreeViewGroup', inheritAttrs: false,
-  props: { for: { type: String, required: true }, ...partProps },
+  props: { for: { type: String, required: true }, ...partProps, ...conditionalPresenceProps },
   slots: Object as SlotsType<{ default: (props: TreeViewRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('TreeViewGroup');
     const expanded = computed(() => root.expandedItems.value.has(props.for));
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-      as: props.as, asChild: props.asChild, role: 'group', hidden: !expanded.value,
-      'data-scope': 'tree-view', 'data-part': 'group', 'data-state': expanded.value ? 'open' : 'closed',
-    }), { default: () => slots['default']?.(root.state.value) });
+    const forcePresent = computed(() => props.forcePresent);
+    const presence = useConditionalPresence(expanded, forcePresent);
+    return (): VNodeChild => {
+      const inactivePresent = !expanded.value && presence.present.value;
+      return h(Primitive, mergeProps(attrs, {
+        as: props.as,
+        asChild: props.asChild,
+        elementRef: presence.register,
+        role: 'group',
+        hidden: presence.hidden.value,
+        ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
+        'data-scope': 'tree-view',
+        'data-part': 'group',
+        'data-state': expanded.value ? 'open' : 'closed',
+      }), { default: () => slots['default']?.(root.state.value) });
+    };
   },
 });
 

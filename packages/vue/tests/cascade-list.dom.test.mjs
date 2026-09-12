@@ -25,6 +25,7 @@ const { renderToString } = await import('@vue/server-renderer');
 const {
   CascadeListColumn,
   CascadeListItem,
+  CascadeListItemChevron,
   CascadeListRoot,
 } = await import('../.verification-dist/cascade-list.js');
 
@@ -53,6 +54,36 @@ async function settle() {
   await nextTick();
   await Promise.resolve();
 }
+
+test('Vue cascade list keeps structural absence and leaf affordances immediately hidden', async () => {
+  const { app, host } = mount(() => h(CascadeListRoot, {
+    nodes: initialNodes,
+    defaultValue: 'seoul',
+  }, {
+    default: () => [
+      h(CascadeListColumn, { depth: 3, 'data-empty-column': '' }, {
+        default: () => 'No structural column',
+      }),
+      h(CascadeListColumn, { depth: 2 }, {
+        default: ({ items }) => items.map((item) => h(CascadeListItem, { value: item }, {
+          default: () => [
+            item,
+            h(CascadeListItemChevron, { 'data-item-chevron': item }, { default: () => 'Next' }),
+          ],
+        })),
+      }),
+    ],
+  }));
+
+  await settle();
+  const emptyColumn = host.querySelector('[data-empty-column]');
+  const leafChevron = host.querySelector('[data-item-chevron="seoul"]');
+  assert.ok(emptyColumn instanceof HTMLElement);
+  assert.ok(leafChevron instanceof HTMLElement);
+  assert.equal(emptyColumn.hidden, true);
+  assert.equal(leafChevron.hidden, true);
+  unmount(app, host);
+});
 
 test('Vue cascade list keeps controlled values external and leaves Escape to its host', async () => {
   const value = ref(null);

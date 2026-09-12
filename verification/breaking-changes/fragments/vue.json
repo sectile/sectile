@@ -30,7 +30,7 @@
       "id": "WI-009:checkbox-group-domain",
       "change": "signature-changed",
       "before": { "subpath": "./checkbox-group" },
-      "symbols": ["CheckboxGroupRootProps.items"],
+      "symbols": ["CheckboxGroupRootProps.items", "CheckboxGroupIndicator.forcePresent"],
       "replacement": { "package": "@sectile/vue", "subpath": "./checkbox-group" },
       "removalReason": "CheckboxGroupRoot now requires the canonical ordered item domain used for validation, deterministic selection order, and bounded membership."
     },
@@ -38,7 +38,7 @@
       "id": "WI-047:vue-form-projections",
       "change": "signature-changed",
       "before": { "subpath": "./form" },
-      "symbols": ["FormRootSlotProps", "FormRoot default slot", "FormSummary default slot", "FormReset default slot", "FormSubmit default slot", "FormSubmitSlotProps.submissionStatus", "FormFieldSlotProps", "FormIssueInput", "FormSubmitResult", "FormSubmitErrorMapper"],
+      "symbols": ["FormRootSlotProps", "FormRoot default slot", "FormSummary default slot", "FormReset default slot", "FormSubmit default slot", "FormSubmitSlotProps.submissionStatus", "FormFieldSlotProps", "FormIssueInput", "FormSubmitResult", "FormSubmitErrorMapper", "FormMessage.forcePresent", "FormSummary.forcePresent"],
       "replacement": { "package": "@sectile/vue", "subpath": "./form" },
       "removalReason": "Use explicit selectors for arbitrary projections, validation and submission lifecycle snapshots, submission.failure for save failures, relatedPaths/relatedIssues for multi-field issues, and the expanded FormSummary slot projections."
     },
@@ -46,21 +46,21 @@
       "id": "WI-025:root-aggregate-removal-closure",
       "change": "signature-changed",
       "before": { "subpath": "." },
-      "symbols": ["tabular, temporal, and virtual aggregate declaration closures"],
+      "symbols": ["tabular, temporal, and virtual aggregate declaration closures", "conditional presence component prop declaration closures"],
       "replacement": { "package": "@sectile/vue", "subpath": "." }
     },
     {
       "id": "WI-009:cascade-list-domain-reconciliation",
       "change": "signature-changed",
       "before": { "subpath": "./cascade-list" },
-      "symbols": ["stable item-domain reconciliation declaration closure"],
+      "symbols": ["stable item-domain reconciliation declaration closure", "CascadeListItemIndicator.forcePresent"],
       "replacement": { "package": "@sectile/vue", "subpath": "./cascade-list" }
     },
     {
       "id": "WI-009:cascade-select-domain-reconciliation",
       "change": "signature-changed",
       "before": { "subpath": "./cascade-select" },
-      "symbols": ["stable item-domain reconciliation declaration closure", "CascadeSelectRoot positioning props", "automatic trigger-relative positioning"],
+      "symbols": ["stable item-domain reconciliation declaration closure", "CascadeSelectRoot positioning props", "automatic trigger-relative positioning", "CascadeSelectItemIndicator.forcePresent"],
       "replacement": { "package": "@sectile/vue", "subpath": "./cascade-select" },
       "removalReason": "CascadeSelectContent now uses automatic trigger-relative positioning by default; pass position=false to preserve consumer-owned layout."
     },
@@ -97,7 +97,7 @@
       "id": "WI-036:select-positioning-props",
       "change": "signature-changed",
       "before": { "subpath": "./select" },
-      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props"],
+      "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props", "SelectItemIndicator.forcePresent"],
       "replacement": { "package": "@sectile/dom", "subpath": "./position" }
     },
     {
@@ -128,7 +128,7 @@
       "id": "WI-036:navigation-menu-positioning-closure",
       "change": "signature-changed",
       "before": { "subpath": "./navigation-menu" },
-      "symbols": ["shared menu declaration closure"],
+      "symbols": ["shared menu declaration closure", "NavigationMenuIndicator.forcePresent"],
       "replacement": { "package": "@sectile/vue", "subpath": "./navigation-menu" },
       "removalReason": "Navigation Menu behavior and props remain unchanged; its declarations share the menu implementation that now exposes MenuButton positioning props."
     },
@@ -136,7 +136,7 @@
       "id": "WI-036:combobox-positioning-props",
       "change": "signature-changed",
       "before": { "subpath": "./combobox" },
-      "symbols": ["ComboboxRoot positioning props", "automatic input-relative positioning"],
+      "symbols": ["ComboboxRoot positioning props", "automatic input-relative positioning", "ComboboxEmpty.forcePresent"],
       "replacement": { "package": "@sectile/vue", "subpath": "./combobox" },
       "removalReason": "ComboboxContent now uses automatic input-relative positioning by default; pass position=false to preserve consumer-owned layout."
     },
@@ -147,6 +147,94 @@
       "symbols": ["middleware", "autoUpdate", "positionChange", "Floating UI-derived props", "TooltipRootProps.position"],
       "replacement": { "package": "@sectile/dom", "subpath": "./position" },
       "removalReason": "Use position=false when TooltipContent layout remains consumer-owned."
+    },
+    {
+      "id": "WI-005:accordion-conditional-presence",
+      "change": "signature-changed",
+      "before": { "subpath": "./accordion" },
+      "symbols": ["AccordionContent.forcePresent"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./accordion" },
+      "removalReason": "AccordionContent adds forcePresent so consumers can keep inactive content present while semantic state and accessibility quarantine update immediately."
+    },
+    {
+      "id": "WI-005:carousel-conditional-presence",
+      "change": "signature-changed",
+      "before": { "subpath": "./carousel" },
+      "symbols": ["CarouselSlide.forcePresent"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./carousel" },
+      "removalReason": "CarouselSlide adds forcePresent for consumer-owned two-way motion while inactive slides remain interaction- and AT-quarantined."
+    },
+    {
+      "id": "WI-002:checkbox-conditional-presence",
+      "change": "signature-changed",
+      "before": { "subpath": "./checkbox" },
+      "symbols": ["CheckboxIndicator.forcePresent"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./checkbox" },
+      "removalReason": "CheckboxIndicator adds forcePresent and otherwise retains finite exit motion before becoming hidden."
+    },
+    {
+      "id": "WI-005:disclosure-conditional-presence",
+      "change": "signature-changed",
+      "before": { "subpath": "./disclosure" },
+      "symbols": ["DisclosureContent.forcePresent"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./disclosure" },
+      "removalReason": "DisclosureContent adds forcePresent while closed content is quarantined immediately from interaction and accessibility semantics."
+    },
+    {
+      "id": "WI-003:listbox-indicator-presence",
+      "change": "signature-changed",
+      "before": { "subpath": "./listbox" },
+      "symbols": ["ListboxItemIndicator.forcePresent"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./listbox" },
+      "removalReason": "ListboxItemIndicator adds forcePresent and uses root-owned exit presence so large item domains do not retain one Presence controller per item."
+    },
+    {
+      "id": "WI-002:radio-group-indicator-presence",
+      "change": "signature-changed",
+      "before": { "subpath": "./radio-group" },
+      "symbols": ["RadioGroupIndicator.forcePresent"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./radio-group" },
+      "removalReason": "RadioGroupIndicator adds forcePresent and retains finite exit motion before becoming hidden."
+    },
+    {
+      "id": "WI-002:rating-indicator-presence",
+      "change": "signature-changed",
+      "before": { "subpath": "./rating" },
+      "symbols": ["RatingIndicator.forcePresent"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./rating" },
+      "removalReason": "RatingIndicator aliases RadioGroupIndicator and therefore exposes the same forcePresent presence contract."
+    },
+    {
+      "id": "WI-005:stepper-content-presence",
+      "change": "signature-changed",
+      "before": { "subpath": "./stepper" },
+      "symbols": ["StepperContent.forcePresent"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./stepper" },
+      "removalReason": "StepperContent aliases TabsContent and therefore exposes the same forcePresent presence contract."
+    },
+    {
+      "id": "WI-005:tabs-content-presence",
+      "change": "signature-changed",
+      "before": { "subpath": "./tabs" },
+      "symbols": ["TabsContent.forcePresent"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./tabs" },
+      "removalReason": "TabsContent adds forcePresent while inactive panels are quarantined immediately from interaction and accessibility semantics."
+    },
+    {
+      "id": "WI-007:tree-grid-editor-presence",
+      "change": "signature-changed",
+      "before": { "subpath": "./tree-grid" },
+      "symbols": ["TreeGridEditor.forcePresent"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./tree-grid" },
+      "removalReason": "TreeGridEditor adds forcePresent; navigation mode immediately returns focus to the cell and quarantines a retained exiting editor."
+    },
+    {
+      "id": "WI-005:tree-view-group-presence",
+      "change": "signature-changed",
+      "before": { "subpath": "./tree-view" },
+      "symbols": ["TreeViewGroup.forcePresent"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./tree-view" },
+      "removalReason": "TreeViewGroup adds forcePresent while collapsed groups are quarantined immediately from interaction and accessibility semantics."
     }
   ]
 }

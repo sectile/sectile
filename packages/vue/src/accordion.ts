@@ -24,6 +24,11 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostId } from './host-provider.js';
 import { reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import {
+  conditionalPresenceProps,
+  useConditionalPresence,
+  type ConditionalPresenceProps,
+} from './internal/conditional-presence.js';
 
 export type AccordionType = 'single' | 'multiple';
 export type AccordionValue = string | readonly string[];
@@ -65,6 +70,8 @@ export interface AccordionPartProps {
   readonly asChild?: boolean;
 }
 
+export interface AccordionContentProps extends AccordionPartProps, ConditionalPresenceProps {}
+
 interface AccordionRootContext {
   readonly openIDs: ComputedRef<readonly string[]>;
   readonly disabled: ComputedRef<boolean>;
@@ -98,7 +105,7 @@ const accordionRootContextKey = Symbol('SectileAccordionRoot');
 const accordionItemContextKey = Symbol('SectileAccordionItem');
 const accordionHeaderProps = accordionPartProps('h3');
 const accordionTriggerProps = accordionPartProps('button');
-const accordionContentProps = accordionPartProps('div');
+const accordionContentProps = { ...accordionPartProps('div'), ...conditionalPresenceProps };
 
 export const AccordionRoot = defineComponent({
   name: 'SectileAccordionRoot',
@@ -317,16 +324,28 @@ export const AccordionContent = defineComponent({
   slots: Object as SlotsType<{ default: (props: AccordionItemSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const item = useAccordionItemContext('AccordionContent');
+    const active = computed(() => item.slotProps.value.open);
+    const forcePresent = computed(() => props.forcePresent);
+    const presence = useConditionalPresence(active, forcePresent);
     const attributes = computed(() => getAccordionPanelAttributes(
       { has: (id: string) => id === item.value && item.slotProps.value.open },
       item.value,
       { panelID: item.panelID, triggerID: item.triggerID },
     ));
-    return (): VNodeChild => h(Primitive, mergeProps(
-      attrs,
-      attributes.value as Record<string, unknown>,
-      { as: props.as, asChild: props.asChild },
-    ), { default: () => slots['default']?.(item.slotProps.value) });
+    return (): VNodeChild => {
+      const inactivePresent = !active.value && presence.present.value;
+      return h(Primitive, mergeProps(
+        attrs,
+        attributes.value as Record<string, unknown>,
+        {
+          as: props.as,
+          asChild: props.asChild,
+          elementRef: presence.register,
+          hidden: presence.hidden.value,
+          ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
+        },
+      ), { default: () => slots['default']?.(item.slotProps.value) });
+    };
   },
 });
 

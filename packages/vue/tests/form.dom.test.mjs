@@ -678,6 +678,87 @@ test('Vue FormSummary keeps one multi-field issue and exposes related-field ARIA
   host.remove();
 });
 
+test('Vue Form live regions suppress stale semantics during retained exit and restore current messages on reopen', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const issues = ref([{ path: 'email', message: 'Email is already in use.' }]);
+  const motion = { transitionProperty: 'opacity', transitionDuration: '20ms' };
+  const app = createApp({
+    render: () => h(FormRoot, { issues: issues.value }, {
+      default: () => [
+        h(FormSummary, { style: motion }),
+        h(FormField, { id: 'email', name: 'email' }, {
+          default: () => [
+            h(TextField, { defaultValue: 'team@sectile.dev' }),
+            h(FormMessage, { style: motion }),
+          ],
+        }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  try {
+    await nextTick();
+    await nextTick();
+    const summary = host.querySelector('[data-part="summary"]');
+    const message = host.querySelector('[data-part="message"]');
+    assert.ok(summary instanceof HTMLElement);
+    assert.ok(message instanceof HTMLElement);
+    assert.equal(summary.hidden, false);
+    assert.equal(message.hidden, false);
+    assert.equal(summary.getAttribute('role'), 'alert');
+    assert.equal(message.getAttribute('role'), 'alert');
+
+    issues.value = [];
+    await nextTick();
+    await nextTick();
+    await nextTick();
+    for (const live of [summary, message]) {
+      assert.equal(live.dataset.state, 'hidden');
+      assert.equal(live.hidden, false);
+      assert.equal(live.inert, true);
+      assert.equal(live.getAttribute('role'), null);
+      assert.equal(live.getAttribute('aria-live'), 'off');
+      assert.equal(live.getAttribute('aria-hidden'), 'true');
+    }
+
+    issues.value = [{ path: 'email', message: 'Use another address.' }];
+    await nextTick();
+    await nextTick();
+    await nextTick();
+    for (const live of [summary, message]) {
+      assert.equal(live.dataset.state, 'visible');
+      assert.equal(live.hidden, false);
+      assert.equal(live.inert, false);
+      assert.equal(live.getAttribute('role'), 'alert');
+      assert.equal(live.getAttribute('aria-live'), 'polite');
+      assert.equal(live.getAttribute('aria-hidden'), null);
+      assert.match(live.textContent, /Use another address/);
+    }
+
+    issues.value = [];
+    await nextTick();
+    await nextTick();
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    summary.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    message.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    await nextTick();
+    await nextTick();
+    for (const live of [summary, message]) {
+      assert.equal(live.hidden, true);
+      assert.equal(live.inert, false);
+      assert.equal(live.getAttribute('role'), null);
+      assert.equal(live.getAttribute('aria-live'), 'off');
+      assert.equal(live.getAttribute('aria-hidden'), null);
+    }
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
 test('Vue FormField uses native fieldset semantics and preserves explicit child metadata', async () => {
   const host = document.createElement('div');
   document.body.append(host);

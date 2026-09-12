@@ -42,6 +42,7 @@ export interface CascadeSelectOptions<ID extends StableID = StableID> extends Po
   readonly defaultOpen?: boolean;
   readonly label?: string;
   readonly position?: boolean;
+  readonly manageVisibility?: boolean;
   readonly onValueChange?: (value: ID | null) => void;
   readonly onHighlightedValueChange?: (value: ID | null) => void;
   readonly onOpenChange?: (open: boolean) => void;
@@ -135,7 +136,7 @@ class DOMCascadeSelectConnection<ID extends StableID> implements CascadeSelectCo
   readonly #visibility: HiddenBinding | undefined;
 
   public constructor(options: CascadeSelectOptions<ID>, tree: Tree<ID>, runtime: SemanticController<CascadeSelectState<ID>, CascadeSelectEvent<ID>, CascadeSelectEffect<ID>>, disabled: ReadonlySet<ID>, controlled: { value: boolean; highlighted: boolean; open: boolean }) {
-    const manageVisibility = (options as CascadeSelectOptions<ID> & { readonly manageVisibility?: boolean }).manageVisibility;
+    const manageVisibility = options.manageVisibility;
     this.#options = options; this.tree = tree; this.#runtime = runtime; this.#controlled = controlled; this.#visibility = manageVisibility === false ? undefined : createHiddenBinding(options.popup);
     this.#layer = createDOMLayerBinding({ surface: options.popup, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close'); } });
     this.#position = options.position === false

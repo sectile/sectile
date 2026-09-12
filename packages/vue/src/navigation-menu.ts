@@ -1,6 +1,11 @@
 import { computed, defineComponent, h, mergeProps, type PropType, type SlotsType, type VNodeChild } from 'vue';
 import { MenuItem, MenuSubContent, NavigationMenuRoot } from './menu.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import {
+  conditionalPresenceProps,
+  useConditionalPresence,
+  type ConditionalPresenceProps,
+} from './internal/conditional-presence.js';
 
 export { NavigationMenuRoot };
 export { MenuItem as NavigationMenuLink, MenuItem as NavigationMenuTrigger, MenuSubContent as NavigationMenuContent };
@@ -11,6 +16,12 @@ export type {
   MenuRootSlotProps as NavigationMenuRootSlotProps,
   MenuSubContentProps as NavigationMenuContentProps,
 } from './menu.js';
+
+export interface NavigationMenuIndicatorProps extends ConditionalPresenceProps {
+  readonly open?: boolean;
+  readonly as?: PrimitiveAs;
+  readonly asChild?: boolean;
+}
 
 const partProps = {
   as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
@@ -39,10 +50,21 @@ export const NavigationMenuViewport = defineComponent({
 
 export const NavigationMenuIndicator = defineComponent({
   name: 'SectileNavigationMenuIndicator', inheritAttrs: false,
-  props: { open: { type: Boolean, default: false }, ...partProps },
+  props: { open: { type: Boolean, default: false }, ...conditionalPresenceProps, ...partProps },
   slots: Object as SlotsType<{ default: (props: { open: boolean }) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const state = computed(() => props.open);
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, hidden: !state.value, 'aria-hidden': 'true', 'data-scope': 'navigation-menu', 'data-part': 'indicator', 'data-state': state.value ? 'visible' : 'hidden' }), { default: () => slots['default']?.({ open: state.value }) });
+    const forcePresent = computed(() => props.forcePresent);
+    const presence = useConditionalPresence(state, forcePresent);
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+      as: props.as,
+      asChild: props.asChild,
+      elementRef: presence.register,
+      hidden: presence.hidden.value,
+      'aria-hidden': 'true',
+      'data-scope': 'navigation-menu',
+      'data-part': 'indicator',
+      'data-state': state.value ? 'visible' : 'hidden',
+    }), { default: () => slots['default']?.({ open: state.value }) });
   },
 });

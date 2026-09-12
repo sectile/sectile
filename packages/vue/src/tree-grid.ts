@@ -12,6 +12,11 @@ import {
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { collectionBranchIDs, reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import {
+  conditionalPresenceProps,
+  useConditionalPresence,
+  type ConditionalPresenceProps,
+} from './internal/conditional-presence.js';
 
 export interface TreeGridRootProps {
   readonly rows: readonly TreeGridRowInput<string, string>[];
@@ -38,6 +43,7 @@ export interface TreeGridRootSlotProps { readonly value: string | null; readonly
 export interface TreeGridRowSlotProps extends TreeGridRootSlotProps { readonly value: string; readonly expanded: boolean }
 export interface TreeGridCellSlotProps extends TreeGridRootSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly editing: boolean }
 export interface TreeGridPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface TreeGridEditorProps extends ConditionalPresenceProps { readonly for: string; readonly label?: string }
 
 interface Context {
   readonly state: ComputedRef<TreeGridRootSlotProps>;
@@ -46,6 +52,7 @@ interface Context {
   registerCell(element: HTMLElement, id: string, columnIndex: number): void;
   registerDisclosure(element: HTMLElement, id: string): void;
   registerEditor(element: HTMLInputElement, id: string, label: string | undefined): void;
+  handleEditorKeydown(event: KeyboardEvent): void;
 }
 interface TreeGridConnectionOwner {
   readonly rows: readonly TreeGridRowInput<string, string>[];
@@ -167,6 +174,11 @@ export const TreeGridRoot = defineComponent({
       state, expandedRows, registerRow: (node, rowIndex, level, expanded) => connection.value?.setRowAttributes(node, { rowIndex, level, ...(expanded === undefined ? {} : { expanded }) }),
       registerCell: (node, id, columnIndex) => connection.value?.setCellAttributes(node, { id, columnIndex }), registerDisclosure: (node, id) => connection.value?.setDisclosureAttributes(node, id),
       registerEditor: (node, id, label) => connection.value?.bindEditor(node, { id, ...(label === undefined ? {} : { label }) }),
+      handleEditorKeydown: (event) => {
+        if (connection.value?.handleKeyboardEvent(event) !== true) return;
+        event.preventDefault();
+        event.stopPropagation();
+      },
     });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
     watch([() => props.rows, () => props.getCellValue, () => props.setCellValue, () => props.disabled, () => props.readonly, () => props.policies], connect);
@@ -210,8 +222,33 @@ export const TreeGridDisclosure = defineComponent({ name: 'SectileTreeGridDisclo
 
 export const TreeGridEditor = defineComponent({
   name: 'SectileTreeGridEditor', inheritAttrs: false,
-  props: { for: { type: String, required: true }, label: { type: String, default: undefined } },
-  setup(props, { attrs }) { const root = useRoot('TreeGridEditor'); const editing = computed(() => root.state.value.highlightedValue === props.for && root.state.value.editMode === 'editing'); return (): VNodeChild => h('input', mergeProps(attrs, { ref: (node: unknown) => { if (node instanceof HTMLInputElement) root.registerEditor(node, props.for, props.label); }, hidden: !editing.value, disabled: root.state.value.disabled, readonly: root.state.value.readonly, 'aria-label': props.label, 'data-sectile-tree-grid-editor': props.for, 'data-scope': 'tree-grid', 'data-part': 'editor' })); },
+  props: { for: { type: String, required: true }, label: { type: String, default: undefined }, ...conditionalPresenceProps },
+  setup(props, { attrs }) {
+    const root = useRoot('TreeGridEditor');
+    const editing = computed(() => root.state.value.highlightedValue === props.for && root.state.value.editMode === 'editing');
+    const forcePresent = computed(() => props.forcePresent);
+    const presence = useConditionalPresence(editing, forcePresent);
+    return (): VNodeChild => {
+      const inactivePresent = !editing.value && presence.present.value;
+      return h('input', mergeProps(attrs, {
+        ref: (node: unknown) => {
+          const element = presence.register(node);
+          if (element?.tagName === 'INPUT') root.registerEditor(element as HTMLInputElement, props.for, props.label);
+        },
+        hidden: presence.hidden.value,
+        tabindex: inactivePresent ? -1 : undefined,
+        onKeydown: root.handleEditorKeydown,
+        ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
+        disabled: root.state.value.disabled,
+        readonly: root.state.value.readonly,
+        'aria-label': props.label,
+        'data-sectile-tree-grid-editor': props.for,
+        'data-scope': 'tree-grid',
+        'data-part': 'editor',
+        'data-state': editing.value ? 'editing' : 'idle',
+      }));
+    };
+  },
 });
 
 function numberData(value: string | undefined, fallback: number): number { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : fallback; }

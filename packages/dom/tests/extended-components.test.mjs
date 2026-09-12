@@ -260,13 +260,19 @@ test('DOM editable owns native edit, commit, cancel, and focus handoff', () => {
   const preview = new FakeElement();
   const input = new FakeElement();
   const editable = createEditable({ root, preview, input, defaultValue: 'Alpha' });
+  assert.equal(preview.hidden, false);
+  assert.equal(input.hidden, true);
   preview.emit('click', {});
   assert.equal(editable.getSnapshot().state.editing, true);
+  assert.equal(preview.hidden, true);
+  assert.equal(input.hidden, false);
   assert.equal(input.focused, true);
   input.value = 'Beta';
   input.emit('input', {});
   input.emit('keydown', { key: 'Enter', preventDefault() {} });
   assert.deepEqual(editable.getSnapshot().state, { value: 'Beta', draft: 'Beta', editing: false });
+  assert.equal(preview.hidden, false);
+  assert.equal(input.hidden, true);
   assert.equal(preview.focused, true);
 
   preview.emit('click', {});

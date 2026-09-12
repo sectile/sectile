@@ -19,6 +19,23 @@ test('DOM carousel projects current slide and pause-independent movement', () =>
   assert.equal(b.hidden, false);
 });
 
+test('DOM carousel can leave slide visibility under renderer ownership', () => {
+  const root = new FakeElement();
+  const a = new FakeElement();
+  const b = new FakeElement();
+  a.hidden = true;
+  b.hidden = false;
+  const carousel = createCarousel({ root, slides: ['a', 'b'], manageVisibility: false });
+  carousel.setSlideAttributes(a, 'a');
+  carousel.setSlideAttributes(b, 'b');
+  assert.equal(a.hidden, true);
+  assert.equal(b.hidden, false);
+  carousel.handleEvent('next');
+  assert.equal(a.hidden, true);
+  assert.equal(b.hidden, false);
+  carousel.disconnect();
+});
+
 test('DOM carousel wires controls and preserves controlled ownership', () => {
   const root = new FakeElement();
   const previous = new FakeElement();

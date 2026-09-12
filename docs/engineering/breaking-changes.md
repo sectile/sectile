@@ -18,6 +18,7 @@
 | WI-001 | @sectile/terminal | `./year-picker` | `toYearPickerEvent`, `YearPickerConnection` | @sectile/terminal/year-picker |
 | WI-001 | @sectile/terminal | `./year-range-picker` | `YearRangePickerConnection` | @sectile/terminal/year-range-picker |
 | WI-002 | @sectile/terminal | `./alert-dialog` | `Core Result declaration closure` | @sectile/terminal/alert-dialog |
+| WI-002 | @sectile/vue | `./checkbox` | `CheckboxIndicator.forcePresent` | @sectile/vue/checkbox |
 | WI-002 | @sectile/core | `./checkbox` | `Result and machine-update declaration closure` | @sectile/core/checkbox |
 | WI-002 | @sectile/dom | `./checkbox` | `Core Result declaration closure` | @sectile/dom/checkbox |
 | WI-002 | @sectile/core | `./collection-window` | `Result declaration closure` | @sectile/core/collection-window |
@@ -32,6 +33,8 @@
 | WI-002 | @sectile/form | `./path` | `Core Result declaration closure` | @sectile/form/path |
 | WI-002 | @sectile/terminal | `./popover` | `Core Result declaration closure` | @sectile/terminal/popover |
 | WI-002 | @sectile/tabular | `./query` | `Tabular query declaration closure` | @sectile/tabular/query |
+| WI-002 | @sectile/vue | `./radio-group` | `RadioGroupIndicator.forcePresent` | @sectile/vue/radio-group |
+| WI-002 | @sectile/vue | `./rating` | `RatingIndicator.forcePresent` | @sectile/vue/rating |
 | WI-002 | @sectile/core | `./result` | `okResult`, `failResult` | @sectile/core/result |
 | WI-002 | @sectile/core | `./accordion` | `StableID declaration closure` | @sectile/core/accordion |
 | WI-002 | @sectile/core | `./alert-dialog` | `StableID declaration closure` | @sectile/core/alert-dialog |
@@ -71,12 +74,21 @@
 | WI-002 | @sectile/form | `./values` | `Core Result declaration closure` | @sectile/form/values |
 | WI-003 | @sectile/temporal | `./year-picker` | `MAX_YEAR_PICKER_PAGE_SIZE`, `createYearPickerPage`, `tryCreateYearPickerPage`, `YearPickerEvent`, `TemporalErrorCode` | @sectile/temporal/year-picker |
 | WI-003 | @sectile/dom | `./virtual` | `module side-effect import @sectile/virtual`, `VirtualizerOptions.root`, `VirtualizerOptions.scrollport`, `VirtualizerOptions.surface`, `VirtualizerOptions.viewportInsets`, `VirtualizerConnection.registerFrame`, `VirtualizerConnection.setViewportInsets`, `VirtualScrollport`, `VirtualViewportReader`, `VirtualScrollWriter`, `virtualContentStyle`, `virtualSurfaceStyle` | @sectile/dom/virtual |
+| WI-003 | @sectile/vue | `./listbox` | `ListboxItemIndicator.forcePresent` | @sectile/vue/listbox |
 | WI-003 | @sectile/temporal | `./calendar` | `TemporalErrorCode` | @sectile/temporal/calendar |
 | WI-003 | @sectile/temporal | `./date-field` | `TemporalErrorCode` | @sectile/temporal/date-field |
 | WI-003 | @sectile/temporal | `./date-range-field` | `TemporalErrorCode` | @sectile/temporal/date-range-field |
 | WI-003 | @sectile/temporal | `./date-time-field` | `TemporalErrorCode` | @sectile/temporal/date-time-field |
 | WI-003 | @sectile/temporal | `./time-field` | `TemporalErrorCode` | @sectile/temporal/time-field |
 | WI-003 | @sectile/temporal | `./time-range-field` | `TemporalErrorCode` | @sectile/temporal/time-range-field |
+| WI-005 | @sectile/vue | `./accordion` | `AccordionContent.forcePresent` | @sectile/vue/accordion |
+| WI-005 | @sectile/vue | `./carousel` | `CarouselSlide.forcePresent` | @sectile/vue/carousel |
+| WI-005 | @sectile/dom | `./carousel` | `CarouselOptions.manageVisibility` | @sectile/dom/carousel |
+| WI-005 | @sectile/vue | `./disclosure` | `DisclosureContent.forcePresent` | @sectile/vue/disclosure |
+| WI-005 | @sectile/vue | `./stepper` | `StepperContent.forcePresent` | @sectile/vue/stepper |
+| WI-005 | @sectile/vue | `./tabs` | `TabsContent.forcePresent` | @sectile/vue/tabs |
+| WI-005 | @sectile/vue | `./tree-view` | `TreeViewGroup.forcePresent` | @sectile/vue/tree-view |
+| WI-007 | @sectile/vue | `./tree-grid` | `TreeGridEditor.forcePresent` | @sectile/vue/tree-grid |
 | WI-008 | @sectile/terminal | `./combobox` | `Combobox controller declaration closure` | @sectile/terminal/combobox |
 | WI-008 | @sectile/dom | `./slider` | `Slider controller declaration closure` | @sectile/dom/slider |
 | WI-008 | @sectile/terminal | `./slider` | `Slider controller declaration closure` | @sectile/terminal/slider |
@@ -86,9 +98,9 @@
 | WI-008 | @sectile/terminal | `./tree-view` | `TreeView controller declaration closure` | @sectile/terminal/tree-view |
 | WI-008 | @sectile/dom | `./window-splitter` | `WindowSplitter controller declaration closure` | @sectile/dom/window-splitter |
 | WI-008 | @sectile/terminal | `./window-splitter` | `WindowSplitter controller declaration closure` | @sectile/terminal/window-splitter |
-| WI-009 | @sectile/vue | `./cascade-list` | `stable item-domain reconciliation declaration closure` | @sectile/vue/cascade-list |
-| WI-009 | @sectile/vue | `./cascade-select` | `stable item-domain reconciliation declaration closure`, `CascadeSelectRoot positioning props`, `automatic trigger-relative positioning` | @sectile/vue/cascade-select |
-| WI-009 | @sectile/vue | `./checkbox-group` | `CheckboxGroupRootProps.items` | @sectile/vue/checkbox-group |
+| WI-009 | @sectile/vue | `./cascade-list` | `stable item-domain reconciliation declaration closure`, `CascadeListItemIndicator.forcePresent` | @sectile/vue/cascade-list |
+| WI-009 | @sectile/vue | `./cascade-select` | `stable item-domain reconciliation declaration closure`, `CascadeSelectRoot positioning props`, `automatic trigger-relative positioning`, `CascadeSelectItemIndicator.forcePresent` | @sectile/vue/cascade-select |
+| WI-009 | @sectile/vue | `./checkbox-group` | `CheckboxGroupRootProps.items`, `CheckboxGroupIndicator.forcePresent` | @sectile/vue/checkbox-group |
 | WI-009 | @sectile/core | `./adapter-runtime` | `tryReconcileCollectionIdentities` | @sectile/core/adapter-runtime |
 | WI-009 | @sectile/form | `./error` | `FormErrorCode form-event-invalid`, `Core Result declaration closure` | @sectile/form/error |
 | WI-009 | @sectile/form | `.` | `FormErrorCode form-event-invalid`, `typed field-state commands`, `local StandardSchema declaration closure` | @sectile/form |
@@ -114,7 +126,7 @@
 | WI-017 | @sectile/dom | `./tabular` | `Tabular DOM activation declaration closure` | @sectile/dom/tabular |
 | WI-020 | @sectile/terminal | `./node` | `TerminalScreenWriter.render: TerminalFrame declaration closure` | @sectile/terminal/node#createTerminalScreenWriter |
 | WI-020 | @sectile/terminal | `./screen` | `RenderTerminalScreenOptions.columns`, `RenderTerminalScreenOptions.rows`, `renderTerminalScreen` | @sectile/terminal/screen#renderTerminalScreen |
-| WI-025 | @sectile/vue | `.` | `tabular, temporal, and virtual aggregate declaration closures` | @sectile/vue |
+| WI-025 | @sectile/vue | `.` | `tabular, temporal, and virtual aggregate declaration closures`, `conditional presence component prop declaration closures` | @sectile/vue |
 | WI-025 | @sectile/vue | `./tabular` | `all runtime and type exports` | Replaced by the checked data-table, data-grid, and data-tree-grid mapping in verification/entrypoint-migrations/WI-025.json. |
 | WI-025 | @sectile/dom | `./temporal` | `all runtime and type exports` | Replaced by the complete checked @sectile/dom/temporal/* mapping in verification/entrypoint-migrations/WI-025.json. |
 | WI-025 | @sectile/vue | `./temporal` | `all runtime and type exports` | Replaced by the complete checked @sectile/vue/temporal/* mapping in verification/entrypoint-migrations/WI-025.json. |
@@ -142,8 +154,8 @@
 | WI-034 | @sectile/virtual | `.` | `VirtualPoint, VirtualSize, VirtualRect, and VirtualInsets declaration closure` | @sectile/virtual |
 | WI-036 | @sectile/vue | `./alert-dialog` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props` | @sectile/dom/position |
 | WI-036 | @sectile/dom | `./alert-dialog` | `Floating UI declaration closure`, `PositionOptions` | @sectile/dom/position |
-| WI-036 | @sectile/dom | `./cascade-select` | `CascadeSelectOptions positioning options`, `automatic trigger-relative positioning` | @sectile/dom/cascade-select |
-| WI-036 | @sectile/vue | `./combobox` | `ComboboxRoot positioning props`, `automatic input-relative positioning` | @sectile/vue/combobox |
+| WI-036 | @sectile/dom | `./cascade-select` | `CascadeSelectOptions positioning options`, `automatic trigger-relative positioning`, `CascadeSelectOptions.manageVisibility` | @sectile/dom/cascade-select |
+| WI-036 | @sectile/vue | `./combobox` | `ComboboxRoot positioning props`, `automatic input-relative positioning`, `ComboboxEmpty.forcePresent` | @sectile/vue/combobox |
 | WI-036 | @sectile/vue | `./dialog` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props` | @sectile/dom/position |
 | WI-036 | @sectile/dom | `./dialog` | `Floating UI declaration closure`, `PositionOptions` | @sectile/dom/position |
 | WI-036 | @sectile/vue | `./drawer` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props` | @sectile/dom/position |
@@ -152,10 +164,10 @@
 | WI-036 | @sectile/dom | `./menu-button` | `MenuButtonOptions positioning options`, `manual positioning opt-out` | @sectile/dom/menu-button |
 | WI-036 | @sectile/vue | `./menu` | `MenuButtonRoot positioning props`, `automatic trigger-relative positioning` | @sectile/vue/menu |
 | WI-036 | @sectile/vue | `./menubar` | `shared menu declaration closure` | @sectile/vue/menubar |
-| WI-036 | @sectile/vue | `./navigation-menu` | `shared menu declaration closure` | @sectile/vue/navigation-menu |
+| WI-036 | @sectile/vue | `./navigation-menu` | `shared menu declaration closure`, `NavigationMenuIndicator.forcePresent` | @sectile/vue/navigation-menu |
 | WI-036 | @sectile/vue | `./popover` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props`, `PopoverRootProps.position` | @sectile/dom/position |
 | WI-036 | @sectile/dom | `./popover` | `middleware`, `autoUpdate`, `onPositionChange`, `Floating UI type re-exports`, `PopoverOptions.position` | @sectile/dom/position |
-| WI-036 | @sectile/vue | `./select` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props` | @sectile/dom/position |
+| WI-036 | @sectile/vue | `./select` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props`, `SelectItemIndicator.forcePresent` | @sectile/dom/position |
 | WI-036 | @sectile/dom | `./select` | `middleware`, `autoUpdate`, `onPositionChange`, `Floating UI declaration closure` | @sectile/dom/position |
 | WI-036 | @sectile/vue | `./tooltip` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props`, `TooltipRootProps.position` | @sectile/dom/position |
 | WI-036 | @sectile/dom | `./tooltip` | `middleware`, `autoUpdate`, `onPositionChange`, `Floating UI type re-exports`, `TooltipOptions.position` | @sectile/dom/position |
@@ -164,8 +176,8 @@
 | WI-039 | @sectile/virtual | `./track-grid-layout` | `TrackGridLayoutState.regions readonly array`, `Virtual geometry declaration closure` | @sectile/virtual/track-grid-layout |
 | WI-039 | @sectile/virtual | `./partitioned-track-grid-layout` | `PartitionedTrackGridLayoutState.rows and columns readonly arrays`, `Virtual geometry declaration closure` | @sectile/virtual/partitioned-track-grid-layout |
 | WI-039 | @sectile/virtual | `./spatial-layout` | `SpatialLayoutState.items readonly array`, `SpatialLayoutInput.domain`, `Virtual geometry declaration closure` | @sectile/virtual/spatial-layout |
-| WI-046 | @sectile/dom | `./combobox` | `TextInput declaration closure`, `ComboboxConnectionOptions positioning options`, `automatic input-relative positioning` | @sectile/dom/combobox |
+| WI-046 | @sectile/dom | `./combobox` | `TextInput declaration closure`, `ComboboxConnectionOptions positioning options`, `automatic input-relative positioning`, `ComboboxOptions.manageVisibility` | @sectile/dom/combobox |
 | WI-046 | @sectile/dom | `./text` | `TextConnection.handleEvent`, `FacadeConnection<TextConnection>.send` | @sectile/dom/text |
 | WI-047 | @sectile/form | `./state` | `FormEvent update-field`, `FormFieldInput.valid`, `getFormFieldIDsByIssueSource`, `FormState flat validation and submission fields`, `FormStateInput flat validation and submission fields`, `FormIssue`, `FormFieldState`, `FormEvent submit-failed` | @sectile/form/state |
-| WI-047 | @sectile/dom | `./form` | `FormConnection.subscribe`, `FormConnection field mutation surface`, `FormValidationIssue`, `FormSubmitResult`, `FormSubmitErrorMapper`, `FormSubmitFailureResult`, `FormConnection.submitFailed`, `FormAnnounceSummaryHandler` | @sectile/dom/form |
-| WI-047 | @sectile/vue | `./form` | `FormRootSlotProps`, `FormRoot default slot`, `FormSummary default slot`, `FormReset default slot`, `FormSubmit default slot`, `FormSubmitSlotProps.submissionStatus`, `FormFieldSlotProps`, `FormIssueInput`, `FormSubmitResult`, `FormSubmitErrorMapper` | @sectile/vue/form |
+| WI-047 | @sectile/dom | `./form` | `FormConnection.subscribe`, `FormConnection field mutation surface`, `FormValidationIssue`, `FormSubmitResult`, `FormSubmitErrorMapper`, `FormSubmitFailureResult`, `FormConnection.submitFailed`, `FormAnnounceSummaryHandler`, `FormOptions.manageSummaryVisibility` | @sectile/dom/form |
+| WI-047 | @sectile/vue | `./form` | `FormRootSlotProps`, `FormRoot default slot`, `FormSummary default slot`, `FormReset default slot`, `FormSubmit default slot`, `FormSubmitSlotProps.submissionStatus`, `FormFieldSlotProps`, `FormIssueInput`, `FormSubmitResult`, `FormSubmitErrorMapper`, `FormMessage.forcePresent`, `FormSummary.forcePresent` | @sectile/vue/form |

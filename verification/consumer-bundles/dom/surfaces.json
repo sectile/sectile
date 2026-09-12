@@ -714,7 +714,8 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
-        "createPresence"
+        "createPresence",
+        "retainExitPresence"
       ],
       "typeBearing": true,
       "optionalPeer": null,

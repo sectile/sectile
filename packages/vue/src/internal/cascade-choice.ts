@@ -14,6 +14,11 @@ import {
 import { tryCreateTree, type TreeNodeInput } from '@sectile/core/tree';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { collectionBranchIDs } from './collection.js';
+import {
+  conditionalPresenceProps,
+  type ConditionalPresenceProps,
+  type ConditionalPresenceRegistry,
+} from './conditional-presence.js';
 
 export interface CascadeChoiceRootState {
   readonly value: string | null;
@@ -59,12 +64,15 @@ export interface CascadeChoicePartProps {
   readonly asChild?: boolean;
 }
 
+export interface CascadeChoiceItemIndicatorProps extends CascadeChoicePartProps, ConditionalPresenceProps {}
+
 export interface CascadeChoiceRootContext<State extends CascadeChoiceRootState = CascadeChoiceRootState> {
   readonly state: ComputedRef<State>;
   readonly label: ComputedRef<string | undefined>;
   readonly textValue: ComputedRef<(id: string) => string>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
   readonly branchItems: ComputedRef<ReadonlySet<string>>;
+  readonly indicatorPresence: ConditionalPresenceRegistry;
   registerColumn(element: HTMLElement, depth: number, label?: string): void;
   registerItem(element: HTMLElement, id: string, disabled: boolean): void;
 }
@@ -178,18 +186,24 @@ export function createCascadeChoiceParts<State extends CascadeChoiceRootState>(o
   const ItemIndicator = defineComponent({
     name: `Sectile${options.componentName}ItemIndicator`,
     inheritAttrs: false,
-    props: cascadeChoicePartProps,
+    props: { ...cascadeChoicePartProps, ...conditionalPresenceProps },
     slots: Object as SlotsType<{ default: (props: CascadeChoiceItemSlotProps) => VNodeChild }>,
     setup(props, { attrs, slots }) {
+      const root = useRoot(`${options.componentName}ItemIndicator`);
       const item = useItem(`${options.componentName}ItemIndicator`);
-      return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-        as: props.as,
-        asChild: props.asChild,
-        hidden: !item.state.value.selected,
-        'aria-hidden': 'true',
-        'data-scope': options.scope,
-        'data-part': 'item-indicator',
-      }), { default: () => slots['default']?.(item.state.value) });
+      return (): VNodeChild => {
+        const state = item.state.value;
+        return h(Primitive, mergeProps(attrs, {
+          as: props.as,
+          asChild: props.asChild,
+          elementRef: (element: unknown) => root.indicatorPresence.register(state.value, element),
+          hidden: !root.indicatorPresence.isPresent(state.value, state.selected, props.forcePresent),
+          'aria-hidden': 'true',
+          'data-scope': options.scope,
+          'data-part': 'item-indicator',
+          'data-state': state.selected ? 'checked' : 'unchecked',
+        }), { default: () => slots['default']?.(state) });
+      };
     },
   });
 

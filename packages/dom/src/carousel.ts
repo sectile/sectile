@@ -48,6 +48,7 @@ export interface CarouselOptions<ID extends StableID = StableID> {
   readonly direction?: ReadingDirection;
   readonly autoplay?: boolean | CarouselAutoplayOptions;
   readonly label?: string;
+  readonly manageVisibility?: boolean;
   readonly previousButton?: HTMLElement;
   readonly nextButton?: HTMLElement;
   readonly pauseButton?: HTMLElement;
@@ -313,7 +314,7 @@ class DOMCarousel<ID extends StableID> implements CarouselConnection<ID> {
       element.setAttribute('role', 'group');
       element.setAttribute('aria-roledescription', 'slide');
       if (index !== null) element.setAttribute('aria-label', this.#options.getSlideLabel?.(id, index, this.#slides.size) ?? `${index + 1} of ${this.#slides.size}`);
-      element.hidden = id !== state.cursor.current;
+      if (this.#options.manageVisibility !== false) element.hidden = id !== state.cursor.current;
     }
     for (const [id, binding] of this.#indicatorElements) {
       const index = this.#slides.indexOf(id);

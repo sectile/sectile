@@ -102,7 +102,8 @@ async function inspectVueInstall(root, packageManager, tarballs) {
     "if (stableIDElementToken('%') === stableIDElementToken('-25')) throw new Error('DOM identity encoding collision');",
   ].join(' ')], directory);
   await run(process.execPath, ['--input-type=module', '-e', [
-    "const { createPresence } = await import('@sectile/dom/presence');",
+    "const { createPresence, retainExitPresence } = await import('@sectile/dom/presence');",
+    "if (typeof retainExitPresence !== 'function') throw new Error('DOM exit presence export missing');",
     "const presence = createPresence({ open: false });",
     "if (presence.getPresent() !== false) throw new Error('DOM presence initial state mismatch');",
     "presence.disconnect();",

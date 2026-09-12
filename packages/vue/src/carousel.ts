@@ -12,6 +12,11 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostDirection, useHostId } from './host-provider.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import {
+  conditionalPresenceProps,
+  useConditionalPresence,
+  type ConditionalPresenceProps,
+} from './internal/conditional-presence.js';
 
 export interface CarouselRootProps {
   readonly slides: readonly string[];
@@ -40,6 +45,7 @@ export interface CarouselRootSlotProps {
 }
 export interface CarouselSlideSlotProps extends CarouselRootSlotProps { readonly value: string; readonly active: boolean }
 export interface CarouselPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface CarouselSlideProps extends CarouselPartProps, ConditionalPresenceProps { readonly value: string }
 
 interface Context {
   readonly state: ComputedRef<CarouselRootSlotProps>;
@@ -104,7 +110,7 @@ export const CarouselRoot = defineComponent({
       localValue.value = value;
       if (controlled.value && requestedValue !== value) emit('update:modelValue', value);
       connection.value = createCarousel({
-        root, slides: props.slides,
+        root, slides: props.slides, manageVisibility: false,
         ...(controlled.value ? { value } : { defaultValue: value }),
         ...(controlled.paused ? { paused: props.paused as boolean } : { defaultPaused: localPaused.value }),
         disabled: props.disabled, orientation: props.orientation, direction: direction.value, autoplay: props.autoplay,
@@ -158,12 +164,32 @@ export const CarouselPause = registeredPart('SectileCarouselPause', 'pause', 'pa
 
 export const CarouselSlide = defineComponent({
   name: 'SectileCarouselSlide', inheritAttrs: false,
-  props: { value: { type: String, required: true }, ...partProps },
+  props: { value: { type: String, required: true }, ...partProps, ...conditionalPresenceProps },
   slots: Object as SlotsType<{ default: (props: CarouselSlideSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('CarouselSlide'); const state = computed<CarouselSlideSlotProps>(() => ({ ...root.state.value, value: props.value, active: root.state.value.value === props.value })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerSlide(node, props.value); },
-    hidden: !state.value.active, 'data-sectile-carousel-slide': props.value, 'data-scope': 'carousel', 'data-part': 'slide', 'data-state': state.value.active ? 'active' : 'inactive',
-  }), { default: () => slots['default']?.(state.value) }); },
+  setup(props, { attrs, slots }) {
+    const root = useRoot('CarouselSlide');
+    const state = computed<CarouselSlideSlotProps>(() => ({ ...root.state.value, value: props.value, active: root.state.value.value === props.value }));
+    const active = computed(() => state.value.active);
+    const forcePresent = computed(() => props.forcePresent);
+    const presence = useConditionalPresence(active, forcePresent);
+    return (): VNodeChild => {
+      const inactivePresent = !active.value && presence.present.value;
+      return h(Primitive, mergeProps(attrs, {
+        as: props.as,
+        asChild: props.asChild,
+        elementRef: (node: unknown) => {
+          const element = presence.register(node);
+          if (element !== undefined) root.registerSlide(element, props.value);
+        },
+        hidden: presence.hidden.value,
+        ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
+        'data-sectile-carousel-slide': props.value,
+        'data-scope': 'carousel',
+        'data-part': 'slide',
+        'data-state': active.value ? 'active' : 'inactive',
+      }), { default: () => slots['default']?.(state.value) });
+    };
+  },
 });
 
 export const CarouselIndicator = defineComponent({

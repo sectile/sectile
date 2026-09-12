@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createPresence } from '../.verification-dist/presence.js';
+import { createPresence, retainExitPresence } from '../.verification-dist/presence.js';
 
 test('presence is SSR-safe and an initially closed surface does not start an exit generation', () => {
   const element = new FakeElement(style({ transitionDuration: '100ms' }));
@@ -154,6 +154,54 @@ test('presence caps consumer-controlled fallback waits at sixty seconds', () => 
   }
 });
 
+test('exit presence completes immediately when no finite browser animation is active', () => {
+  const element = new FakeElement(style());
+  let completions = 0;
+  const cancel = retainExitPresence(element, () => { completions += 1; });
+
+  assert.equal(cancel, null);
+  assert.equal(completions, 1);
+});
+
+test('exit presence waits for every finite browser animation before completing', async () => {
+  const first = deferred();
+  const second = deferred();
+  const element = new FakeElement(style());
+  element.animations = [
+    fakeAnimation(first.promise, 20),
+    fakeAnimation(second.promise, 50),
+    fakeAnimation(new Promise(() => {}), Number.POSITIVE_INFINITY),
+    fakeAnimation(new Promise(() => {}), 50, 'paused'),
+    fakeAnimation(new Promise(() => {}), 50, 'idle'),
+  ];
+  let completions = 0;
+  const cancel = retainExitPresence(element, () => { completions += 1; });
+
+  assert.equal(typeof cancel, 'function');
+  first.resolve();
+  await Promise.resolve();
+  assert.equal(completions, 0);
+  second.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.equal(completions, 1);
+});
+
+test('cancelled exit presence ignores stale animation completion', async () => {
+  const completion = deferred();
+  const element = new FakeElement(style());
+  element.animations = [fakeAnimation(completion.promise, 100)];
+  let completions = 0;
+  const cancel = retainExitPresence(element, () => { completions += 1; });
+
+  assert.equal(typeof cancel, 'function');
+  cancel?.();
+  completion.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.equal(completions, 0);
+});
+
 class FakeView {
   constructor(computedStyle) {
     this.computedStyle = computedStyle;
@@ -168,7 +216,9 @@ class FakeElement {
     this.view = viewOrStyle instanceof FakeView ? viewOrStyle : new FakeView(viewOrStyle);
     this.ownerDocument = { defaultView: this.view };
     this.listeners = new Map();
+    this.animations = [];
   }
+  getAnimations() { return this.animations; }
   addEventListener(type, listener) {
     const listeners = this.listeners.get(type) ?? new Set();
     listeners.add(listener);
@@ -177,6 +227,16 @@ class FakeElement {
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
   emit(type) { for (const listener of [...(this.listeners.get(type) ?? [])]) listener({ target: this }); }
   listenerCount() { return [...this.listeners.values()].reduce((total, listeners) => total + listeners.size, 0); }
+}
+
+function deferred() {
+  let resolve;
+  const promise = new Promise((next) => { resolve = next; });
+  return { promise, resolve };
+}
+
+function fakeAnimation(finished, endTime, playState = 'running') {
+  return { finished, playState, effect: { getComputedTiming: () => ({ endTime }) } };
 }
 
 function style(overrides = {}) {

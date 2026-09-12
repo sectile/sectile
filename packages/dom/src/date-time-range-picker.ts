@@ -47,6 +47,7 @@ export interface DateTimeRangePickerOptions extends PickerPositionOptions {
   readonly readOnly?: boolean;
   readonly required?: boolean;
   readonly label?: string;
+  readonly manageVisibility?: boolean;
   readonly onValueChange?: (value: DateTimeRange | null) => void;
   readonly onHighlightedValueChange?: (value: DateValue) => void;
   readonly onOpenChange?: (open: boolean) => void;
@@ -192,7 +193,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     this.options = options;
     this.runtime = runtime;
     this.controls = controls;
-    const manageVisibility = (options as DateTimeRangePickerOptions & { readonly manageVisibility?: boolean }).manageVisibility;
+    const manageVisibility = options.manageVisibility;
     this.#visibility = manageVisibility === false ? undefined : createHiddenBinding(options.root);
     this.#layer = createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.calendar.open, close: () => { this.handleEvent('close'); } });
     this.#position = createPickerPosition(options.root, options.trigger, options);

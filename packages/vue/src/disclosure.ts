@@ -21,6 +21,11 @@ import {
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostId } from './host-provider.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import {
+  conditionalPresenceProps,
+  useConditionalPresence,
+  type ConditionalPresenceProps,
+} from './internal/conditional-presence.js';
 
 export interface DisclosureRootProps {
   readonly modelValue?: boolean;
@@ -43,7 +48,7 @@ export interface DisclosureTriggerProps {
   readonly asChild?: boolean;
 }
 
-export interface DisclosureContentProps {
+export interface DisclosureContentProps extends ConditionalPresenceProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
@@ -178,6 +183,7 @@ export const DisclosureContent = defineComponent({
   name: 'SectileDisclosureContent',
   inheritAttrs: false,
   props: {
+    ...conditionalPresenceProps,
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
     asChild: { type: Boolean, default: false },
   },
@@ -186,17 +192,29 @@ export const DisclosureContent = defineComponent({
   }>,
   setup(props, { attrs, slots }) {
     const context = useDisclosureContext('DisclosureContent');
+    const active = computed(() => context.slotProps.value.open);
+    const forcePresent = computed(() => props.forcePresent);
+    const presence = useConditionalPresence(active, forcePresent);
     const attributes = computed(() => getDisclosureContentAttributes(
       { open: context.slotProps.value.open },
       { id: context.contentId },
     ));
-    return (): VNodeChild => h(Primitive, mergeProps(
-      attrs,
-      attributes.value as unknown as Record<string, unknown>,
-      { as: props.as, asChild: props.asChild },
-    ), {
-      default: () => slots['default']?.(context.slotProps.value),
-    });
+    return (): VNodeChild => {
+      const inactivePresent = !active.value && presence.present.value;
+      return h(Primitive, mergeProps(
+        attrs,
+        attributes.value as unknown as Record<string, unknown>,
+        {
+          as: props.as,
+          asChild: props.asChild,
+          elementRef: presence.register,
+          hidden: presence.hidden.value,
+          ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
+        },
+      ), {
+        default: () => slots['default']?.(context.slotProps.value),
+      });
+    };
   },
 });
 

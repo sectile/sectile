@@ -315,11 +315,11 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "80d5d2e7fbd36719dd983376bebe63f5e3fd6ef25d6374af77b1ccc303e6adc0",
+  "fingerprint": "064e03ba84d4e831181f9c4711eb9886640c151cf1dca4787b372f1d7fcfd21b",
   "files": [
     {
       "path": "dist/accordion.d.ts",
-      "sha256": "97861078aa1bad50b668d01d5f3ca09da5d7c49ceed8dde9d60ee92939ad0e96"
+      "sha256": "38c1038bbd8c2b26eeb60f67a2c5eb10bec6b89f7a39a1f87d667cf9a11e1902"
     },
     {
       "path": "dist/alert-dialog.d.ts",
@@ -331,15 +331,15 @@
     },
     {
       "path": "dist/carousel.d.ts",
-      "sha256": "883edba50e4205be2d3e4274d04228a66127c4a605bcd268113ea18ef6afcdda"
+      "sha256": "726fcb0d38ad778586bc70c37fcf2630ba96db69d649a8dc7df46ce5d613cc97"
     },
     {
       "path": "dist/cascade-list.d.ts",
-      "sha256": "a08547b62af6c12be48beb851d43087ea53af0357be696fbd7ca720def1ff405"
+      "sha256": "50dbd25c0b57cec26dfc04687e8d9c94f7dc89d8969f2f044a092da8df3e262d"
     },
     {
       "path": "dist/cascade-select.d.ts",
-      "sha256": "2aaf406f03096c9d41d47ed8723dd32235b2e6a8992009645baf8d859fd1de9a"
+      "sha256": "949d23d73d2876561c73d12c2aa517f4c3a0e1eddf886e89067bb3cda69a99e8"
     },
     {
       "path": "dist/chart.d.ts",
@@ -347,11 +347,11 @@
     },
     {
       "path": "dist/checkbox-group.d.ts",
-      "sha256": "5677388feed2913c1a80bcb02ba7269392f95c86568115b6f87c2d9e4a210326"
+      "sha256": "cfbac273dc6c07303e193f554411c7ded75848286d6df5ebf38b4dad5dd1fb59"
     },
     {
       "path": "dist/checkbox.d.ts",
-      "sha256": "d8d8ce67821725b8a5b000a0de2adc437ef5425dc60eba06dd48ac34873f13ec"
+      "sha256": "e3204c82108c1df1dc1cf52d2a569b3d7240beb569ccda3dbda3f47d40a90c85"
     },
     {
       "path": "dist/color-picker.d.ts",
@@ -359,7 +359,7 @@
     },
     {
       "path": "dist/combobox.d.ts",
-      "sha256": "f531e562cc8c0aadfb4d1649311320f1f8e56f9d11b533bd83f2ff86292533b9"
+      "sha256": "26df2ac60dbc3dadcda56574e48a9830978e72ca86ee167d374f08e334b2cbea"
     },
     {
       "path": "dist/data-grid.d.ts",
@@ -407,7 +407,7 @@
     },
     {
       "path": "dist/disclosure.d.ts",
-      "sha256": "9499085a04d98fe4bbd0004cb59c701c92d8e0f23fca584eafe96b7c64f79de3"
+      "sha256": "675341a5dbb5eb086db641daefec891cd454e044a2be75f2cae752b395491203"
     },
     {
       "path": "dist/drawer.d.ts",
@@ -423,7 +423,7 @@
     },
     {
       "path": "dist/form.d.ts",
-      "sha256": "c4ad2e2032aac55ab9c0409907c720ee3f14b5dbdb44134e2acd4e394a6638f4"
+      "sha256": "28dbd7774c516232680f1fbf3571ebd76e432ee24dacfb97c268cca32af32e0e"
     },
     {
       "path": "dist/grid.d.ts",
@@ -439,7 +439,11 @@
     },
     {
       "path": "dist/internal/cascade-choice.d.ts",
-      "sha256": "96820769e997c57276faa2b2fc531fa5f0851beebfe075669ee83e6a47eafd33"
+      "sha256": "248b00c930cf80a03beb6b15479392b42e01bdf2229dd8c19872848a4674270f"
+    },
+    {
+      "path": "dist/internal/conditional-presence.d.ts",
+      "sha256": "7c20637d17b87e46f7d90b35b872e5b1109b7c1d8ca445457d779e12036507e5"
     },
     {
       "path": "dist/internal/date-picker.d.ts",
@@ -448,6 +452,10 @@
     {
       "path": "dist/internal/form-control.d.ts",
       "sha256": "d32781c2df833310dce1485481680bccc7e25255f5288fea1e3d8498b53d692c"
+    },
+    {
+      "path": "dist/internal/form-presence-parts.d.ts",
+      "sha256": "64b227ac44637c2483b7bbf0ba622757f5476697f3842c5291c9dcd04af8f7bf"
     },
     {
       "path": "dist/internal/native-field.d.ts",
@@ -487,7 +495,7 @@
     },
     {
       "path": "dist/listbox.d.ts",
-      "sha256": "ab32be0d39971fd37c65390644d772aad6b345d3a2f0d56d5ee27290a15209ac"
+      "sha256": "c0181fcdf56d8cac7398af6859f44d97ced552701cc7db8d1af78bf236d02304"
     },
     {
       "path": "dist/menu-button.d.ts",
@@ -523,7 +531,7 @@
     },
     {
       "path": "dist/navigation-menu.d.ts",
-      "sha256": "8fc7fd362d42b8e486bd1d0b6e58d6a38304d503c4fe334f552d4da356297c8d"
+      "sha256": "4836bb5c931974e4283a576c5d1556ef6318da0a78e2e44d6e1a8c20a21bc47f"
     },
     {
       "path": "dist/number-field.d.ts",
@@ -555,7 +563,7 @@
     },
     {
       "path": "dist/radio-group.d.ts",
-      "sha256": "abcb1338ab1534cc50e4a12b9c9040f1ba0f72cea3059eb770e94a3f6d71cc35"
+      "sha256": "86811eaa1e8ed0c5d5b94ff6f89ae194801dbbbb31d96b3367a2d3a8a9bc5b45"
     },
     {
       "path": "dist/range-calendar.d.ts",
@@ -563,7 +571,7 @@
     },
     {
       "path": "dist/rating.d.ts",
-      "sha256": "1e0a689473bf60f9ae85893a438b90451ff346c419b09cb94ca604a9d2fe918a"
+      "sha256": "c7116dd7b2e0d956ab79817539f5254c7678b134616ef0f36991ae90e86ac3ec"
     },
     {
       "path": "dist/reorder.d.ts",
@@ -571,7 +579,7 @@
     },
     {
       "path": "dist/select.d.ts",
-      "sha256": "cb88734a17c802a294d6481e11aca2cef33d915496a9f310763d7ab536b263dc"
+      "sha256": "68924d0f74b50ab7870ecd60ea53cf50587a39ed6ed7a5fa739033bb4b452922"
     },
     {
       "path": "dist/slider.d.ts",
@@ -583,7 +591,7 @@
     },
     {
       "path": "dist/stepper.d.ts",
-      "sha256": "37cf834a1b990d4959441633440c670b464c7b04dc08061bf0058a3c6d89efac"
+      "sha256": "0953994459413dccfca183ac3ac6103c8361c9447947800cb4f5b14d3c059a37"
     },
     {
       "path": "dist/switch.d.ts",
@@ -591,7 +599,7 @@
     },
     {
       "path": "dist/tabs.d.ts",
-      "sha256": "cad43b76723a88b2d67e4ecac18cd7193c4caafbb4f6e91eb63c2664209a3474"
+      "sha256": "7e67803267d7a9f55920e94c5aa8477dc581ef7ef380effeff738cb584033f46"
     },
     {
       "path": "dist/tags-input.d.ts",
@@ -639,11 +647,11 @@
     },
     {
       "path": "dist/tree-grid.d.ts",
-      "sha256": "8f614b704c389fb64d029b7e94bc7e4581750f4e06b861378b05217b5942c04e"
+      "sha256": "ee97c265d8873feabf52202636a6e70e7a418dbc259af51a50a425a8354b69c3"
     },
     {
       "path": "dist/tree-view.d.ts",
-      "sha256": "d02bc5e0edbff2453892c0deeb12fc52941a2cd166b6959d8c2bcdc6fe49c4f7"
+      "sha256": "93cdc31f89528832ecfaa3dd5dd6f6e5dd94bb36c20e296ad55f73f5123f2efa"
     },
     {
       "path": "dist/virtual-core.d.ts",

@@ -21,6 +21,11 @@ import {
 import { useHostDirection, useHostId } from './host-provider.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import {
+  conditionalPresenceProps,
+  useConditionalPresence,
+  type ConditionalPresenceProps,
+} from './internal/conditional-presence.js';
 
 export type TabsActivationMode = 'automatic' | 'manual';
 export interface TabsRootProps {
@@ -39,7 +44,7 @@ export interface TabsRootSlotProps { readonly value: string; readonly highlighte
 export interface TabsListProps { readonly label?: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TabsTriggerProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TabsTriggerSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly disabled: boolean }
-export interface TabsContentProps { readonly value: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface TabsContentProps extends ConditionalPresenceProps { readonly value: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TabsContentSlotProps { readonly value: string; readonly selected: boolean }
 export interface TabsIndicatorProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
@@ -231,6 +236,7 @@ export const TabsContent = defineComponent({
   inheritAttrs: false,
   props: {
     value: { type: String, required: true },
+    ...conditionalPresenceProps,
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
     asChild: { type: Boolean, default: false },
   },
@@ -239,13 +245,25 @@ export const TabsContent = defineComponent({
     const root = useTabsRootContext('TabsContent');
     const part = { scope: root.partContract.scope, part: root.partContract.parts['content'] ?? 'content' };
     const selected = computed(() => root.value.value === props.value);
+    const forcePresent = computed(() => props.forcePresent);
+    const presence = useConditionalPresence(selected, forcePresent);
     const attributes = computed(() => {
       const ids = root.ids(props.value);
       return getTabsContentAttributes({ selected: selected.value, contentID: ids.content, triggerID: ids.trigger });
     });
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, { as: props.as, asChild: props.asChild, 'data-scope': part.scope }), {
-      default: () => slots['default']?.({ value: props.value, selected: selected.value }),
-    });
+    return (): VNodeChild => {
+      const inactivePresent = !selected.value && presence.present.value;
+      return h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, {
+        as: props.as,
+        asChild: props.asChild,
+        elementRef: presence.register,
+        hidden: presence.hidden.value,
+        ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
+        'data-scope': part.scope,
+      }), {
+        default: () => slots['default']?.({ value: props.value, selected: selected.value }),
+      });
+    };
   },
 });
 

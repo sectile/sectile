@@ -60,5 +60,7 @@ test('Vue Form renders native semantics and stable compound part boundaries duri
   assert.match(html, /aria-describedby="email-description email-message"/);
   assert.match(html, /type="submit"/);
   assert.match(html, /type="reset"/);
-  assert.match(html, /role="alert"/);
+  assert.doesNotMatch(html, /role="alert"/);
+  assert.equal((html.match(/aria-live="off"/g) ?? []).length, 2);
+  assert.equal((html.match(/data-state="hidden"/g) ?? []).length, 2);
 });

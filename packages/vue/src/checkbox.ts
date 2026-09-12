@@ -27,6 +27,11 @@ import {
   useCompositeFormControl,
 } from './internal/form-control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import {
+  conditionalPresenceProps,
+  useConditionalPresence,
+  type ConditionalPresenceProps,
+} from './internal/conditional-presence.js';
 
 export type CheckboxValue = boolean | 'indeterminate';
 
@@ -208,7 +213,7 @@ export const CheckboxRoot = defineComponent({
 
 export type CheckboxValueChangeHandler = (value: CheckboxValue) => void;
 
-export interface CheckboxIndicatorProps {
+export interface CheckboxIndicatorProps extends ConditionalPresenceProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
@@ -217,6 +222,7 @@ export const CheckboxIndicator = defineComponent({
   name: 'SectileCheckboxIndicator',
   inheritAttrs: false,
   props: {
+    ...conditionalPresenceProps,
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' },
     asChild: { type: Boolean, default: false },
   },
@@ -229,12 +235,16 @@ export const CheckboxIndicator = defineComponent({
       throw new TypeError('CheckboxIndicator must be used inside CheckboxRoot.');
     }
     const part = { scope: context.partContract.scope, part: context.partContract.parts['indicator'] ?? 'indicator' };
+    const active = computed(() => context.slotProps.value.checked !== false);
+    const forcePresent = computed(() => props.forcePresent);
+    const presence = useConditionalPresence(active, forcePresent);
     return (): VNodeChild => {
       const state = context.slotProps.value;
       return h(Primitive, mergeProps(attrs, {
         as: props.as,
         asChild: props.asChild,
-        hidden: state.checked === false,
+        elementRef: presence.register,
+        hidden: presence.hidden.value,
         'aria-hidden': 'true',
         'data-scope': part.scope,
         'data-part': part.part,

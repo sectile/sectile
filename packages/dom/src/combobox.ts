@@ -133,6 +133,7 @@ export interface ComboboxConnectionOptions<ID extends StableID = StableID> exten
   readonly input: TextElement;
   readonly popup?: HTMLElement;
   readonly position?: boolean;
+  readonly manageVisibility?: boolean;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
   readonly getItemElementID?: (id: ID) => string;
@@ -288,7 +289,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
     this.labels = options.controller.labels;
     this.#input = options.input;
     this.#popup = options.popup;
-    const manageVisibility = (options as ComboboxConnectionOptions<ID> & { readonly manageVisibility?: boolean }).manageVisibility;
+    const manageVisibility = options.manageVisibility;
     this.#visibility = this.#popup === undefined || manageVisibility === false
       ? undefined
       : createHiddenBinding(this.#popup);

@@ -124,6 +124,38 @@ test('DOM Form coordinates native invalid submission and accessible focus recove
   }
 });
 
+test('DOM Form can leave summary visibility under renderer ownership', async () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const input = document.createElement('input');
+    const summary = document.createElement('div');
+    input.name = 'email';
+    input.required = true;
+    summary.hidden = true;
+    formElement.append(input, summary);
+    document.body.append(formElement);
+
+    const form = createForm({
+      form: formElement,
+      summary,
+      manageSummaryVisibility: false,
+      participants: [{ id: 'email', element: input }],
+    });
+    assert.equal(summary.hidden, true);
+    formElement.requestSubmit();
+    await Promise.resolve();
+    assert.equal(form.state.validation.status, 'invalid');
+    assert.equal(summary.hidden, true, 'renderer-owned visibility is not overwritten by invalid projection');
+    summary.hidden = false;
+    form.reset();
+    assert.equal(summary.hidden, false, 'reset also preserves renderer-owned visibility');
+  } finally {
+    dom.restore();
+  }
+});
+
 test('DOM Form reads successful native controls through FormData and observes submission lifecycle', () => {
   const dom = installDOM();
   try {

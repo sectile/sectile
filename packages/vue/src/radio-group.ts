@@ -16,6 +16,11 @@ import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './in
 import { useHostDirection } from './host-provider.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import {
+  conditionalPresenceProps,
+  useConditionalPresence,
+  type ConditionalPresenceProps,
+} from './internal/conditional-presence.js';
 
 export interface RadioGroupRootProps {
   readonly items: readonly string[];
@@ -34,7 +39,7 @@ export interface RadioGroupRootProps {
 export interface RadioGroupRootSlotProps { readonly value: string; readonly highlightedValue: string | null; readonly disabled: boolean; readonly: boolean }
 export interface RadioGroupItemProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface RadioGroupItemSlotProps { readonly value: string; readonly checked: boolean; readonly highlighted: boolean; readonly disabled: boolean }
-export interface RadioGroupIndicatorProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface RadioGroupIndicatorProps extends ConditionalPresenceProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
 interface RootContext {
   readonly value: ComputedRef<string>;
@@ -208,6 +213,7 @@ export const RadioGroupIndicator = defineComponent({
   name: 'SectileRadioGroupIndicator',
   inheritAttrs: false,
   props: {
+    ...conditionalPresenceProps,
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' },
     asChild: { type: Boolean, default: false },
   },
@@ -216,9 +222,13 @@ export const RadioGroupIndicator = defineComponent({
     const item = inject<ItemContext>(itemKey);
     if (item === undefined) throw new TypeError('RadioGroupIndicator must be used inside RadioGroupItem.');
     const part = { scope: item.partContract.scope, part: item.partContract.parts['indicator'] ?? 'indicator' };
+    const active = computed(() => item.state.value.checked);
+    const forcePresent = computed(() => props.forcePresent);
+    const presence = useConditionalPresence(active, forcePresent);
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
-      hidden: !item.state.value.checked,
+      elementRef: presence.register,
+      hidden: presence.hidden.value,
       'aria-hidden': 'true',
       'data-scope': part.scope,
       'data-part': part.part,

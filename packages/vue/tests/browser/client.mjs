@@ -1,5 +1,7 @@
 import { createSSRApp, nextTick } from 'vue';
 import { createHydrationFixture } from './hydration-fixture.mjs';
+import { runConditionalPresenceScenarios } from './conditional-presence-fixture.mjs?wi=118';
+import { runTreeGridEditorPresenceScenario } from './tree-grid-editor-presence-fixture.mjs?wi=118';
 import { runDocumentVirtualScenarios } from './document-virtual-fixture.mjs?wi=110';
 import { runHighLevelDocumentVirtualScenarios } from './high-level-document-virtual-fixture.mjs?wi=112';
 import { runPopupPresenceFocusScenarios } from './popup-presence-focus-fixture.mjs';
@@ -138,6 +140,22 @@ if ([...group?.querySelectorAll('[role="meter"]') ?? []].map((element) => elemen
   failures.push('updated group values');
 }
 if (warnings.length > 0) failures.push('Vue hydration warnings');
+const openHydrationDialog = document.querySelector('[data-browser-state="open"]');
+if (openHydrationDialog instanceof HTMLElement) {
+  openHydrationDialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  await nextTick();
+}
+let conditionalPresence;
+try {
+  conditionalPresence = Object.freeze({
+    ...await runConditionalPresenceScenarios(),
+    'conditional-presence-tree-grid-editor-focus': await runTreeGridEditorPresenceScenario(),
+  });
+  for (const [scenario, evidence] of Object.entries(conditionalPresence)) if (!evidence.ok) failures.push(scenario);
+} catch (error) {
+  failures.push(`conditional presence exception: ${error instanceof Error ? error.message : String(error)}`);
+  conditionalPresence = Object.freeze({});
+}
 let popupPresenceFocus;
 try {
   popupPresenceFocus = await runPopupPresenceFocusScenarios();
@@ -197,6 +215,7 @@ const result = Object.freeze({
     emailBeforeInputCanceled,
     emailValue: emailInput instanceof HTMLInputElement ? emailInput.value : null,
   }),
+  conditionalPresence,
   popupPresenceFocus,
   documentVirtual,
   highLevelDocumentVirtual,
@@ -206,6 +225,9 @@ window.__SECTILE_BROWSER_RESULT__ = result;
 console.info('Sectile browser verification:', JSON.stringify({ ok: result.ok, failures, warnings }));
 console.info('Sectile document virtual:', JSON.stringify(documentVirtual));
 console.info('Sectile high-level document virtual:', JSON.stringify(highLevelDocumentVirtual));
+for (const [scenario, evidence] of Object.entries(conditionalPresence)) {
+  console.info('Sectile conditional presence:', scenario, JSON.stringify(evidence));
+}
 for (const [scenario, evidence] of Object.entries(popupPresenceFocus)) {
   console.info('Sectile popup focus:', scenario, JSON.stringify(evidence));
 }

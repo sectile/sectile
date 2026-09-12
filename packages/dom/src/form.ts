@@ -202,6 +202,7 @@ export interface FormOptions<
   readonly form: HTMLFormElement;
   readonly summary?: HTMLElement;
   readonly renderSummaryContent?: boolean;
+  readonly manageSummaryVisibility?: boolean;
   readonly participants?: readonly FormParticipant<ID>[];
   readonly issues?: readonly FormIssue<ID>[];
   readonly schema?: FormSchema<Input, Output>;
@@ -307,6 +308,7 @@ export function tryCreateForm<
   let nativeResumeToken = 0;
   let summary: HTMLElement | undefined = options.summary;
   let renderSummaryContent = options.renderSummaryContent ?? true;
+  let manageSummaryVisibility = options.manageSummaryVisibility ?? true;
   let schemaOption: FormSchema<Input, Output> | undefined = options.schema;
   let validateOption: FormValidateHandler<ID, Input> | undefined = options.validate;
   let validateOn = new Set<FormInteractionValidationTrigger>(options.validateOn ?? []);
@@ -327,7 +329,7 @@ export function tryCreateForm<
     if (renderSummaryContent) {
       summary.textContent = summaryMessage(state.allIssues, state.submission.failure);
     }
-    summary.hidden = state.allIssues.length === 0 && state.submission.failure === null;
+    if (manageSummaryVisibility) summary.hidden = state.allIssues.length === 0 && state.submission.failure === null;
   };
   const configureSummary = (element: HTMLElement | undefined): void => {
     summary = element;
@@ -354,6 +356,7 @@ export function tryCreateForm<
       || !sameTriggers(validateOn, nextValidateOn)
       || !sameTriggers(revalidateOn, nextRevalidateOn);
     renderSummaryContent = next.renderSummaryContent ?? true;
+    manageSummaryVisibility = next.manageSummaryVisibility ?? true;
     configureSummary(next.summary);
     schemaOption = next.schema;
     validateOption = next.validate;
@@ -549,7 +552,7 @@ export function tryCreateForm<
       if (renderSummaryContent) {
         summary.textContent = summaryMessage(remaining, state.submission.failure);
       }
-      summary.hidden = remaining.length === 0 && state.submission.failure === null;
+      if (manageSummaryVisibility) summary.hidden = remaining.length === 0 && state.submission.failure === null;
     }
   };
   const focusInvalid = (startId: ID): boolean => {
@@ -579,7 +582,7 @@ export function tryCreateForm<
       if (renderSummaryContent) {
         summary.textContent = summaryMessage(issues, state.submission.failure);
       }
-      summary.hidden = issues.length === 0 && state.submission.failure === null;
+      if (manageSummaryVisibility) summary.hidden = issues.length === 0 && state.submission.failure === null;
     }
     announceSummaryHandler?.(issues, state.submission.failure);
   };
@@ -588,7 +591,7 @@ export function tryCreateForm<
     if (failure === null) return;
     if (summary !== undefined) {
       if (renderSummaryContent) summary.textContent = summaryMessage([], failure);
-      summary.hidden = false;
+      if (manageSummaryVisibility) summary.hidden = false;
     }
     announceSummaryHandler?.([], failure);
   };
@@ -1018,7 +1021,7 @@ export function tryCreateForm<
     if (commands !== null) execute(commands);
     if (summary !== undefined) {
       if (renderSummaryContent) summary.textContent = '';
-      summary.hidden = true;
+      if (manageSummaryVisibility) summary.hidden = true;
     }
     resetHandler?.();
     queueMicrotask(captureAllCurrentValues);

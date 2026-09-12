@@ -22,8 +22,8 @@ import {
 } from './internal/form-control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { usePresence } from './internal/presence.js';
+import { useConditionalPresenceRegistry } from './internal/conditional-presence.js';
 
-type CascadeSelectRendererOptions = CascadeSelectOptions<string> & { readonly manageVisibility?: boolean };
 type CascadeSelectRendererConnection = CascadeSelectConnection<string> & { refresh(): void };
 
 import {
@@ -35,6 +35,7 @@ import {
   type CascadeChoiceColumnProps,
   type CascadeChoiceColumnSlotProps,
   type CascadeChoiceItemContext,
+  type CascadeChoiceItemIndicatorProps,
   type CascadeChoiceItemProps,
   type CascadeChoiceItemSlotProps,
   type CascadeChoicePartProps,
@@ -68,6 +69,7 @@ export type CascadeSelectColumnProps = CascadeChoiceColumnProps;
 export type CascadeSelectColumnSlotProps = CascadeChoiceColumnSlotProps;
 export type CascadeSelectItemProps = CascadeChoiceItemProps;
 export type CascadeSelectItemSlotProps = CascadeChoiceItemSlotProps;
+export type CascadeSelectItemIndicatorProps = CascadeChoiceItemIndicatorProps;
 export type CascadeSelectPartProps = CascadeChoicePartProps;
 
 interface RootContext extends CascadeChoiceRootContext<CascadeSelectRootSlotProps> {
@@ -118,6 +120,8 @@ export const CascadeSelectRoot = defineComponent({
     const valueControlled = useControlledStateInvariant('CascadeSelectRoot', 'modelValue', () => props.modelValue);
     const openControlled = useControlledStateInvariant('CascadeSelectRoot', 'open', () => props.open);
     const state = computed<CascadeSelectRootSlotProps>(() => Object.freeze({ value: props.modelValue !== undefined ? props.modelValue : localValue.value, valuePath: valuePath.value, highlightedValue: highlighted.value, path: path.value, columns: columns.value, open: props.open ?? localOpen.value, disabled: props.disabled, readonly: props.readonly }));
+    const selectedIDSet = computed<ReadonlySet<string>>(() => { const value = props.modelValue !== undefined ? props.modelValue : localValue.value; return value === null ? new Set() : new Set([value]); });
+    const indicatorPresence = useConditionalPresenceRegistry(selectedIDSet);
     const refresh = (): void => { const current = connection.value?.getSnapshot().state; if (current === undefined) return; localValue.value = current.value; localOpen.value = current.open; highlighted.value = current.highlighted; path.value = current.path; columns.value = connection.value?.getColumns() ?? []; valuePath.value = connection.value?.getValuePath() ?? []; refreshItems(); };
     const refreshItems = (): void => { if (popup.value === undefined || connection.value === undefined) return; popup.value.querySelectorAll<HTMLElement>('[data-sectile-cascade-select-id]').forEach((element) => { const id = element.dataset['sectileCascadeSelectId']; if (id !== undefined) connection.value?.setItemAttributes(element, id, props.disabledItems.includes(id)); }); };
     const connect = (): void => {
@@ -129,7 +133,7 @@ export const CascadeSelectRoot = defineComponent({
       const value = requestedValue !== null && leafIDs.has(requestedValue) ? requestedValue : null;
       localValue.value = value;
       if (valueControlled && requestedValue !== value) emit('update:modelValue', value);
-      connection.value = createCascadeSelect({ root: root.value, trigger: trigger.value, popup: popup.value, nodes: props.nodes, disabledItems: props.disabledItems, position: props.position, manageVisibility: false, side: props.side, align: props.align, sideOffset: props.sideOffset, collisionPadding: props.collisionPadding, ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }), avoidCollisions: props.avoidCollisions, hideWhenDetached: props.hideWhenDetached, strategy: props.strategy, tracking: props.tracking, ...(props.policies === undefined ? {} : { policies: props.policies }), ...(valueControlled ? { value } : { defaultValue: value }), ...(openControlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }), disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }), onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); }, onHighlightedValueChange: (next) => { highlighted.value = next; emit('highlight', next); }, onOpenChange: (next) => { localOpen.value = next; emit('update:open', next); }, onUpdate: refresh } as CascadeSelectRendererOptions);
+      connection.value = createCascadeSelect({ root: root.value, trigger: trigger.value, popup: popup.value, nodes: props.nodes, disabledItems: props.disabledItems, position: props.position, manageVisibility: false, side: props.side, align: props.align, sideOffset: props.sideOffset, collisionPadding: props.collisionPadding, ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }), avoidCollisions: props.avoidCollisions, hideWhenDetached: props.hideWhenDetached, strategy: props.strategy, tracking: props.tracking, ...(props.policies === undefined ? {} : { policies: props.policies }), ...(valueControlled ? { value } : { defaultValue: value }), ...(openControlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }), disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }), onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); }, onHighlightedValueChange: (next) => { highlighted.value = next; emit('highlight', next); }, onOpenChange: (next) => { localOpen.value = next; emit('update:open', next); }, onUpdate: refresh });
       refresh();
     };
     const branches = computed(() => cascadeBranchItems(props.nodes));
@@ -143,7 +147,7 @@ export const CascadeSelectRoot = defineComponent({
         if (mounted) connect();
       });
     };
-    provide<RootContext>(rootKey, { state, position: computed(() => props.position), strategy: computed(() => props.strategy), label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), disabledItems: computed(() => new Set(props.disabledItems)), branchItems: branches, registerTrigger: (element) => { const next = element ?? null; const changed = trigger.value !== next; trigger.value = next; if (changed) scheduleConnect(); }, registerPopup: (element) => { const changed = popup.value !== element; popup.value = element; if (changed) scheduleConnect(); }, refresh: () => (connection.value as CascadeSelectRendererConnection | undefined)?.refresh(), registerColumn: (element, depth, label) => connection.value?.setColumnAttributes(element, depth === 0 ? null : state.value.path[depth - 1] ?? null, label), registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled) });
+    provide<RootContext>(rootKey, { state, position: computed(() => props.position), strategy: computed(() => props.strategy), label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), disabledItems: computed(() => new Set(props.disabledItems)), branchItems: branches, indicatorPresence, registerTrigger: (element) => { const next = element ?? null; const changed = trigger.value !== next; trigger.value = next; if (changed) scheduleConnect(); }, registerPopup: (element) => { const changed = popup.value !== element; popup.value = element; if (changed) scheduleConnect(); }, refresh: () => (connection.value as CascadeSelectRendererConnection | undefined)?.refresh(), registerColumn: (element, depth, label) => connection.value?.setColumnAttributes(element, depth === 0 ? null : state.value.path[depth - 1] ?? null, label), registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled) });
     onMounted(() => { mounted = true; connect(); }); onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); }); watch([() => props.nodes, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies], connect);
     watch([() => props.modelValue, () => props.open], () => { if (connection.value === undefined) return; const result = connection.value.syncControlledValues({ ...(valueControlled ? { value: props.modelValue as string | null } : {}), ...(openControlled ? { open: props.open as boolean } : {}) }); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
     const registerRoot = (node: unknown): void => { const next = node instanceof HTMLElement ? node : null; const changed = root.value !== next; root.value = next; if (changed) scheduleConnect(); };

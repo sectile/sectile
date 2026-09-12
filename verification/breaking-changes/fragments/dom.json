@@ -38,7 +38,7 @@
       "id": "WI-047:dom-form-outcomes",
       "change": "signature-changed",
       "before": { "subpath": "./form" },
-      "symbols": ["FormConnection.subscribe", "FormConnection field mutation surface", "FormValidationIssue", "FormSubmitResult", "FormSubmitErrorMapper", "FormSubmitFailureResult", "FormConnection.submitFailed", "FormAnnounceSummaryHandler"],
+      "symbols": ["FormConnection.subscribe", "FormConnection field mutation surface", "FormValidationIssue", "FormSubmitResult", "FormSubmitErrorMapper", "FormSubmitFailureResult", "FormConnection.submitFailed", "FormAnnounceSummaryHandler", "FormOptions.manageSummaryVisibility"],
       "replacement": { "package": "@sectile/dom", "subpath": "./form" },
       "removalReason": "Use granular subscriptions and typed field methods, relatedPaths for multi-field validation, failure for submission-level errors, and issues only for invalid input."
     },
@@ -90,7 +90,7 @@
       "id": "WI-036:cascade-select-positioning-surface",
       "change": "signature-changed",
       "before": { "subpath": "./cascade-select" },
-      "symbols": ["CascadeSelectOptions positioning options", "automatic trigger-relative positioning"],
+      "symbols": ["CascadeSelectOptions positioning options", "automatic trigger-relative positioning", "CascadeSelectOptions.manageVisibility"],
       "replacement": { "package": "@sectile/dom", "subpath": "./cascade-select" },
       "removalReason": "Cascade Select now positions its popup by default; pass position=false to preserve consumer-owned layout."
     },
@@ -142,7 +142,7 @@
       "id": "WI-046:combobox-text-native-dispatch",
       "change": "signature-changed",
       "before": { "subpath": "./combobox" },
-      "symbols": ["TextInput declaration closure", "ComboboxConnectionOptions positioning options", "automatic input-relative positioning"],
+      "symbols": ["TextInput declaration closure", "ComboboxConnectionOptions positioning options", "automatic input-relative positioning", "ComboboxOptions.manageVisibility"],
       "replacement": { "package": "@sectile/dom", "subpath": "./combobox" },
       "removalReason": "Combobox text transitions retain the same TextInput union, and popup positioning is now automatic by default; pass position=false to preserve consumer-owned layout."
     },
@@ -180,6 +180,14 @@
       "before": { "subpath": "./window-splitter" },
       "symbols": ["WindowSplitter controller declaration closure"],
       "replacement": { "package": "@sectile/dom", "subpath": "./window-splitter" }
+    },
+    {
+      "id": "WI-005:carousel-visibility-ownership",
+      "change": "signature-changed",
+      "before": { "subpath": "./carousel" },
+      "symbols": ["CarouselOptions.manageVisibility"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./carousel" },
+      "removalReason": "Carousel keeps direct-DOM visibility ownership by default and now exposes manageVisibility=false for renderer-owned visual presence. Existing calls remain valid."
     }
   ]
 }

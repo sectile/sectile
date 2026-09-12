@@ -18,8 +18,11 @@ import { useNativeInputFormControl } from './internal/form-control.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { usePresence } from './internal/presence.js';
-
-type ComboboxRendererOptions = ComboboxOptions<string> & { readonly manageVisibility?: boolean };
+import {
+  conditionalPresenceProps,
+  useConditionalPresence,
+  type ConditionalPresenceProps,
+} from './internal/conditional-presence.js';
 
 export interface ComboboxRootProps extends Omit<PositionOptions, 'arrowPadding'> {
   readonly items: readonly ComboboxItemDefinition<string>[];
@@ -41,6 +44,7 @@ export interface ComboboxRootSlotProps { readonly value: string | null; readonly
 export interface ComboboxItemProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface ComboboxItemSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly disabled: boolean }
 export interface ComboboxPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface ComboboxEmptyProps extends ComboboxPartProps, ConditionalPresenceProps {}
 
 interface Context {
   readonly state: ComputedRef<ComboboxRootSlotProps>;
@@ -180,7 +184,7 @@ export const ComboboxRoot = defineComponent({
         onOpenChange: ({ value }) => { localOpen.value = value; emit('update:open', value); },
         onHighlightedValueChange: ({ value }) => { highlighted.value = value; emit('highlight', value); },
         onAccept: (id) => emit('accept', id), onUpdate: refresh,
-      } as ComboboxRendererOptions);
+      });
       connection.value.setInputAttributes(props.label); connection.value.setPopupAttributes(props.label); refreshItems(); refresh();
     };
     let mounted = false;
@@ -311,12 +315,29 @@ export const ComboboxItem = defineComponent({
 });
 
 export const ComboboxEmpty = defineComponent({
-  name: 'SectileComboboxEmpty', inheritAttrs: false, props: partProps,
+  name: 'SectileComboboxEmpty', inheritAttrs: false, props: { ...partProps, ...conditionalPresenceProps },
   slots: Object as SlotsType<{ default: (props: ComboboxRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('ComboboxEmpty'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, role: 'status', hidden: root.hasMatches(),
-    'data-scope': 'combobox', 'data-part': 'empty',
-  }), { default: () => slots['default']?.(root.state.value) }); },
+  setup(props, { attrs, slots }) {
+    const root = useRoot('ComboboxEmpty');
+    const active = computed(() => !root.hasMatches());
+    const forcePresent = computed(() => props.forcePresent);
+    const presence = useConditionalPresence(active, forcePresent);
+    return (): VNodeChild => {
+      const inactivePresent = !active.value && presence.present.value;
+      return h(Primitive, mergeProps(attrs, {
+        as: props.as,
+        asChild: props.asChild,
+        elementRef: presence.register,
+        role: active.value ? 'status' : undefined,
+        'aria-live': active.value ? undefined : 'off',
+        hidden: presence.hidden.value,
+        ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
+        'data-scope': 'combobox',
+        'data-part': 'empty',
+        'data-state': active.value ? 'visible' : 'hidden',
+      }), { default: () => slots['default']?.(root.state.value) });
+    };
+  },
 });
 
 function useRoot(part: string): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError(`${part} must be used inside ComboboxRoot.`); return root; }

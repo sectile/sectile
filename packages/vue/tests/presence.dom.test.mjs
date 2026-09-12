@@ -16,14 +16,25 @@ const { Teleport, createApp, createSSRApp, defineComponent, h, nextTick, ref, sh
 const { renderToString } = await import('@vue/server-renderer');
 const { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } = await import('../.verification-dist/dialog.js');
 const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import('../.verification-dist/alert-dialog.js');
-const { SelectContent, SelectItem, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectViewport } = await import('../.verification-dist/select.js');
-const { ComboboxContent, ComboboxInput, ComboboxRoot } = await import('../.verification-dist/combobox.js');
-const { CascadeSelectContent, CascadeSelectRoot, CascadeSelectTrigger } = await import('../.verification-dist/cascade-select.js');
+const { SelectContent, SelectItem, SelectItemIndicator, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectViewport } = await import('../.verification-dist/select.js');
+const { ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxRoot } = await import('../.verification-dist/combobox.js');
+const { CascadeSelectContent, CascadeSelectItem, CascadeSelectItemIndicator, CascadeSelectRoot, CascadeSelectTrigger } = await import('../.verification-dist/cascade-select.js');
+const { CascadeListItem, CascadeListItemIndicator, CascadeListRoot } = await import('../.verification-dist/cascade-list.js');
+const { ListboxItem, ListboxItemIndicator, ListboxRoot } = await import('../.verification-dist/listbox.js');
 const { DatePickerContent, DatePickerGrid, DatePickerRoot, DatePickerTrigger } = await import('../.verification-dist/date-picker.js');
 const { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem, MenuSubContent } = await import('../.verification-dist/menu.js');
 const { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } = await import('../.verification-dist/popover.js');
 const { TooltipContent, TooltipPortal, TooltipRoot, TooltipTrigger } = await import('../.verification-dist/tooltip.js');
 const { ToastClose, ToastPortal, ToastProvider, ToastRoot, ToastTitle, ToastViewport } = await import('../.verification-dist/toast.js');
+const { CheckboxIndicator, CheckboxRoot } = await import('../.verification-dist/checkbox.js');
+const { RadioGroupIndicator, RadioGroupItem, RadioGroupRoot } = await import('../.verification-dist/radio-group.js');
+const { NavigationMenuIndicator } = await import('../.verification-dist/navigation-menu.js');
+const { AccordionContent, AccordionItem, AccordionRoot } = await import('../.verification-dist/accordion.js');
+const { CarouselRoot, CarouselSlide } = await import('../.verification-dist/carousel.js');
+const { DisclosureContent, DisclosureRoot } = await import('../.verification-dist/disclosure.js');
+const { TabsContent, TabsRoot } = await import('../.verification-dist/tabs.js');
+const { TreeGridCell, TreeGridEditor, TreeGridRoot, TreeGridRow } = await import('../.verification-dist/tree-grid.js');
+const { TreeViewGroup, TreeViewItem, TreeViewRoot } = await import('../.verification-dist/tree-view.js');
 
 const PopupSurface = defineComponent({
   name: 'PopupSurface',
@@ -33,6 +44,411 @@ const PopupSurface = defineComponent({
     expose({ element });
     return () => h('div', { ...attrs, ref: element }, slots.default?.());
   },
+});
+
+test('checkbox indicator retains exit motion and cancels stale completion on reopen', async () => {
+  const host = document.createElement('div'); document.body.append(host); const checked = ref(true);
+  const motion = { transitionProperty: 'opacity', transitionDuration: '20ms' };
+  const app = createApp({ render: () => h(CheckboxRoot, {
+    modelValue: checked.value,
+    'onUpdate:modelValue': (value) => { checked.value = value; },
+  }, { default: () => h(CheckboxIndicator, { style: motion }, { default: () => '✓' }) }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const indicator = host.querySelector('[data-scope="checkbox"][data-part="indicator"]');
+    assert.ok(indicator instanceof HTMLElement); assert.equal(indicator.hidden, false); assert.equal(indicator.dataset.state, 'checked');
+
+    checked.value = false; await nextTick();
+    assert.equal(indicator.dataset.state, 'unchecked'); assert.equal(indicator.hidden, false);
+    checked.value = true; await nextTick();
+    assert.equal(host.querySelector('[data-part="indicator"]'), indicator); assert.equal(indicator.dataset.state, 'checked'); assert.equal(indicator.hidden, false);
+    await new Promise((resolve) => setTimeout(resolve, 25)); indicator.dispatchEvent(new Event('transitionend', { bubbles: true })); await nextTick();
+    assert.equal(indicator.hidden, false, 'stale exit completion stays cancelled after reopen');
+
+    checked.value = false; await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 25)); indicator.dispatchEvent(new Event('transitionend', { bubbles: true })); await nextTick(); await nextTick();
+    assert.equal(indicator.dataset.state, 'unchecked'); assert.equal(indicator.hidden, true);
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('radio indicator supports forcePresent while zero-motion indicators hide immediately', async () => {
+  const host = document.createElement('div'); document.body.append(host); const value = ref('a');
+  const app = createApp({ render: () => h(RadioGroupRoot, {
+    items: ['a', 'b'], modelValue: value.value, 'onUpdate:modelValue': (next) => { value.value = next; },
+  }, { default: () => [
+    h(RadioGroupItem, { value: 'a' }, { default: () => h(RadioGroupIndicator, { forcePresent: true }, { default: () => 'A' }) }),
+    h(RadioGroupItem, { value: 'b' }, { default: () => h(RadioGroupIndicator, null, { default: () => 'B' }) }),
+  ] }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const indicators = [...host.querySelectorAll('[data-scope="radio-group"][data-part="indicator"]')];
+    const first = indicators[0]; const second = indicators[1];
+    assert.ok(first instanceof HTMLElement); assert.ok(second instanceof HTMLElement);
+    assert.equal(first.hidden, false); assert.equal(first.dataset.state, 'checked'); assert.equal(second.hidden, true);
+
+    value.value = 'b'; await nextTick(); await nextTick();
+    assert.equal(first.dataset.state, 'unchecked'); assert.equal(first.hidden, false, 'forcePresent never derives hidden from inactive state');
+    assert.equal(second.dataset.state, 'checked'); assert.equal(second.hidden, false);
+
+    value.value = 'a'; await nextTick(); await nextTick();
+    assert.equal(second.dataset.state, 'unchecked'); assert.equal(second.hidden, true, 'zero-motion inactive indicator completes immediately');
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('navigation menu indicator retains CSS animation before hiding', async () => {
+  const host = document.createElement('div'); document.body.append(host); const open = ref(true);
+  const motion = { animationName: 'indicator-exit', animationDuration: '20ms', animationIterationCount: '1' };
+  const app = createApp({ render: () => h(NavigationMenuIndicator, { open: open.value, style: motion }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const indicator = host.querySelector('[data-scope="navigation-menu"][data-part="indicator"]');
+    assert.ok(indicator instanceof HTMLElement); assert.equal(indicator.hidden, false); assert.equal(indicator.dataset.state, 'visible');
+    open.value = false; await nextTick();
+    assert.equal(indicator.dataset.state, 'hidden'); assert.equal(indicator.hidden, false);
+    await new Promise((resolve) => setTimeout(resolve, 25)); indicator.dispatchEvent(new Event('animationend', { bubbles: true })); await nextTick(); await nextTick();
+    assert.equal(indicator.hidden, true);
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('listbox indicator registry measures only the changed exit at high cardinality', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const items = Array.from({ length: 1_000 }, (_, index) => `item-${index}`);
+  const value = ref(items[0]);
+  const motion = { transitionProperty: 'opacity', transitionDuration: '20ms' };
+  const app = createApp({ render: () => h(ListboxRoot, {
+    items, modelValue: value.value, 'onUpdate:modelValue': (next) => { value.value = next; },
+  }, { default: () => items.map((item) => h(ListboxItem, { value: item, key: item }, {
+    default: () => h(ListboxItemIndicator, { style: motion }, { default: () => '✓' }),
+  })) }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const options = [...host.querySelectorAll('[role="option"]')];
+    const indicators = options.map((option) => option.querySelector('[data-part="item-indicator"]'));
+    const exits = new Map();
+    let animationReads = 0;
+    for (const indicator of indicators) {
+      assert.ok(indicator instanceof HTMLElement);
+      const exit = deferred();
+      exits.set(indicator, exit);
+      indicator.getAnimations = () => {
+        animationReads += 1;
+        return [fakeAnimation(exit.promise, 20)];
+      };
+    }
+
+    value.value = items[1];
+    await nextTick(); await nextTick();
+    assert.equal(animationReads, 1, 'only the previously selected indicator inspects exit animations');
+
+    const first = indicators[0];
+    const second = indicators[1];
+    assert.ok(first instanceof HTMLElement); assert.ok(second instanceof HTMLElement);
+    assert.equal(first.dataset.state, 'unchecked'); assert.equal(first.hidden, false);
+    assert.equal(second.dataset.state, 'checked'); assert.equal(second.hidden, false);
+    for (let index = 2; index < indicators.length; index += 1) {
+      const indicator = indicators[index];
+      assert.ok(indicator instanceof HTMLElement); assert.equal(indicator.hidden, true);
+    }
+
+    exits.get(first)?.resolve();
+    await Promise.resolve(); await Promise.resolve(); await nextTick(); await nextTick();
+    assert.equal(first.hidden, true);
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('Select and both cascade hosts retain only the previous item indicator through exit motion', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const items = ['alpha', 'beta'];
+  const nodes = items.map((id) => ({ id, parentID: null }));
+  const selectValue = ref('alpha'); const listValue = ref('alpha'); const cascadeValue = ref('alpha');
+  const motion = { transitionProperty: 'opacity', transitionDuration: '20ms' };
+  const renderSelectItems = () => items.map((value) => h(SelectItem, { value, key: value }, {
+    default: () => [h(SelectItemText, null, { default: () => value }), h(SelectItemIndicator, { style: motion }, { default: () => '✓' })],
+  }));
+  const app = createApp({ render: () => [
+    h(SelectRoot, {
+      items, modelValue: selectValue.value, defaultOpen: true, position: false,
+      'onUpdate:modelValue': (value) => { selectValue.value = value; },
+    }, { default: () => [h(SelectTrigger), h(SelectContent, null, { default: () => h(SelectViewport, null, { default: renderSelectItems }) })] }),
+    h(CascadeListRoot, {
+      nodes, modelValue: listValue.value, 'onUpdate:modelValue': (value) => { listValue.value = value; },
+    }, { default: () => items.map((value) => h(CascadeListItem, { value, key: value }, {
+      default: () => h(CascadeListItemIndicator, { style: motion }, { default: () => '✓' }),
+    })) }),
+    h(CascadeSelectRoot, {
+      nodes, modelValue: cascadeValue.value, defaultOpen: true, position: false,
+      'onUpdate:modelValue': (value) => { cascadeValue.value = value; },
+    }, { default: () => [h(CascadeSelectTrigger), h(CascadeSelectContent, null, { default: () => items.map((value) => h(CascadeSelectItem, { value, key: value }, {
+      default: () => h(CascadeSelectItemIndicator, { style: motion }, { default: () => '✓' }),
+    })) })] }),
+  ] });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const scopes = ['select', 'cascade-list', 'cascade-select'];
+    const exiting = [];
+    const exits = [];
+    for (const scope of scopes) {
+      const indicators = [...host.querySelectorAll(`[data-scope="${scope}"][data-part="item-indicator"]`)];
+      assert.equal(indicators.length, 2);
+      const first = indicators[0];
+      assert.ok(first instanceof HTMLElement);
+      const exit = deferred();
+      first.getAnimations = () => [fakeAnimation(exit.promise, 20)];
+      exiting.push(first);
+      exits.push(exit);
+    }
+
+    selectValue.value = 'beta'; listValue.value = 'beta'; cascadeValue.value = 'beta';
+    await nextTick(); await nextTick();
+    for (const scope of scopes) {
+      const indicators = [...host.querySelectorAll(`[data-scope="${scope}"][data-part="item-indicator"]`)];
+      const first = indicators[0]; const second = indicators[1];
+      assert.ok(first instanceof HTMLElement); assert.ok(second instanceof HTMLElement);
+      assert.equal(first.dataset.state, 'unchecked'); assert.equal(first.hidden, false);
+      assert.equal(second.dataset.state, 'checked'); assert.equal(second.hidden, false);
+    }
+    for (const exit of exits) exit.resolve();
+    await Promise.resolve(); await Promise.resolve(); await nextTick(); await nextTick();
+    for (const indicator of exiting) assert.equal(indicator.hidden, true);
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('structural content retains exit motion while inactive semantics are quarantined immediately', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const disclosureOpen = ref(true);
+  const accordionValue = ref('a');
+  const tabValue = ref('a');
+  const expanded = ref(['root']);
+  const motion = { transitionProperty: 'opacity', transitionDuration: '20ms' };
+  const treeNodes = [{ id: 'root', parentID: null }, { id: 'leaf', parentID: 'root' }];
+  const app = createApp({ render: () => [
+    h(DisclosureRoot, { modelValue: disclosureOpen.value, 'onUpdate:modelValue': (value) => { disclosureOpen.value = value; } }, {
+      default: () => h(DisclosureContent, { style: motion }, { default: () => 'Disclosure' }),
+    }),
+    h(AccordionRoot, { items: ['a'], modelValue: accordionValue.value, 'onUpdate:modelValue': (value) => { accordionValue.value = value; } }, {
+      default: () => h(AccordionItem, { value: 'a' }, { default: () => h(AccordionContent, { style: motion }, { default: () => 'Accordion' }) }),
+    }),
+    h(TabsRoot, { items: ['a', 'b'], modelValue: tabValue.value, 'onUpdate:modelValue': (value) => { tabValue.value = value; } }, {
+      default: () => [
+        h(TabsContent, { value: 'a', style: motion }, { default: () => 'A' }),
+        h(TabsContent, { value: 'b' }, { default: () => 'B' }),
+      ],
+    }),
+    h(TreeViewRoot, { nodes: treeNodes, expandedValues: expanded.value, 'onUpdate:expandedValues': (value) => { expanded.value = value; } }, {
+      default: () => [
+        h(TreeViewItem, { value: 'root' }),
+        h(TreeViewGroup, { for: 'root', style: motion }, { default: () => h(TreeViewItem, { value: 'leaf' }) }),
+      ],
+    }),
+  ] });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const content = [
+      host.querySelector('[data-scope="disclosure"][data-part="content"]'),
+      host.querySelector('[data-scope="accordion"][data-part="content"]'),
+      host.querySelector('[data-scope="tabs"][data-part="content"][data-state="active"]'),
+      host.querySelector('[data-scope="tree-view"][data-part="group"]'),
+    ];
+    for (const element of content) { assert.ok(element instanceof HTMLElement); assert.equal(element.hidden, false); }
+
+    disclosureOpen.value = false;
+    accordionValue.value = '';
+    tabValue.value = 'b';
+    expanded.value = [];
+    await nextTick(); await nextTick();
+
+    for (const element of content) {
+      assert.equal(element.hidden, false);
+      assert.equal(element.inert, true);
+      assert.equal(element.getAttribute('aria-hidden'), 'true');
+    }
+    assert.equal(content[0].dataset.state, 'closed');
+    assert.equal(content[1].dataset.state, 'closed');
+    assert.equal(content[2].dataset.state, 'inactive');
+    assert.equal(content[3].dataset.state, 'closed');
+
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    for (const element of content) element.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    await nextTick(); await nextTick();
+    for (const element of content) {
+      assert.equal(element.hidden, true);
+      assert.equal(element.inert, false);
+      assert.equal(element.getAttribute('aria-hidden'), null);
+    }
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('forcePresent keeps inactive structural content rendered but quarantined', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const value = ref('a');
+  const app = createApp({ render: () => h(TabsRoot, { items: ['a', 'b'], modelValue: value.value, 'onUpdate:modelValue': (next) => { value.value = next; } }, {
+    default: () => h(TabsContent, { value: 'a', forcePresent: true }, { default: () => 'A' }),
+  }) });
+  app.mount(host);
+  try {
+    await nextTick();
+    const content = host.querySelector('[data-scope="tabs"][data-part="content"]');
+    assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, false); assert.equal(content.inert, false);
+    value.value = 'b'; await nextTick(); await nextTick();
+    assert.equal(content.dataset.state, 'inactive'); assert.equal(content.hidden, false);
+    assert.equal(content.inert, true); assert.equal(content.getAttribute('aria-hidden'), 'true');
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('carousel crossfade keeps only the active slide interactive and AT-visible', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const value = ref('a');
+  const motion = { transitionProperty: 'opacity', transitionDuration: '20ms' };
+  const app = createApp({ render: () => h(CarouselRoot, { slides: ['a', 'b'], modelValue: value.value, 'onUpdate:modelValue': (next) => { value.value = next; } }, {
+    default: () => [
+      h(CarouselSlide, { value: 'a', style: motion }, { default: () => h('button', null, 'A') }),
+      h(CarouselSlide, { value: 'b' }, { default: () => h('button', null, 'B') }),
+    ],
+  }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const slides = [...host.querySelectorAll('[data-scope="carousel"][data-part="slide"]')];
+    const first = slides[0]; const second = slides[1];
+    assert.ok(first instanceof HTMLElement); assert.ok(second instanceof HTMLElement);
+    assert.equal(first.hidden, false); assert.equal(first.inert, false); assert.equal(second.hidden, true);
+
+    value.value = 'b'; await nextTick(); await nextTick();
+    assert.equal(first.dataset.state, 'inactive'); assert.equal(first.hidden, false);
+    assert.equal(first.inert, true); assert.equal(first.getAttribute('aria-hidden'), 'true');
+    assert.equal(second.dataset.state, 'active'); assert.equal(second.hidden, false);
+    assert.equal(second.inert, false); assert.equal(second.getAttribute('aria-hidden'), null);
+
+    await new Promise((resolve) => setTimeout(resolve, 25)); first.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    await nextTick(); await nextTick();
+    assert.equal(first.hidden, true); assert.equal(first.inert, false); assert.equal(first.getAttribute('aria-hidden'), null);
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('combobox empty status suppresses stale live-region semantics during retained exit and reopen', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const inputValue = ref('zzz');
+  const motion = { transitionProperty: 'opacity', transitionDuration: '20ms' };
+  const app = createApp({ render: () => h(ComboboxRoot, {
+    items: [{ id: 'alpha', label: 'Alpha' }],
+    inputValue: inputValue.value,
+    policies: { matches: (label, query) => label.toLowerCase().includes(query.toLowerCase()) },
+    'onUpdate:inputValue': (value) => { inputValue.value = value; },
+  }, { default: () => [
+    h(ComboboxInput),
+    h(ComboboxEmpty, { style: motion }, { default: () => 'No results' }),
+  ] }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const empty = host.querySelector('[data-scope="combobox"][data-part="empty"]');
+    assert.ok(empty instanceof HTMLElement);
+    assert.equal(empty.dataset.state, 'visible'); assert.equal(empty.hidden, false);
+    assert.equal(empty.getAttribute('role'), 'status'); assert.equal(empty.getAttribute('aria-live'), null);
+
+    inputValue.value = '';
+    await nextTick(); await nextTick();
+    assert.equal(empty.dataset.state, 'hidden'); assert.equal(empty.hidden, false); assert.equal(empty.inert, true);
+    assert.equal(empty.getAttribute('role'), null); assert.equal(empty.getAttribute('aria-live'), 'off'); assert.equal(empty.getAttribute('aria-hidden'), 'true');
+
+    inputValue.value = 'zzz';
+    await nextTick(); await nextTick();
+    assert.equal(host.querySelector('[data-part="empty"]'), empty);
+    assert.equal(empty.dataset.state, 'visible'); assert.equal(empty.hidden, false); assert.equal(empty.inert, false);
+    assert.equal(empty.getAttribute('role'), 'status'); assert.equal(empty.getAttribute('aria-live'), null); assert.equal(empty.getAttribute('aria-hidden'), null);
+
+    inputValue.value = '';
+    await nextTick(); await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 25)); empty.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    await nextTick(); await nextTick();
+    assert.equal(empty.hidden, true); assert.equal(empty.inert, false);
+    assert.equal(empty.getAttribute('role'), null); assert.equal(empty.getAttribute('aria-live'), 'off'); assert.equal(empty.getAttribute('aria-hidden'), null);
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('tree-grid editor retains visual exit without retaining focus or edit semantics', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const rows = [{ id: 'root', parentID: null, cells: ['name'] }];
+  const values = new Map([['name', 'Root']]);
+  const editMode = ref('navigation');
+  const motion = { transitionProperty: 'opacity', transitionDuration: '20ms' };
+  const app = createApp({ render: () => h(TreeGridRoot, {
+    rows,
+    defaultHighlightedValue: 'name',
+    editMode: editMode.value,
+    'onUpdate:editMode': (value) => { editMode.value = value; },
+    getCellValue: (id) => values.get(id) ?? '',
+    setCellValue: (id, value) => values.set(id, value),
+  }, { default: () => h(TreeGridRow, { value: 'root', rowIndex: 1 }, {
+    default: () => h(TreeGridCell, { value: 'name', columnIndex: 1 }, {
+      default: () => h(TreeGridEditor, { for: 'name', style: motion }),
+    }),
+  }) }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const root = host.querySelector('[data-scope="tree-grid"][data-part="root"]');
+    const cell = host.querySelector('[data-scope="tree-grid"][data-part="cell"]');
+    const editor = host.querySelector('[data-scope="tree-grid"][data-part="editor"]');
+    assert.ok(root instanceof HTMLElement); assert.ok(cell instanceof HTMLElement); assert.ok(editor instanceof HTMLInputElement);
+    assert.equal(editor.dataset.state, 'idle'); assert.equal(editor.hidden, true);
+
+    root.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    await nextTick(); await Promise.resolve(); await nextTick();
+    assert.equal(editor.dataset.state, 'editing'); assert.equal(editor.hidden, false); assert.equal(editor.inert, false);
+    assert.equal(document.activeElement, editor);
+
+    root.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await nextTick(); await Promise.resolve(); await nextTick();
+    assert.equal(editor.dataset.state, 'idle'); assert.equal(editor.hidden, false);
+    assert.equal(editor.inert, true); assert.equal(editor.getAttribute('aria-hidden'), 'true'); assert.equal(editor.tabIndex, -1);
+    assert.notEqual(document.activeElement, editor);
+
+    root.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    await nextTick(); await Promise.resolve(); await nextTick();
+    assert.equal(host.querySelector('[data-part="editor"]'), editor);
+    assert.equal(editor.dataset.state, 'editing'); assert.equal(editor.hidden, false); assert.equal(editor.inert, false);
+    assert.equal(editor.getAttribute('aria-hidden'), null); assert.equal(document.activeElement, editor);
+    await new Promise((resolve) => setTimeout(resolve, 25)); editor.dispatchEvent(new Event('transitionend', { bubbles: true })); await nextTick();
+    assert.equal(editor.hidden, false, 'reopen cancels the stale editor exit');
+
+    editor.value = 'Renamed';
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    editor.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    await nextTick(); await Promise.resolve(); await nextTick();
+    assert.equal(values.get('name'), 'Renamed');
+    assert.equal(editor.dataset.state, 'idle'); assert.equal(editor.hidden, false); assert.equal(editor.inert, true);
+    assert.notEqual(document.activeElement, editor);
+    await new Promise((resolve) => setTimeout(resolve, 25)); editor.dispatchEvent(new Event('transitionend', { bubbles: true }));
+    await nextTick(); await nextTick();
+    assert.equal(editor.hidden, true); assert.equal(editor.inert, false); assert.equal(editor.getAttribute('aria-hidden'), null);
+  } finally {
+    app.unmount(); host.remove();
+  }
 });
 
 test('dialog projects closed presence before measuring exit motion and quarantines retained surfaces', async () => {
@@ -498,6 +914,16 @@ test('[HYD-02] SSR teleports hydrate Select and Toast without mismatch warnings'
     app.unmount(); host.remove(); overlays.remove();
   }
 });
+
+function deferred() {
+  let resolve;
+  const promise = new Promise((next) => { resolve = next; });
+  return { promise, resolve };
+}
+
+function fakeAnimation(finished, endTime) {
+  return { finished, playState: 'running', effect: { getComputedTiming: () => ({ endTime }) } };
+}
 
 function capturePositionedContentInsertions(target) {
   const inserted = [];

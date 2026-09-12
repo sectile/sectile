@@ -147,20 +147,20 @@
     },
     {
       "package": "vue",
-      "javascriptFiles": 110,
-      "declarationFiles": 110,
-      "sourceMapFiles": 110,
+      "javascriptFiles": 112,
+      "declarationFiles": 112,
+      "sourceMapFiles": 112,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 582488,
-        "declarations": 651277,
-        "sourceMaps": 448783,
-        "total": 1682548
+        "javascript": 604291,
+        "declarations": 671946,
+        "sourceMaps": 477833,
+        "total": 1754070
       },
       "packed": {
-        "tarballBytes": 263624,
-        "unpackedBytes": 1699365,
-        "files": 333
+        "tarballBytes": 280915,
+        "unpackedBytes": 1770866,
+        "files": 339
       }
     }
   ]

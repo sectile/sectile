@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "workstream": "issue-118-presence-9c38bfe0e7",
+  "issue": 118,
+  "package": "vue",
+  "baseline": {
+    "javascriptFiles": 110,
+    "declarationFiles": 110,
+    "sourceMapFiles": 110,
+    "declarationMapFiles": 0,
+    "bytes": {
+      "javascript": 582488,
+      "declarations": 651277,
+      "sourceMaps": 448783,
+      "total": 1682548
+    },
+    "packed": {
+      "tarballBytes": 263624,
+      "unpackedBytes": 1699365,
+      "files": 333
+    },
+    "tarballCeilingBytes": 276822
+  },
+  "cleanHeadMeasurement": {
+    "tarballBytes": 275442,
+    "unpackedBytes": 1742467,
+    "files": 330
+  },
+  "current": {
+    "javascriptFiles": 112,
+    "declarationFiles": 112,
+    "sourceMapFiles": 112,
+    "declarationMapFiles": 0,
+    "bytes": {
+      "javascript": 604291,
+      "declarations": 671946,
+      "sourceMaps": 477833,
+      "total": 1754070
+    },
+    "packed": {
+      "tarballBytes": 280915,
+      "unpackedBytes": 1770866,
+      "files": 339
+    }
+  },
+  "deltaFromCleanHead": {
+    "tarballBytes": 5473,
+    "unpackedBytes": 28399,
+    "files": 9
+  },
+  "contributors": [
+    "Shared conditional Presence runtime used by state-driven Vue parts.",
+    "Root-owned repeated-indicator exit retention that keeps update work proportional to changed indicators.",
+    "Form live-region Presence split that preserves tree-shaking for unrelated Form named imports.",
+    "Additive forcePresent contracts and structural Presence logic across affected components."
+  ],
+  "counterEvidence": {
+    "consumerBundleBaselinesRaised": false,
+    "domConsumerBundleShards": "4/4 pass",
+    "vueConsumerBundleShards": "4/4 pass",
+    "formNamedBundle": "Presence closure excluded from unrelated FormDescription named import",
+    "listboxNamedBundle": {
+      "esbuildRawBytes": 39645,
+      "esbuildGzipBytes": 12001,
+      "esbuildBrotliBytes": 10842,
+      "rawCeilingBytes": 40140,
+      "gzipCeilingBytes": 12016,
+      "brotliCeilingBytes": 10842
+    },
+    "runtimeCardinality": "1,000-item Listbox selection change starts exit retention only for the changed previous indicator",
+    "browser": "Chromium verifies retained Listbox indicator transition, structural exits, live-region suppression, TreeGrid editor focus handoff, and popup reopen/focus behavior"
+  },
+  "decision": "Accept the stabilized Vue packed-footprint increase for issue #118 and replace only the Vue source-map footprint baseline. The increase is package artifact overhead for the new Presence contracts, while consumer runtime bundle ceilings remain unchanged and passing."
+}

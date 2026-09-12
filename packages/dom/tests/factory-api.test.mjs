@@ -25,9 +25,11 @@ test('every public DOM component exposes direct and fallible factories', async (
 test('presence observation is exposed only through its focused utility subpath', async () => {
   const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.createPresence, undefined);
+  assert.equal(rootModule.retainExitPresence, undefined);
 
   const presenceModule = await import('../.verification-dist/presence.js');
   assert.equal(typeof presenceModule.createPresence, 'function');
+  assert.equal(typeof presenceModule.retainExitPresence, 'function');
 });
 
 test('identity encoding is exposed only through its focused utility subpath', async () => {

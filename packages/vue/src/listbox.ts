@@ -28,6 +28,12 @@ import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './i
 import { useHostDirection, useHostId, type HostDirection } from './host-provider.js';
 import { reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import {
+  conditionalPresenceProps,
+  useConditionalPresenceRegistry,
+  type ConditionalPresenceProps,
+  type ConditionalPresenceRegistry,
+} from './internal/conditional-presence.js';
 
 export type ListboxSelectionMode = 'single' | 'multiple';
 export type ListboxValue = string | readonly string[];
@@ -77,6 +83,8 @@ export interface ListboxPartProps {
   readonly asChild?: boolean;
 }
 
+export interface ListboxItemIndicatorProps extends ListboxPartProps, ConditionalPresenceProps {}
+
 interface ListboxRootContext {
   readonly selectedIDs: ComputedRef<readonly string[]>;
   readonly selectedIDSet: ComputedRef<ReadonlySet<string>>;
@@ -84,6 +92,7 @@ interface ListboxRootContext {
   readonly disabled: ComputedRef<boolean>;
   readonly readonly: ComputedRef<boolean>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
+  readonly indicatorPresence: ConditionalPresenceRegistry;
   itemID(id: string): string;
   select(id: string, target: HTMLElement): void;
 }
@@ -229,6 +238,7 @@ export const ListboxRoot = defineComponent({
     const selectedIDSet = computed<ReadonlySet<string>>(
       () => new Set(selectedIDs.value),
     );
+    const indicatorPresence = useConditionalPresenceRegistry(selectedIDSet);
     const highlightedValue = computed(() => snapshot.value.state.cursor.current);
     const disabled = computed(() => props.disabled);
     const readonly = computed(() => props.readonly);
@@ -267,6 +277,7 @@ export const ListboxRoot = defineComponent({
       disabled,
       readonly,
       disabledItems,
+      indicatorPresence,
       itemID,
       select,
     });
@@ -371,19 +382,24 @@ export const ListboxItemText = defineComponent({
 export const ListboxItemIndicator = defineComponent({
   name: 'SectileListboxItemIndicator',
   inheritAttrs: false,
-  props: listboxPartProps,
+  props: { ...listboxPartProps, ...conditionalPresenceProps },
   slots: Object as SlotsType<{ default: (props: ListboxItemSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
+    const root = useListboxRootContext('ListboxItemIndicator');
     const item = useListboxItemContext('ListboxItemIndicator');
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-      as: props.as,
-      asChild: props.asChild,
-      hidden: !item.slotProps.value.selected,
-      'aria-hidden': 'true',
-      'data-scope': 'listbox',
-      'data-part': 'item-indicator',
-      'data-state': item.slotProps.value.selected ? 'checked' : 'unchecked',
-    }), { default: () => slots['default']?.(item.slotProps.value) });
+    return (): VNodeChild => {
+      const state = item.slotProps.value;
+      return h(Primitive, mergeProps(attrs, {
+        as: props.as,
+        asChild: props.asChild,
+        elementRef: (element: unknown) => root.indicatorPresence.register(state.value, element),
+        hidden: !root.indicatorPresence.isPresent(state.value, state.selected, props.forcePresent),
+        'aria-hidden': 'true',
+        'data-scope': 'listbox',
+        'data-part': 'item-indicator',
+        'data-state': state.selected ? 'checked' : 'unchecked',
+      }), { default: () => slots['default']?.(state) });
+    };
   },
 });
 

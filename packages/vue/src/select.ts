@@ -16,6 +16,12 @@ import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 import { useHostId, useHostPortalTarget } from './host-provider.js';
 import { usePresence } from './internal/presence.js';
+import {
+  conditionalPresenceProps,
+  useConditionalPresenceRegistry,
+  type ConditionalPresenceProps,
+  type ConditionalPresenceRegistry,
+} from './internal/conditional-presence.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
@@ -46,6 +52,7 @@ export interface SelectRootSlotProps { readonly value: string | null; readonly h
 export interface SelectItemProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface SelectItemSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly disabled: boolean }
 export interface SelectPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface SelectItemIndicatorProps extends SelectPartProps, ConditionalPresenceProps {}
 export interface SelectPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
 
 interface RootContext {
@@ -56,6 +63,7 @@ interface RootContext {
   readonly label: ComputedRef<string | undefined>;
   readonly textValue: ComputedRef<(id: string) => string>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
+  readonly indicatorPresence: ConditionalPresenceRegistry;
   readonly contentID: string;
   itemID(id: string): string;
   registerTrigger(element?: HTMLButtonElement): void;
@@ -119,6 +127,11 @@ export const SelectRoot = defineComponent({
       highlightedValue: highlighted.value, open: props.open ?? localOpen.value,
       disabled: props.disabled, readonly: props.readonly,
     }));
+    const selectedIDSet = computed<ReadonlySet<string>>(() => {
+      const value = props.modelValue !== undefined ? props.modelValue : localValue.value;
+      return value === null ? new Set() : new Set([value]);
+    });
+    const indicatorPresence = useConditionalPresenceRegistry(selectedIDSet);
     const refresh = (): void => {
       const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return;
       localValue.value = snapshot.choice.selection.selected[0] ?? null; highlighted.value = snapshot.choice.cursor.current; localOpen.value = snapshot.open;
@@ -178,6 +191,7 @@ export const SelectRoot = defineComponent({
     provide<RootContext>(rootKey, {
       state, unmountOnExit, position, strategy, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
       disabledItems: computed(() => new Set(props.disabledItems)),
+      indicatorPresence,
       registerTrigger: (element) => {
         trigger.value = element;
         if (element === undefined) {
@@ -293,11 +307,25 @@ export const SelectItem = defineComponent({
 });
 
 export const SelectItemIndicator = defineComponent({
-  name: 'SectileSelectItemIndicator', inheritAttrs: false, props: partProps,
+  name: 'SectileSelectItemIndicator', inheritAttrs: false, props: { ...partProps, ...conditionalPresenceProps },
   slots: Object as SlotsType<{ default: (props: SelectItemSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const item = useItem('SelectItemIndicator'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, hidden: !item.state.value.selected, 'aria-hidden': 'true', 'data-scope': 'select', 'data-part': 'item-indicator',
-  }), { default: () => slots['default']?.(item.state.value) }); },
+  setup(props, { attrs, slots }) {
+    const root = useRoot('SelectItemIndicator');
+    const item = useItem('SelectItemIndicator');
+    return (): VNodeChild => {
+      const state = item.state.value;
+      return h(Primitive, mergeProps(attrs, {
+        as: props.as,
+        asChild: props.asChild,
+        elementRef: (element: unknown) => root.indicatorPresence.register(state.value, element),
+        hidden: !root.indicatorPresence.isPresent(state.value, state.selected, props.forcePresent),
+        'aria-hidden': 'true',
+        'data-scope': 'select',
+        'data-part': 'item-indicator',
+        'data-state': state.selected ? 'checked' : 'unchecked',
+      }), { default: () => slots['default']?.(state) });
+    };
+  },
 });
 
 export const SelectViewport = defineComponent({

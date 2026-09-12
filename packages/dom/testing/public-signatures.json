@@ -291,7 +291,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "4e96c416419e731bab0f493950b261bf2e963776a2fcf5c322a9f6c93650bf54",
+  "fingerprint": "58e215e06b8276f624a4f008e209bb066434cf971b764d7bf97c67bcbd0628b1",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -307,7 +307,7 @@
     },
     {
       "path": "dist/carousel.d.ts",
-      "sha256": "94c34aef704ffdafb8dbd0199746968dfc8f959166a98393c5fe470c42c791e6"
+      "sha256": "cdb7f94aa7ec16777489249cd4591fed83f7f007a4ea337bac363b9565aba116"
     },
     {
       "path": "dist/cascade-list.d.ts",
@@ -315,7 +315,7 @@
     },
     {
       "path": "dist/cascade-select.d.ts",
-      "sha256": "c0959d877979cbb6b907531b7c44324c5e7ba8e64856d8f8efe82f98169ceb20"
+      "sha256": "0a5219beb89fb8fbf253b1c9894aca81c44b2a01604a098427a6ced699802ee8"
     },
     {
       "path": "dist/chart.d.ts",
@@ -335,7 +335,7 @@
     },
     {
       "path": "dist/combobox.d.ts",
-      "sha256": "4872af88f1644286d35bea2ed5ec0fe6aa33a9c8f8d0ac3ae3155bb8e5b51be6"
+      "sha256": "6403822f03001896146cdfd67c01521d6e2ddf13affda6c11cceb1faaf619251"
     },
     {
       "path": "dist/data-grid.d.ts",
@@ -355,7 +355,7 @@
     },
     {
       "path": "dist/date-picker.d.ts",
-      "sha256": "93b9852a414e39f35cef0bb81adad46a7980fadb8da9942646a38a66a0bea74d"
+      "sha256": "7c3a894238a53b03a23298de28a5cd6cb249968448cf3e36223d323af2ae2f4a"
     },
     {
       "path": "dist/date-range-field.d.ts",
@@ -363,7 +363,7 @@
     },
     {
       "path": "dist/date-range-picker.d.ts",
-      "sha256": "3080f98e682f5c9b8b916f46280751a9d79816e451d3526f74468a6a42d5b40c"
+      "sha256": "a4f8da88bb4402a9ff9bafaf24124ff2cd3dea155d53182945a503b9aa7059e2"
     },
     {
       "path": "dist/date-time-field.d.ts",
@@ -371,11 +371,11 @@
     },
     {
       "path": "dist/date-time-picker.d.ts",
-      "sha256": "9911d60ccb35100e8d0b39c05aa41c2c68e605805dff91c817c08455a78423fa"
+      "sha256": "2ec44b9941f500bf72d9a78e1315a3ad6e9f6b59784353d699b86015b790d20a"
     },
     {
       "path": "dist/date-time-range-picker.d.ts",
-      "sha256": "e827caeb4fa8d51fb979ef11a49f9475be86937e7a225b97e958a06391243ce6"
+      "sha256": "59f63032a7f09b6cb88d6ad9520ca95f80ce28508dae5a16fea55bb45c3396a4"
     },
     {
       "path": "dist/dialog.d.ts",
@@ -399,7 +399,7 @@
     },
     {
       "path": "dist/form.d.ts",
-      "sha256": "c8976ae697a3c82ea519d823d27b5274ee67d31be61aa0b7b37c44a23014cd90"
+      "sha256": "f24f4547de478f7ea276979edd57fadd65c712aa83c7b882a01a0f5fc9f920ec"
     },
     {
       "path": "dist/grid.d.ts",
@@ -515,7 +515,7 @@
     },
     {
       "path": "dist/presence.d.ts",
-      "sha256": "31325b84ba2b9797b733f7a9736f9264e2db4c0c1cc6fb5e13cc2dbf3dea3a91"
+      "sha256": "d476d90fdb0379f178e723eab19b6a0b09c374864f6fdf7d1ca1646b2b240e21"
     },
     {
       "path": "dist/progress.d.ts",

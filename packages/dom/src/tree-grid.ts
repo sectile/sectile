@@ -494,14 +494,17 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
   public focusCurrent(): void {
     queueMicrotask((): void => {
       if (!this.#active) return;
-      const current = this.#controller.getSnapshot().state.cursor.current;
+      const state = this.#controller.getSnapshot().state;
+      const current = state.cursor.current;
       if (current === null) {
         this.#root.focus();
         return;
       }
       for (const element of this.#root.querySelectorAll<HTMLElement>('[data-cell-id]')) {
         if (element.dataset['cellId'] !== stableIDToken(current)) continue;
-        const input = element.querySelector<HTMLInputElement>('input');
+        const input = state.editMode === 'editing'
+          ? element.querySelector<HTMLInputElement>('input')
+          : null;
         if (input !== null) {
           input.focus();
           input.select();

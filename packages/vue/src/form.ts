@@ -2,7 +2,6 @@ import {
   computed,
   defineComponent,
   h,
-  inject,
   mergeProps,
   nextTick,
   onBeforeUnmount,
@@ -30,7 +29,6 @@ import {
 } from '@sectile/dom/form';
 import {
   getFormFieldIDByPath,
-  getFormIssuesBySource,
   type FormFieldMetaInput as DomainFormFieldMetaInput,
   type FormFieldState as DomainFormFieldState,
   type FormIssue as DomainFormIssue,
@@ -74,6 +72,16 @@ import {
 import { useNextTickTask } from './internal/scheduled-task.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostId } from './host-provider.js';
+import type { ConditionalPresenceProps } from './internal/conditional-presence.js';
+import {
+  formContextKey,
+  formFieldContextKey,
+  useFormContext,
+  useFormFieldContext,
+  useFormSelectorFromContext,
+  type FormContext,
+  type FormFieldContext,
+} from './internal/form-context.js';
 
 export interface FormState extends DomainFormState<string> {}
 export interface FormFieldState extends DomainFormFieldState<string> {}
@@ -352,41 +360,14 @@ export interface FormPartProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
+export interface FormMessageProps extends FormPartProps, ConditionalPresenceProps {}
+export interface FormSummaryProps extends FormPartProps, ConditionalPresenceProps {}
 
 interface RegisteredParticipant {
   readonly participant: FormParticipant<string>;
   unregister?: () => void;
 }
 
-interface FormContext {
-  readonly summary: ShallowRef<HTMLElement | null>;
-  readonly summaryId: string;
-  readonly register: (participant: FormParticipant<string>) => () => void;
-  readonly setFieldDiagnostic: (id: string, issue: FormIssue | null) => void;
-  readonly connection: ShallowRef<FormConnection<string> | null>;
-}
-
-interface FormFieldContext {
-  readonly slotProps: ComputedRef<FormFieldSlotProps>;
-  readonly labelMode: ComputedRef<FormLabelMode>;
-  readonly registerControl: (registration: FormControlRegistration) => () => void;
-  readonly attributesFor: (
-    registration: FormControlRegistration,
-  ) => Readonly<Record<string, unknown>>;
-}
-
-const formContextKey = Symbol('SectileForm');
-const formFieldContextKey = Symbol('SectileFormField');
-const emptyState: FormState = Object.freeze({
-  validation: Object.freeze({ generation: 0, status: 'idle', trigger: null, intent: null }),
-  submission: Object.freeze({ generation: 0, status: 'idle', count: 0, failure: null }),
-  touched: false,
-  dirty: false,
-  valid: true,
-  fields: Object.freeze([]),
-  issues: Object.freeze([]),
-  allIssues: Object.freeze([]),
-});
 const partProps = {
   as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
   asChild: { type: Boolean, default: false },
@@ -493,6 +474,7 @@ const FormRootImpl = defineComponent({
     const configuration = () => ({
       ...(summary.value === null ? {} : { summary: summary.value }),
       renderSummaryContent: false,
+      manageSummaryVisibility: false,
       ...(props.schema === undefined ? {} : { schema: props.schema }),
       ...(props.validate === undefined ? {} : { validate: props.validate }),
       validateOn: props.validateOn,
@@ -677,38 +659,6 @@ function submissionErrorFailure(): FormSubmissionFailure {
   return Object.freeze({
     message: 'Form submission failed.',
   });
-}
-
-function useFormSelectorFromContext<Selected>(
-  context: FormContext,
-  selectorSource: () => FormSelectorFunction<Selected>,
-  equalsSource: () => NonNullable<FormSubscribeOptions<Selected>['equals']> = () => Object.is,
-): Readonly<ShallowRef<Selected>> {
-  const initialSelector = selectorSource();
-  const selected = shallowRef(
-    initialSelector(context.connection.value?.state ?? emptyState),
-  ) as ShallowRef<Selected>;
-  let unsubscribe: (() => void) | undefined;
-  const stop = watch(
-    [context.connection, selectorSource, equalsSource],
-    ([target, selector, equals]) => {
-      unsubscribe?.();
-      unsubscribe = undefined;
-      const next = selector(target?.state ?? emptyState);
-      if (!equals(selected.value, next)) selected.value = next;
-      if (target !== null) {
-        unsubscribe = target.subscribeForm(selector, (value) => {
-          selected.value = value;
-        }, { equals });
-      }
-    },
-    { immediate: true, flush: 'sync' },
-  );
-  onScopeDispose(() => {
-    unsubscribe?.();
-    stop();
-  });
-  return selected;
 }
 
 function useFormFieldSelectorFromContext<Selected>(
@@ -1255,74 +1205,7 @@ export const FormDescription = defineComponent({
   },
 });
 
-export const FormMessage = defineComponent({
-  name: 'SectileFormMessage', inheritAttrs: false,
-  props: { ...partProps, as: { ...partProps.as, default: 'p' } },
-  slots: Object as SlotsType<{ default: (props: FormFieldSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) {
-    const field = useFormFieldContext('FormMessage');
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-      as: props.as,
-      asChild: props.asChild,
-      id: field.slotProps.value.messageId,
-      hidden: field.slotProps.value.valid,
-      role: 'alert',
-      'aria-live': 'polite',
-      'data-scope': 'form',
-      'data-part': 'message',
-    }), {
-      default: () => slots['default']?.(field.slotProps.value)
-        ?? field.slotProps.value.issues.map((issue) => issue.message).join(' '),
-    });
-  },
-});
-
-export const FormSummary = defineComponent({
-  name: 'SectileFormSummary', inheritAttrs: false,
-  props: partProps,
-  slots: Object as SlotsType<{ default: (props: FormSummarySlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) {
-    const form = useFormContext('FormSummary');
-    const valid = useFormSelectorFromContext(form, () => (state) => state.valid);
-    const validation = useFormSelectorFromContext(form, () => (state) => state.validation);
-    const submission = useFormSelectorFromContext(form, () => (state) => state.submission);
-    const issues = useFormSelectorFromContext(form, () => (state) => state.allIssues);
-    const serverIssues = useFormSelectorFromContext(
-      form,
-      () => (state) => getFormIssuesBySource(state, 'server'),
-    );
-    const firstIssue = useFormSelectorFromContext(
-      form,
-      () => (state) => state.allIssues[0] ?? null,
-    );
-    const slotProps = computed<FormSummarySlotProps>(() => Object.freeze({
-      validation: validation.value,
-      submission: submission.value,
-      issues: issues.value,
-      serverIssues: serverIssues.value,
-      firstIssue: firstIssue.value,
-      valid: valid.value,
-    }));
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-      as: props.as,
-      asChild: props.asChild,
-      id: form.summaryId,
-      elementRef: (element: unknown) => { form.summary.value = element as HTMLElement | null; },
-      role: 'alert',
-      'aria-live': 'polite',
-      tabindex: -1,
-      hidden: issues.value.length === 0 && submission.value.failure === null,
-      'data-scope': 'form',
-      'data-part': 'summary',
-    }), {
-      default: () => slots['default']?.(slotProps.value)
-        ?? [
-          submission.value.failure?.message,
-          ...issues.value.map((issue) => issue.message),
-        ].filter((message): message is string => message !== undefined).join(' '),
-    });
-  },
-});
+export { FormMessage, FormSummary } from './internal/form-presence-parts.js';
 
 export const FormReset = defineComponent({
   name: 'SectileFormReset', inheritAttrs: false,
@@ -1393,18 +1276,6 @@ function renderFieldPart(
     'data-scope': 'form',
     'data-part': part,
   }), { default: () => slots.default?.() });
-}
-
-function useFormContext(part: string): FormContext {
-  const context = inject<FormContext | null>(formContextKey, null);
-  if (context === null) throw new TypeError(`${part} must be rendered inside FormRoot.`);
-  return context;
-}
-
-function useFormFieldContext(part: string): FormFieldContext {
-  const context = inject<FormFieldContext | null>(formFieldContextKey, null);
-  if (context === null) throw new TypeError(`${part} must be rendered inside FormField.`);
-  return context;
 }
 
 function resolveElement<ElementType extends HTMLElement>(

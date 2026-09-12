@@ -41,6 +41,7 @@ export interface DatePickerOptions extends PickerPositionOptions {
   readonly readOnly?: boolean;
   readonly required?: boolean;
   readonly label?: string;
+  readonly manageVisibility?: boolean;
   readonly onValueChange?: (value: DateValue | null) => void;
   readonly onHighlightedValueChange?: (value: DateValue) => void;
   readonly onOpenChange?: (open: boolean) => void;
@@ -96,7 +97,7 @@ class DOMDatePicker implements DatePickerConnection {
     this.#keyEvent = (options as InternalDatePickerOptions).createKeyEvent?.(runtime.getSnapshot().state.highlighted.year) ?? keyEvent;
     this.controls = controls;
     this.stateFactory = stateFactory;
-    const manageVisibility = (options as DatePickerOptions & { readonly manageVisibility?: boolean }).manageVisibility;
+    const manageVisibility = options.manageVisibility;
     this.#visibility = manageVisibility === false ? undefined : createHiddenBinding(options.root);
     this.#layer = createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close'); } });
     this.#position = createPickerPosition(options.root, options.trigger, options);
