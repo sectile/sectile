@@ -1,6 +1,7 @@
 import { createSSRApp, nextTick } from 'vue';
 import { createHydrationFixture } from './hydration-fixture.mjs';
 import { runDocumentVirtualScenarios } from './document-virtual-fixture.mjs?wi=110';
+import { runHighLevelDocumentVirtualScenarios } from './high-level-document-virtual-fixture.mjs?wi=112';
 import { runPopupPresenceFocusScenarios } from './popup-presence-focus-fixture.mjs';
 import { runTabularVirtualScenarios } from './tabular-virtual-fixture.mjs?wi=15e';
 
@@ -153,6 +154,14 @@ try {
   failures.push(`document virtual exception: ${error instanceof Error ? error.message : String(error)}`);
   documentVirtual = Object.freeze({ ok: false });
 }
+let highLevelDocumentVirtual;
+try {
+  highLevelDocumentVirtual = await runHighLevelDocumentVirtualScenarios();
+  if (!highLevelDocumentVirtual.ok) failures.push('high-level document virtual');
+} catch (error) {
+  failures.push(`high-level document virtual exception: ${error instanceof Error ? error.message : String(error)}`);
+  highLevelDocumentVirtual = Object.freeze({ ok: false });
+}
 let tabularVirtual;
 try {
   tabularVirtual = await runTabularVirtualScenarios();
@@ -190,11 +199,13 @@ const result = Object.freeze({
   }),
   popupPresenceFocus,
   documentVirtual,
+  highLevelDocumentVirtual,
   tabularVirtual,
 });
 window.__SECTILE_BROWSER_RESULT__ = result;
 console.info('Sectile browser verification:', JSON.stringify({ ok: result.ok, failures, warnings }));
 console.info('Sectile document virtual:', JSON.stringify(documentVirtual));
+console.info('Sectile high-level document virtual:', JSON.stringify(highLevelDocumentVirtual));
 for (const [scenario, evidence] of Object.entries(popupPresenceFocus)) {
   console.info('Sectile popup focus:', scenario, JSON.stringify(evidence));
 }

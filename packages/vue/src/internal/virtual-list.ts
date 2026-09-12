@@ -200,18 +200,10 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       }
       const total = extents.reduce((sum, extent) => sum + extent, 0)
         + gap * Math.max(0, extents.length - 1);
-      const scrollport = root.value?.scrollport.value;
-      const elementScrollport = scrollport?.nodeType === 1
-        ? scrollport as HTMLElement
-        : null;
-      const measuredViewportExtent = axis === 'vertical'
-        ? elementScrollport?.clientHeight ?? 0
-        : elementScrollport?.clientWidth ?? 0;
-      const viewportExtent = measuredViewportExtent > 0
-        ? measuredViewportExtent
-        : axis === 'vertical'
-          ? initialViewport?.height ?? 0
-          : initialViewport?.width ?? 0;
+      const viewport = root.value?.plan?.viewport;
+      const viewportExtent = axis === 'vertical'
+        ? viewport?.height ?? initialViewport?.height ?? 0
+        : viewport?.width ?? initialViewport?.width ?? 0;
       const target = viewportExtent + bootstrapTrailingOverscanExtent(props.overscan, axis);
       const average = extents.reduce((sum, extent) => sum + extent, 0) / extents.length;
       if (target > total && count < prepared.value.domain.size) {
@@ -386,7 +378,9 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
         measure: measure as unknown as VirtualizerRootProps['measure'],
       }),
       as: props.as,
-      style: [{ overflow: 'auto' }, attrs['style']],
+      style: attrs['scrollport'] === undefined || attrs['scrollport'] === 'root'
+        ? [{ overflow: 'auto' }, attrs['style']]
+        : attrs['style'],
       'data-virtual-layout': 'virtual-list',
       'data-phase': phase(),
       onStateChange: (value: object) => {

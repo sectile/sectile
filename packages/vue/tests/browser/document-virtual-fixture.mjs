@@ -35,7 +35,9 @@ export async function runDocumentVirtualScenarios() {
       top: options.top ?? window.scrollY,
       behavior: options.behavior ?? 'auto',
     });
-    return nativeScrollTo(optionsOrX, y);
+    return typeof optionsOrX === 'number'
+      ? nativeScrollTo(optionsOrX, y ?? window.scrollY)
+      : nativeScrollTo(optionsOrX);
   };
   document.documentElement.style.scrollBehavior = 'smooth';
 
@@ -209,7 +211,10 @@ function browserPlan(state, viewport, placementY) {
     anchor: placement.visible
       ? Object.freeze({
           id: placement.id,
-          viewportOffset: Object.freeze({ x: -viewport.x, y: -viewport.y }),
+          viewportOffset: Object.freeze({
+            x: placement.rect.x - viewport.x,
+            y: placement.rect.y - viewport.y,
+          }),
         })
       : null,
   });

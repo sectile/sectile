@@ -125,6 +125,193 @@ test('VirtualList public expose preserves scrollport and surface refs', async ()
   }
 });
 
+test('high-level virtual collections forward physical scrollport targets without nested List scrolling', async () => {
+  const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 80; } });
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return 120; } });
+  const host = document.createElement('div');
+  const external = document.createElement('div');
+  document.body.append(host, external);
+  const target = shallowRef(document);
+  const list = ref();
+  const grid = ref();
+  const masonry = ref();
+  const spatial = ref();
+  const items = Object.freeze([{ id: 'item' }]);
+  const common = {
+    items,
+    getID: (value) => value.id,
+    overscan: 0,
+    initialViewport: { x: 0, y: 0, width: 120, height: 80 },
+  };
+  const app = createApp({
+    render: () => h('div', [
+      h(VirtualList, {
+        ...common,
+        ref: list,
+        scrollport: target.value,
+        sizePolicy: { kind: 'fixed', extent: 20 },
+        style: { minHeight: '1px' },
+      }, { item: ({ id }) => id }),
+      h(VirtualGrid, {
+        ...common,
+        ref: grid,
+        scrollport: target.value,
+        sizePolicy: { kind: 'fixed', extent: 20 },
+        lanePolicy: { kind: 'fixed', count: 1 },
+      }, { item: ({ id }) => id }),
+      h(VirtualMasonry, {
+        ...common,
+        ref: masonry,
+        scrollport: target.value,
+        sizePolicy: { kind: 'fixed', extent: 20 },
+        lanePolicy: { kind: 'fixed', count: 1 },
+      }, { item: ({ id }) => id }),
+      h(VirtualSpatial, {
+        ...common,
+        ref: spatial,
+        scrollport: target.value,
+        getRect: () => ({ x: 0, y: 0, width: 20, height: 20 }),
+        sizeOwnership: 'declared',
+      }, { item: ({ id }) => id }),
+    ]),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    const roots = [...host.querySelectorAll('[data-virtual-layout][data-part="root"]')];
+    const surfaces = roots.map((root) => root.querySelector('[data-part="surface"]'));
+    assert.equal(roots.length, 4);
+    for (const exposed of [list, grid, masonry, spatial]) {
+      assert.equal(exposed.value.scrollport.value, document);
+    }
+    assert.equal(roots[0].style.overflow, '');
+    assert.equal(roots[0].style.minHeight, '1px');
+
+    target.value = external;
+    await settle();
+    for (const exposed of [list, grid, masonry, spatial]) {
+      assert.equal(exposed.value.scrollport.value, external);
+    }
+    assert.equal(roots[0].style.overflow, '');
+
+    target.value = null;
+    await settle();
+    for (const exposed of [list, grid, masonry, spatial]) {
+      assert.equal(exposed.value.scrollport.value, null);
+      assert.equal(exposed.value.flush().error.code, 'virtualizer-not-connected');
+    }
+
+    target.value = 'root';
+    await settle();
+    for (let index = 0; index < roots.length; index += 1) {
+      const exposed = [list, grid, masonry, spatial][index];
+      assert.equal(exposed.value.scrollport.value, roots[index]);
+      assert.equal(host.querySelectorAll('[data-virtual-layout][data-part="root"]')[index], roots[index]);
+      assert.equal(roots[index].querySelector('[data-part="surface"]'), surfaces[index]);
+    }
+    assert.equal(roots[0].style.overflow, 'auto');
+    assert.equal(roots[0].style.minHeight, '1px');
+  } finally {
+    app.unmount();
+    host.remove();
+    external.remove();
+    if (heightDescriptor === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
+    if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
+  }
+});
+
+test('document page movement reprojects high-level viewports without repairing layout geometry', async () => {
+  const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  let viewportWidth = 120;
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 100; } });
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return viewportWidth; } });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const grid = ref();
+  const masonry = ref();
+  const spatial = ref();
+  const items = Object.freeze(Array.from({ length: 12 }, (_, id) => ({ id })));
+  const common = {
+    scrollport: 'document',
+    items,
+    getID: (value) => value.id,
+    overscan: 0,
+    initialViewport: { x: 0, y: 0, width: 120, height: 100 },
+  };
+  const lanePolicy = { kind: 'responsive', minExtent: 50, maxCount: 6, gap: 10 };
+  const app = createApp({
+    render: () => h('div', [
+      h(VirtualGrid, {
+        ...common,
+        ref: grid,
+        sizePolicy: { kind: 'fixed', extent: 20 },
+        lanePolicy,
+      }, { item: ({ id }) => String(id) }),
+      h(VirtualMasonry, {
+        ...common,
+        ref: masonry,
+        sizePolicy: { kind: 'fixed', extent: 20 },
+        lanePolicy,
+      }, { item: ({ id }) => String(id) }),
+      h(VirtualSpatial, {
+        ...common,
+        ref: spatial,
+        getRect: (_value, index) => ({ x: 0, y: index * 20, width: 20, height: 20 }),
+        sizeOwnership: 'declared',
+      }, { item: ({ id }) => String(id) }),
+    ]),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    assert.equal(grid.value.state.columns.size, 2);
+    assert.equal(masonry.value.state.laneCount, 2);
+    const gridState = grid.value.state;
+    const masonryState = masonry.value.state;
+    const spatialState = spatial.value.state;
+    const initialY = grid.value.plan.viewport.y;
+
+    browserWindow.scrollTo({ left: 0, top: 40 });
+    document.dispatchEvent(new browserWindow.Event('scroll'));
+    grid.value.flush();
+    masonry.value.flush();
+    spatial.value.flush();
+    await settle();
+    assert.notEqual(grid.value.plan.viewport.y, initialY);
+    assert.equal(grid.value.state, gridState);
+    assert.equal(masonry.value.state, masonryState);
+    assert.equal(spatial.value.state, spatialState);
+    assert.equal(grid.value.state.columns.size, 2);
+    assert.equal(masonry.value.state.laneCount, 2);
+
+    viewportWidth = 240;
+    browserWindow.dispatchEvent(new browserWindow.Event('resize'));
+    grid.value.flush();
+    masonry.value.flush();
+    spatial.value.flush();
+    await settle();
+    await settle();
+    assert.equal(grid.value.state.columns.size, 4);
+    assert.equal(masonry.value.state.laneCount, 4);
+    assert.equal(spatial.value.state, spatialState);
+  } finally {
+    browserWindow.scrollTo({ left: 0, top: 0 });
+    app.unmount();
+    host.remove();
+    if (heightDescriptor === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
+    if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
+  }
+});
+
 test('VirtualList renders intrinsic rows without per-item Sectile wrappers and reconciles keyed data', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
   const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
@@ -461,6 +648,71 @@ test('VirtualList separates fixed sizes from automatic DOM measurement', async (
     fixed.value.flush();
     await settle();
     assert.deepEqual(fixed.value.state.extents.extentAt(0), { kind: 'exact', value: 20 });
+  } finally {
+    app.unmount();
+    host.remove();
+    if (heightDescriptor === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
+    if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
+    if (boundsDescriptor === undefined) delete HTMLElement.prototype.getBoundingClientRect;
+    else Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', boundsDescriptor);
+  }
+});
+
+test('VirtualList document bootstrap uses the projected plan viewport instead of an element scrollport', async () => {
+  const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  const boundsDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'getBoundingClientRect');
+  const bootstrapReads = new Set();
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 80; } });
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return 120; } });
+  Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
+    configurable: true,
+    value() {
+      if (this.dataset.documentBootstrap !== undefined) {
+        bootstrapReads.add(Number(this.dataset.documentBootstrap));
+        return {
+          x: 0, y: 0, top: 0, right: 120, bottom: 20, left: 0,
+          width: 120, height: 20, toJSON() {},
+        };
+      }
+      return boundsDescriptor?.value?.call(this) ?? {
+        x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0,
+        width: 0, height: 0, toJSON() {},
+      };
+    },
+  });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const list = ref();
+  const items = Object.freeze(Array.from({ length: 10 }, (_, id) => ({ id })));
+  const app = createApp({
+    render: () => h(VirtualList, {
+      ref: list,
+      scrollport: 'document',
+      items,
+      getID: (value) => value.id,
+      sizePolicy: { kind: 'measured' },
+      overscan: 0,
+      initialViewport: { x: 0, y: 0, width: 120, height: 20 },
+      itemAttributes: (value) => ({ 'data-document-bootstrap': String(value.id) }),
+    }, { item: ({ id }) => String(id) }),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    await settle();
+    const root = host.querySelector('[data-virtual-layout="virtual-list"][data-part="root"]');
+    assert.equal(root.getAttribute('data-phase'), 'ready');
+    assert.equal(list.value.scrollport.value, document);
+    assert.equal(list.value.plan.viewport.height, 80);
+    assert.ok(bootstrapReads.has(0));
+    assert.ok(bootstrapReads.has(1));
+    assert.ok(bootstrapReads.has(2));
+    assert.ok(bootstrapReads.has(3));
+    assert.deepEqual(list.value.state.extents.extentAt(9), { kind: 'unknown', fallback: 20 });
   } finally {
     app.unmount();
     host.remove();

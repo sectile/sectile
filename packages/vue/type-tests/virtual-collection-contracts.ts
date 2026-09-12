@@ -1,7 +1,7 @@
 import type { StableID } from '@sectile/core';
 import type { ShallowRef } from 'vue';
 import type { VirtualSizePolicy, VirtualLanePolicy } from '@sectile/virtual/collection';
-import type { VirtualLayoutPlan } from '@sectile/dom/virtual';
+import type { VirtualLayoutPlan, VirtualScrollport } from '@sectile/dom/virtual';
 import type {
   VirtualCollectionExpose,
   VirtualCollectionItemSlotProps,
@@ -31,11 +31,15 @@ type StringValue = Readonly<{ id: string; label: string }>;
 
 declare const numberItems: readonly NumberValue[];
 declare const stringItems: readonly StringValue[];
+declare const elementScrollport: HTMLElement;
+declare const documentScrollport: Document;
+declare const browserWindow: Window;
 
 const numberList: VirtualListPublicProps<NumberValue, number> = {
   items: numberItems,
   getID: (value) => value.id,
   sizePolicy: { kind: 'fixed', extent: 24 },
+  scrollport: 'document',
 };
 numberList.getID(numberItems[0]!, 0) satisfies number;
 numberList.sizePolicy satisfies VirtualSizePolicy<NumberValue>;
@@ -60,6 +64,7 @@ const numberGrid: VirtualGridPublicProps<NumberValue, number> = {
   getID: (value) => value.id,
   sizePolicy: { kind: 'fixed', extent: 24 },
   lanePolicy: { kind: 'fixed', count: 2 },
+  scrollport: elementScrollport,
 };
 void numberGrid;
 
@@ -68,6 +73,7 @@ const numberMasonry: VirtualMasonryPublicProps<NumberValue, number> = {
   getID: (value) => value.id,
   sizePolicy: { kind: 'estimated', estimate: 24 },
   lanePolicy: { kind: 'fixed', count: 2 },
+  scrollport: documentScrollport,
 };
 numberMasonry.sizePolicy satisfies VirtualSizePolicy<NumberValue>;
 numberMasonry.lanePolicy satisfies VirtualLanePolicy;
@@ -77,8 +83,17 @@ const numberSpatial: VirtualSpatialPublicProps<NumberValue, number> = {
   getID: (value) => value.id,
   getRect: (_value, index) => ({ x: 0, y: index * 20, width: 20, height: 20 }),
   sizeOwnership: 'declared',
+  scrollport: null,
 };
 numberSpatial.sizeOwnership satisfies VirtualSpatialSizeOwnership;
+
+'root' satisfies VirtualListPublicProps<NumberValue, number>['scrollport'];
+'document' satisfies VirtualGridPublicProps<NumberValue, number>['scrollport'];
+elementScrollport satisfies VirtualMasonryPublicProps<NumberValue, number>['scrollport'];
+documentScrollport satisfies VirtualSpatialPublicProps<NumberValue, number>['scrollport'];
+null satisfies VirtualListPublicProps<NumberValue, number>['scrollport'];
+// @ts-expect-error Window is not a supported physical scrollport target.
+browserWindow satisfies VirtualGridPublicProps<NumberValue, number>['scrollport'];
 
 declare const commonSlot: VirtualCollectionItemSlotProps<NumberValue, number>;
 commonSlot.id satisfies number;
@@ -96,7 +111,7 @@ declare const spatialSlot: VirtualSpatialSlotProps<NumberValue, number>;
 spatialSlot.id satisfies number;
 
 declare const commonExpose: VirtualCollectionExpose<object, StableID>;
-commonExpose.scrollport satisfies ShallowRef<HTMLElement | null | undefined>;
+commonExpose.scrollport satisfies ShallowRef<VirtualScrollport | null | undefined>;
 commonExpose.surface satisfies ShallowRef<HTMLElement | null | undefined>;
 commonExpose.plan satisfies VirtualLayoutPlan<StableID> | null;
 commonExpose.phase satisfies VirtualCollectionPhase;

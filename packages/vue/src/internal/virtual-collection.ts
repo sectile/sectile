@@ -30,6 +30,7 @@ import {
   type VirtualPoint,
   type VirtualRect,
   type VirtualScrollAlignment,
+  type VirtualScrollport,
 } from '@sectile/dom/virtual';
 import {
   useVirtualizerSurfaceRegistration,
@@ -37,6 +38,7 @@ import {
   type VirtualizerItemSize,
   type VirtualizerOperationResult,
   type VirtualizerRootExpose,
+  type VirtualizerScrollportTarget,
 } from './virtual-core.js';
 
 export type VirtualCollectionIDResolver<
@@ -64,6 +66,7 @@ export interface VirtualCollectionBaseProps<
   readonly getID: VirtualCollectionIDResolver<Value, ID>;
   readonly overscan?: number | Partial<VirtualInsets>;
   readonly viewportInsets?: number | Partial<VirtualInsets>;
+  readonly scrollport?: VirtualizerScrollportTarget | null;
   readonly maxItems?: number;
   readonly initialViewport?: VirtualRect;
   readonly as?: string;
@@ -106,7 +109,7 @@ export interface VirtualCollectionExpose<
   State,
   ID extends StableID = StableID,
 > {
-  readonly scrollport: ShallowRef<HTMLElement | null | undefined>;
+  readonly scrollport: ShallowRef<VirtualScrollport | null | undefined>;
   readonly surface: ShallowRef<HTMLElement | null | undefined>;
   readonly state: State;
   readonly plan: VirtualLayoutPlan<ID> | null;
@@ -400,13 +403,10 @@ export function createVirtualCollectionExpose<State>(
   initialState: State,
   phase: () => VirtualCollectionPhase,
 ): VirtualCollectionExpose<State, StableID> {
-  const emptyScrollport = shallowRef<HTMLElement | null>(null);
+  const emptyScrollport = shallowRef<VirtualScrollport | null>(null);
   const emptySurface = shallowRef<HTMLElement | null>(null);
   return shallowReactive({
-    get scrollport() {
-      return root.value?.scrollport as ShallowRef<HTMLElement | null | undefined> | undefined
-        ?? emptyScrollport;
-    },
+    get scrollport() { return root.value?.scrollport ?? emptyScrollport; },
     get surface() { return root.value?.surface ?? emptySurface; },
     get state() { return (root.value?.state as State | undefined) ?? initialState; },
     get plan() { return root.value?.plan ?? null; },
