@@ -616,7 +616,7 @@ function cleanGeneratedOutputs() {
     rmSync(join(root, 'packages', entry.directory, '.verification-dist'), { recursive: true, force: true });
   }
   rmSync(publicationPackDirectory, { recursive: true, force: true });
-  if (includeDocumentation) rmSync(join(root, 'docs', '.vitepress', 'dist'), { recursive: true, force: true });
+  if (includeDocumentation) rmSync(join(root, 'docs', 'dist'), { recursive: true, force: true });
 }
 
 function fileMatchesExplicitTargets(path) {

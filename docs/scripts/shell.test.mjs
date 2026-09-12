@@ -1,0 +1,110 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import test from 'node:test';
+import {
+  areas,
+  examplePath,
+  examples,
+  hosts,
+  validateExampleCatalog,
+} from '../src/examples/catalog.ts';
+import { routes } from '../src/routes.ts';
+
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+
+test('the active documentation package is a Vue and Vite shell', async () => {
+  const packageJSON = JSON.parse(await read('package.json'));
+  const dependencySurface = JSON.stringify({
+    dependencies: packageJSON.dependencies,
+    devDependencies: packageJSON.devDependencies,
+    scripts: packageJSON.scripts,
+  });
+
+  assert.equal(packageJSON.dependencies.vue, '^3.5.22');
+  assert.equal(packageJSON.scripts.dev, 'vite --host 127.0.0.1');
+  assert.equal(packageJSON.scripts.build, 'vite build && node scripts/materialize-routes.mjs');
+  assert.doesNotMatch(dependencySurface, /vitepress/u);
+});
+
+test('the shell derives separate Vue and DOM package and example routes', () => {
+  const paths = routes.map((route) => route.path);
+
+  assert.equal(paths[0], '/');
+  assert.equal(new Set(paths).size, paths.length);
+  for (const host of hosts) {
+    assert.ok(paths.includes(`/${host.id}`));
+    for (const area of areas) assert.ok(paths.includes(`/${host.id}/${area.id}`));
+  }
+  for (const example of examples) assert.ok(paths.includes(examplePath(example)));
+  assert.ok(!paths.includes('/components'));
+  assert.ok(!paths.includes('/packages'));
+});
+
+test('the design shell keeps fixed navigation geometry in tokens', async () => {
+  const tokens = await read('src/styles/tokens.css');
+  const shell = await read('src/styles/shell.css');
+
+  assert.match(tokens, /--docs-header-height: 56px/u);
+  assert.match(tokens, /--docs-sidebar-width: 256px/u);
+  assert.match(tokens, /--docs-content-width: 1040px/u);
+  assert.match(shell, /grid-template-columns: var\(--docs-sidebar-width\) minmax\(0, 1fr\)/u);
+  assert.doesNotMatch(shell, /--vp-/u);
+});
+
+test('the example catalog rejects host mixing and duplicate focused routes', () => {
+  const vueExample = examples.find((example) => example.host === 'vue');
+  assert.ok(vueExample);
+
+  const hostMixed = { ...vueExample, sourceOwner: 'dom' };
+  assert.ok(validateExampleCatalog([hostMixed]).some((issue) => issue.code === 'host-source-mismatch'));
+
+  const duplicate = { ...vueExample, id: 'duplicate-example' };
+  assert.ok(validateExampleCatalog([vueExample, duplicate]).some((issue) => issue.code === 'duplicate-path'));
+
+  const unfocused = { ...vueExample, id: 'unfocused-example', slug: 'checkbox/unfocused', focus: '   ' };
+  assert.ok(validateExampleCatalog([unfocused]).some((issue) => issue.code === 'empty-focus'));
+});
+
+test('behavior example sources stay inside their host and omit presentation styling', async () => {
+  for (const example of examples) {
+    assert.equal(example.sourceOwner, example.host);
+    assert.match(example.previewPath, new RegExp(`^\\./${example.host}/`, 'u'));
+    assert.ok(example.focus.trim().length > 0);
+
+    await read(`src/examples/${example.previewPath.slice(2)}`);
+    for (const section of example.code) {
+      assert.match(section.path, new RegExp(`^\\./${example.host}/`, 'u'));
+      const source = await read(`src/examples/${section.path.slice(2)}`);
+      if (example.host === 'vue') assert.doesNotMatch(source, /@sectile\/dom/u);
+      else assert.doesNotMatch(source, /@sectile\/vue|from ['"]vue['"]/u);
+      if (example.kind === 'behavior') assert.doesNotMatch(source, /<style\b|\.css['"]|style\s*=/u);
+    }
+  }
+});
+
+test('vue checkbox preview keeps a persistent visual box around the conditional indicator', async () => {
+  const preview = await read('src/examples/vue/components/checkbox/controlled-state/Preview.vue');
+  const shell = await read('src/styles/shell.css');
+  const boxIndex = preview.indexOf('data-example-checkbox-box');
+  const indicatorIndex = preview.indexOf('<CheckboxIndicator>');
+
+  assert.ok(boxIndex >= 0 && indicatorIndex > boxIndex);
+  assert.match(shell, /\[data-example-checkbox-box\]/u);
+  assert.match(shell, /\[data-state="checked"\].*\[data-example-checkbox-box\]/u);
+});
+
+test('runtime modules are resolved from catalog paths instead of a second example registry', async () => {
+  const runtime = await read('src/examples/runtime.ts');
+  assert.match(runtime, /import\.meta\.glob/u);
+  for (const example of examples) assert.doesNotMatch(runtime, new RegExp(example.id, 'u'));
+});
+
+test('preview is primary and relevant code stays collapsed by default', async () => {
+  const app = await read('src/App.vue');
+  const previewIndex = app.indexOf('class="docs-preview"');
+  const codeIndex = app.indexOf('class="docs-code-disclosure"');
+
+  assert.ok(previewIndex >= 0 && codeIndex > previewIndex);
+  assert.match(app, /<details class="docs-code-disclosure">/u);
+  assert.doesNotMatch(app, /<details class="docs-code-disclosure"\s+open/u);
+});

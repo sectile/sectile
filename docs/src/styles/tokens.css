@@ -1,0 +1,27 @@
+:root {
+  --docs-header-height: 56px;
+  --docs-sidebar-width: 256px;
+  --docs-content-width: 1040px;
+  --docs-page-gutter: 48px;
+
+  --docs-space-1: 4px;
+  --docs-space-2: 8px;
+  --docs-space-3: 12px;
+  --docs-space-4: 16px;
+  --docs-space-5: 24px;
+  --docs-space-6: 32px;
+  --docs-space-7: 48px;
+  --docs-space-8: 64px;
+
+  --docs-radius: 8px;
+  --docs-border: #e5e7eb;
+  --docs-bg: #ffffff;
+  --docs-bg-muted: #f7f7f8;
+  --docs-text: #18181b;
+  --docs-text-muted: #71717a;
+  --docs-accent: #5b43d6;
+  --docs-focus: #4f46e5;
+
+  --docs-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --docs-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}

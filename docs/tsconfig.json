@@ -10,10 +10,9 @@
     "types": ["node", "vite/client"]
   },
   "include": [
-    ".vitepress/**/*.ts",
-    ".vitepress/**/*.vue",
-    "examples/**/*.ts",
-    "examples/**/*.vue",
+    "src/**/*.ts",
+    "src/**/*.vue",
+    "vite.config.ts",
     "env.d.ts"
   ]
 }

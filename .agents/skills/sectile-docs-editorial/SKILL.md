@@ -62,11 +62,11 @@ Pages in the same public documentation area share one sidebar definition. Moving
 
 Keep one canonical destination for each reader task. Do not surface old introduction, host-model, adapter-authoring, implementation, or theory navigation merely because the route still exists for compatibility.
 
-## Host-selection consistency
+## Environment separation
 
-The top navigation `HostSelector` is the single host/integration selection control for public docs. Host-aware installation commands, imports, examples, and package snippets read the shared host preference and update from that selection.
+Vue and DOM documentation are separate route trees, navigation contexts, example catalogs, and source trees. A Vue page documents Vue usage only; a DOM page documents DOM usage only. Do not add a runtime host selector, Vue/DOM tabs, segmented controls, or another control that mixes both environments into one page. Ordinary links may point to the corresponding page in the other environment when useful.
 
-Do not add local Core/DOM/Terminal/Vue tabs, segmented controls, radio groups, or selectors to host-aware content. Tabs may still represent an orthogonal mode such as View versus Code. When a route supports only a subset of hosts, scope the top selector options for that route instead of adding another selector in the page body.
+Within each environment, organize examples under Components, Form, Temporal, Virtual, Tabular, and Chart. Package landing pages are example galleries. Keep the same package navigation shape even when one area has no examples yet.
 
 ## Examples and instructions
 
@@ -74,15 +74,19 @@ Task guides may be instructional. Keep instructions next to the task they help c
 
 Describe examples in terms of the developer's environment and public package APIs, not the Sectile repository layout. Do not invent filenames such as `main.mjs`, `Example.vue`, or `index.html` unless the filename itself is required by the documented tool or framework. A reader should not need to infer a checkout path, docs fixture, or arbitrary file placement before understanding what the example demonstrates.
 
-Call an example **complete** only when the code shown to the reader is sufficient to reproduce the visible result in the stated host with the documented dependencies. A complete example includes the required imports, state/setup, rendered markup, lifecycle/cleanup when the host requires it, and every example-specific style needed to reproduce the preview. Do not rely on docs-only CSS, hidden preview components, fixtures, or markup that is absent from the shown source.
+Examples are preview-first. The interactive Preview is the primary surface; code is secondary and collapsed by default under **Relevant code** or an equivalent label. Give each focused example one primary behavior or styling concern and its own stable route.
 
-For DOM examples, include the HTML elements that connection code queries or mutates. A JavaScript or TypeScript fragment containing `querySelector()` calls without the corresponding markup is a snippet, not a complete example.
+Package and component landing pages show static example cards or thumbnails rather than mounting every interactive Preview. Do not make readers scan a long prose page to find one feature-specific example.
 
-For Vue examples, a complete single-file component includes the script and template plus any example-specific styles represented in the preview. If shared application styling is intentionally omitted, the preview must not imply that the omitted styling comes from the shown code.
+Behavior examples show only code relevant to the behavior under examination. Generic documentation presentation, spacing, centering, preview dimensions, and neutral scaffolding belong to a small shared preview fixture selected by example metadata and are not presented as feature code. A behavior example must not contain presentation CSS merely to make the documentation preview attractive. Styling examples are the explicit exception: presentation code is part of the example because styling itself is the subject.
 
-Use explicit labels such as "snippet", "pattern", or "fragment" for intentionally partial source. Never describe a partial source as copyable or complete.
+Do not author the Preview implementation and displayed source as separate copies. Display source from the same example-owned files that execute the Preview. Metadata for route, environment, package area, title, primary focus, kind, fixture, source paths, tags, and related examples has one canonical owner.
 
-Reserve **View / Code** labels for examples where the shown source reproduces the displayed artifact. When a documentation preview intentionally adds presentation or scaffolding that is not part of the public usage source, label the relationship **Behavior preview / Usage code** instead. State what the usage source includes and what the documentation preview adds; host-specific snippets must identify their scope, such as Vue composition, DOM connection, Core state transition, or Terminal integration. Never let a partial source appear to be the implementation behind a richer preview.
+For DOM examples, the displayed feature source must contain or construct the application-owned elements it operates on and must include lifecycle cleanup when the public API owns resources. Do not show a connection fragment while hiding required markup in documentation-only code.
+
+For Vue examples, the displayed feature source is the actual SFC or example-owned module mounted by the Preview. Shared documentation fixtures may wrap it but must not alter or fake the documented behavior.
+
+Do not call behavior-example source a complete reproduction of the visual Preview when neutral documentation fixture styling is intentionally omitted. Do not use View/Code host-switching tabs. Never let separately authored code appear to be the implementation behind a richer Preview.
 
 Product overview sections are descriptive, not instructional. Do not tell the reader to copy code, choose components, or customize styling there.
 
@@ -98,11 +102,12 @@ For every changed public page, check:
 
 1. Does the opening describe Sectile or the documented feature, rather than how to read the docs?
 2. Are product claims supported by the public contract or canonical repository description?
-3. Could any sentence be generic marketing copy for an unrelated UI library? If yes, rewrite or remove it.
-4. Are instructions confined to sections where the reader is actually performing a task?
-5. Is each language natural on its own, with unnecessary language mixing removed?
-6. Are API identifiers preserved exactly while explanatory prose remains readable?
-7. Are examples and API reference links subordinate to the explanation rather than standing in for it?
-8. If an example is called complete or copyable, does the visible source reproduce the visible preview without hidden docs-only markup or styling?
+3. Are Vue and DOM fully separated in routes, navigation, metadata, and feature source?
+4. Does each focused example have one primary concern and its own route?
+5. Is Preview visually primary and Relevant code secondary and collapsed by default?
+6. Do package and component galleries remain static instead of mounting every interactive example?
+7. Is displayed source read from the same example-owned file that executes the Preview?
+8. Does behavior source omit documentation presentation styling while styling examples are explicitly typed as styling examples?
+9. Is each language natural on its own, and are API identifiers preserved exactly?
 
 If these checks fail, revise before validation or commit.

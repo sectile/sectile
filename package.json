@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/run-workspace-command.mjs workspace-build -- pnpm run build:workspace",
-    "build:workspace": "pnpm -r --filter './packages/*' --workspace-concurrency=1 run build && node scripts/virtual-benchmark/run.mjs docs --prepared && pnpm --filter @sectile/docs build",
-    "build:docs": "node scripts/virtual-benchmark/run.mjs docs && pnpm --filter @sectile/docs build",
-    "dev:docs": "node scripts/virtual-benchmark/run.mjs docs && pnpm --filter @sectile/docs dev",
+    "build:workspace": "pnpm -r --filter './packages/*' --workspace-concurrency=1 run build && pnpm --filter @sectile/docs build",
+    "build:docs": "pnpm --filter @sectile/docs build",
+    "dev:docs": "pnpm --filter @sectile/docs dev",
     "build:benchmark": "node scripts/virtual-benchmark/run.mjs build",
     "dev:benchmark": "node scripts/virtual-benchmark/run.mjs dev",
     "benchmark:commit-layout-results": "node scripts/virtual-benchmark/commit-layout-results.mjs",

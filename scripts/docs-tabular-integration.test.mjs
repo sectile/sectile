@@ -11,7 +11,7 @@ test('workspace verification prepares package outputs before local documentation
   ]);
   assert.equal(packageJSON.scripts.prebuild, undefined);
   assert.equal(packageJSON.scripts.predev, undefined);
-  assert.equal(packageJSON.scripts.build, 'vitepress build');
+  assert.equal(packageJSON.scripts.build, 'vite build && node scripts/materialize-routes.mjs');
   assert.doesNotMatch(Object.values(packageJSON.scripts).join('\n'), /pnpm --filter @sectile\//u);
   assert.match(workspaceVerifier, /aliases\.set\('docs', '@sectile\/docs'\)/u);
   assert.match(workspaceVerifier, /includeDocumentation/u);

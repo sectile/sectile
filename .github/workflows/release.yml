@@ -57,16 +57,12 @@ jobs:
           path: release-artifacts/*.tgz
           if-no-files-found: error
           retention-days: 7
-      - name: Build release documentation dependencies
-        run: pnpm --recursive --workspace-concurrency=1 --filter @sectile/docs^... build
-      - name: Prepare release documentation benchmark assets
-        run: node scripts/virtual-benchmark/run.mjs docs --prepared
       - name: Build release documentation
         run: pnpm --filter @sectile/docs build
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: docs/.vitepress/dist
+          path: docs/dist
 
   publish:
     needs: prepare
