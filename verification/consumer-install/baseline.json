@@ -117,25 +117,25 @@
       }
     },
     "virtual": {
-      "tarballBytes": 64336,
-      "unpackedBytes": 314124,
-      "unpackedFiles": 54,
+      "tarballBytes": 69178,
+      "unpackedBytes": 331152,
+      "unpackedFiles": 57,
       "categories": {
         "runtimeJS": {
-          "files": 17,
-          "bytes": 148707
+          "files": 18,
+          "bytes": 157944
         },
         "declarations": {
-          "files": 17,
-          "bytes": 48147
+          "files": 18,
+          "bytes": 49261
         },
         "sourceMaps": {
-          "files": 17,
-          "bytes": 112168
+          "files": 18,
+          "bytes": 118745
         },
         "other": {
           "files": 3,
-          "bytes": 5102
+          "bytes": 5202
         }
       }
     },
@@ -186,25 +186,25 @@
       }
     },
     "vue": {
-      "tarballBytes": 267580,
-      "unpackedBytes": 1699304,
-      "unpackedFiles": 333,
+      "tarballBytes": 279252,
+      "unpackedBytes": 1742407,
+      "unpackedFiles": 330,
       "categories": {
         "runtimeJS": {
-          "files": 110,
-          "bytes": 582488
+          "files": 109,
+          "bytes": 593497
         },
         "declarations": {
-          "files": 110,
-          "bytes": 651277
+          "files": 109,
+          "bytes": 661649
         },
         "sourceMaps": {
-          "files": 110,
-          "bytes": 448783
+          "files": 109,
+          "bytes": 470525
         },
         "other": {
           "files": 3,
-          "bytes": 16756
+          "bytes": 16736
         }
       }
     }

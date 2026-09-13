@@ -140,6 +140,46 @@ calibration, and retained run artifacts with one isolated process, without
 selecting or comparing an authoritative baseline. It cannot produce work-item
 evidence or replace a baseline.
 
+## Schema 7 published certification reference
+
+The active full certification reference for schema 7 is environment partition
+`f6e20f816693ec2b0bbdb67eacb8e90b20ce625ee6bd98fa11833f2b73949b52`.
+It was recorded on 2026-09-13 from the exact latest independently published npm
+artifacts listed below, not from the release candidate. Every package tag is an
+ancestor of the candidate and every tarball was checked against npm registry
+integrity before extraction into an isolated dependency root. The measurement
+harness was copied unchanged from `80465aad0426969de7d54c3d8ce4ec36b25b1c81`.
+
+The reference uses performance schema 7, measurement protocol 10, statistics
+protocol 2, GC protocol 2, the effective worker runtime options
+`--expose-gc` / no `NODE_OPTIONS`, ten isolated processes, five batches per
+process, and the full 234-metric catalog. Its selector file is
+`all-owners__all-types__all-domains__all-scales__all-evidence.json`, with SHA-256
+`dff7d8d58681dbec1d7e8981051644b6244ff4e3809de7958cf0692fc87fabd9` and build
+fingerprint `258eb923f10cfe5c3b1a608bee6493b72a61d55593409f0a73df3adefd0f8e10`.
+
+| Published artifact | Version | Tarball SHA-256 |
+|---|---|---|
+| `@sectile/core` | 0.14.5 | `0d3ab99005cf3041505ebaf82078040fccaf1e6e9653f112a374a38e35c537bb` |
+| `@sectile/chart` | 0.15.3 | `fd9269634a531ec5cf72e0488e6148945f38e54647a5c20b56ed1225f2d8c440` |
+| `@sectile/form` | 0.14.7 | `cf1d983c9840c217b07b1aba950faebbb8402ad73a9961a9901e7081b4fe6aea` |
+| `@sectile/tabular` | 0.15.2 | `a4d677163e262381b7c9e13312cad321d1430f2ee33f1e63c5f374fe49af1c81` |
+| `@sectile/temporal` | 0.14.7 | `e2811eeabb392dcf746d489b6e15986945a2c7f3ba052e43e5d6a7c02cb53f50` |
+| `@sectile/virtual` | 0.15.2 | `58196f7929736b48b5713928d1c1290b236cc97d32aa2e6ffebc998b83e94305` |
+| `@sectile/dom` | 0.17.0 | `b24fa2c0b42eb7702d132832e8e89dc8c38f6228443d9f2f9ca4a58024f66547` |
+| `@sectile/terminal` | 0.14.6 | `9496ccfe56c740b5e98c276083f85b13fc252b40745763ec0a7b644efe76e484` |
+| `@sectile/vue` | 0.17.0 | `c0238924373a9c68540fc3cfe4fe2e47006b7f59a6fd92917e9e451a9876f77a` |
+
+The candidate certification report from run
+`2026-09-13T09-44-46-759Z-641007-2bcae2e5` has SHA-256
+`f438915645ba1f3062a538e45f1fdc9a54c62d1eb27b8cf6d53bbb79a378fd60`
+and build fingerprint
+`523e61c32b6fe2b51abbd49c5700c226f5153755acd3ef9c81ad46d7f6531bef`.
+Direct comparison against the published reference passed all 234 metrics with
+zero timing, allocation, retained-heap, or package-footprint regressions under
+the calibrated five-percent certification band. The largest package-footprint
+increase is Vue at 1.67 percent, followed by DOM at 1.46 percent.
+
 ## Recovered full certification reference
 
 This preserved reference predates performance schema 7 worker-runtime provenance.
