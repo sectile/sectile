@@ -31790,12 +31790,11 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-155"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Retained ID and item-to-leaf indexes identify changes; sorted change sets path-copy 64-entry vector leaves and only touched packed-tree paths.",
-        "adversarialWitness": "Changed rectangles occupy distinct spatial leaves while the explicit repair bound remains below half the item count.",
+        "proof": "Each changed measurement performs one constant-time finite-endpoint closure check before retained ID and item-to-leaf indexes identify changes; sorted change sets path-copy 64-entry vector leaves and only touched packed-tree paths.",
+        "adversarialWitness": "ISSUE-155 rejects a finite-component rectangle whose derived endpoint overflows before retained geometry changes. Accepted changed rectangles can still occupy distinct spatial leaves while the explicit repair bound remains below half the item count.",
         "evidence": [
           "scripts/complexity-contracts.test.mjs",
           "scripts/complexity-witnesses.test.mjs"
@@ -31931,11 +31930,12 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-085"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-085",
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-155"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Scalar splice range/cardinality preflight runs before any inserted Spatial item is read; accepted declaration order is retained by the bounded Sequence patch chain while changed geometry is copied into a bounded owner-local overlay; order-only patches retain the packed tree unchanged.",
-        "adversarialWitness": "ISSUE-085 proves over-ceiling and out-of-range splices read zero inserted item fields before typed rejection. Repeated accepted structural geometry changes fill the overlay bound and force one packed rebuild instead of extending retained or query work.",
+        "proof": "Scalar splice range/cardinality preflight runs before any inserted Spatial item is read; each accepted inserted rectangle then performs one constant-time finite-endpoint closure check. Accepted declaration order is retained by the bounded Sequence patch chain while changed geometry is copied into a bounded owner-local overlay; order-only patches retain the packed tree unchanged.",
+        "adversarialWitness": "ISSUE-085 proves over-ceiling and out-of-range splices read zero inserted item fields before typed rejection. ISSUE-155 proves overflowing finite-component geometry is rejected at the same canonical boundary. Repeated accepted structural geometry changes fill the overlay bound and force one packed rebuild instead of extending retained or query work.",
         "evidence": [
           "scripts/complexity-contracts.test.mjs",
           "scripts/complexity-witnesses.test.mjs"
@@ -32108,11 +32108,12 @@
         ],
         "deterministicWork": [
           "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-095",
-          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-154"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-154",
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-155"
         ],
-        "resourceRationale": "Existing-ID updates reuse blocked-vector/packed-tree repair and retain one scalar cumulative partition-drift counter. Membership changes patch only declared Sequence identities and retain removed/new/changed geometry in the bounded structural overlay.",
-        "proof": "Each declared upsert is captured once. Membership-preserving changes enter applySpatialBaseChanges or the existing overlay repair. A repaired item increments cumulative partition drift only when its new rectangle escapes the retained leaf bounds; crossing the existing spatial-delta ceiling repacks the tree and resets that scalar. Structural updates remove only declared IDs from the retained Sequence, append only new upsert IDs, and pass removed/new/changed geometry to applySpatialOverlayChanges; unchanged Spatial items and packed-tree leaves are not enumerated.",
-        "adversarialWitness": "ISSUE-095 covers one existing geometry update and a remove/change/add structural update over 4,096 items with zero rebuilt items. ISSUE-154 repeatedly permutes sparse 64-item geometry batches across the full domain and proves that accumulated leaf drift selects a repack instead of persisting a degraded index. Benchmarks hold the changed set fixed while nItem grows from 1k to 100k.",
+        "resourceRationale": "Existing-ID updates reuse blocked-vector/packed-tree repair and retain one scalar cumulative partition-drift counter. Membership changes patch only declared Sequence identities and retain removed/new/changed geometry in the bounded structural overlay. Finite-endpoint closure adds only constant scalar work per declared upsert and no retained state.",
+        "proof": "Each declared upsert is captured once and performs one constant-time finite-endpoint closure check before publication. Membership-preserving changes enter applySpatialBaseChanges or the existing overlay repair. A repaired item increments cumulative partition drift only when its new rectangle escapes the retained leaf bounds; crossing the existing spatial-delta ceiling repacks the tree and resets that scalar. Structural updates remove only declared IDs from the retained Sequence, append only new upsert IDs, and pass removed/new/changed geometry to applySpatialOverlayChanges; unchanged Spatial items and packed-tree leaves are not enumerated.",
+        "adversarialWitness": "ISSUE-095 covers one existing geometry update and a remove/change/add structural update over 4,096 items with zero rebuilt items. ISSUE-154 repeatedly permutes sparse 64-item geometry batches across the full domain and proves that accumulated leaf drift selects a repack instead of persisting a degraded index. ISSUE-155 rejects a sparse upsert whose finite components overflow its derived endpoint before any retained geometry changes. Benchmarks hold the changed set fixed while nItem grows from 1k to 100k.",
         "evidence": [
           "packages/virtual/tests/runtime/spatial-layout.test.mjs"
         ],
