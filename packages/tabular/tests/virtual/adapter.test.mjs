@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createDataTreeGrid } from '../../.verification-dist/data-tree-grid.js';
+import { encodeTabularCellID } from '../../.verification-dist/model.js';
 import {
   createDataGridVirtualAdapter,
   createDataTableVirtualAdapter,
@@ -29,6 +31,30 @@ function gridProjection(ids, columns = { start: [], center: ['name', 'score'], e
     edit: { kind: 'navigation' },
     rowSelection: { kind: 'explicit-rows', rowIDs: [] },
     expansion: { expandedRowIDs: [] },
+  };
+}
+
+const treeColumns = [
+  { id: 'name', capabilities: [] },
+  { id: 'score', capabilities: [] },
+];
+
+function treeResponse(controller, rows, viewRevision = 1) {
+  const request = controller.getSnapshot().tabular.state.requestState.pendingRequest;
+  assert.notEqual(request, null);
+  return {
+    protocolVersion: 1,
+    requestID: request.requestID,
+    sourceGeneration: request.sourceGeneration,
+    queryRevision: request.queryRevision,
+    expansionRevision: request.expansionRevision,
+    viewRevision,
+    access: request.access,
+    matchingLeafCount: { kind: 'known', value: rows.filter((entry) => entry.kind === 'leaf').length },
+    visibleRowCount: { kind: 'known', value: rows.length },
+    rows,
+    columnSchema: { revision: 0, columns: treeColumns, headers: [] },
+    removedRowIDs: [],
   };
 }
 
@@ -97,6 +123,84 @@ test('TAB-VIR-03: partitioned Grid adapter survives measurement and center to pi
     columnExtents: { kind: 'uniform', extent: estimated(120) },
   });
   assert.deepEqual(tree.locateCell({ rowID: 'r1', columnID: 'name' }), { id: 'c1:2:r14:name', index: 0 });
+});
+
+test('ISSUE-156: DataTreeGrid Virtual preserves context-only cell membership and actual region ceilings', () => {
+  const controller = createDataTreeGrid({
+    columns: treeColumns,
+    initialValues: {
+      query: {
+        sort: [], filters: [],
+        groups: [{ id: 'by-name', columnID: 'name', policy: 'group' }],
+        aggregates: [], pivots: [],
+      },
+      columnState: {
+        order: ['name', 'score'], hidden: [], pinnedStart: ['name'], pinnedEnd: [],
+      },
+      accessState: {
+        kind: 'window',
+        window: { revision: 0, requestGeneration: 0, start: 1, size: 1, total: null, pending: null },
+      },
+    },
+  });
+  const contextRows = [
+    { kind: 'group', id: 'group:a', parentGroupID: null, depth: 0, expanded: true, contextOnly: true, cells: { name: 'A', score: 3 } },
+    { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
+  ];
+  assert.equal(controller.synchronizeView(treeResponse(controller, contextRows)).ok, true);
+  const projection = controller.getProjection();
+  assert.deepEqual(projection.columns, { start: ['name'], center: ['score'], end: [] });
+  assert.deepEqual(projection.rows.map(({ rowID, cells }) => [rowID, cells.length]), [
+    ['group:a', 0],
+    ['r1', 2],
+  ]);
+  const canonicalCellIDs = projection.rows.flatMap(({ cells }) => cells.map(encodeTabularCellID));
+
+  const adapter = createDataTreeGridVirtualAdapter({
+    projection,
+    rowExtents: { kind: 'uniform', extent: exact(24) },
+    columnExtents: { kind: 'uniform', extent: exact(80) },
+    limits: { maxProjectedCells: 2 },
+  });
+  assert.deepEqual(adapter.state.rows.toArray().map(({ id }) => id), ['group:a', 'r1']);
+  assert.deepEqual(adapter.state.columns.toArray().map(({ id, partition }) => [id, partition]), [
+    ['name', 'start'],
+    ['score', 'center'],
+  ]);
+  assert.deepEqual(adapter.state.regions.map(({ id }) => id), canonicalCellIDs);
+  assert.equal(adapter.locateCell({ rowID: 'group:a', columnID: 'name' }), null);
+  assert.equal(adapter.locateCell({ rowID: 'group:a', columnID: 'score' }), null);
+  assert.deepEqual(adapter.locateCell({ rowID: 'r1', columnID: 'name' }), { id: canonicalCellIDs[0], index: 0 });
+  assert.deepEqual(adapter.locateCell({ rowID: 'r1', columnID: 'score' }), { id: canonicalCellIDs[1], index: 1 });
+
+  const queried = adapter.strategy.tryQuery(adapter.state, {
+    viewport: { x: 0, y: 0, width: 160, height: 48 },
+  });
+  assert.equal(queried.ok, true);
+  assert.deepEqual(
+    [...queried.value.placements.map(({ id }) => id)].sort(),
+    [...canonicalCellIDs].sort(),
+  );
+
+  const measured = adapter.strategy.tryMeasure(adapter.state, {
+    generation: adapter.state.generation,
+    measurements: [
+      { axis: 'row', id: 'r1', extent: exact(37) },
+      { axis: 'column', id: 'name', extent: exact(144) },
+    ],
+    anchor: null,
+  });
+  assert.equal(measured.ok, true);
+  const reconciled = reconcileDataTreeGridVirtualAdapter(
+    adapter,
+    measured.value.state,
+    Object.freeze({ ...projection, generation: projection.generation + 1 }),
+  );
+  assert.equal(reconciled.ok, true);
+  assert.equal(reconciled.value.state.rows.toArray().find(({ id }) => id === 'r1').extent.value, 37);
+  assert.equal(reconciled.value.state.columns.toArray().find(({ id }) => id === 'name').extent.value, 144);
+  assert.equal(reconciled.value.adapter.locateCell({ rowID: 'group:a', columnID: 'name' }), null);
+  assert.deepEqual(reconciled.value.state.regions.map(({ id }) => id), canonicalCellIDs);
 });
 
 test('TAB-VIR-04: partition and projected-cell ceilings remain distinct', () => {

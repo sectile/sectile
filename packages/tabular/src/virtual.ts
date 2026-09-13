@@ -212,14 +212,21 @@ function tryCreateGridAdapter(
 ): TabularVirtualResult<DataGridVirtualAdapter | DataTreeGridVirtualAdapter> {
   const limits = normalizeLimits(options.limits);
   if (!limits.ok) return limits;
-  const domain = gridDomain(options.projection, options.rowExtents, options.columnExtents, limits.value);
+  const domain = gridDomain(options.projection, options.rowExtents, options.columnExtents, limits.value, tree);
   if (!domain.ok) return domain;
   const state = tryCreatePartitionedTrackGridLayout(domain.value.rows, domain.value.columns, domain.value.regions, {
     maxTracks: limits.value.maxProjectedCells,
     maxRegions: limits.value.maxProjectedCells,
   });
   if (!state.ok) return state;
-  return success(createGridAdapter(options.projection.generation, state.value, options.rowExtents, options.columnExtents, limits.value, tree));
+  return success(createGridAdapter(
+    options.projection.generation,
+    state.value,
+    options.rowExtents,
+    options.columnExtents,
+    limits.value,
+    domain.value.rowRegionOffsets,
+  ));
 }
 
 function reconcileGridAdapter(
@@ -230,7 +237,7 @@ function reconcileGridAdapter(
 ): TabularVirtualResult<DataGridVirtualReconciliation> {
   const privateState = gridPrivate.get(adapter);
   if (privateState === undefined || !compatibleGridState(adapter.state, currentState)) return generationMismatch(adapter.state.generation, currentState.generation);
-  const target = gridDomain(nextProjection, privateState.rowExtents, privateState.columnExtents, privateState.limits);
+  const target = gridDomain(nextProjection, privateState.rowExtents, privateState.columnExtents, privateState.limits, tree);
   if (!target.ok) return target;
   const unionRows = boundedTrackUnion(currentState.rows, target.value.rows, currentState.maxTracks);
   const unionColumns = boundedTrackUnion(currentState.columns, target.value.columns, currentState.maxTracks);
@@ -251,7 +258,14 @@ function reconcileGridAdapter(
     mutations.push(Object.freeze(mutation));
     state = applied.value.state;
   }
-  const next = createGridAdapter(nextProjection.generation, state, privateState.rowExtents, privateState.columnExtents, privateState.limits, tree);
+  const next = createGridAdapter(
+    nextProjection.generation,
+    state,
+    privateState.rowExtents,
+    privateState.columnExtents,
+    privateState.limits,
+    target.value.rowRegionOffsets,
+  );
   return success(Object.freeze({ expectedVirtualGeneration: currentState.generation, projectionGeneration: nextProjection.generation, mutations: Object.freeze(mutations), state, adapter: next }));
 }
 
@@ -277,11 +291,10 @@ function createGridAdapter(
   rowExtents: TabularVirtualExtentPolicy<TabularRowID>,
   columnExtents: TabularVirtualExtentPolicy<TabularColumnID>,
   limits: TabularVirtualLimits,
-  _tree: boolean,
+  rowRegionOffsets: ReadonlyMap<TabularRowID, number>,
 ): DataGridVirtualAdapter {
   const rowIndexes = trackIndexes(state.rows);
   const columnIndexes = trackIndexes(state.columns);
-  const columnCount = state.columns.size;
   const adapter: DataGridVirtualAdapter = Object.freeze({
     projectionGeneration,
     state,
@@ -289,10 +302,10 @@ function createGridAdapter(
     locateRow: (rowID: TabularRowID) => indexedLocator(rowIndexes, rowID),
     locateColumn: (columnID: TabularColumnID) => indexedLocator(columnIndexes, columnID),
     locateCell: (cell: TabularCellAddress) => {
-      const rowIndex = rowIndexes.get(cell.rowID);
+      const rowOffset = rowRegionOffsets.get(cell.rowID);
       const columnIndex = columnIndexes.get(cell.columnID);
-      if (rowIndex === undefined || columnIndex === undefined) return null;
-      return Object.freeze({ id: encodeTabularCellID(cell), index: rowIndex * columnCount + columnIndex });
+      if (rowOffset === undefined || columnIndex === undefined) return null;
+      return Object.freeze({ id: encodeTabularCellID(cell), index: rowOffset + columnIndex });
     },
   });
   gridPrivate.set(adapter, Object.freeze({ rowExtents, columnExtents, limits }));
@@ -304,7 +317,13 @@ function gridDomain(
   rowPolicy: TabularVirtualExtentPolicy<TabularRowID>,
   columnPolicy: TabularVirtualExtentPolicy<TabularColumnID>,
   limits: TabularVirtualLimits,
-): TabularVirtualResult<{ readonly rows: readonly PartitionedTrack<TabularRowID>[]; readonly columns: readonly PartitionedTrack<TabularColumnID>[]; readonly regions: readonly PartitionedTrackGridRegion<TabularCellID, TabularRowID, TabularColumnID>[] }> {
+  tree: boolean,
+): TabularVirtualResult<{
+  readonly rows: readonly PartitionedTrack<TabularRowID>[];
+  readonly columns: readonly PartitionedTrack<TabularColumnID>[];
+  readonly regions: readonly PartitionedTrackGridRegion<TabularCellID, TabularRowID, TabularColumnID>[];
+  readonly rowRegionOffsets: ReadonlyMap<TabularRowID, number>;
+}> {
   const projectedRows = projection.rows;
   const startColumns = projection.columns.start;
   const centerColumns = projection.columns.center;
@@ -312,9 +331,17 @@ function gridDomain(
   const rowCount = projectedRows.length;
   const columnCount = startColumns.length + centerColumns.length + endColumns.length;
   if (rowCount > limits.maxProjectedCells || columnCount > limits.maxProjectedCells) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Projected tracks exceed the configured ceiling.');
-  if (rowCount > 0 && columnCount > Math.floor(limits.maxProjectedCells / rowCount)) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Projected cells exceed the configured ceiling.');
   const partitions = Number(startColumns.length > 0) + Number(centerColumns.length > 0) + Number(endColumns.length > 0);
   if (partitions > limits.maxPartitions) return failure('resource-rejection', 'partition-ceiling-exceeded', 'Logical pin partitions exceed the configured ceiling.');
+  if (!tree && rowCount > 0 && columnCount > Math.floor(limits.maxProjectedCells / rowCount)) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Projected cells exceed the configured ceiling.');
+  if (tree) {
+    let cellCount = 0;
+    for (let index = 0; index < rowCount; index += 1) {
+      const next = projectedRows[index]!.cells.length;
+      if (next > limits.maxProjectedCells - cellCount) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Projected cells exceed the configured ceiling.');
+      cellCount += next;
+    }
+  }
   const rowIDs = projectedRows.map((row) => row.rowID);
   const columnIDs = [...startColumns, ...centerColumns, ...endColumns];
   const rows: PartitionedTrack<TabularRowID>[] = [];
@@ -336,8 +363,24 @@ function gridDomain(
         : 'end' as const;
     columns.push(Object.freeze({ id, partition, extent: extent.value }));
   }
-  const regions = projectedRows.flatMap((row) => columnIDs.map((columnID) => Object.freeze({ id: encodeTabularCellID({ rowID: row.rowID, columnID }), row: row.rowID, column: columnID })));
-  return success(Object.freeze({ rows: Object.freeze(rows), columns: Object.freeze(columns), regions: Object.freeze(regions) }));
+  const regions: PartitionedTrackGridRegion<TabularCellID, TabularRowID, TabularColumnID>[] = [];
+  const rowRegionOffsets = new Map<TabularRowID, number>();
+  for (const row of projectedRows) {
+    if (tree) {
+      if (row.cells.length === 0) continue;
+      rowRegionOffsets.set(row.rowID, regions.length);
+      for (const cell of row.cells) regions.push(Object.freeze({ id: encodeTabularCellID(cell), row: cell.rowID, column: cell.columnID }));
+      continue;
+    }
+    rowRegionOffsets.set(row.rowID, regions.length);
+    for (const columnID of columnIDs) regions.push(Object.freeze({ id: encodeTabularCellID({ rowID: row.rowID, columnID }), row: row.rowID, column: columnID }));
+  }
+  return success(Object.freeze({
+    rows: Object.freeze(rows),
+    columns: Object.freeze(columns),
+    regions: Object.freeze(regions),
+    rowRegionOffsets,
+  }));
 }
 
 function createExtentDomain<ID extends string>(ids: readonly ID[], policy: TabularVirtualExtentPolicy<ID>, maxItems: number, axis: 'row' | 'column') {

@@ -391,8 +391,12 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Table lookup delegates to the Core Sequence index. Grid lookup combines retained row and column indexes into a row-major coordinate.",
-        "adversarialWitness": "Repeated last-row and last-column lookup on a large projection performs no Array.indexOf call and retains no cell-ID map.",
+        "proof": "Table lookup delegates to the Core Sequence index. Grid lookup combines retained row/column indexes with one row-sized map from canonical cell-bearing rows to their compact region start offset. A context-only row has no region offset and returns null in constant work; no cell-ID map is retained.",
+        "adversarialWitness": "TAB-VIR-07 repeatedly resolves the last row/column/cell of a large dense projection with no Array.indexOf calls. ISSUE-156 places an empty context row before a dense leaf and proves both context-cell misses and compact leaf indexes stay O(1) without a cell-ID map.",
+        "deterministicWork": [
+          "packages/tabular/tests/virtual/adapter.test.mjs TAB-VIR-07",
+          "packages/tabular/tests/virtual/adapter.test.mjs ISSUE-156"
+        ],
         "fullScan": {
           "allowed": false,
           "rationale": "Locator calls are hot-path identity lookups and must not scan rows, columns, or cells."
@@ -401,12 +405,13 @@
     },
     {
       "id": "virtual.projection-preflight",
-      "inherits": "constant-v1",
+      "inherits": "linear-v1",
       "source": "packages/tabular/src/virtual.ts",
       "benchmarkIDs": [
         "VAL-002:tabular-virtual-projection-preflight"
       ],
-      "specificationCeiling": "O(1) before resource rejection",
+      "specificationCeiling": "O(nRow)",
+      "reviewedWeakening": "DataTreeGrid context-only rows make actual region cardinality intentionally sparse, so the bridge must inspect at most one canonical cell-array length per already-bounded row before deciding the actual region ceiling. DataGrid and oversized track domains retain their O(1) rejection path.",
       "contract": {
         "variables": [
           {
@@ -421,7 +426,7 @@
           }
         ],
         "time": {
-          "bound": "O(1)",
+          "bound": "O(nRow)",
           "kind": "worst-case",
           "runtimeState": "external"
         },
@@ -438,14 +443,15 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "DataTable create/reconcile checks projected row array length before ID mapping. Grid create/reconcile reads row and partition array lengths, checks row/column ceilings, uses division for the projected-cell ceiling, and checks non-empty partition count before mapping row IDs, concatenating column IDs, invoking extent policies, or creating regions.",
-        "adversarialWitness": "TAB-VIR-09 presents 100k accessor-backed rows at maxProjectedCells=1 to DataTable, DataGrid, and DataTreeGrid create/reconcile and observes zero ID and extent-policy reads. An accessor-backed two-column domain also rejects with zero column element reads; exact-bound one-row/one-column controls remain accepted.",
+        "proof": "DataTable create/reconcile checks projected row array length before ID mapping. Grid create/reconcile reads row and partition array lengths and rejects oversized track domains before row identity or extent access. DataGrid retains the O(1) dense division check. DataTreeGrid then visits at most nRow already-bounded row headers, adds only each canonical cells.length with an early remaining-budget comparison, and rejects before row-ID mapping, extent policy calls, or region materialization when actual canonical regions exceed maxProjectedCells.",
+        "adversarialWitness": "TAB-VIR-09 presents 100k accessor-backed rows at maxProjectedCells=1 to DataTable, DataGrid, and DataTreeGrid and observes zero ID/extent reads because track cardinality rejects first. ISSUE-156 uses two row tracks and two columns under maxProjectedCells=2: the old dense product is four but canonical DataTreeGrid cells total two, so bounded header counting accepts exactly the real region domain without phantom-cell cost.",
         "deterministicWork": [
-          "packages/tabular/tests/virtual/adapter.test.mjs TAB-VIR-09"
+          "packages/tabular/tests/virtual/adapter.test.mjs TAB-VIR-09",
+          "packages/tabular/tests/virtual/adapter.test.mjs ISSUE-156"
         ],
         "fullScan": {
-          "allowed": false,
-          "rationale": "Inputs rejectable from projection cardinality must fail before translating or scanning their identity, extent, or region domains."
+          "allowed": true,
+          "rationale": "DataTreeGrid must inspect one cells.length per already-bounded projected row to compute actual sparse region cardinality. Obviously oversized row/column track domains and DataGrid dense products still reject in O(1), and the sparse pass does not enumerate cell identities or invoke extent policies before acceptance."
         }
       }
     },
@@ -567,10 +573,11 @@
           "fallback bridge regions are a subset of the current region domain",
           "every emitted row/column track replacement is an endpoint-sized domain"
         ],
-        "proof": "Reconciliation attempts the existing union bridge only while each union fits maxTracks. If either union would exceed the retained track ceiling, the adapter keeps only regions whose row and column IDs exist in both endpoints, directly replaces endpoint-sized row and column tracks through Virtual's extent-preserving mutations, then installs target regions. A constant number of complete endpoint/region traversals is performed and no intermediate Virtual track state exceeds maxTracks.",
-        "adversarialWitness": "TAB-VIR-08 reconciles disjoint two-row and disjoint two-column endpoints at maxProjectedCells=2, where the old union cardinality is four. Both direct target constructions and DataGrid/DataTreeGrid reconciliations succeed, every emitted track/region mutation remains at or below two items, and a shared measured row/column retains its exact extent through the bounded fallback.",
+        "proof": "Reconciliation attempts the existing union bridge only while each union fits maxTracks. If either union would exceed the retained track ceiling, the adapter keeps only regions whose row and column IDs exist in both endpoints, directly replaces endpoint-sized row and column tracks through Virtual's extent-preserving mutations, then installs the target canonical region domain. Region membership is independent from row/column track membership, so structural context rows can retain measured row tracks with zero regions. A constant number of complete endpoint/region traversals is performed and no intermediate Virtual track state exceeds maxTracks.",
+        "adversarialWitness": "TAB-VIR-08 reconciles disjoint two-row and disjoint two-column endpoints at maxProjectedCells=2, where the old union cardinality is four. ISSUE-156 measures a real leaf row and pinned column beside a zero-cell context row, reconciles the canonical projection, preserves those exact extents, and keeps the context row absent from the region/locator domain.",
         "deterministicWork": [
-          "packages/tabular/tests/virtual/adapter.test.mjs TAB-VIR-08"
+          "packages/tabular/tests/virtual/adapter.test.mjs TAB-VIR-08",
+          "packages/tabular/tests/virtual/adapter.test.mjs ISSUE-156"
         ],
         "fullScan": {
           "allowed": true,
