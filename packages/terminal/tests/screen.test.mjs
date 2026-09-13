@@ -312,6 +312,44 @@ function countTextMeasurements(value, render) {
   } finally { String.prototype.split = split; }
 }
 
+test('screen cross-measures fill children under their assigned main-axis size', () => {
+  const render = (value, width, align) => serializeTerminalFrame(renderTerminalScreen(
+    terminalRow([
+      terminalText(value, { width }),
+      terminalSpacer({ width }),
+    ], { width: 6, height: 3, align }),
+    { columns: 6, rows: 3 },
+  ));
+  const expected = {
+    start: ['abc   ', 'def   ', '      '],
+    center: ['abc   ', 'def   ', '      '],
+    end: ['      ', 'abc   ', 'def   '],
+    stretch: ['abc   ', 'def   ', '      '],
+  };
+
+  for (const align of ['start', 'center', 'end', 'stretch']) {
+    const fill = render('abcdef', 'fill', align);
+    assert.deepEqual(fill, render('abcdef', 3, align), align);
+    assert.deepEqual(fill, expected[align], align);
+  }
+
+  const fillWide = render('漢字語', 'fill', 'start');
+  assert.deepEqual(fillWide, render('漢字語', 3, 'start'));
+  assert.match(fillWide[0], /^漢/);
+  assert.match(fillWide[1], /^字/);
+  assert.match(fillWide[2], /^語/);
+
+  const { frame, measurements } = countTextMeasurements('abcdef', () => renderTerminalScreen(
+    terminalRow([
+      terminalText('abcdef', { width: 'fill' }),
+      terminalSpacer({ width: 'fill' }),
+    ], { width: 6, height: 3, align: 'start' }),
+    { columns: 6, rows: 3 },
+  ));
+  assert.equal(measurements, 1);
+  assert.deepEqual(serializeTerminalFrame(frame), expected.start);
+});
+
 test('screen composes boxes, rows, fill regions, and clipping into a fixed viewport', () => {
   const appearance = createTerminalAppearance({
     capabilities: { colorLevel: 0, unicode: true },

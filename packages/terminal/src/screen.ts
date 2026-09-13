@@ -415,7 +415,12 @@ function renderChild(frame: MutableFrame, task: ChildrenRenderTask, pending: Ren
   const index = task.index++;
   const child = task.children[index]!;
   const main = task.mainSizes[index] ?? 0;
-  const intrinsic = measureNode(child, content.width, content.height, frame.measurements);
+  const intrinsic = measureNode(
+    child,
+    horizontal ? main : content.width,
+    content.height,
+    frame.measurements,
+  );
   const desiredCross = resolveCrossSize(
     horizontal ? child.height : child.width,
     horizontal ? intrinsic.height : intrinsic.width,
