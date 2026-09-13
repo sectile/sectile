@@ -486,6 +486,43 @@ test('ISSUE-095: existing-ID updates use bounded repair and retain dense rebuild
   assert.deepEqual(querySpatialLayout(dense, { viewport }).placements, querySpatialLayout(rebuilt, { viewport }).placements);
 });
 
+test('ISSUE-154: cumulative sparse geometry drift repacks before query selectivity can stay degraded', () => {
+  const count = 4_096;
+  const leafSize = 64;
+  const leafCount = count / leafSize;
+  const items = Array.from({ length: count }, (_, index) => ({
+    id: `item-${index}`,
+    rect: { x: index * 2, y: 0, width: 1, height: 1 },
+  }));
+  let state = createSpatialLayout(items, { maxItems: count });
+  const modes = [];
+  for (let start = 0; start < count; start += leafSize) {
+    const upsert = [];
+    for (let index = start; index < start + leafSize; index += 1) {
+      upsert.push({
+        id: `item-${index}`,
+        rect: {
+          x: ((index % leafSize) * leafCount + Math.floor(index / leafSize)) * 2,
+          y: 0,
+          width: 1,
+          height: 1,
+        },
+      });
+    }
+    state = applySpatialMutation(state, { type: 'update', upsert }).state;
+    modes.push(readRepairDiagnostics(state)?.mode);
+  }
+
+  assert.equal(modes[0], 'incremental');
+  assert.ok(modes.indexOf('rebuild') > 0 && modes.indexOf('rebuild') < leafCount - 1);
+  const rebuilt = createSpatialLayout(state.items.toArray(), { maxItems: count });
+  const viewport = { x: count, y: 0, width: 1, height: 1 };
+  const retainedPlan = querySpatialLayout(state, { viewport });
+  const rebuiltPlan = querySpatialLayout(rebuilt, { viewport });
+  assert.equal(retainedPlan.placements.length, 1);
+  assert.deepEqual(retainedPlan.placements, rebuiltPlan.placements);
+});
+
 test('SPA-04: boundaries, zero-size rectangles, anchors, and stale generations are explicit', () => {
   const state = createSpatialLayout([
     { id: 'anchor', rect: { x: 10, y: 10, width: 20, height: 20 } },

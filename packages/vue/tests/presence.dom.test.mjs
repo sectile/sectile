@@ -492,6 +492,42 @@ test('dialog reopen cancels the prior exit and preserves the retained content no
   }
 });
 
+test('open dialog configuration updates preserve focus and keep autofocus for the next open', async () => {
+  const host = document.createElement('div'); const outside = document.createElement('button'); document.body.append(host, outside);
+  const open = ref(true); const label = ref('First label'); const side = ref('bottom');
+  const app = createApp({ render: () => h(DialogRoot, {
+    open: open.value,
+    label: label.value,
+    side: side.value,
+    modal: false,
+    'onUpdate:open': (value) => { open.value = value; },
+  }, { default: () => h(DialogContent, null, { default: () => [
+    h('button', { id: 'first-focus' }, 'First'),
+    h('button', { id: 'second-focus' }, 'Second'),
+  ] }) }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const first = host.querySelector('#first-focus'); const second = host.querySelector('#second-focus');
+    assert.ok(first instanceof HTMLButtonElement); assert.ok(second instanceof HTMLButtonElement);
+    assert.equal(document.activeElement, first);
+
+    second.focus(); assert.equal(document.activeElement, second);
+    label.value = 'Second label'; await nextTick(); await nextTick();
+    assert.equal(document.activeElement, second);
+
+    side.value = 'top'; await nextTick(); await nextTick();
+    assert.equal(document.activeElement, second);
+
+    open.value = false; await nextTick(); await nextTick();
+    outside.focus(); assert.equal(document.activeElement, outside);
+    open.value = true; await nextTick(); await nextTick();
+    assert.equal(document.activeElement, first);
+  } finally {
+    app.unmount(); host.remove(); outside.remove();
+  }
+});
+
 test('controlled toast retains its closed item through exit motion and then removes it', async () => {
   const host = document.createElement('div'); document.body.append(host); const toasts = ref([{ id: 'saved', title: '저장됨', durationMs: null }]);
   const app = createApp({ render: () => h(ToastProvider, { toasts: toasts.value, closeLabel: '알림 닫기', 'onUpdate:toasts': (items) => { toasts.value = [...items]; } }, { default: ({ toasts: items }) => h(ToastPortal, { disabled: true }, { default: () => h(ToastViewport, null, { default: () => items.map((item) => h(ToastRoot, { value: item.id, style: { transitionDuration: '50ms' } }, { default: () => [h(ToastTitle), h(ToastClose)] })) }) }) }) });

@@ -218,8 +218,10 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         connection.value?.disconnect();
         connection.value = undefined;
       };
-      const connect = (): void => {
+      let restoreAutoFocusOnClose = false;
+      const connect = (preserveOpenLifecycle = false): void => {
         if (content.value === undefined) return;
+        const preserveFocusLifecycle = preserveOpenLifecycle && connection.value !== undefined && localOpen.value;
         disconnect();
         connection.value = config.create({
           root: content.value,
@@ -234,7 +236,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           ...(props.label === undefined ? { labelledBy: titleID } : { label: props.label }),
           describedBy: descriptionID,
           ...(props.initialFocus === undefined ? {} : { initialFocus: props.initialFocus }),
-          autoFocus: props.autoFocus,
+          autoFocus: preserveFocusLifecycle ? false : props.autoFocus,
           restoreFocus: props.restoreFocus,
           trapFocus: props.trapFocus,
           closeOnInteractOutside: props.closeOnInteractOutside,
@@ -261,6 +263,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           onInteractOutside: (event) => { emit('interactOutside', event); },
           onUpdate: update,
         });
+        restoreAutoFocusOnClose = preserveFocusLifecycle && props.autoFocus;
         update();
       };
       let connectScheduled = false;
@@ -309,7 +312,10 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary,
         () => props.avoidCollisions, () => props.arrowPadding, () => props.hideWhenDetached,
         () => props.strategy, () => props.tracking,
-      ], connect);
+      ], () => connect(true));
+      watch(localOpen, (next) => {
+        if (!next && restoreAutoFocusOnClose) scheduleConnect();
+      });
       onBeforeUnmount(() => {
         destroyed = true;
         disconnect();

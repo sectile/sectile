@@ -2,7 +2,7 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all 9 package source trees.
 
-Findings: 444; migration owners: WI-020, WI-027, WI-040.
+Findings: 446; migration owners: WI-020, WI-027, WI-040.
 
 ## Classifications
 
@@ -10,7 +10,7 @@ Findings: 444; migration owners: WI-020, WI-027, WI-040.
 |---|---:|
 | bounded-small | 14 |
 | migration-required | 60 |
-| result-proportional | 173 |
+| result-proportional | 175 |
 | reuse | 197 |
 
 ## Categories
@@ -21,7 +21,7 @@ Findings: 444; migration owners: WI-020, WI-027, WI-040.
 | discarded-canonical-index | 61 |
 | measurement-authority | 30 |
 | private-algorithm-bypass | 2 |
-| raw-full-domain-scan | 267 |
+| raw-full-domain-scan | 269 |
 | repeated-immutable-view | 13 |
 | whole-domain-validation | 35 |
 
@@ -65,8 +65,8 @@ Findings: 444; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/feed.ts:68` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/grid.ts:130` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/date-picker.ts:440` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/native-field.ts:120` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:304` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/native-field.ts:125` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:307` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:284` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:231` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:222` | controller-rebuild |

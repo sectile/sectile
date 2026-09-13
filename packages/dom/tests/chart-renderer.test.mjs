@@ -363,24 +363,43 @@ test('WebGL2 restoration rolls back every partial replacement and stays lost aft
   }
 });
 
-test('WebGL2 invalidates lost resources, restores the last projection, and ignores callbacks after disconnect', () => {
-  const { calls, canvas } = webglFixture();
-  const renderer = createChartRenderer(canvas, { mode: 'webgl2' });
+test('WebGL2 retains the latest projection while lost and ignores callbacks after disconnect', () => {
+  const value = webglFixture();
+  const renderer = createChartRenderer(value.canvas, { mode: 'webgl2' });
   renderer.render(projection());
-  const uploads = calls.filter(([name]) => name === 'bufferData').length;
-  const lost = calls.find(([name, type]) => name === 'addEventListener' && type === 'webglcontextlost')[2];
-  const restored = calls.find(([name, type]) => name === 'addEventListener' && type === 'webglcontextrestored')[2];
+  const uploads = value.calls.filter(([name]) => name === 'bufferData').length;
+  const lost = value.calls.find(([name, type]) => name === 'addEventListener' && type === 'webglcontextlost')[2];
+  const restored = value.calls.find(([name, type]) => name === 'addEventListener' && type === 'webglcontextrestored')[2];
   let prevented = false;
   lost({ preventDefault: () => { prevented = true; } });
   assert.equal(prevented, true);
   assert.equal(renderer.getDiagnostics().liveResources, 0);
+
+  const lostResources = value.resourceCounts();
+  const middle = projection();
+  middle.viewport = { ...middle.viewport, width: 150 };
+  const latest = projection();
+  latest.viewport = { ...latest.viewport, width: 200 };
+  renderer.render(middle);
+  renderer.render(latest);
+  assert.equal(value.calls.filter(([name]) => name === 'bufferData').length, uploads);
+  assert.deepEqual(value.resourceCounts(), lostResources);
+
+  const beforeRestore = value.calls.length;
   restored();
-  assert.equal(calls.filter(([name]) => name === 'bufferData').length > uploads, true);
+  const restoredViewportUniforms = value.calls.slice(beforeRestore)
+    .filter(([name, uniform]) => name === 'uniform2f' && uniform === 'uViewport')
+    .map((entry) => entry.slice(2));
+  assert.equal(restoredViewportUniforms.length > 0, true);
+  assert.deepEqual(restoredViewportUniforms, restoredViewportUniforms.map(() => [200, 80]));
+  assert.equal(value.calls.filter(([name]) => name === 'bufferData').length > uploads, true);
   assert.equal(renderer.getDiagnostics().liveResources > 5, true);
+
   renderer.disconnect();
-  const afterDisconnect = calls.filter(([name]) => name === 'bufferData').length;
+  const afterDisconnect = value.calls.filter(([name]) => name === 'bufferData').length;
+  renderer.render(projection());
   restored();
-  assert.equal(calls.filter(([name]) => name === 'bufferData').length, afterDisconnect);
+  assert.equal(value.calls.filter(([name]) => name === 'bufferData').length, afterDisconnect);
 });
 
 test('renderer construction rejects invalid styles and unavailable explicit modes', () => {

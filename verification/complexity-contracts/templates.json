@@ -13,7 +13,7 @@
       "resourceRationale": "Namespace access owns no per-read resource.",
       "proof": "A namespace value read is one property lookup.",
       "adversarialWitness": "Repeated reads do not traverse retained domain state.",
-      "evidence": ["VAL-016"],
+      "evidence": ["scripts/complexity-contracts.test.mjs"],
       "fullScan": { "allowed": false, "rationale": "Value access has no collection input." }
     },
     "public-callable-v1": {
@@ -32,7 +32,7 @@
       "resourceRationale": "The conservative fallback includes validation/output allocation and requires surface overrides for host resources.",
       "proof": "The conservative public ceiling permits one pass over input, retained state, and produced output; registered hot operations provide tighter source proof.",
       "adversarialWitness": "Maximum-size external input with maximum-size retained state and full snapshot output.",
-      "evidence": ["VAL-016", "VAL-017"],
+      "evidence": ["scripts/complexity-contracts.test.mjs", "scripts/complexity-witnesses.test.mjs"],
       "fullScan": { "allowed": true, "rationale": "The public fallback admits external validation and explicit full-output materialization; hot canonical paths require a tighter operation contract." }
     },
     "constant-v1": {
@@ -47,7 +47,7 @@
       "resourceRationale": "Indexed/scalar trusted-state observations retain no new collection resource.",
       "proof": "The operation performs a bounded number of indexed reads or scalar steps.",
       "adversarialWitness": "Maximum-size retained state does not increase deterministic work.",
-      "evidence": ["VAL-016", "VAL-017"],
+      "evidence": ["scripts/complexity-contracts.test.mjs", "scripts/complexity-witnesses.test.mjs"],
       "fullScan": { "allowed": false, "rationale": "Indexed or scalar work must not traverse the domain." }
     },
     "linear-v1": {
@@ -65,7 +65,7 @@
       "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
       "proof": "One bounded traversal visits each relevant input/state entry and emits at most k entries.",
       "adversarialWitness": "Every input entry is visited and every eligible entry is emitted.",
-      "evidence": ["VAL-016", "VAL-017"],
+      "evidence": ["scripts/complexity-contracts.test.mjs", "scripts/complexity-witnesses.test.mjs"],
       "fullScan": { "allowed": true, "rationale": "Construction, external validation, or explicit full projection has a linear lower bound." }
     },
     "lifecycle-v1": {
@@ -83,7 +83,7 @@
       "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
       "proof": "Connection work visits owned resources and only affected projection targets.",
       "adversarialWitness": "Deep ancestor chain with every registered target affected, followed by repeated disconnect.",
-      "evidence": ["VAL-016", "VAL-017"],
+      "evidence": ["scripts/complexity-contracts.test.mjs", "scripts/complexity-witnesses.test.mjs"],
       "fullScan": { "allowed": false, "rationale": "Mounted updates may scan owned resources or affected targets, never unrelated global connections." }
     }
   }

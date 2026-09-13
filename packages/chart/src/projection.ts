@@ -616,8 +616,8 @@ function projectDefinitionLayer<ID extends StableID>(
     const selected = Uint32Array.from({ length: layer.owner.size }, (_, index) => index);
     const batch = projectArcs(layer, layerIndex, selected, viewport, transform);
     if (!batch.ok) return batch;
-    const decorated = decorateExactBatch(model, batch.value, revision);
-    return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, revision), representedDatums: selected.length, emittedPrimitives: selected.length, aggregateRepresentatives: 0, visitedIndexNodes: 1, revision });
+    const exact = createExactProjectionBatch(model, layer, semantics, batch.value, revision);
+    return chartOK({ batch: exact.batch, dataBatch: exact.dataBatch, representedDatums: selected.length, emittedPrimitives: selected.length, aggregateRepresentatives: 0, visitedIndexNodes: 1, revision });
   }
   const xAxis = semantics.xAxis === undefined ? undefined : axes.get(semantics.xAxis);
   const yAxis = semantics.yAxis === undefined ? undefined : axes.get(semantics.yAxis);
@@ -632,8 +632,8 @@ function projectDefinitionLayer<ID extends StableID>(
     const batch = projectPolyline(layer, layerIndex, selected.indices, xScale, yScale, transform);
     const lineRevision = batchRevision(layer, selected.aggregated ? selected.indices.length : 0);
     if (!batch.ok) return batch;
-    const decorated = decorateExactBatch(model, batch.value, lineRevision);
-    return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, lineRevision), representedDatums: selected.indices.length, emittedPrimitives: selected.indices.length, aggregateRepresentatives: 0, visitedIndexNodes: selected.visitedNodes, revision: lineRevision });
+    const exact = createExactProjectionBatch(model, layer, semantics, batch.value, lineRevision);
+    return chartOK({ batch: exact.batch, dataBatch: exact.dataBatch, representedDatums: selected.indices.length, emittedPrimitives: selected.indices.length, aggregateRepresentatives: 0, visitedIndexNodes: selected.visitedNodes, revision: lineRevision });
   }
   if (semantics.kind === 'scatter' && semantics.projection === 'density') {
     const selected = selectPackedAggregateFrontier(layer.owner, quota, cartesianBounds);
@@ -669,8 +669,8 @@ function projectDefinitionLayer<ID extends StableID>(
   else if (semantics.kind === 'bar') batch = projectRectangles(layer, layerIndex, selected, xScale, yScale, transform);
   else batch = projectDefinitionCells(layer, semantics, layerIndex, selected, xScale, yScale, transform);
   if (!batch.ok) return batch;
-  const decorated = decorateExactBatch(model, batch.value, revision);
-  return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, revision), representedDatums: selected.length, emittedPrimitives: selected.length, aggregateRepresentatives: 0, visitedIndexNodes: visible.visitedNodes, revision });
+  const exact = createExactProjectionBatch(model, layer, semantics, batch.value, revision);
+  return chartOK({ batch: exact.batch, dataBatch: exact.dataBatch, representedDatums: selected.length, emittedPrimitives: selected.length, aggregateRepresentatives: 0, visitedIndexNodes: visible.visitedNodes, revision });
 }
 
 function cartesianSelectionBounds<ID extends StableID>(
@@ -779,7 +779,14 @@ function projectAggregateCells(
   };
 }
 
-const dataGeometryCache = new WeakMap<object, Map<string, ChartDataGeometry>>();
+interface DataGeometryCacheEntry {
+  readonly geometry: ChartDataGeometry;
+  readonly selectionToken: object;
+  readonly identityIndices: Uint32Array;
+  readonly aggregateBounds?: Float64Array;
+}
+
+const dataGeometryCache = new WeakMap<object, Map<string, DataGeometryCacheEntry>>();
 const MAX_DATA_GEOMETRIES_PER_OWNER = 8;
 
 function createDataBatch<ID extends StableID>(
@@ -787,16 +794,8 @@ function createDataBatch<ID extends StableID>(
   semantics: ResolvedChartLayer<ID>,
   batch: ChartProjectionBatch,
   revision: ChartBatchRevision,
+  geometryEntry = resolveDataGeometryCacheEntry(layer, semantics, batch, revision),
 ): ChartDataBatch {
-  const key = dataGeometryKey(batch, revision);
-  let retained = dataGeometryCache.get(layer.owner.geometryToken);
-  if (retained === undefined) { retained = new Map(); dataGeometryCache.set(layer.owner.geometryToken, retained); }
-  let geometry = retained.get(key);
-  if (geometry === undefined) {
-    geometry = buildDataGeometry(layer, semantics, batch);
-    if (retained.size >= MAX_DATA_GEOMETRIES_PER_OWNER) retained.delete(retained.keys().next().value as string);
-    retained.set(key, geometry);
-  }
   const representatives = batch.representatives ?? Object.freeze([]);
   const values = batch.type === 'cell'
     ? Float64Array.from({ length: batch.cells.length / CHART_CELL_STRIDE }, (_, index) => batch.cells[index * CHART_CELL_STRIDE + 4] as number)
@@ -806,13 +805,90 @@ function createDataBatch<ID extends StableID>(
     layerIndex: batch.layerIndex,
     ...(semantics.xAxis === undefined ? {} : { xAxisID: semantics.xAxis }),
     ...(semantics.yAxis === undefined ? {} : { yAxisID: semantics.yAxis }),
-    geometry,
+    geometry: geometryEntry.geometry,
     ...(values === undefined ? {} : { values }),
     identityIndices: batch.identityIndices,
     representatives,
     revision,
     ...(batch.colors === undefined ? {} : { colors: batch.colors }),
   });
+}
+
+function resolveDataGeometryCacheEntry<ID extends StableID>(
+  layer: PackedChartLayer<ID>,
+  semantics: ResolvedChartLayer<ID>,
+  batch: ChartProjectionBatch,
+  revision: ChartBatchRevision,
+): DataGeometryCacheEntry {
+  const key = dataGeometryKey(batch, revision);
+  let retained = dataGeometryCache.get(layer.owner.geometryToken);
+  if (retained === undefined) { retained = new Map(); dataGeometryCache.set(layer.owner.geometryToken, retained); }
+  const cached = retained.get(key);
+  if (cached !== undefined && sameDataGeometrySelection(cached, batch)) return cached;
+  const entry = dataGeometryCacheEntry(batch, buildDataGeometry(layer, semantics, batch));
+  if (cached === undefined && retained.size >= MAX_DATA_GEOMETRIES_PER_OWNER) retained.delete(retained.keys().next().value as string);
+  retained.set(key, entry);
+  return entry;
+}
+
+function dataGeometryCacheEntry(
+  batch: ChartProjectionBatch,
+  geometry: ChartDataGeometry,
+): DataGeometryCacheEntry {
+  const representatives = batch.representatives ?? [];
+  let aggregateBounds: Float64Array | undefined;
+  if (representatives.some((representative) => representative.kind === 'aggregate')) {
+    aggregateBounds = new Float64Array(representatives.length * 4);
+    aggregateBounds.fill(Number.NaN);
+    for (let index = 0; index < representatives.length; index += 1) {
+      const representative = representatives[index];
+      if (representative?.kind !== 'aggregate') continue;
+      const offset = index * 4;
+      aggregateBounds[offset] = representative.bounds.minimumX;
+      aggregateBounds[offset + 1] = representative.bounds.maximumX;
+      aggregateBounds[offset + 2] = representative.bounds.minimumY;
+      aggregateBounds[offset + 3] = representative.bounds.maximumY;
+    }
+  }
+  return Object.freeze({
+    geometry,
+    selectionToken: Object.freeze({}),
+    identityIndices: batch.identityIndices.slice(),
+    ...(aggregateBounds === undefined ? {} : { aggregateBounds }),
+  });
+}
+
+function sameIdentityIndices(left: Uint32Array, right: Uint32Array): boolean {
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < right.length; index += 1) {
+    if (left[index] !== right[index]) return false;
+  }
+  return true;
+}
+
+function sameDataGeometrySelection(
+  cached: DataGeometryCacheEntry,
+  batch: ChartProjectionBatch,
+): boolean {
+  if (!sameIdentityIndices(cached.identityIndices, batch.identityIndices)) return false;
+  const representatives = batch.representatives ?? [];
+  if (cached.aggregateBounds === undefined) {
+    return !representatives.some((representative) => representative.kind === 'aggregate');
+  }
+  if (cached.aggregateBounds.length !== representatives.length * 4) return false;
+  for (let index = 0; index < representatives.length; index += 1) {
+    const representative = representatives[index];
+    const offset = index * 4;
+    if (representative?.kind !== 'aggregate') {
+      if (!Number.isNaN(cached.aggregateBounds[offset])) return false;
+      continue;
+    }
+    if (cached.aggregateBounds[offset] !== representative.bounds.minimumX
+      || cached.aggregateBounds[offset + 1] !== representative.bounds.maximumX
+      || cached.aggregateBounds[offset + 2] !== representative.bounds.minimumY
+      || cached.aggregateBounds[offset + 3] !== representative.bounds.maximumY) return false;
+  }
+  return true;
 }
 
 function buildDataGeometry<ID extends StableID>(
@@ -899,10 +975,37 @@ function dataGeometryKey(batch: ChartProjectionBatch, revision: ChartBatchRevisi
   return `${batch.type}:${revision.level}:${batch.identityIndices.length}:${hash >>> 0}`;
 }
 
+interface OrdinalColorCacheEntry {
+  readonly colors: Uint8Array;
+  readonly selection: object;
+  readonly identityRevision: number;
+  readonly orderRevision: number;
+  readonly styleRevision: number;
+}
+
+const ordinalColorCache = new WeakMap<object, OrdinalColorCacheEntry[]>();
+const MAX_ORDINAL_COLORS_PER_OWNER = 8;
+
+function createExactProjectionBatch<ID extends StableID>(
+  model: ChartModelState<ID>,
+  layer: PackedChartLayer<ID>,
+  semantics: ResolvedChartLayer<ID>,
+  batch: ChartProjectionBatch,
+  revision: ChartBatchRevision,
+): { readonly batch: ChartProjectionBatch; readonly dataBatch: ChartDataBatch } {
+  const geometryEntry = resolveDataGeometryCacheEntry(layer, semantics, batch, revision);
+  const decorated = decorateExactBatch(model, batch, revision, geometryEntry.selectionToken);
+  return Object.freeze({
+    batch: decorated,
+    dataBatch: createDataBatch(layer, semantics, decorated, revision, geometryEntry),
+  });
+}
+
 function decorateExactBatch<ID extends StableID>(
   model: ChartModelState<ID>,
   batch: ChartProjectionBatch,
   revision: ChartBatchRevision,
+  selection: object,
 ): ChartProjectionBatch {
   const representatives = Object.freeze([...batch.identityIndices].map((index) => Object.freeze({
     kind: 'datum' as const,
@@ -912,7 +1015,7 @@ function decorateExactBatch<ID extends StableID>(
     ...batch,
     representatives,
     revision,
-    ...(batch.colors === undefined ? { colors: ordinalBatchColors(model, batch, representatives) } : {}),
+    ...(batch.colors === undefined ? { colors: ordinalBatchColors(model, batch, representatives, revision, selection) } : {}),
   });
 }
 
@@ -920,7 +1023,22 @@ function ordinalBatchColors<ID extends StableID>(
   model: ChartModelState<ID>,
   batch: ChartProjectionBatch,
   representatives: readonly ChartRepresentative<ID>[],
+  revision: ChartBatchRevision,
+  selection: object,
 ): Uint8Array {
+  const layer = getChartModelData<ID>(model).layers[batch.layerIndex] as PackedChartLayer<ID>;
+  let retained = ordinalColorCache.get(layer.owner.geometryToken);
+  if (retained === undefined) {
+    retained = [];
+    ordinalColorCache.set(layer.owner.geometryToken, retained);
+  }
+  for (let index = 0; index < retained.length; index += 1) {
+    const cached = retained[index] as OrdinalColorCacheEntry;
+    if (cached.selection === selection
+      && cached.identityRevision === revision.identity
+      && cached.orderRevision === revision.order
+      && cached.styleRevision === revision.style) return cached.colors;
+  }
   const scale = createOrdinalColorScale<ID>([
     [0.12, 0.31, 0.69, 1],
     [0.82, 0.25, 0.28, 1],
@@ -937,6 +1055,14 @@ function ordinalBatchColors<ID extends StableID>(
     const color = scale.color(key);
     for (let channel = 0; channel < 4; channel += 1) colors[index * 4 + channel] = Math.round((color[channel] as number) * 255);
   }
+  if (retained.length >= MAX_ORDINAL_COLORS_PER_OWNER) retained.shift();
+  retained.push(Object.freeze({
+    colors,
+    selection,
+    identityRevision: revision.identity,
+    orderRevision: revision.order,
+    styleRevision: revision.style,
+  }));
   return colors;
 }
 

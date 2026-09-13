@@ -83,6 +83,9 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
       const participation = useNativeInputFormControl(input);
       const connection = shallowRef<NativeFieldConnection<Value>>();
       const controlled = useControlledStateInvariant(config.name, 'modelValue', () => props.modelValue);
+      const acceptedValue = shallowRef<Value | null | undefined>(
+        controlled ? props.modelValue as Value | null : undefined,
+      );
       const pendingValue = shallowRef<Value | null | typeof noPendingNativeFieldValue>(noPendingNativeFieldValue);
 
       const connect = (preserved?: Value | null): void => {
@@ -92,7 +95,7 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
           input: input.value,
           ...(props.policies === undefined ? {} : { policies: props.policies as Policies }),
           ...(controlled
-            ? { value: props.modelValue as Value | null }
+            ? { value: acceptedValue.value as Value | null }
             : { defaultValue: (preserved === undefined ? props.defaultValue : preserved) as Value | null }),
           disabled: props.disabled,
           readOnly: props.readonly,
@@ -114,8 +117,10 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
       onBeforeUnmount(() => connection.value?.disconnect());
       watch(() => props.modelValue, (value) => {
         if (!controlled || value === undefined || connection.value === undefined) return;
+        const result = connection.value.syncControlledValues({ value: value as Value | null });
+        if (!result.ok) throw new TypeError('Controlled native field synchronization failed.');
+        acceptedValue.value = value as Value | null;
         pendingValue.value = noPendingNativeFieldValue;
-        connection.value.syncControlledValues({ value: value as Value | null });
       });
       watch(
         [() => props.policies, () => props.disabled, () => props.readonly,
@@ -141,7 +146,7 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
         value: (() => {
           const value = controlled && pendingValue.value !== noPendingNativeFieldValue
             ? pendingValue.value
-            : controlled ? props.modelValue : props.defaultValue;
+            : controlled ? acceptedValue.value : props.defaultValue;
           return value === null || value === undefined ? '' : config.formatValue(value as Value);
         })(),
       }, participation.controlProps.value));

@@ -243,8 +243,8 @@
           },
           {
             "name": "k",
-            "meaning": "values in changed packed geometry",
-            "ceiling": "Chart projection representative ceiling"
+            "meaning": "scalar elements in changed immutable geometry or color storage",
+            "ceiling": "a constant multiple of the Chart projection representative ceiling"
           }
         ],
         "time": {
@@ -258,18 +258,27 @@
           "retained": "O(k)"
         },
         "resources": {
-          "allocations": "view O(l), changed geometry O(k)",
+          "allocations": "compatible view O(l), changed geometry or color O(k)",
           "cacheEntries": "O(l)",
           "listeners": "2",
           "observers": "0",
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Each layer owns one geometry buffer and at most one color buffer. Compatible views update uniforms only; changed immutable geometry is converted once and uses a bounded changed-range upload when the calibrated gate admits it.",
-        "adversarialWitness": "One value changes near each end of a large layer, forcing a full upload, while every unchanged layer retains buffer identity.",
+        "deterministicWork": [
+          "packages/chart/tests/projection/projection.semantic.test.mjs ISSUE-151 proves compatible 1k, 10k, and 100k projections submit the same immutable color owner",
+          "packages/dom/tests/chart-renderer.test.mjs retained compatible-view redraw performs zero geometry or color upload after the initial buffers are retained"
+        ],
+        "resourceRationale": "Each emitted layer retains one geometry buffer and at most one color buffer. Chart owns immutable source arrays; DOM stores only their current identities and GPU resources, so compatible views require no input-sized comparison state.",
+        "proof": "Each layer owns one geometry buffer and at most one color buffer. The retain path checks geometry and color owner identity before calling updateBuffer; a compatible Chart view reuses both immutable owners and therefore updates uniforms/draw state without converting geometry, scanning color bytes, or uploading either buffer. A changed owner is compared once and uses a bounded changed-range upload when the calibrated gate admits it.",
+        "adversarialWitness": "A 100,000-representative exact scatter changes only viewport width and retains geometry/color owners, so the renderer bypasses updateBuffer for both arrays. Separately, one changed value near each end of a large new owner forces the intended full-upload fallback.",
+        "evidence": [
+          "packages/chart/tests/projection/projection.semantic.test.mjs",
+          "packages/dom/tests/chart-renderer.test.mjs"
+        ],
         "fullScan": {
           "allowed": true,
-          "rationale": "A new immutable geometry owner may require one equality-range scan before selecting full versus partial upload; compatible views never inspect its values."
+          "rationale": "A new immutable geometry or color owner may require one equality-range scan before selecting full versus partial upload; compatible views retain source identity and inspect neither geometry values nor color bytes."
         }
       }
     },
@@ -638,7 +647,7 @@
         "proof": "setItemAttributes resolves duplicate host ownership through one WeakMap lookup, repairs at most the current ID and one prior owner, projects only the newly registered element, updates only its submenu position when present, and retries only pending focus.",
         "adversarialWitness": "Sequentially register a maximum flat leaf domain of distinct elements, then transfer one existing element to another ID; projection writes stay constant per registration and replacement never scans prior registrations.",
         "evidence": [
-          "VAL-009"
+          "packages/dom/tests/menu.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -1366,9 +1375,7 @@
         "proof": "The resolved host removes its stable connection listeners, the connection disconnects both observers, cancels one pending frame, and clears each owner-local frame, item, pending-entry, and placement registry exactly once. No shared document registry retains disconnected owners.",
         "adversarialWitness": "Disconnect document-host connections during queued scroll/resize work at 1, 8, and 32 same-document connections, invoke captured stale callbacks, and verify zero publication, pending frames, listeners, or resource recreation.",
         "evidence": [
-          "VAL-004",
-          "VAL-010",
-          "VAL-001"
+          "packages/dom/tests/virtual.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -1452,9 +1459,7 @@
         "proof": "The resolved host adapter turns browser events into the same generation-guarded transaction. Geometry and item callbacks coalesce into one frame; the transaction resolves only changed entries, composes frame and layout deltas, and performs at most one correction write and final query. A rejected post-write query restores the two saved physical coordinates through the same host writer before error reporting. Accepted frames index each emitted placement once.",
         "adversarialWitness": "Document viewport resize, page scroll, frame invalidation, and changed mounted items in one generation still produce one scheduled transaction. Repeated mutation, measurement, inset, frame, and target-scroll rejections restore page scroll/state/plan; cross-document registrations reject before observer retention.",
         "evidence": [
-          "VAL-004",
-          "VAL-010",
-          "VAL-001"
+          "packages/dom/tests/virtual.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -1521,9 +1526,7 @@
         "proof": "Construction resolves stable host operations once. The stable scroll listener marks only the viewport dirty, one coalesced frame reads scalar offsets/extents, projects through the cached surface frame, delegates one query, and indexes each returned placement once. Document mode neither rereads the surface rectangle nor reads document scroll range on this path.",
         "adversarialWitness": "At 1, 8, and 32 same-document connections, a burst of page-scroll events schedules at most one frame per connection; each accepted frame performs no surface geometry/range read and one query, then disconnect releases every listener and pending frame.",
         "evidence": [
-          "VAL-004",
-          "VAL-010",
-          "VAL-001"
+          "packages/dom/tests/virtual.test.mjs"
         ],
         "fullScan": {
           "allowed": false,

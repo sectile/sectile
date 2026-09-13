@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "workItem": "WI-018",
-  "fingerprint": "fnv1a32:d5a19334",
+  "fingerprint": "fnv1a32:56d9c843",
   "decisions": [
     {
       "id": "sequence",
@@ -300,10 +300,11 @@
       "parameters": {
         "blockSize": 64,
         "repairBound": "repairBound(j,n)=(touchedVectorBlocks+touchedSpatialLeaves)*(64+ceil(log2(ceil(n/64)+1)))+j",
-        "structuralOverlayBound": "p<=min(256,ceil(n/64))"
+        "structuralOverlayBound": "p<=min(256,ceil(n/64))",
+        "partitionDriftBound": "q<=min(256,ceil(n/64)) where q counts repaired items whose new rect escapes the retained leaf bounds since the last repack"
       },
-      "rule": "incremental iff n>=1024 and measurement repairBound(j,n)<n/2 or structural p<=min(256,ceil(n/64)); order-only patches retain geometry; otherwise perform one packed full rebuild.",
-      "rationale": "Sixty-four-item vector blocks and spatial leaves bound measurement repair, while a fixed structural overlay separates declaration order from geometry without unbounded query or retained cost; both paths fall back before dense work approaches a packed rebuild.",
+      "rule": "incremental iff n>=1024 and measurement repairBound(j,n)<n/2 and cumulative partition drift q<=min(256,ceil(n/64)), or structural p<=min(256,ceil(n/64)); order-only patches retain geometry; crossing q repacks the packed tree and resets q; otherwise perform one packed full rebuild.",
+      "rationale": "Sixty-four-item vector blocks and spatial leaves bound measurement repair, while the same fixed spatial-delta ceiling bounds both structural overlays and cumulative cross-partition geometry drift. Sparse in-leaf updates remain incremental; repeated movement that would permanently broaden retained leaf bounds repacks before query selectivity can degrade without bound.",
       "rejected": [
         {
           "candidate": "packed-full-rebuild",

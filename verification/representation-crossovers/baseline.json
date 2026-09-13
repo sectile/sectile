@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "workItem": "WI-018",
-  "fingerprint": "fnv1a32:d5a19334",
+  "fingerprint": "fnv1a32:56d9c843",
   "processCount": 9,
   "runtime": {
-    "node": "v24.19.0",
-    "v8": "13.6.233.17-node.51",
-    "platform": "darwin",
-    "architecture": "arm64"
+    "node": "v24.20.0",
+    "v8": "13.6.233.17-node.53",
+    "platform": "linux",
+    "architecture": "x64"
   },
   "metrics": [
     {
@@ -20,11 +20,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 45124.4419643,
-        "p95": 45297.9836551,
-        "relativeMAD": 0.00250377520955,
-        "minimum": 44533.0276498,
-        "maximum": 45338.3571429
+        "median": 32140.3598726,
+        "p95": 32759.6641685,
+        "relativeMAD": 0.0034802556015,
+        "minimum": 31955.3944637,
+        "maximum": 33013.1246006
       },
       "work": 20000,
       "allocationUnits": 0,
@@ -42,11 +42,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 205393.130435,
-        "p95": 208052.904348,
-        "relativeMAD": 0.00498344426214,
-        "minimum": 202835.130435,
-        "maximum": 208836.956522
+        "median": 131680.361111,
+        "p95": 147476.608187,
+        "relativeMAD": 0.00514439024524,
+        "minimum": 131002.945946,
+        "maximum": 156368.421053
       },
       "work": 240000,
       "allocationUnits": 0,
@@ -64,11 +64,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 6227.6119403,
-        "p95": 6543.27694777,
-        "relativeMAD": 0.0102845378194,
-        "minimum": 6157.57042253,
-        "maximum": 6623.62637363
+        "median": 3927.90400001,
+        "p95": 3966.90488889,
+        "relativeMAD": 0.00670032215921,
+        "minimum": 3847.352,
+        "maximum": 3975.36
       },
       "work": 20000,
       "allocationUnits": 0,
@@ -85,11 +85,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 618806.352941,
-        "p95": 624268.559216,
-        "relativeMAD": 0.0046537666888,
-        "minimum": 613117.1875,
-        "maximum": 625990.176471
+        "median": 560763.666667,
+        "p95": 567472.811111,
+        "relativeMAD": 0.00247153039118,
+        "minimum": 555525.588235,
+        "maximum": 571021.611111
       },
       "work": 50000,
       "allocationUnits": 0,
@@ -106,16 +106,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 3376208.25,
-        "p95": 3395620.85,
-        "relativeMAD": 0.00350800339419,
-        "minimum": 3325208.25,
-        "maximum": 3400666.75
+        "median": 2651051.25,
+        "p95": 2712418.05,
+        "relativeMAD": 0.000741026790867,
+        "minimum": 2634852.25,
+        "maximum": 2718938.75
       },
       "work": 50000,
       "allocationUnits": 100000,
       "retainedBytes": 0,
-      "heapDeltaBytes": 5209088,
+      "heapDeltaBytes": 5517112,
       "sourceBytes": 306
     },
     {
@@ -127,16 +127,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 2520187.5,
-        "p95": 2549233.35,
-        "relativeMAD": 0.00833687969649,
-        "minimum": 2471947.75,
-        "maximum": 2552645.75
+        "median": 1994024.2,
+        "p95": 2309706.36,
+        "relativeMAD": 0.0139671323949,
+        "minimum": 1369328.2,
+        "maximum": 2498291.8
       },
       "work": 50000,
       "allocationUnits": 50000,
       "retainedBytes": 0,
-      "heapDeltaBytes": 5292584,
+      "heapDeltaBytes": 5646584,
       "sourceBytes": 303
     },
     {
@@ -148,11 +148,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 149347.490566,
-        "p95": 152183.509502,
-        "relativeMAD": 0.00269417727274,
-        "minimum": 148945.121951,
-        "maximum": 152709.156863
+        "median": 87243.0227273,
+        "p95": 88992.7566138,
+        "relativeMAD": 0.00909988875008,
+        "minimum": 86009.1025641,
+        "maximum": 89142.5079365
       },
       "work": 24576,
       "allocationUnits": 0,
@@ -169,11 +169,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 405276.041667,
-        "p95": 409966.279545,
-        "relativeMAD": 0.0077727138373,
-        "minimum": 400426.136364,
-        "maximum": 410993.041667
+        "median": 270805.264706,
+        "p95": 277590.512773,
+        "relativeMAD": 0.0125637274191,
+        "minimum": 265925.380952,
+        "maximum": 277906.911765
       },
       "work": 26624,
       "allocationUnits": 2048,
@@ -191,16 +191,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 15379833,
-        "p95": 15640825,
-        "relativeMAD": 0.00717394005513,
-        "minimum": 15218125,
-        "maximum": 15665875
+        "median": 13056759,
+        "p95": 13429261.4,
+        "relativeMAD": 0.0141405688808,
+        "minimum": 12680949,
+        "maximum": 13563249
       },
       "work": 240000,
       "allocationUnits": 260000,
       "retainedBytes": 0,
-      "heapDeltaBytes": 35606064,
+      "heapDeltaBytes": 35631856,
       "sourceBytes": 320
     },
     {
@@ -213,11 +213,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 120101.666667,
-        "p95": 128993.577478,
-        "relativeMAD": 0.00570798458138,
-        "minimum": 119314.44,
-        "maximum": 134008.776316
+        "median": 112315.897436,
+        "p95": 114711.054337,
+        "relativeMAD": 0.00615154696147,
+        "minimum": 109909.77907,
+        "maximum": 114961.302326
       },
       "work": 240000,
       "allocationUnits": 0,
@@ -235,11 +235,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 49956.754717,
-        "p95": 52737.9913876,
-        "relativeMAD": 0.0163274616676,
-        "minimum": 47795.3382353,
-        "maximum": 53904.2280702
+        "median": 41109.5697674,
+        "p95": 44842.9835659,
+        "relativeMAD": 0.0290572854944,
+        "minimum": 39508.5175439,
+        "maximum": 45096.4222222
       },
       "work": 10158.86851277919,
       "allocationUnits": 2312,
@@ -257,16 +257,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 233515.090909,
-        "p95": 239422.9,
-        "relativeMAD": 0.0232208079992,
-        "minimum": 215968.75,
-        "maximum": 239746.5
+        "median": 176828.409091,
+        "p95": 185556.484444,
+        "relativeMAD": 0.0219948717619,
+        "minimum": 172538.086957,
+        "maximum": 185775.4
       },
       "work": 28379.325867793603,
       "allocationUnits": 10300,
       "retainedBytes": 122336,
-      "heapDeltaBytes": 706464,
+      "heapDeltaBytes": 706352,
       "sourceBytes": 730
     },
     {
@@ -279,16 +279,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 3834875,
-        "p95": 4946990.23333,
-        "relativeMAD": 0.0200282060476,
-        "minimum": 3689916.66667,
-        "maximum": 5408437.5
+        "median": 2704435.5,
+        "p95": 3184631.4,
+        "relativeMAD": 0.0110246667003,
+        "minimum": 2632695.25,
+        "maximum": 3385193
       },
       "work": 373166.2366811197,
       "allocationUnits": 100172,
       "retainedBytes": 1200800,
-      "heapDeltaBytes": 5509000,
+      "heapDeltaBytes": 5508888,
       "sourceBytes": 730
     },
     {
@@ -301,16 +301,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 8446562.5,
-        "p95": 8923316.5,
-        "relativeMAD": 0.0120685189981,
-        "minimum": 8201250,
-        "maximum": 9222541.5
+        "median": 5950277,
+        "p95": 6137176.8,
+        "relativeMAD": 0.0117034047322,
+        "minimum": 5827162.5,
+        "maximum": 6204002
       },
       "work": 837685.4018761062,
       "allocationUnits": 200028,
       "retainedBytes": 2399072,
-      "heapDeltaBytes": 10441000,
+      "heapDeltaBytes": 10440888,
       "sourceBytes": 730
     },
     {
@@ -323,11 +323,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 23187.5,
-        "p95": 27024.2956523,
-        "relativeMAD": 0.020268141562,
-        "minimum": 18106.2881356,
-        "maximum": 29342.1929134
+        "median": 55058.4492754,
+        "p95": 66866.530869,
+        "relativeMAD": 0.057617924648,
+        "minimum": 47121.9658537,
+        "maximum": 67717.5784753
       },
       "work": 101878,
       "allocationUnits": 1,
@@ -345,11 +345,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 21298.625,
-        "p95": 27954.3623333,
-        "relativeMAD": 0.0223306135318,
-        "minimum": 19518,
-        "maximum": 30853.34
+        "median": 18924.5289256,
+        "p95": 43812.5716114,
+        "relativeMAD": 0.0797267738297,
+        "minimum": 16370.0655738,
+        "maximum": 51388.7723577
       },
       "work": 105872,
       "allocationUnits": 1,
@@ -367,11 +367,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 93728.1553398,
-        "p95": 98232.4344156,
-        "relativeMAD": 0.0137830223821,
-        "minimum": 91368.0555556,
-        "maximum": 99874.5119048
+        "median": 85907.5071429,
+        "p95": 107535.096786,
+        "relativeMAD": 0.0545274012574,
+        "minimum": 67238.3027523,
+        "maximum": 112827.9375
       },
       "work": 150808,
       "allocationUnits": 1,
@@ -389,11 +389,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 171035.714286,
-        "p95": 256719.606112,
-        "relativeMAD": 0.00849603257465,
-        "minimum": 168033.333333,
-        "maximum": 311950.361702
+        "median": 124604.792453,
+        "p95": 130487.818865,
+        "relativeMAD": 0.00662121651773,
+        "minimum": 123779.757143,
+        "maximum": 131684.353846
       },
       "work": 200736,
       "allocationUnits": 1,
@@ -410,11 +410,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 54558.627907,
-        "p95": 56619.3511111,
-        "relativeMAD": 0.0157109223857,
-        "minimum": 52185.9354839,
-        "maximum": 57196.7555556
+        "median": 15848.6963351,
+        "p95": 18780.3173737,
+        "relativeMAD": 0.0101102578255,
+        "minimum": 15328.7451737,
+        "maximum": 20154.4404145
       },
       "work": 13606.617476658635,
       "allocationUnits": 10000,
@@ -431,11 +431,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 87607.2765957,
-        "p95": 90100.324439,
-        "relativeMAD": 0.0214518187563,
-        "minimum": 83462.5714286,
-        "maximum": 90327.5348837
+        "median": 43321.4109589,
+        "p95": 45064.1545455,
+        "relativeMAD": 0.0357695884505,
+        "minimum": 40283.5223881,
+        "maximum": 45192.9242424
       },
       "work": 23606.617476658634,
       "allocationUnits": 10000,
@@ -454,11 +454,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 363311.793103,
-        "p95": 365703.462381,
-        "relativeMAD": 0.00325140440154,
-        "minimum": 358680.533333,
-        "maximum": 366510.392857
+        "median": 240961.219512,
+        "p95": 263341.894216,
+        "relativeMAD": 0.0146079936934,
+        "minimum": 236288.642857,
+        "maximum": 272724.302326
       },
       "work": 163840,
       "allocationUnits": 800,
@@ -477,16 +477,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 3550944.33333,
-        "p95": 3624702.6,
-        "relativeMAD": 0.00484218611138,
-        "minimum": 3531375,
-        "maximum": 3627763.66667
+        "median": 2281700,
+        "p95": 2315434,
+        "relativeMAD": 0.00535986325983,
+        "minimum": 2262610,
+        "maximum": 2320723.6
       },
       "work": 2129920,
       "allocationUnits": 1280,
       "retainedBytes": 40960,
-      "heapDeltaBytes": 1147032,
+      "heapDeltaBytes": 1146984,
       "sourceBytes": 361
     },
     {
@@ -500,11 +500,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 156972.65625,
-        "p95": 160209.05323,
-        "relativeMAD": 0.00798272118437,
-        "minimum": 154497.469697,
-        "maximum": 160784.147541
+        "median": 105427.808219,
+        "p95": 106989.02406,
+        "relativeMAD": 0.0122567858562,
+        "minimum": 103530.836957,
+        "maximum": 107355.032609
       },
       "work": 20480,
       "allocationUnits": 800,
@@ -523,11 +523,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 336924.741935,
-        "p95": 343287.5,
-        "relativeMAD": 0.0067064334637,
-        "minimum": 331377.709677,
-        "maximum": 345234.375
+        "median": 258092.947368,
+        "p95": 265835.668908,
+        "relativeMAD": 0.0213939353838,
+        "minimum": 252319.914286,
+        "maximum": 266729.428571
       },
       "work": 266240,
       "allocationUnits": 1280,
@@ -546,16 +546,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 8935979.5,
-        "p95": 10070208.1,
-        "relativeMAD": 0.0115287305662,
-        "minimum": 8797062.5,
-        "maximum": 10746791.5
+        "median": 6644964.5,
+        "p95": 6767267.9,
+        "relativeMAD": 0.004753975736,
+        "minimum": 6542000.5,
+        "maximum": 6795384.5
       },
       "work": 2883584,
       "allocationUnits": 12320,
       "retainedBytes": 655360,
-      "heapDeltaBytes": 8578976,
+      "heapDeltaBytes": 8873304,
       "sourceBytes": 361
     },
     {
@@ -569,16 +569,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 62040458,
-        "p95": 62847650.2,
-        "relativeMAD": 0.017126582141,
-        "minimum": 60798209,
-        "maximum": 63127167
+        "median": 44272316,
+        "p95": 44950086.8,
+        "relativeMAD": 0.0151934224539,
+        "minimum": 43177020,
+        "maximum": 44953502
       },
       "work": 34340864,
       "allocationUnits": 12800,
       "retainedBytes": 655360,
-      "heapDeltaBytes": 9272416,
+      "heapDeltaBytes": 9525888,
       "sourceBytes": 361
     },
     {
@@ -592,16 +592,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 5233833.33333,
-        "p95": 5338379,
-        "relativeMAD": 0.0121086520396,
-        "minimum": 5129291.66667,
-        "maximum": 5342229
+        "median": 3897403,
+        "p95": 3973889.26667,
+        "relativeMAD": 0.00968961468276,
+        "minimum": 3841272.66667,
+        "maximum": 3978285.66667
       },
       "work": 360448,
       "allocationUnits": 12320,
       "retainedBytes": 196608,
-      "heapDeltaBytes": 8562376,
+      "heapDeltaBytes": 8889520,
       "sourceBytes": 361
     },
     {
@@ -615,16 +615,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 5555916.5,
-        "p95": 5619987.7,
-        "relativeMAD": 0.00532459406112,
-        "minimum": 5469979.5,
-        "maximum": 5642479.5
+        "median": 4116005,
+        "p95": 4162528.4,
+        "relativeMAD": 0.0069927028758,
+        "minimum": 4058026.66667,
+        "maximum": 4174356
       },
       "work": 4292608,
       "allocationUnits": 12800,
       "retainedBytes": 196608,
-      "heapDeltaBytes": 8997176,
+      "heapDeltaBytes": 9308592,
       "sourceBytes": 361
     },
     {
@@ -638,11 +638,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 180021.454545,
-        "p95": 183907.090702,
-        "relativeMAD": 0.00939079988449,
-        "minimum": 177828.571429,
-        "maximum": 184993.882353
+        "median": 141270.966102,
+        "p95": 155707.674576,
+        "relativeMAD": 0.00643767814345,
+        "minimum": 139978.864407,
+        "maximum": 162962.576271
       },
       "work": 131072,
       "allocationUnits": 1,
@@ -661,16 +661,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 3252625,
-        "p95": 3272033.35,
-        "relativeMAD": 0.00392629030401,
-        "minimum": 3227854,
-        "maximum": 3274041.75
+        "median": 2511379.8,
+        "p95": 2584223.08,
+        "relativeMAD": 0.00908257683683,
+        "minimum": 2488570,
+        "maximum": 2601321
       },
       "work": 2097152,
       "allocationUnits": 1,
       "retainedBytes": 32768,
-      "heapDeltaBytes": 1148648,
+      "heapDeltaBytes": 2211184,
       "sourceBytes": 432
     },
     {
@@ -684,11 +684,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 18606.9245283,
-        "p95": 20323.3983217,
-        "relativeMAD": 0.0197993021133,
-        "minimum": 18024.7395833,
-        "maximum": 21001.6153846
+        "median": 16049.0608696,
+        "p95": 16693.9967348,
+        "relativeMAD": 0.00907775490278,
+        "minimum": 15791.2807018,
+        "maximum": 16855.626087
       },
       "work": 16384,
       "allocationUnits": 1,
@@ -707,11 +707,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 618220.9,
-        "p95": 634630.8,
-        "relativeMAD": 0.00776421502422,
-        "minimum": 610004.2,
-        "maximum": 641945.8
+        "median": 445132.090909,
+        "p95": 454704.236364,
+        "relativeMAD": 0.00519130889248,
+        "minimum": 441566.272727,
+        "maximum": 457438.090909
       },
       "work": 262144,
       "allocationUnits": 1,
@@ -730,16 +730,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 3174250,
-        "p95": 3299201.95,
-        "relativeMAD": 0.0141175080728,
-        "minimum": 3111708.5,
-        "maximum": 3331260.25
+        "median": 2451165,
+        "p95": 2486962.44,
+        "relativeMAD": 0.00245010025839,
+        "minimum": 2443141.8,
+        "maximum": 2500597.8
       },
       "work": 2097152,
       "allocationUnits": 1,
       "retainedBytes": 524288,
-      "heapDeltaBytes": 987944,
+      "heapDeltaBytes": 1911064,
       "sourceBytes": 432
     },
     {
@@ -753,16 +753,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 46195459,
-        "p95": 46736117.2,
-        "relativeMAD": 0.00533513478026,
-        "minimum": 45509000,
-        "maximum": 46748834
+        "median": 36380937,
+        "p95": 37124404.4,
+        "relativeMAD": 0.00798393400369,
+        "minimum": 36066686,
+        "maximum": 37255816
       },
       "work": 33554432,
       "allocationUnits": 1,
       "retainedBytes": 524288,
-      "heapDeltaBytes": 1089272,
+      "heapDeltaBytes": 1854016,
       "sourceBytes": 432
     },
     {
@@ -776,11 +776,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 568612.5,
-        "p95": 604137.1,
-        "relativeMAD": 0.007247114687,
-        "minimum": 554770.8,
-        "maximum": 623464.6
+        "median": 407910.75,
+        "p95": 421394.283333,
+        "relativeMAD": 0.00316941133945,
+        "minimum": 406308.615385,
+        "maximum": 422655.916667
       },
       "work": 262144,
       "allocationUnits": 1,
@@ -799,16 +799,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 9201646,
-        "p95": 9348762.3,
-        "relativeMAD": 0.00575755685451,
-        "minimum": 9091812.5,
-        "maximum": 9411520.5
+        "median": 6801842,
+        "p95": 6885076.5,
+        "relativeMAD": 0.0103395521389,
+        "minimum": 6692807.5,
+        "maximum": 6893900.5
       },
       "work": 4194304,
       "allocationUnits": 1,
       "retainedBytes": 65536,
-      "heapDeltaBytes": 2428488,
+      "heapDeltaBytes": 3211432,
       "sourceBytes": 432
     },
     {
@@ -822,11 +822,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 181800,
-        "p95": 185581.693712,
-        "relativeMAD": 0.00818528995764,
-        "minimum": 179670.454545,
-        "maximum": 186360.294118
+        "median": 143054.296296,
+        "p95": 146052.935989,
+        "relativeMAD": 0.00885282204114,
+        "minimum": 141774.481481,
+        "maximum": 146667.90566
       },
       "work": 131328,
       "allocationUnits": 288,
@@ -845,11 +845,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2862312.5,
-        "p95": 2916731.3,
-        "relativeMAD": 0.00795536825566,
-        "minimum": 2815146,
-        "maximum": 2918760.5
+        "median": 2238512.4,
+        "p95": 2313916.56,
+        "relativeMAD": 0.0113126020655,
+        "minimum": 2210942.6,
+        "maximum": 2329320
       },
       "work": 2097408,
       "allocationUnits": 288,
@@ -868,11 +868,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 21507.1428571,
-        "p95": 23893.6674286,
-        "relativeMAD": 0.0117600681559,
-        "minimum": 21101.7205882,
-        "maximum": 25117.2266667
+        "median": 17957.5473684,
+        "p95": 19310.934,
+        "relativeMAD": 0.00869090668227,
+        "minimum": 17709.5773196,
+        "maximum": 19608.89
       },
       "work": 16640,
       "allocationUnits": 288,
@@ -891,11 +891,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 602187.5,
-        "p95": 606673.133333,
-        "relativeMAD": 0.00349420515491,
-        "minimum": 597247.529412,
-        "maximum": 606875
+        "median": 437725.55,
+        "p95": 443630.118182,
+        "relativeMAD": 0.00439317409156,
+        "minimum": 433016.478261,
+        "maximum": 446628.5
       },
       "work": 262400,
       "allocationUnits": 288,
@@ -914,11 +914,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2904031.25,
-        "p95": 3247180.65,
-        "relativeMAD": 0.0054019735497,
-        "minimum": 2886972.33333,
-        "maximum": 3454041.75
+        "median": 2262378.6,
+        "p95": 2436200.98333,
+        "relativeMAD": 0.00634657258522,
+        "minimum": 2248020.25,
+        "maximum": 2508276.75
       },
       "work": 2101248,
       "allocationUnits": 4128,
@@ -937,11 +937,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 45013917,
-        "p95": 45640733.4,
-        "relativeMAD": 0.00278156197782,
-        "minimum": 44305833,
-        "maximum": 45672417
+        "median": 35331851,
+        "p95": 35834471,
+        "relativeMAD": 0.00532788389717,
+        "minimum": 35012676,
+        "maximum": 35867085
       },
       "work": 33558528,
       "allocationUnits": 4128,
@@ -960,11 +960,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 647875,
-        "p95": 670252.380952,
-        "relativeMAD": 0.0101871502991,
-        "minimum": 633519.466667,
-        "maximum": 679944.444445
+        "median": 450897.454545,
+        "p95": 509012.981818,
+        "relativeMAD": 0.017287139668,
+        "minimum": 437831.3,
+        "maximum": 545953.272727
       },
       "work": 266240,
       "allocationUnits": 4128,
@@ -983,11 +983,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 8996229,
-        "p95": 9127191.6,
-        "relativeMAD": 0.012713660357,
-        "minimum": 8813208,
-        "maximum": 9138250
+        "median": 6440468.5,
+        "p95": 6571160,
+        "relativeMAD": 0.00896479813546,
+        "minimum": 6372495,
+        "maximum": 6593202
       },
       "work": 4198400,
       "allocationUnits": 4128,
@@ -1004,16 +1004,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 5721041.5,
-        "p95": 6142091.7,
-        "relativeMAD": 0.0182732462262,
-        "minimum": 5584333.5,
-        "maximum": 6170083.5
+        "median": 6277456.5,
+        "p95": 6389775.6,
+        "relativeMAD": 0.00620322896707,
+        "minimum": 6237890.5,
+        "maximum": 6407010
       },
       "work": 300000,
       "allocationUnits": 300000,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 15641944,
+      "heapDeltaBytes": 15699296,
       "sourceBytes": 217
     },
     {
@@ -1025,11 +1025,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 109602.855856,
-        "p95": 122900.405901,
-        "relativeMAD": 0.0651846769598,
-        "minimum": 96205.5084746,
-        "maximum": 127002.488095
+        "median": 246274.255814,
+        "p95": 250367.40907,
+        "relativeMAD": 0.00707572612609,
+        "minimum": 240830.461538,
+        "maximum": 251934.465116
       },
       "work": 100000,
       "allocationUnits": 100000,
@@ -1047,16 +1047,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 2674885.5,
-        "p95": 2764047.9,
-        "relativeMAD": 0.0201410490281,
-        "minimum": 2606375,
-        "maximum": 2775135.5
+        "median": 1709779.83333,
+        "p95": 1752557.1,
+        "relativeMAD": 0.0128897826764,
+        "minimum": 1685398.16667,
+        "maximum": 1755457.16667
       },
       "work": 32768,
       "allocationUnits": 4097,
       "retainedBytes": 163840,
-      "heapDeltaBytes": 2744992,
+      "heapDeltaBytes": 2746192,
       "sourceBytes": 210
     },
     {
@@ -1069,16 +1069,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 32736250,
-        "p95": 33650100,
-        "relativeMAD": 0.00270599106494,
-        "minimum": 32494459,
-        "maximum": 33987500
+        "median": 27540540,
+        "p95": 28122684,
+        "relativeMAD": 0.00818190202517,
+        "minimum": 26829460,
+        "maximum": 28173800
       },
       "work": 400000,
       "allocationUnits": 50001,
       "retainedBytes": 2000000,
-      "heapDeltaBytes": 33067568,
+      "heapDeltaBytes": 33067768,
       "sourceBytes": 210
     },
     {
@@ -1091,16 +1091,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 4573722.33333,
-        "p95": 4939216.66667,
-        "relativeMAD": 0.00433942681406,
-        "minimum": 4520250,
-        "maximum": 5021000
+        "median": 2657717.75,
+        "p95": 2717977,
+        "relativeMAD": 0.00561985936991,
+        "minimum": 2636838,
+        "maximum": 2719750.5
       },
       "work": 393216,
       "allocationUnits": 4096,
       "retainedBytes": 32768,
-      "heapDeltaBytes": 2748856,
+      "heapDeltaBytes": 2749552,
       "sourceBytes": 239
     },
     {
@@ -1113,16 +1113,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 72157666,
-        "p95": 72964933,
-        "relativeMAD": 0.00273649372196,
-        "minimum": 71619041,
-        "maximum": 73113833
+        "median": 45111966,
+        "p95": 46191218.6,
+        "relativeMAD": 0.00132148973512,
+        "minimum": 44848944,
+        "maximum": 46230971
       },
       "work": 6243856.189774725,
       "allocationUnits": 50000,
       "retainedBytes": 400000,
-      "heapDeltaBytes": 33071432,
+      "heapDeltaBytes": 33072128,
       "sourceBytes": 239
     },
     {
@@ -1135,16 +1135,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 2540.89806678,
-        "p95": 3110.6344108,
-        "relativeMAD": 0.0992145197231,
-        "minimum": 2288.80408542,
-        "maximum": 3120.91263441
+        "median": 3206.61767578,
+        "p95": 3845.49980469,
+        "relativeMAD": 0.0374618955885,
+        "minimum": 2789.46240234,
+        "maximum": 4088.77441406
       },
       "work": 3225,
       "allocationUnits": 2,
       "retainedBytes": 12500,
-      "heapDeltaBytes": 3696,
+      "heapDeltaBytes": 3808,
       "sourceBytes": 249
     },
     {
@@ -1157,16 +1157,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 4044.16666667,
-        "p95": 4727.25243836,
-        "relativeMAD": 0.0283010153691,
-        "minimum": 3268.93939394,
-        "maximum": 4818.06
+        "median": 2176.35260116,
+        "p95": 2482.0638905,
+        "relativeMAD": 0.081161926692,
+        "minimum": 1746.69753086,
+        "maximum": 2536.23931624
       },
       "work": 4125,
       "allocationUnits": 2,
       "retainedBytes": 12500,
-      "heapDeltaBytes": 3928,
+      "heapDeltaBytes": 4040,
       "sourceBytes": 249
     },
     {
@@ -1179,11 +1179,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 16437.3961353,
-        "p95": 18022.1632941,
-        "relativeMAD": 0.0132257039666,
-        "minimum": 14908,
-        "maximum": 18848.0588235
+        "median": 6679.37078652,
+        "p95": 6792.27185854,
+        "relativeMAD": 0.0103327631213,
+        "minimum": 6552.73863636,
+        "maximum": 6819.30337079
       },
       "work": 9375,
       "allocationUnits": 2,
@@ -1201,11 +1201,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 102919.736842,
-        "p95": 106263.420553,
-        "relativeMAD": 0.0111547372978,
-        "minimum": 101120.701031,
-        "maximum": 106912.454545
+        "median": 48611.0869565,
+        "p95": 51200.9203065,
+        "relativeMAD": 0.00883636463915,
+        "minimum": 47589.6,
+        "maximum": 51231.7407407
       },
       "work": 53125,
       "allocationUnits": 2,
@@ -1223,16 +1223,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 1655.17138672,
-        "p95": 1692.89951172,
-        "relativeMAD": 0.0134719220152,
-        "minimum": 1609.78173828,
-        "maximum": 1701.23291016
+        "median": 1176.89892578,
+        "p95": 1185.84277344,
+        "relativeMAD": 0.0051753130019,
+        "minimum": 1165.11474609,
+        "maximum": 1187.83300781
       },
       "work": 100,
       "allocationUnits": 101,
       "retainedBytes": 3200,
-      "heapDeltaBytes": 8488,
+      "heapDeltaBytes": 8600,
       "sourceBytes": 139
     },
     {
@@ -1245,16 +1245,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 19345.4258873,
-        "p95": 20523.1073967,
-        "relativeMAD": 0.0194742664481,
-        "minimum": 18576.8251748,
-        "maximum": 20582.0135747
+        "median": 9846.51243781,
+        "p95": 10010.3099529,
+        "relativeMAD": 0.00659373012554,
+        "minimum": 9723.60717846,
+        "maximum": 10013.1326633
       },
       "work": 1000,
       "allocationUnits": 1001,
       "retainedBytes": 32000,
-      "heapDeltaBytes": 44576,
+      "heapDeltaBytes": 44688,
       "sourceBytes": 139
     },
     {
@@ -1267,11 +1267,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 190306.333333,
-        "p95": 205208.202754,
-        "relativeMAD": 0.0167648394687,
-        "minimum": 185758.327273,
-        "maximum": 212568.702703
+        "median": 166145.017544,
+        "p95": 168225.084147,
+        "relativeMAD": 0.00841963023332,
+        "minimum": 162662.216667,
+        "maximum": 168313.163636
       },
       "work": 6250,
       "allocationUnits": 6251,
@@ -1289,11 +1289,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 1808516.6,
-        "p95": 1873896.72,
-        "relativeMAD": 0.0180764721761,
-        "minimum": 1741341.8,
-        "maximum": 1886166.8
+        "median": 1919793.8,
+        "p95": 1970336.56,
+        "relativeMAD": 0.00917473532835,
+        "minimum": 1895072.8,
+        "maximum": 1987509.6
       },
       "work": 50000,
       "allocationUnits": 50001,
@@ -1311,16 +1311,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 255.228515625,
-        "p95": 272.110742187,
-        "relativeMAD": 0.0298120556793,
-        "minimum": 243.957519531,
-        "maximum": 277.302734375
+        "median": 162.15234375,
+        "p95": 170.438769531,
+        "relativeMAD": 0.041904555419,
+        "minimum": 151.815429688,
+        "maximum": 170.503417969
       },
       "work": 100,
       "allocationUnits": 101,
       "retainedBytes": 800,
-      "heapDeltaBytes": 5528,
+      "heapDeltaBytes": 5640,
       "sourceBytes": 232
     },
     {
@@ -1333,16 +1333,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 1487.203125,
-        "p95": 1503.47900391,
-        "relativeMAD": 0.00864602704321,
-        "minimum": 1459.43164063,
-        "maximum": 1503.72314453
+        "median": 1116.93212891,
+        "p95": 1176.33945313,
+        "relativeMAD": 0.0262791713316,
+        "minimum": 1017.03662109,
+        "maximum": 1183.29785156
       },
       "work": 1000,
       "allocationUnits": 1001,
       "retainedBytes": 8000,
-      "heapDeltaBytes": 23528,
+      "heapDeltaBytes": 23640,
       "sourceBytes": 232
     },
     {
@@ -1355,11 +1355,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 7837.16811594,
-        "p95": 8367.03536869,
-        "relativeMAD": 0.00542932747814,
-        "minimum": 7741.05124341,
-        "maximum": 8689.87175793
+        "median": 5589.69965017,
+        "p95": 5599.8486995,
+        "relativeMAD": 0.00176669824984,
+        "minimum": 5444.28417969,
+        "maximum": 5600.8165273
       },
       "work": 6250,
       "allocationUnits": 6251,
@@ -1377,11 +1377,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 137898.666667,
-        "p95": 142542.682927,
-        "relativeMAD": 0.0144059230142,
-        "minimum": 134549.804878,
-        "maximum": 143541.666667
+        "median": 387927.941176,
+        "p95": 413552.989638,
+        "relativeMAD": 0.0217005129061,
+        "minimum": 376298,
+        "maximum": 422489.548387
       },
       "work": 50000,
       "allocationUnits": 50001,
@@ -1400,11 +1400,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 989.211243611,
-        "p95": 1065.20293241,
-        "relativeMAD": 0.0285000122823,
-        "minimum": 957.330661323,
-        "maximum": 1096.79878049
+        "median": 745.782608696,
+        "p95": 775.854908584,
+        "relativeMAD": 0.0107315400094,
+        "minimum": 730.63509411,
+        "maximum": 777.950209958
       },
       "work": 257,
       "allocationUnits": 2,
@@ -1423,11 +1423,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 29.3784179687,
-        "p95": 35.5100585938,
-        "relativeMAD": 0.0179999002775,
-        "minimum": 28.80859375,
-        "maximum": 36.5190429688
+        "median": 25.4384765625,
+        "p95": 30.7583007812,
+        "relativeMAD": 0.0351836922729,
+        "minimum": 23.8979492188,
+        "maximum": 32.8110351562
       },
       "work": 5,
       "allocationUnits": 2,
@@ -1446,11 +1446,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 9614.10769231,
-        "p95": 10316.1567362,
-        "relativeMAD": 0.0115253654893,
-        "minimum": 9503.3015873,
-        "maximum": 10504.0784314
+        "median": 5786.50806452,
+        "p95": 5923.57903226,
+        "relativeMAD": 0.0181224646927,
+        "minimum": 5676.9516129,
+        "maximum": 5928.39516129
       },
       "work": 8224,
       "allocationUnits": 64,
@@ -1469,11 +1469,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 161.112304687,
-        "p95": 184.615234375,
-        "relativeMAD": 0.0145230605109,
-        "minimum": 153.584472656,
-        "maximum": 186.299804687
+        "median": 97.9541015624,
+        "p95": 126.603710938,
+        "relativeMAD": 0.0192313443986,
+        "minimum": 95.6352539062,
+        "maximum": 142.442382813
       },
       "work": 160,
       "allocationUnits": 64,
@@ -1492,11 +1492,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 18700.9819005,
-        "p95": 19007.4693807,
-        "relativeMAD": 0.00348422191885,
-        "minimum": 18417.9473684,
-        "maximum": 19145.2614679
+        "median": 11108.9038462,
+        "p95": 11553.3801869,
+        "relativeMAD": 0.0121243484523,
+        "minimum": 10969.2484663,
+        "maximum": 11578.5669782
       },
       "work": 16448,
       "allocationUnits": 128,
@@ -1515,11 +1515,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 312.179970253,
-        "p95": 336.200366389,
-        "relativeMAD": 0.034696921631,
-        "minimum": 298.597278226,
-        "maximum": 341.190389294
+        "median": 195.315541601,
+        "p95": 237.335546875,
+        "relativeMAD": 0.0387974688045,
+        "minimum": 187.312011719,
+        "maximum": 240.268554688
       },
       "work": 320,
       "allocationUnits": 128,
@@ -1538,11 +1538,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 3011.77173913,
-        "p95": 3317.03573554,
-        "relativeMAD": 0.0318857144537,
-        "minimum": 2900.43604651,
-        "maximum": 3347.83977901
+        "median": 1910.42079208,
+        "p95": 2041.90738916,
+        "relativeMAD": 0.0129962425987,
+        "minimum": 1881.5245098,
+        "maximum": 2072.91133005
       },
       "work": 2056,
       "allocationUnits": 16,
@@ -1561,11 +1561,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 56.8642578125,
-        "p95": 80.58671875,
-        "relativeMAD": 0.0067921482427,
-        "minimum": 56.2744140625,
-        "maximum": 95.1943359375
+        "median": 33.912109375,
+        "p95": 47.21328125,
+        "relativeMAD": 0.00678166215441,
+        "minimum": 33.65234375,
+        "maximum": 54.23828125
       },
       "work": 40,
       "allocationUnits": 16,
@@ -1584,11 +1584,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 1276.72759227,
-        "p95": 1703.76964067,
-        "relativeMAD": 0.0530283179085,
-        "minimum": 1193.04297521,
-        "maximum": 1938.27013423
+        "median": 797.940429688,
+        "p95": 859.272165386,
+        "relativeMAD": 0.0434070378942,
+        "minimum": 741.813476562,
+        "maximum": 860.955078125
       },
       "work": 903,
       "allocationUnits": 647,
@@ -1607,11 +1607,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 454.184647303,
-        "p95": 719.073976242,
-        "relativeMAD": 0.0468944544672,
-        "minimum": 405.574430823,
-        "maximum": 847.171328671
+        "median": 329.093023256,
+        "p95": 569.725715536,
+        "relativeMAD": 0.177455861962,
+        "minimum": 261.59009009,
+        "maximum": 628.433070866
       },
       "work": 651,
       "allocationUnits": 647,
@@ -1630,11 +1630,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 11187.4189723,
-        "p95": 11820.5452161,
-        "relativeMAD": 0.0148098593987,
-        "minimum": 10700.6880734,
-        "maximum": 11838.1147541
+        "median": 8260.89347079,
+        "p95": 9341.96644942,
+        "relativeMAD": 0.0336890339101,
+        "minimum": 7617.97034596,
+        "maximum": 9617.38447972
       },
       "work": 8839,
       "allocationUnits": 8583,
@@ -1653,11 +1653,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 10185.4062969,
-        "p95": 10688.784159,
-        "relativeMAD": 0.0103393999085,
-        "minimum": 9883.18181818,
-        "maximum": 10920.5192604
+        "median": 7905.47674419,
+        "p95": 10170.957171,
+        "relativeMAD": 0.0404726506148,
+        "minimum": 7473.03675345,
+        "maximum": 11105.5841924
       },
       "work": 8587,
       "allocationUnits": 8583,
@@ -1676,11 +1676,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 20892.7777778,
-        "p95": 22153.9683684,
-        "relativeMAD": 0.0108136363191,
-        "minimum": 20184.079602,
-        "maximum": 22308.9005236
+        "median": 17614.801444,
+        "p95": 19143.592379,
+        "relativeMAD": 0.0170875758002,
+        "minimum": 16969.9899329,
+        "maximum": 19308.9201521
       },
       "work": 17031,
       "allocationUnits": 16775,
@@ -1699,11 +1699,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 20176.504918,
-        "p95": 20967.4044162,
-        "relativeMAD": 0.0152586979129,
-        "minimum": 19868.6377246,
-        "maximum": 21086.3295455
+        "median": 15159.7799353,
+        "p95": 16369.1487597,
+        "relativeMAD": 0.0543925663825,
+        "minimum": 14335.2005988,
+        "maximum": 16374.4178674
       },
       "work": 16779,
       "allocationUnits": 16775,
@@ -1722,11 +1722,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2876.08932462,
-        "p95": 3754.00969815,
-        "relativeMAD": 0.0442086124656,
-        "minimum": 2723.397463,
-        "maximum": 4162.94642857
+        "median": 2147.37375083,
+        "p95": 2275.31738019,
+        "relativeMAD": 0.0137563772895,
+        "minimum": 2095.03212291,
+        "maximum": 2296.43333333
       },
       "work": 2695,
       "allocationUnits": 2439,
@@ -1745,11 +1745,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2508.52441406,
-        "p95": 3128.82080078,
-        "relativeMAD": 0.0287108916511,
-        "minimum": 2433.41064453,
-        "maximum": 3276.06201172
+        "median": 1658.12646484,
+        "p95": 1729.04667969,
+        "relativeMAD": 0.0215313252114,
+        "minimum": 1607.47460938,
+        "maximum": 1741.89648438
       },
       "work": 2443,
       "allocationUnits": 2439,
@@ -1768,16 +1768,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 211150.634615,
-        "p95": 322594.857143,
-        "relativeMAD": 0.0107278995459,
-        "minimum": 205003.711111,
-        "maximum": 386986.095238
+        "median": 572752.578947,
+        "p95": 599126.171242,
+        "relativeMAD": 0.0168622457442,
+        "minimum": 559937.866667,
+        "maximum": 604615.470588
       },
       "work": 100256,
       "allocationUnits": 100000,
       "retainedBytes": 800000,
-      "heapDeltaBytes": 1608800,
+      "heapDeltaBytes": 1600576,
       "sourceBytes": 254
     },
     {
@@ -1791,16 +1791,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 205775.333333,
-        "p95": 218174.830118,
-        "relativeMAD": 0.0283733727231,
-        "minimum": 196204.854167,
-        "maximum": 220417.490196
+        "median": 592145.904762,
+        "p95": 628689.360714,
+        "relativeMAD": 0.0288489417907,
+        "minimum": 564526.45,
+        "maximum": 641663.142857
       },
       "work": 100004,
       "allocationUnits": 100000,
       "retainedBytes": 800000,
-      "heapDeltaBytes": 1600576,
+      "heapDeltaBytes": 1600736,
       "sourceBytes": 254
     },
     {
@@ -1814,11 +1814,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 3193264,
-        "p95": 3462266.7,
-        "relativeMAD": 0.0564360635388,
-        "minimum": 2968014,
-        "maximum": 3491625
+        "median": 8898851.5,
+        "p95": 9042138,
+        "relativeMAD": 0.0175899665255,
+        "minimum": 7835471,
+        "maximum": 9055382
       },
       "work": 3200256,
       "allocationUnits": 3200000,
@@ -1837,11 +1837,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 3185427,
-        "p95": 3954900,
-        "relativeMAD": 0.0463667822242,
-        "minimum": 2902562.5,
-        "maximum": 4369416.66667
+        "median": 8874829,
+        "p95": 8980205.7,
+        "relativeMAD": 0.0122529121406,
+        "minimum": 7874295,
+        "maximum": 8983571.5
       },
       "work": 3200004,
       "allocationUnits": 3200000,
@@ -1860,11 +1860,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 6006562.5,
-        "p95": 6388475.1,
-        "relativeMAD": 0.0259542791738,
-        "minimum": 5517375,
-        "maximum": 6530458.5
+        "median": 16793448,
+        "p95": 17692967.8,
+        "relativeMAD": 0.0444123803522,
+        "minimum": 15445359,
+        "maximum": 17795423
       },
       "work": 6400256,
       "allocationUnits": 6400000,
@@ -1883,16 +1883,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 5822270.5,
-        "p95": 6728945.8,
-        "relativeMAD": 0.0417791478427,
-        "minimum": 5436166,
-        "maximum": 6933354
+        "median": 17629503,
+        "p95": 17700712.2,
+        "relativeMAD": 0.00206886149881,
+        "minimum": 17065994,
+        "maximum": 17725913
       },
       "work": 6400004,
       "allocationUnits": 6400000,
       "retainedBytes": 800000,
-      "heapDeltaBytes": 52016360,
+      "heapDeltaBytes": 20006112,
       "sourceBytes": 254
     },
     {
@@ -1906,11 +1906,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 855847.166667,
-        "p95": 1082785.73,
-        "relativeMAD": 0.0318818994746,
-        "minimum": 814156.25,
-        "maximum": 1160770.75
+        "median": 2448416.33333,
+        "p95": 2541724.6,
+        "relativeMAD": 0.018356355244,
+        "minimum": 2389645.25,
+        "maximum": 2557464.33333
       },
       "work": 800256,
       "allocationUnits": 800000,
@@ -1929,11 +1929,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 873310.545455,
-        "p95": 1223481.02222,
-        "relativeMAD": 0.0153271417769,
-        "minimum": 828762.5,
-        "maximum": 1429882
+        "median": 2419259.25,
+        "p95": 2542284.26667,
+        "relativeMAD": 0.0225672382983,
+        "minimum": 2354351,
+        "maximum": 2553406.66667
       },
       "work": 800004,
       "allocationUnits": 800000,
@@ -1951,16 +1951,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 1816784.66667,
-        "p95": 1841498.66667,
-        "relativeMAD": 0.00525965836348,
-        "minimum": 1778208.33333,
-        "maximum": 1845798.66667
+        "median": 1287274.44444,
+        "p95": 1325686.74286,
+        "relativeMAD": 0.00713669795012,
+        "minimum": 1277209.33333,
+        "maximum": 1342210.66667
       },
       "work": 571516.495181978,
       "allocationUnits": 40000,
       "retainedBytes": 320000,
-      "heapDeltaBytes": 777112,
+      "heapDeltaBytes": 776976,
       "sourceBytes": 260
     },
     {
@@ -1974,16 +1974,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 7214666.5,
-        "p95": 7365745.9,
-        "relativeMAD": 0.00901808836207,
-        "minimum": 7021250,
-        "maximum": 7370729.5
+        "median": 5144571.66667,
+        "p95": 5203323.5,
+        "relativeMAD": 0.00709861494781,
+        "minimum": 5089304.33333,
+        "maximum": 5211148.5
       },
       "work": 2286033.980727912,
       "allocationUnits": 160000,
       "retainedBytes": 1280000,
-      "heapDeltaBytes": 3136264,
+      "heapDeltaBytes": 3136128,
       "sourceBytes": 240
     },
     {
@@ -1996,16 +1996,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 7243437.5,
-        "p95": 7385637.3,
-        "relativeMAD": 0.00767073644249,
-        "minimum": 7165542,
-        "maximum": 7443395.5
+        "median": 5184047.66667,
+        "p95": 5564508.4,
+        "relativeMAD": 0.00962111780991,
+        "minimum": 5130975.66667,
+        "maximum": 5734788
       },
       "work": 2286033.980727912,
       "allocationUnits": 160000,
       "retainedBytes": 0,
-      "heapDeltaBytes": 3136264,
+      "heapDeltaBytes": 3136128,
       "sourceBytes": 113
     },
     {
@@ -2019,16 +2019,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 7187541.5,
-        "p95": 7338187.6,
-        "relativeMAD": 0.00850715088049,
-        "minimum": 7125937.5,
-        "maximum": 7353521
+        "median": 5164819.5,
+        "p95": 5255996.6,
+        "relativeMAD": 0.0100122569627,
+        "minimum": 5084477.5,
+        "maximum": 5282307
       },
       "work": 2286033.980727912,
       "allocationUnits": 160000,
       "retainedBytes": 0,
-      "heapDeltaBytes": 3136264,
+      "heapDeltaBytes": 3136128,
       "sourceBytes": 141
     },
     {
@@ -2041,16 +2041,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 904409.666667,
-        "p95": 928754.85,
-        "relativeMAD": 0.0110339930762,
-        "minimum": 889243,
-        "maximum": 928822.916667
+        "median": 647010.411765,
+        "p95": 659278.673529,
+        "relativeMAD": 0.0113697597556,
+        "minimum": 639654.058824,
+        "maximum": 659739.705882
       },
       "work": 285762.247590989,
       "allocationUnits": 20000,
       "retainedBytes": 160000,
-      "heapDeltaBytes": 380720,
+      "heapDeltaBytes": 380584,
       "sourceBytes": 138
     },
     {
@@ -2064,16 +2064,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 7199125,
-        "p95": 7286304,
-        "relativeMAD": 0.00234403486532,
-        "minimum": 7019646,
-        "maximum": 7310354
+        "median": 5179718,
+        "p95": 5312987.6,
+        "relativeMAD": 0.00998973303177,
+        "minimum": 5099082.66667,
+        "maximum": 5367338
       },
       "work": 2286033.980727912,
       "allocationUnits": 160000,
       "retainedBytes": 160000,
-      "heapDeltaBytes": 3136264,
+      "heapDeltaBytes": 3136128,
       "sourceBytes": 177
     },
     {
@@ -2085,11 +2085,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 247331.081081,
-        "p95": 257080.21141,
-        "relativeMAD": 0.00941375586219,
-        "minimum": 244137.75,
-        "maximum": 259147.925
+        "median": 118207.126214,
+        "p95": 140742.137864,
+        "relativeMAD": 0.00975710399404,
+        "minimum": 116603.989011,
+        "maximum": 154739.291262
       },
       "work": 100000,
       "allocationUnits": 0,
@@ -2106,11 +2106,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 16.7236328126,
-        "p95": 24.0640625,
-        "relativeMAD": 0.0291970802978,
-        "minimum": 15.5029296873,
-        "maximum": 28.4423828125
+        "median": 7.56787109379,
+        "p95": 14.7761718752,
+        "relativeMAD": 0.012904058323,
+        "minimum": 7.44580078127,
+        "maximum": 14.9306640627
       },
       "work": 2,
       "allocationUnits": 0,
@@ -2129,11 +2129,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 14314.2040816,
-        "p95": 14850.5989744,
-        "relativeMAD": 0.0164824589379,
-        "minimum": 13857.0512821,
-        "maximum": 14983.3333333
+        "median": 5967.33660131,
+        "p95": 6258.89780233,
+        "relativeMAD": 0.0101510440242,
+        "minimum": 5906.76190476,
+        "maximum": 6376.10224439
       },
       "work": 20064,
       "allocationUnits": 1,
@@ -2152,11 +2152,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 14477.3706897,
-        "p95": 15175.6146173,
-        "relativeMAD": 0.0164100772426,
-        "minimum": 14069.2567568,
-        "maximum": 15345.5789474
+        "median": 6028.7122093,
+        "p95": 6213.46260871,
+        "relativeMAD": 0.00674641745893,
+        "minimum": 5961.85196375,
+        "maximum": 6236.09384164
       },
       "work": 20064,
       "allocationUnits": 1,
@@ -2175,16 +2175,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 1023059,
-        "p95": 1081086.34667,
-        "relativeMAD": 0.0134977552614,
-        "minimum": 971726.888889,
-        "maximum": 1082058.3
+        "median": 879861.9,
+        "p95": 1163107.64889,
+        "relativeMAD": 0.0675700140583,
+        "minimum": 820409.619048,
+        "maximum": 1214208.6
       },
       "work": 1280000,
       "allocationUnits": 1280000,
       "retainedBytes": 80000,
-      "heapDeltaBytes": 22240,
+      "heapDeltaBytes": 22784,
       "sourceBytes": 263
     },
     {
@@ -2198,16 +2198,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 1019270.83333,
-        "p95": 1128275.43333,
-        "relativeMAD": 0.0272978417801,
-        "minimum": 898972.25,
-        "maximum": 1169187.5
+        "median": 826806.148148,
+        "p95": 975236.878571,
+        "relativeMAD": 0.0567752322794,
+        "minimum": 761056.444444,
+        "maximum": 1009262.75
       },
       "work": 1280000,
       "allocationUnits": 1280000,
       "retainedBytes": 80000,
-      "heapDeltaBytes": 13056,
+      "heapDeltaBytes": 22784,
       "sourceBytes": 263
     },
     {
@@ -2221,11 +2221,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 507.222167968,
-        "p95": 529.264257812,
-        "relativeMAD": 0.0296816202671,
-        "minimum": 462.341308594,
-        "maximum": 532.836914062
+        "median": 390.284667969,
+        "p95": 497.416601563,
+        "relativeMAD": 0.082141565839,
+        "minimum": 323.928222656,
+        "maximum": 538.934570312
       },
       "work": 129,
       "allocationUnits": 2,
@@ -2244,11 +2244,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 647670.454546,
-        "p95": 692179.005882,
-        "relativeMAD": 0.0333948214082,
-        "minimum": 626041.615385,
-        "maximum": 697440.5
+        "median": 517723.125,
+        "p95": 552940.498261,
+        "relativeMAD": 0.0166638412226,
+        "minimum": 478409.761905,
+        "maximum": 567178.130435
       },
       "work": 112596,
       "allocationUnits": 3126,
@@ -2267,11 +2267,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 18226.9372093,
-        "p95": 21019.7486343,
-        "relativeMAD": 0.0362930970266,
-        "minimum": 15825.9259259,
-        "maximum": 21068.3411215
+        "median": 20443.0633914,
+        "p95": 26590.3316269,
+        "relativeMAD": 0.133119997852,
+        "minimum": 16689.6526656,
+        "maximum": 26934.9199346
       },
       "work": 4224,
       "allocationUnits": 128,
@@ -2290,11 +2290,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2298.63986874,
-        "p95": 2770.84403013,
-        "relativeMAD": 0.0704122456655,
-        "minimum": 2136.78747361,
-        "maximum": 2873.83839213
+        "median": 2455.74414062,
+        "p95": 2554.02910156,
+        "relativeMAD": 0.0235683875735,
+        "minimum": 2334.34716797,
+        "maximum": 2575.2890625
       },
       "work": 584,
       "allocationUnits": 16,
@@ -2313,11 +2313,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 396123.384615,
-        "p95": 404430.020364,
-        "relativeMAD": 0.00678793757283,
-        "minimum": 386126.826087,
-        "maximum": 405711.64
+        "median": 253234.548387,
+        "p95": 276060.151462,
+        "relativeMAD": 0.00792328061036,
+        "minimum": 250523.314286,
+        "maximum": 284796.789474
       },
       "work": 100065,
       "allocationUnits": 1,
@@ -2336,11 +2336,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 450644.809524,
-        "p95": 461722.163529,
-        "relativeMAD": 0.0069415190361,
-        "minimum": 441755.952381,
-        "maximum": 462072.9
+        "median": 269445.606061,
+        "p95": 282683.833397,
+        "relativeMAD": 0.00672069080103,
+        "minimum": 266459.757576,
+        "maximum": 287226.741935
       },
       "work": 112564,
       "allocationUnits": 1,
@@ -2359,11 +2359,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 394881.185185,
-        "p95": 398566.427556,
-        "relativeMAD": 0.00176588513435,
-        "minimum": 391260.814815,
-        "maximum": 398859.592593
+        "median": 253784.305556,
+        "p95": 258305.397509,
+        "relativeMAD": 0.00378176625964,
+        "minimum": 250410.361111,
+        "maximum": 258643.542857
       },
       "work": 100128,
       "allocationUnits": 1,
@@ -2382,11 +2382,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 394828.36,
-        "p95": 406791.774074,
-        "relativeMAD": 0.00936006536932,
-        "minimum": 388842.592593,
-        "maximum": 406862.833333
+        "median": 253321.606061,
+        "p95": 258315.972119,
+        "relativeMAD": 0.00166277633498,
+        "minimum": 250649.512821,
+        "maximum": 259972.567568
       },
       "work": 100072,
       "allocationUnits": 1,
@@ -2405,16 +2405,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 551212.5,
-        "p95": 559208.305263,
-        "relativeMAD": 0.00417642923554,
-        "minimum": 543310.166667,
-        "maximum": 560831.105263
+        "median": 362430.103448,
+        "p95": 415499.006897,
+        "relativeMAD": 0.00548609415044,
+        "minimum": 360441.777778,
+        "maximum": 447248
       },
       "work": 11079.626630838393,
       "allocationUnits": 10016.609640474437,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1071344,
+      "heapDeltaBytes": 1123048,
       "sourceBytes": 409
     },
     {
@@ -2428,16 +2428,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 2106875,
-        "p95": 2132673.4,
-        "relativeMAD": 0.00584590922581,
-        "minimum": 2088300,
-        "maximum": 2139733.4
+        "median": 1235426,
+        "p95": 1409060.4,
+        "relativeMAD": 0.0162348857804,
+        "minimum": 1210259.375,
+        "maximum": 1443538
       },
       "work": 218683.5229208241,
       "allocationUnits": 217620.50593046015,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 2797072,
+      "heapDeltaBytes": 2839072,
       "sourceBytes": 409
     },
     {
@@ -2451,16 +2451,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 554008.736842,
-        "p95": 562392.980186,
-        "relativeMAD": 0.00628994450596,
-        "minimum": 544456,
-        "maximum": 565659.352941
+        "median": 377475.190476,
+        "p95": 404887.8,
+        "relativeMAD": 0.0105423894778,
+        "minimum": 366747.863636,
+        "maximum": 421115.47619
       },
       "work": 12126.033980727912,
       "allocationUnits": 11063.016990363956,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1070392,
+      "heapDeltaBytes": 1131616,
       "sourceBytes": 409
     },
     {
@@ -2474,16 +2474,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 541489.052632,
-        "p95": 553260.616842,
-        "relativeMAD": 0.0073457576825,
-        "minimum": 536366.7,
-        "maximum": 557964.894737
+        "median": 364646.275862,
+        "p95": 377487.690394,
+        "relativeMAD": 0.00522271213167,
+        "minimum": 358635.733333,
+        "maximum": 381610.035714
       },
       "work": 11195.894114159451,
       "allocationUnits": 10132.877123795495,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1068072,
+      "heapDeltaBytes": 1124000,
       "sourceBytes": 409
     },
     {
@@ -2497,11 +2497,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 515.66631412,
-        "p95": 585.791502559,
-        "relativeMAD": 0.0202016117744,
-        "minimum": 487.735632185,
-        "maximum": 612.393767705
+        "median": 358.265625001,
+        "p95": 417.298046875,
+        "relativeMAD": 0.0318701208103,
+        "minimum": 343.394042968,
+        "maximum": 434.244140625
       },
       "work": 129,
       "allocationUnits": 2,
@@ -2520,11 +2520,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 643354.166667,
-        "p95": 679373.866667,
-        "relativeMAD": 0.0213590004894,
-        "minimum": 619335.9375,
-        "maximum": 680247.2
+        "median": 538425.75,
+        "p95": 637059.727273,
+        "relativeMAD": 0.0479091550271,
+        "minimum": 500034.045454,
+        "maximum": 637499.545455
       },
       "work": 112596,
       "allocationUnits": 3126,
@@ -2543,11 +2543,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 17340.1985019,
-        "p95": 19036.887638,
-        "relativeMAD": 0.00937506129674,
-        "minimum": 17024.8015873,
-        "maximum": 19083.4453333
+        "median": 18557.2890855,
+        "p95": 24896.5215941,
+        "relativeMAD": 0.0810358396919,
+        "minimum": 16833.836858,
+        "maximum": 25009.2318612
       },
       "work": 4224,
       "allocationUnits": 128,
@@ -2566,11 +2566,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 2306.55459057,
-        "p95": 2809.97252251,
-        "relativeMAD": 0.0609771100973,
-        "minimum": 2049.1095176,
-        "maximum": 2831.48967552
+        "median": 2268.21923828,
+        "p95": 2573.81113281,
+        "relativeMAD": 0.0175467185957,
+        "minimum": 2166.72021484,
+        "maximum": 2673.50488281
       },
       "work": 584,
       "allocationUnits": 16,
@@ -2589,11 +2589,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 396492,
-        "p95": 403724.176923,
-        "relativeMAD": 0.00928828518421,
-        "minimum": 390306.115385,
-        "maximum": 404913.166667
+        "median": 254182.432432,
+        "p95": 310984.103104,
+        "relativeMAD": 0.00618249592735,
+        "minimum": 251985.277778,
+        "maximum": 343087.368421
       },
       "work": 100065,
       "allocationUnits": 1,
@@ -2612,11 +2612,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 447109.818182,
-        "p95": 455307.56996,
-        "relativeMAD": 0.00966225909934,
-        "minimum": 440439.833333,
-        "maximum": 456318.181818
+        "median": 269026.566667,
+        "p95": 302015.743382,
+        "relativeMAD": 0.0116888261294,
+        "minimum": 265627.314286,
+        "maximum": 317222.676471
       },
       "work": 112564,
       "allocationUnits": 1,
@@ -2635,11 +2635,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 393913.32,
-        "p95": 398947.160889,
-        "relativeMAD": 0.00300606156781,
-        "minimum": 390437.5,
-        "maximum": 400260.814815
+        "median": 256219.675,
+        "p95": 311653.227105,
+        "relativeMAD": 0.0140856018703,
+        "minimum": 252610.666667,
+        "maximum": 343228.975
       },
       "work": 100128,
       "allocationUnits": 1,
@@ -2658,11 +2658,11 @@
       },
       "timing": {
         "count": 9,
-        "median": 393158.36,
-        "p95": 400141.969231,
-        "relativeMAD": 0.0052207735562,
-        "minimum": 389591.285714,
-        "maximum": 401133
+        "median": 254264.051282,
+        "p95": 296193.287879,
+        "relativeMAD": 0.00908111071281,
+        "minimum": 251411.147059,
+        "maximum": 320310.611111
       },
       "work": 100072,
       "allocationUnits": 1,
@@ -2681,16 +2681,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 542535.4,
-        "p95": 548138.411111,
-        "relativeMAD": 0.0064703611968,
-        "minimum": 535985.4,
-        "maximum": 549048.611111
+        "median": 361970.107143,
+        "p95": 373360.050575,
+        "relativeMAD": 0.0048144471774,
+        "minimum": 358518.533333,
+        "maximum": 373882.888889
       },
       "work": 11079.626630838393,
       "allocationUnits": 10016.609640474437,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1064720,
+      "heapDeltaBytes": 1123048,
       "sourceBytes": 409
     },
     {
@@ -2704,16 +2704,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 2102883.4,
-        "p95": 2133263.36,
-        "relativeMAD": 0.00684774058325,
-        "minimum": 2087358.4,
-        "maximum": 2133516.8
+        "median": 1237546.88889,
+        "p95": 1370268.5,
+        "relativeMAD": 0.0154175078619,
+        "minimum": 1217468,
+        "maximum": 1442471
       },
       "work": 218683.5229208241,
       "allocationUnits": 217620.50593046015,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 2795728,
+      "heapDeltaBytes": 2839072,
       "sourceBytes": 409
     },
     {
@@ -2727,16 +2727,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 550506.25,
-        "p95": 557924.696491,
-        "relativeMAD": 0.00720554943745,
-        "minimum": 543093.75,
-        "maximum": 558615.722222
+        "median": 374216.25,
+        "p95": 423197.933333,
+        "relativeMAD": 0.0113920315678,
+        "minimum": 364686.962963,
+        "maximum": 447922.555556
       },
       "work": 12126.033980727912,
       "allocationUnits": 11063.016990363956,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1070104,
+      "heapDeltaBytes": 1134552,
       "sourceBytes": 409
     },
     {
@@ -2750,16 +2750,16 @@
       },
       "timing": {
         "count": 9,
-        "median": 542681.25,
-        "p95": 551323.3,
-        "relativeMAD": 0.00736693961697,
-        "minimum": 535675.421053,
-        "maximum": 553583.3
+        "median": 362918.233333,
+        "p95": 376016.709579,
+        "relativeMAD": 0.00754838532498,
+        "minimum": 359391.517241,
+        "maximum": 382328.814815
       },
       "work": 11195.894114159451,
       "allocationUnits": 10132.877123795495,
       "retainedBytes": 4000000,
-      "heapDeltaBytes": 1063176,
+      "heapDeltaBytes": 1124000,
       "sourceBytes": 409
     }
   ]

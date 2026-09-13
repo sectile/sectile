@@ -63,7 +63,7 @@
         "proof": "Each inserted identity performs one bounded Sequence lookup and at most one logarithmic extent-index lookup before emitting one extent.",
         "adversarialWitness": "Every inserted identity survives from a different retained extent-index leaf or requires a new estimate.",
         "evidence": [
-          "VAL-003"
+          "packages/virtual/tests/runtime/collection.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -112,7 +112,7 @@
         "proof": "Fixed and responsive policies use only scalar validation, division, and clamping.",
         "adversarialWitness": "Maximum safe lane counts and finite asymmetric gaps do not increase deterministic work.",
         "evidence": [
-          "VAL-003"
+          "packages/virtual/tests/runtime/collection.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -175,7 +175,7 @@
         "proof": "Patch creation runs splice-range and resulting-cardinality scalar preflight first, then snapshots and validates only an accepted inserted/value-change range before Core applies one bounded structural patch; token application is constant time.",
         "adversarialWitness": "ISSUE-083 proves that over-ceiling and out-of-range patches read zero inserted elements and invoke the resolver zero times. Accepted sparse patches retain the existing local identity checks without scanning unchanged values.",
         "evidence": [
-          "VAL-003"
+          "packages/virtual/tests/runtime/collection.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -239,8 +239,7 @@
         "proof": "Projection captures the ceiling-validated source size once, resolves only indexes below that bound, and checks the live array length after the fixed resolver loop before Core validates and indexes the resulting stable identities.",
         "adversarialWitness": "ISSUE-098 starts with one accepted item and a resolver that appends on every invocation; production resolution performs one callback and returns a typed input failure instead of following the moving array boundary.",
         "evidence": [
-          "VAL-003",
-          "VAL-028"
+          "packages/virtual/tests/runtime/collection.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -307,7 +306,7 @@
         "proof": "The owner discovers one prefix/suffix window, resolves only that window under stable resolver provenance, and applies one Core Sequence splice.",
         "adversarialWitness": "Only the middle item changes after equal prefix and suffix scans consume the rest of a maximum-size array.",
         "evidence": [
-          "VAL-003"
+          "packages/virtual/tests/runtime/collection.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -445,7 +444,7 @@
         "proof": "Validated updates are sorted/deduplicated once, updateNode descends only paths containing submitted indexes, and unchanged leaf/run entries return their existing nodes so an unchanged root returns the existing ExtentIndex identity.",
         "adversarialWitness": "EXT-03/EXT-05 submits same-value and duplicate-index updates whose final canonical value equals the retained extent and proves owner identity is preserved, while estimated(10) to exact(10) produces a distinct owner.",
         "evidence": [
-          "VAL-029"
+          "packages/virtual/tests/structures/extent-index.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -661,7 +660,7 @@
         "proof": "ExtentIndex canonicalizes the measurement batch and path-copies only effective changes. If the canonical root is unchanged, Linear returns the existing layout state before generation publication; changed extent paths and anchor reads remain logarithmic.",
         "adversarialWitness": "ISSUE-099 submits a non-empty same-kind/same-value batch and proves state/generation identity is retained, then mixes one unchanged and one changed extent and proves exactly one new generation; estimated-to-exact equal geometry remains a real change.",
         "evidence": [
-          "VAL-029"
+          "packages/virtual/tests/runtime/linear-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -898,7 +897,7 @@
         "proof": "ExtentIndex canonicalizes the measurement batch first. An unchanged canonical owner returns the existing Masonry state before generation or placement publication; an effective change path-copies extent paths and may cascade lane placement recomputation from the first changed item.",
         "adversarialWitness": "ISSUE-099 proves a non-empty same-kind/same-value batch retains state/generation, while an estimated-to-exact transition remains a real change; changing the first effective item under balanced shortest-lane placement can still reflow every later item.",
         "evidence": [
-          "VAL-029"
+          "packages/virtual/tests/runtime/linear-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -960,7 +959,7 @@
         "proof": "Changing laneCount, itemGap, or placementPolicy routes through buildInternals without a retained owner; each materialized item is placed once and shortest-lane selection uses the existing bounded lane scan/heap strategy.",
         "adversarialWitness": "ISSUE-097 changes each packing input independently and verifies a fresh logical owner with all materialized placements recomputed and equivalent to a fresh rebuild.",
         "evidence": [
-          "VAL-027"
+          "packages/virtual/tests/runtime/masonry-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -1023,7 +1022,7 @@
         "proof": "The geometry owner compares the fixed normalized geometry fields before generation advancement. Equal geometry returns the existing state. Axis, flow, laneExtent, and laneGap changes reuse the retained MasonryInternals because placement lane/start/extent data does not depend on those projection fields.",
         "adversarialWitness": "ISSUE-097 exercises exact omitted/explicit no-ops and isolated axis, flow, laneExtent, and laneGap changes on a 4,096-item materialized owner with stable state or retained internals identity and unchanged deterministic Masonry work counters; the benchmark holds geometry delta fixed while nItem grows from 1k to 100k.",
         "evidence": [
-          "VAL-027"
+          "packages/virtual/tests/runtime/masonry-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -1292,7 +1291,7 @@
         "proof": "Retained row/column maps resolve each replacement region directly, retained contiguous partition metadata validates span endpoints in constant work, and the delegated Track Grid validates only the replacement region set under the #92 nRegion log nRegion bound.",
         "adversarialWitness": "ISSUE-093 replaces one region over thousands of retained tracks while row/column view identity is preserved and repair diagnostics report zero rebuilt track items.",
         "evidence": [
-          "VAL-023"
+          "packages/virtual/tests/runtime/partitioned-track-grid-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -1509,8 +1508,11 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "The packed tree prunes non-overlapping branches, filters overlaid identities, scans the bounded structural delta, resolves current declaration indexes, and sorts placements by z-index and declaration order.",
-        "adversarialWitness": "A viewport intersects every packed candidate while the structural overlay is at its fixed bound.",
+        "proof": "The packed tree prunes non-overlapping branches, filters overlaid identities, scans the bounded structural delta, resolves current declaration indexes, and sorts placements by z-index and declaration order. Membership-preserving repairs accumulate only rectangles that leave their retained leaf bounds; crossing the existing spatial delta ceiling repacks the tree and resets that drift before it can remain unbounded across generations.",
+        "adversarialWitness": "ISSUE-154 repeatedly moves one sparse 64-item batch across the full spatial domain. The first batch remains incremental, accumulated partition drift then selects a packed repack, and the resulting tiny-viewport plan stays equivalent to a fresh owner instead of retaining the degraded partition indefinitely.",
+        "deterministicWork": [
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-154"
+        ],
         "fullScan": {
           "allowed": false,
           "rationale": "A full visit is permitted only when kPlacement itself equals nItem."
@@ -1552,6 +1554,11 @@
             "name": "rRepair",
             "meaning": "selected blocked-vector and packed-tree repair bound for membership-preserving value changes",
             "ceiling": "rRepair < nItem / 2"
+          },
+          {
+            "name": "qPartitionDrift",
+            "meaning": "retained count of repaired items whose rectangles escaped their previous packed leaf bounds since the last repack",
+            "ceiling": "qPartitionDrift <= min(256, ceil(nItem / 64))"
           }
         ],
         "time": {
@@ -1575,22 +1582,23 @@
         "assumptions": [
           "the active Spatial state and retained indexes are canonical",
           "the Core Sequence delta remains below its own materialization crossover",
-          "the Spatial repair remains below its packed-tree or structural-overlay rebuild crossover"
+          "the Spatial repair remains below its packed-tree, structural-overlay, and cumulative partition-drift rebuild crossovers"
         ],
         "ceilings": [
           "maxItems",
           "Sequence patch depth 32",
-          "structural overlay limit min(256, ceil(nItem / 64))"
+          "structural overlay limit min(256, ceil(nItem / 64))",
+          "cumulative partition drift min(256, ceil(nItem / 64))"
         ],
         "deterministicWork": [
-          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-095"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-095",
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-154"
         ],
-        "resourceRationale": "Existing-ID updates reuse blocked-vector/packed-tree repair. Membership changes patch only declared Sequence identities and retain removed/new/changed geometry in the bounded structural overlay.",
-        "proof": "Each declared upsert is captured once. Membership-preserving changes enter applySpatialBaseChanges or the existing overlay repair. Structural updates remove only declared IDs from the retained Sequence, append only new upsert IDs, and pass removed/new/changed geometry to applySpatialOverlayChanges; unchanged Spatial items and packed-tree leaves are not enumerated.",
-        "adversarialWitness": "ISSUE-095 covers one existing geometry update and a remove/change/add structural update over 4,096 items with zero rebuilt items. Benchmarks hold the changed set fixed while nItem grows from 1k to 100k.",
+        "resourceRationale": "Existing-ID updates reuse blocked-vector/packed-tree repair and retain one scalar cumulative partition-drift counter. Membership changes patch only declared Sequence identities and retain removed/new/changed geometry in the bounded structural overlay.",
+        "proof": "Each declared upsert is captured once. Membership-preserving changes enter applySpatialBaseChanges or the existing overlay repair. A repaired item increments cumulative partition drift only when its new rectangle escapes the retained leaf bounds; crossing the existing spatial-delta ceiling repacks the tree and resets that scalar. Structural updates remove only declared IDs from the retained Sequence, append only new upsert IDs, and pass removed/new/changed geometry to applySpatialOverlayChanges; unchanged Spatial items and packed-tree leaves are not enumerated.",
+        "adversarialWitness": "ISSUE-095 covers one existing geometry update and a remove/change/add structural update over 4,096 items with zero rebuilt items. ISSUE-154 repeatedly permutes sparse 64-item geometry batches across the full domain and proves that accumulated leaf drift selects a repack instead of persisting a degraded index. Benchmarks hold the changed set fixed while nItem grows from 1k to 100k.",
         "evidence": [
-          "VAL-025",
-          "VAL-039"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -1645,16 +1653,18 @@
         "ceilings": [
           "maxItems",
           "Sequence patch depth 32",
-          "structural overlay limit min(256, ceil(nItem / 64))"
+          "structural overlay limit min(256, ceil(nItem / 64))",
+          "cumulative partition drift min(256, ceil(nItem / 64))"
         ],
         "deterministicWork": [
-          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-095"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-095",
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-154"
         ],
-        "resourceRationale": "A boundary-shrinking geometry change, structural-overlay saturation, or the Core Sequence owner's own bounded materialization crossover selects one full owner rebuild rather than retaining unbounded delta state.",
-        "proof": "When applySpatialOverlayChanges selects rebuild, materializeSpatialItems visits the resulting domain once and createOwnedState builds one new blocked vector and packed spatial tree. Dense membership-preserving value changes likewise reuse applySpatialBaseChanges' existing rebuild crossover.",
-        "adversarialWitness": "ISSUE-095 adds enough new IDs to exceed the structural overlay bound and verifies one rebuild containing the complete resulting domain.",
+        "resourceRationale": "A boundary-shrinking geometry change, structural-overlay saturation, cumulative packed-partition drift, or the Core Sequence owner's own bounded materialization crossover selects one packed rebuild rather than retaining unbounded delta or query degradation.",
+        "proof": "When applySpatialOverlayChanges selects rebuild, materializeSpatialItems visits the resulting domain once and createOwnedState builds one new blocked vector and packed spatial tree. Dense membership-preserving value changes reuse applySpatialBaseChanges' existing rebuild crossover. Sparse repairs that cumulatively move more than the bounded spatial-delta ceiling outside retained leaf bounds reuse the already-updated blocked vector and rebuild only the packed tree, resetting partition drift to zero.",
+        "adversarialWitness": "ISSUE-095 adds enough new IDs to exceed the structural overlay bound and verifies one rebuild containing the complete resulting domain. ISSUE-154 forces repeated sparse cross-partition motion and verifies a deterministic repack before the stale partition can remain permanently degraded.",
         "evidence": [
-          "VAL-039"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -1700,7 +1710,7 @@
         "proof": "Each transform captures origin and viewportInsets once from the external frame, canonicalizes those captured values through createVirtualSurfaceFrame and Core geometry, then performs arithmetic only against the immutable snapshot.",
         "adversarialWitness": "ISSUE-100 supplies accessor-backed frame fields that change on every observation and unreadable geometry; counters remain one observation per frame field and invalid reads stay inside the typed Virtual geometry boundary.",
         "evidence": [
-          "VAL-030"
+          "packages/virtual/tests/runtime/surface.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -1755,7 +1765,7 @@
         "proof": "Regions are sorted once by row and column. A row-end ordered stream removes expired regions, while a coordinate-compressed active-column segment tree performs one predecessor lookup, insertion, and later removal per region in logarithmic work.",
         "adversarialWitness": "ISSUE-092 keeps thousands of valid column-disjoint regions simultaneously active on one row and across long row spans; candidate checks remain linear and indexed search/tree work remains nRegion log nRegion.",
         "evidence": [
-          "VAL-022"
+          "packages/virtual/tests/runtime/track-grid-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -1809,7 +1819,7 @@
         "proof": "Measurements partition by axis and each ExtentIndex path-copies only effective changes. If both resulting extent owners are unchanged, Track Grid returns the existing state before generation publication while retaining the region index.",
         "adversarialWitness": "ISSUE-099 proves a non-empty unchanged row measurement preserves state/generation, a mixed unchanged-row/changed-column batch publishes exactly once, and an estimated-to-exact row transition remains a real change.",
         "evidence": [
-          "VAL-029"
+          "packages/virtual/tests/runtime/linear-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -1872,7 +1882,7 @@
         "proof": "The replace-regions branch selects the caller replacement before the splice-tracks-only state.regions.toArray boundary. validateRegions then validates, canonicalizes, sorts, and indexes only jRegion replacement entries under the #92 bound.",
         "adversarialWitness": "ISSUE-094 replaces thousands of retained sparse regions with one region while production repair diagnostics report zero copied previous entries or rebuilt items; the benchmark holds track cardinality fixed while increasing nPreviousRegion.",
         "evidence": [
-          "VAL-024"
+          "packages/virtual/tests/runtime/track-grid-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -1947,7 +1957,7 @@
         "proof": "Every canonical region has positive span and end <= old target-track count. Appending at that exact boundary cannot split or shift an existing region, so the mutation applies only the ExtentIndex splice and reuses GridInternals without materializing, transforming, validating, sorting, or rebuilding nRegion.",
         "adversarialWitness": "ISSUE-096 appends one row and one column to a 4,096-region sparse owner, preserves region-view identity, and records zero copied/rebuilt region entries; the benchmark holds nTrack and jTrack fixed while nRegion grows from 1k to 100k.",
         "evidence": [
-          "VAL-026"
+          "packages/virtual/tests/runtime/track-grid-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,

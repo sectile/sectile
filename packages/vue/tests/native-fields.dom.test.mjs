@@ -18,8 +18,10 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref } = await import('vue');
+const { DateField } = await import('../.verification-dist/date-field.js');
 const { DateTimeField } = await import('../.verification-dist/date-time-field.js');
 const { NumberField } = await import('../.verification-dist/number-field.js');
+const { TimeField } = await import('../.verification-dist/time-field.js');
 const { DateRangeFieldRoot, DateRangeFieldStartInput, DateRangeFieldEndInput } = await import('../.verification-dist/date-range-field.js');
 const { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } = await import('../.verification-dist/time-range-field.js');
 
@@ -104,6 +106,68 @@ test('controlled native fields retain pending proposals until delayed owner sync
   assert.equal(dateTimeInput.value, '2026-09-22T09:30');
   assert.deepEqual([dateTimeInput.selectionStart, dateTimeInput.selectionEnd], [5, 7]);
   assert.equal(numberInput.value, '34');
+
+  app.unmount();
+  host.remove();
+});
+
+test('controlled civil fields keep the last accepted value when owner synchronization rejects', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const date = ref({ year: 2026, month: 9, day: 13 });
+  const time = ref({ hour: 9, minute: 30, second: 0, millisecond: 0 });
+  const dateTime = ref({
+    date: { year: 2026, month: 9, day: 13 },
+    time: { hour: 9, minute: 30, second: 0, millisecond: 0 },
+  });
+  const errors = [];
+  let dateProposal;
+  const app = createApp({
+    render: () => h('div', null, [
+      h(DateField, {
+        modelValue: date.value,
+        'onUpdate:modelValue': (value) => { dateProposal = value; },
+      }),
+      h(TimeField, { modelValue: time.value }),
+      h(DateTimeField, { modelValue: dateTime.value }),
+    ]),
+  });
+  app.config.errorHandler = (error) => errors.push(error);
+
+  app.mount(host);
+  await nextTick();
+  const [dateInput, timeInput, dateTimeInput] = host.querySelectorAll('input');
+  assert.deepEqual(
+    [dateInput.value, timeInput.value, dateTimeInput.value],
+    ['2026-09-13', '09:30', '2026-09-13T09:30'],
+  );
+
+  date.value = { year: 0, month: 1, day: 1 };
+  await nextTick();
+  assert.equal(dateInput.value, '2026-09-13');
+  assert.equal(errors.length, 1);
+  assert.ok(errors[0] instanceof TypeError);
+
+  time.value = { hour: 24, minute: 0, second: 0, millisecond: 0 };
+  await nextTick();
+  assert.equal(timeInput.value, '09:30');
+  assert.equal(errors.length, 2);
+  assert.ok(errors[1] instanceof TypeError);
+
+  dateTime.value = {
+    date: { year: 0, month: 1, day: 1 },
+    time: { hour: 0, minute: 0, second: 0, millisecond: 0 },
+  };
+  await nextTick();
+  assert.equal(dateTimeInput.value, '2026-09-13T09:30');
+  assert.equal(errors.length, 3);
+  assert.ok(errors[2] instanceof TypeError);
+
+  dateInput.setSelectionRange(0, 4);
+  dateInput.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'ArrowUp' }));
+  await nextTick();
+  assert.deepEqual(dateProposal, { year: 2027, month: 9, day: 13 });
+  assert.equal(dateInput.value, '2027-09-13');
 
   app.unmount();
   host.remove();

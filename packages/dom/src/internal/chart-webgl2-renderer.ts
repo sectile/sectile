@@ -222,8 +222,9 @@ export class WebGL2ChartRenderer implements ChartRenderer {
   }
 
   public render(projection: ChartProjection, batches: readonly ChartProjectionBatch[] = projection.batches): void {
-    if (!this.#active || this.#lost) return;
+    if (!this.#active) return;
     this.#lastProjection = projection;
+    if (this.#lost) return;
     const gl = this.#gl;
     gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
     gl.clearColor(0, 0, 0, 0);

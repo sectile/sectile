@@ -398,6 +398,127 @@ test('preserves heatmap data geometry while value colors and datum delta update'
   assert.equal(after.diagnostics.reusedBatches, 1);
 });
 
+test('keeps retained data geometry collision-safe for distinct representative selections', () => {
+  const data = Array.from({ length: 100_000 }, (_, index) => ({
+    id: index,
+    x: index === 1 || index === 99_999 ? -10 : index === 769 || index === 13_215 ? 10 : 0,
+    y: index === 99_999 || index === 13_215 ? 2 : index === 1 || index === 769 ? 1 : 0,
+  }));
+  const definition = {
+    coordinate: { kind: 'cartesian', axes: [
+      { id: 'x', orientation: 'x', scale: 'linear', domain: { kind: 'numeric', minimum: -10, maximum: 10 } },
+      { id: 'y', orientation: 'y', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: 2 } },
+    ] },
+    layers: [{ id: 'points', kind: 'scatter', xAxis: 'x', yAxis: 'y', projection: 'raw', data }],
+  };
+  const source = createChartDefinition(definition);
+  const project = (owner, minimum, maximum) => createChartProjection(owner, {
+    viewport: { width: 100, height: 100 },
+    view: createChartAxisViewState(owner.axes, [{
+      axisID: 'x', initial: { kind: 'continuous', minimum, maximum },
+    }]),
+    maximumRepresentatives: 2,
+  });
+
+  const first = project(source, -10, -9);
+  const second = project(source, 9, 10);
+  const fresh = project(createChartDefinition(definition), 9, 10);
+
+  assert.deepEqual([...first.batches[0].identityIndices], [1, 99_999]);
+  assert.deepEqual([...second.batches[0].identityIndices], [769, 13_215]);
+  assert.deepEqual([...second.dataBatches[0].geometry.positions], [10, 1, 10, 2]);
+  assert.deepEqual(second.dataBatches[0].geometry.positions, fresh.dataBatches[0].geometry.positions);
+  assert.notEqual(second.dataBatches[0].geometry, first.dataBatches[0].geometry);
+  assert.notEqual(second.batches[0].colors, first.batches[0].colors);
+});
+
+test('ISSUE-151: compatible view projections retain exact color owners at large cardinalities', () => {
+  for (const count of [1_000, 10_000, 100_000]) {
+    const source = createChartDefinition({
+      coordinate: { kind: 'cartesian', axes: [
+        { id: 'x', orientation: 'x', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: count - 1 } },
+        { id: 'y', orientation: 'y', scale: 'linear', domain: { kind: 'numeric', minimum: 0, maximum: 9 } },
+      ] },
+      layers: [{
+        id: 'points', kind: 'scatter', xAxis: 'x', yAxis: 'y', projection: 'raw',
+        data: Array.from({ length: count }, (_, index) => ({ id: index, x: index, y: index % 10 })),
+      }],
+    });
+    const before = createChartProjection(source, {
+      viewport: { width: 800, height: 600 }, maximumRepresentatives: count,
+    });
+    const after = createChartProjection(source, {
+      viewport: { width: 801, height: 600 }, maximumRepresentatives: count, previous: before,
+    });
+
+    assert.equal(after.dataBatches[0].geometry, before.dataBatches[0].geometry, `geometry ${count}`);
+    assert.equal(after.batches[0].colors, before.batches[0].colors, `projected colors ${count}`);
+    assert.equal(after.dataBatches[0].colors, before.dataBatches[0].colors, `data colors ${count}`);
+    assert.equal(after.batches[0].colors.byteLength, count * 4, `color bytes ${count}`);
+  }
+});
+
+test('ISSUE-151: exact color ownership follows model and representative identity/order revisions', () => {
+  const definition = (data) => ({
+    coordinate: { kind: 'radial' },
+    layers: [{ id: 'share', kind: 'pie', data }],
+  });
+  const initial = createChartDefinition(definition([
+    { id: 'alpha', value: 1 },
+    { id: 'beta', value: 2 },
+    { id: 'gamma', value: 3 },
+  ]));
+  const before = createChartProjection(initial, { viewport: { width: 200, height: 200 } });
+
+  const geometryDefinition = definition([
+    { id: 'alpha', value: 3 },
+    { id: 'beta', value: 2 },
+    { id: 'gamma', value: 1 },
+  ]);
+  const geometryOwner = replaceChartDefinition(initial, geometryDefinition);
+  const geometryChanged = createChartProjection(geometryOwner, {
+    viewport: { width: 200, height: 200 }, previous: before,
+  });
+  const freshGeometry = createChartProjection(createChartDefinition(geometryDefinition), {
+    viewport: { width: 200, height: 200 },
+  });
+  assert.notEqual(geometryChanged.dataBatches[0].geometry, before.dataBatches[0].geometry);
+  assert.notEqual(geometryChanged.batches[0].colors, before.batches[0].colors);
+  assert.deepEqual(geometryChanged.batches[0].colors, freshGeometry.batches[0].colors);
+
+  const reorderedDefinition = definition([
+    { id: 'gamma', value: 3 },
+    { id: 'beta', value: 2 },
+    { id: 'alpha', value: 1 },
+  ]);
+  const reorderedOwner = replaceChartDefinition(geometryOwner, reorderedDefinition);
+  const reordered = createChartProjection(reorderedOwner, {
+    viewport: { width: 200, height: 200 }, previous: geometryChanged,
+  });
+  const freshReordered = createChartProjection(createChartDefinition(reorderedDefinition), {
+    viewport: { width: 200, height: 200 },
+  });
+  assert.equal(reordered.dataBatches[0].geometry, geometryChanged.dataBatches[0].geometry);
+  assert.notEqual(reordered.batches[0].colors, geometryChanged.batches[0].colors);
+  assert.deepEqual(reordered.batches[0].colors, freshReordered.batches[0].colors);
+
+  const replacedDefinition = definition([
+    { id: 'delta', value: 3 },
+    { id: 'epsilon', value: 2 },
+    { id: 'zeta', value: 1 },
+  ]);
+  const replacedOwner = replaceChartDefinition(reorderedOwner, replacedDefinition);
+  const replaced = createChartProjection(replacedOwner, {
+    viewport: { width: 200, height: 200 }, previous: reordered,
+  });
+  const freshReplaced = createChartProjection(createChartDefinition(replacedDefinition), {
+    viewport: { width: 200, height: 200 },
+  });
+  assert.equal(replaced.dataBatches[0].geometry, reordered.dataBatches[0].geometry);
+  assert.notEqual(replaced.batches[0].colors, reordered.batches[0].colors);
+  assert.deepEqual(replaced.batches[0].colors, freshReplaced.batches[0].colors);
+});
+
 test('requires explicit heatmap reduction and never samples exact bars or radial segments', () => {
   const heatData = Array.from({ length: 256 }, (_, id) => ({ id, x: id % 16, y: Math.floor(id / 16), value: id + 1 }));
   const reducedHeat = createChartDefinition({

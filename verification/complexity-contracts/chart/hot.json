@@ -158,8 +158,7 @@
         "proof": "The owner captures the input layer array once, visits exactly its preflight layerCount by index, captures each approved layer/data reference and data length once, and accumulates maxDatums before any accessor runs. Collection consumes only this internal prepared owner and indexes each data array below its approved size, so callback appends cannot move either layer or datum iteration boundary.",
         "adversarialWitness": "CHT-08 keeps initial over-ceiling accessors at zero calls, then lets accepted identity accessors append datums or layers on every bounded witness call; only the preflight-approved layer and datum positions are resolved and retained.",
         "evidence": [
-          "VAL-007",
-          "VAL-031"
+          "packages/chart/tests/model/definition.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -307,7 +306,7 @@
         "proof": "Normalization captures each profile scalar once, validates and writes those exact scalars into packed storage, builds one Core identity sequence, and retains profile indexes whose packed hierarchy and auxiliary entries are linear in their owning layer. Whole-model replacement, layer replacement, and patch packing share the same `packDatum` canonicalization owner.",
         "adversarialWitness": "Getter-backed point, ordered-series, Cartesian segment, grid-cell, and radial datums return finite values on their first numeric-field observation and NaN thereafter; construction and replacement paths retain only the first validated observations with one read per field while the maximum-size mixed-profile bound remains linear.",
         "evidence": [
-          "VAL-036"
+          "packages/chart/tests/model/model.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -518,7 +517,7 @@
         "proof": "Model construction precomputes Cartesian bounds and a cumulative radial prefix. Projection allocates layer quotas and visits only selected representative indexes; a radial representative at source i reads exact cumulative boundaries from prefix[i] and prefix[i + 1] in constant time instead of reconstructing the prefix from source zero.",
         "adversarialWitness": "A one-million-datum raw radial model projected with maximumRepresentatives=4096 emits 4096 representatives, reports zero full-source scans, preserves exact retained-prefix arc boundaries, and is covered by the chart:projection:radial-sampled timing workload across 10k, 100k, and 1m source cardinalities.",
         "evidence": [
-          "VAL-038"
+          "packages/chart/tests/projection/projection.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -579,7 +578,7 @@
         },
         "resources": {
           "allocations": "O(nLayer + nAxis + nTick + kRepresentative)",
-          "cacheEntries": "at most 8 per live geometry owner",
+          "cacheEntries": "at most 8 data geometries plus 8 exact ordinal color owners per live geometry owner",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
@@ -588,13 +587,22 @@
         "assumptions": [
           "exact bar, pie, donut, raw scatter, and raw heatmap requests reject before partial publication when their quota is insufficient",
           "Cartesian exact, line envelope, density, and heatmap requests consume retained visible-domain hierarchy nodes",
-          "aggregate representatives carry bounds, count, and reduction and never carry a datum identity"
+          "aggregate representatives carry bounds, count, and reduction and never carry a datum identity",
+          "borrowed geometry and color arrays remain immutable for the lifetime of their Chart owners"
         ],
-        "proof": "Axis layout visits bounded axes and ticks; exact Cartesian selection and aggregate reductions traverse retained visible-domain hierarchy nodes; line selection uses binary search plus retained range aggregates; output work follows emitted representatives. Compatible data-space geometry is retained by geometry token and bounded level key.",
-        "adversarialWitness": "One-million-datum line and density projections emit at most 8,192 representatives while diagnostics report hierarchy visits and zero full-source scans; exact profiles return a resource rejection instead of sampling.",
+        "deterministicWork": [
+          "packages/chart/tests/projection/projection.semantic.test.mjs ISSUE-151 retains one exact ordinal color owner across compatible 1k, 10k, and 100k viewport-only projections",
+          "ISSUE-151 model-owner, identity, and order regressions prove changed semantic owners regenerate colors while collision-safe geometry selection remains canonical"
+        ],
+        "resourceRationale": "Data geometry retains at most eight collision-safe representative selections per live geometry owner. Exact ordinal colors retain at most eight owners beside that geometry owner and reference only the already-validated geometry selection token instead of copying or rescanning representative indices.",
+        "proof": "Axis layout visits bounded axes and ticks; exact Cartesian selection and aggregate reductions traverse retained visible-domain hierarchy nodes; line selection uses binary search plus retained range aggregates; output work follows emitted representatives. Compatible data-space geometry is retained by geometry token and bounded level key. Exact ordinal colors reuse the collision-safe retained geometry selection as their representative token, then compare at most eight revision records by object/scalar identity before returning the immutable color owner; compatible views add no color-cardinality scan or color allocation.",
+        "adversarialWitness": "One-million-datum line and density projections emit at most 8,192 representatives while diagnostics report hierarchy visits and zero full-source scans; exact profiles return a resource rejection instead of sampling. Exact scatter projections at 1k, 10k, and 100k representatives retain color owner identity across viewport-only changes, while radial model-owner and representative identity/order changes miss the color cache and match a fresh projection.",
+        "evidence": [
+          "packages/chart/tests/projection/projection.semantic.test.mjs"
+        ],
         "fullScan": {
           "allowed": false,
-          "rationale": "When semantic output is bounded below source cardinality, projection must use retained indexes or reject rather than scan the source."
+          "rationale": "When semantic output is bounded below source cardinality, projection must use retained indexes or reject rather than scan the source. Compatible exact color reuse may consume the already-required collision-safe geometry-selection result but must not add a second representative or color scan."
         }
       }
     },
@@ -671,7 +679,7 @@
         "proof": "Filled areas and scatter use indexed exact candidates; ordered lines use one binary search per bounded layer plus equal-X candidates; categorical bars use retained center orders. Every resolvable hit is compared against a max-heap of at most k candidates, replacement mutates an existing slot, and only the final k candidates are sorted and materialized.",
         "adversarialWitness": "Dense overlapping points and repeated-X/repeated-center fixtures test every tied candidate while retainedCandidates stays at maximumHits; separated geometry retains logarithmic lookup plus bounded leaves.",
         "evidence": [
-          "VAL-033"
+          "packages/chart/tests/query/query.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -762,7 +770,7 @@
         "proof": "relativePosition performs one direct finite-difference ratio or one fixed halved fallback when subtraction overflows. interpolate performs one fixed branch between direct same-side affine arithmetic and weighted opposite-sign endpoint interpolation. Neither path depends on chart cardinality.",
         "adversarialWitness": "CHT-03 maps Number.MAX_VALUE opposite-sign domains and ranges through linear, temporal, logarithmic, categorical, tick, and continuous-color paths while every accepted in-bound result remains finite.",
         "evidence": [
-          "VAL-032"
+          "packages/chart/tests/scale/scale.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -817,7 +825,7 @@
         "proof": "A retained StableID index resolves one axis. Pan compares the finite action fraction with the remaining base movement ratio before multiplying; zoom compares its factor with finite minimum/maximum useful span thresholds before dividing. Only an in-bound request performs the ordinary scalar product/quotient, and one final scalar invariant guard rejects any unrepresentable derived window before publication. Accepted transitions replace one axis record in an array bounded by maxAxes; no-op transitions return the prior state identity.",
         "adversarialWitness": "Number.MAX_VALUE positive/negative pans and Number.MIN_VALUE zoom-out requests on linear, temporal, and logarithmic windows remain finite and constructor-valid; an unrepresentable zero-minimum-span zoom-in returns chart-view-invalid, while an explicit minimum span clamps safely. One million ordinary alternating zoom transitions across 16 mixed axes retain one lookup per transition and bounded scalar work.",
         "evidence": [
-          "VAL-034"
+          "packages/chart/tests/interaction/view.test.mjs"
         ],
         "fullScan": {
           "allowed": false,

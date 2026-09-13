@@ -138,6 +138,46 @@ test('DOM JavaScript positioning coalesces updates and restores owned projection
   fixture.close();
 });
 
+test('DOM positioning tracks VisualViewport resize and scroll with coalesced cleanup', () => {
+  const fixture = createPositionFixture();
+  const visualViewport = new fixture.window.EventTarget();
+  Object.assign(visualViewport, { offsetLeft: 0, offsetTop: 0, width: 300, height: 400 });
+  Object.defineProperty(fixture.window, 'visualViewport', { configurable: true, value: visualViewport });
+  setRect(fixture.reference, { x: 80, y: 180, width: 40, height: 20 });
+  setRect(fixture.root, { x: 0, y: 0, width: 80, height: 80 });
+  const before = readPositionSourceRegistryDiagnostics();
+  const engine = createPositionEngine({ root: fixture.root, reference: fixture.reference, side: 'bottom' });
+  engine.connect();
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'bottom');
+  assert.equal(engine.diagnostics().sourceSubscriptions, 4);
+
+  visualViewport.height = 220;
+  visualViewport.dispatchEvent(new fixture.window.Event('resize'));
+  visualViewport.dispatchEvent(new fixture.window.Event('scroll'));
+  assert.equal(fixture.frames.pending, 1);
+  assert.equal(engine.diagnostics().coalescedUpdates >= 1, true);
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'top');
+
+  const completed = engine.diagnostics().completedUpdates;
+  visualViewport.offsetTop = 20;
+  visualViewport.dispatchEvent(new fixture.window.Event('scroll'));
+  assert.equal(fixture.frames.pending, 1);
+  fixture.frames.flush();
+  assert.equal(engine.diagnostics().completedUpdates, completed + 1);
+
+  engine.disconnect();
+  assert.equal(engine.diagnostics().sourceSubscriptions, 0);
+  const disconnected = readPositionSourceRegistryDiagnostics();
+  assert.equal(disconnected.physicalListeners, before.physicalListeners);
+  assert.equal(disconnected.callbacks, before.callbacks);
+  visualViewport.dispatchEvent(new fixture.window.Event('resize'));
+  assert.equal(fixture.frames.pending, 0);
+  assert.deepEqual(readPositionSourceRegistryDiagnostics(), disconnected);
+  fixture.close();
+});
+
 test('DOM positioning restores styles after browser CSSOM value normalization', () => {
   const fixture = createPositionFixture();
   setRect(fixture.reference, { x: 20.123456, y: 20.123456, width: 40, height: 20 });
@@ -223,6 +263,57 @@ test('DOM positioning discovers shorthand overflow through computed axes', () =>
   assert.equal(engine.diagnostics().discoveredAncestors, 1);
   assert.equal(engine.diagnostics().sourceSubscriptions, 3);
   engine.disconnect();
+  fixture.close();
+});
+
+test('DOM positioning refresh transfers reparented ancestor ownership without duplicate sources', () => {
+  const fixture = createPositionFixture();
+  const visualViewport = new fixture.window.EventTarget();
+  Object.assign(visualViewport, { offsetLeft: 0, offsetTop: 0, width: 400, height: 400 });
+  Object.defineProperty(fixture.window, 'visualViewport', { configurable: true, value: visualViewport });
+  const first = fixture.window.document.createElement('div');
+  const second = fixture.window.document.createElement('div');
+  first.style.overflow = 'auto';
+  second.style.overflow = 'auto';
+  fixture.window.document.body.append(first, second);
+  first.append(fixture.reference, fixture.root);
+  setRect(first, { x: 0, y: 0, width: 300, height: 300 });
+  setRect(second, { x: 0, y: 0, width: 300, height: 150 });
+  setRect(fixture.reference, { x: 80, y: 100, width: 40, height: 20 });
+  setRect(fixture.root, { x: 0, y: 0, width: 80, height: 80 });
+  const before = readPositionSourceRegistryDiagnostics();
+  const engine = createPositionEngine({ root: fixture.root, reference: fixture.reference, side: 'bottom' });
+  engine.connect();
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'bottom');
+
+  second.append(fixture.reference, fixture.root);
+  engine.update();
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'top');
+  const transferred = readPositionSourceRegistryDiagnostics();
+  engine.update();
+  engine.update();
+  assert.equal(fixture.frames.pending, 1);
+  assert.deepEqual(readPositionSourceRegistryDiagnostics(), transferred);
+  fixture.frames.flush();
+
+  first.dispatchEvent(new fixture.window.Event('scroll'));
+  assert.equal(fixture.frames.pending, 0);
+  setRect(fixture.reference, { x: 80, y: 20, width: 40, height: 20 });
+  second.dispatchEvent(new fixture.window.Event('scroll'));
+  assert.equal(fixture.frames.pending, 1);
+  fixture.frames.flush();
+  assert.equal(fixture.root.dataset.side, 'bottom');
+
+  engine.disconnect();
+  const disconnected = readPositionSourceRegistryDiagnostics();
+  assert.equal(disconnected.physicalListeners, before.physicalListeners);
+  assert.equal(disconnected.callbacks, before.callbacks);
+  first.dispatchEvent(new fixture.window.Event('scroll'));
+  second.dispatchEvent(new fixture.window.Event('scroll'));
+  assert.equal(fixture.frames.pending, 0);
+  assert.deepEqual(readPositionSourceRegistryDiagnostics(), disconnected);
   fixture.close();
 });
 

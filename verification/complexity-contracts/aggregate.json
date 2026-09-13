@@ -50,7 +50,7 @@
       "proof": "A namespace value read is one property lookup.",
       "adversarialWitness": "Repeated reads do not traverse retained domain state.",
       "evidence": [
-        "VAL-016"
+        "scripts/complexity-contracts.test.mjs"
       ],
       "fullScan": {
         "allowed": false,
@@ -112,8 +112,8 @@
       "proof": "The conservative public ceiling permits one pass over input, retained state, and produced output; registered hot operations provide tighter source proof.",
       "adversarialWitness": "Maximum-size external input with maximum-size retained state and full snapshot output.",
       "evidence": [
-        "VAL-016",
-        "VAL-017"
+        "scripts/complexity-contracts.test.mjs",
+        "scripts/complexity-witnesses.test.mjs"
       ],
       "fullScan": {
         "allowed": true,
@@ -157,8 +157,8 @@
       "proof": "The operation performs a bounded number of indexed reads or scalar steps.",
       "adversarialWitness": "Maximum-size retained state does not increase deterministic work.",
       "evidence": [
-        "VAL-016",
-        "VAL-017"
+        "scripts/complexity-contracts.test.mjs",
+        "scripts/complexity-witnesses.test.mjs"
       ],
       "fullScan": {
         "allowed": false,
@@ -214,8 +214,8 @@
       "proof": "One bounded traversal visits each relevant input/state entry and emits at most k entries.",
       "adversarialWitness": "Every input entry is visited and every eligible entry is emitted.",
       "evidence": [
-        "VAL-016",
-        "VAL-017"
+        "scripts/complexity-contracts.test.mjs",
+        "scripts/complexity-witnesses.test.mjs"
       ],
       "fullScan": {
         "allowed": true,
@@ -271,8 +271,8 @@
       "proof": "Connection work visits owned resources and only affected projection targets.",
       "adversarialWitness": "Deep ancestor chain with every registered target affected, followed by repeated disconnect.",
       "evidence": [
-        "VAL-016",
-        "VAL-017"
+        "scripts/complexity-contracts.test.mjs",
+        "scripts/complexity-witnesses.test.mjs"
       ],
       "fullScan": {
         "allowed": false,
@@ -20538,8 +20538,8 @@
         "proof": "Domain replacement is an explicit boundary that invokes the component's one canonical reconciliation constructor and retains only the new domain and snapshot; identical owner replacement is O(1).",
         "adversarialWitness": "A disjoint maximum domain forces the component reconciliation to emit its complete canonical state exactly once.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -20611,8 +20611,8 @@
         "proof": "External identities are validated/indexed once, selected and disabled membership use Sets, and one domain-order pass emits canonical selection before bounded current fallback queries.",
         "adversarialWitness": "A maximum domain with every selected identity ordered oppositely and all but the last item disabled visits each input once.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -20673,8 +20673,8 @@
         "proof": "Controlled sync performs one ownership branch, one component state constructor, and one revision replacement without host projection or domain traversal.",
         "adversarialWitness": "Controlled and uncontrolled sync at the revision ceiling exercise the only bounded branches.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -20735,8 +20735,8 @@
         "proof": "One reducer call freezes and maps one bounded command vector, commits the reconciled snapshot, attempts the stable host-effect publisher once per mapped effect, then attempts the single application notify callback. The first user error is rethrown only after both phases complete.",
         "adversarialWitness": "The reducer emits the command ceiling, the first and last host effects throw, and application notify also throws; every effect and notify is still attempted in phase order.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -20798,8 +20798,8 @@
         "proof": "Construction inserts supplied identities into one Set and performs one expected-O(1) domain membership check per distinct identity.",
         "adversarialWitness": "Every supplied ID is distinct and the final ID lies outside the domain.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -20867,8 +20867,8 @@
         "proof": "Destroy marks the facade inactive before resolving the disposer, invokes it at most once, and unconditionally clears the subscriber Set in finally. The original thrown value propagates after cleanup. Time stays O(pSubscriber + rResource), with O(1) auxiliary space, no new runtime allocation, and zero retained subscribers after either normal or exceptional teardown.",
         "adversarialWitness": "The production-export heap worker retains 40 facades through eight teardown cycles per success, Error, undefined, null, and throwing-getter mode. All 2560 subscribed callbacks and their captured payloads are live before destruction and collectible afterward without calling unsubscribe. Runtime tests cover reentrant destroy, stale publication, rejected mutations, and exact error identity.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -20929,8 +20929,8 @@
         "proof": "Special facade methods are created once and forwarded connection methods use one owner-local wrapper per property; repeated reads return stable function identity.",
         "adversarialWitness": "Read every forwarded method once, then repeatedly read the same methods before and after destroy.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -20985,8 +20985,8 @@
         "proof": "Set insertion/removal changes one facade-owned subscription entry.",
         "adversarialWitness": "Subscribe, reentrant unsubscribe, and unsubscribe after destroy keep one-entry work.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -21048,8 +21048,8 @@
         "proof": "One stable onUpdate relay captures the current subscriber Set once, attempts every snapshot subscriber, then attempts the application onUpdate callback and rethrows the first user error after both phases.",
         "adversarialWitness": "The first facade subscriber throws, later subscribers still observe the committed snapshot, and a throwing application callback runs last while the first error is preserved.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -21110,8 +21110,8 @@
         "proof": "The solver validates fixed-size records, evaluates one preferred side or exactly four scalar side candidates without arrays or sorting, then materializes only the fixed-size winning result.",
         "adversarialWitness": "A preferred placement overflowing every boundary edge evaluates all four candidates and shifts the winner while retaining constant auxiliary state.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -21183,8 +21183,8 @@
         "proof": "A module-private family plus exact owner WeakMap check is O(1); trusted states skip whole-domain validation and execute only the requested movement and bounded output construction.",
         "adversarialWitness": "A canonical 100,000-item state moves one eligible step without reading unrelated domain identities; a different owner cannot hit the provenance check.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -21261,8 +21261,8 @@
         "proof": "Missing, forged, or owner-mismatched provenance routes through the pre-existing full state/domain validation before any transition.",
         "adversarialWitness": "A structurally valid copied state over 100,000 identities exercises complete error-equivalent validation; an invalid final identity rejects with the original error.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -21337,8 +21337,8 @@
         "proof": "Grid-control and tree-grid consume the Grid owner's O(1) retained domain view. A tree-grid expansion traverses only visible rows, reuses owner-cached row views, and materializes one indexed visible-cell output; repeated reads of that expansion return the cached view in O(1).",
         "adversarialWitness": "A sparse grid with one visible row visits only that row's coordinates and emitted cells instead of the full rectangle; repeated canonical transitions perform zero domain, row, or visible-tree reconstruction.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -21400,8 +21400,8 @@
         "proof": "The code-unit ceiling rejects before parsing; the closed grammar performs a fixed sequence of anchored parses and bounded token splits.",
         "adversarialWitness": "A maximum-length invalid function reaches every grammar branch without exceeding the code-unit ceiling.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -21456,8 +21456,8 @@
         "proof": "Every conversion evaluates a fixed scalar matrix or fixed three/four-channel formula and materializes one fixed-size value.",
         "adversarialWitness": "An in-gamut OKLCH round trip exercises transfer functions, two matrices, polar conversion, and quantization.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -21518,8 +21518,8 @@
         "proof": "Reject and clip are one pass; reduce-chroma performs exactly twelve binary-search conversions with constant scalar state.",
         "adversarialWitness": "A high-chroma out-of-gamut value forces all twelve reduction iterations.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -21590,8 +21590,8 @@
         "proof": "Cross-cancellation bounds multiplication/division intermediates; addition uses denominator GCD; every retained result is reduced and rechecked.",
         "adversarialWitness": "Coprime maximum-width operands force the widest allowed intermediate and Euclidean reduction.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -21657,8 +21657,8 @@
         "proof": "Each operand is validated and reduced by Euclidean GCD, then compared with two bounded-width cross products.",
         "adversarialWitness": "Coprime Fibonacci-sized operands at both configured width ceilings maximize remainder calls.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -21724,8 +21724,8 @@
         "proof": "The external ratio is width-checked and reduced before one exact division at the fixed Core percentage precision materializes one decimal spelling; callers cannot expand the precision ceiling.",
         "adversarialWitness": "A maximum-width non-terminating ratio exercises the fixed half-even precision and widest accepted division operands.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -21788,8 +21788,8 @@
         "proof": "Non-empty commands are copied and frozen into one output vector; the empty path reuses one frozen singleton. No second command-array copy is made.",
         "adversarialWitness": "A maximum command batch copies and freezes each command once; repeated zero-command updates share the same empty vector.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -21844,8 +21844,8 @@
         "proof": "Success and failure constructors create one fixed-shape discriminated result and retain supplied detail records by immutable contract.",
         "adversarialWitness": "A failure with a maximum-size caller-owned detail record performs no enumeration or copy of that record.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -21909,8 +21909,8 @@
         "proof": "One scalar reduction validates each bounded input rectangle and retains only four extrema before materializing one result.",
         "adversarialWitness": "Maximum rect input makes every final rectangle extend one bound and therefore requires every visit.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -21966,8 +21966,8 @@
         "proof": "Point, size, rectangle, inset, intersection, containment, overflow, clamp, and alignment operations use a fixed number of finite-number scalar comparisons and arithmetic steps.",
         "adversarialWitness": "Fractional negative coordinates and oversized extents execute the same bounded scalar branches.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -22030,8 +22030,8 @@
         "proof": "Construction retains one row-major indexed domain view; every observation returns that same immutable owner.",
         "adversarialWitness": "Repeated domain reads on a maximum-size grid preserve object identity and perform no cell visits.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -22093,8 +22093,8 @@
         "proof": "The axis loop advances once per scanned cell and stops at maxScan, a found candidate, or the boundary.",
         "adversarialWitness": "A sparse axis with no eligible cell forces exactly min(axis length, maxScan) visits.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -22151,8 +22151,8 @@
         "proof": "The operation performs a bounded number of indexed reads or scalar steps.",
         "adversarialWitness": "Maximum-size retained state does not increase deterministic work.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -22216,8 +22216,8 @@
         "proof": "The shared axis loop advances once per coordinate, invokes accepts exactly once for each visit, excludes the current coordinate after wrapping, and stops at maxScan, the first accepted coordinate, or the exhausted axis.",
         "adversarialWitness": "A maximum-length axis whose callback rejects every coordinate visits exactly min(axis length minus one, maxScan) coordinates.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -22286,8 +22286,8 @@
         "proof": "The first row/column read scans one axis and retains one immutable indexed view; every repeated read of that coordinate is O(1) with zero allocation.",
         "adversarialWitness": "The first fully occupied maximum-length axis read emits every cell; a repeated read returns the identical view.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -22354,8 +22354,8 @@
         "proof": "The normalizer checks the ceiling once, scans each ID's code units once, records one uniqueness entry, and emits one frozen ordered snapshot.",
         "adversarialWitness": "The final maximum-width ID duplicates the first after all prior identities have been validated.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -22417,8 +22417,8 @@
         "proof": "Identity or length mismatch exits immediately; equal-length distinct arrays compare each aligned identity at most once.",
         "adversarialWitness": "Two maximum equal-length vectors differ only at the final identity.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -22479,8 +22479,8 @@
         "proof": "Binary search halves the sorted disjoint span vector after each comparison.",
         "adversarialWitness": "A miss between the final pair of maximum-count singleton spans reaches logarithmic depth.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -22552,8 +22552,8 @@
         "proof": "Two monotone cursors visit each input span at most once and normalize while emitting without sorting or index expansion.",
         "adversarialWitness": "Alternating disjoint singleton spans force every input visit and maximum output spans.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -22620,8 +22620,8 @@
         "proof": "Clamp, translate, and resize traverse the ordered input once, validate each boundary, and coalesce while emitting.",
         "adversarialWitness": "Maximum-count separated spans survive the transform without merging.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -22816,8 +22816,8 @@
         "proof": "Boundary validation and packed storage visit x*d coordinates once. When expectedQueries reaches the frozen low-dimensional crossover, d stable presorts plus balanced level partitions build the private kd index during construction only; otherwise construction remains O(x*d).",
         "adversarialWitness": "Maximum low-dimensional query-heavy input selects the indexed construction; high-dimensional, small, and low-query inputs retain the packed path.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -22879,8 +22879,8 @@
         "proof": "ID resolution is one expected constant-time map lookup; coordinate snapshots and squared distance visit exactly d packed coordinates.",
         "adversarialWitness": "Maximum dimension emits a full immutable snapshot or accumulates every squared component once.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -22976,8 +22976,8 @@
         "proof": "Packed queries inspect x points; the fixed 2D radius path reads one scalar coordinate pair per point without changing scan or output order. Indexed queries prune by squared axis distance, abort above x/2 candidates, and restart one packed scan; construction performs all index building so no query rebuild is hidden. Radius output is restored to domain order with bounded radix passes.",
         "adversarialWitness": "Collinear or duplicate coordinates defeat pruning, cross the x/2 threshold, and execute the bounded packed fallback with stable ties.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -23032,8 +23032,8 @@
         "proof": "Each tick/value/ratio mapping performs a bounded number of exact integer operations under fixed width ceilings.",
         "adversarialWitness": "Maximum range count and decimal scale remain within the same bounded operation count.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -23095,8 +23095,8 @@
         "proof": "A canonical state retains its Sequence owner. Source and target resolve through its index, one move overlay is created in O(1), and the public full ids snapshot is materialized exactly once.",
         "adversarialWitness": "Moving the first identity after the last in a maximum-size canonical sequence performs two indexed lookups, one overlay, and one full output materialization.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -23158,8 +23158,8 @@
         "proof": "A canonical state retains the current Tree and input-order index. Cycle, source, target, parent, and last-sibling queries reuse those indexes; one output vector and exactly one next Tree are constructed.",
         "adversarialWitness": "Moving a root with a maximum-size subtree under the last branch performs constant indexed resolution followed by one complete immutable output and one next-tree validation.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -23233,8 +23233,8 @@
         "proof": "Closed truth-table algebra visits each exception vector once using owner-local hash membership; it never expands a complement universe.",
         "adversarialWitness": "Disjoint maximum exception vectors force both complete visits and maximum retained output.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -23303,8 +23303,8 @@
         "proof": "Materialization alone walks the supplied canonical Sequence once and performs one expected-O(1) membership lookup per ID.",
         "adversarialWitness": "A complement with no exceptions emits every maximum-size Sequence ID.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -23367,8 +23367,8 @@
         "proof": "Construction retains one private hash index; membership performs exactly one exception lookup and polarity inversion.",
         "adversarialWitness": "A missing ID against the maximum exception set still performs one hash lookup.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -23437,8 +23437,8 @@
         "proof": "Canonical state retains ordered domain indexes; toggle performs one domain index lookup, binary search, and immutable selected-vector copy without a domain scan.",
         "adversarialWitness": "A 100k domain with one selected ID performs one indexOf call and zero at/contains calls.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -23493,8 +23493,8 @@
         "proof": "The operation performs a bounded number of indexed reads or scalar steps.",
         "adversarialWitness": "Maximum-size retained state does not increase deterministic work.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -23620,8 +23620,8 @@
         "proof": "The operation performs a bounded number of indexed reads or scalar steps.",
         "adversarialWitness": "Maximum-size retained state does not increase deterministic work.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -23694,8 +23694,8 @@
         "proof": "Materialization walks at most 32 metadata overlays whose cumulative changed cardinality is at most one eighth of the resulting domain, copies the indexed base vector once, applies patches in order, and caches the one frozen result; larger changes compact eagerly.",
         "adversarialWitness": "A depth-64 patched 100k sequence requests the full ids projection.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -23823,8 +23823,8 @@
         "proof": "Lookup translates through at most one retained patch per overlay depth before the indexed base lookup.",
         "adversarialWitness": "A missing ID traverses every depth-32 overlay before the base map miss; the next patch compacts first.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -23896,8 +23896,8 @@
         "proof": "External source and replacement text are each validated once, offsets use local boundary checks after that proof, and immutable replacement materializes the output once.",
         "adversarialWitness": "Maximum valid text replaced at the final surrogate boundary.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -23964,8 +23964,8 @@
         "proof": "A module-private WeakSet proves the source state was built from well-formed text. Replacement validation scans only inserted code units, source cuts and output selection inspect adjacent code units, and immutable string construction pays the unavoidable output cost.",
         "adversarialWitness": "A one-code-unit replacement at the end of a maximum-size canonical text checks two local boundaries without validating the unchanged prefix.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -24184,8 +24184,8 @@
         "proof": "Parent, child, depth, preorder, and postorder indexes each visit nodes/edges a bounded number of times.",
         "adversarialWitness": "A maximum-depth chain reaches every node and depth check.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -24248,8 +24248,8 @@
         "proof": "Construction records one preorder index and numeric end boundary per node; lookup is one map access plus one array read and allocates only the returned pair.",
         "adversarialWitness": "Root and deepest-leaf interval reads on a maximum-depth tree each perform one lookup.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -24318,8 +24318,8 @@
         "proof": "The first child/preorder/postorder read builds one indexed immutable view; repeated reads return that same view in O(1) with zero allocation.",
         "adversarialWitness": "A first maximum-size preorder read indexes every node, then repeated reads preserve object identity.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -24388,8 +24388,8 @@
         "proof": "The stack traversal visits each visible node once and emits one ordered identity per visit.",
         "adversarialWitness": "Every branch expanded makes the visible result equal the full preorder.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -24453,8 +24453,8 @@
         "proof": "The controller compares a fixed scalar cache key before constructing a resolved request and returns the single retained structurally immutable projection with borrowed binary storage in one Result wrapper.",
         "adversarialWitness": "Repeated projection reads on a one-million-datum model return one object identity without domain traversal; a 50,000-read heap-allocation sample stays below one percent of an otherwise identical uncached previous-projection request.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -24531,8 +24531,8 @@
         "proof": "Each transition reserves one of 1,024 synchronous cascade slots before commit, captures one immutable snapshot/command record and current listener arrays, and drains records iteratively in FIFO order. Every captured target is attempted and the first user error is rethrown only after the queue is empty. Unsubscribe and controller disposal remove retained listeners idempotently.",
         "adversarialWitness": "A command listener creates one nested state transition per delivered render command; revision 1,024 commits and the 1,025th transition returns a resource failure before commit.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -24596,8 +24596,7 @@
         "proof": "The owner captures the input layer array once, visits exactly its preflight layerCount by index, captures each approved layer/data reference and data length once, and accumulates maxDatums before any accessor runs. Collection consumes only this internal prepared owner and indexes each data array below its approved size, so callback appends cannot move either layer or datum iteration boundary.",
         "adversarialWitness": "CHT-08 keeps initial over-ceiling accessors at zero calls, then lets accepted identity accessors append datums or layers on every bounded witness call; only the preflight-approved layer and datum positions are resolved and retained.",
         "evidence": [
-          "VAL-007",
-          "VAL-031"
+          "packages/chart/tests/model/definition.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -24664,8 +24663,8 @@
         "proof": "Raw model normalization captures every bounded layer header before packing. Patch preflight copies current layer sizes once, resolves each bounded operation through the retained layer index, and updates a running total in declaration order before any datum is materialized or packed.",
         "adversarialWitness": "An over-ceiling replacement or insert exposes datum arrays through read-counting proxies and returns the resource rejection with zero element reads; an insert-then-remove sequence that only fits at the end is rejected at its overflowing intermediate state.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -24727,8 +24726,8 @@
         "proof": "The first membership query builds one StableID-preserving Set keyed weakly by the immutable selection owner; later DOM accessibility projections reuse expected-constant membership without rescanning the selection.",
         "adversarialWitness": "A million selected numeric and string identities are queried repeatedly while only a bounded accessibility window is projected.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -24795,7 +24794,7 @@
         "proof": "Normalization captures each profile scalar once, validates and writes those exact scalars into packed storage, builds one Core identity sequence, and retains profile indexes whose packed hierarchy and auxiliary entries are linear in their owning layer. Whole-model replacement, layer replacement, and patch packing share the same `packDatum` canonicalization owner.",
         "adversarialWitness": "Getter-backed point, ordered-series, Cartesian segment, grid-cell, and radial datums return finite values on their first numeric-field observation and NaN thereafter; construction and replacement paths retain only the first validated observations with one read per field while the maximum-size mixed-profile bound remains linear.",
         "evidence": [
-          "VAL-036"
+          "packages/chart/tests/model/model.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -24867,8 +24866,8 @@
         "proof": "The owner copies only intersecting fixed-size blocks, patches the Core identity sequence, and records only affected leaf-to-root hierarchy paths; radial prefix repair counts its affected suffix as bIndex.",
         "adversarialWitness": "One replacement in a 4,096-datum ordered layer copies one value block and repairs at most one leaf-to-root hierarchy path.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -24935,8 +24934,8 @@
         "proof": "The replacement validates and indexes one layer, patches the Core identity sequence once, creates at most nLayer lightweight views, and reuses every other immutable owner.",
         "adversarialWitness": "Replacing one datum layer beside a one-million-datum unchanged layer reports one scanned datum and preserves the unchanged owner identity.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -25003,8 +25002,8 @@
         "proof": "The clone walks public batch and data-batch fields once. One map copies each distinct backing buffer exactly once, a second map recreates each distinct typed-array view exactly once, and both maps preserve source alias relationships inside the isolated result.",
         "adversarialWitness": "A layered Cartesian plus radial projection shares identity, color, and polyline-offset views across public surfaces; the clone preserves those aliases, remains isolated from a second clone and the controller cache, and can transfer its buffer without detaching the source.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -25073,7 +25072,7 @@
         "proof": "Model construction precomputes Cartesian bounds and a cumulative radial prefix. Projection allocates layer quotas and visits only selected representative indexes; a radial representative at source i reads exact cumulative boundaries from prefix[i] and prefix[i + 1] in constant time instead of reconstructing the prefix from source zero.",
         "adversarialWitness": "A one-million-datum raw radial model projected with maximumRepresentatives=4096 emits 4096 representatives, reports zero full-source scans, preserves exact retained-prefix arc boundaries, and is covered by the chart:projection:radial-sampled timing workload across 10k, 100k, and 1m source cardinalities.",
         "evidence": [
-          "VAL-038"
+          "packages/chart/tests/projection/projection.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -25136,7 +25135,7 @@
         },
         "resources": {
           "allocations": "O(nLayer + nAxis + nTick + kRepresentative)",
-          "cacheEntries": "at most 8 per live geometry owner",
+          "cacheEntries": "at most 8 data geometries plus 8 exact ordinal color owners per live geometry owner",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
@@ -25145,7 +25144,8 @@
         "assumptions": [
           "exact bar, pie, donut, raw scatter, and raw heatmap requests reject before partial publication when their quota is insufficient",
           "Cartesian exact, line envelope, density, and heatmap requests consume retained visible-domain hierarchy nodes",
-          "aggregate representatives carry bounds, count, and reduction and never carry a datum identity"
+          "aggregate representatives carry bounds, count, and reduction and never carry a datum identity",
+          "borrowed geometry and color arrays remain immutable for the lifetime of their Chart owners"
         ],
         "ceilings": [
           "operation item and output ceilings"
@@ -25154,19 +25154,18 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "packages/chart/tests/projection/projection.semantic.test.mjs ISSUE-151 retains one exact ordinal color owner across compatible 1k, 10k, and 100k viewport-only projections",
+          "ISSUE-151 model-owner, identity, and order regressions prove changed semantic owners regenerate colors while collision-safe geometry selection remains canonical"
         ],
-        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Axis layout visits bounded axes and ticks; exact Cartesian selection and aggregate reductions traverse retained visible-domain hierarchy nodes; line selection uses binary search plus retained range aggregates; output work follows emitted representatives. Compatible data-space geometry is retained by geometry token and bounded level key.",
-        "adversarialWitness": "One-million-datum line and density projections emit at most 8,192 representatives while diagnostics report hierarchy visits and zero full-source scans; exact profiles return a resource rejection instead of sampling.",
+        "resourceRationale": "Data geometry retains at most eight collision-safe representative selections per live geometry owner. Exact ordinal colors retain at most eight owners beside that geometry owner and reference only the already-validated geometry selection token instead of copying or rescanning representative indices.",
+        "proof": "Axis layout visits bounded axes and ticks; exact Cartesian selection and aggregate reductions traverse retained visible-domain hierarchy nodes; line selection uses binary search plus retained range aggregates; output work follows emitted representatives. Compatible data-space geometry is retained by geometry token and bounded level key. Exact ordinal colors reuse the collision-safe retained geometry selection as their representative token, then compare at most eight revision records by object/scalar identity before returning the immutable color owner; compatible views add no color-cardinality scan or color allocation.",
+        "adversarialWitness": "One-million-datum line and density projections emit at most 8,192 representatives while diagnostics report hierarchy visits and zero full-source scans; exact profiles return a resource rejection instead of sampling. Exact scatter projections at 1k, 10k, and 100k representatives retain color owner identity across viewport-only changes, while radial model-owner and representative identity/order changes miss the color cache and match a fresh projection.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "packages/chart/tests/projection/projection.semantic.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
-          "rationale": "When semantic output is bounded below source cardinality, projection must use retained indexes or reject rather than scan the source."
+          "rationale": "When semantic output is bounded below source cardinality, projection must use retained indexes or reject rather than scan the source. Compatible exact color reuse may consume the already-required collision-safe geometry-selection result but must not add a second representative or color scan."
         }
       }
     },
@@ -25251,7 +25250,7 @@
         "proof": "Filled areas and scatter use indexed exact candidates; ordered lines use one binary search per bounded layer plus equal-X candidates; categorical bars use retained center orders. Every resolvable hit is compared against a max-heap of at most k candidates, replacement mutates an existing slot, and only the final k candidates are sorted and materialized.",
         "adversarialWitness": "Dense overlapping points and repeated-X/repeated-center fixtures test every tied candidate while retainedCandidates stays at maximumHits; separated geometry retains logarithmic lookup plus bounded leaves.",
         "evidence": [
-          "VAL-033"
+          "packages/chart/tests/query/query.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -25313,8 +25312,8 @@
         "proof": "Primitive bounds are emitted once, Morton keys are sorted once, categorical bar records are sorted once by their dominant-axis centers, and one balanced packed hierarchy plus two packed bar orders is retained per structurally immutable projection owner.",
         "adversarialWitness": "Every representative emits one sortable query primitive; every categorical bar additionally enters exactly one dominant-axis order.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -25369,7 +25368,7 @@
         "proof": "relativePosition performs one direct finite-difference ratio or one fixed halved fallback when subtraction overflows. interpolate performs one fixed branch between direct same-side affine arithmetic and weighted opposite-sign endpoint interpolation. Neither path depends on chart cardinality.",
         "adversarialWitness": "CHT-03 maps Number.MAX_VALUE opposite-sign domains and ranges through linear, temporal, logarithmic, categorical, tick, and continuous-color paths while every accepted in-bound result remains finite.",
         "evidence": [
-          "VAL-032"
+          "packages/chart/tests/scale/scale.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -25433,7 +25432,7 @@
         "proof": "A retained StableID index resolves one axis. Pan compares the finite action fraction with the remaining base movement ratio before multiplying; zoom compares its factor with finite minimum/maximum useful span thresholds before dividing. Only an in-bound request performs the ordinary scalar product/quotient, and one final scalar invariant guard rejects any unrepresentable derived window before publication. Accepted transitions replace one axis record in an array bounded by maxAxes; no-op transitions return the prior state identity.",
         "adversarialWitness": "Number.MAX_VALUE positive/negative pans and Number.MIN_VALUE zoom-out requests on linear, temporal, and logarithmic windows remain finite and constructor-valid; an unrepresentable zero-minimum-span zoom-in returns chart-view-invalid, while an explicit minimum span clamps safely. One million ordinary alternating zoom transitions across 16 mixed axes retain one lookup per transition and bounded scalar work.",
         "evidence": [
-          "VAL-034"
+          "packages/chart/tests/interaction/view.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -25500,8 +25499,8 @@
         "proof": "Canvas2D visits each packed data-space primitive once, projects it through its two retained axis scales, and retains no geometry copy.",
         "adversarialWitness": "Every visible primitive has a distinct color and both axes use non-identity ranges.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -25568,8 +25567,8 @@
         "proof": "Idempotent disconnect invalidates the owner, cancels its frame and settlement timer, removes stable listeners, disconnects one observer and subscription, releases renderer resources, clears accessible nodes, removes the overlay, and restores borrowed attributes and styles.",
         "adversarialWitness": "Disconnect during a pending frame, wheel settlement, active captured pinch, and lost WebGL context leaves zero connection lifecycle diagnostics and ignores stale callbacks.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -25637,8 +25636,8 @@
         "proof": "The adapter filters the bounded projected axis list, dispatches one Chart-owned domain action per enabled axis, retains at most two pointer positions, and replaces one settlement timer. Controller render commands enter the connection's single-frame coalescer.",
         "adversarialWitness": "Two-axis pinch plus an enabled wheel burst at a domain limit performs bounded axis lookups, releases pointer capture, leaves browser defaults uncancelled when unchanged, and retains one timer and frame.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -25715,8 +25714,8 @@
         "proof": "The connection-owned SVG samples each axis to at most 512 ticks, emits at most 64 legend entries and 512 interaction markers, and otherwise retains no datum nodes. Interaction marking scans the already bounded emitted batches only when active, cursor, or selection state is visible.",
         "adversarialWitness": "Every axis requests the Core tick maximum and the chart declares more than 64 layers.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -25810,8 +25809,8 @@
           },
           {
             "name": "k",
-            "meaning": "values in changed packed geometry",
-            "ceiling": "Chart projection representative ceiling"
+            "meaning": "scalar elements in changed immutable geometry or color storage",
+            "ceiling": "a constant multiple of the Chart projection representative ceiling"
           }
         ],
         "time": {
@@ -25825,7 +25824,7 @@
           "retained": "O(k)"
         },
         "resources": {
-          "allocations": "view O(l), changed geometry O(k)",
+          "allocations": "compatible view O(l), changed geometry or color O(k)",
           "cacheEntries": "O(l)",
           "listeners": "2",
           "observers": "0",
@@ -25843,19 +25842,19 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "packages/chart/tests/projection/projection.semantic.test.mjs ISSUE-151 proves compatible 1k, 10k, and 100k projections submit the same immutable color owner",
+          "packages/dom/tests/chart-renderer.test.mjs retained compatible-view redraw performs zero geometry or color upload after the initial buffers are retained"
         ],
-        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Each layer owns one geometry buffer and at most one color buffer. Compatible views update uniforms only; changed immutable geometry is converted once and uses a bounded changed-range upload when the calibrated gate admits it.",
-        "adversarialWitness": "One value changes near each end of a large layer, forcing a full upload, while every unchanged layer retains buffer identity.",
+        "resourceRationale": "Each emitted layer retains one geometry buffer and at most one color buffer. Chart owns immutable source arrays; DOM stores only their current identities and GPU resources, so compatible views require no input-sized comparison state.",
+        "proof": "Each layer owns one geometry buffer and at most one color buffer. The retain path checks geometry and color owner identity before calling updateBuffer; a compatible Chart view reuses both immutable owners and therefore updates uniforms/draw state without converting geometry, scanning color bytes, or uploading either buffer. A changed owner is compared once and uses a bounded changed-range upload when the calibrated gate admits it.",
+        "adversarialWitness": "A 100,000-representative exact scatter changes only viewport width and retains geometry/color owners, so the renderer bypasses updateBuffer for both arrays. Separately, one changed value near each end of a large new owner forces the intended full-upload fallback.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "packages/chart/tests/projection/projection.semantic.test.mjs",
+          "packages/dom/tests/chart-renderer.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "A new immutable geometry owner may require one equality-range scan before selecting full versus partial upload; compatible views never inspect its values."
+          "rationale": "A new immutable geometry or color owner may require one equality-range scan before selecting full versus partial upload; compatible views retain source identity and inspect neither geometry values nor color bytes."
         }
       }
     },
@@ -26012,8 +26011,8 @@
         "proof": "Construction evaluates one selector, retains one record, and inserts it into one form or field Set channel.",
         "adversarialWitness": "A subscription to an absent field still allocates one field-channel record and no domain projection.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -26090,8 +26089,8 @@
         "proof": "Dispatch snapshots the coarse channel and only event-routed field channels; source-wide events reuse Form owner indexes and reset/reinitialize explicitly visit every subscribed field channel.",
         "adversarialWitness": "A source replacement touching one of 10k fields evaluates coarse selectors plus only that field's channel, while reset deliberately evaluates every subscribed field channel.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -26158,8 +26157,8 @@
         "proof": "The idempotent disposer marks one record inactive, deletes it from one Set, and removes an empty field channel from one Map.",
         "adversarialWitness": "Repeated disposal during active dispatch changes no other channel and retains no subscription.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -26470,7 +26469,7 @@
         "proof": "setItemAttributes resolves duplicate host ownership through one WeakMap lookup, repairs at most the current ID and one prior owner, projects only the newly registered element, updates only its submenu position when present, and retries only pending focus.",
         "adversarialWitness": "Sequentially register a maximum flat leaf domain of distinct elements, then transfer one existing element to another ID; projection writes stay constant per registration and replacement never scans prior registrations.",
         "evidence": [
-          "VAL-009"
+          "packages/dom/tests/menu.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -26664,8 +26663,8 @@
         "proof": "Connection discovers the owned ancestor chain once; source-owned WeakMap registries retain one physical listener and only callbacks for connections affected by that source.",
         "adversarialWitness": "Deep nested scrolling ancestors with every target connected.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -26727,8 +26726,8 @@
         "proof": "Cleanup visits each connection-owned disposer once and clears all retained resources.",
         "adversarialWitness": "Maximum ancestor registrations followed by repeated idempotent disconnect.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -26790,8 +26789,8 @@
         "proof": "Discovery walks the owned overflow/document ancestor chain once and records each unique source.",
         "adversarialWitness": "Every ancestor establishes a distinct clipping or scrolling context.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -26846,8 +26845,8 @@
         "proof": "Generation coalescing retains at most one pending update callback per connection.",
         "adversarialWitness": "Many synchronous invalidations before the next frame still retain one scheduled callback.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -26914,8 +26913,8 @@
         "proof": "An update consumes retained discovery, completes reference/floating/boundary/ancestor reads, invokes the bounded Core AnchoredLayout solver, then commits one owned projection.",
         "adversarialWitness": "Every ancestor clips and every side candidate overflows.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -27203,8 +27202,8 @@
         "proof": "One logical pin-order index is built for visible columns, then each canonical header node contributes once to a descendant interval and metric.",
         "adversarialWitness": "A deep grouped header tree with hidden leaves and all three pin regions produces exact start and span values without any descendant column lookup scan.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -27269,8 +27268,8 @@
         "proof": "The DOM DataTable connection builds one Map from row ID to canonical projected row when projection.rows identity changes. Row registration resolves once and passes the resolved row directly to ARIA projection; cell registration and later row refreshes reuse Map.get. Repeated reads over the same accepted rows perform no projected-row array scan, and disconnect clears the index and its retained row references.",
         "adversarialWitness": "The DOM Tabular production-path regression uses 100, 500, and 1,000 accepted rows. The first row lookup for each accepted view writes exactly nRow index entries; the remaining row registrations, one full refresh, and one cell registration per row perform zero accepted-row Array.find predicate evaluations and no second index build. Replacing the view while rows remain registered rebuilds exactly one new entry and rejects an old row identity.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -27393,8 +27392,8 @@
         "proof": "Reconciliation validates the external native value once, then scans a shared prefix and suffix at most once. Malformed UTF-16 becomes one whole-value Core replace proposal that is rejected by canonical Text validation and restored by the host; well-formed cut repair checks only adjacent surrogate code units. The binding retains only one active composition record plus one generation-guarded composition finalizer.",
         "adversarialWitness": "A 100k-code-unit replacement differing only in the final surrogate pair reconstructs the exact native value within the deterministic two-input-length inspection ceiling. Lone high/low surrogates in prefix, suffix, and interior positions return within the same ceiling; the public binding keeps canonical Core text unchanged and restores the rendered value. Disconnect invalidates the pending finalizer.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -27472,9 +27471,7 @@
         "proof": "The resolved host removes its stable connection listeners, the connection disconnects both observers, cancels one pending frame, and clears each owner-local frame, item, pending-entry, and placement registry exactly once. No shared document registry retains disconnected owners.",
         "adversarialWitness": "Disconnect document-host connections during queued scroll/resize work at 1, 8, and 32 same-document connections, invoke captured stale callbacks, and verify zero publication, pending frames, listeners, or resource recreation.",
         "evidence": [
-          "VAL-004",
-          "VAL-010",
-          "VAL-001"
+          "packages/dom/tests/virtual.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -27560,9 +27557,7 @@
         "proof": "The resolved host adapter turns browser events into the same generation-guarded transaction. Geometry and item callbacks coalesce into one frame; the transaction resolves only changed entries, composes frame and layout deltas, and performs at most one correction write and final query. A rejected post-write query restores the two saved physical coordinates through the same host writer before error reporting. Accepted frames index each emitted placement once.",
         "adversarialWitness": "Document viewport resize, page scroll, frame invalidation, and changed mounted items in one generation still produce one scheduled transaction. Repeated mutation, measurement, inset, frame, and target-scroll rejections restore page scroll/state/plan; cross-document registrations reject before observer retention.",
         "evidence": [
-          "VAL-004",
-          "VAL-010",
-          "VAL-001"
+          "packages/dom/tests/virtual.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -27631,9 +27626,7 @@
         "proof": "Construction resolves stable host operations once. The stable scroll listener marks only the viewport dirty, one coalesced frame reads scalar offsets/extents, projects through the cached surface frame, delegates one query, and indexes each returned placement once. Document mode neither rereads the surface rectangle nor reads document scroll range on this path.",
         "adversarialWitness": "At 1, 8, and 32 same-document connections, a burst of page-scroll events schedules at most one frame per connection; each accepted frame performs no surface geometry/range read and one query, then disconnect releases every listener and pending frame.",
         "evidence": [
-          "VAL-004",
-          "VAL-010",
-          "VAL-001"
+          "packages/dom/tests/virtual.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -27776,8 +27769,8 @@
         "proof": "Canonical Form state retains ID-to-index mapping and resolves one fixed-size chunk coordinate.",
         "adversarialWitness": "First, middle, last, and absent IDs in a 10k-field canonical form perform one map lookup.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -27848,8 +27841,8 @@
         "proof": "The canonical source-owner delta set retains at most one current-owner cardinality of pending overlay entries; once cumulative effective changes exceed the current set size it compacts to the current set. Between compactions the retained base is therefore at most twice the current owner count and materialization replays at most one additional current-owner cardinality before emitting the explicit snapshot.",
         "adversarialWitness": "Dense 10/100/1000-owner source replacement down to one owner compacts before enumeration, while regrowth to the full current owner set keeps replay work within three map entries per current owner.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -27936,8 +27929,8 @@
         "proof": "The retained ID and relation indexes resolve the changed issue owner and related fields. Only their 64-entry chunks and the outer chunk vector are copied; the observable allIssues output and its indexes are materialized once.",
         "adversarialWitness": "One related issue change in a 10k-field canonical form copies only associated field chunks and the canonical issue output without visiting unrelated field records.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -28189,8 +28182,8 @@
         "proof": "Retained source-owner and issue-relation indexes enumerate only affected fields; incoming and retained issues rebuild the explicit allIssues output once while changed field chunks are copied by ID.",
         "adversarialWitness": "Replacing one source affecting two related fields in a 10k-field form rebuilds the issue output and copies only those field chunks without visiting the other 9,998 field records.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -28421,8 +28414,8 @@
         "proof": "Ordinary slice updates visit only their owner-local canonicalizer. Response normalization retains one row-ID-to-position index that replaces the former transient duplicate-ID Set; range events perform two expected-O(1) endpoint lookups, scan only the endpoint span, and materialize only leaf IDs from that span. DataGrid reuses the same accepted-view row index instead of retaining a duplicate flat-row index.",
         "adversarialWitness": "Two-row tail ranges over 1k, 10k, and 100k accepted domains perform exactly two index lookups and six accepted-row reads in the shared production kernel; the DataTable integration performs no accepted-view filter/map or full-size Array.indexOf.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -28483,8 +28476,8 @@
         "proof": "Column partitions are retained in the column owner by immutable column-state identity, and the no-view row domain uses one frozen singleton. Repeated reads over the same state perform one WeakMap lookup and construct only the small top-level projection wrapper; stale partitions cannot survive a column-state identity change and old entries are collectible with their WeakMap keys.",
         "adversarialWitness": "TAB-TBL-09 performs repeated unchanged reads at 100, 1,000, and 10,000 columns with zero order-filter scans, then changes order/pinning and observes exactly one three-partition rebuild before subsequent O(1) reads. TAB-GRD-06 confirms pre-view Grid reads reuse the same empty-row and derived column-domain identities.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -28553,8 +28546,8 @@
         "proof": "The current projection generation retains row, column, and cell indexes; a valid adjacent move performs O(1) coordinate lookup and scans only candidates on its movement axis.",
         "adversarialWitness": "Every candidate on a 100k-row axis is disabled, forcing one bounded axis scan without rebuilding cell records or indexes.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -28621,8 +28614,8 @@
         "proof": "Column partitions and one projected index are built once; each header node contributes to one descendant interval exactly once.",
         "adversarialWitness": "A maximum-depth header tree with hidden and pinned leaves is visited once and rejects the first non-contiguous group without per-group column scans.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -28730,8 +28723,8 @@
         "proof": "Cold resolution first performs one O(1) reentrancy guard, then normalizes nRecord identities; each enabled filter can visit all records; every sort comparison can walk sSort comparators; pivot discovery materializes one frozen ordered record-value bridge for the current query evaluation and reuses it across pPivot callbacks; grouping can revisit all records at each group depth; each group-cell evaluation materializes at most one frozen full-group aggregate bridge reused across aAggregate callbacks, while pivot matcher subsets and callback counts remain descriptor-dependent. Access slicing then emits only kRow plus dContext rows.",
         "adversarialWitness": "ISSUE-052 holds nRecord=10 and independently varies filter/sort/group/aggregate/pivot descriptor counts to expose unavoidable callback axes. ISSUE-076 varies pivot and aggregate descriptor counts from 1 to 8 and observes exactly one frozen full-record callback-array identity per current query/group owner; source/query invalidation produces a fresh identity and attempted mutation cannot affect later callbacks. ISSUE-135 reenters from row-ID, value-accessor, and predicate callbacks; every nested resolve rejects before source/query/projection work and the outer owner remains usable. The package benchmark repeats each descriptor axis at counts 1 and 8 with nRecord=1000.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -28839,8 +28832,8 @@
         "proof": "A source generation may rebuild normalization and every query/projection stage; a query revision reuses row identities but rebuilds descriptor-sensitive filtering, sorting, grouping, pivot discovery and projection. One O(1) reentrancy guard rejects nested resolution before those stages can be invalidated recursively. Pivot and full-group aggregate callback bridges are local to the current query/group evaluation, so invalidation receives fresh frozen snapshots without retaining a cross-generation cache. An expansion revision reuses the prepared query and emits grouped rows under one remaining maxRows budget. The cold worst-case formula therefore remains a safe bound for every invalidation mode.",
         "adversarialWitness": "ISSUE-052 varies descriptor counts at fixed records. ISSUE-053 expands a 1,000-record single group under maxRows=1 and rejects before the first leaf/cell projection rather than materializing the subtree. ISSUE-076 proves descriptor counts 1 and 8 share one frozen callback snapshot within an owner and source/query invalidation uses a distinct snapshot identity. ISSUE-135 attempts newer nested generations from three application callback classes and observes a constant-time typed rejection with no recursive invalidation.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -28913,8 +28906,8 @@
         "proof": "Equal source, query, and expansion revisions reuse one retained projection after one O(1) reentrancy guard. Flat projections slice directly. Grouped projections retain one 32-bit parent index per row, so a window boundary walks only its ancestor chain and then copies the requested rows; no prefix scan is performed.",
         "adversarialWitness": "ISSUE-050 slices the final 10 rows of a 10k flat projection with at most ten numeric row reads and a final nested leaf with exactly two retained ancestor reads plus one output row. ISSUE-135 confirms that rejected nested policy resolution leaves the current projection warm, with no additional row-ID, value, or predicate callbacks on the next same-generation request. The package warm benchmark uses a late offset rather than start=1.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -28980,8 +28973,8 @@
         "proof": "Table lookup delegates to the Core Sequence index. Grid lookup combines retained row and column indexes into a row-major coordinate.",
         "adversarialWitness": "Repeated last-row and last-column lookup on a large projection performs no Array.indexOf call and retains no cell-ID map.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -29046,8 +29039,8 @@
         "proof": "DataTable create/reconcile checks projected row array length before ID mapping. Grid create/reconcile reads row and partition array lengths, checks row/column ceilings, uses division for the projected-cell ceiling, and checks non-empty partition count before mapping row IDs, concatenating column IDs, invoking extent policies, or creating regions.",
         "adversarialWitness": "TAB-VIR-09 presents 100k accessor-backed rows at maxProjectedCells=1 to DataTable, DataGrid, and DataTreeGrid create/reconcile and observes zero ID and extent-policy reads. An accessor-backed two-column domain also rejects with zero column element reads; exact-bound one-row/one-column controls remain accepted.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -29117,8 +29110,8 @@
         "proof": "A fixed 32-patch planner bounds incremental array and persistent-layout work. Larger diffs use one splice, reuse stable-ID extents from the current indexed domain, and call the extent policy only for new IDs.",
         "adversarialWitness": "Reverse order, a large filter, and mixed insertion/removal at 100k rows each produce one bulk mutation; a pure rotation produces one move mutation.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -29206,8 +29199,8 @@
         "proof": "Reconciliation attempts the existing union bridge only while each union fits maxTracks. If either union would exceed the retained track ceiling, the adapter keeps only regions whose row and column IDs exist in both endpoints, directly replaces endpoint-sized row and column tracks through Virtual's extent-preserving mutations, then installs target regions. A constant number of complete endpoint/region traversals is performed and no intermediate Virtual track state exceeds maxTracks.",
         "adversarialWitness": "TAB-VIR-08 reconciles disjoint two-row and disjoint two-column endpoints at maxProjectedCells=2, where the old union cardinality is four. Both direct target constructions and DataGrid/DataTreeGrid reconciliations succeed, every emitted track/region mutation remains at or below two items, and a shared measured row/column retains its exact extent through the bounded fallback.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -29452,8 +29445,8 @@
         "proof": "External field state is normalized and each bounded semantic segment is visited at most once.",
         "adversarialWitness": "Every segment is incomplete or constrained at a calendar boundary.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -29520,8 +29513,8 @@
         "proof": "The host delegates semantics then projects terminal effects/layout without scanning another component owner.",
         "adversarialWitness": "Maximum canonical domain with every emitted command projected to the screen owner.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -30175,7 +30168,7 @@
         "proof": "Each inserted identity performs one bounded Sequence lookup and at most one logarithmic extent-index lookup before emitting one extent.",
         "adversarialWitness": "Every inserted identity survives from a different retained extent-index leaf or requires a new estimate.",
         "evidence": [
-          "VAL-003"
+          "packages/virtual/tests/runtime/collection.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -30232,7 +30225,7 @@
         "proof": "Fixed and responsive policies use only scalar validation, division, and clamping.",
         "adversarialWitness": "Maximum safe lane counts and finite asymmetric gaps do not increase deterministic work.",
         "evidence": [
-          "VAL-003"
+          "packages/virtual/tests/runtime/collection.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -30297,7 +30290,7 @@
         "proof": "Patch creation runs splice-range and resulting-cardinality scalar preflight first, then snapshots and validates only an accepted inserted/value-change range before Core applies one bounded structural patch; token application is constant time.",
         "adversarialWitness": "ISSUE-083 proves that over-ceiling and out-of-range patches read zero inserted elements and invoke the resolver zero times. Accepted sparse patches retain the existing local identity checks without scanning unchanged values.",
         "evidence": [
-          "VAL-003"
+          "packages/virtual/tests/runtime/collection.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -30363,8 +30356,7 @@
         "proof": "Projection captures the ceiling-validated source size once, resolves only indexes below that bound, and checks the live array length after the fixed resolver loop before Core validates and indexes the resulting stable identities.",
         "adversarialWitness": "ISSUE-098 starts with one accepted item and a resolver that appends on every invocation; production resolution performs one callback and returns a typed input failure instead of following the moving array boundary.",
         "evidence": [
-          "VAL-003",
-          "VAL-028"
+          "packages/virtual/tests/runtime/collection.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -30433,7 +30425,7 @@
         "proof": "The owner discovers one prefix/suffix window, resolves only that window under stable resolver provenance, and applies one Core Sequence splice.",
         "adversarialWitness": "Only the middle item changes after equal prefix and suffix scans consume the rest of a maximum-size array.",
         "evidence": [
-          "VAL-003"
+          "packages/virtual/tests/runtime/collection.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -30500,8 +30492,8 @@
         "proof": "The owner visits only the retained valueChange window, verifies identity at each changed index, derives one policy extent, and emits an update only when that extent differs from the retained projection. Fixed size policy is an O(1) no-op.",
         "adversarialWitness": "Every value in the declared changed window invalidates a previously exact measurement while all identities outside the window remain untouched.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -30562,8 +30554,8 @@
         "proof": "Prefix-sum lookup descends the balanced extent index by one branch per level.",
         "adversarialWitness": "Lookup at the final offset of a maximum-size non-uniform extent index.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -30634,7 +30626,7 @@
         "proof": "Validated updates are sorted/deduplicated once, updateNode descends only paths containing submitted indexes, and unchanged leaf/run entries return their existing nodes so an unchanged root returns the existing ExtentIndex identity.",
         "adversarialWitness": "EXT-03/EXT-05 submits same-value and duplicate-index updates whose final canonical value equals the retained extent and proves owner identity is preserved, while estimated(10) to exact(10) produces a distinct owner.",
         "evidence": [
-          "VAL-029"
+          "packages/virtual/tests/structures/extent-index.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -30695,8 +30687,8 @@
         "proof": "Blocked views descend one balanced block path; packed and dense views use direct indexed reads.",
         "adversarialWitness": "Read the final item of a maximum-depth blocked owner.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -30758,8 +30750,8 @@
         "proof": "Iteration visits each retained block and item exactly once without array materialization.",
         "adversarialWitness": "Consume a maximum-size view to iterator completion.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -30821,8 +30813,8 @@
         "proof": "toArray allocates one output array and fills each position once from the retained owner.",
         "adversarialWitness": "Materialize a maximum-size blocked view.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -30883,8 +30875,8 @@
         "proof": "Cross-extent reconfiguration validates one scalar, returns the existing state for an unchanged extent, or freezes one shallow state copy while retaining the existing domain and extent index identities.",
         "adversarialWitness": "Resize the cross axis of a maximum-size linear state and verify domain and extent-index identity are retained while generation changes exactly once.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -30953,7 +30945,7 @@
         "proof": "ExtentIndex canonicalizes the measurement batch and path-copies only effective changes. If the canonical root is unchanged, Linear returns the existing layout state before generation publication; changed extent paths and anchor reads remain logarithmic.",
         "adversarialWitness": "ISSUE-099 submits a non-empty same-kind/same-value batch and proves state/generation identity is retained, then mixes one unchanged and one changed extent and proves exactly one new generation; estimated-to-exact equal geometry remains a real change.",
         "evidence": [
-          "VAL-029"
+          "packages/virtual/tests/runtime/linear-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -31022,8 +31014,8 @@
         "proof": "Gap-aware range search performs bounded logarithmic prefix lookups, then emits each render-window placement once.",
         "adversarialWitness": "Non-zero gaps force the nested range search and the viewport emits kPlacement items.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -31088,8 +31080,8 @@
         "proof": "A uniform extent run derives row count and content extent with scalar arithmetic and stores no per-item masonry placement.",
         "adversarialWitness": "Derive geometry for a 100,000-item uniform masonry domain and assert that no placement is copied, recomputed, or retained.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -31169,8 +31161,8 @@
         "proof": "Closed-form row bounds skip the offscreen domain, each candidate is visited once, and only emitted placements are sorted back into domain order.",
         "adversarialWitness": "Query a narrow render window near the end of a maximum-size uniform domain and count only emitted placements.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -31242,7 +31234,7 @@
         "proof": "ExtentIndex canonicalizes the measurement batch first. An unchanged canonical owner returns the existing Masonry state before generation or placement publication; an effective change path-copies extent paths and may cascade lane placement recomputation from the first changed item.",
         "adversarialWitness": "ISSUE-099 proves a non-empty same-kind/same-value batch retains state/generation, while an estimated-to-exact transition remains a real change; changing the first effective item under balanced shortest-lane placement can still reflow every later item.",
         "evidence": [
-          "VAL-029"
+          "packages/virtual/tests/runtime/linear-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -31309,7 +31301,7 @@
         "proof": "Changing laneCount, itemGap, or placementPolicy routes through buildInternals without a retained owner; each materialized item is placed once and shortest-lane selection uses the existing bounded lane scan/heap strategy.",
         "adversarialWitness": "ISSUE-097 changes each packing input independently and verifies a fresh logical owner with all materialized placements recomputed and equivalent to a fresh rebuild.",
         "evidence": [
-          "VAL-027"
+          "packages/virtual/tests/runtime/masonry-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -31377,7 +31369,7 @@
         "proof": "The geometry owner compares the fixed normalized geometry fields before generation advancement. Equal geometry returns the existing state. Axis, flow, laneExtent, and laneGap changes reuse the retained MasonryInternals because placement lane/start/extent data does not depend on those projection fields.",
         "adversarialWitness": "ISSUE-097 exercises exact omitted/explicit no-ops and isolated axis, flow, laneExtent, and laneGap changes on a 4,096-item materialized owner with stable state or retained internals identity and unchanged deterministic Masonry work counters; the benchmark holds geometry delta fixed while nItem grows from 1k to 100k.",
         "evidence": [
-          "VAL-027"
+          "packages/virtual/tests/runtime/masonry-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -31449,8 +31441,8 @@
         "proof": "Each visible lane binary-searches its first overlap, emits candidates, then restores domain order by sorting the output.",
         "adversarialWitness": "Every visible lane contributes interleaved placements requiring the output sort.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -31523,8 +31515,8 @@
         "proof": "Identity maps locate changed tracks; blocked vectors and prefix indexes path-copy bounded paths while region indexes and partition boundaries retain owner identity.",
         "adversarialWitness": "Changed tracks occupy disjoint 64-entry blocks across both axes while remaining below the half-rebuild crossover.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -31591,8 +31583,8 @@
         "proof": "When the deterministic repair bound reaches half the track count, one packed rebuild replaces track, prefix, partition, and region indexes.",
         "adversarialWitness": "A dense batch changes every track and forces the selected rebuild branch.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -31664,8 +31656,8 @@
         "proof": "A bounded 3x3 partition set queries nested indexes, deduplicates candidates by ID, projects them, and sorts emitted placements.",
         "adversarialWitness": "Regions span pinned and center partitions so every partition query returns duplicate/interleaved candidates.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -31732,7 +31724,7 @@
         "proof": "Retained row/column maps resolve each replacement region directly, retained contiguous partition metadata validates span endpoints in constant work, and the delegated Track Grid validates only the replacement region set under the #92 nRegion log nRegion bound.",
         "adversarialWitness": "ISSUE-093 replaces one region over thousands of retained tracks while row/column view identity is preserved and repair diagnostics report zero rebuilt track items.",
         "evidence": [
-          "VAL-023"
+          "packages/virtual/tests/runtime/partitioned-track-grid-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -31805,8 +31797,8 @@
         "proof": "Retained ID and item-to-leaf indexes identify changes; sorted change sets path-copy 64-entry vector leaves and only touched packed-tree paths.",
         "adversarialWitness": "Changed rectangles occupy distinct spatial leaves while the explicit repair bound remains below half the item count.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -31868,8 +31860,8 @@
         "proof": "When the deterministic measurement repair bound or structural overlay bound is crossed, one STR sort and packed-tree rebuild replaces the owner.",
         "adversarialWitness": "A dense measurement, a boundary-shrinking removal, or a saturated structural overlay forces the selected rebuild branch.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -31945,8 +31937,8 @@
         "proof": "Scalar splice range/cardinality preflight runs before any inserted Spatial item is read; accepted declaration order is retained by the bounded Sequence patch chain while changed geometry is copied into a bounded owner-local overlay; order-only patches retain the packed tree unchanged.",
         "adversarialWitness": "ISSUE-085 proves over-ceiling and out-of-range splices read zero inserted item fields before typed rejection. Repeated accepted structural geometry changes fill the overlay bound and force one packed rebuild instead of extending retained or query work.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -32023,15 +32015,14 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-154"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "The packed tree prunes non-overlapping branches, filters overlaid identities, scans the bounded structural delta, resolves current declaration indexes, and sorts placements by z-index and declaration order.",
-        "adversarialWitness": "A viewport intersects every packed candidate while the structural overlay is at its fixed bound.",
+        "proof": "The packed tree prunes non-overlapping branches, filters overlaid identities, scans the bounded structural delta, resolves current declaration indexes, and sorts placements by z-index and declaration order. Membership-preserving repairs accumulate only rectangles that leave their retained leaf bounds; crossing the existing spatial delta ceiling repacks the tree and resets that drift before it can remain unbounded across generations.",
+        "adversarialWitness": "ISSUE-154 repeatedly moves one sparse 64-item batch across the full spatial domain. The first batch remains incremental, accumulated partition drift then selects a packed repack, and the resulting tiny-viewport plan stays equivalent to a fresh owner instead of retaining the degraded partition indefinitely.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -32076,6 +32067,11 @@
             "name": "rRepair",
             "meaning": "selected blocked-vector and packed-tree repair bound for membership-preserving value changes",
             "ceiling": "rRepair < nItem / 2"
+          },
+          {
+            "name": "qPartitionDrift",
+            "meaning": "retained count of repaired items whose rectangles escaped their previous packed leaf bounds since the last repack",
+            "ceiling": "qPartitionDrift <= min(256, ceil(nItem / 64))"
           }
         ],
         "time": {
@@ -32099,25 +32095,26 @@
         "assumptions": [
           "the active Spatial state and retained indexes are canonical",
           "the Core Sequence delta remains below its own materialization crossover",
-          "the Spatial repair remains below its packed-tree or structural-overlay rebuild crossover"
+          "the Spatial repair remains below its packed-tree, structural-overlay, and cumulative partition-drift rebuild crossovers"
         ],
         "ceilings": [
           "maxItems",
           "Sequence patch depth 32",
-          "structural overlay limit min(256, ceil(nItem / 64))"
+          "structural overlay limit min(256, ceil(nItem / 64))",
+          "cumulative partition drift min(256, ceil(nItem / 64))"
         ],
         "benchmarkIDs": [
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-095"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-095",
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-154"
         ],
-        "resourceRationale": "Existing-ID updates reuse blocked-vector/packed-tree repair. Membership changes patch only declared Sequence identities and retain removed/new/changed geometry in the bounded structural overlay.",
-        "proof": "Each declared upsert is captured once. Membership-preserving changes enter applySpatialBaseChanges or the existing overlay repair. Structural updates remove only declared IDs from the retained Sequence, append only new upsert IDs, and pass removed/new/changed geometry to applySpatialOverlayChanges; unchanged Spatial items and packed-tree leaves are not enumerated.",
-        "adversarialWitness": "ISSUE-095 covers one existing geometry update and a remove/change/add structural update over 4,096 items with zero rebuilt items. Benchmarks hold the changed set fixed while nItem grows from 1k to 100k.",
+        "resourceRationale": "Existing-ID updates reuse blocked-vector/packed-tree repair and retain one scalar cumulative partition-drift counter. Membership changes patch only declared Sequence identities and retain removed/new/changed geometry in the bounded structural overlay.",
+        "proof": "Each declared upsert is captured once. Membership-preserving changes enter applySpatialBaseChanges or the existing overlay repair. A repaired item increments cumulative partition drift only when its new rectangle escapes the retained leaf bounds; crossing the existing spatial-delta ceiling repacks the tree and resets that scalar. Structural updates remove only declared IDs from the retained Sequence, append only new upsert IDs, and pass removed/new/changed geometry to applySpatialOverlayChanges; unchanged Spatial items and packed-tree leaves are not enumerated.",
+        "adversarialWitness": "ISSUE-095 covers one existing geometry update and a remove/change/add structural update over 4,096 items with zero rebuilt items. ISSUE-154 repeatedly permutes sparse 64-item geometry batches across the full domain and proves that accumulated leaf drift selects a repack instead of persisting a degraded index. Benchmarks hold the changed set fixed while nItem grows from 1k to 100k.",
         "evidence": [
-          "VAL-025",
-          "VAL-039"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -32178,19 +32175,21 @@
         "ceilings": [
           "maxItems",
           "Sequence patch depth 32",
-          "structural overlay limit min(256, ceil(nItem / 64))"
+          "structural overlay limit min(256, ceil(nItem / 64))",
+          "cumulative partition drift min(256, ceil(nItem / 64))"
         ],
         "benchmarkIDs": [
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-095"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-095",
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs ISSUE-154"
         ],
-        "resourceRationale": "A boundary-shrinking geometry change, structural-overlay saturation, or the Core Sequence owner's own bounded materialization crossover selects one full owner rebuild rather than retaining unbounded delta state.",
-        "proof": "When applySpatialOverlayChanges selects rebuild, materializeSpatialItems visits the resulting domain once and createOwnedState builds one new blocked vector and packed spatial tree. Dense membership-preserving value changes likewise reuse applySpatialBaseChanges' existing rebuild crossover.",
-        "adversarialWitness": "ISSUE-095 adds enough new IDs to exceed the structural overlay bound and verifies one rebuild containing the complete resulting domain.",
+        "resourceRationale": "A boundary-shrinking geometry change, structural-overlay saturation, cumulative packed-partition drift, or the Core Sequence owner's own bounded materialization crossover selects one packed rebuild rather than retaining unbounded delta or query degradation.",
+        "proof": "When applySpatialOverlayChanges selects rebuild, materializeSpatialItems visits the resulting domain once and createOwnedState builds one new blocked vector and packed spatial tree. Dense membership-preserving value changes reuse applySpatialBaseChanges' existing rebuild crossover. Sparse repairs that cumulatively move more than the bounded spatial-delta ceiling outside retained leaf bounds reuse the already-updated blocked vector and rebuild only the packed tree, resetting partition drift to zero.",
+        "adversarialWitness": "ISSUE-095 adds enough new IDs to exceed the structural overlay bound and verifies one rebuild containing the complete resulting domain. ISSUE-154 forces repeated sparse cross-partition motion and verifies a deterministic repack before the stale partition can remain permanently degraded.",
         "evidence": [
-          "VAL-039"
+          "packages/virtual/tests/runtime/spatial-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -32247,7 +32246,7 @@
         "proof": "Each transform captures origin and viewportInsets once from the external frame, canonicalizes those captured values through createVirtualSurfaceFrame and Core geometry, then performs arithmetic only against the immutable snapshot.",
         "adversarialWitness": "ISSUE-100 supplies accessor-backed frame fields that change on every observation and unreadable geometry; counters remain one observation per frame field and invalid reads stay inside the typed Virtual geometry boundary.",
         "evidence": [
-          "VAL-030"
+          "packages/virtual/tests/runtime/surface.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -32308,7 +32307,7 @@
         "proof": "Regions are sorted once by row and column. A row-end ordered stream removes expired regions, while a coordinate-compressed active-column segment tree performs one predecessor lookup, insertion, and later removal per region in logarithmic work.",
         "adversarialWitness": "ISSUE-092 keeps thousands of valid column-disjoint regions simultaneously active on one row and across long row spans; candidate checks remain linear and indexed search/tree work remains nRegion log nRegion.",
         "evidence": [
-          "VAL-022"
+          "packages/virtual/tests/runtime/track-grid-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -32375,7 +32374,7 @@
         "proof": "Measurements partition by axis and each ExtentIndex path-copies only effective changes. If both resulting extent owners are unchanged, Track Grid returns the existing state before generation publication while retaining the region index.",
         "adversarialWitness": "ISSUE-099 proves a non-empty unchanged row measurement preserves state/generation, a mixed unchanged-row/changed-column batch publishes exactly once, and an estimated-to-exact row transition remains a real change.",
         "evidence": [
-          "VAL-029"
+          "packages/virtual/tests/runtime/linear-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -32440,7 +32439,7 @@
         "proof": "The replace-regions branch selects the caller replacement before the splice-tracks-only state.regions.toArray boundary. validateRegions then validates, canonicalizes, sorts, and indexes only jRegion replacement entries under the #92 bound.",
         "adversarialWitness": "ISSUE-094 replaces thousands of retained sparse regions with one region while production repair diagnostics report zero copied previous entries or rebuilt items; the benchmark holds track cardinality fixed while increasing nPreviousRegion.",
         "evidence": [
-          "VAL-024"
+          "packages/virtual/tests/runtime/track-grid-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -32517,7 +32516,7 @@
         "proof": "Every canonical region has positive span and end <= old target-track count. Appending at that exact boundary cannot split or shift an existing region, so the mutation applies only the ExtentIndex splice and reuses GridInternals without materializing, transforming, validating, sorting, or rebuilding nRegion.",
         "adversarialWitness": "ISSUE-096 appends one row and one column to a 4,096-region sparse owner, preserves region-view identity, and records zero copied/rebuilt region entries; the benchmark holds nTrack and jTrack fixed while nRegion grows from 1k to 100k.",
         "evidence": [
-          "VAL-026"
+          "packages/virtual/tests/runtime/track-grid-layout.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -32593,8 +32592,8 @@
         "proof": "Row and column range lookup each binary-search the retained ExtentIndex over its full safe-integer cardinality; the region interval index then prunes non-overlapping rows, filters candidates by columns, emits intersections, and restores domain order.",
         "adversarialWitness": "ISSUE-080 queries compact uniform track indexes across and above the 32-bit boundary and counts production range-kernel offset/extent reads on a 2^40-scale logical domain; range work remains logarithmic. Many row-spanning regions separately exercise candidate filtering with interleaved column intersections.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -32666,8 +32665,8 @@
         "proof": "Vue retains one record per low-cardinality coordinate, axis, layer, view, navigation, or control declaration and coalesces all touches in one nextTick publication. High-cardinality arrays remain opaque props; Chart owns datum validation and model reconciliation.",
         "adversarialWitness": "Replacing a maximum-size layer array causes one declaration publication, a record scan bounded by axes plus layers, and no datum-sized Vue registry.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -32749,8 +32748,8 @@
         "proof": "Provider and Root each retain one controller snapshot subscription. Selector composables derive shallow values from that snapshot and publish only when their equality predicate changes; layer and axis scans are bounded by the public Chart ceilings.",
         "adversarialWitness": "A model replacement changes every selected layer and axis while every mounted selector uses a comparator that reports inequality.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -32822,8 +32821,8 @@
         "proof": "Vue delegates the explicit prop-replacement boundary to Core collection reconciliation and retains only the resulting controller snapshot.",
         "adversarialWitness": "A disjoint equal-size prop replacement invalidates selection and current while visiting every external option once.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -32890,8 +32889,8 @@
         "proof": "Each composable owns one shallowRef and one DOM Form selector subscription; field selectors bind directly to the field-ID channel and all reconnect cleanup uses one retained disposer.",
         "adversarialWitness": "A field update with unrelated field subscribers must invoke only the changed field channel and form selectors whose selected value changes.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -33033,8 +33032,8 @@
         "proof": "An unchanged effective width does not change viewportWidth and therefore schedules no Grid geometry repair. Value-only changes recompute only the contiguous affected row window. Fixed-size structural changes patch the dense identity domain and row tail only. Non-fixed structural changes recompute rows from the first regrouped row, and an actual lane-geometry change rebuilds at most all rows and cLane columns.",
         "adversarialWitness": "Insert one item at index zero under a non-fixed size policy so every later dense row is regrouped, then change the effective viewport width so the lane count also changes; the repair visits at most nItem values and emits one replacement row set plus cLane columns.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -33101,8 +33100,8 @@
         "proof": "The shared Vue projector visits each emitted placement once, creates the native item VNode directly, and retains one element, registration disposer, and stable function ref per mounted identity. DOM owns item observation and measurement batching.",
         "adversarialWitness": "A maximum render window mounts kPlacement distinct identities, then replaces the window so every cached registration is released and replaced without creating per-placement Sectile component instances.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
@@ -33175,8 +33174,8 @@
         "proof": "The Vue host performs no geometry work when the effective width and policy-derived lane geometry are unchanged. Structural and value changes are forwarded through Virtual-owned extent reconciliation. An actual lane geometry, itemGap, or placementPolicy change issues one Masonry geometry mutation; variable extents may then require the owner to rebuild every placement, while uniform extents remain formula-backed.",
         "adversarialWitness": "Change the effective width under responsive lanes with variable extents and shortest-lane placement so the lane count changes and every item placement must be rebuilt; separately invalidate a changed value window near index zero so the owner must repair from the earliest affected item.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
@@ -33243,8 +33242,8 @@
         "proof": "Surface/frame changes are not reactive inputs to the Spatial state watcher and therefore issue no Spatial mutation. With stable geometry resolvers, the host materializes only the collection change window and, in mounted size ownership, performs StableID lookups only for that window to retain measured width and height. A getRect or getZIndex resolver identity change may affect every application rectangle and therefore materializes one full replacement.",
         "adversarialWitness": "Replace the getRect resolver for an nItem collection so every declared rectangle may change; separately move the surface frame without changing collection values and assert the Spatial state identity and generation remain unchanged.",
         "evidence": [
-          "VAL-016",
-          "VAL-017"
+          "scripts/complexity-contracts.test.mjs",
+          "scripts/complexity-witnesses.test.mjs"
         ],
         "fullScan": {
           "allowed": true,

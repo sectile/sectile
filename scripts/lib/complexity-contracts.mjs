@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { stat } from 'node:fs/promises';
+import { extname, isAbsolute, normalize, resolve } from 'node:path';
 
 export const COMPLEXITY_SCHEMA_VERSION = 1;
 export const PACKAGE_NAMES = Object.freeze([
@@ -22,6 +24,43 @@ const RUNTIME_STATES = new Set([
   'connected',
   'mounted-or-connected',
 ]);
+const EVIDENCE_ROOTS = new Set(['packages', 'verification', 'scripts', 'docs']);
+const EVIDENCE_EXTENSIONS = new Set(['.mjs', '.js', '.cjs', '.ts', '.tsx', '.vue', '.json', '.md']);
+const SYMBOLIC_BENCHMARK_ID = /^(?:VAL|ISSUE|GH|FRM)-\d+:[a-z0-9][a-z0-9:-]*$/u;
+const PACKAGE_BENCHMARK_ID = new RegExp(`^(?:${PACKAGE_NAMES.join('|')}):[a-z0-9][a-z0-9:-]*$`, 'u');
+
+export function validateBenchmarkID(id, label = 'benchmark ID') {
+  assert.equal(typeof id, 'string', `${label}: benchmark ID must be a string.`);
+  assert.ok(SYMBOLIC_BENCHMARK_ID.test(id) || PACKAGE_BENCHMARK_ID.test(id), `${label}: unsupported benchmark ID namespace ${id}.`);
+  return id;
+}
+
+export function validateEvidenceReference(reference, label = 'evidence') {
+  assert.equal(typeof reference, 'string', `${label}: evidence reference must be a string.`);
+  assert.ok(reference.length > 0, `${label}: evidence reference must not be empty.`);
+  assert.equal(isAbsolute(reference), false, `${label}: evidence reference must be repository-relative.`);
+  assert.equal(reference.includes('\\'), false, `${label}: evidence reference must use repository-relative POSIX separators.`);
+  const segments = reference.split('/');
+  assert.ok(!segments.includes('.') && !segments.includes('..'), `${label}: evidence reference must not traverse outside its declared path.`);
+  assert.equal(normalize(reference).replaceAll('\\', '/'), reference, `${label}: evidence reference must already be normalized.`);
+  assert.ok(EVIDENCE_ROOTS.has(segments[0]), `${label}: unsupported evidence root ${reference}.`);
+  assert.ok(EVIDENCE_EXTENSIONS.has(extname(reference)), `${label}: unsupported evidence artifact type ${reference}.`);
+  return reference;
+}
+
+export async function validateEvidenceReferences(references, repoRoot, label = 'evidence') {
+  for (const reference of references) {
+    validateEvidenceReference(reference, label);
+    let metadata;
+    try {
+      metadata = await stat(resolve(repoRoot, reference));
+    } catch {
+      assert.fail(`${label}: unresolved evidence reference ${reference}.`);
+    }
+    assert.ok(metadata.isFile(), `${label}: evidence reference must resolve to a file: ${reference}.`);
+  }
+  return references;
+}
 
 export function validateTemplates(document) {
   assert.equal(document?.schemaVersion, COMPLEXITY_SCHEMA_VERSION, 'Unsupported complexity template schema.');
@@ -85,6 +124,8 @@ export function validateContract(contract, label) {
   for (const field of ['assumptions', 'ceilings', 'evidence', 'benchmarkIDs', 'deterministicWork']) {
     assert.ok(Array.isArray(contract[field]) && contract[field].length > 0, `${label}: ${field} required.`);
   }
+  for (const reference of contract.evidence) validateEvidenceReference(reference, label);
+  for (const benchmarkID of contract.benchmarkIDs) validateBenchmarkID(benchmarkID, label);
   assert.equal(typeof contract.resourceRationale, 'string', `${label}: resource rationale required.`);
   assert.ok(contract.resourceRationale.length > 0, `${label}: resource rationale required.`);
   assert.equal(typeof contract.fullScan?.allowed, 'boolean', `${label}: full-scan classification required.`);
@@ -107,6 +148,7 @@ export function expandOperation(operation, templates) {
   assert.equal(typeof operation.source, 'string', `${operation.id}: source required.`);
   assert.ok(operation.source.length > 0, `${operation.id}: source required.`);
   assert.ok(Array.isArray(operation.benchmarkIDs) && operation.benchmarkIDs.length > 0, `${operation.id}: benchmark IDs required.`);
+  for (const benchmarkID of operation.benchmarkIDs) validateBenchmarkID(benchmarkID, operation.id);
   if (operation.specificationCeiling !== undefined) {
     const actualRank = complexityRank(merged.time.bound);
     const ceilingRank = complexityRank(operation.specificationCeiling);

@@ -6,6 +6,9 @@ import {
   complexityRank,
   expandOperation,
   validateAliasContracts,
+  validateBenchmarkID,
+  validateEvidenceReference,
+  validateEvidenceReferences,
   validateFragment,
   validateTemplates,
 } from './lib/complexity-contracts.mjs';
@@ -56,7 +59,7 @@ test('intentional fixture rejects a weaker specification bound without rationale
     id: 'fixture.weaker',
     inherits: 'linear-v1',
     source: 'fixture.ts',
-    benchmarkIDs: ['VAL-fixture'],
+    benchmarkIDs: ['VAL-999:fixture'],
     specificationCeiling: 'O(n)',
     contract: { time: { bound: 'O(n^2)', kind: 'worst-case', runtimeState: 'external' } },
   }, templates), /reviewed rationale/u);
@@ -67,7 +70,7 @@ test('same-degree extra variables require dominance proof or reviewed rationale'
     id: 'fixture.extra-variable',
     inherits: 'linear-v1',
     source: 'fixture.ts',
-    benchmarkIDs: ['VAL-fixture'],
+    benchmarkIDs: ['VAL-999:fixture'],
     specificationCeiling: 'O(n)',
     contract: {
       variables: [
@@ -80,7 +83,7 @@ test('same-degree extra variables require dominance proof or reviewed rationale'
     id: 'fixture.dominated-variable',
     inherits: 'linear-v1',
     source: 'fixture.ts',
-    benchmarkIDs: ['VAL-fixture'],
+    benchmarkIDs: ['VAL-999:fixture'],
     specificationCeiling: 'O(n)',
     contract: {
       variables: [
@@ -95,4 +98,20 @@ test('intentional fixture rejects missing variables and evidence fields', () => 
   const malformed = structuredClone(templates['linear-v1']);
   delete malformed.variables;
   assert.throws(() => validateTemplates({ schemaVersion: 1, templates: { malformed } }), /variables required/u);
+});
+
+test('intentional fixture rejects symbolic and malformed evidence references', () => {
+  assert.throws(() => validateEvidenceReference('VAL-017', 'fixture'), /unsupported evidence root/u);
+  assert.throws(() => validateEvidenceReference('../packages/core/tests/runtime/layer-stack.test.mjs', 'fixture'), /must not traverse/u);
+});
+
+test('intentional fixture rejects an unresolved repository evidence file', async () => {
+  await assert.rejects(
+    validateEvidenceReferences(['verification/DOES-NOT-EXIST.json'], process.cwd(), 'fixture'),
+    /unresolved evidence reference/u,
+  );
+});
+
+test('intentional fixture rejects unsupported benchmark identifier namespaces', () => {
+  assert.throws(() => validateBenchmarkID('DOES-NOT-EXIST:benchmark', 'fixture'), /unsupported benchmark ID namespace/u);
 });

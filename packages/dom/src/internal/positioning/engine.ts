@@ -184,6 +184,7 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
   const ownedStyles = new Map<HTMLElement, Map<string, OwnedValue>>();
   const ownedData = new Map<HTMLElement, Map<string, OwnedValue>>();
   const disposers: (() => void)[] = [];
+  const ancestorSubscriptions = new Map<EventTarget, () => void>();
   let clippingAncestors: readonly Element[] = Object.freeze([]);
   let resizeObserver: ResizeObserver | undefined;
   let layoutObserver: IntersectionObserver | undefined;
@@ -252,6 +253,31 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
     options.onLayout?.(layout);
   };
 
+  const reconcileAncestors = (ancestors: DiscoveredAncestors): void => {
+    const nextSources = new Set<EventTarget>(ancestors.sources);
+    const added: Array<readonly [EventTarget, () => void]> = [];
+    try {
+      for (const source of ancestors.sources) {
+        if (!ancestorSubscriptions.has(source)) added.push([source, subscribeSource(source, 'scroll', schedule)]);
+      }
+    } catch (error) {
+      for (let index = added.length - 1; index >= 0; index -= 1) added[index]![1]();
+      throw error;
+    }
+    for (const [source, dispose] of ancestorSubscriptions) {
+      if (nextSources.has(source)) continue;
+      dispose();
+      ancestorSubscriptions.delete(source);
+      diagnostics.sourceSubscriptions -= 1;
+    }
+    for (const [source, dispose] of added) {
+      ancestorSubscriptions.set(source, dispose);
+      diagnostics.sourceSubscriptions += 1;
+    }
+    clippingAncestors = ancestors.clipping;
+    diagnostics.discoveredAncestors = ancestors.sources.length;
+  };
+
   const connect = (): void => {
     if (connected) return;
     connected = true;
@@ -263,26 +289,26 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
       return;
     }
     diagnostics.discoveryRuns += 1;
-    const ancestors = discoverOverflowAncestors(options.reference, options.root, view);
-    clippingAncestors = ancestors.clipping;
-    diagnostics.discoveredAncestors = ancestors.sources.length;
-    const invalidate = (): void => schedule();
-    const sources = new Set<EventTarget>([view, ...ancestors.sources]);
-    for (const source of sources) {
-      disposers.push(subscribeSource(source, 'scroll', invalidate));
-      diagnostics.sourceSubscriptions += 1;
-    }
-    disposers.push(subscribeSource(view, 'resize', invalidate));
+    reconcileAncestors(discoverOverflowAncestors(options.reference, options.root, view));
+    disposers.push(subscribeSource(view, 'scroll', schedule));
     diagnostics.sourceSubscriptions += 1;
+    disposers.push(subscribeSource(view, 'resize', schedule));
+    diagnostics.sourceSubscriptions += 1;
+    const visualViewport = view.visualViewport;
+    if (visualViewport != null) {
+      disposers.push(subscribeSource(visualViewport, 'scroll', schedule));
+      disposers.push(subscribeSource(visualViewport, 'resize', schedule));
+      diagnostics.sourceSubscriptions += 2;
+    }
     if (typeof view.ResizeObserver === 'function') {
-      resizeObserver = new view.ResizeObserver(invalidate);
+      resizeObserver = new view.ResizeObserver(schedule);
       resizeObserver.observe(options.reference);
       resizeObserver.observe(options.root);
       if (options.collisionBoundary !== undefined && options.collisionBoundary !== 'viewport') resizeObserver.observe(options.collisionBoundary);
       diagnostics.resizeObservers = 1;
     }
     if (options.observeLayoutShift !== false && typeof view.IntersectionObserver === 'function') {
-      layoutObserver = new view.IntersectionObserver(invalidate);
+      layoutObserver = new view.IntersectionObserver(schedule);
       layoutObserver.observe(options.reference);
       diagnostics.layoutObservers = 1;
     }
@@ -297,6 +323,8 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
     connected = false;
     generation += 1;
     cancelFrame();
+    for (const dispose of [...ancestorSubscriptions.values()].reverse()) dispose();
+    ancestorSubscriptions.clear();
     for (let index = disposers.length - 1; index >= 0; index -= 1) disposers[index]!();
     disposers.length = 0;
     resizeObserver?.disconnect();
@@ -319,7 +347,11 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
       if (!connected) return;
       if (route === 'css-anchor') {
         if (anchorName !== undefined) projectCSS(options, anchorName, ownedStyles, ownedData, diagnostics);
-      } else schedule();
+      } else {
+        diagnostics.discoveryRuns += 1;
+        reconcileAncestors(discoverOverflowAncestors(options.reference, options.root, view));
+        schedule();
+      }
     },
     disconnect,
     diagnostics: (): PositionEngineDiagnostics => Object.freeze({ route, ...diagnostics }),
