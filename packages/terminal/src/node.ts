@@ -109,7 +109,7 @@ export function createTTYKeyboard(
   }
 
   const wasRaw = input.isRaw;
-  const wasFlowing = input.readableFlowing === true;
+  const wasFlowing = input.readableFlowing;
   let closed = false;
   let decoder: Readable | undefined;
   let onInput: TTYKeyboardInputHandler | undefined = listener;
@@ -136,8 +136,7 @@ export function createTTYKeyboard(
         input.setRawMode(wasRaw);
       } finally {
         try {
-          if (wasFlowing) input.resume();
-          else input.pause();
+          restoreTTYFlowState(input, wasFlowing);
         } finally {
           ownedTTYInputs.delete(input);
         }
@@ -172,6 +171,15 @@ export function createTTYKeyboard(
   }
 
   return { ok: true, value: Object.freeze({ close }) };
+}
+
+function restoreTTYFlowState(input: ReadStream, flowing: boolean | null): void {
+  if (flowing === true) {
+    input.resume();
+    return;
+  }
+  input.pause();
+  if (flowing === null) input.readableFlowing = null;
 }
 
 function createKeypressStream(): Readable {

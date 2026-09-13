@@ -106,7 +106,7 @@ test('TTY keyboard preserves a pre-existing flowing and raw stream', () => {
 });
 
 test('TTY keyboard releases its source listener and decoder ownership on every close', () => {
-  for (const raw of [false, true]) for (const flowing of [false, true]) {
+  for (const raw of [false, true]) for (const flowing of [null, false, true]) {
     const input = new FakeTTYInput({ raw, flowing });
     const baselineSymbols = Object.getOwnPropertySymbols(input);
     for (let cycle = 0; cycle < 16; cycle += 1) {
@@ -302,6 +302,33 @@ test('TTY keyboard returns an actual ReadStream to its original listener state',
     assert.equal(input.isRaw, false);
     assert.equal(input.readableFlowing, false);
     assert.deepEqual(received, [{ key: 'a', text: 'a' }]);
+  } finally {
+    if (keyboard?.ok) keyboard.value.close();
+    const closed = once(input, 'close');
+    input.destroy();
+    await closed;
+  }
+});
+
+test('TTY keyboard restores a fresh actual ReadStream to its virgin flow behavior', { skip: process.platform !== 'linux' }, async () => {
+  const input = new ReadStream(openSync('/dev/ptmx', 'r+'));
+  let keyboard;
+  try {
+    assert.equal(input.isTTY, true);
+    assert.equal(input.readableFlowing, null);
+    const before = input.rawListeners('data');
+    keyboard = createTTYKeyboard(input, () => {});
+    assert.equal(keyboard.ok, true);
+    assert.equal(input.readableFlowing, true);
+    keyboard.value.close();
+    assert.deepEqual(input.rawListeners('data'), before);
+    assert.equal(input.isRaw, false);
+    assert.equal(input.readableFlowing, null);
+
+    const external = () => {};
+    input.on('data', external);
+    assert.equal(input.readableFlowing, true);
+    input.off('data', external);
   } finally {
     if (keyboard?.ok) keyboard.value.close();
     const closed = once(input, 'close');
