@@ -3,6 +3,7 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { Window } from 'happy-dom';
 import { createClientTabularSource, resolveClientTabularRequest } from '@sectile/tabular/source';
+import { createDataTreeGridVirtualAdapter } from '@sectile/tabular/virtual';
 import { createDataTable } from '../.verification-dist/data-table.js';
 import { createDataGrid, tryCreateDataGrid } from '../.verification-dist/data-grid.js';
 import { createDataTreeGrid } from '../.verification-dist/data-tree-grid.js';
@@ -725,6 +726,95 @@ test('DOM Tabular Grid resolves cell event targets by ancestry without registry 
   target.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
   assert.deepEqual(tree.getSnapshot().cursor.current, { rowID: 'r1', columnID: 'name' });
   assert.equal(containsCalls, 0);
+  tree.disconnect();
+});
+
+test('ISSUE-157: DOM DataTreeGrid preserves canonical context cell membership through Virtual composition', () => {
+  const window = new Window();
+  const document = window.document;
+  const root = document.createElement('div');
+  document.body.append(root);
+  const commands = [];
+  const tree = createDataTreeGrid({
+    columns,
+    root,
+    onCommand: (command) => commands.push(command),
+    initialValues: {
+      query: {
+        sort: [], filters: [],
+        groups: [{ id: 'by-name', columnID: 'name', policy: 'group' }],
+        aggregates: [], pivots: [],
+      },
+      accessState: {
+        kind: 'window',
+        window: { revision: 0, requestGeneration: 0, start: 1, size: 1, total: null, pending: null },
+      },
+    },
+  });
+  const rows = [
+    { kind: 'group', id: 'group:a', parentGroupID: null, depth: 0, expanded: true, contextOnly: true, cells: { name: 'A', score: 3 } },
+    { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
+  ];
+  assert.equal(tree.synchronizeView(treeResponse(tree.controller, rows)).ok, true);
+  const projection = tree.getProjection();
+  assert.deepEqual(projection.rows.map(({ rowID, cells }) => [rowID, cells.length]), [['group:a', 0], ['r1', 2]]);
+
+  const contextCell = { rowID: 'group:a', columnID: 'name' };
+  const leafCell = { rowID: 'r1', columnID: 'name' };
+  const projectedCellArrays = new Set(projection.rows.map((row) => row.cells));
+  const originals = Object.fromEntries(['find', 'findIndex', 'some', 'includes'].map((name) => [name, Array.prototype[name]]));
+  let rowCellScans = 0;
+  for (const name of Object.keys(originals)) {
+    Array.prototype[name] = function(...args) {
+      if (projectedCellArrays.has(this)) rowCellScans += 1;
+      return originals[name].apply(this, args);
+    };
+  }
+  let releaseLeaf;
+  try {
+    const phantom = document.createElement('div');
+    root.append(phantom);
+    const rejected = tree.registerCell(phantom, { cell: contextCell });
+    assert.equal(rejected.ok, false);
+    assert.equal(rejected.error.code, 'profile-view-mismatch');
+    assert.equal(phantom.hasAttribute('role'), false);
+    assert.equal(phantom.hasAttribute('data-row-id'), false);
+    assert.equal(tree.requestRevealCell(contextCell), false);
+
+    const leaf = document.createElement('div');
+    root.append(leaf);
+    const registered = tree.registerCell(leaf, { cell: leafCell });
+    assert.equal(registered.ok, true);
+    releaseLeaf = registered.value;
+    assert.equal(leaf.getAttribute('role'), 'gridcell');
+    assert.equal(tree.requestRevealCell(leafCell), true);
+    assert.equal(commands.some((command) => command.type === 'request-reveal-cell' && command.cell.rowID === 'r1'), true);
+  } finally {
+    for (const [name, method] of Object.entries(originals)) Array.prototype[name] = method;
+  }
+  assert.equal(rowCellScans, 0);
+  releaseLeaf?.();
+
+  const virtual = createDataTreeGridVirtualAdapter({
+    projection,
+    rowExtents: { kind: 'uniform', extent: { kind: 'exact', value: 24 } },
+    columnExtents: { kind: 'uniform', extent: { kind: 'exact', value: 80 } },
+  });
+  const queried = virtual.strategy.tryQuery(virtual.state, { viewport: { x: 0, y: 0, width: 160, height: 48 } });
+  assert.equal(queried.ok, true);
+  const regions = new Map(virtual.state.regions.map((region) => [region.id, region]));
+  assert.equal(virtual.state.regions.some((region) => region.row === 'group:a'), false);
+  for (const placement of queried.value.placements) {
+    const region = regions.get(placement.id);
+    assert.notEqual(region, undefined);
+    assert.notEqual(region.row, 'group:a');
+    const element = document.createElement('div');
+    root.append(element);
+    const registered = tree.registerCell(element, { cell: { rowID: region.row, columnID: region.column } });
+    assert.equal(registered.ok, true);
+    registered.value();
+  }
+  assert.equal(tree.registerCell(document.createElement('div'), { cell: contextCell }).ok, false);
   tree.disconnect();
 });
 

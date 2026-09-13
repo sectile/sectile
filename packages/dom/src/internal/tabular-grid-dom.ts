@@ -159,6 +159,7 @@ export class DOMTabularGrid<
   readonly #editors = new Map<string, GridDOMEditorRegistration>();
   readonly #projectedRowsByID = new Map<TabularRowID | TabularGroupID, GridDOMRowLookup>();
   readonly #projectedColumnIndexes = new Map<TabularColumnID, number>();
+  readonly #sparseProjectedCellColumns = new WeakMap<GridDOMRow, ReadonlySet<TabularColumnID>>();
   readonly #refreshers = new Set<() => void>();
   readonly #unsubscribeCommands: () => void;
   #projectedRows: readonly GridDOMRow[] | null = null;
@@ -297,7 +298,7 @@ export class DOMTabularGrid<
     this.#ensureProjectedColumns(projection, this.#semanticSnapshot());
     const row = this.#projectedRowsByID.get(options.cell.rowID);
     const columnIndex = this.#projectedColumnIndexes.get(options.cell.columnID);
-    if (row === undefined || columnIndex === undefined) return domFailure('profile-view-mismatch', 'Registered grid cell is not projected.', { cell: options.cell });
+    if (row === undefined || columnIndex === undefined || !this.#rowHasCell(row[0], options.cell.columnID)) return domFailure('profile-view-mismatch', 'Registered grid cell is not projected.', { cell: options.cell });
     const key = cellKey(options.cell);
     const current = this.#cells.get(key);
     if (current !== undefined && current[1] !== element) return domFailure('profile-view-mismatch', 'Grid cell is already registered.', { cell: options.cell });
@@ -666,10 +667,21 @@ export class DOMTabularGrid<
   }
 
   #semanticSnapshot(): TabularSnapshot { return this.getSnapshot().tabular; }
+  #rowHasCell(row: GridDOMRow, columnID: TabularColumnID): boolean {
+    if (row.cells.length === 0) return false;
+    if (row.cells.length === this.#projectedColumnIndexes.size) return true;
+    let columns = this.#sparseProjectedCellColumns.get(row);
+    if (columns === undefined) {
+      columns = new Set(row.cells.map((cell) => cell.columnID));
+      this.#sparseProjectedCellColumns.set(row, columns);
+    }
+    return columns.has(columnID);
+  }
   #hasCell(projection: Projection, cell: TabularCellAddress): boolean {
     this.#ensureProjectedRows(projection.rows);
     this.#ensureProjectedColumns(projection, this.#semanticSnapshot());
-    return this.#projectedRowsByID.has(cell.rowID) && this.#projectedColumnIndexes.has(cell.columnID);
+    const row = this.#projectedRowsByID.get(cell.rowID);
+    return row !== undefined && this.#projectedColumnIndexes.has(cell.columnID) && this.#rowHasCell(row[0], cell.columnID);
   }
   #findCell(target: EventTarget | null): GridDOMCellOptions | null {
     let node = target as Node | null;
