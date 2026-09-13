@@ -952,12 +952,13 @@ test('ISSUE-159: participant target ownership follows descendants, replacement, 
     externalAfter.value = 'after';
     formElement.append(anchor);
     document.body.append(externalBefore, externalAfter);
+    let dynamicReads = 0;
     const dynamic = {
       id: 'external',
       element: anchor,
       semanticControl: externalBefore,
       name: 'external',
-      getValue: () => dynamic.semanticControl.value,
+      getValue: () => { dynamicReads += 1; return dynamic.semanticControl.value; },
     };
     const unregisterDynamic = form.registerParticipant(dynamic);
     externalBefore.value = 'before-updated';
@@ -966,13 +967,13 @@ test('ISSUE-159: participant target ownership follows descendants, replacement, 
 
     dynamic.semanticControl = externalAfter;
     assert.equal(form.refreshParticipant('external'), true);
-    const afterRefresh = form.getSnapshot().revision;
+    const afterRefreshReads = dynamicReads;
     externalBefore.value = 'stale-after-refresh';
     externalBefore.dispatchEvent(new Event('input', { bubbles: true }));
-    assert.equal(form.getSnapshot().revision, afterRefresh);
+    assert.equal(dynamicReads, afterRefreshReads);
     externalAfter.value = 'after-updated';
     externalAfter.dispatchEvent(new Event('input', { bubbles: true }));
-    assert.equal(form.getSnapshot().revision > afterRefresh, true);
+    assert.equal(dynamicReads, afterRefreshReads + 1);
 
     unregisterDynamic();
     const afterUnregister = form.getSnapshot().revision;
