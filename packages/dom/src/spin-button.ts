@@ -60,10 +60,14 @@ function tryCreateSpinButtonConnection(options: SpinButtonOptions): Result<SpinB
     initial: tryCreateSpinButtonState(range.value, options.value ?? options.defaultValue ?? range.value.lower, options.draft !== undefined ? options.draft : options.defaultDraft ?? null),
     reducer: (state, event) => applySpinButtonEvent(range.value, state, event, options.policies),
     reconcile: (previous, proposed) => tryCreateSpinButtonState(range.value, valueControlled ? previous.value : proposed.value, draftControlled ? previous.draft : proposed.draft),
-    notify: (previous, proposed) => {
-      if (previous.value !== proposed.value) options.onValueChange?.(proposed.value);
-      if (previous.draft !== proposed.draft) options.onDraftChange?.(proposed.draft);
-    },
+    notify: [
+      (previous, proposed) => {
+        if (previous.value !== proposed.value) options.onValueChange?.(proposed.value);
+      },
+      (previous, proposed) => {
+        if (previous.draft !== proposed.draft) options.onDraftChange?.(proposed.draft);
+      },
+    ],
     toEffect: (command) => command,
     interaction: options,
   });

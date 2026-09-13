@@ -192,14 +192,18 @@ function tryCreateTabsConnection<ID extends StableID>(
       anchor: valueControlled || options.readOnly === true ? previous.selection.anchor : proposed.selection.anchor,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     }),
-    notify: (previous, proposed) => {
-      if (previous.selection.selected[0] !== proposed.selection.selected[0]) {
-        options.onValueChange?.(proposed.selection.selected[0] ?? null);
-      }
-      if (previous.cursor.current !== proposed.cursor.current) {
-        options.onHighlightedValueChange?.(proposed.cursor.current);
-      }
-    },
+    notify: [
+      (previous, proposed) => {
+        if (previous.selection.selected[0] !== proposed.selection.selected[0]) {
+          options.onValueChange?.(proposed.selection.selected[0] ?? null);
+        }
+      },
+      (previous, proposed) => {
+        if (previous.cursor.current !== proposed.cursor.current) {
+          options.onHighlightedValueChange?.(proposed.cursor.current);
+        }
+      },
+    ],
     toEffect: toTabsEffect,
   });
   if (!runtime.ok) return runtime;

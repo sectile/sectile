@@ -50,6 +50,30 @@ test('DOM selection facades project checkbox, select, pagination, and step seman
   assert.equal(stepperRoot.attributes.get('aria-roledescription'), 'stepper');
 });
 
+test('DOM select drains sibling proposals before rethrowing the first callback failure', () => {
+  const trace = [];
+  const firstError = new Error('value callback failed');
+  const select = createSelect({
+    root: new FakeElement(),
+    trigger: new FakeElement(),
+    popup: new FakeElement(),
+    items: ['a', 'b'],
+    defaultValue: 'a',
+    defaultHighlightedValue: 'a',
+    defaultOpen: true,
+    position: false,
+    onValueChange: (value) => { trace.push(`value:${value}`); throw firstError; },
+    onHighlightedValueChange: (value) => { trace.push(`highlight:${value}`); },
+    onOpenChange: (open) => { trace.push(`open:${open}`); },
+  });
+  assert.throws(() => select.handleEvent({ type: 'select', id: 'b' }), (error) => error === firstError);
+  assert.deepEqual(trace, ['value:b', 'highlight:b', 'open:false']);
+  assert.deepEqual(select.getSnapshot().state.choice.selection.selected, ['b']);
+  assert.equal(select.getSnapshot().state.choice.cursor.current, 'b');
+  assert.equal(select.getSnapshot().state.open, false);
+  select.disconnect();
+});
+
 test('DOM select handles keyboard and typeahead events on a portalled popup', () => {
   const root = new FakeElement();
   const trigger = new FakeElement();

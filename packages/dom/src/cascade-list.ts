@@ -119,10 +119,14 @@ function tryCreateCascadeListConnection<ID extends StableID>(
       highlighted: controlled.highlighted ? previous.highlighted : proposed.highlighted,
       path: proposed.path,
     }),
-    notify: (previous, proposed) => {
-      if (previous.value !== proposed.value) options.onValueChange?.(proposed.value);
-      if (previous.highlighted !== proposed.highlighted) options.onHighlightedValueChange?.(proposed.highlighted);
-    },
+    notify: [
+      (previous, proposed) => {
+        if (previous.value !== proposed.value) options.onValueChange?.(proposed.value);
+      },
+      (previous, proposed) => {
+        if (previous.highlighted !== proposed.highlighted) options.onHighlightedValueChange?.(proposed.highlighted);
+      },
+    ],
     toEffect: (command) => command.type === 'focus'
       ? { type: 'focus-option', id: command.id }
       : command,

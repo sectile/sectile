@@ -37,7 +37,10 @@ function construct(options: DateRangeFieldOptions): DOMTemporalResult<DateRangeF
       startValue: controlled.value ? previous.start.value : proposed.start.value, endValue: controlled.value ? previous.end.value : proposed.end.value,
       startInputState: controlled.start ? previous.start.inputState : proposed.start.inputState, endInputState: controlled.end ? previous.end.inputState : proposed.end.inputState, active: proposed.active,
     }),
-    notify: (previous, proposed) => { if (previous.start.inputState !== proposed.start.inputState) options.onStartInputStateChange?.(proposed.start.inputState); if (previous.end.inputState !== proposed.end.inputState) options.onEndInputStateChange?.(proposed.end.inputState); },
+    notify: [
+      (previous, proposed) => { if (previous.start.inputState !== proposed.start.inputState) options.onStartInputStateChange?.(proposed.start.inputState); },
+      (previous, proposed) => { if (previous.end.inputState !== proposed.end.inputState) options.onEndInputStateChange?.(proposed.end.inputState); },
+    ],
     toEffect: (command) => command, interaction: options,
   });
   return runtime.ok ? { ok: true, value: new DOMDateRangeField(options, runtime.value, controlled) } : runtime;

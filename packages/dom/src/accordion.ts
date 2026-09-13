@@ -140,17 +140,21 @@ export function createAccordionController<ID extends StableID>(
       openIDs: valueControlled || options.readOnly === true ? previous.openIDs : proposed.openIDs,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     }, policies),
-    notify: (previous, proposed) => {
-      if (!sameIDs(previous.openIDs, proposed.openIDs)) {
-        options.onValueChange?.({ value: proposed.openIDs, previousValue: previous.openIDs });
-      }
-      if (previous.cursor.current !== proposed.cursor.current) {
-        options.onHighlightedValueChange?.({
-          value: proposed.cursor.current,
-          previousValue: previous.cursor.current,
-        });
-      }
-    },
+    notify: [
+      (previous, proposed) => {
+        if (!sameIDs(previous.openIDs, proposed.openIDs)) {
+          options.onValueChange?.({ value: proposed.openIDs, previousValue: previous.openIDs });
+        }
+      },
+      (previous, proposed) => {
+        if (previous.cursor.current !== proposed.cursor.current) {
+          options.onHighlightedValueChange?.({
+            value: proposed.cursor.current,
+            previousValue: previous.cursor.current,
+          });
+        }
+      },
+    ],
     toEffect: (command) => command,
   });
   if (!runtime.ok) return runtime;

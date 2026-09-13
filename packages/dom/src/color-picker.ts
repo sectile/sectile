@@ -70,11 +70,17 @@ function tryCreateColorPickerConnection(options: ColorPickerOptions): Result<Col
       format: formatControlled ? previous.format : proposed.format,
       channel: proposed.channel,
     }, policies),
-    notify: (previous, proposed) => {
-      if (!sameColor(previous.value, proposed.value)) options.onValueChange?.(proposed.value);
-      if (previous.draft !== proposed.draft) options.onDraftChange?.(proposed.draft);
-      if (previous.format !== proposed.format) options.onFormatChange?.(proposed.format);
-    },
+    notify: [
+      (previous, proposed) => {
+        if (!sameColor(previous.value, proposed.value)) options.onValueChange?.(proposed.value);
+      },
+      (previous, proposed) => {
+        if (previous.draft !== proposed.draft) options.onDraftChange?.(proposed.draft);
+      },
+      (previous, proposed) => {
+        if (previous.format !== proposed.format) options.onFormatChange?.(proposed.format);
+      },
+    ],
     toEffect: (command) => command,
     interaction: options,
   });

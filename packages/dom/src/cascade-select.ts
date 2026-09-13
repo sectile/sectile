@@ -111,11 +111,17 @@ function tryCreateCascadeSelectConnection<ID extends StableID>(options: CascadeS
       open: controlled.open ? previous.open : proposed.open,
       path: proposed.path,
     }),
-    notify: (previous, proposed) => {
-      if (previous.value !== proposed.value) options.onValueChange?.(proposed.value);
-      if (previous.highlighted !== proposed.highlighted) options.onHighlightedValueChange?.(proposed.highlighted);
-      if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open);
-    },
+    notify: [
+      (previous, proposed) => {
+        if (previous.value !== proposed.value) options.onValueChange?.(proposed.value);
+      },
+      (previous, proposed) => {
+        if (previous.highlighted !== proposed.highlighted) options.onHighlightedValueChange?.(proposed.highlighted);
+      },
+      (previous, proposed) => {
+        if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open);
+      },
+    ],
     toEffect: (command) => command.type === 'focus'
       ? { type: 'focus-option', id: command.id }
       : command,

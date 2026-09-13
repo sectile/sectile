@@ -71,7 +71,11 @@ function tryCreateGridControlConnection<ID extends StableID>(options: GridOption
     initial: tryCreateGridState(grid.value, { current: options.highlightedValue !== undefined ? options.highlightedValue : options.defaultHighlightedValue ?? null, selected: selected === null ? [] : [selected], anchor: selected, editMode: options.editMode ?? options.defaultEditMode ?? 'navigation' }),
     reducer: (state, event) => applyGridEvent(grid.value, state, event, policies),
     reconcile: (previous, proposed) => tryCreateGridState(grid.value, { current: highlightControlled ? previous.cursor.current : proposed.cursor.current, selected: valueControlled ? previous.selection.selected : proposed.selection.selected, anchor: valueControlled ? previous.selection.anchor : proposed.selection.anchor, editMode: editControlled ? previous.editMode : proposed.editMode }),
-    notify: (previous, proposed) => { const before = previous.selection.selected[0] ?? null; const after = proposed.selection.selected[0] ?? null; if (before !== after) options.onValueChange?.(after); if (previous.cursor.current !== proposed.cursor.current) options.onHighlightedValueChange?.(proposed.cursor.current); if (previous.editMode !== proposed.editMode) options.onEditModeChange?.(proposed.editMode); },
+    notify: [
+      (previous, proposed) => { const before = previous.selection.selected[0] ?? null; const after = proposed.selection.selected[0] ?? null; if (before !== after) options.onValueChange?.(after); },
+      (previous, proposed) => { if (previous.cursor.current !== proposed.cursor.current) options.onHighlightedValueChange?.(proposed.cursor.current); },
+      (previous, proposed) => { if (previous.editMode !== proposed.editMode) options.onEditModeChange?.(proposed.editMode); },
+    ],
     toEffect: (command) => command,
     interaction: options,
     interactionIntent: gridIntent,

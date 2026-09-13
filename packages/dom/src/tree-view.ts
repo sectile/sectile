@@ -171,7 +171,7 @@ export function createTreeViewController<ID extends StableID>(
       highlightControlled,
       selectionMode,
     ),
-    notify: (previous, proposed) => notifyTreeViewChange(options, previous, proposed),
+    notify: treeViewNotifiers(options),
     toEffect: toTreeViewEffect,
     interaction: options,
     interactionIntent: treeViewIntent,
@@ -448,20 +448,26 @@ class DOMTreeViewController<ID extends StableID> implements TreeViewController<I
   }
 }
 
-function notifyTreeViewChange<ID extends StableID>(
+function treeViewNotifiers<ID extends StableID>(
   options: TreeViewControllerOptions<ID>,
-  previous: TreeViewState<ID>,
-  proposed: TreeViewState<ID>,
-): void {
-  if (!sameIDs(previous.selection.selected, proposed.selection.selected)) {
-    options.onValueChange?.(Object.freeze({ value: proposed.selection.selected, previousValue: previous.selection.selected }));
-  }
-  if (!sameIDs(previous.expansion.ids, proposed.expansion.ids)) {
-    options.onExpandedValuesChange?.(Object.freeze({ value: proposed.expansion.ids, previousValue: previous.expansion.ids }));
-  }
-  if (previous.cursor.current !== proposed.cursor.current) {
-    options.onHighlightedValueChange?.(Object.freeze({ value: proposed.cursor.current, previousValue: previous.cursor.current }));
-  }
+): readonly ((previous: TreeViewState<ID>, proposed: TreeViewState<ID>) => void)[] {
+  return Object.freeze([
+    (previous, proposed) => {
+      if (!sameIDs(previous.selection.selected, proposed.selection.selected)) {
+        options.onValueChange?.(Object.freeze({ value: proposed.selection.selected, previousValue: previous.selection.selected }));
+      }
+    },
+    (previous, proposed) => {
+      if (!sameIDs(previous.expansion.ids, proposed.expansion.ids)) {
+        options.onExpandedValuesChange?.(Object.freeze({ value: proposed.expansion.ids, previousValue: previous.expansion.ids }));
+      }
+    },
+    (previous, proposed) => {
+      if (previous.cursor.current !== proposed.cursor.current) {
+        options.onHighlightedValueChange?.(Object.freeze({ value: proposed.cursor.current, previousValue: previous.cursor.current }));
+      }
+    },
+  ]);
 }
 
 function treeViewIntent<ID extends StableID>(event: TreeViewEvent<ID>): 'navigate' | 'mutate' {

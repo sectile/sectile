@@ -47,7 +47,11 @@ function tryCreateSelectConnection<ID extends StableID>(options: SelectOptions<I
     initial: tryCreateSelectState(domain.value, { value: options.value === undefined ? options.defaultValue ?? null : options.value, ...(options.highlightedValue !== undefined ? { current: options.highlightedValue } : options.defaultHighlightedValue !== undefined ? { current: options.defaultHighlightedValue } : {}), open: options.open ?? options.defaultOpen ?? false }),
     reducer: (state, event) => applySelectEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => tryCreateSelectState(domain.value, { value: controlled.value ? previous.choice.selection.selected[0] ?? null : proposed.choice.selection.selected[0] ?? null, current: controlled.highlighted ? previous.choice.cursor.current : proposed.choice.cursor.current, open: controlled.open ? previous.open : proposed.open }),
-    notify: (previous, proposed) => { const before = previous.choice.selection.selected[0] ?? null; const after = proposed.choice.selection.selected[0] ?? null; if (before !== after) options.onValueChange?.(after); if (previous.choice.cursor.current !== proposed.choice.cursor.current) options.onHighlightedValueChange?.(proposed.choice.cursor.current); if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); },
+    notify: [
+      (previous, proposed) => { const before = previous.choice.selection.selected[0] ?? null; const after = proposed.choice.selection.selected[0] ?? null; if (before !== after) options.onValueChange?.(after); },
+      (previous, proposed) => { if (previous.choice.cursor.current !== proposed.choice.cursor.current) options.onHighlightedValueChange?.(proposed.choice.cursor.current); },
+      (previous, proposed) => { if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); },
+    ],
     toEffect: (command) => command.type === 'focus' ? { type: 'focus-option', id: command.id } : { type: 'close-popup' },
   });
   if (!runtime.ok) return runtime;

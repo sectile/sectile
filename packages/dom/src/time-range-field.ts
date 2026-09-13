@@ -28,7 +28,10 @@ function construct(options: TimeRangeFieldOptions): DOMTemporalResult<TimeRangeF
     initial: tryCreateTimeRangeFieldState({ value: options.value !== undefined ? options.value : options.defaultValue ?? null, ...optionalInputState('startInputState', options.startInputState ?? options.defaultStartInputState), ...optionalInputState('endInputState', options.endInputState ?? options.defaultEndInputState) }),
     reducer: (state, event) => applyTimeRangeFieldEvent(state, event, { ...options.policies, ...(options.required === undefined ? {} : { required: options.required }) }),
     reconcile: (previous, proposed) => tryCreateTimeRangeFieldState({ startValue: controlled.value ? previous.start.value : proposed.start.value, endValue: controlled.value ? previous.end.value : proposed.end.value, startInputState: controlled.start ? previous.start.inputState : proposed.start.inputState, endInputState: controlled.end ? previous.end.inputState : proposed.end.inputState, active: proposed.active }),
-    notify: (previous, proposed) => { if (previous.start.inputState !== proposed.start.inputState) options.onStartInputStateChange?.(proposed.start.inputState); if (previous.end.inputState !== proposed.end.inputState) options.onEndInputStateChange?.(proposed.end.inputState); }, toEffect: (command) => command, interaction: options,
+    notify: [
+      (previous, proposed) => { if (previous.start.inputState !== proposed.start.inputState) options.onStartInputStateChange?.(proposed.start.inputState); },
+      (previous, proposed) => { if (previous.end.inputState !== proposed.end.inputState) options.onEndInputStateChange?.(proposed.end.inputState); },
+    ], toEffect: (command) => command, interaction: options,
   });
   return runtime.ok ? { ok: true, value: new DOMTimeRangeField(options, runtime.value, controlled) } : runtime;
 }

@@ -120,10 +120,14 @@ function tryCreateCarouselConnection<ID extends StableID>(options: CarouselOptio
       pausedControlled ? previous.paused : proposed.paused,
       proposed.pauseReasons,
     ),
-    notify: (previous, proposed) => {
-      if (previous.cursor.current !== proposed.cursor.current) options.onValueChange?.(proposed.cursor.current);
-      if (previous.paused !== proposed.paused) options.onPausedChange?.(proposed.paused);
-    },
+    notify: [
+      (previous, proposed) => {
+        if (previous.cursor.current !== proposed.cursor.current) options.onValueChange?.(proposed.cursor.current);
+      },
+      (previous, proposed) => {
+        if (previous.paused !== proposed.paused) options.onPausedChange?.(proposed.paused);
+      },
+    ],
     toEffect: (command) => command,
     interaction: options,
   });

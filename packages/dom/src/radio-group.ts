@@ -179,14 +179,18 @@ function tryCreateRadioGroupConnection<ID extends StableID>(
         : proposed.selection.anchor,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     }),
-    notify: (previous, proposed) => {
-      if (previous.selection.selected[0] !== proposed.selection.selected[0]) {
-        options.onValueChange?.(proposed.selection.selected[0] ?? null);
-      }
-      if (previous.cursor.current !== proposed.cursor.current) {
-        options.onHighlightedValueChange?.(proposed.cursor.current);
-      }
-    },
+    notify: [
+      (previous, proposed) => {
+        if (previous.selection.selected[0] !== proposed.selection.selected[0]) {
+          options.onValueChange?.(proposed.selection.selected[0] ?? null);
+        }
+      },
+      (previous, proposed) => {
+        if (previous.cursor.current !== proposed.cursor.current) {
+          options.onHighlightedValueChange?.(proposed.cursor.current);
+        }
+      },
+    ],
     toEffect: (command) => Object.freeze({ type: 'focus-radio', id: command.id }),
   });
   if (!runtime.ok) return runtime;
