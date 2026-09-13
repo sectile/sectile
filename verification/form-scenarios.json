@@ -157,7 +157,7 @@
       "description": "Dynamic registration, replacement, ordering, names, ownership, and teardown do not leave stale participants.",
       "evidence": [
         { "file": "packages/vue/tests/form.dom.test.mjs", "test": "dynamic custom-control replacement preserves field metadata and refreshes targets" },
-        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form updates duplicate participant ids in place and unregisters explicitly" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "ISSUE-133: DOM Form reconciles duplicate participant replacement against the retained baseline" },
         { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form observes and refreshes registered out-of-tree controls exactly once" }
       ]
     },
