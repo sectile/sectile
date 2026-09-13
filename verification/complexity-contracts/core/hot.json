@@ -1710,8 +1710,8 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "A canonical state retains its Sequence owner. Source and target resolve through its index, one move overlay is created in O(1), and the public full ids snapshot is materialized exactly once.",
-        "adversarialWitness": "Moving the first identity after the last in a maximum-size canonical sequence performs two indexed lookups, one overlay, and one full output materialization.",
+        "proof": "A canonical state retains its Sequence owner. The caller-owned event discriminant, source, and applicable target are captured into fixed scalar locals once; source and target resolve through the retained index, one move overlay is created in O(1), and the public full ids snapshot is materialized exactly once.",
+        "adversarialWitness": "A getter-backed move proves the discriminant, source, and target are each observed once while a maximum-size first-to-last move still performs two indexed lookups, one overlay, and one full output materialization.",
         "fullScan": {
           "allowed": true,
           "rationale": "Only the public full ordered output has a linear lower bound; source and target lookup do not scan."
@@ -1752,8 +1752,8 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "A canonical state retains the current Tree and input-order index. Cycle, source, target, parent, and last-sibling queries reuse those indexes; one output vector and exactly one next Tree are constructed.",
-        "adversarialWitness": "Moving a root with a maximum-size subtree under the last branch performs constant indexed resolution followed by one complete immutable output and one next-tree validation.",
+        "proof": "A canonical state retains the current Tree and input-order index. Caller-owned source, parent, and optional sibling target are captured into fixed scalar locals once; cycle, source, target, parent, and last-sibling queries reuse the retained indexes; one output vector and exactly one next Tree are constructed.",
+        "adversarialWitness": "A getter-backed reparent proves source, parent, and optional sibling target are each observed once while moving a root with a maximum-size subtree under the last branch still performs constant indexed resolution followed by one complete immutable output and one next-tree validation.",
         "fullScan": {
           "allowed": true,
           "rationale": "The next immutable tree and public full node snapshot must each account for all n nodes; the current tree is not reconstructed."

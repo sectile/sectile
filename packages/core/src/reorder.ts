@@ -80,19 +80,20 @@ export function applySequenceReorderEvent<ID extends StableID>(
     if (!valid.ok) return transitionFailure(valid);
     sequence = sequenceReorderOwners.get(valid.value) as Sequence<ID>;
   }
-  const sourceIndex = sequence.indexOf(event.id);
-  if (sourceIndex === null) return missingID(event.id);
-  if ((event.type === 'move-before' || event.type === 'move-after') && event.id === event.targetID) {
-    return createMachineUpdate(state);
-  }
+  const type = event.type;
+  const id = event.id;
+  const targetID = type === 'move-before' || type === 'move-after' ? event.targetID : null;
+  const sourceIndex = sequence.indexOf(id);
+  if (sourceIndex === null) return missingID(id);
+  if (targetID !== null && id === targetID) return createMachineUpdate(state);
   let destination: number;
-  if (event.type === 'move-to-start') destination = 0;
-  else if (event.type === 'move-to-end') destination = sequence.size - 1;
+  if (type === 'move-to-start') destination = 0;
+  else if (type === 'move-to-end') destination = sequence.size - 1;
   else {
-    const targetIndex = sequence.indexOf(event.targetID);
-    if (targetIndex === null) return missingID(event.targetID);
+    const targetIndex = sequence.indexOf(targetID as ID);
+    if (targetIndex === null) return missingID(targetID as ID);
     const postRemovalTarget = targetIndex > sourceIndex ? targetIndex - 1 : targetIndex;
-    destination = postRemovalTarget + (event.type === 'move-after' ? 1 : 0);
+    destination = postRemovalTarget + (type === 'move-after' ? 1 : 0);
   }
   const patch = Object.freeze({
     type: 'move' as const,
@@ -136,52 +137,54 @@ export function applyTreeReorderEvent<ID extends StableID>(
     owner = treeReorderOwners.get(canonicalState) as TreeReorderOwner<ID>;
   }
   const { tree, positions } = owner;
-  if (!tree.has(event.id)) return missingID(event.id);
-  if (event.parentID !== null && !tree.has(event.parentID)) return missingID(event.parentID);
-  if (event.parentID !== null && isWithinSubtree(tree, event.id, event.parentID)) {
+  const id = event.id;
+  const parentID = event.parentID;
+  const beforeID = event.beforeID ?? null;
+  if (!tree.has(id)) return missingID(id);
+  if (parentID !== null && !tree.has(parentID)) return missingID(parentID);
+  if (parentID !== null && isWithinSubtree(tree, id, parentID)) {
     return fail(
       'transition-rejection',
       'reorder-tree-cycle',
       'A tree node cannot move below itself or one of its descendants.',
-      { id: event.id, parentID: event.parentID },
+      { id, parentID },
     );
   }
-  const beforeID = event.beforeID ?? null;
-  if (beforeID === event.id) return createMachineUpdate(state);
+  if (beforeID === id) return createMachineUpdate(state);
   if (
     beforeID !== null
-    && (!tree.has(beforeID) || tree.parentOf(beforeID) !== event.parentID)
+    && (!tree.has(beforeID) || tree.parentOf(beforeID) !== parentID)
   ) {
     return fail(
       'transition-rejection',
       'reorder-tree-sibling-invalid',
       'beforeID must identify a sibling under the requested parent.',
-      { beforeID, parentID: event.parentID },
+      { beforeID, parentID },
     );
   }
 
-  const sourceIndex = positions.get(event.id)!;
+  const sourceIndex = positions.get(id)!;
   const nodes = [...canonicalState.nodes];
   nodes.splice(sourceIndex, 1);
   let destination: number;
   if (beforeID !== null) {
     destination = postRemovalIndex(positions.get(beforeID)!, sourceIndex);
   } else {
-    const siblings = event.parentID === null ? tree.roots : tree.childrenOf(event.parentID)!;
+    const siblings = parentID === null ? tree.roots : tree.childrenOf(parentID)!;
     let lastSibling = siblings.at(siblings.size - 1);
-    if (lastSibling === event.id) lastSibling = siblings.at(siblings.size - 2);
+    if (lastSibling === id) lastSibling = siblings.at(siblings.size - 2);
     if (lastSibling !== null) {
       destination = postRemovalIndex(positions.get(lastSibling)!, sourceIndex) + 1;
-    } else if (event.parentID === null) {
+    } else if (parentID === null) {
       destination = nodes.length;
     } else {
-      destination = postRemovalIndex(positions.get(event.parentID)!, sourceIndex) + 1;
+      destination = postRemovalIndex(positions.get(parentID)!, sourceIndex) + 1;
     }
   }
-  if (destination === sourceIndex && tree.parentOf(event.id) === event.parentID) {
+  if (destination === sourceIndex && tree.parentOf(id) === parentID) {
     return createMachineUpdate(state);
   }
-  nodes.splice(destination, 0, Object.freeze({ id: event.id, parentID: event.parentID }));
+  nodes.splice(destination, 0, Object.freeze({ id, parentID }));
   Object.freeze(nodes);
   const nextTree = tryCreateTree(nodes);
   if (!nextTree.ok) return transitionFailure(nextTree);
