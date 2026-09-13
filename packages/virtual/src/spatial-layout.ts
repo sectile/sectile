@@ -990,7 +990,13 @@ function sameRect(left: VirtualRect, right: VirtualRect): boolean { return left.
 function sameSpatialItem<ID extends StableID>(left: SpatialItem<ID>, right: SpatialItem<ID>): boolean {
   return left.id === right.id && (left.zIndex ?? 0) === (right.zIndex ?? 0) && sameRect(left.rect, right.rect);
 }
-function validRect(rect: VirtualRect): boolean { return isFiniteRect(rect) && rect.x >= 0 && rect.y >= 0; }
+function validRect(rect: VirtualRect): boolean {
+  return isFiniteRect(rect)
+    && rect.x >= 0
+    && rect.y >= 0
+    && Number.isFinite(rect.x + rect.width)
+    && Number.isFinite(rect.y + rect.height);
+}
 function anchorRect<ID extends StableID>(state: SpatialLayoutState<ID>, anchor: VirtualAnchor<ID> | null | undefined): VirtualRect | null { return anchor === null || anchor === undefined ? null : spatialRectAt(state, anchor.id); }
 function getInternals<ID extends StableID>(state: SpatialLayoutState<ID>): VirtualResult<SpatialInternals<ID>> { const value = internals.get(state as SpatialLayoutState); return value === undefined ? fail('construction', 'virtual-layout-domain-mismatch', 'Spatial state must be created by createSpatialLayout().') : ok(value as SpatialInternals<ID>); }
 function validSnapshotHeader<ID extends StableID>(snapshot: SpatialLayoutSnapshot<ID>): boolean {

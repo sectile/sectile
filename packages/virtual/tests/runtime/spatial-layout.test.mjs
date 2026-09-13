@@ -10,6 +10,8 @@ import {
   spatialRectAt,
   tryApplySpatialMeasurements,
   tryApplySpatialMutation,
+  tryCreateSpatialLayout,
+  tryQuerySpatialLayout,
 } from '../../.verification-dist/spatial-layout.js';
 import { readRepairDiagnostics } from '../../.verification-dist/internal/repair-diagnostics.js';
 
@@ -92,6 +94,56 @@ test('SPA-03: measurement, update, and removal keep domain and index observation
   for (const item of updated.items.iterate()) assert.deepEqual(spatialRectAt(updated, item.id), item.rect);
   assert.equal(spatialRectAt(updated, 'item-0'), null);
   assert.equal(spatialRectAt(updated, 'item-39'), null);
+});
+
+test('ISSUE-155: spatial canonical paths require finite rectangle endpoints', () => {
+  const overflowX = tryCreateSpatialLayout([{
+    id: 'x', rect: { x: 1e308, y: 0, width: 1e308, height: 1 },
+  }]);
+  assert.equal(overflowX.ok, false);
+  assert.equal(overflowX.error.code, 'virtual-layout-geometry-invalid');
+
+  const overflowY = tryCreateSpatialLayout([{
+    id: 'y', rect: { x: 0, y: 1e308, width: 1, height: 1e308 },
+  }]);
+  assert.equal(overflowY.ok, false);
+  assert.equal(overflowY.error.code, 'virtual-layout-geometry-invalid');
+
+  const halfMaximum = Number.MAX_VALUE / 2;
+  const boundary = tryCreateSpatialLayout([{
+    id: 'boundary',
+    rect: { x: halfMaximum, y: halfMaximum, width: halfMaximum, height: halfMaximum },
+  }]);
+  assert.equal(boundary.ok, true);
+  const plan = tryQuerySpatialLayout(boundary.value, {
+    viewport: { x: 0, y: 0, width: 1, height: 1 },
+  });
+  assert.equal(plan.ok, true);
+  assert.equal(Number.isFinite(plan.value.contentSize.width), true);
+  assert.equal(Number.isFinite(plan.value.contentSize.height), true);
+  assert.equal(plan.value.contentSize.width, Number.MAX_VALUE);
+  assert.equal(plan.value.contentSize.height, Number.MAX_VALUE);
+
+  const base = createSpatialLayout([{
+    id: 'base', rect: { x: 0, y: 0, width: 10, height: 10 },
+  }]);
+  const measurement = tryApplySpatialMeasurements(base, {
+    generation: base.generation,
+    measurements: [{
+      id: 'base', rect: { x: 1e308, y: 0, width: 1e308, height: 1 },
+    }],
+  });
+  assert.equal(measurement.ok, false);
+  assert.equal(measurement.error.code, 'virtual-layout-measurement-invalid');
+  assert.deepEqual(spatialRectAt(base, 'base'), { x: 0, y: 0, width: 10, height: 10 });
+
+  const update = tryApplySpatialMutation(base, {
+    type: 'update',
+    upsert: [{ id: 'base', rect: { x: 0, y: 1e308, width: 1, height: 1e308 } }],
+  });
+  assert.equal(update.ok, false);
+  assert.equal(update.error.code, 'virtual-layout-geometry-invalid');
+  assert.deepEqual(spatialRectAt(base, 'base'), { x: 0, y: 0, width: 10, height: 10 });
 });
 
 test('spatial splice patches preserve declaration order and validate inserted identities', () => {
