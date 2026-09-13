@@ -220,7 +220,7 @@ export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialL
     const current = state.domain.contains(measurement.id)
       ? spatialItemByID(data.value, measurement.id)
       : undefined;
-    if (current === undefined || replacements.has(measurement.id) || !validRect(measurement.rect)) return fail('transition-rejection', 'virtual-layout-measurement-invalid', 'Spatial measurements require unique existing IDs and valid rectangles.', { measurement });
+    if (current === undefined || replacements.has(measurement.id) || !validRect(measurement.rect)) return fail('transition-rejection', 'virtual-layout-measurement-invalid', 'Spatial measurement geometry or ID is invalid.', { measurement });
     const rect = createRect(measurement.rect);
     if (!sameRect(current.rect, rect)) replacements.set(measurement.id, Object.freeze({ ...current, rect }));
   }
@@ -825,7 +825,7 @@ function canonicalizeSpatialItem<ID extends StableID>(
   });
   const zIndex = item.zIndex;
   if (!validRect(rect) || (zIndex !== undefined && !Number.isSafeInteger(zIndex))) {
-    return fail(errorClass, 'virtual-layout-geometry-invalid', 'Spatial items require finite non-negative rectangles and safe-integer z-indices.');
+    return fail(errorClass, 'virtual-layout-geometry-invalid', 'Spatial item geometry or z-index is invalid.');
   }
   return ok(Object.freeze({
     id,
@@ -994,8 +994,7 @@ function validRect(rect: VirtualRect): boolean {
   return isFiniteRect(rect)
     && rect.x >= 0
     && rect.y >= 0
-    && Number.isFinite(rect.x + rect.width)
-    && Number.isFinite(rect.y + rect.height);
+    && Math.max(rect.x + rect.width, rect.y + rect.height) < Infinity;
 }
 function anchorRect<ID extends StableID>(state: SpatialLayoutState<ID>, anchor: VirtualAnchor<ID> | null | undefined): VirtualRect | null { return anchor === null || anchor === undefined ? null : spatialRectAt(state, anchor.id); }
 function getInternals<ID extends StableID>(state: SpatialLayoutState<ID>): VirtualResult<SpatialInternals<ID>> { const value = internals.get(state as SpatialLayoutState); return value === undefined ? fail('construction', 'virtual-layout-domain-mismatch', 'Spatial state must be created by createSpatialLayout().') : ok(value as SpatialInternals<ID>); }
