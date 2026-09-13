@@ -345,11 +345,12 @@ export function tryCreateForm<
   let subscriptionErrorHandler: ((error: unknown) => void) | undefined = options.onSubscriptionError;
   let dispatchingNotifications = false;
 
-  const retirePendingValidationForTopologyChange = (): void => {
-    if (state.validation.status !== 'validating') return;
-    validationController?.abort();
+  const detachPendingValidationForTopologyChange = (): AbortController | null => {
+    if (state.validation.status !== 'validating') return null;
+    const retired = validationController;
     validationController = null;
     validationSequence += 1;
+    return retired;
   };
 
   options.form.dataset['scope'] = 'form';
@@ -517,17 +518,23 @@ export function tryCreateForm<
   };
   const transition = (
     event: FormEvent<ID>,
-    beforeCommit?: () => void,
+    retirePendingValidation = false,
   ): readonly FormCommand<ID>[] | null => {
     if (!active) return null;
     const result = applyFormEvent(state, event);
     if (!result.ok) return null;
     const previous = state;
-    beforeCommit?.();
+    const retiredValidation = retirePendingValidation
+      ? detachPendingValidationForTopologyChange()
+      : null;
     state = result.value.state;
-    if (!Object.is(previous, state)) {
-      syncSummary();
-      notify(event, previous);
+    try {
+      if (!Object.is(previous, state)) {
+        syncSummary();
+        notify(event, previous);
+      }
+    } finally {
+      retiredValidation?.abort();
     }
     return result.value.commands;
   };
@@ -1119,7 +1126,7 @@ export function tryCreateForm<
           id: participant.id,
           name: readParticipantName(participant),
         },
-      }, retirePendingValidationForTopologyChange);
+      }, true);
     }
     reorderParticipants(participants, state, transition);
     return (): void => {
@@ -1131,7 +1138,7 @@ export function tryCreateForm<
       participantValues.delete(participant.id);
       transition(
         { type: 'unregister-field', id: participant.id },
-        retirePendingValidationForTopologyChange,
+        true,
       );
     };
   };

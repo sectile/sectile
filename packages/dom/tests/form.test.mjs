@@ -1070,6 +1070,128 @@ test('ISSUE-132: participant topology changes retire pending interaction validat
   }
 });
 
+test('ISSUE-158: topology validation abort commits before reentrant public Form updates', async () => {
+  const dom = installDOM();
+  try {
+    const { document, Event } = dom.window;
+    const formElement = document.createElement('form');
+    const first = document.createElement('input');
+    first.name = 'a';
+    first.value = 'before';
+    formElement.append(first);
+    document.body.append(formElement);
+    const pending = [];
+    const signals = [];
+    const seen = [];
+    const notifications = [];
+    const third = document.createElement('input');
+    const fourth = document.createElement('input');
+    let form;
+    let unregisterThird;
+    let unregisterFourth;
+    form = createForm({
+      form: formElement,
+      participants: [{ id: 'a', element: first }],
+      validateOn: ['input'],
+      validate(values, context) {
+        const index = signals.length;
+        signals.push(context.signal);
+        seen.push({ ...values });
+        if (index === 0) {
+          context.signal.addEventListener('abort', () => {
+            assert.equal(form.setFieldMeta('a', { touched: true }), true);
+            third.name = 'c';
+            third.value = 'three';
+            formElement.append(third);
+            unregisterThird = form.registerParticipant({ id: 'c', element: third });
+          }, { once: true });
+        } else if (index === 1) {
+          context.signal.addEventListener('abort', () => {
+            fourth.name = 'd';
+            fourth.value = 'four';
+            formElement.append(fourth);
+            unregisterFourth = form.registerParticipant({ id: 'd', element: fourth });
+            assert.equal(form.setFieldMeta('a', { touched: false }), true);
+          }, { once: true });
+        }
+        return new Promise((resolve) => { pending.push(resolve); });
+      },
+      onStateChange(state) {
+        notifications.push({
+          fields: state.fields.map((field) => field.id).join(','),
+          touched: state.fields.find((field) => field.id === 'a')?.touched ?? false,
+        });
+      },
+    });
+
+    first.value = 'after';
+    first.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.state.validation.status, 'validating');
+    notifications.length = 0;
+
+    const second = document.createElement('input');
+    second.name = 'b';
+    second.value = 'two';
+    formElement.append(second);
+    const unregisterSecond = form.registerParticipant({ id: 'b', element: second });
+
+    assert.equal(signals[0].aborted, true);
+    assert.deepEqual(form.state.fields.map((field) => field.id), ['a', 'b', 'c']);
+    assert.equal(form.getField('a')?.touched, true);
+    assert.notEqual(form.getField('c'), null);
+    assert.equal(third.dataset.scope, 'form');
+    assert.deepEqual(notifications, [
+      { fields: 'a,b', touched: false },
+      { fields: 'a,b', touched: true },
+      { fields: 'a,b,c', touched: true },
+    ]);
+
+    pending[0]({ issues: [{ message: 'stale register result', path: 'a' }] });
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(form.state.allIssues.some((issue) => issue.message === 'stale register result'), false);
+
+    third.value = 'three-updated';
+    third.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.state.validation.status, 'validating');
+    assert.deepEqual(seen[1], { a: 'after', b: 'two', c: 'three-updated' });
+    notifications.length = 0;
+
+    second.remove();
+    unregisterSecond();
+
+    assert.equal(signals[1].aborted, true);
+    assert.deepEqual(form.state.fields.map((field) => field.id), ['a', 'c', 'd']);
+    assert.equal(form.getField('b'), null);
+    assert.notEqual(form.getField('d'), null);
+    assert.equal(fourth.dataset.scope, 'form');
+    assert.equal(form.getField('a')?.touched, false);
+    assert.deepEqual(notifications, [
+      { fields: 'a,c', touched: true },
+      { fields: 'a,c,d', touched: true },
+      { fields: 'a,c,d', touched: false },
+    ]);
+
+    pending[1]({ issues: [{ message: 'stale unregister result', path: 'c' }] });
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(form.state.allIssues.some((issue) => issue.message === 'stale unregister result'), false);
+
+    fourth.value = 'four-updated';
+    fourth.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.deepEqual(seen[2], { a: 'after', c: 'three-updated', d: 'four-updated' });
+    pending[2]({});
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(form.state.validation.status, 'valid');
+
+    unregisterThird?.();
+    unregisterFourth?.();
+    form.destroy();
+  } finally {
+    dom.restore();
+  }
+});
+
 test('ISSUE-132: topology changes cannot resume submission validation from stale values', async () => {
   const dom = installDOM();
   try {
