@@ -12,6 +12,7 @@ const rows = [
   { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
   { kind: 'leaf', id: 'r2', cells: { name: 'Beta', score: 2 } },
 ];
+const fakeDocument = { defaultView: null };
 
 class FakeElement {
   attributes = new Map();
@@ -23,7 +24,7 @@ class FakeElement {
   scrollTop = 0;
   clientWidth = 100;
   clientHeight = 30;
-  ownerDocument = { defaultView: null };
+  ownerDocument = fakeDocument;
   style = { setProperty() {}, removeProperty() {} };
   append(element) { element.parent = this; this.children.push(element); }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
