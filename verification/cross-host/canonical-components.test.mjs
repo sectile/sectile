@@ -3,6 +3,8 @@ import test from 'node:test';
 import { createSequence } from '@sectile/core/sequence';
 import { createSelect as createDOMSelect } from '@sectile/dom/select';
 import { createSelect as createTerminalSelect } from '@sectile/terminal/select';
+import { createGridControl as createDOMGrid } from '@sectile/dom/grid';
+import { createGridControl as createTerminalGrid } from '@sectile/terminal/grid';
 import { createCascadeList as createDOMCascadeList } from '@sectile/dom/cascade-list';
 import { createCascadeList as createTerminalCascadeList } from '@sectile/terminal/cascade-list';
 import { createCascadeSelect as createDOMCascadeSelect } from '@sectile/dom/cascade-select';
@@ -95,6 +97,68 @@ test('rating hosts preserve canonical clear and direct-set traces', () => {
   assert.deepEqual(DOMValues, terminalValues);
   DOM.disconnect();
 });
+
+for (const [name, create, DOM] of [
+  ['DOM Select', createDOMSelect, true],
+  ['Terminal Select', createTerminalSelect, false],
+]) {
+  test(`${name} keeps outer proposal payloads stable when the first callback synchronizes a newer revision`, () => {
+    const trace = [];
+    let control;
+    const options = {
+      items: ['a', 'b'],
+      value: 'a',
+      highlightedValue: 'a',
+      open: true,
+      onValueChange(value) {
+        trace.push(`value:${value}`);
+        const synchronized = control.update({ value, highlightedValue: value, open: false });
+        assert.equal(synchronized.ok, true);
+      },
+      onHighlightedValueChange: (value) => trace.push(`highlight:${value}`),
+      onOpenChange: (open) => trace.push(`open:${open}`),
+      onUpdate: () => trace.push('update'),
+      ...(DOM ? { root: new FakeElement(), trigger: new FakeElement(), popup: new FakeElement(), position: false } : {}),
+    };
+    control = create(options);
+    control.subscribe((snapshot) => trace.push(`subscriber:${snapshot.revision}`));
+    assert.equal(control.handleEvent({ type: 'select', id: 'b' }), true);
+    assert.deepEqual(trace, ['value:b', 'subscriber:2', 'update', 'highlight:b', 'open:false']);
+    assert.equal(control.getSnapshot().revision, 2);
+    assert.deepEqual(readChoice(control), { value: 'b', highlight: 'b' });
+    assert.equal(control.state.open, false);
+    control.destroy();
+  });
+}
+
+for (const [name, create, DOM] of [
+  ['DOM Grid', createDOMGrid, true],
+  ['Terminal Grid', createTerminalGrid, false],
+]) {
+  test(`${name} completes edit effects and facade publication before rethrowing proposal failure`, () => {
+    const trace = [];
+    const firstError = new Error('value callback failed');
+    const control = create({
+      rows: [['a', 'b']],
+      defaultValue: 'a',
+      defaultHighlightedValue: 'a',
+      defaultEditMode: 'navigation',
+      onValueChange: (value) => { trace.push(`value:${value}`); throw firstError; },
+      onHighlightedValueChange: (value) => trace.push(`highlight:${value}`),
+      onEditModeChange: (mode) => trace.push(`mode:${mode}`),
+      onEditStart: (id) => trace.push(`start:${id}`),
+      onUpdate: () => trace.push('update'),
+      ...(DOM ? { root: new FakeElement() } : {}),
+    });
+    control.subscribe((snapshot) => trace.push(`subscriber:${snapshot.revision}`));
+    assert.throws(() => control.handleEvent({ type: 'start-edit', id: 'b' }), (error) => error === firstError);
+    assert.deepEqual(trace, ['value:b', 'highlight:b', 'mode:editing', 'start:b', 'subscriber:1', 'update']);
+    assert.deepEqual(control.getSnapshot().state.selection.selected, ['b']);
+    assert.equal(control.getSnapshot().state.cursor.current, 'b');
+    assert.equal(control.getSnapshot().state.editMode, 'editing');
+    control.destroy();
+  });
+}
 
 const nullableChoiceFactories = [
   ['DOM Select', createDOMSelect, true], ['Terminal Select', createTerminalSelect, true],

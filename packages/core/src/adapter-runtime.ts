@@ -109,6 +109,11 @@ export interface SemanticController<State, Event, Effect, Code extends string = 
 }
 
 type SemanticControllerNotifier<State> = (previous: State, proposed: State) => void;
+type SemanticControllerCompletion<State, Effect> = (
+  effects: readonly Effect[],
+  previous: State,
+  proposed: State,
+) => void;
 
 export interface SemanticControllerOptions<State, Event, Command, Effect, Code extends string = CoreErrorCode> {
   readonly initial: Result<State, Code>;
@@ -116,6 +121,7 @@ export interface SemanticControllerOptions<State, Event, Command, Effect, Code e
   readonly reconcile?: (previous: State, proposed: State) => Result<State, Code>;
   readonly publishEffect?: (effect: Effect) => void;
   readonly notify?: SemanticControllerNotifier<State> | readonly SemanticControllerNotifier<State>[];
+  readonly complete?: SemanticControllerCompletion<State, Effect>;
   readonly toEffect: (command: Command) => Effect;
   readonly interaction?: InteractionStateInput | undefined;
   readonly interactionIntent?: (event: Event) => 'navigate' | 'mutate';
@@ -184,6 +190,7 @@ export function createSemanticController<State, Event, Command, Effect, Code ext
           prepared.result.commands,
           options.publishEffect,
           notifiers,
+          options.complete,
           previous.state,
           prepared.proposed,
         );
@@ -213,6 +220,7 @@ export function createHostAdapter<State, HostInput, Event, Command, HostEffect, 
     ...(options.reconcile === undefined ? {} : { reconcile: options.reconcile }),
     ...(options.publishEffect === undefined ? {} : { publishEffect: options.publishEffect }),
     ...(options.notify === undefined ? {} : { notify: options.notify }),
+    ...(options.complete === undefined ? {} : { complete: options.complete }),
     ...(options.interaction === undefined ? {} : { interaction: options.interaction }),
     ...(options.interactionIntent === undefined ? {} : { interactionIntent: options.interactionIntent }),
   });
@@ -626,6 +634,7 @@ function publishControllerUpdate<State, Effect>(
   effects: readonly Effect[],
   publishEffect: ((effect: Effect) => void) | undefined,
   notifiers: readonly SemanticControllerNotifier<State>[],
+  complete: SemanticControllerCompletion<State, Effect> | undefined,
   previous: State,
   proposed: State,
 ): void {
@@ -644,6 +653,10 @@ function publishControllerUpdate<State, Effect>(
     catch (error) {
       if (!hasError) { hasError = true; firstError = error; }
     }
+  }
+  try { complete?.(effects, previous, proposed); }
+  catch (error) {
+    if (!hasError) { hasError = true; firstError = error; }
   }
   if (hasError) throw firstError;
 }

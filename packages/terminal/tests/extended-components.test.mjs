@@ -39,7 +39,7 @@ test('terminal extended selection facades own conventional keyboard input', asyn
   assert.deepEqual(rating.getSnapshot().state.selection.selected, ['2']);
 });
 
-test('terminal select drains sibling proposals before rethrowing the first callback failure', () => {
+test('terminal select drains committed publication before rethrowing the first callback failure', () => {
   const trace = [];
   const firstError = new Error('value callback failed');
   const select = createSelect({
@@ -50,9 +50,11 @@ test('terminal select drains sibling proposals before rethrowing the first callb
     onValueChange: (value) => { trace.push(`value:${value}`); throw firstError; },
     onHighlightedValueChange: (value) => { trace.push(`highlight:${value}`); },
     onOpenChange: (open) => { trace.push(`open:${open}`); },
+    onUpdate: () => trace.push('update'),
   });
+  select.subscribe((snapshot) => trace.push(`subscriber:${snapshot.revision}`));
   assert.throws(() => select.handleEvent({ type: 'select', id: 'b' }), (error) => error === firstError);
-  assert.deepEqual(trace, ['value:b', 'highlight:b', 'open:false']);
+  assert.deepEqual(trace, ['value:b', 'highlight:b', 'open:false', 'subscriber:1', 'update']);
   assert.deepEqual(select.getSnapshot().state.choice.selection.selected, ['b']);
   assert.equal(select.getSnapshot().state.choice.cursor.current, 'b');
   assert.equal(select.getSnapshot().state.open, false);

@@ -67,6 +67,7 @@ function tryCreateGridControlConnection<ID extends StableID>(options: GridOption
   const policies: GridPolicies<ID> = { ...options.policies, eligible: (id) => !disabled.has(id) && !itemDisabled.has(id) && (suppliedEligibility?.(id) ?? true) };
   const valueControlled = options.value !== undefined; const highlightControlled = options.highlightedValue !== undefined; const editControlled = options.editMode !== undefined;
   const selected = options.value !== undefined ? options.value : options.defaultValue ?? null;
+  let connection: DOMGrid<ID> | undefined;
   const runtime = createSemanticController<GridState<ID>, GridEvent<ID>, GridCommand<ID>, GridCommand<ID>>({
     initial: tryCreateGridState(grid.value, { current: options.highlightedValue !== undefined ? options.highlightedValue : options.defaultHighlightedValue ?? null, selected: selected === null ? [] : [selected], anchor: selected, editMode: options.editMode ?? options.defaultEditMode ?? 'navigation' }),
     reducer: (state, event) => applyGridEvent(grid.value, state, event, policies),
@@ -77,11 +78,13 @@ function tryCreateGridControlConnection<ID extends StableID>(options: GridOption
       (previous, proposed) => { if (previous.editMode !== proposed.editMode) options.onEditModeChange?.(proposed.editMode); },
     ],
     toEffect: (command) => command,
+    complete: (commands) => connection?.complete(commands),
     interaction: options,
     interactionIntent: gridIntent,
   });
   if (!runtime.ok) return runtime;
-  return { ok: true, value: new DOMGrid(options, grid.value, runtime.value, disabled, itemDisabled, valueControlled, highlightControlled, editControlled) };
+  connection = new DOMGrid(options, grid.value, runtime.value, disabled, itemDisabled, valueControlled, highlightControlled, editControlled);
+  return { ok: true, value: connection };
 }
 
 class DOMGrid<ID extends StableID> implements GridConnection<ID> {
@@ -89,6 +92,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
   readonly #elementOwners = new WeakMap<HTMLElement, ID>();
   readonly #focusEntry: DOMCompositeFocusEntry<ID>;
   #active = true;
+  #publishedRevision: number;
   #projectedCurrent: ID | null;
   #projectedValue: ID | null;
   readonly #disabled: ReadonlySet<ID>; readonly #itemDisabled: Set<ID>; readonly #valueControlled: boolean; readonly #highlightControlled: boolean; readonly #editControlled: boolean;
@@ -96,6 +100,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
   public constructor(options: GridOptions<ID>, grid: Grid<ID>, runtime: SemanticController<GridState<ID>, GridEvent<ID>, GridCommand<ID>>, disabled: ReadonlySet<ID>, itemDisabled: Set<ID>, valueControlled: boolean, highlightControlled: boolean, editControlled: boolean) {
     this.#options = options; this.grid = grid; this.#runtime = runtime;
     this.#disabled = disabled; this.#itemDisabled = itemDisabled; this.#valueControlled = valueControlled; this.#highlightControlled = highlightControlled; this.#editControlled = editControlled;
+    this.#publishedRevision = runtime.getSnapshot().revision;
     const state = runtime.getSnapshot().state;
     this.#focusEntry = new DOMCompositeFocusEntry({
       mode: 'root', root: options.root, current: state.cursor.current, rootEnabled: options.disabled !== true,
@@ -104,7 +109,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
     this.#projectedValue = state.selection.selected[0] ?? null;
     this.#keydown = (event) => { const semantic = toGridEvent(event, this.getSnapshot().state.editMode); if (semantic !== null && this.handleEvent(semantic)) event.preventDefault(); };
     this.#click = (event) => { const id = this.#findID(event.target); if (id !== null) this.handleEvent({ type: 'select', id }); };
-    this.#focus = (event) => { const id = this.#findID(event.target); if (id === null || id === this.getSnapshot().state.cursor.current) return; const result = this.#runtime.handle({ type: 'focus', id }); if (result.ok) this.#projectTransition(); queueMicrotask(() => { if (!this.#active) return; this.#options.onUpdate?.(); this.focusCurrent(); }); };
+    this.#focus = (event) => { const id = this.#findID(event.target); if (id === null || id === this.getSnapshot().state.cursor.current) return; this.handleEvent({ type: 'focus', id }); };
     options.root.addEventListener('keydown', this.#keydown); options.root.addEventListener('click', this.#click); options.root.addEventListener('focusin', this.#focus);
     options.root.setAttribute('role', 'grid'); options.root.setAttribute('aria-rowcount', String(grid.rowCount)); options.root.setAttribute('aria-colcount', String(grid.columnCount)); if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     setInteractionAttributes(options.root, options, { readOnly: true });
@@ -113,7 +118,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
   public syncControlledValues(values: GridControlledValues<ID>): Result<RevisionSnapshot<GridState<ID>>> {
     if (this.#valueControlled !== (values.value !== undefined) || this.#highlightControlled !== (values.highlightedValue !== undefined) || this.#editControlled !== (values.editMode !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled grid values must preserve their construction-time shape.' } };
     const current = this.getSnapshot().state; const selected = values.value === undefined ? current.selection.selected : values.value === null ? [] : [values.value];
-    const result = this.#runtime.replace(tryCreateGridState(this.grid, { current: values.highlightedValue === undefined ? current.cursor.current : values.highlightedValue, selected, anchor: values.value === undefined ? current.selection.anchor : values.value, editMode: values.editMode ?? current.editMode })); if (result.ok) { this.#projectTransition(); this.#options.onUpdate?.(); this.focusCurrent(); } return result;
+    const result = this.#runtime.replace(tryCreateGridState(this.grid, { current: values.highlightedValue === undefined ? current.cursor.current : values.highlightedValue, selected, anchor: values.value === undefined ? current.selection.anchor : values.value, editMode: values.editMode ?? current.editMode })); if (result.ok) { this.#projectTransition(); this.#publishUpdate(); this.focusCurrent(); } return result;
   }
   public setCellAttributes(element: HTMLElement | undefined, id: ID, attributes?: GridCellAttributes): void {
     if (!this.#active || this.grid.positionOf(id) === null) return;
@@ -130,7 +135,22 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
     this.#elementOwners.set(element, id);
     this.#projectCell(id, element);
   }
-  public handleEvent(event: GridEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) { for (const command of result.commands) { if (command.type === 'focus') this.#elements.get(command.id)?.focus(); else if (command.type === 'begin-edit') this.#options.onEditStart?.(command.id); else if (command.type === 'commit-edit') this.#options.onEditCommit?.(command.id); else this.#options.onEditCancel?.(command.id); } this.#projectTransition(); this.#options.onUpdate?.(); this.focusCurrent(); } return result.ok; }
+  public handleEvent(event: GridEvent<ID>): boolean { return this.#runtime.handle(event).ok; }
+  public complete(commands: readonly GridCommand<ID>[]): void {
+    let firstError: unknown; let hasError = false;
+    for (const command of commands) {
+      try {
+        if (command.type === 'focus') this.#elements.get(command.id)?.focus();
+        else if (command.type === 'begin-edit') this.#options.onEditStart?.(command.id);
+        else if (command.type === 'commit-edit') this.#options.onEditCommit?.(command.id);
+        else this.#options.onEditCancel?.(command.id);
+      } catch (error) { if (!hasError) { hasError = true; firstError = error; } }
+    }
+    try { this.#projectTransition(); } catch (error) { if (!hasError) { hasError = true; firstError = error; } }
+    try { this.#publishUpdate(); } catch (error) { if (!hasError) { hasError = true; firstError = error; } }
+    try { this.focusCurrent(); } catch (error) { if (!hasError) { hasError = true; firstError = error; } }
+    if (hasError) throw firstError;
+  }
   public focusCurrent(): void { queueMicrotask(() => { if (!this.#active) return; const current = this.getSnapshot().state.cursor.current; if (current === null) this.#options.root.focus(); else this.#elements.get(current)?.focus(); }); }
   public disconnect(): void {
     this.#active = false;
@@ -190,6 +210,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
       if (value !== null) this.#elements.get(value)?.setAttribute('aria-selected', 'true');
     }
   }
+  #publishUpdate(): void { const revision = this.#runtime.getSnapshot().revision; if (revision === this.#publishedRevision) return; this.#publishedRevision = revision; this.#options.onUpdate?.(); }
 }
 
 function gridIntent<ID extends StableID>(event: GridEvent<ID>): 'navigate' | 'mutate' {

@@ -240,6 +240,10 @@ test('semantic controller drains notifier cohorts after host effects and preserv
       (previous, proposed) => { trace.push(`notify:first:${previous}->${proposed}`); throw later; },
       (previous, proposed) => { trace.push(`notify:second:${previous}->${proposed}`); throw latest; },
     ],
+    complete: (effects, previous, proposed) => {
+      trace.push(`complete:${effects.length}:${previous}->${proposed}`);
+      throw new Error('completion failed');
+    },
   });
   assert.equal(constructed.ok, true);
 
@@ -250,6 +254,7 @@ test('semantic controller drains notifier cohorts after host effects and preserv
     'effect:2',
     'notify:first:0->1',
     'notify:second:0->1',
+    'complete:2:0->1',
   ]);
 });
 

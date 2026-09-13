@@ -50,13 +50,14 @@ test('DOM selection facades project checkbox, select, pagination, and step seman
   assert.equal(stepperRoot.attributes.get('aria-roledescription'), 'stepper');
 });
 
-test('DOM select drains sibling proposals before rethrowing the first callback failure', () => {
+test('DOM select drains committed publication before rethrowing the first callback failure', () => {
   const trace = [];
   const firstError = new Error('value callback failed');
+  const root = new FakeElement();
+  const trigger = new FakeElement();
+  const popup = new FakeElement();
   const select = createSelect({
-    root: new FakeElement(),
-    trigger: new FakeElement(),
-    popup: new FakeElement(),
+    root, trigger, popup,
     items: ['a', 'b'],
     defaultValue: 'a',
     defaultHighlightedValue: 'a',
@@ -65,12 +66,15 @@ test('DOM select drains sibling proposals before rethrowing the first callback f
     onValueChange: (value) => { trace.push(`value:${value}`); throw firstError; },
     onHighlightedValueChange: (value) => { trace.push(`highlight:${value}`); },
     onOpenChange: (open) => { trace.push(`open:${open}`); },
+    onUpdate: () => trace.push('update'),
   });
+  select.subscribe((snapshot) => trace.push(`subscriber:${snapshot.revision}`));
   assert.throws(() => select.handleEvent({ type: 'select', id: 'b' }), (error) => error === firstError);
-  assert.deepEqual(trace, ['value:b', 'highlight:b', 'open:false']);
+  assert.deepEqual(trace, ['value:b', 'highlight:b', 'open:false', 'subscriber:1', 'update']);
   assert.deepEqual(select.getSnapshot().state.choice.selection.selected, ['b']);
   assert.equal(select.getSnapshot().state.choice.cursor.current, 'b');
   assert.equal(select.getSnapshot().state.open, false);
+  assert.equal(trigger.attributes.get('aria-expanded'), 'false');
   select.disconnect();
 });
 
