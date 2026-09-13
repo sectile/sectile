@@ -3,15 +3,9 @@ title: Vue Chart
 description: Vue 컴포넌트와 반응형 데이터로 접근 가능한 Sectile 차트를 만듭니다.
 ---
 
-<script setup>
-import ChartPackageExample from '../../../.vitepress/theme/components/ChartPackageExample.vue'
-</script>
-
 # Vue 차트
 
 `@sectile/vue/chart`는 차트, 축, 데이터 레이어, 조작 버튼, Canvas 렌더러를 위한 컴포넌트를 제공합니다. 데이터는 배열로 남기 때문에 데이터 하나마다 Vue 컴포넌트나 감시자가 생기지 않습니다.
-
-<ChartPackageExample kind="line" host="vue" />
 
 ## 설치
 

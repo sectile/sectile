@@ -1,12 +1,6 @@
-<script setup>
-import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # Shared contracts
 
 DataTable, DataGrid, and DataTreeGrid have different interaction density, but share data identity, query, selection, column state, and response acceptance. These contracts let an application change profile or renderer without redesigning data ownership.
-
-<TabularExample kind="contracts" />
 
 Use the controls to request a view, select a row, and submit a stale response. Core receives events and determines state plus host commands; it does not touch DOM or network APIs.
 

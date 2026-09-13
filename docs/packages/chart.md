@@ -3,10 +3,6 @@ title: Chart
 description: Build line, scatter, bar, heatmap, pie, and donut charts with shared data, scale, and interaction semantics.
 ---
 
-<script setup>
-import ChartPackageExample from '../.vitepress/theme/components/ChartPackageExample.vue'
-</script>
-
 # Chart
 
 Sectile Chart keeps chart data, scales, visible ranges, selection, and interaction state independent of the renderer. Vue and DOM integrations add browser measurement, accessible interaction, and Canvas rendering; `@sectile/chart` can also drive an application-owned renderer or export pipeline.
@@ -16,8 +12,6 @@ Application records stay in ordinary arrays. Stable record IDs connect data upda
 ## Choose the chart by the question the data should answer
 
 Start with one representative case: twelve weeks of revenue in a line chart. Hover or select a point to inspect that week, and use the visible-range controls only when the time series needs a closer view. The other chart types appear as focused examples in the task guides instead of changing the dataset inside this preview.
-
-<ChartPackageExample />
 
 The **Usage code** follows the Integration selected in the page header. The preview adds its title, summary, and detail row for documentation; the code view focuses on connecting the same chart data through the public Vue or DOM integration.
 

@@ -3,15 +3,9 @@ title: Chart 상호작용과 상태
 description: 페이지 스크롤을 방해하지 않으면서 선택, 키보드, 이동, 확대·축소 기능을 추가합니다.
 ---
 
-<script setup>
-import ChartPackageExample from '../../../.vitepress/theme/components/ChartPackageExample.vue'
-</script>
-
 # 상호작용과 상태
 
 차트는 선택한 데이터, 포인터 아래의 데이터, 각 축에서 현재 보이는 범위를 관리할 수 있습니다. 이 상태를 Sectile에 맡기거나 앱의 상태와 연결할 수 있습니다.
-
-<ChartPackageExample kind="scatter" />
 
 ## 표시 범위를 만든 뒤 조작 방법 추가하기
 

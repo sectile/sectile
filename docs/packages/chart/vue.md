@@ -3,15 +3,9 @@ title: Vue charts
 description: Build accessible Sectile charts with Vue components and reactive data.
 ---
 
-<script setup>
-import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageExample.vue'
-</script>
-
 # Vue charts
 
 `@sectile/vue/chart` provides components for the chart, axes, data layers, controls, and Canvas renderer. Records remain in arrays, so a large data set does not create one Vue component or watcher per record.
-
-<ChartPackageExample kind="line" host="vue" />
 
 ## Install
 

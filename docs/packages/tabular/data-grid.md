@@ -1,26 +1,16 @@
-<script setup>
-import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # DataGrid
 
 DataGrid is a two-dimensional workspace where cells are the task. Use it for arrow-key navigation, roving focus, cell editing, and deterministic recovery. Choose [DataTable](./data-table) when reading and selecting rows is the primary interaction.
 
-<TabularExample kind="grid-overview" />
-
 ## Navigate cells with the keyboard
 
 Only one cell participates in the tab order. Arrow keys move the cursor, Home and End move to row boundaries, and PageUp/PageDown move relative to the access window. Core emits reveal and focus commands for off-screen targets instead of touching the platform.
-
-<TabularExample kind="grid-navigation" />
 
 When a new view removes the active row or column, the cursor recovers to a nearby row in the same column, a nearby column in the same row, or the first focusable cell. Core, DOM, and Vue share this rule.
 
 ## Edit, commit, or cancel
 
 Enter or an input action switches from navigation mode to edit mode. Commit produces a typed command; Escape restores the original value and cursor. The application owns persistence and validation copy.
-
-<TabularExample kind="grid-editing" />
 
 - `Editor` can wrap a native input, select, or textarea.
 - A parser returns a wire value or a structured error.
@@ -30,8 +20,6 @@ Enter or an input action switches from navigation mode to edit mode. Commit prod
 ## Select rows independently from the cursor
 
 The cell cursor answers “where am I working?” while row selection answers “which records receive a bulk action?”. They are independent, and row checkboxes support anchored Shift ranges.
-
-<TabularExample kind="grid-selection" />
 
 The range follows visible leaf-row order. A new sort or filter establishes a new order, while group and context rows are excluded.
 

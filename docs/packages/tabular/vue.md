@@ -1,7 +1,3 @@
-<script setup>
-import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # Tabular with Vue
 
 The Vue Tabular API is split by profile across `@sectile/vue/data-table`, `@sectile/vue/data-grid`, and `@sectile/vue/data-tree-grid`. Install the optional `@sectile/tabular` peer when using one of these entry points.
@@ -9,8 +5,6 @@ The Vue Tabular API is split by profile across `@sectile/vue/data-table`, `@sect
 ```sh
 pnpm add @sectile/vue @sectile/tabular vue
 ```
-
-<TabularExample kind="table-overview" />
 
 Open **Code → Vue** to see controller creation, typed compound components, Provider, and source composition in one file.
 

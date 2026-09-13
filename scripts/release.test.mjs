@@ -96,8 +96,11 @@ test('release retries prepare tagged artifacts and load the complete current pub
   assert.equal(workflow.match(/git restore --source="\$RELEASE_TOOLING_REF"/gu).length, 2);
   assert.ok(preparation.includes('ref: ${{ inputs.tag }}'));
   assert.match(workflow, /run: pnpm release:check/u);
-  assert.ok(workflow.includes('run: pnpm --recursive --workspace-concurrency=1 --filter @sectile/docs^... build'));
   assert.match(workflow, /run: pnpm --filter @sectile\/docs build/u);
+  assert.match(workflow, /path: docs\/dist/u);
+  assert.equal(preparation.includes('@sectile/docs^... build'), false);
+  assert.equal(preparation.includes('scripts/virtual-benchmark/run.mjs docs'), false);
+  assert.equal(workflow.includes('docs/.vitepress/dist'), false);
   assert.equal(workflow.includes('verify:release'), false);
   assert.equal(workflow.includes('verify:compat'), false);
   assert.equal(localRelease.includes("['verify:release']"), false);

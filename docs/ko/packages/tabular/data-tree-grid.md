@@ -1,26 +1,16 @@
-<script setup>
-import TabularExample from '../../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # DataTreeGrid
 
 DataTreeGrid는 DataGrid의 셀 cursor·편집에 부모와 자식 행을 더한 계층형 작업 공간입니다. 서비스 소유권, 파일형 재고, 조직별 권한처럼 **부모 context를 유지한 채 leaf 셀을 작업**해야 할 때 사용합니다.
 
-<TabularExample kind="tree-overview" />
-
 ## branch를 접고 펼치기
 
 Group 행의 disclosure를 누르면 expansion state가 바뀌고 source에 새 view를 요청합니다. Tabular는 임의의 자식 배열을 DOM에서 숨기지 않습니다. source가 현재 expansion에 맞는 평평한 visible row 목록과 계층 metadata를 반환합니다.
-
-<TabularExample kind="tree-hierarchy" />
 
 각 행은 `level`, `positionInSet`, `setSize`, parent/group ID를 가질 수 있습니다. 필터 결과의 부모는 실제 결과가 아니더라도 자식의 위치를 설명하기 위한 `contextOnly` 행으로 남을 수 있습니다. 이 행은 탐색 context이지만 선택·편집 대상은 아닙니다.
 
 ## leaf 행을 선택하기
 
 Checkbox 선택은 leaf에만 적용됩니다. Shift 범위는 화면에 보이는 leaf 순서를 사용하므로 group 행과 접힌 descendant를 건너뜁니다. Header의 전체 선택은 현재 query revision에 맞는 모든 leaf를 나타냅니다.
-
-<TabularExample kind="tree-selection" />
 
 Group 단위 선택이 필요하면 `BulkSelectionControl`에 group-leaves target을 전달합니다. 실제 descendant ID를 모두 열거하지 않고 source가 계산할 수 있는 선택 의도를 저장합니다.
 

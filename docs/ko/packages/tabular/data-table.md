@@ -1,20 +1,12 @@
-<script setup>
-import TabularExample from '../../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # DataTable
 
 DataTable은 행을 읽고 비교하는 표입니다. 디렉터리, 검색 결과, 감사 기록처럼 **native table 의미와 행 단위 선택**이 중요한 화면에 사용합니다. 모든 셀을 방향키로 이동하고 편집해야 한다면 [DataGrid](./data-grid)를 선택하세요.
-
-<TabularExample kind="table-overview" />
 
 예제의 **코드** 탭에서는 같은 화면을 Vue compound component, 기존 HTML에 연결하는 DOM API, 렌더러가 없는 Core API로 전환해 볼 수 있습니다.
 
 ## 검색하고 정렬하기
 
 열 제목을 반복해서 누르면 오름차순, 내림차순, 정렬 해제를 순환합니다. 검색어와 정렬 상태는 현재 DOM을 직접 바꾸는 대신 하나의 query를 만들고 source에 새 view를 요청합니다. 따라서 같은 UI를 메모리 배열과 서버 데이터에 모두 사용할 수 있습니다.
-
-<TabularExample kind="table-query" />
 
 - `SortTrigger`는 `column`과 comparator를 query에 기록합니다.
 - `FilterControl`은 전체 검색 또는 특정 열의 filter를 기록합니다.
@@ -26,23 +18,17 @@ DataTable은 행을 읽고 비교하는 표입니다. 디렉터리, 검색 결�
 
 개별 checkbox, Shift 범위, 현재 query에 맞는 모든 행 선택을 같은 선택 계약으로 다룹니다. 헤더 checkbox는 선택 없음, 일부 선택, 전체 선택을 각각 false, mixed, true 상태로 표시합니다.
 
-<TabularExample kind="table-selection" />
-
 `SelectionControl`은 현재 Body 행을 자동으로 상속합니다. `BulkSelectionControl`의 `all-matching`은 아직 내려받지 않은 모든 ID를 저장하지 않고 query revision과 제외 행만 저장합니다. native form으로 전송할 때는 `name`을 지정하고, 행 ID와 다른 값이 필요할 때만 `value`를 지정합니다.
 
 ## 여러 단계 header와 편집 의도
 
 Header row에 `depth`를 직접 지정하지 않습니다. leaf header는 `column`, 여러 열을 묶는 header만 `header`로 schema node를 연결합니다. Tabular가 depth, colspan, rowspan과 접근성 metadata를 계산합니다.
 
-<TabularExample kind="table-structure" />
-
 `Editor`는 값을 저장하지 않습니다. native input에서 commit 의도를 typed command로 전달하며, 검증·저장·optimistic update는 응용 프로그램이 결정합니다. 셀 cursor와 edit mode가 중심이면 DataGrid가 더 적합합니다.
 
 ## 열 표시, 고정과 크기
 
 열 순서·숨김·start/end pinning은 공유할 수 있는 semantic state입니다. 픽셀 너비는 DOM/Vue host 상태입니다. 이 구분 덕분에 Core는 플랫폼에 종속되지 않으면서도 각 화면은 실제 측정값을 사용할 수 있습니다.
-
-<TabularExample kind="table-columns" />
 
 `ColumnResizeHandle`은 pointer와 keyboard 입력을 모두 받고 min/max 범위를 지킵니다. 열 표시와 고정은 controller의 `columnState`를 변경하므로 저장하거나 controlled state로 소유할 수 있습니다.
 

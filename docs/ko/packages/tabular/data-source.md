@@ -1,12 +1,6 @@
-<script setup>
-import TabularExample from '../../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # 비동기 source
 
 Tabular의 정렬·필터·페이지 변경은 현재 DOM 행을 재배열하는 명령이 아니라 **새 view를 요청하는 query 변경**입니다. source는 그 request를 메모리에서 계산할 수도 있고 서버로 보낼 수도 있습니다.
-
-<TabularExample kind="remote-source" />
 
 검색하거나 정렬하고, 다음 페이지로 이동한 뒤 실패도 발생시켜 보세요. 화면은 마지막으로 승인된 결과를 유지하면서 별도의 loading/error 상태를 보여주고, 오래 도착한 응답은 거부합니다. 코드 탭에서는 같은 흐름을 Vue·DOM·Core로 전환할 수 있습니다.
 

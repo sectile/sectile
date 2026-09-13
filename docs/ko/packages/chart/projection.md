@@ -3,15 +3,9 @@ title: Chart 그리기와 위치 찾기
 description: 차트를 그릴 수 있는 도형으로 바꾸고 포인터 아래의 값을 찾습니다.
 ---
 
-<script setup>
-import ChartPackageExample from '../../../.vitepress/theme/components/ChartPackageExample.vue'
-</script>
-
 # 그리기와 위치 찾기
 
 DOM과 Vue 연동 기능은 그리기 과정을 자동으로 처리합니다. 이 문서의 API는 사용자 정의 렌더러를 만들거나, 차트를 이미지로 내보내거나, 툴팁과 주석의 위치를 직접 정할 때만 필요합니다.
-
-<ChartPackageExample kind="heatmap" host="dom" />
 
 ## 현재 화면에 필요한 도형 만들기
 

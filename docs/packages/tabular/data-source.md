@@ -1,12 +1,6 @@
-<script setup>
-import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # Async data sources
 
 A Tabular sort, filter, or page change is not an instruction to rearrange mounted rows. It is a **query change that requests a new view**. A source can evaluate that request in memory or send it to a server.
-
-<TabularExample kind="remote-source" />
 
 Search, sort, move to another page, and trigger a failure. The surface retains its last accepted rows while exposing loading or error state, and rejects a response that arrives too late. The Code tab shows the same lifecycle in Vue, DOM, and Core.
 

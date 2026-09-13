@@ -1,26 +1,16 @@
-<script setup>
-import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # DataTreeGrid
 
 DataTreeGrid adds parent and child rows to DataGrid's cell cursor and editing model. Use it for service ownership, file-like inventory, and grouped permissions where users work on leaf cells while retaining **parent context**.
 
-<TabularExample kind="tree-overview" />
-
 ## Expand and collapse branches
 
 A group disclosure changes expansion state and requests a new view. Tabular does not hide an arbitrary nested DOM subtree. The source returns a flat list of currently visible rows plus hierarchy metadata for the active expansion.
-
-<TabularExample kind="tree-hierarchy" />
 
 Rows can carry `level`, `positionInSet`, `setSize`, and parent/group IDs. A parent that does not match a filter may remain as `contextOnly` so its matching descendants keep meaningful location. It is navigation context, not a selectable or editable record.
 
 ## Select leaf rows
 
 Checkbox selection applies to leaves. A Shift range follows visible leaf order, skipping group rows and collapsed descendants. The header control represents every leaf matched by the current query revision.
-
-<TabularExample kind="tree-selection" />
 
 For group-level selection, pass a group-leaves target to `BulkSelectionControl`. It stores source-resolvable intent instead of enumerating every descendant ID.
 

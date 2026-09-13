@@ -1,7 +1,3 @@
-<script setup>
-import TabularExample from '../../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # DOM에서 Tabular 연결하기
 
 `@sectile/dom/tabular`는 semantic controller를 기존 HTML element에 연결합니다. 스타일과 element 생성은 응용 프로그램이 맡고, connection은 native/ARIA 속성, event, focus, form 값, 등록 수명을 관리합니다.
@@ -9,8 +5,6 @@ import TabularExample from '../../../.vitepress/theme/components/TabularExample.
 ```sh
 pnpm add @sectile/dom @sectile/tabular
 ```
-
-<TabularExample kind="table-overview" />
 
 **코드 → DOM**은 기존 HTML element를 유지하면서 sort, row, cell과 source를 connection에 등록하는 흐름을 보여줍니다.
 

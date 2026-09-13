@@ -3,11 +3,6 @@ title: Tabular
 description: 표와 편집 가능한 그리드, 계층형 그리드에서 쿼리·선택·데이터 원본·이동·편집 상태를 같은 규칙으로 다룹니다.
 ---
 
-<script setup>
-import TabularFeatureMap from '../../.vitepress/theme/components/TabularFeatureMap.vue'
-import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # Tabular
 
 `@sectile/tabular`은 표와 그리드의 동작을 화면 환경과 분리합니다. 쿼리, 현재 적용된 데이터, 행 선택, 셀 이동, 편집 의도, 열 상태, 계층 구조를 Vue나 기존 DOM, 애플리케이션이 직접 만드는 화면에서도 같은 규칙으로 다룰 수 있습니다.
@@ -41,13 +36,9 @@ pnpm add @sectile/vue @sectile/tabular vue
 | DataGrid | 모든 셀을 2차원 방향키 이동이나 편집 대상으로 다룰 때 | [DataGrid](./tabular/data-grid) |
 | DataTreeGrid | 그리드에 펼치고 접을 수 있는 부모·자식 계층도 필요할 때 | [DataTreeGrid](./tabular/data-tree-grid) |
 
-<TabularFeatureMap />
-
 ## 검색하고 선택할 수 있는 표 만들기
 
 DataTable은 표에 맞는 기본 상호작용을 유지하면서 쿼리와 선택 상태를 화면 환경 밖에서 관리합니다. 정렬, 필터, 체크박스 선택, 그룹 행, 편집 의도는 각각 따로 맞춰 관리할 필요 없이 같은 상태 흐름으로 갱신됩니다.
-
-<TabularExample kind="table-overview" />
 
 **사용 코드**는 페이지 상단의 **연결 방식**을 따릅니다. 미리보기에는 문서용 데이터와 표현 스타일이 포함되어 있으며, 사용 코드는 Vue 구성, DOM 연결, 화면 환경과 무관한 상태 처리처럼 공개 API를 사용하는 부분에 집중합니다.
 
@@ -57,23 +48,17 @@ DataTable은 표에 맞는 기본 상호작용을 유지하면서 쿼리와 선�
 
 행 선택과 별개로 현재 셀의 위치가 중요하다면 DataGrid를 사용합니다. 방향키 이동, 편집·확정·취소, 행 선택, 현재 셀 복구를 서로 다른 상태로 관리하므로 데이터가 바뀌어도 애플리케이션이 키보드 위치를 직접 다시 계산할 필요가 없습니다.
 
-<TabularExample kind="grid-overview" />
-
 [DataGrid 안내](./tabular/data-grid)에서는 셀 이동 복구, 편집 가능한 셀, 독립적인 행 선택, 열 동작을 자세히 다룹니다.
 
 ## 그리드 동작을 유지하면서 계층 구조 추가하기
 
 DataTreeGrid는 셀 이동과 편집을 유지하면서 펼치고 접을 수 있는 계층 구조를 더합니다. 부모 행은 계층 정보를 보여주고, 실제 이동과 선택은 일반적인 그리드와 마찬가지로 보이는 셀을 기준으로 처리할 수 있습니다.
 
-<TabularExample kind="tree-overview" />
-
 [DataTreeGrid 안내](./tabular/data-tree-grid)에서는 펼치기와 접기, 현재 보이는 말단 행 선택, 편집, 가지를 접었을 때의 현재 셀 복구를 설명합니다.
 
 ## 서버의 정렬과 필터링에 연결하기
 
 쿼리가 바뀌면 현재 화면의 행을 즉석에서 다시 배열하는 대신 새로운 데이터 요청을 만듭니다. 같은 상호작용 상태를 메모리 데이터뿐 아니라 HTTP, RPC, 페이지 단위 조회, 서버에서 일부 범위만 가져오는 방식에도 연결할 수 있습니다.
-
-<TabularExample kind="remote-source" />
 
 새 요청을 기다리는 동안에는 마지막으로 적용된 결과를 계속 보여줄 수 있습니다. Tabular는 진행 중인 요청, 적용된 데이터, 취소, 실패를 구분하며 더 오래된 응답이 뒤늦게 도착해도 새 결과에 섞지 않습니다. 전송 방식, 인증, 캐시, 재시도 정책과 로딩·빈 결과·오류 화면은 애플리케이션이 담당합니다.
 

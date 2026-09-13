@@ -3,15 +3,9 @@ title: DOM chart rendering
 description: Render a chart in existing HTML, label it for assistive technology, and clean it up safely.
 ---
 
-<script setup>
-import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageExample.vue'
-</script>
-
 # DOM rendering
 
 Use `@sectile/dom/chart` when your application owns the HTML and does not need Vue components. It measures the chart container, draws into a Canvas element, updates when the container size changes, and adds the elements needed for keyboard and screen-reader access.
-
-<ChartPackageExample kind="bar" host="dom" />
 
 ## Install
 

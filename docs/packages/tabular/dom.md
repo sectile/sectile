@@ -1,7 +1,3 @@
-<script setup>
-import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # DOM composition
 
 `@sectile/dom/tabular` connects semantic controllers to existing HTML elements. The application creates and styles elements; the connection owns native/ARIA attributes, events, focus, form values, and registration lifetimes.
@@ -9,8 +5,6 @@ import TabularExample from '../../.vitepress/theme/components/TabularExample.vue
 ```sh
 pnpm add @sectile/dom @sectile/tabular
 ```
-
-<TabularExample kind="table-overview" />
 
 Open **Code → DOM** to see existing HTML elements registered for sorting, rows, cells, and source execution.
 

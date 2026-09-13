@@ -1,12 +1,6 @@
-<script setup>
-import TabularExample from '../../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # 공통 계약
 
 DataTable, DataGrid, DataTreeGrid는 화면의 상호작용 밀도는 다르지만 데이터의 정체성, query, 선택, 열 상태, request 승인 규칙은 공유합니다. 이 공통 계약 덕분에 profile이나 renderer를 바꿔도 데이터와 상태 소유권을 다시 설계하지 않아도 됩니다.
-
-<TabularExample kind="contracts" />
 
 버튼을 눌러 request, 선택, 오래된 응답 거부를 확인해 보세요. Core는 event를 받아 다음 state와 host가 실행할 command를 결정할 뿐, DOM이나 network를 직접 만지지 않습니다.
 

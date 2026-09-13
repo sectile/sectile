@@ -1,7 +1,3 @@
-<script setup>
-import TabularExample from '../../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # Vue에서 Tabular 사용하기
 
 Tabular용 Vue API는 `@sectile/vue/data-table`, `@sectile/vue/data-grid`, `@sectile/vue/data-tree-grid`로 나뉩니다. 이 진입점을 사용할 때는 optional peer dependency인 `@sectile/tabular`를 함께 설치합니다.
@@ -9,8 +5,6 @@ Tabular용 Vue API는 `@sectile/vue/data-table`, `@sectile/vue/data-grid`, `@sec
 ```sh
 pnpm add @sectile/vue @sectile/tabular vue
 ```
-
-<TabularExample kind="table-overview" />
 
 **코드 → Vue**에서 controller 생성, typed compound component, Provider와 source 연결이 한 파일 안에서 어떻게 이어지는지 확인할 수 있습니다.
 

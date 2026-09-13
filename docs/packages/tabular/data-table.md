@@ -1,20 +1,12 @@
-<script setup>
-import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # DataTable
 
 DataTable is a table for reading and comparing rows. Use it for directories, search results, and audit logs where **native table semantics and row selection** matter. Choose [DataGrid](./data-grid) when every cell must support keyboard navigation and editing.
-
-<TabularExample kind="table-overview" />
 
 The **Code** tab switches the same UI between Vue compound components, DOM bindings for existing HTML, and renderer-free Core APIs.
 
 ## Search and sort
 
 Repeatedly activate a heading to cycle ascending, descending, and off. Search and sort update one query and request a new view instead of mutating mounted DOM rows. The same UI therefore works with both in-memory and server-backed data.
-
-<TabularExample kind="table-query" />
 
 - `SortTrigger` records a column and comparator in the query.
 - `FilterControl` records a global or column filter.
@@ -26,23 +18,17 @@ See [async data sources](./data-source) for a complete request, cancellation, fa
 
 Individual checkboxes, Shift ranges, and selecting every row matched by the current query share one selection contract. The header checkbox exposes false, mixed, and true for none, some, and all matching rows.
 
-<TabularExample kind="table-selection" />
-
 `SelectionControl` inherits the current Body row. `BulkSelectionControl` with `all-matching` stores the query revision and exclusions rather than every unloaded ID. Set `name` for native form submission and override `value` only when it differs from the row ID.
 
 ## Multi-level headers and edit intent
 
 Do not specify a header-row depth. Bind leaf headers with `column`, and only bind a spanning group with `header`. Tabular derives depth, colspan, rowspan, and accessibility metadata from the schema.
 
-<TabularExample kind="table-structure" />
-
 `Editor` does not persist data. It converts a native input commit into a typed command; the application owns validation, storage, and optimistic updates. Use DataGrid when a cell cursor and edit mode are central.
 
 ## Column visibility, pinning, and size
 
 Order, visibility, and start/end pinning are portable semantic state. Pixel width belongs to the DOM or Vue host. This keeps Core platform-independent while each rendered surface can use real measurements.
-
-<TabularExample kind="table-columns" />
 
 `ColumnResizeHandle` supports pointer and keyboard input and respects min/max limits. Column visibility and pinning update controller `columnState`, so they can be persisted or controlled by the application.
 

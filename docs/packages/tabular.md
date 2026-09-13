@@ -3,11 +3,6 @@ title: Tabular
 description: Build tables, editable grids, and hierarchical grids with shared query, selection, source, and interaction state.
 ---
 
-<script setup>
-import TabularFeatureMap from '../.vitepress/theme/components/TabularFeatureMap.vue'
-import TabularExample from '../.vitepress/theme/components/TabularExample.vue'
-</script>
-
 # Tabular
 
 `@sectile/tabular` keeps table and grid behavior independent of the renderer. Queries, accepted source views, row selection, cell navigation, edit intent, column state, and hierarchy can therefore follow the same rules in Vue, existing DOM, or application-owned rendering.
@@ -41,13 +36,9 @@ The three profiles share source, query, selection, column, and revision concepts
 | DataGrid | Every cell participates in two-dimensional keyboard navigation or editing | [DataGrid](./tabular/data-grid) |
 | DataTreeGrid | A grid also needs expandable parent/child hierarchy | [DataTreeGrid](./tabular/data-tree-grid) |
 
-<TabularFeatureMap />
-
 ## Build a searchable, selectable table
 
 A DataTable keeps native table-oriented interaction while the query and selection state remain portable. Sorting, filtering, checkbox selection, grouped rows, and edit intent all update the controller rather than requiring application code to coordinate those states separately.
-
-<TabularExample kind="table-overview" />
 
 The **Usage code** follows the Integration selected in the page header. The preview uses documentation data and presentation styles; the code view focuses on the public Vue composition, DOM connection, or renderer-neutral controller flow.
 
@@ -57,23 +48,17 @@ The [DataTable guide](./tabular/data-table) continues with search and sort, all-
 
 Use DataGrid when the current cell matters independently of row selection. Arrow-key movement, edit/commit/cancel, row selection, and cursor recovery remain distinct states, so changing data does not require the application to reconstruct keyboard position by hand.
 
-<TabularExample kind="grid-overview" />
-
 The [DataGrid guide](./tabular/data-grid) covers navigation recovery, editable cells, independent row selection, and column behavior in detail.
 
 ## Add hierarchy without losing grid behavior
 
 DataTreeGrid adds expandable branches while retaining cell navigation and editing. Parent rows can provide hierarchy context while leaf cells remain the normal navigation and selection targets.
 
-<TabularExample kind="tree-overview" />
-
 The [DataTreeGrid guide](./tabular/data-tree-grid) covers disclosure, visible-leaf selection, editing, and cursor recovery when branches collapse.
 
 ## Connect sorting and filtering to a server
 
 A query change produces a new source request; it does not rearrange the currently mounted rows in place. This lets the same interaction model work with in-memory data, HTTP, RPC, pagination, or windowed server results.
-
-<TabularExample kind="remote-source" />
 
 While a replacement request is pending, the last accepted view can remain visible. The controller distinguishes pending work, accepted data, cancellation, and failure, and rejects stale responses instead of partially merging them into a newer view. The application still owns transport, authentication, caching, retry policy, and the presentation of loading, empty, and error states.
 

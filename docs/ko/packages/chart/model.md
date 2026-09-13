@@ -3,10 +3,6 @@ title: Chart 데이터와 스케일
 description: 앱의 데이터 필드를 차트 축에 연결하고, 알맞은 스케일을 고르며, 데이터를 안전하게 갱신합니다.
 ---
 
-<script setup>
-import ChartPackageExample from '../../../.vitepress/theme/components/ChartPackageExample.vue'
-</script>
-
 # 데이터와 스케일
 
 차트 정의에는 어떤 데이터를 그리고 각 축에서 어떤 필드를 읽을지 적습니다. 다음 예제는 `date`와 `amount` 필드로 주간 매출을 그립니다.
@@ -61,11 +57,7 @@ const layer = {
 
 각 조각의 크기 자체를 비교하는 일이 중심이라면 파이 차트를 사용합니다. 다음 분기 예산 예제는 네 부문의 비중을 하나의 전체 안에서 보여 줍니다.
 
-<ChartPackageExample kind="pie" />
-
 같은 비중 비교에서 가운데를 비워 외곽 구간을 더 분명하게 보여 주려면 도넛을 사용할 수 있습니다. 방사형 데이터에는 축이 없으므로 이동·확대 기능을 붙이지 않고, 각 구간을 가리키거나 선택해 값을 확인하는 데 집중합니다.
-
-<ChartPackageExample kind="donut" />
 
 ## 필드에 맞는 스케일 고르기
 

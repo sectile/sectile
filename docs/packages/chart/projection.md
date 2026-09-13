@@ -3,15 +3,9 @@ title: Chart drawing and hit testing
 description: Turn a chart into draw-ready shapes and find the value under a pointer.
 ---
 
-<script setup>
-import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageExample.vue'
-</script>
-
 # Drawing and hit testing
 
 The DOM and Vue integrations handle drawing automatically. Use the APIs on this page only when you are building a custom renderer, exporting chart graphics, or placing your own tooltip or annotation.
-
-<ChartPackageExample kind="heatmap" host="dom" />
 
 ## Create shapes for one chart size
 

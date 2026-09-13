@@ -3,15 +3,9 @@ title: Chart interaction and state
 description: Add selection, keyboard controls, panning, and zooming without trapping normal page input.
 ---
 
-<script setup>
-import ChartPackageExample from '../../.vitepress/theme/components/ChartPackageExample.vue'
-</script>
-
 # Interaction and state
 
 A chart can track selected records, the record under the pointer, and the visible range of each axis. You can let Sectile manage these values or bind them to application state.
-
-<ChartPackageExample kind="scatter" />
 
 ## Enable a visible range before adding controls
 

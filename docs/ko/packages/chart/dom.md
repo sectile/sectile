@@ -3,15 +3,9 @@ title: DOM Chart 렌더링
 description: 기존 HTML에 차트를 그리고, 접근성 이름을 붙이며, 사용한 자원을 안전하게 정리합니다.
 ---
 
-<script setup>
-import ChartPackageExample from '../../../.vitepress/theme/components/ChartPackageExample.vue'
-</script>
-
 # DOM 렌더링
 
 Vue 컴포넌트 없이 앱이 직접 HTML을 관리한다면 `@sectile/dom/chart`를 사용하세요. 차트 영역의 크기를 재고 Canvas에 그리며, 크기 변경에 맞춰 갱신하고, 키보드와 화면 읽기 프로그램에 필요한 요소도 만듭니다.
-
-<ChartPackageExample kind="bar" host="dom" />
 
 ## 설치
 
