@@ -733,6 +733,141 @@ test('DOM Form preserves document order and delegates reset to participants and 
   }
 });
 
+test('ISSUE-134: initial participant topology is batched with linear ordered comparisons', () => {
+  const dom = installDOM();
+  const originalCompareDocumentPosition = dom.window.Node.prototype.compareDocumentPosition;
+  try {
+    const { document } = dom.window;
+    for (const size of [100, 250, 500, 1_000]) {
+      const formElement = document.createElement('form');
+      const participants = [];
+      for (let index = 0; index < size; index += 1) {
+        const input = document.createElement('input');
+        input.name = `field${index}`;
+        input.value = String(index);
+        formElement.append(input);
+        participants.push({ id: `field${index}`, element: input });
+      }
+      document.body.append(formElement);
+      let comparisons = 0;
+      let stateChanges = 0;
+      let updates = 0;
+      dom.window.Node.prototype.compareDocumentPosition = function compareDocumentPosition(other) {
+        comparisons += 1;
+        return originalCompareDocumentPosition.call(this, other);
+      };
+
+      const form = createForm({
+        form: formElement,
+        participants,
+        onStateChange: () => { stateChanges += 1; },
+        onUpdate: () => { updates += 1; },
+      });
+
+      assert.equal(form.state.fields.length, size);
+      assert.equal(form.state.fields[0].id, 'field0');
+      assert.equal(form.state.fields.at(-1).id, `field${size - 1}`);
+      assert.equal(form.getSnapshot().revision, 0);
+      assert.equal(stateChanges, 0);
+      assert.equal(updates, 0);
+      assert.equal(comparisons <= size * 2, true, `${size} participants used ${comparisons} document comparisons`);
+      form.destroy();
+      formElement.remove();
+    }
+  } finally {
+    dom.window.Node.prototype.compareDocumentPosition = originalCompareDocumentPosition;
+    dom.restore();
+  }
+});
+
+test('ISSUE-134: initial duplicate participants preserve first baseline and final owner', () => {
+  const dom = installDOM();
+  try {
+    const { document, Event } = dom.window;
+    const formElement = document.createElement('form');
+    const first = document.createElement('input');
+    const replacement = document.createElement('input');
+    const sibling = document.createElement('input');
+    first.value = 'baseline';
+    replacement.value = 'replacement';
+    sibling.value = 'sibling';
+    formElement.append(sibling, replacement, first);
+    document.body.append(formElement);
+    let firstReads = 0;
+    let replacementReads = 0;
+
+    const form = createForm({
+      form: formElement,
+      participants: [
+        {
+          id: 'field',
+          element: first,
+          name: 'before',
+          getValue: () => { firstReads += 1; return first.value; },
+        },
+        { id: 'sibling', element: sibling, name: 'sibling' },
+        {
+          id: 'field',
+          element: replacement,
+          name: 'after',
+          getValue: () => { replacementReads += 1; return replacement.value; },
+        },
+      ],
+    });
+
+    assert.deepEqual(form.state.fields.map((field) => field.id), ['sibling', 'field']);
+    assert.equal(form.getField('field').name, 'after');
+    assert.equal(form.getField('field').dirty, true);
+    assert.equal(form.state.dirty, true);
+    assert.equal(firstReads, 1);
+    assert.equal(replacementReads, 1);
+
+    replacement.value = 'baseline';
+    replacement.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.getField('field').dirty, false);
+    assert.equal(form.state.dirty, false);
+
+    first.value = 'ignored';
+    first.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.getField('field').dirty, false);
+    form.destroy();
+  } finally {
+    dom.restore();
+  }
+});
+
+test('ISSUE-134: initial out-of-tree participant owns one listener set and releases it on destroy', () => {
+  const dom = installDOM();
+  try {
+    const { document, Event } = dom.window;
+    const formElement = document.createElement('form');
+    const external = document.createElement('input');
+    formElement.id = 'initial-external';
+    external.setAttribute('form', 'initial-external');
+    external.name = 'email';
+    external.value = 'before@sectile.dev';
+    document.body.append(formElement, external);
+    const form = createForm({
+      form: formElement,
+      participants: [{ id: 'external', element: external }],
+    });
+
+    external.value = 'after@sectile.dev';
+    external.dispatchEvent(new Event('input', { bubbles: true }));
+    external.dispatchEvent(new Event('blur'));
+    assert.equal(form.getField('external').dirty, true);
+    assert.equal(form.getField('external').touched, true);
+
+    const revision = form.getSnapshot().revision;
+    form.destroy();
+    external.value = 'ignored@sectile.dev';
+    external.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.getSnapshot().revision, revision);
+  } finally {
+    dom.restore();
+  }
+});
+
 test('DOM Form reinitializes the current participant values as a reversible dirty baseline', () => {
   const dom = installDOM();
   try {

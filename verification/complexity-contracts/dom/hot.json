@@ -274,6 +274,98 @@
       }
     },
     {
+      "id": "form.initial-participants",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/form.ts",
+      "benchmarkIDs": [
+        "ISSUE-134:dom-form-initial-participants"
+      ],
+      "specificationCeiling": "O(nParticipant + uParticipant log uParticipant + iIssue + rIssue + tTarget*aMax)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nParticipant",
+            "meaning": "initial participant entries supplied to one Form construction",
+            "ceiling": "Form construction entry ceiling"
+          },
+          {
+            "name": "uParticipant",
+            "meaning": "final unique participant IDs after duplicate replacement",
+            "ceiling": "uParticipant <= nParticipant"
+          },
+          {
+            "name": "iIssue",
+            "meaning": "initial Form issues normalized by the portable owner",
+            "ceiling": "Form construction entry ceiling"
+          },
+          {
+            "name": "rIssue",
+            "meaning": "primary and related field references retained by initial issues",
+            "ceiling": "Form maxOutputNodes"
+          },
+          {
+            "name": "tTarget",
+            "meaning": "final participant DOM targets inspected while installing external listeners",
+            "ceiling": "sum of final participant target counts"
+          },
+          {
+            "name": "aMax",
+            "meaning": "maximum target count owned by one final participant",
+            "ceiling": "aMax <= tTarget"
+          },
+          {
+            "name": "xExternal",
+            "meaning": "external listener roots retained by final participants",
+            "ceiling": "xExternal <= tTarget"
+          }
+        ],
+        "time": {
+          "bound": "O(nParticipant + uParticipant log uParticipant + iIssue + rIssue + tTarget*aMax)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nParticipant + uParticipant + iIssue + rIssue + tTarget)",
+          "output": "O(uParticipant + iIssue + rIssue)",
+          "retained": "O(uParticipant + iIssue + rIssue + tTarget)"
+        },
+        "resources": {
+          "allocations": "O(nParticipant + uParticipant + iIssue + rIssue + tTarget)",
+          "cacheEntries": "O(uParticipant + iIssue + rIssue)",
+          "listeners": "6 root listeners plus O(xExternal) external listeners",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Map lookup and insertion are expected O(1); one DOM compareDocumentPosition call is treated as one platform ordering comparison.",
+          "The per-participant external-root reduction retains its existing target-cardinality bound; this operation removes repetition over participant prefixes rather than changing target ownership."
+        ],
+        "ceilings": [
+          "Portable field/issue construction remains bounded by Form maxEntries and maxOutputNodes.",
+          "Only final unique participant owners retain external listener resources."
+        ],
+        "evidence": [
+          "packages/dom/tests/form.test.mjs",
+          "packages/dom/benchmarks/form-initialization.mjs"
+        ],
+        "benchmarkIDs": [
+          "ISSUE-134:dom-form-initial-participants"
+        ],
+        "deterministicWork": [
+          "Already document-ordered 100/250/500/1000-participant initialization performs at most two document-position comparisons per participant, publishes revision 0, and emits zero intermediate update callbacks.",
+          "Duplicate IDs are scanned once in input order, retain the first captured baseline, use the final participant as the live owner, and create one canonical portable field record."
+        ],
+        "resourceRationale": "Construction retains one final participant, baseline, current-value snapshot and disposer per unique ID plus portable Form state. Root listeners are constant; external listeners belong only to final participant roots and disconnect releases them.",
+        "proof": "The constructor scans nParticipant input entries once, retaining first baselines and last owners in Maps; sorts only the uParticipant final owners once; calls tryCreateFormState once with the final field metadata and initial issues; then visits final owners once to install their resources. Dynamic post-construction registration remains a separate incremental path.",
+        "adversarialWitness": "A list containing duplicate IDs, final owners in reverse document order, initial related issues, and external targets still performs one input scan, one final-owner sort, one portable construction and one final observer pass without replaying growing prefixes.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Construction must inspect every supplied participant and final owned target once; only final-owner sorting may revisit owners logarithmically."
+        }
+      }
+    },
+    {
       "id": "form.subscribe",
       "inherits": "lifecycle-v1",
       "source": "packages/dom/src/form.ts",

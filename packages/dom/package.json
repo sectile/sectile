@@ -386,6 +386,7 @@
   "scripts": {
     "build": "sectile-build production",
     "build:verification": "sectile-build verification",
+    "benchmark:form": "pnpm --silent run build && node benchmarks/form-initialization.mjs",
     "typecheck:public": "pnpm --silent run build && pnpm --silent run typecheck:public:prepared",
     "typecheck": "tsc --project tsconfig.json --pretty false",
     "test": "pnpm --silent run build:verification && node --test --test-concurrency=4 tests/*.test.mjs",

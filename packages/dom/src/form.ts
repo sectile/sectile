@@ -6,6 +6,7 @@ import {
   tryCreateFormState,
   type FormCommand,
   type FormEvent,
+  type FormFieldInput,
   type FormFieldState,
   type FormFieldMetaInput,
   type FormIssue,
@@ -280,12 +281,34 @@ export function tryCreateForm<
 >(
   options: FormOptions<ID, Input, Output>,
 ): FormResult<FormConnection<ID, Input, Output>> {
-  const initial = tryCreateFormState<ID>({ issues: options.issues ?? [] });
-  if (!initial.ok) return initial;
-
   const participants = new Map<ID, FormParticipant<ID>>();
   const participantBaselines = new Map<ID, unknown>();
   const participantValues = new Map<ID, unknown>();
+  for (const participant of options.participants ?? []) {
+    const replacing = participants.has(participant.id);
+    const currentValue = readFormParticipantValue(participant);
+    participants.set(participant.id, participant);
+    participantValues.set(participant.id, currentValue);
+    if (!replacing) participantBaselines.set(participant.id, currentValue);
+    participant.element.dataset['scope'] = 'form';
+    participant.element.dataset['part'] = 'field';
+  }
+  const initialParticipants = orderedParticipants(participants);
+  const initialFields: FormFieldInput<ID>[] = initialParticipants.map((participant) => ({
+    id: participant.id,
+    name: readParticipantName(participant),
+    dirty: !formParticipantValuesEqual(
+      participant,
+      participantValues.get(participant.id),
+      participantBaselines.get(participant.id),
+    ),
+  }));
+  const initial = tryCreateFormState<ID>({
+    fields: initialFields,
+    issues: options.issues ?? [],
+  });
+  if (!initial.ok) return initial;
+
   const participantObservers = new Map<ID, () => void>();
   const handledParticipantEvents = new WeakSet<Event>();
   const pendingReinitializations = new Map<number, FormReinitializeOptions>();
@@ -530,13 +553,8 @@ export function tryCreateForm<
     participant: FormParticipant<ID>,
     current: unknown,
     baseline: unknown,
-  ): boolean => participant.isValueEqual?.(current, baseline)
-    ?? sameParticipantValue(current, baseline);
-  const readValue = (participant: FormParticipant<ID>): unknown => (
-    participant.getValue === undefined
-      ? readParticipantValue(participant)
-      : participant.getValue()
-  );
+  ): boolean => formParticipantValuesEqual(participant, current, baseline);
+  const readValue = (participant: FormParticipant<ID>): unknown => readFormParticipantValue(participant);
   const captureParticipant = (participant: FormParticipant<ID>): unknown => {
     const value = readValue(participant);
     participantValues.set(participant.id, value);
@@ -1118,7 +1136,7 @@ export function tryCreateForm<
     };
   };
 
-  for (const participant of options.participants ?? []) registerParticipant(participant);
+  for (const participant of participants.values()) observeParticipant(participant);
 
   const createSelectorSubscription = <Value, Selected>(
     value: Value,
@@ -1325,6 +1343,23 @@ function sameParticipantValue(left: unknown, right: unknown): boolean {
   return left.every((value, index) => sameParticipantValue(value, right[index]));
 }
 
+function readFormParticipantValue<ID extends StableID>(
+  participant: FormParticipant<ID>,
+): unknown {
+  return participant.getValue === undefined
+    ? readParticipantValue(participant)
+    : participant.getValue();
+}
+
+function formParticipantValuesEqual<ID extends StableID>(
+  participant: FormParticipant<ID>,
+  current: unknown,
+  baseline: unknown,
+): boolean {
+  return participant.isValueEqual?.(current, baseline)
+    ?? sameParticipantValue(current, baseline);
+}
+
 function readControlName(element: HTMLElement): string | null {
   const name = (element as HTMLElement & { readonly name?: string }).name?.trim();
   return name === undefined || name.length === 0 ? null : name;
@@ -1461,19 +1496,28 @@ function orderedIssues<ID extends StableID>(state: FormState<ID>): readonly Form
   return state.allIssues;
 }
 
+function orderedParticipants<ID extends StableID>(
+  participants: ReadonlyMap<ID, FormParticipant<ID>>,
+): readonly FormParticipant<ID>[] {
+  const byRegistration = [...participants.values()];
+  const registrationIndex = new Map<ID, number>();
+  for (let index = 0; index < byRegistration.length; index += 1) {
+    registrationIndex.set(byRegistration[index]!.id, index);
+  }
+  return [...byRegistration].sort((left, right) => {
+    const position = left.element.compareDocumentPosition(right.element);
+    if ((position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0) return -1;
+    if ((position & Node.DOCUMENT_POSITION_PRECEDING) !== 0) return 1;
+    return registrationIndex.get(left.id)! - registrationIndex.get(right.id)!;
+  });
+}
+
 function reorderParticipants<ID extends StableID>(
   participants: ReadonlyMap<ID, FormParticipant<ID>>,
   state: FormState<ID>,
   transition: (event: FormEvent<ID>) => readonly FormCommand<ID>[] | null,
 ): void {
-  const byRegistration = [...participants.values()];
-  const ordered = [...byRegistration].sort((left, right) => {
-    const position = left.element.compareDocumentPosition(right.element);
-    if ((position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0) return -1;
-    if ((position & Node.DOCUMENT_POSITION_PRECEDING) !== 0) return 1;
-    return byRegistration.indexOf(left) - byRegistration.indexOf(right);
-  });
-  const ids = ordered.map((participant) => participant.id);
+  const ids = orderedParticipants(participants).map((participant) => participant.id);
   if (
     ids.length === state.fields.length
     && ids.some((id, index) => state.fields[index]?.id !== id)
