@@ -1994,8 +1994,18 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "One pass validates identities while building the sole frozen snapshot and index; construction performs no second snapshot copy or intermediate tuple vector.",
-        "adversarialWitness": "A maximum-size unique identity vector reaches the final validation/index entry.",
+        "ceilings": [
+          "n is captured once after maxItems preflight and never follows later caller-owned array growth."
+        ],
+        "deterministicWork": [
+          "A one-item input that appends another ID from its first element getter performs exactly one identity observation and retains one ID.",
+          "An input already above maxItems rejects before observing any identity value."
+        ],
+        "evidence": [
+          "packages/core/tests/structures/sequence.reference-law.test.mjs"
+        ],
+        "proof": "Preflight accepts one cardinality n <= maxItems; unique validation captures that boundary once and performs exactly n identity observations while building the sole frozen snapshot and index. Construction performs no second snapshot copy or intermediate tuple vector.",
+        "adversarialWitness": "A maximum-size unique identity vector reaches the final validation/index entry, while a getter that grows the caller-owned array cannot extend validation beyond the accepted cardinality.",
         "fullScan": {
           "allowed": true,
           "rationale": "Unique validation and index construction have a linear lower bound."
@@ -2081,7 +2091,7 @@
       "id": "sequence.patch-limits",
       "inherits": "linear-v1",
       "source": "packages/core/src/structures/sequence.ts",
-      "benchmarkIDs": ["GH-29:move-policy-boundary"],
+      "benchmarkIDs": ["GH-29:move-policy-boundary", "GH-130:sequence-input-boundary"],
       "specificationCeiling": "O(1 + s)",
       "contract": {
         "variables": [{ "name": "s", "meaning": "identities materialized and validated for a changed policy", "ceiling": "zero for over-limit moves or unchanged-policy no-ops; input and output cardinality otherwise" }],
@@ -2089,11 +2099,11 @@
         "space": { "auxiliary": "O(1 + s)", "output": "O(1 + s)", "retained": "O(1 + s)" },
         "resources": { "allocations": "O(1 + s)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
         "assumptions": ["This entry covers policy changes and move rejection/no-op boundaries. Unchanged-policy nonempty patches retain existing overlay and density bounds.", "Stable ID validation retains its configured code-unit ceiling; ID index operations are expected constant time."],
-        "ceilings": ["Over-limit moves reject from size before identity access or materialization, independent of overlay history.", "A data no-op reuses the original owner only when its effective policy is unchanged."],
-        "deterministicWork": ["16, 4096 and 100000-item move rejections perform zero identity reads; sparse/dense/inverse-move histories have equivalent failures."],
-        "resourceRationale": "A changed resource policy is an explicit normalization boundary producing a validated owner and truthful limits. Rejected cardinality uses scalar checks only; no new persistent cache is added.",
-        "proof": "tryApplySequencePatch checks size-preserving moves against maxItems before representation selection. Policy changes use materialized validation, including same-position and zero-count moves. The materialized helper always reaches tryCreateSequence.",
-        "adversarialWitness": "Sparse and dense moves, inverse-move history, zero-count/same-position moves, tightened ID ceilings, exact limits, raised policies, empty and shrinking splices.",
+        "ceilings": ["Over-limit moves reject from size before identity access or materialization, independent of overlay history.", "Splice nextSize and canonical inserted identities use one preflight-approved inserted cardinality even if caller-owned input grows during observation.", "A data no-op reuses the original owner only when its effective policy is unchanged."],
+        "deterministicWork": ["16, 4096 and 100000-item move rejections perform zero identity reads; sparse/dense/inverse-move histories have equivalent failures.", "A one-item splice input that appends another ID from its getter performs exactly one inserted identity observation in both sparse-overlay and changed-policy materialization paths."],
+        "resourceRationale": "A changed resource policy is an explicit normalization boundary producing a validated owner and truthful limits. Rejected cardinality uses scalar checks only; inserted input is canonicalized once to the preflight-approved boundary before representation selection; no new persistent cache is added.",
+        "proof": "tryApplySequencePatch checks size-preserving moves against maxItems before representation selection. Splice validation captures coordinates and inserted cardinality once and passes exactly that frozen prefix to either sparse validation/retention or changed-policy materialization. Policy changes preserve final-sequence validation, including same-position and zero-count moves. The materialized helper always reaches tryCreateSequence.",
+        "adversarialWitness": "Sparse and dense moves, inverse-move history, zero-count/same-position moves, tightened ID ceilings, exact limits, raised policies, empty and shrinking splices, and splice element getters that grow their caller-owned input.",
         "evidence": ["packages/core/tests/structures/sequence.reference-law.test.mjs"],
         "fullScan": { "allowed": true, "rationale": "Changed policy owners are explicitly materialized and revalidated. Known over-limit cardinality and unchanged-policy no-ops remain constant work." }
       }

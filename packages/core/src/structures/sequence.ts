@@ -113,69 +113,94 @@ export function tryApplySequencePatch<ID extends StableID>(
   const idCeilingError = validateSafeCeiling(maxIDCodeUnits, 'maxIDCodeUnits', 1);
   if (idCeilingError !== null) return { ok: false, error: idCeilingError };
   const size = sequence.size;
+  const policyChanged = maxItems !== sequence.maxItems
+    || maxIDCodeUnits !== sequence.maxIDCodeUnits;
   // Moves preserve cardinality even when their order change is empty.
   if (patch.type === 'move' && size > maxItems) {
     return fail('resource-rejection', 'item-ceiling-exceeded', 'Sequence exceeds maxItems.', {
       size, maxItems,
     });
   }
-  // Explicit policy changes establish a newly validated owner and its metadata.
-  if (maxItems !== sequence.maxItems || maxIDCodeUnits !== sequence.maxIDCodeUnits) {
-    return applyMaterializedSequencePatch(sequence, patch, maxItems, maxIDCodeUnits);
-  }
   if (patch.type === 'splice') {
+    const spliceIndex = patch.index;
+    const deleteCount = patch.deleteCount;
+    const insertedInput = patch.inserted;
     if (
-      !Number.isSafeInteger(patch.index)
-      || !Number.isSafeInteger(patch.deleteCount)
-      || patch.index < 0
-      || patch.deleteCount < 0
-      || patch.index > size
-      || patch.deleteCount > size - patch.index
+      !Number.isSafeInteger(spliceIndex)
+      || !Number.isSafeInteger(deleteCount)
+      || spliceIndex < 0
+      || deleteCount < 0
+      || spliceIndex > size
+      || deleteCount > size - spliceIndex
     ) return invalidPatch(patch, size);
-    const nextSize = size - patch.deleteCount + patch.inserted.length;
+    const insertedCount = insertedInput.length;
+    const nextSize = size - deleteCount + insertedCount;
     if (nextSize > maxItems) {
       return fail('resource-rejection', 'item-ceiling-exceeded', 'Sequence exceeds maxItems.', {
         size: nextSize,
         maxItems,
       });
     }
-    if (patch.deleteCount === 0 && patch.inserted.length === 0) return ok(sequence);
+    if (deleteCount === 0 && insertedCount === 0 && !policyChanged) return ok(sequence);
+    if (policyChanged) {
+      return applyMaterializedSequencePatch(
+        sequence,
+        Object.freeze({
+          type: 'splice' as const,
+          index: spliceIndex,
+          deleteCount,
+          inserted: snapshotSequenceInput(insertedInput, insertedCount),
+        }),
+        maxItems,
+        maxIDCodeUnits,
+      );
+    }
     const insertedIndex = new Map<ID, number>();
-    const inserted = validateUniqueIDs(patch.inserted, maxIDCodeUnits, insertedIndex);
+    const inserted = validateUniqueIDs(insertedInput, maxIDCodeUnits, insertedIndex);
     if (!inserted.ok) {
       return fail('transition-rejection', inserted.error.code, inserted.error.message, inserted.error.details);
     }
-    const deletedEnd = patch.index + patch.deleteCount;
+    const canonicalPatch = Object.freeze({
+      type: 'splice' as const,
+      index: spliceIndex,
+      deleteCount,
+      inserted: inserted.value,
+    });
+    const deletedEnd = spliceIndex + deleteCount;
     for (let index = 0; index < inserted.value.length; index += 1) {
       const id = inserted.value[index]!;
       const previousIndex = sequence.indexOf(id);
-      if (previousIndex !== null && (previousIndex < patch.index || previousIndex >= deletedEnd)) {
+      if (previousIndex !== null && (previousIndex < spliceIndex || previousIndex >= deletedEnd)) {
         return fail('transition-rejection', 'duplicate-id', 'Stable identities must be unique.', {
           id,
-          index: patch.index + index,
+          index: spliceIndex + index,
         });
       }
     }
     if (shouldMaterializeSequencePatch(
       sequence,
-      patch.deleteCount + inserted.value.length,
+      deleteCount + inserted.value.length,
       nextSize,
     )) {
       return applyMaterializedSequencePatch(
         sequence,
-        Object.freeze({ ...patch, inserted: inserted.value }),
+        canonicalPatch,
         maxItems,
         maxIDCodeUnits,
       );
     }
     return ok(new PatchedSequence(
       sequence,
-      Object.freeze({ ...patch, inserted: inserted.value }),
+      canonicalPatch,
       maxItems,
       maxIDCodeUnits,
       insertedIndex,
     ));
   } else {
+    // Explicit policy changes establish a newly validated owner and its metadata.
+    if (policyChanged) {
+      return applyMaterializedSequencePatch(sequence, patch, maxItems, maxIDCodeUnits);
+    }
     if (
       !Number.isSafeInteger(patch.from)
       || !Number.isSafeInteger(patch.to)
@@ -198,6 +223,15 @@ export function tryApplySequencePatch<ID extends StableID>(
       maxIDCodeUnits,
     ));
   }
+}
+
+function snapshotSequenceInput<ID extends StableID>(
+  ids: readonly ID[],
+  size: number,
+): readonly ID[] {
+  const snapshot = new Array<ID>(size);
+  for (let index = 0; index < size; index += 1) snapshot[index] = ids[index]!;
+  return Object.freeze(snapshot);
 }
 
 function shouldMaterializeSequencePatch<ID extends StableID>(

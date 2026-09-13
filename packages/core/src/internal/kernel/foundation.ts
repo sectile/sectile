@@ -223,7 +223,8 @@ export function validateUniqueIDs<ID extends StableID>(
 ): Result<readonly ID[]> {
   const snapshot: ID[] = [];
   const seen = indexByID ?? new Map<ID, number>();
-  for (let index = 0; index < ids.length; index += 1) {
+  const size = ids.length;
+  for (let index = 0; index < size; index += 1) {
     const id = ids[index];
     if (id === undefined) {
       return fail('construction', 'invalid-id-type', 'Stable IDs must be strings.', { index });

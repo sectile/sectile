@@ -207,6 +207,82 @@ test('no-op moves validate tightened ID ceilings and expose changed policy', () 
   assert.equal(source.maxIDCodeUnits, 32);
 });
 
+test('ISSUE-130: sequence construction consumes only the preflight-approved identity boundary', () => {
+  const ids = ['a'];
+  let reads = 0;
+  Object.defineProperty(ids, 0, {
+    configurable: true,
+    enumerable: true,
+    get() {
+      reads += 1;
+      if (ids.length === 1) ids.push('b');
+      return 'a';
+    },
+  });
+
+  const result = tryCreateSequence(ids, { maxItems: 1 });
+  assert.equal(result.ok, true);
+  assert.equal(reads, 1);
+  assert.equal(ids.length, 2);
+  assert.equal(result.value.size, 1);
+  assert.equal(result.value.maxItems, 1);
+  assert.deepEqual(result.value.ids, ['a']);
+
+  const oversized = ['a', 'b'];
+  let oversizedReads = 0;
+  Object.defineProperty(oversized, 0, {
+    configurable: true,
+    enumerable: true,
+    get() { oversizedReads += 1; return 'a'; },
+  });
+  const rejected = tryCreateSequence(oversized, { maxItems: 1 });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'item-ceiling-exceeded');
+  assert.equal(oversizedReads, 0);
+});
+
+test('ISSUE-130: splice patches retain only the inserted cardinality authorized by preflight', () => {
+  const base = createSequence(
+    Array.from({ length: 100 }, (_, index) => `id-${index}`),
+    { maxItems: 101, maxIDCodeUnits: 32 },
+  );
+
+  for (const options of [undefined, { maxItems: 102 }]) {
+    const inserted = ['x'];
+    let reads = 0;
+    Object.defineProperty(inserted, 0, {
+      configurable: true,
+      enumerable: true,
+      get() {
+        reads += 1;
+        if (inserted.length === 1) inserted.push('y');
+        return 'x';
+      },
+    });
+    const patch = { type: 'splice', index: 100, deleteCount: 0, inserted };
+    const result = options === undefined
+      ? tryApplySequencePatch(base, patch)
+      : tryApplySequencePatch(base, patch, options);
+
+    assert.equal(result.ok, true);
+    assert.equal(reads, 1);
+    assert.equal(inserted.length, 2);
+    assert.equal(result.value.size, 101);
+    assert.equal(result.value.at(100), 'x');
+    assert.equal(result.value.at(101), null);
+    assert.equal(result.value.maxItems, options?.maxItems ?? 101);
+  }
+
+  const duplicate = tryApplySequencePatch(
+    createSequence(['a', 'b'], { maxItems: 4 }),
+    { type: 'splice', index: 1, deleteCount: 0, inserted: ['x', 'x'] },
+    { maxItems: 5 },
+  );
+  assert.equal(duplicate.ok, false);
+  assert.equal(duplicate.error.code, 'duplicate-id');
+  assert.deepEqual(duplicate.error.details, { id: 'x', index: 2 });
+});
+
 test('over-limit moves reject before reading or materializing identities', () => {
   for (const size of [16, 4_096, 100_000]) {
     const source = createSequence(Array.from({ length: size }, (_, index) => index));

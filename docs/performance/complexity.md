@@ -75,7 +75,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:selection-expression.membership | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(eSelection)` | forbidden | VAL-016, VAL-017 |
 | core:selection.toggle | trusted | `O(sSelected + log nDomain)` expected | `O(sSelected)` | `O(sSelected)` | `O(sSelected)` | forbidden | VAL-016, VAL-017 |
 | core:sequence.at | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
-| core:sequence.construct | external | `O(n + k)` expected | `O(n)` | `O(n)` | `O(n)` | allowed | VAL-016, VAL-017 |
+| core:sequence.construct | external | `O(n + k)` expected | `O(n)` | `O(n)` | `O(n)` | allowed | packages/core/tests/structures/sequence.reference-law.test.mjs |
 | core:sequence.index-of | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | VAL-016, VAL-017 |
 | core:sequence.materialize | external | `O(n + k)` worst-case | `O(n + dPatch)` | `O(n + k)` | `O(n + k)` | allowed | VAL-016, VAL-017 |
 | core:sequence.patch-limits | trusted | `O(1 + s)` expected | `O(1 + s)` | `O(1 + s)` | `O(1 + s)` | allowed | packages/core/tests/structures/sequence.reference-law.test.mjs |
