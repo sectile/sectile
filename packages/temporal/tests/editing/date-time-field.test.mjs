@@ -119,6 +119,52 @@ test('time field commits, bounds, and adjusts its caret segment', () => {
   assert.equal(formatTimeValue(invalidDraft.value), '10:30');
 });
 
+test('time field keeps active optional segments represented while repeated adjustment crosses zero', () => {
+  let seconds = createTimeFieldState(time(10, 30, 1));
+  seconds = applyTimeFieldEvent(seconds, {
+    type: 'text',
+    event: { type: 'replace', startCodeUnitOffset: 6, endCodeUnitOffset: 6, text: '', selection: { anchorCodeUnitOffset: 6, focusCodeUnitOffset: 6 } },
+  }).value.state;
+  const secondZero = applyTimeFieldEvent(seconds, 'decrement-segment');
+  assert.equal(formatTimeValue(secondZero.value.state.value), '10:30');
+  assert.equal(secondZero.value.state.inputState.snapshot.text, '10:30:00');
+  assert.equal(secondZero.value.state.inputState.snapshot.selection.startCodeUnitOffset, 6);
+  assert.equal(secondZero.value.state.inputState.snapshot.selection.focusCodeUnitOffset, 8);
+  const secondPrevious = applyTimeFieldEvent(secondZero.value.state, 'decrement-segment');
+  assert.equal(formatTimeValue(secondPrevious.value.state.value), '10:29:59');
+
+  let secondForward = createTimeFieldState(time(10, 30, 59));
+  secondForward = applyTimeFieldEvent(secondForward, {
+    type: 'text',
+    event: { type: 'replace', startCodeUnitOffset: 6, endCodeUnitOffset: 6, text: '', selection: { anchorCodeUnitOffset: 6, focusCodeUnitOffset: 6 } },
+  }).value.state;
+  const nextMinute = applyTimeFieldEvent(secondForward, 'increment-segment');
+  assert.equal(nextMinute.value.state.inputState.snapshot.text, '10:31:00');
+  assert.equal(formatTimeValue(applyTimeFieldEvent(nextMinute.value.state, 'increment-segment').value.state.value), '10:31:01');
+
+  let milliseconds = createTimeFieldState(time(10, 30, 1, 1));
+  milliseconds = applyTimeFieldEvent(milliseconds, {
+    type: 'text',
+    event: { type: 'replace', startCodeUnitOffset: 9, endCodeUnitOffset: 9, text: '', selection: { anchorCodeUnitOffset: 9, focusCodeUnitOffset: 9 } },
+  }).value.state;
+  const millisecondZero = applyTimeFieldEvent(milliseconds, 'decrement-segment');
+  assert.equal(millisecondZero.value.state.inputState.snapshot.text, '10:30:01.000');
+  assert.equal(millisecondZero.value.state.inputState.snapshot.selection.startCodeUnitOffset, 9);
+  assert.equal(millisecondZero.value.state.inputState.snapshot.selection.focusCodeUnitOffset, 12);
+  assert.equal(formatTimeValue(applyTimeFieldEvent(millisecondZero.value.state, 'decrement-segment').value.state.value), '10:30:00.999');
+
+  let millisecondForward = createTimeFieldState(time(10, 30, 1, 999));
+  millisecondForward = applyTimeFieldEvent(millisecondForward, {
+    type: 'text',
+    event: { type: 'replace', startCodeUnitOffset: 9, endCodeUnitOffset: 9, text: '', selection: { anchorCodeUnitOffset: 9, focusCodeUnitOffset: 9 } },
+  }).value.state;
+  const nextSecond = applyTimeFieldEvent(millisecondForward, 'increment-segment');
+  assert.equal(nextSecond.value.state.inputState.snapshot.text, '10:30:02.000');
+  assert.equal(formatTimeValue(applyTimeFieldEvent(nextSecond.value.state, 'increment-segment').value.state.value), '10:30:02.001');
+
+  assert.equal(formatTimeValue(time(10, 30)), '10:30');
+});
+
 test('date-time values remain timezone-free and use a strict ISO-like separator', () => {
   const value = dateTime(2026, 8, 22, 16, 3);
   assert.equal(formatDateTimeValue(value), '2026-08-22T16:03');
@@ -172,4 +218,47 @@ test('date-time field steps the active segment and recovers invalid drafts atomi
   assert.equal(formatDateTimeValue(recovered.value.state.value), '2024-03-01T00:15');
   assert.equal(recovered.value.state.inputState.snapshot.text, '2024-03-01T00:15');
   assert.equal(formatDateTimeValue(invalidDraft.value), '2024-02-01T00:15');
+});
+
+test('date-time field preserves active seconds and milliseconds through zero and civil day carry', () => {
+  let seconds = createDateTimeFieldState(dateTime(2024, 1, 31, 23, 59, 59));
+  seconds = applyDateTimeFieldEvent(seconds, {
+    type: 'text',
+    event: {
+      type: 'replace',
+      startCodeUnitOffset: 17,
+      endCodeUnitOffset: 17,
+      text: '',
+      selection: { anchorCodeUnitOffset: 17, focusCodeUnitOffset: 17 },
+    },
+  }).value.state;
+  const nextDay = applyDateTimeFieldEvent(seconds, 'increment-segment');
+  assert.equal(formatDateTimeValue(nextDay.value.state.value), '2024-02-01T00:00');
+  assert.equal(nextDay.value.state.inputState.snapshot.text, '2024-02-01T00:00:00');
+  assert.equal(nextDay.value.state.inputState.snapshot.selection.startCodeUnitOffset, 17);
+  assert.equal(nextDay.value.state.inputState.snapshot.selection.focusCodeUnitOffset, 19);
+  assert.equal(
+    formatDateTimeValue(applyDateTimeFieldEvent(nextDay.value.state, 'increment-segment').value.state.value),
+    '2024-02-01T00:00:01',
+  );
+
+  let milliseconds = createDateTimeFieldState(dateTime(2024, 1, 31, 23, 59, 59, 999));
+  milliseconds = applyDateTimeFieldEvent(milliseconds, {
+    type: 'text',
+    event: {
+      type: 'replace',
+      startCodeUnitOffset: 20,
+      endCodeUnitOffset: 20,
+      text: '',
+      selection: { anchorCodeUnitOffset: 20, focusCodeUnitOffset: 20 },
+    },
+  }).value.state;
+  const midnight = applyDateTimeFieldEvent(milliseconds, 'increment-segment');
+  assert.equal(midnight.value.state.inputState.snapshot.text, '2024-02-01T00:00:00.000');
+  assert.equal(midnight.value.state.inputState.snapshot.selection.startCodeUnitOffset, 20);
+  assert.equal(midnight.value.state.inputState.snapshot.selection.focusCodeUnitOffset, 23);
+  assert.equal(
+    formatDateTimeValue(applyDateTimeFieldEvent(midnight.value.state, 'increment-segment').value.state.value),
+    '2024-02-01T00:00:00.001',
+  );
 });

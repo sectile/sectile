@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { applyTimeRangeFieldEvent, createTimeRangeFieldState } from '../../.verification-dist/time-range-field.js';
 import { createTimeValue, formatTimeValue } from '../../.verification-dist/time-field.js';
-const time = (hour, minute) => createTimeValue(hour, minute);
+const time = (hour, minute, second = 0, millisecond = 0) => createTimeValue(hour, minute, second, millisecond);
 
 test('time range field exposes only complete ordered wall-clock ranges', () => {
   let state = createTimeRangeFieldState();
@@ -33,4 +33,30 @@ test('required time range field rejects clearing a committed range', () => {
   const committed = applyTimeRangeFieldEvent(cleared.value.state, { type: 'field', endpoint: 'start', event: 'commit' }, { required: true });
   assert.equal(committed.ok, false);
   assert.equal(committed.error.code, 'time-range-field-value-required');
+});
+
+test('time range field endpoint adjustment preserves an active zero-valued seconds segment', () => {
+  let state = createTimeRangeFieldState({ value: { start: time(10, 30, 1), end: time(10, 40) } });
+  state = applyTimeRangeFieldEvent(state, {
+    type: 'field',
+    endpoint: 'start',
+    event: {
+      type: 'text',
+      event: {
+        type: 'replace',
+        startCodeUnitOffset: 6,
+        endCodeUnitOffset: 6,
+        text: '',
+        selection: { anchorCodeUnitOffset: 6, focusCodeUnitOffset: 6 },
+      },
+    },
+  }).value.state;
+
+  const zero = applyTimeRangeFieldEvent(state, { type: 'field', endpoint: 'start', event: 'decrement-segment' });
+  assert.equal(zero.value.state.start.inputState.snapshot.text, '10:30:00');
+  assert.equal(zero.value.state.start.inputState.snapshot.selection.focusCodeUnitOffset, 8);
+  assert.equal(formatTimeValue(zero.value.state.value.start), '10:30');
+
+  const previous = applyTimeRangeFieldEvent(zero.value.state, { type: 'field', endpoint: 'start', event: 'decrement-segment' });
+  assert.equal(formatTimeValue(previous.value.state.value.start), '10:29:59');
 });

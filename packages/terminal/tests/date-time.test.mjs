@@ -26,6 +26,20 @@ test('terminal time field maps vertical keys to the active segment', () => {
   assert.equal(formatTimeValue(field.getValue()), '10:45');
 });
 
+test('terminal time field keeps repeated vertical adjustment on seconds when zero becomes explicit editing text', () => {
+  const field = createTimeField({ defaultValue: createTimeValue(10, 30, 1) });
+  field.handleKeyboardInput({ key: 'home' });
+  for (let index = 0; index < 6; index += 1) field.handleKeyboardInput({ key: 'right' });
+
+  assert.equal(field.handleKeyboardInput({ key: 'down' }), true);
+  assert.equal(field.getText(), '10:30:00');
+  assert.equal(field.getCaret(), 8);
+  assert.equal(formatTimeValue(field.getValue()), '10:30');
+
+  assert.equal(field.handleKeyboardInput({ key: 'down' }), true);
+  assert.equal(formatTimeValue(field.getValue()), '10:29:59');
+});
+
 test('terminal date range field switches endpoints and commits a complete range', () => {
   const field = createDateRangeField();
   field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: createDateValue(2026, 8, 22) } });

@@ -351,7 +351,7 @@ function committedInput(
   value: DateTimeValue | null,
   segment?: DateTimeSegment,
 ): TemporalResult<TextEditingState> {
-  const text = value === null ? '' : formatDateTimeValue(value);
+  const text = value === null ? '' : formatDateTimeFieldInput(value, segment);
   const range = segment === 'year' ? [0, 4]
     : segment === 'month' ? [5, 7]
       : segment === 'day' ? [8, 10]
@@ -364,6 +364,13 @@ function committedInput(
     anchorCodeUnitOffset: Math.min(range[0] ?? 0, text.length),
     focusCodeUnitOffset: Math.min(range[1] ?? 0, text.length),
   });
+}
+
+function formatDateTimeFieldInput(value: DateTimeValue, segment?: DateTimeSegment): string {
+  const text = formatDateTimeValue(value);
+  if (segment === 'second' && value.time.second === 0 && value.time.millisecond === 0) return `${text}:00`;
+  if (segment === 'millisecond' && value.time.millisecond === 0) return value.time.second === 0 ? `${text}:00.000` : `${text}.000`;
+  return text;
 }
 
 function validatePolicies(policies: DateTimeFieldPolicies): TemporalResult<true> {

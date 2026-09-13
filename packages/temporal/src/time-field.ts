@@ -159,9 +159,16 @@ function commitValue(value: TimeValue | null, policies: TimeFieldPolicies, segme
 }
 
 function committedInput(value: TimeValue | null, segment?: TimeSegment): TemporalResult<TextEditingState> {
-  const text = value === null ? '' : formatTimeValue(value);
+  const text = value === null ? '' : formatTimeFieldInput(value, segment);
   const range = segment === 'hour' ? [0, 2] : segment === 'minute' ? [3, 5] : segment === 'second' ? [6, 8] : segment === 'millisecond' ? [9, 12] : [text.length, text.length];
   return tryCreateTextEditingState(text, { anchorCodeUnitOffset: Math.min(range[0] ?? 0, text.length), focusCodeUnitOffset: Math.min(range[1] ?? 0, text.length) });
+}
+
+function formatTimeFieldInput(value: TimeValue, segment?: TimeSegment): string {
+  const text = formatTimeValue(value);
+  if (segment === 'second' && value.second === 0 && value.millisecond === 0) return `${text}:00`;
+  if (segment === 'millisecond' && value.millisecond === 0) return value.second === 0 ? `${text}:00.000` : `${text}.000`;
+  return text;
 }
 
 function validatePolicies(policies: TimeFieldPolicies): TemporalResult<true> {
