@@ -1063,24 +1063,98 @@ test('submit payload reinitialize commits only after a successful submission', a
   }
 });
 
-test('DOM Form updates duplicate participant ids in place and unregisters explicitly', () => {
+test('ISSUE-133: DOM Form reconciles duplicate participant replacement against the retained baseline', () => {
   const dom = installDOM();
   try {
     const { document } = dom.window;
     const formElement = document.createElement('form');
     const first = document.createElement('input');
     const replacement = document.createElement('input');
-    formElement.append(first, replacement);
+    const baselineReplacement = document.createElement('input');
+    first.value = 'baseline';
+    replacement.value = 'replacement';
+    baselineReplacement.value = 'baseline';
+    formElement.append(first, replacement, baselineReplacement);
     document.body.append(formElement);
     const form = createForm({ form: formElement });
 
     form.registerParticipant({ id: 'field', element: first, name: 'before' });
-    const unregister = form.registerParticipant({ id: 'field', element: replacement, name: 'after' });
+    const staleUnregister = form.registerParticipant({ id: 'field', element: replacement, name: 'changed' });
 
     assert.equal(form.state.fields.length, 1);
-    assert.equal(form.state.fields[0].name, 'after');
+    assert.equal(form.state.fields[0].name, 'changed');
+    assert.equal(form.state.fields[0].dirty, true);
+    assert.equal(form.state.dirty, true);
+    assert.equal(form.refreshParticipant('field'), true);
+    assert.equal(form.state.fields[0].dirty, true);
+
+    const unregister = form.registerParticipant({
+      id: 'field',
+      element: baselineReplacement,
+      name: 'restored',
+    });
+    assert.equal(form.state.fields.length, 1);
+    assert.equal(form.state.fields[0].name, 'restored');
+    assert.equal(form.state.fields[0].dirty, false);
+    assert.equal(form.state.dirty, false);
+    assert.equal(form.refreshParticipant('field'), true);
+    assert.equal(form.state.fields[0].dirty, false);
+
+    staleUnregister();
+    assert.equal(form.state.fields.length, 1);
     unregister();
     assert.equal(form.state.fields.length, 0);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('ISSUE-133: duplicate participant replacement uses custom value snapshots and comparators', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const first = document.createElement('button');
+    const equalReplacement = document.createElement('button');
+    const changedReplacement = document.createElement('button');
+    first.type = 'button';
+    equalReplacement.type = 'button';
+    changedReplacement.type = 'button';
+    formElement.append(first, equalReplacement, changedReplacement);
+    document.body.append(formElement);
+    let value = ['Alpha'];
+    const isValueEqual = (current, baseline) => (
+      Array.isArray(current)
+      && Array.isArray(baseline)
+      && current.map((entry) => entry.toLowerCase()).join('|')
+        === baseline.map((entry) => entry.toLowerCase()).join('|')
+    );
+    const form = createForm({ form: formElement });
+
+    form.registerParticipant({
+      id: 'tags',
+      element: first,
+      getValue: () => [...value],
+      isValueEqual,
+    });
+    value = ['ALPHA'];
+    form.registerParticipant({
+      id: 'tags',
+      element: equalReplacement,
+      getValue: () => [...value],
+      isValueEqual,
+    });
+    assert.equal(form.state.fields[0].dirty, false);
+
+    value = ['beta'];
+    form.registerParticipant({
+      id: 'tags',
+      element: changedReplacement,
+      getValue: () => [...value],
+      isValueEqual,
+    });
+    assert.equal(form.state.fields[0].dirty, true);
+    assert.equal(form.state.dirty, true);
   } finally {
     dom.restore();
   }

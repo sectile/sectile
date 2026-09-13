@@ -1085,10 +1085,14 @@ export function tryCreateForm<
     participant.element.dataset['scope'] = 'form';
     participant.element.dataset['part'] = 'field';
     if (replacing) {
+      const baseline = participantBaselines.get(participant.id);
       transition({
         type: 'set-field-meta',
         id: participant.id,
-        meta: { name: readParticipantName(participant) },
+        meta: {
+          name: readParticipantName(participant),
+          dirty: !valuesEqual(participant, currentValue, baseline),
+        },
       });
     } else {
       transition({
