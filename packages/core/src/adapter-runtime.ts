@@ -108,12 +108,14 @@ export interface SemanticController<State, Event, Effect, Code extends string = 
   reject<Code extends string>(code: Code, message: string, details?: Readonly<Record<string, unknown>>): RevisionResult<State, Effect, Code>;
 }
 
+type SemanticControllerNotifier<State> = (previous: State, proposed: State) => void;
+
 export interface SemanticControllerOptions<State, Event, Command, Effect, Code extends string = CoreErrorCode> {
   readonly initial: Result<State, Code>;
   readonly reducer: EventReducer<State, Event, Command, Code>;
   readonly reconcile?: (previous: State, proposed: State) => Result<State, Code>;
   readonly publishEffect?: (effect: Effect) => void;
-  readonly notify?: (previous: State, proposed: State) => void;
+  readonly notify?: SemanticControllerNotifier<State> | readonly SemanticControllerNotifier<State>[];
   readonly toEffect: (command: Command) => Effect;
   readonly interaction?: InteractionStateInput | undefined;
   readonly interactionIntent?: (event: Event) => 'navigate' | 'mutate';
@@ -143,6 +145,11 @@ export function createSemanticController<State, Event, Command, Effect, Code ext
   if (!interaction.ok) return interaction;
   const snapshot = tryCreateRevisionSnapshot(options.initial.value);
   if (!snapshot.ok) return snapshot;
+  const notifiers: readonly SemanticControllerNotifier<State>[] = options.notify === undefined
+    ? Object.freeze([])
+    : typeof options.notify === 'function'
+      ? Object.freeze([options.notify])
+      : Object.freeze([...options.notify]);
   let current = snapshot.value;
   return {
     ok: true,
@@ -176,7 +183,7 @@ export function createSemanticController<State, Event, Command, Effect, Code ext
         publishControllerUpdate(
           prepared.result.commands,
           options.publishEffect,
-          options.notify,
+          notifiers,
           previous.state,
           prepared.proposed,
         );
@@ -618,7 +625,7 @@ export function createFacadeConnection<
 function publishControllerUpdate<State, Effect>(
   effects: readonly Effect[],
   publishEffect: ((effect: Effect) => void) | undefined,
-  notify: ((previous: State, proposed: State) => void) | undefined,
+  notifiers: readonly SemanticControllerNotifier<State>[],
   previous: State,
   proposed: State,
 ): void {
@@ -632,9 +639,11 @@ function publishControllerUpdate<State, Effect>(
       }
     }
   }
-  try { notify?.(previous, proposed); }
-  catch (error) {
-    if (!hasError) { hasError = true; firstError = error; }
+  for (const notify of notifiers) {
+    try { notify(previous, proposed); }
+    catch (error) {
+      if (!hasError) { hasError = true; firstError = error; }
+    }
   }
   if (hasError) throw firstError;
 }

@@ -128,6 +128,7 @@ test('collection component controller replaces one domain generation and retains
 });
 
 test('semantic controller keeps its snapshot when reconciliation rejects', () => {
+  let notifications = 0;
   const constructed = createSemanticController({
     initial: { ok: true, value: 1 },
     reducer: (state, event) => ({
@@ -142,6 +143,7 @@ test('semantic controller keeps its snapshot when reconciliation rejects', () =>
         message: 'The proposed test state is rejected.',
       },
     }),
+    notify: () => { notifications += 1; },
     toEffect: (command) => command,
   });
 
@@ -153,6 +155,7 @@ test('semantic controller keeps its snapshot when reconciliation rejects', () =>
   assert.equal(result.snapshot, previous);
   assert.equal(constructed.value.getSnapshot(), previous);
   assert.deepEqual(result.commands, []);
+  assert.equal(notifications, 0);
 });
 
 test('semantic controller commits before notification and preserves nested revisions', () => {
@@ -217,9 +220,10 @@ test('semantic controller retains its committed snapshot when notification throw
   assert.equal(constructed.value.getSnapshot().revision, 1);
 });
 
-test('semantic controller completes host effects before notify and preserves the first error', () => {
+test('semantic controller drains notifier cohorts after host effects and preserves the first error', () => {
   const first = new Error('first host effect failed');
-  const later = new Error('application notify failed');
+  const later = new Error('first application notifier failed');
+  const latest = new Error('later application notifier failed');
   const trace = [];
   const constructed = createSemanticController({
     initial: { ok: true, value: 0 },
@@ -232,13 +236,60 @@ test('semantic controller completes host effects before notify and preserves the
       trace.push(`effect:${effect.id}`);
       if (effect.id === 1) throw first;
     },
-    notify: () => { trace.push('notify'); throw later; },
+    notify: [
+      (previous, proposed) => { trace.push(`notify:first:${previous}->${proposed}`); throw later; },
+      (previous, proposed) => { trace.push(`notify:second:${previous}->${proposed}`); throw latest; },
+    ],
   });
   assert.equal(constructed.ok, true);
 
   assert.throws(() => constructed.value.handle('increment'), (error) => error === first);
   assert.equal(constructed.value.getSnapshot().state, 1);
-  assert.deepEqual(trace, ['effect:1', 'effect:2', 'notify']);
+  assert.deepEqual(trace, [
+    'effect:1',
+    'effect:2',
+    'notify:first:0->1',
+    'notify:second:0->1',
+  ]);
+});
+
+test('semantic controller notifier cohorts keep the outer proposal stable under reentrancy', () => {
+  const trace = [];
+  let controller;
+  controller = createSemanticController({
+    initial: { ok: true, value: 0 },
+    reducer: (state, amount) => ({
+      ok: true,
+      value: { state: state + amount, commands: [] },
+    }),
+    notify: [
+      (previous, proposed) => {
+        trace.push(['first', previous, proposed]);
+        const synchronized = controller.value.replace({ ok: true, value: 99 });
+        assert.equal(synchronized.ok, true);
+      },
+      (previous, proposed) => {
+        trace.push(['second', previous, proposed, controller.value.getSnapshot().state]);
+      },
+    ],
+    toEffect: (command) => command,
+  });
+  assert.equal(controller.ok, true);
+
+  const outer = controller.value.handle(1);
+  assert.equal(outer.ok, true);
+  assert.equal(outer.snapshot.state, 1);
+  assert.equal(controller.value.getSnapshot().state, 99);
+  assert.equal(controller.value.getSnapshot().revision, 2);
+  assert.deepEqual(trace, [
+    ['first', 0, 1],
+    ['second', 0, 1, 99],
+  ]);
+
+  trace.length = 0;
+  const stale = controller.value.handle(1, 0);
+  assert.equal(stale.ok, false);
+  assert.deepEqual(trace, []);
 });
 
 test('host adapter forwards its stable effect publisher before application notify', () => {
