@@ -1,5 +1,12 @@
 # @sectile/virtual
 
+## 0.15.3
+
+### Changes
+
+- chore: refresh verification inventories (9239b075)
+- fix(virtual): refresh sparse spatial z-index metadata (94d35109)
+
 ## 0.15.2
 
 ### Changes

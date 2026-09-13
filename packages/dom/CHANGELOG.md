@@ -1,5 +1,19 @@
 # @sectile/dom
 
+## 0.18.0
+
+### Changes
+
+- fix(dom): preserve backward text selection (e4b6862a)
+- fix(dom): bound malformed text reconciliation (83328d17)
+- fix(dom): preserve calendar focus entry (0821a616)
+- perf(dom): batch initial form participants (a7490ce1)
+- fix(dom): reconcile dirty state on participant replacement (3e9c53da)
+- fix(form): invalidate validation on topology changes (9b5f7c36)
+- fix(dom): preserve nullable composite focus entry (7e553eb5)
+- fix(dom): clear canceled validation on reinitialize (66469790)
+- feat: support conditional exit presence (2244d16f)
+
 ## 0.17.0
 
 ### Changes

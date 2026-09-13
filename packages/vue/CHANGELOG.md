@@ -1,5 +1,16 @@
 # @sectile/vue
 
+## 0.18.0
+
+### Changes
+
+- perf(vue): trim conditional presence closure (276c5353)
+- fix(vue): project date cell availability (172a9252)
+- fix(dom): preserve calendar focus entry (0821a616)
+- fix(dom): preserve nullable composite focus entry (7e553eb5)
+- fix(tabular)!: enforce context-only group rows (905e4589)
+- feat: support conditional exit presence (2244d16f)
+
 ## 0.17.0
 
 ### Changes

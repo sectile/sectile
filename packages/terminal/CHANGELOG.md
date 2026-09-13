@@ -1,5 +1,12 @@
 # @sectile/terminal
 
+## 0.14.7
+
+### Changes
+
+- perf(terminal): stop clipped text projection early (09123d9a)
+- fix(terminal): measure fill text at assigned width (16a52db0)
+
 ## 0.14.6
 
 ### Changes

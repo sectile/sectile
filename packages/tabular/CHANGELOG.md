@@ -1,5 +1,12 @@
 # @sectile/tabular
 
+## 0.16.0
+
+### Changes
+
+- fix(tabular): reject reentrant source resolution (e1f9a9f4)
+- fix(tabular)!: enforce context-only group rows (905e4589)
+
 ## 0.15.2
 
 ### Changes

@@ -1,5 +1,12 @@
 # @sectile/form
 
+## 0.14.8
+
+### Changes
+
+- perf(form): reuse validation invalidation path (d12e2810)
+- fix(form): invalidate validation on topology changes (9b5f7c36)
+
 ## 0.14.7
 
 ### Changes

@@ -1,5 +1,11 @@
 # @sectile/core
 
+## 0.14.6
+
+### Changes
+
+- fix(core): bound sequence ID validation (9849b38d)
+
 ## 0.14.5
 
 ### Changes

@@ -1,5 +1,11 @@
 # @sectile/chart
 
+## 0.15.4
+
+### Changes
+
+- chore: refresh verification inventories (9239b075)
+
 ## 0.15.3
 
 ### Changes
