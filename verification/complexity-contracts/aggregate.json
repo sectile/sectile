@@ -29685,6 +29685,97 @@
     {
       "package": "terminal",
       "surface": "hot",
+      "id": "screen.projection",
+      "source": "packages/terminal/src/screen.ts",
+      "benchmarkIDs": [
+        "GH-144:terminal-clipped-text-projection"
+      ],
+      "specificationCeiling": "O(t)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "total input text code units",
+            "ceiling": "caller string length"
+          },
+          {
+            "name": "G",
+            "meaning": "total grapheme records in the input",
+            "ceiling": "G <= n for non-empty grapheme records"
+          },
+          {
+            "name": "g",
+            "meaning": "grapheme records yielded to the projection walk",
+            "ceiling": "g <= G"
+          },
+          {
+            "name": "t",
+            "meaning": "code units covered by the consumed projection prefix",
+            "ceiling": "t <= n"
+          },
+          {
+            "name": "v",
+            "meaning": "grapheme prefix needed to exhaust every cell that can intersect the text clip",
+            "ceiling": "total grapheme count; depends on wrapping, widths, newlines and clip geometry"
+          },
+          {
+            "name": "c",
+            "meaning": "grapheme prefix needed to resolve the requested cursor offset",
+            "ceiling": "total grapheme count; zero when no unresolved cursor exists"
+          }
+        ],
+        "time": {
+          "bound": "O(t)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(g)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Grapheme segmentation and terminal width classification are proportional to the consumed text prefix under the existing Unicode contract.",
+          "Projection-local y never decreases; after the clip bottom is reached, or after the clip right edge is reached on its final visible row, later wrapped content cannot re-enter the clip.",
+          "Intrinsic text measurement is owned by screen.measure and calls the same walker without a projection visitor, so it still consumes the complete text required for intrinsic height."
+        ],
+        "ceilings": [
+          "With no unresolved cursor, projection consumes at most the visible prefix plus one lazy iterator lookahead: g <= min(G, v + 1).",
+          "When a cursor requires later logical traversal, projection consumes at most the larger visible/cursor prefix plus one lookahead: g <= min(G, max(v, c) + 1).",
+          "No projection index, cache or text slice is retained between renders."
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "In an 80x1 viewport with wrapped one-cell ASCII and no cursor, input lengths 80, 1000, 10000 and 100000 yield exactly 80, 81, 81 and 81 grapheme records while producing the same visible row.",
+          "A visible cursor at UTF-16 offset 40 keeps the 81-record bound for a 100000-character input.",
+          "A cursor at offset 1000 in a 10000-character input consumes 1001 records and matches the frame and cursor produced by the exact 1000-character prefix."
+        ],
+        "resourceRationale": "renderText retains only scalar clip bounds and the existing cursor/frame references. The walker streams grapheme records and stops before width classification once drawing is complete and no cursor obligation remains; it creates no retained projection structure.",
+        "proof": "renderText translates the clip bottom and right edge into text-local coordinates. Its position visitor resolves any pending cursor first, then returns a stop signal once later cells cannot intersect the clip. walkTerminalText observes that signal before consuming or classifying the yielded grapheme. Measurement supplies no visitor, so its full intrinsic walk is unchanged.",
+        "adversarialWitness": "Production-export tests wrap the real Intl.Segmenter to count yielded grapheme records for fixed 80x1 output across 80 to 100000 input characters and for cursors inside and beyond the visible prefix; existing screen tests retain newline, wide-grapheme, wrapping, clipping, style, continuation and cursor behavior coverage.",
+        "evidence": [
+          "packages/terminal/tests/screen.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "All input may still be required when it can affect visible projection or when an unresolved cursor reaches or exceeds the end; an otherwise clipped tail alone cannot force a full scan."
+        }
+      }
+    },
+    {
+      "package": "terminal",
+      "surface": "hot",
       "id": "screen.render",
       "source": "packages/terminal/src/screen.ts",
       "benchmarkIDs": [

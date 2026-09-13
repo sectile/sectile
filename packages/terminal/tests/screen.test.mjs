@@ -299,6 +299,75 @@ test('screen measures wide child and line collections without argument-list stac
   assert.deepEqual(serializeTerminalFrame(frame), ['  ']);
 });
 
+test('screen bounds wrapped text projection to visible and cursor-required prefixes', () => {
+  const moduleURL = new URL('../.verification-dist/screen.js', import.meta.url).href;
+  const result = spawnSync(process.execPath, ['--input-type=module', '-e', `
+    import assert from 'node:assert/strict';
+    const NativeSegmenter = Intl.Segmenter;
+    let yielded = 0;
+    class CountingSegmenter {
+      constructor(...arguments_) { this.segmenter = new NativeSegmenter(...arguments_); }
+      segment(value) {
+        const segments = this.segmenter.segment(value);
+        return {
+          [Symbol.iterator]() {
+            const iterator = segments[Symbol.iterator]();
+            return {
+              next() {
+                const next = iterator.next();
+                if (!next.done) yielded += 1;
+                return next;
+              },
+              [Symbol.iterator]() { return this; },
+            };
+          },
+        };
+      }
+      resolvedOptions() { return this.segmenter.resolvedOptions(); }
+      static supportedLocalesOf(...arguments_) { return NativeSegmenter.supportedLocalesOf(...arguments_); }
+    }
+    Object.defineProperty(Intl, 'Segmenter', { configurable: true, value: CountingSegmenter });
+    const { renderTerminalScreen, serializeTerminalFrame, terminalText } = await import(${JSON.stringify(moduleURL)});
+    const render = (length, cursorOffset) => {
+      yielded = 0;
+      const frame = renderTerminalScreen(terminalText('x'.repeat(length), {
+        wrap: true,
+        ...(cursorOffset === undefined ? {} : { cursor: { codeUnitOffset: cursorOffset } }),
+      }), { columns: 80, rows: 1 });
+      return { yielded, rows: serializeTerminalFrame(frame), cursor: frame.cursor };
+    };
+    const lengths = [80, 1_000, 10_000, 100_000];
+    const samples = lengths.map((length) => render(length));
+    assert.deepEqual(samples.map(({ yielded }) => yielded), [80, 81, 81, 81]);
+    for (const sample of samples) assert.deepEqual(sample.rows, ['x'.repeat(80)]);
+
+    const visibleCursor = render(100_000, 40);
+    assert.equal(visibleCursor.yielded, 81);
+    assert.deepEqual(visibleCursor.cursor, {
+      row: 0, column: 40, visible: true, shape: 'bar', blink: true,
+    });
+
+    const cursorPrefix = render(1_000, 1_000);
+    const clippedTail = render(10_000, 1_000);
+    assert.equal(cursorPrefix.yielded, 1_000);
+    assert.equal(clippedTail.yielded, 1_001);
+    assert.deepEqual(clippedTail.rows, cursorPrefix.rows);
+    assert.deepEqual(clippedTail.cursor, cursorPrefix.cursor);
+    console.log(JSON.stringify({
+      noCursor: samples.map(({ yielded: count }) => count),
+      visibleCursor: visibleCursor.yielded,
+      clippedCursor: clippedTail.yielded,
+    }));
+  `], { encoding: 'utf8', timeout: 15_000 });
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), {
+    noCursor: [80, 81, 81, 81],
+    visibleCursor: 81,
+    clippedCursor: 1_001,
+  });
+});
+
 function countTextMeasurements(value, render) {
   const split = String.prototype.split;
   let measurements = 0;

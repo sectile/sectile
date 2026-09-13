@@ -14,7 +14,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | form | 21 | 0 | 9 |
 | tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |
-| terminal | 347 | 167 | 8 |
+| terminal | 347 | 167 | 9 |
 | virtual | 114 | 0 | 36 |
 | vue | 740 | 319 | 9 |
 
@@ -162,6 +162,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | terminal:component.dispatch | trusted | `O(nDomain + cCommand)` worst-case | `O(nDomain + cCommand)` | `O(cCommand)` | `O(nDomain)` | allowed | VAL-016, VAL-017 |
 | terminal:layer-stack.close-callbacks | connected | `O(k)` expected | `O(k)` | `O(1)` | `O(n)` | forbidden | packages/terminal/tests/layer-stack.test.mjs |
 | terminal:screen.measure | connected | `O(q + e + t)` expected | `O(p + d + t)` | `O(p)` | `O(1)` | allowed | packages/terminal/tests/screen.test.mjs |
+| terminal:screen.projection | connected | `O(t)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | packages/terminal/tests/screen.test.mjs |
 | terminal:screen.render | connected | `O(rRow + rRow * cColumn)` worst-case | `O(rRow + rRow * cColumn)` | `O(rRow + rRow * cColumn)` | `O(rRow + rRow * cColumn)` | allowed | packages/terminal/tests/screen.test.mjs |
 | terminal:screen.traverse | connected | `O(v)` worst-case | `O(d + a)` | `O(1)` | `O(1)` | allowed | packages/terminal/tests/screen.test.mjs |
 | terminal:screen.writer-snapshot | external | `O(rRow)` worst-case | `O(1)` | `O(rRow)` | `O(rRow)` | allowed | packages/terminal/tests/screen.test.mjs |

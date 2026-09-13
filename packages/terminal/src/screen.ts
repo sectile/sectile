@@ -208,7 +208,7 @@ interface TerminalTextWalk {
 }
 
 interface TerminalTextVisitor {
-  readonly position?: (x: number, y: number, codeUnitOffset: number) => void;
+  readonly position?: (x: number, y: number, codeUnitOffset: number) => boolean | void;
   readonly grapheme?: (x: number, y: number, grapheme: string, width: number) => void;
 }
 
@@ -343,6 +343,8 @@ function renderText(
   if (cursorOffset !== undefined && (!Number.isSafeInteger(cursorOffset) || cursorOffset < 0)) {
     throw new RangeError('Terminal cursor offset must be a non-negative safe integer.');
   }
+  const projectionBottom = clip.y + clip.height - rectangle.y;
+  const projectionRight = clip.x + clip.width - rectangle.x;
 
   const layout = walkTerminalText(node.value, rectangle.width, wrap, {
     position: (x, y, codeUnitOffset) => {
@@ -357,6 +359,10 @@ function renderText(
           wrap,
         );
       }
+      const drawingComplete = y >= projectionBottom
+        || (y === projectionBottom - 1 && x >= projectionRight);
+      if (drawingComplete && (cursorOffset === undefined || frame.cursor !== null)) return false;
+      return undefined;
     },
     grapheme: (x, y, grapheme, width) => {
       if (y >= rectangle.height) return;
@@ -606,7 +612,7 @@ function walkTerminalText(
   let y = 0;
   let codeUnitOffset = 0;
   for (const { segment } of graphemeSegments(value)) {
-    visitor.position?.(x, y, codeUnitOffset);
+    if (visitor.position?.(x, y, codeUnitOffset) === false) break;
     codeUnitOffset += segment.length;
     if (segment === '\n') {
       x = 0;
