@@ -10,7 +10,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 |---|---:|---:|---:|
 | core | 380 | 26 | 59 |
 | chart | 80 | 0 | 15 |
-| dom | 424 | 171 | 30 |
+| dom | 425 | 171 | 30 |
 | form | 21 | 0 | 9 |
 | tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |
