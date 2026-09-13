@@ -82,10 +82,14 @@ regressions retain their reports and terminal status.
 
 `record` accepts a non-quick certification run and writes it under an exact
 environment partition plus its workload-selection ID. The environment partition
-includes Node/V8/OS/CPU/flags, the workload fingerprint, the measurement profile,
-and explicit measurement, statistics, and GC protocol versions. Changing benchmark
-semantics or switching between `screening` and `certification` therefore selects a
-new baseline partition even when the runtime and hardware are unchanged. A selected
+includes the measurement worker's Node/V8 versions and runtime options, OS/CPU,
+the workload fingerprint, the measurement profile, and explicit measurement,
+statistics, and GC protocol versions. Worker runtime options preserve the ordered
+`execArgv` actually used by the worker plus its inherited, trimmed `NODE_OPTIONS`;
+parent-runner flags that are not forwarded to workers are not measurement metadata.
+Changing benchmark semantics or switching between `screening` and `certification`
+therefore selects a new baseline partition even when the runtime and hardware are
+unchanged. A selected
 baseline can coexist with the full baseline for the same compatible measurement
 environment. `performance:promote` accepts certification reports, including selected
 certification shards; three-process screenings and quick runs cannot become
@@ -125,10 +129,11 @@ session directory and replace `.tasks/performance/latest-comparison.json`.
 work-item flag is rejected without an output path.
 
 Reports include the workload fingerprint, implementation/build fingerprint,
-Node/V8/OS/architecture/CPU/flag metadata, measured package footprints, process
-resource usage, and registered browser-only counters. Comparison refuses a
-runtime, hardware, flag, or workload-schema mismatch. Build fingerprints may
-differ because comparison exists to evaluate code changes.
+measurement-worker Node/V8/runtime-option metadata, OS/architecture/CPU metadata,
+measured package footprints, process resource usage, and registered browser-only
+counters. Comparison refuses a runtime, hardware, worker-option, or workload-schema
+mismatch. Build fingerprints may differ because comparison exists to evaluate code
+changes.
 
 `--quick` is a smoke mode. It validates workload construction, execution,
 calibration, and retained run artifacts with one isolated process, without
@@ -136,6 +141,11 @@ selecting or comparing an authoritative baseline. It cannot produce work-item
 evidence or replace a baseline.
 
 ## Recovered full certification reference
+
+This preserved reference predates performance schema 7 worker-runtime provenance.
+It remains historical evidence but is intentionally not comparable with or selectable
+for schema 7 reports; authoritative comparisons require a newly recorded baseline
+from the exact worker runtime environment.
 
 The full reference in environment partition
 `933652c83112df2b038ebf25ee0f49bb867b465e448838e959f3227b14ab8380`
@@ -171,8 +181,8 @@ The preserved current report from run
 `2026-09-07T12-50-43-241Z-136859-cf8a2a0f` has build fingerprint
 `8cda85c3456d5eda10c0a21223ddb5ed25eccebdbb089927623ff74feb4b231c`.
 Its runtime, hardware, harness and protocol metadata match this reference.
-The original report validator and comparator passed with zero regressions,
-including the nine package footprints, using the existing calibrated 5% band
-and existing memory-comparison rules. Default baseline selection also resolves
-to this recovered reference. The current candidate therefore remains distinct
-from the previously published code supplying the reference measurements.
+The original schema-6 report validator and comparator passed with zero regressions,
+including the nine package footprints, using the existing calibrated 5% band and
+existing memory-comparison rules. Schema-7 baseline selection deliberately does not
+resolve to this reference because its measurement-worker runtime options were not
+recorded.

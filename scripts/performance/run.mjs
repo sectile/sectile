@@ -19,6 +19,7 @@ import {
 import { performanceBaselinePath, selectPerformanceBaseline } from './baselines.mjs';
 import { compareReports, validateRunnerReport } from './check.mjs';
 import { collectProvenance } from './provenance.mjs';
+import { commonWorkerRuntime } from './runtime.mjs';
 import {
   appendPerformanceProcess,
   createPerformanceSession,
@@ -109,6 +110,7 @@ async function main() {
       process.stderr.write(`performance worker ${processIndex + 1}/${options.processCount} complete\n`);
     }
 
+    const workerRuntime = commonWorkerRuntime(processReports);
     const workloadFingerprint = createHash('sha256').update(JSON.stringify(WORKLOAD_SCHEMA)).digest('hex');
     const report = Object.freeze({
       schemaVersion: PERFORMANCE_SCHEMA_VERSION,
@@ -116,6 +118,7 @@ async function main() {
       provenance: await collectProvenance(repoRoot, workloadFingerprint, {
         packageNames: options.all ? publishedPackageDirectories : options.selection.owners,
         measurementProfile: options.measurementProfile,
+        workerRuntime,
       }),
       runner: Object.freeze({
         processCount: options.processCount,

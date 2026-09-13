@@ -9,6 +9,7 @@ import {
   PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
   PERFORMANCE_STATISTICS_PROTOCOL_VERSION,
 } from './config.mjs';
+import { normalizeWorkerRuntime } from './runtime.mjs';
 
 const BASE_FINGERPRINT_INPUTS = Object.freeze([
   'package.json',
@@ -18,6 +19,7 @@ const BASE_FINGERPRINT_INPUTS = Object.freeze([
 
 export async function collectProvenance(repoRoot, workloadFingerprint, options = {}) {
   const cpu = cpus()[0];
+  const workerRuntime = normalizeWorkerRuntime(options.workerRuntime);
   const packageNames = options.packageNames ?? publishedPackageDirectories;
   const measurementProfile = options.measurementProfile;
   if (!PERFORMANCE_MEASUREMENT_PROFILES.includes(measurementProfile)) {
@@ -31,14 +33,14 @@ export async function collectProvenance(repoRoot, workloadFingerprint, options =
     ]),
   ];
   return Object.freeze({
-    node: process.version,
-    v8: process.versions.v8,
+    node: workerRuntime.node,
+    v8: workerRuntime.v8,
     platform: platform(),
     architecture: arch(),
     osRelease: release(),
     cpuModel: cpu?.model ?? 'unknown',
     cpuCount: cpus().length,
-    execArgv: Object.freeze([...process.execArgv].sort()),
+    runtimeOptions: workerRuntime.runtimeOptions,
     workloadFingerprint,
     measurementProfile,
     measurementProtocolVersion: PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
@@ -72,7 +74,7 @@ export function compatibilityMetadata(provenance) {
     osRelease: provenance.osRelease,
     cpuModel: provenance.cpuModel,
     cpuCount: provenance.cpuCount,
-    execArgv: provenance.execArgv,
+    runtimeOptions: provenance.runtimeOptions,
     workloadFingerprint: provenance.workloadFingerprint,
     measurementProfile: provenance.measurementProfile,
     measurementProtocolVersion: provenance.measurementProtocolVersion,

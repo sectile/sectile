@@ -66,6 +66,17 @@ test('authoritative records can use the screening measurement profile', () => {
   assert.deepEqual(output.selection.evidence, ['timing']);
 });
 
+test('worker reports its effective CLI and inherited runtime options', () => {
+  const report = runWorker('timing', {
+    execArgv: ['--jitless', '--expose-gc'],
+    nodeOptions: '  --stack-trace-limit=25  ',
+  });
+  assert.deepEqual(report.runtime.runtimeOptions, {
+    execArgv: ['--jitless', '--expose-gc'],
+    nodeOptions: '--stack-trace-limit=25',
+  });
+});
+
 test('worker separates allocation and retention evidence lanes', () => {
   const allocation = runWorker('allocation');
   const allocationMetric = allocation.metrics.find(({ id }) => id === 'core:controller:handle');
@@ -101,11 +112,15 @@ test('work-item evidence requires a package target and output artifact', () => {
   assert.match(result.stderr, /requires --output/u);
 });
 
-function runWorker(evidence) {
-  const result = spawnSync(process.execPath, ['--expose-gc', 'scripts/performance/worker.mjs'], {
+function runWorker(evidence, options = {}) {
+  const result = spawnSync(process.execPath, [
+    ...(options.execArgv ?? ['--expose-gc']),
+    'scripts/performance/worker.mjs',
+  ], {
     encoding: 'utf8',
     env: {
       ...process.env,
+      ...(options.nodeOptions === undefined ? {} : { NODE_OPTIONS: options.nodeOptions }),
       SECTILE_PERFORMANCE_QUICK: '1',
       SECTILE_PERFORMANCE_PROFILE: 'screening',
       SECTILE_PERFORMANCE_PACKAGES: 'core',

@@ -16,6 +16,7 @@ import {
   normalizePerformanceSelection,
   performanceMetricSelected,
 } from './schema.mjs';
+import { collectWorkerRuntime } from './runtime.mjs';
 import { createWorkloadGroups } from './workloads.mjs';
 
 const quick = process.env['SECTILE_PERFORMANCE_QUICK'] === '1';
@@ -186,6 +187,7 @@ function selectionForEvidence(evidence) {
 if (!Number.isFinite(sink)) throw new Error('Performance sink became invalid.');
 process.stdout.write(JSON.stringify(Object.freeze({
   processIndex: Number(process.env['SECTILE_PERFORMANCE_PROCESS_INDEX'] ?? 0),
+  runtime: collectWorkerRuntime(),
   sink,
   resourceUsage: process.resourceUsage(),
   metrics: Object.freeze(metrics),

@@ -9,6 +9,7 @@ import {
   selectPerformanceBaseline,
 } from './performance/baselines.mjs';
 import { assertComparable, compareReports, validateRunnerReport } from './performance/check.mjs';
+import { collectProvenance } from './performance/provenance.mjs';
 import {
   appendPerformanceProcess,
   createPerformanceSession,
@@ -31,6 +32,10 @@ import {
   PERFORMANCE_SCHEMA_VERSION,
   PERFORMANCE_STATISTICS_PROTOCOL_VERSION,
 } from './performance/config.mjs';
+import {
+  collectWorkerRuntime,
+  commonWorkerRuntime,
+} from './performance/runtime.mjs';
 import {
   PERFORMANCE_EVIDENCE,
   PERFORMANCE_TIMING_PACKAGES,
@@ -87,6 +92,94 @@ test('comparison rejects workload, runtime, hardware, flag, and protocol mismatc
     current.provenance[field] = value;
     assert.throws(() => assertComparable(baseline, current), /mismatched workload, runtime, hardware, flags, or protocol/u);
   }
+});
+
+test('worker runtime provenance captures CLI and inherited NODE_OPTIONS canonically', () => {
+  const runtime = collectWorkerRuntime({
+    version: 'v-test',
+    versions: { v8: 'v8-test' },
+    execArgv: ['--stack-trace-limit=25', '--expose-gc'],
+    env: { NODE_OPTIONS: '  --jitless  ' },
+  });
+  assert.deepEqual(runtime, {
+    node: 'v-test',
+    v8: 'v8-test',
+    runtimeOptions: {
+      execArgv: ['--stack-trace-limit=25', '--expose-gc'],
+      nodeOptions: '--jitless',
+    },
+  });
+
+  const noEnvironmentOptions = collectWorkerRuntime({
+    version: 'v-test',
+    versions: { v8: 'v8-test' },
+    execArgv: ['--expose-gc'],
+    env: {},
+  });
+  assert.equal(noEnvironmentOptions.runtimeOptions.nodeOptions, null);
+});
+
+test('report provenance uses measurement-worker runtime rather than parent runner flags', async () => {
+  const workerRuntime = {
+    node: 'v-worker',
+    v8: 'v8-worker',
+    runtimeOptions: {
+      execArgv: ['--expose-gc'],
+      nodeOptions: '--jitless',
+    },
+  };
+  const provenance = await collectProvenance(process.cwd(), 'schema', {
+    packageNames: [],
+    measurementProfile: 'screening',
+    workerRuntime,
+  });
+  assert.equal(provenance.node, 'v-worker');
+  assert.equal(provenance.v8, 'v8-worker');
+  assert.deepEqual(provenance.runtimeOptions, workerRuntime.runtimeOptions);
+});
+
+test('worker runtime provenance rejects mixed isolated-process options', () => {
+  const normal = {
+    runtime: collectWorkerRuntime({
+      version: 'v-test', versions: { v8: 'v8-test' }, execArgv: ['--expose-gc'], env: {},
+    }),
+  };
+  const jitless = {
+    runtime: collectWorkerRuntime({
+      version: 'v-test', versions: { v8: 'v8-test' }, execArgv: ['--expose-gc'], env: { NODE_OPTIONS: '--jitless' },
+    }),
+  };
+  assert.deepEqual(commonWorkerRuntime([normal, structuredClone(normal)]), normal.runtime);
+  assert.throws(() => commonWorkerRuntime([normal, jitless]), /different runtime options/u);
+});
+
+test('performance compatibility partitions effective worker runtime options', () => {
+  const baseline = fixture();
+  const nodeOptions = fixture();
+  nodeOptions.provenance.runtimeOptions = {
+    execArgv: ['--expose-gc'],
+    nodeOptions: '--jitless',
+  };
+  assert.throws(() => assertComparable(baseline, nodeOptions), /mismatched workload, runtime, hardware, flags, or protocol/u);
+  assert.notEqual(
+    performanceBaselinePath('/tmp/baselines', baseline),
+    performanceBaselinePath('/tmp/baselines', nodeOptions),
+  );
+
+  const parentOnlyFlag = fixture();
+  parentOnlyFlag.provenance.runtimeOptions = {
+    execArgv: ['--expose-gc'],
+    nodeOptions: null,
+  };
+  assert.deepEqual(parentOnlyFlag.provenance.runtimeOptions, baseline.provenance.runtimeOptions);
+});
+
+test('schema-6 reports are not comparable after worker-runtime provenance migration', () => {
+  const legacy = fixture();
+  legacy.schemaVersion = 6;
+  delete legacy.provenance.runtimeOptions;
+  legacy.provenance.execArgv = [];
+  assert.throws(() => validateRunnerReport(legacy), /performance schema mismatch/u);
 });
 
 test('default performance baselines require one exact environment partition', async (context) => {
@@ -563,7 +656,9 @@ function fixture() {
     schemaVersion: PERFORMANCE_SCHEMA_VERSION,
     provenance: {
       node: 'v1', v8: '1', platform: 'test', architecture: 'test', osRelease: '1',
-      cpuModel: 'test', cpuCount: 1, execArgv: [], workloadFingerprint: 'schema',
+      cpuModel: 'test', cpuCount: 1,
+      runtimeOptions: { execArgv: ['--expose-gc'], nodeOptions: null },
+      workloadFingerprint: 'schema',
       measurementProfile: 'screening',
       measurementProtocolVersion: PERFORMANCE_MEASUREMENT_PROTOCOL_VERSION,
       statisticsProtocolVersion: PERFORMANCE_STATISTICS_PROTOCOL_VERSION,
