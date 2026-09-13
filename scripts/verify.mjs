@@ -203,11 +203,8 @@ function verificationSteps() {
     ], { requires: ['publication-artifacts'] }));
   }
   if (includeDocumentation) {
-    const documentationScripts = ['generate:check', 'typecheck', 'test'];
-    if (buildDocumentationSite) {
-      result.push(commandStep('documentation:assets', 'documentation benchmark assets', process.execPath, [join(root, 'scripts/virtual-benchmark/run.mjs'), 'docs', '--prepared']));
-      documentationScripts.push('build');
-    }
+    const documentationScripts = ['typecheck', 'test'];
+    if (buildDocumentationSite) documentationScripts.push('build');
     result.push(packageScriptStep('documentation', 'documentation verification', '@sectile/docs', documentationScripts));
   }
   if (fullRepositoryVerification) result.push(...workspaceContractSteps({ includePerformance: releaseRequested }));

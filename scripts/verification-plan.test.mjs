@@ -102,6 +102,11 @@ test('verification CLI separates affected, full deterministic, and release certi
   assert.equal(release.stages.includes('performance certification'), true);
   assert.equal(release.certificationPerformance, true);
   assert.equal(release.documentationSiteBuild, true);
+  assert.equal(release.units.some(({ id }) => id === 'documentation:assets'), false);
+  assert.deepEqual(
+    release.units.find(({ id }) => id === 'documentation').commands,
+    ['@sectile/docs typecheck', '@sectile/docs test', '@sectile/docs build'],
+  );
 
   const docs = explain(['docs']);
   assert.equal(docs.documentationSiteBuild, true);
