@@ -27281,6 +27281,62 @@
     {
       "package": "dom",
       "surface": "hot",
+      "id": "temporal.day-focus-entry",
+      "source": "packages/dom/src/internal/date-picker-cell.ts",
+      "benchmarkIDs": [
+        "ISSUE-138:dom-temporal-day-focus-entry"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "0",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Temporal already owns semantic highlight and availability; DOM receives those two scalar facts for projection."
+        ],
+        "ceilings": [
+          "one grid root or one day-cell element per projection call"
+        ],
+        "benchmarkIDs": [
+          "ISSUE-138:dom-temporal-day-focus-entry"
+        ],
+        "deterministicWork": [
+          "An unavailable highlighted day performs one root tabIndex write and one cell tabIndex write without enumerating rendered cells.",
+          "An available highlighted day restores the root to -1 and gives only that available cell tabIndex 0."
+        ],
+        "resourceRationale": "Focus-entry projection owns no registry, listener, observer, timer, subscription, or retained collection; it writes only the supplied element.",
+        "proof": "The operation performs a bounded number of indexed reads or scalar steps.",
+        "adversarialWitness": "Maximum-size retained state does not increase deterministic work.",
+        "evidence": [
+          "packages/dom/tests/calendar.test.mjs",
+          "packages/dom/tests/date-time.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Ordinary root and cell projection must not inspect unrelated rendered cells."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
       "id": "text.native-reconcile",
       "source": "packages/dom/src/internal/text-element.ts",
       "benchmarkIDs": [

@@ -91,6 +91,65 @@ async function settle() {
   await nextTick();
 }
 
+test('ISSUE-138: declarative date-picker policy changes preserve a keyboard grid entry', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const blocked = ref(true);
+  const highlighted = Object.freeze({ year: 2026, month: 9, day: 15 });
+  const sibling = Object.freeze({ year: 2026, month: 9, day: 16 });
+  const app = createApp({
+    render() {
+      const unavailable = blocked.value;
+      return h(DatePickerRoot, {
+        highlightedValue: highlighted,
+        defaultOpen: true,
+        position: false,
+        policies: {
+          unavailable: (value) => unavailable
+            && value.year === highlighted.year
+            && value.month === highlighted.month
+            && value.day === highlighted.day,
+        },
+      }, {
+        default: ({ highlightedValue }) => [
+          h(DatePickerTrigger),
+          h(DatePickerContent, null, {
+            default: () => h(DatePickerGrid, null, {
+              default: () => [
+                h(DatePickerCell, { value: highlighted }, { default: () => '15' }),
+                h(DatePickerCell, { value: sibling }, { default: () => '16' }),
+                h('output', { 'data-highlight': true }, `${highlightedValue.year}-${highlightedValue.month}-${highlightedValue.day}`),
+              ],
+            }),
+          }),
+        ],
+      });
+    },
+  });
+
+  app.mount(host);
+  await settle();
+  const grid = host.querySelector('[data-scope="date"][data-part="grid"]');
+  const highlightedCell = host.querySelector('[data-sectile-picker-date="2026-09-15"]');
+  const siblingCell = host.querySelector('[data-sectile-picker-date="2026-09-16"]');
+  assert.equal(grid?.getAttribute('tabindex'), '0');
+  assert.equal(highlightedCell?.disabled, true);
+  assert.equal(highlightedCell?.getAttribute('tabindex'), '-1');
+  assert.equal(siblingCell?.getAttribute('tabindex'), '-1');
+  assert.equal(host.querySelector('[data-highlight]')?.textContent, '2026-9-15');
+
+  blocked.value = false;
+  await settle();
+  assert.equal(grid?.getAttribute('tabindex'), '-1');
+  assert.equal(highlightedCell?.disabled, false);
+  assert.equal(highlightedCell?.getAttribute('tabindex'), '0');
+  assert.equal(siblingCell?.getAttribute('tabindex'), '-1');
+  assert.equal(host.querySelector('[data-highlight]')?.textContent, '2026-9-15');
+
+  app.unmount();
+  host.remove();
+});
+
 test('Vue period pickers keep granularity-specific text and keyboard movement', async () => {
   const host = document.createElement('div');
   document.body.append(host);

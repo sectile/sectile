@@ -8,7 +8,12 @@ import { applyDateRangePickerEvent, tryCreateDateRangePickerState, type DateRang
 export type { DatePickerPolicies } from '@sectile/temporal/date-picker';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
-import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
+import {
+  focusDatePickerEntry,
+  setDatePickerCellAvailability,
+  setDatePickerCellFocusEntry,
+  setDatePickerGridFocusEntry,
+} from './internal/date-picker-cell.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 import { currentReferenceDate } from './internal/reference-date.js';
 import { createPickerPosition, type PickerPositionOptions } from './internal/picker-position.js';
@@ -61,11 +66,12 @@ class DOMDateRangePicker implements DateRangePickerConnection {
     element.setAttribute('role', 'gridcell');
     element.dataset['datePickerId'] = calendarID(value);
     element.setAttribute('aria-selected', String((state.value !== null && dateRangeContains(state.value, value)) || (state.anchor !== null && compareDateValues(state.anchor, value) === 0)));
-    setDatePickerCellAvailability(element, isCalendarValueAvailable(value, this.options.policies));
-    element.tabIndex = compareDateValues(state.calendar.highlighted, value) === 0 ? 0 : -1;
+    const available = isCalendarValueAvailable(value, this.options.policies);
+    setDatePickerCellAvailability(element, available);
+    setDatePickerCellFocusEntry(element, available, compareDateValues(state.calendar.highlighted, value) === 0);
   }
-  public handleEvent(event: DateRangePickerEvent | PeriodPickerEvent): boolean { const result = this.runtime.handle(event as DateRangePickerEvent); if (result.ok) { this.refresh(); this.options.onUpdate?.(); if (result.commands.some((command) => command.type === 'open-changed' && !command.open)) this.options.trigger.focus(); else if (result.commands.some((command) => command.type === 'highlight-changed')) queueMicrotask(() => { if (this.#active) this.options.grid.querySelector<HTMLElement>('[tabindex="0"]')?.focus(); }); } return result.ok; }
-  public refresh(): void { const state = this.getSnapshot().state; this.#keyEvent ??= (this.options as InternalDateRangePickerOptions).createKeyEvent?.(state.calendar.highlighted.year) ?? keyEvent; this.#visibility?.setHidden(!state.calendar.open); this.options.trigger.setAttribute('aria-haspopup', 'dialog'); this.options.trigger.setAttribute('aria-expanded', String(state.calendar.open)); if (this.options.label !== undefined) this.options.grid.setAttribute('aria-label', this.options.label); for (const [input, value] of [[this.options.startInput, state.value?.start], [this.options.endInput, state.value?.end]] as const) if (input !== undefined) { input.value = value === undefined ? '' : formatDateValue(value); setInteractionAttributes(input, this.options, { native: true }); input.readOnly = true; input.setAttribute('aria-readonly', 'true'); } this.#layer.sync(); this.#position.update(); }
+  public handleEvent(event: DateRangePickerEvent | PeriodPickerEvent): boolean { const result = this.runtime.handle(event as DateRangePickerEvent); if (result.ok) { this.refresh(); this.options.onUpdate?.(); if (result.commands.some((command) => command.type === 'open-changed' && !command.open)) this.options.trigger.focus(); else if (result.commands.some((command) => command.type === 'highlight-changed')) queueMicrotask(() => { if (this.#active) focusDatePickerEntry(this.options.grid); }); } return result.ok; }
+  public refresh(): void { const state = this.getSnapshot().state; this.#keyEvent ??= (this.options as InternalDateRangePickerOptions).createKeyEvent?.(state.calendar.highlighted.year) ?? keyEvent; if ((this.options as InternalDateRangePickerOptions).projectCell === undefined) setDatePickerGridFocusEntry(this.options.grid, isCalendarValueAvailable(state.calendar.highlighted, this.options.policies)); this.#visibility?.setHidden(!state.calendar.open); this.options.trigger.setAttribute('aria-haspopup', 'dialog'); this.options.trigger.setAttribute('aria-expanded', String(state.calendar.open)); if (this.options.label !== undefined) this.options.grid.setAttribute('aria-label', this.options.label); for (const [input, value] of [[this.options.startInput, state.value?.start], [this.options.endInput, state.value?.end]] as const) if (input !== undefined) { input.value = value === undefined ? '' : formatDateValue(value); setInteractionAttributes(input, this.options, { native: true }); input.readOnly = true; input.setAttribute('aria-readonly', 'true'); } this.#layer.sync(); this.#position.update(); }
   public disconnect(): void { this.#active = false; this.#layer.disconnect(); this.#position.disconnect(); this.#visibility?.disconnect(); this.options.trigger.removeEventListener('click', this.#trigger); this.options.grid.removeEventListener('keydown', this.#keydown); this.options.grid.removeEventListener('click', this.#click); }
 }
 function keyEvent(event: KeyboardEvent): DatePickerEvent | null { if (event.altKey || event.ctrlKey || event.metaKey) return null; if (event.key === 'ArrowLeft') return 'previous-day'; if (event.key === 'ArrowRight') return 'next-day'; if (event.key === 'ArrowUp') return 'previous-week'; if (event.key === 'ArrowDown') return 'next-week'; if (event.key === 'Home') return 'start-of-week'; if (event.key === 'End') return 'end-of-week'; if (event.key === 'PageUp') return event.shiftKey ? 'previous-year' : 'previous-month'; if (event.key === 'PageDown') return event.shiftKey ? 'next-year' : 'next-month'; if (event.key === 'Enter' || event.key === ' ') return 'select-highlighted'; if (event.key === 'Escape') return 'close'; return null; }

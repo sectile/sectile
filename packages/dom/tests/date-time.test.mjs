@@ -11,6 +11,7 @@ import { createDatePicker } from '../.verification-dist/date-picker.js';
 import { createMonthPicker } from '../.verification-dist/month-picker.js';
 import { createYearPicker } from '../.verification-dist/year-picker.js';
 import { createDateRangePicker } from '../.verification-dist/date-range-picker.js';
+import { createRangeCalendar } from '../.verification-dist/range-calendar.js';
 import { createMonthRangePicker } from '../.verification-dist/month-range-picker.js';
 import { createYearRangePicker } from '../.verification-dist/year-range-picker.js';
 import { createDateTimePicker } from '../.verification-dist/date-time-picker.js';
@@ -207,6 +208,65 @@ test('DOM date picker composes an editable date field with calendar selection', 
 
   assert.equal(formatDateValue(picker.getSnapshot().state.value), '2024-02-12');
   assert.equal(input.readOnly, false);
+});
+
+test('ISSUE-138: day-picker families keep a keyboard entry when controlled highlight is unavailable', () => {
+  const highlighted = createDateValue(2026, 9, 15);
+  const sibling = createDateValue(2026, 9, 16);
+  const dayPolicies = (unavailable) => ({ unavailable });
+  const dateTimePolicies = (unavailable) => ({ date: { unavailable } });
+  for (const [name, create, policies] of [
+    ['date', createDatePicker, dayPolicies],
+    ['range-calendar', createRangeCalendar, dayPolicies],
+    ['date-range', createDateRangePicker, dayPolicies],
+    ['date-time', createDateTimePicker, dateTimePolicies],
+    ['date-time-range', createDateTimeRangePicker, dateTimePolicies],
+  ]) {
+    let blocked = true;
+    const grid = new FakeElement();
+    grid.tabIndex = -1;
+    const picker = create({
+      root: new FakeElement(),
+      grid,
+      trigger: new FakeElement(),
+      highlightedValue: highlighted,
+      defaultOpen: true,
+      position: false,
+      policies: policies((value) => blocked && formatDateValue(value) === '2026-09-15'),
+    });
+    try {
+      const highlightedCell = new FakeElement();
+      const siblingCell = new FakeElement();
+      picker.setCellAttributes(highlightedCell, highlighted);
+      picker.setCellAttributes(siblingCell, sibling);
+      assert.equal(highlightedCell.disabled, true, `${name} disables unavailable highlight`);
+      assert.equal(highlightedCell.getAttribute('aria-disabled'), 'true', `${name} exposes unavailable semantics`);
+      assert.deepEqual(
+        [grid.tabIndex, highlightedCell.tabIndex, siblingCell.tabIndex],
+        [0, -1, -1],
+        `${name} uses the grid root as the sole entry`,
+      );
+      const state = picker.getSnapshot().state;
+      const semanticHighlight = 'calendar' in state ? state.calendar.highlighted : state.highlighted;
+      assert.equal(formatDateValue(semanticHighlight), '2026-09-15', `${name} preserves controlled highlight`);
+
+      blocked = false;
+      picker.refresh();
+      picker.setCellAttributes(highlightedCell, highlighted);
+      picker.setCellAttributes(siblingCell, sibling);
+      assert.equal(highlightedCell.disabled, false, `${name} refreshes changed availability`);
+      assert.deepEqual(
+        [grid.tabIndex, highlightedCell.tabIndex, siblingCell.tabIndex],
+        [-1, 0, -1],
+        `${name} restores ordinary roving focus`,
+      );
+      const refreshedState = picker.getSnapshot().state;
+      const refreshedHighlight = 'calendar' in refreshedState ? refreshedState.calendar.highlighted : refreshedState.highlighted;
+      assert.equal(formatDateValue(refreshedHighlight), '2026-09-15', `${name} does not change semantic ownership`);
+    } finally {
+      picker.disconnect();
+    }
+  }
 });
 
 test('DOM period cell values project canonical availability and period keyboard input', () => {

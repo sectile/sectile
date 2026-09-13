@@ -17,7 +17,12 @@ import {
   type CalendarState,
 } from '@sectile/temporal/calendar';
 import { compareDateValues, parseDateValue, type DateValue } from '@sectile/temporal/date-field';
-import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
+import {
+  focusDatePickerEntry,
+  setDatePickerCellAvailability,
+  setDatePickerCellFocusEntry,
+  setDatePickerGridFocusEntry,
+} from './internal/date-picker-cell.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { currentReferenceDate } from './internal/reference-date.js';
 
@@ -190,8 +195,9 @@ class DOMCalendar implements CalendarConnection {
     element.dataset['calendarId'] = calendarID(value);
     element.setAttribute('role', 'gridcell');
     element.setAttribute('aria-selected', String(state.value !== null && compareDateValues(state.value, value) === 0));
-    setDatePickerCellAvailability(element, isCalendarValueAvailable(value, this.#options.policies));
-    element.tabIndex = compareDateValues(state.highlighted, value) === 0 ? 0 : -1;
+    const available = isCalendarValueAvailable(value, this.#options.policies);
+    setDatePickerCellAvailability(element, available);
+    setDatePickerCellFocusEntry(element, available, compareDateValues(state.highlighted, value) === 0);
   }
   public handleEvent(event: CalendarEvent): boolean {
     const result = this.#runtime.handle(event);
@@ -208,11 +214,16 @@ class DOMCalendar implements CalendarConnection {
     return semantic !== null && this.handleEvent(semantic);
   }
   public focusCurrent(): void {
-    this.#grid.querySelector<HTMLElement>('[tabindex="0"]')?.focus();
+    focusDatePickerEntry(this.#grid);
   }
   public refresh(): void {
+    const state = this.getSnapshot().state;
     if (this.#options.label === undefined) this.#grid.removeAttribute('aria-label');
     else this.#grid.setAttribute('aria-label', this.#options.label);
+    setDatePickerGridFocusEntry(
+      this.#grid,
+      isCalendarValueAvailable(state.highlighted, this.#options.policies),
+    );
     this.#grid.querySelectorAll<HTMLElement>('[data-calendar-id]').forEach((element) => {
       const parsed = parseDateValue(element.dataset['calendarId'] ?? '');
       if (parsed.ok) this.setCellAttributes(element, parsed.value);

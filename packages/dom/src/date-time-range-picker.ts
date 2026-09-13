@@ -16,7 +16,12 @@ export type { DateTimeRangePickerPolicies } from '@sectile/temporal/date-time-ra
 import { type TimeValue } from '@sectile/temporal/time-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
-import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
+import {
+  focusDatePickerEntry,
+  setDatePickerCellAvailability,
+  setDatePickerCellFocusEntry,
+  setDatePickerGridFocusEntry,
+} from './internal/date-picker-cell.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createTimeField, type TimeFieldConnection } from './time-field.js';
@@ -311,11 +316,9 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     element.dataset['datePickerId'] = calendarID(value);
     element.setAttribute('role', 'gridcell');
     element.setAttribute('aria-selected', String(isSelected(state, value)));
-    setDatePickerCellAvailability(
-      element,
-      isCalendarValueAvailable(value, this.options.policies?.date),
-    );
-    element.tabIndex = compareDateValues(state.calendar.highlighted, value) === 0 ? 0 : -1;
+    const available = isCalendarValueAvailable(value, this.options.policies?.date);
+    setDatePickerCellAvailability(element, available);
+    setDatePickerCellFocusEntry(element, available, compareDateValues(state.calendar.highlighted, value) === 0);
   }
 
   public handleEvent(event: DateTimeRangePickerEvent): boolean {
@@ -326,7 +329,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
       if (result.commands.some((command) => command.type === 'open-changed' && !command.open)) {
         this.options.trigger.focus();
       } else if (result.commands.some((command) => command.type === 'highlight-changed')) {
-        queueMicrotask(() => { if (this.#active) this.options.grid.querySelector<HTMLElement>('[tabindex="0"]')?.focus(); });
+        queueMicrotask(() => { if (this.#active) focusDatePickerEntry(this.options.grid); });
       }
     }
     return result.ok;
@@ -334,6 +337,10 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
 
   public refresh(): void {
     const state = this.getSnapshot().state;
+    setDatePickerGridFocusEntry(
+      this.options.grid,
+      isCalendarValueAvailable(state.calendar.highlighted, this.options.policies?.date),
+    );
     this.#visibility?.setHidden(!state.calendar.open);
     this.options.trigger.setAttribute('aria-haspopup', 'dialog');
     this.options.trigger.setAttribute('aria-expanded', String(state.calendar.open));

@@ -9,7 +9,12 @@ export type { CalendarMonthValue, CalendarViewMode } from '@sectile/temporal/cal
 export type { DatePickerPolicies } from '@sectile/temporal/date-picker';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
-import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
+import {
+  focusDatePickerEntry,
+  setDatePickerCellAvailability,
+  setDatePickerCellFocusEntry,
+  setDatePickerGridFocusEntry,
+} from './internal/date-picker-cell.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 import { currentReferenceDate } from './internal/reference-date.js';
@@ -140,12 +145,19 @@ class DOMDatePicker implements DatePickerConnection {
     element.setAttribute('role', 'gridcell');
     element.dataset['datePickerId'] = calendarID(value);
     element.setAttribute('aria-selected', String(state.value !== null && compareDateValues(state.value, value) === 0));
-    setDatePickerCellAvailability(element, isCalendarValueAvailable(value, this.options.policies));
-    element.tabIndex = compareDateValues(state.highlighted, value) === 0 ? 0 : -1;
+    const available = isCalendarValueAvailable(value, this.options.policies);
+    setDatePickerCellAvailability(element, available);
+    setDatePickerCellFocusEntry(element, available, compareDateValues(state.highlighted, value) === 0);
   }
-  public handleEvent(event: DatePickerEvent | PeriodPickerEvent): boolean { const result = this.runtime.handle(event as DatePickerEvent); if (result.ok) { this.refresh(); this.options.onUpdate?.(); if (result.commands.some((command) => command.type === 'open-changed' && !command.open)) this.options.trigger.focus(); else if (result.commands.some((command) => command.type === 'highlight-changed')) queueMicrotask(() => { if (this.#active) this.options.grid.querySelector<HTMLElement>('[tabindex="0"]')?.focus(); }); } return result.ok; }
+  public handleEvent(event: DatePickerEvent | PeriodPickerEvent): boolean { const result = this.runtime.handle(event as DatePickerEvent); if (result.ok) { this.refresh(); this.options.onUpdate?.(); if (result.commands.some((command) => command.type === 'open-changed' && !command.open)) this.options.trigger.focus(); else if (result.commands.some((command) => command.type === 'highlight-changed')) queueMicrotask(() => { if (this.#active) focusDatePickerEntry(this.options.grid); }); } return result.ok; }
   public refresh(): void {
     const state = this.getSnapshot().state;
+    if ((this.options as InternalDatePickerOptions).projectCell === undefined) {
+      setDatePickerGridFocusEntry(
+        this.options.grid,
+        isCalendarValueAvailable(state.highlighted, this.options.policies),
+      );
+    }
     this.#visibility?.setHidden(!state.open);
     this.options.trigger.setAttribute('aria-haspopup', 'dialog');
     this.options.trigger.setAttribute('aria-expanded', String(state.open));

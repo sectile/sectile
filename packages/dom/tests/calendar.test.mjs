@@ -26,6 +26,32 @@ test('DOM calendar owns date navigation, selection, and ARIA projection', () => 
   connection.disconnect();
 });
 
+test('ISSUE-138: unavailable highlighted dates use the grid root as the keyboard entry', () => {
+  const root = new FakeElement();
+  const blocked = date(2026, 9, 15);
+  const available = date(2026, 9, 16);
+  const connection = createCalendar({
+    root,
+    defaultHighlightedValue: blocked,
+    policies: { unavailable: (value) => formatDateValue(value) === '2026-09-15' },
+  });
+  const blockedCell = new FakeElement();
+  const availableCell = new FakeElement();
+  connection.setCellAttributes(blockedCell, blocked);
+  connection.setCellAttributes(availableCell, available);
+
+  assert.deepEqual([root.tabIndex, blockedCell.tabIndex, availableCell.tabIndex], [0, -1, -1]);
+  assert.equal(blockedCell.disabled, true);
+  connection.focusCurrent();
+  assert.equal(root.focusCount, 1);
+
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowRight')), true);
+  assert.equal(formatDateValue(connection.getSnapshot().state.highlighted), '2026-09-16');
+  connection.setCellAttributes(availableCell, available);
+  assert.deepEqual([root.tabIndex, availableCell.tabIndex], [-1, 0]);
+  connection.disconnect();
+});
+
 test('DOM keys map to calendar units including week edges and shifted years', () => {
   assert.equal(toCalendarEvent(keyboardEvent('ArrowLeft')), 'previous-day');
   assert.equal(toCalendarEvent(keyboardEvent('ArrowDown')), 'next-week');
@@ -63,6 +89,8 @@ function keyboardEvent(key, shiftKey = false, ctrlKey = false) {
 class FakeElement {
   attributes = new Map();
   dataset = {};
+  disabled = false;
+  focusCount = 0;
   listeners = new Map();
   tabIndex = -1;
 
@@ -77,5 +105,5 @@ class FakeElement {
   querySelectorAll() { return []; }
   querySelector() { return null; }
   contains() { return true; }
-  focus() {}
+  focus() { this.focusCount += 1; }
 }
