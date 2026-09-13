@@ -25918,7 +25918,7 @@
         },
         "resources": {
           "allocations": "O(nParticipant + uParticipant + iIssue + rIssue + tTarget)",
-          "cacheEntries": "O(uParticipant + iIssue + rIssue)",
+          "cacheEntries": "O(uParticipant + iIssue + rIssue + tTarget)",
           "listeners": "6 root listeners plus O(xExternal) external listeners",
           "observers": "0",
           "timers": "0",
@@ -25939,8 +25939,8 @@
           "Already document-ordered 100/250/500/1000-participant initialization performs at most two document-position comparisons per participant, publishes revision 0, and emits zero intermediate update callbacks.",
           "Duplicate IDs are scanned once in input order, retain the first captured baseline, use the final participant as the live owner, and create one canonical portable field record."
         ],
-        "resourceRationale": "Construction retains one final participant, baseline, current-value snapshot and disposer per unique ID plus portable Form state. Root listeners are constant; external listeners belong only to final participant roots and disconnect releases them.",
-        "proof": "The constructor scans nParticipant input entries once, retaining first baselines and last owners in Maps; sorts only the uParticipant final owners once; calls tryCreateFormState once with the final field metadata and initial issues; then visits final owners once to install their resources. Dynamic post-construction registration remains a separate incremental path.",
+        "resourceRationale": "Construction retains one final participant, baseline, current-value snapshot and disposer per unique ID plus portable Form state. Each final explicit DOM target also owns one weak reverse-routing entry; WeakMap keys do not retain detached nodes. Root listeners are constant; external listeners belong only to final participant roots and disconnect releases listeners plus reverse ownership.",
+        "proof": "The constructor scans nParticipant input entries once, retaining first baselines and last owners in Maps; sorts only the uParticipant final owners once; calls tryCreateFormState once with the final field metadata and initial issues; then visits final owners once to install their resources and explicit target ownership. Dynamic post-construction registration remains a separate incremental path.",
         "adversarialWitness": "A list containing duplicate IDs, final owners in reverse document order, initial related issues, and external targets still performs one input scan, one final-owner sort, one portable construction and one final observer pass without replaying growing prefixes.",
         "evidence": [
           "packages/dom/tests/form.test.mjs",
@@ -25949,6 +25949,79 @@
         "fullScan": {
           "allowed": true,
           "rationale": "Construction must inspect every supplied participant and final owned target once; only final-owner sorting may revisit owners logarithmically."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
+      "id": "form.participant-event-target",
+      "source": "packages/dom/src/form.ts",
+      "benchmarkIDs": [
+        "ISSUE-159:dom-form-event-target-work"
+      ],
+      "specificationCeiling": "O(hTarget) expected",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nParticipant",
+            "meaning": "live registered Form participants",
+            "ceiling": "Form field/participant ceiling"
+          },
+          {
+            "name": "tTarget",
+            "meaning": "live explicit DOM targets owned by participants",
+            "ceiling": "sum of live participant target counts"
+          },
+          {
+            "name": "hTarget",
+            "meaning": "event target parentNode ancestry depth to the nearest live participant owner or listening form root",
+            "ceiling": "host tree depth"
+          }
+        ],
+        "time": {
+          "bound": "O(hTarget)",
+          "kind": "expected",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(tTarget)"
+        },
+        "resources": {
+          "allocations": "0 participant snapshots, target arrays, or per-event indexes",
+          "cacheEntries": "O(tTarget)",
+          "listeners": "0 new listeners per event",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "WeakMap and participant Map lookups have expected constant cost and target ancestry is acyclic.",
+          "Explicit participant targets are indexed only at register/refresh lifecycle boundaries; event routing owns no portable Form semantics."
+        ],
+        "ceilings": [
+          "Direct explicit targets resolve in one reverse-owner probe plus one live-owner confirmation.",
+          "Descendant resolution visits each parentNode at most once and never enumerates participant owners."
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "ISSUE-159 dispatches an unchanged input event on the last direct target at 100, 1000, and 5000 participants with zero participant-element contains calls and zero state revisions.",
+          "ISSUE-159 descendant, replacement, refresh, unregister, out-of-tree, and destroy controls prove ownership follows only the live target ancestry and stale owners are inert."
+        ],
+        "resourceRationale": "One weak reverse entry is retained per live explicit target and the existing participant disposer captures only that participant's bounded target set. Weak keys do not retain detached targets; cleanup removes an entry only while it still points at the retiring participant, so stale disposers cannot erase a replacement owner.",
+        "proof": "participantFor probes the target and then parentNode ancestors through the reverse WeakMap, validating each hit against the participant Map. observeParticipant installs ownership from one lifecycle-time participantTargets snapshot and its disposer releases external listeners plus still-owned reverse entries. The event path never constructs participantTargets, snapshots the participant Map, or calls HTMLElement.contains.",
+        "adversarialWitness": "Last-registered direct targets in 100/1000/5000-owner forms, descendants of late owners, duplicate-ID replacement, mutable explicit target refresh, out-of-tree listener roots, unregister, and destroy.",
+        "evidence": [
+          "packages/dom/tests/form.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Delegated interaction routing may inspect only the target ancestry; participant-domain traversal is forbidden."
         }
       }
     },

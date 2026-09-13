@@ -10,7 +10,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 |---|---:|---:|---:|
 | core | 380 | 26 | 59 |
 | chart | 80 | 0 | 15 |
-| dom | 425 | 171 | 32 |
+| dom | 425 | 171 | 33 |
 | form | 21 | 0 | 9 |
 | tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |
@@ -111,6 +111,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:chart.webgl2-bind | connected | `O(l + s)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/chart-renderer.test.mjs |
 | dom:chart.webgl2-render | connected | `O(l + k)` worst-case | `O(k)` | `O(1)` | `O(k)` | allowed | packages/chart/tests/projection/projection.semantic.test.mjs, packages/dom/tests/chart-renderer.test.mjs |
 | dom:form.initial-participants | external | `O(nParticipant + uParticipant log uParticipant + iIssue + rIssue + tTarget*aMax)` worst-case | `O(nParticipant + uParticipant + iIssue + rIssue + tTarget)` | `O(uParticipant + iIssue + rIssue)` | `O(uParticipant + iIssue + rIssue + tTarget)` | allowed | packages/dom/tests/form.test.mjs, packages/dom/benchmarks/form-initialization.mjs |
+| dom:form.participant-event-target | connected | `O(hTarget)` expected | `O(1)` | `O(1)` | `O(tTarget)` | forbidden | packages/dom/tests/form.test.mjs |
 | dom:form.subscribe | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:form.subscription-dispatch | connected | `O(sForm + uSource + sAffected)` worst-case | `O(sForm + uSource + sAffected)` | `O(1)` | `O(sForm + sField)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:form.unsubscribe | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
