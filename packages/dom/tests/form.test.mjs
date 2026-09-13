@@ -868,6 +868,129 @@ test('ISSUE-134: initial out-of-tree participant owns one listener set and relea
   }
 });
 
+test('ISSUE-159: delegated direct target lookup stays independent of participant cardinality', () => {
+  const dom = installDOM();
+  const originalContains = dom.window.HTMLElement.prototype.contains;
+  try {
+    const { document, Event } = dom.window;
+    for (const size of [100, 1_000, 5_000]) {
+      const formElement = document.createElement('form');
+      const participants = [];
+      const elements = [];
+      for (let index = 0; index < size; index += 1) {
+        const input = document.createElement('input');
+        input.name = `field${index}`;
+        input.value = String(index);
+        formElement.append(input);
+        elements.push(input);
+        participants.push({ id: `field${index}`, element: input });
+      }
+      document.body.append(formElement);
+      const form = createForm({ form: formElement, participants });
+      const owned = new Set(elements);
+      let containsCalls = 0;
+      dom.window.HTMLElement.prototype.contains = function contains(target) {
+        if (owned.has(this)) containsCalls += 1;
+        return originalContains.call(this, target);
+      };
+      elements.at(-1).dispatchEvent(new Event('input', { bubbles: true }));
+      dom.window.HTMLElement.prototype.contains = originalContains;
+
+      assert.equal(containsCalls, 0, `${size} participants used ${containsCalls} participant contains checks`);
+      assert.equal(form.getSnapshot().revision, 0);
+      form.destroy();
+      formElement.remove();
+    }
+  } finally {
+    dom.window.HTMLElement.prototype.contains = originalContains;
+    dom.restore();
+  }
+});
+
+test('ISSUE-159: participant target ownership follows descendants, replacement, refresh, unregister, and destroy', () => {
+  const dom = installDOM();
+  try {
+    const { document, Event } = dom.window;
+    const formElement = document.createElement('form');
+    const firstRoot = document.createElement('div');
+    const firstInput = document.createElement('input');
+    const replacementRoot = document.createElement('div');
+    const replacementInput = document.createElement('input');
+    firstInput.value = 'one';
+    replacementInput.value = 'two';
+    firstRoot.append(firstInput);
+    replacementRoot.append(replacementInput);
+    formElement.append(firstRoot, replacementRoot);
+    document.body.append(formElement);
+    const form = createForm({ form: formElement });
+
+    const staleUnregister = form.registerParticipant({
+      id: 'field', element: firstRoot, name: 'field', getValue: () => firstInput.value,
+    });
+    firstInput.value = 'one-updated';
+    firstInput.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.getField('field').dirty, true);
+
+    const unregisterReplacement = form.registerParticipant({
+      id: 'field', element: replacementRoot, name: 'field', getValue: () => replacementInput.value,
+    });
+    staleUnregister();
+    const afterReplacement = form.getSnapshot().revision;
+    firstInput.value = 'stale';
+    firstInput.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.getSnapshot().revision, afterReplacement);
+    replacementInput.value = 'three';
+    replacementInput.dispatchEvent(new Event('change', { bubbles: true }));
+    replacementInput.dispatchEvent(new Event('blur'));
+    assert.equal(form.getField('field').dirty, true);
+    assert.equal(form.getField('field').touched, true);
+
+    const anchor = document.createElement('div');
+    const externalBefore = document.createElement('input');
+    const externalAfter = document.createElement('input');
+    externalBefore.value = 'before';
+    externalAfter.value = 'after';
+    formElement.append(anchor);
+    document.body.append(externalBefore, externalAfter);
+    const dynamic = {
+      id: 'external',
+      element: anchor,
+      semanticControl: externalBefore,
+      name: 'external',
+      getValue: () => dynamic.semanticControl.value,
+    };
+    const unregisterDynamic = form.registerParticipant(dynamic);
+    externalBefore.value = 'before-updated';
+    externalBefore.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.getField('external').dirty, true);
+
+    dynamic.semanticControl = externalAfter;
+    assert.equal(form.refreshParticipant('external'), true);
+    const afterRefresh = form.getSnapshot().revision;
+    externalBefore.value = 'stale-after-refresh';
+    externalBefore.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.getSnapshot().revision, afterRefresh);
+    externalAfter.value = 'after-updated';
+    externalAfter.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.getSnapshot().revision > afterRefresh, true);
+
+    unregisterDynamic();
+    const afterUnregister = form.getSnapshot().revision;
+    externalAfter.value = 'ignored-after-unregister';
+    externalAfter.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.getSnapshot().revision, afterUnregister);
+
+    const beforeDestroy = form.getSnapshot().revision;
+    form.destroy();
+    replacementInput.value = 'ignored-after-destroy';
+    replacementInput.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.getSnapshot().revision, beforeDestroy);
+    unregisterReplacement();
+  } finally {
+    dom.restore();
+  }
+});
+
 test('DOM Form reinitializes the current participant values as a reversible dirty baseline', () => {
   const dom = installDOM();
   try {

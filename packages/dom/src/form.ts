@@ -310,6 +310,7 @@ export function tryCreateForm<
   if (!initial.ok) return initial;
 
   const participantObservers = new Map<ID, () => void>();
+  const participantTargetOwners = new WeakMap<Node, FormParticipant<ID>>();
   const handledParticipantEvents = new WeakSet<Event>();
   const pendingReinitializations = new Map<number, FormReinitializeOptions>();
   const formSubscribers = new Set<SelectorSubscription<FormState<ID>>>();
@@ -992,12 +993,14 @@ export function tryCreateForm<
   };
   const participantFor = (target: EventTarget | null): FormParticipant<ID> | undefined => {
     if (!(target instanceof Node)) return undefined;
-    return [...participants.values()].find((participant) => {
-      const controls = participantTargets(participant);
-      return controls.includes(target as HTMLElement)
-        || participant.element === target
-        || participant.element.contains(target);
-    });
+    let node: Node | null = target;
+    while (node !== null) {
+      const participant = participantTargetOwners.get(node);
+      if (participant !== undefined && participants.get(participant.id) === participant) return participant;
+      if (node === options.form) break;
+      node = node.parentNode;
+    }
+    return undefined;
   };
   const invalidateAfterInteraction = (
     trigger: FormInteractionValidationTrigger,
@@ -1076,9 +1079,9 @@ export function tryCreateForm<
 
   const observeParticipant = (participant: FormParticipant<ID>): void => {
     participantObservers.get(participant.id)?.();
-    const externalTargets = participantTargets(participant).filter(
-      (target) => !options.form.contains(target),
-    );
+    const targets = participantTargets(participant);
+    for (const target of targets) participantTargetOwners.set(target, participant);
+    const externalTargets = targets.filter((target) => !options.form.contains(target));
     const roots = externalTargets.filter((target) => !externalTargets.some(
       (candidate) => candidate !== target && candidate.contains(target),
     ));
@@ -1094,6 +1097,9 @@ export function tryCreateForm<
         target.removeEventListener('change', onValueInteraction);
         target.removeEventListener('blur', onBlur, true);
         target.removeEventListener('invalid', onInvalid, true);
+      }
+      for (const target of targets) {
+        if (participantTargetOwners.get(target) === participant) participantTargetOwners.delete(target);
       }
     });
   };
