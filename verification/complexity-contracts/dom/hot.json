@@ -412,7 +412,7 @@
         },
         "resources": {
           "allocations": "0 participant snapshots, target arrays, or per-event indexes",
-          "cacheEntries": "O(tTarget) weak reverse ownership entries",
+          "cacheEntries": "O(tTarget)",
           "listeners": "0 new listeners per event",
           "observers": "0",
           "timers": "0",
