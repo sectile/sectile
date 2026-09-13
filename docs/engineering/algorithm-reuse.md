@@ -51,8 +51,8 @@ Findings: 444; migration owners: WI-020, WI-027, WI-040.
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2236` | raw-identity-lookup |
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2237` | raw-identity-lookup |
 | WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2308` | derived-index-construction |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2571` | raw-identity-lookup |
-| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2811` | linear-membership |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2560` | raw-identity-lookup |
+| WI-027 | form-indexed-field-state | `packages/form/src/internal/form.ts:2800` | linear-membership |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/accordion.ts:165` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/carousel.ts:137` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/cascade-list.ts:212` | controller-rebuild |

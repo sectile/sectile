@@ -1132,7 +1132,7 @@ function registerField<ID extends StableID>(
     [...currentFields, normalized.value],
     state.issues,
   );
-  return update(afterFieldTopologyMutation(state, next));
+  return invalidateValidation(afterIssueMutation(state, next));
 }
 
 function unregisterField<ID extends StableID>(
@@ -1152,7 +1152,7 @@ function unregisterField<ID extends StableID>(
     materializeFields(store).filter((field) => field.id !== id),
     state.issues,
   );
-  return update(afterFieldTopologyMutation(state, next));
+  return invalidateValidation(afterIssueMutation(state, next));
 }
 
 function setFieldMeta<ID extends StableID>(
@@ -2438,17 +2438,6 @@ function withoutIssueSource<ID extends StableID>(
   const fields = createFieldStore(projectRelatedIssues(directFields, globalIssues));
   const next = deriveState(state, {}, fields, createFormIssueStore(globalIssues, fields));
   return afterIssueMutation(state, next);
-}
-
-function afterFieldTopologyMutation<ID extends StableID>(
-  previous: FormState<ID>,
-  next: FormState<ID>,
-): FormState<ID> {
-  const updated = afterIssueMutation(previous, next);
-  if (updated.validation.status !== 'validating') return updated;
-  return deriveState(updated, {
-    validation: createValidationState(updated.validation.generation, 'idle', null, null),
-  });
 }
 
 function afterIssueMutation<ID extends StableID>(
