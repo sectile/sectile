@@ -178,7 +178,7 @@ export function createDataGridVirtualAdapter(options: DataGridVirtualAdapterOpti
 }
 
 export function tryCreateDataGridVirtualAdapter(options: DataGridVirtualAdapterOptions): TabularVirtualResult<DataGridVirtualAdapter> {
-  return tryCreateGridAdapter(options, false);
+  return tryCreateGridAdapter(options);
 }
 
 export function reconcileDataGridVirtualAdapter(
@@ -186,7 +186,7 @@ export function reconcileDataGridVirtualAdapter(
   currentState: GridVirtualState,
   nextProjection: DataGridProjection,
 ): TabularVirtualResult<DataGridVirtualReconciliation> {
-  return reconcileGridAdapter(adapter, currentState, nextProjection, false);
+  return reconcileGridAdapter(adapter, currentState, nextProjection);
 }
 
 export function createDataTreeGridVirtualAdapter(options: DataTreeGridVirtualAdapterOptions): DataTreeGridVirtualAdapter {
@@ -194,7 +194,7 @@ export function createDataTreeGridVirtualAdapter(options: DataTreeGridVirtualAda
 }
 
 export function tryCreateDataTreeGridVirtualAdapter(options: DataTreeGridVirtualAdapterOptions): TabularVirtualResult<DataTreeGridVirtualAdapter> {
-  return tryCreateGridAdapter(options, true);
+  return tryCreateGridAdapter(options);
 }
 
 export function reconcileDataTreeGridVirtualAdapter(
@@ -202,17 +202,16 @@ export function reconcileDataTreeGridVirtualAdapter(
   currentState: GridVirtualState,
   nextProjection: DataTreeGridProjection,
 ): TabularVirtualResult<DataTreeGridVirtualReconciliation> {
-  const result = reconcileGridAdapter(adapter, currentState, nextProjection, true);
+  const result = reconcileGridAdapter(adapter, currentState, nextProjection);
   return result.ok ? success(result.value as DataTreeGridVirtualReconciliation) : result;
 }
 
 function tryCreateGridAdapter(
   options: DataGridVirtualAdapterOptions | DataTreeGridVirtualAdapterOptions,
-  tree: boolean,
 ): TabularVirtualResult<DataGridVirtualAdapter | DataTreeGridVirtualAdapter> {
   const limits = normalizeLimits(options.limits);
   if (!limits.ok) return limits;
-  const domain = gridDomain(options.projection, options.rowExtents, options.columnExtents, limits.value, tree);
+  const domain = gridDomain(options.projection, options.rowExtents, options.columnExtents, limits.value);
   if (!domain.ok) return domain;
   const state = tryCreatePartitionedTrackGridLayout(domain.value.rows, domain.value.columns, domain.value.regions, {
     maxTracks: limits.value.maxProjectedCells,
@@ -232,11 +231,10 @@ function reconcileGridAdapter(
   adapter: DataGridVirtualAdapter,
   currentState: GridVirtualState,
   nextProjection: DataGridProjection | DataTreeGridProjection,
-  tree: boolean,
 ): TabularVirtualResult<DataGridVirtualReconciliation> {
   const privateState = gridPrivate.get(adapter);
   if (privateState === undefined || !compatibleGridState(adapter.state, currentState)) return generationMismatch(adapter.state.generation, currentState.generation);
-  const target = gridDomain(nextProjection, privateState.rowExtents, privateState.columnExtents, privateState.limits, tree);
+  const target = gridDomain(nextProjection, privateState.rowExtents, privateState.columnExtents, privateState.limits);
   if (!target.ok) return target;
   const unionRows = boundedTrackUnion(currentState.rows, target.value.rows, currentState.maxTracks);
   const unionColumns = boundedTrackUnion(currentState.columns, target.value.columns, currentState.maxTracks);
@@ -316,7 +314,6 @@ function gridDomain(
   rowPolicy: TabularVirtualExtentPolicy<TabularRowID>,
   columnPolicy: TabularVirtualExtentPolicy<TabularColumnID>,
   limits: TabularVirtualLimits,
-  tree: boolean,
 ): TabularVirtualResult<{
   readonly rows: readonly PartitionedTrack<TabularRowID>[];
   readonly columns: readonly PartitionedTrack<TabularColumnID>[];
@@ -328,13 +325,13 @@ function gridDomain(
   const endColumns = projection.columns.end;
   const rowCount = projectedRows.length;
   const columnCount = startColumns.length + centerColumns.length + endColumns.length;
-  if (rowCount > limits.maxProjectedCells || columnCount > limits.maxProjectedCells) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Projected tracks exceed the configured ceiling.');
+  if (rowCount > limits.maxProjectedCells || columnCount > limits.maxProjectedCells) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Track ceiling exceeded.');
   const partitions = Number(startColumns.length > 0) + Number(centerColumns.length > 0) + Number(endColumns.length > 0);
-  if (partitions > limits.maxPartitions) return failure('resource-rejection', 'partition-ceiling-exceeded', 'Logical pin partitions exceed the configured ceiling.');
-  let contextRows = 0;
-  while (tree && contextRows < rowCount && projectedRows[contextRows]!.cells.length === 0) contextRows += 1;
-  const cellRows = rowCount - contextRows;
-  if (cellRows > 0 && columnCount > Math.floor(limits.maxProjectedCells / cellRows)) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Projected cells exceed the configured ceiling.');
+  if (partitions > limits.maxPartitions) return failure('resource-rejection', 'partition-ceiling-exceeded', 'Partition ceiling exceeded.');
+  let startRow = 0;
+  while (columnCount > 0 && startRow < rowCount && projectedRows[startRow]!.cells.length === 0) startRow += 1;
+  const cellRows = rowCount - startRow;
+  if (cellRows > 0 && columnCount > Math.floor(limits.maxProjectedCells / cellRows)) return failure('resource-rejection', 'projected-cell-ceiling-exceeded', 'Cell ceiling exceeded.');
   const rowIDs = projectedRows.map((row) => row.rowID);
   const columnIDs = [...startColumns, ...centerColumns, ...endColumns];
   const rows: PartitionedTrack<TabularRowID>[] = [];
@@ -357,9 +354,9 @@ function gridDomain(
     columns.push(Object.freeze({ id, partition, extent: extent.value }));
   }
   const regions: PartitionedTrackGridRegion<TabularCellID, TabularRowID, TabularColumnID>[] = [];
-  for (let rowIndex = contextRows; rowIndex < rowCount; rowIndex += 1) {
-    const row = projectedRows[rowIndex]!;
-    for (const columnID of columnIDs) regions.push(Object.freeze({ id: encodeTabularCellID({ rowID: row.rowID, columnID }), row: row.rowID, column: columnID }));
+  for (let rowIndex = startRow; rowIndex < rowCount; rowIndex += 1) {
+    const rowID = rowIDs[rowIndex]!;
+    for (const columnID of columnIDs) regions.push(Object.freeze({ id: encodeTabularCellID({ rowID, columnID }), row: rowID, column: columnID }));
   }
   return success(Object.freeze({
     rows: Object.freeze(rows),
