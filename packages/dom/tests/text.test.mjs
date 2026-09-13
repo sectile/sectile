@@ -145,6 +145,44 @@ test('DOM text adopts non-cancelable and Unicode-safe native replacements', () =
   assert.deepEqual(element.selection, [3, 3]);
 });
 
+test('ISSUE-142: malformed native UTF-16 terminates and restores canonical text', () => {
+  const initial = 'safe';
+  const malformedValues = [
+    '\ud800',
+    '\udc00',
+    '\ud800x',
+    'x\udc00',
+    'a\ud800b',
+    'a\udc00b',
+  ];
+  const element = new FakeTextElement();
+  const connection = createText({
+    element,
+    defaultValue: createTextEditingState(initial, selection(initial.length)),
+  });
+
+  for (const malformed of malformedValues) {
+    const replacement = deriveNativeReplacement(initial, malformed);
+    assert.ok(replacement.inspectedCodeUnits <= initial.length + malformed.length + 2);
+    assert.equal(
+      initial.slice(0, replacement.startCodeUnitOffset)
+        + replacement.text
+        + initial.slice(replacement.endCodeUnitOffset),
+      malformed,
+    );
+
+    element.value = malformed;
+    element.selectionStart = malformed.length;
+    element.selectionEnd = malformed.length;
+    element.emit('input', { inputType: 'insertReplacementText' });
+    assert.equal(connection.getValue(), initial);
+    assert.equal(element.value, initial);
+    assert.deepEqual(element.selection, [initial.length, initial.length]);
+  }
+
+  connection.disconnect();
+});
+
 test('DOM text adopts the native search clear action and removes its listener', () => {
   const element = new FakeTextElement();
   const connection = createText({ element, defaultValue: createTextState('select') });

@@ -27386,12 +27386,12 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "packages/dom/tests/text.test.mjs native replacement reconciliation has linear bounded work and exact output",
+          "packages/dom/tests/text.test.mjs ISSUE-142"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Reconciliation scans a shared prefix and suffix at most once, emits one Core replace transition, and retains only one active composition record plus one generation-guarded composition finalizer.",
-        "adversarialWitness": "A 100k-code-unit replacement differing only in the final surrogate pair reconstructs the exact native value within the deterministic two-input-length inspection ceiling; disconnect invalidates the pending finalizer.",
+        "proof": "Reconciliation validates the external native value once, then scans a shared prefix and suffix at most once. Malformed UTF-16 becomes one whole-value Core replace proposal that is rejected by canonical Text validation and restored by the host; well-formed cut repair checks only adjacent surrogate code units. The binding retains only one active composition record plus one generation-guarded composition finalizer.",
+        "adversarialWitness": "A 100k-code-unit replacement differing only in the final surrogate pair reconstructs the exact native value within the deterministic two-input-length inspection ceiling. Lone high/low surrogates in prefix, suffix, and interior positions return within the same ceiling; the public binding keeps canonical Core text unchanged and restores the rendered value. Disconnect invalidates the pending finalizer.",
         "evidence": [
           "VAL-016",
           "VAL-017"
