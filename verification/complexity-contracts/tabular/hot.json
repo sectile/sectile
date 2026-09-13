@@ -391,8 +391,8 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Table lookup delegates to the Core Sequence index. Grid lookup combines retained row/column indexes with one scalar canonical context-prefix count. A context-only row is identified by rowIndex < contextRows; later dense rows subtract that prefix before row-major arithmetic, so no row-offset or cell-ID map is retained.",
-        "adversarialWitness": "TAB-VIR-07 repeatedly resolves the last row/column/cell of a large dense projection with no Array.indexOf calls. ISSUE-156 places a zero-cell context prefix before a dense leaf and proves both context-cell misses and compact leaf indexes stay O(1) with only scalar context metadata.",
+        "proof": "Table lookup delegates to the Core Sequence index. Grid lookup retains only the row/column indexes and derives the first cell-bearing row once in O(1) from Virtual row, column, and region cardinalities. A context-only row is identified by rowIndex < firstCellRow; later dense rows subtract that scalar before row-major arithmetic, so no row-offset or cell-ID map is retained.",
+        "adversarialWitness": "TAB-VIR-07 repeatedly resolves the last row/column/cell of a large dense projection with no Array.indexOf calls. ISSUE-156 places a zero-cell context prefix before a dense leaf and proves both context-cell misses and compact leaf indexes stay O(1) without additional row-sized locator metadata.",
         "deterministicWork": [
           "packages/tabular/tests/virtual/adapter.test.mjs TAB-VIR-07",
           "packages/tabular/tests/virtual/adapter.test.mjs ISSUE-156"

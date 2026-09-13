@@ -225,7 +225,6 @@ function tryCreateGridAdapter(
     options.rowExtents,
     options.columnExtents,
     limits.value,
-    domain.value.contextRows,
   ));
 }
 
@@ -264,7 +263,6 @@ function reconcileGridAdapter(
     privateState.rowExtents,
     privateState.columnExtents,
     privateState.limits,
-    target.value.contextRows,
   );
   return success(Object.freeze({ expectedVirtualGeneration: currentState.generation, projectionGeneration: nextProjection.generation, mutations: Object.freeze(mutations), state, adapter: next }));
 }
@@ -291,11 +289,11 @@ function createGridAdapter(
   rowExtents: TabularVirtualExtentPolicy<TabularRowID>,
   columnExtents: TabularVirtualExtentPolicy<TabularColumnID>,
   limits: TabularVirtualLimits,
-  contextRows: number,
 ): DataGridVirtualAdapter {
   const rowIndexes = trackIndexes(state.rows);
   const columnIndexes = trackIndexes(state.columns);
   const columnCount = state.columns.size;
+  const firstCellRow = columnCount === 0 ? 0 : state.rows.size - state.regions.length / columnCount;
   const adapter: DataGridVirtualAdapter = Object.freeze({
     projectionGeneration,
     state,
@@ -305,8 +303,8 @@ function createGridAdapter(
     locateCell: (cell: TabularCellAddress) => {
       const rowIndex = rowIndexes.get(cell.rowID);
       const columnIndex = columnIndexes.get(cell.columnID);
-      if (rowIndex === undefined || rowIndex < contextRows || columnIndex === undefined) return null;
-      return Object.freeze({ id: encodeTabularCellID(cell), index: (rowIndex - contextRows) * columnCount + columnIndex });
+      if (rowIndex === undefined || rowIndex < firstCellRow || columnIndex === undefined) return null;
+      return Object.freeze({ id: encodeTabularCellID(cell), index: (rowIndex - firstCellRow) * columnCount + columnIndex });
     },
   });
   gridPrivate.set(adapter, Object.freeze({ rowExtents, columnExtents, limits }));
@@ -323,7 +321,6 @@ function gridDomain(
   readonly rows: readonly PartitionedTrack<TabularRowID>[];
   readonly columns: readonly PartitionedTrack<TabularColumnID>[];
   readonly regions: readonly PartitionedTrackGridRegion<TabularCellID, TabularRowID, TabularColumnID>[];
-  readonly contextRows: number;
 }> {
   const projectedRows = projection.rows;
   const startColumns = projection.columns.start;
@@ -368,7 +365,6 @@ function gridDomain(
     rows: Object.freeze(rows),
     columns: Object.freeze(columns),
     regions: Object.freeze(regions),
-    contextRows,
   }));
 }
 
