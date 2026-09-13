@@ -43,7 +43,7 @@
       "types": "dist/track-grid-layout.d.ts"
     }
   ],
-  "fingerprint": "e981abdbacf4856d0de04ad380e8310bdea68b87809c1a3846e4ae7f573aba8f",
+  "fingerprint": "083bde599494a8e9d95d9f1c562c013c25878e419f56ee141a806cd598b4053c",
   "files": [
     {
       "path": "dist/collection.d.ts",
@@ -63,7 +63,7 @@
     },
     {
       "path": "dist/internal/track.d.ts",
-      "sha256": "a20617e0982602c7f6b470caeb7a75f901ed7524d3f4dd97ff1e7857d1497581"
+      "sha256": "c09119a279020af93288e9169c2f2ad814e357a7f945bc73006e82e1f36acca7"
     },
     {
       "path": "dist/layout.d.ts",
