@@ -81,8 +81,9 @@ export class DOMTextElementBinding {
     if (this.#element.value !== snapshot.text) this.#element.value = snapshot.text;
     if (supportsSelection(this.#element)) {
       this.#element.setSelectionRange(
-        snapshot.selection.anchorCodeUnitOffset,
-        snapshot.selection.focusCodeUnitOffset,
+        snapshot.selection.startCodeUnitOffset,
+        snapshot.selection.endCodeUnitOffset,
+        snapshot.selection.direction,
       );
     }
   }

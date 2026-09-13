@@ -183,6 +183,56 @@ test('ISSUE-142: malformed native UTF-16 terminates and restores canonical text'
   connection.disconnect();
 });
 
+test('ISSUE-141: DOM text renders directional selections without collapse', () => {
+  for (const [name, anchor, focus, start, end, direction] of [
+    ['forward', 1, 3, 1, 3, 'forward'],
+    ['backward', 3, 1, 1, 3, 'backward'],
+    ['collapsed', 2, 2, 2, 2, 'none'],
+  ]) {
+    const element = new FakeTextElement();
+    const connection = createText({
+      element,
+      defaultValue: createTextEditingState('abcd', {
+        anchorCodeUnitOffset: anchor,
+        focusCodeUnitOffset: focus,
+      }),
+    });
+    assert.deepEqual(
+      [element.selectionStart, element.selectionEnd, element.selectionDirection],
+      [start, end, direction],
+      name,
+    );
+    connection.render();
+    assert.deepEqual(
+      [element.selectionStart, element.selectionEnd, element.selectionDirection],
+      [start, end, direction],
+      `${name} repeated render`,
+    );
+    connection.disconnect();
+  }
+});
+
+test('ISSUE-141: native edit after backward render replaces the selected range', () => {
+  const element = new FakeTextElement();
+  const connection = createText({
+    element,
+    defaultValue: createTextEditingState('abcd', {
+      anchorCodeUnitOffset: 3,
+      focusCodeUnitOffset: 1,
+    }),
+  });
+  assert.deepEqual([element.selectionStart, element.selectionEnd, element.selectionDirection], [1, 3, 'backward']);
+
+  element.value = 'aXd';
+  element.selectionStart = 2;
+  element.selectionEnd = 2;
+  element.selectionDirection = 'none';
+  element.emit('input', { inputType: 'insertText' });
+  assert.equal(connection.getValue(), 'aXd');
+  assert.deepEqual([element.selectionStart, element.selectionEnd, element.selectionDirection], [2, 2, 'none']);
+  connection.disconnect();
+});
+
 test('DOM text adopts the native search clear action and removes its listener', () => {
   const element = new FakeTextElement();
   const connection = createText({ element, defaultValue: createTextState('select') });
@@ -416,10 +466,11 @@ class FakeTextElement {
     for (const listener of this.listeners.get(type) ?? []) listener(event);
   }
 
-  setSelectionRange(start, end) {
-    this.selectionStart = start;
+  setSelectionRange(start, end, direction = 'none') {
+    this.selectionStart = start > end ? end : start;
     this.selectionEnd = end;
-    this.selection = [start, end];
+    this.selectionDirection = direction;
+    this.selection = [this.selectionStart, this.selectionEnd];
   }
 }
 

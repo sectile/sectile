@@ -57,6 +57,27 @@ test('controlled DOM civil fields rebase clean inputs and preserve active select
   assert.deepEqual([dateTimeInput.selectionStart, dateTimeInput.selectionEnd], [5, 7]);
 });
 
+test('ISSUE-141: date field preserves backward selection through the shared text binding', () => {
+  const input = new FakeInput();
+  const field = createDateField({ input, defaultValue: createDateValue(2026, 8, 18) });
+  input.value = '2026-09-18';
+  input.setSelectionRange(5, 7, 'backward');
+  input.emit('input', { inputType: 'insertReplacementText' });
+
+  assert.equal(field.getText(), '2026-09-18');
+  assert.deepEqual(
+    [input.selectionStart, input.selectionEnd, input.selectionDirection],
+    [5, 7, 'backward'],
+  );
+  assert.deepEqual(field.getSnapshot().state.inputState.snapshot.selection, {
+    anchorCodeUnitOffset: 7,
+    focusCodeUnitOffset: 5,
+    startCodeUnitOffset: 5,
+    endCodeUnitOffset: 7,
+    direction: 'backward',
+  });
+});
+
 test('controlled DOM civil fields preserve active drafts during external value sync', () => {
   const input = new FakeInput();
   const field = createDateField({ input, value: createDateValue(2026, 8, 18) });
@@ -757,5 +778,5 @@ class FakeElement {
 class FakeInput extends FakeElement {
   value = ''; type = ''; inputMode = ''; placeholder = ''; readOnly = false; required = false; validationMessage = ''; selectionStart = 0; selectionEnd = 0; selectionDirection = 'none';
   setCustomValidity(message) { this.validationMessage = message; }
-  setSelectionRange(start, end, direction = 'none') { this.selectionStart = start; this.selectionEnd = end; this.selectionDirection = direction; }
+  setSelectionRange(start, end, direction = 'none') { this.selectionStart = start > end ? end : start; this.selectionEnd = end; this.selectionDirection = direction; }
 }
