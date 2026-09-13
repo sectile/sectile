@@ -133,6 +133,6 @@ export function useConditionalPresenceRegistry(
         });
       }
     },
-    isPresent: (key: string, active: boolean, forcePresent = false) => forcePresent || active || exiting.has(key),
+    isPresent: (key: string, active: boolean, forcePresent?: boolean) => forcePresent || active || exiting.has(key),
   });
 }
