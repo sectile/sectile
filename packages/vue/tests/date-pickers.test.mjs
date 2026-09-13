@@ -4,7 +4,7 @@ import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
 import { CalendarCell, CalendarContent, CalendarGrid, CalendarRoot } from '../.verification-dist/calendar.js';
 import { DatePickerCell, DatePickerContent, DatePickerGrid, DatePickerInput, DatePickerMonthCell, DatePickerRoot, DatePickerTrigger, DatePickerYearViewTrigger } from '../.verification-dist/date-picker.js';
-import { DateRangePickerEndInput, DateRangePickerRoot, DateRangePickerStartInput } from '../.verification-dist/date-range-picker.js';
+import { DateRangePickerCell, DateRangePickerContent, DateRangePickerEndInput, DateRangePickerGrid, DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerTrigger } from '../.verification-dist/date-range-picker.js';
 import { DateTimePickerCell, DateTimePickerContent, DateTimePickerDateInput, DateTimePickerDateTimeInput, DateTimePickerGrid, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger } from '../.verification-dist/date-time-picker.js';
 import { DateTimeRangePickerCell, DateTimeRangePickerContent, DateTimeRangePickerEndDateInput, DateTimeRangePickerEndDateTimeInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerGrid, DateTimeRangePickerRoot, DateTimeRangePickerStartDateInput, DateTimeRangePickerStartDateTimeInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerTrigger } from '../.verification-dist/date-time-range-picker.js';
 import { RangeCalendarCell, RangeCalendarContent, RangeCalendarGrid, RangeCalendarRoot } from '../.verification-dist/range-calendar.js';
@@ -26,6 +26,62 @@ test('Vue calendar exposes a persistent native grid', async () => {
   }));
   assert.match(html, /role="grid"/);
   assert.match(html, /data-part="cell"/);
+});
+
+test('ISSUE-139: day-picker SSR exposes policy availability through slot and native semantics', async () => {
+  const blocked = Object.freeze({ year: 2026, month: 9, day: 15 });
+  const available = Object.freeze({ year: 2026, month: 9, day: 16 });
+  const unavailable = (value) => value.year === blocked.year && value.month === blocked.month && value.day === blocked.day;
+  const directPolicies = { unavailable };
+  const dateTimePolicies = { date: { unavailable } };
+  const cases = [
+    ['calendar', CalendarRoot, CalendarContent, CalendarGrid, CalendarCell, null, { defaultHighlightedValue: blocked, policies: directPolicies }],
+    ['range-calendar', RangeCalendarRoot, RangeCalendarContent, RangeCalendarGrid, RangeCalendarCell, null, { defaultHighlightedValue: blocked, policies: directPolicies }],
+    ['date', DatePickerRoot, DatePickerContent, DatePickerGrid, DatePickerCell, DatePickerTrigger, { defaultHighlightedValue: blocked, defaultOpen: true, policies: directPolicies }],
+    ['date-range', DateRangePickerRoot, DateRangePickerContent, DateRangePickerGrid, DateRangePickerCell, DateRangePickerTrigger, { defaultHighlightedValue: blocked, defaultOpen: true, policies: directPolicies }],
+    ['date-time', DateTimePickerRoot, DateTimePickerContent, DateTimePickerGrid, DateTimePickerCell, DateTimePickerTrigger, { defaultHighlightedValue: blocked, defaultOpen: true, policies: dateTimePolicies }],
+    ['date-time-range', DateTimeRangePickerRoot, DateTimeRangePickerContent, DateTimeRangePickerGrid, DateTimeRangePickerCell, DateTimeRangePickerTrigger, { defaultHighlightedValue: blocked, defaultOpen: true, policies: dateTimePolicies }],
+  ];
+
+  for (const [name, Root, Content, Grid, Cell, Trigger, props] of cases) {
+    const html = await render(() => h(Root, props, {
+      default: () => [
+        ...(Trigger === null ? [] : [h(Trigger)]),
+        h(Content, null, {
+          default: () => h(Grid, null, {
+            default: () => [
+              h(Cell, { value: blocked }, { default: ({ disabled }) => disabled ? 'slot-disabled' : 'slot-enabled' }),
+              h(Cell, { value: available }, { default: ({ disabled }) => disabled ? 'available-disabled' : 'available-enabled' }),
+            ],
+          }),
+        }),
+      ],
+    }));
+    assert.match(
+      html,
+      /<button(?=[^>]*data-sectile-picker-date="2026-09-15")(?=[^>]*aria-disabled="true")(?=[^>]*\sdisabled(?:\s|>))[^>]*>slot-disabled<\/button>/u,
+      name,
+    );
+    assert.match(
+      html,
+      /<button(?=[^>]*data-sectile-picker-date="2026-09-16")(?=[^>]*aria-disabled="false")(?![^>]*\sdisabled(?:\s|>))[^>]*>available-enabled<\/button>/u,
+      name,
+    );
+  }
+
+  const rootDisabled = await render(() => h(DatePickerRoot, {
+    defaultHighlightedValue: available,
+    defaultOpen: true,
+    disabled: true,
+  }, {
+    default: () => [h(DatePickerTrigger), h(DatePickerContent, null, {
+      default: () => h(DatePickerGrid, null, {
+        default: () => h(DatePickerCell, { value: available }, { default: ({ disabled }) => disabled ? 'root-disabled' : 'root-enabled' }),
+      }),
+    })],
+  }));
+  assert.match(rootDisabled, /aria-disabled="true"/u);
+  assert.match(rootDisabled, /root-disabled/u);
 });
 
 test('Vue date picker keeps trigger, text input, content, grid, and cells composable', async () => {

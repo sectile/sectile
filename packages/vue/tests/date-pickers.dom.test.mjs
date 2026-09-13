@@ -17,7 +17,8 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, h, nextTick, ref } = await import('vue');
+const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
+const { renderToString } = await import('@vue/server-renderer');
 const { CalendarCell, CalendarContent, CalendarGrid, CalendarNextMonth, CalendarRoot } = await import('../.verification-dist/calendar.js');
 const {
   DatePickerCell,
@@ -145,6 +146,101 @@ test('ISSUE-138: declarative date-picker policy changes preserve a keyboard grid
   assert.equal(highlightedCell?.getAttribute('tabindex'), '0');
   assert.equal(siblingCell?.getAttribute('tabindex'), '-1');
   assert.equal(host.querySelector('[data-highlight]')?.textContent, '2026-9-15');
+
+  app.unmount();
+  host.remove();
+});
+
+test('ISSUE-139: mounted day-cell slot and native availability stay synchronized across policy changes', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const blocked = ref(false);
+  const value = Object.freeze({ year: 2026, month: 9, day: 15 });
+  const app = createApp({
+    render() {
+      const unavailable = blocked.value;
+      return h(DatePickerRoot, {
+        highlightedValue: value,
+        defaultOpen: true,
+        position: false,
+        policies: {
+          unavailable: (candidate) => unavailable
+            && candidate.year === value.year
+            && candidate.month === value.month
+            && candidate.day === value.day,
+        },
+      }, {
+        default: () => [h(DatePickerTrigger), h(DatePickerContent, null, {
+          default: () => h(DatePickerGrid, null, {
+            default: () => h(DatePickerCell, { value }, {
+              default: ({ disabled }) => disabled ? 'slot-disabled' : 'slot-enabled',
+            }),
+          }),
+        })],
+      });
+    },
+  });
+
+  app.mount(host);
+  await settle();
+  const cell = () => host.querySelector('[data-sectile-picker-date="2026-09-15"]');
+  assert.equal(cell()?.textContent, 'slot-enabled');
+  assert.equal(cell()?.disabled, false);
+  assert.equal(cell()?.getAttribute('aria-disabled'), 'false');
+
+  blocked.value = true;
+  await settle();
+  assert.equal(cell()?.textContent, 'slot-disabled');
+  assert.equal(cell()?.disabled, true);
+  assert.equal(cell()?.getAttribute('aria-disabled'), 'true');
+
+  blocked.value = false;
+  await settle();
+  assert.equal(cell()?.textContent, 'slot-enabled');
+  assert.equal(cell()?.disabled, false);
+  assert.equal(cell()?.getAttribute('aria-disabled'), 'false');
+
+  app.unmount();
+  host.remove();
+});
+
+test('ISSUE-139: hydration preserves unavailable day-cell slot and native semantics', async () => {
+  const host = document.createElement('div');
+  const value = Object.freeze({ year: 2026, month: 9, day: 15 });
+  const component = {
+    render: () => h(DatePickerRoot, {
+      highlightedValue: value,
+      defaultOpen: true,
+      position: false,
+      policies: {
+        unavailable: (candidate) => candidate.year === value.year
+          && candidate.month === value.month
+          && candidate.day === value.day,
+      },
+    }, {
+      default: () => [h(DatePickerTrigger), h(DatePickerContent, null, {
+        default: () => h(DatePickerGrid, null, {
+          default: () => h(DatePickerCell, { value }, {
+            default: ({ disabled }) => disabled ? 'slot-disabled' : 'slot-enabled',
+          }),
+        }),
+      })],
+    }),
+  };
+
+  host.innerHTML = await renderToString(createSSRApp(component));
+  document.body.append(host);
+  const cell = () => host.querySelector('[data-sectile-picker-date="2026-09-15"]');
+  assert.equal(cell()?.textContent, 'slot-disabled');
+  assert.equal(cell()?.disabled, true);
+  assert.equal(cell()?.getAttribute('aria-disabled'), 'true');
+
+  const app = createSSRApp(component);
+  app.mount(host);
+  await settle();
+  assert.equal(cell()?.textContent, 'slot-disabled');
+  assert.equal(cell()?.disabled, true);
+  assert.equal(cell()?.getAttribute('aria-disabled'), 'true');
 
   app.unmount();
   host.remove();

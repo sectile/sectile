@@ -173,6 +173,7 @@ interface Context {
   selectDate(value: DateValue): void;
   selectMonth(value: CalendarMonthValue): void;
   selectYear(value: PickerYearValue): void;
+  dayAvailable(value: DateValue): boolean;
   periodAvailable(value: CalendarMonthValue | PickerYearValue): boolean;
 }
 const key = Symbol('SectileDatePickerRoot');
@@ -354,7 +355,14 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         refresh();
       };
       provide<Context>(key, {
-        kind, scope, granularity, inline, state, periodAvailable, formatInput: capability.formatInput,
+        kind, scope, granularity, inline, state,
+        dayAvailable: (value) => isCalendarValueAvailable(
+          value,
+          kind === 'date-time' || kind === 'date-time-range'
+            ? (runtimeProps.policies as { readonly date?: CalendarPolicies } | undefined)?.date
+            : runtimeProps.policies as CalendarPolicies | undefined,
+        ),
+        periodAvailable, formatInput: capability.formatInput,
         position: computed(() => runtimeProps.position), strategy: computed(() => runtimeProps.strategy),
         register: (part, element) => {
           if (elements.get(part) === element || (element === undefined && !elements.has(part))) return;
@@ -530,12 +538,12 @@ export const PickerCell = /* @__PURE__ */ defineComponent({
   name: 'SectilePickerCell', inheritAttrs: false,
   props: { value: { type: Object as PropType<DateValue>, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: PickerCellSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('PickerCell'); const state = computed<PickerCellSlotProps>(() => cellState(root.kind, root.state.value, props.value)); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+  setup(props, { attrs, slots }) { const root = useRoot('PickerCell'); const state = computed<PickerCellSlotProps>(() => cellState(root.state.value, props.value, root.dayAvailable(props.value))); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined,
     elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerCell(node, props.value); },
     disabled: state.value.disabled,
     onClick: (event: MouseEvent) => { event.stopPropagation(); root.selectDate(props.value); },
-    role: 'gridcell', 'aria-selected': String(state.value.selected || state.value.inRange), 'data-sectile-picker-date': formatDateValue(props.value),
+    role: 'gridcell', 'aria-selected': String(state.value.selected || state.value.inRange), 'aria-disabled': String(state.value.disabled), 'data-sectile-picker-date': formatDateValue(props.value),
     'data-scope': root.scope, 'data-part': 'cell', 'data-selected': state.value.selected ? '' : undefined,
     'data-in-range': state.value.inRange ? '' : undefined, 'data-highlighted': state.value.highlighted ? '' : undefined,
     'data-outside-month': state.value.outsideMonth ? '' : undefined,
@@ -739,14 +747,14 @@ function extractState(kind: PickerKind, raw: unknown): { value: PickerValue; hig
   return { value: state['value'] as PickerValue, highlighted: calendar['highlighted'] as DateValue, open: calendar['open'] as boolean, view: calendar['view'] as { readonly year: number; readonly month: number }, viewMode: calendar['viewMode'] as CalendarViewMode };
 }
 function compare(left: DateValue, right: DateValue): number { return left.year - right.year || left.month - right.month || left.day - right.day; }
-function cellState(kind: PickerKind, state: PickerRootSlotProps, value: DateValue): PickerCellSlotProps {
+function cellState(state: PickerRootSlotProps, value: DateValue, available: boolean): PickerCellSlotProps {
   const selectedDate = dateOf(state.value); let selected = selectedDate !== null && compare(selectedDate, value) === 0; let inRange = false;
   if (state.value !== null && !('year' in state.value) && !('date' in state.value)) {
     const start = 'date' in state.value.start ? state.value.start.date : state.value.start;
     const end = 'date' in state.value.end ? state.value.end.date : state.value.end;
     inRange = compare(start, value) <= 0 && compare(value, end) <= 0; selected = compare(start, value) === 0 || compare(end, value) === 0;
   }
-  return { value, selected, inRange, highlighted: compare(state.highlightedValue, value) === 0, disabled: state.disabled, outsideMonth: value.month !== state.view.month || value.year !== state.view.year };
+  return { value, selected, inRange, highlighted: compare(state.highlightedValue, value) === 0, disabled: state.disabled || !available, outsideMonth: value.month !== state.view.month || value.year !== state.view.year };
 }
 function monthContainsValue(value: PickerValue, month: CalendarMonthValue): boolean { const date = dateOf(value); return date !== null && date.year === month.year && date.month === month.month; }
 function yearContainsValue(value: PickerValue, year: PickerYearValue): boolean { const date = dateOf(value); return date !== null && date.year === year.year; }
