@@ -391,8 +391,8 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Table lookup delegates to the Core Sequence index. Grid lookup combines retained row/column indexes with one row-sized map from canonical cell-bearing rows to their compact region start offset. A context-only row has no region offset and returns null in constant work; no cell-ID map is retained.",
-        "adversarialWitness": "TAB-VIR-07 repeatedly resolves the last row/column/cell of a large dense projection with no Array.indexOf calls. ISSUE-156 places an empty context row before a dense leaf and proves both context-cell misses and compact leaf indexes stay O(1) without a cell-ID map.",
+        "proof": "Table lookup delegates to the Core Sequence index. Grid lookup combines retained row/column indexes with one scalar canonical context-prefix count. A context-only row is identified by rowIndex < contextRows; later dense rows subtract that prefix before row-major arithmetic, so no row-offset or cell-ID map is retained.",
+        "adversarialWitness": "TAB-VIR-07 repeatedly resolves the last row/column/cell of a large dense projection with no Array.indexOf calls. ISSUE-156 places a zero-cell context prefix before a dense leaf and proves both context-cell misses and compact leaf indexes stay O(1) with only scalar context metadata.",
         "deterministicWork": [
           "packages/tabular/tests/virtual/adapter.test.mjs TAB-VIR-07",
           "packages/tabular/tests/virtual/adapter.test.mjs ISSUE-156"
@@ -411,7 +411,7 @@
         "VAL-002:tabular-virtual-projection-preflight"
       ],
       "specificationCeiling": "O(nRow)",
-      "reviewedWeakening": "DataTreeGrid context-only rows make actual region cardinality intentionally sparse, so the bridge must inspect at most one canonical cell-array length per already-bounded row before deciding the actual region ceiling. DataGrid and oversized track domains retain their O(1) rejection path.",
+      "reviewedWeakening": "DataTreeGrid context-only ancestor rows make actual region cardinality intentionally sparse. The canonical source/profile contract prepends those zero-cell ancestors as one prefix, so the bridge may inspect that prefix before applying the existing dense product ceiling to the remaining rows. DataGrid and oversized track domains retain their O(1) rejection path.",
       "contract": {
         "variables": [
           {
@@ -443,15 +443,15 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "DataTable create/reconcile checks projected row array length before ID mapping. Grid create/reconcile reads row and partition array lengths and rejects oversized track domains before row identity or extent access. DataGrid retains the O(1) dense division check. DataTreeGrid then visits at most nRow already-bounded row headers, adds only each canonical cells.length with an early remaining-budget comparison, and rejects before row-ID mapping, extent policy calls, or region materialization when actual canonical regions exceed maxProjectedCells.",
-        "adversarialWitness": "TAB-VIR-09 presents 100k accessor-backed rows at maxProjectedCells=1 to DataTable, DataGrid, and DataTreeGrid and observes zero ID/extent reads because track cardinality rejects first. ISSUE-156 uses two row tracks and two columns under maxProjectedCells=2: the old dense product is four but canonical DataTreeGrid cells total two, so bounded header counting accepts exactly the real region domain without phantom-cell cost.",
+        "proof": "DataTable create/reconcile checks projected row array length before ID mapping. Grid create/reconcile reads row and partition array lengths and rejects oversized track domains before row identity or extent access. DataGrid retains the O(1) dense division check. DataTreeGrid scans only the leading canonical zero-cell context prefix, subtracts that scalar from rowCount, then applies the same safe division check to the remaining dense rows before row-ID mapping, extent policy calls, or region materialization.",
+        "adversarialWitness": "TAB-VIR-09 presents 100k accessor-backed rows at maxProjectedCells=1 to DataTable, DataGrid, and DataTreeGrid and observes zero ID/extent reads because track cardinality rejects first. ISSUE-156 uses one zero-cell context ancestor plus one dense leaf across two columns under maxProjectedCells=2: subtracting the canonical prefix accepts exactly the two real regions instead of the old four-cell Cartesian product.",
         "deterministicWork": [
           "packages/tabular/tests/virtual/adapter.test.mjs TAB-VIR-09",
           "packages/tabular/tests/virtual/adapter.test.mjs ISSUE-156"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "DataTreeGrid must inspect one cells.length per already-bounded projected row to compute actual sparse region cardinality. Obviously oversized row/column track domains and DataGrid dense products still reject in O(1), and the sparse pass does not enumerate cell identities or invoke extent policies before acceptance."
+          "rationale": "DataTreeGrid may inspect the already-bounded leading zero-cell context prefix to recover its canonical dense data-row cardinality. Obviously oversized row/column track domains and DataGrid dense products still reject in O(1), and the prefix pass does not enumerate cell identities or invoke extent policies before acceptance."
         }
       }
     },
