@@ -23,9 +23,9 @@ other non-linear layouts. Content and item style helpers remain opt-in. Install
 `@sectile/virtual` separately when using this subpath; the rest of `@sectile/dom`
 does not require it.
 
-## Floating surface positioning
+## Anchored surface positioning
 
-Popover and tooltip placement use Floating UI. Offset, collision flip and shift, available-size data, arrow positioning, detached-anchor hiding, and open-only automatic updates are enabled by default. Boundaries, padding, strategy, update observers, and the middleware queue remain configurable. Floating UI middleware is re-exported from both component entry points for custom positioning.
+Popover and tooltip placement use the shared Sectile positioning contract exported from `@sectile/dom/position`. `PositionOptions` exposes `side`, `align`, `sideOffset`, `collisionBoundary`, `collisionPadding`, `avoidCollisions`, `arrowPadding`, `hideWhenDetached`, `strategy`, and `tracking`. `strategy` selects `absolute` or `fixed` placement. Tracking is event-driven by default; use `tracking: 'animation-frame'` when the anchor or content can move without a relevant browser event. Set the component-level `position` option to `false` when application layout owns placement instead.
 
 ## API shape
 
