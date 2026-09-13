@@ -95,10 +95,14 @@ function constructCalendar(options: CalendarOptions): TerminalTemporalResult<Cal
       view: controls.highlighted ? previous.view : proposed.view,
       viewMode: proposed.viewMode,
     }),
-    notify: (previous, proposed) => {
-      if (compareNullable(previous.value, proposed.value) !== 0) options.onValueChange?.(proposed.value);
-      if (compareDateValues(previous.highlighted, proposed.highlighted) !== 0) options.onHighlightedValueChange?.(proposed.highlighted);
-    },
+    notify: [
+      (previous, proposed) => {
+        if (compareNullable(previous.value, proposed.value) !== 0) options.onValueChange?.(proposed.value);
+      },
+      (previous, proposed) => {
+        if (compareDateValues(previous.highlighted, proposed.highlighted) !== 0) options.onHighlightedValueChange?.(proposed.highlighted);
+      },
+    ],
     toEffect: (command) => command,
     interaction: options,
     interactionIntent: calendarInteractionIntent,

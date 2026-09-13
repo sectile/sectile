@@ -94,12 +94,16 @@ function tryCreatePaginationConnection(options: PaginationOptions): Result<Pagin
       controlled || options.readOnly === true ? previous.page : proposed.page,
       controlled || options.readOnly === true ? previous.itemsPerPage : proposed.itemsPerPage,
     ),
-    notify: (previous, proposed) => {
-      if (previous.page !== proposed.page) options.onPageChange?.(proposed.page);
-      if (previous.itemsPerPage !== proposed.itemsPerPage) {
-        options.onItemsPerPageChange?.(proposed.itemsPerPage);
-      }
-    },
+    notify: [
+      (previous, proposed) => {
+        if (previous.page !== proposed.page) options.onPageChange?.(proposed.page);
+      },
+      (previous, proposed) => {
+        if (previous.itemsPerPage !== proposed.itemsPerPage) {
+          options.onItemsPerPageChange?.(proposed.itemsPerPage);
+        }
+      },
+    ],
     toEffect: (command) => command,
     interaction: options,
     interactionIntent: () => 'mutate',

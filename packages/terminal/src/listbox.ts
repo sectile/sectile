@@ -158,7 +158,7 @@ function createListboxControllerWithPublisher<ID extends StableID>(
       highlightControlled,
       selectionMode,
     ),
-    notify: (previous, proposed) => notifyListboxChange(options, previous, proposed),
+    notify: listboxNotifiers(options),
     toEffect: toListboxEffect,
     publishEffect: publishEffect!,
     interaction: interaction.value,
@@ -446,23 +446,27 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
   }
 }
 
-function notifyListboxChange<ID extends StableID>(
+function listboxNotifiers<ID extends StableID>(
   options: ListboxControllerOptions<ID>,
-  previous: ListboxState<ID>,
-  proposed: ListboxState<ID>,
-): void {
-  if (!sameIDs(previous.selection.selected, proposed.selection.selected)) {
-    options.onValueChange?.(Object.freeze({
-      value: proposed.selection.selected,
-      previousValue: previous.selection.selected,
-    }));
-  }
-  if (previous.cursor.current !== proposed.cursor.current) {
-    options.onHighlightedValueChange?.(Object.freeze({
-      value: proposed.cursor.current,
-      previousValue: previous.cursor.current,
-    }));
-  }
+): readonly ((previous: ListboxState<ID>, proposed: ListboxState<ID>) => void)[] {
+  return Object.freeze([
+    (previous, proposed) => {
+      if (!sameIDs(previous.selection.selected, proposed.selection.selected)) {
+        options.onValueChange?.(Object.freeze({
+          value: proposed.selection.selected,
+          previousValue: previous.selection.selected,
+        }));
+      }
+    },
+    (previous, proposed) => {
+      if (previous.cursor.current !== proposed.cursor.current) {
+        options.onHighlightedValueChange?.(Object.freeze({
+          value: proposed.cursor.current,
+          previousValue: previous.cursor.current,
+        }));
+      }
+    },
+  ]);
 }
 
 function controlledState<ID extends StableID>(

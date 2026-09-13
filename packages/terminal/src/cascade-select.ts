@@ -66,7 +66,11 @@ function tryCreateCascadeSelectConnection<ID extends StableID>(options: CascadeS
     initial: tryCreateCascadeSelectState(tree, { value: options.value === undefined ? options.defaultValue ?? null : options.value, ...(options.highlightedValue !== undefined ? { highlighted: options.highlightedValue } : options.defaultHighlightedValue !== undefined ? { highlighted: options.defaultHighlightedValue } : {}), open: options.open ?? options.defaultOpen ?? false }),
     reducer: (state, event) => applyCascadeSelectEvent(tree, state, event, policies),
     reconcile: (previous, proposed) => tryCreateCascadeSelectState(tree, { value: controlled.value ? previous.value : proposed.value, highlighted: controlled.highlighted ? previous.highlighted : proposed.highlighted, open: controlled.open ? previous.open : proposed.open, path: proposed.path }),
-    notify: (previous, proposed) => { if (previous.value !== proposed.value) options.onValueChange?.(proposed.value); if (previous.highlighted !== proposed.highlighted) options.onHighlightedValueChange?.(proposed.highlighted); if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); },
+    notify: [
+      (previous, proposed) => { if (previous.value !== proposed.value) options.onValueChange?.(proposed.value); },
+      (previous, proposed) => { if (previous.highlighted !== proposed.highlighted) options.onHighlightedValueChange?.(proposed.highlighted); },
+      (previous, proposed) => { if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); },
+    ],
     toEffect: (command) => command,
   });
   return runtime.ok ? { ok: true, value: new TerminalCascadeSelectConnection(options, tree, runtime.value, controlled) } : runtime;

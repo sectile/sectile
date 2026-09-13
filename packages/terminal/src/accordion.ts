@@ -44,7 +44,10 @@ function tryCreateAccordionConnection<ID extends StableID>(options: AccordionOpt
     initial: tryCreateAccordionState(domain.value, { openIDs: initialOpen, current: options.highlightedValue !== undefined ? options.highlightedValue : options.defaultHighlightedValue ?? null }, policies),
     reducer: (state, event) => applyAccordionEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => tryCreateAccordionState(domain.value, { openIDs: openControlled ? previous.openIDs : proposed.openIDs, current: highlightControlled ? previous.cursor.current : proposed.cursor.current }, policies),
-    notify: (previous, proposed) => { if (!sameIDs(previous.openIDs, proposed.openIDs)) options.onOpenChange?.(proposed.openIDs); if (previous.cursor.current !== proposed.cursor.current) options.onHighlightedValueChange?.(proposed.cursor.current); },
+    notify: [
+      (previous, proposed) => { if (!sameIDs(previous.openIDs, proposed.openIDs)) options.onOpenChange?.(proposed.openIDs); },
+      (previous, proposed) => { if (previous.cursor.current !== proposed.cursor.current) options.onHighlightedValueChange?.(proposed.cursor.current); },
+    ],
     toEffect: (command) => command,
     interaction: options,
   });

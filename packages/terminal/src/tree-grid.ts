@@ -183,7 +183,7 @@ export function createTreeGridController<
       highlightControlled,
       editModeControlled,
     ),
-    notify: (previous, proposed) => notifyTreeGridChange(options, previous, proposed),
+    notify: treeGridNotifiers(options),
     toEffect: toTreeGridEffect,
     interaction: options,
     interactionIntent: treeGridIntent,
@@ -408,23 +408,31 @@ class TerminalTreeGridController<RowID extends StableID, CellID extends StableID
   }
 }
 
-function notifyTreeGridChange<RowID extends StableID, CellID extends StableID>(
+function treeGridNotifiers<RowID extends StableID, CellID extends StableID>(
   options: TreeGridControllerOptions<RowID, CellID>,
-  previous: TreeGridState<RowID, CellID>,
-  proposed: TreeGridState<RowID, CellID>,
-): void {
-  const previousValue = selectedValue(previous);
-  const value = selectedValue(proposed);
-  if (previousValue !== value) options.onValueChange?.(Object.freeze({ value, previousValue }));
-  if (!sameIDs(previous.expansion.ids, proposed.expansion.ids)) {
-    options.onExpandedValueChange?.(Object.freeze({ value: proposed.expansion.ids, previousValue: previous.expansion.ids }));
-  }
-  if (previous.cursor.current !== proposed.cursor.current) {
-    options.onHighlightedValueChange?.(Object.freeze({ value: proposed.cursor.current, previousValue: previous.cursor.current }));
-  }
-  if (previous.editMode !== proposed.editMode) {
-    options.onEditModeChange?.(Object.freeze({ value: proposed.editMode, previousValue: previous.editMode }));
-  }
+): readonly ((previous: TreeGridState<RowID, CellID>, proposed: TreeGridState<RowID, CellID>) => void)[] {
+  return Object.freeze([
+    (previous, proposed) => {
+      const previousValue = selectedValue(previous);
+      const value = selectedValue(proposed);
+      if (previousValue !== value) options.onValueChange?.(Object.freeze({ value, previousValue }));
+    },
+    (previous, proposed) => {
+      if (!sameIDs(previous.expansion.ids, proposed.expansion.ids)) {
+        options.onExpandedValueChange?.(Object.freeze({ value: proposed.expansion.ids, previousValue: previous.expansion.ids }));
+      }
+    },
+    (previous, proposed) => {
+      if (previous.cursor.current !== proposed.cursor.current) {
+        options.onHighlightedValueChange?.(Object.freeze({ value: proposed.cursor.current, previousValue: previous.cursor.current }));
+      }
+    },
+    (previous, proposed) => {
+      if (previous.editMode !== proposed.editMode) {
+        options.onEditModeChange?.(Object.freeze({ value: proposed.editMode, previousValue: previous.editMode }));
+      }
+    },
+  ]);
 }
 
 function treeGridIntent<RowID extends StableID, CellID extends StableID>(

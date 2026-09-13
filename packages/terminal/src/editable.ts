@@ -53,10 +53,14 @@ function tryCreateEditableConnection(options: EditableOptions): Result<EditableC
       proposed.editing ? proposed.draft : controlled ? previous.value : proposed.value,
       proposed.editing,
     ),
-    notify: (previous, proposed) => {
-      if (previous.value !== proposed.value) options.onValueChange?.(proposed.value);
-      if (previous.editing !== proposed.editing) options.onEditingChange?.(proposed.editing);
-    },
+    notify: [
+      (previous, proposed) => {
+        if (previous.value !== proposed.value) options.onValueChange?.(proposed.value);
+      },
+      (previous, proposed) => {
+        if (previous.editing !== proposed.editing) options.onEditingChange?.(proposed.editing);
+      },
+    ],
     toEffect: (command) => command,
     interaction: options,
   });

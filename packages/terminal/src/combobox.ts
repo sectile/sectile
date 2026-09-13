@@ -172,7 +172,7 @@ export function createComboboxController<ID extends StableID>(
       openControlled,
       highlightControlled,
     ),
-    notify: (previous, proposed) => notifyComboboxChange(options, previous, proposed),
+    notify: comboboxNotifiers(options),
     toEffect: toComboboxEffect,
     interaction: options,
     interactionIntent: comboboxIntent,
@@ -379,23 +379,31 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
   }
 }
 
-function notifyComboboxChange<ID extends StableID>(
+function comboboxNotifiers<ID extends StableID>(
   options: ComboboxControllerOptions<ID>,
-  previous: ComboboxState<ID>,
-  proposed: ComboboxState<ID>,
-): void {
-  const previousValue = selectedValue(previous);
-  const value = selectedValue(proposed);
-  if (previousValue !== value) options.onValueChange?.(Object.freeze({ value, previousValue }));
-  if (!sameTextEditingState(previous.text, proposed.text)) {
-    options.onInputStateChange?.(Object.freeze({ value: proposed.text, previousValue: previous.text }));
-  }
-  if (previous.popupOpen !== proposed.popupOpen) {
-    options.onOpenChange?.(Object.freeze({ value: proposed.popupOpen, previousValue: previous.popupOpen }));
-  }
-  if (previous.cursor.current !== proposed.cursor.current) {
-    options.onHighlightedValueChange?.(Object.freeze({ value: proposed.cursor.current, previousValue: previous.cursor.current }));
-  }
+): readonly ((previous: ComboboxState<ID>, proposed: ComboboxState<ID>) => void)[] {
+  return Object.freeze([
+    (previous, proposed) => {
+      const previousValue = selectedValue(previous);
+      const value = selectedValue(proposed);
+      if (previousValue !== value) options.onValueChange?.(Object.freeze({ value, previousValue }));
+    },
+    (previous, proposed) => {
+      if (!sameTextEditingState(previous.text, proposed.text)) {
+        options.onInputStateChange?.(Object.freeze({ value: proposed.text, previousValue: previous.text }));
+      }
+    },
+    (previous, proposed) => {
+      if (previous.popupOpen !== proposed.popupOpen) {
+        options.onOpenChange?.(Object.freeze({ value: proposed.popupOpen, previousValue: previous.popupOpen }));
+      }
+    },
+    (previous, proposed) => {
+      if (previous.cursor.current !== proposed.cursor.current) {
+        options.onHighlightedValueChange?.(Object.freeze({ value: proposed.cursor.current, previousValue: previous.cursor.current }));
+      }
+    },
+  ]);
 }
 
 function comboboxIntent<ID extends StableID>(event: ComboboxEvent<ID>): 'navigate' | 'mutate' {

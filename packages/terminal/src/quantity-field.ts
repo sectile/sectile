@@ -89,10 +89,14 @@ function tryCreateQuantityFieldConnection(options: QuantityFieldOptions): Result
       displayUnitControlled ? previous.displayUnit : proposed.displayUnit,
       inputControlled ? previous.inputState : proposed.inputState,
     ),
-    notify: (previous, proposed) => {
-      if (previous.displayUnit !== proposed.displayUnit) options.onDisplayUnitChange?.(proposed.displayUnit);
-      if (!sameTextEditingState(previous.inputState, proposed.inputState)) options.onInputStateChange?.(proposed.inputState);
-    },
+    notify: [
+      (previous, proposed) => {
+        if (previous.displayUnit !== proposed.displayUnit) options.onDisplayUnitChange?.(proposed.displayUnit);
+      },
+      (previous, proposed) => {
+        if (!sameTextEditingState(previous.inputState, proposed.inputState)) options.onInputStateChange?.(proposed.inputState);
+      },
+    ],
     toEffect: (command) => command,
     interaction: options,
     interactionIntent: (event) => typeof event === 'object' && event.type === 'set-display-unit' ? 'navigate' : 'mutate',

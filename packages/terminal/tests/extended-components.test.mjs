@@ -39,6 +39,25 @@ test('terminal extended selection facades own conventional keyboard input', asyn
   assert.deepEqual(rating.getSnapshot().state.selection.selected, ['2']);
 });
 
+test('terminal select drains sibling proposals before rethrowing the first callback failure', () => {
+  const trace = [];
+  const firstError = new Error('value callback failed');
+  const select = createSelect({
+    items: ['a', 'b'],
+    defaultValue: 'a',
+    defaultHighlightedValue: 'a',
+    defaultOpen: true,
+    onValueChange: (value) => { trace.push(`value:${value}`); throw firstError; },
+    onHighlightedValueChange: (value) => { trace.push(`highlight:${value}`); },
+    onOpenChange: (open) => { trace.push(`open:${open}`); },
+  });
+  assert.throws(() => select.handleEvent({ type: 'select', id: 'b' }), (error) => error === firstError);
+  assert.deepEqual(trace, ['value:b', 'highlight:b', 'open:false']);
+  assert.deepEqual(select.getSnapshot().state.choice.selection.selected, ['b']);
+  assert.equal(select.getSnapshot().state.choice.cursor.current, 'b');
+  assert.equal(select.getSnapshot().state.open, false);
+});
+
 test('terminal toggle group uses Enter and Space as presses', () => {
   const single = createToggleGroup({ items: ['bold', 'italic'], defaultValue: ['bold'], defaultHighlightedValue: 'bold' });
   single.handleKeyboardInput({ key: 'enter' });

@@ -112,13 +112,19 @@ function construct(options: DateTimePickerOptions): TerminalTemporalResult<DateT
         open: controls.open ? previous.calendar.open : proposed.calendar.open,
       },
     }),
-    notify: (previous, proposed) => {
-      if (compareNullable(previous.value, proposed.value) !== 0) options.onValueChange?.(proposed.value);
-      if (compareDateValues(previous.calendar.highlighted, proposed.calendar.highlighted) !== 0) {
-        options.onHighlightedValueChange?.(proposed.calendar.highlighted);
-      }
-      if (previous.calendar.open !== proposed.calendar.open) options.onOpenChange?.(proposed.calendar.open);
-    },
+    notify: [
+      (previous, proposed) => {
+        if (compareNullable(previous.value, proposed.value) !== 0) options.onValueChange?.(proposed.value);
+      },
+      (previous, proposed) => {
+        if (compareDateValues(previous.calendar.highlighted, proposed.calendar.highlighted) !== 0) {
+          options.onHighlightedValueChange?.(proposed.calendar.highlighted);
+        }
+      },
+      (previous, proposed) => {
+        if (previous.calendar.open !== proposed.calendar.open) options.onOpenChange?.(proposed.calendar.open);
+      },
+    ],
     toEffect: (command) => command,
     interaction: options,
   });

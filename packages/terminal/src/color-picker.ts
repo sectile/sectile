@@ -43,7 +43,11 @@ function tryCreateConnection(options: ColorPickerOptions): Result<ColorPickerCon
     initial: tryCreateColorPickerState({ value: options.value ?? options.defaultValue ?? '#000000', draft: options.draft !== undefined ? options.draft : options.defaultDraft ?? null, format: options.format ?? options.defaultFormat ?? 'hex' }, policies),
     reducer: (state, event) => applyColorPickerEvent(state, event, policies),
     reconcile: (previous, proposed) => tryCreateColorPickerState({ value: controlled[0] ? previous.value : proposed.value, draft: controlled[1] ? previous.draft : proposed.draft, format: controlled[2] ? previous.format : proposed.format, channel: proposed.channel }, policies),
-    notify: (previous, proposed) => { if (!sameColor(previous.value, proposed.value)) options.onValueChange?.(proposed.value); if (previous.draft !== proposed.draft) options.onDraftChange?.(proposed.draft); if (previous.format !== proposed.format) options.onFormatChange?.(proposed.format); },
+    notify: [
+      (previous, proposed) => { if (!sameColor(previous.value, proposed.value)) options.onValueChange?.(proposed.value); },
+      (previous, proposed) => { if (previous.draft !== proposed.draft) options.onDraftChange?.(proposed.draft); },
+      (previous, proposed) => { if (previous.format !== proposed.format) options.onFormatChange?.(proposed.format); },
+    ],
     toEffect: (command) => command, interaction: options,
   });
   return runtime.ok ? { ok: true, value: new TerminalColorPicker(options, policies, runtime.value, controlled) } : runtime;
