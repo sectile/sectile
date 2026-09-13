@@ -11,6 +11,8 @@ import {
 } from '../.verification-dist/keyboard.js';
 import { fitTerminalText } from '../.verification-dist/layout.js';
 import { createTTYKeyboard, toTerminalKeyboardInput } from '../.verification-dist/node.js';
+import { renderTerminalScreen, serializeTerminalFrame, terminalText } from '../.verification-dist/screen.js';
+import { createText } from '../.verification-dist/text.js';
 
 class FakeTTYInput extends EventEmitter {
   isTTY = true;
@@ -54,6 +56,19 @@ test('Node keypresses expose portable edge aliases', () => {
   assert.deepEqual(toTerminalKeyboardInput('\u0005', { name: 'e', ctrl: true }), {
     key: 'end',
   });
+});
+
+test('Node keypresses keep Unicode controls out of insertable text', () => {
+  for (const control of ['\u0085', '\u009b']) {
+    const input = toTerminalKeyboardInput(control, {});
+    assert.notEqual(input, null);
+    assert.equal(input.key, control);
+    assert.equal(Object.hasOwn(input, 'text'), false);
+  }
+
+  for (const printable of ['A', '한', '😀', 'e\u0301', '！', ' ']) {
+    assert.equal(toTerminalKeyboardInput(printable, {}).text, printable);
+  }
 });
 
 test('terminal text editing removes one grapheme and accepts printable text', () => {
@@ -196,6 +211,28 @@ test('TTY keyboard decodes fragmented UTF-8 and escape sequences once per input'
     assert.deepEqual(received, [
       { key: '한', text: '한' }, { key: 'up' }, { key: 'home' }, { key: 'left', altKey: true },
     ]);
+  } finally { keyboard.value.close(); }
+});
+
+test('TTY keyboard keeps decoded C1 controls out of public text and screen state', () => {
+  const input = new FakeTTYInput();
+  const text = createText();
+  const received = [];
+  const keyboard = createTTYKeyboard(input, (value) => {
+    received.push(value);
+    text.handleKeyboardInput(value);
+  });
+  assert.equal(keyboard.ok, true);
+  try {
+    input.emit('data', Buffer.from('\u0085'));
+    input.emit('data', Buffer.from('\u009b'));
+    assert.equal(received.length, 2);
+    assert.equal(received.every((value) => !Object.hasOwn(value, 'text')), true);
+    assert.equal(text.getValue(), '');
+    assert.deepEqual(
+      serializeTerminalFrame(renderTerminalScreen(terminalText(text.getValue()), { columns: 2, rows: 1 })),
+      ['  '],
+    );
   } finally { keyboard.value.close(); }
 });
 

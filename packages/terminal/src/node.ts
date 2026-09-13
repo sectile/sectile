@@ -8,6 +8,7 @@ import type {
   TerminalColorLevel,
 } from './appearance.js';
 import { createTerminalAppearance } from './appearance.js';
+import { isTerminalTextInput } from './internal/grapheme.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import type { TerminalFrame, TerminalFrameCursor } from './screen.js';
 import { serializeTerminalFrame } from './screen.js';
@@ -310,7 +311,6 @@ function printableKey(value: string | undefined): string | null {
 }
 
 function printableText(value: string | undefined, keypress: NodeKeypress): string | null {
-  if (value === undefined || value.length === 0) return null;
-  if (keypress.ctrl === true || keypress.meta === true) return null;
-  return Array.from(value).every((character) => character >= ' ') ? value : null;
+  if (value === undefined || keypress.ctrl === true || keypress.meta === true) return null;
+  return isTerminalTextInput(value) ? value : null;
 }
