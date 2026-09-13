@@ -322,6 +322,13 @@ export function tryCreateForm<
   let subscriptionErrorHandler: ((error: unknown) => void) | undefined = options.onSubscriptionError;
   let dispatchingNotifications = false;
 
+  const retirePendingValidationForTopologyChange = (): void => {
+    if (state.validation.status !== 'validating') return;
+    validationController?.abort();
+    validationController = null;
+    validationSequence += 1;
+  };
+
   options.form.dataset['scope'] = 'form';
   options.form.dataset['part'] = 'root';
   const syncSummary = (): void => {
@@ -485,11 +492,15 @@ export function tryCreateForm<
       dispatchingNotifications = false;
     }
   };
-  const transition = (event: FormEvent<ID>): readonly FormCommand<ID>[] | null => {
+  const transition = (
+    event: FormEvent<ID>,
+    beforeCommit?: () => void,
+  ): readonly FormCommand<ID>[] | null => {
     if (!active) return null;
     const result = applyFormEvent(state, event);
     if (!result.ok) return null;
     const previous = state;
+    beforeCommit?.();
     state = result.value.state;
     if (!Object.is(previous, state)) {
       syncSummary();
@@ -1086,7 +1097,7 @@ export function tryCreateForm<
           id: participant.id,
           name: readParticipantName(participant),
         },
-      });
+      }, retirePendingValidationForTopologyChange);
     }
     reorderParticipants(participants, state, transition);
     return (): void => {
@@ -1096,7 +1107,10 @@ export function tryCreateForm<
       participants.delete(participant.id);
       participantBaselines.delete(participant.id);
       participantValues.delete(participant.id);
-      transition({ type: 'unregister-field', id: participant.id });
+      transition(
+        { type: 'unregister-field', id: participant.id },
+        retirePendingValidationForTopologyChange,
+      );
     };
   };
 

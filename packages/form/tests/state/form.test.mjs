@@ -1136,6 +1136,52 @@ test('ISSUE-048: submission attempt count rejects overflow and accepts the final
   }).ok, true);
 });
 
+test('ISSUE-132: field topology changes invalidate pending validation without invalidating same-id replacement', () => {
+  let state = createFormState({ fields: [{ id: 'a' }] });
+  state = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'input', intent: 'interaction',
+  }).value.state;
+  const registerGeneration = state.validation.generation;
+
+  state = applyFormEvent(state, {
+    type: 'register-field', field: { id: 'b' },
+  }).value.state;
+  assert.equal(state.validation.status, 'idle');
+  assert.equal(state.validation.generation, registerGeneration);
+  const staleRegister = applyFormEvent(state, {
+    type: 'validation-completed', trigger: 'input', intent: 'interaction', generation: registerGeneration,
+  });
+  assert.equal(staleRegister.ok, false);
+  assert.equal(staleRegister.error.code, 'form-validation-generation-stale');
+
+  state = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'input', intent: 'interaction',
+  }).value.state;
+  const unregisterGeneration = state.validation.generation;
+  state = applyFormEvent(state, { type: 'unregister-field', id: 'b' }).value.state;
+  assert.equal(state.validation.status, 'idle');
+  assert.equal(state.validation.generation, unregisterGeneration);
+  const staleUnregister = applyFormEvent(state, {
+    type: 'validation-completed', trigger: 'input', intent: 'interaction', generation: unregisterGeneration,
+  });
+  assert.equal(staleUnregister.ok, false);
+  assert.equal(staleUnregister.error.code, 'form-validation-generation-stale');
+
+  state = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'input', intent: 'interaction',
+  }).value.state;
+  const replacementGeneration = state.validation.generation;
+  state = applyFormEvent(state, {
+    type: 'register-field', field: { id: 'a', name: 'renamed' },
+  }).value.state;
+  assert.equal(state.validation.status, 'validating');
+  assert.equal(state.validation.generation, replacementGeneration);
+  const replacementCompletion = applyFormEvent(state, {
+    type: 'validation-completed', trigger: 'input', intent: 'interaction', generation: replacementGeneration,
+  });
+  assert.equal(replacementCompletion.ok, true);
+});
+
 test('FRM-01, FRM-02: form generations reject stale validation and submission results atomically', () => {
   let state = createFormState({ fields: [{ id: 'email' }] });
   state = applyFormEvent(state, {

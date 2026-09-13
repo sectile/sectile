@@ -855,6 +855,145 @@ test('ISSUE-123: reinitialize still preserves settled validation metadata', () =
   }
 });
 
+test('ISSUE-132: participant topology changes retire pending interaction validation and fresh validation sees current fields', async () => {
+  const dom = installDOM();
+  try {
+    const { document, Event } = dom.window;
+    const formElement = document.createElement('form');
+    const first = document.createElement('input');
+    first.name = 'a';
+    first.value = 'before';
+    formElement.append(first);
+    document.body.append(formElement);
+    const pending = [];
+    const seen = [];
+    const signals = [];
+    const form = createForm({
+      form: formElement,
+      participants: [{ id: 'a', element: first }],
+      validateOn: ['input'],
+      validate(values, context) {
+        seen.push({ ...values });
+        signals.push(context.signal);
+        return new Promise((resolve) => { pending.push(resolve); });
+      },
+    });
+
+    first.value = 'after';
+    first.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.deepEqual(seen[0], { a: 'after' });
+    assert.equal(form.state.validation.status, 'validating');
+
+    const second = document.createElement('input');
+    second.name = 'b';
+    second.value = 'registered';
+    formElement.append(second);
+    const unregisterSecond = form.registerParticipant({ id: 'b', element: second });
+    assert.equal(signals[0].aborted, true);
+    assert.equal(form.state.validation.status, 'idle');
+    assert.deepEqual(form.state.fields.map((field) => field.id), ['a', 'b']);
+
+    pending[0]({ issues: [{ message: 'stale register result', path: 'a' }] });
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(form.state.validation.status, 'idle');
+    assert.equal(form.state.allIssues.some((issue) => issue.message === 'stale register result'), false);
+
+    second.value = 'invalid';
+    second.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.deepEqual(seen[1], { a: 'after', b: 'invalid' });
+    pending[1]({ issues: [{ message: 'B is invalid.', path: 'b' }] });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(form.state.validation.status, 'invalid');
+    assert.equal(form.state.allIssues.some((issue) => issue.message === 'B is invalid.'), true);
+
+    second.value = 'pending-remove';
+    second.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.state.validation.status, 'validating');
+    assert.deepEqual(seen[2], { a: 'after', b: 'pending-remove' });
+    second.remove();
+    unregisterSecond();
+    assert.equal(signals[2].aborted, true);
+    assert.equal(form.state.validation.status, 'idle');
+    assert.deepEqual(form.state.fields.map((field) => field.id), ['a']);
+
+    pending[2]({ issues: [{ message: 'stale unregister result', path: 'a' }] });
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(form.state.validation.status, 'idle');
+    assert.equal(form.state.allIssues.some((issue) => issue.message === 'stale unregister result'), false);
+
+    first.value = 'final';
+    first.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.deepEqual(seen[3], { a: 'final' });
+    pending[3]({});
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(form.state.validation.status, 'valid');
+    form.destroy();
+  } finally {
+    dom.restore();
+  }
+});
+
+test('ISSUE-132: topology changes cannot resume submission validation from stale values', async () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const first = document.createElement('input');
+    first.name = 'a';
+    first.value = 'one';
+    formElement.append(first);
+    document.body.append(formElement);
+    const pending = [];
+    const seen = [];
+    const signals = [];
+    let submissions = 0;
+    const form = createForm({
+      form: formElement,
+      participants: [{ id: 'a', element: first }],
+      validate(values, context) {
+        seen.push({ ...values });
+        signals.push(context.signal);
+        return new Promise((resolve) => { pending.push(resolve); });
+      },
+      onSubmit() {
+        submissions += 1;
+        return { ok: true };
+      },
+    });
+
+    formElement.requestSubmit();
+    assert.deepEqual(seen[0], { a: 'one' });
+    assert.equal(form.state.validation.status, 'validating');
+    assert.equal(form.state.validation.intent, 'submission');
+
+    const second = document.createElement('input');
+    second.name = 'b';
+    second.value = 'two';
+    formElement.append(second);
+    form.registerParticipant({ id: 'b', element: second });
+    assert.equal(signals[0].aborted, true);
+    assert.equal(form.state.validation.status, 'idle');
+
+    pending[0]({});
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(submissions, 0);
+    assert.equal(form.state.submission.status, 'idle');
+
+    formElement.requestSubmit();
+    assert.deepEqual(seen[1], { a: 'one', b: 'two' });
+    pending[1]({});
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(submissions, 1);
+    assert.equal(form.state.submission.status, 'succeeded');
+    form.destroy();
+  } finally {
+    dom.restore();
+  }
+});
+
 test('DOM Form supports custom value snapshots and comparators', () => {
   const dom = installDOM();
   try {
