@@ -162,7 +162,7 @@ test('Grid focus publication drains against the latest synchronous controlled ac
     await settle();
     assert.deepEqual(stats.tabChanges, [['a', -1], ['b', 0]]);
     assert.deepEqual(stats.selectionChanges, [['b', 'true']]);
-    assert.deepEqual(trace, ['value', 'update', 'highlight', 'update', 'update']);
+    assert.deepEqual(trace, ['value', 'update', 'highlight', 'update']);
     reset(stats, true);
     root.emit('focusin', { target: a });
     await settle();

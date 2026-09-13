@@ -92,6 +92,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
   readonly #elementOwners = new WeakMap<HTMLElement, ID>();
   readonly #focusEntry: DOMCompositeFocusEntry<ID>;
   #active = true;
+  #nativeFocusEvent = false;
   #publishedRevision: number;
   #projectedCurrent: ID | null;
   #projectedValue: ID | null;
@@ -109,7 +110,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
     this.#projectedValue = state.selection.selected[0] ?? null;
     this.#keydown = (event) => { const semantic = toGridEvent(event, this.getSnapshot().state.editMode); if (semantic !== null && this.handleEvent(semantic)) event.preventDefault(); };
     this.#click = (event) => { const id = this.#findID(event.target); if (id !== null) this.handleEvent({ type: 'select', id }); };
-    this.#focus = (event) => { const id = this.#findID(event.target); if (id === null || id === this.getSnapshot().state.cursor.current) return; this.handleEvent({ type: 'focus', id }); };
+    this.#focus = (event) => { const id = this.#findID(event.target); if (id === null || id === this.getSnapshot().state.cursor.current) return; this.#nativeFocusEvent = true; try { this.#runtime.handle({ type: 'focus', id }); } finally { this.#nativeFocusEvent = false; } };
     options.root.addEventListener('keydown', this.#keydown); options.root.addEventListener('click', this.#click); options.root.addEventListener('focusin', this.#focus);
     options.root.setAttribute('role', 'grid'); options.root.setAttribute('aria-rowcount', String(grid.rowCount)); options.root.setAttribute('aria-colcount', String(grid.columnCount)); if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     setInteractionAttributes(options.root, options, { readOnly: true });
@@ -137,6 +138,19 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
   }
   public handleEvent(event: GridEvent<ID>): boolean { return this.#runtime.handle(event).ok; }
   public complete(commands: readonly GridCommand<ID>[]): void {
+    if (this.#nativeFocusEvent) {
+      let firstError: unknown; let hasError = false;
+      try { this.#projectTransition(); } catch (error) { hasError = true; firstError = error; }
+      queueMicrotask(() => {
+        if (!this.#active) return;
+        let deferredError: unknown; let hasDeferredError = false;
+        try { this.#publishUpdate(); } catch (error) { hasDeferredError = true; deferredError = error; }
+        try { this.focusCurrent(); } catch (error) { if (!hasDeferredError) { hasDeferredError = true; deferredError = error; } }
+        if (hasDeferredError) throw deferredError;
+      });
+      if (hasError) throw firstError;
+      return;
+    }
     let firstError: unknown; let hasError = false;
     for (const command of commands) {
       try {
