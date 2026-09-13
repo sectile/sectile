@@ -30170,12 +30170,12 @@
         "deterministicWork": [
           "One active keyboard and one source data forwarder per TTY; no decoder properties or keypress listeners are added to that TTY.",
           "Each chunk is forwarded synchronously once without a second buffering queue; Node decoding and key normalization retain their input/output bounds.",
-          "Close detaches the forwarder, clears private listeners and the application callback, destroys the private readable, and releases ownership even if raw restoration throws.",
+          "Close detaches the forwarder, clears private listeners and the application callback, destroys the private readable, restores the borrowed TTY raw state plus its null/paused/flowing consumption state, and releases ownership even if restoration throws.",
           "Repeated close and captured stale data callbacks perform zero decoding or publication."
         ],
         "resourceRationale": "The caller stream retains only one adapter data callback until close. External decoders are untouched. Node's pending escape work can retain only the detached private decoder after its listener is removed, not the application callback or input stream.",
         "proof": "Removing one source data listener can scan lInput listeners. All other adapter teardown steps touch a fixed private listener set and scalar ownership state. Normal input adds one constant synchronous forwarding dispatch per chunk; no subscriber-domain scan or byte copy is introduced by the bridge.",
-        "adversarialWitness": "64 acquire/close cycles cover all raw/flow baselines and verify zero residual decoding. Active, idle, and subsequently installed external decoders keep their listener identities. Fragmented UTF-8/escape input, mid-chunk close, late escape completion, setup failures, and a real Linux ReadStream exercise the public factory.",
+        "adversarialWitness": "96 acquire/close cycles cover both raw baselines crossed with null, explicitly paused, and flowing Readable states and verify zero residual decoding. Active, idle, and subsequently installed external decoders keep their listener identities. Fragmented UTF-8/escape input, mid-chunk close, late escape completion, setup failures, and real Linux ReadStreams including a virgin null-flow baseline exercise the public factory.",
         "evidence": [
           "packages/terminal/tests/keyboard.test.mjs"
         ],
