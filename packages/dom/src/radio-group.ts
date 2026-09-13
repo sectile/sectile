@@ -17,6 +17,7 @@ import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import type { KeyboardInput } from './tabs.js';
 import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
+import { DOMCompositeFocusEntry } from './internal/composite-focus-entry.js';
 
 export type RadioGroupEffect<ID extends StableID = StableID> =
   { readonly type: 'focus-radio'; readonly id: ID };
@@ -217,6 +218,7 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
   readonly #valueControlled: boolean;
   readonly #highlightControlled: boolean;
   readonly #disabledItems: ReadonlySet<ID>;
+  readonly #focusEntry: DOMCompositeFocusEntry<ID>;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
   #active = true;
@@ -232,6 +234,10 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
     this.#valueControlled = options.value !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
     this.#disabledItems = disabledItems;
+    this.#focusEntry = new DOMCompositeFocusEntry({
+      mode: 'item', root: options.root, current: runtime.getSnapshot().state.cursor.current,
+      rank: (id) => domain.indexOf(id),
+    });
     applyAttributes(options.root, getRadioGroupRootAttributes(options));
     this.#keydown = (event): void => {
       const semantic = toRadioGroupEvent<ID>(event, options.orientation, options.direction);
@@ -270,7 +276,10 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
         : state.selection.anchor,
       current: this.#highlightControlled ? (values.highlightedValue ?? null) : state.cursor.current,
     }));
-    if (result.ok) this.#options.onUpdate?.();
+    if (result.ok) {
+      this.#focusEntry.setCurrent(result.value.state.cursor.current);
+      this.#options.onUpdate?.();
+    }
     return result;
   }
 
@@ -284,18 +293,19 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
       highlighted: state.cursor.current === id,
       disabled: unavailable,
     }));
+    this.#focusEntry.bind(element, id, { available: !unavailable });
   }
 
   public handleEvent(event: RadioGroupEvent<ID>): boolean {
     const result = this.#runtime.handle(event);
-    if (result.ok) queueMicrotask(() => {
-      if (!this.#active) return;
-      for (const element of this.#options.root.querySelectorAll<HTMLElement>('[data-radio-group-id]')) {
-        const current = result.snapshot.state.cursor.current;
-        if (current !== null && element.dataset['radioGroupId'] === stableIDToken(current)) element.focus();
-      }
-    });
-    if (result.ok) this.#options.onUpdate?.();
+    if (result.ok) {
+      this.#focusEntry.setCurrent(result.snapshot.state.cursor.current);
+      queueMicrotask(() => {
+        if (!this.#active || result.snapshot.state.cursor.current === null) return;
+        this.#focusEntry.elementFor(result.snapshot.state.cursor.current)?.focus();
+      });
+      this.#options.onUpdate?.();
+    }
     return result.ok;
   }
 
@@ -303,6 +313,7 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
     this.#active = false;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
+    this.#focusEntry.disconnect();
   }
 }
 

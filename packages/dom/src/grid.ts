@@ -6,6 +6,7 @@ import { applyGridEvent, tryCreateGridState, type GridCommand, type GridEditMode
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
+import { DOMCompositeFocusEntry } from './internal/composite-focus-entry.js';
 
 export type { GridEditMode, GridPolicies } from '@sectile/core/grid-control';
 
@@ -82,6 +83,7 @@ function tryCreateGridControlConnection<ID extends StableID>(options: GridOption
 class DOMGrid<ID extends StableID> implements GridConnection<ID> {
   public readonly grid: Grid<ID>; readonly #options: GridOptions<ID>; readonly #runtime: SemanticController<GridState<ID>, GridEvent<ID>, GridCommand<ID>>; readonly #elements = new Map<ID, HTMLElement>();
   readonly #elementOwners = new WeakMap<HTMLElement, ID>();
+  readonly #focusEntry: DOMCompositeFocusEntry<ID>;
   #active = true;
   #projectedCurrent: ID | null;
   #projectedValue: ID | null;
@@ -91,6 +93,9 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
     this.#options = options; this.grid = grid; this.#runtime = runtime;
     this.#disabled = disabled; this.#itemDisabled = itemDisabled; this.#valueControlled = valueControlled; this.#highlightControlled = highlightControlled; this.#editControlled = editControlled;
     const state = runtime.getSnapshot().state;
+    this.#focusEntry = new DOMCompositeFocusEntry({
+      mode: 'root', root: options.root, current: state.cursor.current, rootEnabled: options.disabled !== true,
+    });
     this.#projectedCurrent = state.cursor.current;
     this.#projectedValue = state.selection.selected[0] ?? null;
     this.#keydown = (event) => { const semantic = toGridEvent(event, this.getSnapshot().state.editMode); if (semantic !== null && this.handleEvent(semantic)) event.preventDefault(); };
@@ -128,16 +133,17 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
     this.#options.root.removeEventListener('focusin', this.#focus);
+    this.#focusEntry.disconnect();
     this.#elements.clear();
     this.#itemDisabled.clear();
     this.#projectedCurrent = null;
     this.#projectedValue = null;
   }
   #releaseCell(id: ID, element: HTMLElement): void {
+    this.#focusEntry.release(id, element);
     this.#elements.delete(id);
     if (this.#elementOwners.get(element) === id) this.#elementOwners.delete(element);
     this.#itemDisabled.delete(id);
-    element.tabIndex = -1;
   }
   #findID(target: EventTarget | null): ID | null {
     // Follow the light-DOM target ancestry, including text nodes, without a cell scan.
@@ -161,7 +167,9 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
     element.setAttribute('aria-selected', String(state.selection.has(id)));
     if (this.#disabled.has(id) || this.#itemDisabled.has(id)) element.setAttribute('aria-disabled', 'true');
     else element.removeAttribute('aria-disabled');
-    element.tabIndex = state.cursor.current === id ? 0 : -1;
+    this.#focusEntry.bind(element, id, {
+      available: this.#options.disabled !== true && !this.#disabled.has(id) && !this.#itemDisabled.has(id),
+    });
   }
   #projectTransition(): void {
     const state = this.getSnapshot().state;
@@ -172,12 +180,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
     const previousValue = this.#projectedValue;
     this.#projectedCurrent = current;
     this.#projectedValue = value;
-    if (previousCurrent !== current) {
-      const previous = previousCurrent === null ? undefined : this.#elements.get(previousCurrent);
-      const next = current === null ? undefined : this.#elements.get(current);
-      if (previous !== undefined) previous.tabIndex = -1;
-      if (next !== undefined) next.tabIndex = 0;
-    }
+    if (previousCurrent !== current) this.#focusEntry.setCurrent(current);
     if (previousValue !== value) {
       if (previousValue !== null) this.#elements.get(previousValue)?.setAttribute('aria-selected', 'false');
       if (value !== null) this.#elements.get(value)?.setAttribute('aria-selected', 'true');

@@ -16,6 +16,7 @@ import { stableIDToken } from './internal/stable-id-token.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
+import { DOMCompositeFocusEntry } from './internal/composite-focus-entry.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -246,6 +247,7 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
   readonly #valueControlled: boolean;
   readonly #highlightControlled: boolean;
   readonly #disabledItems: ReadonlySet<ID>;
+  readonly #focusEntry: DOMCompositeFocusEntry<ID>;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
   #active = true;
@@ -264,6 +266,10 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
     this.#valueControlled = valueControlled;
     this.#highlightControlled = highlightControlled;
     this.#disabledItems = disabledItems;
+    this.#focusEntry = new DOMCompositeFocusEntry({
+      mode: 'item', root: options.root, current: runtime.getSnapshot().state.cursor.current,
+      rank: (id) => domain.indexOf(id),
+    });
     applyAttributes(options.root, getTabsListAttributes(options));
     this.#keydown = (event): void => {
       const semantic = toTabsEvent<ID>(event, options.orientation, options.direction);
@@ -301,7 +307,10 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
         ? (values.highlightedValue ?? null)
         : current.cursor.current,
     }));
-    if (result.ok) this.#options.onUpdate?.();
+    if (result.ok) {
+      this.#focusEntry.setCurrent(result.value.state.cursor.current);
+      this.#options.onUpdate?.();
+    }
     return result;
   }
 
@@ -317,6 +326,7 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
       disabled,
       ...(attributes.panelID === undefined ? {} : { panelID: attributes.panelID }),
     }));
+    this.#focusEntry.bind(element, attributes.id, { available: !disabled });
   }
 
   public setPanelAttributes(element: HTMLElement, id: ID, tabID?: string): void {
@@ -329,10 +339,14 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
   public handleEvent(event: TabsEvent<ID>): boolean {
     const result = this.#runtime.handle(event);
     if (result.ok) {
+      this.#focusEntry.setCurrent(result.snapshot.state.cursor.current);
       for (const effect of result.commands) {
         if (effect.type === 'activate-tab') this.#options.onActivate?.(effect.id);
       }
-      queueMicrotask(() => { if (this.#active) focusData(this.#options.root, 'tabsId', result.snapshot.state.cursor.current); });
+      queueMicrotask(() => {
+        if (!this.#active || result.snapshot.state.cursor.current === null) return;
+        this.#focusEntry.elementFor(result.snapshot.state.cursor.current)?.focus();
+      });
     }
     if (result.ok) this.#options.onUpdate?.();
     return result.ok;
@@ -342,6 +356,7 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
     this.#active = false;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
+    this.#focusEntry.disconnect();
   }
 }
 
@@ -361,13 +376,6 @@ function applyAttributes(element: HTMLElement, attributes: Readonly<Record<strin
 
 function selected<ID extends StableID>(value: ID | null): readonly ID[] {
   return value === null ? [] : [value];
-}
-
-function focusData(root: HTMLElement, key: string, id: StableID | null): void {
-  if (id === null) return;
-  for (const element of root.querySelectorAll<HTMLElement>(`[data-${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}]`)) {
-    if (element.dataset[key] === stableIDToken(id)) element.focus();
-  }
 }
 
 function controlledError<State>(name: string): Result<RevisionSnapshot<State>> {

@@ -190,7 +190,7 @@ test('DOM menu transitions project only changed cursor hosts at 1k, 10k, and 100
       assert.deepEqual(tabWrites, []);
       root.emit('click', { target: elements.at(-1), composedPath: () => [elements.at(-1), root] });
       assert.deepEqual(invoked, [size - 1]);
-      assert.deepEqual(tabWrites, [[0, -1], [size - 1, 0], [size - 1, -1]]);
+      assert.deepEqual(tabWrites, [[0, -1], [size - 1, 0], [size - 1, -1], [0, 0]]);
       menu.refresh(null);
       assert.equal(elements.reduce((sum, element) => sum + element.projectionWrites, 0), 0);
       assert.equal(menu.state.cursor.current, null);

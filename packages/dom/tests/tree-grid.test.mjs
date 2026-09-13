@@ -306,6 +306,10 @@ class FakeElement {
     this.attributes.delete(name);
   }
 
+  querySelector() {
+    return null;
+  }
+
   querySelectorAll() {
     return [];
   }

@@ -25,6 +25,7 @@ import { createDisabledItems } from './internal/disabled-items.js';
 import { findDelegatedStableID } from './internal/delegated-event.js';
 import { stableIDToken } from './internal/stable-id-token.js';
 import { horizontalArrow } from './internal/direction.js';
+import { DOMCompositeFocusEntry } from './internal/composite-focus-entry.js';
 
 export type RatingOptions<ID extends StableID = StableID> = Omit<
   RadioGroupOptions<ID>,
@@ -131,6 +132,7 @@ class DOMRatingConnection<ID extends StableID> implements RatingConnection<ID> {
   readonly disabledItems: ReadonlySet<ID>;
   readonly valueControlled: boolean;
   readonly highlightControlled: boolean;
+  readonly #focusEntry: DOMCompositeFocusEntry<ID>;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
   #active = true;
@@ -149,6 +151,10 @@ class DOMRatingConnection<ID extends StableID> implements RatingConnection<ID> {
     this.disabledItems = disabledItems;
     this.valueControlled = valueControlled;
     this.highlightControlled = highlightControlled;
+    this.#focusEntry = new DOMCompositeFocusEntry({
+      mode: 'item', root: options.root, current: runtime.getSnapshot().state.cursor.current,
+      rank: (id) => domain.indexOf(id),
+    });
     applyAttributes(options.root, getRadioGroupRootAttributes({ ...options, orientation: 'horizontal' }));
     this.#keydown = (event): void => {
       const semantic = ratingKeyboardEvent<ID>(event, options.direction);
@@ -183,7 +189,10 @@ class DOMRatingConnection<ID extends StableID> implements RatingConnection<ID> {
         : current.selection.anchor,
       current: this.highlightControlled ? values.highlightedValue ?? null : current.cursor.current,
     }));
-    if (result.ok) this.options.onUpdate?.();
+    if (result.ok) {
+      this.#focusEntry.setCurrent(result.value.state.cursor.current);
+      this.options.onUpdate?.();
+    }
     return result;
   }
 
@@ -200,19 +209,20 @@ class DOMRatingConnection<ID extends StableID> implements RatingConnection<ID> {
       }),
       'aria-label': `${String(id)} rating`,
     });
+    this.#focusEntry.bind(element, id, { available: !unavailable });
   }
 
   public handleEvent(event: RatingEvent<ID>): boolean {
     if (event === 'clear' && this.options.clearable !== true) return false;
     const result = this.runtime.handle(event);
-    if (result.ok) queueMicrotask(() => {
-      if (!this.#active) return;
-      for (const element of this.options.root.querySelectorAll<HTMLElement>('[data-radio-group-id]')) {
-        const current = result.snapshot.state.cursor.current;
-        if (current !== null && element.dataset['radioGroupId'] === stableIDToken(current)) element.focus();
-      }
-    });
-    if (result.ok) this.options.onUpdate?.();
+    if (result.ok) {
+      this.#focusEntry.setCurrent(result.snapshot.state.cursor.current);
+      queueMicrotask(() => {
+        if (!this.#active || result.snapshot.state.cursor.current === null) return;
+        this.#focusEntry.elementFor(result.snapshot.state.cursor.current)?.focus();
+      });
+      this.options.onUpdate?.();
+    }
     return result.ok;
   }
 
@@ -220,6 +230,7 @@ class DOMRatingConnection<ID extends StableID> implements RatingConnection<ID> {
     this.#active = false;
     this.options.root.removeEventListener('keydown', this.#keydown);
     this.options.root.removeEventListener('click', this.#click);
+    this.#focusEntry.disconnect();
   }
 }
 

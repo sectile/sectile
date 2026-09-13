@@ -16,6 +16,7 @@ import {
 import { findDelegatedStableID } from './internal/delegated-event.js';
 import { stableIDToken } from './internal/stable-id-token.js';
 import { setInteractionAttributes } from './internal/interaction.js';
+import { DOMCompositeFocusEntry } from './internal/composite-focus-entry.js';
 
 export type { TreeNodeInput } from '@sectile/core/tree';
 export type { TreeViewPolicies } from '@sectile/core/tree-view';
@@ -237,6 +238,8 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
   readonly #onTransition: ((details: TreeViewTransitionDetails<ID>) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
   readonly #disabled: ReadonlySet<ID>;
+  readonly #interactionDisabled: boolean;
+  readonly #focusEntry: DOMCompositeFocusEntry<ID>;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handleClick: (event: MouseEvent) => void;
   #active = true;
@@ -248,6 +251,11 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
     this.#disabled = new Set(options.disabledItems ?? []);
+    this.#interactionDisabled = options.disabled === true;
+    this.#focusEntry = new DOMCompositeFocusEntry({
+      mode: 'root', root: this.#root, current: this.#controller.getSnapshot().state.cursor.current,
+      rootEnabled: !this.#interactionDisabled,
+    });
     setInteractionAttributes(this.#root, options, { readOnly: true });
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
@@ -276,6 +284,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
   ): Result<RevisionSnapshot<TreeViewState<ID>>> {
     const result = this.#controller.syncControlledValues(values);
     if (result.ok) {
+      this.#focusEntry.setCurrent(result.value.state.cursor.current);
       this.#onUpdate?.();
       this.focusCurrent();
     }
@@ -299,7 +308,6 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
     const leaf = this.tree.isLeaf(attributes.id);
     const level = (this.tree.depthOf(attributes.id) ?? 0) + 1;
     element.dataset['treeViewId'] = stableIDToken(attributes.id);
-    element.tabIndex = state.cursor.current === attributes.id ? 0 : -1;
     element.setAttribute('role', 'treeitem');
     element.setAttribute('aria-level', String(level));
     element.setAttribute('aria-selected', String(state.selection.has(attributes.id)));
@@ -308,8 +316,10 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
     } else {
       element.removeAttribute('aria-expanded');
     }
-    if (attributes.disabled === true || this.#disabled.has(attributes.id)) element.setAttribute('aria-disabled', 'true');
+    const unavailable = this.#interactionDisabled || attributes.disabled === true || this.#disabled.has(attributes.id);
+    if (unavailable) element.setAttribute('aria-disabled', 'true');
     else element.removeAttribute('aria-disabled');
+    this.#focusEntry.bind(element, attributes.id, { available: !unavailable });
   }
 
   public setDisclosureAttributes(element: HTMLElement, id: ID): void {
@@ -333,6 +343,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
     const result = this.#controller.handleEvent(event);
     this.#onTransition?.(Object.freeze({ event, result }));
     if (result.ok) {
+      this.#focusEntry.setCurrent(result.snapshot.state.cursor.current);
       this.#onUpdate?.();
       this.focusCurrent();
     }
@@ -347,11 +358,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
         this.#root.focus();
         return;
       }
-      for (const element of this.#root.querySelectorAll<HTMLElement>('[data-tree-view-id]')) {
-        if (element.dataset['treeViewId'] !== stableIDToken(current)) continue;
-        element.focus();
-        return;
-      }
+      this.#focusEntry.elementFor(current)?.focus();
     });
   }
 
@@ -359,6 +366,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
     this.#active = false;
     this.#root.removeEventListener('keydown', this.#handleKeydown);
     this.#root.removeEventListener('click', this.#handleClick);
+    this.#focusEntry.disconnect();
   }
 }
 

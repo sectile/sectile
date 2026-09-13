@@ -19,6 +19,7 @@ import { createSemanticController, type SemanticController } from '@sectile/core
 import { setInteractionAttributes } from './internal/interaction.js';
 import type { KeyboardInput } from './tabs.js';
 import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
+import { DOMCompositeFocusEntry } from './internal/composite-focus-entry.js';
 
 export type ToolbarEffect<ID extends StableID = StableID> =
   | { readonly type: 'focus-control'; readonly id: ID }
@@ -127,6 +128,7 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
   readonly #runtime: SemanticController<ToolbarState<ID>, ToolbarEvent<ID>, ToolbarEffect<ID>>;
   readonly #controlled: boolean;
   readonly #disabledItems: ReadonlySet<ID>;
+  readonly #focusEntry: DOMCompositeFocusEntry<ID>;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
   #active = true;
@@ -142,6 +144,10 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
     this.#runtime = runtime;
     this.#controlled = controlled;
     this.#disabledItems = disabledItems;
+    this.#focusEntry = new DOMCompositeFocusEntry({
+      mode: 'item', root: options.root, current: runtime.getSnapshot().state.cursor.current,
+      rank: (id) => domain.indexOf(id),
+    });
     options.root.setAttribute('role', 'toolbar');
     setInteractionAttributes(options.root, options);
     options.root.setAttribute('aria-orientation', options.orientation ?? 'horizontal');
@@ -169,32 +175,34 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
       message: 'An uncontrolled toolbar cannot be synchronized externally.',
     } };
     const result = this.#runtime.replace(tryCreateToolbarState(this.#domain, { current: value }));
-    if (result.ok) this.#options.onUpdate?.();
+    if (result.ok) {
+      this.#focusEntry.setCurrent(result.value.state.cursor.current);
+      this.#options.onUpdate?.();
+    }
     return result;
   }
 
   public setItemAttributes(element: HTMLElement, id: ID, disabled = false): void {
+    const unavailable = this.#options.disabled === true || disabled || this.#disabledItems.has(id);
     element.dataset['toolbarId'] = stableIDToken(id);
-    element.tabIndex = this.#runtime.getSnapshot().state.cursor.current === id ? 0 : -1;
-    if (disabled || this.#disabledItems.has(id)) element.setAttribute('aria-disabled', 'true');
+    if (unavailable) element.setAttribute('aria-disabled', 'true');
     else element.removeAttribute('aria-disabled');
+    this.#focusEntry.bind(element, id, { available: !unavailable });
   }
 
   public handleEvent(event: ToolbarEvent<ID>): boolean {
     const result = this.#runtime.handle(event);
     if (result.ok) {
+      this.#focusEntry.setCurrent(result.snapshot.state.cursor.current);
       for (const effect of result.commands) {
         if (effect.type === 'invoke-control') this.#options.onInvoke?.(effect.id);
       }
       queueMicrotask(() => {
-        if (!this.#active) return;
-        for (const element of this.#options.root.querySelectorAll<HTMLElement>('[data-toolbar-id]')) {
-          const current = result.snapshot.state.cursor.current;
-          if (current !== null && element.dataset['toolbarId'] === stableIDToken(current)) element.focus();
-        }
+        if (!this.#active || result.snapshot.state.cursor.current === null) return;
+        this.#focusEntry.elementFor(result.snapshot.state.cursor.current)?.focus();
       });
+      this.#options.onUpdate?.();
     }
-    if (result.ok) this.#options.onUpdate?.();
     return result.ok;
   }
 
@@ -202,5 +210,6 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
     this.#active = false;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
+    this.#focusEntry.disconnect();
   }
 }

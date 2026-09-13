@@ -18,6 +18,7 @@ import {
 import { findDelegatedStableID } from './internal/delegated-event.js';
 import { stableIDToken } from './internal/stable-id-token.js';
 import { setInteractionAttributes } from './internal/interaction.js';
+import { DOMCompositeFocusEntry } from './internal/composite-focus-entry.js';
 
 export type {
   TreeGridEditMode,
@@ -320,6 +321,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
   readonly #onUpdate: (() => void) | undefined;
   readonly #disabled: boolean;
   readonly #readOnly: boolean;
+  readonly #focusEntry: DOMCompositeFocusEntry<CellID>;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handleClick: (event: MouseEvent) => void;
   readonly #handleDoubleClick: (event: MouseEvent) => void;
@@ -345,6 +347,10 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     this.#onUpdate = options.onUpdate;
     this.#disabled = options.disabled === true;
     this.#readOnly = options.readOnly === true;
+    this.#focusEntry = new DOMCompositeFocusEntry({
+      mode: 'root', root: this.#root, current: this.#controller.getSnapshot().state.cursor.current,
+      rootEnabled: !this.#disabled,
+    });
     setInteractionAttributes(this.#root, options, { readOnly: true });
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
@@ -394,6 +400,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
   ): Result<RevisionSnapshot<TreeGridState<RowID, CellID>>> {
     const result = this.#controller.syncControlledValues(values);
     if (result.ok) {
+      this.#focusEntry.setCurrent(result.value.state.cursor.current);
       this.#onUpdate?.();
       this.focusCurrent();
     }
@@ -422,12 +429,11 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     attributes: TreeGridCellAttributes<CellID>,
   ): void {
     const state = this.#controller.getSnapshot().state;
-    const current = state.cursor.current === attributes.id;
     element.dataset['cellId'] = stableIDToken(attributes.id);
-    element.tabIndex = current ? 0 : -1;
     element.setAttribute('role', 'gridcell');
     element.setAttribute('aria-colindex', String(attributes.columnIndex));
     element.setAttribute('aria-selected', String(state.selection.has(attributes.id)));
+    this.#focusEntry.bind(element, attributes.id, { available: !this.#disabled });
   }
 
   public setDisclosureAttributes(element: HTMLElement, id: RowID): void {
@@ -500,18 +506,16 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
         this.#root.focus();
         return;
       }
-      for (const element of this.#root.querySelectorAll<HTMLElement>('[data-cell-id]')) {
-        if (element.dataset['cellId'] !== stableIDToken(current)) continue;
-        const input = state.editMode === 'editing'
-          ? element.querySelector<HTMLInputElement>('input')
-          : null;
-        if (input !== null) {
-          input.focus();
-          input.select();
-        } else {
-          element.focus();
-        }
-        return;
+      const element = this.#focusEntry.elementFor(current);
+      if (element === undefined) return;
+      const input = state.editMode === 'editing'
+        ? element.querySelector<HTMLInputElement>('input')
+        : null;
+      if (input !== null) {
+        input.focus();
+        input.select();
+      } else {
+        element.focus();
       }
     });
   }
@@ -523,6 +527,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     this.#root.removeEventListener('keydown', this.#handleKeydown);
     this.#root.removeEventListener('click', this.#handleClick);
     this.#root.removeEventListener('dblclick', this.#handleDoubleClick);
+    this.#focusEntry.disconnect();
     for (const [element, listeners] of this.#editors) {
       element.removeEventListener('input', listeners.input);
       element.removeEventListener('compositionstart', listeners.compositionStart);
@@ -545,6 +550,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     if (result.ok) this.#applyEffects(result.commands);
     this.#onTransition?.(Object.freeze({ event, result }));
     if (result.ok) {
+      this.#focusEntry.setCurrent(result.snapshot.state.cursor.current);
       this.#onUpdate?.();
       this.focusCurrent();
     }

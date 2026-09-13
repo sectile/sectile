@@ -25,7 +25,7 @@ const { GridCell, GridRoot, GridRow } = await import('../.verification-dist/grid
 const { MenuItem, MenuRoot, MenuSubContent, MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenubarRoot, NavigationMenuRoot } = await import('../.verification-dist/menu.js');
 const { PaginationRoot } = await import('../.verification-dist/pagination.js');
 const { SelectContent, SelectRoot, SelectTrigger } = await import('../.verification-dist/select.js');
-const { ToolbarRoot } = await import('../.verification-dist/toolbar.js');
+const { ToolbarItem, ToolbarRoot } = await import('../.verification-dist/toolbar.js');
 const { TreeGridRoot } = await import('../.verification-dist/tree-grid.js');
 
 async function settle() {
@@ -324,6 +324,36 @@ test('Vue toolbar reconciles controlled focus after items change', async () => {
   items.value = ['a'];
   await settle();
   assert.equal(value.value, 'a');
+  unmount(app, host);
+});
+
+test('ISSUE-127: Vue toolbar keeps controlled null semantic state while DOM owns one entry', async () => {
+  const value = ref(null);
+  const updates = [];
+  const { app, host } = mount(() => h(ToolbarRoot, {
+    items: ['a', 'b'],
+    modelValue: value.value,
+    'onUpdate:modelValue': (next) => { updates.push(next); value.value = next; },
+  }, {
+    default: () => [h(ToolbarItem, { value: 'a' }), h(ToolbarItem, { value: 'b' })],
+  }));
+
+  await settle();
+  const items = () => [...host.querySelectorAll('[data-part="item"]')];
+  assert.deepEqual(items().map((element) => element.tabIndex), [0, -1]);
+  assert.equal(value.value, null);
+  assert.deepEqual(updates, []);
+
+  value.value = 'b';
+  await settle();
+  assert.deepEqual(items().map((element) => element.tabIndex), [-1, 0]);
+  assert.deepEqual(updates, []);
+
+  value.value = null;
+  await settle();
+  assert.deepEqual(items().map((element) => element.tabIndex), [0, -1]);
+  assert.equal(value.value, null);
+  assert.deepEqual(updates, []);
   unmount(app, host);
 });
 

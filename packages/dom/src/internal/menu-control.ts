@@ -13,6 +13,7 @@ import { createDOMLayerBinding, type DOMLayerBinding } from './layer-binding.js'
 import type { PositionOptions } from '../position.js';
 import { createPosition, manualPositionConnection, type PositionConnection } from './position-connection.js';
 import { createHiddenBinding, type HiddenBinding } from './hidden-binding.js';
+import { DOMCompositeFocusEntry } from './composite-focus-entry.js';
 
 export type MenuKind = 'menu' | 'menubar' | 'navigation-menu' | 'menu-button';
 export interface MenuTypeaheadOptions<ID extends StableID> { readonly textValue: (id: ID) => string; readonly timeout?: number; readonly now?: () => number; readonly normalize?: (text: string) => string }
@@ -83,6 +84,7 @@ export function createMenuControl<ID extends StableID>(options: MenuControlOptio
 class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   readonly #options: ResolvedMenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>; readonly #policies: MenuPolicies<ID>; readonly #elements = new Map<ID, HTMLElement>(); readonly #elementOwners = new WeakMap<HTMLElement, ID>(); readonly #submenus = new Map<ID, HTMLElement>(); readonly #submenuOwners = new WeakMap<HTMLElement, ID>();
   readonly #rootVisibility: HiddenBinding | undefined; readonly #submenuVisibility = new Map<ID, HiddenBinding>(); readonly #submenuIDs = new Map<ID, { readonly element: HTMLElement; readonly previous: string | null; readonly applied: string }>(); readonly #submenuControlIDs = new Map<ID, string>();
+  readonly #focusEntry: DOMCompositeFocusEntry<ID>;
   #nextSubmenuID = 0;
   #pendingFocus: ID | undefined;
   #projectedState: MenuState<ID> | undefined;
@@ -90,6 +92,11 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   #typeaheadBuffer = ''; #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
   public constructor(options: ResolvedMenuControlOptions<ID>, tree: Tree<ID>, runtime: ControlledComponentController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, boolean>, policies: MenuPolicies<ID>) {
     this.#options = options; this.#tree = tree; this.#runtime = runtime; this.#policies = policies;
+    const order = tree.preorder();
+    this.#focusEntry = new DOMCompositeFocusEntry({
+      mode: 'item', root: options.root, current: runtime.getSnapshot().state.cursor.current,
+      rank: (id) => order.indexOf(id),
+    });
     this.#rootVisibility = options.manageVisibility === false || options.kind !== 'menu-button' ? undefined : createHiddenBinding(options.root);
     setInteractionAttributes(options.root, options); if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options, { native: true });
     this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
@@ -139,6 +146,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     const current = this.#elements.get(id);
     if (current === element) return;
     if (current !== undefined) {
+      this.#focusEntry.release(id, current);
       this.#clearSubmenuControl(id, current);
       this.#elements.delete(id);
       if (this.#elementOwners.get(current) === id) this.#elementOwners.delete(current);
@@ -147,6 +155,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     if (element !== undefined) {
       const candidate = this.#elementOwners.get(element);
       if (candidate !== undefined && candidate !== id && this.#elements.get(candidate) === element) {
+        this.#focusEntry.release(candidate, element);
         this.#clearSubmenuControl(candidate, element);
         this.#elements.delete(candidate);
         this.#disconnectSubmenuPosition(candidate);
@@ -155,6 +164,10 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
       this.#elementOwners.set(element, id);
       this.#connectSubmenuPosition(id);
       this.#projectItem(id, element, this.getSnapshot().state);
+      this.#focusEntry.bind(element, id, {
+        available: this.#options.disabled !== true && this.#policies.disabled?.(id) !== true,
+        fallbackEligible: this.#options.kind !== 'menu-button' && this.#tree.parentOf(id) === null,
+      });
       this.#submenuPositions.get(id)?.update();
     }
     this.#focusPending();
@@ -208,6 +221,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     this.#options.trigger?.removeEventListener('click', this.#triggerClick);
     this.#pendingFocus = undefined;
     this.#projectedState = undefined;
+    this.#focusEntry.disconnect();
     this.#elements.clear();
     this.#submenuControlIDs.clear();
   }
@@ -250,7 +264,6 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
         this.#submenuControlIDs.set(id, submenu.id);
       }
     }
-    element.tabIndex = state.cursor.current === id ? 0 : -1;
   }
   #projectTransition(): void {
     const state = this.getSnapshot().state;
@@ -259,12 +272,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     // Compare with the last host publication, including reentrant controlled sync.
     this.#projectedState = state;
     if (state.open && this.#pendingFocus !== undefined && state.cursor.current !== this.#pendingFocus) this.#pendingFocus = undefined;
-    if (previous.cursor.current !== state.cursor.current) {
-      const oldItem = previous.cursor.current === null ? undefined : this.#elements.get(previous.cursor.current);
-      const newItem = state.cursor.current === null ? undefined : this.#elements.get(state.cursor.current);
-      if (oldItem !== undefined) oldItem.tabIndex = -1;
-      if (newItem !== undefined) newItem.tabIndex = 0;
-    }
+    if (previous.cursor.current !== state.cursor.current) this.#focusEntry.setCurrent(state.cursor.current);
     const before = previous.openPath;
     const after = state.openPath;
     let shared = 0;
