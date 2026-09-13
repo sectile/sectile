@@ -12,7 +12,7 @@
     {
       "group": "source",
       "tests": 18,
-      "sha256": "2fefe43e51c6e3d4c9c25b3ab4c2557ca0ba7050ba4fe5b5e987ba1250d90f5a"
+      "sha256": "6d3b11ff511f7586e868bf99b2f65bafcdf3fb84e596db6b40dfbfcbe2cdcc23"
     },
     {
       "group": "columns",
@@ -78,9 +78,9 @@
     }
   },
   "footprint": {
-    "javascriptBytes": 159904,
+    "javascriptBytes": 159787,
     "declarationBytes": 44365,
-    "sourceMapBytes": 114636,
+    "sourceMapBytes": 114720,
     "packedBytes": 55011,
     "declarationFiles": 17,
     "publicSubpaths": 9

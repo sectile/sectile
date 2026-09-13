@@ -58,11 +58,12 @@ class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
   public readonly options: TabularClientSourceOptions<RecordValue>;
   public readonly limits: TabularLimits;
   public readonly staticColumnIDs: ReadonlySet<string>;
-  #sourceStage: ClientSourceStage<RecordValue> | null = null;
-  #queryStage: ClientQueryStage<RecordValue> | null = null;
-  #projectionStage: ClientProjectionStage<RecordValue> | null = null;
-  #viewSourceGeneration = -1;
-  #viewRevision = 0;
+  #s: ClientSourceStage<RecordValue> | null = null;
+  #q: ClientQueryStage<RecordValue> | null = null;
+  #p: ClientProjectionStage<RecordValue> | null = null;
+  #g = -1;
+  #r = 0;
+  #b = false;
 
   public constructor(options: TabularClientSourceOptions<RecordValue>, limits: TabularLimits) {
     this.options = options;
@@ -71,30 +72,36 @@ class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
   }
 
   public resolve(request: TabularRequest): TabularResult<TabularViewResponse> {
-    if (this.#viewSourceGeneration >= 0 && request.sourceGeneration < this.#viewSourceGeneration) {
-      return fail('transition-rejection', 'stale-source-generation', 'Client source generation cannot move backward.');
+    if (this.#b) return fail('transition-rejection', 'source-policy-failed', 'Client source reentrancy.');
+    this.#b = true;
+    try {
+      if (this.#g >= 0 && request.sourceGeneration < this.#g) {
+        return fail('transition-rejection', 'stale-source-generation', 'Client source generation cannot move backward.');
+      }
+      const viewRevision = nextClientViewRevision(this.#g, request.sourceGeneration, this.#r);
+      if (!viewRevision.ok) return viewRevision;
+      const response = resolveClient(this, request, viewRevision.value);
+      if (response.ok) {
+        this.#g = request.sourceGeneration;
+        this.#r = response.value.viewRevision;
+      }
+      return response;
+    } finally {
+      this.#b = false;
     }
-    const viewRevision = nextClientViewRevision(this.#viewSourceGeneration, request.sourceGeneration, this.#viewRevision);
-    if (!viewRevision.ok) return viewRevision;
-    const response = resolveClient(this, request, viewRevision.value);
-    if (response.ok) {
-      this.#viewSourceGeneration = request.sourceGeneration;
-      this.#viewRevision = response.value.viewRevision;
-    }
-    return response;
   }
 
   public resolveProjection(request: TabularRequest): TabularResult<ClientProjectionStage<RecordValue>> {
-    let source = this.#sourceStage;
+    let source = this.#s;
     if (source === null || source.sourceGeneration !== request.sourceGeneration) {
       const normalized = normalizeClientRecords(this, request.sourceGeneration);
       if (!normalized.ok) return normalized;
       source = normalized.value;
-      this.#sourceStage = source;
-      this.#queryStage = null;
-      this.#projectionStage = null;
+      this.#s = source;
+      this.#q = null;
+      this.#p = null;
     }
-    let query = this.#queryStage;
+    let query = this.#q;
     if (query === null
       || query.source !== source
       || query.queryRevision !== request.queryRevision
@@ -112,10 +119,10 @@ class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
         filtered: filtered.value,
         prepared: prepared.value,
       });
-      this.#queryStage = query;
-      this.#projectionStage = null;
+      this.#q = query;
+      this.#p = null;
     }
-    const retained = this.#projectionStage;
+    const retained = this.#p;
     if (retained !== null
       && retained.query === query
       && retained.expansionRevision === request.expansionRevision
@@ -134,7 +141,7 @@ class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
       expansionRevision: request.expansionRevision,
       projection: projection.value,
     });
-    this.#projectionStage = stage;
+    this.#p = stage;
     return ok(stage);
   }
 }

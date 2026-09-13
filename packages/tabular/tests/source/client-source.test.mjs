@@ -93,6 +93,96 @@ test('TAB-SRC-02: client source revisions advance strictly per source generation
   assert.deepEqual([first.value.viewRevision, second.value.viewRevision, independent.value.viewRevision], [1, 2, 1]);
 });
 
+test('ISSUE-135: client source rejects synchronous policy reentrancy without disturbing the current owner', () => {
+  for (const site of ['rowID', 'value', 'predicate']) {
+    const counters = { rowID: 0, value: 0, predicate: 0 };
+    const activeQuery = site === 'predicate'
+      ? {
+          sort: [],
+          filters: [{ id: 'all', scope: 'global', predicate: 'all', value: null }],
+          groups: [], aggregates: [], pivots: [],
+        }
+      : { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
+    let local;
+    let nested = null;
+    let armed = true;
+    const reenter = () => {
+      if (!armed) return;
+      armed = false;
+      nested = resolveClientTabularRequest(local, request({
+        requestID: 2,
+        sourceGeneration: 1,
+        queryRevision: site === 'predicate' ? 1 : 0,
+        query: activeQuery,
+      }));
+    };
+    local = createClientTabularSource({
+      records: [{ id: 'a', value: 1 }],
+      columnSchema: {
+        revision: 0,
+        columns: [{ id: 'value' }],
+        headers: [],
+      },
+      getRowID(record) {
+        counters.rowID += 1;
+        if (site === 'rowID') reenter();
+        return record.id;
+      },
+      getValue(record, columnID) {
+        counters.value += 1;
+        if (site === 'value') reenter();
+        return record[columnID];
+      },
+      policies: {
+        predicates: {
+          all() {
+            counters.predicate += 1;
+            if (site === 'predicate') reenter();
+            return true;
+          },
+        },
+      },
+    });
+
+    const outer = resolveClientTabularRequest(local, request({
+      requestID: 1,
+      queryRevision: site === 'predicate' ? 1 : 0,
+      query: activeQuery,
+    }));
+    assert.equal(outer.ok, true, site);
+    assert.equal(outer.value.viewRevision, 1, site);
+    assert.equal(nested?.ok, false, site);
+    assert.equal(nested?.error.code, 'source-policy-failed', site);
+
+    const afterOuter = { ...counters };
+    const warm = resolveClientTabularRequest(local, request({
+      requestID: 3,
+      queryRevision: site === 'predicate' ? 1 : 0,
+      query: activeQuery,
+    }));
+    assert.equal(warm.ok, true, site);
+    assert.equal(warm.value.viewRevision, 2, site);
+    assert.deepEqual(counters, afterOuter, site);
+
+    const next = resolveClientTabularRequest(local, request({
+      requestID: 4,
+      sourceGeneration: 1,
+      queryRevision: site === 'predicate' ? 1 : 0,
+      query: activeQuery,
+    }));
+    assert.equal(next.ok, true, site);
+    assert.equal(next.value.viewRevision, 1, site);
+    const stale = resolveClientTabularRequest(local, request({
+      requestID: 5,
+      sourceGeneration: 0,
+      queryRevision: site === 'predicate' ? 1 : 0,
+      query: activeQuery,
+    }));
+    assert.equal(stale.ok, false, site);
+    assert.equal(stale.error.code, 'stale-source-generation', site);
+  }
+});
+
 test('TAB-SRC-13: client view revisions use the final safe value and reject exhaustion', () => {
   const maximum = Number.MAX_SAFE_INTEGER;
   const finalSafe = nextClientViewRevision(7, 7, maximum - 1);
