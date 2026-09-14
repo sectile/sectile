@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import { createGitHubAPI } from './lib/github-api.mjs'
 import {
   WORKFLOW_FIELD,
   assertMaintainerPermission,
@@ -160,4 +161,26 @@ test('maintainer permission honors GitHub role mapping and fails closed', () => 
     /admin\/maintain/u,
   )
   assert.throws(() => assertMaintainerPermission(), /admin\/maintain/u)
+})
+
+test('GitHub API client reports HTTP failures without accepting partial data', async () => {
+  const api = createGitHubAPI('test-token', async () => new Response(
+    JSON.stringify({ message: 'Forbidden' }),
+    { status: 403, headers: { 'content-type': 'application/json' } },
+  ))
+  await assert.rejects(() => api.request('/repos/sectile/sectile'), /403: Forbidden/u)
+})
+
+test('GitHub API client rejects non-JSON success and GraphQL error payloads', async () => {
+  const invalidJSON = createGitHubAPI('test-token', async () => new Response('not-json', { status: 200 }))
+  await assert.rejects(() => invalidJSON.request('/graphql'), /non-JSON/u)
+
+  const graphqlError = createGitHubAPI('test-token', async () => new Response(
+    JSON.stringify({ errors: [{ message: 'permission denied' }] }),
+    { status: 200, headers: { 'content-type': 'application/json' } },
+  ))
+  await assert.rejects(
+    () => graphqlError.graphql('query { viewer { login } }'),
+    /GraphQL failed: permission denied/u,
+  )
 })
