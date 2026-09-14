@@ -77,11 +77,17 @@ request because the check is read-only and only the newest PR snapshot is useful
 Run the controller from a trusted checkout with the GitHub CLI and Git installed.
 The active GitHub account must have `maintain` or `admin` access to
 `sectile/sectile` and enough GitHub CLI scopes to read and edit the Project and
-issues. The current pilot operator uses the existing `gh` login; the controller
-does not read, print, persist, or inject a GitHub token itself.
+issues. The controller also uses GitHub's versioned Issue Fields REST endpoints
+through `gh api`: inspection reads the organization-level `Workflow` definition,
+and mutations add only the requested issue field value. The current pilot
+operator uses the existing `gh` login; the controller does not read, print,
+persist, or inject a GitHub token itself.
 
 The Project and Workflow field already exist. Routine operation therefore does
-not need authority to create or edit organization Issue Field definitions.
+not need authority to create or edit organization Issue Field definitions. The
+Project column is validated by its pinned Project field identity, while the
+organization field is validated as a single-select whose ordered options match
+the canonical lifecycle.
 
 Use approved default-branch policy, pinned to an exact full SHA for every
 transition. The controller fetches the current remote `main`, verifies that the
@@ -122,10 +128,14 @@ node scripts/github-project-workflow.mjs reconcile --apply
 
 For each enrolled issue, reconciliation adds a missing Project item. It preserves
 any non-empty Workflow value exactly as observed and initializes only an unset
-Workflow to `Candidate`. After writes, the controller reads Project membership
-and Workflow values again and fails if an enrolled item is still missing, a value
-is unset, or a previously non-empty value changed. Re-running reconciliation is
-therefore a recovery operation, not a reset to Candidate.
+Workflow to `Candidate`. `Workflow` is an organization Issue Field, so the
+controller writes it with the additive `POST .../issue-field-values` REST
+operation rather than `gh project item-edit`; unrelated issue fields are not
+replaced. The write response and a subsequent search-based read-back must both
+confirm the requested value. After writes, the controller reads Project
+membership and Workflow values again and fails if an enrolled item is still
+missing, a value is unset, or a previously non-empty value changed. Re-running
+reconciliation is therefore a recovery operation, not a reset to Candidate.
 
 New issues are not automatically enrolled by a privileged GitHub Action. The
 orchestrator must explicitly decide whether a new issue enters this pilot and use

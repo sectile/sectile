@@ -36,6 +36,9 @@ export const PINNED_PROJECT = Object.freeze({
   }),
 })
 
+const ISSUE_FIELDS_API_VERSION = '2026-03-10'
+const ISSUE_FIELDS_ACCEPT = 'application/vnd.github+json'
+
 function issueURL(issueNumber) {
   return `https://github.com/${PINNED_PROJECT.repository}/issues/${issueNumber}`
 }
@@ -99,7 +102,35 @@ export async function readWorkflowValues(cli) {
   return values
 }
 
-export function validatePinnedResources({ project, repository, fields }) {
+export function parseWorkflowIssueField(payload) {
+  const issueFields = requireArray(payload, 'Organization issue field-list response')
+  const named = issueFields.filter(field => field?.name === PINNED_PROJECT.workflowField.name)
+  if (named.length !== 1) {
+    throw new Error(`Expected exactly one organization Workflow issue field; observed ${named.length}`)
+  }
+
+  const field = requireObject(named[0], 'Organization Workflow issue field')
+  const id = requireInteger(field.id, 'Organization Workflow issue field id')
+  if (id <= 0) throw new Error('Organization Workflow issue field id must be positive')
+  const nodeId = requireString(field.node_id, 'Organization Workflow issue field node id')
+  if (field.data_type !== 'single_select') {
+    throw new Error(`Organization Workflow issue field must be single_select; observed ${field.data_type ?? 'unknown'}`)
+  }
+  const options = requireArray(field.options, 'Organization Workflow issue field options')
+  const optionNames = options.map((option, index) =>
+    requireString(
+      requireObject(option, `Organization Workflow option ${index}`).name,
+      `Organization Workflow option ${index} name`,
+    ))
+  if (optionNames.length !== WORKFLOW_STATES.length ||
+      optionNames.some((name, index) => name !== WORKFLOW_STATES[index])) {
+    throw new Error('Organization Workflow issue field options do not match the canonical lifecycle')
+  }
+
+  return Object.freeze({ id, nodeId, name: field.name, dataType: field.data_type, options })
+}
+
+export function validatePinnedResources({ project, repository, fields, issueFields }) {
   const projectInfo = requireObject(project, 'Project')
   if (projectInfo.number !== PINNED_PROJECT.number || projectInfo.id !== PINNED_PROJECT.id ||
       projectInfo.title !== PINNED_PROJECT.title || projectInfo.public !== true ||
@@ -124,22 +155,28 @@ export function validatePinnedResources({ project, repository, fields }) {
     throw new Error('Pinned Workflow Project field identity or type does not match live state')
   }
 
-  return Object.freeze({ project: projectInfo, workflowField: field })
+  const issueField = parseWorkflowIssueField(issueFields)
+  return Object.freeze({ project: projectInfo, workflowField: field, issueField })
 }
 
 export async function inspectLive(cli = createGitHubCLI()) {
   await cli.text(['auth', 'status', '-h', 'github.com'])
-  const [project, repository, fields, itemPayload, workflowValues] = await Promise.all([
+  const [project, repository, fields, issueFields, itemPayload, workflowValues] = await Promise.all([
     cli.json(['project', 'view', String(PINNED_PROJECT.number), '--owner', PINNED_PROJECT.owner, '--format', 'json']),
     cli.json(['repo', 'view', PINNED_PROJECT.repository, '--json', 'projectsV2']),
     cli.json(['project', 'field-list', String(PINNED_PROJECT.number), '--owner', PINNED_PROJECT.owner, '--format', 'json']),
+    cli.json([
+      'api', `orgs/${PINNED_PROJECT.owner}/issue-fields`,
+      '-H', `Accept: ${ISSUE_FIELDS_ACCEPT}`,
+      '-H', `X-GitHub-Api-Version: ${ISSUE_FIELDS_API_VERSION}`,
+    ]),
     cli.json([
       'project', 'item-list', String(PINNED_PROJECT.number), '--owner', PINNED_PROJECT.owner,
       '--limit', '100', '--format', 'json',
     ]),
     readWorkflowValues(cli),
   ])
-  validatePinnedResources({ project, repository, fields })
+  const pinned = validatePinnedResources({ project, repository, fields, issueFields })
   const projectIssues = parseProjectItems(itemPayload)
   const issues = new Map()
   for (const number of MAINTAINER_ENROLLED_ISSUES) {
@@ -164,7 +201,11 @@ export async function inspectLive(cli = createGitHubCLI()) {
       public: project.public,
       url: project.url,
     }),
-    workflowField: PINNED_PROJECT.workflowField,
+    workflowField: Object.freeze({
+      ...PINNED_PROJECT.workflowField,
+      issueFieldId: pinned.issueField.id,
+      issueFieldNodeId: pinned.issueField.nodeId,
+    }),
     issues,
   })
 }
@@ -204,12 +245,40 @@ async function addMissingItem(cli, number) {
   return 'added'
 }
 
-async function setCandidate(cli, number) {
-  await cli.json([
-    'project', 'item-edit', String(PINNED_PROJECT.number), '--owner', PINNED_PROJECT.owner,
-    '--url', issueURL(number), '--field', PINNED_PROJECT.workflowField.name,
-    '--value', 'Candidate', '--format', 'json',
-  ])
+export function workflowIssueFieldWriteArgs(issue, fieldId, value) {
+  const issueNumber = requireInteger(issue, 'Workflow issue number')
+  if (issueNumber <= 0) throw new Error('Workflow issue number must be positive')
+  const numericFieldId = requireInteger(fieldId, 'Workflow issue field id')
+  if (numericFieldId <= 0) throw new Error('Workflow issue field id must be positive')
+  assertWorkflowState(value)
+  return [
+    'api', `repos/${PINNED_PROJECT.repository}/issues/${issueNumber}/issue-field-values`,
+    '--method', 'POST',
+    '-H', `Accept: ${ISSUE_FIELDS_ACCEPT}`,
+    '-H', `X-GitHub-Api-Version: ${ISSUE_FIELDS_API_VERSION}`,
+    '-F', `issue_field_values[][field_id]=${numericFieldId}`,
+    '-f', `issue_field_values[][value]=${value}`,
+  ]
+}
+
+async function setWorkflowValue(cli, issue, value, fieldId) {
+  const payload = requireArray(
+    await cli.json(workflowIssueFieldWriteArgs(issue, fieldId, value)),
+    `Issue #${issue} issue-field update response`,
+  )
+  const matches = payload.filter(row => row?.issue_field_id === fieldId)
+  if (matches.length !== 1) {
+    throw new Error(`Issue #${issue} Workflow write response contained ${matches.length} matching fields`)
+  }
+  const field = requireObject(matches[0], `Issue #${issue} Workflow write response field`)
+  if (field.issue_field_name !== PINNED_PROJECT.workflowField.name || field.data_type !== 'single_select' ||
+      field.single_select_option?.name !== value) {
+    throw new Error(`Issue #${issue} Workflow write response did not confirm ${value}`)
+  }
+}
+
+async function setCandidate(cli, number, fieldId) {
+  await setWorkflowValue(cli, number, 'Candidate', fieldId)
 }
 
 export async function reconcileLive({ apply = false, cli = createGitHubCLI() } = {}) {
@@ -238,7 +307,7 @@ export async function reconcileLive({ apply = false, cli = createGitHubCLI() } =
       actions.push({ issue: number, action: 'workflow', result: 'preserved', value: item.workflow })
       continue
     }
-    await setCandidate(cli, number)
+    await setCandidate(cli, number, afterMembership.workflowField.issueFieldId)
     actions.push({ issue: number, action: 'workflow', result: 'initialized', value: 'Candidate' })
   }
 
@@ -609,14 +678,6 @@ async function publishCompletion(cli, request, context) {
   return readBack
 }
 
-async function setWorkflowValue(cli, issue, value) {
-  await cli.json([
-    'project', 'item-edit', String(PINNED_PROJECT.number), '--owner', PINNED_PROJECT.owner,
-    '--url', issueURL(issue), '--field', PINNED_PROJECT.workflowField.name,
-    '--value', value, '--format', 'json',
-  ])
-}
-
 export function transitionDisposition(current, request, completion = null) {
   assertWorkflowState(current)
   if (completion !== null) {
@@ -690,7 +751,7 @@ export async function transitionLive(request, {
 
   let recovery = 'normal'
   if (item.workflow === request.from) {
-    await setWorkflowValue(cli, request.issue, request.target)
+    await setWorkflowValue(cli, request.issue, request.target, state.workflowField.issueFieldId)
     const afterMutation = await inspectLive(cli)
     if (afterMutation.issues.get(request.issue)?.workflow !== request.target) {
       throw new Error(`Workflow read-back mismatch after transition to ${request.target}`)

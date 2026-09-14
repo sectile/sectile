@@ -10,6 +10,7 @@ import {
   reconciliationPlan,
   transitionDisposition,
   validatePinnedResources,
+  workflowIssueFieldWriteArgs,
 } from './github-project-workflow.mjs'
 import {
   MAINTAINER_ENROLLED_ISSUES,
@@ -329,7 +330,7 @@ test('GitHub CLI transport fails closed on malformed process and JSON results', 
   await assert.rejects(() => malformedJSON.json(['project', 'view', '1']), /invalid JSON/u)
 })
 
-test('pinned Project validation rejects title or field identity drift', () => {
+test('pinned Project validation rejects Project or organization Issue Field drift', () => {
   const project = {
     number: PINNED_PROJECT.number,
     id: PINNED_PROJECT.id,
@@ -355,10 +356,23 @@ test('pinned Project validation rejects title or field identity drift', () => {
       type: PINNED_PROJECT.workflowField.type,
     }],
   }
+  const issueFields = [{
+    id: 42,
+    node_id: 'IFSS_workflow',
+    name: PINNED_PROJECT.workflowField.name,
+    data_type: 'single_select',
+    options: WORKFLOW_FIELD.options.map((option, index) => ({
+      id: index + 1,
+      name: option.name,
+      color: 'gray',
+    })),
+  }]
 
-  assert.doesNotThrow(() => validatePinnedResources({ project, repository, fields }))
+  assert.doesNotThrow(() => validatePinnedResources({ project, repository, fields, issueFields }))
   assert.throws(
-    () => validatePinnedResources({ project: { ...project, title: 'Other' }, repository, fields }),
+    () => validatePinnedResources({
+      project: { ...project, title: 'Other' }, repository, fields, issueFields,
+    }),
     /Pinned Project identity/u,
   )
   assert.throws(
@@ -366,9 +380,30 @@ test('pinned Project validation rejects title or field identity drift', () => {
       project,
       repository,
       fields: { fields: [{ ...fields.fields[0], id: 'PVTSSF_other' }] },
+      issueFields,
     }),
     /Pinned Workflow Project field identity/u,
   )
+  assert.throws(
+    () => validatePinnedResources({
+      project,
+      repository,
+      fields,
+      issueFields: [{ ...issueFields[0], options: issueFields[0].options.slice(0, -1) }],
+    }),
+    /canonical lifecycle/u,
+  )
+})
+
+test('Workflow writes use additive Issue Field Values REST semantics', () => {
+  assert.deepEqual(workflowIssueFieldWriteArgs(119, 42, 'Candidate'), [
+    'api', 'repos/sectile/sectile/issues/119/issue-field-values',
+    '--method', 'POST',
+    '-H', 'Accept: application/vnd.github+json',
+    '-H', 'X-GitHub-Api-Version: 2026-03-10',
+    '-F', 'issue_field_values[][field_id]=42',
+    '-f', 'issue_field_values[][value]=Candidate',
+  ])
 })
 
 test('Project membership and Workflow state produce preservation-first reconciliation', () => {
