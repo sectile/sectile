@@ -3,6 +3,7 @@ import process from 'node:process'
 import {
   MAINTAINER_ENROLLED_ISSUES,
   compareWorkflowField,
+  issueFieldPatch,
   workflowFieldCreateBody,
   workflowValue,
 } from './lib/github-project-workflow.mjs'
@@ -29,17 +30,23 @@ function token() {
   return value
 }
 
+async function readWorkflowField(api, owner, fieldId) {
+  const field = await api.request(`/orgs/${owner}/issue-fields/${fieldId}`)
+  const errors = compareWorkflowField(field)
+  if (errors.length > 0) {
+    throw new Error(`Workflow field is incompatible: ${errors.join(', ')}`)
+  }
+  return field
+}
+
 async function ensureWorkflowField(api, owner, apply, actions) {
   const fields = asGitHubList(await api.request(`/orgs/${owner}/issue-fields`))
   const matches = fields.filter(field => field.name === 'Workflow')
   if (matches.length > 1) throw new Error('Multiple organization Issue Fields are named Workflow')
   if (matches.length === 1) {
-    const errors = compareWorkflowField(matches[0])
-    if (errors.length > 0) {
-      throw new Error(`Existing Workflow field is incompatible: ${errors.join(', ')}`)
-    }
-    actions.push({ action: 'workflow-field', result: 'existing', id: matches[0].id })
-    return matches[0]
+    const field = await readWorkflowField(api, owner, matches[0].id)
+    actions.push({ action: 'workflow-field', result: 'existing', id: field.id })
+    return field
   }
 
   if (!apply) {
@@ -50,10 +57,9 @@ async function ensureWorkflowField(api, owner, apply, actions) {
     method: 'POST',
     body: workflowFieldCreateBody(),
   })
-  const errors = compareWorkflowField(created)
-  if (errors.length > 0) throw new Error(`Created Workflow field failed read-back: ${errors.join(', ')}`)
-  actions.push({ action: 'workflow-field', result: 'created', id: created.id })
-  return created
+  const field = await readWorkflowField(api, owner, created.id)
+  actions.push({ action: 'workflow-field', result: 'created', id: field.id })
+  return field
 }
 
 async function organizationId(api, owner) {
@@ -93,13 +99,10 @@ async function ensureProject(api, owner, repo, apply, actions) {
     )
     project = data?.createProjectV2?.projectV2
     if (!project?.id || !project?.number) throw new Error('Project creation returned no usable project identity')
-    actions.push({ action: 'project', result: 'created', number: project.number, id: project.id })
-  } else {
-    actions.push({ action: 'project', result: 'existing', number: project.number, id: project.node_id ?? project.id })
   }
 
   const projectId = project.node_id ?? project.id
-  if (!projectId) throw new Error('Project has no node ID')
+  if (!projectId || !project.number) throw new Error('Project has no usable node ID/number')
 
   const readme = [
     '# Sectile Engineering',
@@ -118,6 +121,21 @@ async function ensureProject(api, owner, repo, apply, actions) {
     )
   }
 
+  const readBack = apply
+    ? await api.request(`/orgs/${owner}/projectsV2/${project.number}`)
+    : project
+  if (apply && (readBack.title !== title || readBack.public !== true)) {
+    throw new Error(`Project read-back mismatch: title=${readBack.title}, public=${readBack.public}`)
+  }
+  actions.push({
+    action: 'project',
+    result: matches.length === 0 ? (apply ? 'created' : 'would-create') : 'existing',
+    number: project.number,
+    id: projectId,
+    url: readBack.html_url ?? project.url ?? null,
+    public: readBack.public ?? project.public ?? null,
+  })
+
   const repository = await repositoryProjectInfo(api, owner, repo)
   const alreadyLinked = repository.projectsV2.nodes.some(node => node.id === projectId)
   if (!alreadyLinked) {
@@ -126,6 +144,10 @@ async function ensureProject(api, owner, repo, apply, actions) {
         'mutation($projectId:ID!,$repositoryId:ID!){linkProjectV2ToRepository(input:{projectId:$projectId,repositoryId:$repositoryId}){repository{id}}}',
         { projectId, repositoryId: repository.id },
       )
+      const linked = await repositoryProjectInfo(api, owner, repo)
+      if (!linked.projectsV2.nodes.some(node => node.id === projectId)) {
+        throw new Error('Project/repository link failed read-back')
+      }
       actions.push({ action: 'project-repository-link', result: 'created' })
     } else {
       actions.push({ action: 'project-repository-link', result: 'would-create' })
@@ -139,64 +161,73 @@ async function ensureProject(api, owner, repo, apply, actions) {
 
 async function ensureProjectWorkflowField(api, owner, project, field, apply, actions) {
   if (!project || !field) return
-  const path = `/orgs/${owner}/projectsV2/${project.number}/fields?per_page=100`
-  const fields = asGitHubList(await api.request(path))
-  const match = fields.find(entry =>
-    Number(entry.issue_field_id) === Number(field.id) || entry.name === field.name,
-  )
-  if (match) {
-    actions.push({ action: 'project-workflow-field', result: 'existing', id: match.id })
-    return
-  }
   if (!apply) {
-    actions.push({ action: 'project-workflow-field', result: 'would-add' })
+    actions.push({ action: 'project-workflow-field', result: 'would-ensure', issueFieldId: field.id })
     return
   }
-  const created = await api.request(`/orgs/${owner}/projectsV2/${project.number}/fields`, {
+  const response = await api.requestResult(`/orgs/${owner}/projectsV2/${project.number}/fields`, {
     method: 'POST',
     body: { issue_field_id: Number(field.id) },
+    acceptedStatuses: [304],
   })
-  actions.push({ action: 'project-workflow-field', result: 'added', id: created?.id ?? null })
+  if (![201, 304].includes(response.status)) {
+    throw new Error(`Unexpected Project field status: ${response.status}`)
+  }
+  actions.push({
+    action: 'project-workflow-field',
+    result: response.status === 201 ? 'added' : 'existing',
+    issueFieldId: field.id,
+    projectFieldId: response.data?.id ?? null,
+  })
+}
+
+async function issueWorkflowValues(api, owner, repo, issueNumber) {
+  return asGitHubList(
+    await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}/issue-field-values?per_page=100`),
+  )
+}
+
+async function ensureProjectItem(api, owner, projectNumber, issue) {
+  const response = await api.requestResult(`/orgs/${owner}/projectsV2/${projectNumber}/items`, {
+    method: 'POST',
+    body: { type: 'Issue', id: Number(issue.id) },
+    acceptedStatuses: [304],
+  })
+  if (response.status === 201) return 'added'
+  if (response.status === 304) return 'existing'
+  throw new Error(`Unexpected Project item status: ${response.status}`)
 }
 
 async function enrollIssues(api, owner, repo, project, field, apply, actions) {
   if (!project || !field) return
-  const items = asGitHubList(await api.request(`/orgs/${owner}/projectsV2/${project.number}/items?per_page=100`))
-  const knownIssueNumbers = new Set(
-    items
-      .map(item => item.content)
-      .filter(content => content && content.number)
-      .map(content => Number(content.number)),
-  )
-
   for (const issueNumber of MAINTAINER_ENROLLED_ISSUES) {
     const issue = await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}`)
     if (issue.pull_request) throw new Error(`#${issueNumber} is a pull request, not an issue`)
 
-    if (!knownIssueNumbers.has(issueNumber)) {
-      if (apply) {
-        await api.request(`/orgs/${owner}/projectsV2/${project.number}/items`, {
-          method: 'POST',
-          body: { type: 'Issue', id: Number(issue.id) },
-        })
-        actions.push({ action: 'project-item', issue: issueNumber, result: 'added' })
-      } else {
-        actions.push({ action: 'project-item', issue: issueNumber, result: 'would-add' })
-      }
+    if (apply) {
+      const itemResult = await ensureProjectItem(api, owner, project.number, issue)
+      actions.push({ action: 'project-item', issue: issueNumber, result: itemResult })
+    } else {
+      actions.push({ action: 'project-item', issue: issueNumber, result: 'would-ensure' })
     }
 
-    const values = asGitHubList(await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}/issue-field-values?per_page=100`))
-    const current = workflowValue(values, field.id)
+    const current = workflowValue(
+      await issueWorkflowValues(api, owner, repo, issueNumber),
+      field.id,
+    )
     if (current !== null) {
       actions.push({ action: 'workflow-initialize', issue: issueNumber, result: 'preserved', value: current })
       continue
     }
     if (apply) {
-      const updated = asGitHubList(await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}/issue-field-values`, {
+      await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}/issue-field-values`, {
         method: 'POST',
-        body: { issue_field_values: [{ field_id: Number(field.id), value: 'Candidate' }] },
-      }))
-      const readBack = workflowValue(updated, field.id)
+        body: issueFieldPatch(field.id, 'Candidate'),
+      })
+      const readBack = workflowValue(
+        await issueWorkflowValues(api, owner, repo, issueNumber),
+        field.id,
+      )
       if (readBack !== 'Candidate') throw new Error(`#${issueNumber} Workflow read-back was ${readBack ?? 'unset'}`)
       actions.push({ action: 'workflow-initialize', issue: issueNumber, result: 'set', value: 'Candidate' })
     } else {
