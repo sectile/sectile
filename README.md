@@ -29,3 +29,9 @@ Host coverage is explicit rather than universal. Core and Temporal have DOM, Ter
 - Package-local builds and tests with cross-host verification
 
 See the [documentation](docs/index.md) and [accepted theory](docs/references/sectile-theory.md). The documentation contains the interactive examples for every supported host. The canonical repository check is `pnpm verify`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for reporting findings and participating in
+the engineering pilot. Shared Issue, PR, review, and checkpoint templates are
+listed in the [work-item protocol](docs/engineering/workflow.md).
