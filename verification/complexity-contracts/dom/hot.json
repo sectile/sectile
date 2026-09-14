@@ -52,53 +52,6 @@
       }
     },
     {
-      "id": "chart.hit-coherence",
-      "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/chart-connection.ts",
-      "benchmarkIDs": [
-        "VAL-014:dom-chart-hit-coherence"
-      ],
-      "specificationCeiling": "O(n + c)",
-      "contract": {
-        "variables": [
-          {
-            "name": "n",
-            "meaning": "chart source datums visited only by a mismatch-triggered projection refresh",
-            "ceiling": "Chart model datum ceiling"
-          },
-          {
-            "name": "c",
-            "meaning": "delegated Chart hit-test candidates",
-            "ceiling": "Chart query candidate ceiling"
-          }
-        ],
-        "time": {
-          "bound": "O(n + c)",
-          "kind": "worst-case",
-          "runtimeState": "connected"
-        },
-        "space": {
-          "auxiliary": "O(1)",
-          "output": "O(1)",
-          "retained": "O(1)"
-        },
-        "resources": {
-          "allocations": "O(1)",
-          "cacheEntries": "0",
-          "listeners": "0",
-          "observers": "0",
-          "timers": "0",
-          "subscriptions": "0"
-        },
-        "proof": "Each pointer or click performs scalar CSS viewport comparison before delegating one maximumHits=1 query. Stable viewport queries add no projection refresh. A width/height mismatch performs one additional controller projection synchronization before the query; the existing pointer publication refresh remains separately coalesced by the connection frame owner.",
-        "adversarialWitness": "A mutable canvas grows and shrinks so the stale projection places a neighboring datum at the new target coordinate; the first pointer/click resolves the current datum, stable input retains one projection refresh, a mismatch adds exactly one, and handled projection failure never queries the retained stale projection.",
-        "fullScan": {
-          "allowed": true,
-          "rationale": "Only a detected viewport mismatch may invoke the existing Chart projection owner, whose own contract governs source traversal; the stable hit path performs no DOM-owned chart-data scan."
-        }
-      }
-    },
-    {
       "id": "chart.disconnect",
       "inherits": "linear-v1",
       "source": "packages/dom/src/internal/chart-connection.ts",
@@ -142,6 +95,53 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Cleanup visits only connection-owned resources and bounded accessible nodes."
+        }
+      }
+    },
+    {
+      "id": "chart.hit-coherence",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/internal/chart-connection.ts",
+      "benchmarkIDs": [
+        "VAL-014:dom-chart-hit-coherence"
+      ],
+      "specificationCeiling": "O(n + c)",
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "chart source datums visited only by a mismatch-triggered projection refresh",
+            "ceiling": "Chart model datum ceiling"
+          },
+          {
+            "name": "c",
+            "meaning": "delegated Chart hit-test candidates",
+            "ceiling": "Chart query candidate ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(n + c)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Each pointer or click performs scalar CSS viewport comparison before delegating one maximumHits=1 query. Stable viewport queries add no projection refresh. A width/height mismatch performs one additional controller projection synchronization before the query; the existing pointer publication refresh remains separately coalesced by the connection frame owner.",
+        "adversarialWitness": "A mutable canvas grows and shrinks so the stale projection places a neighboring datum at the new target coordinate; the first pointer/click resolves the current datum, stable input retains one projection refresh, a mismatch adds exactly one, and handled projection failure never queries the retained stale projection.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Only a detected viewport mismatch may invoke the existing Chart projection owner, whose own contract governs source traversal; the stable hit path performs no DOM-owned chart-data scan."
         }
       }
     },
