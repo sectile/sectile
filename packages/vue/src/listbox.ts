@@ -5,10 +5,11 @@ import {
   inject,
   mergeProps,
   nextTick,
+  onBeforeUnmount,
   provide,
+  shallowReactive,
   shallowRef,
   watch,
-  type ComputedRef,
   type PropType,
   type SlotsType,
   type VNodeChild,
@@ -28,6 +29,11 @@ import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './i
 import { useHostDirection, useHostId, type HostDirection } from './host-provider.js';
 import { reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import {
+  createItemProjectionRegistry,
+  useItemProjectionSignal,
+  type ItemProjectionRegistry,
+} from './internal/item-projection.js';
 import {
   conditionalPresenceProps,
   useConditionalPresenceRegistry,
@@ -86,19 +92,18 @@ export interface ListboxPartProps {
 export interface ListboxItemIndicatorProps extends ListboxPartProps, ConditionalPresenceProps {}
 
 interface ListboxRootContext {
-  readonly selectedIDs: ComputedRef<readonly string[]>;
-  readonly selectedIDSet: ComputedRef<ReadonlySet<string>>;
-  readonly highlightedValue: ComputedRef<string | null>;
-  readonly disabled: ComputedRef<boolean>;
-  readonly readonly: ComputedRef<boolean>;
-  readonly disabledItems: ComputedRef<ReadonlySet<string>>;
+  readonly state: ListboxRootSlotProps;
+  readonly itemProjection: ItemProjectionRegistry;
   readonly indicatorPresence: ConditionalPresenceRegistry;
   itemID(id: string): string;
+  isSelected(id: string): boolean;
+  isHighlighted(id: string): boolean;
+  isItemDisabled(id: string): boolean;
   select(id: string, target: HTMLElement): void;
 }
 
 interface ListboxItemContext {
-  readonly slotProps: ComputedRef<ListboxItemSlotProps>;
+  readonly slotProps: ListboxItemSlotProps;
 }
 
 interface ListboxEmit {
@@ -160,6 +165,98 @@ export const ListboxRoot = defineComponent({
       ...props,
       direction: direction.value,
     });
+    const controlled = useControlledStateInvariant('ListboxRoot', 'modelValue', () => props.modelValue);
+    const initialValue = toIDs(controlled ? props.modelValue : props.defaultValue, props.selectionMode);
+    const controller = shallowRef(createController(
+      controlled,
+      initialValue,
+      initialValue[0] ?? firstEnabledItem(controllerProps) ?? null,
+      controllerProps,
+      emit,
+    ));
+    const snapshot = shallowRef(controller.value.getSnapshot());
+    const selectedIDs = shallowRef<readonly string[]>(snapshot.value.state.selection.selected);
+    const selectedIDSet = computed<ReadonlySet<string>>(() => new Set(selectedIDs.value));
+    const indicatorPresence = useConditionalPresenceRegistry(selectedIDSet);
+    const itemProjection = createItemProjectionRegistry();
+    let currentSelectedSet = new Set(selectedIDs.value);
+    let currentSelectionMode = props.selectionMode;
+    let currentHighlighted = snapshot.value.state.cursor.current;
+    let disabledItemSet = new Set(controllerProps.disabledItems);
+    let submissionIndex = new Map(controllerProps.items.map((id, index) => [id, index] as const));
+    const state = shallowReactive({
+      value: fromIDs(selectedIDs.value, props.selectionMode),
+      highlightedValue: currentHighlighted,
+      disabled: controllerProps.disabled,
+      readonly: controllerProps.readonly,
+    });
+    const syncActiveDescendant = (): void => {
+      const element = rootElement.value;
+      if (
+        element === null
+        || typeof element.setAttribute !== 'function'
+        || typeof element.removeAttribute !== 'function'
+      ) return;
+      if (currentHighlighted === null) element.removeAttribute('aria-activedescendant');
+      else element.setAttribute('aria-activedescendant', itemID(currentHighlighted));
+    };
+    const syncSubmissionSelection = (changedIDs: Iterable<string>): void => {
+      const element = submissionElement.value;
+      if (element === null) return;
+      for (const id of changedIDs) {
+        const index = submissionIndex.get(id);
+        if (index === undefined) continue;
+        const option = element.options.item(index);
+        if (option !== null && option.value === id) option.selected = currentSelectedSet.has(id);
+      }
+    };
+    const publishSnapshot = (
+      nextSnapshot: ReturnType<ListboxController<string>['getSnapshot']>,
+    ): void => {
+      const nextSelectedIDs = nextSnapshot.state.selection.selected;
+      const previousSelectedIDs = selectedIDs.value;
+      const selectionReferenceChanged = previousSelectedIDs !== nextSelectedIDs;
+      let nextSelectedSet = currentSelectedSet;
+      const changedSelection = new Set<string>();
+      let selectionOrderChanged = false;
+      if (selectionReferenceChanged) {
+        nextSelectedSet = new Set(nextSelectedIDs);
+        for (const id of currentSelectedSet) if (!nextSelectedSet.has(id)) changedSelection.add(id);
+        for (const id of nextSelectedSet) if (!currentSelectedSet.has(id)) changedSelection.add(id);
+        selectionOrderChanged = !sameIDs(previousSelectedIDs, nextSelectedIDs);
+      }
+      const selectionModeChanged = currentSelectionMode !== props.selectionMode;
+      const previousHighlight = currentHighlighted;
+      currentSelectedSet = nextSelectedSet;
+      currentSelectionMode = props.selectionMode;
+      currentHighlighted = nextSnapshot.state.cursor.current;
+      snapshot.value = nextSnapshot;
+      if (selectionOrderChanged) selectedIDs.value = nextSelectedIDs;
+      if (selectionOrderChanged || selectionModeChanged) {
+        state.value = fromIDs(nextSelectedIDs, props.selectionMode);
+      }
+      state.highlightedValue = currentHighlighted;
+      for (const id of changedSelection) itemProjection.invalidate(id);
+      if (previousHighlight !== currentHighlighted) {
+        itemProjection.invalidate(previousHighlight);
+        itemProjection.invalidate(currentHighlighted);
+      }
+      syncSubmissionSelection(changedSelection);
+      syncActiveDescendant();
+    };
+    const updateControllerProjection = (nextControllerProps: ListboxControllerProps): void => {
+      const nextDisabledItems = new Set(nextControllerProps.disabledItems);
+      if (controllerProps.disabled !== nextControllerProps.disabled) {
+        state.disabled = nextControllerProps.disabled;
+        itemProjection.invalidateAll();
+      } else {
+        for (const id of disabledItemSet) if (!nextDisabledItems.has(id)) itemProjection.invalidate(id);
+        for (const id of nextDisabledItems) if (!disabledItemSet.has(id)) itemProjection.invalidate(id);
+      }
+      state.readonly = nextControllerProps.readonly;
+      disabledItemSet = nextDisabledItems;
+      submissionIndex = new Map(nextControllerProps.items.map((id, index) => [id, index] as const));
+    };
     const participation = useCompositeFormControl({
       root: rootElement,
       submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
@@ -175,28 +272,16 @@ export const ListboxRoot = defineComponent({
             controllerProps,
             emit,
           );
-          snapshot.value = controller.value.getSnapshot();
+          publishSnapshot(controller.value.getSnapshot());
         });
       },
     });
-    const controlled = useControlledStateInvariant('ListboxRoot', 'modelValue', () => props.modelValue);
-    const initialValue = toIDs(controlled ? props.modelValue : props.defaultValue, props.selectionMode);
-    const controller = shallowRef(createController(
-      controlled,
-      initialValue,
-      initialValue[0] ?? firstEnabledItem(controllerProps) ?? null,
-      controllerProps,
-      emit,
-    ));
-    const snapshot = shallowRef(controller.value.getSnapshot());
     const rebuild = (): void => {
       const nextControllerProps = snapshotListboxControllerProps({
         ...props,
         direction: direction.value,
       });
-      if (sameListboxControllerProps(controllerProps, nextControllerProps)) {
-        return;
-      }
+      if (sameListboxControllerProps(controllerProps, nextControllerProps)) return;
       const requested = controlled
         ? toIDs(props.modelValue, props.selectionMode)
         : snapshot.value.state.selection.selected;
@@ -214,8 +299,9 @@ export const ListboxRoot = defineComponent({
         nextControllerProps,
         emit,
       );
+      updateControllerProjection(nextControllerProps);
       controllerProps = nextControllerProps;
-      snapshot.value = controller.value.getSnapshot();
+      publishSnapshot(controller.value.getSnapshot());
       if (controlled && !sameIDs(requested, reconciled.selected)) {
         emit('update:modelValue', fromIDs(reconciled.selected, props.selectionMode));
       }
@@ -226,35 +312,19 @@ export const ListboxRoot = defineComponent({
         value: toIDs(value, props.selectionMode),
       });
       if (!result.ok) throw new TypeError(result.error.message);
-      snapshot.value = result.value;
+      publishSnapshot(result.value);
     });
     watch(
       [() => props.items, () => props.selectionMode, () => props.disabledItems,
         () => props.disabled, () => props.readonly, () => props.orientation, () => props.textValue, direction],
       rebuild,
     );
-
-    const selectedIDs = computed(() => snapshot.value.state.selection.selected);
-    const selectedIDSet = computed<ReadonlySet<string>>(
-      () => new Set(selectedIDs.value),
-    );
-    const indicatorPresence = useConditionalPresenceRegistry(selectedIDSet);
-    const highlightedValue = computed(() => snapshot.value.state.cursor.current);
-    const disabled = computed(() => props.disabled);
-    const readonly = computed(() => props.readonly);
-    const disabledItems = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
-    const slotProps = computed<ListboxRootSlotProps>(() => Object.freeze({
-      value: fromIDs(selectedIDs.value, props.selectionMode),
-      highlightedValue: highlightedValue.value,
-      disabled: disabled.value,
-      readonly: readonly.value,
-    }));
     const applyResult = (
       result: ReturnType<ListboxController<string>['handleEvent']>,
       root?: HTMLElement,
     ): boolean => {
       if (!result.ok) return false;
-      snapshot.value = result.snapshot;
+      publishSnapshot(result.snapshot);
       applyEffects(result.commands, emit);
       if (root !== undefined) void nextTick(() => root.focus());
       return true;
@@ -271,35 +341,34 @@ export const ListboxRoot = defineComponent({
       event.preventDefault();
     };
     provide<ListboxRootContext>(listboxRootContextKey, {
-      selectedIDs,
-      selectedIDSet,
-      highlightedValue,
-      disabled,
-      readonly,
-      disabledItems,
+      state,
+      itemProjection,
       indicatorPresence,
       itemID,
+      isSelected: (id) => currentSelectedSet.has(id),
+      isHighlighted: (id) => currentHighlighted === id,
+      isItemDisabled: (id) => controllerProps.disabled || disabledItemSet.has(id),
       select,
     });
-
-    const rootAttributes = computed(() => getListboxRootAttributes({
-      selectionMode: props.selectionMode,
-      orientation: props.orientation,
-      direction: direction.value,
-      disabled: props.disabled,
-      readOnly: props.readonly,
-      ...(highlightedValue.value === null ? {} : { activeDescendantID: itemID(highlightedValue.value) }),
-    }));
+    onBeforeUnmount(() => itemProjection.clear());
     return (): VNodeChild => {
+      const rootAttributes = getListboxRootAttributes({
+        selectionMode: props.selectionMode,
+        orientation: props.orientation,
+        direction: direction.value,
+        disabled: props.disabled,
+        readOnly: props.readonly,
+        ...(currentHighlighted === null ? {} : { activeDescendantID: itemID(currentHighlighted) }),
+      });
       const root = h(Primitive, mergeProps(
         attrs,
-        rootAttributes.value as Record<string, unknown>,
+        rootAttributes as Record<string, unknown>,
         {
           as: props.as, asChild: props.asChild, onKeydown: handleKeydown,
-          elementRef: (element: unknown) => { rootElement.value = element as HTMLElement | null; },
+          elementRef: (element: unknown) => { rootElement.value = element as HTMLElement | null; syncActiveDescendant(); },
         },
         participation.controlProps.value,
-      ), { default: () => slots['default']?.(slotProps.value) });
+      ), { default: () => slots['default']?.(state) });
       if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return root;
       return [root, h('select', {
         ref: submissionElement,
@@ -312,7 +381,7 @@ export const ListboxRoot = defineComponent({
         style: visuallyHiddenInputStyle,
       }, props.items.map((id) => h('option', {
         value: id,
-        selected: selectedIDSet.value.has(id),
+        selected: currentSelectedSet.has(id),
       }, id)))];
     };
   },
@@ -334,23 +403,29 @@ export const ListboxItem = defineComponent({
   slots: Object as SlotsType<{ default: (props: ListboxItemSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useListboxRootContext('ListboxItem');
-    const slotProps = computed<ListboxItemSlotProps>(() => Object.freeze({
-      value: props.value,
-      selected: root.selectedIDSet.value.has(props.value),
-      highlighted: root.highlightedValue.value === props.value,
-      disabled: root.disabled.value || props.disabled || root.disabledItems.value.has(props.value),
-    }));
+    const itemProjection = useItemProjectionSignal(root.itemProjection, () => props.value);
+    const slotProps: ListboxItemSlotProps = Object.freeze({
+      get value() { return props.value; },
+      get selected() { itemProjection(); return root.isSelected(props.value); },
+      get highlighted() { itemProjection(); return root.isHighlighted(props.value); },
+      get disabled() { itemProjection(); return props.disabled || root.isItemDisabled(props.value); },
+    });
     provide<ListboxItemContext>(listboxItemContextKey, { slotProps });
-    const attributes = computed(() => getListboxItemAttributes(
-      {
-        cursor: { current: root.highlightedValue.value },
-        selection: { has: (id: string) => root.selectedIDSet.value.has(id) },
-      },
-      { id: props.value, disabled: props.disabled },
-      { disabled: slotProps.value.disabled, elementID: root.itemID(props.value) },
-    ));
+    const attributes = computed(() => {
+      const selected = slotProps.selected;
+      const highlighted = slotProps.highlighted;
+      const disabled = slotProps.disabled;
+      return getListboxItemAttributes(
+        {
+          cursor: { current: highlighted ? props.value : null },
+          selection: { has: (id: string) => id === props.value && selected },
+        },
+        { id: props.value, disabled: props.disabled },
+        { disabled, elementID: root.itemID(props.value) },
+      );
+    });
     const handleClick = (event: MouseEvent): void => {
-      if (!event.defaultPrevented && !slotProps.value.disabled) {
+      if (!event.defaultPrevented && !slotProps.disabled) {
         root.select(props.value, event.currentTarget as HTMLElement);
       }
     };
@@ -358,7 +433,7 @@ export const ListboxItem = defineComponent({
       attrs,
       attributes.value as Record<string, unknown>,
       { as: props.as, asChild: props.asChild, onClick: handleClick },
-    ), { default: () => slots['default']?.(slotProps.value) });
+    ), { default: () => slots['default']?.(slotProps) });
   },
 });
 
@@ -374,8 +449,8 @@ export const ListboxItemText = defineComponent({
       asChild: props.asChild,
       'data-scope': 'listbox',
       'data-part': 'item-text',
-      'data-state': item.slotProps.value.selected ? 'checked' : 'unchecked',
-    }), { default: () => slots['default']?.(item.slotProps.value) });
+      'data-state': item.slotProps.selected ? 'checked' : 'unchecked',
+    }), { default: () => slots['default']?.(item.slotProps) });
   },
 });
 
@@ -388,7 +463,7 @@ export const ListboxItemIndicator = defineComponent({
     const root = useListboxRootContext('ListboxItemIndicator');
     const item = useListboxItemContext('ListboxItemIndicator');
     return (): VNodeChild => {
-      const state = item.slotProps.value;
+      const state = item.slotProps;
       return h(Primitive, mergeProps(attrs, {
         as: props.as,
         asChild: props.asChild,
