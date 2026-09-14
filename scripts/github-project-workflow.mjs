@@ -6,8 +6,8 @@ import {
   workflowFieldCreateBody,
   workflowValue,
 } from './lib/github-project-workflow.mjs'
+import { asGitHubList, createGitHubAPI } from './lib/github-api.mjs'
 
-const API_VERSION = '2026-03-10'
 const DEFAULT_PROJECT_TITLE = 'Sectile Engineering'
 
 function parseArgs(argv) {
@@ -29,48 +29,8 @@ function token() {
   return value
 }
 
-function apiClient(authToken) {
-  async function request(path, { method = 'GET', body } = {}) {
-    const response = await fetch(`https://api.github.com${path}`, {
-      method,
-      headers: {
-        Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${authToken}`,
-        'X-GitHub-Api-Version': API_VERSION,
-        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    })
-    const text = await response.text()
-    const data = text ? JSON.parse(text) : null
-    if (!response.ok) {
-      const detail = data?.message ? `: ${data.message}` : ''
-      throw new Error(`${method} ${path} failed with ${response.status}${detail}`)
-    }
-    return data
-  }
-
-  async function graphql(query, variables = {}) {
-    const data = await request('/graphql', { method: 'POST', body: { query, variables } })
-    if (Array.isArray(data?.errors) && data.errors.length > 0) {
-      throw new Error(`GraphQL failed: ${data.errors.map(error => error.message).join('; ')}`)
-    }
-    return data?.data
-  }
-
-  return { request, graphql }
-}
-
-function asList(value) {
-  if (Array.isArray(value)) return value
-  for (const key of ['values', 'items', 'projects', 'fields']) {
-    if (Array.isArray(value?.[key])) return value[key]
-  }
-  return []
-}
-
 async function ensureWorkflowField(api, owner, apply, actions) {
-  const fields = asList(await api.request(`/orgs/${owner}/issue-fields`))
+  const fields = asGitHubList(await api.request(`/orgs/${owner}/issue-fields`))
   const matches = fields.filter(field => field.name === 'Workflow')
   if (matches.length > 1) throw new Error('Multiple organization Issue Fields are named Workflow')
   if (matches.length === 1) {
@@ -116,7 +76,7 @@ async function repositoryProjectInfo(api, owner, repo) {
 
 async function ensureProject(api, owner, repo, apply, actions) {
   const title = process.env.SECTILE_PROJECT_TITLE || DEFAULT_PROJECT_TITLE
-  const projects = asList(await api.request(`/orgs/${owner}/projectsV2?per_page=100`))
+  const projects = asGitHubList(await api.request(`/orgs/${owner}/projectsV2?per_page=100`))
   const matches = projects.filter(project => project.title === title && project.state !== 'closed')
   if (matches.length > 1) throw new Error(`Multiple open projects are titled ${title}`)
 
@@ -180,7 +140,7 @@ async function ensureProject(api, owner, repo, apply, actions) {
 async function ensureProjectWorkflowField(api, owner, project, field, apply, actions) {
   if (!project || !field) return
   const path = `/orgs/${owner}/projectsV2/${project.number}/fields?per_page=100`
-  const fields = asList(await api.request(path))
+  const fields = asGitHubList(await api.request(path))
   const match = fields.find(entry =>
     Number(entry.issue_field_id) === Number(field.id) || entry.name === field.name,
   )
@@ -201,7 +161,7 @@ async function ensureProjectWorkflowField(api, owner, project, field, apply, act
 
 async function enrollIssues(api, owner, repo, project, field, apply, actions) {
   if (!project || !field) return
-  const items = asList(await api.request(`/orgs/${owner}/projectsV2/${project.number}/items?per_page=100`))
+  const items = asGitHubList(await api.request(`/orgs/${owner}/projectsV2/${project.number}/items?per_page=100`))
   const knownIssueNumbers = new Set(
     items
       .map(item => item.content)
@@ -225,14 +185,14 @@ async function enrollIssues(api, owner, repo, project, field, apply, actions) {
       }
     }
 
-    const values = asList(await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}/issue-field-values?per_page=100`))
+    const values = asGitHubList(await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}/issue-field-values?per_page=100`))
     const current = workflowValue(values, field.id)
     if (current !== null) {
       actions.push({ action: 'workflow-initialize', issue: issueNumber, result: 'preserved', value: current })
       continue
     }
     if (apply) {
-      const updated = asList(await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}/issue-field-values`, {
+      const updated = asGitHubList(await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}/issue-field-values`, {
         method: 'POST',
         body: { issue_field_values: [{ field_id: Number(field.id), value: 'Candidate' }] },
       }))
@@ -247,7 +207,7 @@ async function enrollIssues(api, owner, repo, project, field, apply, actions) {
 
 async function setup({ apply }) {
   const { owner, repo } = repositoryParts()
-  const api = apiClient(token())
+  const api = createGitHubAPI(token())
   const actions = []
   const field = await ensureWorkflowField(api, owner, apply, actions)
   const project = await ensureProject(api, owner, repo, apply, actions)
