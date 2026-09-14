@@ -59,17 +59,21 @@ export function tryCreateLayerStackState<ID extends StableID = StableID>(
   const ids = tryCreateSequence(inputs.map((layer) => layer.id));
   if (!ids.ok) return ids;
   const layers: Layer<ID>[] = [];
-  for (const input of inputs) {
+  for (let index = 0; index < size; index += 1) {
+    const input = inputs[index]!;
     const normalized = normalizeLayer(input);
     if (!normalized.ok) return normalized;
     const parentID = normalized.value.parentID;
-    if (parentID !== null && layers.at(-1)?.id !== parentID) {
-      return fail(
-        'construction',
-        'layer-parent-not-topmost',
-        'A nested layer must open directly above its current topmost parent.',
-        { id: input.id, parentID },
-      );
+    if (parentID !== null) {
+      const parentIndex = ids.value.indexOf(parentID);
+      if (parentIndex === null || parentIndex >= index) {
+        return fail(
+          'construction',
+          'layer-parent-not-topmost',
+          'A nested layer parent must already be open below the child.',
+          { id: input.id, parentID },
+        );
+      }
     }
     layers.push(normalized.value);
   }
@@ -151,22 +155,20 @@ function closeFrom<ID extends StableID>(
   index: number,
   reason: Exclude<LayerCloseReason, 'ancestor-closed'>,
 ): Result<LayerStackUpdate<ID>> {
-  let end = index + 1;
-  while (
-    end < state.layers.length
-    && state.layers[end]?.parentID === state.layers[end - 1]?.id
-  ) {
-    end += 1;
+  const closingIDs = new Set<ID>();
+  const closing: Layer<ID>[] = [];
+  const retained = state.layers.slice(0, index);
+  for (let cursor = index; cursor < state.layers.length; cursor += 1) {
+    const layer = state.layers[cursor]!;
+    if (cursor === index || (layer.parentID !== null && closingIDs.has(layer.parentID))) {
+      closingIDs.add(layer.id);
+      closing.push(layer);
+    } else retained.push(layer);
   }
-  const closing = state.layers.slice(index, end).reverse();
-  const next = Object.freeze({
-    layers: Object.freeze([
-      ...state.layers.slice(0, index),
-      ...state.layers.slice(end),
-    ]),
-  });
+  const next = Object.freeze({ layers: Object.freeze(retained) });
   // Shallow copies of foreign layers can still alias mutable records.
   if (hasCanonicalState(tryCreateLayerStackState, state)) bindCanonicalState(tryCreateLayerStackState, next);
+  closing.reverse();
   return createMachineUpdate(
     next,
     closing.map((layer, commandIndex) => ({

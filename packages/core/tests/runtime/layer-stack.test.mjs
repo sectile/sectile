@@ -9,19 +9,26 @@ import {
   tryCreateLayerStackState,
 } from '../../.verification-dist/layer-stack.js';
 
-test('LAY-02, LAY-05: layer stack opens only contiguous parent-child chains', () => {
+test('LAY-02, LAY-05: layer stack accepts sibling ancestry only to already-open parents', () => {
   let state = createLayerStackState();
   state = applyLayerStackEvent(state, {
     type: 'open-layer', layer: { id: 'dialog', mode: 'modal' },
   }).value.state;
   state = applyLayerStackEvent(state, {
-    type: 'open-layer', layer: { id: 'popover', parentID: 'dialog' },
+    type: 'open-layer', layer: { id: 'popover-a', parentID: 'dialog' },
   }).value.state;
-  assert.equal(getTopLayer(state).id, 'popover');
-  assert.deepEqual(getInteractiveLayerIDs(state), ['dialog', 'popover']);
+  state = applyLayerStackEvent(state, {
+    type: 'open-layer', layer: { id: 'popover-b', parentID: 'dialog' },
+  }).value.state;
+  assert.equal(getTopLayer(state).id, 'popover-b');
+  assert.deepEqual(getInteractiveLayerIDs(state), ['dialog', 'popover-a', 'popover-b']);
   assert.equal(applyLayerStackEvent(state, {
-    type: 'open-layer', layer: { id: 'invalid', parentID: 'dialog' },
+    type: 'open-layer', layer: { id: 'invalid', parentID: 'missing' },
   }).ok, false);
+  assert.equal(tryCreateLayerStackState([
+    { id: 'future-child', parentID: 'future-parent' },
+    { id: 'future-parent' },
+  ]).ok, false);
 });
 
 test('LAY-03: topmost dismissal respects each layer policy', () => {
@@ -38,20 +45,56 @@ test('LAY-03: topmost dismissal respects each layer policy', () => {
   assert.deepEqual(outside.state.layers.map((layer) => layer.id), ['dialog']);
 });
 
-test('LAY-04: closing an ancestor closes descendants in top-down command order', () => {
+test('LAY-04: closing an ancestor closes sibling branches in reverse z-order', () => {
   const state = createLayerStackState([
     { id: 'dialog', mode: 'modal' },
-    { id: 'popover', parentID: 'dialog' },
-    { id: 'tooltip', parentID: 'popover', mode: 'tooltip' },
+    { id: 'popover-a', parentID: 'dialog' },
+    { id: 'tooltip-a', parentID: 'popover-a', mode: 'tooltip' },
+    { id: 'popover-b', parentID: 'dialog' },
+    { id: 'tooltip-b', parentID: 'popover-b', mode: 'tooltip' },
     { id: 'independent' },
   ]);
   const closed = applyLayerStackEvent(state, { type: 'close-layer', id: 'dialog' }).value;
   assert.deepEqual(closed.state.layers.map((layer) => layer.id), ['independent']);
   assert.deepEqual(closed.commands, [
-    { type: 'layer-closed', id: 'tooltip', reason: 'ancestor-closed' },
-    { type: 'layer-closed', id: 'popover', reason: 'ancestor-closed' },
+    { type: 'layer-closed', id: 'tooltip-b', reason: 'ancestor-closed' },
+    { type: 'layer-closed', id: 'popover-b', reason: 'ancestor-closed' },
+    { type: 'layer-closed', id: 'tooltip-a', reason: 'ancestor-closed' },
+    { type: 'layer-closed', id: 'popover-a', reason: 'ancestor-closed' },
     { type: 'layer-closed', id: 'dialog', reason: 'programmatic' },
   ]);
+});
+
+test('LayerStack sibling descendant closure stays linear at the supported ceiling', () => {
+  const size = createSequence([]).maxItems;
+  const state = createLayerStackState(Array.from({ length: size }, (_, index) => ({
+    id: index,
+    ...(index === 0 ? {} : { parentID: index % 2 === 0 ? 0 : index - 1 }),
+  })));
+  const findIndex = Array.prototype.findIndex;
+  const has = Set.prototype.has;
+  let searches = 0;
+  let membershipReads = 0;
+  Array.prototype.findIndex = function (...args) {
+    if (this === state.layers) searches += 1;
+    return Reflect.apply(findIndex, this, args);
+  };
+  Set.prototype.has = function (...args) {
+    membershipReads += 1;
+    return Reflect.apply(has, this, args);
+  };
+  try {
+    const closed = applyLayerStackEvent(state, { type: 'close-layer', id: 0 }).value;
+    assert.equal(closed.state.layers.length, 0);
+    assert.equal(closed.commands.length, size);
+    assert.equal(closed.commands[0].id, size - 1);
+    assert.deepEqual(closed.commands.at(-1), { type: 'layer-closed', id: 0, reason: 'programmatic' });
+  } finally {
+    Array.prototype.findIndex = findIndex;
+    Set.prototype.has = has;
+  }
+  assert.equal(searches, 1);
+  assert.equal(membershipReads, size - 1);
 });
 
 test('LayerStack rejects oversized inputs before ID reads or materialization', () => {
@@ -93,7 +136,7 @@ test('LayerStack accepts the inclusive Sequence ceiling and validates supported 
     [{ id: '' }], [{ id: 'x'.repeat(1_025) }], [{ id: 'a' }, { id: 'a' }],
     [{ id: 'a', mode: 'invalid' }], [{ id: 'a', dismissOnEscape: 'yes' }],
     [{ id: 'a', dismissOnInteractOutside: 1 }], [{ id: 'a', parentID: 'missing' }],
-    [{ id: 'a' }, { id: 'b' }, { id: 'c', parentID: 'a' }],
+    [{ id: 'child', parentID: 'parent' }, { id: 'parent' }],
   ]) assert.equal(tryCreateLayerStackState(input).ok, false);
 });
 
