@@ -10,7 +10,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 |---|---:|---:|---:|
 | core | 380 | 26 | 59 |
 | chart | 80 | 0 | 15 |
-| dom | 425 | 171 | 33 |
+| dom | 425 | 171 | 34 |
 | form | 21 | 0 | 9 |
 | tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |
@@ -106,6 +106,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | chart:view.transition.axis-domain | trusted | `O(nAxis)` worst-case | `O(nAxis)` | `O(nAxis)` | `O(nAxis)` | forbidden | packages/chart/tests/interaction/view.test.mjs |
 | dom:chart.canvas2d-render | connected | `O(a + k)` worst-case | `O(a)` | `O(1)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:chart.disconnect | connected | `O(r + u)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| dom:chart.hit-coherence | connected | `O(n + c)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:chart.navigation-dispatch | connected | `O(a + p)` worst-case | `O(a + p)` | `O(a)` | `O(a + p)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:chart.overlay-render | connected | `O(a + t + l + k)` worst-case | `O(a + t + l + k)` | `O(a + t + l + k)` | `O(a + t + l + k)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:chart.webgl2-bind | connected | `O(l + s)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/chart-renderer.test.mjs |
