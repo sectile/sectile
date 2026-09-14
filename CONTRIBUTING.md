@@ -5,12 +5,12 @@ For work participating in the engineering pilot, read
 shared records. Automated implementation remains gated on separately configured
 Project state, safeguards, and execution ownership.
 
-## Reporting a finding
+## Reporting an issue
 
-Use the **Engineering finding** issue template. Describe observed and expected
-behavior, affected versions, and evidence. Automated auditors must include the
-actual inspected full source SHA. External reporters who do not know a source
-SHA may provide the package version and mark the source baseline unknown.
+Use the **Issue report** template. Describe observed and expected behavior,
+affected versions, and evidence. Automated auditors must include the actual
+inspected full source SHA. External reporters who do not know a source SHA may
+provide the package version and mark the source baseline unknown.
 
 A new report enters review as a candidate. A reviewer establishes the root cause,
 impact, bounded scope, acceptance criteria, dependencies, and evidence before
@@ -35,6 +35,3 @@ exact source SHAs and applicable artifact identities. Keep self-checks distinct
 from the separate review step. The human maintainer decides merge and release
 in this pilot. Issues requiring published-artifact verification stay open until
 that evidence is complete.
-
-Report sensitive details through the approved restricted channel. Public records
-must contain only details appropriate for public disclosure; never publish secrets.
