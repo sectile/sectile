@@ -171,6 +171,67 @@ test('Grid focus publication drains against the latest synchronous controlled ac
   } finally { grid.destroy(); }
 });
 
+test('Grid native focus deferral executes a reentrant start-edit command exactly once', async () => {
+  const root = new Cell();
+  const cell = new Cell();
+  let grid;
+  let nestedResult = false;
+  const starts = [];
+  const modes = [];
+  const updates = [];
+  grid = createGridControl({ root, rows: [['a']],
+    onHighlightedValueChange: (id) => { nestedResult = grid.handleEvent({ type: 'start-edit', id }); },
+    onEditModeChange: (mode) => modes.push(mode),
+    onEditStart: (id) => starts.push(id),
+    onUpdate: () => updates.push(grid.getSnapshot().revision),
+  });
+  grid.setCellAttributes(cell, 'a');
+  try {
+    root.emit('focusin', { target: cell });
+    await settle();
+    assert.equal(nestedResult, true);
+    assert.deepEqual(starts, ['a']);
+    assert.deepEqual(modes, ['editing']);
+    assert.deepEqual(updates, [2]);
+    assert.equal(grid.state.cursor.current, 'a');
+    assert.equal(grid.state.editMode, 'editing');
+    assert.equal(cell.focusCalls, 1, 'native focus completion coalesces the reentrant focus command');
+  } finally { grid.destroy(); }
+});
+
+test('Grid native focus deferral drains nested edit cancellation before one latest publication', async () => {
+  const root = new Cell();
+  const cell = new Cell();
+  let grid;
+  let startResult = false;
+  let cancelResult = false;
+  const starts = [];
+  const cancels = [];
+  const modes = [];
+  const updates = [];
+  grid = createGridControl({ root, rows: [['a']],
+    onHighlightedValueChange: (id) => { startResult = grid.handleEvent({ type: 'start-edit', id }); },
+    onEditModeChange: (mode) => modes.push(mode),
+    onEditStart: (id) => { starts.push(id); cancelResult = grid.handleEvent('cancel-edit'); },
+    onEditCancel: (id) => cancels.push(id),
+    onUpdate: () => updates.push(grid.getSnapshot().revision),
+  });
+  grid.setCellAttributes(cell, 'a');
+  try {
+    root.emit('focusin', { target: cell });
+    await settle();
+    assert.equal(startResult, true);
+    assert.equal(cancelResult, true);
+    assert.deepEqual(starts, ['a']);
+    assert.deepEqual(cancels, ['a']);
+    assert.deepEqual(modes, ['editing', 'navigation']);
+    assert.deepEqual(updates, [3]);
+    assert.equal(grid.state.cursor.current, 'a');
+    assert.equal(grid.state.editMode, 'navigation');
+    assert.equal(cell.focusCalls, 1, 'latest native focus publication owns the single deferred focus');
+  } finally { grid.destroy(); }
+});
+
 test('Grid disconnect cancels pending focus and detached handlers across ownership churn', async () => {
   for (let cycle = 0; cycle < 32; cycle += 1) {
     const root = new Cell();
