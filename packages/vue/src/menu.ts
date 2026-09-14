@@ -15,13 +15,13 @@ import type {
 } from '@sectile/dom/position';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostDirection, useHostId } from './host-provider.js';
-import { reconcileCollectionState, sameIDs } from './internal/collection.js';
-import { useControlledStateInvariant } from './internal/controlled-state.js';
 import {
-  createItemProjectionRegistry,
-  useItemProjectionSignal,
-  type ItemProjectionRegistry,
-} from './internal/item-projection.js';
+  invalidateItemProjection,
+  reconcileCollectionState,
+  sameIDs,
+  type ItemProjection,
+} from './internal/collection.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { usePresence } from './internal/presence.js';
 
 type MenuKind = 'menu' | 'menu-button' | 'menubar' | 'navigation-menu';
@@ -61,7 +61,7 @@ interface Context {
   readonly direction: ComputedRef<'ltr' | 'rtl'>;
   readonly position: ComputedRef<boolean>;
   readonly strategy: ComputedRef<PositionStrategy>;
-  readonly itemProjection: ItemProjectionRegistry;
+  readonly itemProjection: ItemProjection;
   isItemHighlighted(id: string): boolean;
   isItemOpen(id: string): boolean;
   isItemDisabled(id: string): boolean;
@@ -145,7 +145,7 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
       let currentOpenPath: readonly string[] = [];
       let currentOpenPathSet = new Set<string>();
       let disabledItemSet = new Set(runtimeProps.disabledItems);
-      const itemProjection = createItemProjectionRegistry();
+      const itemProjection = shallowReactive(new Map<string, true>());
       const state = shallowReactive({
         open: kind === 'menu-button' && runtimeProps.open !== undefined ? runtimeProps.open : currentOpen,
         highlightedValue: currentHighlighted,
@@ -166,20 +166,18 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
         if (previous === value) return;
         currentHighlighted = value;
         state.highlightedValue = value;
-        itemProjection.invalidate(previous);
-        itemProjection.invalidate(value);
+        invalidateItemProjection(itemProjection, previous);
+        invalidateItemProjection(itemProjection, value);
       };
       const publishOpenPath = (value: readonly string[]): void => {
         const previousSet = currentOpenPathSet;
         const nextSet = new Set(value);
-        const changed = new Set<string>();
-        for (const id of previousSet) if (!nextSet.has(id)) changed.add(id);
-        for (const id of nextSet) if (!previousSet.has(id)) changed.add(id);
+        for (const id of previousSet) if (!nextSet.has(id)) invalidateItemProjection(itemProjection, id);
+        for (const id of nextSet) if (!previousSet.has(id)) invalidateItemProjection(itemProjection, id);
         const pathChanged = !sameIDs(currentOpenPath, value);
         currentOpenPath = value;
         currentOpenPathSet = nextSet;
         if (pathChanged) state.openPath = value;
-        for (const id of changed) itemProjection.invalidate(id);
       };
       const publishSnapshot = (snapshot: ReturnType<MenuConnection<string>['getSnapshot']>['state']): void => {
         publishOpen(snapshot.open);
@@ -188,13 +186,10 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
       };
       const updateOwnerProjection = (): void => {
         const nextDisabledItems = new Set(runtimeProps.disabledItems);
-        if (state.disabled !== runtimeProps.disabled) {
-          state.disabled = runtimeProps.disabled;
-          itemProjection.invalidateAll();
-        } else {
-          for (const id of disabledItemSet) if (!nextDisabledItems.has(id)) itemProjection.invalidate(id);
-          for (const id of nextDisabledItems) if (!disabledItemSet.has(id)) itemProjection.invalidate(id);
-        }
+        if (state.disabled === runtimeProps.disabled) {
+          for (const id of disabledItemSet) if (!nextDisabledItems.has(id)) invalidateItemProjection(itemProjection, id);
+          for (const id of nextDisabledItems) if (!disabledItemSet.has(id)) invalidateItemProjection(itemProjection, id);
+        } else state.disabled = runtimeProps.disabled;
         disabledItemSet = nextDisabledItems;
       };
       const refresh = (): void => {
@@ -279,7 +274,7 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
         registerSubmenu: (element, parent) => (connection.value as MenuRegistrationConnection | undefined)?.setSubmenuAttributes(element, parent),
       });
       onMounted(() => { mounted = true; connect(); });
-      onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); itemProjection.clear(); });
+      onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); });
       watch([() => runtimeProps.items, () => runtimeProps.disabledItems, () => runtimeProps.disabled, () => runtimeProps.label, () => runtimeProps.textValue, () => runtimeProps.policies, direction, () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset, () => runtimeProps.collisionPadding, () => runtimeProps.collisionBoundary, () => runtimeProps.avoidCollisions, () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.tracking], connect);
       watch(() => runtimeProps.open, (value) => {
         if (!controlled || value === undefined) return;
@@ -354,12 +349,11 @@ export const MenuItem = defineComponent({
   slots: Object as SlotsType<{ default: (props: MenuItemSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('MenuItem');
-    const itemProjection = useItemProjectionSignal(root.itemProjection, () => props.value);
     const state: MenuItemSlotProps = Object.freeze({
       get value() { return props.value; },
-      get highlighted() { itemProjection(); return root.isItemHighlighted(props.value); },
-      get open() { itemProjection(); return root.isItemOpen(props.value); },
-      get disabled() { itemProjection(); return props.disabled || root.isItemDisabled(props.value); },
+      get highlighted() { root.itemProjection.get(props.value); return root.isItemHighlighted(props.value); },
+      get open() { root.itemProjection.get(props.value); return root.isItemOpen(props.value); },
+      get disabled() { root.itemProjection.get(props.value); return props.disabled || root.isItemDisabled(props.value); },
     });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.registerItem(node instanceof HTMLElement ? node : undefined, props.value); },
@@ -377,9 +371,8 @@ export const MenuSubContent = defineComponent({
   setup(props, { attrs, slots }) {
     const root = useRoot('MenuSubContent');
     const element = shallowRef<HTMLElement>();
-    const itemProjection = useItemProjectionSignal(root.itemProjection, () => props.for);
     const open = computed(() => {
-      itemProjection();
+      root.itemProjection.get(props.for);
       return root.state.open && root.isItemOpen(props.for);
     });
     const present = useMenuPresence(open, element, () => root.refresh(props.for));

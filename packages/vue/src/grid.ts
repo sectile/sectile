@@ -4,13 +4,13 @@ import {
 } from 'vue';
 import { createGridControl, type GridConnection, type GridEditMode, type GridPolicies } from '@sectile/dom/grid';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { reconcileCollectionState, sameIDs } from './internal/collection.js';
-import { useControlledStateInvariant } from './internal/controlled-state.js';
 import {
-  createItemProjectionRegistry,
-  useItemProjectionSignal,
-  type ItemProjectionRegistry,
-} from './internal/item-projection.js';
+  invalidateItemProjection,
+  reconcileCollectionState,
+  sameIDs,
+  type ItemProjection,
+} from './internal/collection.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface GridRootProps {
   readonly rows: readonly (readonly (string | null)[])[];
@@ -34,7 +34,7 @@ export interface GridPartProps { readonly as?: PrimitiveAs; readonly asChild?: b
 
 interface Context {
   readonly state: GridRootSlotProps;
-  readonly itemProjection: ItemProjectionRegistry;
+  readonly itemProjection: ItemProjection;
   isItemDisabled(id: string): boolean;
   registerCell(element: HTMLElement | undefined, id: string, disabled: boolean): void;
 }
@@ -72,7 +72,7 @@ export const GridRoot = defineComponent({
     const element = shallowRef<HTMLElement>(); const connection = shallowRef<GridConnection<string>>();
     let connectionOwner: GridConnectionOwner | undefined;
     let disabledItemSet = new Set(props.disabledItems);
-    const itemProjection = createItemProjectionRegistry();
+    const itemProjection = shallowReactive(new Map<string, true>());
     const state = shallowReactive({
       value: props.modelValue !== undefined ? props.modelValue : props.defaultValue,
       highlightedValue: props.highlightedValue !== undefined ? props.highlightedValue : props.defaultHighlightedValue,
@@ -87,8 +87,8 @@ export const GridRoot = defineComponent({
     };
     const invalidateIdentityChange = (previous: string | null, next: string | null): void => {
       if (previous === next) return;
-      itemProjection.invalidate(previous);
-      itemProjection.invalidate(next);
+      invalidateItemProjection(itemProjection, previous);
+      invalidateItemProjection(itemProjection, next);
     };
     const updateValue = (value: string | null): void => {
       const previous = state.value;
@@ -107,13 +107,10 @@ export const GridRoot = defineComponent({
     };
     const updateOwnerProjection = (owner: GridConnectionOwner): void => {
       const nextDisabledItems = new Set(owner.disabledItems);
-      if (state.disabled !== owner.disabled) {
-        state.disabled = owner.disabled;
-        itemProjection.invalidateAll();
-      } else {
-        for (const id of disabledItemSet) if (!nextDisabledItems.has(id)) itemProjection.invalidate(id);
-        for (const id of nextDisabledItems) if (!disabledItemSet.has(id)) itemProjection.invalidate(id);
-      }
+      if (state.disabled === owner.disabled) {
+        for (const id of disabledItemSet) if (!nextDisabledItems.has(id)) invalidateItemProjection(itemProjection, id);
+        for (const id of nextDisabledItems) if (!disabledItemSet.has(id)) invalidateItemProjection(itemProjection, id);
+      } else state.disabled = owner.disabled;
       disabledItemSet = nextDisabledItems;
       state.readonly = owner.readonly;
     };
@@ -176,7 +173,7 @@ export const GridRoot = defineComponent({
       isItemDisabled: (id) => disabledItemSet.has(id),
       registerCell: (node, id, disabled) => connection.value?.setCellAttributes(node, id, { disabled }),
     });
-    onMounted(connect); onBeforeUnmount(() => { connection.value?.disconnect(); itemProjection.clear(); });
+    onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
     watch([() => props.rows, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.policies], connect);
     watch([() => props.modelValue, () => props.highlightedValue, () => props.editMode], () => {
       if (connection.value === undefined) return;
@@ -215,12 +212,11 @@ export const GridCell = defineComponent({
       root.registerCell(node instanceof HTMLElement ? node : undefined, registeredID, props.disabled);
     };
     onBeforeUnmount(() => root.registerCell(undefined, registeredID, false));
-    const itemProjection = useItemProjectionSignal(root.itemProjection, () => props.value);
     const state: GridCellSlotProps = Object.freeze({
       get value() { return props.value; },
-      get selected() { itemProjection(); return toRaw(root.state).value === props.value; },
-      get highlighted() { itemProjection(); return toRaw(root.state).highlightedValue === props.value; },
-      get disabled() { itemProjection(); return toRaw(root.state).disabled || props.disabled || root.isItemDisabled(props.value); },
+      get selected() { root.itemProjection.get(props.value); return toRaw(root.state).value === props.value; },
+      get highlighted() { root.itemProjection.get(props.value); return toRaw(root.state).highlightedValue === props.value; },
+      get disabled() { root.itemProjection.get(props.value); return root.state.disabled || props.disabled || root.isItemDisabled(props.value); },
       get highlightedValue() { return root.state.highlightedValue; },
       get editMode() { return root.state.editMode; },
       get readonly() { return root.state.readonly; },

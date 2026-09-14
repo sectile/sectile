@@ -9,6 +9,7 @@ import { tryCreateTree } from '@sectile/core/tree';
 export type { CollectionSelectionMode } from '@sectile/core/adapter-runtime';
 
 export type ReconciledCollectionState = ReconciledCollectionIdentities<string>;
+export type ItemProjection = Map<string, true>;
 
 export interface ReconcileCollectionOptions {
   readonly preserveNullCurrent?: boolean;
@@ -40,6 +41,15 @@ export function reconcileCollectionState(
 
 export function sameIDs(left: readonly string[], right: readonly string[]): boolean {
   return sameStableIDOrder(left, right);
+}
+
+export function invalidateItemProjection(
+  projection: ItemProjection,
+  id: string | null | undefined,
+): void {
+  if (id === null || id === undefined) return;
+  projection.set(id, true);
+  projection.delete(id);
 }
 
 export function collectionBranchIDs(
