@@ -1316,9 +1316,10 @@ test('useVirtualizer reconnects physical targets with bounded registration work'
   const first = document.createElement('div');
   const second = document.createElement('div');
   const surface = document.createElement('div');
+  const secondSurface = document.createElement('div');
   const frame = document.createElement('div');
   const item = document.createElement('div');
-  document.body.append(first, second, surface, frame, item);
+  document.body.append(first, second, surface, secondSurface, frame, item);
   const scrollport = shallowRef(first);
   const surfaceRef = shallowRef(surface);
   const environment = createTrackedVirtualizerEnvironment();
@@ -1349,28 +1350,66 @@ test('useVirtualizer reconnects physical targets with bounded registration work'
     const staleFrame = environment.frames.at(-1);
     assert.ok(staleFrame);
 
+    const planCountBeforeRetire = plans.length;
     scrollport.value = second;
-    await settle();
-    assert.equal(environment.observers.length, 4);
+    assert.equal(virtualizer.connection.value, undefined);
     assert.equal(environment.observers[0].disconnectCalls, 1);
     assert.equal(environment.observers[1].disconnectCalls, 1);
+    assert.equal(staleFrame.cancelled, true);
+    const retiredFlush = virtualizer.flush();
+    assert.equal(retiredFlush.ok, false);
+    assert.equal(retiredFlush.error.code, 'virtualizer-not-connected');
+    staleFrame.callback();
+    assert.equal(plans.length, planCountBeforeRetire);
+
+    await settle();
+    assert.equal(environment.observers.length, 4);
     assert.equal(environment.observers[2].observeCalls.filter((value) => value === frame).length, 1);
     assert.equal(environment.observers[3].observeCalls.filter((value) => value === item).length, 1);
     assert.equal(virtualizer.scrollport.value, second);
 
     const observerCount = environment.observers.length;
+    const stableConnection = virtualizer.connection.value;
     scrollport.value = second;
     await settle();
     assert.equal(environment.observers.length, observerCount);
+    assert.equal(virtualizer.connection.value, stableConnection);
 
-    const planCount = plans.length;
-    staleFrame.callback();
-    assert.equal(plans.length, planCount);
+    surfaceRef.value = secondSurface;
+    assert.equal(virtualizer.connection.value, undefined);
+    assert.equal(environment.observers[2].disconnectCalls, 1);
+    assert.equal(environment.observers[3].disconnectCalls, 1);
+    assert.equal(virtualizer.flush().error.code, 'virtualizer-not-connected');
+    await settle();
+    assert.equal(environment.observers.length, 6);
+    assert.equal(environment.observers[4].observeCalls.filter((value) => value === frame).length, 1);
+    assert.equal(environment.observers[5].observeCalls.filter((value) => value === item).length, 1);
+
+    const beforeRapid = environment.observers.length;
+    scrollport.value = first;
+    assert.equal(virtualizer.connection.value, undefined);
+    assert.equal(environment.observers[4].disconnectCalls, 1);
+    assert.equal(environment.observers[5].disconnectCalls, 1);
+    scrollport.value = second;
+    scrollport.value = first;
+    assert.equal(environment.observers.length, beforeRapid);
+    await settle();
+    assert.equal(environment.observers.length, beforeRapid + 2);
+    assert.equal(virtualizer.scrollport.value, first);
+    assert.equal(environment.observers[6].observeCalls.filter((value) => value === frame).length, 1);
+    assert.equal(environment.observers[7].observeCalls.filter((value) => value === item).length, 1);
 
     scrollport.value = null;
+    assert.equal(virtualizer.connection.value, undefined);
+    assert.equal(environment.observers[6].disconnectCalls, 1);
+    assert.equal(environment.observers[7].disconnectCalls, 1);
+    const nullFlush = virtualizer.flush();
+    assert.equal(nullFlush.ok, false);
+    assert.equal(nullFlush.error.code, 'virtualizer-not-connected');
+    const beforeNullSettle = environment.observers.length;
     await settle();
     assert.equal(virtualizer.connection.value, undefined);
-    assert.equal(virtualizer.flush().ok, false);
+    assert.equal(environment.observers.length, beforeNullSettle);
 
     unregisterFrame();
     unregisterItem();
@@ -1379,6 +1418,7 @@ test('useVirtualizer reconnects physical targets with bounded registration work'
     first.remove();
     second.remove();
     surface.remove();
+    secondSurface.remove();
     frame.remove();
     item.remove();
   }

@@ -199,6 +199,8 @@ export function useVirtualizer<State, ID extends StableID, Measurement, Mutation
   const frameRegistrations = new Map<HTMLElement, () => void>();
   const items = new Map<HTMLElement, DesiredItem<ID>>();
   const itemRegistrations = new Map<HTMLElement, () => void>();
+  let connectedScrollport: VirtualScrollport | undefined;
+  let connectedSurface: HTMLElement | undefined;
   let disposed = false;
 
   const report = (error: Parameters<VirtualizerErrorHandler>[0]): void => {
@@ -226,8 +228,11 @@ export function useVirtualizer<State, ID extends StableID, Measurement, Mutation
   const disconnectConnection = (): void => {
     frameRegistrations.clear();
     itemRegistrations.clear();
-    connection.value?.disconnect();
+    const current = connection.value;
     connection.value = undefined;
+    connectedScrollport = undefined;
+    connectedSurface = undefined;
+    current?.disconnect();
   };
   const connect = (): void => {
     if (disposed) return;
@@ -272,6 +277,8 @@ export function useVirtualizer<State, ID extends StableID, Measurement, Mutation
       },
       onError: report,
     });
+    connectedScrollport = currentScrollport;
+    connectedSurface = currentSurface;
     connection.value = next;
     for (const frame of frames.keys()) {
       frameRegistrations.set(frame, next.registerFrame(frame));
@@ -280,7 +287,16 @@ export function useVirtualizer<State, ID extends StableID, Measurement, Mutation
       itemRegistrations.set(item, next.registerItem(item, desired.id));
     }
   };
+  const retireObsoleteConnection = (): void => {
+    if (connection.value === undefined) return;
+    if (
+      scrollport.value === connectedScrollport
+      && surface.value === connectedSurface
+    ) return;
+    disconnectConnection();
+  };
 
+  watch([scrollport, surface], retireObsoleteConnection, { flush: 'sync' });
   watch([scrollport, surface], connect, { flush: 'post', immediate: true });
   watch(
     options.state,
