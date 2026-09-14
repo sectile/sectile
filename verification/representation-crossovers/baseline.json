@@ -1,7 +1,6 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "workItem": "WI-018",
-  "fingerprint": "fnv1a32:56d9c843",
   "processCount": 9,
   "runtime": {
     "node": "v24.20.0",
@@ -2762,5 +2761,6 @@
       "heapDeltaBytes": 1124000,
       "sourceBytes": 409
     }
-  ]
+  ],
+  "sourceFingerprint": "sha256:e610fa74304d74029daf7fdeba7ed4b4e9373886b429cc290ad10456ef747ba6"
 }

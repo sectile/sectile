@@ -454,5 +454,7 @@
         "color-gamut:fixed-12-chroma:20000-12"
       ]
     }
-  ]
+  ],
+  "sourceFingerprint": "sha256:e610fa74304d74029daf7fdeba7ed4b4e9373886b429cc290ad10456ef747ba6",
+  "evidenceFingerprint": "sha256:4be97a0765a6641c3204bc926bcc98cc3671c540dcab44ef372666016d0dc2dd"
 }

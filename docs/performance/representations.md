@@ -40,4 +40,4 @@ This generated record freezes WI-018 representation choices before implementatio
 - **color-value:** `mutable-class-plugin` — Adds mutable identity, method dispatch, plugin closure, and one object per conversion step. `immutable-object-every-step` — Preserves semantics but allocates intermediate records in every scalar stage.
 - **color-gamut:** `reject` — Remains the default policy but cannot serve callers explicitly requesting perceptual gamut projection. `clip` — Remains available but may change hue/lightness relationships more than bounded chroma reduction.
 
-The machine-readable source of truth is `verification/representation-crossovers/decisions.json`; `pnpm check:crossovers` rejects source, decision, evidence, threshold, or documentation drift.
+The machine-readable source of truth is `verification/representation-crossovers/decisions.json`; `pnpm check:crossovers` rejects governed production source, decision, recorded evidence, threshold, or documentation drift. Use `pnpm update:crossovers` for an intentional deterministic attestation and `pnpm record:crossovers` only when replacing measured evidence.
