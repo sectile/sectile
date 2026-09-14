@@ -50,7 +50,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   #accessibilitySelection: ChartSelection<ID> | null = null;
   #frame = 0;
   #renderScale: number;
-  #pendingPointer: { readonly x: number; readonly y: number } | null = null;
+  #pendingPointer: { readonly clientX: number; readonly clientY: number } | null = null;
   #active = true;
   #inFrame = false;
 
@@ -251,8 +251,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   readonly #handleResize = (): void => { this.#schedule(); };
   readonly #handlePointerMove = (event: PointerEvent): void => {
     if (this.#navigation.isPointerGestureActive()) return;
-    const rect = this.#options.canvas.getBoundingClientRect();
-    this.#pendingPointer = Object.freeze({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+    this.#pendingPointer = Object.freeze({ clientX: event.clientX, clientY: event.clientY });
     this.#schedule();
   };
   readonly #handlePointerLeave = (): void => {
@@ -293,13 +292,11 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     this.#inFrame = true;
     let failure: readonly [unknown] | undefined;
     try {
-      if (this.#pendingPointer !== null && this.#projection !== null) {
+      if (this.#pendingPointer !== null) {
         const pointer = this.#pendingPointer;
         this.#pendingPointer = null;
         try {
-          const hits = hitTestChartProjection(this.#projection, { ...pointer, maximumHits: 1 });
-          const hit = hits[0];
-          this.controller.dispatch({ type: 'pointer-candidate', id: hit?.kind === 'datum' ? hit.id : null });
+          this.controller.dispatch({ type: 'pointer-candidate', id: this.#hitAt(pointer.clientX, pointer.clientY) });
         } catch (error) { failure ??= [error]; }
       }
       try { this.refresh(); }
@@ -311,10 +308,25 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   };
 
   #hitAt(clientX: number, clientY: number): ID | null {
-    if (this.#projection === null) return null;
-    const rect = this.#options.canvas.getBoundingClientRect();
-    const hit = hitTestChartProjection(this.#projection, { x: clientX - rect.left, y: clientY - rect.top, maximumHits: 1 })[0];
+    let projection = this.#projection;
+    if (projection === null) return null;
+    let rect = this.#options.canvas.getBoundingClientRect();
+    if (!this.#projectionMatchesRect(projection, rect)) {
+      this.refresh();
+      projection = this.#projection;
+      if (projection === null) return null;
+      rect = this.#options.canvas.getBoundingClientRect();
+      if (!this.#projectionMatchesRect(projection, rect)) return null;
+    }
+    const hit = hitTestChartProjection(projection, { x: clientX - rect.left, y: clientY - rect.top, maximumHits: 1 })[0];
     return hit?.kind === 'datum' ? hit.id : null;
+  }
+
+  #projectionMatchesRect(projection: ChartProjection<ID>, rect: DOMRect): boolean {
+    let rootRect: DOMRect | undefined;
+    const width = Math.max(1, rect.width || this.#options.canvas.clientWidth || (rootRect ??= this.#options.root.getBoundingClientRect()).width || 1);
+    const height = Math.max(1, rect.height || this.#options.canvas.clientHeight || (rootRect ??= this.#options.root.getBoundingClientRect()).height || 1);
+    return projection.viewport.width === width && projection.viewport.height === height;
   }
 
   #measureViewport(): ChartViewport {

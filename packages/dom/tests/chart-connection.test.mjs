@@ -461,6 +461,123 @@ test('pointer and click use bounded nearest regions while ordinary wheel remains
   connection.disconnect(); connection.disconnect();
 });
 
+test('DOM Chart hit testing synchronizes resized canvas geometry only on viewport mismatch', () => {
+  const value = fixture('point', [{ id: 'a', x: 0, y: 0 }, { id: 'b', x: 1, y: 1 }]);
+  let width = 100;
+  const rect = () => ({ x: 0, y: 0, left: 0, top: 0, right: width, bottom: 100, width, height: 100, toJSON() {} });
+  value.root.getBoundingClientRect = rect;
+  value.canvas.getBoundingClientRect = rect;
+  let resize;
+  value.window.ResizeObserver = class {
+    constructor(callback) { resize = callback; }
+    observe() {}
+    disconnect() {}
+  };
+  let projectCalls = 0;
+  const controller = new Proxy(value.controller, {
+    get(target, property) {
+      const result = Reflect.get(target, property, target);
+      if (property === 'project') return (...args) => { projectCalls += 1; return Reflect.apply(result, target, args); };
+      return typeof result === 'function' ? result.bind(target) : result;
+    },
+  });
+  const connection = createDOMChart({ root: value.root, canvas: value.canvas, controller, renderer: value.renderer });
+  const pointAt = (projection, index) => {
+    const points = projection.batches.find((batch) => batch.type === 'point').positions;
+    return { x: points[index * 2], y: points[index * 2 + 1] };
+  };
+
+  const stable = pointAt(connection.getProjection(), 1);
+  value.canvas.dispatchEvent(new value.window.PointerEvent('pointermove', { clientX: stable.x, clientY: stable.y }));
+  connection.flush();
+  assert.equal(value.controller.getSnapshot().state.activeDatum, 'b');
+  assert.equal(projectCalls, 2, 'stable pointer frame keeps the existing single projection refresh');
+
+  width = 200;
+  resize();
+  const grown = pointAt(value.controller.project({ viewport: { width: 200, height: 100, devicePixelRatio: 1 } }).value, 1);
+  value.canvas.dispatchEvent(new value.window.PointerEvent('pointermove', { clientX: grown.x, clientY: grown.y }));
+  assert.equal(connection.getLifecycleDiagnostics().frames, 1, 'resize and pointer share one queued frame');
+  connection.flush();
+  assert.equal(value.controller.getSnapshot().state.activeDatum, 'b');
+  assert.equal(connection.getProjection().viewport.width, 200);
+  assert.equal(projectCalls, 4, 'viewport mismatch adds exactly one coherence refresh');
+
+  width = 300;
+  const clicked = pointAt(value.controller.project({ viewport: { width: 300, height: 100, devicePixelRatio: 1 } }).value, 1);
+  const beforeClick = projectCalls;
+  value.canvas.dispatchEvent(new value.window.MouseEvent('click', { clientX: clicked.x, clientY: clicked.y }));
+  assert.deepEqual(value.controller.getSnapshot().state.selection, { type: 'points', ids: ['b'] });
+  assert.equal(value.controller.getSnapshot().state.cursor, 'b');
+  assert.equal(projectCalls, beforeClick + 1, 'click synchronizes stale geometry before querying');
+  connection.flush();
+  assert.equal(projectCalls, beforeClick + 2, 'click publication retains the existing queued render refresh');
+  connection.disconnect();
+});
+
+test('DOM Chart shrink coherence cannot resolve a neighboring datum from the stale projection', () => {
+  const value = fixture('point', [
+    { id: 'a', x: 0, y: 0 }, { id: 'b', x: 1, y: 0 }, { id: 'c', x: 2, y: 0 },
+  ]);
+  let width = 200;
+  const rect = () => ({ x: 0, y: 0, left: 0, top: 0, right: width, bottom: 100, width, height: 100, toJSON() {} });
+  value.root.getBoundingClientRect = rect;
+  value.canvas.getBoundingClientRect = rect;
+  const connection = createDOMChart({ root: value.root, canvas: value.canvas, controller: value.controller, renderer: value.renderer });
+  const stale = connection.getProjection().batches.find((batch) => batch.type === 'point').positions;
+  const currentProjection = value.controller.project({ viewport: { width: 100, height: 100, devicePixelRatio: 1 } }).value;
+  const current = currentProjection.batches.find((batch) => batch.type === 'point').positions;
+  assert.deepEqual([stale[2], stale[3]], [current[4], current[5]], 'stale middle datum occupies the resized final-datum coordinate');
+
+  width = 100;
+  value.canvas.dispatchEvent(new value.window.PointerEvent('pointermove', { clientX: current[4], clientY: current[5] }));
+  connection.flush();
+  assert.equal(value.controller.getSnapshot().state.activeDatum, 'c');
+  connection.disconnect();
+});
+
+test('DOM Chart never queries a retained stale projection after a handled resize projection failure', () => {
+  const value = fixture('point', [
+    { id: 'a', x: 0, y: 0 }, { id: 'b', x: 1, y: 0 }, { id: 'c', x: 2, y: 0 },
+  ]);
+  let width = 200;
+  const rect = () => ({ x: 0, y: 0, left: 0, top: 0, right: width, bottom: 100, width, height: 100, toJSON() {} });
+  value.root.getBoundingClientRect = rect;
+  value.canvas.getBoundingClientRect = rect;
+  const currentProjection = value.controller.project({ viewport: { width: 100, height: 100, devicePixelRatio: 1 } }).value;
+  const current = currentProjection.batches.find((batch) => batch.type === 'point').positions;
+  let failProjection = false;
+  const controller = new Proxy(value.controller, {
+    get(target, property) {
+      const result = Reflect.get(target, property, target);
+      if (property === 'project') return (...args) => failProjection
+        ? { ok: false, error: { class: 'transition-rejection', code: 'forced-projection-failure', message: 'forced projection failure' } }
+        : Reflect.apply(result, target, args);
+      return typeof result === 'function' ? result.bind(target) : result;
+    },
+  });
+  const errors = [];
+  const connection = createDOMChart({
+    root: value.root, canvas: value.canvas, controller, renderer: value.renderer,
+    onProjectionError: (error) => errors.push(error),
+  });
+
+  width = 100;
+  failProjection = true;
+  value.canvas.dispatchEvent(new value.window.MouseEvent('click', { clientX: current[4], clientY: current[5] }));
+  assert.equal(errors.length, 1);
+  assert.equal(connection.getViewport().width, 100);
+  assert.equal(connection.getProjection().viewport.width, 200, 'last successful projection remains retained');
+  assert.deepEqual(value.controller.getSnapshot().state.selection, { type: 'points', ids: [] });
+  assert.equal(value.controller.getSnapshot().state.cursor, null);
+
+  failProjection = false;
+  value.canvas.dispatchEvent(new value.window.MouseEvent('click', { clientX: current[4], clientY: current[5] }));
+  assert.deepEqual(value.controller.getSnapshot().state.selection, { type: 'points', ids: ['c'] });
+  assert.equal(value.controller.getSnapshot().state.cursor, 'c');
+  connection.disconnect();
+});
+
 test('line pointer and click interaction use nearest X regions across the plot height', () => {
   const value = fixture('ordered-series');
   const connection = createDOMChart({
