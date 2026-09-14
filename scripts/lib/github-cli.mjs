@@ -5,20 +5,20 @@ const execFileAsync = promisify(execFile)
 const DEFAULT_TIMEOUT_MS = 30_000
 const DEFAULT_MAX_BUFFER = 2 * 1024 * 1024
 
-function commandLabel(args) {
-  return ['gh', ...args.slice(0, 4)].join(' ')
+function commandLabel(executable, args) {
+  return [executable, ...args.slice(0, 4)].join(' ')
 }
 
-export async function runGitHubCLI(args, {
+async function runExecutable(executable, args, {
   timeoutMs = DEFAULT_TIMEOUT_MS,
   maxBuffer = DEFAULT_MAX_BUFFER,
 } = {}) {
   if (!Array.isArray(args) || args.length === 0 || args.some(arg => typeof arg !== 'string')) {
-    throw new Error('GitHub CLI arguments must be a non-empty string array')
+    throw new Error(`${executable} arguments must be a non-empty string array`)
   }
 
   try {
-    const { stdout = '', stderr = '' } = await execFileAsync('gh', args, {
+    const { stdout = '', stderr = '' } = await execFileAsync(executable, args, {
       encoding: 'utf8',
       timeout: timeoutMs,
       maxBuffer,
@@ -29,32 +29,48 @@ export async function runGitHubCLI(args, {
     const stderr = typeof error?.stderr === 'string' ? error.stderr.trim() : ''
     const detail = stderr ? `: ${stderr}` : ''
     const timeout = error?.killed || error?.signal === 'SIGTERM' ? ' timed out' : ''
-    throw new Error(`${commandLabel(args)}${timeout} failed${detail}`, { cause: error })
+    throw new Error(`${commandLabel(executable, args)}${timeout} failed${detail}`, { cause: error })
   }
 }
 
-export function createGitHubCLI(run = runGitHubCLI) {
-  if (typeof run !== 'function') throw new Error('GitHub CLI runner is required')
+export function runGitHubCLI(args, options) {
+  return runExecutable('gh', args, options)
+}
+
+export function runGitCLI(args, options) {
+  return runExecutable('git', args, options)
+}
+
+function createCLI(executable, run) {
+  if (typeof run !== 'function') throw new Error(`${executable} CLI runner is required`)
 
   async function text(args, options) {
     const result = await run(args, options)
     if (!result || typeof result.stdout !== 'string' || typeof result.stderr !== 'string') {
-      throw new Error(`${commandLabel(args)} returned an invalid process result`)
+      throw new Error(`${commandLabel(executable, args)} returned an invalid process result`)
     }
     return result.stdout
   }
 
   async function json(args, options) {
     const stdout = await text(args, options)
-    if (!stdout.trim()) throw new Error(`${commandLabel(args)} returned empty JSON output`)
+    if (!stdout.trim()) throw new Error(`${commandLabel(executable, args)} returned empty JSON output`)
     try {
       return JSON.parse(stdout)
     } catch {
-      throw new Error(`${commandLabel(args)} returned invalid JSON`)
+      throw new Error(`${commandLabel(executable, args)} returned invalid JSON`)
     }
   }
 
   return Object.freeze({ json, text })
+}
+
+export function createGitHubCLI(run = runGitHubCLI) {
+  return createCLI('gh', run)
+}
+
+export function createGitCLI(run = runGitCLI) {
+  return createCLI('git', run)
 }
 
 export function requireObject(value, label) {

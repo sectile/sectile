@@ -83,203 +83,468 @@ export function assertFullSHA(value, label = 'SHA') {
   return value
 }
 
-export function normalizeIssueField(field) {
-  return {
-    name: field?.name,
-    description: field?.description ?? '',
-    data_type: field?.data_type,
-    visibility: field?.visibility ?? null,
-    options: Array.isArray(field?.options)
-      ? field.options.map(option => ({
-          id: option.id,
-          name: option.name,
-          description: option.description ?? '',
-          color: option.color,
-          priority: option.priority,
-        }))
-      : [],
+const RECORD_HEADINGS = Object.freeze({
+  '## Issue Review — v1': 'Issue Review',
+  '## Code Review — v1': 'Code Review',
+  '## Verification — v1': 'Verification',
+  '## Checkpoint — v1': 'Checkpoint',
+})
+
+const RECORD_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,191}$/u
+const OPERATION_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u
+
+function cleanScalar(value) {
+  let result = String(value ?? '').trim()
+  if (result.startsWith('`') && result.endsWith('`') && result.length >= 2) {
+    result = result.slice(1, -1).trim()
   }
+  if (result.startsWith('**') && result.endsWith('**') && result.length >= 4) {
+    result = result.slice(2, -2).trim()
+  }
+  return result
 }
 
-export function compareWorkflowField(actual) {
-  const field = normalizeIssueField(actual)
-  const errors = []
-  if (field.name !== WORKFLOW_FIELD.name) errors.push(`name=${field.name ?? 'missing'}`)
-  if (field.data_type !== WORKFLOW_FIELD.data_type) {
-    errors.push(`data_type=${field.data_type ?? 'missing'}`)
-  }
-  if (field.visibility !== null && field.visibility !== WORKFLOW_FIELD.visibility) {
-    errors.push(`visibility=${field.visibility}`)
-  }
-
-  const actualNames = field.options.map(option => option.name)
-  const expectedNames = WORKFLOW_FIELD.options.map(option => option.name)
-  if (actualNames.length !== expectedNames.length ||
-      actualNames.some((name, index) => name !== expectedNames[index])) {
-    errors.push(`options=${JSON.stringify(actualNames)}`)
-  }
-  return errors
-}
-
-export function workflowFieldCreateBody() {
-  return {
-    name: WORKFLOW_FIELD.name,
-    description: WORKFLOW_FIELD.description,
-    data_type: WORKFLOW_FIELD.data_type,
-    visibility: WORKFLOW_FIELD.visibility,
-    options: WORKFLOW_FIELD.options.map(option => ({ ...option })),
-  }
-}
-
-export function issueFieldPatch(fieldId, value) {
-  const numericId = Number(fieldId)
-  if (!Number.isSafeInteger(numericId) || numericId <= 0) {
-    throw new Error('Issue field ID must be a positive integer')
-  }
-  if (typeof value !== 'string' || value.length === 0) {
-    throw new Error('Issue field value must be a non-empty string')
-  }
-  return { issue_field_values: [{ field_id: numericId, value }] }
-}
-
-export function parseWorkflowRequest(body) {
-  if (typeof body !== 'string') return null
-  const lines = body.split(/\r?\n/u).map(line => line.trim()).filter(Boolean)
-  if (lines[0] !== '/sectile-workflow') return null
-
+function parseFields(lines) {
   const fields = new Map()
-  for (const line of lines.slice(1)) {
-    const separator = line.indexOf(':')
-    if (separator <= 0) throw new Error(`Malformed workflow request line: ${line}`)
-    const key = line.slice(0, separator).trim().toLowerCase()
-    const value = line.slice(separator + 1).trim()
-    if (!value) throw new Error(`Workflow request value is empty: ${key}`)
-    if (fields.has(key)) throw new Error(`Duplicate workflow request field: ${key}`)
-    fields.set(key, value)
+  for (const line of lines) {
+    const match = /^-\s+([^:]+):\s*(.*)$/u.exec(line.trim())
+    if (!match) continue
+    const label = match[1].trim()
+    const value = cleanScalar(match[2])
+    if (fields.has(label)) throw new Error(`Duplicate record field: ${label}`)
+    fields.set(label, value)
   }
-
-  const allowed = new Set(['state', 'record', 'source-sha', 'policy-sha', 'pr', 'head-sha'])
-  for (const key of fields.keys()) {
-    if (!allowed.has(key)) throw new Error(`Unknown workflow request field: ${key}`)
-  }
-
-  const state = assertWorkflowState(fields.get('state'))
-  const request = {
-    state,
-    record: fields.get('record') ?? null,
-    sourceSHA: fields.get('source-sha') ?? null,
-    policySHA: fields.get('policy-sha') ?? null,
-    pr: fields.has('pr') ? Number(fields.get('pr')) : null,
-    headSHA: fields.get('head-sha') ?? null,
-  }
-
-  if (request.sourceSHA !== null) assertFullSHA(request.sourceSHA, 'source-sha')
-  if (request.policySHA !== null) assertFullSHA(request.policySHA, 'policy-sha')
-  if (request.headSHA !== null) assertFullSHA(request.headSHA, 'head-sha')
-  if (request.pr !== null && (!Number.isSafeInteger(request.pr) || request.pr <= 0)) {
-    throw new Error('pr must be a positive integer')
-  }
-  if (request.record !== null) {
-    let url
-    try {
-      url = new URL(request.record)
-    } catch {
-      throw new Error('record must be an absolute URL')
-    }
-    if (url.protocol !== 'https:' || url.hostname !== 'github.com') {
-      throw new Error('record must be a github.com HTTPS URL')
-    }
-  }
-  return request
+  return fields
 }
 
-export function validateRequestShape(request) {
-  const errors = []
-  const requireRecord = !['Candidate'].includes(request.state)
-  if (requireRecord && request.record === null) errors.push('record is required')
-
-  if (['Ready', 'In Progress', 'Code Review', 'Awaiting Merge', 'Verification',
-    'Awaiting Release', 'Done'].includes(request.state)) {
-    if (request.sourceSHA === null) errors.push('source-sha is required')
-    if (request.policySHA === null) errors.push('policy-sha is required')
+function parseSections(lines) {
+  const sections = new Map()
+  let current = null
+  let content = []
+  const flush = () => {
+    if (current === null) return
+    if (sections.has(current)) throw new Error(`Duplicate record section: ${current}`)
+    sections.set(current, content.join('\n').trim())
   }
-
-  if (['Code Review', 'Awaiting Merge', 'Verification'].includes(request.state)) {
-    if (request.pr === null) errors.push('pr is required')
-    if (request.headSHA === null) errors.push('head-sha is required')
+  for (const line of lines) {
+    const match = /^###\s+(.+)$/u.exec(line.trim())
+    if (match) {
+      flush()
+      current = match[1].trim()
+      content = []
+    } else if (current !== null) {
+      content.push(line)
+    }
   }
-  return errors
+  flush()
+  return sections
 }
 
-export function recordURLBelongsToIssue(recordURL, owner, repo, issueNumber) {
-  if (typeof recordURL !== 'string') return false
+function requiredField(record, name) {
+  if (!record.fields.has(name)) throw new Error(`${record.kind} record is missing field: ${name}`)
+  const value = record.fields.get(name)
+  if (!value) throw new Error(`${record.kind} record field is empty: ${name}`)
+  return value
+}
+
+function requiredSection(record, name) {
+  const value = record.sections.get(name)
+  if (!value) throw new Error(`${record.kind} record is missing section content: ${name}`)
+  return value
+}
+
+function splitField(record, name, count) {
+  const value = requiredField(record, name)
+  const parts = value.split(/\s+\/\s+/u).map(cleanScalar)
+  if (parts.length !== count || parts.some(part => part.length === 0)) {
+    throw new Error(`${record.kind} record field ${name} must contain ${count} slash-separated values`)
+  }
+  return parts
+}
+
+function concreteIdentifier(value, label) {
+  const cleaned = cleanScalar(value)
+  if (!RECORD_ID_PATTERN.test(cleaned) || /^(?:Pending|Unknown|N\/A)$/iu.test(cleaned)) {
+    throw new Error(`${label} must be a concrete stable identifier`)
+  }
+  return cleaned
+}
+
+function issueReference(value, label) {
+  const match = /^#(\d+)$/u.exec(cleanScalar(value))
+  const number = match ? Number(match[1]) : NaN
+  if (!Number.isSafeInteger(number) || number <= 0) throw new Error(`${label} must be an issue reference`)
+  return number
+}
+
+function completionSurface(value) {
+  const cleaned = cleanScalar(value)
+  if (/^Source-only\b/iu.test(cleaned)) return 'source'
+  if (/^Published artifact\b/iu.test(cleaned)) return 'published'
+  throw new Error(`Unknown completion surface: ${cleaned}`)
+}
+
+export function assertOperationID(value) {
+  if (typeof value !== 'string' || !OPERATION_ID_PATTERN.test(value)) {
+    throw new Error('operation-id must be a stable 1-128 character identifier')
+  }
+  return value
+}
+
+export function parseRecordBody(body) {
+  if (typeof body !== 'string' || body.trim().length === 0) throw new Error('Record body is empty')
+  const lines = body.split(/\r?\n/u)
+  const heading = lines.find(line => line.trim().length > 0)?.trim()
+  const kind = RECORD_HEADINGS[heading]
+  if (!kind) throw new Error(`Unsupported or non-canonical record heading: ${heading ?? 'missing'}`)
+  return Object.freeze({
+    kind,
+    heading,
+    body,
+    fields: parseFields(lines),
+    sections: parseSections(lines),
+  })
+}
+
+export function parseRecordURL(recordURL) {
+  let url
   try {
-    const url = new URL(recordURL)
-    return url.protocol === 'https:' && url.hostname === 'github.com' &&
-      url.pathname === `/${owner}/${repo}/issues/${issueNumber}` &&
-      /^#issuecomment-\d+$/u.test(url.hash)
+    url = new URL(recordURL)
   } catch {
-    return false
+    throw new Error('record must be an absolute URL')
   }
+  if (url.protocol !== 'https:' || url.hostname !== 'github.com') {
+    throw new Error('record must be a github.com HTTPS URL')
+  }
+  const path = /^\/([^/]+)\/([^/]+)\/(issues|pull)\/(\d+)$/u.exec(url.pathname)
+  if (!path) throw new Error('record URL must identify a GitHub issue or pull request')
+  const number = Number(path[4])
+  const issueComment = /^#issuecomment-(\d+)$/u.exec(url.hash)
+  const review = /^#pullrequestreview-(\d+)$/u.exec(url.hash)
+  if (path[3] === 'issues' && issueComment) {
+    return Object.freeze({
+      owner: path[1], repo: path[2], surface: 'issue-comment', number,
+      databaseId: Number(issueComment[1]), url: url.href,
+    })
+  }
+  if (path[3] === 'pull' && issueComment) {
+    return Object.freeze({
+      owner: path[1], repo: path[2], surface: 'pr-comment', number,
+      databaseId: Number(issueComment[1]), url: url.href,
+    })
+  }
+  if (path[3] === 'pull' && review) {
+    return Object.freeze({
+      owner: path[1], repo: path[2], surface: 'pr-review', number,
+      databaseId: Number(review[1]), url: url.href,
+    })
+  }
+  throw new Error('record URL must identify an issue comment, PR comment, or PR review')
 }
 
-export function commentIdFromRecordURL(recordURL) {
-  const match = /#issuecomment-(\d+)$/u.exec(new URL(recordURL).hash)
-  if (!match) throw new Error('Record URL does not identify an issue comment')
-  return Number(match[1])
+export function parseTransitionCompletion(body) {
+  if (typeof body !== 'string') return null
+  const lines = body.split(/\r?\n/u)
+  const heading = lines.find(line => line.trim().length > 0)?.trim()
+  if (heading !== '## Workflow Transition — v2') return null
+  const fields = parseFields(lines)
+  const operationId = fields.get('Operation ID')
+  const previous = fields.get('Previous')
+  const current = fields.get('Current')
+  if (!operationId || !previous || !current) throw new Error('Workflow Transition — v2 record is incomplete')
+  assertOperationID(operationId)
+  assertWorkflowState(previous)
+  assertWorkflowState(current)
+  return Object.freeze({
+    operationId,
+    actor: fields.get('Actor') ?? null,
+    previous,
+    current,
+    evidence: fields.get('Evidence record') ?? null,
+    scopeReview: fields.get('Scope review') ?? null,
+    sourceSHA: fields.get('Source SHA') ?? null,
+    policySHA: fields.get('Policy SHA') ?? null,
+    defaultSHA: fields.get('Current default HEAD at transition') ?? null,
+    pr: fields.get('PR') ?? null,
+    prHeadSHA: fields.get('PR head SHA') ?? null,
+    mergedSourceSHA: fields.get('Merged source SHA') ?? null,
+    recovery: fields.get('Recovery') ?? null,
+  })
 }
 
-export function recordSupportsTarget(recordBody, request) {
-  if (typeof recordBody !== 'string') return false
-  if (request.sourceSHA !== null && !recordBody.includes(request.sourceSHA)) return false
-  if (request.policySHA !== null && !recordBody.includes(request.policySHA)) return false
-  if (request.headSHA !== null && !recordBody.includes(request.headSHA)) return false
+export function recordIdentity(record) {
+  let recordId
+  let workId
+  let runId
+  if (record.kind === 'Issue Review') {
+    recordId = concreteIdentifier(requiredField(record, 'Record ID'), 'Record ID')
+    ;[workId, runId] = splitField(record, 'Work ID / Run ID', 2)
+  } else {
+    ;[recordId, workId, runId] = splitField(record, 'Record ID / Work ID / Run ID', 3)
+  }
+  return Object.freeze({
+    recordId: concreteIdentifier(recordId, 'Record ID'),
+    workId: concreteIdentifier(workId, 'Work ID'),
+    runId: concreteIdentifier(runId, 'Run ID'),
+  })
+}
 
-  switch (request.state) {
+function recordActor(record) {
+  const label = record.kind === 'Issue Review'
+    ? 'Reviewer / role'
+    : record.kind === 'Code Review'
+      ? 'Reviewer / role'
+      : record.kind === 'Verification'
+        ? 'Verifier / role'
+        : 'Actor / role'
+  const [actor, role] = splitField(record, label, 2)
+  if (!actor || /^(?:Pending|Unknown|N\/A)$/iu.test(actor)) {
+    throw new Error(`${record.kind} record actor must be concrete`)
+  }
+  return Object.freeze({ actor, role })
+}
+
+function policySHA(record) {
+  const [, sha] = splitField(record, 'Template version / policy commit', 2)
+  return assertFullSHA(sha, 'record policy SHA')
+}
+
+export function validateIssueReviewRecord(record, {
+  repository,
+  issue,
+  sourceSHA,
+  policySHA: expectedPolicySHA,
+  requireReady = false,
+} = {}) {
+  if (record.kind !== 'Issue Review') throw new Error('Expected an Issue Review — v1 record')
+  const identity = recordIdentity(record)
+  const actor = recordActor(record)
+  if (actor.role !== 'Issue Reviewer') throw new Error(`Issue Review role must be Issue Reviewer; observed ${actor.role}`)
+  const [recordRepository, issueRef] = splitField(record, 'Repository / issue', 2)
+  if (recordRepository !== repository || issueReference(issueRef, 'Issue Review issue') !== issue) {
+    throw new Error('Issue Review repository or issue does not match the transition target')
+  }
+  const [, reviewedSHA] = splitField(record, 'Reviewed source ref / full SHA', 2)
+  if (assertFullSHA(reviewedSHA, 'Issue Review source SHA') !== sourceSHA) {
+    throw new Error('Issue Review source SHA does not match source-sha')
+  }
+  if (policySHA(record) !== expectedPolicySHA) throw new Error('Issue Review policy SHA does not match policy-sha')
+  requiredSection(record, 'Accepted scope snapshot')
+  requiredSection(record, 'Evidence and findings')
+  requiredSection(record, 'Decision and handoff')
+  const outcome = requiredField(record, 'Finding outcome')
+  const readiness = requiredField(record, 'Implementation readiness')
+  const surface = completionSurface(requiredField(record, 'Completion surface'))
+  if (requireReady && (outcome !== 'Confirmed' || !/^Ready\b/u.test(readiness))) {
+    throw new Error(`Issue Review does not authorize Ready: outcome=${outcome}, readiness=${readiness}`)
+  }
+  return Object.freeze({ identity, actor, outcome, readiness, completionSurface: surface })
+}
+
+export function validateCheckpointRecord(record, {
+  repository,
+  issue,
+  sourceSHA,
+  policySHA: expectedPolicySHA,
+  requireBlocker = false,
+} = {}) {
+  if (record.kind !== 'Checkpoint') throw new Error('Expected a Checkpoint — v1 record')
+  const identity = recordIdentity(record)
+  const actor = recordActor(record)
+  const [recordRepository, issueRef] = splitField(record, 'Repository / issue / PR / branch', 4)
+  if (recordRepository !== repository || issueReference(issueRef, 'Checkpoint issue') !== issue) {
+    throw new Error('Checkpoint repository or issue does not match the transition target')
+  }
+  if (assertFullSHA(requiredField(record, 'Inspected source SHA'), 'Checkpoint source SHA') !== sourceSHA) {
+    throw new Error('Checkpoint source SHA does not match source-sha')
+  }
+  if (policySHA(record) !== expectedPolicySHA) throw new Error('Checkpoint policy SHA does not match policy-sha')
+  requiredSection(record, 'Durable state')
+  requiredSection(record, 'Progress and recovery')
+  if (requireBlocker) {
+    const blockers = requiredField(record, 'Dependencies / blockers')
+    if (/^(?:None|N\/A)(?:\b|\s|$)/iu.test(blockers)) throw new Error('Blocked transition requires a concrete blocker')
+  }
+  return Object.freeze({ identity, actor })
+}
+
+export function validateCodeReviewRecord(record, {
+  repository,
+  pr,
+  headSHA,
+  policySHA: expectedPolicySHA,
+  requirePassed = true,
+} = {}) {
+  if (record.kind !== 'Code Review') throw new Error('Expected a Code Review — v1 record')
+  const identity = recordIdentity(record)
+  const actor = recordActor(record)
+  if (actor.role !== 'Code Reviewer') throw new Error(`Code Review role must be Code Reviewer; observed ${actor.role}`)
+  const [recordRepository, prRef] = splitField(record, 'Repository / PR', 2)
+  if (recordRepository !== repository || issueReference(prRef, 'Code Review PR') !== pr) {
+    throw new Error('Code Review repository or PR does not match the transition target')
+  }
+  if (assertFullSHA(requiredField(record, 'Reviewed PR head SHA'), 'Code Review head SHA') !== headSHA) {
+    throw new Error('Code Review head SHA does not match head-sha')
+  }
+  assertFullSHA(requiredField(record, 'Reviewed base SHA'), 'Code Review base SHA')
+  if (policySHA(record) !== expectedPolicySHA) throw new Error('Code Review policy SHA does not match policy-sha')
+  const scope = requiredField(record, 'Accepted issue-review / scope snapshot')
+  if (/^(?:Pending|Unknown|N\/A)$/iu.test(scope)) throw new Error('Code Review requires an accepted scope snapshot')
+  requiredSection(record, 'Review coverage and evidence')
+  requiredSection(record, 'Findings')
+  requiredSection(record, 'Decision')
+  const outcome = requiredField(record, 'Outcome')
+  if (requirePassed && outcome !== 'Passed') throw new Error(`Code Review outcome is not Passed: ${outcome}`)
+  return Object.freeze({ identity, actor, outcome })
+}
+
+export function validateVerificationRecord(record, {
+  repository,
+  issue,
+  pr,
+  expectedSourceSHA,
+  policySHA: expectedPolicySHA,
+  allowedPhases,
+  allowedConclusions,
+  requireArtifact = false,
+} = {}) {
+  if (record.kind !== 'Verification') throw new Error('Expected a Verification — v1 record')
+  const identity = recordIdentity(record)
+  const actor = recordActor(record)
+  if (actor.role !== 'Verifier') throw new Error(`Verification role must be Verifier; observed ${actor.role}`)
+  const refs = splitField(record, 'Repository / issue / PR', 3)
+  if (refs[0] !== repository || issueReference(refs[1], 'Verification issue') !== issue ||
+      (pr !== null && issueReference(refs[2], 'Verification PR') !== pr)) {
+    throw new Error('Verification repository, issue, or PR does not match the transition target')
+  }
+  const source = assertFullSHA(requiredField(record, 'Source full SHA'), 'Verification source SHA')
+  if (expectedSourceSHA !== null && source !== expectedSourceSHA) {
+    throw new Error('Verification source SHA does not match the expected source snapshot')
+  }
+  if (policySHA(record) !== expectedPolicySHA) throw new Error('Verification policy SHA does not match policy-sha')
+  const criteria = requiredField(record, 'Accepted criteria snapshot')
+  if (/^(?:Pending|Unknown|N\/A)$/iu.test(criteria)) throw new Error('Verification requires an accepted criteria snapshot')
+  const phase = requiredField(record, 'Phase')
+  const conclusion = requiredField(record, 'Conclusion')
+  if (allowedPhases && !allowedPhases.includes(phase)) throw new Error(`Verification phase is not allowed here: ${phase}`)
+  if (allowedConclusions && !allowedConclusions.includes(conclusion)) {
+    throw new Error(`Verification conclusion is not allowed here: ${conclusion}`)
+  }
+  if (requireArtifact) {
+    const artifact = requiredField(record, 'Package / version / artifact digest or integrity')
+    if (/^(?:N\/A|Unknown|Pending)(?:\b|\s|$)/iu.test(artifact)) {
+      throw new Error('Released completion requires an exact published artifact identity')
+    }
+  }
+  return Object.freeze({ identity, actor, phase, conclusion, sourceSHA: source })
+}
+
+export function validateTransitionEvidence(record, scopeReview, request) {
+  const common = {
+    repository: request.repository,
+    issue: request.issue,
+    sourceSHA: request.sourceSHA,
+    policySHA: request.policySHA,
+  }
+  const scope = validateIssueReviewRecord(scopeReview, {
+    ...common,
+    requireReady: !['Issue Review', 'Rejected', 'Duplicate'].includes(request.target),
+  })
+
+  switch (request.target) {
     case 'Issue Review':
-      return recordBody.includes('Issue Review')
+      validateIssueReviewRecord(record, common)
+      break
     case 'Ready':
-      return recordBody.includes('Issue Review') &&
-        (recordBody.includes('Implementation readiness: Ready') ||
-         recordBody.includes('Technical qualification: **Passed**'))
+      validateIssueReviewRecord(record, { ...common, requireReady: true })
+      break
     case 'In Progress':
-      return recordBody.includes('Checkpoint') || recordBody.includes('claim')
+      validateCheckpointRecord(record, common)
+      break
     case 'Code Review':
-      return recordBody.includes('Checkpoint') && recordBody.includes('Ready')
+      validateVerificationRecord(record, {
+        repository: request.repository,
+        issue: request.issue,
+        pr: request.pr,
+        expectedSourceSHA: request.headSHA,
+        policySHA: request.policySHA,
+        allowedPhases: ['Implementation close'],
+        allowedConclusions: ['Fixed on source'],
+      })
+      break
     case 'Awaiting Merge':
-      return recordBody.includes('Code Review') &&
-        (recordBody.includes('Outcome: Passed') || recordBody.includes('recommendation: Passed'))
+      validateCodeReviewRecord(record, {
+        repository: request.repository,
+        pr: request.pr,
+        headSHA: request.headSHA,
+        policySHA: request.policySHA,
+      })
+      break
     case 'Verification':
-      return recordBody.includes('Verification') || recordBody.includes('merged')
+      if (request.from === 'Awaiting Merge') {
+        validateCodeReviewRecord(record, {
+          repository: request.repository,
+          pr: request.pr,
+          headSHA: request.headSHA,
+          policySHA: request.policySHA,
+        })
+      } else {
+        validateVerificationRecord(record, {
+          repository: request.repository,
+          issue: request.issue,
+          pr: request.pr,
+          expectedSourceSHA: request.mergeSHA,
+          policySHA: request.policySHA,
+          allowedPhases: ['Post-merge', 'Published artifact'],
+          allowedConclusions: ['Not fixed', 'Incomplete'],
+        })
+      }
+      break
     case 'Awaiting Release':
-      return recordBody.includes('Verification') &&
-        (recordBody.includes('Awaiting release') || recordBody.includes('Fixed on source'))
+      if (scope.completionSurface !== 'published') {
+        throw new Error('Awaiting Release is valid only for a published-artifact completion surface')
+      }
+      validateVerificationRecord(record, {
+        repository: request.repository,
+        issue: request.issue,
+        pr: request.pr,
+        expectedSourceSHA: request.mergeSHA,
+        policySHA: request.policySHA,
+        allowedPhases: ['Post-merge'],
+        allowedConclusions: ['Fixed on source', 'Awaiting release'],
+      })
+      break
     case 'Done':
-      return recordBody.includes('Verification') && recordBody.includes('Fixed and released')
+      validateVerificationRecord(record, {
+        repository: request.repository,
+        issue: request.issue,
+        pr: request.pr,
+        expectedSourceSHA: request.mergeSHA,
+        policySHA: request.policySHA,
+        allowedPhases: scope.completionSurface === 'published'
+          ? ['Published artifact']
+          : ['Post-merge', 'Implementation close'],
+        allowedConclusions: scope.completionSurface === 'published'
+          ? ['Fixed and released']
+          : ['Fixed on source'],
+        requireArtifact: scope.completionSurface === 'published',
+      })
+      break
     case 'Blocked':
-      return recordBody.includes('Blocked') || recordBody.includes('blocker')
-    case 'Rejected':
-      return recordBody.includes('Rejected')
-    case 'Duplicate':
-      return recordBody.includes('Duplicate')
-    case 'Candidate':
-      return true
+      validateCheckpointRecord(record, { ...common, requireBlocker: true })
+      break
+    case 'Rejected': {
+      const review = validateIssueReviewRecord(record, common)
+      if (review.outcome !== 'Rejected') throw new Error(`Rejected transition requires Finding outcome: Rejected; observed ${review.outcome}`)
+      break
+    }
+    case 'Duplicate': {
+      const review = validateIssueReviewRecord(record, common)
+      if (review.outcome !== 'Duplicate') throw new Error(`Duplicate transition requires Finding outcome: Duplicate; observed ${review.outcome}`)
+      break
+    }
     default:
-      return false
+      throw new Error(`No evidence rule for Workflow target: ${request.target}`)
   }
-}
-
-export function workflowValue(values, fieldId) {
-  const entry = (values ?? []).find(value => Number(value.issue_field_id) === Number(fieldId))
-  if (!entry) return null
-  return entry.single_select_option?.name ?? entry.value ?? null
-}
-
-export function assertMaintainerPermission({ permission, roleName } = {}) {
-  const allowed = permission === 'admin' || roleName === 'admin' || roleName === 'maintain'
-  if (!allowed) {
-    throw new Error(
-      `Workflow mutation requires admin/maintain role; observed permission=${permission ?? 'none'}, role=${roleName ?? 'none'}`,
-    )
-  }
+  return scope
 }

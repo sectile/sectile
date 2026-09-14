@@ -5,48 +5,154 @@ import { createGitHubCLI } from './lib/github-cli.mjs'
 import {
   PINNED_PROJECT,
   parseProjectItems,
+  parseTransitionArgs,
   readWorkflowValues,
   reconciliationPlan,
+  transitionDisposition,
   validatePinnedResources,
 } from './github-project-workflow.mjs'
 import {
   MAINTAINER_ENROLLED_ISSUES,
   WORKFLOW_FIELD,
-  assertMaintainerPermission,
-  compareWorkflowField,
-  issueFieldPatch,
-  parseWorkflowRequest,
-  recordSupportsTarget,
-  recordURLBelongsToIssue,
+  parseRecordBody,
+  parseRecordURL,
+  parseTransitionCompletion,
   requireTransition,
   transitionAllowed,
-  validateRequestShape,
-  workflowFieldCreateBody,
-  workflowValue,
+  validateCodeReviewRecord,
+  validateIssueReviewRecord,
+  validateTransitionEvidence,
+  validateVerificationRecord,
 } from './lib/github-project-workflow.mjs'
 
 const SHA_A = 'a'.repeat(40)
 const SHA_B = 'b'.repeat(40)
 const SHA_C = 'c'.repeat(40)
 
-test('Workflow schema contains the canonical lifecycle in order', () => {
-  const body = workflowFieldCreateBody()
-  assert.equal(body.name, 'Workflow')
-  assert.equal(body.visibility, 'all')
-  assert.deepEqual(
-    body.options.map(option => option.name),
-    WORKFLOW_FIELD.options.map(option => option.name),
-  )
-  assert.deepEqual(compareWorkflowField(body), [])
-})
+function issueReviewBody({
+  source = SHA_A,
+  policy = SHA_B,
+  outcome = 'Confirmed',
+  readiness = 'Ready',
+  surface = 'Published artifact + @sectile/chart',
+} = {}) {
+  return [
+    '## Issue Review — v1',
+    '- Record ID: review-194-v1',
+    '- Work ID / Run ID: sectile-issue-194 / review-run-1',
+    '- Reviewer / role: reviewer-bot / Issue Reviewer',
+    '- Reviewed at: 2026-09-15T01:00:00+09:00',
+    '- Repository / issue: sectile/sectile / #194',
+    `- Reviewed source ref / full SHA: main / ${source}`,
+    `- Template version / policy commit: v1 / ${policy}`,
+    '- Issue body observed at: 2026-09-15T00:59:00+09:00',
+    '',
+    '### Accepted scope snapshot',
+    'AC-1 through AC-9 from the reviewed issue snapshot.',
+    '',
+    '### Evidence and findings',
+    'The root cause and affected surface were independently reviewed.',
+    '',
+    '### Decision and handoff',
+    `- Finding outcome: ${outcome}`,
+    `- Implementation readiness: ${readiness}`,
+    '- Priority and rationale: P2 / bounded resource contract',
+    '- Dependencies: None after checking',
+    '- Regression / verification plan: deterministic production regression',
+    `- Completion surface: ${surface}`,
+    '- Recommended next action: implement the accepted criteria',
+  ].join('\n')
+}
 
-test('schema comparison rejects reordered or incomplete options', () => {
-  const body = workflowFieldCreateBody()
-  body.options = [...body.options].reverse()
-  assert.match(compareWorkflowField(body).join('\n'), /options=/u)
-})
+function codeReviewBody({ head = SHA_C, policy = SHA_B, outcome = 'Passed' } = {}) {
+  return [
+    '## Code Review — v1',
+    '- Record ID / Work ID / Run ID: code-review-200-v1 / sectile-issue-194 / code-review-run-1',
+    '- Reviewer / role: reviewer-bot / Code Reviewer',
+    '- Reviewed at: 2026-09-15T01:05:00+09:00',
+    '- Repository / PR: sectile/sectile / #200',
+    `- Reviewed PR head SHA: ${head}`,
+    `- Reviewed base SHA: ${SHA_A}`,
+    `- Tested target SHA: ${head}`,
+    '- Worktree/instrumentation: clean',
+    '- Accepted issue-review / scope snapshot: https://github.com/sectile/sectile/issues/194#issuecomment-1',
+    `- Template version / policy commit: v1 / ${policy}`,
+    '',
+    '### Review coverage and evidence',
+    'Reviewed the accepted criteria and exact head.',
+    '',
+    '### Findings',
+    'No blocking findings within the stated coverage.',
+    '',
+    '### Decision',
+    `- Outcome: ${outcome}`,
+    `- Current head/base recheck: ${head} / ${SHA_A}`,
+    '- Remaining risks: None within the stated coverage',
+    '- Required next action: maintainer merge decision',
+  ].join('\n')
+}
 
-test('transition graph does not allow lifecycle skipping', () => {
+function verificationBody({
+  source = SHA_C,
+  policy = SHA_B,
+  phase = 'Implementation close',
+  conclusion = 'Fixed on source',
+  artifact = 'N/A — source verification',
+} = {}) {
+  return [
+    '## Verification — v1',
+    '- Record ID / Work ID / Run ID: verify-194-v1 / sectile-issue-194 / verify-run-1',
+    '- Verifier / role: verifier-bot / Verifier',
+    '- Verified at: 2026-09-15T01:10:00+09:00',
+    '- Repository / issue / PR: sectile/sectile / #194 / #200',
+    `- Phase: ${phase}`,
+    `- Source full SHA: ${source}`,
+    `- Package / version / artifact digest or integrity: ${artifact}`,
+    '- Environment / tool versions: Node 24 / pnpm',
+    '- Source state: clean snapshot',
+    '- Accepted criteria snapshot: https://github.com/sectile/sectile/issues/194#issuecomment-1',
+    `- Template version / policy commit: v1 / ${policy}`,
+    '',
+    '| Unit / criterion | Command or procedure | Exact target | Outcome | Durable evidence |',
+    '| --- | --- | --- | --- | --- |',
+    `| AC-1 | node --test | ${source} | Passed | log |`,
+    '',
+    '- Untested areas / residual risk: None within selected scope',
+    `- Conclusion: ${conclusion}`,
+    '- Recommended next action: advance the verified workflow state',
+  ].join('\n')
+}
+
+function transitionRequest({
+  from = 'Issue Review',
+  target = 'Ready',
+  recordURL = 'https://github.com/sectile/sectile/issues/194#issuecomment-1',
+  scopeRecordURL = 'https://github.com/sectile/sectile/issues/194#issuecomment-1',
+  pr = null,
+  headSHA = null,
+  mergeSHA = null,
+} = {}) {
+  return {
+    repository: 'sectile/sectile',
+    issue: 194,
+    from,
+    target,
+    recordURL,
+    scopeRecordURL,
+    sourceSHA: SHA_A,
+    policySHA: SHA_B,
+    operationID: 'transition-194-1',
+    pr,
+    headSHA,
+    mergeSHA,
+  }
+}
+
+test('Workflow schema and transition graph retain the canonical lifecycle', () => {
+  assert.deepEqual(WORKFLOW_FIELD.options.map(option => option.name), [
+    'Candidate', 'Issue Review', 'Ready', 'In Progress', 'Code Review', 'Awaiting Merge',
+    'Verification', 'Awaiting Release', 'Done', 'Blocked', 'Rejected', 'Duplicate',
+  ])
   assert.equal(transitionAllowed('Candidate', 'Issue Review'), true)
   assert.equal(transitionAllowed('Candidate', 'Ready'), false)
   assert.equal(transitionAllowed('Issue Review', 'Ready'), true)
@@ -55,121 +161,164 @@ test('transition graph does not allow lifecycle skipping', () => {
   assert.throws(() => requireTransition('In Progress', 'Done'), /not allowed/u)
 })
 
-test('workflow requests use a non-shell line protocol and validate provenance', () => {
-  const request = parseWorkflowRequest([
-    '/sectile-workflow',
-    'state: Ready',
-    'record: https://github.com/sectile/sectile/issues/194#issuecomment-1234',
-    `source-sha: ${SHA_A}`,
-    `policy-sha: ${SHA_B}`,
-  ].join('\n'))
-
-  assert.equal(request.state, 'Ready')
-  assert.equal(request.sourceSHA, SHA_A)
-  assert.deepEqual(validateRequestShape(request), [])
-  assert.equal(
-    recordURLBelongsToIssue(request.record, 'sectile', 'sectile', 194),
-    true,
-  )
-})
-
-test('workflow request rejects unknown fields, bad SHAs and foreign records', () => {
+test('record parser requires the canonical heading and structured v1 fields', () => {
+  const record = parseRecordBody(issueReviewBody())
+  assert.equal(record.kind, 'Issue Review')
+  assert.equal(record.fields.get('Record ID'), 'review-194-v1')
+  assert.match(record.sections.get('Accepted scope snapshot'), /AC-1/u)
   assert.throws(
-    () => parseWorkflowRequest('/sectile-workflow\nstate: Ready\nshell: echo unsafe'),
-    /Unknown workflow request field/u,
+    () => parseRecordBody(`Example:\n## Issue Review — v1\n- Record ID: quoted`),
+    /Unsupported or non-canonical record heading/u,
   )
   assert.throws(
-    () => parseWorkflowRequest('/sectile-workflow\nstate: Ready\nsource-sha: deadbeef'),
-    /40-character/u,
-  )
-  assert.equal(
-    recordURLBelongsToIssue(
-      'https://github.com/other/repo/issues/194#issuecomment-1',
-      'sectile',
-      'sectile',
-      194,
-    ),
-    false,
+    () => validateIssueReviewRecord(parseRecordBody('## Issue Review — v1\n- Record ID: x'), {
+      repository: 'sectile/sectile', issue: 194, sourceSHA: SHA_A, policySHA: SHA_B,
+    }),
+    /missing field/u,
   )
 })
 
-test('phase-specific request shape requires review and PR identities', () => {
-  const ready = parseWorkflowRequest('/sectile-workflow\nstate: Ready\nrecord: https://github.com/sectile/sectile/issues/1#issuecomment-1')
-  assert.deepEqual(validateRequestShape(ready), [
-    'source-sha is required',
-    'policy-sha is required',
-  ])
-
-  const review = parseWorkflowRequest([
-    '/sectile-workflow',
-    'state: Code Review',
-    'record: https://github.com/sectile/sectile/issues/1#issuecomment-1',
-    `source-sha: ${SHA_A}`,
-    `policy-sha: ${SHA_B}`,
-  ].join('\n'))
-  assert.deepEqual(validateRequestShape(review), [
-    'pr is required',
-    'head-sha is required',
-  ])
-})
-
-test('records must contain the exact provenance required by the target state', () => {
-  const ready = parseWorkflowRequest([
-    '/sectile-workflow',
-    'state: Ready',
-    'record: https://github.com/sectile/sectile/issues/194#issuecomment-1234',
-    `source-sha: ${SHA_A}`,
-    `policy-sha: ${SHA_B}`,
-  ].join('\n'))
-  assert.equal(recordSupportsTarget([
-    '## Issue Review — v1',
-    `Reviewed source ref / full SHA: main / ${SHA_A}`,
-    `Template version / policy commit: v1 / ${SHA_B}`,
-    'Implementation readiness: Ready',
-  ].join('\n'), ready), true)
-  assert.equal(recordSupportsTarget('## Issue Review — v1\nImplementation readiness: Ready', ready), false)
-
-  const codeReview = parseWorkflowRequest([
-    '/sectile-workflow',
-    'state: Awaiting Merge',
-    'record: https://github.com/sectile/sectile/issues/194#issuecomment-1234',
-    `source-sha: ${SHA_A}`,
-    `policy-sha: ${SHA_B}`,
-    'pr: 200',
-    `head-sha: ${SHA_C}`,
-  ].join('\n'))
-  assert.equal(recordSupportsTarget([
-    '## Code Review — v1',
-    `Source: ${SHA_A}`,
-    `Policy: ${SHA_B}`,
-    `Reviewed PR head SHA: ${SHA_C}`,
-    'Outcome: Passed',
-  ].join('\n'), codeReview), true)
-})
-
-test('issue-field POST payload changes only the requested field', () => {
-  assert.deepEqual(issueFieldPatch(20, 'Issue Review'), {
-    issue_field_values: [{ field_id: 20, value: 'Issue Review' }],
+test('Issue Review validation binds exact issue, source and policy SHAs', () => {
+  const record = parseRecordBody(issueReviewBody())
+  const validated = validateIssueReviewRecord(record, {
+    repository: 'sectile/sectile',
+    issue: 194,
+    sourceSHA: SHA_A,
+    policySHA: SHA_B,
+    requireReady: true,
   })
-  assert.throws(() => issueFieldPatch(0, 'Ready'), /positive integer/u)
-  assert.throws(() => issueFieldPatch(20, ''), /non-empty string/u)
-
-  const existing = [
-    { issue_field_id: 10, value: 'owner' },
-    { issue_field_id: 20, value: 2, single_select_option: { name: 'Candidate' } },
-    { issue_field_id: 30, value: '2026-09-14' },
-  ]
-  assert.equal(workflowValue(existing, 20), 'Candidate')
+  assert.equal(validated.outcome, 'Confirmed')
+  assert.equal(validated.completionSurface, 'published')
+  assert.throws(
+    () => validateIssueReviewRecord(record, {
+      repository: 'sectile/sectile', issue: 194, sourceSHA: SHA_C, policySHA: SHA_B,
+    }),
+    /source SHA does not match/u,
+  )
 })
 
-test('maintainer permission honors GitHub role mapping and fails closed', () => {
-  assert.doesNotThrow(() => assertMaintainerPermission({ permission: 'admin', roleName: 'admin' }))
-  assert.doesNotThrow(() => assertMaintainerPermission({ permission: 'write', roleName: 'maintain' }))
+test('Code Review and Verification records bind exact PR snapshots', () => {
+  const review = validateCodeReviewRecord(parseRecordBody(codeReviewBody()), {
+    repository: 'sectile/sectile', pr: 200, headSHA: SHA_C, policySHA: SHA_B,
+  })
+  assert.equal(review.outcome, 'Passed')
   assert.throws(
-    () => assertMaintainerPermission({ permission: 'write', roleName: 'write' }),
-    /admin\/maintain/u,
+    () => validateCodeReviewRecord(parseRecordBody(codeReviewBody({ head: SHA_A })), {
+      repository: 'sectile/sectile', pr: 200, headSHA: SHA_C, policySHA: SHA_B,
+    }),
+    /head SHA does not match/u,
   )
-  assert.throws(() => assertMaintainerPermission(), /admin\/maintain/u)
+
+  const verification = validateVerificationRecord(parseRecordBody(verificationBody()), {
+    repository: 'sectile/sectile', issue: 194, pr: 200,
+    expectedSourceSHA: SHA_C, policySHA: SHA_B,
+    allowedPhases: ['Implementation close'], allowedConclusions: ['Fixed on source'],
+  })
+  assert.equal(verification.conclusion, 'Fixed on source')
+})
+
+test('published completion cannot reach Done with source-only verification', () => {
+  const scope = parseRecordBody(issueReviewBody())
+  const request = transitionRequest({
+    from: 'Awaiting Release', target: 'Done', pr: 200, headSHA: SHA_C, mergeSHA: SHA_C,
+    recordURL: 'https://github.com/sectile/sectile/pull/200#issuecomment-2',
+  })
+  assert.throws(
+    () => validateTransitionEvidence(
+      parseRecordBody(verificationBody({
+        source: SHA_C, phase: 'Post-merge', conclusion: 'Fixed on source',
+      })),
+      scope,
+      request,
+    ),
+    /Verification phase is not allowed here/u,
+  )
+  assert.doesNotThrow(() => validateTransitionEvidence(
+    parseRecordBody(verificationBody({
+      source: SHA_C,
+      phase: 'Published artifact',
+      conclusion: 'Fixed and released',
+      artifact: '@sectile/chart 0.15.5 / sha512-example',
+    })),
+    scope,
+    request,
+  ))
+})
+
+test('record URLs distinguish issue comments, PR comments and native reviews', () => {
+  assert.equal(
+    parseRecordURL('https://github.com/sectile/sectile/issues/194#issuecomment-1').surface,
+    'issue-comment',
+  )
+  assert.equal(
+    parseRecordURL('https://github.com/sectile/sectile/pull/200#issuecomment-2').surface,
+    'pr-comment',
+  )
+  assert.equal(
+    parseRecordURL('https://github.com/sectile/sectile/pull/200#pullrequestreview-3').surface,
+    'pr-review',
+  )
+  assert.throws(() => parseRecordURL('https://example.com/anything'), /github.com HTTPS URL/u)
+})
+
+test('transition arguments require stable operation and PR identities for review phases', () => {
+  const request = parseTransitionArgs([
+    '--issue', '194', '--from', 'Issue Review', '--state', 'Ready',
+    '--record', 'https://github.com/sectile/sectile/issues/194#issuecomment-1',
+    '--source-sha', SHA_A, '--policy-sha', SHA_B, '--operation-id', 'transition-194-ready-1',
+  ])
+  assert.equal(request.issue, 194)
+  assert.equal(request.scopeRecordURL, request.recordURL)
+  assert.equal(request.apply, false)
+  assert.throws(
+    () => parseTransitionArgs([
+      '--issue', '194', '--from', 'In Progress', '--state', 'Code Review',
+      '--record', 'https://github.com/sectile/sectile/issues/194#issuecomment-2',
+      '--scope-record', 'https://github.com/sectile/sectile/issues/194#issuecomment-1',
+      '--source-sha', SHA_A, '--policy-sha', SHA_B, '--operation-id', 'transition-194-review-1',
+    ]),
+    /requires --pr and --head-sha/u,
+  )
+})
+
+test('retry disposition reconciles an applied target without mutating twice', () => {
+  const request = transitionRequest({ from: 'Ready', target: 'In Progress' })
+  assert.equal(transitionDisposition('Ready', request), 'mutate-workflow')
+  assert.equal(transitionDisposition('In Progress', request), 'recover-completion')
+  const completion = {
+    operationId: request.operationID,
+    previous: request.from,
+    current: request.target,
+    evidence: request.recordURL,
+    scopeReview: request.scopeRecordURL,
+    sourceSHA: request.sourceSHA,
+    policySHA: request.policySHA,
+    pr: 'N/A',
+    prHeadSHA: 'N/A',
+  }
+  assert.equal(transitionDisposition('In Progress', request, completion), 'already-complete')
+  assert.throws(() => transitionDisposition('Blocked', request), /Workflow changed/u)
+})
+
+test('transition completion parser rejects incomplete operation records', () => {
+  const completion = parseTransitionCompletion([
+    '## Workflow Transition — v2',
+    '- Operation ID: transition-194-ready-1',
+    '- Actor: @jinyongp / Loki operator',
+    '- Previous: Issue Review',
+    '- Current: Ready',
+    '- Evidence record: https://github.com/sectile/sectile/issues/194#issuecomment-1',
+    '- Scope review: https://github.com/sectile/sectile/issues/194#issuecomment-1',
+    `- Source SHA: ${SHA_A}`,
+    `- Policy SHA: ${SHA_B}`,
+    '- PR: N/A',
+    '- PR head SHA: N/A',
+  ].join('\n'))
+  assert.equal(completion.operationId, 'transition-194-ready-1')
+  assert.throws(
+    () => parseTransitionCompletion('## Workflow Transition — v2\n- Operation ID: x'),
+    /incomplete/u,
+  )
 })
 
 test('GitHub CLI transport fails closed on malformed process and JSON results', async () => {
