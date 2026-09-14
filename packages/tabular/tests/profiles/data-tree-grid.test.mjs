@@ -111,6 +111,54 @@ test('ISSUE-122: context-only ancestors remain structural and cannot become reco
   assert.equal(controller.dispatch({ type: 'begin-edit' }).ok, true);
 });
 
+test('ISSUE-122: accepted context transition drops stale group selection and preserves off-window rows', () => {
+  const controller = createDataTreeGrid({
+    columns,
+    initialValues: {
+      query: {
+        sort: [], filters: [],
+        groups: [{ id: 'by-name', columnID: 'name', policy: 'group' }],
+        aggregates: [], pivots: [],
+      },
+      accessState: {
+        kind: 'window',
+        window: { revision: 0, requestGeneration: 0, start: 0, size: 2, total: null, pending: null },
+      },
+    },
+  });
+  const ordinaryRows = [
+    { kind: 'group', id: 'group:a', parentGroupID: null, depth: 0, expanded: true, cells: { name: 'A', score: 3 } },
+    { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
+  ];
+  assert.equal(controller.synchronizeView(response(controller, ordinaryRows)).ok, true);
+  assert.equal(controller.dispatch({
+    type: 'set-row-selection',
+    selection: { kind: 'explicit-rows', rowIDs: ['group:a', 'off-window'] },
+  }).ok, true);
+  assert.deepEqual(controller.getProjection().rowSelection, {
+    kind: 'explicit-rows', rowIDs: ['group:a', 'off-window'],
+  });
+
+  assert.equal(controller.dispatch({
+    type: 'set-access',
+    accessState: {
+      kind: 'window',
+      window: { revision: 0, requestGeneration: 0, start: 1, size: 1, total: null, pending: null },
+    },
+  }).ok, true);
+  const contextRows = [
+    { kind: 'group', id: 'group:a', parentGroupID: null, depth: 0, expanded: true, contextOnly: true, cells: { name: 'A', score: 3 } },
+    { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
+  ];
+  assert.equal(controller.synchronizeView(response(controller, contextRows)).ok, true);
+  assert.deepEqual(controller.getSnapshot().tabular.state.rowSelection, {
+    kind: 'explicit-rows', rowIDs: ['off-window'],
+  });
+  assert.deepEqual(controller.getProjection().rowSelection, {
+    kind: 'explicit-rows', rowIDs: ['off-window'],
+  });
+});
+
 test('TAB-TGR-03: row expansion is source intent and malformed ancestry rejects atomically', () => {
   const controller = createDataTreeGrid({ columns });
   assert.equal(controller.synchronizeView(response(controller, rows)).ok, true);

@@ -16,6 +16,7 @@ import {
   canonicalizeRowSelection,
   createGroupLeafSelectionTarget,
   reconcileAuthoritativeRowRemoval,
+  reconcileContextOnlyRowSelection,
   reconcileRowSelectionBinding,
   selectAllMatchingRows,
   setIndexedVisibleRowSelectionRange,
@@ -232,12 +233,16 @@ class DataTableRuntime implements DataTableController {
       ? nextRevision(this.#snapshot.state.projectionGeneration)
       : ok(this.#snapshot.state.projectionGeneration);
     if (!projectionGeneration.ok) return projectionGeneration;
+    const retainedSelection = reconcileAuthoritativeRowRemoval(
+      this.#snapshot.state.rowSelection,
+      removedRowIDsOf(view.value),
+    );
     const state = Object.freeze({
       ...this.#snapshot.state,
       columnState: columnState.value,
       accessState: accessState.value,
       columnSchemaRevision: view.value.columnSchema.revision,
-      rowSelection: reconcileAuthoritativeRowRemoval(this.#snapshot.state.rowSelection, removedRowIDsOf(view.value)),
+      rowSelection: reconcileContextOnlyRowSelection(retainedSelection, view.value.rows),
       requestState: Object.freeze({ kind: 'ready' as const, pendingRequest: null }),
       acceptedViewState: Object.freeze({ kind: 'current' as const, view: view.value }),
       projectionGeneration: projectionGeneration.value,
