@@ -279,8 +279,11 @@ export function workflowValue(values, fieldId) {
   return entry.single_select_option?.name ?? entry.value ?? null
 }
 
-export function assertMaintainerPermission(permission) {
-  if (!['admin', 'maintain'].includes(permission)) {
-    throw new Error(`Workflow mutation requires maintain/admin permission; observed ${permission ?? 'none'}`)
+export function assertMaintainerPermission({ permission, roleName } = {}) {
+  const allowed = permission === 'admin' || roleName === 'admin' || roleName === 'maintain'
+  if (!allowed) {
+    throw new Error(
+      `Workflow mutation requires admin/maintain role; observed permission=${permission ?? 'none'}, role=${roleName ?? 'none'}`,
+    )
   }
 }
