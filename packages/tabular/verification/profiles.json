@@ -122,31 +122,31 @@
       "id": "TAB-TGR-01",
       "title": "TAB-TGR-01: tree projection derives ordered parentage and navigates visible cells",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "6dc97647b6b83648c880b6fb419c21e9d27b53648a58986a731ad89d8b7b893c"
+      "sha256": "2ad92759e40ca25636090ccbb554a9a7c62193b5b8e8bcee03de45057a6aa51c"
     },
     {
       "id": "TAB-TGR-02",
       "title": "TAB-TGR-02: group cells are read-only while leaf edit commands keep exact payloads",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "6dc97647b6b83648c880b6fb419c21e9d27b53648a58986a731ad89d8b7b893c"
+      "sha256": "2ad92759e40ca25636090ccbb554a9a7c62193b5b8e8bcee03de45057a6aa51c"
     },
     {
       "id": "TAB-TGR-03",
       "title": "TAB-TGR-03: row expansion is source intent and malformed ancestry rejects atomically",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "6dc97647b6b83648c880b6fb419c21e9d27b53648a58986a731ad89d8b7b893c"
+      "sha256": "2ad92759e40ca25636090ccbb554a9a7c62193b5b8e8bcee03de45057a6aa51c"
     },
     {
       "id": "TAB-TGR-04",
       "title": "TAB-TGR-04: tree profile emits no renderer reveal commands",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "6dc97647b6b83648c880b6fb419c21e9d27b53648a58986a731ad89d8b7b893c"
+      "sha256": "2ad92759e40ca25636090ccbb554a9a7c62193b5b8e8bcee03de45057a6aa51c"
     },
     {
       "id": "TAB-TGR-05",
       "title": "TAB-TGR-05: controlled tree-grid owner synchronizes null cursor and navigation edit state",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "6dc97647b6b83648c880b6fb419c21e9d27b53648a58986a731ad89d8b7b893c"
+      "sha256": "2ad92759e40ca25636090ccbb554a9a7c62193b5b8e8bcee03de45057a6aa51c"
     }
   ],
   "expectedFailures": [
