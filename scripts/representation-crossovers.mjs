@@ -4,10 +4,16 @@ import { execFileSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { summarize } from './performance/statistics.mjs';
-import { renderCrossoverDocumentation, stableCrossoverFingerprint, validateCrossoverDecisions } from './lib/representation-crossovers.mjs';
+import {
+  crossoverGovernedSourcePaths,
+  renderCrossoverDocumentation,
+  stableCrossoverEvidenceFingerprint,
+  stableCrossoverSourceFingerprint,
+  validateCrossoverProvenance,
+} from './lib/representation-crossovers.mjs';
 
 const mode = process.argv[2] ?? 'check';
-assert.ok(mode === 'record' || mode === 'check', `unknown crossover mode: ${mode}`);
+assert.ok(mode === 'record' || mode === 'attest' || mode === 'check', `unknown crossover mode: ${mode}`);
 const manifestPath = resolve('verification/representation-crossovers/decisions.json');
 const baselinePath = resolve('verification/representation-crossovers/baseline.json');
 const documentationPath = resolve('docs/performance/representations.md');
@@ -18,9 +24,11 @@ const [workerSource, manifestSource] = await Promise.all([
   readFile(manifestPath, 'utf8'),
 ]);
 const manifest = JSON.parse(manifestSource);
-const fingerprintInput = { ...manifest };
-delete fingerprintInput.fingerprint;
-const fingerprint = stableCrossoverFingerprint(workerSource, fingerprintInput);
+const governedSources = await Promise.all(crossoverGovernedSourcePaths(manifest).map(async (path) => Object.freeze({
+  path,
+  source: await readFile(resolve(path), 'utf8'),
+})));
+const sourceFingerprint = stableCrossoverSourceFingerprint(workerSource, fingerprintInput(manifest), governedSources);
 
 if (mode === 'record') {
   const processes = [];
@@ -56,11 +64,10 @@ if (mode === 'record') {
       sourceBytes: first.sourceBytes,
     });
   });
-  const recordedManifest = { ...manifest, fingerprint };
   const baseline = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     workItem: 'WI-018',
-    fingerprint,
+    sourceFingerprint,
     processCount: PROCESS_COUNT,
     runtime: {
       node: process.version,
@@ -70,20 +77,44 @@ if (mode === 'record') {
     },
     metrics,
   };
-  validateCrossoverDecisions(recordedManifest, baseline);
+  await writeAttestation(manifest, baseline, 'recorded');
+} else if (mode === 'attest') {
+  const stored = JSON.parse(await readFile(baselinePath, 'utf8'));
+  const baseline = { ...stored, schemaVersion: 2, sourceFingerprint };
+  delete baseline.fingerprint;
+  await writeAttestation(manifest, baseline, 'attested');
+} else {
+  const baseline = JSON.parse(await readFile(baselinePath, 'utf8'));
+  const report = validateCrossoverProvenance(manifest, baseline, workerSource, governedSources);
+  assert.equal(normalizeText(await readFile(documentationPath, 'utf8')), renderCrossoverDocumentation(manifest, baseline), 'crossover documentation drifted');
+  console.log(JSON.stringify({ status: 'passed', ...report, processCount: baseline.processCount }));
+}
+
+async function writeAttestation(sourceManifest, baseline, status) {
+  const recordedManifest = {
+    ...sourceManifest,
+    schemaVersion: 2,
+    sourceFingerprint,
+    evidenceFingerprint: stableCrossoverEvidenceFingerprint(baseline),
+  };
+  delete recordedManifest.fingerprint;
+  validateCrossoverProvenance(recordedManifest, baseline, workerSource, governedSources);
   const documentation = renderCrossoverDocumentation(recordedManifest, baseline);
   await Promise.all([
     writeFile(manifestPath, `${JSON.stringify(recordedManifest, null, 2)}\n`, 'utf8'),
     writeFile(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8'),
     writeFile(documentationPath, documentation, 'utf8'),
   ]);
-  console.log(JSON.stringify({ status: 'recorded', decisions: manifest.decisions.length, metrics: metrics.length, processCount: PROCESS_COUNT }));
-} else {
-  assert.equal(manifest.fingerprint, fingerprint, 'crossover source or decisions changed; re-record required');
-  const baseline = JSON.parse(await readFile(baselinePath, 'utf8'));
-  const report = validateCrossoverDecisions(manifest, baseline);
-  assert.equal(normalizeText(await readFile(documentationPath, 'utf8')), renderCrossoverDocumentation(manifest, baseline), 'crossover documentation drifted');
-  console.log(JSON.stringify({ status: 'passed', ...report, processCount: baseline.processCount }));
+  console.log(JSON.stringify({ status, decisions: recordedManifest.decisions.length, metrics: baseline.metrics.length, processCount: baseline.processCount }));
+}
+
+function fingerprintInput(value) {
+  const input = structuredClone(value);
+  delete input.fingerprint;
+  delete input.sourceFingerprint;
+  delete input.evidenceFingerprint;
+  input.schemaVersion = 2;
+  return input;
 }
 
 function normalizeText(value) {

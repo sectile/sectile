@@ -51,6 +51,22 @@ test('host source changes add cross-host verification', () => {
   assert.ok(gates.includes('cross-host'));
 });
 
+test('governed representation sources select crossover verification without broad package coupling', () => {
+  const options = { crossoverGovernedSources: ['packages/virtual/src/spatial-layout.ts'] };
+  const governed = deriveAffectedWorkspaceGates(
+    ['packages/virtual/src/spatial-layout.ts'],
+    new Set(['@sectile/virtual']),
+    options,
+  );
+  assert.ok(governed.includes('representation-crossovers'));
+  const unrelated = deriveAffectedWorkspaceGates(
+    ['packages/virtual/src/surface.ts'],
+    new Set(['@sectile/virtual']),
+    options,
+  );
+  assert.equal(unrelated.includes('representation-crossovers'), false);
+});
+
 test('dependency closure prepares dependencies without verifying unrelated dependents', () => {
   assert.deepEqual(
     collectDependencyClosure(graph, new Set(['@sectile/chart']), false),

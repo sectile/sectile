@@ -63,8 +63,13 @@ crossover evidence. Account for index construction and retained memory.
 ### Representation evidence
 
 `verification/representation-crossovers/decisions.json` is the source of truth
-for frozen choices. Replacing one requires latency, allocation, retained heap,
-adversarial, and bundle evidence against the production implementation.
+for frozen choices. Each decision names the exact production source files that
+implement it. `pnpm check:crossovers` verifies those sources and the recorded
+evidence deterministically; `pnpm update:crossovers` explicitly re-attests a
+reviewed source/evidence state without measuring time, while only
+`pnpm record:crossovers` replaces measured timing evidence. Replacing a frozen
+choice requires latency, allocation, retained heap, adversarial, and bundle
+evidence against the production implementation.
 
 Every changed hot operation adds its complexity contract, source proof,
 adversarial witness, deterministic work/resource counter, and production-bound

@@ -1,10 +1,13 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "workItem": "WI-018",
-  "fingerprint": "fnv1a32:56d9c843",
   "decisions": [
     {
       "id": "sequence",
+      "governedSources": [
+        "packages/core/src/internal/kernel/indexed-sequence.ts",
+        "packages/core/src/structures/sequence.ts"
+      ],
       "selected": "adaptive-flat-overlay",
       "candidates": [
         "flat-rebuild",
@@ -34,6 +37,9 @@
     },
     {
       "id": "selection",
+      "governedSources": [
+        "packages/core/src/internal/state/selection.ts"
+      ],
       "selected": "sorted-sparse-vector",
       "candidates": [
         "sorted-sparse-vector",
@@ -63,6 +69,9 @@
     },
     {
       "id": "grid",
+      "governedSources": [
+        "packages/core/src/structures/grid.ts"
+      ],
       "selected": "dense-flat",
       "candidates": [
         "dense-flat",
@@ -85,6 +94,9 @@
     },
     {
       "id": "tree",
+      "governedSources": [
+        "packages/core/src/structures/tree.ts"
+      ],
       "selected": "lazy-euler-cache",
       "candidates": [
         "repeated-dfs",
@@ -107,6 +119,9 @@
     },
     {
       "id": "text",
+      "governedSources": [
+        "packages/core/src/internal/editing/text.ts"
+      ],
       "selected": "local-boundary-proof",
       "candidates": [
         "full-utf16-scan",
@@ -127,6 +142,9 @@
     },
     {
       "id": "reorder",
+      "governedSources": [
+        "packages/core/src/reorder.ts"
+      ],
       "selected": "retained-index-one-materialization",
       "candidates": [
         "rebuild-and-reindex",
@@ -147,6 +165,10 @@
     },
     {
       "id": "exact-ratio",
+      "governedSources": [
+        "packages/core/src/internal/kernel/decimal.ts",
+        "packages/core/src/structures/range.ts"
+      ],
       "selected": "euclidean-reduce",
       "candidates": [
         "euclidean-reduce",
@@ -167,6 +189,9 @@
     },
     {
       "id": "index-span-set",
+      "governedSources": [
+        "packages/core/src/structures/index-span.ts"
+      ],
       "selected": "flat-normalized-vector",
       "candidates": [
         "flat-normalized-vector",
@@ -187,6 +212,9 @@
     },
     {
       "id": "selection-expression",
+      "governedSources": [
+        "packages/core/src/structures/selection-expression.ts"
+      ],
       "selected": "set-plus-vector",
       "candidates": [
         "set-plus-vector",
@@ -207,6 +235,9 @@
     },
     {
       "id": "metric-index",
+      "governedSources": [
+        "packages/core/src/structures/metric-index.ts"
+      ],
       "selected": "balanced-kd",
       "candidates": [
         "packed-vector-scan",
@@ -242,6 +273,9 @@
     },
     {
       "id": "geometry",
+      "governedSources": [
+        "packages/core/src/structures/anchored-layout.ts"
+      ],
       "selected": "scalar-bounded-scoring",
       "candidates": [
         "immutable-object-candidates",
@@ -262,6 +296,9 @@
     },
     {
       "id": "tabular-cache",
+      "governedSources": [
+        "packages/tabular/src/source.ts"
+      ],
       "selected": "single-current",
       "candidates": [
         "repeat-resolution",
@@ -291,6 +328,10 @@
     },
     {
       "id": "virtual-spatial",
+      "governedSources": [
+        "packages/virtual/src/internal/blocked-vector.ts",
+        "packages/virtual/src/spatial-layout.ts"
+      ],
       "selected": "blocked-path-copy",
       "candidates": [
         "packed-full-rebuild",
@@ -323,6 +364,10 @@
     },
     {
       "id": "virtual-track",
+      "governedSources": [
+        "packages/virtual/src/internal/blocked-vector.ts",
+        "packages/virtual/src/partitioned-track-grid-layout.ts"
+      ],
       "selected": "blocked-path-copy",
       "candidates": [
         "packed-full-rebuild",
@@ -353,6 +398,9 @@
     },
     {
       "id": "color-value",
+      "governedSources": [
+        "packages/core/src/structures/color.ts"
+      ],
       "selected": "immutable-boundary-scalar-internal",
       "candidates": [
         "immutable-boundary-scalar-internal",
@@ -379,6 +427,9 @@
     },
     {
       "id": "color-gamut",
+      "governedSources": [
+        "packages/core/src/structures/color.ts"
+      ],
       "selected": "fixed-12-chroma",
       "candidates": [
         "reject",

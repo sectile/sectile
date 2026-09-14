@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 
 export const REQUIRED_CROSSOVER_DECISIONS = Object.freeze([
   'sequence',
@@ -20,12 +21,19 @@ export const REQUIRED_CROSSOVER_DECISIONS = Object.freeze([
 ]);
 
 export function validateCrossoverDecisions(manifest, baseline) {
-  assert.equal(manifest.schemaVersion, 1, 'crossover decision schema drifted');
+  assert.equal(manifest.schemaVersion, 2, 'crossover decision schema drifted');
   assert.equal(manifest.workItem, 'WI-018', 'crossover decision owner drifted');
-  assert.equal(baseline.schemaVersion, 1, 'crossover baseline schema drifted');
+  assert.equal(baseline.schemaVersion, 2, 'crossover baseline schema drifted');
   assert.equal(baseline.workItem, 'WI-018', 'crossover baseline owner drifted');
   assert.ok(baseline.processCount >= 9, 'crossovers require at least nine isolated processes');
-  assert.equal(baseline.fingerprint, manifest.fingerprint, 'decision/baseline fingerprint drifted');
+  assert.match(manifest.sourceFingerprint, /^sha256:[0-9a-f]{64}$/u, 'crossover source fingerprint missing');
+  assert.match(manifest.evidenceFingerprint, /^sha256:[0-9a-f]{64}$/u, 'crossover evidence fingerprint missing');
+  assert.equal(baseline.sourceFingerprint, manifest.sourceFingerprint, 'decision/baseline source fingerprint drifted');
+  assert.equal(
+    manifest.evidenceFingerprint,
+    stableCrossoverEvidenceFingerprint(baseline),
+    'crossover recorded evidence changed; run pnpm update:crossovers or pnpm record:crossovers',
+  );
   assert.deepEqual(
     manifest.decisions.map(({ id }) => id).sort(),
     [...REQUIRED_CROSSOVER_DECISIONS].sort(),
@@ -34,6 +42,7 @@ export function validateCrossoverDecisions(manifest, baseline) {
   const metrics = new Map(baseline.metrics.map((metric) => [metric.id, metric]));
   assert.equal(metrics.size, baseline.metrics.length, 'duplicate crossover metric');
   for (const decision of manifest.decisions) {
+    validateGovernedSources(decision);
     assert.ok(typeof decision.selected === 'string' && decision.selected.length > 0, `${decision.id}: selected representation missing`);
     assert.ok(Array.isArray(decision.candidates) && decision.candidates.length >= 2, `${decision.id}: at least two candidates required`);
     assert.ok(decision.candidates.includes(decision.selected), `${decision.id}: selected representation is not a candidate`);
@@ -76,6 +85,31 @@ export function validateCrossoverDecisions(manifest, baseline) {
     'virtual-spatial: structural overlay bound drifted',
   );
   return Object.freeze({ decisions: manifest.decisions.length, metrics: baseline.metrics.length });
+}
+
+export function crossoverGovernedSourcePaths(manifest) {
+  assert.ok(Array.isArray(manifest.decisions), 'crossover decisions missing');
+  const paths = [];
+  for (const decision of manifest.decisions) {
+    validateGovernedSources(decision);
+    paths.push(...decision.governedSources);
+  }
+  return Object.freeze([...new Set(paths)].sort());
+}
+
+export function validateCrossoverProvenance(manifest, baseline, workerSource, governedSources) {
+  const expectedPaths = crossoverGovernedSourcePaths(manifest);
+  const entries = [...governedSources].sort((left, right) => left.path.localeCompare(right.path));
+  assert.deepEqual(entries.map(({ path }) => path), expectedPaths, 'crossover governed-source input drifted');
+  const fingerprintInput = structuredClone(manifest);
+  delete fingerprintInput.sourceFingerprint;
+  delete fingerprintInput.evidenceFingerprint;
+  assert.equal(
+    manifest.sourceFingerprint,
+    stableCrossoverSourceFingerprint(workerSource, fingerprintInput, entries),
+    'crossover worker, decisions, or governed production source changed; run pnpm update:crossovers or pnpm record:crossovers',
+  );
+  return validateCrossoverDecisions(manifest, baseline);
 }
 
 function requireMatrix(metrics) {
@@ -130,7 +164,7 @@ export function renderCrossoverDocumentation(manifest, baseline) {
   for (const decision of manifest.decisions) {
     lines.push(`- **${decision.id}:** ${decision.rejected.map(({ candidate, reason }) => `\`${candidate}\` — ${reason}`).join(' ')}`);
   }
-  lines.push('', 'The machine-readable source of truth is `verification/representation-crossovers/decisions.json`; `pnpm check:crossovers` rejects source, decision, evidence, threshold, or documentation drift.', '');
+  lines.push('', 'The machine-readable source of truth is `verification/representation-crossovers/decisions.json`; `pnpm check:crossovers` rejects governed production source, decision, recorded evidence, threshold, or documentation drift. Use `pnpm update:crossovers` for an intentional deterministic attestation and `pnpm record:crossovers` only when replacing measured evidence.', '');
   return lines.join('\n');
 }
 
@@ -138,12 +172,39 @@ function escapeCell(value) { return value.replaceAll('|', '\\|'); }
 function format(value) { return Number(value.toPrecision(4)).toLocaleString('en-US'); }
 function formatBytes(value) { return `${Number((value / 1024).toPrecision(4)).toLocaleString('en-US')} KiB`; }
 
-export function stableCrossoverFingerprint(workerSource, manifestWithoutFingerprint) {
-  let hash = 2_166_136_261;
-  const source = `${workerSource.replaceAll('\r\n', '\n')}\n${JSON.stringify(manifestWithoutFingerprint)}`;
-  for (let index = 0; index < source.length; index += 1) {
-    hash ^= source.charCodeAt(index);
-    hash = Math.imul(hash, 16_777_619) >>> 0;
+export function stableCrossoverSourceFingerprint(workerSource, manifestWithoutAttestation, governedSources = []) {
+  const parts = [normalizeText(workerSource), JSON.stringify(manifestWithoutAttestation)];
+  for (const entry of [...governedSources].sort((left, right) => left.path.localeCompare(right.path))) {
+    parts.push(entry.path, normalizeText(entry.source));
   }
-  return `fnv1a32:${hash.toString(16).padStart(8, '0')}`;
+  return sha256(parts);
+}
+
+export function stableCrossoverEvidenceFingerprint(baseline) {
+  const input = structuredClone(baseline);
+  delete input.sourceFingerprint;
+  return sha256([JSON.stringify(input)]);
+}
+
+function validateGovernedSources(decision) {
+  assert.ok(Array.isArray(decision.governedSources) && decision.governedSources.length > 0, `${decision.id}: governed production sources missing`);
+  const canonical = [...new Set(decision.governedSources)].sort();
+  assert.deepEqual(decision.governedSources, canonical, `${decision.id}: governed production sources must be sorted and unique`);
+  for (const path of decision.governedSources) {
+    assert.match(path, /^packages\/[^/]+\/src\/.+\.ts$/u, `${decision.id}: invalid governed production source ${path}`);
+  }
+}
+
+function sha256(parts) {
+  const hash = createHash('sha256');
+  for (const part of parts) {
+    const value = String(part);
+    hash.update(`${Buffer.byteLength(value, 'utf8')}:`);
+    hash.update(value);
+  }
+  return `sha256:${hash.digest('hex')}`;
+}
+
+function normalizeText(value) {
+  return value.replaceAll('\r\n', '\n');
 }

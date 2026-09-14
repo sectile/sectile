@@ -1,4 +1,5 @@
 import { mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { withArtifactSession } from './lib/artifact-session.mjs';
@@ -8,6 +9,7 @@ import {
   collectDependencyClosure,
   deriveAffectedSelection,
 } from './lib/verification-plan.mjs';
+import { crossoverGovernedSourcePaths } from './lib/representation-crossovers.mjs';
 import { loadPublishedPackageGraph } from './lib/workspace-graph.mjs';
 import { runVerificationSteps } from './lib/verification-runner.mjs';
 
@@ -52,6 +54,8 @@ if (exactRequested && targetArguments.length === 0) {
 }
 
 const graph = await loadPublishedPackageGraph();
+const crossoverManifest = JSON.parse(await readFile(join(root, 'verification', 'representation-crossovers', 'decisions.json'), 'utf8'));
+const crossoverGovernedSources = crossoverGovernedSourcePaths(crossoverManifest);
 const aliases = new Map(graph.packages.flatMap((entry) => [
   [entry.name, entry.name],
   [entry.directory, entry.name],
@@ -78,7 +82,7 @@ const scopedChangedFiles = explicitTargets.size === 0
   : changedFiles.filter((path) => fileMatchesExplicitTargets(path));
 const affectedSelection = exactRequested || scopedChangedFiles.length === 0
   ? null
-  : deriveAffectedSelection(graph, scopedChangedFiles);
+  : deriveAffectedSelection(graph, scopedChangedFiles, { crossoverGovernedSources });
 const explicitPackages = [...explicitTargets].filter((name) => name !== '@sectile/docs');
 const selectedPackages = new Set(
   compatibility

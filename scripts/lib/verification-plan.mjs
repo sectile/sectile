@@ -1,4 +1,4 @@
-export function deriveAffectedSelection(graph, changedFiles) {
+export function deriveAffectedSelection(graph, changedFiles, options = {}) {
   const directPackages = new Set();
   const runtimePackages = new Set();
   let includeDocumentation = false;
@@ -32,12 +32,13 @@ export function deriveAffectedSelection(graph, changedFiles) {
     directPackages: Object.freeze([...directPackages]),
     runtimePackages: Object.freeze([...runtimePackages]),
     includeDocumentation,
-    workspaceGates: Object.freeze(deriveAffectedWorkspaceGates(changedFiles, selectedPackages)),
+    workspaceGates: Object.freeze(deriveAffectedWorkspaceGates(changedFiles, selectedPackages, options)),
   });
 }
 
-export function deriveAffectedWorkspaceGates(changedFiles, selectedPackages) {
+export function deriveAffectedWorkspaceGates(changedFiles, selectedPackages, options = {}) {
   const gates = new Set();
+  const crossoverGovernedSources = new Set(options.crossoverGovernedSources ?? []);
   const sourceChanged = changedFiles.some((path) => /^packages\/[^/]+\/src\//u.test(path));
   const hostSourceChanged = changedFiles.some((path) => /^packages\/(?:dom|vue)\/src\//u.test(path));
   const toolingChanged = changedFiles.some((path) => (
@@ -71,6 +72,7 @@ export function deriveAffectedWorkspaceGates(changedFiles, selectedPackages) {
   if (changedFiles.some((path) => (
     path.startsWith('verification/representation-crossovers/')
     || path.startsWith('scripts/representation-crossovers')
+    || crossoverGovernedSources.has(path)
   ))) gates.add('representation-crossovers');
   if (publicSurfaceChanged) {
     gates.add('entrypoint-migrations');
