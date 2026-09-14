@@ -501,7 +501,7 @@ function applySpatialValueChanges<ID extends StableID>(
     for (const [id, item] of changes) {
       const baseIndex = data.baseIDs.indexOf(id);
       if (baseIndex === null) break;
-      baseChanges.push(Object.freeze([baseIndex, item] as const));
+      baseChanges.push([baseIndex, item]);
     }
   }
   return baseChanges.length === changes.size
@@ -520,10 +520,20 @@ function applySpatialBaseChanges<ID extends StableID>(
   changes: readonly (readonly [number, SpatialItem<ID>])[],
   generation: number,
 ): SpatialLayoutState<ID> {
-  const touchedLeaves = [...new Set(changes.map(([index]) => data.leafByBase[index]!))]
-    .sort((left, right) => left - right);
-  const touchedPartitions = new Set(changes.map(([index]) => Math.floor(index / LEAF_SIZE))).size
-    + touchedLeaves.length;
+  const touchedLeafSet = new Set<number>();
+  let touchedPartitions = 0;
+  let previousPartition = -1;
+  for (let changeIndex = 0; changeIndex < changes.length; changeIndex += 1) {
+    const index = changes[changeIndex]![0];
+    touchedLeafSet.add(data.leafByBase[index]!);
+    const partition = Math.floor(index / LEAF_SIZE);
+    if (partition !== previousPartition) {
+      previousPartition = partition;
+      touchedPartitions += 1;
+    }
+  }
+  const touchedLeaves = [...touchedLeafSet].sort((left, right) => left - right);
+  touchedPartitions += touchedLeaves.length;
   const repairBound = blockedRepairBound(changes.length, data.base.size, touchedPartitions);
   if (useBlockedRepair(changes.length, data.base.size, touchedPartitions)) {
     const vector = data.base.updateDetailed(changes);
