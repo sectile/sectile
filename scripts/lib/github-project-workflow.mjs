@@ -131,6 +131,17 @@ export function workflowFieldCreateBody() {
   }
 }
 
+export function issueFieldPatch(fieldId, value) {
+  const numericId = Number(fieldId)
+  if (!Number.isSafeInteger(numericId) || numericId <= 0) {
+    throw new Error('Issue field ID must be a positive integer')
+  }
+  if (typeof value !== 'string' || value.length === 0) {
+    throw new Error('Issue field value must be a non-empty string')
+  }
+  return { issue_field_values: [{ field_id: numericId, value }] }
+}
+
 export function parseWorkflowRequest(body) {
   if (typeof body !== 'string') return null
   const lines = body.split(/\r?\n/u).map(line => line.trim()).filter(Boolean)
@@ -256,21 +267,6 @@ export function recordSupportsTarget(recordBody, request) {
     default:
       return false
   }
-}
-
-export function mergeIssueFieldValue(existingValues, fieldId, value) {
-  const result = []
-  let replaced = false
-  for (const entry of existingValues ?? []) {
-    if (Number(entry.issue_field_id) === Number(fieldId)) {
-      result.push({ field_id: Number(fieldId), value })
-      replaced = true
-      continue
-    }
-    result.push({ field_id: Number(entry.issue_field_id), value: entry.value })
-  }
-  if (!replaced) result.push({ field_id: Number(fieldId), value })
-  return result
 }
 
 export function workflowValue(values, fieldId) {
