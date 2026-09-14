@@ -13,7 +13,7 @@ The release candidate has the same 246-file shape. After restoring the focused `
 
 ## Decision
 
-Repair only the Terminal entry in `verification/source-maps/baseline.json` using the official npm `0.14.7` artifact as the reference. Do not use the current release candidate as the replacement baseline and do not change any other package record.
+Repair only the Terminal entries in `verification/source-maps/baseline.json` and `verification/consumer-install/baseline.json` using the official npm `0.14.7` artifact as the reference. Do not use the current release candidate as either replacement baseline and do not change any other package record or any comparison formula.
 
 | Measurement | Stale baseline | Published 0.14.7 reference | Current candidate | Published → candidate |
 | --- | ---: | ---: | ---: | ---: |
@@ -27,8 +27,21 @@ Repair only the Terminal entry in `verification/source-maps/baseline.json` using
 
 With the existing source-map policy unchanged, the repaired published reference yields a 119,899-byte tarball ceiling and a 655,132-byte unpacked ceiling. The current candidate remains below both without weakening the five-percent-plus-16-byte policy.
 
+The consumer-install record was stale in the same way: it still described 243 files and a 109,109-byte tarball. The canonical publication-artifact unit now produces a 115,108-byte candidate tarball with the same 246-file shape as published `0.14.7`. Its emitted categories are 261,784 bytes of runtime JavaScript, 168,229 bytes of declarations, 183,135 bytes of source maps, and 14,471 bytes of other package files.
+
+| Consumer-install measurement | Stale baseline | Published 0.14.7 reference | Current candidate | Published → candidate | New effective gate |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Tarball | 109,109 B | 114,174 B | 115,108 B | +934 B | 119,915 B |
+| Runtime JavaScript | 250,426 B | 259,973 B | 261,784 B | +1,811 B | 273,004 B |
+| Declarations | 164,585 B | 168,229 B | 168,229 B | 0 B | 176,673 B |
+| Source maps | 174,369 B | 181,262 B | 183,135 B | +1,873 B | 190,358 B |
+| Other package files | 14,324 B | 14,456 B | 14,471 B | +15 B | 15,211 B |
+| Packed files | 243 | 246 | 246 | 0 | n/a |
+
+Every candidate category remains below the unchanged five-percent-plus-32-byte consumer-install gate derived from the published artifact.
+
 ## Consumer impact
 
 The Terminal consumer-bundle baseline is unchanged. All three Terminal fixture shards pass after the TTY text-filter closure repair. The focused `@sectile/terminal/node` named import contains only `dist/node.js` plus the fixture and retains only `node:readline` and `node:stream` dependencies; `dist/internal/grapheme.js` is no longer in that closure. Its current esbuild result is 1,903 raw / 932 gzip / 814 brotli bytes, and its Vite result is 1,925 / 935 / 813 bytes, all within the existing ceilings.
 
-This change repairs verification provenance against an artifact consumers can already install. It does not add a public export, dependency, or package file, and it does not raise any consumer bundle or install ceiling.
+This change repairs verification provenance against an artifact consumers can already install. It does not add a public export, dependency, or package file. Consumer-bundle ceilings remain unchanged; source-map and consumer-install comparison formulas remain unchanged while their stale Terminal references advance only to the published `0.14.7` artifact.
