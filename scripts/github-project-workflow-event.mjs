@@ -6,6 +6,7 @@ import {
   assertMaintainerPermission,
   commentIdFromRecordURL,
   compareWorkflowField,
+  issueFieldPatch,
   parseWorkflowRequest,
   recordSupportsTarget,
   recordURLBelongsToIssue,
@@ -69,15 +70,31 @@ async function ensureProjectItem(api, owner, projectNumber, issue) {
   return 'added'
 }
 
-async function setWorkflow(api, owner, repo, issueNumber, field, state) {
-  await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}/issue-field-values`, {
-    method: 'POST',
-    body: { issue_field_values: [{ field_id: Number(field.id), value: state }] },
-  })
-  const values = asGitHubList(
+async function issueWorkflowValues(api, owner, repo, issueNumber) {
+  return asGitHubList(
     await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}/issue-field-values?per_page=100`),
   )
-  const observed = workflowValue(values, field.id)
+}
+
+async function setWorkflow(api, owner, repo, issueNumber, field, state, expectedCurrent) {
+  const before = workflowValue(
+    await issueWorkflowValues(api, owner, repo, issueNumber),
+    field.id,
+  )
+  if (before !== expectedCurrent) {
+    throw new Error(
+      `Workflow changed before mutation for #${issueNumber}: expected ${expectedCurrent ?? 'unset'}, observed ${before ?? 'unset'}`,
+    )
+  }
+
+  await api.request(`/repos/${owner}/${repo}/issues/${issueNumber}/issue-field-values`, {
+    method: 'POST',
+    body: issueFieldPatch(field.id, state),
+  })
+  const observed = workflowValue(
+    await issueWorkflowValues(api, owner, repo, issueNumber),
+    field.id,
+  )
   if (observed !== state) {
     throw new Error(`Workflow read-back mismatch for #${issueNumber}: expected ${state}, observed ${observed ?? 'unset'}`)
   }
@@ -94,14 +111,14 @@ async function initializeIssue(api, event) {
   const field = await workflowField(api, owner)
   const projectInfo = await project(api, owner)
   const itemResult = await ensureProjectItem(api, owner, projectInfo.number, issue)
-  const values = asGitHubList(
-    await api.request(`/repos/${owner}/${repo}/issues/${issue.number}/issue-field-values?per_page=100`),
+  const current = workflowValue(
+    await issueWorkflowValues(api, owner, repo, issue.number),
+    field.id,
   )
-  const current = workflowValue(values, field.id)
   if (current !== null) {
     return { result: 'preserved', issue: issue.number, workflow: current, projectItem: itemResult }
   }
-  await setWorkflow(api, owner, repo, issue.number, field, 'Candidate')
+  await setWorkflow(api, owner, repo, issue.number, field, 'Candidate', null)
   return { result: 'initialized', issue: issue.number, workflow: 'Candidate', projectItem: itemResult }
 }
 
@@ -178,10 +195,10 @@ async function applyRequest(api, event) {
   const projectInfo = await project(api, owner)
   await ensureProjectItem(api, owner, projectInfo.number, issue)
 
-  const values = asGitHubList(
-    await api.request(`/repos/${owner}/${repo}/issues/${issue.number}/issue-field-values?per_page=100`),
+  const current = workflowValue(
+    await issueWorkflowValues(api, owner, repo, issue.number),
+    field.id,
   )
-  const current = workflowValue(values, field.id)
   if (current === null) throw new Error('Workflow is unset; initialize the issue before transition')
   requireTransition(current, request.state)
 
@@ -196,7 +213,7 @@ async function applyRequest(api, event) {
   await requireRecord(api, owner, repo, issue.number, request)
   const pr = await requirePR(api, owner, repo, issue.number, request)
 
-  await setWorkflow(api, owner, repo, issue.number, field, request.state)
+  await setWorkflow(api, owner, repo, issue.number, field, request.state, current)
   const resultBody = [
     '## Workflow transition — v1',
     `- Request comment: ${comment.html_url}`,
