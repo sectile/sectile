@@ -909,6 +909,7 @@ function repairSpatialTree<ID extends StableID>(
     work.copied += 1;
     const repaired = node.items.map((item) => {
       const value = items.at(item.baseIndex)!;
+      if (value === item.value) return item;
       const rect = value.rect;
       const bounds = node.bounds;
       if (rect.x < bounds.x || rect.y < bounds.y
