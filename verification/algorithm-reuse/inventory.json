@@ -236,7 +236,7 @@
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
       "path": "packages/chart/src/projection.ts",
-      "line": 1127,
+      "line": 1140,
       "evidence": "new Map(dataBatches.map(",
       "rule": "chart-bounded-projection-work",
       "classification": "result-proportional",
