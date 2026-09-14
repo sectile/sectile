@@ -55,19 +55,14 @@ async function project(api, owner) {
 }
 
 async function ensureProjectItem(api, owner, projectNumber, issue) {
-  const items = asGitHubList(
-    await api.request(`/orgs/${owner}/projectsV2/${projectNumber}/items?per_page=100`),
-  )
-  const exists = items.some(item =>
-    item.content?.node_id === issue.node_id ||
-    (item.content?.number === issue.number && item.content?.repository_url === issue.repository_url),
-  )
-  if (exists) return 'existing'
-  await api.request(`/orgs/${owner}/projectsV2/${projectNumber}/items`, {
+  const response = await api.requestResult(`/orgs/${owner}/projectsV2/${projectNumber}/items`, {
     method: 'POST',
     body: { type: 'Issue', id: Number(issue.id) },
+    acceptedStatuses: [304],
   })
-  return 'added'
+  if (response.status === 201) return 'added'
+  if (response.status === 304) return 'existing'
+  throw new Error(`Unexpected Project item status: ${response.status}`)
 }
 
 async function issueWorkflowValues(api, owner, repo, issueNumber) {
