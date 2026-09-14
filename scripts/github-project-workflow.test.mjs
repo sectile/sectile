@@ -152,9 +152,12 @@ test('field update preservation retains unrelated field values', () => {
   assert.equal(workflowValue(existing, 20), 'Candidate')
 })
 
-test('maintainer permission is fail closed', () => {
-  assert.doesNotThrow(() => assertMaintainerPermission('admin'))
-  assert.doesNotThrow(() => assertMaintainerPermission('maintain'))
-  assert.throws(() => assertMaintainerPermission('write'), /maintain\/admin/u)
-  assert.throws(() => assertMaintainerPermission(undefined), /maintain\/admin/u)
+test('maintainer permission honors GitHub role mapping and fails closed', () => {
+  assert.doesNotThrow(() => assertMaintainerPermission({ permission: 'admin', roleName: 'admin' }))
+  assert.doesNotThrow(() => assertMaintainerPermission({ permission: 'write', roleName: 'maintain' }))
+  assert.throws(
+    () => assertMaintainerPermission({ permission: 'write', roleName: 'write' }),
+    /admin\/maintain/u,
+  )
+  assert.throws(() => assertMaintainerPermission(), /admin\/maintain/u)
 })
