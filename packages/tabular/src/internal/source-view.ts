@@ -35,7 +35,13 @@ export function retainRemovedRowIDs<View extends TabularView>(
 }
 
 export function removedRowIDsOf(view: TabularView): readonly TabularRowID[] {
-  return removedRowsByView.get(view) ?? [];
+  const base = removedRowsByView.get(view) ?? [];
+  let ids: TabularRowID[] | undefined;
+  for (const row of view.rows) {
+    if (!(row as { readonly contextOnly?: boolean }).contextOnly) break;
+    (ids ??= [...base]).push(row.id);
+  }
+  return ids ?? base;
 }
 
 export function visibleRowIndexOf(view: TabularView): VisibleRowIndex {
@@ -97,7 +103,7 @@ export function createPreparedViewResponse(
     visibleRowCount: view.visibleRowCount,
     rows: view.rows,
     columnSchema: view.columnSchema,
-    removedRowIDs: removedRowIDsOf(view),
+    removedRowIDs: removedRowsByView.get(view) ?? [],
   });
   preparedViews.set(response, { request, currentView, view });
   return response;

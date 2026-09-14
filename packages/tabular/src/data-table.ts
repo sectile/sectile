@@ -17,7 +17,6 @@ import {
   createGroupLeafSelectionTarget,
   reconcileAuthoritativeRowRemoval,
   reconcileRowSelectionBinding,
-  rowSelectionContains,
   selectAllMatchingRows,
   setIndexedVisibleRowSelectionRange,
   toggleExplicitRowSelection,
@@ -233,17 +232,12 @@ class DataTableRuntime implements DataTableController {
       ? nextRevision(this.#snapshot.state.projectionGeneration)
       : ok(this.#snapshot.state.projectionGeneration);
     if (!projectionGeneration.ok) return projectionGeneration;
-    const retainedSelection = reconcileAuthoritativeRowRemoval(
-      this.#snapshot.state.rowSelection,
-      removedRowIDsOf(view.value),
-    );
-    const rowSelection = reconcileContextOnlyRowSelection(retainedSelection, view.value.rows);
     const state = Object.freeze({
       ...this.#snapshot.state,
       columnState: columnState.value,
       accessState: accessState.value,
       columnSchemaRevision: view.value.columnSchema.revision,
-      rowSelection,
+      rowSelection: reconcileAuthoritativeRowRemoval(this.#snapshot.state.rowSelection, removedRowIDsOf(view.value)),
       requestState: Object.freeze({ kind: 'ready' as const, pendingRequest: null }),
       acceptedViewState: Object.freeze({ kind: 'current' as const, view: view.value }),
       projectionGeneration: projectionGeneration.value,
@@ -370,21 +364,6 @@ class DataTableRuntime implements DataTableController {
 
 function dataTableDisposed<T>(operation: string): TabularResult<T> {
   return fail('transition-rejection', 'controller-disposed', `Disposed DataTable controller cannot ${operation}.`);
-}
-
-function reconcileContextOnlyRowSelection(
-  selection: TabularRowSelection,
-  rows: readonly TabularRow[],
-): TabularRowSelection {
-  if (selection.kind !== 'explicit-rows' || selection.rowIDs.length === 0 || rows.length === 0) return selection;
-  let contextRowIDs: TabularRowID[] | undefined;
-  for (const row of rows) {
-    if (row.kind !== 'group' || row.contextOnly !== true) break;
-    if (!rowSelectionContains(selection, row.id)) continue;
-    contextRowIDs ??= [];
-    contextRowIDs.push(row.id);
-  }
-  return contextRowIDs === undefined ? selection : reconcileAuthoritativeRowRemoval(selection, contextRowIDs);
 }
 
 function reduceDataTableEvent(

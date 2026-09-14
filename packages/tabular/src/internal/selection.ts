@@ -184,10 +184,13 @@ export function reconcileAuthoritativeRowRemoval(
 ): TabularRowSelection {
   if (removedRowIDs.length === 0) return selection;
   const current = expressionOf(selection);
+  const explicit = current.kind === 'explicit';
+  if (!removedRowIDs.some((id) => current.contains(id) === explicit)) return selection;
   const removed = new Set(removedRowIDs);
-  const retained = current.exceptions.filter((id) => !removed.has(id));
-  if (retained.length === current.exceptionCount) return selection;
-  return wrapExpression(createSelectionExpression(current.kind, retained, current), selection);
+  return wrapExpression(
+    createSelectionExpression(current.kind, current.exceptions.filter((id) => !removed.has(id)), current),
+    selection,
+  );
 }
 
 export function createGroupLeafSelectionTarget(

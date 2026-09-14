@@ -1143,9 +1143,10 @@ function validateResponseCrossInvariants(
   let observable = false;
   let leafCount = 0;
   for (const row of rows) {
-    if (row.kind === 'group' && row.contextOnly === true) {
+    if ((row as { readonly contextOnly?: boolean }).contextOnly === true) {
       if (observable || contextCount >= start || contextCount >= request.query.groups.length
-        || row.depth !== contextCount || row.parentGroupID !== contextParent) {
+        || (row as Extract<TabularResolvedRow, { readonly kind: 'group' }>).depth !== contextCount
+        || (row as Extract<TabularResolvedRow, { readonly kind: 'group' }>).parentGroupID !== contextParent) {
         return fail('transition-rejection', 'response-envelope-mismatch', 'Invalid context-only ancestry.');
       }
       contextParent = row.id;
