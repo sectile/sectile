@@ -53,7 +53,7 @@ self-approval, or automated merge; policy adoption remains a human decision.
 
 ## Canonical files and discovery
 
-- Issue body: `.github/ISSUE_TEMPLATE/engineering-finding.md`.
+- Issue body: `.github/ISSUE_TEMPLATE/issue-report.md`.
 - PR body: `.github/pull_request_template.md`.
 - Reviews, verification, and checkpoints: `docs/engineering/records.md`.
 - Contributor entry point: `CONTRIBUTING.md`.
