@@ -172,12 +172,12 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
       const publishOpenPath = (value: readonly string[]): void => {
         const previousSet = currentOpenPathSet;
         const nextSet = new Set(value);
-        for (const id of previousSet) if (!nextSet.has(id)) invalidateItemProjection(itemProjection, id);
-        for (const id of nextSet) if (!previousSet.has(id)) invalidateItemProjection(itemProjection, id);
         const pathChanged = !sameIDs(currentOpenPath, value);
         currentOpenPath = value;
         currentOpenPathSet = nextSet;
         if (pathChanged) state.openPath = value;
+        for (const id of previousSet) if (!nextSet.has(id)) invalidateItemProjection(itemProjection, id);
+        for (const id of nextSet) if (!previousSet.has(id)) invalidateItemProjection(itemProjection, id);
       };
       const publishSnapshot = (snapshot: ReturnType<MenuConnection<string>['getSnapshot']>['state']): void => {
         publishOpen(snapshot.open);
