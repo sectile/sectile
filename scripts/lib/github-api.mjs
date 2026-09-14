@@ -4,7 +4,11 @@ export function createGitHubAPI(authToken, fetchImpl = globalThis.fetch) {
   if (!authToken) throw new Error('GitHub API token is required')
   if (typeof fetchImpl !== 'function') throw new Error('fetch implementation is required')
 
-  async function request(path, { method = 'GET', body } = {}) {
+  async function requestResult(path, {
+    method = 'GET',
+    body,
+    acceptedStatuses = [],
+  } = {}) {
     const response = await fetchImpl(`https://api.github.com${path}`, {
       method,
       headers: {
@@ -24,11 +28,15 @@ export function createGitHubAPI(authToken, fetchImpl = globalThis.fetch) {
         throw new Error(`${method} ${path} returned non-JSON content`)
       }
     }
-    if (!response.ok) {
+    if (!response.ok && !acceptedStatuses.includes(response.status)) {
       const detail = data?.message ? `: ${data.message}` : ''
       throw new Error(`${method} ${path} failed with ${response.status}${detail}`)
     }
-    return data
+    return { status: response.status, data }
+  }
+
+  async function request(path, options) {
+    return (await requestResult(path, options)).data
   }
 
   async function graphql(query, variables = {}) {
@@ -39,7 +47,7 @@ export function createGitHubAPI(authToken, fetchImpl = globalThis.fetch) {
     return data?.data
   }
 
-  return Object.freeze({ request, graphql })
+  return Object.freeze({ request, requestResult, graphql })
 }
 
 export function asGitHubList(value) {
