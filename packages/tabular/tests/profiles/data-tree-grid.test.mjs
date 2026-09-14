@@ -150,7 +150,7 @@ test('ISSUE-122: accepted context transition drops stale group selection and pre
     { kind: 'group', id: 'group:a', parentGroupID: null, depth: 0, expanded: true, contextOnly: true, cells: { name: 'A', score: 3 } },
     { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
   ];
-  assert.equal(controller.synchronizeView(response(controller, contextRows)).ok, true);
+  assert.equal(controller.synchronizeView(response(controller, contextRows, { viewRevision: 2 })).ok, true);
   assert.deepEqual(controller.getSnapshot().tabular.state.rowSelection, {
     kind: 'explicit-rows', rowIDs: ['off-window'],
   });
