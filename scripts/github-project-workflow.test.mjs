@@ -6,7 +6,7 @@ import {
   WORKFLOW_FIELD,
   assertMaintainerPermission,
   compareWorkflowField,
-  mergeIssueFieldValue,
+  issueFieldPatch,
   parseWorkflowRequest,
   recordSupportsTarget,
   recordURLBelongsToIssue,
@@ -139,17 +139,18 @@ test('records must contain the exact provenance required by the target state', (
   ].join('\n'), codeReview), true)
 })
 
-test('field update preservation retains unrelated field values', () => {
+test('issue-field POST payload changes only the requested field', () => {
+  assert.deepEqual(issueFieldPatch(20, 'Issue Review'), {
+    issue_field_values: [{ field_id: 20, value: 'Issue Review' }],
+  })
+  assert.throws(() => issueFieldPatch(0, 'Ready'), /positive integer/u)
+  assert.throws(() => issueFieldPatch(20, ''), /non-empty string/u)
+
   const existing = [
     { issue_field_id: 10, value: 'owner' },
     { issue_field_id: 20, value: 2, single_select_option: { name: 'Candidate' } },
     { issue_field_id: 30, value: '2026-09-14' },
   ]
-  assert.deepEqual(mergeIssueFieldValue(existing, 20, 'Issue Review'), [
-    { field_id: 10, value: 'owner' },
-    { field_id: 20, value: 'Issue Review' },
-    { field_id: 30, value: '2026-09-14' },
-  ])
   assert.equal(workflowValue(existing, 20), 'Candidate')
 })
 
@@ -169,6 +170,19 @@ test('GitHub API client reports HTTP failures without accepting partial data', a
     { status: 403, headers: { 'content-type': 'application/json' } },
   ))
   await assert.rejects(() => api.request('/repos/sectile/sectile'), /403: Forbidden/u)
+})
+
+test('GitHub API client can explicitly accept idempotent 304 responses', async () => {
+  const api = createGitHubAPI('test-token', async () => new Response(null, { status: 304 }))
+  const result = await api.requestResult('/orgs/sectile/projectsV2/1/items', {
+    method: 'POST',
+    acceptedStatuses: [304],
+  })
+  assert.deepEqual(result, { status: 304, data: null })
+  await assert.rejects(
+    () => api.request('/orgs/sectile/projectsV2/1/items', { method: 'POST' }),
+    /failed with 304/u,
+  )
 })
 
 test('GitHub API client rejects non-JSON success and GraphQL error payloads', async () => {
