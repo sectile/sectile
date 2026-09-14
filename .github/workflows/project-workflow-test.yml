@@ -1,0 +1,27 @@
+name: project-workflow-test
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/project-workflow-*.yml'
+      - 'docs/engineering/github-projects.md'
+      - 'scripts/github-project-workflow.mjs'
+      - 'scripts/github-project-workflow.test.mjs'
+      - 'scripts/lib/github-project-workflow.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+          package-manager-cache: false
+      - run: node --check scripts/github-project-workflow.mjs
+      - run: node --check scripts/lib/github-project-workflow.mjs
+      - run: node --test scripts/github-project-workflow.test.mjs
+      - run: git diff --check origin/${{ github.base_ref }}...HEAD
