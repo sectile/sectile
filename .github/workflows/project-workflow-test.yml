@@ -3,10 +3,12 @@ name: project-workflow-test
 on:
   pull_request:
     paths:
-      - '.github/workflows/project-workflow-*.yml'
+      - '.github/workflows/project-workflow*.yml'
       - 'docs/engineering/github-projects.md'
       - 'scripts/github-project-workflow.mjs'
+      - 'scripts/github-project-workflow-event.mjs'
       - 'scripts/github-project-workflow.test.mjs'
+      - 'scripts/lib/github-api.mjs'
       - 'scripts/lib/github-project-workflow.mjs'
 
 permissions:
@@ -22,6 +24,8 @@ jobs:
           node-version: 24.x
           package-manager-cache: false
       - run: node --check scripts/github-project-workflow.mjs
+      - run: node --check scripts/github-project-workflow-event.mjs
+      - run: node --check scripts/lib/github-api.mjs
       - run: node --check scripts/lib/github-project-workflow.mjs
       - run: node --test scripts/github-project-workflow.test.mjs
       - run: git diff --check origin/${{ github.base_ref }}...HEAD
