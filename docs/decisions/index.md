@@ -9,6 +9,7 @@ Accepted decisions are derived from Sectile ownership, invariants, and cost cont
 
 - [Core geometry consumer-bundle baseline repair](core-geometry-bundle-baseline.md) records the bundle reference already shipped by `@sectile/core@0.14.5` after finite derived-rectangle validation was added.
 - [DOM Tabular consumer-bundle baseline ratchet](dom-tabular-bundle-baseline-ratchet.md) advances the focused Tabular fixture reference to the already-published `@sectile/dom@0.17.0` artifact.
+- [DOM date-range-picker consumer-bundle baseline ratchet](dom-date-range-picker-bundle-baseline-ratchet.md) advances the focused Temporal fixture reference to the already-published `@sectile/dom@0.18.0` artifact.
 - [Tabular Virtual consumer-bundle baseline ratchet](tabular-virtual-bundle-baseline-ratchet.md) advances the focused Virtual fixture reference to the already-published `@sectile/tabular@0.15.2` package combination.
 - [Terminal publication baseline repair](terminal-source-map-baseline.md) repairs the source-map publication reference against the already-published `@sectile/terminal@0.14.7` artifact.
 - [Virtual surface framing](virtual-surface-framing.md) defines the coordinate and host-composition contract for headers, footers, sticky insets, empty content, and virtual item surfaces. Its runtime migration is pending.
