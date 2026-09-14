@@ -10,7 +10,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 |---|---:|---:|---:|
 | core | 380 | 26 | 59 |
 | chart | 80 | 0 | 15 |
-| dom | 425 | 171 | 34 |
+| dom | 425 | 171 | 35 |
 | form | 21 | 0 | 9 |
 | tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |
@@ -123,6 +123,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:menu.item-registration | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(nRegistered)` | forbidden | packages/dom/tests/menu.test.mjs |
 | dom:menu.submenu-registration | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(s)` | forbidden | packages/dom/tests/menu.test.mjs, packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/browser/popup-presence-focus-fixture.mjs |
 | dom:menu.transition-projection | connected | `O(1 + hPath)` expected | `O(1)` | `O(1)` | `O(hPath)` | forbidden | packages/dom/tests/menu.test.mjs, packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/browser/popup-presence-focus-fixture.mjs |
+| dom:modal.isolation-refresh | connected | `O(m + a)` worst-case | `O(m + a)` | `O(1)` | `O(m)` | allowed | packages/dom/tests/dialog-browser.test.mjs |
 | dom:position.connect | connected | `O(aDom)` worst-case | `O(aDom)` | `O(1)` | `O(aDom)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:position.disconnect | connected | `O(aDom)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:position.discovery | connected | `O(aDom)` worst-case | `O(aDom)` | `O(aDom)` | `O(aDom)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
