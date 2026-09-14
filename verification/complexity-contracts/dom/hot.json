@@ -830,6 +830,30 @@
       }
     },
     {
+      "id": "modal.isolation-refresh",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/internal/modal-effects.ts",
+      "benchmarkIDs": ["GH-169:modal-isolation-live-retention"],
+      "specificationCeiling": "O(m + a)",
+      "contract": {
+        "variables": [
+          { "name": "m", "meaning": "modal-owned baseline snapshots retained at refresh start", "ceiling": "currently live isolated elements plus elements detached since the previous observer delivery" },
+          { "name": "a", "meaning": "current top-modal branch ancestors and direct children visited while recomputing isolation", "ceiling": "current document/modal branch topology" }
+        ],
+        "time": { "bound": "O(m + a)", "kind": "worst-case", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(m + a)", "output": "O(1)", "retained": "O(m)" },
+        "resources": { "allocations": "O(m + a)", "cacheEntries": "O(m)", "listeners": "0", "observers": "0 new observers per refresh; one document observer while any modal is active", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["MutationObserver delivers child-list changes while at least one modal is active.", "Connected baseline owners remain in the map so repeated isolation restores the original consumer state; disconnected owners are released after one refresh."],
+        "ceilings": ["A detached snapshot survives only until the first isolation refresh after detachment.", "Last-modal release restores and clears every remaining snapshot and disconnects the document observer."],
+        "deterministicWork": ["At increasing churn cardinalities, each removed background receives exactly one detached baseline restore on the removal refresh.", "A later unrelated mutation and final modal close perform zero operations on previously removed backgrounds.", "A connected background retains its exact original inert and aria-hidden baseline across repeated refreshes."],
+        "resourceRationale": "The existing strong Map owns only live/relevant baselines between observer deliveries; disconnected keys are deleted after restoration and no second registry or observer is introduced.",
+        "proof": "applyTopModal first restores every currently retained baseline in reverse capture order and deletes disconnected keys, then recaptures only the current top-modal branch paths and their direct children. Connected keys retain their original snapshot; detached history cannot accumulate across later observer deliveries.",
+        "adversarialWitness": "Repeatedly append, isolate, and remove 16, 256, and 2048 background nodes under one long-lived Dialog, then trigger an unrelated marker mutation and final close; removed-node restore counts are N, then zero, then zero while nested modal and live-baseline tests preserve exact restoration.",
+        "evidence": ["packages/dom/tests/dialog-browser.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "A refresh must restore the modal-owned current baseline set before recomputing isolation, but disconnected historical entries are removed after that one required restoration." }
+      }
+    },
+    {
       "id": "position.connect",
       "inherits": "lifecycle-v1",
       "source": "packages/dom/src/internal/positioning/engine.ts",

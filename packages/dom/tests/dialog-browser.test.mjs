@@ -173,6 +173,79 @@ test('modal isolation covers background nodes added while open', async () => {
   dialog.disconnect();
 });
 
+test('modal isolation releases detached background history after one observer refresh', async () => {
+  for (const size of [16, 256, 2_048]) {
+    const window = new Window();
+    const document = window.document;
+    const surface = document.createElement('section');
+    document.body.append(surface);
+    const dialog = createDialog({ root: surface });
+    dialog.handleEvent('open');
+    const backgrounds = Array.from({ length: size }, () => document.createElement('aside'));
+    document.body.append(...backgrounds);
+    await window.happyDOM.waitUntilComplete();
+    assert.equal(backgrounds.every((element) => element.inert && element.getAttribute('aria-hidden') === 'true'), true);
+
+    let detachedRestores = 0;
+    for (const element of backgrounds) {
+      const removeAttribute = element.removeAttribute.bind(element);
+      element.removeAttribute = (name) => {
+        if (name === 'aria-hidden' && !element.isConnected) detachedRestores += 1;
+        removeAttribute(name);
+      };
+      element.remove();
+    }
+    await window.happyDOM.waitUntilComplete();
+    assert.equal(detachedRestores, size, `${size} removed backgrounds restore exactly once`);
+
+    detachedRestores = 0;
+    const marker = document.createElement('aside');
+    document.body.append(marker);
+    await window.happyDOM.waitUntilComplete();
+    assert.equal(detachedRestores, 0, `${size} removed backgrounds are absent from later isolation work`);
+    assert.equal(marker.inert, true);
+
+    dialog.handleEvent('close');
+    assert.equal(detachedRestores, 0, `${size} removed backgrounds are absent from final cleanup`);
+    assert.equal(marker.inert, false);
+    assert.equal(marker.hasAttribute('aria-hidden'), false);
+
+    const afterRelease = document.createElement('aside');
+    document.body.append(afterRelease);
+    await window.happyDOM.waitUntilComplete();
+    assert.equal(afterRelease.inert, false);
+    assert.equal(afterRelease.hasAttribute('aria-hidden'), false);
+    dialog.disconnect();
+  }
+});
+
+test('modal isolation keeps the original live baseline across repeated refreshes', async () => {
+  const window = new Window();
+  const document = window.document;
+  const background = document.createElement('main');
+  background.inert = true;
+  background.setAttribute('aria-hidden', 'false');
+  const surface = document.createElement('section');
+  document.body.append(background, surface);
+  const dialog = createDialog({ root: surface });
+  dialog.handleEvent('open');
+
+  for (let cycle = 0; cycle < 3; cycle += 1) {
+    const marker = document.createElement('aside');
+    document.body.append(marker);
+    await window.happyDOM.waitUntilComplete();
+    assert.equal(background.inert, true);
+    assert.equal(background.getAttribute('aria-hidden'), 'true');
+    marker.remove();
+    await window.happyDOM.waitUntilComplete();
+  }
+
+  dialog.handleEvent('close');
+  assert.equal(background.inert, true);
+  assert.equal(background.getAttribute('aria-hidden'), 'false');
+  dialog.disconnect();
+});
+
 test('dialog visibility ownership restores exact baseline and preserves consumer changes', () => {
   const window = new Window();
   const document = window.document;

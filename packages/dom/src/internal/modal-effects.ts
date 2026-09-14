@@ -3,7 +3,6 @@ export interface ModalEffects {
 }
 
 interface HiddenSnapshot {
-  readonly element: HTMLElement;
   readonly inert: boolean;
   readonly ariaHidden: string | null;
 }
@@ -48,6 +47,7 @@ export function acquireModalEffects(surface: HTMLElement, additionalBranches: re
         return;
       }
       restoreIsolation(state);
+      state.hidden.clear();
       if (document.body !== null) {
         document.body.style.overflow = state.scroll.overflow;
         document.body.style.paddingRight = state.scroll.paddingRight;
@@ -69,7 +69,7 @@ function createState(document: Document): ModalState {
 }
 
 function applyTopModal(state: ModalState): void {
-  restoreIsolation(state);
+  restoreIsolation(state, true);
   const branches = state.entries.at(-1)?.branches.filter((branch) => branch.isConnected) ?? [];
   if (branches.length === 0) return;
   const preserveAriaHidden = new Set(branches.slice(1));
@@ -114,17 +114,17 @@ function restoreAriaHidden(state: ModalState, element: HTMLElement): void {
 function capture(state: ModalState, element: HTMLElement): void {
   if (state.hidden.has(element)) return;
   state.hidden.set(element, {
-    element,
     inert: element.inert,
     ariaHidden: element.getAttribute('aria-hidden'),
   });
 }
 
-function restoreIsolation(state: ModalState): void {
-  for (const snapshot of [...state.hidden.values()].reverse()) {
-    snapshot.element.inert = snapshot.inert;
-    if (snapshot.ariaHidden === null) snapshot.element.removeAttribute('aria-hidden');
-    else snapshot.element.setAttribute('aria-hidden', snapshot.ariaHidden);
+function restoreIsolation(state: ModalState, releaseDisconnected = false): void {
+  for (const [element, snapshot] of [...state.hidden.entries()].reverse()) {
+    element.inert = snapshot.inert;
+    if (snapshot.ariaHidden === null) element.removeAttribute('aria-hidden');
+    else element.setAttribute('aria-hidden', snapshot.ariaHidden);
+    if (releaseDisconnected && !element.isConnected) state.hidden.delete(element);
   }
 }
 
