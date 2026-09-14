@@ -126,3 +126,13 @@ Preserve meaningful fixtures, failure propagation and package boundaries. Prove
 effective compiler settings and resulting artifacts rather than requiring an
 option to be copied into a particular file. File counts are reporting evidence,
 not fixed architecture quotas.
+
+### Engineering work records
+
+When reporting findings, claiming work, preparing a PR, reviewing, verifying, or
+handing off pilot work, read `docs/engineering/workflow.md` and the matching
+repository template. Read policy from the approved default-branch revision and
+record that revision separately from the code snapshot under inspection. Keep
+incomplete checkpoints and failed checks explicit. Preserve durable evidence
+before changing workflow state. Existing implementation and validation rules
+continue to determine the required technical evidence.
