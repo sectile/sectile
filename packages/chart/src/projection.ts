@@ -1119,13 +1119,16 @@ function projectionDelta<ID extends StableID>(
 }
 
 function representativeIDs<ID extends StableID>(batches: readonly ChartProjectionBatch[]): ID[] {
-  const ids = new Set<ID>();
-  for (const batch of batches) {
-    for (const representative of batch.representatives ?? []) {
-      if (representative.kind === 'datum') ids.add(representative.id as ID);
+  const ids: ID[] = [];
+  for (let batchIndex = 0; batchIndex < batches.length; batchIndex += 1) {
+    const representatives = batches[batchIndex]?.representatives;
+    if (representatives === undefined) continue;
+    for (let index = 0; index < representatives.length; index += 1) {
+      const representative = representatives[index];
+      if (representative?.kind === 'datum') ids.push(representative.id as ID);
     }
   }
-  return [...ids];
+  return ids;
 }
 
 function representativeLayers<ID extends StableID>(
