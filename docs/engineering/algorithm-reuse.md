@@ -63,13 +63,13 @@ Findings: 449; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:211` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/disclosure.ts:115` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/feed.ts:68` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/grid.ts:180` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/grid.ts:177` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/date-picker.ts:440` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/native-field.ts:125` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:307` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:300` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:317` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:283` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:313` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:278` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/multi-thumb-slider.ts:153` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/pagination.ts:137` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/quantity-field.ts:92` | controller-rebuild |
