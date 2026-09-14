@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { createGitHubAPI } from './lib/github-api.mjs'
+import { createGitHubCLI } from './lib/github-cli.mjs'
 import {
+  PINNED_PROJECT,
+  parseProjectItems,
+  readWorkflowValues,
+  reconciliationPlan,
+  validatePinnedResources,
+} from './github-project-workflow.mjs'
+import {
+  MAINTAINER_ENROLLED_ISSUES,
   WORKFLOW_FIELD,
   assertMaintainerPermission,
   compareWorkflowField,
@@ -164,37 +172,133 @@ test('maintainer permission honors GitHub role mapping and fails closed', () => 
   assert.throws(() => assertMaintainerPermission(), /admin\/maintain/u)
 })
 
-test('GitHub API client reports HTTP failures without accepting partial data', async () => {
-  const api = createGitHubAPI('test-token', async () => new Response(
-    JSON.stringify({ message: 'Forbidden' }),
-    { status: 403, headers: { 'content-type': 'application/json' } },
-  ))
-  await assert.rejects(() => api.request('/repos/sectile/sectile'), /403: Forbidden/u)
+test('GitHub CLI transport fails closed on malformed process and JSON results', async () => {
+  const malformedProcess = createGitHubCLI(async () => ({ stdout: '{}'}))
+  await assert.rejects(() => malformedProcess.json(['project', 'view', '1']), /invalid process result/u)
+
+  const malformedJSON = createGitHubCLI(async () => ({ stdout: 'not-json', stderr: '' }))
+  await assert.rejects(() => malformedJSON.json(['project', 'view', '1']), /invalid JSON/u)
 })
 
-test('GitHub API client can explicitly accept idempotent 304 responses', async () => {
-  const api = createGitHubAPI('test-token', async () => new Response(null, { status: 304 }))
-  const result = await api.requestResult('/orgs/sectile/projectsV2/1/items', {
-    method: 'POST',
-    acceptedStatuses: [304],
-  })
-  assert.deepEqual(result, { status: 304, data: null })
-  await assert.rejects(
-    () => api.request('/orgs/sectile/projectsV2/1/items', { method: 'POST' }),
-    /failed with 304/u,
+test('pinned Project validation rejects title or field identity drift', () => {
+  const project = {
+    number: PINNED_PROJECT.number,
+    id: PINNED_PROJECT.id,
+    title: PINNED_PROJECT.title,
+    public: true,
+    closed: false,
+    owner: { login: 'sectile', type: 'Organization' },
+  }
+  const repository = {
+    projectsV2: {
+      Nodes: [{
+        id: PINNED_PROJECT.id,
+        number: PINNED_PROJECT.number,
+        title: PINNED_PROJECT.title,
+        closed: false,
+      }],
+    },
+  }
+  const fields = {
+    fields: [{
+      id: PINNED_PROJECT.workflowField.id,
+      name: PINNED_PROJECT.workflowField.name,
+      type: PINNED_PROJECT.workflowField.type,
+    }],
+  }
+
+  assert.doesNotThrow(() => validatePinnedResources({ project, repository, fields }))
+  assert.throws(
+    () => validatePinnedResources({ project: { ...project, title: 'Other' }, repository, fields }),
+    /Pinned Project identity/u,
+  )
+  assert.throws(
+    () => validatePinnedResources({
+      project,
+      repository,
+      fields: { fields: [{ ...fields.fields[0], id: 'PVTSSF_other' }] },
+    }),
+    /Pinned Workflow Project field identity/u,
   )
 })
 
-test('GitHub API client rejects non-JSON success and GraphQL error payloads', async () => {
-  const invalidJSON = createGitHubAPI('test-token', async () => new Response('not-json', { status: 200 }))
-  await assert.rejects(() => invalidJSON.request('/graphql'), /non-JSON/u)
+test('Project membership and Workflow state produce preservation-first reconciliation', () => {
+  const members = parseProjectItems({
+    totalCount: 2,
+    items: [
+      {
+        id: 'PVTI_one',
+        content: {
+          type: 'Issue', repository: 'sectile/sectile', number: 119,
+          url: 'https://github.com/sectile/sectile/issues/119',
+        },
+      },
+      {
+        id: 'PVTI_two',
+        content: {
+          type: 'Issue', repository: 'sectile/sectile', number: 121,
+          url: 'https://github.com/sectile/sectile/issues/121',
+        },
+      },
+    ],
+  })
+  const issues = new Map(MAINTAINER_ENROLLED_ISSUES.map(number => [number, {
+    number,
+    present: members.has(number),
+    workflow: null,
+  }]))
+  issues.set(119, { number: 119, present: true, workflow: 'Issue Review' })
+  issues.set(124, { number: 124, present: false, workflow: 'Ready' })
+  const plan = reconciliationPlan({ issues })
 
-  const graphqlError = createGitHubAPI('test-token', async () => new Response(
-    JSON.stringify({ errors: [{ message: 'permission denied' }] }),
-    { status: 200, headers: { 'content-type': 'application/json' } },
-  ))
-  await assert.rejects(
-    () => graphqlError.graphql('query { viewer { login } }'),
-    /GraphQL failed: permission denied/u,
+  assert.deepEqual(plan.find(entry => entry.issue === 119), {
+    issue: 119,
+    action: 'preserve',
+    value: 'Issue Review',
+  })
+  assert.deepEqual(plan.find(entry => entry.issue === 121), {
+    issue: 121,
+    action: 'initialize-workflow',
+    value: 'Candidate',
+  })
+  assert.deepEqual(plan.find(entry => entry.issue === 124), {
+    issue: 124,
+    action: 'add-project-item',
+    workflow: 'preserve-existing',
+    value: 'Ready',
+  })
+})
+
+test('Workflow search reads issue-level values independently of Project membership', async () => {
+  const cli = {
+    json: async args => {
+      const search = args[args.indexOf('--search') + 1]
+      if (search === 'field.workflow:Candidate') return [{ number: 119 }]
+      if (search === 'field.workflow:"Issue Review"') return [{ number: 121 }]
+      if (search === 'no:field.workflow') return [{ number: 124 }]
+      return []
+    },
+  }
+  const values = await readWorkflowValues(cli)
+  assert.equal(values.get(119), 'Candidate')
+  assert.equal(values.get(121), 'Issue Review')
+  assert.equal(values.get(124), null)
+})
+
+test('Project membership parser rejects incomplete and duplicate issue lists', () => {
+  assert.throws(
+    () => parseProjectItems({ totalCount: 2, items: [] }),
+    /Project item list is incomplete/u,
+  )
+  const item = {
+    id: 'PVTI_one',
+    content: {
+      type: 'Issue', repository: 'sectile/sectile', number: 119,
+      url: 'https://github.com/sectile/sectile/issues/119',
+    },
+  }
+  assert.throws(
+    () => parseProjectItems({ totalCount: 2, items: [item, { ...item, id: 'PVTI_two' }] }),
+    /duplicate item/u,
   )
 })
