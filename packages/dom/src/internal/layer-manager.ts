@@ -49,10 +49,8 @@ class ManagedDOMLayers implements DOMLayerManager {
 
   public register(registration: DOMLayerRegistration): boolean {
     if (this.#state.layers.some((layer) => layer.id === registration.id)) return true;
-    const top = getTopLayer(this.#state);
-    const topSurface = top === null ? undefined : this.#surfaces.get(top.id);
     const parentID = registration.layer.parentID === undefined
-      ? top !== null && topSurface?.contains?.(registration.owner) === true ? top.id : null
+      ? this.#implicitParentID(registration.owner)
       : registration.layer.parentID;
     const result = applyLayerStackEvent(this.#state, {
       type: 'open-layer',
@@ -85,6 +83,14 @@ class ManagedDOMLayers implements DOMLayerManager {
 
   public isTop(id: string): boolean {
     return getTopLayer(this.#state)?.id === id;
+  }
+
+  #implicitParentID(owner: HTMLElement): string | null {
+    for (let index = this.#state.layers.length - 1; index >= 0; index -= 1) {
+      const layer = this.#state.layers[index]!;
+      if (this.#surfaces.get(layer.id)?.contains?.(owner) === true) return layer.id;
+    }
+    return null;
   }
 
   #executeClosures(ids: readonly string[], initiatingID?: string): void {

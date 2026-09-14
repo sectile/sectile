@@ -97,6 +97,78 @@ test('DOM layer manager closes nested descendants but preserves independent laye
   assert.equal(independent.getSnapshot().state.open, true);
 });
 
+test('Dialog owner closure closes concurrent sibling and nested Popovers while preserving an independent layer', () => {
+  const ownerDocument = {};
+  const dialogRoot = new Fake(ownerDocument);
+  const dialogTrigger = new Fake(ownerDocument);
+  const firstRoot = new Fake(ownerDocument);
+  const firstTrigger = new Fake(ownerDocument);
+  const secondRoot = new Fake(ownerDocument);
+  const secondTrigger = new Fake(ownerDocument);
+  const nestedRoot = new Fake(ownerDocument);
+  const nestedTrigger = new Fake(ownerDocument);
+  const independentRoot = new Fake(ownerDocument);
+  const independentTrigger = new Fake(ownerDocument);
+  dialogRoot.children.add(firstTrigger);
+  dialogRoot.children.add(secondTrigger);
+  secondRoot.children.add(nestedTrigger);
+
+  const dialog = createDialog({ root: dialogRoot, trigger: dialogTrigger });
+  const first = createPopover({ root: firstRoot, trigger: firstTrigger });
+  const second = createPopover({ root: secondRoot, trigger: secondTrigger });
+  const nested = createPopover({ root: nestedRoot, trigger: nestedTrigger });
+  const independent = createDialog({ root: independentRoot, trigger: independentTrigger });
+
+  dialog.handleEvent('open');
+  first.handleEvent('open');
+  second.handleEvent('open');
+  nested.handleEvent('open');
+  independent.handleEvent('open');
+  assert.equal(firstTrigger.attributes.get('aria-expanded'), 'true');
+  assert.equal(secondTrigger.attributes.get('aria-expanded'), 'true');
+  assert.equal(nestedTrigger.attributes.get('aria-expanded'), 'true');
+
+  dialog.handleEvent('close');
+  for (const [connection, root, trigger] of [
+    [first, firstRoot, firstTrigger], [second, secondRoot, secondTrigger], [nested, nestedRoot, nestedTrigger],
+  ]) {
+    assert.equal(connection.getSnapshot().state.open, false);
+    assert.equal(root.hidden, true);
+    assert.equal(trigger.attributes.get('aria-expanded'), 'false');
+  }
+  assert.equal(dialog.getSnapshot().state.open, false);
+  assert.equal(independent.getSnapshot().state.open, true);
+});
+
+test('DOM layer manager infers the highest containing owner across sibling branches', () => {
+  const ownerDocument = {};
+  const manager = getDOMLayerManager(new Fake(ownerDocument));
+  const rootSurface = new Fake(ownerDocument);
+  const firstSurface = new Fake(ownerDocument);
+  const secondSurface = new Fake(ownerDocument);
+  const nestedSurface = new Fake(ownerDocument);
+  const independentSurface = new Fake(ownerDocument);
+  const firstOwner = new Fake(ownerDocument);
+  const secondOwner = new Fake(ownerDocument);
+  const nestedOwner = new Fake(ownerDocument);
+  rootSurface.children.add(firstOwner);
+  rootSurface.children.add(secondOwner);
+  secondSurface.children.add(nestedOwner);
+  const closed = [];
+
+  assert.equal(manager.register({ id: 'root', layer: { id: 'root' }, surface: rootSurface, owner: rootSurface, close: () => closed.push('root') }), true);
+  assert.equal(manager.register({ id: 'first', layer: { id: 'first' }, surface: firstSurface, owner: firstOwner, close: () => closed.push('first') }), true);
+  assert.equal(manager.register({ id: 'second', layer: { id: 'second' }, surface: secondSurface, owner: secondOwner, close: () => closed.push('second') }), true);
+  assert.equal(manager.register({ id: 'nested', layer: { id: 'nested' }, surface: nestedSurface, owner: nestedOwner, close: () => closed.push('nested') }), true);
+  assert.equal(manager.register({ id: 'independent', layer: { id: 'independent' }, surface: independentSurface, owner: independentSurface, close: () => closed.push('independent') }), true);
+
+  assert.equal(manager.close('root'), true);
+  assert.deepEqual(closed, ['nested', 'second', 'first']);
+  assert.equal(manager.isTop('independent'), true);
+  assert.equal(manager.close('independent'), true);
+  assert.deepEqual(closed, ['nested', 'second', 'first']);
+});
+
 test('DOM layer manager closes a nested select with its owning dialog', () => {
   const ownerDocument = {};
   const outerRoot = new Fake(ownerDocument);
