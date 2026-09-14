@@ -159,6 +159,31 @@ test('ISSUE-122: accepted context transition drops stale group selection and pre
   });
 });
 
+test('ISSUE-122: accepted context leaves unrelated explicit and all-matching selection identities intact', () => {
+  const contextRows = [
+    { kind: 'group', id: 'group:a', parentGroupID: null, depth: 0, expanded: true, contextOnly: true, cells: { name: 'A', score: 3 } },
+    { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
+  ];
+  const query = {
+    sort: [], filters: [],
+    groups: [{ id: 'by-name', columnID: 'name', policy: 'group' }],
+    aggregates: [], pivots: [],
+  };
+  const accessState = {
+    kind: 'window',
+    window: { revision: 0, requestGeneration: 0, start: 1, size: 1, total: null, pending: null },
+  };
+  for (const rowSelection of [
+    { kind: 'explicit-rows', rowIDs: ['off-window'] },
+    { kind: 'all-matching', sourceGeneration: 0, queryRevision: 0, excludedRowIDs: ['excluded'] },
+  ]) {
+    const controller = createDataTreeGrid({ columns, initialValues: { query, accessState, rowSelection } });
+    const before = controller.getSnapshot().tabular.state.rowSelection;
+    assert.equal(controller.synchronizeView(response(controller, contextRows)).ok, true);
+    assert.equal(controller.getSnapshot().tabular.state.rowSelection, before);
+  }
+});
+
 test('TAB-TGR-03: row expansion is source intent and malformed ancestry rejects atomically', () => {
   const controller = createDataTreeGrid({ columns });
   assert.equal(controller.synchronizeView(response(controller, rows)).ok, true);

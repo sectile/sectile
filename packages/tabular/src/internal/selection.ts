@@ -190,24 +190,6 @@ export function reconcileAuthoritativeRowRemoval(
   return wrapExpression(createSelectionExpression(current.kind, retained, current), selection);
 }
 
-export function reconcileContextOnlyRowSelection(
-  selection: TabularRowSelection,
-  rows: readonly TabularRow[],
-): TabularRowSelection {
-  if (selection.kind !== 'explicit-rows' || selection.rowIDs.length === 0 || rows.length === 0) return selection;
-  const current = expressionOf(selection);
-  let selectedContextIDs: Set<TabularRowID> | undefined;
-  for (const row of rows) {
-    if (row.kind !== 'group' || row.contextOnly !== true) break;
-    if (!current.contains(row.id)) continue;
-    selectedContextIDs ??= new Set<TabularRowID>();
-    selectedContextIDs.add(row.id);
-  }
-  if (selectedContextIDs === undefined) return selection;
-  const retained = current.exceptions.filter((id) => !selectedContextIDs.has(id));
-  return wrapExpression(createSelectionExpression('explicit', retained, current), selection);
-}
-
 export function createGroupLeafSelectionTarget(
   selection: TabularRowSelection,
   groupID: TabularGroupID,

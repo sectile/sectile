@@ -5,7 +5,6 @@ import {
   createExplicitRowSelection,
   createGroupLeafSelectionTarget,
   reconcileAuthoritativeRowRemoval,
-  reconcileContextOnlyRowSelection,
   reconcileRowSelectionBinding,
   selectAllMatchingRows,
   setIndexedVisibleRowSelectionRange,
@@ -52,22 +51,6 @@ test('TAB-SEL-04: authoritative deletion reconciles selected IDs and exclusions 
     kind: 'all-matching', sourceGeneration: 1, queryRevision: 2, excludedRowIDs: [],
   });
   assert.equal(reconcileAuthoritativeRowRemoval(explicit.value, ['not-present']), explicit.value);
-});
-
-test('ISSUE-122: context-only reconciliation removes only present explicit context IDs', () => {
-  const contextRows = [
-    { kind: 'group', id: 'group:a', parentGroupID: null, depth: 0, expanded: true, contextOnly: true, cells: {} },
-    { kind: 'leaf', id: 'visible', cells: {} },
-  ];
-  const explicit = createExplicitRowSelection(['off-window', 'group:a', 'visible'], limits);
-  const untouched = createExplicitRowSelection(['off-window', 'visible'], limits);
-  const all = selectAllMatchingRows(4, 7, limits);
-  assert.equal(explicit.ok && untouched.ok && all.ok, true);
-  assert.deepEqual(reconcileContextOnlyRowSelection(explicit.value, contextRows), {
-    kind: 'explicit-rows', rowIDs: ['off-window', 'visible'],
-  });
-  assert.equal(reconcileContextOnlyRowSelection(untouched.value, contextRows), untouched.value);
-  assert.equal(reconcileContextOnlyRowSelection(all.value, contextRows), all.value);
 });
 
 test('TAB-SEL-05: group bulk intent carries leaf binding and never stores a synthetic group ID', () => {

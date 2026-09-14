@@ -16,8 +16,8 @@ import {
   canonicalizeRowSelection,
   createGroupLeafSelectionTarget,
   reconcileAuthoritativeRowRemoval,
-  reconcileContextOnlyRowSelection,
   reconcileRowSelectionBinding,
+  rowSelectionContains,
   selectAllMatchingRows,
   setIndexedVisibleRowSelectionRange,
   toggleExplicitRowSelection,
@@ -237,12 +237,14 @@ class DataTableRuntime implements DataTableController {
       this.#snapshot.state.rowSelection,
       removedRowIDsOf(view.value),
     );
+    const rowSelection = reconcileContextOnlyRowSelection(retainedSelection, view.value.rows, this.#model);
+    if (!rowSelection.ok) return rowSelection;
     const state = Object.freeze({
       ...this.#snapshot.state,
       columnState: columnState.value,
       accessState: accessState.value,
       columnSchemaRevision: view.value.columnSchema.revision,
-      rowSelection: reconcileContextOnlyRowSelection(retainedSelection, view.value.rows),
+      rowSelection: rowSelection.value,
       requestState: Object.freeze({ kind: 'ready' as const, pendingRequest: null }),
       acceptedViewState: Object.freeze({ kind: 'current' as const, view: view.value }),
       projectionGeneration: projectionGeneration.value,
@@ -369,6 +371,26 @@ class DataTableRuntime implements DataTableController {
 
 function dataTableDisposed<T>(operation: string): TabularResult<T> {
   return fail('transition-rejection', 'controller-disposed', `Disposed DataTable controller cannot ${operation}.`);
+}
+
+function reconcileContextOnlyRowSelection(
+  selection: TabularRowSelection,
+  rows: readonly TabularRow[],
+  model: TabularModel,
+): TabularResult<TabularRowSelection> {
+  if (selection.kind !== 'explicit-rows' || selection.rowIDs.length === 0 || rows.length === 0) return ok(selection);
+  let selectedContextIDs: Set<TabularRowID> | undefined;
+  for (const row of rows) {
+    if (row.kind !== 'group' || row.contextOnly !== true) break;
+    if (!rowSelectionContains(selection, row.id)) continue;
+    selectedContextIDs ??= new Set<TabularRowID>();
+    selectedContextIDs.add(row.id);
+  }
+  if (selectedContextIDs === undefined) return ok(selection);
+  return canonicalizeRowSelection(Object.freeze({
+    kind: 'explicit-rows' as const,
+    rowIDs: Object.freeze(selection.rowIDs.filter((id) => !selectedContextIDs.has(id))),
+  }), model.limits);
 }
 
 function reduceDataTableEvent(
