@@ -220,7 +220,7 @@ export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialL
     const current = state.domain.contains(measurement.id)
       ? spatialItemByID(data.value, measurement.id)
       : undefined;
-    if (current === undefined || replacements.has(measurement.id) || !validRect(measurement.rect)) return fail('transition-rejection', 'virtual-layout-measurement-invalid', 'Spatial measurement geometry or ID is invalid.', { measurement });
+    if (current === undefined || replacements.has(measurement.id) || !validRect(measurement.rect)) return fail('transition-rejection', 'virtual-layout-measurement-invalid', 'Invalid spatial measurement.', { measurement });
     const rect = createRect(measurement.rect);
     if (!sameRect(current.rect, rect)) replacements.set(measurement.id, Object.freeze({ ...current, rect }));
   }
@@ -520,20 +520,10 @@ function applySpatialBaseChanges<ID extends StableID>(
   changes: readonly (readonly [number, SpatialItem<ID>])[],
   generation: number,
 ): SpatialLayoutState<ID> {
-  const touchedLeafSet = new Set<number>();
-  let touchedPartitions = 0;
-  let previousPartition = -1;
-  for (let changeIndex = 0; changeIndex < changes.length; changeIndex += 1) {
-    const index = changes[changeIndex]![0];
-    touchedLeafSet.add(data.leafByBase[index]!);
-    const partition = Math.floor(index / LEAF_SIZE);
-    if (partition !== previousPartition) {
-      previousPartition = partition;
-      touchedPartitions += 1;
-    }
-  }
-  const touchedLeaves = [...touchedLeafSet].sort((left, right) => left - right);
-  touchedPartitions += touchedLeaves.length;
+  const touchedLeaves = [...new Set(changes.map(([index]) => data.leafByBase[index]!))]
+    .sort((left, right) => left - right);
+  const touchedPartitions = new Set(changes.map(([index]) => Math.floor(index / LEAF_SIZE))).size
+    + touchedLeaves.length;
   const repairBound = blockedRepairBound(changes.length, data.base.size, touchedPartitions);
   if (useBlockedRepair(changes.length, data.base.size, touchedPartitions)) {
     const vector = data.base.updateDetailed(changes);
