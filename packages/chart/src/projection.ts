@@ -853,7 +853,7 @@ function dataGeometryCacheEntry(
   return Object.freeze({
     geometry,
     selectionToken: Object.freeze({}),
-    identityIndices: batch.identityIndices.slice(),
+    identityIndices: batch.identityIndices,
     ...(aggregateBounds === undefined ? {} : { aggregateBounds }),
   });
 }
