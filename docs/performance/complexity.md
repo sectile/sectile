@@ -16,7 +16,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | temporal | 104 | 12 | 4 |
 | terminal | 347 | 167 | 9 |
 | virtual | 114 | 0 | 36 |
-| vue | 740 | 319 | 9 |
+| vue | 740 | 319 | 10 |
 
 ## Variables
 
@@ -211,8 +211,9 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | vue:chart.declaration-reconcile | mounted | `O(aAxis + lLayer + nDatum)` worst-case | `O(aAxis + lLayer + nDatum)` | `O(1)` | `O(aAxis + lLayer + nDatum)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:chart.selector-bridge | mounted | `O(sState + sLayer*lLayer + sAxis*aAxis)` worst-case | `O(1)` | `O(1)` | `O(sState + sLayer + sAxis)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:collection.external-reconcile | external | `O(nOption + sSelected + dDisabled)` expected | `O(nOption + sSelected + dDisabled)` | `O(sSelected)` | `O(sSelected)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| vue:collection.item-slot-invalidation | mounted | `O(j + h + s)` expected | `O(h + s)` | `O(j)` | `O(r)` | forbidden | packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/listbox.test.mjs |
 | vue:form.selector-bridge | mounted | `O(sForm + sField)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
-| vue:grid.cell-projection | mounted | `O(r + j)` expected | `O(r)` | `O(r)` | `O(r)` | allowed | packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/structural-controls.test.mjs |
+| vue:grid.cell-projection | mounted | `O(j)` expected | `O(r)` | `O(r)` | `O(r)` | allowed | packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/structural-controls.test.mjs |
 | vue:virtual.grid-reconfigure | mounted | `O(nItem)` worst-case | `O(rRepair + cLane)` | `O(rRepair + cLane)` | `O(nItem)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:virtual.item-projection | mounted | `O(kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(nMounted)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:virtual.masonry-reconfigure | mounted | `O(nItem log lLane + jChanged log nItem)` worst-case | `O(nItem + jChanged log nItem)` | `O(nItem)` | `O(nItem)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |

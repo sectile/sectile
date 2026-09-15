@@ -8,7 +8,6 @@ import type {
   TerminalColorLevel,
 } from './appearance.js';
 import { createTerminalAppearance } from './appearance.js';
-import { isTerminalTextInput } from './internal/grapheme.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import type { TerminalFrame, TerminalFrameCursor } from './screen.js';
 import { serializeTerminalFrame } from './screen.js';
@@ -24,6 +23,7 @@ export interface TTYKeyboard {
   close(): void;
 }
 
+const terminalControl = new RegExp('\\p{Control}', 'v');
 const ownedTTYInputs = new WeakSet<ReadStream>();
 
 export type TTYKeyboardInputHandler = (input: TerminalKeyboardInput) => void;
@@ -312,5 +312,5 @@ function printableKey(value: string | undefined): string | null {
 
 function printableText(value: string | undefined, keypress: NodeKeypress): string | null {
   if (value === undefined || keypress.ctrl === true || keypress.meta === true) return null;
-  return isTerminalTextInput(value) ? value : null;
+  return value.length > 0 && !terminalControl.test(value) ? value : null;
 }

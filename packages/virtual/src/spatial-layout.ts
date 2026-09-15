@@ -220,7 +220,7 @@ export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialL
     const current = state.domain.contains(measurement.id)
       ? spatialItemByID(data.value, measurement.id)
       : undefined;
-    if (current === undefined || replacements.has(measurement.id) || !validRect(measurement.rect)) return fail('transition-rejection', 'virtual-layout-measurement-invalid', 'Spatial measurement geometry or ID is invalid.', { measurement });
+    if (current === undefined || replacements.has(measurement.id) || !validRect(measurement.rect)) return fail('transition-rejection', 'virtual-layout-measurement-invalid', 'Invalid spatial measurement.', { measurement });
     const rect = createRect(measurement.rect);
     if (!sameRect(current.rect, rect)) replacements.set(measurement.id, Object.freeze({ ...current, rect }));
   }
@@ -501,7 +501,7 @@ function applySpatialValueChanges<ID extends StableID>(
     for (const [id, item] of changes) {
       const baseIndex = data.baseIDs.indexOf(id);
       if (baseIndex === null) break;
-      baseChanges.push(Object.freeze([baseIndex, item] as const));
+      baseChanges.push([baseIndex, item]);
     }
   }
   return baseChanges.length === changes.size
@@ -909,6 +909,7 @@ function repairSpatialTree<ID extends StableID>(
     work.copied += 1;
     const repaired = node.items.map((item) => {
       const value = items.at(item.baseIndex)!;
+      if (value === item.value) return item;
       const rect = value.rect;
       const bounds = node.bounds;
       if (rect.x < bounds.x || rect.y < bounds.y

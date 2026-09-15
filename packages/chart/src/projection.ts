@@ -853,7 +853,7 @@ function dataGeometryCacheEntry(
   return Object.freeze({
     geometry,
     selectionToken: Object.freeze({}),
-    identityIndices: batch.identityIndices.slice(),
+    identityIndices: batch.identityIndices,
     ...(aggregateBounds === undefined ? {} : { aggregateBounds }),
   });
 }
@@ -1102,8 +1102,8 @@ function projectionDelta<ID extends StableID>(
   revisions: readonly ChartProjectionLayerRevision<ID>[],
   previous: ChartProjection<ID> | undefined,
 ): ChartProjectionDelta<ID> {
+  if (previous === undefined) return Object.freeze({ enter: Object.freeze(representativeIDs<ID>(batches)), update: Object.freeze([]), exit: Object.freeze([]) });
   const current = representativeLayers<ID>(batches, dataBatches, revisions);
-  if (previous === undefined) return Object.freeze({ enter: Object.freeze([...current.keys()]), update: Object.freeze([]), exit: Object.freeze([]) });
   const before = representativeLayers(previous.batches, previous.dataBatches ?? [], previous.layerRevisions ?? []);
   const enter: ID[] = [];
   const update: ID[] = [];
@@ -1116,6 +1116,19 @@ function projectionDelta<ID extends StableID>(
   }
   for (const id of before.keys()) if (!current.has(id)) exit.push(id);
   return Object.freeze({ enter: Object.freeze(enter), update: Object.freeze(update), exit: Object.freeze(exit) });
+}
+
+function representativeIDs<ID extends StableID>(batches: readonly ChartProjectionBatch[]): ID[] {
+  const ids: ID[] = [];
+  for (let batchIndex = 0; batchIndex < batches.length; batchIndex += 1) {
+    const representatives = batches[batchIndex]?.representatives;
+    if (representatives === undefined) continue;
+    for (let index = 0; index < representatives.length; index += 1) {
+      const representative = representatives[index];
+      if (representative?.kind === 'datum') ids.push(representative.id as ID);
+    }
+  }
+  return ids;
 }
 
 function representativeLayers<ID extends StableID>(

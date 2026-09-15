@@ -2,7 +2,7 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all 9 package source trees.
 
-Findings: 445; migration owners: WI-020, WI-027, WI-040.
+Findings: 449; migration owners: WI-020, WI-027, WI-040.
 
 ## Classifications
 
@@ -10,16 +10,16 @@ Findings: 445; migration owners: WI-020, WI-027, WI-040.
 |---|---:|
 | bounded-small | 14 |
 | migration-required | 60 |
-| result-proportional | 175 |
-| reuse | 196 |
+| result-proportional | 177 |
+| reuse | 198 |
 
 ## Categories
 
 | Category | Count |
 |---|---:|
 | controller-connection-rebuild | 36 |
-| discarded-canonical-index | 62 |
-| measurement-authority | 30 |
+| discarded-canonical-index | 64 |
+| measurement-authority | 32 |
 | private-algorithm-bypass | 2 |
 | raw-full-domain-scan | 267 |
 | repeated-immutable-view | 13 |
@@ -63,13 +63,13 @@ Findings: 445; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:211` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/disclosure.ts:115` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/feed.ts:68` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/grid.ts:130` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/grid.ts:178` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/date-picker.ts:440` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/native-field.ts:125` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:307` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:284` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:231` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:222` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:300` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:315` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:278` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/multi-thumb-slider.ts:153` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/pagination.ts:137` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/quantity-field.ts:92` | controller-rebuild |

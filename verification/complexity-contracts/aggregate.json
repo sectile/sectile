@@ -33049,6 +33049,88 @@
     {
       "package": "vue",
       "surface": "hot",
+      "id": "collection.item-slot-invalidation",
+      "source": "packages/vue/src/internal/collection.ts",
+      "benchmarkIDs": [
+        "GH-170:vue-collection-item-slot-invalidation"
+      ],
+      "specificationCeiling": "O(j + h + s)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "r",
+            "meaning": "mounted GridCell, ListboxItem, MenuItem, and MenuSubContent identity consumers",
+            "ceiling": "the owning collection's mounted item ceiling"
+          },
+          {
+            "name": "j",
+            "meaning": "mounted identities whose item-local projected state changes in the current publication",
+            "ceiling": "changed cursor/highlight identities plus selection, disabled-item, or menu-path deltas"
+          },
+          {
+            "name": "h",
+            "meaning": "Menu open-path depth inspected while publishing an open-path snapshot",
+            "ceiling": "Menu hierarchy depth"
+          },
+          {
+            "name": "s",
+            "meaning": "Listbox selection identities inspected when the canonical selection reference actually changes",
+            "ceiling": "selected item cardinality"
+          }
+        ],
+        "time": {
+          "bound": "O(j + h + s)",
+          "kind": "expected",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(h + s)",
+          "output": "O(j)",
+          "retained": "O(r)"
+        },
+        "resources": {
+          "allocations": "O(h + s)",
+          "cacheEntries": "0 retained item invalidation entries after each synchronous publication",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(r)"
+        },
+        "assumptions": [
+          "Core/domain controllers remain the semantic owner and DOM remains the host-projection owner; Vue stores only transient reactive key pulses rather than copied collection state.",
+          "Unchanged Listbox selection state is structurally shared, so a cursor-only transition sets s to zero and does not scan the selected domain.",
+          "A consumer that explicitly reads a changed root-wide slot property intentionally subscribes to that root property; the item-local guarantee applies to consumers that depend only on item-local projection fields.",
+          "Root disabled changes are genuinely global and invalidate r mounted identities through the shared root scalar rather than an item-domain sweep."
+        ],
+        "ceilings": [
+          "ancestor, observer, timer, listener, and subscription ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:lifecycle-work"
+        ],
+        "deterministicWork": [
+          "At both 1000 and 4000 mounted identities, one ordinary cursor/highlight move executes exactly two consumer item slots in Grid, Listbox, and Menu.",
+          "Listbox selection publication invalidates only identities in the selection symmetric difference; hidden native option state is synchronized only for those changed identities.",
+          "Menu open-path publication compares path membership and invalidates only the symmetric path delta, while each MenuSubContent subscribes to its own parent identity key.",
+          "Item consumers subscribe to reactive Map keys through ordinary render dependency tracking; prop identity reuse, unmount, and remount rely on Vue effect dependency cleanup and retain no historical item token."
+        ],
+        "resourceRationale": "The Vue bridge uses one shallow-reactive Map per root as a transient keyed invalidation channel. Each pulse sets and deletes one key synchronously, leaving no retained identity entry; Vue owns O(r) render-effect subscriptions and releases them with component effects.",
+        "proof": "Root bridges mutate stable shallow-reactive public slot projections without replacing an aggregate computed object. Item-local getters read one reactive identity key and then canonical current state through non-aggregate accessors. Publishers pulse old/new cursor IDs, selection deltas, disabled-item deltas, or Menu open-path deltas; unrelated item effects are not scheduled.",
+        "adversarialWitness": "Mount 4000 Grid, Listbox, and Menu items, reset consumer slot counters after settlement, then move the cursor/highlight once. Each family must report exactly two consumer slot executions independent of r. Reuse identities, remove/remount consumers, and apply controlled or disabled-item changes to verify reactive-key dependency cleanup and targeted invalidation.",
+        "evidence": [
+          "packages/vue/tests/dynamic-collections.dom.test.mjs",
+          "packages/vue/tests/listbox.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Ordinary item-state publication must not scan or invalidate all mounted identities. Domain replacement and genuinely global root-disabled changes are explicit owner-reconfiguration branches outside this ordinary publication contract."
+        }
+      }
+    },
+    {
+      "package": "vue",
+      "surface": "hot",
       "id": "form.selector-bridge",
       "source": "packages/vue/src/form.ts",
       "benchmarkIDs": [
@@ -33120,7 +33202,8 @@
       "id": "grid.cell-projection",
       "source": "packages/vue/src/grid.ts",
       "benchmarkIDs": [
-        "GH-13:vue-grid-registration-and-delta"
+        "GH-13:vue-grid-registration-and-delta",
+        "GH-170:vue-collection-item-slot-invalidation"
       ],
       "specificationCeiling": "O(r + j)",
       "reviewedWeakening": null,
@@ -33133,12 +33216,12 @@
           },
           {
             "name": "j",
-            "meaning": "cells whose projected cursor or selection state changes",
-            "ceiling": "at most four distinct IDs for an ordinary transition"
+            "meaning": "cells whose projected cursor, selection, or item-disabled state changes",
+            "ceiling": "at most four distinct IDs for an ordinary cursor/selection transition"
           }
         ],
         "time": {
-          "bound": "O(r + j)",
+          "bound": "O(j)",
           "kind": "expected",
           "runtimeState": "mounted"
         },
@@ -33149,7 +33232,7 @@
         },
         "resources": {
           "allocations": "O(r)",
-          "cacheEntries": "one registered primitive ID per cell component",
+          "cacheEntries": "one registered primitive ID and one ref-counted Vue invalidation token per mounted identity",
           "listeners": "three DOM-owner root listeners",
           "observers": "0",
           "timers": "0",
@@ -33157,8 +33240,8 @@
         },
         "assumptions": [
           "Core and DOM own transitions and host attributes. The rows and root policies are stable during ordinary interaction.",
-          "Framework render work may visit every mounted cell. This contract does not assert constant total Vue rendering cost or bound arbitrary consumer slot code.",
-          "Construction and explicit owner reconfiguration may scan the domain and discover mounted parts once."
+          "Ordinary root state publication mutates a stable property-granular slot object and invalidates only identity channels whose item-local projection changed.",
+          "Construction and explicit owner reconfiguration may scan the domain, discover mounted parts, or invalidate all mounted identities when a genuinely global item state such as root disabled changes."
         ],
         "ceilings": [
           "operation item and output ceilings"
@@ -33168,19 +33251,20 @@
         ],
         "deterministicWork": [
           "At 1000 and 4000 mounted cells, initial registration writes exactly r gridcell roles.",
+          "At 1000 and 4000 mounted cells, one ArrowRight cursor transition executes exactly two GridCell consumer slots: the previous and next cursor identities.",
           "Navigation, selection and a distant click perform zero part-discovery queries and zero static role rewrites; each tested settled transition writes at most 32 cell attributes.",
-          "Per-cell refs register identity and disabled changes, release the old ID on reuse, and release host ownership on unmount."
+          "Per-cell refs register identity and disabled changes, release the old ID on reuse, and release host ownership plus the Vue projection channel on unmount."
         ],
-        "resourceRationale": "Framework render/computed allocations and component-scoped reactive consumers are O(r); each cell registration is O(1), and ordinary host projection is O(j). The bridge retains scalar state and component-local registration IDs, using the existing DOM registry rather than an additional Vue collection index. Unmount releases registrations and disconnects the DOM owner; queued focus checks that owner's active state.",
-        "proof": "GridRoot refresh publishes canonical scalar state without calling refreshParts. Discovery is restricted to connection setup. Stable GridCell ref callbacks feed single-cell registration and release into the DOM owner; unchanged refs perform no host projection.",
-        "adversarialWitness": "Large mounted domains, all eight controlled-state combinations, disabled changes, reused IDs, removal/remount, read-only and disabled gates, edit callbacks and unmount before queued focus drains.",
+        "resourceRationale": "Mounted component subscriptions and identity channels are O(r). Ordinary item-local publication is O(j) and retains no historical identity entries; connection setup and explicit global reconfiguration are the only r-sized branches.",
+        "proof": "GridRoot publishes canonical scalar changes into one stable shallow-reactive root slot projection and invalidates previous/new identity channels without calling refreshParts. GridCell local getters subscribe to only their identity token while root-wide public getters remain lazy reactive dependencies. Discovery is restricted to connection setup and stable cell refs feed single-cell registration into the DOM owner.",
+        "adversarialWitness": "Mount 4000 cells, move the cursor by one cell, and count consumer slot executions separately from DOM writes. Exactly the old/new cell slots execute while part discovery remains zero. Then exercise controlled-state combinations, disabled changes, reused IDs, removal/remount, read-only and disabled gates, edit callbacks and unmount cleanup.",
         "evidence": [
           "packages/vue/tests/dynamic-collections.dom.test.mjs",
           "packages/vue/tests/structural-controls.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "Vue may render mounted components after root state publication, and connection setup discovers declarative parts. Ordinary host attribute publication remains bounded by changed cells and never performs repeated full-domain registration scans."
+          "rationale": "Construction, domain replacement, and genuinely global item-state changes may touch r mounted cells. Ordinary cursor/selection publication does not take that branch and may not execute unrelated GridCell consumer slots."
         }
       }
     },

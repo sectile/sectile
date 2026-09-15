@@ -92,7 +92,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
   readonly #elementOwners = new WeakMap<HTMLElement, ID>();
   readonly #focusEntry: DOMCompositeFocusEntry<ID>;
   #active = true;
-  #nativeFocusEvent = false;
+  #completionContext: 'ordinary' | 'native-focus' | 'native-reentrant' = 'ordinary';
   #publishedRevision: number;
   #projectedCurrent: ID | null;
   #projectedValue: ID | null;
@@ -110,7 +110,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
     this.#projectedValue = state.selection.selected[0] ?? null;
     this.#keydown = (event) => { const semantic = toGridEvent(event, this.getSnapshot().state.editMode); if (semantic !== null && this.handleEvent(semantic)) event.preventDefault(); };
     this.#click = (event) => { const id = this.#findID(event.target); if (id !== null) this.handleEvent({ type: 'select', id }); };
-    this.#focus = (event) => { const id = this.#findID(event.target); if (id === null || id === this.getSnapshot().state.cursor.current) return; this.#nativeFocusEvent = true; try { this.#runtime.handle({ type: 'focus', id }); } finally { this.#nativeFocusEvent = false; } };
+    this.#focus = (event) => { const id = this.#findID(event.target); if (id === null || id === this.getSnapshot().state.cursor.current) return; this.#dispatch({ type: 'focus', id }, true); };
     options.root.addEventListener('keydown', this.#keydown); options.root.addEventListener('click', this.#click); options.root.addEventListener('focusin', this.#focus);
     options.root.setAttribute('role', 'grid'); options.root.setAttribute('aria-rowcount', String(grid.rowCount)); options.root.setAttribute('aria-colcount', String(grid.columnCount)); if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     setInteractionAttributes(options.root, options, { readOnly: true });
@@ -136,9 +136,9 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
     this.#elementOwners.set(element, id);
     this.#projectCell(id, element);
   }
-  public handleEvent(event: GridEvent<ID>): boolean { return this.#runtime.handle(event).ok; }
+  public handleEvent(event: GridEvent<ID>): boolean { return this.#dispatch(event).ok; }
   public complete(commands: readonly GridCommand<ID>[]): void {
-    if (this.#nativeFocusEvent) {
+    if (this.#completionContext === 'native-focus') {
       let firstError: unknown; let hasError = false;
       try { this.#projectTransition(); } catch (error) { hasError = true; firstError = error; }
       queueMicrotask(() => {
@@ -151,15 +151,12 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
       if (hasError) throw firstError;
       return;
     }
-    let firstError: unknown; let hasError = false;
-    for (const command of commands) {
-      try {
-        if (command.type === 'focus') this.#elements.get(command.id)?.focus();
-        else if (command.type === 'begin-edit') this.#options.onEditStart?.(command.id);
-        else if (command.type === 'commit-edit') this.#options.onEditCommit?.(command.id);
-        else this.#options.onEditCancel?.(command.id);
-      } catch (error) { if (!hasError) { hasError = true; firstError = error; } }
+    if (this.#completionContext === 'native-reentrant') {
+      this.#executeCommands(commands, true);
+      return;
     }
+    let firstError: unknown; let hasError = false;
+    try { this.#executeCommands(commands); } catch (error) { hasError = true; firstError = error; }
     try { this.#projectTransition(); } catch (error) { if (!hasError) { hasError = true; firstError = error; } }
     try { this.#publishUpdate(); } catch (error) { if (!hasError) { hasError = true; firstError = error; } }
     try { this.focusCurrent(); } catch (error) { if (!hasError) { hasError = true; firstError = error; } }
@@ -176,6 +173,27 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
     this.#itemDisabled.clear();
     this.#projectedCurrent = null;
     this.#projectedValue = null;
+  }
+  #dispatch(event: GridEvent<ID>, nativeFocus = false) {
+    const previousContext = this.#completionContext;
+    this.#completionContext = nativeFocus
+      ? 'native-focus'
+      : previousContext === 'ordinary' ? 'ordinary' : 'native-reentrant';
+    try { return this.#runtime.handle(event); }
+    finally { this.#completionContext = previousContext; }
+  }
+  #executeCommands(commands: readonly GridCommand<ID>[], deferFocus = false): void {
+    let firstError: unknown; let hasError = false;
+    for (const command of commands) {
+      try {
+        if (command.type === 'focus') {
+          if (!deferFocus) this.#elements.get(command.id)?.focus();
+        } else if (command.type === 'begin-edit') this.#options.onEditStart?.(command.id);
+        else if (command.type === 'commit-edit') this.#options.onEditCommit?.(command.id);
+        else this.#options.onEditCancel?.(command.id);
+      } catch (error) { if (!hasError) { hasError = true; firstError = error; } }
+    }
+    if (hasError) throw firstError;
   }
   #releaseCell(id: ID, element: HTMLElement): void {
     this.#focusEntry.release(id, element);

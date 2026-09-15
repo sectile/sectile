@@ -22,6 +22,7 @@ const { CarouselRoot } = await import('../.verification-dist/carousel.js');
 const { CascadeSelectContent, CascadeSelectRoot, CascadeSelectTrigger } = await import('../.verification-dist/cascade-select.js');
 const { FeedRoot } = await import('../.verification-dist/feed.js');
 const { GridCell, GridRoot, GridRow } = await import('../.verification-dist/grid.js');
+const { ListboxItem, ListboxRoot } = await import('../.verification-dist/listbox.js');
 const { MenuItem, MenuRoot, MenuSubContent, MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenubarRoot, NavigationMenuRoot } = await import('../.verification-dist/menu.js');
 const { PaginationRoot } = await import('../.verification-dist/pagination.js');
 const { SelectContent, SelectRoot, SelectTrigger } = await import('../.verification-dist/select.js');
@@ -111,6 +112,151 @@ test('Vue Grid mounts linearly and projects bounded cursor and selection changes
       if (mounted !== undefined) unmount(mounted.app, mounted.host);
     }
   }
+});
+
+test('Vue collection cursor deltas execute only changed item consumer slots at 1k and 4k', async () => {
+  for (const size of [1_000, 4_000]) {
+    const gridIDs = Array.from({ length: size }, (_, index) => `slot-grid-${index}`);
+    let gridSlots = 0;
+    const grid = mount(() => h(GridRoot, { rows: [gridIDs], defaultHighlightedValue: gridIDs[0] }, {
+      default: () => h(GridRow, null, {
+        default: () => gridIDs.map((id) => h(GridCell, { key: id, value: id }, {
+          default: () => { gridSlots += 1; return id; },
+        })),
+      }),
+    }));
+    try {
+      await settle();
+      gridSlots = 0;
+      gridKey(grid.host.querySelector('[data-part="root"]'), 'ArrowRight');
+      await settle();
+      assert.equal(gridSlots, 2, `${size} Grid cells should execute only the old/new cursor slots`);
+    } finally { unmount(grid.app, grid.host); }
+
+    const listboxIDs = Array.from({ length: size }, (_, index) => `slot-listbox-${index}`);
+    let listboxSlots = 0;
+    const listbox = mount(() => h(ListboxRoot, { items: listboxIDs }, {
+      default: () => listboxIDs.map((id) => h(ListboxItem, { key: id, value: id }, {
+        default: () => { listboxSlots += 1; return id; },
+      })),
+    }));
+    try {
+      await settle();
+      listboxSlots = 0;
+      listbox.host.querySelector('[role="listbox"]').dispatchEvent(new browserWindow.KeyboardEvent('keydown', {
+        key: 'ArrowDown', bubbles: true, cancelable: true,
+      }));
+      await settle();
+      assert.equal(listboxSlots, 2, `${size} Listbox items should execute only the old/new highlight slots`);
+    } finally { unmount(listbox.app, listbox.host); }
+
+    const menuItems = Array.from({ length: size }, (_, index) => ({ id: `slot-menu-${index}` }));
+    let menuSlots = 0;
+    const menu = mount(() => h(MenuRoot, { items: menuItems, defaultHighlightedValue: menuItems[0].id }, {
+      default: () => menuItems.map(({ id }) => h(MenuItem, { key: id, value: id }, {
+        default: () => { menuSlots += 1; return id; },
+      })),
+    }));
+    try {
+      await settle();
+      menuSlots = 0;
+      menu.host.querySelector('[role="menu"]').dispatchEvent(new browserWindow.KeyboardEvent('keydown', {
+        key: 'ArrowDown', bubbles: true, cancelable: true,
+      }));
+      await settle();
+      assert.equal(menuSlots, 2, `${size} Menu items should execute only the old/new highlight slots`);
+    } finally { unmount(menu.app, menu.host); }
+  }
+});
+
+test('Vue collection root slot projections remain reactive after item-local invalidation', async () => {
+  const grid = mount(() => h(GridRoot, { rows: [['a', 'b']], defaultHighlightedValue: 'a' }, {
+    default: (state) => [
+      h('output', { 'data-root-state': 'grid' }, state.highlightedValue ?? ''),
+      h(GridRow, null, { default: () => ['a', 'b'].map((id) => h(GridCell, { value: id }, () => id)) }),
+    ],
+  }));
+  try {
+    await settle();
+    gridKey(grid.host.querySelector('[data-part="root"]'), 'ArrowRight');
+    await settle();
+    assert.equal(grid.host.querySelector('[data-root-state="grid"]').textContent, 'b');
+  } finally { unmount(grid.app, grid.host); }
+
+  const listbox = mount(() => h(ListboxRoot, { items: ['a', 'b'] }, {
+    default: (state) => [
+      h('output', { 'data-root-state': 'listbox' }, state.highlightedValue ?? ''),
+      ...['a', 'b'].map((id) => h(ListboxItem, { value: id }, () => id)),
+    ],
+  }));
+  try {
+    await settle();
+    listbox.host.querySelector('[role="listbox"]').dispatchEvent(new browserWindow.KeyboardEvent('keydown', {
+      key: 'ArrowDown', bubbles: true, cancelable: true,
+    }));
+    await settle();
+    assert.equal(listbox.host.querySelector('[data-root-state="listbox"]').textContent, 'b');
+  } finally { unmount(listbox.app, listbox.host); }
+
+  const items = [{ id: 'a' }, { id: 'b' }];
+  const menu = mount(() => h(MenuRoot, { items, defaultHighlightedValue: 'a' }, {
+    default: (state) => [
+      h('output', { 'data-root-state': 'menu' }, state.highlightedValue ?? ''),
+      ...items.map(({ id }) => h(MenuItem, { value: id }, () => id)),
+    ],
+  }));
+  try {
+    await settle();
+    menu.host.querySelector('[role="menu"]').dispatchEvent(new browserWindow.KeyboardEvent('keydown', {
+      key: 'ArrowDown', bubbles: true, cancelable: true,
+    }));
+    await settle();
+    assert.equal(menu.host.querySelector('[data-root-state="menu"]').textContent, 'b');
+  } finally { unmount(menu.app, menu.host); }
+});
+
+test('Vue collection root slot projections are readonly views over canonical owner state', async () => {
+  let gridState;
+  const grid = mount(() => h(GridRoot, { rows: [['a', 'b']], defaultHighlightedValue: 'a' }, {
+    default: (state) => {
+      gridState = state;
+      return h(GridRow, null, {
+        default: () => ['a', 'b'].map((id) => h(GridCell, { value: id }, () => id)),
+      });
+    },
+  }));
+  try {
+    await settle();
+    const cells = [...grid.host.querySelectorAll('[data-sectile-grid-cell]')];
+    const originalWarn = console.warn;
+    console.warn = () => {};
+    try { Reflect.set(gridState, 'highlightedValue', 'b'); } finally { console.warn = originalWarn; }
+    await settle();
+    assert.equal(gridState.highlightedValue, 'a');
+    assert.equal(cells[0].hasAttribute('data-highlighted'), true);
+    assert.equal(cells[1].hasAttribute('data-highlighted'), false);
+    assert.equal(cells[0].tabIndex, 0);
+    assert.equal(cells[1].tabIndex, -1);
+  } finally { unmount(grid.app, grid.host); }
+
+  let listboxState;
+  const listbox = mount(() => h(ListboxRoot, { items: ['a', 'b'] }, {
+    default: (state) => {
+      listboxState = state;
+      return ['a', 'b'].map((id) => h(ListboxItem, { value: id }, () => id));
+    },
+  }));
+  try {
+    await settle();
+    const root = listbox.host.querySelector('[role="listbox"]');
+    const options = [...listbox.host.querySelectorAll('[role="option"]')];
+    const originalWarn = console.warn;
+    console.warn = () => {};
+    try { Reflect.set(listboxState, 'highlightedValue', 'b'); } finally { console.warn = originalWarn; }
+    await settle();
+    assert.equal(listboxState.highlightedValue, 'a');
+    assert.equal(root.getAttribute('aria-activedescendant'), options[0].id);
+  } finally { unmount(listbox.app, listbox.host); }
 });
 
 test('Vue Grid cell refs preserve disabled changes, recycled identities, removal and remount', async () => {
