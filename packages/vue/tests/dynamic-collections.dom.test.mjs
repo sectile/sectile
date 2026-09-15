@@ -215,6 +215,50 @@ test('Vue collection root slot projections remain reactive after item-local inva
   } finally { unmount(menu.app, menu.host); }
 });
 
+test('Vue collection root slot projections are readonly views over canonical owner state', async () => {
+  let gridState;
+  const grid = mount(() => h(GridRoot, { rows: [['a', 'b']], defaultHighlightedValue: 'a' }, {
+    default: (state) => {
+      gridState = state;
+      return h(GridRow, null, {
+        default: () => ['a', 'b'].map((id) => h(GridCell, { value: id }, () => id)),
+      });
+    },
+  }));
+  try {
+    await settle();
+    const cells = [...grid.host.querySelectorAll('[data-sectile-grid-cell]')];
+    const originalWarn = console.warn;
+    console.warn = () => {};
+    try { Reflect.set(gridState, 'highlightedValue', 'b'); } finally { console.warn = originalWarn; }
+    await settle();
+    assert.equal(gridState.highlightedValue, 'a');
+    assert.equal(cells[0].hasAttribute('data-highlighted'), true);
+    assert.equal(cells[1].hasAttribute('data-highlighted'), false);
+    assert.equal(cells[0].tabIndex, 0);
+    assert.equal(cells[1].tabIndex, -1);
+  } finally { unmount(grid.app, grid.host); }
+
+  let listboxState;
+  const listbox = mount(() => h(ListboxRoot, { items: ['a', 'b'] }, {
+    default: (state) => {
+      listboxState = state;
+      return ['a', 'b'].map((id) => h(ListboxItem, { value: id }, () => id));
+    },
+  }));
+  try {
+    await settle();
+    const root = listbox.host.querySelector('[role="listbox"]');
+    const options = [...listbox.host.querySelectorAll('[role="option"]')];
+    const originalWarn = console.warn;
+    console.warn = () => {};
+    try { Reflect.set(listboxState, 'highlightedValue', 'b'); } finally { console.warn = originalWarn; }
+    await settle();
+    assert.equal(listboxState.highlightedValue, 'a');
+    assert.equal(root.getAttribute('aria-activedescendant'), options[0].id);
+  } finally { unmount(listbox.app, listbox.host); }
+});
+
 test('Vue Grid cell refs preserve disabled changes, recycled identities, removal and remount', async () => {
   const rows = [['a', 'b', 'c']];
   const id = ref('b');

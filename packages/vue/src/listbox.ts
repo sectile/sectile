@@ -7,6 +7,7 @@ import {
   nextTick,
   provide,
   shallowReactive,
+  shallowReadonly,
   shallowRef,
   watch,
   type PropType,
@@ -183,12 +184,13 @@ export const ListboxRoot = defineComponent({
     let currentHighlighted = snapshot.value.state.cursor.current;
     let disabledItemSet = new Set(controllerProps.disabledItems);
     let submissionIndex = new Map(controllerProps.items.map((id, index) => [id, index] as const));
-    const state = shallowReactive({
+    const mutableState = shallowReactive({
       value: fromIDs(selectedIDs.value, props.selectionMode),
       highlightedValue: currentHighlighted,
       disabled: controllerProps.disabled,
       readonly: controllerProps.readonly,
     });
+    const state: ListboxRootSlotProps = shallowReadonly(mutableState);
     const syncActiveDescendant = (): void => {
       const element = rootElement.value;
       if (
@@ -232,9 +234,9 @@ export const ListboxRoot = defineComponent({
       snapshot.value = nextSnapshot;
       if (selectionOrderChanged) selectedIDs.value = nextSelectedIDs;
       if (selectionOrderChanged || selectionModeChanged) {
-        state.value = fromIDs(nextSelectedIDs, props.selectionMode);
+        mutableState.value = fromIDs(nextSelectedIDs, props.selectionMode);
       }
-      state.highlightedValue = currentHighlighted;
+      mutableState.highlightedValue = currentHighlighted;
       for (const id of changedSelection) invalidateItemProjection(itemProjection, id);
       if (previousHighlight !== currentHighlighted) {
         invalidateItemProjection(itemProjection, previousHighlight);
@@ -248,8 +250,8 @@ export const ListboxRoot = defineComponent({
       if (controllerProps.disabled === nextControllerProps.disabled) {
         for (const id of disabledItemSet) if (!nextDisabledItems.has(id)) invalidateItemProjection(itemProjection, id);
         for (const id of nextDisabledItems) if (!disabledItemSet.has(id)) invalidateItemProjection(itemProjection, id);
-      } else state.disabled = nextControllerProps.disabled;
-      state.readonly = nextControllerProps.readonly;
+      } else mutableState.disabled = nextControllerProps.disabled;
+      mutableState.readonly = nextControllerProps.readonly;
       disabledItemSet = nextDisabledItems;
       submissionIndex = new Map(nextControllerProps.items.map((id, index) => [id, index] as const));
     };

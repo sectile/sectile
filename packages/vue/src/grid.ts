@@ -1,6 +1,6 @@
 import {
   defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
-  shallowReactive, shallowRef, toRaw, watch, type PropType, type SlotsType, type VNodeChild,
+  shallowReactive, shallowReadonly, shallowRef, toRaw, watch, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createGridControl, type GridConnection, type GridEditMode, type GridPolicies } from '@sectile/dom/grid';
 import { Primitive, type PrimitiveAs } from './primitive.js';
@@ -73,13 +73,14 @@ export const GridRoot = defineComponent({
     let connectionOwner: GridConnectionOwner | undefined;
     let disabledItemSet = new Set(props.disabledItems);
     const itemProjection = shallowReactive(new Map<string, true>());
-    const state = shallowReactive({
+    const mutableState = shallowReactive({
       value: props.modelValue !== undefined ? props.modelValue : props.defaultValue,
       highlightedValue: props.highlightedValue !== undefined ? props.highlightedValue : props.defaultHighlightedValue,
       editMode: props.editMode ?? props.defaultEditMode,
       disabled: props.disabled,
       readonly: props.readonly,
     });
+    const state: GridRootSlotProps = shallowReadonly(mutableState);
     const controlled = {
       value: useControlledStateInvariant('GridRoot', 'modelValue', () => props.modelValue),
       highlighted: useControlledStateInvariant('GridRoot', 'highlightedValue', () => props.highlightedValue),
@@ -91,28 +92,28 @@ export const GridRoot = defineComponent({
       invalidateItemProjection(itemProjection, next);
     };
     const updateValue = (value: string | null): void => {
-      const previous = state.value;
+      const previous = mutableState.value;
       if (previous === value) return;
-      state.value = value;
+      mutableState.value = value;
       invalidateIdentityChange(previous, value);
     };
     const updateHighlight = (value: string | null): void => {
-      const previous = state.highlightedValue;
+      const previous = mutableState.highlightedValue;
       if (previous === value) return;
-      state.highlightedValue = value;
+      mutableState.highlightedValue = value;
       invalidateIdentityChange(previous, value);
     };
     const updateEditMode = (value: GridEditMode): void => {
-      if (state.editMode !== value) state.editMode = value;
+      if (mutableState.editMode !== value) mutableState.editMode = value;
     };
     const updateOwnerProjection = (owner: GridConnectionOwner): void => {
       const nextDisabledItems = new Set(owner.disabledItems);
-      if (state.disabled === owner.disabled) {
+      if (mutableState.disabled === owner.disabled) {
         for (const id of disabledItemSet) if (!nextDisabledItems.has(id)) invalidateItemProjection(itemProjection, id);
         for (const id of nextDisabledItems) if (!disabledItemSet.has(id)) invalidateItemProjection(itemProjection, id);
-      } else state.disabled = owner.disabled;
+      } else mutableState.disabled = owner.disabled;
       disabledItemSet = nextDisabledItems;
-      state.readonly = owner.readonly;
+      mutableState.readonly = owner.readonly;
     };
     const publishSnapshot = (snapshot: ReturnType<GridConnection<string>['getSnapshot']>['state']): void => {
       updateValue(snapshot.selection.selected[0] ?? null);
@@ -132,8 +133,8 @@ export const GridRoot = defineComponent({
       updateOwnerProjection(nextOwner);
       if (element.value === undefined) return;
       const items = nextOwner.rows.flatMap((row) => row.filter((id): id is string => id !== null));
-      const requestedValue = controlled.value ? props.modelValue as string | null : state.value;
-      const requestedHighlight = controlled.highlighted ? props.highlightedValue as string | null : state.highlightedValue;
+      const requestedValue = controlled.value ? props.modelValue as string | null : mutableState.value;
+      const requestedHighlight = controlled.highlighted ? props.highlightedValue as string | null : mutableState.highlightedValue;
       const reconciled = reconcileCollectionState(
         items,
         requestedValue === null ? [] : [requestedValue],
@@ -143,7 +144,7 @@ export const GridRoot = defineComponent({
         { preserveNullCurrent: true },
       );
       const value = reconciled.selected[0] ?? null;
-      const requestedEditMode = controlled.editMode ? props.editMode as GridEditMode : state.editMode;
+      const requestedEditMode = controlled.editMode ? props.editMode as GridEditMode : mutableState.editMode;
       const editMode = reconciled.current === null && requestedEditMode === 'editing'
         ? 'navigation'
         : requestedEditMode;
