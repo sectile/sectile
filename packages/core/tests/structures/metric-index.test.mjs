@@ -94,6 +94,95 @@ test('representation and crossover state stay absent from the public surface', (
   assert.equal('expectedQueries' in index, false);
 });
 
+test('ISSUE-185: construction consumes one captured point boundary and header observation', () => {
+  let growingPointReads = 0;
+  const growingPoints = [];
+  Object.defineProperty(growingPoints, 0, {
+    enumerable: true,
+    configurable: true,
+    get() {
+      growingPointReads += 1;
+      if (growingPoints.length === 1) growingPoints.push({ id: 'p1', coordinates: [1] });
+      return { id: 'p0', coordinates: [0] };
+    },
+  });
+  const growing = tryCreateMetricIndex(growingPoints, { dimensions: 1, maxItems: 1, expectedQueries: 0 });
+  assert.equal(growing.ok, true);
+  assert.equal(growingPointReads, 1);
+  assert.equal(growingPoints.length, 2);
+  assert.equal(growing.value.size, 1);
+  assert.deepEqual(growing.value.ids, ['p0']);
+  assert.deepEqual(growing.value.coordinateOf('p0'), [0]);
+  assert.equal(growing.value.coordinateOf('p1'), null);
+
+  let pointReads = 0;
+  let idReads = 0;
+  let coordinateReferenceReads = 0;
+  let coordinateReads = 0;
+  const acceptedCoordinates = [];
+  Object.defineProperty(acceptedCoordinates, 0, {
+    enumerable: true,
+    configurable: true,
+    get() {
+      coordinateReads += 1;
+      return 7;
+    },
+  });
+  const replacementCoordinates = [99];
+  const observedPoint = {};
+  Object.defineProperties(observedPoint, {
+    id: {
+      enumerable: true,
+      get() {
+        idReads += 1;
+        return idReads === 1 ? 'first-id' : 'later-id';
+      },
+    },
+    coordinates: {
+      enumerable: true,
+      get() {
+        coordinateReferenceReads += 1;
+        return coordinateReferenceReads === 1 ? acceptedCoordinates : replacementCoordinates;
+      },
+    },
+  });
+  const inferredPoints = [];
+  Object.defineProperty(inferredPoints, 0, {
+    enumerable: true,
+    configurable: true,
+    get() {
+      pointReads += 1;
+      return observedPoint;
+    },
+  });
+  const captured = tryCreateMetricIndex(inferredPoints, { maxItems: 1, expectedQueries: 0 });
+  assert.equal(captured.ok, true);
+  assert.deepEqual([pointReads, idReads, coordinateReferenceReads, coordinateReads], [1, 1, 1, 1]);
+  assert.equal(captured.value.dimensions, 1);
+  assert.deepEqual(captured.value.ids, ['first-id']);
+  assert.deepEqual(captured.value.coordinateOf('first-id'), [7]);
+  assert.equal(captured.value.coordinateOf('later-id'), null);
+
+  for (const options of [{ maxItems: 1 }, { dimensions: 1, maxItems: 1 }]) {
+    let overPointReads = 0;
+    const over = [];
+    for (const [index, id] of ['a', 'b'].entries()) {
+      Object.defineProperty(over, index, {
+        enumerable: true,
+        configurable: true,
+        get() {
+          overPointReads += 1;
+          return { id, coordinates: [index] };
+        },
+      });
+    }
+    const rejected = tryCreateMetricIndex(over, options);
+    assert.equal(rejected.ok, false);
+    assert.equal(rejected.error.code, 'item-ceiling-exceeded');
+    assert.equal(overPointReads, 0);
+  }
+});
+
 test('construction and query resource contracts reject malformed inputs', () => {
   assert.equal(tryCreateMetricIndex([], {}).error.code, 'invalid-boundary');
   assert.equal(tryCreateMetricIndex([], { dimensions: 2 }).ok, true);
