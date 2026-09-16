@@ -919,10 +919,10 @@ export function tryCreateForm<
       event?.preventDefault();
       void Promise.all([
         customPromise === null
-          ? Promise.resolve(custom)
+          ? Promise.resolve(custom).catch(validationException)
           : Promise.resolve(customPromise).catch(validationException),
         schemaPromise === null
-          ? Promise.resolve(schema)
+          ? Promise.resolve(schema).catch(schemaException)
           : Promise.resolve(schemaPromise).catch(schemaException),
       ]).then(([customResult, schemaResult]) => {
         if (controller.signal.aborted) return;

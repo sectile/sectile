@@ -363,6 +363,74 @@ test('ISSUE-192: DOM Form settles PromiseLike inspection failures', () => {
   }
 });
 
+test('ISSUE-192: DOM Form settles mixed sync/async Promise assimilation failures', async () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const throwingOnSecondThenRead = (message) => {
+      let reads = 0;
+      const result = {};
+      Object.defineProperty(result, 'then', {
+        get() {
+          reads += 1;
+          if (reads === 1) return undefined;
+          throw new Error(message);
+        },
+      });
+      return result;
+    };
+
+    for (const { options, source, message } of [
+      {
+        options: {
+          validate: () => throwingOnSecondThenRead('validate assimilation failed'),
+          schema: {
+            '~standard': {
+              version: 1,
+              vendor: 'issue-192',
+              validate: async (value) => ({ value }),
+            },
+          },
+        },
+        source: 'validate',
+        message: 'Form validation failed.',
+      },
+      {
+        options: {
+          validate: async () => ({}),
+          schema: {
+            '~standard': {
+              version: 1,
+              vendor: 'issue-192',
+              validate: () => throwingOnSecondThenRead('schema assimilation failed'),
+            },
+          },
+        },
+        source: 'schema',
+        message: 'Schema validation failed.',
+      },
+    ]) {
+      const formElement = document.createElement('form');
+      document.body.append(formElement);
+      const form = createForm({ form: formElement, ...options });
+
+      formElement.requestSubmit();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      assert.equal(form.state.validation.status, 'invalid');
+      assert.equal(form.state.submission.status, 'idle');
+      assert.equal(
+        form.state.allIssues.some((issue) => issue.source === source && issue.message === message),
+        true,
+      );
+      form.destroy();
+      formElement.remove();
+    }
+  } finally {
+    dom.restore();
+  }
+});
+
 test('DOM Form clears one canonical multi-field server issue on related input', () => {
   const dom = installDOM();
   try {
