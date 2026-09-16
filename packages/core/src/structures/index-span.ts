@@ -104,12 +104,16 @@ export function tryCreateIndexSpanSet(
 ): Result<IndexSpanSet> {
   const limits = trySpanLimits(options);
   if (!limits.ok) return limits;
-  if (spans.length > limits.value.maxSpans) return spanCeilingFailure(spans.length, limits.value.maxSpans);
+  const spanCount = spans.length;
+  if (spanCount > limits.value.maxSpans) return spanCeilingFailure(spanCount, limits.value.maxSpans);
   const snapshot: IndexSpan[] = [];
-  for (const span of spans) {
-    const error = validateSpanBounds(span.start, span.endExclusive, limits.value);
+  for (let spanIndex = 0; spanIndex < spanCount; spanIndex += 1) {
+    const span = spans[spanIndex] as IndexSpan;
+    const start = span.start;
+    const endExclusive = span.endExclusive;
+    const error = validateSpanBounds(start, endExclusive, limits.value);
     if (error !== null) return { ok: false, error };
-    if (span.start !== span.endExclusive) snapshot.push(span);
+    if (start !== endExclusive) snapshot.push({ start, endExclusive });
   }
   snapshot.sort(compareSpans);
   return normalizedSpanSet(snapshot, limits.value.maxSpans);
