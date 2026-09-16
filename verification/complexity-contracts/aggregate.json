@@ -21978,6 +21978,81 @@
     {
       "package": "core",
       "surface": "hot",
+      "id": "grid.construct",
+      "source": "packages/core/src/structures/grid.ts",
+      "benchmarkIDs": [
+        "VAL-017:grid-construction-work"
+      ],
+      "specificationCeiling": "O(nRow + nCell)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "nRow",
+            "meaning": "captured input row references",
+            "ceiling": "nRow <= maxRows"
+          },
+          {
+            "name": "nCell",
+            "meaning": "retained rectangle cells nRow * columnCount",
+            "ceiling": "columnCount <= maxColumns and nCell <= maxCells"
+          },
+          {
+            "name": "nOccupied",
+            "meaning": "non-null retained grid identities",
+            "ceiling": "nOccupied <= maxItems and nOccupied <= nCell"
+          }
+        ],
+        "time": {
+          "bound": "O(nRow + nCell)",
+          "kind": "expected",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nRow)",
+          "output": "O(nCell)",
+          "retained": "O(nCell)"
+        },
+        "resources": {
+          "allocations": "O(nRow + nCell)",
+          "cacheEntries": "O(nOccupied)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "nRow is captured once before the maxRows decision and later caller-owned row growth cannot extend traversal.",
+          "Each accepted row reference and row length is captured once before column and cell ceiling decisions.",
+          "Cell traversal uses only captured row lengths, so emitted positions remain inside the accepted rectangle."
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "A one-row input whose first cell getter appends another identity performs one cell observation and retains one occupied cell.",
+          "A one-row outer array whose first row getter appends another row performs one row-reference observation and retains one row.",
+          "An input already above maxRows rejects before observing any row element, and an over-column input rejects before observing any cell element."
+        ],
+        "resourceRationale": "Prepared row references and captured lengths are temporary O(nRow) ownership; the retained cell vector, position index, and row-major identity domain are bounded by nCell, with nOccupied <= nCell and no lifecycle resources.",
+        "proof": "Construction captures one row cardinality nRow <= maxRows, captures exactly those nRow row references and lengths, derives one columnCount <= maxColumns and nCell <= maxCells, allocates one rectangle, then visits only each captured row prefix. Every retained identity is validated once, inserted into one position map and one row-major domain, and nOccupied is capped by maxItems.",
+        "adversarialWitness": "ISSUE-183 appends an inner cell from the first accepted cell getter and appends an outer row from the first accepted row getter. Neither append changes the accepted traversal prefix or retained rectangle, while initially over-ceiling controls perform zero forbidden element observations.",
+        "evidence": [
+          "packages/core/tests/structures/grid.reference-law.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External construction must capture every accepted row header and initialize the retained rectangle before indexed lookup views can be trusted."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
       "id": "grid.domain",
       "source": "packages/core/src/structures/grid.ts",
       "benchmarkIDs": [
