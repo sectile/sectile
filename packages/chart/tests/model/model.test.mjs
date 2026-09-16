@@ -128,6 +128,80 @@ test('CHT-09: raw model and patch ceilings reject before datum observation', () 
   assert.deepEqual(acceptedPatch.value.identities, [0, 2, 3]);
 });
 
+test('ISSUE-194: raw model preflight consumes one fixed captured layer prefix', () => {
+  let layerReads = 0;
+  let idReads = 0;
+  let profileReads = 0;
+  let dataReads = 0;
+  const acceptedData = [{ id: 'accepted', x: 1, y: 2 }];
+  const replacementData = [{ id: 'replacement', x: 3, y: 4 }];
+  const acceptedLayer = {};
+  Object.defineProperties(acceptedLayer, {
+    id: {
+      enumerable: true,
+      get() {
+        idReads += 1;
+        return 'points';
+      },
+    },
+    profile: {
+      enumerable: true,
+      get() {
+        profileReads += 1;
+        return 'point';
+      },
+    },
+    data: {
+      enumerable: true,
+      get() {
+        dataReads += 1;
+        return dataReads === 1 ? acceptedData : replacementData;
+      },
+    },
+  });
+
+  const layers = [];
+  Object.defineProperty(layers, 0, {
+    enumerable: true,
+    configurable: true,
+    get() {
+      layerReads += 1;
+      if (layers.length === 1) {
+        layers.push({ id: 'appended', profile: 'point', data: [] });
+      }
+      return acceptedLayer;
+    },
+  });
+
+  const result = tryCreateChartModel({ layers }, { maxLayers: 1, maxDatums: 1 });
+  assert.equal(result.ok, true);
+  assert.equal(layerReads, 1);
+  assert.deepEqual([idReads, profileReads, dataReads], [1, 1, 1]);
+  assert.equal(layers.length, 2);
+  assert.equal(result.value.layerCount, 1);
+  assert.deepEqual(result.value.identities, ['accepted']);
+  assert.deepEqual(result.value.toModel().layers, [{
+    id: 'points', profile: 'point', data: acceptedData,
+  }]);
+
+  let overCeilingLayerReads = 0;
+  const overCeiling = [];
+  for (const [index, id] of ['first', 'second'].entries()) {
+    Object.defineProperty(overCeiling, index, {
+      enumerable: true,
+      configurable: true,
+      get() {
+        overCeilingLayerReads += 1;
+        return { id, profile: 'point', data: [] };
+      },
+    });
+  }
+  const rejected = tryCreateChartModel({ layers: overCeiling }, { maxLayers: 1, maxDatums: 1 });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'chart-layer-ceiling-exceeded');
+  assert.equal(overCeilingLayerReads, 0);
+});
+
 test('numeric datum fields are captured once before validation and packing', () => {
   const cases = [
     ['point', { x: 1, y: 2 }],
