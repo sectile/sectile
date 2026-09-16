@@ -8,7 +8,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 380 | 26 | 59 |
+| core | 380 | 26 | 60 |
 | chart | 80 | 0 | 15 |
 | dom | 425 | 171 | 35 |
 | form | 21 | 0 | 9 |
@@ -53,6 +53,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:foundation.result-construction | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:geometry.bounds | external | `O(nRect)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:geometry.scalar | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:grid.construct | external | `O(nRow + nCell)` expected | `O(nRow)` | `O(nCell)` | `O(nCell)` | allowed | packages/core/tests/structures/grid.reference-law.test.mjs |
 | core:grid.domain | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(n)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:grid.move | trusted | `O(sAxis)` expected | `O(1)` | `O(1)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:grid.position | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
