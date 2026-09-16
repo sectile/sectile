@@ -554,26 +554,33 @@ export function createFacadeConnection<
   const subscribers = new Set<FacadeSnapshotListener<Connection>>();
   let connection: Connection | undefined;
   let active = true;
+  let activePublication: object | undefined;
   const onUpdate = (): void => {
     if (!active) return;
+    const publication = {};
+    activePublication = publication;
     let firstError: unknown;
     let hasError = false;
     if (connection !== undefined) {
       let snapshot: SnapshotOf<Connection> | undefined;
       try { snapshot = connection.getSnapshot() as SnapshotOf<Connection>; }
       catch (error) { hasError = true; firstError = error; }
-      if (snapshot !== undefined) {
+      if (snapshot !== undefined && activePublication === publication) {
         for (const subscriber of [...subscribers]) {
           try { subscriber(snapshot); }
           catch (error) {
             if (!hasError) { hasError = true; firstError = error; }
           }
+          if (activePublication !== publication) break;
         }
       }
     }
-    try { options.onUpdate?.(); }
-    catch (error) {
-      if (!hasError) { hasError = true; firstError = error; }
+    if (activePublication === publication) {
+      try { options.onUpdate?.(); }
+      catch (error) {
+        if (!hasError) { hasError = true; firstError = error; }
+      }
+      if (activePublication === publication) activePublication = undefined;
     }
     if (hasError) throw firstError;
   };
