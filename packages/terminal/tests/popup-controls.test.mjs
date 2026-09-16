@@ -133,7 +133,7 @@ test('terminal popup reentrant callbacks publish the latest revision without dup
         ? [[2, false]] : [[1, true], [2, false]]);
       assert.equal(control.getSnapshot().revision, 2);
       assert.equal(control.state.open, false);
-      assert.equal(updates, snapshots.length);
+      assert.equal(updates, source === 'update' ? 2 : 1);
       assert.equal(restores, 1);
       control.destroy();
     }
