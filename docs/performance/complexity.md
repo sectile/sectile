@@ -8,7 +8,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 380 | 26 | 60 |
+| core | 380 | 26 | 61 |
 | chart | 80 | 0 | 15 |
 | dom | 425 | 171 | 35 |
 | form | 21 | 0 | 9 |
@@ -61,6 +61,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:grid.view | trusted | `O(sAxis + k)` worst-case | `O(sAxis)` | `O(k)` | `O(k)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:identity.normalize | external | `O(nID + uID)` worst-case | `O(nID)` | `O(nID)` | `O(nID)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:identity.same-order | trusted | `O(nID)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:index-span.construct | external | `O(n log n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | packages/core/tests/structures/index-span.test.mjs |
 | core:index-span.contains | trusted | `O(log a)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:index-span.set-algebra | trusted | `O(a + bSpan)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:index-span.transform | trusted | `O(a)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |

@@ -22504,6 +22504,71 @@
     {
       "package": "core",
       "surface": "hot",
+      "id": "index-span.construct",
+      "source": "packages/core/src/structures/index-span.ts",
+      "benchmarkIDs": [
+        "ISSUE-186:index-span-construction-work"
+      ],
+      "specificationCeiling": "O(n log n)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "captured accepted input span cardinality",
+            "ceiling": "n <= maxSpans"
+          }
+        ],
+        "time": {
+          "bound": "O(n log n)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(n)",
+          "output": "O(n)",
+          "retained": "O(n)"
+        },
+        "resources": {
+          "allocations": "O(n)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "n is captured once before span-element observation and n > maxSpans rejects before reading any element.",
+          "Construction consumes exactly indexed positions [0,n); caller-provided iteration cannot extend or block the admitted work.",
+          "Each accepted external span contributes one captured start/endExclusive pair, and retained normalized spans remain bounded by n <= maxSpans."
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "A one-element array with an expanding custom iterator performs one indexed element read, zero iterator starts, and zero yielded-iterator observations.",
+          "A getter-backed accepted span observes start and endExclusive exactly once and retains the same validated pair with coherent coveredCount.",
+          "An input initially above maxSpans rejects with zero indexed element observations."
+        ],
+        "resourceRationale": "Construction temporarily retains at most n captured span records, sorts that bounded vector in place, and retains at most n normalized output spans. No cache, listener, observer, timer, or subscription is created.",
+        "proof": "tryCreateIndexSpanSet captures n = spans.length, rejects n > maxSpans, then visits exactly n indexed positions. Each position is canonicalized immediately to one internal start/endExclusive record; sorting is O(n log n), normalization is one O(n) pass, and retained output cannot exceed n spans.",
+        "adversarialWitness": "ISSUE-186 combines a custom iterator that would yield beyond the accepted array length with getter-backed bounds that change after their first observation. Production ignores external iteration, observes each accepted bound once, and preserves the validated half-open span invariants; the stable over-ceiling control performs zero element reads.",
+        "evidence": [
+          "packages/core/tests/structures/index-span.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External construction must validate every span in the admitted indexed prefix before sorting and normalization."
+        }
+      }
+    },
+    {
+      "package": "core",
+      "surface": "hot",
       "id": "index-span.contains",
       "source": "packages/core/src/structures/index-span.ts",
       "benchmarkIDs": [
