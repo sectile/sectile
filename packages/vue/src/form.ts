@@ -438,15 +438,6 @@ const FormRootImpl = defineComponent({
       if (handler === undefined) return;
       const target = connection.value;
       if (target === null) return;
-      let result: FormSubmitResult | PromiseLike<FormSubmitResult>;
-      try {
-        result = handler(toFormSubmitEvent(payload));
-      } catch (error) {
-        return {
-          ok: false,
-          failure: mapSubmissionError(props.mapSubmitError, error),
-        };
-      }
       const settle = (resolved: FormSubmitResult): DOMFormSubmitResult<string> => {
         if (typeof resolved !== 'object' || resolved === null || resolved.ok !== false) {
           return { ok: true };
@@ -460,14 +451,24 @@ const FormRootImpl = defineComponent({
           ...(issues.length === 0 ? {} : { issues }),
         };
       };
-      if (isPromiseLike(result)) {
-        return Promise.resolve(result).then(
-          settle,
-          (error: unknown) => ({
-            ok: false as const,
-            failure: mapSubmissionError(props.mapSubmitError, error),
-          }),
-        );
+      let result: FormSubmitResult;
+      try {
+        const candidate = handler(toFormSubmitEvent(payload));
+        if (isPromiseLike(candidate)) {
+          return Promise.resolve(candidate).then(
+            settle,
+            (error: unknown) => ({
+              ok: false as const,
+              failure: mapSubmissionError(props.mapSubmitError, error),
+            }),
+          );
+        }
+        result = candidate;
+      } catch (error) {
+        return {
+          ok: false,
+          failure: mapSubmissionError(props.mapSubmitError, error),
+        };
       }
       return settle(result);
     };

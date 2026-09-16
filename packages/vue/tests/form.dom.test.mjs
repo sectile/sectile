@@ -610,6 +610,48 @@ test('Vue Form owns async submission success and failure lifecycle', async () =>
   host.remove();
 });
 
+test('ISSUE-192: Vue Form maps PromiseLike inspection failures through mapSubmitError', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let state;
+  let mappedReason;
+  const thenable = {};
+  Object.defineProperty(thenable, 'then', {
+    get() { throw new Error('vue submit inspection failed'); },
+  });
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onSubmit: () => thenable,
+      mapSubmitError: (reason) => {
+        mappedReason = reason;
+        return { message: 'Mapped Vue submission inspection failure.' };
+      },
+      onStateChange: (next) => { state = next; },
+    }, {
+      default: () => [
+        h(FormSummary),
+        h(FormSubmit, null, { default: () => 'Save' }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+  const form = host.querySelector('form');
+  assert.ok(form instanceof HTMLFormElement);
+
+  form.requestSubmit();
+  await nextTick();
+
+  assert.equal(mappedReason?.message, 'vue submit inspection failed');
+  assert.equal(form.dataset.submissionStatus, 'failed');
+  assert.deepEqual(state.submission.failure, { message: 'Mapped Vue submission inspection failure.' });
+
+  app.unmount();
+  host.remove();
+});
+
 test('Vue FormSummary keeps one multi-field issue and exposes related-field ARIA state', async () => {
   const host = document.createElement('div');
   document.body.append(host);

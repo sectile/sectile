@@ -769,18 +769,19 @@ export function tryCreateForm<
         pendingReinitializations.set(submissionGeneration, reinitializeOptions);
       },
     });
-    let result: FormSubmitResult<ID> | PromiseLike<FormSubmitResult<ID>>;
+    let result: FormSubmitResult<ID>;
     try {
-      result = submitHandler(payload);
+      const candidate = submitHandler(payload);
+      if (isPromiseLike(candidate)) {
+        void Promise.resolve(candidate).then(
+          (resolved) => settleManagedSubmission(submissionGeneration, resolved),
+          (error: unknown) => failManagedSubmission(submissionGeneration, error),
+        );
+        return;
+      }
+      result = candidate;
     } catch (error) {
       failManagedSubmission(submissionGeneration, error);
-      return;
-    }
-    if (isPromiseLike(result)) {
-      void Promise.resolve(result).then(
-        (resolved) => settleManagedSubmission(submissionGeneration, resolved),
-        (error: unknown) => failManagedSubmission(submissionGeneration, error),
-      );
       return;
     }
     settleManagedSubmission(submissionGeneration, result);
@@ -892,29 +893,37 @@ export function tryCreateForm<
       changedFieldId,
       signal: controller.signal,
     });
-    let custom: FormValidationResult | PromiseLike<FormValidationResult> = {};
-    let schema: StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>> | null = null;
+    let custom: FormValidationResult = {};
+    let customPromise: PromiseLike<FormValidationResult> | null = null;
+    let schema: StandardSchemaV1.Result<Output> | null = null;
+    let schemaPromise: PromiseLike<StandardSchemaV1.Result<Output>> | null = null;
     try {
-      custom = validateOption?.(input, context) ?? {};
+      const candidate = validateOption?.(input, context) ?? {};
+      if (isPromiseLike(candidate)) customPromise = candidate;
+      else custom = candidate;
     } catch (error) {
       custom = validationException(error);
     }
     if (intent === 'submission' && schemaOption !== undefined) {
       try {
-        schema = schemaOption['~standard'].validate(input);
+        const candidate = schemaOption['~standard'].validate(input);
+        if (isPromiseLike(candidate)) schemaPromise = candidate;
+        else schema = candidate;
       } catch (error) {
         schema = schemaException(error);
       }
     }
     const includeNative = intent === 'submission'
       && includeNativeValidation(options.form, submitter);
-    if (isPromiseLike(custom) || isPromiseLike(schema)) {
+    if (customPromise !== null || schemaPromise !== null) {
       event?.preventDefault();
       void Promise.all([
-        Promise.resolve(custom).catch(validationException),
-        schema === null
-          ? Promise.resolve(null)
-          : Promise.resolve(schema).catch(schemaException),
+        customPromise === null
+          ? Promise.resolve(custom).catch(validationException)
+          : Promise.resolve(customPromise).catch(validationException),
+        schemaPromise === null
+          ? Promise.resolve(schema).catch(schemaException)
+          : Promise.resolve(schemaPromise).catch(schemaException),
       ]).then(([customResult, schemaResult]) => {
         if (controller.signal.aborted) return;
         finishValidation(
