@@ -38,7 +38,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:adapter.facade-destroy | connected | `O(pSubscriber + rResource)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:adapter.facade-method-read | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(pMethod)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:adapter.facade-subscribe | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
-| core:adapter.facade-update-publication | mounted | `O(pSubscriber)` worst-case | `O(pSubscriber)` | `O(1)` | `O(pSubscriber)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:adapter.facade-update-publication | mounted | `O(pSubscriber)` worst-case | `O(pSubscriber)` | `O(1)` | `O(pSubscriber)` | forbidden | packages/core/tests/runtime/adapter-runtime.test.mjs |
 | core:anchored-layout.solve | external | `O(cAnchor)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:canonical-state.transition | trusted | `O(sMove + oResult)` expected | `O(1)` | `O(oResult)` | `O(oResult)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:canonical-state.validation-external | external | `O(n + k + sMove)` worst-case | `O(n + k)` | `O(1)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |

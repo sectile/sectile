@@ -352,6 +352,57 @@ test('facade connection exposes live state, subscriptions, and idempotent destru
   assert.equal(disconnects, 1);
 });
 
+test('ISSUE-176: nested facade publication supersedes stale outer completion', () => {
+  let state = 'a';
+  let revision = 0;
+  let onUpdate = () => undefined;
+  const trace = [];
+  const nestedError = new Error('nested subscriber failed');
+  const constructed = createFacadeConnection(
+    { onUpdate: () => trace.push(`update:${revision}:${state}`) },
+    (options) => {
+      onUpdate = options.onUpdate;
+      return {
+        ok: true,
+        value: {
+          getSnapshot: () => ({ state, revision }),
+          handleEvent: (next) => {
+            state = next;
+            revision += 1;
+            onUpdate();
+            return true;
+          },
+        },
+      };
+    },
+  );
+  assert.equal(constructed.ok, true);
+  const facade = constructed.value;
+  let nested = false;
+  facade.subscribe((snapshot) => {
+    trace.push(`first:${snapshot.revision}:${snapshot.state}`);
+    if (!nested && snapshot.revision === 1) {
+      nested = true;
+      facade.send('c');
+    }
+  });
+  facade.subscribe((snapshot) => {
+    trace.push(`second:${snapshot.revision}:${snapshot.state}`);
+    if (snapshot.revision === 2) throw nestedError;
+  });
+  facade.subscribe((snapshot) => trace.push(`third:${snapshot.revision}:${snapshot.state}`));
+
+  assert.throws(() => facade.send('b'), (error) => error === nestedError);
+  assert.deepEqual(trace, [
+    'first:1:b',
+    'first:2:c',
+    'second:2:c',
+    'third:2:c',
+    'update:2:c',
+  ]);
+  assert.deepEqual(facade.getSnapshot(), { state: 'c', revision: 2 });
+});
+
 for (const phase of ['disconnect call', 'disconnect lookup']) {
   test(`facade destruction stays inactive and one-shot after a throwing ${phase}`, () => {
     for (const failure of [new Error('disconnect failed'), undefined, null]) {

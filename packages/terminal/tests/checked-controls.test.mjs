@@ -103,7 +103,7 @@ for (const { name, create, change, value, field } of [
         if (throws) assert.throws(() => control.send('toggle'), (error) => error === failure);
         else assert.equal(control.send('toggle'), true);
         assert.deepEqual(snapshots, source === 'change' ? [[2, false]] : [[1, true], [2, false]]);
-        assert.equal(updates, snapshots.length);
+        assert.equal(updates, 1);
         assert.equal(control.getSnapshot().revision, 2);
         assert.equal(control.state[field], false);
         control.destroy();

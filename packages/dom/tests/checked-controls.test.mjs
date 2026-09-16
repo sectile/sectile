@@ -223,7 +223,7 @@ for (const { name, create, change, value, field, attribute } of [
         assert.deepEqual(snapshots, source === 'change'
           ? [[2, false, 'false']]
           : [[1, true, 'true'], [2, false, 'false']]);
-        assert.equal(updates, snapshots.length);
+        assert.equal(updates, 1);
         assert.equal(control.getSnapshot().revision, 2);
         assert.equal(control.state[field], false);
         assert.equal(element.attributes.get(attribute), 'false');
