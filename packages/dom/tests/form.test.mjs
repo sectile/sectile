@@ -297,6 +297,72 @@ test('DOM Form maps thrown managed submission errors without exposing the reason
   }
 });
 
+test('ISSUE-192: DOM Form settles PromiseLike inspection failures', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const throwingThenable = (message) => {
+      const result = {};
+      Object.defineProperty(result, 'then', {
+        get() { throw new Error(message); },
+      });
+      return result;
+    };
+
+    for (const { options, message } of [
+      {
+        options: { validate: () => throwingThenable('validate inspection failed') },
+        message: 'Form validation failed.',
+      },
+      {
+        options: {
+          schema: {
+            '~standard': {
+              version: 1,
+              vendor: 'issue-192',
+              validate: () => throwingThenable('schema inspection failed'),
+            },
+          },
+        },
+        message: 'Schema validation failed.',
+      },
+    ]) {
+      const formElement = document.createElement('form');
+      document.body.append(formElement);
+      const form = createForm({ form: formElement, ...options });
+
+      formElement.requestSubmit();
+
+      assert.equal(form.state.validation.status, 'invalid');
+      assert.equal(form.state.submission.status, 'idle');
+      assert.equal(form.state.allIssues.some((issue) => issue.message === message), true);
+      form.destroy();
+      formElement.remove();
+    }
+
+    const formElement = document.createElement('form');
+    document.body.append(formElement);
+    let mappedReason;
+    const form = createForm({
+      form: formElement,
+      onSubmit: () => throwingThenable('submit inspection failed'),
+      mapSubmitError: (reason) => {
+        mappedReason = reason;
+        return { message: 'Mapped submission inspection failure.' };
+      },
+    });
+
+    formElement.requestSubmit();
+
+    assert.equal(mappedReason?.message, 'submit inspection failed');
+    assert.equal(form.state.submission.status, 'failed');
+    assert.deepEqual(form.state.submission.failure, { message: 'Mapped submission inspection failure.' });
+    form.destroy();
+  } finally {
+    dom.restore();
+  }
+});
+
 test('DOM Form clears one canonical multi-field server issue on related input', () => {
   const dom = installDOM();
   try {
