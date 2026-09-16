@@ -591,25 +591,30 @@ function preflightChartModel<ID extends StableID>(
   layers: readonly ChartLayer<ID>[],
   limits: Required<ChartLimits>,
 ): ChartResult<PreparedChartModelInput<ID>> {
-  if (layers.length > limits.maxLayers) {
+  const layerCount = layers.length;
+  if (layerCount > limits.maxLayers) {
     return chartFail('resource-rejection', 'chart-layer-ceiling-exceeded', 'Chart layer count exceeds its ceiling.', {
-      actual: layers.length,
+      actual: layerCount,
       ceiling: limits.maxLayers,
     });
   }
   const prepared: PreparedChartLayerInput<ID>[] = [];
   const layerIDs = new Set<ID>();
   let datumCount = 0;
-  for (let layerPosition = 0; layerPosition < layers.length; layerPosition += 1) {
+  for (let layerPosition = 0; layerPosition < layerCount; layerPosition += 1) {
     const layer = layers[layerPosition];
-    if (layer === null || typeof layer !== 'object' || !Array.isArray(layer.data)) {
+    if (layer === null || typeof layer !== 'object') {
       return chartFail('construction', 'chart-model-invalid', 'Chart layer data must be an array.', { layer: layerPosition });
     }
     const id = layer.id;
+    const profile = layer.profile;
+    const data = layer.data;
+    if (!Array.isArray(data)) {
+      return chartFail('construction', 'chart-model-invalid', 'Chart layer data must be an array.', { layer: layerPosition });
+    }
     if (layerIDs.has(id)) {
       return chartFail('construction', 'chart-layer-duplicate', 'Chart layer identities must be unique.', { id });
     }
-    const data = layer.data as readonly ChartDatum<ID>[];
     const dataLength = data.length;
     if (dataLength > limits.maxDatums - datumCount) {
       return chartFail('resource-rejection', 'chart-datum-ceiling-exceeded', 'Chart datum count exceeds its ceiling.', {
@@ -619,7 +624,7 @@ function preflightChartModel<ID extends StableID>(
     }
     datumCount += dataLength;
     layerIDs.add(id);
-    prepared.push(Object.freeze({ id, profile: layer.profile, data, dataLength }));
+    prepared.push(Object.freeze({ id, profile, data, dataLength }));
   }
   return chartOK(Object.freeze({ layers: Object.freeze(prepared), datumCount }));
 }
