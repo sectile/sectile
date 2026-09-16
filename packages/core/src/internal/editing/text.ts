@@ -345,22 +345,22 @@ function createSnapshot(
       'Text selection must provide anchor and focus code-unit offsets.',
     );
   }
+  const anchor = selection.anchorCodeUnitOffset;
+  const focus = selection.focusCodeUnitOffset;
   const anchorError = validateOffset(
     text,
-    selection.anchorCodeUnitOffset,
+    anchor,
     'anchorCodeUnitOffset',
     errorClass,
   );
   if (anchorError !== null) return anchorError;
   const focusError = validateOffset(
     text,
-    selection.focusCodeUnitOffset,
+    focus,
     'focusCodeUnitOffset',
     errorClass,
   );
   if (focusError !== null) return focusError;
-  const anchor = selection.anchorCodeUnitOffset;
-  const focus = selection.focusCodeUnitOffset;
   const textSelection: TextSelection = Object.freeze({
     anchorCodeUnitOffset: anchor,
     focusCodeUnitOffset: focus,
@@ -381,21 +381,26 @@ function normalizeEditingState(
   }
   const snapshot = normalizeSnapshot(state.snapshot, errorClass);
   if (!snapshot.ok) return snapshot;
-  if (state.composition === null) return ok(stateFromSnapshot(snapshot.value));
-  if (!isObject(state.composition)) {
+  const composition = state.composition;
+  if (composition === null) return ok(stateFromSnapshot(snapshot.value));
+  if (!isObject(composition)) {
     return fail(
       errorClass,
       'invalid-text-composition',
       'Text composition must be null or a composition snapshot.',
     );
   }
-  const baseline = normalizeSnapshot(state.composition.baseline, errorClass);
+  const baselineInput = composition.baseline;
+  const startCodeUnitOffset = composition.startCodeUnitOffset;
+  const endCodeUnitOffset = composition.endCodeUnitOffset;
+  const composingText = composition.composingText;
+  const baseline = normalizeSnapshot(baselineInput, errorClass);
   if (!baseline.ok) return baseline;
   const projected = replaceChecked(
     baseline.value.text,
-    state.composition.startCodeUnitOffset,
-    state.composition.endCodeUnitOffset,
-    state.composition.composingText,
+    startCodeUnitOffset,
+    endCodeUnitOffset,
+    composingText,
     errorClass,
     true,
   );
@@ -411,9 +416,9 @@ function normalizeEditingState(
     snapshot.value,
     freezeComposition({
       baseline: baseline.value,
-      startCodeUnitOffset: state.composition.startCodeUnitOffset,
-      endCodeUnitOffset: state.composition.endCodeUnitOffset,
-      composingText: state.composition.composingText,
+      startCodeUnitOffset,
+      endCodeUnitOffset,
+      composingText,
     }),
   ));
 }

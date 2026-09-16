@@ -268,6 +268,76 @@ test('public text events reduce replacement and composition as one atomic state 
   assert.deepEqual(cancelled.state, replaced.state);
 });
 
+test('ISSUE-140: text canonicalization captures external selection and composition fields once', () => {
+  let anchorReads = 0;
+  let focusReads = 0;
+  const selectionResult = tryCreateTextEditingState('😀', {
+    get anchorCodeUnitOffset() {
+      anchorReads += 1;
+      return anchorReads === 1 ? 0 : 1;
+    },
+    get focusCodeUnitOffset() {
+      focusReads += 1;
+      return 2;
+    },
+  });
+  assert.equal(selectionResult.ok, true);
+  assert.deepEqual([anchorReads, focusReads], [1, 1]);
+  assert.deepEqual(
+    observe(selectionResult.value).selection,
+    {
+      anchorCodeUnitOffset: 0,
+      focusCodeUnitOffset: 2,
+      startCodeUnitOffset: 0,
+      endCodeUnitOffset: 2,
+      direction: 'forward',
+    },
+  );
+  const selectionRevalidated = normalizeTextEditingState(structuralTextState(selectionResult.value));
+  assert.equal(selectionRevalidated.ok, true);
+  assert.deepEqual(observe(selectionRevalidated.value), observe(selectionResult.value));
+
+  let compositionReads = 0;
+  let baselineReads = 0;
+  let startReads = 0;
+  let endReads = 0;
+  let composingTextReads = 0;
+  const composition = {
+    get baseline() {
+      baselineReads += 1;
+      return { text: 'ab', selection: endSelection('ab') };
+    },
+    get startCodeUnitOffset() {
+      startReads += 1;
+      return startReads === 1 ? 0 : 1;
+    },
+    get endCodeUnitOffset() {
+      endReads += 1;
+      return 1;
+    },
+    get composingText() {
+      composingTextReads += 1;
+      return 'x';
+    },
+  };
+  const compositionResult = normalizeTextEditingState({
+    snapshot: { text: 'xb', selection: endSelection('xb') },
+    get composition() {
+      compositionReads += 1;
+      return composition;
+    },
+  });
+  assert.equal(compositionResult.ok, true);
+  assert.deepEqual(
+    [compositionReads, baselineReads, startReads, endReads, composingTextReads],
+    [1, 1, 1, 1, 1],
+  );
+  assert.equal(compositionResult.value.composition.startCodeUnitOffset, 0);
+  const compositionRevalidated = normalizeTextEditingState(structuralTextState(compositionResult.value));
+  assert.equal(compositionRevalidated.ok, true);
+  assert.deepEqual(observe(compositionRevalidated.value), observe(compositionResult.value));
+});
+
 test('public text normalization rejects malformed external state without throwing', () => {
   for (const invalid of [
     normalizeTextEditingState({ snapshot: null, composition: null }),
@@ -302,6 +372,27 @@ function endSelection(text) {
   return {
     anchorCodeUnitOffset: text.length,
     focusCodeUnitOffset: text.length,
+  };
+}
+
+function structuralTextState(state) {
+  const snapshot = (value) => ({
+    text: value.text,
+    selection: {
+      anchorCodeUnitOffset: value.selection.anchorCodeUnitOffset,
+      focusCodeUnitOffset: value.selection.focusCodeUnitOffset,
+    },
+  });
+  return {
+    snapshot: snapshot(state.snapshot),
+    composition: state.composition === null
+      ? null
+      : {
+          baseline: snapshot(state.composition.baseline),
+          startCodeUnitOffset: state.composition.startCodeUnitOffset,
+          endCodeUnitOffset: state.composition.endCodeUnitOffset,
+          composingText: state.composition.composingText,
+        },
   };
 }
 
