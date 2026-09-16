@@ -21035,25 +21035,27 @@
           "external input is validated exactly once at its boundary"
         ],
         "ceilings": [
-          "operation item and output ceilings"
+          "Each onUpdate invocation captures at most the facade-owned subscriber count and never scans a component/domain collection.",
+          "One O(1) publication token identifies the current synchronous generation; nested publication replaces it and superseded outer work stops after the callback already in progress.",
+          "No publication queue or multi-generation history is retained."
         ],
         "benchmarkIDs": [
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "ISSUE-176: an outer publication superseded by a nested update stops before later stale subscribers and before duplicate application completion.",
+          "The nested/latest generation still drains its captured subscriber cohort after a throwing subscriber, invokes application onUpdate once, and preserves the first thrown identity.",
+          "The stable non-reentrant path attempts each captured subscriber once and application onUpdate once in subscriber-before-application order."
         ],
-        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "One stable onUpdate relay captures the current subscriber Set once, attempts every snapshot subscriber, then attempts the application onUpdate callback and rethrows the first user error after both phases.",
-        "adversarialWitness": "The first facade subscriber throws, later subscribers still observe the committed snapshot, and a throwing application callback runs last while the first error is preserved.",
+        "resourceRationale": "Each invocation materializes one bounded subscriber cohort O(pSubscriber) plus one O(1) publication token. The facade retains only its existing subscriber Set; generation fencing adds no queue, timer, observer, listener, or per-generation retained history.",
+        "proof": "One stable onUpdate relay installs a current publication token, captures the current subscriber Set once, and attempts that cohort in order. After each external subscriber callback it checks whether nested publication replaced the token. A superseded outer invocation stops before delivering further stale snapshots or application completion; the current generation attempts application onUpdate and clears its token before rethrowing the first captured user error. Per invocation time remains O(pSubscriber) and temporary space O(pSubscriber).",
+        "adversarialWitness": "ISSUE-176 nests a second committed publication from the first outer subscriber, then throws from a later nested subscriber. The latest generation still reaches later subscribers and application completion exactly once while the superseded outer generation publishes no stale remainder. Existing non-reentrant first-error and destruction tests cover stable and exceptional controls.",
         "evidence": [
-          "scripts/complexity-contracts.test.mjs",
-          "scripts/complexity-witnesses.test.mjs"
+          "packages/core/tests/runtime/adapter-runtime.test.mjs"
         ],
         "fullScan": {
           "allowed": false,
-          "rationale": "Only facade-owned subscribers may be visited by one connection update."
+          "rationale": "Only the facade-owned subscriber cohort captured for one connection update may be visited; superseded publication may stop early."
         }
       }
     },
