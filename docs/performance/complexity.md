@@ -86,7 +86,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:text.replace-canonical | trusted | `O(nInsert + nOut)` worst-case | `O(1)` | `O(nOut)` | `O(nOut)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:toast.construct | external | `O(n + l)` expected | `O(n + l)` | `O(k + l)` | `O(k + l)` | allowed | packages/core/tests/composites/toast.test.mjs |
 | core:toast.transition | trusted | `O(1 + s + l + k)` expected | `O(1 + s + l + k)` | `O(1 + s + l + k)` | `O(1 + s + l + k)` | allowed | packages/core/tests/composites/toast.test.mjs |
-| core:tree.construct | external | `O(n + k)` expected | `O(n)` | `O(k)` | `O(k)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:tree.construct | external | `O(n)` expected | `O(n)` | `O(n)` | `O(n)` | allowed | packages/core/tests/structures/tree.reference-law.test.mjs |
 | core:tree.subtree-interval | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(n)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:tree.views | trusted | `O(n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:tree.visible | external | `O(n + k)` expected | `O(n)` | `O(k)` | `O(k)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
