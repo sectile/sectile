@@ -132,6 +132,100 @@ test('grid construction normalizes ragged rows and rejects invalid occupancy', (
   assert.equal(rejected.kind, 'resource-rejected');
 });
 
+test('ISSUE-183: grid construction consumes only captured row and column prefixes', () => {
+  let innerReads = 0;
+  const growingRow = [];
+  Object.defineProperty(growingRow, 0, {
+    enumerable: true,
+    configurable: true,
+    get() {
+      innerReads += 1;
+      if (growingRow.length === 1) growingRow.push('cell-1');
+      return 'cell-0';
+    },
+  });
+  const inner = tryCreateGrid([growingRow], {
+    maxRows: 1, maxColumns: 1, maxCells: 1, maxItems: 2,
+  });
+  assert.equal(inner.ok, true);
+  assert.equal(innerReads, 1);
+  assert.equal(growingRow.length, 2);
+  assert.equal(inner.value.rowCount, 1);
+  assert.equal(inner.value.columnCount, 1);
+  assert.equal(inner.value.size, 1);
+  assert.deepEqual(inner.value.domain().ids, ['cell-0']);
+  assert.equal(inner.value.positionOf('cell-1'), null);
+
+  let outerReads = 0;
+  const growingRows = [];
+  Object.defineProperty(growingRows, 0, {
+    enumerable: true,
+    configurable: true,
+    get() {
+      outerReads += 1;
+      if (growingRows.length === 1) growingRows.push(['row-1']);
+      return ['row-0'];
+    },
+  });
+  const outer = tryCreateGrid(growingRows, {
+    maxRows: 1, maxColumns: 1, maxCells: 1, maxItems: 2,
+  });
+  assert.equal(outer.ok, true);
+  assert.equal(outerReads, 1);
+  assert.equal(growingRows.length, 2);
+  assert.equal(outer.value.rowCount, 1);
+  assert.equal(outer.value.size, 1);
+  assert.deepEqual(outer.value.domain().ids, ['row-0']);
+  assert.equal(outer.value.positionOf('row-1'), null);
+
+  for (const grid of [inner.value, outer.value]) {
+    for (const id of grid.domain().ids) {
+      const position = grid.positionOf(id);
+      assert.ok(position.row >= 0 && position.row < grid.rowCount);
+      assert.ok(position.column >= 0 && position.column < grid.columnCount);
+      assert.equal(grid.cellAt(position.row, position.column), id);
+    }
+  }
+
+  let overRowReads = 0;
+  const overRows = [];
+  for (const [index, id] of ['a', 'b'].entries()) {
+    Object.defineProperty(overRows, index, {
+      enumerable: true,
+      configurable: true,
+      get() {
+        overRowReads += 1;
+        return [id];
+      },
+    });
+  }
+  const rejectedRows = tryCreateGrid(overRows, {
+    maxRows: 1, maxColumns: 1, maxCells: 2, maxItems: 2,
+  });
+  assert.equal(rejectedRows.ok, false);
+  assert.equal(rejectedRows.error.code, 'row-ceiling-exceeded');
+  assert.equal(overRowReads, 0);
+
+  let overColumnReads = 0;
+  const overColumns = [];
+  for (const [index, id] of ['a', 'b'].entries()) {
+    Object.defineProperty(overColumns, index, {
+      enumerable: true,
+      configurable: true,
+      get() {
+        overColumnReads += 1;
+        return id;
+      },
+    });
+  }
+  const rejectedColumns = tryCreateGrid([overColumns], {
+    maxRows: 1, maxColumns: 1, maxCells: 2, maxItems: 2,
+  });
+  assert.equal(rejectedColumns.ok, false);
+  assert.equal(rejectedColumns.error.code, 'column-ceiling-exceeded');
+  assert.equal(overColumnReads, 0);
+});
+
 test('grid sequences preserve raised item ceilings in wide and tall domains', () => {
   const count = 100_001;
   const ids = Array.from({ length: count }, (_, id) => id);

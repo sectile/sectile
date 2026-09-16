@@ -267,13 +267,23 @@ export function tryCreateGrid<ID extends StableID>(
   if (maxIDCodeUnits < 1) {
     return fail('construction', 'invalid-max-id-code-units', 'maxIDCodeUnits must be a positive safe integer.', { maxIDCodeUnits });
   }
-  if (rows.length > maxRows) {
+  const rowCount = rows.length;
+  if (rowCount > maxRows) {
     return fail('resource-rejection', 'row-ceiling-exceeded', 'Grid exceeds maxRows.', {
-      rowCount: rows.length,
+      rowCount,
       maxRows,
     });
   }
-  const observedColumns = rows.reduce((maximum, row) => Math.max(maximum, row.length), 0);
+  const preparedRows = new Array<readonly (ID | null)[]>(rowCount);
+  const rowLengths = new Array<number>(rowCount);
+  let observedColumns = 0;
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+    const row = rows[rowIndex] ?? [];
+    const rowLength = row.length;
+    preparedRows[rowIndex] = row;
+    rowLengths[rowIndex] = rowLength;
+    observedColumns = Math.max(observedColumns, rowLength);
+  }
   const columnCount = options.columnCount ?? observedColumns;
   const columnError = validateSafeCeiling(columnCount, 'columnCount');
   if (columnError !== null) return { ok: false, error: columnError };
@@ -291,10 +301,10 @@ export function tryCreateGrid<ID extends StableID>(
       maxColumns,
     });
   }
-  const cellCount = rows.length * columnCount;
+  const cellCount = rowCount * columnCount;
   if (!Number.isSafeInteger(cellCount) || cellCount > maxCells) {
     return fail('resource-rejection', 'cell-ceiling-exceeded', 'Grid rectangle exceeds maxCells.', {
-      rowCount: rows.length,
+      rowCount,
       columnCount,
       cellCount,
       maxCells,
@@ -304,9 +314,10 @@ export function tryCreateGrid<ID extends StableID>(
   const cells: (ID | null)[] = Array.from({ length: cellCount }, () => null);
   const positions = new Map<ID, GridPosition>();
   const domainIDs: ID[] = [];
-  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
-    const row = rows[rowIndex] ?? [];
-    for (let column = 0; column < row.length; column += 1) {
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+    const row = preparedRows[rowIndex] as readonly (ID | null)[];
+    const rowLength = rowLengths[rowIndex] as number;
+    for (let column = 0; column < rowLength; column += 1) {
       const id = row[column] ?? null;
       if (id === null) continue;
       const idError = validateStableID(id, maxIDCodeUnits);
@@ -330,7 +341,7 @@ export function tryCreateGrid<ID extends StableID>(
     }
   }
   return ok(new IndexedGrid(
-    rows.length, columnCount, cells, positions, domainIDs, maxItems, maxIDCodeUnits,
+    rowCount, columnCount, cells, positions, domainIDs, maxItems, maxIDCodeUnits,
   ));
 }
 
