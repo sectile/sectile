@@ -24656,15 +24656,13 @@
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "raw model preflight observes exactly the initially accepted layer prefix and reads each accepted layer id, profile, and data reference once before datum packing"
         ],
-        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Raw model normalization captures every bounded layer header before packing. Patch preflight copies current layer sizes once, resolves each bounded operation through the retained layer index, and updates a running total in declaration order before any datum is materialized or packed.",
-        "adversarialWitness": "An over-ceiling replacement or insert exposes datum arrays through read-counting proxies and returns the resource rejection with zero element reads; an insert-then-remove sequence that only fits at the end is rejected at its overflowing intermediate state.",
+        "resourceRationale": "A captured layerCount bounded by maxLayers fixes the raw-model traversal domain, while one captured data reference and data length per accepted layer keep datum packing bounded by maxDatums without a second drift scan or retained cache.",
+        "proof": "Raw model normalization captures layerCount once, rejects that count against maxLayers, visits exactly those layer positions, and captures each accepted id, profile, data reference, and data length once before packing. Packing consumes only the prepared owner and its captured data lengths. Patch preflight separately copies current layer sizes once, resolves each bounded operation through the retained layer index, and updates a running total in declaration order before any datum is materialized or packed.",
+        "adversarialWitness": "ISSUE-194 lets the first accepted layer access append another layer and makes the accepted layer data getter return a different array on a second read; production retains only the original one-layer prefix and first data observation with one header read each. A stable initially over-ceiling model still rejects with zero layer element reads. Existing patch witnesses keep over-ceiling datum arrays unread and reject overflowing intermediate operation states.",
         "evidence": [
-          "scripts/complexity-contracts.test.mjs",
-          "scripts/complexity-witnesses.test.mjs"
+          "packages/chart/tests/model/model.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
