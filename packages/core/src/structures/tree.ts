@@ -237,35 +237,38 @@ export function tryCreateTree<ID extends StableID>(
   if (maxIDCodeUnits < 1) {
     return fail('construction', 'invalid-max-id-code-units', 'maxIDCodeUnits must be a positive safe integer.', { maxIDCodeUnits });
   }
-  if (nodes.length > maxItems) {
+  const nodeCount = nodes.length;
+  if (nodeCount > maxItems) {
     return fail('resource-rejection', 'item-ceiling-exceeded', 'Tree exceeds maxItems.', {
-      size: nodes.length,
+      size: nodeCount,
       maxItems,
     });
   }
 
   const parent = new Map<ID, ID | null>();
   const ids: ID[] = [];
-  for (let index = 0; index < nodes.length; index += 1) {
+  for (let index = 0; index < nodeCount; index += 1) {
     const node = nodes[index];
     if (node === undefined) {
       return fail('construction', 'invalid-node', 'Tree input must not contain sparse or missing nodes.', { index });
     }
-    const idError = validateStableID(node.id, maxIDCodeUnits);
+    const id = node.id;
+    const parentID = node.parentID;
+    const idError = validateStableID(id, maxIDCodeUnits);
     if (idError !== null) return { ok: false, error: idError };
-    if (parent.has(node.id)) {
+    if (parent.has(id)) {
       return fail('construction', 'duplicate-id', 'Tree identities must be unique.', {
-        id: node.id,
+        id,
         index,
       });
     }
-    if (node.parentID === node.id) {
+    if (parentID === id) {
       return fail('construction', 'self-parent', 'A tree node cannot be its own parent.', {
-        id: node.id,
+        id,
       });
     }
-    parent.set(node.id, node.parentID);
-    ids.push(node.id);
+    parent.set(id, parentID);
+    ids.push(id);
   }
   for (const id of ids) {
     const parentID = parent.get(id) ?? null;

@@ -120,6 +120,82 @@ test('tree construction rejects duplicate, missing, cyclic, self-parent, and dep
 });
 
 
+test('ISSUE-184: tree construction consumes one captured node prefix and header observation', () => {
+  let nodeReads = 0;
+  const growingNodes = [];
+  Object.defineProperty(growingNodes, 0, {
+    enumerable: true,
+    configurable: true,
+    get() {
+      nodeReads += 1;
+      if (growingNodes.length === 1) growingNodes.push({ id: 'node-1', parentID: null });
+      return { id: 'node-0', parentID: null };
+    },
+  });
+  const growing = tryCreateTree(growingNodes, { maxItems: 1, maxDepth: 1 });
+  assert.equal(growing.ok, true);
+  assert.equal(nodeReads, 1);
+  assert.equal(growingNodes.length, 2);
+  assert.equal(growing.value.size, 1);
+  assert.deepEqual(growing.value.roots.ids, ['node-0']);
+  assert.deepEqual(growing.value.preorder().ids, ['node-0']);
+  assert.deepEqual(growing.value.postorder().ids, ['node-0']);
+  for (const view of [
+    growing.value.roots,
+    growing.value.preorder(),
+    growing.value.postorder(),
+    growing.value.childrenOf('node-0'),
+  ]) {
+    assertTreeSequenceLimits(view, 1, 1_024);
+  }
+  assert.equal(growing.value.has('node-1'), false);
+
+  let idReads = 0;
+  let parentReads = 0;
+  const observedNode = {};
+  Object.defineProperties(observedNode, {
+    id: {
+      enumerable: true,
+      get() {
+        idReads += 1;
+        return idReads === 1 ? 'first-id' : 'later-id';
+      },
+    },
+    parentID: {
+      enumerable: true,
+      get() {
+        parentReads += 1;
+        return parentReads === 1 ? null : 'missing-parent';
+      },
+    },
+  });
+  const captured = tryCreateTree([observedNode], { maxItems: 1, maxDepth: 1 });
+  assert.equal(captured.ok, true);
+  assert.deepEqual([idReads, parentReads], [1, 1]);
+  assert.deepEqual(captured.value.roots.ids, ['first-id']);
+  assert.equal(captured.value.has('first-id'), true);
+  assert.equal(captured.value.has('later-id'), false);
+  assert.equal(captured.value.parentOf('first-id'), null);
+
+  let overReads = 0;
+  const over = [];
+  for (const [index, id] of ['a', 'b'].entries()) {
+    Object.defineProperty(over, index, {
+      enumerable: true,
+      configurable: true,
+      get() {
+        overReads += 1;
+        return { id, parentID: null };
+      },
+    });
+  }
+  const rejected = tryCreateTree(over, { maxItems: 1, maxDepth: 1 });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'item-ceiling-exceeded');
+  assert.equal(overReads, 0);
+});
+
+
 test('tree production traversal remains stack-safe at the declared depth ceiling', () => {
   const size = 20_000;
   const nodes = Array.from({ length: size }, (_, index) => ({
