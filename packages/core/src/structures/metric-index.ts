@@ -58,6 +58,14 @@ interface MetricLimits {
   readonly expectedQueries: number;
 }
 
+interface MetricPreflight<ID extends StableID> {
+  readonly limits: MetricLimits;
+  readonly pointCount: number;
+  readonly firstPoint: MetricPoint<ID> | undefined;
+  readonly firstCoordinates: readonly number[] | undefined;
+  readonly firstCoordinateCount: number | undefined;
+}
+
 interface KDIndex {
   readonly root: number;
   readonly point: Int32Array;
@@ -83,55 +91,56 @@ export function tryCreateMetricIndex<ID extends StableID>(
   options: MetricIndexOptions = {},
 ): Result<MetricIndex<ID>> {
   if (!Array.isArray(points)) return fail('construction', 'invalid-boundary', 'Metric points must be an array.');
-  const limits = tryMetricLimits(points, options);
-  if (!limits.ok) return limits;
-  if (points.length > limits.value.maxItems) {
-    return fail('resource-rejection', 'item-ceiling-exceeded', 'Metric point count exceeds maxItems.', {
-      size: points.length,
-      maxItems: limits.value.maxItems,
-    });
-  }
+  const preflight = tryMetricPreflight(points, options);
+  if (!preflight.ok) return preflight;
+  const { limits, pointCount, firstPoint, firstCoordinates, firstCoordinateCount } = preflight.value;
   const ids: ID[] = [];
   const indexByID = new Map<ID, number>();
-  const coordinates = new Float64Array(points.length * limits.value.dimensions);
-  for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
-    const point = points[pointIndex];
+  const coordinates = new Float64Array(pointCount * limits.dimensions);
+  for (let pointIndex = 0; pointIndex < pointCount; pointIndex += 1) {
+    const point = pointIndex === 0 && firstPoint !== undefined ? firstPoint : points[pointIndex];
     if (point === undefined || point === null || typeof point !== 'object') {
       return fail('construction', 'invalid-boundary', 'Every metric point must be an object.', { pointIndex });
     }
-    const idError = validateStableID(point.id, limits.value.maxIDCodeUnits);
+    const id = point.id;
+    const usesInferredFirstPoint = pointIndex === 0 && firstPoint !== undefined;
+    const pointCoordinates = usesInferredFirstPoint ? firstCoordinates : point.coordinates;
+    const coordinateCount = Array.isArray(pointCoordinates)
+      ? usesInferredFirstPoint ? firstCoordinateCount as number : pointCoordinates.length
+      : null;
+    const idError = validateStableID(id, limits.maxIDCodeUnits);
     if (idError !== null) return { ok: false, error: idError };
-    if (indexByID.has(point.id)) {
-      return fail('construction', 'duplicate-id', 'Metric point identities must be unique.', { id: point.id, pointIndex });
+    if (indexByID.has(id)) {
+      return fail('construction', 'duplicate-id', 'Metric point identities must be unique.', { id, pointIndex });
     }
-    if (!Array.isArray(point.coordinates) || point.coordinates.length !== limits.value.dimensions) {
+    if (!Array.isArray(pointCoordinates) || coordinateCount !== limits.dimensions) {
       return fail('construction', 'invalid-boundary', 'Every metric coordinate must match the fixed dimension.', {
-        id: point.id,
-        expected: limits.value.dimensions,
-        actual: Array.isArray(point.coordinates) ? point.coordinates.length : null,
+        id,
+        expected: limits.dimensions,
+        actual: coordinateCount,
       });
     }
-    indexByID.set(point.id, pointIndex);
-    ids.push(point.id);
-    for (let dimension = 0; dimension < limits.value.dimensions; dimension += 1) {
-      const coordinate = point.coordinates[dimension];
-      if (!validCoordinate(coordinate, limits.value.maxCoordinateMagnitude)) {
+    indexByID.set(id, pointIndex);
+    ids.push(id);
+    for (let dimension = 0; dimension < limits.dimensions; dimension += 1) {
+      const coordinate = pointCoordinates[dimension];
+      if (!validCoordinate(coordinate, limits.maxCoordinateMagnitude)) {
         return fail('construction', 'invalid-boundary', 'Metric coordinates must be finite and within maxCoordinateMagnitude.', {
-          id: point.id,
+          id,
           dimension,
           coordinate,
-          maxCoordinateMagnitude: limits.value.maxCoordinateMagnitude,
+          maxCoordinateMagnitude: limits.maxCoordinateMagnitude,
         });
       }
-      coordinates[pointIndex * limits.value.dimensions + dimension] = coordinate;
+      coordinates[pointIndex * limits.dimensions + dimension] = coordinate;
     }
   }
-  const kd = points.length >= KD_MIN_ITEMS
-    && limits.value.dimensions <= KD_MAX_DIMENSIONS
-    && limits.value.expectedQueries >= KD_QUERY_CROSSOVER
-    ? buildKDIndex(coordinates, points.length, limits.value.dimensions)
+  const kd = pointCount >= KD_MIN_ITEMS
+    && limits.dimensions <= KD_MAX_DIMENSIONS
+    && limits.expectedQueries >= KD_QUERY_CROSSOVER
+    ? buildKDIndex(coordinates, pointCount, limits.dimensions)
     : null;
-  return ok(Object.freeze(new PackedMetricIndex(Object.freeze(ids), indexByID, coordinates, limits.value, kd)));
+  return ok(Object.freeze(new PackedMetricIndex(Object.freeze(ids), indexByID, coordinates, limits, kd)));
 }
 
 class PackedMetricIndex<ID extends StableID> implements MetricIndex<ID> {
@@ -365,7 +374,11 @@ class PackedMetricIndex<ID extends StableID> implements MetricIndex<ID> {
   }
 }
 
-function tryMetricLimits<ID extends StableID>(points: readonly MetricPoint<ID>[], options: MetricIndexOptions): Result<MetricLimits> {
+function tryMetricPreflight<ID extends StableID>(
+  points: readonly MetricPoint<ID>[],
+  options: MetricIndexOptions,
+): Result<MetricPreflight<ID>> {
+  const pointCount = points.length;
   const maxItems = options.maxItems ?? DEFAULT_MAX_METRIC_ITEMS;
   const itemError = validateSafeCeiling(maxItems, 'maxItems');
   if (itemError !== null) return { ok: false, error: itemError };
@@ -374,12 +387,23 @@ function tryMetricLimits<ID extends StableID>(points: readonly MetricPoint<ID>[]
   if (!Number.isSafeInteger(maxDimensions) || maxDimensions < 1 || maxDimensions > MAX_METRIC_DIMENSIONS) {
     return fail('construction', 'invalid-boundary', 'maxDimensions must be a positive safe integer within the hard ceiling.', { maxDimensions, hardCeiling: MAX_METRIC_DIMENSIONS });
   }
-  const inferredDimensions = points[0]?.coordinates?.length;
-  const dimensionValue = options.dimensions ?? inferredDimensions;
-  if (!Number.isSafeInteger(dimensionValue) || (dimensionValue ?? 0) < 1 || (dimensionValue ?? 0) > maxDimensions) {
-    return fail('construction', 'invalid-boundary', 'dimensions must be a positive safe integer within maxDimensions.', { dimensions: dimensionValue, maxDimensions });
+
+  let firstPoint: MetricPoint<ID> | undefined;
+  let firstCoordinates: readonly number[] | undefined;
+  let firstCoordinateCount: number | undefined;
+  let dimensionValue = options.dimensions;
+  if (dimensionValue === undefined && pointCount <= maxItems) {
+    firstPoint = points[0];
+    firstCoordinates = firstPoint?.coordinates;
+    firstCoordinateCount = firstCoordinates?.length;
+    dimensionValue = firstCoordinateCount;
   }
-  const dimensions = dimensionValue as number;
+  if (dimensionValue !== undefined || pointCount <= maxItems) {
+    if (!Number.isSafeInteger(dimensionValue) || (dimensionValue ?? 0) < 1 || (dimensionValue ?? 0) > maxDimensions) {
+      return fail('construction', 'invalid-boundary', 'dimensions must be a positive safe integer within maxDimensions.', { dimensions: dimensionValue, maxDimensions });
+    }
+  }
+
   const maxCoordinateMagnitude = options.maxCoordinateMagnitude ?? DEFAULT_MAX_METRIC_COORDINATE_MAGNITUDE;
   if (typeof maxCoordinateMagnitude !== 'number' || !Number.isFinite(maxCoordinateMagnitude)
     || maxCoordinateMagnitude <= 0 || maxCoordinateMagnitude > DEFAULT_MAX_METRIC_COORDINATE_MAGNITUDE) {
@@ -392,7 +416,15 @@ function tryMetricLimits<ID extends StableID>(points: readonly MetricPoint<ID>[]
   if (!Number.isSafeInteger(expectedQueries) || expectedQueries < 0) {
     return fail('construction', 'invalid-boundary', 'expectedQueries must be a non-negative safe integer.', { expectedQueries });
   }
-  return ok(Object.freeze({ dimensions, maxItems, maxDimensions, maxCoordinateMagnitude, maxIDCodeUnits, expectedQueries }));
+  if (pointCount > maxItems) {
+    return fail('resource-rejection', 'item-ceiling-exceeded', 'Metric point count exceeds maxItems.', {
+      size: pointCount,
+      maxItems,
+    });
+  }
+  const dimensions = dimensionValue as number;
+  const limits = Object.freeze({ dimensions, maxItems, maxDimensions, maxCoordinateMagnitude, maxIDCodeUnits, expectedQueries });
+  return ok(Object.freeze({ limits, pointCount, firstPoint, firstCoordinates, firstCoordinateCount }));
 }
 
 function buildKDIndex(coordinates: Float64Array, size: number, dimensions: number): KDIndex {
