@@ -66,7 +66,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:index-span.transform | trusted | `O(a)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:layer-stack.ignored-dismissal | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/runtime/layer-stack.test.mjs |
 | core:layer-stack.reject-oversize | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/runtime/layer-stack.test.mjs |
-| core:metric-index.construct | external | `O(x log x * d)` worst-case | `O(x*d)` | `O(1)` | `O(x*d + x)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:metric-index.construct | external | `O(x log x * d)` worst-case | `O(x*d)` | `O(1)` | `O(x*d + x)` | allowed | packages/core/tests/structures/metric-index.test.mjs |
 | core:metric-index.lookup-distance | trusted | `O(d)` worst-case | `O(1)` | `O(d)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:metric-index.query | trusted | `O(x*d + rMetric)` worst-case | `O(d + log x + rMetric)` | `O(rMetric)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:range.arithmetic | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |

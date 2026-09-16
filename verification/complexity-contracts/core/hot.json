@@ -1562,13 +1562,13 @@
         "variables": [
           {
             "name": "x",
-            "meaning": "metric point count",
-            "ceiling": "maxItems"
+            "meaning": "captured accepted metric point count",
+            "ceiling": "x <= maxItems"
           },
           {
             "name": "d",
-            "meaning": "fixed vector dimension",
-            "ceiling": "maxDimensions"
+            "meaning": "captured fixed vector dimension",
+            "ceiling": "d <= maxDimensions"
           }
         ],
         "time": {
@@ -1589,11 +1589,25 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "Boundary validation and packed storage visit x*d coordinates once. When expectedQueries reaches the frozen low-dimensional crossover, d stable presorts plus balanced level partitions build the private kd index during construction only; otherwise construction remains O(x*d).",
-        "adversarialWitness": "Maximum low-dimensional query-heavy input selects the indexed construction; high-dimensional, small, and low-query inputs retain the packed path.",
+        "ceilings": [
+          "x is captured once before point-element observation and later caller-owned point-array growth cannot extend traversal or retained storage.",
+          "Explicit dimensions require no point inference; inferred d reuses the first accepted point and coordinates reference, and d is then fixed for allocation and packing.",
+          "Each accepted point id, coordinates reference, coordinates length, and each of its d coordinate scalars is consumed from one captured observation before canonical publication."
+        ],
+        "deterministicWork": [
+          "A one-point input that appends another point from its accepted point getter performs one point observation and retains one identity/coordinate tuple under maxItems 1.",
+          "An inferred-dimension point with changing id/coordinates getters is observed once per point/header/scalar and publishes the first validated observations consistently across ids, lookup, and coordinateOf().",
+          "Initially over-ceiling inputs reject with zero point-element observations whether dimensions are explicit or inferred."
+        ],
+        "resourceRationale": "Capture-once preflight adds only fixed scalar/reference locals. Packed coordinates remain O(x*d), identity/index ownership remains O(x), optional KD ownership retains the existing bounded representation, and Core owns no lifecycle resources.",
+        "proof": "Construction captures one point count x <= maxItems before any point traversal, resolves one fixed d <= maxDimensions without unnecessary explicit-dimension inference, allocates exactly x*d packed coordinate slots, and visits exactly those x point positions. Each accepted point contributes one captured id, coordinates reference/length, and d validated scalars to both the identity index and packed storage. When expectedQueries reaches the frozen low-dimensional crossover, d stable presorts plus balanced level partitions build the private KD index over the same x packed points; otherwise construction remains O(x*d).",
+        "adversarialWitness": "ISSUE-185 grows the caller point array after the accepted point boundary and supplies changing id/coordinates getters; construction remains bounded to x and publishes one coherent captured tuple per accepted point. Stable over-ceiling controls perform zero point reads. Existing maximum low-dimensional query-heavy input still selects indexed construction, while high-dimensional, small, and low-query inputs retain the packed path.",
+        "evidence": [
+          "packages/core/tests/structures/metric-index.test.mjs"
+        ],
         "fullScan": {
           "allowed": true,
-          "rationale": "Construction must validate and retain every externally supplied coordinate."
+          "rationale": "Construction must validate and retain every coordinate in the admitted maxItems-bounded point prefix; caller growth outside that prefix is not part of the accepted domain."
         }
       }
     },
