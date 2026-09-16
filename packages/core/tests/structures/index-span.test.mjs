@@ -10,6 +10,7 @@ import {
   subtractIndexSpanSets,
   translateIndexSpanSet,
   tryCreateIndexSpan,
+  tryCreateIndexSpanSet,
   unionIndexSpanSets,
 } from '../../.verification-dist/structures/index-span.js';
 
@@ -27,6 +28,89 @@ test('span construction normalizes empty, overlapping, adjacent, and unordered i
   assert.equal(set.spanCount, 1);
   assert.equal(set.coveredCount, 10);
   assert.equal(Object.isFrozen(set.spans), true);
+});
+
+test('ISSUE-186: span-set construction consumes one indexed prefix and captured bounds', () => {
+  let indexedReads = 0;
+  let iteratorStarts = 0;
+  let yielded = 0;
+  const iterating = Array(1);
+  Object.defineProperty(iterating, 0, {
+    enumerable: true,
+    configurable: true,
+    get() {
+      indexedReads += 1;
+      return { start: 0, endExclusive: 1 };
+    },
+  });
+  Object.defineProperty(iterating, Symbol.iterator, {
+    configurable: true,
+    value() {
+      iteratorStarts += 1;
+      let index = 0;
+      return {
+        next() {
+          if (index >= 4) return { done: true, value: undefined };
+          const value = { start: index * 2, endExclusive: index * 2 + 1 };
+          index += 1;
+          yielded += 1;
+          return { done: false, value };
+        },
+      };
+    },
+  });
+  const bounded = tryCreateIndexSpanSet(iterating, { maxSpans: 1, maxExclusive: 8 });
+  assert.equal(bounded.ok, true);
+  assert.deepEqual([indexedReads, iteratorStarts, yielded], [1, 0, 0]);
+  assert.deepEqual(bounded.value.spans, [{ start: 0, endExclusive: 1 }]);
+  assert.equal(bounded.value.coveredCount, 1);
+
+  let startReads = 0;
+  let endReads = 0;
+  const observedSpan = {};
+  Object.defineProperties(observedSpan, {
+    start: {
+      enumerable: true,
+      get() {
+        startReads += 1;
+        return startReads === 1 ? 0 : 100;
+      },
+    },
+    endExclusive: {
+      enumerable: true,
+      get() {
+        endReads += 1;
+        return endReads === 1 ? 1 : 0;
+      },
+    },
+  });
+  const captured = tryCreateIndexSpanSet([observedSpan], { maxSpans: 1, maxExclusive: 1 });
+  assert.equal(captured.ok, true);
+  assert.deepEqual([startReads, endReads], [1, 1]);
+  assert.deepEqual(captured.value.spans, [{ start: 0, endExclusive: 1 }]);
+  assert.equal(captured.value.coveredCount, 1);
+  for (const span of captured.value.spans) {
+    assert.ok(span.start >= 0);
+    assert.ok(span.start < span.endExclusive);
+    assert.ok(span.endExclusive <= 1);
+  }
+
+  let overReads = 0;
+  const over = Array(2);
+  for (let index = 0; index < over.length; index += 1) {
+    Object.defineProperty(over, index, {
+      enumerable: true,
+      configurable: true,
+      get() {
+        overReads += 1;
+        return { start: index * 2, endExclusive: index * 2 + 1 };
+      },
+    });
+  }
+  const rejected = tryCreateIndexSpanSet(over, { maxSpans: 1, maxExclusive: 4 });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'count-ceiling-exceeded');
+  assert.equal(overReads, 0);
 });
 
 test('span-set algebra agrees with finite set references', () => {
