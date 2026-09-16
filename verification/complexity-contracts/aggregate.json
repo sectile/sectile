@@ -24214,28 +24214,23 @@
         "variables": [
           {
             "name": "n",
-            "meaning": "visited input or state cardinality",
-            "ceiling": "operation resource ceiling"
-          },
-          {
-            "name": "k",
-            "meaning": "produced result cardinality",
-            "ceiling": "k <= n"
+            "meaning": "captured input node cardinality",
+            "ceiling": "n <= maxItems"
           }
         ],
         "time": {
-          "bound": "O(n + k)",
+          "bound": "O(n)",
           "kind": "expected",
           "runtimeState": "external"
         },
         "space": {
           "auxiliary": "O(n)",
-          "output": "O(k)",
-          "retained": "O(k)"
+          "output": "O(n)",
+          "retained": "O(n)"
         },
         "resources": {
-          "allocations": "O(n + k)",
-          "cacheEntries": "O(k)",
+          "allocations": "O(n)",
+          "cacheEntries": "O(n)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
@@ -24246,25 +24241,27 @@
           "external input is validated exactly once at its boundary"
         ],
         "ceilings": [
-          "operation item and output ceilings"
+          "n is captured once before the maxItems decision and later caller-owned node-array growth cannot extend traversal.",
+          "Each accepted node reference, id, and parentID is observed once before topology validation and retention.",
+          "Traversal stack depth is bounded by min(n, maxDepth + 1)."
         ],
         "benchmarkIDs": [
           "VAL-017:linear-work"
         ],
         "deterministicWork": [
-          "visited entries do not exceed the declared input/state cardinality",
-          "emitted and retained entries do not exceed the declared output cardinality"
+          "A one-node input whose first element getter appends another root performs one node observation and retains one node.",
+          "A getter-backed accepted node observes id and parentID exactly once and retains those validated observations.",
+          "An input already above maxItems rejects before observing any node element."
         ],
-        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Parent, child, depth, preorder, and postorder indexes each visit nodes/edges a bounded number of times.",
-        "adversarialWitness": "A maximum-depth chain reaches every node and depth check.",
+        "resourceRationale": "Construction retains O(n) parent/child/depth/order indexes and derived sequence owners for only the admitted node prefix; temporary traversal state is O(n) worst-case and Core owns no lifecycle resources.",
+        "proof": "Construction captures one node count n <= maxItems, visits exactly those n node positions, captures each node header once into the parent map and ordered id vector, validates topology from those internal owners, and performs bounded parent/child and iterative traversal passes. Every retained root/preorder/postorder/child domain is derived from the same n admitted identities.",
+        "adversarialWitness": "ISSUE-184 appends a second root while the first accepted node is read and changes getter-backed id/parentID values after their first observation; production ignores the appended node and retains only the first validated header observations. A maximum-depth chain still reaches every node and depth check, while an initially over-ceiling input performs zero node reads.",
         "evidence": [
-          "scripts/complexity-contracts.test.mjs",
-          "scripts/complexity-witnesses.test.mjs"
+          "packages/core/tests/structures/tree.reference-law.test.mjs"
         ],
         "fullScan": {
           "allowed": true,
-          "rationale": "Tree construction must validate every node and edge."
+          "rationale": "Tree construction must validate every admitted node and edge exactly within the maxItems-bounded prefix."
         }
       }
     },
