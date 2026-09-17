@@ -5,19 +5,19 @@ import {
   createControlledComponentController,
   type ControlledComponentController,
 } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './interaction.js';
+import { setInteractionAttributes } from '../../internal/interaction.js';
 import {
   createDOMLayerID,
   getDOMLayerManager,
   type DOMLayerManager,
-} from './layer-manager.js';
-import { acquireModalEffects, type ModalEffects } from './modal-effects.js';
-import { createHiddenBinding, type HiddenBinding } from './hidden-binding.js';
+} from '../layer/manager.js';
+import { acquireModalEffects, type ModalEffects } from '../modal/effects.js';
+import { createHiddenBinding, type HiddenBinding } from '../../internal/hidden-binding.js';
 import {
   createInteractOutsideEvent,
   isEventInside,
   type InteractOutsideHandler,
-} from '../interact-outside.js';
+} from '../../interact-outside.js';
 
 export interface DOMPopupConnection<State, Event> {
   getSnapshot(): RevisionSnapshot<State>;

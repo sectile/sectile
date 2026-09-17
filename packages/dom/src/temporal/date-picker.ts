@@ -16,14 +16,14 @@ import {
   setDatePickerGridFocusEntry,
 } from './internal/date-picker-cell.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
-import { createDOMLayerBinding, type DOMLayerBinding } from '../internal/layer-binding.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from '../overlay/layer/binding.js';
 import { currentReferenceDate } from './internal/reference-date.js';
-import { createPickerPosition, type PickerPositionOptions } from '../internal/picker-position.js';
-import type { PositionConnection } from '../internal/position-connection.js';
+import { createPickerPosition, type PickerPositionOptions } from '../overlay/position/picker.js';
+import type { PositionConnection } from '../overlay/position/connection.js';
 import { createHiddenBinding, type HiddenBinding } from '../internal/hidden-binding.js';
 import type { PeriodPickerHost, PeriodPickerEvent } from './internal/period-picker.js';
 
-export type { PickerPositionOptions } from '../internal/picker-position.js';
+export type { PickerPositionOptions } from '../overlay/position/picker.js';
 
 type DatePickerStateFactory = (input: DatePickerStateInput) => ReturnType<typeof tryCreateDatePickerState>;
 type DatePickerReducer = (state: DatePickerState, event: DatePickerEvent, policies: DatePickerPolicies) => ReturnType<typeof applyDatePickerEvent>;

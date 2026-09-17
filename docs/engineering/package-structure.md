@@ -224,6 +224,44 @@ owns and disposes the controllers it creates; externally supplied controllers
 retain their existing caller-owned lifetime. The optional aggregate and DOM root
 keep their existing dependency isolation, including the Virtual-free host profiles.
 
+## DOM overlay infrastructure ownership
+
+Public overlay entrypoints stay at their existing `src/*.ts` paths. Shared browser
+infrastructure is grouped below them under `src/overlay/`:
+
+```text
+overlay/
+  layer/
+    manager.ts      # document-scoped layer stack and descendant closure
+    binding.ts      # per-surface registration and document dismissal listeners
+  modal/
+    effects.ts      # inert/aria isolation, scroll lock and MutationObserver
+  popup/
+    connection.ts   # focus, layer, modal, visibility and outside-interaction owner
+  position/
+    engine.ts       # physical layout discovery, observers and scheduled projection
+    connection.ts   # one engine lifetime behind host PositionOptions
+    picker.ts       # Temporal picker adapter
+  presence/
+    motion.ts       # exit-motion listeners and fallback timer
+  menu/
+    control.ts      # retained menu/submenu host connection
+```
+
+`position.ts`, `presence.ts`, `interact-outside.ts` and the public popup/menu
+profiles remain at their supported paths. The lower modules do not import those
+profile constructors. The role gate distinguishes layer registry, layer binding,
+modal isolation, popup connection, positioning engine/connection/picker, motion
+wait and menu connection so a helper cannot gain access to an upper resource
+owner merely because all of them are overlay-related.
+
+Layer state remains one document-scoped registry, modal isolation one
+document-scoped state, and each popup/menu/position connection continues to own
+the listeners, observers, scheduled work and registries it creates. Presence
+retains its generation guard and one active motion cleanup. The move does not
+change portable layer, popup, menu or anchored-layout semantics; those remain in
+Core and the existing domain owners.
+
 ## DOM Virtual ownership
 
 The existing `@sectile/dom/virtual` subpath and export target remain unchanged.

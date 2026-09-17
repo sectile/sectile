@@ -26634,7 +26634,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "menu.click-target",
-      "source": "packages/dom/src/internal/menu-control.ts",
+      "source": "packages/dom/src/overlay/menu/control.ts",
       "benchmarkIDs": [
         "VAL-009:dom-menu-click-routing-work"
       ],
@@ -26699,7 +26699,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "menu.item-registration",
-      "source": "packages/dom/src/internal/menu-control.ts",
+      "source": "packages/dom/src/overlay/menu/control.ts",
       "benchmarkIDs": [
         "VAL-009:dom-menu-item-registration-work"
       ],
@@ -26761,7 +26761,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "menu.submenu-registration",
-      "source": "packages/dom/src/internal/menu-control.ts",
+      "source": "packages/dom/src/overlay/menu/control.ts",
       "benchmarkIDs": [
         "GH-9:submenu-registration-work"
       ],
@@ -26826,7 +26826,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "menu.transition-projection",
-      "source": "packages/dom/src/internal/menu-control.ts",
+      "source": "packages/dom/src/overlay/menu/control.ts",
       "benchmarkIDs": [
         "VAL-009:dom-menu-transition-projection-work"
       ],
@@ -26893,7 +26893,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "modal.isolation-refresh",
-      "source": "packages/dom/src/internal/modal-effects.ts",
+      "source": "packages/dom/src/overlay/modal/effects.ts",
       "benchmarkIDs": [
         "GH-169:modal-isolation-live-retention"
       ],
@@ -26962,7 +26962,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "position.connect",
-      "source": "packages/dom/src/internal/positioning/engine.ts",
+      "source": "packages/dom/src/overlay/position/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-connect-resources"
       ],
@@ -27025,7 +27025,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "position.disconnect",
-      "source": "packages/dom/src/internal/positioning/engine.ts",
+      "source": "packages/dom/src/overlay/position/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-disconnect-zero"
       ],
@@ -27088,7 +27088,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "position.discovery",
-      "source": "packages/dom/src/internal/positioning/engine.ts",
+      "source": "packages/dom/src/overlay/position/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-discovery-work"
       ],
@@ -27151,7 +27151,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "position.schedule",
-      "source": "packages/dom/src/internal/positioning/engine.ts",
+      "source": "packages/dom/src/overlay/position/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-schedule-work"
       ],
@@ -27207,7 +27207,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "position.update",
-      "source": "packages/dom/src/internal/positioning/engine.ts",
+      "source": "packages/dom/src/overlay/position/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-update-work"
       ],

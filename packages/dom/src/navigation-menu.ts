@@ -1,7 +1,7 @@
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { createMenuControl, type MenuControl, type MenuControlOptions } from './internal/menu-control.js';
+import { createMenuControl, type MenuControl, type MenuControlOptions } from './overlay/menu/control.js';
 
 export type NavigationMenuOptions<ID extends StableID = StableID> = Omit<MenuControlOptions<ID>, 'kind' | 'trigger' | 'open' | 'defaultOpen'>;
 export type NavigationMenuConnection<ID extends StableID = StableID> = MenuControl<ID>;

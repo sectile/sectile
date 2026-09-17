@@ -4,7 +4,7 @@ import { Window } from 'happy-dom';
 import { createCascadeSelect } from '../.verification-dist/cascade-select.js';
 import { createCombobox } from '../.verification-dist/combobox.js';
 import { createMenuButton } from '../.verification-dist/menu-button.js';
-import { readPositionSourceRegistryDiagnostics } from '../.verification-dist/internal/positioning/engine.js';
+import { readPositionSourceRegistryDiagnostics } from '../.verification-dist/overlay/position/engine.js';
 
 const cascadeNodes = [
   { id: 'asia', parentID: null },

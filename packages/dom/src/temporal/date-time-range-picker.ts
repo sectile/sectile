@@ -22,12 +22,12 @@ import {
   setDatePickerCellFocusEntry,
   setDatePickerGridFocusEntry,
 } from './internal/date-picker-cell.js';
-import { createDOMLayerBinding, type DOMLayerBinding } from '../internal/layer-binding.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from '../overlay/layer/binding.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createTimeField, type TimeFieldConnection } from './time-field.js';
 import { currentReferenceDate } from './internal/reference-date.js';
-import { createPickerPosition, type PickerPositionOptions } from '../internal/picker-position.js';
-import type { PositionConnection } from '../internal/position-connection.js';
+import { createPickerPosition, type PickerPositionOptions } from '../overlay/position/picker.js';
+import type { PositionConnection } from '../overlay/position/connection.js';
 import { createHiddenBinding, type HiddenBinding } from '../internal/hidden-binding.js';
 
 export interface DateTimeRangePickerOptions extends PickerPositionOptions {

@@ -1,10 +1,10 @@
-import type { PositionOptions } from '../position.js';
+import type { PositionOptions } from '../../position.js';
 import {
   createPositionEngine,
   selectPositionRoute,
   type PositionEngineConnection,
   type PositionEngineOptions,
-} from './positioning/engine.js';
+} from './engine.js';
 
 export interface DOMPositionOptions {
   readonly root: HTMLElement;

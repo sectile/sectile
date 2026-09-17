@@ -7,13 +7,13 @@ import {
   tryCreateDisabledIdentitySet,
   type ControlledComponentController,
 } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './interaction.js';
-import { horizontalArrow, type ReadingDirection } from './direction.js';
-import { createDOMLayerBinding, type DOMLayerBinding } from './layer-binding.js';
-import type { PositionOptions } from '../position.js';
-import { createPosition, manualPositionConnection, type PositionConnection } from './position-connection.js';
-import { createHiddenBinding, type HiddenBinding } from './hidden-binding.js';
-import { DOMCompositeFocusEntry } from './composite-focus-entry.js';
+import { setInteractionAttributes } from '../../internal/interaction.js';
+import { horizontalArrow, type ReadingDirection } from '../../internal/direction.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from '../layer/binding.js';
+import type { PositionOptions } from '../../position.js';
+import { createPosition, manualPositionConnection, type PositionConnection } from '../position/connection.js';
+import { createHiddenBinding, type HiddenBinding } from '../../internal/hidden-binding.js';
+import { DOMCompositeFocusEntry } from '../../internal/composite-focus-entry.js';
 
 export type MenuKind = 'menu' | 'menubar' | 'navigation-menu' | 'menu-button';
 export interface MenuTypeaheadOptions<ID extends StableID> { readonly textValue: (id: ID) => string; readonly timeout?: number; readonly now?: () => number; readonly normalize?: (text: string) => string }

@@ -90,6 +90,9 @@
 | WI-005 | @sectile/vue | `./tree-view` | `TreeViewGroup.forcePresent` | @sectile/vue/tree-view |
 | WI-007 | @sectile/vue | `./tree-grid` | `TreeGridEditor.forcePresent` | @sectile/vue/tree-grid |
 | WI-008 | @sectile/terminal | `./combobox` | `Combobox controller declaration closure` | @sectile/terminal/combobox |
+| WI-008 | @sectile/dom | `./menu` | `MenuControl declaration closure` | @sectile/dom/menu |
+| WI-008 | @sectile/dom | `./menubar` | `MenuControl declaration closure` | @sectile/dom/menubar |
+| WI-008 | @sectile/dom | `./navigation-menu` | `MenuControl declaration closure` | @sectile/dom/navigation-menu |
 | WI-008 | @sectile/dom | `./slider` | `Slider controller declaration closure` | @sectile/dom/slider |
 | WI-008 | @sectile/terminal | `./slider` | `Slider controller declaration closure` | @sectile/terminal/slider |
 | WI-008 | @sectile/dom | `./tree-grid` | `TreeGrid controller declaration closure` | @sectile/dom/tree-grid |

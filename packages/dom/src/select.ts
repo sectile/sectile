@@ -10,12 +10,12 @@ import { stableIDToken } from './internal/stable-id-token.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from './overlay/layer/binding.js';
 import {
   createPosition,
   manualPositionConnection,
   type PositionConnection,
-} from './internal/position-connection.js';
+} from './overlay/position/connection.js';
 import type { PositionOptions } from './position.js';
 import { createHiddenBinding, type HiddenBinding } from './internal/hidden-binding.js';
 

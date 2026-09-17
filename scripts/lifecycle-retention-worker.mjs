@@ -8,7 +8,7 @@ import { createForm } from '../packages/dom/dist/form/connection.js';
 import {
   createPositionEngine,
   readPositionSourceRegistryDiagnostics,
-} from '../packages/dom/dist/internal/positioning/engine.js';
+} from '../packages/dom/dist/overlay/position/engine.js';
 import { createVirtualizer } from '../packages/dom/dist/virtual.js';
 import { createCheckbox as createTerminalCheckbox } from '../packages/terminal/dist/checkbox.js';
 

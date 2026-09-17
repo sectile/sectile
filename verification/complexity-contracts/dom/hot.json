@@ -678,7 +678,7 @@
     {
       "id": "menu.click-target",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/menu-control.ts",
+      "source": "packages/dom/src/overlay/menu/control.ts",
       "benchmarkIDs": ["VAL-009:dom-menu-click-routing-work"],
       "specificationCeiling": "O(hPath) expected",
       "contract": {
@@ -713,7 +713,7 @@
     {
       "id": "menu.item-registration",
       "inherits": "constant-v1",
-      "source": "packages/dom/src/internal/menu-control.ts",
+      "source": "packages/dom/src/overlay/menu/control.ts",
       "benchmarkIDs": [
         "VAL-009:dom-menu-item-registration-work"
       ],
@@ -773,7 +773,7 @@
     {
       "id": "menu.submenu-registration",
       "inherits": "constant-v1",
-      "source": "packages/dom/src/internal/menu-control.ts",
+      "source": "packages/dom/src/overlay/menu/control.ts",
       "benchmarkIDs": ["GH-9:submenu-registration-work"],
       "specificationCeiling": "O(1)",
       "contract": {
@@ -794,7 +794,7 @@
     {
       "id": "menu.transition-projection",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/menu-control.ts",
+      "source": "packages/dom/src/overlay/menu/control.ts",
       "benchmarkIDs": ["VAL-009:dom-menu-transition-projection-work"],
       "specificationCeiling": "O(1 + hPath) expected",
       "contract": {
@@ -832,7 +832,7 @@
     {
       "id": "modal.isolation-refresh",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/modal-effects.ts",
+      "source": "packages/dom/src/overlay/modal/effects.ts",
       "benchmarkIDs": ["GH-169:modal-isolation-live-retention"],
       "specificationCeiling": "O(m + a)",
       "contract": {
@@ -856,7 +856,7 @@
     {
       "id": "position.connect",
       "inherits": "lifecycle-v1",
-      "source": "packages/dom/src/internal/positioning/engine.ts",
+      "source": "packages/dom/src/overlay/position/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-connect-resources"
       ],
@@ -898,7 +898,7 @@
     {
       "id": "position.disconnect",
       "inherits": "lifecycle-v1",
-      "source": "packages/dom/src/internal/positioning/engine.ts",
+      "source": "packages/dom/src/overlay/position/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-disconnect-zero"
       ],
@@ -940,7 +940,7 @@
     {
       "id": "position.discovery",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/positioning/engine.ts",
+      "source": "packages/dom/src/overlay/position/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-discovery-work"
       ],
@@ -982,7 +982,7 @@
     {
       "id": "position.schedule",
       "inherits": "constant-v1",
-      "source": "packages/dom/src/internal/positioning/engine.ts",
+      "source": "packages/dom/src/overlay/position/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-schedule-work"
       ],
@@ -1007,7 +1007,7 @@
     {
       "id": "position.update",
       "inherits": "lifecycle-v1",
-      "source": "packages/dom/src/internal/positioning/engine.ts",
+      "source": "packages/dom/src/overlay/position/engine.ts",
       "benchmarkIDs": [
         "VAL-039:position-update-work"
       ],

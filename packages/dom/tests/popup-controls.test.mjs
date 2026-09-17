@@ -5,7 +5,7 @@ import { createDialog } from '../.verification-dist/dialog.js';
 import { createPopover } from '../.verification-dist/popover.js';
 import { createSelect } from '../.verification-dist/select.js';
 import { createTooltip } from '../.verification-dist/tooltip.js';
-import { getDOMLayerManager } from '../.verification-dist/internal/layer-manager.js';
+import { getDOMLayerManager } from '../.verification-dist/overlay/layer/manager.js';
 
 test('DOM popup facades preserve focus, announce, and visibility obligations', () => {
   const trigger = new Fake();

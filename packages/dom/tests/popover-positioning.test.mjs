@@ -7,7 +7,7 @@ import {
   createPositionEngine,
   readPositionSourceRegistryDiagnostics,
   selectPositionRoute,
-} from '../.verification-dist/internal/positioning/engine.js';
+} from '../.verification-dist/overlay/position/engine.js';
 
 const completeCapabilities = Object.freeze({
   anchorName: true,

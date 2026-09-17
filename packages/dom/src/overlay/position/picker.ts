@@ -2,8 +2,8 @@ import {
   createPosition,
   manualPositionConnection,
   type PositionConnection,
-} from './position-connection.js';
-import type { PositionOptions } from '../position.js';
+} from './connection.js';
+import type { PositionOptions } from '../../position.js';
 
 export interface PickerPositionOptions extends PositionOptions {
   readonly position?: boolean;

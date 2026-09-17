@@ -24,12 +24,12 @@ import { DOMTextElementBinding } from './internal/text-element.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { findDelegatedStableID } from './internal/delegated-event.js';
 import { stableIDElementToken, stableIDToken } from './internal/stable-id-token.js';
-import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from './overlay/layer/binding.js';
 import {
   createPosition,
   manualPositionConnection,
   type PositionConnection,
-} from './internal/position-connection.js';
+} from './overlay/position/connection.js';
 import type { PositionOptions } from './position.js';
 import { createHiddenBinding, type HiddenBinding } from './internal/hidden-binding.js';
 

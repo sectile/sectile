@@ -14,10 +14,10 @@ import {
   setDatePickerCellFocusEntry,
   setDatePickerGridFocusEntry,
 } from './internal/date-picker-cell.js';
-import { createDOMLayerBinding, type DOMLayerBinding } from '../internal/layer-binding.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from '../overlay/layer/binding.js';
 import { currentReferenceDate } from './internal/reference-date.js';
-import { createPickerPosition, type PickerPositionOptions } from '../internal/picker-position.js';
-import type { PositionConnection } from '../internal/position-connection.js';
+import { createPickerPosition, type PickerPositionOptions } from '../overlay/position/picker.js';
+import type { PositionConnection } from '../overlay/position/connection.js';
 import { createHiddenBinding, type HiddenBinding } from '../internal/hidden-binding.js';
 import type { PeriodPickerHost, PeriodPickerEvent } from './internal/period-picker.js';
 

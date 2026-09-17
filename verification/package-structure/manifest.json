@@ -1897,18 +1897,95 @@
           ]
         },
         "positioning": {
-          "reason": "dom positioning owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Public PositionOptions and related host vocabulary; lower positioning runtime owners depend on this contract, not the reverse.",
           "allows": [
-            "foundation",
             "positioning"
           ]
         },
+        "overlay-position-engine": {
+          "reason": "Physical anchored-layout engine, source subscriptions, observers and scheduled positioning work.",
+          "allows": [
+            "overlay-position-engine"
+          ]
+        },
+        "overlay-position-connection": {
+          "reason": "One host positioning connection adapting public position contracts to one engine lifetime.",
+          "allows": [
+            "positioning",
+            "overlay-position-engine",
+            "overlay-position-connection"
+          ]
+        },
+        "overlay-position-picker": {
+          "reason": "Temporal picker positioning adapter over the lower public contract and connection owner.",
+          "allows": [
+            "positioning",
+            "overlay-position-connection",
+            "overlay-position-picker"
+          ]
+        },
+        "overlay-layer-manager": {
+          "reason": "Document-scoped layer stack registry and committed descendant closure execution.",
+          "allows": [
+            "overlay-layer-manager"
+          ]
+        },
+        "overlay-layer-binding": {
+          "reason": "Per-surface layer registration plus stable document dismissal listeners.",
+          "allows": [
+            "overlay-layer-manager",
+            "overlay-layer-binding"
+          ]
+        },
+        "overlay-modal": {
+          "reason": "Document modal isolation, scroll lock and MutationObserver lifetime.",
+          "allows": [
+            "overlay-modal"
+          ]
+        },
+        "overlay-interact": {
+          "reason": "Public interact-outside event projection and containment checks.",
+          "allows": [
+            "overlay-interact"
+          ]
+        },
+        "overlay-popup": {
+          "reason": "Shared popup connection coordinating focus, layer, modal, visibility and outside-interaction resources.",
+          "allows": [
+            "foundation",
+            "overlay-layer-manager",
+            "overlay-modal",
+            "overlay-interact",
+            "overlay-popup"
+          ]
+        },
+        "overlay-presence-motion": {
+          "reason": "Exit motion timing and listener/timer cleanup support below public Presence.",
+          "allows": [
+            "overlay-presence-motion"
+          ]
+        },
+        "overlay-menu": {
+          "reason": "Shared menu host connection owning item/submenu registration, layer, focus and positioning resources.",
+          "allows": [
+            "foundation",
+            "positioning",
+            "overlay-layer-binding",
+            "overlay-position-connection",
+            "overlay-menu"
+          ]
+        },
         "overlays": {
-          "reason": "dom overlays owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Public overlay and menu profile entrypoints composing lower overlay infrastructure.",
           "allows": [
             "foundation",
             "overlays",
-            "positioning"
+            "positioning",
+            "overlay-interact",
+            "overlay-popup",
+            "overlay-position-connection",
+            "overlay-presence-motion",
+            "overlay-menu"
           ]
         },
         "controls": {
@@ -1918,6 +1995,8 @@
             "foundation",
             "overlays",
             "positioning",
+            "overlay-layer-binding",
+            "overlay-position-connection",
             "text"
           ]
         },
@@ -2085,6 +2164,7 @@
             "exports",
             "foundation",
             "overlays",
+            "overlay-interact",
             "positioning",
             "tabular-api",
             "text",
@@ -2150,8 +2230,9 @@
           "reason": "DOM date/date-time picker connections composing lower field, layer and positioning owners.",
           "allows": [
             "foundation",
-            "overlays",
-            "positioning",
+            "overlay-layer-binding",
+            "overlay-position-connection",
+            "overlay-position-picker",
             "temporal-field",
             "temporal-picker",
             "temporal-support"
@@ -2305,7 +2386,7 @@
           "kind": "facade"
         },
         "src/interact-outside.ts": {
-          "role": "overlays",
+          "role": "overlay-interact",
           "kind": "owner"
         },
         "src/internal/cascade-choice-binding.ts": {
@@ -2384,40 +2465,40 @@
           "role": "foundation",
           "kind": "owner"
         },
-        "src/internal/layer-binding.ts": {
-          "role": "overlays",
+        "src/overlay/layer/binding.ts": {
+          "role": "overlay-layer-binding",
           "kind": "owner"
         },
-        "src/internal/layer-manager.ts": {
-          "role": "overlays",
+        "src/overlay/layer/manager.ts": {
+          "role": "overlay-layer-manager",
           "kind": "owner"
         },
-        "src/internal/menu-control.ts": {
-          "role": "overlays",
+        "src/overlay/menu/control.ts": {
+          "role": "overlay-menu",
           "kind": "owner"
         },
-        "src/internal/modal-effects.ts": {
-          "role": "overlays",
+        "src/overlay/modal/effects.ts": {
+          "role": "overlay-modal",
           "kind": "owner"
         },
-        "src/internal/picker-position.ts": {
-          "role": "overlays",
+        "src/overlay/position/picker.ts": {
+          "role": "overlay-position-picker",
           "kind": "owner"
         },
-        "src/internal/popup-control.ts": {
-          "role": "overlays",
+        "src/overlay/popup/connection.ts": {
+          "role": "overlay-popup",
           "kind": "owner"
         },
-        "src/internal/position-connection.ts": {
-          "role": "positioning",
+        "src/overlay/position/connection.ts": {
+          "role": "overlay-position-connection",
           "kind": "owner"
         },
-        "src/internal/positioning/engine.ts": {
-          "role": "positioning",
+        "src/overlay/position/engine.ts": {
+          "role": "overlay-position-engine",
           "kind": "owner"
         },
-        "src/internal/presence-motion.ts": {
-          "role": "overlays",
+        "src/overlay/presence/motion.ts": {
+          "role": "overlay-presence-motion",
           "kind": "owner"
         },
         "src/internal/stable-id-token.ts": {

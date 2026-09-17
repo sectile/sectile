@@ -2,7 +2,7 @@ import { createFacadeConnection, type FacadeConnection } from '@sectile/core/ada
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import type { PositionOptions } from './position.js';
-import { createMenuControl, type MenuControl, type MenuControlOptions } from './internal/menu-control.js';
+import { createMenuControl, type MenuControl, type MenuControlOptions } from './overlay/menu/control.js';
 
 export type MenuButtonOptions<ID extends StableID = StableID> = Omit<MenuControlOptions<ID>, 'kind'> & PositionOptions & { readonly trigger: HTMLElement; readonly position?: boolean };
 export type MenuButtonConnection<ID extends StableID = StableID> = MenuControl<ID>;

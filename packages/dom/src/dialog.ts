@@ -2,7 +2,7 @@ import { createFacadeConnection, type FacadeConnection } from '@sectile/core/ada
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { applyDialogEvent, tryCreateDialogState, type DialogCommand, type DialogEvent, type DialogState } from '@sectile/core/dialog';
-import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
+import { createDOMPopup, type DOMPopupConnection } from './overlay/popup/connection.js';
 import type { InteractOutsideHandler } from './interact-outside.js';
 
 export type { InteractOutsideEvent, InteractOutsideHandler } from './interact-outside.js';

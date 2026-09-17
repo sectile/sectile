@@ -188,6 +188,30 @@
       "symbols": ["CarouselOptions.manageVisibility"],
       "replacement": { "package": "@sectile/dom", "subpath": "./carousel" },
       "removalReason": "Carousel keeps direct-DOM visibility ownership by default and now exposes manageVisibility=false for renderer-owned visual presence. Existing calls remain valid."
+    },
+    {
+      "id": "WI-008:menu-overlay-ownership",
+      "change": "signature-changed",
+      "before": { "subpath": "./menu" },
+      "symbols": ["MenuControl declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./menu" },
+      "removalReason": "The shared DOM menu host implementation moved to its responsibility-owned overlay module; MenuOptions and MenuConnection remain on the same public subpath."
+    },
+    {
+      "id": "WI-008:menubar-overlay-ownership",
+      "change": "signature-changed",
+      "before": { "subpath": "./menubar" },
+      "symbols": ["MenuControl declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./menubar" },
+      "removalReason": "The shared DOM menu host implementation moved to its responsibility-owned overlay module; MenubarOptions and MenubarConnection remain on the same public subpath."
+    },
+    {
+      "id": "WI-008:navigation-menu-overlay-ownership",
+      "change": "signature-changed",
+      "before": { "subpath": "./navigation-menu" },
+      "symbols": ["MenuControl declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./navigation-menu" },
+      "removalReason": "The shared DOM menu host implementation moved to its responsibility-owned overlay module; NavigationMenuOptions and NavigationMenuConnection remain on the same public subpath."
     }
   ]
 }

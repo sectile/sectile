@@ -3,8 +3,8 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import type { PositionAlign, PositionOptions, PositionSide } from './position.js';
-import { createPosition, manualPositionConnection, type PositionConnection } from './internal/position-connection.js';
-import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
+import { createPosition, manualPositionConnection, type PositionConnection } from './overlay/position/connection.js';
+import { createDOMPopup, type DOMPopupConnection } from './overlay/popup/connection.js';
 import type { InteractOutsideHandler } from './interact-outside.js';
 
 export type { InteractOutsideEvent, InteractOutsideHandler } from './interact-outside.js';

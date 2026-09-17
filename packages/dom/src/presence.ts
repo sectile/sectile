@@ -1,4 +1,4 @@
-import { armMotionWait, motionWait, type MotionWait } from './internal/presence-motion.js';
+import { armMotionWait, motionWait, type MotionWait } from './overlay/presence/motion.js';
 
 export interface PresenceOptions {
   readonly open: boolean;

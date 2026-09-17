@@ -3,7 +3,7 @@ import {
   createDOMLayerID,
   getDOMLayerManager,
   type DOMLayerManager,
-} from './layer-manager.js';
+} from './manager.js';
 
 export interface DOMLayerBindingOptions {
   readonly surface: HTMLElement;

@@ -417,6 +417,58 @@ test('DOM Form lower owners stay below connection orchestration', async () => {
   }
 });
 
+test('DOM overlay infrastructure keeps lower resource owners below public profiles', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const dependencies = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
+
+  const owners = [
+    ['overlay/layer/manager', ['overlay-layer-manager']],
+    ['overlay/layer/binding', ['overlay-layer-manager', 'overlay-layer-binding']],
+    ['overlay/modal/effects', ['overlay-modal']],
+    ['overlay/position/engine', ['overlay-position-engine']],
+    ['overlay/position/connection', ['positioning', 'overlay-position-engine', 'overlay-position-connection']],
+    ['overlay/position/picker', ['positioning', 'overlay-position-engine', 'overlay-position-connection', 'overlay-position-picker']],
+    ['overlay/presence/motion', ['overlay-presence-motion']],
+    ['interact-outside', ['overlay-interact']],
+  ];
+  for (const [entry, allowed] of owners) {
+    const source = `packages/dom/src/${entry}.ts`;
+    const pending = [source];
+    const visited = new Set();
+    while (pending.length > 0) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      const owner = classes.get(path);
+      if (owner.package === 'dom') assert.ok(allowed.includes(owner.role), path);
+      pending.push(...dependencies.get(path));
+    }
+    for (const target of ['overlay/popup/connection.ts', 'overlay/menu/control.ts', 'dialog.ts', 'popover.ts', 'menu.ts']) {
+      for (const phase of ['type', 'value']) {
+        const reverse = { source, target: `packages/dom/src/${target}`, targetPackage: '@sectile/dom', phase, kind: 'import' };
+        assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+      }
+    }
+  }
+
+  for (const [source, targets] of [
+    ['packages/dom/src/overlay/popup/connection.ts', ['dialog.ts', 'alert-dialog.ts', 'drawer.ts', 'popover.ts', 'tooltip.ts']],
+    ['packages/dom/src/overlay/menu/control.ts', ['menu.ts', 'menubar.ts', 'navigation-menu.ts', 'menu-button.ts']],
+  ]) {
+    for (const target of targets) {
+      for (const phase of ['type', 'value']) {
+        const reverse = { source, target: `packages/dom/src/${target}`, targetPackage: '@sectile/dom', phase, kind: 'import' };
+        assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+      }
+    }
+  }
+});
+
 test('DOM Virtual helpers stay below the connection and public facade', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);

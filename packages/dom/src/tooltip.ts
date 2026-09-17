@@ -3,8 +3,8 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { applyTooltipEvent, tryCreateTooltipState, type TooltipCommand, type TooltipEvent, type TooltipState } from '@sectile/core/tooltip';
 import type { PositionAlign, PositionOptions, PositionSide } from './position.js';
-import { createPosition, manualPositionConnection, type PositionConnection } from './internal/position-connection.js';
-import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
+import { createPosition, manualPositionConnection, type PositionConnection } from './overlay/position/connection.js';
+import { createDOMPopup, type DOMPopupConnection } from './overlay/popup/connection.js';
 
 export type TooltipSide = PositionSide;
 export type TooltipAlign = PositionAlign;

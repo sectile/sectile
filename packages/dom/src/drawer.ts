@@ -9,7 +9,7 @@ import {
 } from '@sectile/core/drawer';
 import { unwrap } from '@sectile/core/result';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
+import { createDOMPopup, type DOMPopupConnection } from './overlay/popup/connection.js';
 import type { InteractOutsideHandler } from './interact-outside.js';
 
 export type { DrawerSide } from '@sectile/core/drawer';
