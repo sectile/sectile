@@ -1,5 +1,15 @@
 # @sectile/chart
 
+## 0.15.5
+
+### Changes
+
+- fix(chart): bound raw model layer preflight (aec261ef)
+- perf(chart): avoid initial delta dedup allocation (399dcf2d)
+- perf(chart): skip initial delta fingerprints (d07ac33b)
+- perf(chart): reuse retained selection owner (a24ae658)
+- fix: resolve P2 runtime regressions (05dd838e)
+
 ## 0.15.4
 
 ### Changes

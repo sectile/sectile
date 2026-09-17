@@ -1,5 +1,26 @@
 # @sectile/dom
 
+## 0.18.1
+
+### Changes
+
+- fix(dom): settle mixed validation assimilation failures (00f1a182)
+- fix(dom): settle PromiseLike inspection failures (1607d5f5)
+- test(hosts): align nested facade completion (504f58e0)
+- fix(dom): scope grid native focus completion (ab57a932)
+- fix(dom): release detached modal snapshots (2c2d8b7f)
+- fix(dom): preserve sibling layer ownership (96a2a404)
+- fix(dom): synchronize chart hit geometry (d37d19ae)
+- fix(dom): preserve deferred grid focus publication (90d5dec8)
+- fix(runtime): complete adapter publication (d7c1c5e9)
+- fix(dom): drain proposal callbacks (505b6afc)
+- docs(dom): update positioning contract (809ccc9a)
+- test(dom): track refreshed form event owner (13b23728)
+- perf(dom): index form event owners (3c2293d8)
+- fix(dom): serialize form topology aborts (c5f37855)
+- fix(dom): preserve treegrid cell domains (f715ed18)
+- fix: resolve P2 runtime regressions (05dd838e)
+
 ## 0.18.0
 
 ### Changes

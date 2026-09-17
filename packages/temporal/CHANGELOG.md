@@ -1,5 +1,11 @@
 # @sectile/temporal
 
+## 0.14.8
+
+### Changes
+
+- fix(temporal): preserve active zero time segments (8b1c48ad)
+
 ## 0.14.7
 
 ### Changes

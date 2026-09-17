@@ -1,5 +1,20 @@
 # @sectile/vue
 
+## 0.18.1
+
+### Changes
+
+- perf(vue): mark range calendar factories pure (890dfeca)
+- perf(vue): reuse picker selection event type (b770e797)
+- perf(vue): trim range calendar bundle closure (ad42e725)
+- fix(vue): map PromiseLike inspection failures (b5b442d5)
+- fix(vue): keep collection slot projections readonly (4dcb3d6c)
+- fix(vue): publish menu path before item invalidation (b4563202)
+- perf(vue): compact item projection invalidation (16918c44)
+- perf(vue): bound collection item slot invalidation (a37e1ce8)
+- fix(vue): retire obsolete virtual hosts (df3453ff)
+- fix: resolve P2 runtime regressions (05dd838e)
+
 ## 0.18.0
 
 ### Changes

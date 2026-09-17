@@ -1,5 +1,21 @@
 # @sectile/tabular
 
+## 0.16.1
+
+### Changes
+
+- chore(verification): refresh tabular context evidence (38b5444c)
+- perf(tabular): compact context selection reconciliation (70c49cb9)
+- perf(tabular): reuse selection removal kernel (8141bc13)
+- fix(tabular): keep context reconciliation private (00fb40ad)
+- test(tabular): advance context view revision (8a25651a)
+- fix(tabular): reconcile context-only row selection (f940c594)
+- chore(verification): refresh tree virtual evidence (18ce5722)
+- perf(tabular): unify virtual grid preflight (26100400)
+- perf(tabular): derive tree context prefix (a259b0c3)
+- perf(tabular): compact tree virtual context state (1bb41c98)
+- fix(tabular): preserve tree virtual cell domains (935c997c)
+
 ## 0.16.0
 
 ### Changes

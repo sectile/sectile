@@ -1,5 +1,18 @@
 # @sectile/terminal
 
+## 0.14.8
+
+### Changes
+
+- test(terminal): align popup nested completion (30e3c713)
+- test(hosts): align nested facade completion (504f58e0)
+- perf(terminal): isolate tty text filtering (be8f86a6)
+- fix(runtime): complete adapter publication (d7c1c5e9)
+- fix(terminal): drain proposal callbacks (25f473c4)
+- fix(terminal): filter control text input (40b5b381)
+- fix(terminal): restore untouched TTY flow state (b26b4791)
+- fix(temporal): preserve active zero time segments (8b1c48ad)
+
 ## 0.14.7
 
 ### Changes

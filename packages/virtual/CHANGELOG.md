@@ -1,5 +1,16 @@
 # @sectile/virtual
 
+## 0.15.4
+
+### Changes
+
+- perf(virtual): restore sparse repair footprint headroom (21aed715)
+- perf(virtual): trim sparse spatial repair allocations (5f413047)
+- perf(virtual): reuse unchanged spatial items (408e1af4)
+- perf(virtual): trim spatial endpoint guard (39218ce6)
+- fix(virtual): reject overflowing spatial endpoints (89e79c8d)
+- fix: resolve P2 runtime regressions (05dd838e)
+
 ## 0.15.3
 
 ### Changes

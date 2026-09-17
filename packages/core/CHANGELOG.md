@@ -1,5 +1,21 @@
 # @sectile/core
 
+## 0.14.7
+
+### Changes
+
+- fix(core): fence nested facade publication (43b56075)
+- fix(core): bound index span construction inputs (ae422996)
+- fix(core): capture metric index inputs once (4696655a)
+- fix(core): bound tree construction prefixes (026f72d9)
+- fix(core): bound grid construction prefixes (eb3536ae)
+- fix(core): capture text canonicalization fields once (d649e75d)
+- fix(core): support sibling layer ancestry (b64a6429)
+- chore(verification): classify adapter publication API (8983b830)
+- fix(runtime): complete adapter publication (d7c1c5e9)
+- fix(core): drain notifier cohorts (32af573f)
+- fix(core): capture reorder event fields once (a792d5da)
+
 ## 0.14.6
 
 ### Changes
