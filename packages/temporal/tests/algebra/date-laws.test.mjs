@@ -11,7 +11,7 @@ import {
   formatDateValue,
   parseDateValue,
   tryCreateDateValue,
-} from '../../.verification-dist/date-field.js';
+} from '../../.verification-dist/fields/date.js';
 import {
   applyCalendarEvent,
   createCalendarMonth,

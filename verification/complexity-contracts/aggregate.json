@@ -29566,7 +29566,7 @@
       "package": "temporal",
       "surface": "hot",
       "id": "calendar.page-years",
-      "source": "packages/temporal/src/year-picker.ts",
+      "source": "packages/temporal/src/pickers/period/year.ts",
       "benchmarkIDs": [
         "ISSUE-040:year-page-allocation-work"
       ],
@@ -29626,7 +29626,7 @@
       "package": "temporal",
       "surface": "hot",
       "id": "calendar.period-navigation",
-      "source": "packages/temporal/src/internal/period-picker.ts",
+      "source": "packages/temporal/src/pickers/period/navigation.ts",
       "benchmarkIDs": [
         "ISSUE-038:period-navigation-work"
       ],
@@ -29749,7 +29749,7 @@
       "package": "temporal",
       "surface": "hot",
       "id": "field.transition",
-      "source": "packages/temporal/src/date-field.ts",
+      "source": "packages/temporal/src/fields/date.ts",
       "benchmarkIDs": [
         "VAL-005:temporal-field-work"
       ],

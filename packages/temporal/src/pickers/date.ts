@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { TemporalResult } from './error.js';
+import type { TemporalResult } from '../error.js';
 import {
   applyCalendarEvent,
   tryCreateCalendarState,
@@ -8,9 +8,9 @@ import {
   type CalendarPolicies,
   type CalendarState,
   type CalendarStateInput,
-} from './calendar.js';
-import { fail, ok } from './internal/foundation.js';
-import { createMachineUpdate } from './internal/machine.js';
+} from '../calendar.js';
+import { fail, ok } from '../internal/foundation.js';
+import { createMachineUpdate } from '../internal/machine.js';
 
 export interface DatePickerState extends CalendarState {
   readonly open: boolean;

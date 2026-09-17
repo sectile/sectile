@@ -1,8 +1,10 @@
 import { unwrap } from '@sectile/core/result';
-import type { TemporalResult } from './error.js';
-import { applyPeriodRangePickerNavigation, type PeriodPickerNavigationEvent } from './internal/period-picker.js';
-export type { PeriodPickerNavigationEvent } from './internal/period-picker.js';
-import type { DateRange } from './date-field.js';
+import type { TemporalResult } from '../../error.js';
+import { applyPeriodRangePickerNavigation, type PeriodPickerNavigationEvent } from './navigation.js';
+export type {
+  PeriodPickerNavigationEvent,
+} from './navigation.js';
+import type { DateRange } from '../../values/date.js';
 import {
   applyDateRangePickerEvent,
   tryCreateDateRangePickerState,
@@ -11,9 +13,9 @@ import {
   type DateRangePickerState,
   type DateRangePickerStateInput,
   type DateRangePickerUpdate,
-} from './date-range-picker.js';
-import type { DatePickerPolicies } from './date-picker.js';
-import { tryCreateYearPickerValue, type YearPickerCellValue } from './year-picker.js';
+} from '../date-range.js';
+import type { DatePickerPolicies } from '../date.js';
+import { tryCreateYearPickerValue, type YearPickerCellValue } from './year.js';
 
 export type YearRangePickerValue = DateRange;
 export type YearRangePickerCommand = DateRangePickerCommand;
@@ -54,4 +56,7 @@ export function applyYearRangePickerEvent(state: YearRangePickerState, event: Ye
   return applyDateRangePickerEvent(valid.value, event, policies);
 }
 
-export { createYearPickerPage as createYearRangePickerPage, tryCreateYearPickerPage as tryCreateYearRangePickerPage } from './year-picker.js';
+export {
+  createYearPickerPage as createYearRangePickerPage,
+  tryCreateYearPickerPage as tryCreateYearRangePickerPage,
+} from './year.js';

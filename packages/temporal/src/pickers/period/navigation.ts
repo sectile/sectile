@@ -1,10 +1,10 @@
-import { applyCalendarEvent, isCalendarValueAvailable } from '../calendar.js';
-import { addDateMonths, addDateYears, compareDateValues, tryCreateDateValue } from '../date-field.js';
-import type { DatePickerPolicies, DatePickerState, DatePickerUpdate } from '../date-picker.js';
-import type { DateRangePickerState, DateRangePickerUpdate } from '../date-range-picker.js';
-import type { TemporalResult } from '../error.js';
-import { fail } from './foundation.js';
-import { createMachineUpdate } from './machine.js';
+import { applyCalendarEvent, isCalendarValueAvailable } from '../../calendar.js';
+import { addDateMonths, addDateYears, compareDateValues, tryCreateDateValue } from '../../values/date.js';
+import type { DatePickerPolicies, DatePickerState, DatePickerUpdate } from '../date.js';
+import type { DateRangePickerState, DateRangePickerUpdate } from '../date-range.js';
+import type { TemporalResult } from '../../error.js';
+import { fail } from '../../internal/foundation.js';
+import { createMachineUpdate } from '../../internal/machine.js';
 
 export interface PeriodPickerNavigationEvent {
   readonly type: 'navigate-period';

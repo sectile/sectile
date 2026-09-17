@@ -1,8 +1,10 @@
 import { unwrap } from '@sectile/core/result';
-import type { TemporalResult } from './error.js';
-import { applyPeriodPickerNavigation, type PeriodPickerNavigationEvent } from './internal/period-picker.js';
-export type { PeriodPickerNavigationEvent } from './internal/period-picker.js';
-import { createDateValue, tryCreateDateValue, type DateValue } from './date-field.js';
+import type { TemporalResult } from '../../error.js';
+import { applyPeriodPickerNavigation, type PeriodPickerNavigationEvent } from './navigation.js';
+export type {
+  PeriodPickerNavigationEvent,
+} from './navigation.js';
+import { createDateValue, tryCreateDateValue, type DateValue } from '../../values/date.js';
 import {
   applyDatePickerEvent,
   tryCreateDatePickerState,
@@ -12,7 +14,7 @@ import {
   type DatePickerState,
   type DatePickerStateInput,
   type DatePickerUpdate,
-} from './date-picker.js';
+} from '../date.js';
 export type MonthPickerValue = DateValue;
 export type MonthPickerState = DatePickerState;
 export type MonthPickerStateInput = DatePickerStateInput;
@@ -61,5 +63,7 @@ export {
   createCalendarYear as createMonthPickerYear,
   isCalendarValueAvailable as isMonthPickerValueAvailable,
   tryCreateCalendarYear as tryCreateMonthPickerYear,
-} from './calendar.js';
-export type { CalendarMonthValue as MonthPickerCellValue } from './calendar.js';
+} from '../../calendar.js';
+export type {
+  CalendarMonthValue as MonthPickerCellValue,
+} from '../../calendar.js';

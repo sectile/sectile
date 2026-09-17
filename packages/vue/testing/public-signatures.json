@@ -315,7 +315,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "064e03ba84d4e831181f9c4711eb9886640c151cf1dca4787b372f1d7fcfd21b",
+  "fingerprint": "1706a2fd22c686df58fe9dd4e2e839da7c2935c229568be7a9b26bab61940413",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -375,7 +375,7 @@
     },
     {
       "path": "dist/date-field.d.ts",
-      "sha256": "f6d02aa5151d3df29e6ae4b8fa8b0233f964a2468a049a3a4adb743e0620e80d"
+      "sha256": "e6d1f80eeded8fb6dd0cde5fad5cc0b0fe21d1319fec0355691d2be4720436f2"
     },
     {
       "path": "dist/date-picker.d.ts",
@@ -391,7 +391,7 @@
     },
     {
       "path": "dist/date-time-field.d.ts",
-      "sha256": "0d2acda652cfa3029f730951e938ee6fbf93dcd2bef91076487dfa1d5f273b8b"
+      "sha256": "58fd022d5693c03a5af6aa1e60d5b0150c566f5f9abf8d3a3051c4e0c01f314e"
     },
     {
       "path": "dist/date-time-picker.d.ts",
@@ -615,7 +615,7 @@
     },
     {
       "path": "dist/time-field.d.ts",
-      "sha256": "5cb42f9c27e526adb226fd2b15ec6e4476e29f75fced2a0a6750af569e6fe0a9"
+      "sha256": "420806c5d307a5ff17179495186f3bcfc580f18703115cd2ec30a335c5825b19"
     },
     {
       "path": "dist/time-range-field.d.ts",

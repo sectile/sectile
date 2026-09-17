@@ -1,9 +1,11 @@
 import { unwrap } from '@sectile/core/result';
-import type { TemporalResult } from './error.js';
-import { applyPeriodPickerNavigation, type PeriodPickerNavigationEvent } from './internal/period-picker.js';
-export type { PeriodPickerNavigationEvent } from './internal/period-picker.js';
-import { createDateValue, tryCreateDateValue, type DateValue } from './date-field.js';
-import { fail, freezeArray, ok } from './internal/foundation.js';
+import type { TemporalResult } from '../../error.js';
+import { applyPeriodPickerNavigation, type PeriodPickerNavigationEvent } from './navigation.js';
+export type {
+  PeriodPickerNavigationEvent,
+} from './navigation.js';
+import { createDateValue, tryCreateDateValue, type DateValue } from '../../values/date.js';
+import { fail, freezeArray, ok } from '../../internal/foundation.js';
 import {
   applyDatePickerEvent,
   tryCreateDatePickerState,
@@ -13,7 +15,7 @@ import {
   type DatePickerState,
   type DatePickerStateInput,
   type DatePickerUpdate,
-} from './date-picker.js';
+} from '../date.js';
 
 export type YearPickerValue = DateValue;
 export interface YearPickerCellValue { readonly year: number }

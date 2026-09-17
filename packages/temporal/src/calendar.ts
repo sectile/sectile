@@ -12,7 +12,7 @@ import {
   formatDateValue,
   type DateValue,
   tryCreateDateValue,
-} from './date-field.js';
+} from './values/date.js';
 
 export interface CalendarView {
   readonly year: number;

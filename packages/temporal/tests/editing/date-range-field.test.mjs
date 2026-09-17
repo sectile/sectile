@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyDateRangeFieldEvent, createDateRangeFieldState } from '../../.verification-dist/date-range-field.js';
-import { createDateValue, formatDateValue } from '../../.verification-dist/date-field.js';
+import { applyDateRangeFieldEvent, createDateRangeFieldState } from '../../.verification-dist/fields/date-range.js';
+import { createDateValue, formatDateValue } from '../../.verification-dist/fields/date.js';
 
 const date = (year, month, day) => createDateValue(year, month, day);
 

@@ -12,7 +12,7 @@ import {
   parseDateValue,
   tryCreateDateRange,
   tryCreateDateValue,
-} from '../../.verification-dist/date-field.js';
+} from '../../.verification-dist/fields/date.js';
 import {
   addTimeMilliseconds,
   applyTimeFieldEvent,
@@ -20,7 +20,7 @@ import {
   createTimeValue,
   formatTimeValue,
   parseTimeValue,
-} from '../../.verification-dist/time-field.js';
+} from '../../.verification-dist/fields/time.js';
 import {
   addDateTimeMilliseconds,
   applyDateTimeFieldEvent,
@@ -29,7 +29,7 @@ import {
   dateTimeSegmentAt,
   formatDateTimeValue,
   parseDateTimeValue,
-} from '../../.verification-dist/date-time-field.js';
+} from '../../.verification-dist/fields/date-time.js';
 
 const date = (year, month, day) => createDateValue(year, month, day);
 const time = (hour, minute, second = 0, millisecond = 0) => createTimeValue(hour, minute, second, millisecond);

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyTimeRangeFieldEvent, createTimeRangeFieldState } from '../../.verification-dist/time-range-field.js';
-import { createTimeValue, formatTimeValue } from '../../.verification-dist/time-field.js';
+import { applyTimeRangeFieldEvent, createTimeRangeFieldState } from '../../.verification-dist/fields/time-range.js';
+import { createTimeValue, formatTimeValue } from '../../.verification-dist/fields/time.js';
 const time = (hour, minute, second = 0, millisecond = 0) => createTimeValue(hour, minute, second, millisecond);
 
 test('time range field exposes only complete ordered wall-clock ranges', () => {

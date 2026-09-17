@@ -1,29 +1,24 @@
 import { unwrap } from '@sectile/core/result';
-import type { TemporalResult } from './error.js';
-import { fail, ok } from './internal/foundation.js';
-import { createMachineUpdate } from './internal/machine.js';
-import { compareDateValues, createDateValue, type DateValue,tryCreateDateValue } from './date-field.js';
-import { isCalendarValueAvailable, type CalendarViewMode } from './calendar.js';
+import type { TemporalResult } from '../error.js';
+import { fail, ok } from '../internal/foundation.js';
+import { createMachineUpdate } from '../internal/machine.js';
+import { compareDateValues, createDateValue, type DateValue, tryCreateDateValue } from '../values/date.js';
+import { isCalendarValueAvailable, type CalendarViewMode } from '../calendar.js';
 import {
   compareDateTimeValues,
   createDateTimeValue,
   type DateTimeValue,
   tryCreateDateTimeValue,
-} from './date-time-field.js';
+} from '../values/date-time.js';
 import {
   applyDatePickerEvent,
   createDatePickerState,
   type DatePickerPolicies,
   type DatePickerState,
   tryCreateDatePickerState,
-} from './date-picker.js';
-import {
-  compareTimeValues,
-  createTimeValue,
-  type TimeFieldPolicies,
-  type TimeValue,
-  tryCreateTimeValue,
-} from './time-field.js';
+} from './date.js';
+import { compareTimeValues, createTimeValue, type TimeValue, tryCreateTimeValue } from '../values/time.js';
+import type { TimeFieldPolicies } from '../fields/time.js';
 
 export interface DateTimePickerState {
   readonly value: DateTimeValue | null;

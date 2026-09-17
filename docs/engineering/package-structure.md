@@ -385,6 +385,62 @@ and adapter state retain their existing generation and disposal contracts.
 Grouping changes paths and permitted dependencies, not filtering, sorting,
 grouping, pivoting, bounded navigation or incremental layout repair algorithms.
 
+## Temporal ownership
+
+Temporal separates date/time value arithmetic from input editing. Existing
+public subpath keys remain unchanged; their export targets resolve the grouped
+owners rather than introducing a second set of wrappers.
+
+```text
+src/
+  values/
+    date.ts             # civil date and range arithmetic
+    time.ts             # time-of-day and range arithmetic
+    date-time.ts        # composition of date/time values
+  fields/
+    date.ts
+    time.ts
+    date-time.ts
+    date-range.ts
+    time-range.ts
+  calendar.ts           # calendar state, navigation and bounded projections
+  pickers/
+    date.ts
+    date-range.ts
+    date-time.ts
+    date-time-range.ts
+    range-calendar.ts   # existing high-level aliases
+    period/
+      navigation.ts
+      month.ts
+      month-range.ts
+      year.ts
+      year-range.ts
+  internal/
+    foundation.ts       # result construction
+    machine.ts          # existing Core machine-update adapter
+```
+
+Value owners do not import field state, calendar or picker assemblies. Calendar
+uses date values directly, so it no longer depends on date-field input editing.
+Fields retain text state, segments, policies and commit/cancel behavior. Each
+field subpath explicitly re-exports only the value APIs that it already exposed;
+for example, the time-range constructors remain exposed by `/time-range-field`,
+not added to `/time-field`. Date-time values compose the lower date/time owners.
+
+Period navigation is shared by month/year adapters without depending on those
+adapters. The range-calendar export is a facade over date-range picker and
+calendar operations, not a lower owner that calendar must import. Pickers reuse
+existing field policy types where needed, rather than cloning them. Type-only
+and runtime dependencies remain distinguished by the role gate.
+
+The split preserves arithmetic, parsing, formatting, error ordering, input
+composition rules, availability callbacks and the same Core machine-update
+path. It adds no clock, retained registry, timer or subscription. Existing
+civil-year, draft-length, output-cell and caller-supplied scan limits are
+unchanged. Physical artifact and consumer costs are checked independently from
+source organization; this migration does not authorize broader size ceilings.
+
 ## Moving or extracting an implementation
 
 Before editing, identify the owner, direct callers, public surfaces and any

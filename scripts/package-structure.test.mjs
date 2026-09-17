@@ -321,6 +321,40 @@ test('Tabular canonical owners stay below source and profile assembly', async ()
   }
 });
 
+test('Temporal values and calendar stay below input fields and picker composition', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const dependencies = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
+  for (const [entry, allowed] of [
+    ['values/date', ['foundation', 'date-values']],
+    ['values/time', ['foundation', 'time-values']],
+    ['values/date-time', ['foundation', 'date-values', 'time-values', 'date-time-values']],
+    ['calendar', ['foundation', 'machine', 'date-values', 'calendar']],
+  ]) {
+    const visited = new Set();
+    const pending = [`packages/temporal/src/${entry}.ts`];
+    while (pending.length) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      const owner = classes.get(path);
+      if (owner.package === 'temporal') assert.ok(allowed.includes(owner.role), path);
+      pending.push(...dependencies.get(path));
+    }
+    const source = `packages/temporal/src/${entry}.ts`;
+    const witness = graph.edges.find((edge) => edge.source === source);
+    assert.ok(witness, source);
+    for (const target of ['fields/date.ts', 'fields/time.ts', 'pickers/date.ts']) {
+      const reverse = { ...witness, source, target: `packages/temporal/src/${target}` };
+      assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+    }
+  }
+});
+
 test('Virtual shared track contracts stay below concrete layout families', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);

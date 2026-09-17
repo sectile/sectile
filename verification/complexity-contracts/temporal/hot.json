@@ -7,7 +7,7 @@
     {
       "id": "calendar.page-years",
       "inherits": "linear-v1",
-      "source": "packages/temporal/src/year-picker.ts",
+      "source": "packages/temporal/src/pickers/period/year.ts",
       "benchmarkIDs": ["ISSUE-040:year-page-allocation-work"],
       "specificationCeiling": "O(pPage)",
       "contract": {
@@ -29,7 +29,7 @@
     {
       "id": "calendar.period-navigation",
       "inherits": "linear-v1",
-      "source": "packages/temporal/src/internal/period-picker.ts",
+      "source": "packages/temporal/src/pickers/period/navigation.ts",
       "benchmarkIDs": ["ISSUE-038:period-navigation-work"],
       "specificationCeiling": "O(sScan)",
       "contract": {
@@ -73,7 +73,7 @@
     {
       "id": "field.transition",
       "inherits": "linear-v1",
-      "source": "packages/temporal/src/date-field.ts",
+      "source": "packages/temporal/src/fields/date.ts",
       "benchmarkIDs": [
         "VAL-005:temporal-field-work"
       ],

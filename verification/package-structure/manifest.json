@@ -1370,155 +1370,300 @@
     },
     "temporal": {
       "disposition": "regroup",
-      "reason": "Group calendar, field and picker families while preserving portable semantics in WI-007.",
+      "reason": "Values, field editing and picker composition have explicit owners and one-way dependencies.",
       "dependencies": [
         "core"
       ],
       "roles": {
         "foundation": {
-          "reason": "temporal foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Portable error/result construction; no field or picker initialization.",
           "allows": [
             "foundation"
+          ]
+        },
+        "machine": {
+          "reason": "Existing Core revision-backed machine result adapter.",
+          "allows": [
+            "machine",
+            "foundation"
+          ]
+        },
+        "date-values": {
+          "reason": "Gregorian value/range arithmetic independent of input editing.",
+          "allows": [
+            "date-values",
+            "foundation"
+          ]
+        },
+        "time-values": {
+          "reason": "Time-of-day value/range arithmetic independent of input editing.",
+          "allows": [
+            "time-values",
+            "foundation"
+          ]
+        },
+        "date-time-values": {
+          "reason": "Date-time value/range composition over lower date/time values.",
+          "allows": [
+            "date-time-values",
+            "foundation",
+            "date-values",
+            "time-values"
+          ]
+        },
+        "date-field": {
+          "reason": "Date input editing, segment and validation policy.",
+          "allows": [
+            "date-field",
+            "foundation",
+            "machine",
+            "date-values"
+          ]
+        },
+        "time-field": {
+          "reason": "Time input editing, segment and validation policy.",
+          "allows": [
+            "time-field",
+            "foundation",
+            "machine",
+            "time-values"
+          ]
+        },
+        "date-time-field": {
+          "reason": "Date-time input editing over value owners.",
+          "allows": [
+            "date-time-field",
+            "foundation",
+            "machine",
+            "date-values",
+            "time-values",
+            "date-time-values"
+          ]
+        },
+        "date-range-field": {
+          "reason": "Two date field endpoints and range editing.",
+          "allows": [
+            "date-range-field",
+            "foundation",
+            "machine",
+            "date-values",
+            "date-field"
+          ]
+        },
+        "time-range-field": {
+          "reason": "Two time field endpoints and range editing.",
+          "allows": [
+            "time-range-field",
+            "foundation",
+            "machine",
+            "time-values",
+            "time-field"
           ]
         },
         "calendar": {
-          "reason": "temporal calendar owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Calendar state/navigation and bounded projections consume date values, not field input.",
           "allows": [
             "calendar",
             "foundation",
-            "date-value"
+            "machine",
+            "date-values"
           ]
         },
-        "fields": {
-          "reason": "temporal fields owns its named contracts and implementation; permitted imports are explicit.",
+        "date-picker": {
+          "reason": "Open state around lower calendar behavior.",
           "allows": [
-            "calendar",
-            "fields",
+            "date-picker",
             "foundation",
-            "date-value"
+            "machine",
+            "calendar"
           ]
         },
-        "pickers": {
-          "reason": "temporal pickers owns its named contracts and implementation; permitted imports are explicit.",
+        "date-range-picker": {
+          "reason": "Date-range selection composing calendar and date picker.",
           "allows": [
-            "calendar",
-            "fields",
+            "date-range-picker",
             "foundation",
-            "pickers",
-            "date-value"
+            "machine",
+            "date-values",
+            "calendar",
+            "date-picker"
+          ]
+        },
+        "date-time-picker": {
+          "reason": "Date-time selection with shared time-policy types and lower calendar/picker state.",
+          "allows": [
+            "date-time-picker",
+            "foundation",
+            "machine",
+            "date-values",
+            "time-values",
+            "date-time-values",
+            "time-field",
+            "calendar",
+            "date-picker"
+          ]
+        },
+        "period-navigation": {
+          "reason": "Month/year navigation before concrete period adapters.",
+          "allows": [
+            "period-navigation",
+            "foundation",
+            "machine",
+            "date-values",
+            "calendar",
+            "date-picker",
+            "date-range-picker"
+          ]
+        },
+        "period-picker": {
+          "reason": "Month/year adapters and bounded page projection.",
+          "allows": [
+            "period-picker",
+            "foundation",
+            "date-values",
+            "calendar",
+            "date-picker",
+            "period-navigation"
+          ]
+        },
+        "period-range": {
+          "reason": "Month/year range adapters compose lower single-period and date-range behavior.",
+          "allows": [
+            "period-range",
+            "foundation",
+            "date-values",
+            "calendar",
+            "date-picker",
+            "date-range-picker",
+            "period-navigation",
+            "period-picker"
+          ]
+        },
+        "range-calendar": {
+          "reason": "Existing high-level aliases, not a lower calendar primitive.",
+          "allows": [
+            "range-calendar",
+            "calendar",
+            "date-range-picker"
           ]
         },
         "exports": {
-          "reason": "temporal exports owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Type-only package exposure; public keys remain stable.",
           "allows": [
-            "calendar",
             "exports",
-            "fields",
             "foundation",
-            "pickers",
-            "date-value"
-          ]
-        },
-        "reference": {
-          "reason": "temporal reference owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
+            "machine",
+            "date-values",
+            "time-values",
+            "date-time-values",
+            "date-field",
+            "time-field",
+            "date-time-field",
+            "date-range-field",
+            "time-range-field",
             "calendar",
-            "exports",
-            "fields",
-            "foundation",
-            "pickers",
-            "reference",
-            "date-value"
-          ]
-        },
-        "date-value": {
-          "reason": "Existing date-field owns the reusable date arithmetic and DateValue contracts consumed by calendar and fields.",
-          "allows": [
-            "date-value",
-            "foundation"
+            "date-picker",
+            "date-range-picker",
+            "date-time-picker",
+            "period-navigation",
+            "period-picker",
+            "period-range",
+            "range-calendar"
           ]
         }
       },
       "modules": {
-        "src/calendar.ts": {
-          "role": "calendar",
-          "kind": "owner"
-        },
-        "src/date-field.ts": {
-          "role": "date-value",
-          "kind": "owner"
-        },
-        "src/date-picker.ts": {
-          "role": "pickers",
-          "kind": "owner"
-        },
-        "src/date-range-field.ts": {
-          "role": "fields",
-          "kind": "owner"
-        },
-        "src/date-range-picker.ts": {
-          "role": "pickers",
-          "kind": "owner"
-        },
-        "src/date-time-field.ts": {
-          "role": "fields",
-          "kind": "owner"
-        },
-        "src/date-time-picker.ts": {
-          "role": "pickers",
-          "kind": "owner"
-        },
-        "src/date-time-range-picker.ts": {
-          "role": "pickers",
-          "kind": "owner"
-        },
         "src/error.ts": {
           "role": "foundation",
           "kind": "owner"
-        },
-        "src/index.ts": {
-          "role": "exports",
-          "kind": "facade"
         },
         "src/internal/foundation.ts": {
           "role": "foundation",
           "kind": "owner"
         },
         "src/internal/machine.ts": {
-          "role": "foundation",
+          "role": "machine",
           "kind": "owner"
         },
-        "src/internal/period-picker.ts": {
-          "role": "pickers",
+        "src/values/date.ts": {
+          "role": "date-values",
           "kind": "owner"
         },
-        "src/month-picker.ts": {
-          "role": "pickers",
+        "src/values/time.ts": {
+          "role": "time-values",
           "kind": "owner"
         },
-        "src/month-range-picker.ts": {
-          "role": "pickers",
+        "src/values/date-time.ts": {
+          "role": "date-time-values",
           "kind": "owner"
         },
-        "src/range-calendar.ts": {
-          "role": "pickers",
+        "src/fields/date.ts": {
+          "role": "date-field",
           "kind": "owner"
         },
-        "src/time-field.ts": {
-          "role": "fields",
+        "src/fields/time.ts": {
+          "role": "time-field",
           "kind": "owner"
         },
-        "src/time-range-field.ts": {
-          "role": "fields",
+        "src/fields/date-time.ts": {
+          "role": "date-time-field",
           "kind": "owner"
         },
-        "src/year-picker.ts": {
-          "role": "pickers",
+        "src/fields/date-range.ts": {
+          "role": "date-range-field",
           "kind": "owner"
         },
-        "src/year-range-picker.ts": {
-          "role": "pickers",
+        "src/fields/time-range.ts": {
+          "role": "time-range-field",
           "kind": "owner"
+        },
+        "src/calendar.ts": {
+          "role": "calendar",
+          "kind": "owner"
+        },
+        "src/pickers/date.ts": {
+          "role": "date-picker",
+          "kind": "owner"
+        },
+        "src/pickers/date-range.ts": {
+          "role": "date-range-picker",
+          "kind": "owner"
+        },
+        "src/pickers/date-time.ts": {
+          "role": "date-time-picker",
+          "kind": "owner"
+        },
+        "src/pickers/date-time-range.ts": {
+          "role": "date-time-picker",
+          "kind": "owner"
+        },
+        "src/pickers/period/navigation.ts": {
+          "role": "period-navigation",
+          "kind": "owner"
+        },
+        "src/pickers/period/month.ts": {
+          "role": "period-picker",
+          "kind": "owner"
+        },
+        "src/pickers/period/year.ts": {
+          "role": "period-picker",
+          "kind": "owner"
+        },
+        "src/pickers/period/month-range.ts": {
+          "role": "period-range",
+          "kind": "owner"
+        },
+        "src/pickers/period/year-range.ts": {
+          "role": "period-range",
+          "kind": "owner"
+        },
+        "src/pickers/range-calendar.ts": {
+          "role": "range-calendar",
+          "kind": "facade"
+        },
+        "src/index.ts": {
+          "role": "exports",
+          "kind": "facade"
         }
       }
     },

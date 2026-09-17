@@ -1,17 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createDateValue, formatDateValue } from '../../.verification-dist/date-field.js';
-import { createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '../../.verification-dist/date-time-field.js';
+import { createDateValue, formatDateValue } from '../../.verification-dist/fields/date.js';
+import { createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '../../.verification-dist/fields/date-time.js';
 import { createCalendarMonth, createCalendarWeek, createCalendarYear } from '../../.verification-dist/calendar.js';
-import { applyDatePickerEvent, createDatePickerState } from '../../.verification-dist/date-picker.js';
-import { applyDateRangePickerEvent, createDateRangePickerState } from '../../.verification-dist/date-range-picker.js';
-import { applyMonthPickerEvent, createMonthPickerState, createMonthPickerValue, tryCreateMonthPickerState, tryCreateMonthPickerValue } from '../../.verification-dist/month-picker.js';
-import { applyMonthRangePickerEvent, createMonthRangePickerState, tryCreateMonthRangePickerState } from '../../.verification-dist/month-range-picker.js';
-import { applyYearPickerEvent, createYearPickerPage, createYearPickerState, createYearPickerValue, tryCreateYearPickerPage, tryCreateYearPickerState, tryCreateYearPickerValue, MAX_YEAR_PICKER_PAGE_SIZE } from '../../.verification-dist/year-picker.js';
-import { applyYearRangePickerEvent, createYearRangePickerState, tryCreateYearRangePickerState } from '../../.verification-dist/year-range-picker.js';
-import { applyDateTimePickerEvent, createDateTimePickerState } from '../../.verification-dist/date-time-picker.js';
-import { applyDateTimeRangePickerEvent, createDateTimeRangePickerState } from '../../.verification-dist/date-time-range-picker.js';
-import { createTimeValue } from '../../.verification-dist/time-field.js';
+import { applyDatePickerEvent, createDatePickerState } from '../../.verification-dist/pickers/date.js';
+import { applyDateRangePickerEvent, createDateRangePickerState } from '../../.verification-dist/pickers/date-range.js';
+import { applyMonthPickerEvent, createMonthPickerState, createMonthPickerValue, tryCreateMonthPickerState, tryCreateMonthPickerValue } from '../../.verification-dist/pickers/period/month.js';
+import { applyMonthRangePickerEvent, createMonthRangePickerState, tryCreateMonthRangePickerState } from '../../.verification-dist/pickers/period/month-range.js';
+import { applyYearPickerEvent, createYearPickerPage, createYearPickerState, createYearPickerValue, tryCreateYearPickerPage, tryCreateYearPickerState, tryCreateYearPickerValue, MAX_YEAR_PICKER_PAGE_SIZE } from '../../.verification-dist/pickers/period/year.js';
+import { applyYearRangePickerEvent, createYearRangePickerState, tryCreateYearRangePickerState } from '../../.verification-dist/pickers/period/year-range.js';
+import { applyDateTimePickerEvent, createDateTimePickerState } from '../../.verification-dist/pickers/date-time.js';
+import { applyDateTimeRangePickerEvent, createDateTimeRangePickerState } from '../../.verification-dist/pickers/date-time-range.js';
+import { createTimeValue } from '../../.verification-dist/fields/time.js';
 
 const date = (year, month, day) => createDateValue(year, month, day);
 
@@ -243,7 +243,7 @@ test('ISSUE-040: year pages reject excessive cardinality before projection alloc
 });
 
 test('year pages reject unsafe intervals before allocation and preserve exact boundary cells', async () => {
-  const { tryCreateYearRangePickerPage, createYearRangePickerPage } = await import('../../.verification-dist/year-range-picker.js');
+  const { tryCreateYearRangePickerPage, createYearRangePickerPage } = await import('../../.verification-dist/pickers/period/year-range.js');
   for (const [tryPage, createPage] of [[tryCreateYearPickerPage, createYearPickerPage], [tryCreateYearRangePickerPage, createYearRangePickerPage]]) {
     for (const size of [1, 2, 3, 12, MAX_YEAR_PICKER_PAGE_SIZE]) {
       const before = Math.floor(size / 2);

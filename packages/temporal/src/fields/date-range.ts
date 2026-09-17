@@ -1,10 +1,24 @@
 import { unwrap } from '@sectile/core/result';
 import type { ErrorClass } from '@sectile/core';
-import type { TemporalResult } from './error.js';
-import { fail, ok } from './internal/foundation.js';
-import { createMachineUpdate } from './internal/machine.js';
+import type { TemporalResult } from '../error.js';
+import { fail, ok } from '../internal/foundation.js';
+import { createMachineUpdate } from '../internal/machine.js';
 import type { TextEditingState } from '@sectile/core/text';
-import { applyDateFieldEvent, compareDateValues, createDateFieldState, createDateRange, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateRange, type DateValue,tryCreateDateFieldState,tryCreateDateRange } from './date-field.js';
+import {
+  applyDateFieldEvent,
+  createDateFieldState,
+  type DateFieldEvent,
+  type DateFieldPolicies,
+  type DateFieldState,
+  tryCreateDateFieldState,
+} from './date.js';
+import {
+  compareDateValues,
+  createDateRange,
+  type DateRange,
+  type DateValue,
+  tryCreateDateRange,
+} from '../values/date.js';
 
 export type DateRangeFieldEndpoint = 'start' | 'end';
 export interface DateRangeFieldState { readonly value: DateRange | null; readonly start: DateFieldState; readonly end: DateFieldState; readonly active: DateRangeFieldEndpoint }
