@@ -417,6 +417,51 @@ test('DOM Form lower owners stay below connection orchestration', async () => {
   }
 });
 
+test('DOM Tabular contracts and bindings stay below profile connections', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const dependencies = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
+  const owners = [
+    ['contracts', ['tabular-contracts']],
+    ['grid/contracts', ['tabular-contracts', 'tabular-grid-contracts']],
+    ['result', ['tabular-contracts', 'tabular-result']],
+    ['projection', ['foundation', 'tabular-contracts', 'tabular-projection']],
+    ['query', ['tabular-query']],
+    ['bindings/scope', ['tabular-scope']],
+    ['bindings/columns', ['tabular-contracts', 'tabular-result', 'tabular-scope', 'tabular-columns']],
+    ['bindings/editor', ['tabular-contracts', 'tabular-result', 'tabular-editor']],
+    ['bindings/selection', ['foundation', 'tabular-contracts', 'tabular-projection', 'tabular-scope', 'tabular-selection']],
+  ];
+  for (const [entry, allowed] of owners) {
+    const source = `packages/dom/src/tabular/${entry}.ts`;
+    const visited = new Set();
+    const pending = [source];
+    while (pending.length > 0) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      const owner = classes.get(path);
+      if (owner.package === 'dom') assert.ok(allowed.includes(owner.role), path);
+      pending.push(...dependencies.get(path));
+    }
+    for (const target of ['table', 'grid', 'tree-grid', 'grid/connection']) {
+      for (const phase of ['type', 'value']) {
+        const reverse = { source, target: `packages/dom/src/tabular/${target}.ts`, targetPackage: '@sectile/dom', phase, kind: 'import' };
+        assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+      }
+    }
+  }
+  const source = 'packages/dom/src/tabular/grid/connection.ts';
+  for (const target of ['tabular/table.ts', 'tabular/grid.ts', 'tabular/tree-grid.ts', 'tabular.ts']) {
+    const reverse = { source, target: `packages/dom/src/${target}`, targetPackage: '@sectile/dom', phase: 'type', kind: 'import' };
+    assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|facade|cycle/u);
+  }
+});
+
 test('Virtual shared track contracts stay below concrete layout families', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);

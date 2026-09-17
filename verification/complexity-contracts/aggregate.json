@@ -27275,7 +27275,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "tabular.cell-header-indexed-projection",
-      "source": "packages/dom/src/data-table.ts",
+      "source": "packages/dom/src/tabular/table.ts",
       "benchmarkIDs": [
         "VAL-005:dom-tabular-cell-header-index"
       ],
@@ -27351,7 +27351,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "tabular.grid-event-target",
-      "source": "packages/dom/src/internal/tabular-grid-dom.ts",
+      "source": "packages/dom/src/tabular/grid/connection.ts",
       "benchmarkIDs": [
         "VAL-007:dom-tabular-grid-event-target"
       ],
@@ -27417,7 +27417,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "tabular.grid-indexed-projection",
-      "source": "packages/dom/src/internal/tabular-grid-dom.ts",
+      "source": "packages/dom/src/tabular/grid/connection.ts",
       "benchmarkIDs": [
         "VAL-006:dom-tabular-grid-index"
       ],
@@ -27498,7 +27498,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "tabular.header-metrics",
-      "source": "packages/dom/src/internal/tabular-dom.ts",
+      "source": "packages/dom/src/tabular/projection.ts",
       "benchmarkIDs": [
         "VAL-034:dom-tabular-header-metrics"
       ],
@@ -27566,7 +27566,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "tabular.row-indexed-lookup",
-      "source": "packages/dom/src/data-table.ts",
+      "source": "packages/dom/src/tabular/table.ts",
       "benchmarkIDs": [
         "VAL-004:dom-tabular-row-index"
       ],

@@ -1,51 +1,85 @@
-import { unwrap } from '@sectile/core/result';
 import {
-  tryCreateDataTreeGrid as tryCreateSemanticDataTreeGrid,
   type DataTreeGridCommand as SemanticDataTreeGridCommand,
+  type DataTreeGridState,
   type DataTreeGridController as SemanticDataTreeGridController,
-  type DataTreeGridEvent,
   type DataTreeGridOptions as SemanticDataTreeGridOptions,
   type DataTreeGridProjection,
-  type DataTreeGridState,
+  type DataTreeGridEvent,
+  tryCreateDataTreeGrid as tryCreateSemanticDataTreeGrid,
 } from '@sectile/tabular/data-tree-grid';
-import type { TabularCellAddress, TabularResult, TabularRowID, TabularViewResponse } from '@sectile/tabular';
+import type {
+  GridRevealCellCommand,
+  GridRevealRowCommand,
+  GridDOMControlledValues,
+  GridDOMColumnHeaderOptions,
+  GridDOMRowOptions,
+  GridDOMCellOptions,
+  GridDOMSortTriggerOptions,
+  GridDOMFilterControlOptions,
+  GridDOMSelectionControlOptions,
+  GridDOMBulkSelectionControlOptions,
+  GridDOMDisclosureOptions,
+  GridDOMEditorOptions,
+  GridDOMConnectionOptions,
+} from './grid/contracts.js';
+import type {
+  TabularDOMColumnSizeState,
+  TabularDOMColumnResizeHandleOptions,
+  TabularDOMEditorElement,
+  TabularDOMEditorValueParser,
+} from './contracts.js';
+import type {
+  TabularResult,
+  TabularViewResponse,
+  TabularCellAddress,
+  TabularRowID,
+} from '@sectile/tabular';
+import {
+  unwrap,
+} from '@sectile/core/result';
+import {
+  validateColumnSizeOptions,
+} from './bindings/columns.js';
 import {
   DOMTabularGrid,
-  type GridDOMBulkSelectionControlOptions,
-  type GridDOMCellOptions,
-  type GridDOMColumnHeaderOptions,
-  type GridDOMConnectionOptions,
-  type GridDOMControlledValues,
-  type GridDOMDisclosureOptions,
-  type GridDOMEditorOptions,
-  type GridDOMFilterControlOptions,
-  type GridDOMRowOptions,
-  type GridDOMSelectionControlOptions,
-  type GridDOMSortTriggerOptions,
-  type GridRevealCellCommand,
-  type GridRevealRowCommand,
-} from './internal/tabular-grid-dom.js';
-import type { TabularDOMColumnResizeHandleOptions, TabularDOMColumnSizeState, TabularDOMEditorElement, TabularDOMEditorValueParser } from './internal/tabular-dom.js';
-import { validateColumnSizeOptions } from './internal/tabular-dom.js';
+} from './grid/connection.js';
 
 export type DataTreeGridDOMCommand = SemanticDataTreeGridCommand | GridRevealCellCommand | GridRevealRowCommand;
+
 export type DataTreeGridDOMCommandHandler = (command: DataTreeGridDOMCommand) => void;
+
 export type DataTreeGridSnapshotChangeHandler = (snapshot: DataTreeGridState) => void;
+
 export type DataTreeGridColumnSizeChangeHandler = (state: DataTreeGridColumnSizeState) => void;
+
 export type DataTreeGridColumnSizeState = TabularDOMColumnSizeState;
+
 export interface DataTreeGridControlledValues extends GridDOMControlledValues {}
+
 export type DataTreeGridColumnHeaderOptions = GridDOMColumnHeaderOptions;
+
 export interface DataTreeGridRowOptions extends GridDOMRowOptions {}
+
 export interface DataTreeGridTreeRowOptions extends GridDOMRowOptions {}
+
 export interface DataTreeGridCellOptions extends GridDOMCellOptions {}
+
 export interface DataTreeGridSortTriggerOptions extends GridDOMSortTriggerOptions {}
+
 export type DataTreeGridFilterControlOptions = GridDOMFilterControlOptions;
+
 export interface DataTreeGridRowSelectionControlOptions extends GridDOMSelectionControlOptions {}
+
 export type DataTreeGridBulkSelectionControlOptions = GridDOMBulkSelectionControlOptions;
+
 export interface DataTreeGridRowDisclosureOptions extends GridDOMDisclosureOptions {}
+
 export type DataTreeGridColumnResizeHandleOptions = TabularDOMColumnResizeHandleOptions;
+
 export type DataTreeGridEditorElement = TabularDOMEditorElement;
+
 export type DataTreeGridEditorValueParser = TabularDOMEditorValueParser;
+
 export interface DataTreeGridEditorOptions extends GridDOMEditorOptions {}
 
 export interface DataTreeGridConnectionOptions extends Omit<GridDOMConnectionOptions<SemanticDataTreeGridController, SemanticDataTreeGridCommand>, 'onCommand' | 'onSnapshotChange'> {
@@ -153,6 +187,7 @@ export type {
   DataTreeGridState,
   DataTreeGridUpdate,
 } from '@sectile/tabular/data-tree-grid';
+
 export type {
   TabularCellAddress,
   TabularColumnDefinition,

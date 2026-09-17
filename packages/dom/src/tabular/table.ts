@@ -1,65 +1,85 @@
-import { unwrap } from '@sectile/core/result';
 import {
-  tryCreateDataTable as tryCreateSemanticDataTable,
   type DataTableCommand as SemanticDataTableCommand,
   type DataTableController as SemanticDataTableController,
-  type DataTableEvent,
   type DataTableOptions as SemanticDataTableOptions,
   type DataTableProjection,
+  type DataTableEvent,
+  tryCreateDataTable as tryCreateSemanticDataTable,
   type DataTableUpdate,
 } from '@sectile/tabular/data-table';
 import type {
-  TabularCellAddress,
-  TabularColumnID,
-  TabularControlledValues,
-  TabularGroupID,
-  TabularQuery,
-  TabularResult,
-  TabularRow,
-  TabularRowID,
   TabularSnapshot,
+  TabularControlledValues,
+  TabularColumnID,
+  TabularRowID,
+  TabularGroupID,
+  TabularCellAddress,
+  TabularResult,
   TabularViewResponse,
+  TabularRow,
+  TabularQuery,
 } from '@sectile/tabular';
+import type {
+  TabularDOMColumnSizeState,
+  TabularDOMColumnSizeOptions,
+  TabularDOMHeaderReference,
+  TabularDOMRegistrationOptions,
+  TabularDOMColumnResizeHandleOptions,
+  TabularDOMEditorElement,
+  TabularDOMEditorValueParser,
+  TabularDOMEditorOptions,
+  TabularHeaderMetrics,
+  TabularDOMRowSelectionAnchor,
+} from './contracts.js';
+import {
+  unwrap,
+} from '@sectile/core/result';
+import {
+  validateColumnSizeOptions,
+  ColumnSizeStore,
+  setColumnInlineSize,
+  bindColumnResizeHandle,
+} from './bindings/columns.js';
+import {
+  ok,
+  validateRegistrationGeneration,
+  domFailure,
+} from './result.js';
 import {
   BindingScope,
-  ColumnSizeStore,
-  allMatchingSelectionState,
-  bindCheckboxActivation,
-  bindColumnResizeHandle,
   bindEvent,
-  bindRowSelectionActivation,
   clearAttributes,
-  domFailure,
+} from './bindings/scope.js';
+import {
   headerElementID,
   headerMetricsFromColumnIndexes,
-  ok,
-  queryWithFilter,
+} from './projection.js';
+import {
   queryWithSort,
-  readEditorValue,
+  queryWithFilter,
+} from './query.js';
+import {
+  setRowSelectionControlAttributes,
   rowSelected,
   rowSelectionActivation,
-  setEditorAttributes,
-  setColumnInlineSize,
+  bindRowSelectionActivation,
   setBulkSelectionControlAttributes,
-  setRowSelectionControlAttributes,
-  validateColumnSizeOptions,
-  validateRegistrationGeneration,
-  type TabularDOMColumnResizeHandleOptions,
-  type TabularDOMColumnSizeOptions,
-  type TabularDOMColumnSizeState,
-  type TabularDOMEditorElement,
-  type TabularDOMEditorOptions,
-  type TabularDOMEditorValueParser,
-  type TabularDOMHeaderReference,
-  type TabularDOMRegistrationOptions,
-  type TabularHeaderMetrics,
-  type TabularDOMRowSelectionAnchor,
-} from './internal/tabular-dom.js';
+  allMatchingSelectionState,
+  bindCheckboxActivation,
+} from './bindings/selection.js';
+import {
+  setEditorAttributes,
+  readEditorValue,
+} from './bindings/editor.js';
 
 export type DataTableDOMCommand = SemanticDataTableCommand;
+
 export type DataTableDOMCommandHandler = (command: DataTableDOMCommand) => void;
+
 export type DataTableSnapshotChangeHandler = (snapshot: TabularSnapshot) => void;
+
 export type DataTableColumnSizeChangeHandler = (state: DataTableColumnSizeState) => void;
+
 export type DataTableColumnSizeState = TabularDOMColumnSizeState;
 
 export interface DataTableControlledValues extends TabularControlledValues {
@@ -112,8 +132,11 @@ export interface DataTableDisclosureOptions {
 }
 
 export type DataTableColumnResizeHandleOptions = TabularDOMColumnResizeHandleOptions;
+
 export type DataTableEditorElement = TabularDOMEditorElement;
+
 export type DataTableEditorValueParser = TabularDOMEditorValueParser;
+
 export interface DataTableEditorOptions extends TabularDOMEditorOptions {
   readonly commitOnChange?: boolean;
 }
@@ -589,6 +612,7 @@ export type {
   DataTableProjection,
   DataTableUpdate,
 } from '@sectile/tabular/data-table';
+
 export type {
   TabularCellAddress,
   TabularColumnDefinition,

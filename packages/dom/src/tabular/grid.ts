@@ -1,47 +1,78 @@
-import { unwrap } from '@sectile/core/result';
 import {
-  tryCreateDataGrid as tryCreateSemanticDataGrid,
   type DataGridCommand as SemanticDataGridCommand,
+  type DataGridState,
   type DataGridController as SemanticDataGridController,
-  type DataGridEvent,
   type DataGridOptions as SemanticDataGridOptions,
   type DataGridProjection,
-  type DataGridState,
+  type DataGridEvent,
+  tryCreateDataGrid as tryCreateSemanticDataGrid,
 } from '@sectile/tabular/data-grid';
-import type { TabularCellAddress, TabularResult, TabularViewResponse } from '@sectile/tabular';
+import type {
+  GridRevealCellCommand,
+  GridDOMControlledValues,
+  GridDOMColumnHeaderOptions,
+  GridDOMRowOptions,
+  GridDOMCellOptions,
+  GridDOMSortTriggerOptions,
+  GridDOMFilterControlOptions,
+  GridDOMSelectionControlOptions,
+  GridDOMBulkSelectionControlOptions,
+  GridDOMEditorOptions,
+  GridDOMConnectionOptions,
+} from './grid/contracts.js';
+import type {
+  TabularDOMColumnSizeState,
+  TabularDOMColumnResizeHandleOptions,
+  TabularDOMEditorElement,
+  TabularDOMEditorValueParser,
+} from './contracts.js';
+import type {
+  TabularResult,
+  TabularViewResponse,
+  TabularCellAddress,
+} from '@sectile/tabular';
+import {
+  unwrap,
+} from '@sectile/core/result';
+import {
+  validateColumnSizeOptions,
+} from './bindings/columns.js';
 import {
   DOMTabularGrid,
-  type GridDOMBulkSelectionControlOptions,
-  type GridDOMCellOptions,
-  type GridDOMColumnHeaderOptions,
-  type GridDOMConnectionOptions,
-  type GridDOMControlledValues,
-  type GridDOMEditorOptions,
-  type GridDOMFilterControlOptions,
-  type GridDOMRowOptions,
-  type GridDOMSelectionControlOptions,
-  type GridDOMSortTriggerOptions,
-  type GridRevealCellCommand,
-} from './internal/tabular-grid-dom.js';
-import type { TabularDOMColumnResizeHandleOptions, TabularDOMColumnSizeState, TabularDOMEditorElement, TabularDOMEditorValueParser } from './internal/tabular-dom.js';
-import { validateColumnSizeOptions } from './internal/tabular-dom.js';
+} from './grid/connection.js';
 
 export type DataGridDOMCommand = SemanticDataGridCommand | GridRevealCellCommand;
+
 export type DataGridDOMCommandHandler = (command: DataGridDOMCommand) => void;
+
 export type DataGridSnapshotChangeHandler = (snapshot: DataGridState) => void;
+
 export type DataGridColumnSizeChangeHandler = (state: DataGridColumnSizeState) => void;
+
 export type DataGridColumnSizeState = TabularDOMColumnSizeState;
+
 export interface DataGridControlledValues extends GridDOMControlledValues {}
+
 export type DataGridColumnHeaderOptions = GridDOMColumnHeaderOptions;
+
 export interface DataGridRowOptions extends GridDOMRowOptions {}
+
 export interface DataGridCellOptions extends GridDOMCellOptions {}
+
 export interface DataGridSortTriggerOptions extends GridDOMSortTriggerOptions {}
+
 export type DataGridFilterControlOptions = GridDOMFilterControlOptions;
+
 export interface DataGridRowSelectionControlOptions extends GridDOMSelectionControlOptions {}
+
 export type DataGridBulkSelectionControlOptions = GridDOMBulkSelectionControlOptions;
+
 export type DataGridColumnResizeHandleOptions = TabularDOMColumnResizeHandleOptions;
+
 export type DataGridEditorElement = TabularDOMEditorElement;
+
 export type DataGridEditorValueParser = TabularDOMEditorValueParser;
+
 export interface DataGridEditorOptions extends GridDOMEditorOptions {}
 
 export interface DataGridConnectionOptions extends Omit<GridDOMConnectionOptions<SemanticDataGridController, SemanticDataGridCommand>, 'onCommand' | 'onSnapshotChange'> {
@@ -141,6 +172,7 @@ export type {
   DataGridState,
   DataGridUpdate,
 } from '@sectile/tabular/data-grid';
+
 export type {
   TabularCellAddress,
   TabularColumnDefinition,

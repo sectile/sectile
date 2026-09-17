@@ -87,9 +87,9 @@ test('Tabular controls are exposed only through their optional subpath', async (
   assert.equal(typeof tabularModule.createDataTreeGrid, 'function');
 
   const tabularSource = await readFile(new URL('../.verification-dist/tabular.js', import.meta.url), 'utf8');
-  assert.match(tabularSource, /\.\/data-table\.js/);
-  assert.match(tabularSource, /\.\/data-grid\.js/);
-  assert.match(tabularSource, /\.\/data-tree-grid\.js/);
+  assert.match(tabularSource, /\.\/tabular\/table\.js/);
+  assert.match(tabularSource, /\.\/tabular\/grid\.js/);
+  assert.match(tabularSource, /\.\/tabular\/tree-grid\.js/);
 });
 
 test('Chart rendering is exposed only through its optional subpath', async () => {

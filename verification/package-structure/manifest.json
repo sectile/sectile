@@ -1936,14 +1936,57 @@
             "virtual"
           ]
         },
-        "tabular": {
-          "reason": "dom tabular owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "controls",
-            "foundation",
-            "tabular",
-            "virtual"
-          ]
+        "tabular-contracts": {
+          "reason": "Shared DOM Tabular host contracts without connections or resources.",
+          "allows": ["tabular-contracts"]
+        },
+        "tabular-result": {
+          "reason": "Host construction results and registration-generation checks.",
+          "allows": ["tabular-contracts", "tabular-result"]
+        },
+        "tabular-projection": {
+          "reason": "Browser header and attribute projection from canonical Tabular snapshots.",
+          "allows": ["foundation", "tabular-contracts", "tabular-projection"]
+        },
+        "tabular-query": {
+          "reason": "Sort and filter control input translated to Tabular query requests.",
+          "allows": ["tabular-query"]
+        },
+        "tabular-scope": {
+          "reason": "Tabular connection-local event binding and disposer lifetime.",
+          "allows": ["tabular-scope"]
+        },
+        "tabular-columns": {
+          "reason": "Host-owned column sizes and resize-control bindings.",
+          "allows": ["tabular-contracts", "tabular-result", "tabular-scope", "tabular-columns"]
+        },
+        "tabular-editor": {
+          "reason": "Native cell-editor value capture and attribute projection.",
+          "allows": ["tabular-contracts", "tabular-result", "tabular-editor"]
+        },
+        "tabular-selection": {
+          "reason": "Selection-control input and accessibility projection over canonical selection.",
+          "allows": ["tabular-contracts", "tabular-projection", "tabular-scope", "tabular-selection"]
+        },
+        "tabular-grid-contracts": {
+          "reason": "Shared Grid and TreeGrid connection contracts below their runtime owners.",
+          "allows": ["tabular-contracts", "tabular-grid-contracts"]
+        },
+        "tabular-grid-connection": {
+          "reason": "Single shared Grid and TreeGrid browser connection with retained registration and projection indexes.",
+          "allows": ["tabular-contracts", "tabular-grid-contracts", "tabular-result", "tabular-projection", "tabular-query", "tabular-scope", "tabular-columns", "tabular-editor", "tabular-selection", "tabular-grid-connection"]
+        },
+        "tabular-table": {
+          "reason": "Native table connection and creation over lower Tabular host support.",
+          "allows": ["tabular-contracts", "tabular-result", "tabular-projection", "tabular-query", "tabular-scope", "tabular-columns", "tabular-editor", "tabular-selection", "tabular-table"]
+        },
+        "tabular-grid": {
+          "reason": "Grid and TreeGrid creation adapting the shared connection to each domain profile.",
+          "allows": ["tabular-contracts", "tabular-grid-contracts", "tabular-columns", "tabular-grid-connection", "tabular-grid"]
+        },
+        "tabular-api": {
+          "reason": "Existing optional Tabular aggregate exposing its three host profiles.",
+          "allows": ["tabular-api", "tabular-table", "tabular-grid"]
         },
         "chart-contracts": {
           "reason": "dom chart-contracts owns its named contracts and implementation; permitted imports are explicit.",
@@ -2023,7 +2066,7 @@
             "foundation",
             "overlays",
             "positioning",
-            "tabular",
+            "tabular-api",
             "text",
             "virtual",
             "form-contracts",
@@ -2049,7 +2092,7 @@
             "overlays",
             "positioning",
             "reference",
-            "tabular",
+            "tabular-api",
             "text",
             "virtual",
             "form-contracts",
@@ -2187,18 +2230,6 @@
         },
         "src/combobox.ts": {
           "role": "controls",
-          "kind": "owner"
-        },
-        "src/data-grid.ts": {
-          "role": "tabular",
-          "kind": "owner"
-        },
-        "src/data-table.ts": {
-          "role": "tabular",
-          "kind": "owner"
-        },
-        "src/data-tree-grid.ts": {
-          "role": "tabular",
           "kind": "owner"
         },
         "src/dialog.ts": {
@@ -2373,14 +2404,6 @@
           "role": "foundation",
           "kind": "owner"
         },
-        "src/internal/tabular-dom.ts": {
-          "role": "tabular",
-          "kind": "owner"
-        },
-        "src/internal/tabular-grid-dom.ts": {
-          "role": "tabular",
-          "kind": "owner"
-        },
         "src/internal/text-element.ts": {
           "role": "text",
           "kind": "owner"
@@ -2486,7 +2509,59 @@
           "kind": "owner"
         },
         "src/tabular.ts": {
-          "role": "tabular",
+          "role": "tabular-api",
+          "kind": "facade"
+        },
+        "src/tabular/bindings/columns.ts": {
+          "role": "tabular-columns",
+          "kind": "owner"
+        },
+        "src/tabular/bindings/editor.ts": {
+          "role": "tabular-editor",
+          "kind": "owner"
+        },
+        "src/tabular/bindings/scope.ts": {
+          "role": "tabular-scope",
+          "kind": "owner"
+        },
+        "src/tabular/bindings/selection.ts": {
+          "role": "tabular-selection",
+          "kind": "owner"
+        },
+        "src/tabular/contracts.ts": {
+          "role": "tabular-contracts",
+          "kind": "owner"
+        },
+        "src/tabular/grid.ts": {
+          "role": "tabular-grid",
+          "kind": "owner"
+        },
+        "src/tabular/grid/connection.ts": {
+          "role": "tabular-grid-connection",
+          "kind": "owner"
+        },
+        "src/tabular/grid/contracts.ts": {
+          "role": "tabular-grid-contracts",
+          "kind": "owner"
+        },
+        "src/tabular/projection.ts": {
+          "role": "tabular-projection",
+          "kind": "owner"
+        },
+        "src/tabular/query.ts": {
+          "role": "tabular-query",
+          "kind": "owner"
+        },
+        "src/tabular/result.ts": {
+          "role": "tabular-result",
+          "kind": "owner"
+        },
+        "src/tabular/table.ts": {
+          "role": "tabular-table",
+          "kind": "owner"
+        },
+        "src/tabular/tree-grid.ts": {
+          "role": "tabular-grid",
           "kind": "owner"
         },
         "src/tags-input.ts": {

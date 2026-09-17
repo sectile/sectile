@@ -1,3 +1,3 @@
-export * from './data-table.js';
-export * from './data-grid.js';
-export * from './data-tree-grid.js';
+export * from './tabular/table.js';
+export * from './tabular/grid.js';
+export * from './tabular/tree-grid.js';

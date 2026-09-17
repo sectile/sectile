@@ -179,6 +179,51 @@ only target ancestry, subscription creation/disposal remains expected constant
 work, and notification dispatch visits only the affected channels except the
 explicit reset/reinitialize all-channel cases.
 
+## DOM Tabular ownership
+
+The supported `@sectile/dom/tabular` aggregate retains its public names and
+package export target. Its existing `src/tabular.ts` facade exposes three host
+profiles grouped under `src/tabular/`:
+
+```text
+tabular/
+  table.ts
+  grid.ts
+  tree-grid.ts
+  contracts.ts
+  result.ts
+  projection.ts
+  query.ts
+  bindings/
+    scope.ts
+    columns.ts
+    editor.ts
+    selection.ts
+  grid/
+    contracts.ts
+    connection.ts
+```
+
+Common contracts sit below host results, header projection and control bindings.
+The binding scope owns connection-local event disposal; column sizing, editor
+capture and selection controls use only the lower support they require. Grid
+contracts are shared below the Grid/TreeGrid connection and their construction
+adapters. None of these lower owners imports a profile constructor or the public
+aggregate. The dependency gate checks type references as well as runtime edges.
+
+`DOMDataTable` and `DOMTabularGrid` keep their existing registration, projection,
+header and sparse-cell indexes and generation identities. They remain the sole
+owners of their command subscription, pending reveal requests and connection
+cleanup. `BindingScope` and `ColumnSizeStore` each have one definition; grouping
+their code does not create another registry or allocate an index per call.
+
+Portable navigation, selection and editing transitions remain in the Tabular
+profile controllers. DOM captures native editor and control input and projects
+the accepted state into attributes, focus and browser effects. Construction still
+owns and disposes the controllers it creates; externally supplied controllers
+retain their existing caller-owned lifetime. The optional aggregate and DOM root
+keep their existing dependency isolation, including the Virtual-free host profiles.
+
 ## Chart domain ownership
 
 The existing Chart subpaths remain stable facades over responsibility-owned

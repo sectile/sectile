@@ -291,7 +291,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "5915c10f10cee1c9534b766d463b25f93ab943eacf7e92dc58da8bfb942e534a",
+  "fingerprint": "d0ddf091e659157d0edff4eacefa0a6f4188d2a4bd76e8c78db5651d72bc13e3",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -332,18 +332,6 @@
     {
       "path": "dist/combobox.d.ts",
       "sha256": "6403822f03001896146cdfd67c01521d6e2ddf13affda6c11cceb1faaf619251"
-    },
-    {
-      "path": "dist/data-grid.d.ts",
-      "sha256": "c9b78daa542d7272e805fb7d975e14610dfbd322a6f774a24497e7474e1179a2"
-    },
-    {
-      "path": "dist/data-table.d.ts",
-      "sha256": "cdfc246399a44757cd9a7e06bbb7a1c28353faa4ca50f7a714f91be815533387"
-    },
-    {
-      "path": "dist/data-tree-grid.d.ts",
-      "sha256": "65908a1a1d76336b8f39f2564effdf0ec4ccdfbd315e405bb535691756030963"
     },
     {
       "path": "dist/dialog.d.ts",
@@ -424,14 +412,6 @@
     {
       "path": "dist/internal/position-connection.d.ts",
       "sha256": "1354789f4d8aaac8694a718c03eded67afc84aa8d34b3a8dab08a7844ccd6194"
-    },
-    {
-      "path": "dist/internal/tabular-dom.d.ts",
-      "sha256": "274ef095dec3ff6a6f281cafba27cb04cc578365f1b60704334abd300b514219"
-    },
-    {
-      "path": "dist/internal/tabular-grid-dom.d.ts",
-      "sha256": "92efb38de37e4978ce15af5f1e4f2a3886f7f46be8209f625a04481f8488b0ca"
     },
     {
       "path": "dist/listbox.d.ts",
@@ -535,7 +515,27 @@
     },
     {
       "path": "dist/tabular.d.ts",
-      "sha256": "7b05acd8f1376a56d5d7af855c85db2667442965a9e93eb7888f02d2d62cf391"
+      "sha256": "3a2796c08518f926fbaf6d1f46a0902df142fa0f1a7904a2b6ce241d7286ee1e"
+    },
+    {
+      "path": "dist/tabular/contracts.d.ts",
+      "sha256": "d270b6f6a63232bbfaa752c28a66a38081d018cdc1cd381c68e21978b063a539"
+    },
+    {
+      "path": "dist/tabular/grid.d.ts",
+      "sha256": "8742f02938597388884ad49d88c8859419d448ab620e075420b3d037063ae16e"
+    },
+    {
+      "path": "dist/tabular/grid/contracts.d.ts",
+      "sha256": "9c48e57090e259672714c1c0d177581dae45f04c5a4b38c763a22e8cc1b231c0"
+    },
+    {
+      "path": "dist/tabular/table.d.ts",
+      "sha256": "86622f866bb975de6f494dda2480b2630b83f5be4e0275171bb7b738f926aa92"
+    },
+    {
+      "path": "dist/tabular/tree-grid.d.ts",
+      "sha256": "098f39b86e967cb741f92a026c15765534e29807a70976c0be7de22905d753f6"
     },
     {
       "path": "dist/tags-input.d.ts",
