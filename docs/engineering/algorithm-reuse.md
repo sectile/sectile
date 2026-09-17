@@ -64,7 +64,7 @@ Findings: 449; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/disclosure.ts:115` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/feed.ts:68` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/grid.ts:178` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/date-picker.ts:440` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/date-picker.ts:439` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/native-field.ts:125` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:307` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:300` | controller-rebuild |
