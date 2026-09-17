@@ -187,6 +187,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
   const defaultOpen = config.defaultOpen ?? false;
   const yearPageSize = config.yearPageSize ?? 12;
   const inline = config.inline ?? false;
+  const selectionEventType = kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date';
   const component = defineComponent({
     name, inheritAttrs: false,
     props: {
@@ -345,12 +346,12 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       };
       const selectMonth = (value: CalendarMonthValue): void => {
         connection.value?.handleEvent(granularity === 'month'
-          ? { type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: createDateValue(value.year, value.month, 1) }
+          ? { type: selectionEventType, value: createDateValue(value.year, value.month, 1) }
           : { type: 'select-month', value });
         refresh();
       };
       const selectYear = (value: PickerYearValue): void => {
-        connection.value?.handleEvent({ type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: createDateValue(value.year, 1, 1) });
+        connection.value?.handleEvent({ type: selectionEventType, value: createDateValue(value.year, 1, 1) });
         refresh();
       };
       provide<Context>(key, {
@@ -419,8 +420,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         },
         setViewMode: (value) => { connection.value?.handleEvent({ type: 'set-view-mode', value }); refresh(); },
         selectDate: (value) => {
-          const type = kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date';
-          connection.value?.handleEvent({ type, value });
+          connection.value?.handleEvent({ type: selectionEventType, value });
           refresh();
         },
         selectMonth,
