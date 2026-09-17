@@ -1,190 +1,72 @@
 import {
   applyFormEvent,
   getFormField,
-  getFormFieldIDByPath,
   getFormFieldIDsByIssueSource,
   tryCreateFormState,
   type FormCommand,
   type FormEvent,
   type FormFieldInput,
   type FormFieldState,
-  type FormFieldMetaInput,
-  type FormIssue,
-  type FormIssueSource,
   type FormReinitializeOptions,
   type FormState,
   type FormSubmissionFailure,
   type FormValidationIntent,
   type FormValidationTrigger,
 } from '@sectile/form/state';
-import {
-  encodeFormFieldPath,
-  tryCreateFormFieldPath,
-  type FormFieldPath,
-} from '@sectile/form/path';
 import { tryCreateFormValues, type FormValues } from '@sectile/form/values';
-import type {
-  FormSchema,
-  FormSchemaOutput,
-  StandardSchemaV1,
-} from '@sectile/form/schema';
+import type { FormSchema, StandardSchemaV1 } from '@sectile/form/schema';
 import { FormResultError, type FormResult } from '@sectile/form/error';
 import type { StableID } from '@sectile/core';
-
-export {
-  appendFormFieldPath,
-  createFormFieldPath,
-  createFormRelativePath,
-  encodeFormFieldPath,
-  type FormFieldPath,
-  type FormPathSegment,
-  type FormRelativePath,
-} from '@sectile/form/path';
-export type { FormValues } from '@sectile/form/values';
-export type {
-  FormSchema,
-  FormSchemaInput,
-  FormSchemaOutput,
-} from '@sectile/form/schema';
-export type { FormReinitializeOptions } from '@sectile/form/state';
-
-export interface FormValidationIssue {
-  readonly message: string;
-  readonly path?: FormFieldPath;
-  readonly relatedPaths?: readonly FormFieldPath[];
-}
-
-export interface FormValidationResult {
-  readonly issues?: readonly FormValidationIssue[];
-}
-
-export type FormInteractionValidationTrigger = Exclude<FormValidationTrigger, 'submit'>;
-
-export interface FormValidateContext<ID extends StableID = StableID> {
-  readonly trigger: FormValidationTrigger;
-  readonly intent: FormValidationIntent;
-  readonly changedFieldId: ID | null;
-  readonly signal: AbortSignal;
-}
-
-export type FormValidateHandler<
-  ID extends StableID = StableID,
-  Values extends object = FormValues,
-> = (
-  values: Values,
-  context: FormValidateContext<ID>,
-) => FormValidationResult | PromiseLike<FormValidationResult>;
-export type FormFocusHandler = () => boolean | void;
-export type FormResetHandler = () => void;
-export type FormReinitializeHandler = (options?: FormReinitializeOptions) => void;
-export type FormAnnounceSummaryHandler<ID extends StableID = StableID> =
-  (issues: readonly FormIssue<ID>[], failure: FormSubmissionFailure | null) => void;
-export type FormStateChangeHandler<ID extends StableID = StableID> =
-  (state: FormState<ID>) => void;
-export type FormUpdateHandler = () => void;
-
-export type FormSubmissionElement =
-  | HTMLButtonElement
-  | HTMLInputElement
-  | HTMLSelectElement
-  | HTMLTextAreaElement;
-
-export interface FormParticipant<ID extends StableID = StableID> {
-  readonly id: ID;
-  readonly element: HTMLElement;
-  readonly semanticControl?: HTMLElement;
-  readonly focusTarget?: HTMLElement;
-  readonly validationTarget?: HTMLElement;
-  readonly submissionElements?: readonly FormSubmissionElement[];
-  readonly name?: FormFieldPath | null;
-  readonly focus?: FormFocusHandler;
-  readonly reset?: FormResetHandler;
-  readonly getValue?: (() => unknown) | undefined;
-  readonly isValueEqual?: ((current: unknown, baseline: unknown) => boolean) | undefined;
-}
-
-export interface FormSubmitPayload<
-  ID extends StableID = StableID,
-  Values extends object = FormValues,
-> {
-  readonly event: SubmitEvent;
-  readonly formData: FormData;
-  readonly values: Values;
-  readonly submitter: HTMLElement | null;
-  readonly state: FormState<ID>;
-  readonly reinitialize: FormReinitializeHandler;
-}
-
-export type FormSubmitResult<ID extends StableID = StableID> =
-  | void
-  | { readonly ok: true }
-  | {
-      readonly ok: false;
-      readonly failure?: FormSubmissionFailure;
-      readonly issues?: readonly FormIssue<ID>[];
-    };
-
-export type FormSubmitHandler<
-  ID extends StableID = StableID,
-  Values extends object = FormValues,
-> = (
-  payload: FormSubmitPayload<ID, Values>,
-) => FormSubmitResult<ID> | PromiseLike<FormSubmitResult<ID>>;
-
-export interface FormSubmissionDefinition<ID extends StableID = StableID> {
-  readonly schema?: never;
-  readonly onSubmit: FormSubmitHandler<ID, FormValues>;
-}
-
-export interface FormSchemaSubmissionDefinition<
-  Schema extends FormSchema<object, object>,
-  ID extends StableID = StableID,
-> {
-  readonly schema: Schema;
-  readonly onSubmit: FormSubmitHandler<ID, FormSchemaOutput<Schema>>;
-}
-
-export function defineFormSubmission<
-  const Schema extends FormSchema<object, object>,
-  ID extends StableID = StableID,
->(
-  definition: FormSchemaSubmissionDefinition<Schema, ID>,
-): FormSchemaSubmissionDefinition<Schema, ID>;
-export function defineFormSubmission<ID extends StableID = StableID>(
-  definition: FormSubmissionDefinition<ID>,
-): FormSubmissionDefinition<ID>;
-export function defineFormSubmission(
-  definition: FormSubmissionDefinition | FormSchemaSubmissionDefinition<FormSchema<object, object>>,
-): FormSubmissionDefinition | FormSchemaSubmissionDefinition<FormSchema<object, object>> {
-  return Object.freeze({ ...definition });
-}
-
-export type FormSubmitErrorMapper<ID extends StableID = StableID> = (
-  reason: unknown,
-) => FormSubmissionFailure;
-
-export interface FormSubmitFailureResult<ID extends StableID = StableID> {
-  readonly failure?: FormSubmissionFailure;
-  readonly issues?: readonly FormIssue<ID>[];
-}
-
-export interface FormSnapshot<ID extends StableID = StableID> {
-  readonly revision: number;
-  readonly state: FormState<ID>;
-}
-
-export interface FormSubscribeOptions<Selected> {
-  readonly equals?: (previous: Selected, next: Selected) => boolean;
-}
-
-export type FormSelector<ID extends StableID, Selected> =
-  (state: FormState<ID>) => Selected;
-
-export type FormFieldSelector<ID extends StableID, Selected> =
-  (field: FormFieldState<ID> | null) => Selected;
-
-export type FormSelectionListener<Selected> =
-  (selected: Selected, previous: Selected) => void;
+import type {
+  FormAnnounceSummaryHandler,
+  FormConnection,
+  FormFieldSelector,
+  FormInteractionValidationTrigger,
+  FormOptions,
+  FormParticipant,
+  FormReconfigureOptions,
+  FormResetHandler,
+  FormSelectionListener,
+  FormSelector,
+  FormSnapshot,
+  FormStateChangeHandler,
+  FormSubmitErrorMapper,
+  FormSubmitHandler,
+  FormSubmitPayload,
+  FormSubmitResult,
+  FormSubscribeOptions,
+  FormUpdateHandler,
+  FormValidateContext,
+  FormValidateHandler,
+  FormValidationResult,
+} from './contracts.js';
+export * from './contracts.js';
+import {
+  formParticipantValuesEqual,
+  orderedParticipants,
+  participantTargets,
+  readFormParticipantValue,
+  readParticipantName,
+  reorderParticipants,
+} from './participants.js';
+import {
+  collectNativeIssues,
+  mapValidationIssues,
+  orderedIssues,
+  schemaException,
+  standardSchemaPath,
+  summaryMessage,
+  validationException,
+} from './validation.js';
+import {
+  createNativeFormData,
+  defaultSubmissionFailure,
+  includeNativeValidation,
+  isNativeSubmitter,
+  isPromiseLike,
+  nativeSubmitterForm,
+  normalizeSubmissionIssues,
+} from './submission.js';
 
 interface SelectorSubscription<Input> {
   readonly select: (input: Input) => unknown;
@@ -193,73 +75,6 @@ interface SelectorSubscription<Input> {
   selected: unknown;
   active: boolean;
   readonly createdRevision: number;
-}
-
-export interface FormOptions<
-  ID extends StableID = StableID,
-  Input extends object = FormValues,
-  Output extends object = Input,
-> {
-  readonly form: HTMLFormElement;
-  readonly summary?: HTMLElement;
-  readonly renderSummaryContent?: boolean;
-  readonly manageSummaryVisibility?: boolean;
-  readonly participants?: readonly FormParticipant<ID>[];
-  readonly issues?: readonly FormIssue<ID>[];
-  readonly schema?: FormSchema<Input, Output>;
-  readonly validate?: FormValidateHandler<ID, Input>;
-  readonly validateOn?: readonly FormInteractionValidationTrigger[];
-  readonly revalidateOn?: readonly FormInteractionValidationTrigger[];
-  readonly onSubmit?: FormSubmitHandler<ID, Output>;
-  readonly mapSubmitError?: FormSubmitErrorMapper<ID>;
-  readonly onReset?: FormResetHandler;
-  readonly onAnnounceSummary?: FormAnnounceSummaryHandler<ID>;
-  readonly onStateChange?: FormStateChangeHandler<ID>;
-  readonly onUpdate?: FormUpdateHandler;
-  readonly onSubscriptionError?: (error: unknown) => void;
-}
-
-export type FormReconfigureOptions<
-  ID extends StableID = StableID,
-  Input extends object = FormValues,
-  Output extends object = Input,
-> = Omit<FormOptions<ID, Input, Output>, 'form' | 'participants' | 'issues'>;
-
-export interface FormConnection<
-  ID extends StableID = StableID,
-  Input extends object = FormValues,
-  Output extends object = Input,
-> {
-  readonly state: FormState<ID>;
-  getSnapshot(): FormSnapshot<ID>;
-  getFormData(submitter?: HTMLElement | null): FormData;
-  reconfigure(options: FormReconfigureOptions<ID, Input, Output>): void;
-  registerParticipant(participant: FormParticipant<ID>): () => void;
-  refreshParticipant(id: ID): boolean;
-  getField(id: ID): FormFieldState<ID> | null;
-  setFieldMeta(id: ID, meta: FormFieldMetaInput): boolean;
-  replaceFieldIssues(id: ID, source: FormIssueSource, issues: readonly FormIssue<ID>[]): boolean;
-  upsertFieldIssue(id: ID, issue: FormIssue<ID>): boolean;
-  removeFieldIssue(id: ID, issueId: StableID): boolean;
-  clearFieldIssues(id: ID, source?: FormIssueSource): boolean;
-  replaceIssues(source: FormIssueSource, issues: readonly FormIssue<ID>[]): boolean;
-  submitStarted(): number | null;
-  submitSucceeded(generation: number): boolean;
-  submitFailed(generation: number, result: FormSubmitFailureResult<ID>): boolean;
-  reinitialize(options?: FormReinitializeOptions): void;
-  reset(): void;
-  subscribeForm<Selected>(
-    selector: FormSelector<ID, Selected>,
-    listener: FormSelectionListener<Selected>,
-    options?: FormSubscribeOptions<Selected>,
-  ): () => void;
-  subscribeField<Selected>(
-    id: ID,
-    selector: FormFieldSelector<ID, Selected>,
-    listener: FormSelectionListener<Selected>,
-    options?: FormSubscribeOptions<Selected>,
-  ): () => void;
-  destroy(): void;
 }
 
 export function createForm<
@@ -663,42 +478,6 @@ export function tryCreateForm<
       if (command.type === 'reset-field') participants.get(command.id)?.reset?.();
     }
   };
-  const collectNativeIssues = (): readonly FormIssue<ID>[] => {
-    const issues: FormIssue<ID>[] = [];
-    for (const participant of participants.values()) {
-      for (const control of validationTargets(participant)) {
-        const candidate = control as HTMLElement & {
-          readonly validity?: ValidityState;
-          readonly validationMessage?: string;
-          readonly willValidate?: boolean;
-        };
-        if (candidate.willValidate === false || candidate.validity?.valid !== false) continue;
-        issues.push(Object.freeze({
-          id: `${participant.id}:native`,
-          fieldId: participant.id,
-          message: candidate.validationMessage?.trim()
-            || `${readParticipantName(participant) ?? participant.id} is invalid.`,
-          source: 'native',
-        }));
-        break;
-      }
-    }
-    return Object.freeze(issues);
-  };
-  const mapValidationIssues = (
-    source: 'validate' | 'schema',
-    issues: readonly FormValidationIssue[],
-  ): readonly FormIssue<ID>[] => Object.freeze(issues.map((issue, index) => {
-    const owner = issue.path === undefined ? null : getFormFieldIDByPath(state, issue.path);
-    const relatedFieldIds = resolveRelatedFieldIDs(state, issue.relatedPaths ?? [], owner);
-    return Object.freeze({
-      id: `${source}:${owner ?? 'form'}:${index}`,
-      message: issue.message,
-      source,
-      ...(owner === null ? {} : { fieldId: owner }),
-      ...(relatedFieldIds.length === 0 ? {} : { relatedFieldIds }),
-    });
-  }));
   const finishValidation = (
     sequence: number,
     generation: number,
@@ -718,14 +497,14 @@ export function tryCreateForm<
       transition({
         type: 'replace-issues',
         source: 'native',
-        issues: includeNative ? collectNativeIssues() : [],
+        issues: includeNative ? collectNativeIssues(participants) : [],
         generation,
       });
     }
     transition({
       type: 'replace-issues',
       source: 'validate',
-      issues: mapValidationIssues('validate', custom.issues ?? []),
+      issues: mapValidationIssues(state, 'validate', custom.issues ?? []),
       generation,
     });
     if (intent === 'submission') {
@@ -738,7 +517,7 @@ export function tryCreateForm<
       transition({
         type: 'replace-issues',
         source: 'schema',
-        issues: mapValidationIssues('schema', schemaIssues),
+        issues: mapValidationIssues(state, 'schema', schemaIssues),
         generation,
       });
     }
@@ -826,15 +605,6 @@ export function tryCreateForm<
     }
     settleManagedSubmission(generation, { ok: false, failure });
   };
-  const normalizeSubmissionIssues = (
-    issues: readonly FormIssue<ID>[],
-  ): readonly FormIssue<ID>[] => Object.freeze(issues.map((issue) => Object.freeze({
-    ...issue,
-    source: 'server' as const,
-  })));
-  const defaultSubmissionFailure = (): FormSubmissionFailure => Object.freeze({
-    message: 'Form submission failed.',
-  });
   const runValidation = (
     trigger: FormValidationTrigger,
     intent: FormValidationIntent,
@@ -864,7 +634,7 @@ export function tryCreateForm<
         transition({
           type: 'replace-issues',
           source: 'native',
-          issues: includeNativeValidation(options.form, submitter) ? collectNativeIssues() : [],
+          issues: includeNativeValidation(options.form, submitter) ? collectNativeIssues(participants) : [],
           generation,
         });
       }
@@ -965,7 +735,7 @@ export function tryCreateForm<
     try {
       const associatedForm = submitter === null
         ? null
-        : (submitter as FormSubmissionElement).form;
+        : nativeSubmitterForm(submitter);
       if (
         submitter !== null
         && isNativeSubmitter(submitter)
@@ -1308,240 +1078,4 @@ export function tryCreateForm<
     },
   };
   return { ok: true, value: connection };
-}
-
-function readParticipantValue<ID extends StableID>(
-  participant: FormParticipant<ID>,
-): readonly unknown[] {
-  const explicit = participant.submissionElements ?? [];
-  const candidates = explicit.length > 0
-    ? explicit
-    : [participant.semanticControl ?? participant.element].filter(isSubmissionElement);
-  return Object.freeze(candidates.map(readSubmissionValue));
-}
-
-function isSubmissionElement(element: HTMLElement): element is FormSubmissionElement {
-  return element.tagName === 'BUTTON'
-    || element.tagName === 'INPUT'
-    || element.tagName === 'SELECT'
-    || element.tagName === 'TEXTAREA';
-}
-
-function readSubmissionValue(element: FormSubmissionElement): unknown {
-  if (element.tagName === 'SELECT') {
-    const select = element as HTMLSelectElement;
-    return Object.freeze([
-      'select',
-      select.multiple,
-      Object.freeze([...select.options]
-        .filter((option) => option.selected)
-        .map((option) => option.value)),
-    ]);
-  }
-  if (element.tagName === 'INPUT') {
-    const input = element as HTMLInputElement;
-    const type = input.type.toLowerCase();
-    if (type === 'checkbox' || type === 'radio') {
-      return Object.freeze(['checked', input.checked, input.value]);
-    }
-    if (type === 'file') {
-      return Object.freeze([
-        'files',
-        Object.freeze(Array.from(input.files ?? []).map((file) => Object.freeze([
-          file.name,
-          file.size,
-          file.type,
-          file.lastModified,
-        ]))),
-      ]);
-    }
-  }
-  return Object.freeze(['value', element.value]);
-}
-
-function sameParticipantValue(left: unknown, right: unknown): boolean {
-  if (Object.is(left, right)) return true;
-  if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
-  return left.every((value, index) => sameParticipantValue(value, right[index]));
-}
-
-function readFormParticipantValue<ID extends StableID>(
-  participant: FormParticipant<ID>,
-): unknown {
-  return participant.getValue === undefined
-    ? readParticipantValue(participant)
-    : participant.getValue();
-}
-
-function formParticipantValuesEqual<ID extends StableID>(
-  participant: FormParticipant<ID>,
-  current: unknown,
-  baseline: unknown,
-): boolean {
-  return participant.isValueEqual?.(current, baseline)
-    ?? sameParticipantValue(current, baseline);
-}
-
-function readControlName(element: HTMLElement): string | null {
-  const name = (element as HTMLElement & { readonly name?: string }).name?.trim();
-  return name === undefined || name.length === 0 ? null : name;
-}
-
-function readParticipantName<ID extends StableID>(
-  participant: FormParticipant<ID>,
-): string | null {
-  if (participant.name !== undefined && participant.name !== null) {
-    return safeEncodeFormFieldPath(participant.name);
-  }
-  for (const element of participant.submissionElements ?? []) {
-    const name = readControlName(element);
-    if (name !== null) return name;
-  }
-  return readControlName(
-    participant.semanticControl ?? participant.element,
-  );
-}
-
-function participantTargets<ID extends StableID>(
-  participant: FormParticipant<ID>,
-): readonly HTMLElement[] {
-  return [...new Set([
-    participant.element,
-    participant.semanticControl,
-    participant.focusTarget,
-    participant.validationTarget,
-    ...(participant.submissionElements ?? []),
-  ].filter((element): element is HTMLElement => element !== undefined))];
-}
-
-function validationTargets<ID extends StableID>(
-  participant: FormParticipant<ID>,
-): readonly HTMLElement[] {
-  const semantic = participant.semanticControl;
-  const validation = participant.validationTarget;
-  const submissions = participant.submissionElements ?? [];
-  const targets = [...new Set([validation, semantic, ...submissions].filter(
-    (element): element is HTMLElement => element !== undefined,
-  ))];
-  return targets.length > 0 ? targets : [participant.element];
-}
-
-function createNativeFormData(
-  form: HTMLFormElement,
-  submitter: HTMLElement | null,
-): FormData {
-  return submitter === null ? new FormData(form) : new FormData(form, submitter);
-}
-
-function isNativeSubmitter(element: HTMLElement): boolean {
-  if (element.tagName === 'BUTTON') {
-    const type = element.getAttribute('type')?.toLowerCase() ?? 'submit';
-    return type === 'submit';
-  }
-  if (element.tagName !== 'INPUT') return false;
-  const type = element.getAttribute('type')?.toLowerCase() ?? 'text';
-  return type === 'submit' || type === 'image';
-}
-
-function isFormNoValidateSubmitter(element: HTMLElement | null): boolean {
-  if (element === null) return false;
-  return (element as HTMLElement & { readonly formNoValidate?: boolean }).formNoValidate === true;
-}
-
-function includeNativeValidation(
-  form: HTMLFormElement,
-  submitter: HTMLElement | null,
-): boolean {
-  return !form.noValidate && !isFormNoValidateSubmitter(submitter);
-}
-
-function resolveRelatedFieldIDs<ID extends StableID>(
-  state: FormState<ID>,
-  paths: readonly FormFieldPath[],
-  owner: ID | null,
-): readonly ID[] {
-  const ids = new Set<ID>();
-  for (const path of paths) {
-    const id = getFormFieldIDByPath(state, path);
-    if (id !== null && id !== owner) ids.add(id);
-  }
-  return Object.freeze([...ids]);
-}
-
-function safeEncodeFormFieldPath(path: FormFieldPath): string | null {
-  const result = tryCreateFormFieldPath(path);
-  return result.ok ? encodeFormFieldPath(result.value) : null;
-}
-
-function summaryMessage<ID extends StableID>(
-  issues: readonly FormIssue<ID>[],
-  failure: FormSubmissionFailure | null,
-): string {
-  return [failure?.message, ...issues.map((issue) => issue.message)]
-    .filter((message): message is string => message !== undefined)
-    .join(' ');
-}
-
-function isPromiseLike<T>(value: T | PromiseLike<T> | null): value is PromiseLike<T> {
-  return value !== null
-    && typeof value === 'object'
-    && 'then' in value
-    && typeof value.then === 'function';
-}
-
-function validationException(_reason: unknown): FormValidationResult {
-  return Object.freeze({
-    issues: Object.freeze([{ message: 'Form validation failed.' }]),
-  });
-}
-
-function schemaException<Output>(_reason: unknown): StandardSchemaV1.FailureResult {
-  return Object.freeze({
-    issues: Object.freeze([{ message: 'Schema validation failed.' }]),
-  });
-}
-
-function standardSchemaPath(
-  path: StandardSchemaV1.Issue['path'],
-): FormFieldPath | undefined {
-  if (path === undefined || path.length === 0) return undefined;
-  const result: Array<string | number> = [];
-  for (const segment of path) {
-    const key = typeof segment === 'object' && segment !== null ? segment.key : segment;
-    if (typeof key === 'symbol') return undefined;
-    result.push(typeof key === 'number' ? key : String(key));
-  }
-  return result;
-}
-
-function orderedIssues<ID extends StableID>(state: FormState<ID>): readonly FormIssue<ID>[] {
-  return state.allIssues;
-}
-
-function orderedParticipants<ID extends StableID>(
-  participants: ReadonlyMap<ID, FormParticipant<ID>>,
-): readonly FormParticipant<ID>[] {
-  const byRegistration = [...participants.values()];
-  const registrationIndex = new Map<ID, number>();
-  for (let index = 0; index < byRegistration.length; index += 1) {
-    registrationIndex.set(byRegistration[index]!.id, index);
-  }
-  return [...byRegistration].sort((left, right) => {
-    const position = left.element.compareDocumentPosition(right.element);
-    if ((position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0) return -1;
-    if ((position & Node.DOCUMENT_POSITION_PRECEDING) !== 0) return 1;
-    return registrationIndex.get(left.id)! - registrationIndex.get(right.id)!;
-  });
-}
-
-function reorderParticipants<ID extends StableID>(
-  participants: ReadonlyMap<ID, FormParticipant<ID>>,
-  state: FormState<ID>,
-  transition: (event: FormEvent<ID>) => readonly FormCommand<ID>[] | null,
-): void {
-  const ids = orderedParticipants(participants).map((participant) => participant.id);
-  if (
-    ids.length === state.fields.length
-    && ids.some((id, index) => state.fields[index]?.id !== id)
-  ) transition({ type: 'reorder-fields', ids });
 }

@@ -332,7 +332,7 @@
     {
       "id": "form.initial-participants",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/form.ts",
+      "source": "packages/dom/src/form/connection.ts",
       "benchmarkIDs": [
         "ISSUE-134:dom-form-initial-participants"
       ],
@@ -424,7 +424,7 @@
     {
       "id": "form.participant-event-target",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/form.ts",
+      "source": "packages/dom/src/form/connection.ts",
       "benchmarkIDs": [
         "ISSUE-159:dom-form-event-target-work"
       ],
@@ -492,7 +492,7 @@
     {
       "id": "form.subscribe",
       "inherits": "lifecycle-v1",
-      "source": "packages/dom/src/form.ts",
+      "source": "packages/dom/src/form/connection.ts",
       "benchmarkIDs": [
         "VAL-032:dom-form-subscribe-resources"
       ],
@@ -527,7 +527,7 @@
     {
       "id": "form.subscription-dispatch",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/form.ts",
+      "source": "packages/dom/src/form/connection.ts",
       "benchmarkIDs": [
         "VAL-032:dom-form-selector-dispatch-work"
       ],
@@ -584,7 +584,7 @@
     {
       "id": "form.unsubscribe",
       "inherits": "lifecycle-v1",
-      "source": "packages/dom/src/form.ts",
+      "source": "packages/dom/src/form/connection.ts",
       "benchmarkIDs": [
         "VAL-032:dom-form-unsubscribe-work"
       ],

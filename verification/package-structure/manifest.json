@@ -1928,15 +1928,6 @@
             "text"
           ]
         },
-        "form": {
-          "reason": "dom form owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "controls",
-            "form",
-            "foundation",
-            "text"
-          ]
-        },
         "virtual": {
           "reason": "dom virtual owns its named contracts and implementation; permitted imports are explicit.",
           "allows": [
@@ -2029,13 +2020,17 @@
             "chart-renderers",
             "controls",
             "exports",
-            "form",
             "foundation",
             "overlays",
             "positioning",
             "tabular",
             "text",
-            "virtual"
+            "virtual",
+            "form-contracts",
+            "form-participants",
+            "form-validation",
+            "form-submission",
+            "form-connection"
           ]
         },
         "reference": {
@@ -2050,14 +2045,18 @@
             "chart-renderers",
             "controls",
             "exports",
-            "form",
             "foundation",
             "overlays",
             "positioning",
             "reference",
             "tabular",
             "text",
-            "virtual"
+            "virtual",
+            "form-contracts",
+            "form-participants",
+            "form-validation",
+            "form-submission",
+            "form-connection"
           ]
         },
         "temporal-support": {
@@ -2108,6 +2107,44 @@
           "allows": [
             "temporal-facade",
             "temporal-picker"
+          ]
+        },
+        "form-contracts": {
+          "reason": "DOM Form public contracts and immutable submission definition without connection state.",
+          "allows": [
+            "form-contracts"
+          ]
+        },
+        "form-participants": {
+          "reason": "Browser participant value, name, target and document-order projection.",
+          "allows": [
+            "form-contracts",
+            "form-participants"
+          ]
+        },
+        "form-validation": {
+          "reason": "Native/schema validation issue and summary translation over participant projection.",
+          "allows": [
+            "form-contracts",
+            "form-participants",
+            "form-validation"
+          ]
+        },
+        "form-submission": {
+          "reason": "Native FormData, submitter and managed-submission helper translation.",
+          "allows": [
+            "form-contracts",
+            "form-submission"
+          ]
+        },
+        "form-connection": {
+          "reason": "Single DOM Form connection state/resource owner and orchestration boundary.",
+          "allows": [
+            "form-contracts",
+            "form-participants",
+            "form-validation",
+            "form-submission",
+            "form-connection"
           ]
         }
       },
@@ -2184,8 +2221,24 @@
           "role": "controls",
           "kind": "owner"
         },
-        "src/form.ts": {
-          "role": "form",
+        "src/form/connection.ts": {
+          "role": "form-connection",
+          "kind": "owner"
+        },
+        "src/form/contracts.ts": {
+          "role": "form-contracts",
+          "kind": "owner"
+        },
+        "src/form/participants.ts": {
+          "role": "form-participants",
+          "kind": "owner"
+        },
+        "src/form/submission.ts": {
+          "role": "form-submission",
+          "kind": "owner"
+        },
+        "src/form/validation.ts": {
+          "role": "form-validation",
           "kind": "owner"
         },
         "src/grid.ts": {

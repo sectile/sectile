@@ -4,7 +4,7 @@ import { Window } from '../packages/dom/node_modules/happy-dom/lib/index.js';
 import { createFacadeConnection } from '../packages/core/dist/adapter-runtime.js';
 import { unwrap } from '../packages/core/dist/result.js';
 import { createCheckbox as createDOMCheckbox } from '../packages/dom/dist/checkbox.js';
-import { createForm } from '../packages/dom/dist/form.js';
+import { createForm } from '../packages/dom/dist/form/connection.js';
 import {
   createPositionEngine,
   readPositionSourceRegistryDiagnostics,

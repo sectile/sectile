@@ -1852,8 +1852,8 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/form.ts",
-      "line": 601,
+      "path": "packages/dom/src/form/connection.ts",
+      "line": 416,
       "evidence": ".findIndex(",
       "rule": "dom-host-authority",
       "classification": "reuse",
@@ -1863,8 +1863,8 @@
     {
       "detector": "linear-membership",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/form.ts",
-      "line": 621,
+      "path": "packages/dom/src/form/connection.ts",
+      "line": 436,
       "evidence": ".includes(",
       "rule": "dom-host-authority",
       "classification": "reuse",
@@ -1874,8 +1874,8 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/form.ts",
-      "line": 1094,
+      "path": "packages/dom/src/form/connection.ts",
+      "line": 864,
       "evidence": ".some(",
       "rule": "dom-host-authority",
       "classification": "reuse",
@@ -1885,8 +1885,8 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/form.ts",
-      "line": 1545,
+      "path": "packages/dom/src/form/participants.ts",
+      "line": 96,
       "evidence": ".some(",
       "rule": "dom-host-authority",
       "classification": "reuse",

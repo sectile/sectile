@@ -146,6 +146,39 @@ allowed dependency directions only. It does not create a new listener registry,
 observer, timer, cache or runtime dependency, and the DOM root remains isolated
 from the optional Temporal runtime unless a Temporal subpath is imported.
 
+## DOM Form ownership
+
+The optional `@sectile/dom/form` subpath is delivered directly from the Form
+connection family rather than a second runtime facade:
+
+```text
+form/
+  contracts.ts       # public host contracts and defineFormSubmission
+  participants.ts    # native value/name/target/document-order projection
+  validation.ts      # native/schema issue and summary translation
+  submission.ts      # FormData, submitter and managed-submission helpers
+  connection.ts      # one state, subscription and browser-resource owner
+```
+
+The lower owners do not import connection orchestration. They translate bounded
+browser values and host metadata only; portable field, issue, validation,
+submission and path transitions remain in `@sectile/form`. `connection.ts`
+continues to call the canonical Form state machine and re-exports the unchanged
+DOM Form public contracts.
+
+The connection remains the sole owner of participant/current/baseline maps, the
+reverse target `WeakMap`, handled-event `WeakSet`, selector channels, validation
+`AbortController`, native-resume token, pending reinitializations and the six
+form-root listeners. External participant-root listeners keep the same
+participant disposer lifetime. Splitting pure host helpers does not add an
+observer, timer, listener registry, cache or alternate submission authority.
+
+Existing work bounds are retained: initial participant setup scans supplied
+owners and sorts only final unique participants, delegated event routing walks
+only target ancestry, subscription creation/disposal remains expected constant
+work, and notification dispatch visits only the affected channels except the
+explicit reset/reinitialize all-channel cases.
+
 ## Chart domain ownership
 
 The existing Chart subpaths remain stable facades over responsibility-owned

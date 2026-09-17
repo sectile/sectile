@@ -262,9 +262,9 @@
       "default": "./dist/feed.js"
     },
     "./form": {
-      "types": "./dist/form.d.ts",
-      "import": "./dist/form.js",
-      "default": "./dist/form.js"
+      "types": "./dist/form/connection.d.ts",
+      "import": "./dist/form/connection.js",
+      "default": "./dist/form/connection.js"
     },
     "./reorder": {
       "types": "./dist/reorder.d.ts",

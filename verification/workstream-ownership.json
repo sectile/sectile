@@ -80,7 +80,7 @@
       "packages/vue/src/internal/semantic/", "verification/authority/vue.json"
     ],
     "WI-028": [
-      "packages/dom/src/form.ts", "packages/dom/tests/form.test.mjs"
+      "packages/dom/src/form/connection.ts", "packages/dom/tests/form.test.mjs"
     ],
     "WI-029": [
       "packages/vue/src/form.ts", "packages/vue/tests/form.test.mjs"

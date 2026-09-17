@@ -68,7 +68,7 @@
     },
     {
       "subpath": "./form",
-      "types": "dist/form.d.ts"
+      "types": "dist/form/connection.d.ts"
     },
     {
       "subpath": "./grid",
@@ -291,7 +291,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "87cda30307c7b2c6890920de00c316e265028370aa9db349c36bc0f8950fca2b",
+  "fingerprint": "5915c10f10cee1c9534b766d463b25f93ab943eacf7e92dc58da8bfb942e534a",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -366,8 +366,12 @@
       "sha256": "8b28f5d82f86a309421af1881d07c713003e683de0e4e5930e36362e57ebbbad"
     },
     {
-      "path": "dist/form.d.ts",
-      "sha256": "f24f4547de478f7ea276979edd57fadd65c712aa83c7b882a01a0f5fc9f920ec"
+      "path": "dist/form/connection.d.ts",
+      "sha256": "70fef3758ca04eaaf8e933c0d251b86d5afabbc9aac8a864207e3afef4463a3e"
+    },
+    {
+      "path": "dist/form/contracts.d.ts",
+      "sha256": "1037b4e8b6bff2fc32450211ebbdbfa842a3f29006c033d2146eb9f81913e14b"
     },
     {
       "path": "dist/grid.d.ts",

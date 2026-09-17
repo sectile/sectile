@@ -26069,7 +26069,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "form.initial-participants",
-      "source": "packages/dom/src/form.ts",
+      "source": "packages/dom/src/form/connection.ts",
       "benchmarkIDs": [
         "ISSUE-134:dom-form-initial-participants"
       ],
@@ -26163,7 +26163,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "form.participant-event-target",
-      "source": "packages/dom/src/form.ts",
+      "source": "packages/dom/src/form/connection.ts",
       "benchmarkIDs": [
         "ISSUE-159:dom-form-event-target-work"
       ],
@@ -26236,7 +26236,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "form.subscribe",
-      "source": "packages/dom/src/form.ts",
+      "source": "packages/dom/src/form/connection.ts",
       "benchmarkIDs": [
         "VAL-032:dom-form-subscribe-resources"
       ],
@@ -26304,7 +26304,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "form.subscription-dispatch",
-      "source": "packages/dom/src/form.ts",
+      "source": "packages/dom/src/form/connection.ts",
       "benchmarkIDs": [
         "VAL-032:dom-form-selector-dispatch-work"
       ],
@@ -26382,7 +26382,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "form.unsubscribe",
-      "source": "packages/dom/src/form.ts",
+      "source": "packages/dom/src/form/connection.ts",
       "benchmarkIDs": [
         "VAL-032:dom-form-unsubscribe-work"
       ],

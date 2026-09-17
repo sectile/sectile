@@ -50,9 +50,9 @@ test('Form is exposed only through its optional subpath', async () => {
   const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.createForm, undefined);
 
-  const formModule = await import('../.verification-dist/form.js');
+  const formModule = await import('../.verification-dist/form/connection.js');
   assert.equal(typeof formModule.createForm, 'function');
-  const formSource = await readFile(new URL('../.verification-dist/form.js', import.meta.url), 'utf8');
+  const formSource = await readFile(new URL('../.verification-dist/form/connection.js', import.meta.url), 'utf8');
   assert.match(formSource, /@sectile\/form/);
 });
 

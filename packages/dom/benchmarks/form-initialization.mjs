@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks';
 import { Window } from 'happy-dom';
-import { createForm } from '../dist/form.js';
+import { createForm } from '../dist/form/connection.js';
 
 const sizes = [100, 250, 500, 1_000];
 const warmupRuns = 2;

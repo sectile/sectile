@@ -385,6 +385,38 @@ test('DOM Temporal support stays below field, calendar and picker composition', 
   }
 });
 
+test('DOM Form lower owners stay below connection orchestration', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const dependencies = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
+  for (const [entry, allowed] of [
+    ['form/contracts', ['form-contracts']],
+    ['form/participants', ['form-contracts', 'form-participants']],
+    ['form/validation', ['form-contracts', 'form-participants', 'form-validation']],
+    ['form/submission', ['form-contracts', 'form-submission']],
+  ]) {
+    const source = `packages/dom/src/${entry}.ts`;
+    const visited = new Set();
+    const pending = [source];
+    while (pending.length > 0) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      const owner = classes.get(path);
+      if (owner.package === 'dom') assert.ok(allowed.includes(owner.role), path);
+      pending.push(...dependencies.get(path));
+    }
+    const witness = graph.edges.find((edge) => edge.source === source);
+    assert.ok(witness, source);
+    const reverse = { ...witness, source, target: 'packages/dom/src/form/connection.ts' };
+    assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+  }
+});
+
 test('Virtual shared track contracts stay below concrete layout families', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);
