@@ -32,12 +32,12 @@ export type RangeCalendarValueChangeHandler = NonNullable<InstanceType<typeof Ra
 export type RangeCalendarOpenChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:open']>;
 export type RangeCalendarHighlightedValueChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:highlightedValue']>;
 export const RangeCalendarContent = /* @__PURE__ */ specializePickerRootPart('date-range', PickerContent);
-export const RangeCalendarGrid = specializePickerRootPart('date-range', PickerGrid);
+export const RangeCalendarGrid = /* @__PURE__ */ specializePickerRootPart('date-range', PickerGrid);
 export const RangeCalendarCell = PickerCell;
-export const RangeCalendarPreviousMonth = specializePickerRootPart('date-range', createPickerMove('month', -1, 'SectileRangeCalendarPreviousMonth'));
-export const RangeCalendarNextMonth = specializePickerRootPart('date-range', createPickerMove('month', 1, 'SectileRangeCalendarNextMonth'));
-export const RangeCalendarPreviousYear = specializePickerRootPart('date-range', createPickerMove('year', -1, 'SectileRangeCalendarPreviousYear'));
-export const RangeCalendarNextYear = specializePickerRootPart('date-range', createPickerMove('year', 1, 'SectileRangeCalendarNextYear'));
+export const RangeCalendarPreviousMonth = /* @__PURE__ */ specializePickerRootPart('date-range', createPickerMove('month', -1, 'SectileRangeCalendarPreviousMonth'));
+export const RangeCalendarNextMonth = /* @__PURE__ */ specializePickerRootPart('date-range', createPickerMove('month', 1, 'SectileRangeCalendarNextMonth'));
+export const RangeCalendarPreviousYear = /* @__PURE__ */ specializePickerRootPart('date-range', createPickerMove('year', -1, 'SectileRangeCalendarPreviousYear'));
+export const RangeCalendarNextYear = /* @__PURE__ */ specializePickerRootPart('date-range', createPickerMove('year', 1, 'SectileRangeCalendarNextYear'));
 
 export type {
   DateRange,
