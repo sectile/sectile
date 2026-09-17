@@ -12,8 +12,7 @@ import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time
 import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
 import type { DateTimeRange, DateTimeValue } from '@sectile/dom/temporal/date-time-field';
 import { createCalendarMonth, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
-import { createMonthPickerValue, tryCreateMonthPickerValue } from '@sectile/temporal/month-picker';
-import { createYearPickerValue, tryCreateYearPickerValue } from '@sectile/temporal/year-picker';
+import { createDateValue, tryCreateDateValue } from '@sectile/temporal/date-field';
 import type { FormSubmissionRegistration } from './form-control.js';
 import {
   hiddenInputSubmissionCapabilities,
@@ -253,8 +252,8 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         const policies = runtimeProps.policies as PeriodPolicies | undefined;
         if (granularity !== 'day') {
           const canonical = 'month' in value
-            ? tryCreateMonthPickerValue(value.year, value.month)
-            : tryCreateYearPickerValue(value.year);
+            ? tryCreateDateValue(value.year, value.month, 1)
+            : tryCreateDateValue(value.year, 1, 1);
           return canonical.ok && isCalendarValueAvailable(canonical.value, policies);
         }
         if ('month' in value) return monthAvailable(value, policies);
@@ -346,12 +345,12 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       };
       const selectMonth = (value: CalendarMonthValue): void => {
         connection.value?.handleEvent(granularity === 'month'
-          ? { type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: createMonthPickerValue(value.year, value.month) }
+          ? { type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: createDateValue(value.year, value.month, 1) }
           : { type: 'select-month', value });
         refresh();
       };
       const selectYear = (value: PickerYearValue): void => {
-        connection.value?.handleEvent({ type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: createYearPickerValue(value.year) });
+        connection.value?.handleEvent({ type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: createDateValue(value.year, 1, 1) });
         refresh();
       };
       provide<Context>(key, {
