@@ -25,25 +25,25 @@
       }
     },
     "chart": {
-      "tarballBytes": 92836,
-      "unpackedBytes": 438073,
-      "unpackedFiles": 54,
+      "tarballBytes": 98738,
+      "unpackedBytes": 458579,
+      "unpackedFiles": 87,
       "categories": {
         "runtimeJS": {
-          "files": 17,
-          "bytes": 214607
+          "files": 28,
+          "bytes": 225047
         },
         "declarations": {
-          "files": 17,
-          "bytes": 55441
+          "files": 28,
+          "bytes": 56944
         },
         "sourceMaps": {
-          "files": 17,
-          "bytes": 162820
+          "files": 28,
+          "bytes": 171298
         },
         "other": {
           "files": 3,
-          "bytes": 5205
+          "bytes": 5290
         }
       }
     },

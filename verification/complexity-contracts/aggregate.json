@@ -24542,7 +24542,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "controller.project.cached",
-      "source": "packages/chart/src/controller.ts",
+      "source": "packages/chart/src/internal/interaction/controller.ts",
       "benchmarkIDs": [
         "chart:projection:cached",
         "VAL-001:chart-projection-cache-allocation"
@@ -24607,7 +24607,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "controller.publish",
-      "source": "packages/chart/src/controller.ts",
+      "source": "packages/chart/src/internal/interaction/controller.ts",
       "benchmarkIDs": [
         "VAL-002:chart-publication-cascade"
       ],
@@ -24685,7 +24685,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "definition.preflight",
-      "source": "packages/chart/src/definition.ts",
+      "source": "packages/chart/src/internal/definition/resolve.ts",
       "benchmarkIDs": [
         "VAL-007:chart-definition-preflight",
         "VAL-031:chart-definition-cardinality-work"
@@ -24749,7 +24749,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "input.model-cardinality-preflight",
-      "source": "packages/chart/src/model.ts",
+      "source": "packages/chart/src/internal/model/state.ts",
       "benchmarkIDs": [
         "VAL-013:chart-model-cardinality-preflight"
       ],
@@ -24815,7 +24815,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "interaction.selection-contains",
-      "source": "packages/chart/src/interaction.ts",
+      "source": "packages/chart/src/internal/interaction/state.ts",
       "benchmarkIDs": [
         "VAL-012:chart-selection-index"
       ],
@@ -24878,7 +24878,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "model.normalize",
-      "source": "packages/chart/src/model.ts",
+      "source": "packages/chart/src/internal/model/state.ts",
       "benchmarkIDs": [
         "chart:model:normalize",
         "VAL-036:chart-model-datum-capture"
@@ -24945,7 +24945,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "model.patch-layer.sparse",
-      "source": "packages/chart/src/internal/layer-owner.ts",
+      "source": "packages/chart/src/internal/model/layer-owner.ts",
       "benchmarkIDs": [
         "chart:model:patch-layer-sparse"
       ],
@@ -25018,7 +25018,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "model.replace-layer",
-      "source": "packages/chart/src/model.ts",
+      "source": "packages/chart/src/internal/model/state.ts",
       "benchmarkIDs": [
         "chart:model:replace-layer"
       ],
@@ -25086,7 +25086,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "projection.clone",
-      "source": "packages/chart/src/projection.ts",
+      "source": "packages/chart/src/internal/projection/project.ts",
       "benchmarkIDs": [
         "VAL-014:chart-projection-clone-ownership"
       ],
@@ -25154,7 +25154,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "projection.create",
-      "source": "packages/chart/src/projection.ts",
+      "source": "packages/chart/src/internal/projection/project.ts",
       "benchmarkIDs": [
         "chart:projection:cold",
         "chart:projection:radial-sampled",
@@ -25223,7 +25223,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "projection.create.semantic",
-      "source": "packages/chart/src/projection.ts",
+      "source": "packages/chart/src/internal/projection/project.ts",
       "benchmarkIDs": [
         "chart:projection:semantic-bounded"
       ],
@@ -25312,7 +25312,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "projection.hit-test.indexed",
-      "source": "packages/chart/src/query.ts",
+      "source": "packages/chart/src/internal/projection/query.ts",
       "benchmarkIDs": [
         "chart:query:hit-test",
         "chart:query:hit-test-dense",
@@ -25401,7 +25401,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "projection.query-index.build",
-      "source": "packages/chart/src/query.ts",
+      "source": "packages/chart/src/internal/projection/query.ts",
       "benchmarkIDs": [
         "chart:query:index-build"
       ],
@@ -25519,7 +25519,7 @@
       "package": "chart",
       "surface": "hot",
       "id": "view.transition.axis-domain",
-      "source": "packages/chart/src/view.ts",
+      "source": "packages/chart/src/internal/interaction/view.ts",
       "benchmarkIDs": [
         "chart:view:transition",
         "VAL-034:chart-view-finite-transition"

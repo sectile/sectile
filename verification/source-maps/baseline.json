@@ -21,20 +21,20 @@
     },
     {
       "package": "chart",
-      "javascriptFiles": 17,
-      "declarationFiles": 17,
-      "sourceMapFiles": 17,
+      "javascriptFiles": 28,
+      "declarationFiles": 28,
+      "sourceMapFiles": 28,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 214607,
-        "declarations": 55441,
-        "sourceMaps": 162820,
-        "total": 432868
+        "javascript": 225047,
+        "declarations": 56944,
+        "sourceMaps": 171298,
+        "total": 453289
       },
       "packed": {
-        "tarballBytes": 91887,
-        "unpackedBytes": 438079,
-        "files": 54
+        "tarballBytes": 97730,
+        "unpackedBytes": 458590,
+        "files": 87
       }
     },
     {

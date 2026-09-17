@@ -51,19 +51,19 @@
       "types": "dist/view.d.ts"
     }
   ],
-  "fingerprint": "46da79161fbb73493b161ec03b8743b30c4bd1c23464143d07a49329a8552bfe",
+  "fingerprint": "dd89ec472b22e179ab64a55ff65307fff5600f04f962b78a7b5a08cd573f431c",
   "files": [
     {
       "path": "dist/contract.d.ts",
-      "sha256": "51de53f1ceb860c336968be465b913f49507bcd65a1c743c9a2717cd3bfc13e1"
+      "sha256": "e25020b9f677a7ff16201852ae49730301147f9e9064bda341eb9aa6928e3eff"
     },
     {
       "path": "dist/controller.d.ts",
-      "sha256": "af87bdc6eb3051de8e798deaccc5cba5e8fb48c9894d09a1bf907d94ccd8d4b3"
+      "sha256": "f3bb0f2a72bcf1b1a77189b0b0c3e1a8a459f41864f4f2b3e4ba80ed4d3a5266"
     },
     {
       "path": "dist/definition.d.ts",
-      "sha256": "e07572d835980a802e22571c31a4ddcfc5765ca387fce5dcbcd002daebbf21a6"
+      "sha256": "5d4ea610b8a635386ad2c6ba27da2775cb2a2f58adee25a214ba697769f4017a"
     },
     {
       "path": "dist/index.d.ts",
@@ -71,23 +71,71 @@
     },
     {
       "path": "dist/interaction.d.ts",
-      "sha256": "3a94db8373c685afb2507538e399f2d6a6e5c01aebdddb1197bc576e694d3e23"
+      "sha256": "5b60ae24e2709f621697368bb7cdc008d9239fcdc2bdf11ac9ed9ef99fa0e993"
+    },
+    {
+      "path": "dist/internal/definition/contracts.d.ts",
+      "sha256": "d21725566f5c4f6fc0995b9bd1d1804653633b4abe8dd0ce00809efe3df2a378"
+    },
+    {
+      "path": "dist/internal/definition/resolve.d.ts",
+      "sha256": "b7094cf77be63373b476d24d99d93f3f31f7d39ed6d9921b78f596fe6ed08e90"
+    },
+    {
+      "path": "dist/internal/interaction/controller.d.ts",
+      "sha256": "2683ccdd6ca13b545ea57e9b932007eeffb66d1405539e1f8defb21df1b1078f"
+    },
+    {
+      "path": "dist/internal/interaction/state.d.ts",
+      "sha256": "00dd89f0a0e1ea808f0c80b20400beff01edc44b7b9e6cd690a3fe346a2c7668"
+    },
+    {
+      "path": "dist/internal/interaction/view.d.ts",
+      "sha256": "385601a7ca7fc7950c033ec820e152a9f8f7f38888cf0d357610e47bde98352d"
+    },
+    {
+      "path": "dist/internal/layout/contracts.d.ts",
+      "sha256": "8ab0a123c24d15134dddf346f0ceb64fd50e7b270401eb3c5965dc6aeeb6efb0"
+    },
+    {
+      "path": "dist/internal/layout/plot.d.ts",
+      "sha256": "7b4fc2d7d7ad5e5f2cdf9dcc2785565231fd423e2be99f6c3e0ead07f3d7191f"
+    },
+    {
+      "path": "dist/internal/model/contracts.d.ts",
+      "sha256": "0b5bfb805987a1511ebc0091e4aa732f180665503b7bb4aa7b68ec13d4621598"
+    },
+    {
+      "path": "dist/internal/model/limits.d.ts",
+      "sha256": "5b6243f1d342fdeba34339b1d495f186aec849c1658c944486ecece1a39b3280"
+    },
+    {
+      "path": "dist/internal/model/state.d.ts",
+      "sha256": "de0fe2a8ba1f5ac20f074c9d4d23304d88e7d19c09a9e2beff6e447e8898e78c"
+    },
+    {
+      "path": "dist/internal/projection/project.d.ts",
+      "sha256": "232aa9ef5b272a040cec1cc5450b338f9883652bd67bfa2dfa419437bff9c349"
+    },
+    {
+      "path": "dist/internal/projection/query.d.ts",
+      "sha256": "9641ed055098d8f35b688325a2851c88edcf0ca4ab8d8395864b796bb55e37a5"
     },
     {
       "path": "dist/layout.d.ts",
-      "sha256": "0b816d306c7047ed1b59aeb5eaf2901ffb3d6447db25df4e995f75de75aab978"
+      "sha256": "b5fefe157f4a2411c51dfbba73eac917407af9807050197c3d3c87b2f9e45cf0"
     },
     {
       "path": "dist/model.d.ts",
-      "sha256": "9f04692623c0d7a1976eb990fedb7cd1726962744b2309859450b04ee656ae35"
+      "sha256": "4e406af6a16823ea9ba1d169c24379be60a0a3f9071af177ca995f0573106e93"
     },
     {
       "path": "dist/projection.d.ts",
-      "sha256": "37a2ae409a1b627cfd35747038106dee04d21ca2becb579a89a4eb1aa0d99785"
+      "sha256": "26303fb45877da069e3829eef3d5b3e268eb6a83462d7d916832ef8c3551cd2c"
     },
     {
       "path": "dist/query.d.ts",
-      "sha256": "188a607364a2b934200e594d3b84612f0e3d3b330c0ca20bac7b8ec83f6c2228"
+      "sha256": "bcf4f99b646b716da6804858c7f9cfcb9fb38ce26e695621a53d4b38891a2a9a"
     },
     {
       "path": "dist/result.d.ts",
@@ -99,7 +147,7 @@
     },
     {
       "path": "dist/view.d.ts",
-      "sha256": "325593eb7067e0c0b23c1f35c9a014fc57ee6d0d1bc56ea8929da71683dc52fd"
+      "sha256": "7c1ed40e1d801f7796278cfe81462be5e502f315bb47bdae9a7da157ebb1e1e0"
     }
   ]
 }

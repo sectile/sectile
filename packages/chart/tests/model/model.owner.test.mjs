@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getChartModelData } from '../../.verification-dist/internal/model-store.js';
+import { getChartModelData } from '../../.verification-dist/internal/model/store.js';
 import { createChartModel, replaceChartLayer, tryApplyChartPatch } from '../../.verification-dist/model.js';
 
 test('retains one bounded profile index per immutable layer owner', () => {

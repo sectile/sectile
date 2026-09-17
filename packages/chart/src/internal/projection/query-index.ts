@@ -1,4 +1,4 @@
-import type { ChartProjection, ChartProjectionBatch } from '../projection.js';
+import type { ChartProjection, ChartProjectionBatch } from './project.js';
 
 export interface ProjectionQueryIndex {
   readonly order: Uint32Array;
@@ -25,6 +25,7 @@ export interface QueryNode {
 }
 
 const indexes = new WeakMap<object, ProjectionQueryIndex>();
+
 const LEAF_SIZE = 8;
 
 export function projectionQueryIndex(projection: ChartProjection): ProjectionQueryIndex {

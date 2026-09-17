@@ -1,6 +1,6 @@
-import type { ChartLimits } from '../model.js';
-import type { ChartResult } from '../result.js';
-import { chartFail, chartOK } from './result.js';
+import type { ChartResult } from '../../result.js';
+import { chartFail, chartOK } from '../result.js';
+import type { ChartLimits } from './contracts.js';
 
 const normalizedLimits = new WeakSet<object>();
 
@@ -31,3 +31,11 @@ export function tryNormalizeChartLimits(
   normalizedLimits.add(result);
   return chartOK(result);
 }
+
+export const DEFAULT_CHART_LIMITS: Readonly<Required<ChartLimits>> = Object.freeze({
+  maxAxes: 16,
+  maxLayers: 64,
+  maxDatums: 1_000_000,
+  maxPatchOperations: 100_000,
+  maxIDCodeUnits: 1_024,
+});

@@ -266,6 +266,38 @@ test('all product sources have a reviewed role and only the recorded initial sou
   assertStructure(inspectStructure(graph, manifest, classes));
 });
 
+test('Chart contracts and storage stay below model, definition and projection assembly', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  const imports = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) imports.get(edge.source).push(edge.target);
+  for (const [entry, roles] of [
+    ['model/contracts', ['model-contracts']],
+    ['model/store', ['model-contracts', 'layer-storage', 'model-storage']],
+    ['layout/contracts', ['foundation', 'model-contracts', 'input', 'scale', 'layout-contracts']],
+    ['definition/contracts', ['foundation', 'model-contracts', 'input', 'scale', 'layout-contracts', 'definition-contracts']],
+  ]) {
+    const visited = new Set();
+    const pending = [`packages/chart/src/internal/${entry}.ts`];
+    while (pending.length) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      const owner = classes.get(path);
+      if (owner.package === 'chart') assert.ok(roles.includes(owner.role), path);
+      pending.push(...imports.get(path));
+    }
+  }
+  assertStructure(inspectStructure(graph, policy, classes));
+  const source = 'packages/chart/src/internal/model/contracts.ts';
+  const witness = graph.edges.find((edge) => edge.source === source);
+  assert.ok(witness);
+  const reverse = { ...witness, source, target: 'packages/chart/src/internal/model/state.ts' };
+  assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+});
+
 test('Form construction and state contracts keep their dependencies within lower owners', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);

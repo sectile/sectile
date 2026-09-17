@@ -579,189 +579,205 @@
     },
     "chart": {
       "disposition": "extract",
-      "reason": "Separate input, model/storage and projection/interaction ownership in WI-004.",
+      "reason": "Model, definition, layout, projection/query and interaction families are colocated, with lower shared contracts and one retained-state owner per cache.",
       "dependencies": [
         "core"
       ],
       "roles": {
         "foundation": {
-          "reason": "chart foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Existing Chart result contracts and error construction.",
           "allows": [
             "foundation"
           ]
         },
-        "limits": {
-          "reason": "chart limits owns its named contracts and implementation; permitted imports are explicit.",
+        "scale": {
+          "reason": "Compact scale, color and transform primitives remain foundational public owners.",
           "allows": [
             "foundation",
+            "scale"
+          ]
+        },
+        "model-contracts": {
+          "reason": "Renderer-neutral datum, layer, model and limit contracts without model assembly.",
+          "allows": [
+            "model-contracts"
+          ]
+        },
+        "limits": {
+          "reason": "Default limits and the single normalized-limit provenance registry.",
+          "allows": [
+            "foundation",
+            "model-contracts",
             "limits"
           ]
         },
-        "scale": {
-          "reason": "chart scale owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "foundation",
-            "scale"
-          ]
-        },
         "input": {
-          "reason": "chart input owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Portable input/axis/view normalization with lower model limits and scale contracts.",
           "allows": [
             "foundation",
+            "model-contracts",
             "input",
-            "limits",
             "scale"
           ]
         },
-        "storage": {
-          "reason": "chart storage owns its named contracts and implementation; permitted imports are explicit.",
+        "layer-storage": {
+          "reason": "Packed layer values, indexes, bounded repair and retained layer identities.",
           "allows": [
-            "foundation",
-            "input",
-            "limits",
-            "scale",
-            "storage"
+            "model-contracts",
+            "layer-storage"
+          ]
+        },
+        "model-storage": {
+          "reason": "Single model provenance and packed layer view caches.",
+          "allows": [
+            "model-contracts",
+            "layer-storage",
+            "model-storage"
           ]
         },
         "model": {
-          "reason": "chart model owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Model construction and patch assembly over lower contracts and canonical storage.",
           "allows": [
             "foundation",
-            "input",
+            "model-contracts",
             "limits",
-            "model",
-            "scale",
-            "storage"
+            "layer-storage",
+            "model-storage",
+            "model"
           ]
         },
-        "view": {
-          "reason": "chart view owns its named contracts and implementation; permitted imports are explicit.",
+        "layout-contracts": {
+          "reason": "Resolved axes, viewport and layout data shared below view/definition/projection assembly.",
           "allows": [
-            "foundation",
             "input",
             "scale",
-            "view"
+            "layout-contracts"
           ]
         },
         "layout": {
-          "reason": "chart layout owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Axis resolution and plot construction using lower layout contracts and scales.",
           "allows": [
             "foundation",
             "input",
-            "layout",
-            "model",
             "scale",
-            "view"
+            "layout-contracts",
+            "layout"
+          ]
+        },
+        "definition-contracts": {
+          "reason": "Resolved definition/layer metadata without definition construction.",
+          "allows": [
+            "input",
+            "model-contracts",
+            "layout-contracts",
+            "definition-contracts"
+          ]
+        },
+        "definition": {
+          "reason": "Capture definition inputs, resolve axes and assemble canonical models.",
+          "allows": [
+            "foundation",
+            "input",
+            "limits",
+            "model-contracts",
+            "model",
+            "layout-contracts",
+            "layout",
+            "definition-contracts",
+            "definition"
           ]
         },
         "projection": {
-          "reason": "chart projection owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Borrowed packed projections and bounded geometry/color caches.",
           "allows": [
             "foundation",
             "input",
-            "layout",
-            "limits",
-            "model",
-            "projection",
             "scale",
-            "storage",
-            "view"
+            "model-contracts",
+            "layer-storage",
+            "model-storage",
+            "layout-contracts",
+            "layout",
+            "definition-contracts",
+            "projection"
           ]
         },
         "query": {
-          "reason": "chart query owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Projection-owned query indexes and hit testing.",
           "allows": [
             "foundation",
             "input",
-            "layout",
-            "model",
             "projection",
-            "query",
-            "scale",
-            "storage",
+            "query"
+          ]
+        },
+        "view": {
+          "reason": "Portable view transitions using resolved-axis contracts, not layout construction.",
+          "allows": [
+            "foundation",
+            "input",
+            "layout-contracts",
             "view"
           ]
         },
         "interaction": {
-          "reason": "chart interaction owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Portable selection/cursor state and event transitions.",
           "allows": [
             "foundation",
             "input",
-            "interaction",
-            "layout",
-            "model",
-            "projection",
-            "query",
-            "view"
+            "model-contracts",
+            "view",
+            "interaction"
           ]
         },
         "controller": {
-          "reason": "chart controller owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Controller publication, command subscriptions and composition of lower owners.",
           "allows": [
-            "controller",
             "foundation",
             "input",
-            "interaction",
-            "layout",
-            "limits",
-            "model",
-            "projection",
-            "query",
             "scale",
-            "storage",
-            "view",
-            "definition"
-          ]
-        },
-        "exports": {
-          "reason": "chart exports owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "controller",
-            "exports",
-            "foundation",
-            "input",
-            "interaction",
-            "layout",
-            "limits",
+            "model-contracts",
             "model",
+            "layout-contracts",
+            "layout",
+            "definition-contracts",
+            "definition",
             "projection",
-            "query",
-            "scale",
-            "storage",
             "view",
-            "definition"
+            "interaction",
+            "controller"
           ]
         },
         "reference": {
-          "reason": "chart reference owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Verification-only model oracle consumes lower model contracts.",
           "allows": [
-            "controller",
-            "exports",
             "foundation",
-            "input",
-            "interaction",
-            "layout",
-            "limits",
-            "model",
-            "projection",
-            "query",
-            "reference",
-            "scale",
-            "storage",
-            "view",
-            "definition"
+            "model-contracts",
+            "reference"
           ]
         },
-        "definition": {
-          "reason": "Definition assembly resolves axes and constructs models; projected definition types will be lowered in WI-004.",
+        "exports": {
+          "reason": "Existing public entrypoints reexport exactly their supported owners; internal code does not depend on these facades.",
           "allows": [
-            "definition",
             "foundation",
+            "scale",
+            "model-contracts",
             "limits",
             "input",
-            "scale",
+            "layer-storage",
+            "model-storage",
             "model",
-            "layout"
+            "layout-contracts",
+            "layout",
+            "definition-contracts",
+            "definition",
+            "projection",
+            "query",
+            "view",
+            "interaction",
+            "controller",
+            "reference",
+            "exports"
           ]
         }
       },
@@ -771,34 +787,78 @@
           "kind": "owner"
         },
         "src/controller.ts": {
-          "role": "controller",
-          "kind": "owner"
+          "role": "exports",
+          "kind": "facade"
         },
         "src/definition.ts": {
-          "role": "definition",
-          "kind": "owner"
+          "role": "exports",
+          "kind": "facade"
         },
         "src/index.ts": {
           "role": "exports",
           "kind": "facade"
         },
         "src/interaction.ts": {
+          "role": "exports",
+          "kind": "facade"
+        },
+        "src/internal/definition/contracts.ts": {
+          "role": "definition-contracts",
+          "kind": "owner"
+        },
+        "src/internal/definition/resolve.ts": {
+          "role": "definition",
+          "kind": "owner"
+        },
+        "src/internal/interaction/controller.ts": {
+          "role": "controller",
+          "kind": "owner"
+        },
+        "src/internal/interaction/state.ts": {
           "role": "interaction",
           "kind": "owner"
         },
-        "src/internal/layer-owner.ts": {
-          "role": "storage",
+        "src/internal/interaction/view.ts": {
+          "role": "view",
           "kind": "owner"
         },
-        "src/internal/limits.ts": {
+        "src/internal/layout/contracts.ts": {
+          "role": "layout-contracts",
+          "kind": "owner"
+        },
+        "src/internal/layout/plot.ts": {
+          "role": "layout",
+          "kind": "owner"
+        },
+        "src/internal/model/contracts.ts": {
+          "role": "model-contracts",
+          "kind": "owner"
+        },
+        "src/internal/model/layer-owner.ts": {
+          "role": "layer-storage",
+          "kind": "owner"
+        },
+        "src/internal/model/limits.ts": {
           "role": "limits",
           "kind": "owner"
         },
-        "src/internal/model-store.ts": {
-          "role": "storage",
+        "src/internal/model/state.ts": {
+          "role": "model",
           "kind": "owner"
         },
-        "src/internal/query-index.ts": {
+        "src/internal/model/store.ts": {
+          "role": "model-storage",
+          "kind": "owner"
+        },
+        "src/internal/projection/project.ts": {
+          "role": "projection",
+          "kind": "owner"
+        },
+        "src/internal/projection/query-index.ts": {
+          "role": "query",
+          "kind": "owner"
+        },
+        "src/internal/projection/query.ts": {
           "role": "query",
           "kind": "owner"
         },
@@ -811,20 +871,20 @@
           "kind": "owner"
         },
         "src/layout.ts": {
-          "role": "layout",
-          "kind": "owner"
+          "role": "exports",
+          "kind": "facade"
         },
         "src/model.ts": {
-          "role": "model",
-          "kind": "owner"
+          "role": "exports",
+          "kind": "facade"
         },
         "src/projection.ts": {
-          "role": "projection",
-          "kind": "owner"
+          "role": "exports",
+          "kind": "facade"
         },
         "src/query.ts": {
-          "role": "query",
-          "kind": "owner"
+          "role": "exports",
+          "kind": "facade"
         },
         "src/result.ts": {
           "role": "foundation",
@@ -835,8 +895,8 @@
           "kind": "owner"
         },
         "src/view.ts": {
-          "role": "view",
-          "kind": "owner"
+          "role": "exports",
+          "kind": "facade"
         }
       }
     },
@@ -3261,104 +3321,6 @@
   },
   "exceptions": [
     {
-      "id": "chart-source-1",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/chart/src/contract.ts",
-          "packages/chart/src/model.ts"
-        ]
-      ],
-      "owner": "chart",
-      "workItem": "WI-004",
-      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
-    },
-    {
-      "id": "chart-source-2",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/chart/src/internal/layer-owner.ts",
-          "packages/chart/src/model.ts"
-        ]
-      ],
-      "owner": "chart",
-      "workItem": "WI-004",
-      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
-    },
-    {
-      "id": "chart-source-3",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/chart/src/internal/limits.ts",
-          "packages/chart/src/model.ts"
-        ]
-      ],
-      "owner": "chart",
-      "workItem": "WI-004",
-      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
-    },
-    {
-      "id": "chart-source-4",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/chart/src/internal/model-store.ts",
-          "packages/chart/src/model.ts"
-        ]
-      ],
-      "owner": "chart",
-      "workItem": "WI-004",
-      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
-    },
-    {
-      "id": "chart-source-5",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/chart/src/layout.ts",
-          "packages/chart/src/projection.ts"
-        ]
-      ],
-      "owner": "chart",
-      "workItem": "WI-004",
-      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
-    },
-    {
-      "id": "chart-source-6",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/chart/src/projection.ts",
-          "packages/chart/src/definition.ts"
-        ]
-      ],
-      "owner": "chart",
-      "workItem": "WI-004",
-      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
-    },
-    {
-      "id": "chart-source-7",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/chart/src/view.ts",
-          "packages/chart/src/layout.ts"
-        ]
-      ],
-      "owner": "chart",
-      "workItem": "WI-004",
-      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
-    },
-    {
       "id": "virtual-source-18",
       "graph": "source",
       "rule": "direction",
@@ -3413,70 +3375,6 @@
       "owner": "vue",
       "workItem": "WI-010A",
       "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
-    },
-    {
-      "id": "chart-source-22",
-      "graph": "source",
-      "rule": "cycle",
-      "edges": [
-        [
-          "packages/chart/src/definition.ts",
-          "packages/chart/src/layout.ts"
-        ],
-        [
-          "packages/chart/src/layout.ts",
-          "packages/chart/src/projection.ts"
-        ],
-        [
-          "packages/chart/src/projection.ts",
-          "packages/chart/src/definition.ts"
-        ],
-        [
-          "packages/chart/src/projection.ts",
-          "packages/chart/src/layout.ts"
-        ]
-      ],
-      "owner": "chart",
-      "workItem": "WI-004",
-      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
-    },
-    {
-      "id": "chart-source-23",
-      "graph": "source",
-      "rule": "cycle",
-      "edges": [
-        [
-          "packages/chart/src/internal/layer-owner.ts",
-          "packages/chart/src/model.ts"
-        ],
-        [
-          "packages/chart/src/internal/limits.ts",
-          "packages/chart/src/model.ts"
-        ],
-        [
-          "packages/chart/src/internal/model-store.ts",
-          "packages/chart/src/internal/layer-owner.ts"
-        ],
-        [
-          "packages/chart/src/internal/model-store.ts",
-          "packages/chart/src/model.ts"
-        ],
-        [
-          "packages/chart/src/model.ts",
-          "packages/chart/src/internal/layer-owner.ts"
-        ],
-        [
-          "packages/chart/src/model.ts",
-          "packages/chart/src/internal/limits.ts"
-        ],
-        [
-          "packages/chart/src/model.ts",
-          "packages/chart/src/internal/model-store.ts"
-        ]
-      ],
-      "owner": "chart",
-      "workItem": "WI-004",
-      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
     },
     {
       "id": "virtual-source-25",

@@ -1,10 +1,13 @@
+import type { ChartDatum, ChartProfile } from './contracts.js';
 import type { StableID } from '@sectile/core';
 import { applySequencePatch, createSequence, type Sequence } from '@sectile/core/sequence';
-import type { ChartDatum, ChartProfile } from '../model.js';
 
 const VALUE_BLOCK_DATUMS = 256;
+
 const MAX_VALUE_PATCH_DEPTH = 16;
+
 const MAX_HIERARCHY_PATCH_DEPTH = 16;
+
 const HIERARCHY_STRIDE = 12;
 
 export interface ChartLayerRevisions {

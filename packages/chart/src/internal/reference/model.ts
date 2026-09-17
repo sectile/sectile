@@ -1,5 +1,5 @@
 import type { StableID } from '@sectile/core';
-import type { ChartLayer, ChartModel, ChartPatch } from '../../model.js';
+import type { ChartLayer, ChartModel, ChartPatch } from '../model/contracts.js';
 
 /** Slow, allocation-heavy oracle used only by verification builds. */
 export function applyChartPatchReference<ID extends StableID>(

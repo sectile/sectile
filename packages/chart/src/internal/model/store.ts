@@ -1,12 +1,12 @@
-import type { StableID } from '@sectile/core';
-import type { Sequence } from '@sectile/core/sequence';
+import type { ChartLimits, ChartProfile } from './contracts.js';
 import {
-  materializePackedLayerValues,
   type ChartLayerBounds,
   type ChartProfileIndex,
+  materializePackedLayerValues,
   type PackedChartLayerOwner,
 } from './layer-owner.js';
-import type { ChartLimits, ChartProfile } from '../model.js';
+import type { StableID } from '@sectile/core';
+import type { Sequence } from '@sectile/core/sequence';
 
 export interface PackedChartLayer<ID extends StableID = StableID> {
   readonly id: ID;
@@ -36,7 +36,9 @@ export interface ChartModelData<ID extends StableID = StableID> {
 }
 
 const modelData = new WeakMap<object, ChartModelData>();
+
 const localIdentityIndices = new WeakMap<object, Uint32Array>();
+
 const materializedValues = new WeakMap<object, Float64Array>();
 
 export function createPackedChartLayerView<ID extends StableID>(

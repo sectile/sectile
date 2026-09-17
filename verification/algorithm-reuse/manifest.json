@@ -122,7 +122,7 @@
     {
       "id": "chart-query-index-reuse",
       "detectors": ["*"],
-      "prefixes": ["packages/chart/src/internal/query-index.ts"],
+      "prefixes": ["packages/chart/src/internal/projection/query-index.ts"],
       "classification": "reuse",
       "owner": null,
       "rationale": "Chart query structures retain packed spatial indexes for a complete projection generation and release them with their owner."

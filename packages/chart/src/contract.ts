@@ -3,7 +3,7 @@ import { DEFAULT_MAX_ID_CODE_UNITS, validateStableID } from '@sectile/core/ident
 import { unwrap } from '@sectile/core/result';
 import type { UnitID } from '@sectile/core/units';
 import { chartFail, chartOK } from './internal/result.js';
-import type { ChartLimits } from './model.js';
+import type { ChartLimits } from './internal/model/contracts.js';
 import type { ChartResult } from './result.js';
 import type { ChartScaleKind } from './scale.js';
 

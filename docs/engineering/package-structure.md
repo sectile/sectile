@@ -60,9 +60,8 @@ component edge sets, even if every individual edge has an allowed role direction
 
 The migration baseline is `dc6a84e58aeaed00b8af89e971723ecb20157b15`.
 Remaining back-references have exact edge or component records with an owner,
-reason and remediation Work Item. They cover Chart model/projection contracts,
-Virtual track contracts and Vue Form contracts.
-They are not blanket package exemptions.
+reason and remediation Work Item. They cover Virtual track contracts and Vue
+Form contracts. They are not blanket package exemptions.
 
 A successful check with such records says `passed-with-recorded-debt`, not that
 the package structure is finished. A new edge, a larger cyclic component, or a
@@ -102,6 +101,97 @@ classes and their GPU resources retain their original owners. The refactor
 changes locations and import directions, not event handling, rendering,
 validation rules or resource lifetimes. WI-002 removes the DOM Chart cycle and
 its exact migration records without expanding allowed role directions.
+
+## Chart domain ownership
+
+The existing Chart subpaths remain stable facades over responsibility-owned
+implementation families under `packages/chart/src/internal/`:
+
+```text
+model/
+  contracts.ts      # datum, layer, model, patch and limit types
+  limits.ts         # defaults and normalized-limit provenance
+  state.ts          # construction and immutable model patch assembly
+  store.ts          # model provenance and borrowed packed layer views
+  layer-owner.ts    # packed values, profile indexes and bounded repair
+
+definition/
+  contracts.ts      # resolved definition and layer metadata
+  resolve.ts        # capture, axis resolution and model composition
+
+layout/
+  contracts.ts      # resolved axes, viewport and plot contracts
+  plot.ts           # axis and plot layout construction
+
+projection/
+  project.ts        # packed projections and owner-bound geometry/color caches
+  query-index.ts    # retained projection query indexes
+  query.ts          # hit testing
+
+interaction/
+  state.ts          # selection, cursor and semantic event transitions
+  view.ts           # axis-view transitions
+  controller.ts     # publication, subscriptions and composition
+```
+
+Model storage depends on lower model contracts rather than model construction.
+Resolved layout contracts are shared below view, definition and projection
+assembly. `ChartViewport` remains available through the existing projection
+subpath even though the type is owned by layout. Definition metadata likewise
+lives below definition construction and projection; this removes the previous
+cross-owner type cycles without hiding type-only imports from the gate.
+
+The public `contract.ts` remains the compact input-normalization owner: it is
+not a type-only module. `scale.ts` and the result owners remain foundational
+rather than gaining unnecessary wrappers. Internal implementations target
+owning modules, not the public composition facades.
+
+The existing normalized-limit registry, model provenance, packed-value views,
+projection caches, query indexes, selection/view indexes and controller
+subscriptions each retain one owner and their prior lifetime. Moving these
+modules does not change packed representations, patch algorithms, borrowed
+buffer ownership, no-op sharing, generation guards or disposal behavior.
+
+### Chart distribution budget decision — WI-004
+
+The maintainer approved the measured Chart distribution cost of this ownership
+split on 2026-09-17. The immediate comparison source is `636dc2e4`; the same
+production builder and package manifest are used on both sides. Module linking,
+lower contract declarations and their maps add installed-file overhead without
+changing the algorithms, public API or consumer bundle requirements.
+
+| Distribution evidence | Before at `636dc2e4` | After split |
+|---|---:|---:|
+| JavaScript bytes | 224,207 | 225,047 |
+| Declaration bytes | 55,482 | 56,944 |
+| Source-map bytes | 169,865 | 171,298 |
+| Actual pnpm tarball bytes | 96,205 | 98,738 |
+
+Only the Chart records in the existing install and source-map distribution
+baselines are re-attested. The package-local limits remain 250,000 JavaScript,
+120,000 declaration and 350,000 map bytes. Consumer bundle baselines, all other
+package records, installed application records, dependencies and compiler/map
+content policy are unchanged. Shared formulas remain 5 percent plus 32 bytes
+for install categories/tarballs and 5 percent plus 16 bytes for source-map packs.
+
+The older install record contained 92,836 tarball bytes, 214,607 JavaScript,
+55,441 declaration and 162,820 map bytes. Those are historical baseline values,
+not this unit's immediate before measurements. The current actual pnpm pack is
+98,738 compressed and 458,579 unpacked bytes. Its effective limits change as
+follows: tarball 97,510 to 103,707; JavaScript 225,370 to 236,332; declarations
+58,246 to 59,824; maps 170,993 to 179,895; ancillary files 5,498 to 5,587.
+
+The source-map collector uses a separate npm dry-run protocol: its historical
+91,887 compressed and 438,079 unpacked bytes become 97,730 and 458,590. Effective
+limits become 102,633 and 481,536, from 96,498 and 459,999. These numbers are not
+interchangeable with actual pnpm pack measurements. Git retains the previous
+records; the update neither omits source maps nor changes their validation.
+
+Ten selected consumer scenarios in esbuild and Vite preserve external
+dependencies, with raw deltas from -6 to +5 bytes, gzip from -186 to +23, and
+Brotli from -16 to +103. Existing consumer bundle gates remain unchanged.
+These measurements do not establish universal size or runtime improvements.
+Future distribution growth requires its own reviewed decision.
 
 ## Form construction ownership
 

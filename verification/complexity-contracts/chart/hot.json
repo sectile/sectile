@@ -7,7 +7,7 @@
     {
       "id": "controller.project.cached",
       "inherits": "constant-v1",
-      "source": "packages/chart/src/controller.ts",
+      "source": "packages/chart/src/internal/interaction/controller.ts",
       "benchmarkIDs": [
         "chart:projection:cached",
         "VAL-001:chart-projection-cache-allocation"
@@ -50,7 +50,7 @@
     {
       "id": "controller.publish",
       "inherits": "lifecycle-v1",
-      "source": "packages/chart/src/controller.ts",
+      "source": "packages/chart/src/internal/interaction/controller.ts",
       "benchmarkIDs": [
         "VAL-002:chart-publication-cascade"
       ],
@@ -107,7 +107,7 @@
     {
       "id": "definition.preflight",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/definition.ts",
+      "source": "packages/chart/src/internal/definition/resolve.ts",
       "benchmarkIDs": [
         "VAL-007:chart-definition-preflight",
         "VAL-031:chart-definition-cardinality-work"
@@ -169,7 +169,7 @@
     {
       "id": "input.model-cardinality-preflight",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/model.ts",
+      "source": "packages/chart/src/internal/model/state.ts",
       "benchmarkIDs": [
         "VAL-013:chart-model-cardinality-preflight"
       ],
@@ -227,7 +227,7 @@
     {
       "id": "interaction.selection-contains",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/interaction.ts",
+      "source": "packages/chart/src/internal/interaction/state.ts",
       "benchmarkIDs": [
         "VAL-012:chart-selection-index"
       ],
@@ -269,7 +269,7 @@
     {
       "id": "model.normalize",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/model.ts",
+      "source": "packages/chart/src/internal/model/state.ts",
       "benchmarkIDs": [
         "chart:model:normalize",
         "VAL-036:chart-model-datum-capture"
@@ -324,7 +324,7 @@
     {
       "id": "model.patch-layer.sparse",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/internal/layer-owner.ts",
+      "source": "packages/chart/src/internal/model/layer-owner.ts",
       "benchmarkIDs": [
         "chart:model:patch-layer-sparse"
       ],
@@ -380,7 +380,7 @@
     {
       "id": "model.replace-layer",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/model.ts",
+      "source": "packages/chart/src/internal/model/state.ts",
       "benchmarkIDs": [
         "chart:model:replace-layer"
       ],
@@ -427,7 +427,7 @@
     {
       "id": "projection.clone",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/projection.ts",
+      "source": "packages/chart/src/internal/projection/project.ts",
       "benchmarkIDs": [
         "VAL-014:chart-projection-clone-ownership"
       ],
@@ -478,7 +478,7 @@
     {
       "id": "projection.create",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/projection.ts",
+      "source": "packages/chart/src/internal/projection/project.ts",
       "benchmarkIDs": [
         "chart:projection:cold",
         "chart:projection:radial-sampled",
@@ -535,7 +535,7 @@
     {
       "id": "projection.create.semantic",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/projection.ts",
+      "source": "packages/chart/src/internal/projection/project.ts",
       "benchmarkIDs": [
         "chart:projection:semantic-bounded"
       ],
@@ -616,7 +616,7 @@
     {
       "id": "projection.hit-test.indexed",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/query.ts",
+      "source": "packages/chart/src/internal/projection/query.ts",
       "benchmarkIDs": [
         "chart:query:hit-test",
         "chart:query:hit-test-dense",
@@ -697,7 +697,7 @@
     {
       "id": "projection.query-index.build",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/query.ts",
+      "source": "packages/chart/src/internal/projection/query.ts",
       "benchmarkIDs": [
         "chart:query:index-build"
       ],
@@ -788,7 +788,7 @@
     {
       "id": "view.transition.axis-domain",
       "inherits": "linear-v1",
-      "source": "packages/chart/src/view.ts",
+      "source": "packages/chart/src/internal/interaction/view.ts",
       "benchmarkIDs": [
         "chart:view:transition",
         "VAL-034:chart-view-finite-transition"
