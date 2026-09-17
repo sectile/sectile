@@ -135,10 +135,71 @@ entrypoint keeps its existing Form-prefixed type names through explicit aliases;
 internal operations consume the same definitions directly. The structure gate
 classifies this lower contract owner separately from state implementation.
 
-State storage, queries and transitions remain in `internal/form.ts` for the
-remaining WI-003B extraction. Its delta indexes, private-state WeakMap and field
-projection cache retain their existing single owner. Contract extraction alone
-does not complete the remaining runtime responsibility separation.
+State implementation is grouped under `internal/state/`:
+
+```text
+state/
+  contracts.ts       # portable field, issue, state, event and result types
+  records.ts         # input capture, record normalization and comparison
+  status.ts          # validation/submission records and generation guards
+  storage/
+    delta.ts         # bounded overlay indexes/sets and deletion identity
+    fields.ts        # chunked field storage and field-array projection cache
+    issues.ts        # issue, source and relation indexes
+    snapshot.ts      # single state provenance registry and immutable snapshots
+  query.ts           # fields, issue sources and lazy path-owner lookup
+  projection.ts      # complete/incremental field and issue projections
+  create.ts          # external-input validation and canonical construction
+  transitions.ts     # event dispatch and state transition assembly
+```
+
+The public `/state` facade explicitly exports construction, query and transition
+operations and the same type aliases. `internal/form.ts` is superseded, not a
+compatibility barrel. Storage never imports queries, constructors or transitions;
+queries do not import constructors or transitions. The role gate applies these
+rules to type imports as well as emitted runtime dependencies.
+
+`storage/snapshot.ts` is the sole canonical-state registry owner, and
+`storage/fields.ts` owns the sole store-lifetime field-array cache. Delta classes
+and their deletion symbol are defined once in `storage/delta.ts`. Splitting these
+owners does not change the 64-field chunks, overlay depth of 32, lazy path-owner
+index, snapshot sharing, retained output budgets or generation guards.
+
+### Form distribution budget decision — WI-003B
+
+The maintainer approved the measured Form-only distribution cost of separating
+state responsibilities on 2026-09-17. The comparison source is `e84209e1`; the
+unchanged production builder emits the additional private module declarations
+and import/export records. This is installed-file overhead, not permission for
+larger consumer bundles, new dependencies or additional event-path work.
+
+The package-local JavaScript limit increases from 70,000 to 73,236 exclusive:
+the reviewed 3,236-byte distribution delta, preserving the prior headroom. The
+35,000-byte declaration and 80,000-byte source-map local limits remain unchanged.
+Only the Form records in the install and source-map distribution baselines are
+re-attested. The latter also checks compressed/unpacked package bytes; it does
+not permit omitting maps or changing compiler/content policy. Shared formulas
+remain 5 percent plus 32 bytes for install categories/tarballs and 5 percent
+plus 16 bytes for the source-map pack check. Other package records, installed
+application baselines, dependency policies and consumer bundle baselines are
+unchanged. Git retains the prior measurements.
+
+| Distribution evidence | Before at `e84209e1` | After split |
+|---|---:|---:|
+| JavaScript bytes | 69,902 | 73,138 |
+| Declaration bytes | 15,602 | 24,352 |
+| Source-map bytes | 51,056 | 52,996 |
+
+The older recorded install baseline was a 31,338-byte tarball with 67,879
+JavaScript, 14,862 declaration and 49,358 map bytes; the accepted actual pnpm
+pack is 36,118 bytes with the current categories above. Its effective tarball
+limit becomes 37,956 and declaration limit 25,602, under the unchanged formula.
+The separate npm dry-run source-map collector measures 35,742 compressed and
+154,578 unpacked bytes, versus its recorded 31,052 and 136,191; effective limits
+become 37,546 and 162,323. These are distinct pack protocols, not interchangeable
+measurements. New cross-module declarations and module linking records account
+for the structural cost; no new third-party code is introduced. Future growth
+requires its own reviewed decision.
 
 ## Moving or extracting an implementation
 

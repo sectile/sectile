@@ -277,6 +277,9 @@ test('Form construction and state contracts keep their dependencies within lower
     ['path', ['foundation', 'path', 'values']],
     ['values', ['foundation', 'path', 'values']],
     ['internal/state/contracts', ['foundation', 'state-contracts']],
+    ['internal/state/storage/fields', ['state-contracts', 'state-delta', 'state-fields']],
+    ['internal/state/storage/snapshot', ['foundation', 'state-contracts', 'state-records', 'state-delta', 'state-fields', 'state-issues', 'state-snapshot']],
+    ['internal/state/query', ['foundation', 'path', 'state-contracts', 'state-records', 'state-delta', 'state-fields', 'state-issues', 'state-snapshot', 'state-query']],
   ]) {
     const visited = new Set();
     const pending = [`packages/form/src/${entry}.ts`];

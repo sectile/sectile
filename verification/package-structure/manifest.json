@@ -875,24 +875,15 @@
             "schema"
           ]
         },
-        "state": {
-          "reason": "form state owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "foundation",
-            "path",
-            "schema",
-            "state",
-            "state-contracts",
-            "values"
-          ]
-        },
         "state-api": {
           "reason": "form state-api owns its named contracts and implementation; permitted imports are explicit.",
           "allows": [
             "foundation",
-            "state",
             "state-api",
-            "state-contracts"
+            "state-contracts",
+            "state-create",
+            "state-query",
+            "state-transitions"
           ]
         },
         "exports": {
@@ -902,7 +893,6 @@
             "foundation",
             "path",
             "schema",
-            "state",
             "state-api",
             "values"
           ]
@@ -915,7 +905,6 @@
             "path",
             "reference",
             "schema",
-            "state",
             "state-api",
             "values"
           ]
@@ -925,6 +914,106 @@
           "allows": [
             "foundation",
             "state-contracts"
+          ]
+        },
+        "state-records": {
+          "reason": "Capture, normalize and compare portable field and issue records, independent of retained state.",
+          "allows": [
+            "foundation",
+            "state-contracts",
+            "state-records"
+          ]
+        },
+        "state-status": {
+          "reason": "Validation/submission record creation and generation guards, independent of storage.",
+          "allows": [
+            "foundation",
+            "state-contracts",
+            "state-status"
+          ]
+        },
+        "state-delta": {
+          "reason": "Bounded immutable overlay indexes, sets and their sole deletion symbol.",
+          "allows": [
+            "state-delta"
+          ]
+        },
+        "state-fields": {
+          "reason": "Canonical chunked field storage and the single store-lifetime projection cache.",
+          "allows": [
+            "state-contracts",
+            "state-delta",
+            "state-fields"
+          ]
+        },
+        "state-issues": {
+          "reason": "Canonical issue/source/relation indexes consuming normalized records and field storage.",
+          "allows": [
+            "state-contracts",
+            "state-delta",
+            "state-fields",
+            "state-issues",
+            "state-records"
+          ]
+        },
+        "state-snapshot": {
+          "reason": "Single state provenance registry and snapshot construction/derivation from stores.",
+          "allows": [
+            "foundation",
+            "state-contracts",
+            "state-fields",
+            "state-issues",
+            "state-snapshot"
+          ]
+        },
+        "state-query": {
+          "reason": "Read canonical state, fields, issue sources and lazy path-owner indexes without constructors or transitions.",
+          "allows": [
+            "path",
+            "state-contracts",
+            "state-fields",
+            "state-issues",
+            "state-query",
+            "state-snapshot"
+          ]
+        },
+        "state-projection": {
+          "reason": "Repair field/issue projections and assemble derived snapshots without event dispatch.",
+          "allows": [
+            "state-contracts",
+            "state-fields",
+            "state-issues",
+            "state-projection",
+            "state-records",
+            "state-snapshot"
+          ]
+        },
+        "state-create": {
+          "reason": "Validate external inputs and construct a canonical Form state from lower owners.",
+          "allows": [
+            "foundation",
+            "state-contracts",
+            "state-create",
+            "state-projection",
+            "state-records",
+            "state-snapshot",
+            "state-status"
+          ]
+        },
+        "state-transitions": {
+          "reason": "Validate and dispatch Form events using canonical stores and lower operations.",
+          "allows": [
+            "foundation",
+            "state-contracts",
+            "state-create",
+            "state-fields",
+            "state-issues",
+            "state-projection",
+            "state-query",
+            "state-records",
+            "state-snapshot",
+            "state-status",
+            "state-transitions"
           ]
         }
       },
@@ -949,16 +1038,52 @@
           "role": "values",
           "kind": "owner"
         },
-        "src/internal/form.ts": {
-          "role": "state",
-          "kind": "owner"
-        },
         "src/internal/result.ts": {
           "role": "foundation",
           "kind": "owner"
         },
         "src/internal/state/contracts.ts": {
           "role": "state-contracts",
+          "kind": "owner"
+        },
+        "src/internal/state/create.ts": {
+          "role": "state-create",
+          "kind": "owner"
+        },
+        "src/internal/state/projection.ts": {
+          "role": "state-projection",
+          "kind": "owner"
+        },
+        "src/internal/state/query.ts": {
+          "role": "state-query",
+          "kind": "owner"
+        },
+        "src/internal/state/records.ts": {
+          "role": "state-records",
+          "kind": "owner"
+        },
+        "src/internal/state/status.ts": {
+          "role": "state-status",
+          "kind": "owner"
+        },
+        "src/internal/state/storage/delta.ts": {
+          "role": "state-delta",
+          "kind": "owner"
+        },
+        "src/internal/state/storage/fields.ts": {
+          "role": "state-fields",
+          "kind": "owner"
+        },
+        "src/internal/state/storage/issues.ts": {
+          "role": "state-issues",
+          "kind": "owner"
+        },
+        "src/internal/state/storage/snapshot.ts": {
+          "role": "state-snapshot",
+          "kind": "owner"
+        },
+        "src/internal/state/transitions.ts": {
+          "role": "state-transitions",
           "kind": "owner"
         },
         "src/path.ts": {

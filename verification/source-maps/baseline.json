@@ -39,20 +39,20 @@
     },
     {
       "package": "form",
-      "javascriptFiles": 8,
-      "declarationFiles": 8,
-      "sourceMapFiles": 8,
+      "javascriptFiles": 21,
+      "declarationFiles": 21,
+      "sourceMapFiles": 21,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 67879,
-        "declarations": 14862,
-        "sourceMaps": 49358,
-        "total": 132099
+        "javascript": 73138,
+        "declarations": 24352,
+        "sourceMaps": 52996,
+        "total": 150486
       },
       "packed": {
-        "tarballBytes": 31052,
-        "unpackedBytes": 136191,
-        "files": 27
+        "tarballBytes": 35742,
+        "unpackedBytes": 154578,
+        "files": 66
       }
     },
     {

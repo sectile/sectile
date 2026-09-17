@@ -207,6 +207,40 @@ test('indexed field commands preserve unrelated identity and make equal writes n
   assert.equal(missing.error.code, 'form-field-id-missing');
 });
 
+test('Form snapshots share canonical query caches and retain construction budgets across transitions', () => {
+  const initial = createFormState({ fields: [
+    { id: 'root', name: 'user' },
+    { id: 'leaf', name: 'user.name' },
+  ] }, { maxOutputNodes: 2 });
+  const initialFields = initial.fields;
+  const root = getFormField(initial, 'root');
+  // The first query scans; the next query prepares the same snapshot's index.
+  assert.equal(getFormFieldIDByPath(initial, 'user.name'), 'leaf');
+  assert.equal(getFormFieldIDByPath(initial, 'user.name'), 'leaf');
+  const validating = applyFormEvent(initial, {
+    type: 'validation-started', trigger: 'input', intent: 'interaction',
+  });
+  assert.equal(validating.ok, true);
+  assert.equal(validating.value.state.fields, initialFields);
+  assert.equal(getFormField(validating.value.state, 'root'), root);
+  const renamed = setFormFieldMeta(validating.value.state, 'leaf', { name: 'account.name' });
+  assert.equal(renamed.ok, true);
+  const current = renamed.value.state;
+  assert.equal(getFormFieldIDByPath(current, 'user.name'), 'root');
+  assert.equal(getFormFieldIDByPath(current, 'account.name'), 'leaf');
+  assert.equal(getFormFieldIDByPath(initial, 'user.name'), 'leaf');
+  assert.equal(initial.fields, initialFields);
+  assert.equal(getFormField(current, 'root'), root);
+  assert.equal(current.fields, current.fields);
+  const rejected = upsertFormFieldIssue(current, 'leaf', {
+    id: 'required', message: 'Required.', source: 'field',
+  });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'form-output-node-ceiling-exceeded');
+  assert.equal(getFormField(current, 'leaf').issues.length, 0);
+  assert.equal(setFormFieldMeta(current, 'leaf', { name: 'account.name' }).value.state, current);
+});
+
 test('indexed issue commands update only the selected owner and retained source index', () => {
   const issue = {
     id: 'email-server',

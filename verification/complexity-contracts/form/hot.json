@@ -7,7 +7,7 @@
     {
       "id": "field.batch-path-owner",
       "inherits": "linear-v1",
-      "source": "packages/form/src/internal/form.ts",
+      "source": "packages/form/src/internal/state/query.ts",
       "benchmarkIDs": ["ISSUE-039:form-path-owner-work"],
       "specificationCeiling": "O(fField*lPath + nNameCodeUnits + pPath*lPath)",
       "contract": {
@@ -35,7 +35,7 @@
     {
       "id": "field.get",
       "inherits": "constant-v1",
-      "source": "packages/form/src/internal/form.ts",
+      "source": "packages/form/src/internal/state/query.ts",
       "benchmarkIDs": [
         "VAL-031:form-field-get-work"
       ],
@@ -77,7 +77,7 @@
     {
       "id": "field.ids-by-issue-source",
       "inherits": "linear-v1",
-      "source": "packages/form/src/internal/form.ts",
+      "source": "packages/form/src/internal/state/query.ts",
       "benchmarkIDs": [
         "VAL-032:form-source-owner-query-work"
       ],
@@ -130,7 +130,7 @@
     {
       "id": "field.update",
       "inherits": "linear-v1",
-      "source": "packages/form/src/internal/form.ts",
+      "source": "packages/form/src/internal/state/transitions.ts",
       "benchmarkIDs": [
         "VAL-030:form-field-update-work"
       ],
@@ -197,7 +197,7 @@
     {
       "id": "issues.clear-related-server",
       "inherits": "linear-v1",
-      "source": "packages/form/src/internal/form.ts",
+      "source": "packages/form/src/internal/state/transitions.ts",
       "benchmarkIDs": [
         "VAL-033:form-related-server-issue-clear-work"
       ],
@@ -265,7 +265,7 @@
     {
       "id": "issues.output-budget",
       "inherits": "linear-v1",
-      "source": "packages/form/src/internal/form.ts",
+      "source": "packages/form/src/internal/state/transitions.ts",
       "benchmarkIDs": ["FRM-05:relation-output-work"],
       "specificationCeiling": "O(1 + iInput + iRemoved)",
       "contract": {
@@ -282,7 +282,7 @@
     {
       "id": "issues.replace-source",
       "inherits": "linear-v1",
-      "source": "packages/form/src/internal/form.ts",
+      "source": "packages/form/src/internal/state/transitions.ts",
       "benchmarkIDs": [
         "VAL-031:form-source-issue-replacement-work"
       ],
@@ -359,7 +359,7 @@
     {
       "id": "state.construct",
       "inherits": "linear-v1",
-      "source": "packages/form/src/internal/form.ts",
+      "source": "packages/form/src/internal/state/create.ts",
       "benchmarkIDs": [
         "VAL-030:form-construct-work"
       ],

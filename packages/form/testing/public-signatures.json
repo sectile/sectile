@@ -27,7 +27,7 @@
       "types": "dist/values.d.ts"
     }
   ],
-  "fingerprint": "481e29a48c958efbfc4fbe278bb78919b8d0248cb60f5306da3c7f5e1c5b8ea0",
+  "fingerprint": "f73e0c2ba249480a1763bbc68d0f32157d54805645d0023e946d386a31291d4e",
   "files": [
     {
       "path": "dist/error.d.ts",
@@ -50,12 +50,28 @@
       "sha256": "d4a3f3f618faa4ab1476cbb75eed0dbd95b21de1d335eacfc7480f153fb05afb"
     },
     {
-      "path": "dist/internal/form.d.ts",
-      "sha256": "fdc9d14a9f94ae488c86dfe66b2ee774947381619daa07518c4e6d5116343484"
-    },
-    {
       "path": "dist/internal/state/contracts.d.ts",
       "sha256": "4f7c737c5a0d41fb1b4fc9919d5fe6a06caac7c69510cec305b5e438fc1f4943"
+    },
+    {
+      "path": "dist/internal/state/create.d.ts",
+      "sha256": "1e1f4ab1b9e58e9eb9081ebaa2bc0386309239bbeebdcb231629d32cfaed9715"
+    },
+    {
+      "path": "dist/internal/state/query.d.ts",
+      "sha256": "ce4d9ac8edee4f32f6ab63561794f1293864df849a8d13699b8be656f5cf01dc"
+    },
+    {
+      "path": "dist/internal/state/storage/delta.d.ts",
+      "sha256": "258e41a3fb1153c48fd815b88fa2a7c180beb920127ac608727aa560e95bc423"
+    },
+    {
+      "path": "dist/internal/state/storage/fields.d.ts",
+      "sha256": "75a60e7a0b0f363d83c63308069d828f9303752e25c3cb0bae3ca1c8e3b4c2f1"
+    },
+    {
+      "path": "dist/internal/state/transitions.d.ts",
+      "sha256": "fa57af9717d5be51c55b29ff348974c230604c75508220f9c15ebb54a7d43bac"
     },
     {
       "path": "dist/path.d.ts",
@@ -67,7 +83,7 @@
     },
     {
       "path": "dist/state.d.ts",
-      "sha256": "51ecb6fca59849ad567a5a5a3fea049401e9cbfc345afaff09e216b4485eccaa"
+      "sha256": "f42104c53fc7123ea701522e722c8c7fe61bc13b5da1c9288291c6face20f0ef"
     },
     {
       "path": "dist/values.d.ts",
