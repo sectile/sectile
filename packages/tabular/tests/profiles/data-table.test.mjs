@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyDataTableEvent, createDataTable, tryCreateDataTable } from '../../.verification-dist/data-table.js';
-import { prepareControlledDataTableState } from '../../.verification-dist/internal/data-table-state.js';
-import { createTabularModel, tryCreateTabularState } from '../../.verification-dist/model.js';
-import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source.js';
+import { applyDataTableEvent, createDataTable, tryCreateDataTable } from '../../.verification-dist/profiles/table.js';
+import { prepareControlledDataTableState } from '../../.verification-dist/profiles/table-state.js';
+import { createTabularModel, tryCreateTabularState } from '../../.verification-dist/model/state.js';
+import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source/client.js';
 
 const columns = [{ id: 'name', capabilities: ['sort', 'edit'] }, { id: 'score' }];
 const source = createClientTabularSource({

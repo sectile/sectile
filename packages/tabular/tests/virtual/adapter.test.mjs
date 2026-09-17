@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createDataTreeGrid } from '../../.verification-dist/data-tree-grid.js';
-import { encodeTabularCellID } from '../../.verification-dist/model.js';
+import { createDataTreeGrid } from '../../.verification-dist/profiles/data-tree-grid.js';
+import { encodeTabularCellID } from '../../.verification-dist/model/state.js';
 import {
   createDataGridVirtualAdapter,
   createDataTableVirtualAdapter,

@@ -28696,7 +28696,7 @@
       "package": "tabular",
       "surface": "hot",
       "id": "data-table.changed-slice",
-      "source": "packages/tabular/src/data-table.ts",
+      "source": "packages/tabular/src/profiles/table.ts",
       "benchmarkIDs": [
         "VAL-030:data-table-changed-slice-work"
       ],
@@ -28778,7 +28778,7 @@
       "package": "tabular",
       "surface": "hot",
       "id": "data-table.get-projection-retained",
-      "source": "packages/tabular/src/internal/data-table-state.ts",
+      "source": "packages/tabular/src/profiles/table-state.ts",
       "benchmarkIDs": [
         "VAL-003:data-table-retained-projection-read"
       ],
@@ -28840,7 +28840,7 @@
       "package": "tabular",
       "surface": "hot",
       "id": "grid-profile.move",
-      "source": "packages/tabular/src/internal/grid-profile.ts",
+      "source": "packages/tabular/src/profiles/grid.ts",
       "benchmarkIDs": [
         "tabular:grid-profile:move:1000",
         "tabular:grid-profile:move:10000",
@@ -28910,7 +28910,7 @@
       "package": "tabular",
       "surface": "hot",
       "id": "header.projection-validation",
-      "source": "packages/tabular/src/internal/columns.ts",
+      "source": "packages/tabular/src/model/columns.ts",
       "benchmarkIDs": [
         "VAL-034:tabular-header-projection-validation"
       ],
@@ -28978,7 +28978,7 @@
       "package": "tabular",
       "surface": "hot",
       "id": "source.resolve-cold",
-      "source": "packages/tabular/src/source.ts",
+      "source": "packages/tabular/src/source/client.ts",
       "benchmarkIDs": [
         "tabular:resolve:cold:100000"
       ],
@@ -29087,7 +29087,7 @@
       "package": "tabular",
       "surface": "hot",
       "id": "source.resolve-invalidation",
-      "source": "packages/tabular/src/source.ts",
+      "source": "packages/tabular/src/source/client.ts",
       "benchmarkIDs": [
         "tabular:resolve:invalidate:100000"
       ],
@@ -29196,7 +29196,7 @@
       "package": "tabular",
       "surface": "hot",
       "id": "source.resolve-warm",
-      "source": "packages/tabular/src/source.ts",
+      "source": "packages/tabular/src/source/client.ts",
       "benchmarkIDs": [
         "tabular:resolve:warm:100000"
       ],

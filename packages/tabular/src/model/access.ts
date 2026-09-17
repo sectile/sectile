@@ -1,6 +1,6 @@
 import { tryCreateCollectionWindowState } from '@sectile/core/collection-window';
 import { createPaginationModel, tryCreatePaginationState } from '@sectile/core/pagination';
-import { fail, ok } from './foundation.js';
+import { fail, ok } from '../foundation.js';
 import type { TabularAccessState, TabularResult } from '../contracts.js';
 
 export function deriveSafeTabularPageStart(page: number, itemsPerPage: number): number | null {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createTabularModel } from '../../.verification-dist/model.js';
+import { createTabularModel } from '../../.verification-dist/model/state.js';
 import {
   createExplicitRowSelection,
   createGroupLeafSelectionTarget,
@@ -10,7 +10,7 @@ import {
   setIndexedVisibleRowSelectionRange,
   setVisibleRowSelectionRange,
   toggleExplicitRowSelection,
-} from '../../.verification-dist/internal/selection.js';
+} from '../../.verification-dist/model/selection.js';
 
 const limits = createTabularModel({ columns: [] }).limits;
 

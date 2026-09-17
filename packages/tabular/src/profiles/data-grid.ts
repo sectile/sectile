@@ -11,8 +11,8 @@ import {
   type GridProfileProjection,
   type GridProfileState,
   type GridProfileUpdate,
-} from './internal/grid-profile.js';
-import type { TabularResult } from './contracts.js';
+} from './grid.js';
+import type { TabularResult } from '../contracts.js';
 
 export type DataGridCursorState = GridCursorState;
 export type DataGridEditState = GridEditState;
@@ -46,4 +46,4 @@ export type {
   TabularControlledValues,
   TabularViewResponse,
   TabularWireValue,
-} from './contracts.js';
+} from '../contracts.js';

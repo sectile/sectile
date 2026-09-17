@@ -22,10 +22,10 @@ import {
   type PartitionedTrackGridRegion,
 } from '@sectile/virtual/partitioned-track-grid-layout';
 import type { VirtualIndexedView, VirtualLayoutStrategy } from '@sectile/virtual/layout';
-import type { DataGridProjection } from './data-grid.js';
-import type { DataTableProjection } from './data-table.js';
-import type { DataTreeGridProjection } from './data-tree-grid.js';
-import { encodeTabularCellID } from './model.js';
+import type { DataGridProjection } from './profiles/data-grid.js';
+import type { DataTableProjection } from './profiles/table.js';
+import type { DataTreeGridProjection } from './profiles/data-tree-grid.js';
+import { encodeTabularCellID } from './model/state.js';
 import type {
   TabularCellAddress,
   TabularCellID,

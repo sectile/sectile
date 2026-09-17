@@ -3117,7 +3117,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/internal/columns.ts",
+      "path": "packages/tabular/src/model/columns.ts",
       "line": 47,
       "evidence": "new Set(columns.map(",
       "rule": "tabular-residual-reviewed",
@@ -3128,7 +3128,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/columns.ts",
+      "path": "packages/tabular/src/model/columns.ts",
       "line": 50,
       "evidence": ".some(",
       "rule": "tabular-residual-reviewed",
@@ -3139,7 +3139,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/columns.ts",
+      "path": "packages/tabular/src/model/columns.ts",
       "line": 54,
       "evidence": ".some(",
       "rule": "tabular-residual-reviewed",
@@ -3150,7 +3150,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/columns.ts",
+      "path": "packages/tabular/src/model/columns.ts",
       "line": 59,
       "evidence": ".some(",
       "rule": "tabular-residual-reviewed",
@@ -3161,7 +3161,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/internal/columns.ts",
+      "path": "packages/tabular/src/model/columns.ts",
       "line": 85,
       "evidence": "new Set(previousColumns.map(",
       "rule": "tabular-residual-reviewed",
@@ -3172,7 +3172,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/internal/columns.ts",
+      "path": "packages/tabular/src/model/columns.ts",
       "line": 86,
       "evidence": "new Map(nextColumns.map(",
       "rule": "tabular-residual-reviewed",
@@ -3183,7 +3183,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/columns.ts",
+      "path": "packages/tabular/src/model/columns.ts",
       "line": 92,
       "evidence": ".some(",
       "rule": "tabular-residual-reviewed",
@@ -3194,7 +3194,7 @@
     {
       "detector": "linear-membership",
       "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/columns.ts",
+      "path": "packages/tabular/src/model/columns.ts",
       "line": 190,
       "evidence": ".includes(",
       "rule": "tabular-residual-reviewed",
@@ -3205,7 +3205,7 @@
     {
       "detector": "linear-membership",
       "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/columns.ts",
+      "path": "packages/tabular/src/model/columns.ts",
       "line": 191,
       "evidence": ".includes(",
       "rule": "tabular-residual-reviewed",
@@ -3214,64 +3214,9 @@
       "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
     },
     {
-      "detector": "linear-membership",
-      "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 430,
-      "evidence": ".includes(",
-      "rule": "tabular-residual-reviewed",
-      "classification": "result-proportional",
-      "owner": null,
-      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
-    },
-    {
-      "detector": "derived-index-construction",
-      "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 616,
-      "evidence": "new Set(schema.filter((column) => column.capabilities?.includes('edit') === true).map(",
-      "rule": "tabular-retained-current-indexes",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "Source/query/projection and grid-profile indexes are retained for the complete current generation and released together on invalidation."
-    },
-    {
-      "detector": "linear-membership",
-      "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 616,
-      "evidence": ".includes(",
-      "rule": "tabular-residual-reviewed",
-      "classification": "result-proportional",
-      "owner": null,
-      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
-    },
-    {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 676,
-      "evidence": ".some(",
-      "rule": "tabular-residual-reviewed",
-      "classification": "result-proportional",
-      "owner": null,
-      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
-    },
-    {
-      "detector": "raw-identity-lookup",
-      "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/grid-profile.ts",
-      "line": 697,
-      "evidence": ".some(",
-      "rule": "tabular-residual-reviewed",
-      "classification": "result-proportional",
-      "owner": null,
-      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
-    },
-    {
-      "detector": "raw-identity-lookup",
-      "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/internal/selection.ts",
+      "path": "packages/tabular/src/model/selection.ts",
       "line": 188,
       "evidence": ".some(",
       "rule": "tabular-residual-reviewed",
@@ -3282,7 +3227,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/model.ts",
+      "path": "packages/tabular/src/model/state.ts",
       "line": 234,
       "evidence": "new Set(model.columns.map(",
       "rule": "tabular-residual-reviewed",
@@ -3293,7 +3238,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/model.ts",
+      "path": "packages/tabular/src/model/state.ts",
       "line": 352,
       "evidence": ".some(",
       "rule": "tabular-residual-reviewed",
@@ -3304,7 +3249,7 @@
     {
       "detector": "linear-membership",
       "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/model.ts",
+      "path": "packages/tabular/src/model/state.ts",
       "line": 361,
       "evidence": ".includes(",
       "rule": "tabular-residual-reviewed",
@@ -3315,7 +3260,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/model.ts",
+      "path": "packages/tabular/src/model/state.ts",
       "line": 386,
       "evidence": "new Set(columns.map(",
       "rule": "tabular-residual-reviewed",
@@ -3324,11 +3269,11 @@
       "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
     },
     {
-      "detector": "derived-index-construction",
-      "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/query.ts",
-      "line": 271,
-      "evidence": "new Set(aggregates.map(",
+      "detector": "linear-membership",
+      "category": "raw-full-domain-scan",
+      "path": "packages/tabular/src/profiles/grid.ts",
+      "line": 430,
+      "evidence": ".includes(",
       "rule": "tabular-residual-reviewed",
       "classification": "result-proportional",
       "owner": null,
@@ -3337,7 +3282,51 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/source.ts",
+      "path": "packages/tabular/src/profiles/grid.ts",
+      "line": 616,
+      "evidence": "new Set(schema.filter((column) => column.capabilities?.includes('edit') === true).map(",
+      "rule": "tabular-retained-current-indexes",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Source/query/projection and grid-profile indexes are retained for the complete current generation and released together on invalidation."
+    },
+    {
+      "detector": "linear-membership",
+      "category": "raw-full-domain-scan",
+      "path": "packages/tabular/src/profiles/grid.ts",
+      "line": 616,
+      "evidence": ".includes(",
+      "rule": "tabular-residual-reviewed",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/tabular/src/profiles/grid.ts",
+      "line": 676,
+      "evidence": ".some(",
+      "rule": "tabular-residual-reviewed",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/tabular/src/profiles/grid.ts",
+      "line": 697,
+      "evidence": ".some(",
+      "rule": "tabular-residual-reviewed",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
+    },
+    {
+      "detector": "derived-index-construction",
+      "category": "discarded-canonical-index",
+      "path": "packages/tabular/src/source/client.ts",
       "line": 71,
       "evidence": "new Set(options.columnSchema.columns.map(",
       "rule": "tabular-retained-current-indexes",
@@ -3348,7 +3337,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/source.ts",
+      "path": "packages/tabular/src/source/client.ts",
       "line": 511,
       "evidence": "new Set(records.map(",
       "rule": "tabular-retained-current-indexes",
@@ -3359,7 +3348,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/source.ts",
+      "path": "packages/tabular/src/source/client.ts",
       "line": 582,
       "evidence": "new Set(columns.map(",
       "rule": "tabular-retained-current-indexes",
@@ -3370,7 +3359,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/source.ts",
+      "path": "packages/tabular/src/source/client.ts",
       "line": 583,
       "evidence": "new Map(query.aggregates.map(",
       "rule": "tabular-retained-current-indexes",
@@ -3381,7 +3370,7 @@
     {
       "detector": "linear-membership",
       "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/source.ts",
+      "path": "packages/tabular/src/source/client.ts",
       "line": 603,
       "evidence": ".includes(",
       "rule": "tabular-residual-reviewed",
@@ -3392,7 +3381,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/tabular/src/source.ts",
+      "path": "packages/tabular/src/source/client.ts",
       "line": 1131,
       "evidence": "new Set(rows.map(",
       "rule": "tabular-retained-current-indexes",
@@ -3403,9 +3392,20 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/tabular/src/source.ts",
+      "path": "packages/tabular/src/source/client.ts",
       "line": 1132,
       "evidence": ".find(",
+      "rule": "tabular-residual-reviewed",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
+    },
+    {
+      "detector": "derived-index-construction",
+      "category": "discarded-canonical-index",
+      "path": "packages/tabular/src/source/query.ts",
+      "line": 271,
+      "evidence": "new Set(aggregates.map(",
       "rule": "tabular-residual-reviewed",
       "classification": "result-proportional",
       "owner": null,

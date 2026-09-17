@@ -339,6 +339,52 @@ materialization boundaries or layout algorithms. The crossover source paths
 follow the moved production implementation; historical measurements and
 selected representations remain unchanged.
 
+## Tabular ownership
+
+Tabular preserves its public subpath keys while mapping model, query, source
+and profile entrypoints directly to their responsibility owners:
+
+```text
+src/
+  contracts.ts          # shared renderer-neutral vocabulary
+  foundation.ts         # Core-backed result, identity and revision support
+  model/
+    state.ts            # model construction and state reconciliation
+    access.ts
+    columns.ts
+    expansion.ts
+    selection.ts
+  source/
+    query.ts            # canonical query validation and transitions
+    view.ts             # prepared response provenance and visible-row indexes
+    client.ts           # source/query/projection generations and synchronization
+  profiles/
+    table-state.ts      # table model registry and controlled state projection
+    table.ts            # table controller and command subscriptions
+    grid.ts             # shared grid interaction and projection
+    data-grid.ts
+    data-tree-grid.ts
+  virtual.ts            # optional Virtual layout composition
+  index.ts              # type-only public root
+```
+
+Canonical model slices do not import model assembly. Query normalization and
+prepared-view indexes do not import source resolution. The table-state owner
+stays below the table controller, and the shared grid owner composes that
+controller without depending on specialized DataGrid or DataTreeGrid factories.
+The role gate checks those directions for type and runtime dependencies.
+
+Only the optional `/virtual` owner imports Virtual. Base model, source and
+profile consumers retain their renderer-neutral dependency boundary. Public
+subpaths resolve the same declarations and executable definitions at their new
+locations; no function wrappers or duplicate runtime facades are introduced.
+
+Column, expansion, selection and query caches retain one owner. Client source
+stages, accepted/prepared views, table model provenance, controller subscriptions
+and adapter state retain their existing generation and disposal contracts.
+Grouping changes paths and permitted dependencies, not filtering, sorting,
+grouping, pivoting, bounded navigation or incremental layout repair algorithms.
+
 ## Moving or extracting an implementation
 
 Before editing, identify the owner, direct callers, public surfaces and any

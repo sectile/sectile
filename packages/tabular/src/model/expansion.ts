@@ -1,4 +1,4 @@
-import { fail, ok, validateID } from './foundation.js';
+import { fail, ok, validateID } from '../foundation.js';
 import type { TabularGroupID, TabularLimits, TabularResult } from '../contracts.js';
 
 const expansionLimits = new WeakMap<object, Pick<TabularLimits, 'maxSelectionIDs' | 'maxIDCodeUnits'>>();

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createDataTreeGrid } from '../../.verification-dist/data-tree-grid.js';
+import { createDataTreeGrid } from '../../.verification-dist/profiles/data-tree-grid.js';
 
 const columns = [
   { id: 'name', capabilities: ['edit'] },

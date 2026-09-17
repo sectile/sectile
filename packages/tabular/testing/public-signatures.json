@@ -8,78 +8,78 @@
     },
     {
       "subpath": "./data-grid",
-      "types": "dist/data-grid.d.ts"
+      "types": "dist/profiles/data-grid.d.ts"
     },
     {
       "subpath": "./data-table",
-      "types": "dist/data-table.d.ts"
+      "types": "dist/profiles/table.d.ts"
     },
     {
       "subpath": "./data-tree-grid",
-      "types": "dist/data-tree-grid.d.ts"
+      "types": "dist/profiles/data-tree-grid.d.ts"
     },
     {
       "subpath": "./model",
-      "types": "dist/model.d.ts"
+      "types": "dist/model/state.d.ts"
     },
     {
       "subpath": "./query",
-      "types": "dist/query.d.ts"
+      "types": "dist/source/query.d.ts"
     },
     {
       "subpath": "./source",
-      "types": "dist/source.d.ts"
+      "types": "dist/source/client.d.ts"
     },
     {
       "subpath": "./virtual",
       "types": "dist/virtual.d.ts"
     }
   ],
-  "fingerprint": "607954cce96252e17c55ca34ee5563f084defafceff5eea5ff1e1715b711ef0a",
+  "fingerprint": "0e46c6e99e8e56c677bf4494ff721e527e96088af7676a596315847957fea1be",
   "files": [
     {
       "path": "dist/contracts.d.ts",
       "sha256": "2abb9ed63a5d3fc28e706f8404b17923399ec4e587b60513495f17ae11a3f583"
     },
     {
-      "path": "dist/data-grid.d.ts",
-      "sha256": "bfcd496027a293557431dc2003fd1739865ab1aa8d77ac17f89018a951748147"
-    },
-    {
-      "path": "dist/data-table.d.ts",
-      "sha256": "0fcdcbc9f6e7435b0b011e8fd39de2f1f4349057f196e03f448494caf55b0e88"
-    },
-    {
-      "path": "dist/data-tree-grid.d.ts",
-      "sha256": "cccf79bd2f56975b4a6ff872ba89846c0047d17bd0337e5c87fe7f6e5e7863f4"
-    },
-    {
       "path": "dist/index.d.ts",
-      "sha256": "4bf95f155da6b67bae2fff0f239f4da56d6af969fd3e8dcaacf064b3e34527be"
+      "sha256": "741cdc860e6ba20728d88b75cdece61043ef2b8e7ef9dacaec61ff8889f900a4"
     },
     {
-      "path": "dist/internal/grid-profile.d.ts",
-      "sha256": "8ae466154787d333956ce3447f8d47c9b09c27e917ff971d695f55ea874371c4"
-    },
-    {
-      "path": "dist/internal/selection.d.ts",
+      "path": "dist/model/selection.d.ts",
       "sha256": "67ba803d616e56cea7a13c575143a19011a5ec620104a2d127e475fd448c212e"
     },
     {
-      "path": "dist/model.d.ts",
-      "sha256": "9d94f5118c0c7f67a24fd5a69bf5049c32271c84aeb4a7bd4414e95310b1edf9"
+      "path": "dist/model/state.d.ts",
+      "sha256": "8101ceef658219c1805a685b89119138db6120ef7163eaf13b7428fb1075d855"
     },
     {
-      "path": "dist/query.d.ts",
-      "sha256": "6d320aedbb1a6eaae9a8dfe99cdf74713252b05dbc2e2302196c5e2b2d3812d3"
+      "path": "dist/profiles/data-grid.d.ts",
+      "sha256": "4f09fff075434f52330a86d3116b0531cd40c9ebc5779770ad7533b308c4225b"
     },
     {
-      "path": "dist/source.d.ts",
-      "sha256": "05dfe9fc5389ae3890b0e940b0aa97133038c7078f44a1974b1494f2641890f2"
+      "path": "dist/profiles/data-tree-grid.d.ts",
+      "sha256": "0518f6bc6406522209f15886c1390adc332db08a0894e6c48ed00d6557fe76d2"
+    },
+    {
+      "path": "dist/profiles/grid.d.ts",
+      "sha256": "ef11717036a976bf04e731c90f56bedf6cce755e21a59f1b7d83ff5fc1a1c15f"
+    },
+    {
+      "path": "dist/profiles/table.d.ts",
+      "sha256": "ab30dae78e6fb8f2074f9f2c80188ab9e49632e77c08c141d7c85c08b55814ef"
+    },
+    {
+      "path": "dist/source/client.d.ts",
+      "sha256": "cacd51c7fe08196c79f3fddfcfaf8cd19e2b3a8b21f57d3a9ff71768fde31dc5"
+    },
+    {
+      "path": "dist/source/query.d.ts",
+      "sha256": "a2c18973ccfb51fafa72c6fd41e97ae97bb38411fa4f65022098a9ae1cc7d0a5"
     },
     {
       "path": "dist/virtual.d.ts",
-      "sha256": "562143810597157d5aa544638dd53036436a561c41ba11af82a0652e4011dc31"
+      "sha256": "05527064d25ac974d68db805ddf99a99c2f2fff537d863b95bd0c0e721072bd3"
     }
   ]
 }

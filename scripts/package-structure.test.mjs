@@ -298,6 +298,29 @@ test('Chart contracts and storage stay below model, definition and projection as
   assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
 });
 
+test('Tabular canonical owners stay below source and profile assembly', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  for (const [lower, upper] of [
+    ['model/columns', 'model/state'],
+    ['model/selection', 'source/client'],
+    ['source/query', 'model/state'],
+    ['source/view', 'source/client'],
+    ['profiles/table-state', 'profiles/table'],
+    ['profiles/table', 'profiles/grid'],
+    ['profiles/grid', 'profiles/data-grid'],
+  ]) {
+    const source = `packages/tabular/src/${lower}.ts`;
+    const witness = graph.edges.find((edge) => edge.source === source);
+    assert.ok(witness, source);
+    const reverse = { ...witness, source, target: `packages/tabular/src/${upper}.ts` };
+    assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+  }
+});
+
 test('Virtual shared track contracts stay below concrete layout families', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);

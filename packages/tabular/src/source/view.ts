@@ -1,4 +1,4 @@
-import { nextRevision, ok } from './foundation.js';
+import { nextRevision, ok } from '../foundation.js';
 import type { TabularRequest, TabularResolvedRow, TabularResult, TabularRowID, TabularView, TabularViewResponse } from '../contracts.js';
 
 export interface VisibleRowIndex {

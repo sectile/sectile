@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createDataGrid } from '../../.verification-dist/data-grid.js';
-import { nextRevision } from '../../.verification-dist/internal/foundation.js';
-import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source.js';
+import { createDataGrid } from '../../.verification-dist/profiles/data-grid.js';
+import { nextRevision } from '../../.verification-dist/foundation.js';
+import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source/client.js';
 
 const columns = [
   { id: 'name', capabilities: ['edit'] },

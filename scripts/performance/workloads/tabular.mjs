@@ -20,7 +20,7 @@ export function* createTabularWorkloadGroups({ quick, selection }) {
 }
 
 async function resolutionWorkloads(size, quick) {
-  const { createClientTabularSource, resolveClientTabularRequest } = await import('../../../packages/tabular/dist/source.js');
+  const { createClientTabularSource, resolveClientTabularRequest } = await import('../../../packages/tabular/dist/source/client.js');
   const records = recordsFor(size);
   const createSource = () => createClientTabularSource({
     records,
@@ -49,8 +49,8 @@ async function resolutionWorkloads(size, quick) {
 
 async function gridProfileWorkloads(size, quick) {
   const [{ createClientTabularSource, resolveClientTabularRequest }, { createDataGrid }] = await Promise.all([
-    import('../../../packages/tabular/dist/source.js'),
-    import('../../../packages/tabular/dist/data-grid.js'),
+    import('../../../packages/tabular/dist/source/client.js'),
+    import('../../../packages/tabular/dist/profiles/data-grid.js'),
   ]);
   const records = recordsFor(size);
   const source = createClientTabularSource({

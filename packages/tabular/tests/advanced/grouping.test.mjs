@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source.js';
-import { createContextParentIndexes, sliceVisibleRows } from '../../.verification-dist/internal/source-view.js';
+import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source/client.js';
+import { createContextParentIndexes, sliceVisibleRows } from '../../.verification-dist/source/view.js';
 
 const records = [
   { id: 'r1', name: 'Beta', team: 'A', score: 2 },

@@ -1166,100 +1166,134 @@
     },
     "tabular": {
       "disposition": "regroup",
-      "reason": "Group model, source/query, profiles and Virtual composition in WI-006.",
+      "reason": "Model slices, source/query generations and table/grid profiles have distinct lower-owned dependencies; Virtual remains an optional composition entrypoint.",
       "dependencies": [
         "core",
         "virtual"
       ],
       "roles": {
-        "foundation": {
-          "reason": "tabular foundation owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "foundation",
-            "contracts"
-          ]
-        },
         "contracts": {
-          "reason": "tabular contracts owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Renderer-neutral Tabular vocabulary and portable public state contracts.",
           "allows": [
             "contracts"
           ]
         },
-        "model": {
-          "reason": "tabular model owns its named contracts and implementation; permitted imports are explicit.",
+        "foundation": {
+          "reason": "Core-backed result, identity and revision support.",
           "allows": [
-            "contracts",
             "foundation",
-            "model",
-            "query"
+            "contracts"
           ]
         },
-        "source": {
-          "reason": "tabular source owns its named contracts and implementation; permitted imports are explicit.",
+        "model-slices": {
+          "reason": "Canonical access, columns, expansion and selection, with single-owner caches.",
           "allows": [
             "contracts",
             "foundation",
-            "model",
-            "source",
-            "query"
-          ]
-        },
-        "profiles": {
-          "reason": "tabular profiles owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "contracts",
-            "foundation",
-            "model",
-            "profiles",
-            "source",
-            "query"
-          ]
-        },
-        "virtual": {
-          "reason": "tabular virtual owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "contracts",
-            "foundation",
-            "model",
-            "profiles",
-            "source",
-            "virtual",
-            "query"
-          ]
-        },
-        "exports": {
-          "reason": "tabular exports owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "contracts",
-            "exports",
-            "foundation",
-            "model",
-            "profiles",
-            "source",
-            "virtual",
-            "query"
-          ]
-        },
-        "reference": {
-          "reason": "tabular reference owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "contracts",
-            "exports",
-            "foundation",
-            "model",
-            "profiles",
-            "reference",
-            "source",
-            "virtual",
-            "query"
+            "model-slices"
           ]
         },
         "query": {
-          "reason": "Portable query construction and transitions are consumed by both model and source assembly.",
+          "reason": "Canonical query validation, normalization and transitions independent of model/source assembly.",
           "allows": [
-            "query",
             "contracts",
-            "foundation"
+            "foundation",
+            "query"
+          ]
+        },
+        "model": {
+          "reason": "Model construction and reconciliation assemble canonical slices and queries.",
+          "allows": [
+            "contracts",
+            "foundation",
+            "model-slices",
+            "query",
+            "model"
+          ]
+        },
+        "source-view": {
+          "reason": "Prepared response provenance and visible-row indexes, independent of source resolution.",
+          "allows": [
+            "contracts",
+            "foundation",
+            "source-view"
+          ]
+        },
+        "source": {
+          "reason": "Client generation cache, query projection and accepted view synchronization.",
+          "allows": [
+            "contracts",
+            "foundation",
+            "model-slices",
+            "model",
+            "query",
+            "source-view",
+            "source"
+          ]
+        },
+        "table-state": {
+          "reason": "Table model registry and controlled state/request projection below controllers.",
+          "allows": [
+            "contracts",
+            "foundation",
+            "model-slices",
+            "model",
+            "table-state"
+          ]
+        },
+        "table": {
+          "reason": "Table controller composes canonical state, source responses and command subscriptions.",
+          "allows": [
+            "contracts",
+            "foundation",
+            "model-slices",
+            "model",
+            "source-view",
+            "source",
+            "table-state",
+            "table"
+          ]
+        },
+        "grid": {
+          "reason": "Shared grid interaction and projection compose the table controller.",
+          "allows": [
+            "contracts",
+            "foundation",
+            "source",
+            "source-view",
+            "table-state",
+            "table",
+            "grid"
+          ]
+        },
+        "profile": {
+          "reason": "DataGrid and DataTreeGrid factories specialize one shared grid owner.",
+          "allows": [
+            "contracts",
+            "grid",
+            "profile"
+          ]
+        },
+        "virtual": {
+          "reason": "Optional Virtual adapters consume Tabular projections and public Virtual layout contracts.",
+          "allows": [
+            "contracts",
+            "model",
+            "table",
+            "profile",
+            "virtual"
+          ]
+        },
+        "exports": {
+          "reason": "Type-only root exposes existing public surfaces.",
+          "allows": [
+            "contracts",
+            "query",
+            "model",
+            "source",
+            "table",
+            "profile",
+            "exports"
           ]
         }
       },
@@ -1268,69 +1302,69 @@
           "role": "contracts",
           "kind": "owner"
         },
-        "src/data-grid.ts": {
-          "role": "profiles",
-          "kind": "owner"
-        },
-        "src/data-table.ts": {
-          "role": "profiles",
-          "kind": "owner"
-        },
-        "src/data-tree-grid.ts": {
-          "role": "profiles",
-          "kind": "owner"
-        },
-        "src/index.ts": {
-          "role": "exports",
-          "kind": "facade"
-        },
-        "src/internal/access.ts": {
-          "role": "model",
-          "kind": "owner"
-        },
-        "src/internal/columns.ts": {
-          "role": "model",
-          "kind": "owner"
-        },
-        "src/internal/data-table-state.ts": {
-          "role": "profiles",
-          "kind": "owner"
-        },
-        "src/internal/expansion.ts": {
-          "role": "model",
-          "kind": "owner"
-        },
-        "src/internal/foundation.ts": {
+        "src/foundation.ts": {
           "role": "foundation",
           "kind": "owner"
         },
-        "src/internal/grid-profile.ts": {
-          "role": "profiles",
-          "kind": "owner"
-        },
-        "src/internal/selection.ts": {
+        "src/model/state.ts": {
           "role": "model",
           "kind": "owner"
         },
-        "src/internal/source-view.ts": {
-          "role": "source",
+        "src/model/access.ts": {
+          "role": "model-slices",
           "kind": "owner"
         },
-        "src/model.ts": {
-          "role": "model",
+        "src/model/columns.ts": {
+          "role": "model-slices",
           "kind": "owner"
         },
-        "src/query.ts": {
+        "src/model/expansion.ts": {
+          "role": "model-slices",
+          "kind": "owner"
+        },
+        "src/model/selection.ts": {
+          "role": "model-slices",
+          "kind": "owner"
+        },
+        "src/source/query.ts": {
           "role": "query",
           "kind": "owner"
         },
-        "src/source.ts": {
+        "src/source/client.ts": {
           "role": "source",
+          "kind": "owner"
+        },
+        "src/source/view.ts": {
+          "role": "source-view",
+          "kind": "owner"
+        },
+        "src/profiles/table-state.ts": {
+          "role": "table-state",
+          "kind": "owner"
+        },
+        "src/profiles/table.ts": {
+          "role": "table",
+          "kind": "owner"
+        },
+        "src/profiles/grid.ts": {
+          "role": "grid",
+          "kind": "owner"
+        },
+        "src/profiles/data-grid.ts": {
+          "role": "profile",
+          "kind": "owner"
+        },
+        "src/profiles/data-tree-grid.ts": {
+          "role": "profile",
           "kind": "owner"
         },
         "src/virtual.ts": {
           "role": "virtual",
           "kind": "owner"
+        },
+        "src/index.ts": {
+          "role": "exports",
+          "kind": "facade"
         }
       }
     },

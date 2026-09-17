@@ -75,7 +75,7 @@
     {
       "id": "tabular-retained-current-indexes",
       "detectors": ["derived-index-construction"],
-      "paths": ["packages/tabular/src/source.ts", "packages/tabular/src/internal/grid-profile.ts"],
+      "paths": ["packages/tabular/src/source/client.ts", "packages/tabular/src/profiles/grid.ts"],
       "classification": "reuse",
       "owner": null,
       "rationale": "Source/query/projection and grid-profile indexes are retained for the complete current generation and released together on invalidation."

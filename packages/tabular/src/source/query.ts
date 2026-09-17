@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import { fail, ok, validateID } from './internal/foundation.js';
+import { fail, ok, validateID } from '../foundation.js';
 import type {
   TabularAggregate,
   TabularDescriptorID,
@@ -14,7 +14,7 @@ import type {
   TabularQueryValue,
   TabularResult,
   TabularSort,
-} from './contracts.js';
+} from '../contracts.js';
 
 const DEFAULT_QUERY_LIMITS: Pick<
   TabularLimits,
@@ -447,4 +447,4 @@ export type {
   TabularQueryInput,
   TabularQueryValue,
   TabularSort,
-} from './contracts.js';
+} from '../contracts.js';

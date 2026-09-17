@@ -1,17 +1,17 @@
 import { createPaginationModel, tryCreatePaginationState } from '@sectile/core/pagination';
 import { unwrap } from '@sectile/core/result';
-import { canonicalizeTabularColumnState, projectTabularColumnPartitions, reconcileTabularColumns } from './internal/columns.js';
-import { canonicalizeTabularAccessState } from './internal/access.js';
-import { canonicalizeTabularExpansion } from './internal/expansion.js';
-import { fail, nextRevision, ok } from './internal/foundation.js';
+import { canonicalizeTabularColumnState, projectTabularColumnPartitions, reconcileTabularColumns } from '../model/columns.js';
+import { canonicalizeTabularAccessState } from '../model/access.js';
+import { canonicalizeTabularExpansion } from '../model/expansion.js';
+import { fail, nextRevision, ok } from '../foundation.js';
 import {
   issueDataTableRequest,
   prepareControlledDataTableState,
   projectDataTableState,
   resetAccessForQuery,
   retainDataTableModel,
-} from './internal/data-table-state.js';
-import { removedRowIDsOf, visibleRowIndexOf } from './internal/source-view.js';
+} from './table-state.js';
+import { removedRowIDsOf, visibleRowIndexOf } from '../source/view.js';
 import {
   canonicalizeRowSelection,
   createGroupLeafSelectionTarget,
@@ -20,9 +20,9 @@ import {
   selectAllMatchingRows,
   setIndexedVisibleRowSelectionRange,
   toggleExplicitRowSelection,
-} from './internal/selection.js';
-import { canonicalizeTabularStateQuery, tryCreateTabularModel, tryCreateTabularState } from './model.js';
-import { synchronizeTabularView } from './source.js';
+} from '../model/selection.js';
+import { canonicalizeTabularStateQuery, tryCreateTabularModel, tryCreateTabularState } from '../model/state.js';
+import { synchronizeTabularView } from '../source/client.js';
 import type {
   TabularAccessState,
   TabularCellAddress,
@@ -42,9 +42,9 @@ import type {
   TabularState,
   TabularViewResponse,
   TabularWireValue,
-} from './contracts.js';
+} from '../contracts.js';
 
-export { rowSelectionContains } from './internal/selection.js';
+export { rowSelectionContains } from '../model/selection.js';
 
 export type DataTableState = TabularState;
 
@@ -524,4 +524,4 @@ export type {
   TabularSnapshot,
   TabularViewResponse,
   TabularWireValue,
-} from './contracts.js';
+} from '../contracts.js';

@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { nextClientViewRevision } from '../../.verification-dist/internal/source-view.js';
+import { nextClientViewRevision } from '../../.verification-dist/source/view.js';
 import {
   createClientTabularSource,
   resolveClientTabularRequest,
   synchronizeTabularView,
-} from '../../.verification-dist/source.js';
+} from '../../.verification-dist/source/client.js';
 
 const records = Object.freeze([
   Object.freeze({ id: 'r1', name: 'Beta', team: 'A', score: 2, active: true }),

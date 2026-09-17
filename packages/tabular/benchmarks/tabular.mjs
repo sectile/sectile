@@ -4,7 +4,7 @@ import { performance } from 'node:perf_hooks';
 import {
   createClientTabularSource,
   resolveClientTabularRequest,
-} from '../dist/source.js';
+} from '../dist/source/client.js';
 import {
   createDataTableVirtualAdapter,
   reconcileDataTableVirtualAdapter,

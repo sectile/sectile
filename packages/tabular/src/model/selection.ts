@@ -6,7 +6,7 @@ import {
   unionSelectionExpressions,
   type SelectionExpression,
 } from '@sectile/core/selection-expression';
-import { fail, ok, validateID } from './foundation.js';
+import { fail, ok, validateID } from '../foundation.js';
 import type {
   TabularGroupID,
   TabularLimits,

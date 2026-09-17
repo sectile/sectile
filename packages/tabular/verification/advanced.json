@@ -8,43 +8,43 @@
       "id": "TAB-ADV-01",
       "title": "TAB-ADV-01: groups follow first-seen stable sorted order and aggregate filtered descendants",
       "file": "tests/advanced/grouping.test.mjs",
-      "sha256": "78c14b8e43bbc774fa44670120cd92052e424be2dfbac8a6d17b10f6d0294ebf"
+      "sha256": "30fd22c0d470fcf24f89d0310823c263ad9ba7e0e1ba65f80ba3788098d1bee5"
     },
     {
       "id": "TAB-ADV-02",
       "title": "TAB-ADV-02: expansion inserts ordered leaf rows without changing matching leaf count",
       "file": "tests/advanced/grouping.test.mjs",
-      "sha256": "78c14b8e43bbc774fa44670120cd92052e424be2dfbac8a6d17b10f6d0294ebf"
+      "sha256": "30fd22c0d470fcf24f89d0310823c263ad9ba7e0e1ba65f80ba3788098d1bee5"
     },
     {
       "id": "TAB-ADV-03",
       "title": "TAB-ADV-03: synthetic group identities cannot collide with records or another path",
       "file": "tests/advanced/grouping.test.mjs",
-      "sha256": "78c14b8e43bbc774fa44670120cd92052e424be2dfbac8a6d17b10f6d0294ebf"
+      "sha256": "30fd22c0d470fcf24f89d0310823c263ad9ba7e0e1ba65f80ba3788098d1bee5"
     },
     {
       "id": "TAB-ADV-04",
       "title": "TAB-ADV-04: aggregate and group policies are required and failures stay atomic",
       "file": "tests/advanced/grouping.test.mjs",
-      "sha256": "78c14b8e43bbc774fa44670120cd92052e424be2dfbac8a6d17b10f6d0294ebf"
+      "sha256": "30fd22c0d470fcf24f89d0310823c263ad9ba7e0e1ba65f80ba3788098d1bee5"
     },
     {
       "id": "TAB-ADV-05",
       "title": "TAB-ADV-05: pivot columns keep policy order, stable IDs, and read-only aggregate cells",
       "file": "tests/advanced/grouping.test.mjs",
-      "sha256": "78c14b8e43bbc774fa44670120cd92052e424be2dfbac8a6d17b10f6d0294ebf"
+      "sha256": "30fd22c0d470fcf24f89d0310823c263ad9ba7e0e1ba65f80ba3788098d1bee5"
     },
     {
       "id": "TAB-ADV-06",
       "title": "TAB-ADV-06: sliced descendants retain context-only ancestors outside the access range",
       "file": "tests/advanced/grouping.test.mjs",
-      "sha256": "78c14b8e43bbc774fa44670120cd92052e424be2dfbac8a6d17b10f6d0294ebf"
+      "sha256": "30fd22c0d470fcf24f89d0310823c263ad9ba7e0e1ba65f80ba3788098d1bee5"
     },
     {
       "id": "TAB-ADV-07",
       "title": "TAB-ADV-07: client grouping does not fabricate empty groups after filtering",
       "file": "tests/advanced/grouping.test.mjs",
-      "sha256": "78c14b8e43bbc774fa44670120cd92052e424be2dfbac8a6d17b10f6d0294ebf"
+      "sha256": "30fd22c0d470fcf24f89d0310823c263ad9ba7e0e1ba65f80ba3788098d1bee5"
     }
   ],
   "expectedFailures": [

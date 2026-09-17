@@ -13,8 +13,8 @@ import {
   type GridProfileRow,
   type GridProfileState,
   type GridProfileUpdate,
-} from './internal/grid-profile.js';
-import type { TabularResult } from './contracts.js';
+} from './grid.js';
+import type { TabularResult } from '../contracts.js';
 
 export type DataTreeGridCursorState = GridCursorState;
 export type DataTreeGridEditState = GridEditState;
@@ -50,4 +50,4 @@ export type {
   TabularControlledValues,
   TabularViewResponse,
   TabularWireValue,
-} from './contracts.js';
+} from '../contracts.js';

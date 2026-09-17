@@ -27,34 +27,34 @@
       "default": "./dist/index.js"
     },
     "./model": {
-      "types": "./dist/model.d.ts",
-      "import": "./dist/model.js",
-      "default": "./dist/model.js"
+      "types": "./dist/model/state.d.ts",
+      "import": "./dist/model/state.js",
+      "default": "./dist/model/state.js"
     },
     "./query": {
-      "types": "./dist/query.d.ts",
-      "import": "./dist/query.js",
-      "default": "./dist/query.js"
+      "types": "./dist/source/query.d.ts",
+      "import": "./dist/source/query.js",
+      "default": "./dist/source/query.js"
     },
     "./source": {
-      "types": "./dist/source.d.ts",
-      "import": "./dist/source.js",
-      "default": "./dist/source.js"
+      "types": "./dist/source/client.d.ts",
+      "import": "./dist/source/client.js",
+      "default": "./dist/source/client.js"
     },
     "./data-table": {
-      "types": "./dist/data-table.d.ts",
-      "import": "./dist/data-table.js",
-      "default": "./dist/data-table.js"
+      "types": "./dist/profiles/table.d.ts",
+      "import": "./dist/profiles/table.js",
+      "default": "./dist/profiles/table.js"
     },
     "./data-grid": {
-      "types": "./dist/data-grid.d.ts",
-      "import": "./dist/data-grid.js",
-      "default": "./dist/data-grid.js"
+      "types": "./dist/profiles/data-grid.d.ts",
+      "import": "./dist/profiles/data-grid.js",
+      "default": "./dist/profiles/data-grid.js"
     },
     "./data-tree-grid": {
-      "types": "./dist/data-tree-grid.d.ts",
-      "import": "./dist/data-tree-grid.js",
-      "default": "./dist/data-tree-grid.js"
+      "types": "./dist/profiles/data-tree-grid.d.ts",
+      "import": "./dist/profiles/data-tree-grid.js",
+      "default": "./dist/profiles/data-tree-grid.js"
     },
     "./virtual": {
       "types": "./dist/virtual.d.ts",

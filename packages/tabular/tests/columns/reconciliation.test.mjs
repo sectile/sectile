@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createTabularModel } from '../../.verification-dist/model.js';
+import { createTabularModel } from '../../.verification-dist/model/state.js';
 import {
   createTabularColumnState,
   pinTabularColumn,
   projectTabularColumnPartitions,
   reconcileTabularColumns,
   setTabularColumnVisibility,
-} from '../../.verification-dist/internal/columns.js';
+} from '../../.verification-dist/model/columns.js';
 
 const limits = createTabularModel({ columns: [] }).limits;
 

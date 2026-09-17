@@ -1,10 +1,10 @@
 import { unwrap } from '@sectile/core/result';
-import { fail, ok, validateID } from './internal/foundation.js';
-import { canonicalizeTabularAccessState } from './internal/access.js';
-import { canonicalizeTabularColumnState } from './internal/columns.js';
-import { canonicalizeTabularExpansion } from './internal/expansion.js';
-import { canonicalizeRowSelection } from './internal/selection.js';
-import { tryCreateTabularQuery } from './query.js';
+import { fail, ok, validateID } from '../foundation.js';
+import { canonicalizeTabularAccessState } from './access.js';
+import { canonicalizeTabularColumnState } from './columns.js';
+import { canonicalizeTabularExpansion } from './expansion.js';
+import { canonicalizeRowSelection } from './selection.js';
+import { tryCreateTabularQuery } from '../source/query.js';
 import type {
   TabularAccessState,
   TabularCellAddress,
@@ -25,7 +25,7 @@ import type {
   TabularSnapshot,
   TabularState,
   TabularUpdate,
-} from './contracts.js';
+} from '../contracts.js';
 
 const DEFAULT_TABULAR_LIMITS: TabularLimits = Object.freeze({
   maxIDCodeUnits: 1_024,
@@ -552,4 +552,4 @@ export type {
   TabularUpdate,
   TabularWireValue,
   TabularWireCells,
-} from './contracts.js';
+} from '../contracts.js';

@@ -1,8 +1,8 @@
 import { unwrap } from '@sectile/core/result';
-import { deriveSafeTabularPageStart } from './internal/access.js';
-import { fail, ok, validateID } from './internal/foundation.js';
-import { createContextParentIndexes, nextClientViewRevision, preparedViewOf, retainRemovedRowIDs, sliceVisibleRows } from './internal/source-view.js';
-import { tryCreateTabularModel } from './model.js';
+import { deriveSafeTabularPageStart } from '../model/access.js';
+import { fail, ok, validateID } from '../foundation.js';
+import { createContextParentIndexes, nextClientViewRevision, preparedViewOf, retainRemovedRowIDs, sliceVisibleRows } from './view.js';
+import { tryCreateTabularModel } from '../model/state.js';
 import { tryCreateTabularQuery } from './query.js';
 import type {
   TabularAccessRange,
@@ -25,7 +25,7 @@ import type {
   TabularView,
   TabularViewResponse,
   TabularWireValue,
-} from './contracts.js';
+} from '../contracts.js';
 
 interface ClientSource<RecordValue> extends TabularSource {
   readonly options: TabularClientSourceOptions<RecordValue>;
@@ -1239,4 +1239,4 @@ export type {
   TabularSource,
   TabularView,
   TabularViewResponse,
-} from './contracts.js';
+} from '../contracts.js';

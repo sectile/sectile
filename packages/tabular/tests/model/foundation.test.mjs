@@ -8,7 +8,7 @@ import {
   tryCreateTabularModel,
   tryCreateTabularState,
   tryDecodeTabularCellID,
-} from '../../.verification-dist/model.js';
+} from '../../.verification-dist/model/state.js';
 
 const columns = Object.freeze([
   Object.freeze({ id: 'name', label: 'Name', capabilities: Object.freeze(['sort', 'filter']) }),

@@ -1,6 +1,6 @@
 import { validateStableID } from '@sectile/core/identity';
 import { failResult, okResult, type SectileError } from '@sectile/core/result';
-import type { TabularErrorCode, TabularLimits, TabularResult } from '../contracts.js';
+import type { TabularErrorCode, TabularLimits, TabularResult } from './contracts.js';
 
 export function ok<T>(value: T): TabularResult<T> {
   return okResult<T, TabularErrorCode>(value);

@@ -1,9 +1,9 @@
-import { canonicalizeTabularAccessState } from './access.js';
-import { canonicalizeTabularColumnState, projectTabularColumnPartitions, type TabularColumnPartitions } from './columns.js';
-import { canonicalizeTabularExpansion } from './expansion.js';
-import { fail, nextRevision, ok } from './foundation.js';
-import { canonicalizeRowSelection, reconcileRowSelectionBinding } from './selection.js';
-import { canonicalizeTabularStateQuery } from '../model.js';
+import { canonicalizeTabularAccessState } from '../model/access.js';
+import { canonicalizeTabularColumnState, projectTabularColumnPartitions, type TabularColumnPartitions } from '../model/columns.js';
+import { canonicalizeTabularExpansion } from '../model/expansion.js';
+import { fail, nextRevision, ok } from '../foundation.js';
+import { canonicalizeRowSelection, reconcileRowSelectionBinding } from '../model/selection.js';
+import { canonicalizeTabularStateQuery } from '../model/state.js';
 import type {
   TabularAccessState,
   TabularCommand,

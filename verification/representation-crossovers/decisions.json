@@ -297,7 +297,7 @@
     {
       "id": "tabular-cache",
       "governedSources": [
-        "packages/tabular/src/source.ts"
+        "packages/tabular/src/source/client.ts"
       ],
       "selected": "single-current",
       "candidates": [
@@ -455,6 +455,6 @@
       ]
     }
   ],
-  "sourceFingerprint": "sha256:4a0f4d1b31e95a7509d980ce950f9a973b2daddd2c9f2f129d05fab7c5105460",
+  "sourceFingerprint": "sha256:88271fe6866598aed85602d47164a52094a8ea81efdbae475b37b5b0cc25061a",
   "evidenceFingerprint": "sha256:4be97a0765a6641c3204bc926bcc98cc3671c540dcab44ef372666016d0dc2dd"
 }

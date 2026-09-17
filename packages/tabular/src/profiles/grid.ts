@@ -1,9 +1,9 @@
-import { type DataTableController, type DataTableEvent, type DataTableOptions, tryCreateDataTable } from '../data-table.js';
-import { synchronizeTabularView } from '../source.js';
+import { type DataTableController, type DataTableEvent, type DataTableOptions, tryCreateDataTable } from './table.js';
+import { synchronizeTabularView } from '../source/client.js';
 import { scanGridAxis } from '@sectile/core/grid';
-import { fail, nextRevision, ok } from './foundation.js';
-import { dataTableModelOf, prepareControlledDataTableState, projectDataTableState } from './data-table-state.js';
-import { createPreparedViewResponse, visibleRowIndexOf } from './source-view.js';
+import { fail, nextRevision, ok } from '../foundation.js';
+import { dataTableModelOf, prepareControlledDataTableState, projectDataTableState } from './table-state.js';
+import { createPreparedViewResponse, visibleRowIndexOf } from '../source/view.js';
 import type {
   TabularCellAddress,
   TabularColumnSchema,

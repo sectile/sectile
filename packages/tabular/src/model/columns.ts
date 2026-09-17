@@ -1,4 +1,4 @@
-import { fail, ok } from './foundation.js';
+import { fail, ok } from '../foundation.js';
 import type {
   TabularColumnDefinition,
   TabularColumnID,

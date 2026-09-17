@@ -65,7 +65,7 @@
       "packages/temporal/src/", "verification/authority/temporal.json"
     ],
     "WI-006": [
-      "packages/tabular/src/internal/grid-profile.ts", "verification/authority/tabular.json"
+      "packages/tabular/src/profiles/grid.ts", "verification/authority/tabular.json"
     ],
     "WI-022": [
       "packages/virtual/src/internal/", "verification/authority/virtual.json"

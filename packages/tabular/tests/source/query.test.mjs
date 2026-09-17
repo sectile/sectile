@@ -4,7 +4,7 @@ import {
   applyTabularQueryEvent,
   createTabularQuery,
   tryCreateTabularQuery,
-} from '../../.verification-dist/query.js';
+} from '../../.verification-dist/source/query.js';
 
 const complete = Object.freeze({
   sort: [{ id: 'sort-name', columnID: 'name', direction: 'ascending', comparator: 'text' }],
