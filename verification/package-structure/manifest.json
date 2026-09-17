@@ -882,6 +882,7 @@
             "path",
             "schema",
             "state",
+            "state-contracts",
             "values"
           ]
         },
@@ -890,7 +891,8 @@
           "allows": [
             "foundation",
             "state",
-            "state-api"
+            "state-api",
+            "state-contracts"
           ]
         },
         "exports": {
@@ -916,6 +918,13 @@
             "state",
             "state-api",
             "values"
+          ]
+        },
+        "state-contracts": {
+          "reason": "State contracts describe fields, issues, validation and submission without importing storage, queries or transitions.",
+          "allows": [
+            "foundation",
+            "state-contracts"
           ]
         }
       },
@@ -946,6 +955,10 @@
         },
         "src/internal/result.ts": {
           "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/state/contracts.ts": {
+          "role": "state-contracts",
           "kind": "owner"
         },
         "src/path.ts": {

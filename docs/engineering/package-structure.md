@@ -126,10 +126,19 @@ configured budgets, repeated-leaf ordering and opaque value identity. Only
 newly constructed branches and repeated-leaf wrappers are frozen; caller-owned
 leaves are not transferred to the output's structural ownership.
 
-State storage and transitions remain in `internal/form.ts` for the separate
-WI-003B extraction. Its delta indexes, private-state WeakMap and field projection
-cache retain their existing single owner; WI-003A does not claim that the whole
-Form package has been reorganized.
+## Form state contracts
+
+`internal/state/contracts.ts` owns the field, issue, validation, submission,
+event and update types. It imports only the lower Core identity contract, not
+state construction, storage, queries or transitions. The public `/state`
+entrypoint keeps its existing Form-prefixed type names through explicit aliases;
+internal operations consume the same definitions directly. The structure gate
+classifies this lower contract owner separately from state implementation.
+
+State storage, queries and transitions remain in `internal/form.ts` for the
+remaining WI-003B extraction. Its delta indexes, private-state WeakMap and field
+projection cache retain their existing single owner. Contract extraction alone
+does not complete the remaining runtime responsibility separation.
 
 ## Moving or extracting an implementation
 

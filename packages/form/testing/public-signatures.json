@@ -27,7 +27,7 @@
       "types": "dist/values.d.ts"
     }
   ],
-  "fingerprint": "d915d88f46ddcb767511166206aa2ecad17f6f4c3d50394c1a3432b63e6cc6b5",
+  "fingerprint": "481e29a48c958efbfc4fbe278bb78919b8d0248cb60f5306da3c7f5e1c5b8ea0",
   "files": [
     {
       "path": "dist/error.d.ts",
@@ -51,7 +51,11 @@
     },
     {
       "path": "dist/internal/form.d.ts",
-      "sha256": "4aea191deef67513b910653df53c83945e35fddd4d66f70079e080410ce853c3"
+      "sha256": "fdc9d14a9f94ae488c86dfe66b2ee774947381619daa07518c4e6d5116343484"
+    },
+    {
+      "path": "dist/internal/state/contracts.d.ts",
+      "sha256": "4f7c737c5a0d41fb1b4fc9919d5fe6a06caac7c69510cec305b5e438fc1f4943"
     },
     {
       "path": "dist/path.d.ts",
@@ -63,7 +67,7 @@
     },
     {
       "path": "dist/state.d.ts",
-      "sha256": "43acc3e30937204f057477e5096fa6693d511b897c592e415a2f7fabc30edf55"
+      "sha256": "51ecb6fca59849ad567a5a5a3fea049401e9cbfc345afaff09e216b4485eccaa"
     },
     {
       "path": "dist/values.d.ts",
