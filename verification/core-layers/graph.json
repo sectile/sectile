@@ -549,6 +549,16 @@
       "kind": "import"
     },
     {
+      "source": "src/alert-dialog.ts",
+      "target": "src/dialog.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/alert-dialog.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
       "source": "src/carousel.ts",
       "target": "src/internal/kernel/foundation.ts",
       "kind": "import"
@@ -736,6 +746,16 @@
     {
       "source": "src/combobox.ts",
       "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/dialog.ts",
+      "target": "src/internal/composites/popup.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/dialog.ts",
+      "target": "src/shared.ts",
       "kind": "import"
     },
     {
@@ -951,7 +971,7 @@
     {
       "source": "src/index.ts",
       "target": "src/shared.ts",
-      "kind": "import"
+      "kind": "export"
     },
     {
       "source": "src/index.ts",
@@ -1235,7 +1255,22 @@
     },
     {
       "source": "src/internal/composites/popup.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/popup.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/popup.ts",
       "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/popup.ts",
+      "target": "src/shared.ts",
       "kind": "import"
     },
     {
@@ -2204,6 +2239,16 @@
       "kind": "import"
     },
     {
+      "source": "src/popover.ts",
+      "target": "src/internal/composites/popup.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/popover.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
       "source": "src/progress.ts",
       "target": "src/internal/kernel/bounded-scalar.ts",
       "kind": "import"
@@ -2869,6 +2914,11 @@
       "kind": "export"
     },
     {
+      "source": "src/tooltip.ts",
+      "target": "src/internal/state/open-state.ts",
+      "kind": "export"
+    },
+    {
       "source": "src/tree-grid.ts",
       "target": "src/internal/composites/tree-grid.ts",
       "kind": "export"
@@ -3008,7 +3058,10 @@
       "subpath": "./alert-dialog",
       "source": "src/alert-dialog.ts",
       "layer": "public",
-      "facadeTargets": []
+      "facadeTargets": [
+        "src/dialog.ts",
+        "src/shared.ts"
+      ]
     },
     {
       "subpath": "./anchored-layout",
@@ -3139,7 +3192,10 @@
       "subpath": "./dialog",
       "source": "src/dialog.ts",
       "layer": "public",
-      "facadeTargets": []
+      "facadeTargets": [
+        "src/internal/composites/popup.ts",
+        "src/shared.ts"
+      ]
     },
     {
       "subpath": "./disclosure",
@@ -3413,7 +3469,10 @@
       "subpath": "./popover",
       "source": "src/popover.ts",
       "layer": "public",
-      "facadeTargets": []
+      "facadeTargets": [
+        "src/internal/composites/popup.ts",
+        "src/shared.ts"
+      ]
     },
     {
       "subpath": "./progress",
@@ -3691,6 +3750,7 @@
       "source": "src/tooltip.ts",
       "layer": "public",
       "facadeTargets": [
+        "src/internal/state/open-state.ts",
         "src/internal/state/open-state.ts"
       ]
     },
@@ -3858,9 +3918,12 @@
     },
     {
       "module": "src/dialog.ts",
-      "directDependents": [],
-      "transitiveDependentCount": 0,
+      "directDependents": [
+        "src/alert-dialog.ts"
+      ],
+      "transitiveDependentCount": 1,
       "publicSubpaths": [
+        "./alert-dialog",
         "./dialog"
       ]
     },
@@ -3914,11 +3977,12 @@
         "src/result.ts",
         "src/shared.ts"
       ],
-      "transitiveDependentCount": 114,
+      "transitiveDependentCount": 117,
       "publicSubpaths": [
         ".",
         "./accordion",
         "./adapter-runtime",
+        "./alert-dialog",
         "./anchored-layout",
         "./carousel",
         "./cascade-list",
@@ -3930,6 +3994,7 @@
         "./color-picker",
         "./color-text",
         "./combobox",
+        "./dialog",
         "./disclosure",
         "./drawer",
         "./editable",
@@ -3953,6 +4018,7 @@
         "./number-field",
         "./pagination",
         "./pin-input",
+        "./popover",
         "./progress",
         "./quantity-field",
         "./radio-group",
@@ -4136,11 +4202,16 @@
     {
       "module": "src/internal/composites/popup.ts",
       "directDependents": [
-        "src/drawer.ts"
+        "src/dialog.ts",
+        "src/drawer.ts",
+        "src/popover.ts"
       ],
-      "transitiveDependentCount": 1,
+      "transitiveDependentCount": 4,
       "publicSubpaths": [
-        "./drawer"
+        "./alert-dialog",
+        "./dialog",
+        "./drawer",
+        "./popover"
       ]
     },
     {
@@ -4285,6 +4356,7 @@
         "src/internal/composites/linear-choice.ts",
         "src/internal/composites/listbox.ts",
         "src/internal/composites/menu.ts",
+        "src/internal/composites/popup.ts",
         "src/internal/composites/slider.ts",
         "src/internal/composites/tree-grid.ts",
         "src/internal/composites/tree-view.ts",
@@ -4328,11 +4400,12 @@
         "src/toggle-group.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 109,
+      "transitiveDependentCount": 113,
       "publicSubpaths": [
         ".",
         "./accordion",
         "./adapter-runtime",
+        "./alert-dialog",
         "./anchored-layout",
         "./carousel",
         "./cascade-list",
@@ -4344,6 +4417,7 @@
         "./color-picker",
         "./color-text",
         "./combobox",
+        "./dialog",
         "./disclosure",
         "./drawer",
         "./editable",
@@ -4366,6 +4440,7 @@
         "./number-field",
         "./pagination",
         "./pin-input",
+        "./popover",
         "./progress",
         "./quantity-field",
         "./radio-group",
@@ -4463,6 +4538,7 @@
         "src/internal/composites/linear-choice.ts",
         "src/internal/composites/listbox.ts",
         "src/internal/composites/menu.ts",
+        "src/internal/composites/popup.ts",
         "src/internal/composites/slider.ts",
         "src/internal/composites/tree-grid.ts",
         "src/internal/composites/tree-view.ts",
@@ -4483,11 +4559,12 @@
         "src/spin-button.ts",
         "src/tags-input.ts"
       ],
-      "transitiveDependentCount": 75,
+      "transitiveDependentCount": 79,
       "publicSubpaths": [
         ".",
         "./accordion",
         "./adapter-runtime",
+        "./alert-dialog",
         "./carousel",
         "./cascade-select",
         "./checkbox",
@@ -4495,6 +4572,7 @@
         "./collection-window",
         "./color-picker",
         "./combobox",
+        "./dialog",
         "./disclosure",
         "./drawer",
         "./editable",
@@ -4510,6 +4588,7 @@
         "./number-field",
         "./pagination",
         "./pin-input",
+        "./popover",
         "./quantity-field",
         "./radio-group",
         "./rating",
@@ -5060,11 +5139,12 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 112,
+      "transitiveDependentCount": 115,
       "publicSubpaths": [
         ".",
         "./accordion",
         "./adapter-runtime",
+        "./alert-dialog",
         "./anchored-layout",
         "./carousel",
         "./cascade-list",
@@ -5076,6 +5156,7 @@
         "./color-picker",
         "./color-text",
         "./combobox",
+        "./dialog",
         "./disclosure",
         "./drawer",
         "./editable",
@@ -5099,6 +5180,7 @@
         "./number-field",
         "./pagination",
         "./pin-input",
+        "./popover",
         "./progress",
         "./quantity-field",
         "./radio-group",
@@ -5166,6 +5248,7 @@
       "directDependents": [
         "src/accordion.ts",
         "src/adapter-runtime.ts",
+        "src/alert-dialog.ts",
         "src/carousel.ts",
         "src/cascade-list.ts",
         "src/cascade-select.ts",
@@ -5173,6 +5256,7 @@
         "src/collection-window.ts",
         "src/color-picker.ts",
         "src/combobox.ts",
+        "src/dialog.ts",
         "src/drawer.ts",
         "src/editable.ts",
         "src/editing/color-text.ts",
@@ -5188,6 +5272,7 @@
         "src/internal/composites/linear-choice.ts",
         "src/internal/composites/listbox.ts",
         "src/internal/composites/menu.ts",
+        "src/internal/composites/popup.ts",
         "src/internal/composites/slider.ts",
         "src/internal/composites/tree-grid.ts",
         "src/internal/composites/tree-view.ts",
@@ -5229,6 +5314,7 @@
         "src/number-field.ts",
         "src/pagination.ts",
         "src/pin-input.ts",
+        "src/popover.ts",
         "src/progress.ts",
         "src/quantity-field.ts",
         "src/radio-group.ts",
@@ -5259,11 +5345,12 @@
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 113,
+      "transitiveDependentCount": 116,
       "publicSubpaths": [
         ".",
         "./accordion",
         "./adapter-runtime",
+        "./alert-dialog",
         "./anchored-layout",
         "./carousel",
         "./cascade-list",
@@ -5275,6 +5362,7 @@
         "./color-picker",
         "./color-text",
         "./combobox",
+        "./dialog",
         "./disclosure",
         "./drawer",
         "./editable",
@@ -5298,6 +5386,7 @@
         "./number-field",
         "./pagination",
         "./pin-input",
+        "./popover",
         "./progress",
         "./quantity-field",
         "./radio-group",

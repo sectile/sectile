@@ -301,6 +301,7 @@ function workspaceContractSteps({ includePerformance }) {
     commandStep('entrypoint-migrations', 'entrypoint migrations', 'pnpm', ['check:entrypoint-migrations']),
     commandStep('source-maps', 'published source maps', process.execPath, [join(root, 'scripts', 'source-map-policy.mjs'), 'check']),
     commandStep('workspace-boundaries', 'workspace boundaries', 'pnpm', ['check:boundaries']),
+    commandStep('package-structure', 'package responsibility boundaries', 'pnpm', ['check:package-structure']),
     commandStep('public-signatures', 'public signatures', 'pnpm', ['check:signatures']),
     commandStep('component-completeness', 'component completeness', 'pnpm', ['check:components']),
     commandStep('form-scenarios', 'Form scenario completeness', 'pnpm', ['check:form-scenarios']),
@@ -326,6 +327,7 @@ function affectedWorkspaceContractSteps() {
   add('cross-host', commandStep('cross-host', 'cross-host verification', process.execPath, ['--test', '--test-concurrency=1', ...crossHostTestPaths()]));
   add('tooling', commandStep('tooling', 'tooling verification', 'pnpm', ['test:tooling']));
   add('workspace-boundaries', commandStep('workspace-boundaries', 'workspace boundaries', 'pnpm', ['check:boundaries']));
+  add('package-structure', commandStep('package-structure', 'package responsibility boundaries', 'pnpm', ['check:package-structure']));
   add('semantic-authority', commandStep('semantic-authority', 'semantic authority', 'pnpm', ['check:semantic-authority']));
   add('complexity', commandStep('complexity', 'complexity contracts', 'pnpm', ['check:complexity']));
   add('algorithm-reuse', commandStep('algorithm-reuse', 'algorithm reuse inventory', 'pnpm', ['check:algorithm-reuse']));

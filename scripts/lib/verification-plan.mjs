@@ -54,6 +54,14 @@ export function deriveAffectedWorkspaceGates(changedFiles, selectedPackages, opt
   ));
 
   if (toolingChanged) gates.add('tooling');
+  if (sourceChanged || changedFiles.some((path) => (
+    /^packages\/[^/]+\/(?:package|tsconfig(?:\.[^/]+)?)\.json$/u.test(path)
+    || ['package.json', 'pnpm-lock.yaml', 'scripts/check-package-structure.mjs', 'scripts/lib/core-module-dag.mjs'].includes(path)
+    || path.startsWith('tools/tooling/')
+    || path.startsWith('scripts/lib/module-graph/')
+    || path.startsWith('verification/package-structure/')
+    || path.startsWith('verification/core-layers/')
+  ))) gates.add('package-structure');
   if (changedFiles.some((path) => (
     /^(?:packages|benchmarks|docs|tools)\/.*\.(?:json|[cm]?js|[cm]?ts|tsx|vue)$/u.test(path)
     || path === 'scripts/check-workspace-boundaries.mjs'

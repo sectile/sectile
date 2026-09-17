@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, relative, resolve, sep } from 'node:path';
+import { collectModuleImports } from './module-graph/imports.mjs';
+import { detectCycles } from './module-graph/cycles.mjs';
+export { detectCycles } from './module-graph/cycles.mjs';
 
 export async function analyzeCoreModuleDAG(root) {
   const manifest = JSON.parse(await readFile(resolve(root, '../../verification/core-layers/manifest.json'), 'utf8'));
@@ -72,37 +75,6 @@ export function validateEdges(modules, edges, manifest) {
     }
   }
   assert.deepEqual(violations, [], `Core upward edges:\n${violations.join('\n')}`);
-}
-
-export function detectCycles(modulePaths, edges) {
-  const adjacency = new Map(modulePaths.map((path) => [path, []]));
-  for (const edge of edges) adjacency.get(edge.source)?.push(edge.target);
-  const visiting = new Set();
-  const visited = new Set();
-  const stack = [];
-  const cycles = [];
-  const recorded = new Set();
-  const visit = (path) => {
-    if (visited.has(path)) return;
-    if (visiting.has(path)) {
-      const start = stack.indexOf(path);
-      const cycle = [...stack.slice(start), path];
-      const key = canonicalCycle(cycle);
-      if (!recorded.has(key)) {
-        recorded.add(key);
-        cycles.push(cycle);
-      }
-      return;
-    }
-    visiting.add(path);
-    stack.push(path);
-    for (const target of adjacency.get(path) ?? []) visit(target);
-    stack.pop();
-    visiting.delete(path);
-    visited.add(path);
-  };
-  for (const path of modulePaths) visit(path);
-  return cycles.sort((left, right) => left.join('\0').localeCompare(right.join('\0')));
 }
 
 export function validateNoCycles(modulePaths, edges) {
@@ -191,10 +163,10 @@ async function files(directory) {
 }
 
 function declarations(source) {
-  const result = [];
-  const pattern = /\b(import|export)\s+(?:type\s+)?(?:[^'";]*?\s+from\s+)?(['"])(\.[^'"]+)\2/gsu;
-  for (const match of source.matchAll(pattern)) result.push({ kind: match[1], specifier: match[3] });
-  return result;
+  // Keep the established static Core report shape; the package graph additionally
+  // classifies type queries and dynamic imports through this same parser.
+  return collectModuleImports(source).filter(({ kind, specifier }) =>
+    (kind === 'import' || kind === 'export') && specifier.startsWith('.'));
 }
 
 function resolveModule(root, source, specifier) {
@@ -220,12 +192,6 @@ function transitiveDependents(path, reverse) {
     pending.push(...(reverse.get(current) ?? []));
   }
   return result;
-}
-
-function canonicalCycle(cycle) {
-  const open = cycle.slice(0, -1);
-  const rotations = open.map((_, index) => [...open.slice(index), ...open.slice(0, index)].join('\0'));
-  return rotations.sort()[0] ?? '';
 }
 
 function compareEdge(left, right) {

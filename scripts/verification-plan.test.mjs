@@ -21,6 +21,7 @@ test('runtime package changes expand through reverse workspace dependencies', ()
   assert.deepEqual(selection.runtimePackages, ['@sectile/chart']);
   assert.deepEqual(new Set(selection.workspaceGates), new Set([
     'workspace-boundaries',
+    'package-structure',
     'semantic-authority',
     'algorithm-reuse',
     'public-signatures',
@@ -65,6 +66,24 @@ test('governed representation sources select crossover verification without broa
     options,
   );
   assert.equal(unrelated.includes('representation-crossovers'), false);
+});
+
+test('structure policy, internal sources and production settings select the structure gate', () => {
+  for (const path of [
+    'packages/dom/src/internal/chart-connection.ts',
+    'packages/chart/tsconfig.build.json',
+    'packages/chart/package.json',
+    'verification/package-structure/manifest.json',
+    'verification/core-layers/manifest.json',
+    'scripts/lib/module-graph/imports.mjs',
+    'tools/tooling/build.mjs',
+    'pnpm-lock.yaml',
+  ]) assert.ok(deriveAffectedWorkspaceGates([path], new Set()).includes('package-structure'), path);
+  assert.equal(deriveAffectedWorkspaceGates(['scripts/release.test.mjs'], new Set()).includes('package-structure'), false);
+  const unit = explain(['--full', '--unit', 'package-structure']);
+  assert.equal(unit.selectedUnit, 'package-structure');
+  assert.deepEqual(unit.stages, ['package responsibility boundaries']);
+  assert.deepEqual(unit.commands, ['package responsibility boundaries']);
 });
 
 test('dependency closure prepares dependencies without verifying unrelated dependents', () => {

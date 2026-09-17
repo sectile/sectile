@@ -1,0 +1,3624 @@
+{
+  "schemaVersion": 1,
+  "baseline": "dc6a84e58aeaed00b8af89e971723ecb20157b15",
+  "packages": {
+    "core": {
+      "disposition": "keep",
+      "reason": "Preserve existing verified Core layers and foundational public owners.",
+      "dependencies": [],
+      "roles": {
+        "foundation": {
+          "reason": "core foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation"
+          ]
+        },
+        "kernel": {
+          "reason": "core kernel owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "kernel"
+          ]
+        },
+        "structures": {
+          "reason": "core structures owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "kernel",
+            "structures"
+          ]
+        },
+        "state": {
+          "reason": "core state owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "kernel",
+            "state",
+            "structures"
+          ]
+        },
+        "editing": {
+          "reason": "core editing owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "editing",
+            "foundation",
+            "kernel",
+            "state",
+            "structures"
+          ]
+        },
+        "runtime": {
+          "reason": "core runtime owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "kernel",
+            "runtime"
+          ]
+        },
+        "composites": {
+          "reason": "core composites owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "composites",
+            "editing",
+            "foundation",
+            "kernel",
+            "state",
+            "structures"
+          ]
+        },
+        "public": {
+          "reason": "core public owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "composites",
+            "editing",
+            "foundation",
+            "kernel",
+            "public",
+            "runtime",
+            "state",
+            "structures"
+          ]
+        },
+        "reference": {
+          "reason": "core reference owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "composites",
+            "editing",
+            "foundation",
+            "kernel",
+            "public",
+            "reference",
+            "runtime",
+            "state",
+            "structures"
+          ]
+        }
+      },
+      "modules": {
+        "src/accordion.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/adapter-runtime.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/alert-dialog.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/carousel.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/cascade-list.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/cascade-select.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/checkbox-group.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/checkbox.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/collection-window.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/color-picker.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/combobox.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/dialog.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/disclosure.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/drawer.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/editable.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/editing/color-text.ts": {
+          "role": "editing",
+          "kind": "owner"
+        },
+        "src/error-code.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/feed.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/grid-control.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/identity.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/index.ts": {
+          "role": "public",
+          "kind": "facade"
+        },
+        "src/interaction.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/internal/composites/cascade-choice.ts": {
+          "role": "composites",
+          "kind": "owner"
+        },
+        "src/internal/composites/combobox.ts": {
+          "role": "composites",
+          "kind": "owner"
+        },
+        "src/internal/composites/grid-control.ts": {
+          "role": "composites",
+          "kind": "owner"
+        },
+        "src/internal/composites/linear-action.ts": {
+          "role": "composites",
+          "kind": "owner"
+        },
+        "src/internal/composites/linear-choice.ts": {
+          "role": "composites",
+          "kind": "owner"
+        },
+        "src/internal/composites/listbox.ts": {
+          "role": "composites",
+          "kind": "owner"
+        },
+        "src/internal/composites/menu.ts": {
+          "role": "composites",
+          "kind": "owner"
+        },
+        "src/internal/composites/popup.ts": {
+          "role": "composites",
+          "kind": "owner"
+        },
+        "src/internal/composites/slider.ts": {
+          "role": "composites",
+          "kind": "owner"
+        },
+        "src/internal/composites/tree-grid.ts": {
+          "role": "composites",
+          "kind": "owner"
+        },
+        "src/internal/composites/tree-view.ts": {
+          "role": "composites",
+          "kind": "owner"
+        },
+        "src/internal/editing/text.ts": {
+          "role": "editing",
+          "kind": "owner"
+        },
+        "src/internal/kernel/bounded-scalar.ts": {
+          "role": "kernel",
+          "kind": "owner"
+        },
+        "src/internal/kernel/decimal.ts": {
+          "role": "kernel",
+          "kind": "owner"
+        },
+        "src/internal/kernel/exact-ratio.ts": {
+          "role": "kernel",
+          "kind": "owner"
+        },
+        "src/internal/kernel/foundation.ts": {
+          "role": "kernel",
+          "kind": "owner"
+        },
+        "src/internal/kernel/indexed-sequence.ts": {
+          "role": "kernel",
+          "kind": "owner"
+        },
+        "src/internal/kernel/machine.ts": {
+          "role": "kernel",
+          "kind": "owner"
+        },
+        "src/internal/reference/composites/accordion.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/carousel.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/combobox.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/feed.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/grid-control.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/linear-action.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/linear-choice.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/listbox.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/menu.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/multi-thumb-slider.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/slider.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/spin-button.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/tree-grid.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/composites/tree-view.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/editing/text.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/state/checked.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/state/cursor.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/state/expansion.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/state/open-state.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/state/selection.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/structures/grid.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/structures/range.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/structures/sequence.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/reference/structures/tree.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/runtime/revision.ts": {
+          "role": "runtime",
+          "kind": "owner"
+        },
+        "src/internal/state/checked.ts": {
+          "role": "state",
+          "kind": "owner"
+        },
+        "src/internal/state/cursor.ts": {
+          "role": "state",
+          "kind": "owner"
+        },
+        "src/internal/state/expansion.ts": {
+          "role": "state",
+          "kind": "owner"
+        },
+        "src/internal/state/open-state.ts": {
+          "role": "state",
+          "kind": "owner"
+        },
+        "src/internal/state/selection.ts": {
+          "role": "state",
+          "kind": "owner"
+        },
+        "src/layer-stack.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/listbox.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/menu-button.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/menu.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/menubar.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/meter-group.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/meter.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/multi-thumb-slider.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/navigation-menu.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/number-field.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/pagination.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/pin-input.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/popover.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/progress.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/quantity-field.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/radio-group.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/rating.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/reorder.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/result.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/revision.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/select.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/selection.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/shared.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/slider.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/spin-button.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/stepper.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/structures/anchored-layout.ts": {
+          "role": "structures",
+          "kind": "owner"
+        },
+        "src/structures/color.ts": {
+          "role": "structures",
+          "kind": "owner"
+        },
+        "src/structures/geometry.ts": {
+          "role": "structures",
+          "kind": "owner"
+        },
+        "src/structures/grid.ts": {
+          "role": "structures",
+          "kind": "owner"
+        },
+        "src/structures/index-span.ts": {
+          "role": "structures",
+          "kind": "owner"
+        },
+        "src/structures/metric-index.ts": {
+          "role": "structures",
+          "kind": "owner"
+        },
+        "src/structures/range.ts": {
+          "role": "structures",
+          "kind": "owner"
+        },
+        "src/structures/selection-expression.ts": {
+          "role": "structures",
+          "kind": "owner"
+        },
+        "src/structures/sequence.ts": {
+          "role": "structures",
+          "kind": "owner"
+        },
+        "src/structures/tree.ts": {
+          "role": "structures",
+          "kind": "owner"
+        },
+        "src/switch.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/tabs.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/tags-input.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/text.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/timer.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/toast.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/toggle-button.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/toggle-group.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/toolbar.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/tooltip.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/tree-grid.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/tree-view.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/units.ts": {
+          "role": "public",
+          "kind": "owner"
+        },
+        "src/window-splitter.ts": {
+          "role": "public",
+          "kind": "owner"
+        }
+      }
+    },
+    "chart": {
+      "disposition": "extract",
+      "reason": "Separate input, model/storage and projection/interaction ownership in WI-004.",
+      "dependencies": [
+        "core"
+      ],
+      "roles": {
+        "foundation": {
+          "reason": "chart foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation"
+          ]
+        },
+        "limits": {
+          "reason": "chart limits owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "limits"
+          ]
+        },
+        "scale": {
+          "reason": "chart scale owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "scale"
+          ]
+        },
+        "input": {
+          "reason": "chart input owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "input",
+            "limits",
+            "scale"
+          ]
+        },
+        "storage": {
+          "reason": "chart storage owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "input",
+            "limits",
+            "scale",
+            "storage"
+          ]
+        },
+        "model": {
+          "reason": "chart model owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "input",
+            "limits",
+            "model",
+            "scale",
+            "storage"
+          ]
+        },
+        "view": {
+          "reason": "chart view owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "input",
+            "scale",
+            "view"
+          ]
+        },
+        "layout": {
+          "reason": "chart layout owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "input",
+            "layout",
+            "model",
+            "scale",
+            "view"
+          ]
+        },
+        "projection": {
+          "reason": "chart projection owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "input",
+            "layout",
+            "limits",
+            "model",
+            "projection",
+            "scale",
+            "storage",
+            "view"
+          ]
+        },
+        "query": {
+          "reason": "chart query owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "input",
+            "layout",
+            "model",
+            "projection",
+            "query",
+            "scale",
+            "storage",
+            "view"
+          ]
+        },
+        "interaction": {
+          "reason": "chart interaction owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "input",
+            "interaction",
+            "layout",
+            "model",
+            "projection",
+            "query",
+            "view"
+          ]
+        },
+        "controller": {
+          "reason": "chart controller owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controller",
+            "foundation",
+            "input",
+            "interaction",
+            "layout",
+            "limits",
+            "model",
+            "projection",
+            "query",
+            "scale",
+            "storage",
+            "view",
+            "definition"
+          ]
+        },
+        "exports": {
+          "reason": "chart exports owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controller",
+            "exports",
+            "foundation",
+            "input",
+            "interaction",
+            "layout",
+            "limits",
+            "model",
+            "projection",
+            "query",
+            "scale",
+            "storage",
+            "view",
+            "definition"
+          ]
+        },
+        "reference": {
+          "reason": "chart reference owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controller",
+            "exports",
+            "foundation",
+            "input",
+            "interaction",
+            "layout",
+            "limits",
+            "model",
+            "projection",
+            "query",
+            "reference",
+            "scale",
+            "storage",
+            "view",
+            "definition"
+          ]
+        },
+        "definition": {
+          "reason": "Definition assembly resolves axes and constructs models; projected definition types will be lowered in WI-004.",
+          "allows": [
+            "definition",
+            "foundation",
+            "limits",
+            "input",
+            "scale",
+            "model",
+            "layout"
+          ]
+        }
+      },
+      "modules": {
+        "src/contract.ts": {
+          "role": "input",
+          "kind": "owner"
+        },
+        "src/controller.ts": {
+          "role": "controller",
+          "kind": "owner"
+        },
+        "src/definition.ts": {
+          "role": "definition",
+          "kind": "owner"
+        },
+        "src/index.ts": {
+          "role": "exports",
+          "kind": "facade"
+        },
+        "src/interaction.ts": {
+          "role": "interaction",
+          "kind": "owner"
+        },
+        "src/internal/layer-owner.ts": {
+          "role": "storage",
+          "kind": "owner"
+        },
+        "src/internal/limits.ts": {
+          "role": "limits",
+          "kind": "owner"
+        },
+        "src/internal/model-store.ts": {
+          "role": "storage",
+          "kind": "owner"
+        },
+        "src/internal/query-index.ts": {
+          "role": "query",
+          "kind": "owner"
+        },
+        "src/internal/reference/model.ts": {
+          "role": "reference",
+          "kind": "reference"
+        },
+        "src/internal/result.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/layout.ts": {
+          "role": "layout",
+          "kind": "owner"
+        },
+        "src/model.ts": {
+          "role": "model",
+          "kind": "owner"
+        },
+        "src/projection.ts": {
+          "role": "projection",
+          "kind": "owner"
+        },
+        "src/query.ts": {
+          "role": "query",
+          "kind": "owner"
+        },
+        "src/result.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/scale.ts": {
+          "role": "scale",
+          "kind": "owner"
+        },
+        "src/view.ts": {
+          "role": "view",
+          "kind": "owner"
+        }
+      }
+    },
+    "form": {
+      "disposition": "extract",
+      "reason": "Extract path/value and state ownership in WI-003A/B without replacing private stores.",
+      "dependencies": [
+        "core"
+      ],
+      "roles": {
+        "foundation": {
+          "reason": "form foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation"
+          ]
+        },
+        "path": {
+          "reason": "form path owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "path"
+          ]
+        },
+        "values": {
+          "reason": "form values owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "path",
+            "values"
+          ]
+        },
+        "schema": {
+          "reason": "form schema owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "schema"
+          ]
+        },
+        "state": {
+          "reason": "form state owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "path",
+            "schema",
+            "state",
+            "values"
+          ]
+        },
+        "state-api": {
+          "reason": "form state-api owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "state",
+            "state-api"
+          ]
+        },
+        "exports": {
+          "reason": "form exports owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "exports",
+            "foundation",
+            "path",
+            "schema",
+            "state",
+            "state-api",
+            "values"
+          ]
+        },
+        "reference": {
+          "reason": "form reference owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "exports",
+            "foundation",
+            "path",
+            "reference",
+            "schema",
+            "state",
+            "state-api",
+            "values"
+          ]
+        }
+      },
+      "modules": {
+        "src/error.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/index.ts": {
+          "role": "exports",
+          "kind": "facade"
+        },
+        "src/internal/form.ts": {
+          "role": "state",
+          "kind": "owner"
+        },
+        "src/internal/result.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/path.ts": {
+          "role": "path",
+          "kind": "facade"
+        },
+        "src/schema.ts": {
+          "role": "schema",
+          "kind": "owner"
+        },
+        "src/state.ts": {
+          "role": "state-api",
+          "kind": "facade"
+        },
+        "src/values.ts": {
+          "role": "values",
+          "kind": "facade"
+        }
+      }
+    },
+    "tabular": {
+      "disposition": "regroup",
+      "reason": "Group model, source/query, profiles and Virtual composition in WI-006.",
+      "dependencies": [
+        "core",
+        "virtual"
+      ],
+      "roles": {
+        "foundation": {
+          "reason": "tabular foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "contracts"
+          ]
+        },
+        "contracts": {
+          "reason": "tabular contracts owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "contracts"
+          ]
+        },
+        "model": {
+          "reason": "tabular model owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "contracts",
+            "foundation",
+            "model",
+            "query"
+          ]
+        },
+        "source": {
+          "reason": "tabular source owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "contracts",
+            "foundation",
+            "model",
+            "source",
+            "query"
+          ]
+        },
+        "profiles": {
+          "reason": "tabular profiles owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "contracts",
+            "foundation",
+            "model",
+            "profiles",
+            "source",
+            "query"
+          ]
+        },
+        "virtual": {
+          "reason": "tabular virtual owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "contracts",
+            "foundation",
+            "model",
+            "profiles",
+            "source",
+            "virtual",
+            "query"
+          ]
+        },
+        "exports": {
+          "reason": "tabular exports owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "contracts",
+            "exports",
+            "foundation",
+            "model",
+            "profiles",
+            "source",
+            "virtual",
+            "query"
+          ]
+        },
+        "reference": {
+          "reason": "tabular reference owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "contracts",
+            "exports",
+            "foundation",
+            "model",
+            "profiles",
+            "reference",
+            "source",
+            "virtual",
+            "query"
+          ]
+        },
+        "query": {
+          "reason": "Portable query construction and transitions are consumed by both model and source assembly.",
+          "allows": [
+            "query",
+            "contracts",
+            "foundation"
+          ]
+        }
+      },
+      "modules": {
+        "src/contracts.ts": {
+          "role": "contracts",
+          "kind": "owner"
+        },
+        "src/data-grid.ts": {
+          "role": "profiles",
+          "kind": "owner"
+        },
+        "src/data-table.ts": {
+          "role": "profiles",
+          "kind": "owner"
+        },
+        "src/data-tree-grid.ts": {
+          "role": "profiles",
+          "kind": "owner"
+        },
+        "src/index.ts": {
+          "role": "exports",
+          "kind": "facade"
+        },
+        "src/internal/access.ts": {
+          "role": "model",
+          "kind": "owner"
+        },
+        "src/internal/columns.ts": {
+          "role": "model",
+          "kind": "owner"
+        },
+        "src/internal/data-table-state.ts": {
+          "role": "profiles",
+          "kind": "owner"
+        },
+        "src/internal/expansion.ts": {
+          "role": "model",
+          "kind": "owner"
+        },
+        "src/internal/foundation.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/grid-profile.ts": {
+          "role": "profiles",
+          "kind": "owner"
+        },
+        "src/internal/selection.ts": {
+          "role": "model",
+          "kind": "owner"
+        },
+        "src/internal/source-view.ts": {
+          "role": "source",
+          "kind": "owner"
+        },
+        "src/model.ts": {
+          "role": "model",
+          "kind": "owner"
+        },
+        "src/query.ts": {
+          "role": "query",
+          "kind": "owner"
+        },
+        "src/source.ts": {
+          "role": "source",
+          "kind": "owner"
+        },
+        "src/virtual.ts": {
+          "role": "virtual",
+          "kind": "owner"
+        }
+      }
+    },
+    "temporal": {
+      "disposition": "regroup",
+      "reason": "Group calendar, field and picker families while preserving portable semantics in WI-007.",
+      "dependencies": [
+        "core"
+      ],
+      "roles": {
+        "foundation": {
+          "reason": "temporal foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation"
+          ]
+        },
+        "calendar": {
+          "reason": "temporal calendar owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "calendar",
+            "foundation",
+            "date-value"
+          ]
+        },
+        "fields": {
+          "reason": "temporal fields owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "calendar",
+            "fields",
+            "foundation",
+            "date-value"
+          ]
+        },
+        "pickers": {
+          "reason": "temporal pickers owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "calendar",
+            "fields",
+            "foundation",
+            "pickers",
+            "date-value"
+          ]
+        },
+        "exports": {
+          "reason": "temporal exports owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "calendar",
+            "exports",
+            "fields",
+            "foundation",
+            "pickers",
+            "date-value"
+          ]
+        },
+        "reference": {
+          "reason": "temporal reference owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "calendar",
+            "exports",
+            "fields",
+            "foundation",
+            "pickers",
+            "reference",
+            "date-value"
+          ]
+        },
+        "date-value": {
+          "reason": "Existing date-field owns the reusable date arithmetic and DateValue contracts consumed by calendar and fields.",
+          "allows": [
+            "date-value",
+            "foundation"
+          ]
+        }
+      },
+      "modules": {
+        "src/calendar.ts": {
+          "role": "calendar",
+          "kind": "owner"
+        },
+        "src/date-field.ts": {
+          "role": "date-value",
+          "kind": "owner"
+        },
+        "src/date-picker.ts": {
+          "role": "pickers",
+          "kind": "owner"
+        },
+        "src/date-range-field.ts": {
+          "role": "fields",
+          "kind": "owner"
+        },
+        "src/date-range-picker.ts": {
+          "role": "pickers",
+          "kind": "owner"
+        },
+        "src/date-time-field.ts": {
+          "role": "fields",
+          "kind": "owner"
+        },
+        "src/date-time-picker.ts": {
+          "role": "pickers",
+          "kind": "owner"
+        },
+        "src/date-time-range-picker.ts": {
+          "role": "pickers",
+          "kind": "owner"
+        },
+        "src/error.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/index.ts": {
+          "role": "exports",
+          "kind": "facade"
+        },
+        "src/internal/foundation.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/machine.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/period-picker.ts": {
+          "role": "pickers",
+          "kind": "owner"
+        },
+        "src/month-picker.ts": {
+          "role": "pickers",
+          "kind": "owner"
+        },
+        "src/month-range-picker.ts": {
+          "role": "pickers",
+          "kind": "owner"
+        },
+        "src/range-calendar.ts": {
+          "role": "pickers",
+          "kind": "owner"
+        },
+        "src/time-field.ts": {
+          "role": "fields",
+          "kind": "owner"
+        },
+        "src/time-range-field.ts": {
+          "role": "fields",
+          "kind": "owner"
+        },
+        "src/year-picker.ts": {
+          "role": "pickers",
+          "kind": "owner"
+        },
+        "src/year-range-picker.ts": {
+          "role": "pickers",
+          "kind": "owner"
+        }
+      }
+    },
+    "virtual": {
+      "disposition": "regroup",
+      "reason": "Group indexes, layout contracts and layout/collection owners in WI-005.",
+      "dependencies": [
+        "core"
+      ],
+      "roles": {
+        "foundation": {
+          "reason": "virtual foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation"
+          ]
+        },
+        "indexes": {
+          "reason": "virtual indexes owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "indexes",
+            "contracts",
+            "support"
+          ]
+        },
+        "contracts": {
+          "reason": "virtual contracts owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "contracts",
+            "foundation"
+          ]
+        },
+        "layouts": {
+          "reason": "virtual layouts owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "contracts",
+            "foundation",
+            "indexes",
+            "layouts",
+            "support",
+            "track"
+          ]
+        },
+        "collection": {
+          "reason": "virtual collection owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "collection",
+            "contracts",
+            "foundation",
+            "indexes",
+            "layouts",
+            "support",
+            "track"
+          ]
+        },
+        "exports": {
+          "reason": "virtual exports owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "collection",
+            "contracts",
+            "exports",
+            "foundation",
+            "indexes",
+            "layouts",
+            "support",
+            "track"
+          ]
+        },
+        "reference": {
+          "reason": "virtual reference owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "collection",
+            "contracts",
+            "exports",
+            "foundation",
+            "indexes",
+            "layouts",
+            "reference",
+            "support",
+            "track"
+          ]
+        },
+        "support": {
+          "reason": "Owner-local normalization and diagnostics compose lower layout contracts without owning a concrete layout.",
+          "allows": [
+            "support",
+            "foundation",
+            "contracts"
+          ]
+        },
+        "track": {
+          "reason": "Shared track calculations consume extent indexes and layout contracts; concrete linear layout types will move below this owner in WI-005.",
+          "allows": [
+            "track",
+            "support",
+            "foundation",
+            "contracts",
+            "indexes"
+          ]
+        }
+      },
+      "modules": {
+        "src/collection.ts": {
+          "role": "collection",
+          "kind": "owner"
+        },
+        "src/error.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/extent-index.ts": {
+          "role": "indexes",
+          "kind": "owner"
+        },
+        "src/index.ts": {
+          "role": "exports",
+          "kind": "facade"
+        },
+        "src/internal/blocked-vector.ts": {
+          "role": "indexes",
+          "kind": "owner"
+        },
+        "src/internal/extent-index-metadata.ts": {
+          "role": "indexes",
+          "kind": "owner"
+        },
+        "src/internal/foundation.ts": {
+          "role": "support",
+          "kind": "owner"
+        },
+        "src/internal/masonry-internals.ts": {
+          "role": "layouts",
+          "kind": "owner"
+        },
+        "src/internal/region-overlap.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/repair-diagnostics.ts": {
+          "role": "contracts",
+          "kind": "owner"
+        },
+        "src/internal/track.ts": {
+          "role": "track",
+          "kind": "owner"
+        },
+        "src/layout.ts": {
+          "role": "contracts",
+          "kind": "owner"
+        },
+        "src/linear-layout.ts": {
+          "role": "layouts",
+          "kind": "owner"
+        },
+        "src/masonry-layout.ts": {
+          "role": "layouts",
+          "kind": "owner"
+        },
+        "src/partitioned-track-grid-layout.ts": {
+          "role": "layouts",
+          "kind": "owner"
+        },
+        "src/spatial-layout.ts": {
+          "role": "layouts",
+          "kind": "owner"
+        },
+        "src/surface.ts": {
+          "role": "collection",
+          "kind": "owner"
+        },
+        "src/track-grid-layout.ts": {
+          "role": "layouts",
+          "kind": "owner"
+        }
+      }
+    },
+    "dom": {
+      "disposition": "extract",
+      "reason": "Resolve Chart assembly back-references in WI-002, then group host families in WI-008.",
+      "dependencies": [
+        "core",
+        "form",
+        "temporal",
+        "virtual",
+        "tabular",
+        "chart"
+      ],
+      "roles": {
+        "foundation": {
+          "reason": "dom foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation"
+          ]
+        },
+        "positioning": {
+          "reason": "dom positioning owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "positioning"
+          ]
+        },
+        "overlays": {
+          "reason": "dom overlays owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "overlays",
+            "positioning"
+          ]
+        },
+        "controls": {
+          "reason": "dom controls owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "foundation",
+            "overlays",
+            "positioning",
+            "text"
+          ]
+        },
+        "text": {
+          "reason": "dom text owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "text"
+          ]
+        },
+        "form": {
+          "reason": "dom form owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "form",
+            "foundation",
+            "text"
+          ]
+        },
+        "temporal": {
+          "reason": "dom temporal owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "foundation",
+            "overlays",
+            "positioning",
+            "temporal",
+            "text"
+          ]
+        },
+        "virtual": {
+          "reason": "dom virtual owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "foundation",
+            "virtual"
+          ]
+        },
+        "tabular": {
+          "reason": "dom tabular owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "foundation",
+            "tabular",
+            "virtual"
+          ]
+        },
+        "chart-contracts": {
+          "reason": "dom chart-contracts owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart-contracts",
+            "foundation"
+          ]
+        },
+        "chart-options": {
+          "reason": "dom chart-options owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart-contracts",
+            "chart-options",
+            "foundation"
+          ]
+        },
+        "chart-renderers": {
+          "reason": "dom chart-renderers owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart-contracts",
+            "chart-renderers",
+            "foundation"
+          ]
+        },
+        "chart-overlay": {
+          "reason": "dom chart-overlay owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart-contracts",
+            "chart-overlay",
+            "foundation"
+          ]
+        },
+        "chart-navigation": {
+          "reason": "dom chart-navigation owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart-contracts",
+            "chart-navigation",
+            "chart-options",
+            "foundation"
+          ]
+        },
+        "chart-connection": {
+          "reason": "dom chart-connection owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart-connection",
+            "chart-contracts",
+            "chart-navigation",
+            "chart-options",
+            "chart-overlay",
+            "chart-renderers",
+            "foundation"
+          ]
+        },
+        "chart-api": {
+          "reason": "dom chart-api owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart-api",
+            "chart-connection",
+            "chart-contracts",
+            "chart-options",
+            "chart-renderers",
+            "foundation"
+          ]
+        },
+        "exports": {
+          "reason": "dom exports owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart-api",
+            "chart-connection",
+            "chart-contracts",
+            "chart-navigation",
+            "chart-options",
+            "chart-overlay",
+            "chart-renderers",
+            "controls",
+            "exports",
+            "form",
+            "foundation",
+            "overlays",
+            "positioning",
+            "tabular",
+            "temporal",
+            "text",
+            "virtual"
+          ]
+        },
+        "reference": {
+          "reason": "dom reference owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart-api",
+            "chart-connection",
+            "chart-contracts",
+            "chart-navigation",
+            "chart-options",
+            "chart-overlay",
+            "chart-renderers",
+            "controls",
+            "exports",
+            "form",
+            "foundation",
+            "overlays",
+            "positioning",
+            "reference",
+            "tabular",
+            "temporal",
+            "text",
+            "virtual"
+          ]
+        }
+      },
+      "modules": {
+        "src/accordion.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/alert-dialog.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/calendar.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/carousel.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/cascade-list.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/cascade-select.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/chart.ts": {
+          "role": "chart-api",
+          "kind": "facade"
+        },
+        "src/checkbox-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/checkbox.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/color-picker.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/combobox.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/data-grid.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/data-table.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/data-tree-grid.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/date-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-range-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-time-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-time-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-time-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/dialog.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/disclosure.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/drawer.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/editable.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/feed.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/form.ts": {
+          "role": "form",
+          "kind": "owner"
+        },
+        "src/grid.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/identity.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/index.ts": {
+          "role": "exports",
+          "kind": "facade"
+        },
+        "src/interact-outside.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/internal/cascade-choice-binding.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/internal/chart-canvas-renderer.ts": {
+          "role": "chart-renderers",
+          "kind": "owner"
+        },
+        "src/internal/chart-connection.ts": {
+          "role": "chart-connection",
+          "kind": "owner"
+        },
+        "src/internal/chart-navigation.ts": {
+          "role": "chart-navigation",
+          "kind": "owner"
+        },
+        "src/internal/chart-overlay.ts": {
+          "role": "chart-overlay",
+          "kind": "owner"
+        },
+        "src/internal/chart-webgl2-renderer.ts": {
+          "role": "chart-renderers",
+          "kind": "owner"
+        },
+        "src/internal/checked-control.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/internal/composite-focus-entry.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/controlled-field-input.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/internal/date-picker-cell.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/delegated-event.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/direction.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/disabled-items.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/exact-percentage.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/hidden-binding.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/interaction.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/layer-binding.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/internal/layer-manager.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/internal/menu-control.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/internal/modal-effects.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/internal/period-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/picker-position.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/internal/popup-control.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/internal/position-connection.ts": {
+          "role": "positioning",
+          "kind": "owner"
+        },
+        "src/internal/positioning/engine.ts": {
+          "role": "positioning",
+          "kind": "owner"
+        },
+        "src/internal/presence-motion.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/internal/reference-date.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/result.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/stable-id-token.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/tabular-dom.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/internal/tabular-grid-dom.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/internal/text-element.ts": {
+          "role": "text",
+          "kind": "owner"
+        },
+        "src/listbox.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/menu-button.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/menu.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/menubar.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/meter-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/meter.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/month-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/month-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/multi-thumb-slider.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/navigation-menu.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/number-field.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/pagination.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/pin-input.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/popover.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/position.ts": {
+          "role": "positioning",
+          "kind": "owner"
+        },
+        "src/presence.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/progress.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/quantity-field.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/radio-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/range-calendar.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/rating.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/reorder.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/select.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/slider.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/spin-button.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/stepper.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/switch.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tabs.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tabular.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/tags-input.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/text.ts": {
+          "role": "text",
+          "kind": "owner"
+        },
+        "src/time-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/time-range-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/timer.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toast.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toggle-button.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toggle-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toolbar.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tooltip.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/tree-grid.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tree-view.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/virtual.ts": {
+          "role": "virtual",
+          "kind": "owner"
+        },
+        "src/window-splitter.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/year-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/year-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        }
+      }
+    },
+    "terminal": {
+      "disposition": "regroup",
+      "reason": "Group platform input, controls and Temporal integration in WI-009.",
+      "dependencies": [
+        "core",
+        "temporal"
+      ],
+      "roles": {
+        "foundation": {
+          "reason": "terminal foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation"
+          ]
+        },
+        "text": {
+          "reason": "terminal text owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "text"
+          ]
+        },
+        "controls": {
+          "reason": "terminal controls owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "foundation",
+            "text"
+          ]
+        },
+        "temporal": {
+          "reason": "terminal temporal owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "foundation",
+            "temporal",
+            "text"
+          ]
+        },
+        "rendering": {
+          "reason": "terminal rendering owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "rendering",
+            "text"
+          ]
+        },
+        "exports": {
+          "reason": "terminal exports owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "exports",
+            "foundation",
+            "rendering",
+            "temporal",
+            "text"
+          ]
+        },
+        "reference": {
+          "reason": "terminal reference owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "exports",
+            "foundation",
+            "reference",
+            "rendering",
+            "temporal",
+            "text"
+          ]
+        }
+      },
+      "modules": {
+        "src/accordion.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/alert-dialog.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/appearance.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/calendar.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/carousel.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/cascade-list.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/cascade-select.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/checkbox-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/checkbox.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/color-picker.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/combobox.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/date-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-range-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-time-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-time-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-time-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/dialog.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/disclosure.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/drawer.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/editable.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/feed.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/grid.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/index.ts": {
+          "role": "exports",
+          "kind": "facade"
+        },
+        "src/internal/cascade-choice.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/internal/checked-control.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/internal/disabled-items.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/grapheme.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/menu-control.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/internal/period-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/popup-control.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/internal/reference-date.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/result.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/text-input.ts": {
+          "role": "text",
+          "kind": "owner"
+        },
+        "src/keyboard.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/layer-stack.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/layout.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/listbox.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/menu-button.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/menu.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/menubar.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/meter-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/meter.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/month-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/month-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/multi-thumb-slider.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/navigation-menu.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/node.ts": {
+          "role": "rendering",
+          "kind": "owner"
+        },
+        "src/number-field.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/pagination.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/pin-input.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/popover.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/progress.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/quantity-field.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/radio-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/range-calendar.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/rating.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/reorder.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/screen.ts": {
+          "role": "rendering",
+          "kind": "owner"
+        },
+        "src/select.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/slider.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/spin-button.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/stepper.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/switch.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tabs.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tags-input.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/text.ts": {
+          "role": "text",
+          "kind": "owner"
+        },
+        "src/time-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/time-range-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/timer.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toast.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toggle-button.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toggle-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toolbar.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tooltip.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tree-grid.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tree-view.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/window-splitter.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/year-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/year-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        }
+      }
+    },
+    "vue": {
+      "disposition": "extract",
+      "reason": "Group Form, Temporal, Tabular, Virtual and presence composition in WI-010A/E.",
+      "dependencies": [
+        "core",
+        "dom",
+        "form",
+        "temporal",
+        "virtual",
+        "tabular",
+        "chart"
+      ],
+      "roles": {
+        "foundation": {
+          "reason": "vue foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation"
+          ]
+        },
+        "presence": {
+          "reason": "vue presence owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "foundation",
+            "presence"
+          ]
+        },
+        "overlays": {
+          "reason": "vue overlays owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "form-control",
+            "foundation",
+            "overlays",
+            "presence"
+          ]
+        },
+        "form-contracts": {
+          "reason": "vue form-contracts owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "form-contracts",
+            "foundation"
+          ]
+        },
+        "form-control": {
+          "reason": "vue form-control owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "form-contracts",
+            "form-control",
+            "foundation"
+          ]
+        },
+        "form-parts": {
+          "reason": "vue form-parts owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "form-contracts",
+            "form-control",
+            "form-parts",
+            "foundation",
+            "presence"
+          ]
+        },
+        "form-api": {
+          "reason": "vue form-api owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "form-api",
+            "form-contracts",
+            "form-control",
+            "form-parts",
+            "foundation",
+            "presence"
+          ]
+        },
+        "controls": {
+          "reason": "vue controls owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "form-api",
+            "form-contracts",
+            "form-control",
+            "foundation",
+            "overlays",
+            "presence"
+          ]
+        },
+        "temporal": {
+          "reason": "vue temporal owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "form-api",
+            "form-contracts",
+            "form-control",
+            "foundation",
+            "overlays",
+            "presence",
+            "temporal"
+          ]
+        },
+        "tabular": {
+          "reason": "vue tabular owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "foundation",
+            "presence",
+            "tabular",
+            "virtual"
+          ]
+        },
+        "virtual": {
+          "reason": "vue virtual owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "controls",
+            "foundation",
+            "presence",
+            "virtual"
+          ]
+        },
+        "chart": {
+          "reason": "vue chart owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart",
+            "controls",
+            "foundation",
+            "presence"
+          ]
+        },
+        "exports": {
+          "reason": "vue exports owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart",
+            "controls",
+            "exports",
+            "form-api",
+            "form-contracts",
+            "form-control",
+            "form-parts",
+            "foundation",
+            "overlays",
+            "presence",
+            "tabular",
+            "temporal",
+            "virtual"
+          ]
+        },
+        "reference": {
+          "reason": "vue reference owns its named contracts and implementation; permitted imports are explicit.",
+          "allows": [
+            "chart",
+            "controls",
+            "exports",
+            "form-api",
+            "form-contracts",
+            "form-control",
+            "form-parts",
+            "foundation",
+            "overlays",
+            "presence",
+            "reference",
+            "tabular",
+            "temporal",
+            "virtual"
+          ]
+        }
+      },
+      "modules": {
+        "src/accordion.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/alert-dialog.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/calendar.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/carousel.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/cascade-list.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/cascade-select.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/chart.ts": {
+          "role": "chart",
+          "kind": "owner"
+        },
+        "src/checkbox-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/checkbox.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/color-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/combobox.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/data-grid.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/data-table.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/data-tree-grid.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/date-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-range-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-time-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-time-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/date-time-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/dialog.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/disclosure.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/drawer.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/editable.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/feed.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/form.ts": {
+          "role": "form-api",
+          "kind": "owner"
+        },
+        "src/grid.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/host-provider.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/index.ts": {
+          "role": "exports",
+          "kind": "facade"
+        },
+        "src/internal/calendar-capability.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/cascade-choice.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/internal/collection.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/conditional-presence.ts": {
+          "role": "presence",
+          "kind": "owner"
+        },
+        "src/internal/controlled-state.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/date-picker-capability.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/date-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/date-range-picker-capability.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/date-time-picker-capability.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/date-time-range-picker-capability.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/decimal-input.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/form-context.ts": {
+          "role": "form-contracts",
+          "kind": "owner"
+        },
+        "src/internal/form-control-inventory.ts": {
+          "role": "form-control",
+          "kind": "owner"
+        },
+        "src/internal/form-control.ts": {
+          "role": "form-control",
+          "kind": "owner"
+        },
+        "src/internal/form-presence-parts.ts": {
+          "role": "form-parts",
+          "kind": "owner"
+        },
+        "src/internal/month-picker-capability.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/month-range-picker-capability.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/native-field.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/internal/native-input.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/part-contract.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/picker-capability.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/popup.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/internal/presence.ts": {
+          "role": "presence",
+          "kind": "owner"
+        },
+        "src/internal/range-calendar-capability.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/scheduled-task.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/tabs-context.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/internal/tabular-components.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/internal/tabular-parts.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/internal/tabular-profile.ts": {
+          "role": "tabular",
+          "kind": "owner"
+        },
+        "src/internal/virtual-collection.ts": {
+          "role": "virtual",
+          "kind": "owner"
+        },
+        "src/internal/virtual-core.ts": {
+          "role": "virtual",
+          "kind": "owner"
+        },
+        "src/internal/virtual-list.ts": {
+          "role": "virtual",
+          "kind": "owner"
+        },
+        "src/internal/year-picker-capability.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/internal/year-range-picker-capability.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/listbox.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/menu-button.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/menu.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/menubar.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/meter-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/meter.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/month-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/month-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/multi-thumb-slider.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/navigation-menu.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/number-field.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/pagination.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/pin-input.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/popover.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/primitive.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/progress.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/quantity-field.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/radio-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/range-calendar.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/rating.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/reorder.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/select.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/slider.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/spin-button.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/stepper.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/switch.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tabs.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tags-input.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/temporal-provider.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/text.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/time-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/time-range-field.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/timer.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toast.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toggle-button.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toggle-group.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/toolbar.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tooltip.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
+        "src/tree-grid.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tree-view.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/virtual-core.ts": {
+          "role": "virtual",
+          "kind": "owner"
+        },
+        "src/virtual-grid.ts": {
+          "role": "virtual",
+          "kind": "owner"
+        },
+        "src/virtual-list.ts": {
+          "role": "virtual",
+          "kind": "owner"
+        },
+        "src/virtual-masonry.ts": {
+          "role": "virtual",
+          "kind": "owner"
+        },
+        "src/virtual-spatial.ts": {
+          "role": "virtual",
+          "kind": "owner"
+        },
+        "src/window-splitter.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/year-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        },
+        "src/year-range-picker.ts": {
+          "role": "temporal",
+          "kind": "owner"
+        }
+      }
+    }
+  },
+  "exceptions": [
+    {
+      "id": "chart-source-1",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/chart/src/contract.ts",
+          "packages/chart/src/model.ts"
+        ]
+      ],
+      "owner": "chart",
+      "workItem": "WI-004",
+      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
+    },
+    {
+      "id": "chart-source-2",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/chart/src/internal/layer-owner.ts",
+          "packages/chart/src/model.ts"
+        ]
+      ],
+      "owner": "chart",
+      "workItem": "WI-004",
+      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
+    },
+    {
+      "id": "chart-source-3",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/chart/src/internal/limits.ts",
+          "packages/chart/src/model.ts"
+        ]
+      ],
+      "owner": "chart",
+      "workItem": "WI-004",
+      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
+    },
+    {
+      "id": "chart-source-4",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/chart/src/internal/model-store.ts",
+          "packages/chart/src/model.ts"
+        ]
+      ],
+      "owner": "chart",
+      "workItem": "WI-004",
+      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
+    },
+    {
+      "id": "chart-source-5",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/chart/src/layout.ts",
+          "packages/chart/src/projection.ts"
+        ]
+      ],
+      "owner": "chart",
+      "workItem": "WI-004",
+      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
+    },
+    {
+      "id": "chart-source-6",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/chart/src/projection.ts",
+          "packages/chart/src/definition.ts"
+        ]
+      ],
+      "owner": "chart",
+      "workItem": "WI-004",
+      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
+    },
+    {
+      "id": "chart-source-7",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/chart/src/view.ts",
+          "packages/chart/src/layout.ts"
+        ]
+      ],
+      "owner": "chart",
+      "workItem": "WI-004",
+      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
+    },
+    {
+      "id": "dom-source-8",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/dom/src/internal/chart-canvas-renderer.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "owner": "dom",
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "dom-source-9",
+      "graph": "source",
+      "rule": "facade",
+      "edges": [
+        [
+          "packages/dom/src/internal/chart-canvas-renderer.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "owner": "dom",
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "dom-source-10",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/dom/src/internal/chart-connection.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "owner": "dom",
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "dom-source-11",
+      "graph": "source",
+      "rule": "facade",
+      "edges": [
+        [
+          "packages/dom/src/internal/chart-connection.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "owner": "dom",
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "dom-source-12",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/dom/src/internal/chart-navigation.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "owner": "dom",
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "dom-source-13",
+      "graph": "source",
+      "rule": "facade",
+      "edges": [
+        [
+          "packages/dom/src/internal/chart-navigation.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "owner": "dom",
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "dom-source-14",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/dom/src/internal/chart-webgl2-renderer.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "owner": "dom",
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "dom-source-15",
+      "graph": "source",
+      "rule": "facade",
+      "edges": [
+        [
+          "packages/dom/src/internal/chart-webgl2-renderer.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "owner": "dom",
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "form-source-16",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/form/src/path.ts",
+          "packages/form/src/internal/form.ts"
+        ]
+      ],
+      "owner": "form",
+      "workItem": "WI-003A",
+      "reason": "Path/value facades currently load the whole state implementation; extract their owners in WI-003A."
+    },
+    {
+      "id": "form-source-17",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/form/src/values.ts",
+          "packages/form/src/internal/form.ts"
+        ]
+      ],
+      "owner": "form",
+      "workItem": "WI-003A",
+      "reason": "Path/value facades currently load the whole state implementation; extract their owners in WI-003A."
+    },
+    {
+      "id": "virtual-source-18",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/virtual/src/internal/track.ts",
+          "packages/virtual/src/linear-layout.ts"
+        ]
+      ],
+      "owner": "virtual",
+      "workItem": "WI-005",
+      "reason": "Shared track code imports concrete linear-layout types; lower shared track contracts in WI-005."
+    },
+    {
+      "id": "vue-source-19",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/vue/src/internal/form-context.ts",
+          "packages/vue/src/form.ts"
+        ]
+      ],
+      "owner": "vue",
+      "workItem": "WI-010A",
+      "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
+    },
+    {
+      "id": "vue-source-20",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/vue/src/internal/form-context.ts",
+          "packages/vue/src/internal/form-control.ts"
+        ]
+      ],
+      "owner": "vue",
+      "workItem": "WI-010A",
+      "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
+    },
+    {
+      "id": "vue-source-21",
+      "graph": "source",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/vue/src/internal/form-presence-parts.ts",
+          "packages/vue/src/form.ts"
+        ]
+      ],
+      "owner": "vue",
+      "workItem": "WI-010A",
+      "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
+    },
+    {
+      "id": "chart-source-22",
+      "graph": "source",
+      "rule": "cycle",
+      "edges": [
+        [
+          "packages/chart/src/definition.ts",
+          "packages/chart/src/layout.ts"
+        ],
+        [
+          "packages/chart/src/layout.ts",
+          "packages/chart/src/projection.ts"
+        ],
+        [
+          "packages/chart/src/projection.ts",
+          "packages/chart/src/definition.ts"
+        ],
+        [
+          "packages/chart/src/projection.ts",
+          "packages/chart/src/layout.ts"
+        ]
+      ],
+      "owner": "chart",
+      "workItem": "WI-004",
+      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
+    },
+    {
+      "id": "chart-source-23",
+      "graph": "source",
+      "rule": "cycle",
+      "edges": [
+        [
+          "packages/chart/src/internal/layer-owner.ts",
+          "packages/chart/src/model.ts"
+        ],
+        [
+          "packages/chart/src/internal/limits.ts",
+          "packages/chart/src/model.ts"
+        ],
+        [
+          "packages/chart/src/internal/model-store.ts",
+          "packages/chart/src/internal/layer-owner.ts"
+        ],
+        [
+          "packages/chart/src/internal/model-store.ts",
+          "packages/chart/src/model.ts"
+        ],
+        [
+          "packages/chart/src/model.ts",
+          "packages/chart/src/internal/layer-owner.ts"
+        ],
+        [
+          "packages/chart/src/model.ts",
+          "packages/chart/src/internal/limits.ts"
+        ],
+        [
+          "packages/chart/src/model.ts",
+          "packages/chart/src/internal/model-store.ts"
+        ]
+      ],
+      "owner": "chart",
+      "workItem": "WI-004",
+      "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
+    },
+    {
+      "id": "dom-source-24",
+      "graph": "source",
+      "rule": "cycle",
+      "edges": [
+        [
+          "packages/dom/src/chart.ts",
+          "packages/dom/src/internal/chart-canvas-renderer.ts"
+        ],
+        [
+          "packages/dom/src/chart.ts",
+          "packages/dom/src/internal/chart-connection.ts"
+        ],
+        [
+          "packages/dom/src/chart.ts",
+          "packages/dom/src/internal/chart-webgl2-renderer.ts"
+        ],
+        [
+          "packages/dom/src/internal/chart-canvas-renderer.ts",
+          "packages/dom/src/chart.ts"
+        ],
+        [
+          "packages/dom/src/internal/chart-connection.ts",
+          "packages/dom/src/chart.ts"
+        ],
+        [
+          "packages/dom/src/internal/chart-connection.ts",
+          "packages/dom/src/internal/chart-navigation.ts"
+        ],
+        [
+          "packages/dom/src/internal/chart-navigation.ts",
+          "packages/dom/src/chart.ts"
+        ],
+        [
+          "packages/dom/src/internal/chart-webgl2-renderer.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "owner": "dom",
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "virtual-source-25",
+      "graph": "source",
+      "rule": "cycle",
+      "edges": [
+        [
+          "packages/virtual/src/internal/track.ts",
+          "packages/virtual/src/linear-layout.ts"
+        ],
+        [
+          "packages/virtual/src/linear-layout.ts",
+          "packages/virtual/src/internal/track.ts"
+        ]
+      ],
+      "owner": "virtual",
+      "workItem": "WI-005",
+      "reason": "Shared track code imports concrete linear-layout types; lower shared track contracts in WI-005."
+    },
+    {
+      "id": "vue-source-26",
+      "graph": "source",
+      "rule": "cycle",
+      "edges": [
+        [
+          "packages/vue/src/form.ts",
+          "packages/vue/src/internal/form-context.ts"
+        ],
+        [
+          "packages/vue/src/form.ts",
+          "packages/vue/src/internal/form-presence-parts.ts"
+        ],
+        [
+          "packages/vue/src/internal/form-context.ts",
+          "packages/vue/src/form.ts"
+        ],
+        [
+          "packages/vue/src/internal/form-presence-parts.ts",
+          "packages/vue/src/form.ts"
+        ],
+        [
+          "packages/vue/src/internal/form-presence-parts.ts",
+          "packages/vue/src/internal/form-context.ts"
+        ]
+      ],
+      "owner": "vue",
+      "workItem": "WI-010A",
+      "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
+    },
+    {
+      "id": "dom-runtime-1",
+      "graph": "runtime",
+      "owner": "dom",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/dom/src/internal/chart-navigation.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "dom-runtime-2",
+      "graph": "runtime",
+      "owner": "dom",
+      "rule": "facade",
+      "edges": [
+        [
+          "packages/dom/src/internal/chart-navigation.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "dom-runtime-3",
+      "graph": "runtime",
+      "owner": "dom",
+      "rule": "cycle",
+      "edges": [
+        [
+          "packages/dom/src/chart.ts",
+          "packages/dom/src/internal/chart-connection.ts"
+        ],
+        [
+          "packages/dom/src/internal/chart-connection.ts",
+          "packages/dom/src/internal/chart-navigation.ts"
+        ],
+        [
+          "packages/dom/src/internal/chart-navigation.ts",
+          "packages/dom/src/chart.ts"
+        ]
+      ],
+      "workItem": "WI-002",
+      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
+    },
+    {
+      "id": "form-runtime-4",
+      "graph": "runtime",
+      "owner": "form",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/form/src/path.ts",
+          "packages/form/src/internal/form.ts"
+        ]
+      ],
+      "workItem": "WI-003A",
+      "reason": "Path/value facades currently load the whole state implementation; extract their owners in WI-003A."
+    },
+    {
+      "id": "form-runtime-5",
+      "graph": "runtime",
+      "owner": "form",
+      "rule": "direction",
+      "edges": [
+        [
+          "packages/form/src/values.ts",
+          "packages/form/src/internal/form.ts"
+        ]
+      ],
+      "workItem": "WI-003A",
+      "reason": "Path/value facades currently load the whole state implementation; extract their owners in WI-003A."
+    }
+  ]
+}

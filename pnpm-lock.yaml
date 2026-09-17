@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@babel/parser':
+        specifier: 7.29.8
+        version: 7.29.8
       '@sectile/chart':
         specifier: workspace:*
         version: link:packages/chart
