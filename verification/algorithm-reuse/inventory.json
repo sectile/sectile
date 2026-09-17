@@ -2853,8 +2853,8 @@
     {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/virtual.ts",
-      "line": 165,
+      "path": "packages/dom/src/virtual/measurement.ts",
+      "line": 9,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
       "classification": "reuse",
@@ -2864,8 +2864,8 @@
     {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/virtual.ts",
-      "line": 962,
+      "path": "packages/dom/src/virtual/scroll-host.ts",
+      "line": 44,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
       "classification": "reuse",
@@ -2875,8 +2875,8 @@
     {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/virtual.ts",
-      "line": 964,
+      "path": "packages/dom/src/virtual/scroll-host.ts",
+      "line": 46,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
       "classification": "reuse",

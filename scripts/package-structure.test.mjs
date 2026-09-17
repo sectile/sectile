@@ -417,6 +417,41 @@ test('DOM Form lower owners stay below connection orchestration', async () => {
   }
 });
 
+test('DOM Virtual helpers stay below the connection and public facade', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const dependencies = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
+  for (const [entry, allowed] of [
+    ['contracts', ['virtual-contracts']],
+    ['scroll-host', ['virtual-contracts', 'virtual-scroll-host']],
+    ['viewport', ['virtual-viewport']],
+    ['measurement', ['virtual-contracts', 'virtual-measurement']],
+    ['style', ['virtual-contracts', 'virtual-style']],
+  ]) {
+    const source = `packages/dom/src/virtual/${entry}.ts`;
+    const pending = [source];
+    const visited = new Set();
+    while (pending.length > 0) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      const owner = classes.get(path);
+      if (owner.package === 'dom') assert.ok(allowed.includes(owner.role), path);
+      pending.push(...dependencies.get(path));
+    }
+    for (const target of ['virtual/connection.ts', 'virtual.ts']) {
+      for (const phase of ['type', 'value']) {
+        const reverse = { source, target: `packages/dom/src/${target}`, targetPackage: '@sectile/dom', phase, kind: 'import' };
+        assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|facade|cycle/u);
+      }
+    }
+  }
+});
+
 test('DOM Tabular contracts and bindings stay below profile connections', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);

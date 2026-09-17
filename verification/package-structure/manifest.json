@@ -1928,13 +1928,33 @@
             "text"
           ]
         },
-        "virtual": {
-          "reason": "dom virtual owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "controls",
-            "foundation",
-            "virtual"
-          ]
+        "virtual-contracts": {
+          "reason": "Public Virtualizer contracts shared by DOM consumers and lower host helpers.",
+          "allows": ["virtual-contracts"]
+        },
+        "virtual-scroll-host": {
+          "reason": "Physical element/document ownership, frame reads, scroll bounds and browser environment access.",
+          "allows": ["virtual-contracts", "virtual-scroll-host"]
+        },
+        "virtual-viewport": {
+          "reason": "Viewport inset normalization and equality over canonical Virtual geometry.",
+          "allows": ["virtual-viewport"]
+        },
+        "virtual-measurement": {
+          "reason": "Axis measurement resolver over a supplied DOM element and canonical placement.",
+          "allows": ["virtual-contracts", "virtual-measurement"]
+        },
+        "virtual-style": {
+          "reason": "Stateless DOM style projection from canonical surface plans and item placements.",
+          "allows": ["virtual-contracts", "virtual-style"]
+        },
+        "virtual-connection": {
+          "reason": "Single Virtualizer registration, observer, scheduling and rollback/commit resource owner.",
+          "allows": ["virtual-contracts", "virtual-scroll-host", "virtual-viewport", "virtual-connection"]
+        },
+        "virtual-api": {
+          "reason": "Existing optional Virtualizer facade exposing contracts and focused runtime owners.",
+          "allows": ["virtual-contracts", "virtual-measurement", "virtual-style", "virtual-connection", "virtual-api"]
         },
         "tabular-contracts": {
           "reason": "Shared DOM Tabular host contracts without connections or resources.",
@@ -2068,7 +2088,7 @@
             "positioning",
             "tabular-api",
             "text",
-            "virtual",
+            "virtual-api",
             "form-contracts",
             "form-participants",
             "form-validation",
@@ -2094,7 +2114,7 @@
             "reference",
             "tabular-api",
             "text",
-            "virtual",
+            "virtual-api",
             "form-contracts",
             "form-participants",
             "form-validation",
@@ -2681,7 +2701,31 @@
           "kind": "owner"
         },
         "src/virtual.ts": {
-          "role": "virtual",
+          "role": "virtual-api",
+          "kind": "facade"
+        },
+        "src/virtual/contracts.ts": {
+          "role": "virtual-contracts",
+          "kind": "owner"
+        },
+        "src/virtual/scroll-host.ts": {
+          "role": "virtual-scroll-host",
+          "kind": "owner"
+        },
+        "src/virtual/viewport.ts": {
+          "role": "virtual-viewport",
+          "kind": "owner"
+        },
+        "src/virtual/measurement.ts": {
+          "role": "virtual-measurement",
+          "kind": "owner"
+        },
+        "src/virtual/style.ts": {
+          "role": "virtual-style",
+          "kind": "owner"
+        },
+        "src/virtual/connection.ts": {
+          "role": "virtual-connection",
           "kind": "owner"
         },
         "src/window-splitter.ts": {

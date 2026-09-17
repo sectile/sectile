@@ -224,6 +224,70 @@ owns and disposes the controllers it creates; externally supplied controllers
 retain their existing caller-owned lifetime. The optional aggregate and DOM root
 keep their existing dependency isolation, including the Virtual-free host profiles.
 
+## DOM Virtual ownership
+
+The existing `@sectile/dom/virtual` subpath and export target remain unchanged.
+Its `src/virtual.ts` facade exposes the owners grouped under `src/virtual/`:
+
+```text
+virtual/
+  contracts.ts    # public generic host contracts and internal result type
+  scroll-host.ts  # physical owners, surface-frame reads, bounds and environment
+  viewport.ts     # inset normalization and geometry/overscan equality
+  measurement.ts  # axis measurement resolver
+  style.ts        # surface and item style projection
+  connection.ts   # registrations, measurement queue, scheduling and settlement
+```
+
+Contracts and stateless helpers never import the connection or public facade.
+Style projection and measurement-resolver imports do not depend on connection
+construction. Element/document resolution and surface geometry stay in the lower
+scroll-host owner; portable frame transformations and layout operations remain
+in `@sectile/virtual`.
+
+`DOMVirtualizer` remains one state and resource owner. Its two observers, frame
+registrations, item/reverse-item registrations, pending entries, placement index,
+stable event handlers and schedule generation are not split into competing
+registries. The measurement drain, physical viewport reads/writes, post-scroll
+query, rollback-before-error reporting and accepted-state publication retain one
+transaction boundary. Private methods are not wrapped solely to shorten the file.
+
+Ordinary scroll reuses the cached surface frame; geometry invalidation and changed
+item entries coalesce into the existing scheduled transaction. Stale registration
+tokens and callbacks remain guarded. Disconnect removes the connection's listeners,
+disconnects both observers, cancels scheduled work and clears its retained maps.
+The document-host realm, browser scroll settlement and caller-supplied reader,
+writer, environment and strategy contracts remain unchanged.
+
+### Approved DOM compressed-distribution re-attestation
+
+WI-008D retains this ownership split and re-attests only the two DOM compressed
+package measurements after maintainer approval. The existing baseline schema and
+5% tolerance formulas remain unchanged; category sizes, unpacked/install totals,
+consumer-bundle limits and other packages retain their previous records.
+
+| Collector | Historical baseline | Immediate predecessor | Current measurement | Old ceiling | New ceiling |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| npm dry-run / source-map gate | 284,941 | 299,043 | 301,048 | 299,205 | 316,117 |
+| pnpm pack / install gate | 288,213 | 302,599 | 304,465 | 302,656 | 319,721 |
+
+All sizes are bytes. The immediate predecessor is
+`906549b900f2fccf47b5d73d443abda74b8dbcdc`; the same-protocol incremental costs
+are 2,005 and 1,866 bytes, not the changes from the older baseline. Re-attesting
+measured values restores the collectors' existing tolerance, so the new ceiling
+is distinct from the incremental code cost. Only DOM `packed.tarballBytes` in
+`verification/source-maps/baseline.json` and DOM `tarballBytes` in
+`verification/consumer-install/baseline.json` change. No fabricated normalized
+measurement, new waiver mechanism, omitted artifact or compiler adjustment is used.
+
+The split adds 1,074 JavaScript bytes, 2,590 declaration bytes and 47 source-map
+bytes to the immediate predecessor; other packed bytes stay unchanged. These
+categories remain within their old limits. Six DOM/Vue consumers measured with
+esbuild and Vite show raw deltas of -3 to 0 bytes, gzip -15 to 0 and Brotli -17 to
++33. This limited bundle comparison is not a runtime-speed or universal-size
+claim. The original failed pack gates remain in the work record, followed by the
+successful revalidation under the approved measurements.
+
 ## Chart domain ownership
 
 The existing Chart subpaths remain stable facades over responsibility-owned

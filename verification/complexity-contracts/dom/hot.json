@@ -1451,7 +1451,7 @@
     {
       "id": "virtual.disconnect",
       "inherits": "lifecycle-v1",
-      "source": "packages/dom/src/virtual.ts",
+      "source": "packages/dom/src/virtual/connection.ts",
       "benchmarkIDs": [
         "VAL-004:dom-virtual-disconnect-zero",
         "VAL-001:dom-document-virtual-disconnect-zero"
@@ -1527,7 +1527,7 @@
     {
       "id": "virtual.frame",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/virtual.ts",
+      "source": "packages/dom/src/virtual/connection.ts",
       "benchmarkIDs": [
         "VAL-004:dom-virtual-frame-transaction",
         "VAL-010:dom-virtual-frame-work",
@@ -1611,7 +1611,7 @@
     {
       "id": "virtual.scroll",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/virtual.ts",
+      "source": "packages/dom/src/virtual/connection.ts",
       "benchmarkIDs": [
         "VAL-004:dom-virtual-scroll-frame-cache",
         "VAL-010:dom-virtual-scroll-work",

@@ -27756,7 +27756,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "virtual.disconnect",
-      "source": "packages/dom/src/virtual.ts",
+      "source": "packages/dom/src/virtual/connection.ts",
       "benchmarkIDs": [
         "VAL-004:dom-virtual-disconnect-zero",
         "VAL-001:dom-document-virtual-disconnect-zero"
@@ -27834,7 +27834,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "virtual.frame",
-      "source": "packages/dom/src/virtual.ts",
+      "source": "packages/dom/src/virtual/connection.ts",
       "benchmarkIDs": [
         "VAL-004:dom-virtual-frame-transaction",
         "VAL-010:dom-virtual-frame-work",
@@ -27920,7 +27920,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "virtual.scroll",
-      "source": "packages/dom/src/virtual.ts",
+      "source": "packages/dom/src/virtual/connection.ts",
       "benchmarkIDs": [
         "VAL-004:dom-virtual-scroll-frame-cache",
         "VAL-010:dom-virtual-scroll-work",

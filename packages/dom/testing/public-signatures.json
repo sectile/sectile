@@ -291,7 +291,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "d0ddf091e659157d0edff4eacefa0a6f4188d2a4bd76e8c78db5651d72bc13e3",
+  "fingerprint": "545e9c879bc0e845edae11701b536c7ec620142e653878c558b5c2a1bc2ce0ff",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -643,7 +643,23 @@
     },
     {
       "path": "dist/virtual.d.ts",
-      "sha256": "f7f8a25709f7305ed4d39e957e49fe11cdd19fc279dc9ca59dae1061b66cd15c"
+      "sha256": "40275e035a36c6caff08915d651f95f450d21436499b907d4774c9f91b509a71"
+    },
+    {
+      "path": "dist/virtual/connection.d.ts",
+      "sha256": "0a09db874aabb4dae10cdd1ea9170d94b110dfa2a4017adbad86b1ea58248876"
+    },
+    {
+      "path": "dist/virtual/contracts.d.ts",
+      "sha256": "6a102cb68138e1aef55a16390984abb19d560be779a9c6a71648d29001ade83f"
+    },
+    {
+      "path": "dist/virtual/measurement.d.ts",
+      "sha256": "1cb08ad31911e00540ffd7aae0f6fa55f37d3b46c2fe46bbc1ba5ffe01817448"
+    },
+    {
+      "path": "dist/virtual/style.d.ts",
+      "sha256": "a674745c1077c5fd0c4907a97e6537d6d1eeedbc93e0002e30b3641a5f7e53b2"
     },
     {
       "path": "dist/window-splitter.d.ts",
