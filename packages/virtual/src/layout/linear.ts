@@ -1,20 +1,19 @@
+import type { LinearAxis, LinearFlow } from './track.js';
+export type { LinearAxis, LinearFlow } from './track.js';
 import type { StableID } from '@sectile/core';
-import type { VirtualResult } from './error.js';
+import type { VirtualResult } from '../error.js';
 import { canRequestCollectionWindow, type CollectionWindowEvent, type CollectionWindowState } from '@sectile/core/collection-window';
 import { tryApplySequencePatch, tryCreateSequence, type Sequence, type SequencePatch } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
-import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
-import { fail, noOp, ok } from './internal/foundation.js';
-import { isFiniteTrackContentExtent, trackContentExtent, trackRange, trackSpan } from './internal/track.js';
+import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from '../indexes/extent.js';
+import { fail, noOp, ok } from '../foundation.js';
+import { isFiniteTrackContentExtent, trackContentExtent, trackRange, trackSpan } from './track.js';
 import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
   type VirtualAnchor, type VirtualLayoutMutation, type VirtualLayoutPlan, type VirtualLayoutStrategy,
   type VirtualMeasurementBatch, type VirtualPlacement, type VirtualPoint, type VirtualQueryInput,
   type VirtualRect, type VirtualScrollAlignment,
-} from './layout.js';
-
-export type LinearAxis = 'vertical' | 'horizontal';
-export type LinearFlow = 'forward' | 'reverse';
+} from './plan.js';
 
 const linearLayoutStateBrand: unique symbol = Symbol('SectileLinearLayoutState');
 

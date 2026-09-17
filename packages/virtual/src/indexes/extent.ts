@@ -1,7 +1,7 @@
 import { unwrap } from '@sectile/core/result';
-import type { VirtualResult } from './error.js';
-import { fail, ok, validateMaxItems } from './internal/foundation.js';
-import { uniformExtentMetadata } from './internal/extent-index-metadata.js';
+import type { VirtualResult } from '../error.js';
+import { fail, ok, validateMaxItems } from '../foundation.js';
+import { uniformExtentMetadata } from './extent-metadata.js';
 
 export type Extent =
   | { readonly kind: 'exact'; readonly value: number }
@@ -550,4 +550,4 @@ function valueOf(extent: Extent): number {
   return extent.kind === 'unknown' ? extent.fallback : extent.value;
 }
 
-export type { VirtualResult } from './error.js';
+export type { VirtualResult } from '../error.js';

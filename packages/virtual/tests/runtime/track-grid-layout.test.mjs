@@ -1,9 +1,9 @@
 /* Law evidence: GRD-01 GRD-02 GRD-03 GRD-04 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createExtentIndex, createUniformExtentIndex } from '../../.verification-dist/extent-index.js';
-import { createRegionOverlapWork, findRegionOverlap } from '../../.verification-dist/internal/region-overlap.js';
-import { readRepairDiagnostics } from '../../.verification-dist/internal/repair-diagnostics.js';
+import { createExtentIndex, createUniformExtentIndex } from '../../.verification-dist/indexes/extent.js';
+import { createRegionOverlapWork, findRegionOverlap } from '../../.verification-dist/layout/grid/region-overlap.js';
+import { readRepairDiagnostics } from '../../.verification-dist/layout/repair-diagnostics.js';
 import {
   applyGridMeasurements,
   applyTrackGridMutation,
@@ -14,7 +14,7 @@ import {
   tryApplyGridMeasurements,
   tryApplyTrackGridMutation,
   tryCreateTrackGridLayout,
-} from '../../.verification-dist/track-grid-layout.js';
+} from '../../.verification-dist/layout/grid/layout.js';
 
 const exact = (value) => ({ kind: 'exact', value });
 

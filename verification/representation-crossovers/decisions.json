@@ -329,8 +329,8 @@
     {
       "id": "virtual-spatial",
       "governedSources": [
-        "packages/virtual/src/internal/blocked-vector.ts",
-        "packages/virtual/src/spatial-layout.ts"
+        "packages/virtual/src/indexes/blocked-vector.ts",
+        "packages/virtual/src/layout/spatial.ts"
       ],
       "selected": "blocked-path-copy",
       "candidates": [
@@ -365,8 +365,8 @@
     {
       "id": "virtual-track",
       "governedSources": [
-        "packages/virtual/src/internal/blocked-vector.ts",
-        "packages/virtual/src/partitioned-track-grid-layout.ts"
+        "packages/virtual/src/indexes/blocked-vector.ts",
+        "packages/virtual/src/layout/grid/partitioned.ts"
       ],
       "selected": "blocked-path-copy",
       "candidates": [
@@ -455,6 +455,6 @@
       ]
     }
   ],
-  "sourceFingerprint": "sha256:6c5114c8bd107d914c46723a276376ca10bdd4919d5b4e94e3ab5bda7062011e",
+  "sourceFingerprint": "sha256:4a0f4d1b31e95a7509d980ce950f9a973b2daddd2c9f2f129d05fab7c5105460",
   "evidenceFingerprint": "sha256:4be97a0765a6641c3204bc926bcc98cc3671c540dcab44ef372666016d0dc2dd"
 }

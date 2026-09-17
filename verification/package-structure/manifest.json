@@ -1490,173 +1490,211 @@
     },
     "virtual": {
       "disposition": "regroup",
-      "reason": "Group indexes, layout contracts and layout/collection owners in WI-005.",
+      "reason": "Indexes, layout families and collection owners are grouped; track contracts are lower than concrete layouts.",
       "dependencies": [
         "core"
       ],
       "roles": {
         "foundation": {
-          "reason": "virtual foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Renderer-neutral errors and isolated overlap predicates.",
           "allows": [
             "foundation"
-          ]
-        },
-        "indexes": {
-          "reason": "virtual indexes owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "foundation",
-            "indexes",
-            "contracts",
-            "support"
           ]
         },
         "contracts": {
-          "reason": "virtual contracts owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Shared layout plan, geometry and repair observation contracts; no concrete layouts.",
           "allows": [
             "contracts",
             "foundation"
           ]
         },
-        "layouts": {
-          "reason": "virtual layouts owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "contracts",
-            "foundation",
-            "indexes",
-            "layouts",
-            "support",
-            "track"
-          ]
-        },
-        "collection": {
-          "reason": "virtual collection owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "collection",
-            "contracts",
-            "foundation",
-            "indexes",
-            "layouts",
-            "support",
-            "track"
-          ]
-        },
-        "exports": {
-          "reason": "virtual exports owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "collection",
-            "contracts",
-            "exports",
-            "foundation",
-            "indexes",
-            "layouts",
-            "support",
-            "track"
-          ]
-        },
-        "reference": {
-          "reason": "virtual reference owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "collection",
-            "contracts",
-            "exports",
-            "foundation",
-            "indexes",
-            "layouts",
-            "reference",
-            "support",
-            "track"
-          ]
-        },
         "support": {
-          "reason": "Owner-local normalization and diagnostics compose lower layout contracts without owning a concrete layout.",
+          "reason": "Owner-local result and input normalization consuming only lower plan contracts.",
           "allows": [
             "support",
             "foundation",
             "contracts"
           ]
         },
+        "indexes": {
+          "reason": "Extent/blocked indexes and one uniform-extent metadata owner.",
+          "allows": [
+            "indexes",
+            "foundation",
+            "support",
+            "contracts"
+          ]
+        },
         "track": {
-          "reason": "Shared track calculations consume extent indexes and layout contracts; concrete linear layout types will move below this owner in WI-005.",
+          "reason": "Shared axis/flow vocabulary and extent track queries; independent of concrete layouts.",
           "allows": [
             "track",
-            "support",
-            "foundation",
-            "contracts",
             "indexes"
+          ]
+        },
+        "linear": {
+          "reason": "Linear layout state, windowing, anchoring and repair.",
+          "allows": [
+            "foundation",
+            "support",
+            "contracts",
+            "indexes",
+            "track",
+            "linear"
+          ]
+        },
+        "masonry": {
+          "reason": "Masonry layout state and its single internal registry.",
+          "allows": [
+            "foundation",
+            "support",
+            "contracts",
+            "indexes",
+            "track",
+            "masonry"
+          ]
+        },
+        "grid": {
+          "reason": "Track grid layout and owner-local overlap checks.",
+          "allows": [
+            "foundation",
+            "support",
+            "contracts",
+            "indexes",
+            "track",
+            "grid"
+          ]
+        },
+        "partitioned": {
+          "reason": "Partitioned grid composition and repair; only this family composes base grid.",
+          "allows": [
+            "foundation",
+            "support",
+            "contracts",
+            "indexes",
+            "track",
+            "grid",
+            "partitioned"
+          ]
+        },
+        "spatial": {
+          "reason": "Spatial layout state, bounded tree/overlay repair and queries.",
+          "allows": [
+            "foundation",
+            "support",
+            "contracts",
+            "indexes",
+            "track",
+            "spatial"
+          ]
+        },
+        "collection": {
+          "reason": "Collection projection/provenance and surface coordinate support.",
+          "allows": [
+            "collection",
+            "contracts",
+            "foundation",
+            "support",
+            "indexes"
+          ]
+        },
+        "exports": {
+          "reason": "Preserved public entrypoints exposing the corresponding implementation owner.",
+          "allows": [
+            "exports",
+            "foundation",
+            "support",
+            "contracts",
+            "indexes",
+            "track",
+            "collection",
+            "linear",
+            "masonry",
+            "grid",
+            "partitioned",
+            "spatial"
           ]
         }
       },
       "modules": {
-        "src/collection.ts": {
-          "role": "collection",
-          "kind": "owner"
-        },
         "src/error.ts": {
           "role": "foundation",
-          "kind": "owner"
-        },
-        "src/extent-index.ts": {
-          "role": "indexes",
           "kind": "owner"
         },
         "src/index.ts": {
           "role": "exports",
           "kind": "facade"
         },
-        "src/internal/blocked-vector.ts": {
-          "role": "indexes",
-          "kind": "owner"
-        },
-        "src/internal/extent-index-metadata.ts": {
-          "role": "indexes",
-          "kind": "owner"
-        },
-        "src/internal/foundation.ts": {
-          "role": "support",
-          "kind": "owner"
-        },
-        "src/internal/masonry-internals.ts": {
-          "role": "layouts",
-          "kind": "owner"
-        },
-        "src/internal/region-overlap.ts": {
-          "role": "foundation",
-          "kind": "owner"
-        },
-        "src/internal/repair-diagnostics.ts": {
-          "role": "contracts",
-          "kind": "owner"
-        },
-        "src/internal/track.ts": {
-          "role": "track",
-          "kind": "owner"
-        },
-        "src/layout.ts": {
-          "role": "contracts",
-          "kind": "owner"
-        },
-        "src/linear-layout.ts": {
-          "role": "layouts",
-          "kind": "owner"
-        },
-        "src/masonry-layout.ts": {
-          "role": "layouts",
-          "kind": "owner"
-        },
-        "src/partitioned-track-grid-layout.ts": {
-          "role": "layouts",
-          "kind": "owner"
-        },
-        "src/spatial-layout.ts": {
-          "role": "layouts",
-          "kind": "owner"
+        "src/collection.ts": {
+          "role": "exports",
+          "kind": "facade"
         },
         "src/surface.ts": {
+          "role": "exports",
+          "kind": "facade"
+        },
+        "src/collection/projection.ts": {
           "role": "collection",
           "kind": "owner"
         },
-        "src/track-grid-layout.ts": {
-          "role": "layouts",
+        "src/collection/surface.ts": {
+          "role": "collection",
+          "kind": "owner"
+        },
+        "src/foundation.ts": {
+          "role": "support",
+          "kind": "owner"
+        },
+        "src/indexes/blocked-vector.ts": {
+          "role": "indexes",
+          "kind": "owner"
+        },
+        "src/indexes/extent-metadata.ts": {
+          "role": "indexes",
+          "kind": "owner"
+        },
+        "src/indexes/extent.ts": {
+          "role": "indexes",
+          "kind": "owner"
+        },
+        "src/layout/grid/layout.ts": {
+          "role": "grid",
+          "kind": "owner"
+        },
+        "src/layout/grid/partitioned.ts": {
+          "role": "partitioned",
+          "kind": "owner"
+        },
+        "src/layout/grid/region-overlap.ts": {
+          "role": "grid",
+          "kind": "owner"
+        },
+        "src/layout/linear.ts": {
+          "role": "linear",
+          "kind": "owner"
+        },
+        "src/layout/masonry/internals.ts": {
+          "role": "masonry",
+          "kind": "owner"
+        },
+        "src/layout/masonry/layout.ts": {
+          "role": "masonry",
+          "kind": "owner"
+        },
+        "src/layout/plan.ts": {
+          "role": "contracts",
+          "kind": "owner"
+        },
+        "src/layout/repair-diagnostics.ts": {
+          "role": "contracts",
+          "kind": "owner"
+        },
+        "src/layout/spatial.ts": {
+          "role": "spatial",
+          "kind": "owner"
+        },
+        "src/layout/track.ts": {
+          "role": "track",
           "kind": "owner"
         }
       }
@@ -3321,20 +3359,6 @@
   },
   "exceptions": [
     {
-      "id": "virtual-source-18",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/virtual/src/internal/track.ts",
-          "packages/virtual/src/linear-layout.ts"
-        ]
-      ],
-      "owner": "virtual",
-      "workItem": "WI-005",
-      "reason": "Shared track code imports concrete linear-layout types; lower shared track contracts in WI-005."
-    },
-    {
       "id": "vue-source-19",
       "graph": "source",
       "rule": "direction",
@@ -3375,24 +3399,6 @@
       "owner": "vue",
       "workItem": "WI-010A",
       "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
-    },
-    {
-      "id": "virtual-source-25",
-      "graph": "source",
-      "rule": "cycle",
-      "edges": [
-        [
-          "packages/virtual/src/internal/track.ts",
-          "packages/virtual/src/linear-layout.ts"
-        ],
-        [
-          "packages/virtual/src/linear-layout.ts",
-          "packages/virtual/src/internal/track.ts"
-        ]
-      ],
-      "owner": "virtual",
-      "workItem": "WI-005",
-      "reason": "Shared track code imports concrete linear-layout types; lower shared track contracts in WI-005."
     },
     {
       "id": "vue-source-26",

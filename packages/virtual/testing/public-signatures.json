@@ -12,27 +12,27 @@
     },
     {
       "subpath": "./extent-index",
-      "types": "dist/extent-index.d.ts"
+      "types": "dist/indexes/extent.d.ts"
     },
     {
       "subpath": "./layout",
-      "types": "dist/layout.d.ts"
+      "types": "dist/layout/plan.d.ts"
     },
     {
       "subpath": "./linear-layout",
-      "types": "dist/linear-layout.d.ts"
+      "types": "dist/layout/linear.d.ts"
     },
     {
       "subpath": "./masonry-layout",
-      "types": "dist/masonry-layout.d.ts"
+      "types": "dist/layout/masonry/layout.d.ts"
     },
     {
       "subpath": "./partitioned-track-grid-layout",
-      "types": "dist/partitioned-track-grid-layout.d.ts"
+      "types": "dist/layout/grid/partitioned.d.ts"
     },
     {
       "subpath": "./spatial-layout",
-      "types": "dist/spatial-layout.d.ts"
+      "types": "dist/layout/spatial.d.ts"
     },
     {
       "subpath": "./surface",
@@ -40,58 +40,66 @@
     },
     {
       "subpath": "./track-grid-layout",
-      "types": "dist/track-grid-layout.d.ts"
+      "types": "dist/layout/grid/layout.d.ts"
     }
   ],
-  "fingerprint": "083bde599494a8e9d95d9f1c562c013c25878e419f56ee141a806cd598b4053c",
+  "fingerprint": "55f8af6b07575c994c6d8c68ec1c87eebf1a8a51938fd98f5bba4b0e12a9ba72",
   "files": [
     {
       "path": "dist/collection.d.ts",
-      "sha256": "235847fe3bcae8bfd68b2efb2cb412a25c95d83608ae71c1b5530e6d64154a13"
+      "sha256": "11fa0dd0a55c8f5dfc05f96845043b6f6a1af38ef4012b5a642fddb2292d4098"
+    },
+    {
+      "path": "dist/collection/projection.d.ts",
+      "sha256": "62811d7b41b9d7716364b7be519af9a0a5a7f818d9be5e091ece754122b50381"
+    },
+    {
+      "path": "dist/collection/surface.d.ts",
+      "sha256": "a92e162e39074b1b6f4826b240e14b42e43c5a3f47283d563d34b5d508a961b5"
     },
     {
       "path": "dist/error.d.ts",
       "sha256": "715fbd77a5dbab3f3b36322fc461b84211dc6282a513984ae43c39fa30a717a1"
     },
     {
-      "path": "dist/extent-index.d.ts",
-      "sha256": "b3f65bd667379ddbe7907ad3c92274d1f05b03a0de2850028154858493e9b835"
-    },
-    {
       "path": "dist/index.d.ts",
-      "sha256": "2aab8c02d9473e1f8d79b3ca71f864b65e5586c56deb28302ff6e02f6faa1871"
+      "sha256": "9c7ff63ce4abd231bb0eb31a17a016497ace2c78773da454d5b3889511ce06dd"
     },
     {
-      "path": "dist/internal/track.d.ts",
-      "sha256": "c09119a279020af93288e9169c2f2ad814e357a7f945bc73006e82e1f36acca7"
+      "path": "dist/indexes/extent.d.ts",
+      "sha256": "a7a92bf9bf0a2a8902948275d68223144a4994a86f60e930a7de8979218ed0d7"
     },
     {
-      "path": "dist/layout.d.ts",
-      "sha256": "ca7c7682ffa1e9f4034b671960b029addd98fde87e5ae09525ec2c338466b93b"
+      "path": "dist/layout/grid/layout.d.ts",
+      "sha256": "bdf5bc9c859068ebc379bf28eed55bf431b6846fdc2cfd2bed2b326d91503b86"
     },
     {
-      "path": "dist/linear-layout.d.ts",
-      "sha256": "b2979d6aa8cbbd639406cbece7bc91f74ed2227b9e3411ffcae913c6560f6d7b"
+      "path": "dist/layout/grid/partitioned.d.ts",
+      "sha256": "81ca9acd1d5b94686c57b521751388ac515efc95cfe972e08384f94f7cd8e588"
     },
     {
-      "path": "dist/masonry-layout.d.ts",
-      "sha256": "e76fcbaf7b1aec24584325e49c6a50ddff8395670b68be4aca2c37db943f7610"
+      "path": "dist/layout/linear.d.ts",
+      "sha256": "afa65656dda0333baafd3153782ae774c1d578c6bc86006bc49c0610eace13fc"
     },
     {
-      "path": "dist/partitioned-track-grid-layout.d.ts",
-      "sha256": "665a6a79d9e839ed24757f9215440f802c341828d7595bb68ed43fcdf3817f58"
+      "path": "dist/layout/masonry/layout.d.ts",
+      "sha256": "6dbd697332c021477ee49d3de9c7928896f6dbdc1ac07e9910f274e3d5775634"
     },
     {
-      "path": "dist/spatial-layout.d.ts",
-      "sha256": "e66ae0a54df4e10cc509198dcc0d0f948fccf69c5b807f97d5a401da8a407e6d"
+      "path": "dist/layout/plan.d.ts",
+      "sha256": "84eb1f93ad6cb269418afc8f4e7fabf5554c20f6f7223c75594f57d3a7d991ff"
+    },
+    {
+      "path": "dist/layout/spatial.d.ts",
+      "sha256": "91ad8efd41dd113565d53b9870d7c40b9b8f2050c53e7091dd332bdb5b85434e"
+    },
+    {
+      "path": "dist/layout/track.d.ts",
+      "sha256": "4b62b0ac58adde917384ca91f724c8167e16e21b93a8d2e75d9bb5dc1790f560"
     },
     {
       "path": "dist/surface.d.ts",
-      "sha256": "4b56b81ce1b43a15e4d328b3f6e226448b899980363e1460e5d22f5a840fdc73"
-    },
-    {
-      "path": "dist/track-grid-layout.d.ts",
-      "sha256": "cae1330e85c3d307088e346dfb2be056d4cea7b890accfadd92f44b15bc948eb"
+      "sha256": "2f27e2877e7b140ac7315b5a6ca91cc976642058edb03667ceafe5f7a1c36499"
     }
   ]
 }

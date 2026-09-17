@@ -2,34 +2,34 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSequence } from '@sectile/core/sequence';
-import { createExtentIndex } from '../../.verification-dist/extent-index.js';
+import { createExtentIndex } from '../../.verification-dist/indexes/extent.js';
 import {
   createLinearLayout,
   queryLinearLayout,
-} from '../../.verification-dist/linear-layout.js';
+} from '../../.verification-dist/layout/linear.js';
 import {
   createMasonryLayout,
   queryMasonryLayout,
-} from '../../.verification-dist/masonry-layout.js';
+} from '../../.verification-dist/layout/masonry/layout.js';
 import {
   createPartitionedTrackGridLayout,
   queryPartitionedTrackGridLayout,
-} from '../../.verification-dist/partitioned-track-grid-layout.js';
+} from '../../.verification-dist/layout/grid/partitioned.js';
 import {
   createSpatialLayout,
   querySpatialLayout,
-} from '../../.verification-dist/spatial-layout.js';
+} from '../../.verification-dist/layout/spatial.js';
 import {
   createVirtualSurfaceFrame,
   surfaceFrameScrollDelta,
   toScrollportPoint,
   toVirtualViewport,
-} from '../../.verification-dist/surface.js';
+} from '../../.verification-dist/collection/surface.js';
 import {
   createTrackGridLayout,
   queryTrackGridLayout,
-} from '../../.verification-dist/track-grid-layout.js';
-import { normalizeQuery } from '../../.verification-dist/layout.js';
+} from '../../.verification-dist/layout/grid/layout.js';
+import { normalizeQuery } from '../../.verification-dist/layout/plan.js';
 
 const exact = (value) => ({ kind: 'exact', value });
 

@@ -83,7 +83,7 @@
     {
       "id": "virtual-incremental-index",
       "detectors": ["*"],
-      "paths": ["packages/virtual/src/spatial-layout.ts", "packages/virtual/src/track-grid-layout.ts", "packages/virtual/src/partitioned-track-grid-layout.ts", "packages/virtual/src/extent-index.ts"],
+      "paths": ["packages/virtual/src/layout/spatial.ts", "packages/virtual/src/layout/grid/layout.ts", "packages/virtual/src/layout/grid/partitioned.ts", "packages/virtual/src/indexes/extent.ts"],
       "classification": "reuse",
       "owner": null,
       "rationale": "Virtual reuses retained identity, order, prefix, region, leaf, and blocked-vector indexes; measurement repair and bounded structural overlays fall back to one packed rebuild at deterministic crossover limits."

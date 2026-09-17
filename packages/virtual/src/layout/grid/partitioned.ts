@@ -1,11 +1,11 @@
 import type { StableID } from '@sectile/core';
 import { unwrap } from '@sectile/core/result';
 import { tryCreateSequence } from '@sectile/core/sequence';
-import type { VirtualResult } from './error.js';
-import { tryCreateExtentIndex, type Extent, type ExtentIndex } from './extent-index.js';
-import { blockedTrackRepairBound, createBlockedVector, type BlockedVector, useBlockedTrackRepair } from './internal/blocked-vector.js';
-import { fail, noOp, ok } from './internal/foundation.js';
-import { recordRepairDiagnostics } from './internal/repair-diagnostics.js';
+import type { VirtualResult } from '../../error.js';
+import { tryCreateExtentIndex, type Extent, type ExtentIndex } from '../../indexes/extent.js';
+import { blockedTrackRepairBound, createBlockedVector, type BlockedVector, useBlockedTrackRepair } from '../../indexes/blocked-vector.js';
+import { fail, noOp, ok } from '../../foundation.js';
+import { recordRepairDiagnostics } from '../repair-diagnostics.js';
 import {
   alignedScrollOffset,
   anchorForPlan,
@@ -24,7 +24,7 @@ import {
   type VirtualQueryInput,
   type VirtualRect,
   type VirtualScrollAlignment,
-} from './layout.js';
+} from '../plan.js';
 import {
   trackGridRegionRect,
   tryApplyGridMeasurements,
@@ -32,7 +32,7 @@ import {
   tryQueryTrackGridLayout,
   type GridRegion,
   type TrackGridLayoutState,
-} from './track-grid-layout.js';
+} from './layout.js';
 
 export type TrackPartition = 'start' | 'center' | 'end';
 

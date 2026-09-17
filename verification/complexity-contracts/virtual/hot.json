@@ -7,7 +7,7 @@
     {
       "id": "collection.extents.reconcile",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-003:collection-extent-work"
       ],
@@ -74,7 +74,7 @@
     {
       "id": "collection.lanes.resolve",
       "inherits": "constant-v1",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-003:lane-policy-work"
       ],
@@ -123,7 +123,7 @@
     {
       "id": "collection.patch.trusted",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-003:trusted-collection-patch-work"
       ],
@@ -186,7 +186,7 @@
     {
       "id": "collection.project.raw",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-003:raw-collection-project-work",
         "VAL-028:raw-collection-cardinality-work"
@@ -250,7 +250,7 @@
     {
       "id": "collection.replace.raw",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-003:raw-collection-replacement-work"
       ],
@@ -317,7 +317,7 @@
     {
       "id": "collection.value-extents.reconcile",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-019:collection-value-extent-work"
       ],
@@ -364,7 +364,7 @@
     {
       "id": "extent.lookup",
       "inherits": "constant-v1",
-      "source": "packages/virtual/src/extent-index.ts",
+      "source": "packages/virtual/src/indexes/extent.ts",
       "benchmarkIDs": [
         "VAL-017:extent-index-work"
       ],
@@ -393,7 +393,7 @@
     {
       "id": "extent.update",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/extent-index.ts",
+      "source": "packages/virtual/src/indexes/extent.ts",
       "benchmarkIDs": [
         "VAL-029:extent-update-noop-work"
       ],
@@ -455,7 +455,7 @@
     {
       "id": "indexed-view.at",
       "inherits": "constant-v1",
-      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "source": "packages/virtual/src/indexes/blocked-vector.ts",
       "benchmarkIDs": [
         "VAL-017:indexed-view-at-work"
       ],
@@ -489,7 +489,7 @@
     {
       "id": "indexed-view.iterate",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "source": "packages/virtual/src/indexes/blocked-vector.ts",
       "benchmarkIDs": [
         "VAL-017:indexed-view-iterate-work"
       ],
@@ -531,7 +531,7 @@
     {
       "id": "indexed-view.to-array",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "source": "packages/virtual/src/indexes/blocked-vector.ts",
       "benchmarkIDs": [
         "VAL-017:indexed-view-materialize-work"
       ],
@@ -573,7 +573,7 @@
     {
       "id": "linear.cross-extent",
       "inherits": "constant-v1",
-      "source": "packages/virtual/src/linear-layout.ts",
+      "source": "packages/virtual/src/layout/linear.ts",
       "benchmarkIDs": [
         "VAL-019:linear-cross-extent-work"
       ],
@@ -615,7 +615,7 @@
     {
       "id": "linear.measure",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/linear-layout.ts",
+      "source": "packages/virtual/src/layout/linear.ts",
       "benchmarkIDs": [
         "virtual:linear:measure:100000:1",
         "virtual:linear:measure:100000:32",
@@ -671,7 +671,7 @@
     {
       "id": "linear.query",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/linear-layout.ts",
+      "source": "packages/virtual/src/layout/linear.ts",
       "benchmarkIDs": [
         "virtual:linear:query:1000",
         "virtual:linear:query:10000",
@@ -720,7 +720,7 @@
     {
       "id": "masonry.formula.derive",
       "inherits": "constant-v1",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-017:masonry-uniform-work"
       ],
@@ -777,7 +777,7 @@
     {
       "id": "masonry.formula.query",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-017:masonry-uniform-work"
       ],
@@ -849,7 +849,7 @@
     {
       "id": "masonry.measure",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-017:masonry-measure-work",
         "VAL-029:measurement-noop-generation"
@@ -908,7 +908,7 @@
     {
       "id": "masonry.mutation.geometry.rebuild",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-027:masonry-geometry-rebuild-work"
       ],
@@ -970,7 +970,7 @@
     {
       "id": "masonry.mutation.geometry.reuse",
       "inherits": "constant-v1",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-027:masonry-geometry-reuse-work"
       ],
@@ -1033,7 +1033,7 @@
     {
       "id": "masonry.query",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-017:masonry-query-work"
       ],
@@ -1085,7 +1085,7 @@
     {
       "id": "partitioned.measure.incremental",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/partitioned.ts",
       "benchmarkIDs": [
         "virtual:partitioned:measure:100000:1",
         "virtual:partitioned:measure:100000:32"
@@ -1138,7 +1138,7 @@
     {
       "id": "partitioned.measure.rebuild",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/partitioned.ts",
       "benchmarkIDs": [
         "virtual:partitioned:measure:100000:100000"
       ],
@@ -1185,7 +1185,7 @@
     {
       "id": "partitioned.query",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/partitioned.ts",
       "benchmarkIDs": [
         "VAL-017:partitioned-query-work"
       ],
@@ -1237,7 +1237,7 @@
     {
       "id": "partitioned.regions.replace",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/partitioned.ts",
       "benchmarkIDs": [
         "VAL-023:partitioned-region-replace-work"
       ],
@@ -1302,7 +1302,7 @@
     {
       "id": "spatial.measure.incremental",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "virtual:spatial:measure:100000:1",
         "virtual:spatial:measure:100000:32"
@@ -1358,7 +1358,7 @@
     {
       "id": "spatial.measure.rebuild",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "virtual:spatial:measure:100000:100000"
       ],
@@ -1400,7 +1400,7 @@
     {
       "id": "spatial.patch.incremental",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "VAL-017:spatial-structural-patch-work"
       ],
@@ -1461,7 +1461,7 @@
     {
       "id": "spatial.query",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "virtual:spatial:query:1000",
         "virtual:spatial:query:10000",
@@ -1528,7 +1528,7 @@
     {
       "id": "spatial.update.incremental",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "VAL-025:spatial-update-work",
         "VAL-039:spatial-update-structural-work"
@@ -1616,7 +1616,7 @@
     {
       "id": "spatial.update.rebuild",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "VAL-039:spatial-update-rebuild-work"
       ],
@@ -1682,7 +1682,7 @@
     {
       "id": "surface.frame-transform",
       "inherits": "constant-v1",
-      "source": "packages/virtual/src/surface.ts",
+      "source": "packages/virtual/src/collection/surface.ts",
       "benchmarkIDs": [
         "VAL-001:surface-frame-laws",
         "VAL-030:surface-frame-snapshot-work"
@@ -1728,7 +1728,7 @@
     {
       "id": "track.create.regions",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/internal/region-overlap.ts",
+      "source": "packages/virtual/src/layout/grid/region-overlap.ts",
       "benchmarkIDs": [
         "VAL-022:track-region-validation-work"
       ],
@@ -1783,7 +1783,7 @@
     {
       "id": "track.measure",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/layout.ts",
       "benchmarkIDs": [
         "VAL-017:track-measure-work",
         "VAL-029:measurement-noop-generation"
@@ -1837,7 +1837,7 @@
     {
       "id": "track.mutation.regions.replace",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/layout.ts",
       "benchmarkIDs": [
         "VAL-024:track-region-replace-work"
       ],
@@ -1900,7 +1900,7 @@
     {
       "id": "track.mutation.tracks.append",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/layout.ts",
       "benchmarkIDs": [
         "VAL-026:track-trailing-append-work"
       ],
@@ -1975,7 +1975,7 @@
     {
       "id": "track.query",
       "inherits": "linear-v1",
-      "source": "packages/virtual/src/track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/layout.ts",
       "benchmarkIDs": [
         "VAL-017:track-query-work"
       ],

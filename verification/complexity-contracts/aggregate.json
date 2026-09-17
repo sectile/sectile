@@ -30465,7 +30465,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "collection.extents.reconcile",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-003:collection-extent-work"
       ],
@@ -30534,7 +30534,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "collection.lanes.resolve",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-003:lane-policy-work"
       ],
@@ -30591,7 +30591,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "collection.patch.trusted",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-003:trusted-collection-patch-work"
       ],
@@ -30656,7 +30656,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "collection.project.raw",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-003:raw-collection-project-work",
         "VAL-028:raw-collection-cardinality-work"
@@ -30722,7 +30722,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "collection.replace.raw",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-003:raw-collection-replacement-work"
       ],
@@ -30791,7 +30791,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "collection.value-extents.reconcile",
-      "source": "packages/virtual/src/collection.ts",
+      "source": "packages/virtual/src/collection/projection.ts",
       "benchmarkIDs": [
         "VAL-019:collection-value-extent-work"
       ],
@@ -30859,7 +30859,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "extent.lookup",
-      "source": "packages/virtual/src/extent-index.ts",
+      "source": "packages/virtual/src/indexes/extent.ts",
       "benchmarkIDs": [
         "VAL-017:extent-index-work"
       ],
@@ -30921,7 +30921,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "extent.update",
-      "source": "packages/virtual/src/extent-index.ts",
+      "source": "packages/virtual/src/indexes/extent.ts",
       "benchmarkIDs": [
         "VAL-029:extent-update-noop-work"
       ],
@@ -30992,7 +30992,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "indexed-view.at",
-      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "source": "packages/virtual/src/indexes/blocked-vector.ts",
       "benchmarkIDs": [
         "VAL-017:indexed-view-at-work"
       ],
@@ -31054,7 +31054,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "indexed-view.iterate",
-      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "source": "packages/virtual/src/indexes/blocked-vector.ts",
       "benchmarkIDs": [
         "VAL-017:indexed-view-iterate-work"
       ],
@@ -31117,7 +31117,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "indexed-view.to-array",
-      "source": "packages/virtual/src/internal/blocked-vector.ts",
+      "source": "packages/virtual/src/indexes/blocked-vector.ts",
       "benchmarkIDs": [
         "VAL-017:indexed-view-materialize-work"
       ],
@@ -31180,7 +31180,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "linear.cross-extent",
-      "source": "packages/virtual/src/linear-layout.ts",
+      "source": "packages/virtual/src/layout/linear.ts",
       "benchmarkIDs": [
         "VAL-019:linear-cross-extent-work"
       ],
@@ -31242,7 +31242,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "linear.measure",
-      "source": "packages/virtual/src/linear-layout.ts",
+      "source": "packages/virtual/src/layout/linear.ts",
       "benchmarkIDs": [
         "virtual:linear:measure:100000:1",
         "virtual:linear:measure:100000:32",
@@ -31311,7 +31311,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "linear.query",
-      "source": "packages/virtual/src/linear-layout.ts",
+      "source": "packages/virtual/src/layout/linear.ts",
       "benchmarkIDs": [
         "virtual:linear:query:1000",
         "virtual:linear:query:10000",
@@ -31381,7 +31381,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "masonry.formula.derive",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-017:masonry-uniform-work"
       ],
@@ -31447,7 +31447,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "masonry.formula.query",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-017:masonry-uniform-work"
       ],
@@ -31528,7 +31528,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "masonry.measure",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-017:masonry-measure-work",
         "VAL-029:measurement-noop-generation"
@@ -31600,7 +31600,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "masonry.mutation.geometry.rebuild",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-027:masonry-geometry-rebuild-work"
       ],
@@ -31667,7 +31667,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "masonry.mutation.geometry.reuse",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-027:masonry-geometry-reuse-work"
       ],
@@ -31735,7 +31735,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "masonry.query",
-      "source": "packages/virtual/src/masonry-layout.ts",
+      "source": "packages/virtual/src/layout/masonry/layout.ts",
       "benchmarkIDs": [
         "VAL-017:masonry-query-work"
       ],
@@ -31808,7 +31808,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "partitioned.measure.incremental",
-      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/partitioned.ts",
       "benchmarkIDs": [
         "virtual:partitioned:measure:100000:1",
         "virtual:partitioned:measure:100000:32"
@@ -31882,7 +31882,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "partitioned.measure.rebuild",
-      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/partitioned.ts",
       "benchmarkIDs": [
         "virtual:partitioned:measure:100000:100000"
       ],
@@ -31950,7 +31950,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "partitioned.query",
-      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/partitioned.ts",
       "benchmarkIDs": [
         "VAL-017:partitioned-query-work"
       ],
@@ -32023,7 +32023,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "partitioned.regions.replace",
-      "source": "packages/virtual/src/partitioned-track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/partitioned.ts",
       "benchmarkIDs": [
         "VAL-023:partitioned-region-replace-work"
       ],
@@ -32090,7 +32090,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "spatial.measure.incremental",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "virtual:spatial:measure:100000:1",
         "virtual:spatial:measure:100000:32"
@@ -32163,7 +32163,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "spatial.measure.rebuild",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "virtual:spatial:measure:100000:100000"
       ],
@@ -32226,7 +32226,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "spatial.patch.incremental",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "VAL-017:spatial-structural-patch-work"
       ],
@@ -32304,7 +32304,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "spatial.query",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "virtual:spatial:query:1000",
         "virtual:spatial:query:10000",
@@ -32388,7 +32388,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "spatial.update.incremental",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "VAL-025:spatial-update-work",
         "VAL-039:spatial-update-structural-work"
@@ -32481,7 +32481,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "spatial.update.rebuild",
-      "source": "packages/virtual/src/spatial-layout.ts",
+      "source": "packages/virtual/src/layout/spatial.ts",
       "benchmarkIDs": [
         "VAL-039:spatial-update-rebuild-work"
       ],
@@ -32556,7 +32556,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "surface.frame-transform",
-      "source": "packages/virtual/src/surface.ts",
+      "source": "packages/virtual/src/collection/surface.ts",
       "benchmarkIDs": [
         "VAL-001:surface-frame-laws",
         "VAL-030:surface-frame-snapshot-work"
@@ -32613,7 +32613,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "track.create.regions",
-      "source": "packages/virtual/src/internal/region-overlap.ts",
+      "source": "packages/virtual/src/layout/grid/region-overlap.ts",
       "benchmarkIDs": [
         "VAL-022:track-region-validation-work"
       ],
@@ -32674,7 +32674,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "track.measure",
-      "source": "packages/virtual/src/track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/layout.ts",
       "benchmarkIDs": [
         "VAL-017:track-measure-work",
         "VAL-029:measurement-noop-generation"
@@ -32741,7 +32741,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "track.mutation.regions.replace",
-      "source": "packages/virtual/src/track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/layout.ts",
       "benchmarkIDs": [
         "VAL-024:track-region-replace-work"
       ],
@@ -32806,7 +32806,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "track.mutation.tracks.append",
-      "source": "packages/virtual/src/track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/layout.ts",
       "benchmarkIDs": [
         "VAL-026:track-trailing-append-work"
       ],
@@ -32883,7 +32883,7 @@
       "package": "virtual",
       "surface": "hot",
       "id": "track.query",
-      "source": "packages/virtual/src/track-grid-layout.ts",
+      "source": "packages/virtual/src/layout/grid/layout.ts",
       "benchmarkIDs": [
         "VAL-017:track-query-work"
       ],

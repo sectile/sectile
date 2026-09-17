@@ -1,4 +1,4 @@
-import type { VirtualIndexedView } from '../layout.js';
+import type { VirtualIndexedView } from '../layout/plan.js';
 
 const BLOCK_SIZE = 64;
 

@@ -1,5 +1,5 @@
 import type { StableID } from '@sectile/core';
-import type { VirtualResult } from './error.js';
+import type { VirtualResult } from '../error.js';
 import {
   tryApplySequencePatch,
   tryCreateSequence,
@@ -8,15 +8,15 @@ import {
 } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
 import { createRect, isFiniteRect } from '@sectile/core/geometry';
-import { blockedRepairBound, createBlockedVector, createOwnedBlockedVector, type BlockedVector, useBlockedRepair } from './internal/blocked-vector.js';
-import { fail, noOp, ok, preflightSequenceSplice } from './internal/foundation.js';
-import { recordRepairDiagnostics } from './internal/repair-diagnostics.js';
+import { blockedRepairBound, createBlockedVector, createOwnedBlockedVector, type BlockedVector, useBlockedRepair } from '../indexes/blocked-vector.js';
+import { fail, noOp, ok, preflightSequenceSplice } from '../foundation.js';
+import { recordRepairDiagnostics } from './repair-diagnostics.js';
 import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
   type VirtualAnchor, type VirtualLayoutMutation, type VirtualLayoutPlan, type VirtualLayoutStrategy,
   type VirtualMeasurementBatch, type VirtualPlacement, type VirtualPoint, type VirtualQueryInput,
   type VirtualIndexedView, type VirtualRect, type VirtualScrollAlignment,
-} from './layout.js';
+} from './plan.js';
 
 export interface SpatialItem<ID extends StableID = StableID> {
   readonly id: ID;

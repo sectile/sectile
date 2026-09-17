@@ -298,6 +298,21 @@ test('Chart contracts and storage stay below model, definition and projection as
   assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
 });
 
+test('Virtual shared track contracts stay below concrete layout families', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const source = 'packages/virtual/src/layout/track.ts';
+  const witness = graph.edges.find((edge) => edge.source === source);
+  assert.ok(witness);
+  for (const target of ['linear.ts', 'masonry/layout.ts', 'grid/layout.ts', 'grid/partitioned.ts', 'spatial.ts']) {
+    const reverse = { ...witness, source, target: `packages/virtual/src/layout/${target}` };
+    assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+  }
+});
+
 test('Form construction and state contracts keep their dependencies within lower owners', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);

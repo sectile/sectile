@@ -32,34 +32,34 @@
       "default": "./dist/collection.js"
     },
     "./extent-index": {
-      "types": "./dist/extent-index.d.ts",
-      "import": "./dist/extent-index.js",
-      "default": "./dist/extent-index.js"
+      "types": "./dist/indexes/extent.d.ts",
+      "import": "./dist/indexes/extent.js",
+      "default": "./dist/indexes/extent.js"
     },
     "./layout": {
-      "types": "./dist/layout.d.ts",
-      "import": "./dist/layout.js",
-      "default": "./dist/layout.js"
+      "types": "./dist/layout/plan.d.ts",
+      "import": "./dist/layout/plan.js",
+      "default": "./dist/layout/plan.js"
     },
     "./linear-layout": {
-      "types": "./dist/linear-layout.d.ts",
-      "import": "./dist/linear-layout.js",
-      "default": "./dist/linear-layout.js"
+      "types": "./dist/layout/linear.d.ts",
+      "import": "./dist/layout/linear.js",
+      "default": "./dist/layout/linear.js"
     },
     "./masonry-layout": {
-      "types": "./dist/masonry-layout.d.ts",
-      "import": "./dist/masonry-layout.js",
-      "default": "./dist/masonry-layout.js"
+      "types": "./dist/layout/masonry/layout.d.ts",
+      "import": "./dist/layout/masonry/layout.js",
+      "default": "./dist/layout/masonry/layout.js"
     },
     "./partitioned-track-grid-layout": {
-      "types": "./dist/partitioned-track-grid-layout.d.ts",
-      "import": "./dist/partitioned-track-grid-layout.js",
-      "default": "./dist/partitioned-track-grid-layout.js"
+      "types": "./dist/layout/grid/partitioned.d.ts",
+      "import": "./dist/layout/grid/partitioned.js",
+      "default": "./dist/layout/grid/partitioned.js"
     },
     "./spatial-layout": {
-      "types": "./dist/spatial-layout.d.ts",
-      "import": "./dist/spatial-layout.js",
-      "default": "./dist/spatial-layout.js"
+      "types": "./dist/layout/spatial.d.ts",
+      "import": "./dist/layout/spatial.js",
+      "default": "./dist/layout/spatial.js"
     },
     "./surface": {
       "types": "./dist/surface.d.ts",
@@ -67,9 +67,9 @@
       "default": "./dist/surface.js"
     },
     "./track-grid-layout": {
-      "types": "./dist/track-grid-layout.d.ts",
-      "import": "./dist/track-grid-layout.js",
-      "default": "./dist/track-grid-layout.js"
+      "types": "./dist/layout/grid/layout.d.ts",
+      "import": "./dist/layout/grid/layout.js",
+      "default": "./dist/layout/grid/layout.js"
     },
     "./package.json": "./package.json"
   },

@@ -18,8 +18,8 @@ export function* createVirtualWorkloadGroups({ quick, selection }) {
 
 async function linearWorkloads(size, quick, selection) {
   const [{ createExtentIndex }, linearModule] = await Promise.all([
-    import('../../../packages/virtual/dist/extent-index.js'),
-    import('../../../packages/virtual/dist/linear-layout.js'),
+    import('../../../packages/virtual/dist/indexes/extent.js'),
+    import('../../../packages/virtual/dist/layout/linear.js'),
   ]);
   const { applyLinearMeasurements, createLinearLayout, queryLinearLayout } = linearModule;
   const domain = createSequence(Array.from({ length: size }, (_, index) => `virtual-${size}-${index}`));
@@ -45,7 +45,7 @@ async function linearWorkloads(size, quick, selection) {
 }
 
 async function spatialWorkloads(size, quick, selection) {
-  const spatialModule = await import('../../../packages/virtual/dist/spatial-layout.js');
+  const spatialModule = await import('../../../packages/virtual/dist/layout/spatial.js');
   const { applySpatialMeasurements, createSpatialLayout, querySpatialLayout } = spatialModule;
   const items = Object.freeze(Array.from({ length: size }, (_, index) => Object.freeze({
     id: `spatial-${size}-${index}`,
@@ -79,7 +79,7 @@ async function spatialWorkloads(size, quick, selection) {
 }
 
 async function partitionedWorkloads(size, quick) {
-  const { applyPartitionedTrackGridMeasurements, createPartitionedTrackGridLayout } = await import('../../../packages/virtual/dist/partitioned-track-grid-layout.js');
+  const { applyPartitionedTrackGridMeasurements, createPartitionedTrackGridLayout } = await import('../../../packages/virtual/dist/layout/grid/partitioned.js');
   const estimated = (value) => Object.freeze({ kind: 'estimated', value });
   const exact = (value) => Object.freeze({ kind: 'exact', value });
   const rows = Object.freeze(Array.from({ length: size }, (_, index) => Object.freeze({ id: `partitioned-row-${size}-${index}`, partition: 'center', extent: estimated(44) })));

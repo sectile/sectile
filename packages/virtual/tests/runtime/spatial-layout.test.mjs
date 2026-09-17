@@ -12,8 +12,8 @@ import {
   tryApplySpatialMutation,
   tryCreateSpatialLayout,
   tryQuerySpatialLayout,
-} from '../../.verification-dist/spatial-layout.js';
-import { readRepairDiagnostics } from '../../.verification-dist/internal/repair-diagnostics.js';
+} from '../../.verification-dist/layout/spatial.js';
+import { readRepairDiagnostics } from '../../.verification-dist/layout/repair-diagnostics.js';
 
 function intersects(left, right) {
   return left.x < right.x + right.width && right.x < left.x + left.width

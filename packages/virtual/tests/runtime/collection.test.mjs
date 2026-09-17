@@ -14,8 +14,8 @@ import {
   tryCreateVirtualCollection,
   updateVirtualCollection,
   virtualSizePolicyRequiresMeasurement,
-} from '../../.verification-dist/collection.js';
-import { createExtentIndex } from '../../.verification-dist/extent-index.js';
+} from '../../.verification-dist/collection/projection.js';
+import { createExtentIndex } from '../../.verification-dist/indexes/extent.js';
 
 const item = (id, label = String(id)) => Object.freeze({ id, label });
 const getID = (value) => value.id;

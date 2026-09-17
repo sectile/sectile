@@ -1,11 +1,11 @@
 /** Type-only package facade. Runtime consumers import a specific subpath. */
-export type * from './collection.js';
+export type * from './collection/projection.js';
 export type * from './error.js';
-export type * from './extent-index.js';
-export type * from './layout.js';
-export type * from './linear-layout.js';
-export type * from './masonry-layout.js';
-export type * from './partitioned-track-grid-layout.js';
-export type * from './spatial-layout.js';
-export type * from './surface.js';
-export type * from './track-grid-layout.js';
+export type * from './indexes/extent.js';
+export type * from './layout/plan.js';
+export type * from './layout/linear.js';
+export type * from './layout/masonry/layout.js';
+export type * from './layout/grid/partitioned.js';
+export type * from './layout/spatial.js';
+export type * from './collection/surface.js';
+export type * from './layout/grid/layout.js';

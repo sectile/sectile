@@ -1,5 +1,5 @@
 import type { StableID } from '@sectile/core';
-import type { VirtualErrorCode, VirtualResult } from './error.js';
+import type { VirtualErrorCode, VirtualResult } from '../../error.js';
 import { unwrap } from '@sectile/core/result';
 import {
   tryApplySequencePatch,
@@ -7,18 +7,18 @@ import {
   type Sequence,
   type SequencePatch,
 } from '@sectile/core/sequence';
-import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
-import { fail, noOp, ok } from './internal/foundation.js';
-import { findRegionOverlap } from './internal/region-overlap.js';
-import { recordRepairDiagnostics } from './internal/repair-diagnostics.js';
-import { isFiniteTrackContentExtent, trackContentExtent, trackRange, trackSpan, type TrackRange } from './internal/track.js';
-import type { LinearFlow } from './linear-layout.js';
+import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from '../../indexes/extent.js';
+import { fail, noOp, ok } from '../../foundation.js';
+import { findRegionOverlap } from './region-overlap.js';
+import { recordRepairDiagnostics } from '../repair-diagnostics.js';
+import { isFiniteTrackContentExtent, trackContentExtent, trackRange, trackSpan, type TrackRange } from '../track.js';
+import type { LinearFlow } from '../track.js';
 import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
   type VirtualAnchor, type VirtualLayoutMutation, type VirtualLayoutPlan, type VirtualLayoutStrategy,
   type VirtualMeasurementBatch, type VirtualPlacement, type VirtualPoint, type VirtualQueryInput,
   type VirtualIndexedView, type VirtualRect, type VirtualScrollAlignment,
-} from './layout.js';
+} from '../plan.js';
 
 export interface GridRegion<ID extends StableID = StableID> {
   readonly id: ID;

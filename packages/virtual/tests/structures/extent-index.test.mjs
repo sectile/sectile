@@ -5,7 +5,7 @@ import {
   createUniformExtentIndex,
   tryCreateExtentIndex,
   tryCreateUniformExtentIndex,
-} from '../../.verification-dist/extent-index.js';
+} from '../../.verification-dist/indexes/extent.js';
 
 const exact = (value) => ({ kind: 'exact', value });
 const estimated = (value) => ({ kind: 'estimated', value });

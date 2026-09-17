@@ -60,8 +60,8 @@ component edge sets, even if every individual edge has an allowed role direction
 
 The migration baseline is `dc6a84e58aeaed00b8af89e971723ecb20157b15`.
 Remaining back-references have exact edge or component records with an owner,
-reason and remediation Work Item. They cover Virtual track contracts and Vue
-Form contracts. They are not blanket package exemptions.
+reason and remediation Work Item. The remaining records cover Vue Form
+contracts. They are not blanket package exemptions.
 
 A successful check with such records says `passed-with-recorded-debt`, not that
 the package structure is finished. A new edge, a larger cyclic component, or a
@@ -290,6 +290,54 @@ become 37,546 and 162,323. These are distinct pack protocols, not interchangeabl
 measurements. New cross-module declarations and module linking records account
 for the structural cost; no new third-party code is introduced. Future growth
 requires its own reviewed decision.
+
+## Virtual ownership
+
+Virtual keeps its public subpaths while grouping implementation under
+`packages/virtual/src/`. Index and layout subpaths map directly to their owners.
+The existing collection and surface entrypoints remain thin re-exports of the
+corresponding collection modules; they do not wrap calls or duplicate state.
+Internal dependencies target owners directly. The root remains type-only.
+Public declaration and nominal identity checks cover both direct targets and
+facades, within the existing package and install budgets:
+
+```text
+indexes/
+  extent.ts
+  extent-metadata.ts
+  blocked-vector.ts
+layout/
+  plan.ts
+  track.ts
+  repair-diagnostics.ts
+  linear.ts
+  spatial.ts
+  masonry/
+    layout.ts
+    internals.ts
+  grid/
+    layout.ts
+    partitioned.ts
+    region-overlap.ts
+collection/
+  projection.ts
+  surface.ts
+```
+
+`layout/track.ts` owns the shared `LinearAxis` and `LinearFlow` types as well
+as extent-based track operations. The existing linear-layout subpath re-exports
+those types; shared track code does not import a concrete layout. Concrete
+linear, masonry, grid, partitioned-grid and spatial families have distinct
+roles. Only the partitioned-grid owner composes the base grid implementation.
+Indexes and shared plan/result helpers remain below concrete layout owners.
+
+Each state brand, uniform-extent metadata map, collection provenance registry,
+masonry registry and repair-diagnostic registry remains defined once. The
+migration changes source ownership and imports, not index representations,
+64-item partitioning, sparse/dense crossover rules, generation checks,
+materialization boundaries or layout algorithms. The crossover source paths
+follow the moved production implementation; historical measurements and
+selected representations remain unchanged.
 
 ## Moving or extracting an implementation
 

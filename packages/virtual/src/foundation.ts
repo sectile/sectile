@@ -1,8 +1,8 @@
 import type { ErrorClass } from '@sectile/core';
 import { ZERO_POINT } from '@sectile/core/geometry';
 import { failResult, okResult } from '@sectile/core/result';
-import type { VirtualError, VirtualErrorCode, VirtualResult } from '../error.js';
-import type { VirtualLayoutMutation } from '../layout.js';
+import type { VirtualError, VirtualErrorCode, VirtualResult } from './error.js';
+import type { VirtualLayoutMutation } from './layout/plan.js';
 
 export function ok<T>(value: T): VirtualResult<T> {
   return okResult<T, VirtualErrorCode>(value);

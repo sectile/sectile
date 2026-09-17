@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createCollectionWindowState } from '@sectile/core/collection-window';
 import { createSequence } from '@sectile/core/sequence';
-import { createExtentIndex, createUniformExtentIndex } from '../../.verification-dist/extent-index.js';
-import { trackRange } from '../../.verification-dist/internal/track.js';
+import { createExtentIndex, createUniformExtentIndex } from '../../.verification-dist/indexes/extent.js';
+import { trackRange } from '../../.verification-dist/layout/track.js';
 import {
   applyLinearMeasurements,
   applyLinearPatch,
@@ -20,7 +20,7 @@ import {
   tryCreateLinearLayout,
   tryLinearScrollTarget,
   trySetLinearCrossExtent,
-} from '../../.verification-dist/linear-layout.js';
+} from '../../.verification-dist/layout/linear.js';
 import {
   applyGridMeasurements,
   applyTrackGridMutation,
@@ -32,7 +32,7 @@ import {
   tryTrackGridScrollTarget,
   snapshotTrackGridLayout,
   trackGridRegionRect,
-} from '../../.verification-dist/track-grid-layout.js';
+} from '../../.verification-dist/layout/grid/layout.js';
 import {
   applyMasonryMeasurements,
   applyMasonryMutation,
@@ -43,7 +43,7 @@ import {
   snapshotMasonryLayout,
   tryApplyMasonryMeasurements,
   tryMasonryScrollTarget,
-} from '../../.verification-dist/masonry-layout.js';
+} from '../../.verification-dist/layout/masonry/layout.js';
 import {
   applySpatialMeasurements,
   applySpatialMutation,
@@ -55,7 +55,7 @@ import {
   tryApplySpatialMeasurements,
   tryRestoreSpatialLayout,
   trySpatialScrollTarget,
-} from '../../.verification-dist/spatial-layout.js';
+} from '../../.verification-dist/layout/spatial.js';
 
 const estimated = (value) => ({ kind: 'estimated', value });
 const exact = (value) => ({ kind: 'exact', value });

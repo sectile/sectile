@@ -2,8 +2,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSequence } from '@sectile/core/sequence';
-import { createExtentIndex, createUniformExtentIndex } from '../../.verification-dist/extent-index.js';
-import { masonryInternals, masonryLayoutWork } from '../../.verification-dist/internal/masonry-internals.js';
+import { createExtentIndex, createUniformExtentIndex } from '../../.verification-dist/indexes/extent.js';
+import { masonryInternals, masonryLayoutWork } from '../../.verification-dist/layout/masonry/internals.js';
 import {
   applyMasonryMeasurements,
   applyMasonryMutation,
@@ -14,7 +14,7 @@ import {
   snapshotMasonryLayout,
   tryApplyMasonryMeasurements,
   tryApplyMasonryMutation,
-} from '../../.verification-dist/masonry-layout.js';
+} from '../../.verification-dist/layout/masonry/layout.js';
 
 const exact = (value) => ({ kind: 'exact', value });
 const domain = (size) => createSequence(

@@ -3,7 +3,7 @@ import test from 'node:test';
 import {
   createBlockedVector,
   createOwnedBlockedVector,
-} from '../../.verification-dist/internal/blocked-vector.js';
+} from '../../.verification-dist/indexes/blocked-vector.js';
 
 test('blocked vector owns input blocks and path-copies touched leaves', () => {
   const values = Array.from({ length: 130 }, (_, index) => index);

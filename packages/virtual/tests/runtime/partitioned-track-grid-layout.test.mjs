@@ -13,8 +13,8 @@ import {
   tryApplyPartitionedTrackGridMutation,
   tryCreatePartitionedTrackGridLayout,
   tryPartitionedTrackGridScrollTarget,
-} from '../../.verification-dist/partitioned-track-grid-layout.js';
-import { readRepairDiagnostics } from '../../.verification-dist/internal/repair-diagnostics.js';
+} from '../../.verification-dist/layout/grid/partitioned.js';
+import { readRepairDiagnostics } from '../../.verification-dist/layout/repair-diagnostics.js';
 
 const exact = (value) => ({ kind: 'exact', value });
 const estimated = (value) => ({ kind: 'estimated', value });

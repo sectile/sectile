@@ -11,7 +11,7 @@ import {
   type Rect,
   type Size,
 } from '@sectile/core/geometry';
-import type { VirtualResult } from './error.js';
+import type { VirtualResult } from '../error.js';
 
 export type VirtualPoint = Point;
 export type VirtualSize = Size;

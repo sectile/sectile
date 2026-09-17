@@ -1,19 +1,19 @@
 import type { StableID } from '@sectile/core';
-import type { VirtualResult } from './error.js';
+import type { VirtualResult } from '../../error.js';
 import { tryApplySequencePatch, tryCreateSequence, type Sequence, type SequencePatch } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
-import { tryCreateExtentIndex, tryCreateUniformExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
-import { fail, noOp, ok } from './internal/foundation.js';
-import { uniformExtentMetadata } from './internal/extent-index-metadata.js';
-import { masonryInternals, registerMasonryInternals } from './internal/masonry-internals.js';
-import { extentValue } from './internal/track.js';
-import type { LinearAxis, LinearFlow } from './linear-layout.js';
+import { tryCreateExtentIndex, tryCreateUniformExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from '../../indexes/extent.js';
+import { fail, noOp, ok } from '../../foundation.js';
+import { uniformExtentMetadata } from '../../indexes/extent-metadata.js';
+import { masonryInternals, registerMasonryInternals } from './internals.js';
+import { extentValue } from '../track.js';
+import type { LinearAxis, LinearFlow } from '../track.js';
 import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
   type VirtualAnchor, type VirtualLayoutMutation, type VirtualLayoutPlan, type VirtualLayoutStrategy,
   type VirtualMeasurementBatch, type VirtualPlacement, type VirtualPoint, type VirtualQueryInput,
   type VirtualRect, type VirtualScrollAlignment,
-} from './layout.js';
+} from '../plan.js';
 
 export type MasonryPlacementPolicy = 'shortest' | 'round-robin';
 

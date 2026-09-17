@@ -48,7 +48,7 @@ test('governed production source drift fails source attestation', async () => {
   const [manifest, baseline] = await load();
   const workerSource = await readFile('scripts/representation-crossovers-worker.mjs', 'utf8');
   const governedSources = await loadGovernedSources(manifest);
-  const drifted = governedSources.map((entry) => entry.path === 'packages/virtual/src/spatial-layout.ts'
+  const drifted = governedSources.map((entry) => entry.path === 'packages/virtual/src/layout/spatial.ts'
     ? { ...entry, source: `${entry.source}\n// temporary representation drift` }
     : entry);
   assert.throws(
@@ -60,7 +60,7 @@ test('governed production source drift fails source attestation', async () => {
 test('every crossover decision declares canonical production source ownership', async () => {
   const [manifest] = await load();
   const expected = crossoverGovernedSourcePaths(manifest);
-  assert.ok(expected.includes('packages/virtual/src/spatial-layout.ts'));
+  assert.ok(expected.includes('packages/virtual/src/layout/spatial.ts'));
   const missing = structuredClone(manifest);
   delete missing.decisions[0].governedSources;
   assert.throws(() => crossoverGovernedSourcePaths(missing), /governed production sources missing/u);

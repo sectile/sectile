@@ -1,5 +1,7 @@
-import type { Extent, ExtentIndex } from '../extent-index.js';
-import type { LinearFlow } from '../linear-layout.js';
+import type { Extent, ExtentIndex } from '../indexes/extent.js';
+
+export type LinearAxis = 'vertical' | 'horizontal';
+export type LinearFlow = 'forward' | 'reverse';
 
 export interface TrackRange { readonly start: number; readonly end: number; }
 
