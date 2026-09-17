@@ -23,7 +23,7 @@ import {
   setDatePickerCellFocusEntry,
   setDatePickerGridFocusEntry,
 } from './internal/date-picker-cell.js';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from '../internal/interaction.js';
 import { currentReferenceDate } from './internal/reference-date.js';
 
 export type {

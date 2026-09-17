@@ -4,10 +4,10 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
 import { applyTimeFieldEvent, formatTimeValue, tryCreateTimeFieldState, type TimeFieldCommand, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeValue } from '@sectile/temporal/time-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
-import { DOMTextElementBinding } from './internal/text-element.js';
-import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from './internal/controlled-field-input.js';
-import { toTextEvent, type TextInput } from './text.js';
+import { setFieldValidity, setInteractionAttributes } from '../internal/interaction.js';
+import { DOMTextElementBinding } from '../internal/text-element.js';
+import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../internal/controlled-field-input.js';
+import { toTextEvent, type TextInput } from '../text.js';
 
 export { formatTimeValue } from '@sectile/temporal/time-field';
 export type { TimeValue } from '@sectile/temporal/time-field';

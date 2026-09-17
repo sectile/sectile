@@ -7,18 +7,18 @@ import type { DatePickerEvent, DatePickerPolicies } from '@sectile/temporal/date
 import { applyDateRangePickerEvent, tryCreateDateRangePickerState, type DateRangePickerCommand, type DateRangePickerEvent, type DateRangePickerState, type DateRangePickerStateInput } from '@sectile/temporal/date-range-picker';
 export type { DatePickerPolicies } from '@sectile/temporal/date-picker';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from '../internal/interaction.js';
 import {
   focusDatePickerEntry,
   setDatePickerCellAvailability,
   setDatePickerCellFocusEntry,
   setDatePickerGridFocusEntry,
 } from './internal/date-picker-cell.js';
-import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from '../internal/layer-binding.js';
 import { currentReferenceDate } from './internal/reference-date.js';
-import { createPickerPosition, type PickerPositionOptions } from './internal/picker-position.js';
-import type { PositionConnection } from './internal/position-connection.js';
-import { createHiddenBinding, type HiddenBinding } from './internal/hidden-binding.js';
+import { createPickerPosition, type PickerPositionOptions } from '../internal/picker-position.js';
+import type { PositionConnection } from '../internal/position-connection.js';
+import { createHiddenBinding, type HiddenBinding } from '../internal/hidden-binding.js';
 import type { PeriodPickerHost, PeriodPickerEvent } from './internal/period-picker.js';
 
 type DateRangePickerStateFactory = (input: DateRangePickerStateInput) => ReturnType<typeof tryCreateDateRangePickerState>;

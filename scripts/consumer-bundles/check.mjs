@@ -66,7 +66,7 @@ export function validateGranularClosures(results) {
   for (const result of results.filter(({ mode }) => mode === 'named')) {
     if (/^(?:dom:\.\/temporal\/(?:date|date-range)-picker|temporal:\.\/calendar):named$/u.test(result.id)) {
       assert.deepEqual(
-        result.modules.filter((path) => /^@sectile\/(?:dom|temporal)\/dist\/internal\/period-picker\.js$/u.test(path)),
+        result.modules.filter((path) => /^(?:@sectile\/dom\/dist\/temporal\/internal\/period-picker\.js|@sectile\/temporal\/dist\/pickers\/period\/navigation\.js)$/u.test(path)),
         [],
         `${result.bundler}:${result.id}: base date host retained period-only behavior`,
       );
@@ -89,7 +89,7 @@ export function validateGranularClosures(results) {
       }
     }
     if (result.id === 'vue:./temporal/calendar:named') {
-      const unrelated = /@sectile\/(?:dom|vue)\/dist\/(?:date-field|time-field|date-time-field|date-picker|date-range-picker|date-time-picker|date-time-range-picker|month-picker|month-range-picker|year-picker|year-range-picker|range-calendar)\.js$/u;
+      const unrelated = /@sectile\/(?:dom\/dist\/temporal|vue\/dist)\/(?:date-field|time-field|date-time-field|date-picker|date-range-picker|date-time-picker|date-time-range-picker|month-picker|month-range-picker|year-picker|year-range-picker|range-calendar)\.js$/u;
       assert.deepEqual(
         result.modules.filter((path) => unrelated.test(path)),
         [],
@@ -109,7 +109,7 @@ export function validateGranularClosures(results) {
           `${result.bundler}:${result.id}: retained sibling Vue ${family}`);
       }
       for (const family of siblingDOM) {
-        assert.ok(!result.modules.some((path) => path.endsWith(`@sectile/dom/dist/${family}.js`)),
+        assert.ok(!result.modules.some((path) => path.endsWith(`@sectile/dom/dist/temporal/${family}.js`)),
           `${result.bundler}:${result.id}: retained sibling DOM ${family}`);
       }
     }

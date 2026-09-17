@@ -1362,7 +1362,7 @@
     {
       "id": "temporal.day-focus-entry",
       "inherits": "constant-v1",
-      "source": "packages/dom/src/internal/date-picker-cell.ts",
+      "source": "packages/dom/src/temporal/internal/date-picker-cell.ts",
       "benchmarkIDs": [
         "ISSUE-138:dom-temporal-day-focus-entry"
       ],

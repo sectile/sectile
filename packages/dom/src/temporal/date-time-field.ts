@@ -13,10 +13,10 @@ import {
   type DateTimeValue,
 } from '@sectile/temporal/date-time-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
-import { DOMTextElementBinding } from './internal/text-element.js';
-import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from './internal/controlled-field-input.js';
-import { toTextEvent, type TextInput } from './text.js';
+import { setFieldValidity, setInteractionAttributes } from '../internal/interaction.js';
+import { DOMTextElementBinding } from '../internal/text-element.js';
+import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../internal/controlled-field-input.js';
+import { toTextEvent, type TextInput } from '../text.js';
 
 export { formatDateTimeRange, formatDateTimeValue } from '@sectile/temporal/date-time-field';
 export type { DateTimeRange, DateTimeValue } from '@sectile/temporal/date-time-field';

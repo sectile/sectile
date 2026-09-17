@@ -1880,7 +1880,7 @@
     },
     "dom": {
       "disposition": "extract",
-      "reason": "Resolve Chart assembly back-references in WI-002, then group host families in WI-008.",
+      "reason": "Group DOM host implementations by browser responsibility; Chart is complete and WI-008A establishes the Temporal host family.",
       "dependencies": [
         "core",
         "form",
@@ -1934,17 +1934,6 @@
             "controls",
             "form",
             "foundation",
-            "text"
-          ]
-        },
-        "temporal": {
-          "reason": "dom temporal owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "controls",
-            "foundation",
-            "overlays",
-            "positioning",
-            "temporal",
             "text"
           ]
         },
@@ -2045,7 +2034,6 @@
             "overlays",
             "positioning",
             "tabular",
-            "temporal",
             "text",
             "virtual"
           ]
@@ -2068,9 +2056,58 @@
             "positioning",
             "reference",
             "tabular",
-            "temporal",
             "text",
             "virtual"
+          ]
+        },
+        "temporal-support": {
+          "reason": "Temporal-only DOM result, date-cell, reference-date and period host translation support.",
+          "allows": [
+            "temporal-support"
+          ]
+        },
+        "temporal-field": {
+          "reason": "DOM field input translation and projection over Temporal field state.",
+          "allows": [
+            "controls",
+            "foundation",
+            "temporal-field",
+            "temporal-support",
+            "text"
+          ]
+        },
+        "temporal-calendar": {
+          "reason": "DOM calendar keyboard/click translation and calendar-cell projection.",
+          "allows": [
+            "foundation",
+            "temporal-calendar",
+            "temporal-support"
+          ]
+        },
+        "temporal-picker": {
+          "reason": "DOM date/date-time picker connections composing lower field, layer and positioning owners.",
+          "allows": [
+            "foundation",
+            "overlays",
+            "positioning",
+            "temporal-field",
+            "temporal-picker",
+            "temporal-support"
+          ]
+        },
+        "temporal-period": {
+          "reason": "DOM month/year picker adapters over the lower picker and period host support.",
+          "allows": [
+            "temporal-period",
+            "temporal-picker",
+            "temporal-support"
+          ]
+        },
+        "temporal-facade": {
+          "reason": "Range-calendar public aliases over the date-range picker owner.",
+          "allows": [
+            "temporal-facade",
+            "temporal-picker"
           ]
         }
       },
@@ -2081,10 +2118,6 @@
         },
         "src/alert-dialog.ts": {
           "role": "overlays",
-          "kind": "owner"
-        },
-        "src/calendar.ts": {
-          "role": "temporal",
           "kind": "owner"
         },
         "src/carousel.ts": {
@@ -2129,34 +2162,6 @@
         },
         "src/data-tree-grid.ts": {
           "role": "tabular",
-          "kind": "owner"
-        },
-        "src/date-field.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
-        "src/date-picker.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
-        "src/date-range-field.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
-        "src/date-range-picker.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
-        "src/date-time-field.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
-        "src/date-time-picker.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
-        "src/date-time-range-picker.ts": {
-          "role": "temporal",
           "kind": "owner"
         },
         "src/dialog.ts": {
@@ -2251,10 +2256,6 @@
           "role": "controls",
           "kind": "owner"
         },
-        "src/internal/date-picker-cell.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
         "src/internal/delegated-event.ts": {
           "role": "foundation",
           "kind": "owner"
@@ -2295,10 +2296,6 @@
           "role": "overlays",
           "kind": "owner"
         },
-        "src/internal/period-picker.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
         "src/internal/picker-position.ts": {
           "role": "overlays",
           "kind": "owner"
@@ -2317,14 +2314,6 @@
         },
         "src/internal/presence-motion.ts": {
           "role": "overlays",
-          "kind": "owner"
-        },
-        "src/internal/reference-date.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
-        "src/internal/result.ts": {
-          "role": "foundation",
           "kind": "owner"
         },
         "src/internal/stable-id-token.ts": {
@@ -2365,14 +2354,6 @@
         },
         "src/meter.ts": {
           "role": "controls",
-          "kind": "owner"
-        },
-        "src/month-picker.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
-        "src/month-range-picker.ts": {
-          "role": "temporal",
           "kind": "owner"
         },
         "src/multi-thumb-slider.ts": {
@@ -2419,10 +2400,6 @@
           "role": "controls",
           "kind": "owner"
         },
-        "src/range-calendar.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
         "src/rating.ts": {
           "role": "controls",
           "kind": "owner"
@@ -2463,16 +2440,84 @@
           "role": "controls",
           "kind": "owner"
         },
+        "src/temporal/calendar.ts": {
+          "role": "temporal-calendar",
+          "kind": "owner"
+        },
+        "src/temporal/date-field.ts": {
+          "role": "temporal-field",
+          "kind": "owner"
+        },
+        "src/temporal/date-picker.ts": {
+          "role": "temporal-picker",
+          "kind": "owner"
+        },
+        "src/temporal/date-range-field.ts": {
+          "role": "temporal-field",
+          "kind": "owner"
+        },
+        "src/temporal/date-range-picker.ts": {
+          "role": "temporal-picker",
+          "kind": "owner"
+        },
+        "src/temporal/date-time-field.ts": {
+          "role": "temporal-field",
+          "kind": "owner"
+        },
+        "src/temporal/date-time-picker.ts": {
+          "role": "temporal-picker",
+          "kind": "owner"
+        },
+        "src/temporal/date-time-range-picker.ts": {
+          "role": "temporal-picker",
+          "kind": "owner"
+        },
+        "src/temporal/internal/date-picker-cell.ts": {
+          "role": "temporal-support",
+          "kind": "owner"
+        },
+        "src/temporal/internal/period-picker.ts": {
+          "role": "temporal-support",
+          "kind": "owner"
+        },
+        "src/temporal/internal/reference-date.ts": {
+          "role": "temporal-support",
+          "kind": "owner"
+        },
+        "src/temporal/internal/result.ts": {
+          "role": "temporal-support",
+          "kind": "owner"
+        },
+        "src/temporal/month-picker.ts": {
+          "role": "temporal-period",
+          "kind": "owner"
+        },
+        "src/temporal/month-range-picker.ts": {
+          "role": "temporal-period",
+          "kind": "owner"
+        },
+        "src/temporal/range-calendar.ts": {
+          "role": "temporal-facade",
+          "kind": "facade"
+        },
+        "src/temporal/time-field.ts": {
+          "role": "temporal-field",
+          "kind": "owner"
+        },
+        "src/temporal/time-range-field.ts": {
+          "role": "temporal-field",
+          "kind": "owner"
+        },
+        "src/temporal/year-picker.ts": {
+          "role": "temporal-period",
+          "kind": "owner"
+        },
+        "src/temporal/year-range-picker.ts": {
+          "role": "temporal-period",
+          "kind": "owner"
+        },
         "src/text.ts": {
           "role": "text",
-          "kind": "owner"
-        },
-        "src/time-field.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
-        "src/time-range-field.ts": {
-          "role": "temporal",
           "kind": "owner"
         },
         "src/timer.ts": {
@@ -2513,14 +2558,6 @@
         },
         "src/window-splitter.ts": {
           "role": "controls",
-          "kind": "owner"
-        },
-        "src/year-picker.ts": {
-          "role": "temporal",
-          "kind": "owner"
-        },
-        "src/year-range-picker.ts": {
-          "role": "temporal",
           "kind": "owner"
         }
       }

@@ -129,7 +129,7 @@ test('intentional temporal and virtual sibling closures fail', () => {
     fixtureResult('vue:./temporal/month-picker:named', 'named', ['@sectile/vue/dist/year-picker.js'], 1),
   ]), /retained sibling Vue/u);
   assert.throws(() => validateGranularClosures([
-    fixtureResult('vue:./temporal/year-picker:named', 'named', ['@sectile/dom/dist/date-time-picker.js'], 1),
+    fixtureResult('vue:./temporal/year-picker:named', 'named', ['@sectile/dom/dist/temporal/date-time-picker.js'], 1),
   ]), /retained sibling DOM/u);
 });
 
@@ -141,15 +141,18 @@ test('base date picker factories tree-shake period capabilities in both bundlers
     };
     const results = await Promise.all(['esbuild', 'vite'].map((bundler) => bundleFixture(resolve('.'), fixture, bundler)));
     validateGranularClosures(results);
-    assert.ok(results.every((result) => result.modules.includes(`@sectile/dom/dist/${family}.js`)));
+    assert.ok(results.every((result) => result.modules.includes(`@sectile/dom/dist/temporal/${family}.js`)));
   }
 });
 
 test('base date hosts exclude period behavior while period hosts retain their own capabilities', () => {
   for (const id of ['dom:./temporal/date-picker:named', 'dom:./temporal/date-range-picker:named', 'temporal:./calendar:named']) {
     assert.doesNotThrow(() => validateGranularClosures([fixtureResult(id, 'named', ['@sectile/temporal/dist/calendar.js'], 1)]));
-    for (const owner of ['dom', 'temporal']) {
-      const modules = [`@sectile/${owner}/dist/internal/period-picker.js`];
+    for (const module of [
+      '@sectile/dom/dist/temporal/internal/period-picker.js',
+      '@sectile/temporal/dist/pickers/period/navigation.js',
+    ]) {
+      const modules = [module];
       assert.throws(() => validateGranularClosures([fixtureResult(id, 'named', modules, 1)]), /base date host retained period-only behavior/u);
       assert.doesNotThrow(() => validateGranularClosures([fixtureResult('dom:./temporal/month-range-picker:named', 'named', modules, 1)]));
     }

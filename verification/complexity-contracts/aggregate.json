@@ -27632,7 +27632,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "temporal.day-focus-entry",
-      "source": "packages/dom/src/internal/date-picker-cell.ts",
+      "source": "packages/dom/src/temporal/internal/date-picker-cell.ts",
       "benchmarkIDs": [
         "ISSUE-138:dom-temporal-day-focus-entry"
       ],

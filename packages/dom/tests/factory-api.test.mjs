@@ -127,10 +127,10 @@ test('temporal controls are exposed only through their optional subpath', async 
   assert.equal(rootModule.createCalendar, undefined);
 
   assert.equal(packageManifest.exports['./temporal'], undefined);
-  const dateFieldModule = await import('../.verification-dist/date-field.js');
-  const calendarModule = await import('../.verification-dist/calendar.js');
+  const dateFieldModule = await import('../.verification-dist/temporal/date-field.js');
+  const calendarModule = await import('../.verification-dist/temporal/calendar.js');
   assert.equal(typeof dateFieldModule.createDateField, 'function');
   assert.equal(typeof calendarModule.createCalendar, 'function');
-  const dateFieldSource = await readFile(new URL('../.verification-dist/date-field.js', import.meta.url), 'utf8');
+  const dateFieldSource = await readFile(new URL('../.verification-dist/temporal/date-field.js', import.meta.url), 'utf8');
   assert.match(dateFieldSource, /@sectile\/temporal/);
 });

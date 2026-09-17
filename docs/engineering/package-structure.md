@@ -102,6 +102,50 @@ changes locations and import directions, not event handling, rendering,
 validation rules or resource lifetimes. WI-002 removes the DOM Chart cycle and
 its exact migration records without expanding allowed role directions.
 
+## DOM Temporal ownership
+
+The fifteen existing `@sectile/dom/temporal/*` public subpaths keep their keys
+and exported names while their implementations are colocated under
+`packages/dom/src/temporal/`:
+
+```text
+temporal/
+  calendar.ts
+  date-field.ts
+  date-range-field.ts
+  date-time-field.ts
+  time-field.ts
+  time-range-field.ts
+  date-picker.ts
+  date-range-picker.ts
+  date-time-picker.ts
+  date-time-range-picker.ts
+  range-calendar.ts
+  month-picker.ts
+  month-range-picker.ts
+  year-picker.ts
+  year-range-picker.ts
+  internal/
+    result.ts
+    date-picker-cell.ts
+    period-picker.ts
+    reference-date.ts
+```
+
+The internal Temporal support layer contains only DOM-specific controller/result
+adaptation, date-cell projection, browser reference-date capture and period-key
+translation. It does not own portable date arithmetic, selection, availability
+or navigation; those remain in `@sectile/temporal`. Field adapters depend on
+shared DOM text/input primitives, while picker adapters compose the existing
+layer and positioning owners rather than cloning them.
+
+Event listener identities, controlled-state synchronization, visibility,
+position connections, layer bindings and disconnect cleanup remain with their
+existing connections. The regrouping changes physical module targets and
+allowed dependency directions only. It does not create a new listener registry,
+observer, timer, cache or runtime dependency, and the DOM root remains isolated
+from the optional Temporal runtime unless a Temporal subpath is imported.
+
 ## Chart domain ownership
 
 The existing Chart subpaths remain stable facades over responsibility-owned
