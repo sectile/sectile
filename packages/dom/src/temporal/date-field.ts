@@ -5,8 +5,8 @@ import { sameTextEditingState, type TextEditingState } from '@sectile/core/text'
 import { applyDateFieldEvent, formatDateValue, tryCreateDateFieldState, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/temporal/date-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from '../internal/interaction.js';
-import { DOMTextElementBinding } from '../internal/text-element.js';
-import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../internal/controlled-field-input.js';
+import { DOMTextElementBinding } from '../text/element-binding.js';
+import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
 import { toTextEvent, type TextInput } from '../text.js';
 
 export { formatDateValue, parseDateValue } from '@sectile/temporal/date-field';

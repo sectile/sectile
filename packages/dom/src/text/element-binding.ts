@@ -1,5 +1,5 @@
 import { isWellFormedPlainText, type TextEditingState, type TextSelectionInput } from '@sectile/core/text';
-import type { TextElement, TextInput } from '../text.js';
+import type { TextElement, TextInput } from './contracts.js';
 
 export interface DOMTextElementBindingOptions {
   readonly element: TextElement;

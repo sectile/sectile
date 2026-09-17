@@ -1400,7 +1400,7 @@
     {
       "id": "text.native-reconcile",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/text-element.ts",
+      "source": "packages/dom/src/text/element-binding.ts",
       "benchmarkIDs": [
         "VAL-046:dom-text-native-reconcile-work"
       ],

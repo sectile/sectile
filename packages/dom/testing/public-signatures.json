@@ -291,7 +291,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "2efbeab0677652f68b146ac3030ab50a9649dfdfc9eae8353927fcc1113103af",
+  "fingerprint": "96bd5b3aed3d650957dc0d8a25b1c0a2bd55b8fc088aa14a6b04a17abb45765b",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -607,7 +607,11 @@
     },
     {
       "path": "dist/text.d.ts",
-      "sha256": "67b435328afc7426cf64694d66296eb28f8c3023317cf585bdf27eb8fec6afdd"
+      "sha256": "a0c4f86483dc461058cb097618d77b3bc6e31cdcab3892877df15509e3d3c2c7"
+    },
+    {
+      "path": "dist/text/contracts.d.ts",
+      "sha256": "1e7a4b660af55824746c74e1d3c2ecab115ab867b124b888d933d19a3200a1ee"
     },
     {
       "path": "dist/timer.d.ts",

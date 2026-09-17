@@ -262,6 +262,30 @@ retains its generation guard and one active motion cleanup. The move does not
 change portable layer, popup, menu or anchored-layout semantics; those remain in
 Core and the existing domain owners.
 
+## DOM text/input ownership
+
+The public `@sectile/dom/text` entrypoint remains at `src/text.ts`. Shared text
+host support is grouped below it under `src/text/`:
+
+```text
+text/
+  contracts.ts         # public TextInput and TextElement contracts
+  element-binding.ts   # native input/search/composition listener owner
+  controlled-input.ts  # controlled text/selection reconciliation
+```
+
+The public Text controller and connection remain one semantic state owner in
+`text.ts`. `element-binding.ts` no longer imports that upper host: it depends
+only on the lower contracts, removing the previous source cycle between
+`text.ts` and the native binding. Number, quantity and Temporal field adapters
+keep their existing public modules and consume only the lower helpers they need.
+
+Each `DOMTextElementBinding` still owns one stable listener for `input`,
+`search`, `compositionstart` and `compositionend`, with the same composition
+generation guard and disconnect cleanup. Controlled-input synchronization remains
+stateless and does not add a registry, listener or scheduled resource. Native
+replacement derivation and Core text semantics are unchanged.
+
 ## DOM Virtual ownership
 
 The existing `@sectile/dom/virtual` subpath and export target remain unchanged.

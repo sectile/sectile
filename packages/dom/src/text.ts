@@ -13,42 +13,12 @@ import {
   tryCreateTextEditingState,
   type TextEditingState,
   type TextEvent,
-  type TextSelectionInput,
 } from '@sectile/core/text';
-import { DOMTextElementBinding } from './internal/text-element.js';
+import type { TextElement, TextInput } from './text/contracts.js';
+import { DOMTextElementBinding } from './text/element-binding.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 
-export type TextInput =
-  | {
-      readonly type: 'beforeinput';
-      readonly inputType: string;
-      readonly data?: string | null;
-      readonly startCodeUnitOffset: number;
-      readonly endCodeUnitOffset: number;
-      readonly selection: TextSelectionInput;
-    }
-  | {
-      readonly type: 'input';
-      readonly inputType: string;
-      readonly text: string;
-      readonly startCodeUnitOffset: number;
-      readonly endCodeUnitOffset: number;
-      readonly selection: TextSelectionInput;
-    }
-  | {
-      readonly type: 'composition-start';
-      readonly text: string;
-      readonly startCodeUnitOffset: number;
-      readonly endCodeUnitOffset: number;
-      readonly selection: TextSelectionInput;
-    }
-  | {
-      readonly type: 'composition-update';
-      readonly text: string;
-      readonly selection: TextSelectionInput;
-    }
-  | { readonly type: 'composition-commit' }
-  | { readonly type: 'composition-cancel' };
+export type { TextElement, TextInput } from './text/contracts.js';
 
 export interface TextValueChangeDetails {
   readonly value: TextEditingState;
@@ -93,8 +63,6 @@ export interface TextTransitionDetails {
   readonly input: TextInput;
   readonly result: RevisionResult<TextEditingState, never>;
 }
-
-export type TextElement = HTMLInputElement | HTMLTextAreaElement;
 
 export interface TextConnectionOptions {
   readonly controller: TextController;

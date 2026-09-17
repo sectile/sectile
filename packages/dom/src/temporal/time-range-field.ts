@@ -6,8 +6,8 @@ import { formatTimeValue } from '@sectile/temporal/time-field';
 import { applyTimeRangeFieldEvent, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldCommand, type TimeRangeFieldEndpoint, type TimeRangeFieldEvent, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/temporal/time-range-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from '../internal/interaction.js';
-import { DOMTextElementBinding } from '../internal/text-element.js';
-import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../internal/controlled-field-input.js';
+import { DOMTextElementBinding } from '../text/element-binding.js';
+import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
 import { toTextEvent, type TextInput } from '../text.js';
 
 export type { TimeRange } from '@sectile/temporal/time-range-field';

@@ -1997,13 +1997,36 @@
             "positioning",
             "overlay-layer-binding",
             "overlay-position-connection",
-            "text"
+            "text",
+            "text-binding",
+            "text-controlled"
+          ]
+        },
+        "text-contracts": {
+          "reason": "Public DOM text input and host-element contracts shared below the Text connection.",
+          "allows": [
+            "text-contracts"
+          ]
+        },
+        "text-binding": {
+          "reason": "Native input/search/composition listener owner translating one TextElement into TextInput events.",
+          "allows": [
+            "text-contracts",
+            "text-binding"
+          ]
+        },
+        "text-controlled": {
+          "reason": "Controlled field input text and selection reconciliation without browser resource ownership.",
+          "allows": [
+            "text-controlled"
           ]
         },
         "text": {
-          "reason": "dom text owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Public Text controller and connection owner over lower DOM text contracts and native binding.",
           "allows": [
             "foundation",
+            "text-contracts",
+            "text-binding",
             "text"
           ]
         },
@@ -2215,7 +2238,9 @@
             "foundation",
             "temporal-field",
             "temporal-support",
-            "text"
+            "text",
+            "text-binding",
+            "text-controlled"
           ]
         },
         "temporal-calendar": {
@@ -2437,8 +2462,8 @@
           "role": "foundation",
           "kind": "owner"
         },
-        "src/internal/controlled-field-input.ts": {
-          "role": "controls",
+        "src/text/controlled-input.ts": {
+          "role": "text-controlled",
           "kind": "owner"
         },
         "src/internal/delegated-event.ts": {
@@ -2505,8 +2530,12 @@
           "role": "foundation",
           "kind": "owner"
         },
-        "src/internal/text-element.ts": {
-          "role": "text",
+        "src/text/contracts.ts": {
+          "role": "text-contracts",
+          "kind": "owner"
+        },
+        "src/text/element-binding.ts": {
+          "role": "text-binding",
           "kind": "owner"
         },
         "src/listbox.ts": {

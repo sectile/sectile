@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unwrap } from '@sectile/core/result';
 import { createTextEditingState } from '@sectile/core/text';
-import { deriveNativeReplacement } from '../.verification-dist/internal/text-element.js';
+import { deriveNativeReplacement } from '../.verification-dist/text/element-binding.js';
 import { createText, createTextController, createTextState, toTextEvent } from '../.verification-dist/text.js';
 
 test('DOM text creates a caret-preserving state from a plain string', () => {
