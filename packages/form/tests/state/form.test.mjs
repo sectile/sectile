@@ -128,6 +128,37 @@ test('form values preserve opaque values and reject leaf-container collisions', 
   ]).ok, false);
 });
 
+test('Form construction boundaries share limit rejection and preserve caller ownership', () => {
+  for (const limits of [null, [], { maxEntries: 0 }, { maxPathSegments: NaN }, { maxOutputNodes: -1 }]) {
+    const results = [
+      tryCreateFormFieldPath(null, limits),
+      tryCreateFormRelativePath(null, limits),
+      tryCreateFormValues(null, limits),
+      tryCreateFormState(null, limits),
+    ];
+    assert.equal(results[0].ok, false);
+    assert.equal(results[0].error.code, 'form-limit-invalid');
+    for (const result of results.slice(1)) assert.deepEqual(result, results[0]);
+  }
+  let reads = 0;
+  const accessorEntry = { get path() { reads += 1; return 'profile.name'; }, value: 'ignored' };
+  assert.equal(tryCreateFormValues([accessorEntry]).error.code, 'form-value-entry-invalid');
+  assert.equal(reads, 0);
+
+  const path = ['profile', 'payload'];
+  const captured = createFormFieldPath(path);
+  const leaf = { nested: [] };
+  const values = createFormValues([{ path, value: leaf }, { path, value: leaf }]);
+  path[0] = 'changed';
+  assert.deepEqual(captured, ['profile', 'payload']);
+  assert.equal(Object.isFrozen(captured), true);
+  assert.equal(values.profile.payload[0], leaf);
+  assert.equal(values.profile.payload[1], leaf);
+  assert.equal(Object.isFrozen(values.profile.payload), true);
+  assert.equal(Object.isFrozen(leaf), false);
+  assert.equal(Object.isFrozen(leaf.nested), false);
+});
+
 const requiredIssue = {
   id: 'email-required',
   fieldId: 'email',

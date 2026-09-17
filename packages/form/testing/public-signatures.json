@@ -27,7 +27,7 @@
       "types": "dist/values.d.ts"
     }
   ],
-  "fingerprint": "a0a5739e64bfd197b4677c2b0f108421477b71a71d178766c018d36b98d11d48",
+  "fingerprint": "d915d88f46ddcb767511166206aa2ecad17f6f4c3d50394c1a3432b63e6cc6b5",
   "files": [
     {
       "path": "dist/error.d.ts",
@@ -38,12 +38,24 @@
       "sha256": "0bd7568cb76aa1805ed415e92ca861db40d6431c11fd6415809ddf163a8bb137"
     },
     {
+      "path": "dist/internal/construction/limits.d.ts",
+      "sha256": "e77223ee4eb043c21d761e8e4d144f78aec3c2d766a6ec2efb75c88715b7d0eb"
+    },
+    {
+      "path": "dist/internal/construction/path.d.ts",
+      "sha256": "ce1f82ec93cc22cd30fca88291ab383a82dd8db4bf2fe6f02c84400d7d22d66a"
+    },
+    {
+      "path": "dist/internal/construction/values.d.ts",
+      "sha256": "d4a3f3f618faa4ab1476cbb75eed0dbd95b21de1d335eacfc7480f153fb05afb"
+    },
+    {
       "path": "dist/internal/form.d.ts",
-      "sha256": "5eb58c809f24740ce29b20f40bc41bd09edac5afaec3b3217219fc47eb0fc554"
+      "sha256": "4aea191deef67513b910653df53c83945e35fddd4d66f70079e080410ce853c3"
     },
     {
       "path": "dist/path.d.ts",
-      "sha256": "d3c00c1599dba5b5d61693a6d65bce8855af54926bc6890649cc31ac58fc0452"
+      "sha256": "33e13d573365147a5fb5a5b8fe7fcff7c26107dce69ab572079184f17c0cc49b"
     },
     {
       "path": "dist/schema.d.ts",
@@ -51,11 +63,11 @@
     },
     {
       "path": "dist/state.d.ts",
-      "sha256": "1f75075eb6272c5d3e97c67d8b5fd70934b0e8d65eebff26f512599a6fa244db"
+      "sha256": "43acc3e30937204f057477e5096fa6693d511b897c592e415a2f7fabc30edf55"
     },
     {
       "path": "dist/values.d.ts",
-      "sha256": "34b65ce6f7328f9d905f2d2d2d7e50a7db705d56ef5708908cad3d52f9e768cd"
+      "sha256": "f8213454ea57bfa4cead1676a6915758a17050a3f773e8f8061e7e9c3284a024"
     }
   ]
 }

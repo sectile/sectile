@@ -1,7 +1,7 @@
 export {
   createFormValues,
   tryCreateFormValues,
-  type FormConstructionLimits,
   type FormValueEntry,
   type FormValues,
-} from './internal/form.js';
+} from './internal/construction/values.js';
+export type { Limits as FormConstructionLimits } from './internal/construction/limits.js';

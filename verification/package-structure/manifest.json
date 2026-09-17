@@ -928,6 +928,18 @@
           "role": "exports",
           "kind": "facade"
         },
+        "src/internal/construction/limits.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/construction/path.ts": {
+          "role": "path",
+          "kind": "owner"
+        },
+        "src/internal/construction/values.ts": {
+          "role": "values",
+          "kind": "owner"
+        },
         "src/internal/form.ts": {
           "role": "state",
           "kind": "owner"
@@ -3209,34 +3221,6 @@
       "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
     },
     {
-      "id": "form-source-16",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/form/src/path.ts",
-          "packages/form/src/internal/form.ts"
-        ]
-      ],
-      "owner": "form",
-      "workItem": "WI-003A",
-      "reason": "Path/value facades currently load the whole state implementation; extract their owners in WI-003A."
-    },
-    {
-      "id": "form-source-17",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/form/src/values.ts",
-          "packages/form/src/internal/form.ts"
-        ]
-      ],
-      "owner": "form",
-      "workItem": "WI-003A",
-      "reason": "Path/value facades currently load the whole state implementation; extract their owners in WI-003A."
-    },
-    {
       "id": "virtual-source-18",
       "graph": "source",
       "rule": "direction",
@@ -3403,34 +3387,6 @@
       "owner": "vue",
       "workItem": "WI-010A",
       "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
-    },
-    {
-      "id": "form-runtime-4",
-      "graph": "runtime",
-      "owner": "form",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/form/src/path.ts",
-          "packages/form/src/internal/form.ts"
-        ]
-      ],
-      "workItem": "WI-003A",
-      "reason": "Path/value facades currently load the whole state implementation; extract their owners in WI-003A."
-    },
-    {
-      "id": "form-runtime-5",
-      "graph": "runtime",
-      "owner": "form",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/form/src/values.ts",
-          "packages/form/src/internal/form.ts"
-        ]
-      ],
-      "workItem": "WI-003A",
-      "reason": "Path/value facades currently load the whole state implementation; extract their owners in WI-003A."
     }
   ]
 }

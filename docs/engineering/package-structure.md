@@ -61,7 +61,7 @@ component edge sets, even if every individual edge has an allowed role direction
 The migration baseline is `dc6a84e58aeaed00b8af89e971723ecb20157b15`.
 Remaining back-references have exact edge or component records with an owner,
 reason and remediation Work Item. They cover Chart model/projection contracts,
-Form path/value concentration, Virtual track contracts and Vue Form contracts.
+Virtual track contracts and Vue Form contracts.
 They are not blanket package exemptions.
 
 A successful check with such records says `passed-with-recorded-debt`, not that
@@ -102,6 +102,34 @@ classes and their GPU resources retain their original owners. The refactor
 changes locations and import directions, not event handling, rendering,
 validation rules or resource lifetimes. WI-002 removes the DOM Chart cycle and
 its exact migration records without expanding allowed role directions.
+
+## Form construction ownership
+
+Form's existing `/path` and `/values` subpaths expose independent construction
+owners under `packages/form/src/internal/construction/`:
+
+```text
+construction/
+  limits.ts      # shared construction limits, normalization and ceiling results
+  path.ts        # field/relative paths, validation and canonical encoding
+  values.ts      # nested output assembly and owned-branch freezing
+```
+
+The dependency direction is values -> path -> limits, with state also consuming
+path and limits. These lower owners never import the state implementation or a
+public composition facade. Path/value imports therefore do not initialize Form
+state stores. Each owner keeps its small vocabulary types with its operations;
+all public limit re-exports resolve to one `FormConstructionLimits` declaration.
+
+The construction split preserves parsing, input capture, failure ordering,
+configured budgets, repeated-leaf ordering and opaque value identity. Only
+newly constructed branches and repeated-leaf wrappers are frozen; caller-owned
+leaves are not transferred to the output's structural ownership.
+
+State storage and transitions remain in `internal/form.ts` for the separate
+WI-003B extraction. Its delta indexes, private-state WeakMap and field projection
+cache retain their existing single owner; WI-003A does not claim that the whole
+Form package has been reorganized.
 
 ## Moving or extracting an implementation
 

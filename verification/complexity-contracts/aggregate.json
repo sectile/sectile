@@ -28623,7 +28623,7 @@
       "package": "form",
       "surface": "hot",
       "id": "values.construct",
-      "source": "packages/form/src/internal/form.ts",
+      "source": "packages/form/src/internal/construction/values.ts",
       "benchmarkIDs": [
         "VAL-030:form-values-construct-work"
       ],

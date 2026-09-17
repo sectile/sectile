@@ -5,8 +5,8 @@ export {
   encodeFormFieldPath,
   tryCreateFormFieldPath,
   tryCreateFormRelativePath,
-  type FormConstructionLimits,
-  type FormFieldPath,
-  type FormPathSegment,
-  type FormRelativePath,
-} from './internal/form.js';
+  type Path as FormFieldPath,
+  type Segment as FormPathSegment,
+  type RelativePath as FormRelativePath,
+} from './internal/construction/path.js';
+export type { Limits as FormConstructionLimits } from './internal/construction/limits.js';

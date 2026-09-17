@@ -11,7 +11,6 @@ export {
   setFormFieldMeta,
   tryCreateFormState,
   upsertFormFieldIssue,
-  type FormConstructionLimits,
   type FormCommand,
   type FormEvent,
   type FormFieldInput,
@@ -31,3 +30,4 @@ export {
   type FormValidationState,
   type FormValidationTrigger,
 } from './internal/form.js';
+export type { Limits as FormConstructionLimits } from './internal/construction/limits.js';

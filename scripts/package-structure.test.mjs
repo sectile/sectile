@@ -265,3 +265,25 @@ test('all product sources have a reviewed role and only the recorded initial sou
   assert.equal(classes.size, graph.modules.length);
   assertStructure(inspectStructure(graph, manifest, classes));
 });
+
+test('Form path and value imports keep source type and value dependencies within construction owners', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  const imports = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) imports.get(edge.source).push(edge.target);
+  for (const entry of ['path', 'values']) {
+    const visited = new Set();
+    const pending = [`packages/form/src/${entry}.ts`];
+    while (pending.length) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      const owner = classes.get(path);
+      if (owner.package === 'form') assert.ok(['foundation', 'path', 'values'].includes(owner.role), path);
+      pending.push(...imports.get(path));
+    }
+    assert.ok(visited.size > 1);
+  }
+});
