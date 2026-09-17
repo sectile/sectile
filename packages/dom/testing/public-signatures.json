@@ -291,7 +291,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "58e215e06b8276f624a4f008e209bb066434cf971b764d7bf97c67bcbd0628b1",
+  "fingerprint": "e4ca2dab0a847635feb43cba41c693f88b648cc8f62e55b78a67794397e3ea00",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -319,7 +319,7 @@
     },
     {
       "path": "dist/chart.d.ts",
-      "sha256": "f1dd55a042fc59eef4429f2aa66f4b246b099a7fdf64a15c6385059e6f2ab495"
+      "sha256": "0d561a01a0bc1fb75ef9d2b69997bec13a6e0b3d036e2d0ad19a2a52b3f3ce59"
     },
     {
       "path": "dist/checkbox-group.d.ts",
@@ -416,6 +416,18 @@
     {
       "path": "dist/interact-outside.d.ts",
       "sha256": "de3e7df840d640d3c099d45fd5f0e7c9462264b46b4d3092ad1e123123835095"
+    },
+    {
+      "path": "dist/internal/chart/contracts.d.ts",
+      "sha256": "58fb48de1fbd9857852efec85bb9ba7ff3ec5b6a1995be1aae80b615c9093de4"
+    },
+    {
+      "path": "dist/internal/chart/create.d.ts",
+      "sha256": "d29563b8b3c74b8c148638519dd1b5e42fc763cda33f9fd780abdda0ec0d3c86"
+    },
+    {
+      "path": "dist/internal/chart/navigation-options.d.ts",
+      "sha256": "81b6cbf53ff618625b0e039aa9eedcf3939c11558e766e1932cf32c3138c89f8"
     },
     {
       "path": "dist/internal/checked-control.d.ts",

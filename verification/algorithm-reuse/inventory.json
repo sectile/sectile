@@ -1740,50 +1740,6 @@
       "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
     },
     {
-      "detector": "raw-identity-lookup",
-      "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/chart.ts",
-      "line": 134,
-      "evidence": ".some(",
-      "rule": "dom-host-authority",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
-    },
-    {
-      "detector": "linear-membership",
-      "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/chart.ts",
-      "line": 283,
-      "evidence": ".includes(",
-      "rule": "dom-host-authority",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
-    },
-    {
-      "detector": "linear-membership",
-      "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/chart.ts",
-      "line": 284,
-      "evidence": ".includes(",
-      "rule": "dom-host-authority",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
-    },
-    {
-      "detector": "linear-membership",
-      "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/chart.ts",
-      "line": 285,
-      "evidence": ".includes(",
-      "rule": "dom-host-authority",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
-    },
-    {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
       "path": "packages/dom/src/color-picker.ts",
@@ -2059,20 +2015,9 @@
       "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
     },
     {
-      "detector": "derived-index-construction",
-      "category": "discarded-canonical-index",
-      "path": "packages/dom/src/internal/chart-canvas-renderer.ts",
-      "line": 42,
-      "evidence": "new Map(projection.layout?.axes.map(",
-      "rule": "dom-host-authority",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
-    },
-    {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/internal/chart-connection.ts",
+      "path": "packages/dom/src/internal/chart/connection.ts",
       "line": 313,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
@@ -2083,7 +2028,7 @@
     {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/internal/chart-connection.ts",
+      "path": "packages/dom/src/internal/chart/connection.ts",
       "line": 318,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
@@ -2094,7 +2039,7 @@
     {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/internal/chart-connection.ts",
+      "path": "packages/dom/src/internal/chart/connection.ts",
       "line": 327,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
@@ -2105,7 +2050,7 @@
     {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/internal/chart-connection.ts",
+      "path": "packages/dom/src/internal/chart/connection.ts",
       "line": 328,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
@@ -2116,7 +2061,7 @@
     {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/internal/chart-connection.ts",
+      "path": "packages/dom/src/internal/chart/connection.ts",
       "line": 333,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
@@ -2127,7 +2072,7 @@
     {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/internal/chart-connection.ts",
+      "path": "packages/dom/src/internal/chart/connection.ts",
       "line": 334,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
@@ -2138,7 +2083,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/chart-connection.ts",
+      "path": "packages/dom/src/internal/chart/connection.ts",
       "line": 412,
       "evidence": ".find(",
       "rule": "dom-host-authority",
@@ -2149,7 +2094,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/chart-connection.ts",
+      "path": "packages/dom/src/internal/chart/connection.ts",
       "line": 414,
       "evidence": ".find(",
       "rule": "dom-host-authority",
@@ -2160,7 +2105,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/dom/src/internal/chart-connection.ts",
+      "path": "packages/dom/src/internal/chart/connection.ts",
       "line": 430,
       "evidence": "new Map(names.map(",
       "rule": "dom-host-authority",
@@ -2171,7 +2116,51 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/chart-navigation.ts",
+      "path": "packages/dom/src/internal/chart/create.ts",
+      "line": 72,
+      "evidence": ".some(",
+      "rule": "dom-host-authority",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
+    },
+    {
+      "detector": "linear-membership",
+      "category": "raw-full-domain-scan",
+      "path": "packages/dom/src/internal/chart/navigation-options.ts",
+      "line": 20,
+      "evidence": ".includes(",
+      "rule": "dom-host-authority",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
+    },
+    {
+      "detector": "linear-membership",
+      "category": "raw-full-domain-scan",
+      "path": "packages/dom/src/internal/chart/navigation-options.ts",
+      "line": 21,
+      "evidence": ".includes(",
+      "rule": "dom-host-authority",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
+    },
+    {
+      "detector": "linear-membership",
+      "category": "raw-full-domain-scan",
+      "path": "packages/dom/src/internal/chart/navigation-options.ts",
+      "line": 22,
+      "evidence": ".includes(",
+      "rule": "dom-host-authority",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/dom/src/internal/chart/navigation.ts",
       "line": 275,
       "evidence": ".find(",
       "rule": "dom-host-authority",
@@ -2182,7 +2171,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/chart-navigation.ts",
+      "path": "packages/dom/src/internal/chart/navigation.ts",
       "line": 276,
       "evidence": ".find(",
       "rule": "dom-host-authority",
@@ -2193,7 +2182,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/chart-navigation.ts",
+      "path": "packages/dom/src/internal/chart/navigation.ts",
       "line": 347,
       "evidence": ".some(",
       "rule": "dom-host-authority",
@@ -2204,7 +2193,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/dom/src/internal/chart-navigation.ts",
+      "path": "packages/dom/src/internal/chart/navigation.ts",
       "line": 358,
       "evidence": "new Set(view.axes.map(",
       "rule": "dom-host-authority",
@@ -2215,7 +2204,7 @@
     {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/internal/chart-navigation.ts",
+      "path": "packages/dom/src/internal/chart/navigation.ts",
       "line": 364,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
@@ -2226,7 +2215,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/chart-navigation.ts",
+      "path": "packages/dom/src/internal/chart/navigation.ts",
       "line": 382,
       "evidence": ".some(",
       "rule": "dom-host-authority",
@@ -2237,7 +2226,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/chart-navigation.ts",
+      "path": "packages/dom/src/internal/chart/navigation.ts",
       "line": 383,
       "evidence": ".some(",
       "rule": "dom-host-authority",
@@ -2248,7 +2237,7 @@
     {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/internal/chart-overlay.ts",
+      "path": "packages/dom/src/internal/chart/overlay.ts",
       "line": 45,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
@@ -2259,7 +2248,7 @@
     {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
-      "path": "packages/dom/src/internal/chart-overlay.ts",
+      "path": "packages/dom/src/internal/chart/overlay.ts",
       "line": 46,
       "evidence": "getBoundingClientRect(",
       "rule": "dom-host-authority",
@@ -2270,7 +2259,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/chart-overlay.ts",
+      "path": "packages/dom/src/internal/chart/overlay.ts",
       "line": 86,
       "evidence": ".find(",
       "rule": "dom-host-authority",
@@ -2281,7 +2270,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/chart-overlay.ts",
+      "path": "packages/dom/src/internal/chart/overlay.ts",
       "line": 89,
       "evidence": ".find(",
       "rule": "dom-host-authority",
@@ -2292,7 +2281,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/chart-overlay.ts",
+      "path": "packages/dom/src/internal/chart/overlay.ts",
       "line": 90,
       "evidence": ".find(",
       "rule": "dom-host-authority",
@@ -2303,7 +2292,7 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/dom/src/internal/chart-overlay.ts",
+      "path": "packages/dom/src/internal/chart/overlay.ts",
       "line": 98,
       "evidence": "new Set(selection.ids.slice(",
       "rule": "dom-host-authority",
@@ -2314,7 +2303,7 @@
     {
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/chart-overlay.ts",
+      "path": "packages/dom/src/internal/chart/overlay.ts",
       "line": 376,
       "evidence": ".find(",
       "rule": "dom-host-authority",
@@ -2325,7 +2314,18 @@
     {
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
-      "path": "packages/dom/src/internal/chart-webgl2-renderer.ts",
+      "path": "packages/dom/src/internal/chart/renderers/canvas2d.ts",
+      "line": 42,
+      "evidence": "new Map(projection.layout?.axes.map(",
+      "rule": "dom-host-authority",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
+    },
+    {
+      "detector": "derived-index-construction",
+      "category": "discarded-canonical-index",
+      "path": "packages/dom/src/internal/chart/renderers/webgl2.ts",
       "line": 242,
       "evidence": "new Map(projection.layout?.axes.map(",
       "rule": "dom-host-authority",

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
 import { createChartController } from '@sectile/chart/controller';
-import { createDOMChart, tryCreateDOMChart } from '../.verification-dist/chart.js';
+import { createDOMChart, tryCreateDOMChart, tryNormalizeDOMChartNavigation } from '../.verification-dist/chart.js';
 
 function fixture(profile = 'point', data = [
   { id: 1, x: 0, y: 0 }, { id: '1', x: 1, y: 1 },
@@ -815,6 +815,34 @@ function navigableFixture(controlled = false, dualAxes = false) {
   });
   return { ...value, controller, source, initialView: view };
 }
+
+test('navigation normalization, construction and reconfiguration share rejection and capture semantics', (t) => {
+  const value = navigableFixture();
+  const options = { root: value.root, canvas: value.canvas, controller: value.controller, renderer: value.renderer };
+  const connection = createDOMChart(options);
+  t.after(() => connection.disconnect());
+  const before = connection.getLifecycleDiagnostics();
+  const projection = connection.getProjection();
+  for (const navigation of [null, { drag: 'pan' }, { wheel: 'invalid' }, { pinch: 'yes' }, { axes: [NaN] }]) {
+    const expected = tryNormalizeDOMChartNavigation(navigation);
+    assert.equal(expected.ok, false);
+    assert.deepEqual(tryCreateDOMChart({ ...options, navigation }), expected);
+    assert.deepEqual(connection.setNavigation(navigation), expected);
+    assert.deepEqual(connection.getLifecycleDiagnostics(), before);
+    assert.equal(connection.getProjection(), projection);
+  }
+  const axes = ['x'];
+  const navigation = { axes, drag: 'pan', controlAlternative: 'external' };
+  const normalized = tryNormalizeDOMChartNavigation(navigation);
+  assert.equal(normalized.ok, true);
+  assert.equal(connection.setNavigation(navigation).ok, true);
+  axes[0] = 'other';
+  assert.deepEqual(normalized.value.axes, ['x']);
+  assert.ok(Object.isFrozen(normalized.value.axes));
+  assert.equal(value.canvas.style.touchAction, 'pan-y');
+  assert.equal(connection.setNavigation().ok, true);
+  assert.deepEqual(connection.getLifecycleDiagnostics(), before);
+});
 
 test('direct gestures require a declared single-pointer control alternative', () => {
   const value = navigableFixture();

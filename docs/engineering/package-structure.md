@@ -56,19 +56,52 @@ cycle wholly inside one owner may describe valid recursive contracts; a
 cross-role cycle needs explicit remediation. Runtime cycles are governed by exact
 component edge sets, even if every individual edge has an allowed role direction.
 
-## Initial migration debt
+## Migration debt
 
-The baseline is `dc6a84e58aeaed00b8af89e971723ecb20157b15`. Known initial
-back-references have exact edge or component records, with an owner, reason and
-remediation Work Item. They cover the existing DOM Chart composition cycle,
-Chart model/projection contracts, Form path/value concentration, Virtual track
-contracts and Vue Form contracts. They are not blanket package exemptions.
+The migration baseline is `dc6a84e58aeaed00b8af89e971723ecb20157b15`.
+Remaining back-references have exact edge or component records with an owner,
+reason and remediation Work Item. They cover Chart model/projection contracts,
+Form path/value concentration, Virtual track contracts and Vue Form contracts.
+They are not blanket package exemptions.
 
 A successful check with such records says `passed-with-recorded-debt`, not that
 the package structure is finished. A new edge, a larger cyclic component, or a
 stale exception after its edge disappears fails. There is no automatic
 learn/update-exceptions mode. Fixing an owner removes its matching record in the
-same coherent change. The known DOM Chart value cycle belongs to WI-002.
+same coherent change.
+
+## DOM Chart ownership
+
+The existing `@sectile/dom/chart` entrypoint explicitly re-exports its public
+contracts and factories. Its private implementation is colocated under
+`packages/dom/src/internal/chart/`:
+
+```text
+chart/
+  contracts.ts
+  navigation-options.ts
+  result.ts
+  create.ts
+  connection.ts
+  navigation.ts
+  overlay.ts
+  renderers/
+    canvas2d.ts
+    webgl2.ts
+```
+
+Contracts contain only types. Navigation option normalization and construction
+errors are lower-level operations shared by creation and reconfiguration.
+`create.ts` selects renderers and constructs connections; navigation imports
+normalization directly, not the public composition entrypoint. The common error
+constructor in `result.ts` preserves the same construction result contract
+without depending on renderer or connection initialization.
+
+Connection IDs and host resources remain under one connection owner. Renderer
+classes and their GPU resources retain their original owners. The refactor
+changes locations and import directions, not event handling, rendering,
+validation rules or resource lifetimes. WI-002 removes the DOM Chart cycle and
+its exact migration records without expanding allowed role directions.
 
 ## Moving or extracting an implementation
 

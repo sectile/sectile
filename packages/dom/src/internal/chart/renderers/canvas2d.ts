@@ -10,7 +10,7 @@ import type {
   ChartRendererCapabilities,
   ChartRendererDiagnostics,
   NormalizedChartRenderStyle,
-} from '../chart.js';
+} from '../contracts.js';
 
 export class Canvas2DChartRenderer implements ChartRenderer {
   public readonly capabilities: ChartRendererCapabilities = Object.freeze({

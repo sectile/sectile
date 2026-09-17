@@ -13,10 +13,10 @@ import type {
   DOMChartOptions,
   NormalizedDOMChartNavigation,
   NormalizedChartRenderPolicy,
-} from '../chart.js';
-import { ChartNavigationAdapter } from './chart-navigation.js';
-import { ChartOverlay } from './chart-overlay.js';
-import { stableIDElementToken } from './stable-id-token.js';
+} from './contracts.js';
+import { ChartNavigationAdapter } from './navigation.js';
+import { ChartOverlay } from './overlay.js';
+import { stableIDElementToken } from '../stable-id-token.js';
 
 let connectionID = 0;
 

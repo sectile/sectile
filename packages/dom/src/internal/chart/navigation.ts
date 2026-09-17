@@ -7,8 +7,8 @@ import type {
   DOMChartLifecycleDiagnostics,
   DOMChartNavigation,
   NormalizedDOMChartNavigation,
-} from '../chart.js';
-import { tryNormalizeDOMChartNavigation } from '../chart.js';
+} from './contracts.js';
+import { tryNormalizeDOMChartNavigation } from './navigation-options.js';
 
 type ChartWindow = Window & typeof globalThis;
 type GestureMode = Exclude<NormalizedDOMChartNavigation['drag'], 'none'> | 'pinch';

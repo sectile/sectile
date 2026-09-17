@@ -46,7 +46,7 @@ test('shared tooling changes verify consumers and workspace ownership', () => {
 
 test('host source changes add cross-host verification', () => {
   const gates = deriveAffectedWorkspaceGates(
-    ['packages/dom/src/internal/chart-connection.ts'],
+    ['packages/dom/src/internal/chart/connection.ts'],
     new Set(['@sectile/dom']),
   );
   assert.ok(gates.includes('cross-host'));
@@ -70,7 +70,7 @@ test('governed representation sources select crossover verification without broa
 
 test('structure policy, internal sources and production settings select the structure gate', () => {
   for (const path of [
-    'packages/dom/src/internal/chart-connection.ts',
+    'packages/dom/src/internal/chart/connection.ts',
     'packages/chart/tsconfig.build.json',
     'packages/chart/package.json',
     'verification/package-structure/manifest.json',

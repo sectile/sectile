@@ -25583,7 +25583,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "chart.canvas2d-render",
-      "source": "packages/dom/src/internal/chart-canvas-renderer.ts",
+      "source": "packages/dom/src/internal/chart/renderers/canvas2d.ts",
       "benchmarkIDs": [
         "VAL-012:dom-chart-canvas-data-space"
       ],
@@ -25651,7 +25651,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "chart.disconnect",
-      "source": "packages/dom/src/internal/chart-connection.ts",
+      "source": "packages/dom/src/internal/chart/connection.ts",
       "benchmarkIDs": [
         "VAL-013:dom-chart-disconnect-zero"
       ],
@@ -25719,7 +25719,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "chart.hit-coherence",
-      "source": "packages/dom/src/internal/chart-connection.ts",
+      "source": "packages/dom/src/internal/chart/connection.ts",
       "benchmarkIDs": [
         "VAL-014:dom-chart-hit-coherence"
       ],
@@ -25787,7 +25787,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "chart.navigation-dispatch",
-      "source": "packages/dom/src/internal/chart-navigation.ts",
+      "source": "packages/dom/src/internal/chart/navigation.ts",
       "benchmarkIDs": [
         "VAL-012:dom-chart-navigation-burst",
         "VAL-013:dom-chart-navigation-lifecycle"
@@ -25856,7 +25856,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "chart.overlay-render",
-      "source": "packages/dom/src/internal/chart-overlay.ts",
+      "source": "packages/dom/src/internal/chart/overlay.ts",
       "benchmarkIDs": [
         "VAL-012:dom-chart-overlay-bounds"
       ],
@@ -25934,7 +25934,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "chart.webgl2-bind",
-      "source": "packages/dom/src/internal/chart-webgl2-renderer.ts",
+      "source": "packages/dom/src/internal/chart/renderers/webgl2.ts",
       "benchmarkIDs": [
         "VAL-012:dom-chart-webgl2-binding"
       ],
@@ -26001,7 +26001,7 @@
       "package": "dom",
       "surface": "hot",
       "id": "chart.webgl2-render",
-      "source": "packages/dom/src/internal/chart-webgl2-renderer.ts",
+      "source": "packages/dom/src/internal/chart/renderers/webgl2.ts",
       "benchmarkIDs": [
         "VAL-012:dom-chart-webgl2-retained-upload"
       ],

@@ -162,7 +162,7 @@ test('passive Chart tick imports exclude controller ownership while root imports
     source: '@sectile/vue/chart', exportName: 'ChartAxisTicks',
   };
   assert.doesNotThrow(() => validateGranularClosures([ticks]));
-  for (const module of ['@sectile/chart/dist/controller.js', '@sectile/dom/dist/internal/chart-webgl2-renderer.js']) {
+  for (const module of ['@sectile/chart/dist/controller.js', '@sectile/dom/dist/internal/chart/renderers/webgl2.js']) {
     const expanded = { ...ticks, modules: [...ticks.modules, module] };
     assert.throws(() => validateGranularClosures([expanded]), /passive Chart ticks retained/u);
     assert.doesNotThrow(() => validateGranularClosures([{ ...expanded, exportName: 'ChartRoot' }]));

@@ -7,7 +7,7 @@
     {
       "id": "chart.canvas2d-render",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/chart-canvas-renderer.ts",
+      "source": "packages/dom/src/internal/chart/renderers/canvas2d.ts",
       "benchmarkIDs": [
         "VAL-012:dom-chart-canvas-data-space"
       ],
@@ -54,7 +54,7 @@
     {
       "id": "chart.disconnect",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/chart-connection.ts",
+      "source": "packages/dom/src/internal/chart/connection.ts",
       "benchmarkIDs": [
         "VAL-013:dom-chart-disconnect-zero"
       ],
@@ -101,7 +101,7 @@
     {
       "id": "chart.hit-coherence",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/chart-connection.ts",
+      "source": "packages/dom/src/internal/chart/connection.ts",
       "benchmarkIDs": [
         "VAL-014:dom-chart-hit-coherence"
       ],
@@ -148,7 +148,7 @@
     {
       "id": "chart.navigation-dispatch",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/chart-navigation.ts",
+      "source": "packages/dom/src/internal/chart/navigation.ts",
       "benchmarkIDs": [
         "VAL-012:dom-chart-navigation-burst",
         "VAL-013:dom-chart-navigation-lifecycle"
@@ -196,7 +196,7 @@
     {
       "id": "chart.overlay-render",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/chart-overlay.ts",
+      "source": "packages/dom/src/internal/chart/overlay.ts",
       "benchmarkIDs": [
         "VAL-012:dom-chart-overlay-bounds"
       ],
@@ -253,7 +253,7 @@
     {
       "id": "chart.webgl2-bind",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/chart-webgl2-renderer.ts",
+      "source": "packages/dom/src/internal/chart/renderers/webgl2.ts",
       "benchmarkIDs": ["VAL-012:dom-chart-webgl2-binding"],
       "specificationCeiling": "O(l + s)",
       "contract": {
@@ -276,7 +276,7 @@
     {
       "id": "chart.webgl2-render",
       "inherits": "linear-v1",
-      "source": "packages/dom/src/internal/chart-webgl2-renderer.ts",
+      "source": "packages/dom/src/internal/chart/renderers/webgl2.ts",
       "benchmarkIDs": [
         "VAL-012:dom-chart-webgl2-retained-upload"
       ],

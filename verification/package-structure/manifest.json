@@ -1776,24 +1776,40 @@
           "role": "controls",
           "kind": "owner"
         },
-        "src/internal/chart-canvas-renderer.ts": {
-          "role": "chart-renderers",
-          "kind": "owner"
-        },
-        "src/internal/chart-connection.ts": {
+        "src/internal/chart/connection.ts": {
           "role": "chart-connection",
           "kind": "owner"
         },
-        "src/internal/chart-navigation.ts": {
+        "src/internal/chart/contracts.ts": {
+          "role": "chart-contracts",
+          "kind": "owner"
+        },
+        "src/internal/chart/create.ts": {
+          "role": "chart-api",
+          "kind": "owner"
+        },
+        "src/internal/chart/navigation-options.ts": {
+          "role": "chart-options",
+          "kind": "owner"
+        },
+        "src/internal/chart/navigation.ts": {
           "role": "chart-navigation",
           "kind": "owner"
         },
-        "src/internal/chart-overlay.ts": {
+        "src/internal/chart/overlay.ts": {
           "role": "chart-overlay",
           "kind": "owner"
         },
-        "src/internal/chart-webgl2-renderer.ts": {
+        "src/internal/chart/renderers/canvas2d.ts": {
           "role": "chart-renderers",
+          "kind": "owner"
+        },
+        "src/internal/chart/renderers/webgl2.ts": {
+          "role": "chart-renderers",
+          "kind": "owner"
+        },
+        "src/internal/chart/result.ts": {
+          "role": "chart-options",
           "kind": "owner"
         },
         "src/internal/checked-control.ts": {
@@ -3193,118 +3209,6 @@
       "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
     },
     {
-      "id": "dom-source-8",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/dom/src/internal/chart-canvas-renderer.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "owner": "dom",
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
-    },
-    {
-      "id": "dom-source-9",
-      "graph": "source",
-      "rule": "facade",
-      "edges": [
-        [
-          "packages/dom/src/internal/chart-canvas-renderer.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "owner": "dom",
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
-    },
-    {
-      "id": "dom-source-10",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/dom/src/internal/chart-connection.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "owner": "dom",
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
-    },
-    {
-      "id": "dom-source-11",
-      "graph": "source",
-      "rule": "facade",
-      "edges": [
-        [
-          "packages/dom/src/internal/chart-connection.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "owner": "dom",
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
-    },
-    {
-      "id": "dom-source-12",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/dom/src/internal/chart-navigation.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "owner": "dom",
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
-    },
-    {
-      "id": "dom-source-13",
-      "graph": "source",
-      "rule": "facade",
-      "edges": [
-        [
-          "packages/dom/src/internal/chart-navigation.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "owner": "dom",
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
-    },
-    {
-      "id": "dom-source-14",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/dom/src/internal/chart-webgl2-renderer.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "owner": "dom",
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
-    },
-    {
-      "id": "dom-source-15",
-      "graph": "source",
-      "rule": "facade",
-      "edges": [
-        [
-          "packages/dom/src/internal/chart-webgl2-renderer.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "owner": "dom",
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
-    },
-    {
       "id": "form-source-16",
       "graph": "source",
       "rule": "direction",
@@ -3453,48 +3357,6 @@
       "reason": "Existing model/definition/layout types point back into higher assembly; lower owned contracts in WI-004."
     },
     {
-      "id": "dom-source-24",
-      "graph": "source",
-      "rule": "cycle",
-      "edges": [
-        [
-          "packages/dom/src/chart.ts",
-          "packages/dom/src/internal/chart-canvas-renderer.ts"
-        ],
-        [
-          "packages/dom/src/chart.ts",
-          "packages/dom/src/internal/chart-connection.ts"
-        ],
-        [
-          "packages/dom/src/chart.ts",
-          "packages/dom/src/internal/chart-webgl2-renderer.ts"
-        ],
-        [
-          "packages/dom/src/internal/chart-canvas-renderer.ts",
-          "packages/dom/src/chart.ts"
-        ],
-        [
-          "packages/dom/src/internal/chart-connection.ts",
-          "packages/dom/src/chart.ts"
-        ],
-        [
-          "packages/dom/src/internal/chart-connection.ts",
-          "packages/dom/src/internal/chart-navigation.ts"
-        ],
-        [
-          "packages/dom/src/internal/chart-navigation.ts",
-          "packages/dom/src/chart.ts"
-        ],
-        [
-          "packages/dom/src/internal/chart-webgl2-renderer.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "owner": "dom",
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
-    },
-    {
       "id": "virtual-source-25",
       "graph": "source",
       "rule": "cycle",
@@ -3541,56 +3403,6 @@
       "owner": "vue",
       "workItem": "WI-010A",
       "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
-    },
-    {
-      "id": "dom-runtime-1",
-      "graph": "runtime",
-      "owner": "dom",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/dom/src/internal/chart-navigation.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
-    },
-    {
-      "id": "dom-runtime-2",
-      "graph": "runtime",
-      "owner": "dom",
-      "rule": "facade",
-      "edges": [
-        [
-          "packages/dom/src/internal/chart-navigation.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
-    },
-    {
-      "id": "dom-runtime-3",
-      "graph": "runtime",
-      "owner": "dom",
-      "rule": "cycle",
-      "edges": [
-        [
-          "packages/dom/src/chart.ts",
-          "packages/dom/src/internal/chart-connection.ts"
-        ],
-        [
-          "packages/dom/src/internal/chart-connection.ts",
-          "packages/dom/src/internal/chart-navigation.ts"
-        ],
-        [
-          "packages/dom/src/internal/chart-navigation.ts",
-          "packages/dom/src/chart.ts"
-        ]
-      ],
-      "workItem": "WI-002",
-      "reason": "Existing Chart normalizer and contracts live in the public construction module; separate them in WI-002."
     },
     {
       "id": "form-runtime-4",

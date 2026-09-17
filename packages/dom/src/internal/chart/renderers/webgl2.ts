@@ -9,7 +9,7 @@ import type {
   ChartRendererCapabilities,
   ChartRendererDiagnostics,
   NormalizedChartRenderStyle,
-} from '../chart.js';
+} from '../contracts.js';
 
 const SCALE_FUNCTION = `
 float chartMap(float value, vec2 domain, vec2 range, float logarithmic) {

@@ -102,11 +102,18 @@ test('Chart rendering is exposed only through its optional subpath', async () =>
   assert.equal(rootModule.createChartRenderer, undefined);
 
   const chartModule = await import('../.verification-dist/chart.js');
-  assert.equal(typeof chartModule.createDOMChart, 'function');
-  assert.equal(typeof chartModule.tryCreateDOMChart, 'function');
-  assert.equal(typeof chartModule.createChartRenderer, 'function');
+  assert.deepEqual(Object.keys(chartModule).sort(), [
+    'createChartRenderer', 'createDOMChart', 'detectChartRendererCapabilities',
+    'normalizeDOMChartNavigation', 'tryCreateChartRenderer', 'tryCreateDOMChart',
+    'tryNormalizeDOMChartNavigation',
+  ].sort());
+  for (const value of Object.values(chartModule)) assert.equal(typeof value, 'function');
+  assert.deepEqual(chartModule.normalizeDOMChartNavigation(), {
+    axes: undefined, drag: 'none', wheel: 'native', wheelModifier: 'none',
+    pinch: false, keyboard: false, controlAlternative: undefined,
+  });
 
-  const chartSource = await readFile(new URL('../.verification-dist/internal/chart-connection.js', import.meta.url), 'utf8');
+  const chartSource = await readFile(new URL('../.verification-dist/internal/chart/connection.js', import.meta.url), 'utf8');
   assert.match(chartSource, /@sectile\/chart/);
 });
 
