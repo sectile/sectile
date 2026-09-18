@@ -17,7 +17,7 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref } = await import('vue');
-const { DrawerContent, DrawerHandle, DrawerOverlay, DrawerRoot, DrawerTrigger } = await import('../.verification-dist/drawer.js');
+const { DrawerContent, DrawerHandle, DrawerOverlay, DrawerRoot, DrawerTrigger } = await import('../.verification-dist/overlay/drawer.js');
 
 function pointer(type, x, y = 0) {
   return new browserWindow.PointerEvent(type, {

@@ -5,7 +5,7 @@ import {
   conditionalPresenceProps,
   useConditionalPresence,
   type ConditionalPresenceProps,
-} from './internal/conditional-presence.js';
+} from './presence/conditional-presence.js';
 
 export { NavigationMenuRoot };
 export { MenuItem as NavigationMenuLink, MenuItem as NavigationMenuTrigger, MenuSubContent as NavigationMenuContent };

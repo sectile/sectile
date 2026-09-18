@@ -18,7 +18,7 @@ import {
   conditionalPresenceProps,
   type ConditionalPresenceProps,
   type ConditionalPresenceRegistry,
-} from './conditional-presence.js';
+} from '../presence/conditional-presence.js';
 
 export interface CascadeChoiceRootState {
   readonly value: string | null;

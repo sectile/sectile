@@ -4292,6 +4292,17 @@
       "rationale": "Equal canonical owners and normalized options must retain controllers and connections."
     },
     {
+      "detector": "controller-rebuild",
+      "category": "controller-connection-rebuild",
+      "path": "packages/vue/src/input/native-field.ts",
+      "line": 125,
+      "evidence": "watch( [() => props.policies, () => props.disabled, () => props.readonly, () => props.required, () => props.label, () => props.native], () => connect",
+      "rule": "vue-controller-reconfiguration",
+      "classification": "migration-required",
+      "owner": "WI-040",
+      "rationale": "Equal canonical owners and normalized options must retain controllers and connections."
+    },
+    {
       "detector": "linear-membership",
       "category": "raw-full-domain-scan",
       "path": "packages/vue/src/internal/cascade-choice.ts",
@@ -4301,28 +4312,6 @@
       "classification": "reuse",
       "owner": null,
       "rationale": "Remaining Vue occurrences project canonical snapshots or manage framework lifecycle rather than own domain algorithms."
-    },
-    {
-      "detector": "controller-rebuild",
-      "category": "controller-connection-rebuild",
-      "path": "packages/vue/src/internal/native-field.ts",
-      "line": 125,
-      "evidence": "watch( [() => props.policies, () => props.disabled, () => props.readonly, () => props.required, () => props.label, () => props.native], () => connect",
-      "rule": "vue-controller-reconfiguration",
-      "classification": "migration-required",
-      "owner": "WI-040",
-      "rationale": "Equal canonical owners and normalized options must retain controllers and connections."
-    },
-    {
-      "detector": "controller-rebuild",
-      "category": "controller-connection-rebuild",
-      "path": "packages/vue/src/internal/popup.ts",
-      "line": 307,
-      "evidence": "watch([ () => props.disabled, () => props.modal, () => props.label, () => props.initialFocus, () => props.autoFocus, () => props.restoreFocus, () => props.trapF",
-      "rule": "vue-controller-reconfiguration",
-      "classification": "migration-required",
-      "owner": "WI-040",
-      "rationale": "Equal canonical owners and normalized options must retain controllers and connections."
     },
     {
       "detector": "derived-index-construction",
@@ -4418,6 +4407,17 @@
       "path": "packages/vue/src/multi-thumb-slider.ts",
       "line": 153,
       "evidence": "watch([() => props.thumbs, () => props.min, () => props.max, () => props.step, () => props.orientation, () => props.disabled, () => props.readonly, () => props.",
+      "rule": "vue-controller-reconfiguration",
+      "classification": "migration-required",
+      "owner": "WI-040",
+      "rationale": "Equal canonical owners and normalized options must retain controllers and connections."
+    },
+    {
+      "detector": "controller-rebuild",
+      "category": "controller-connection-rebuild",
+      "path": "packages/vue/src/overlay/popup.ts",
+      "line": 307,
+      "evidence": "watch([ () => props.disabled, () => props.modal, () => props.label, () => props.initialFocus, () => props.autoFocus, () => props.restoreFocus, () => props.trapF",
       "rule": "vue-controller-reconfiguration",
       "classification": "migration-required",
       "owner": "WI-040",

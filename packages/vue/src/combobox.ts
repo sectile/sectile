@@ -17,12 +17,12 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useNativeInputFormControl } from './form/control.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
-import { usePresence } from './internal/presence.js';
+import { usePresence } from './presence/presence.js';
 import {
   conditionalPresenceProps,
   useConditionalPresence,
   type ConditionalPresenceProps,
-} from './internal/conditional-presence.js';
+} from './presence/conditional-presence.js';
 
 export interface ComboboxRootProps extends Omit<PositionOptions, 'arrowPadding'> {
   readonly items: readonly ComboboxItemDefinition<string>[];

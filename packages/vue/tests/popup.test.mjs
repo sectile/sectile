@@ -9,8 +9,8 @@ import {
   DialogRoot,
   DialogTitle,
   DialogTrigger,
-} from '../.verification-dist/dialog.js';
-import { AlertDialogContent, AlertDialogRoot, AlertDialogTitle } from '../.verification-dist/alert-dialog.js';
+} from '../.verification-dist/overlay/dialog.js';
+import { AlertDialogContent, AlertDialogRoot, AlertDialogTitle } from '../.verification-dist/overlay/alert-dialog.js';
 import {
   DrawerClose,
   DrawerContent,
@@ -19,9 +19,9 @@ import {
   DrawerRoot,
   DrawerTitle,
   DrawerTrigger,
-} from '../.verification-dist/drawer.js';
-import { PopoverAnchor, PopoverArrow, PopoverContent, PopoverRoot, PopoverTrigger } from '../.verification-dist/popover.js';
-import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from '../.verification-dist/tooltip.js';
+} from '../.verification-dist/overlay/drawer.js';
+import { PopoverAnchor, PopoverArrow, PopoverContent, PopoverRoot, PopoverTrigger } from '../.verification-dist/overlay/popover.js';
+import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from '../.verification-dist/overlay/tooltip.js';
 
 test('Vue dialog links persistent compound parts with native dialog semantics', async () => {
   const app = createSSRApp({

@@ -11,7 +11,7 @@ import {
   type VNodeChild,
 } from 'vue';
 import { useNativeInputFormControl } from '../form/control.js';
-import { useControlledStateInvariant } from './controlled-state.js';
+import { useControlledStateInvariant } from '../internal/controlled-state.js';
 
 const noPendingNativeFieldValue = Symbol('no-pending-native-field-value');
 

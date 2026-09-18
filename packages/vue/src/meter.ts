@@ -16,7 +16,7 @@ import {
   getMeterRootAttributes,
 } from '@sectile/dom/meter';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { normalizeDecimalInput } from './internal/decimal-input.js';
+import { normalizeDecimalInput } from './input/decimal-input.js';
 
 export type MeterValueFormatter = (value: string) => string;
 export interface MeterRootProps {

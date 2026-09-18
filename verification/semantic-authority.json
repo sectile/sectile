@@ -97,6 +97,21 @@
       "root": "packages/vue/src/virtual",
       "classification": "platform-only",
       "semanticPaths": []
+    },
+    {
+      "root": "packages/vue/src/overlay",
+      "classification": "platform-only",
+      "semanticPaths": []
+    },
+    {
+      "root": "packages/vue/src/presence",
+      "classification": "platform-only",
+      "semanticPaths": []
+    },
+    {
+      "root": "packages/vue/src/input",
+      "classification": "platform-only",
+      "semanticPaths": []
     }
   ],
   "dependencyGraph": [

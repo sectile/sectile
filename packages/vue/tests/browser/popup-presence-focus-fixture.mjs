@@ -1,7 +1,7 @@
 import { createApp, h, nextTick, ref } from 'vue';
 import { createMenu } from '@sectile/dom/menu';
-import { DialogClose, DialogContent, DialogRoot, DialogTrigger } from '../../.verification-dist/dialog.js';
-import { PopoverClose, PopoverContent, PopoverRoot, PopoverTrigger } from '../../.verification-dist/popover.js';
+import { DialogClose, DialogContent, DialogRoot, DialogTrigger } from '../../.verification-dist/overlay/dialog.js';
+import { PopoverClose, PopoverContent, PopoverRoot, PopoverTrigger } from '../../.verification-dist/overlay/popover.js';
 import { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem, MenuSubContent } from '../../.verification-dist/menu.js';
 
 const motion = Object.freeze({ transitionProperty: 'opacity', transitionDuration: '20ms' });

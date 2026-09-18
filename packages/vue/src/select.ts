@@ -12,16 +12,16 @@ import type {
   PositionTracking,
 } from '@sectile/dom/position';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './form/control.js';
 import { useHostId, useHostPortalTarget } from './host-provider.js';
-import { usePresence } from './internal/presence.js';
+import { usePresence } from './presence/presence.js';
 import {
   conditionalPresenceProps,
   useConditionalPresenceRegistry,
   type ConditionalPresenceProps,
   type ConditionalPresenceRegistry,
-} from './internal/conditional-presence.js';
+} from './presence/conditional-presence.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 

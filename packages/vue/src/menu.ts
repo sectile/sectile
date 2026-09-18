@@ -22,7 +22,7 @@ import {
   type ItemProjection,
 } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
-import { usePresence } from './internal/presence.js';
+import { usePresence } from './presence/presence.js';
 
 type MenuKind = 'menu' | 'menu-button' | 'menubar' | 'navigation-menu';
 type MenuRegistrationConnection = Omit<MenuConnection<string>, 'setItemAttributes' | 'setSubmenuAttributes'> & {

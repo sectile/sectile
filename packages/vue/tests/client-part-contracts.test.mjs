@@ -19,7 +19,7 @@ const rating = await import('../.verification-dist/rating.js');
 const stepper = await import('../.verification-dist/stepper.js');
 const checkboxGroup = await import('../.verification-dist/checkbox-group.js');
 const windowSplitter = await import('../.verification-dist/window-splitter.js');
-const popover = await import('../.verification-dist/popover.js');
+const popover = await import('../.verification-dist/overlay/popover.js');
 
 function renderClient(render) {
   const host = document.createElement('div');

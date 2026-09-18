@@ -13,7 +13,7 @@ import {
 import { createProgressState } from '@sectile/core/progress';
 import { getProgressIndicatorAttributes, getProgressRootAttributes } from '@sectile/dom/progress';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { normalizeDecimalInput } from './internal/decimal-input.js';
+import { normalizeDecimalInput } from './input/decimal-input.js';
 
 export type ProgressValueFormatter = (value: string) => string;
 export interface ProgressRootProps {

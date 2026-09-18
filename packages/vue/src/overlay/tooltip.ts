@@ -6,7 +6,7 @@ import {
   type PopupPortalProps,
   type PopupRootProps,
   type PopupRootSlotProps,
-} from './internal/popup.js';
+} from './popup.js';
 
 const parts = createPopupComponents({
   scope: 'tooltip', role: 'tooltip', modal: false, triggerMode: 'focus-hover', positioned: true,

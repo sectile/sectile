@@ -5,7 +5,7 @@ import {
 import { getToggleGroupItemAttributes, getToggleGroupRootAttributes } from '@sectile/dom/toggle-group';
 import { createListboxControllerFromItems, type ListboxController } from '@sectile/dom/listbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { provideFormControlOwner } from './form/control.js';
 import {
   hiddenValueSubmissionCapabilities,

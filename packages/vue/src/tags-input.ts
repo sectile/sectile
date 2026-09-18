@@ -4,7 +4,7 @@ import {
 } from 'vue';
 import { createTagsInput, type TagsInputConnection, type TagsInputPolicies } from '@sectile/dom/tags-input';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { provideFormControlOwner } from './form/control.js';
 import {
   hiddenValueSubmissionCapabilities,

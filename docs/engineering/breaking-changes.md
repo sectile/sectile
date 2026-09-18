@@ -133,6 +133,7 @@
 | WI-009 | @sectile/terminal | `./time-field` | `TimeField declaration owner` | @sectile/terminal/time-field |
 | WI-009 | @sectile/terminal | `./time-range-field` | `TimeRangeField declaration owner` | @sectile/terminal/time-range-field |
 | WI-010 | @sectile/tabular | `./virtual` | `TabularVirtualErrorCode.extent-policy-failed`, `TabularRowSelection declaration closure`, `DataTableVirtualAdapterOptions.crossExtent`, `DataTable linear row crossExtent placeholder`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/virtual |
+| WI-010 | @sectile/vue | `./number-field` | `NumberField native-field declaration closure` | @sectile/vue/number-field#NumberField |
 | WI-013 | @sectile/terminal | `./checkbox` | `Checkbox controller declaration closure` | @sectile/terminal/checkbox |
 | WI-013 | @sectile/dom | `./rating` | `Rating controller declaration closure` | @sectile/dom/rating |
 | WI-013 | @sectile/terminal | `./rating` | `Rating controller declaration closure` | @sectile/terminal/rating |

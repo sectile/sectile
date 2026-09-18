@@ -3428,20 +3428,12 @@
             "foundation"
           ]
         },
-        "presence": {
-          "reason": "vue presence owns its named contracts and implementation; permitted imports are explicit.",
-          "allows": [
-            "foundation",
-            "presence"
-          ]
-        },
         "overlays": {
           "reason": "vue overlays owns its named contracts and implementation; permitted imports are explicit.",
           "allows": [
             "form-control",
             "foundation",
-            "overlays",
-            "presence"
+            "overlays"
           ]
         },
         "form-contracts": {
@@ -3449,7 +3441,7 @@
           "allows": [
             "form-contracts",
             "foundation",
-            "presence"
+            "presence-conditional"
           ]
         },
         "form-control": {
@@ -3518,7 +3510,7 @@
             "form-contracts",
             "form-part",
             "foundation",
-            "presence"
+            "presence-conditional"
           ]
         },
         "form-api": {
@@ -3543,7 +3535,10 @@
             "form-control",
             "foundation",
             "overlays",
-            "presence"
+            "presence-conditional",
+            "input-style",
+            "presence-core",
+            "input-decimal"
           ]
         },
         "native-field": {
@@ -3579,8 +3574,8 @@
             "temporal-capability",
             "temporal-provider",
             "foundation",
-            "presence",
-            "form-control"
+            "form-control",
+            "presence-core"
           ]
         },
         "temporal-profiles": {
@@ -3742,8 +3737,7 @@
           "allows": [
             "chart",
             "controls",
-            "foundation",
-            "presence"
+            "foundation"
           ]
         },
         "exports": {
@@ -3758,7 +3752,6 @@
             "form-parts",
             "foundation",
             "overlays",
-            "presence",
             "tabular-table",
             "tabular-grid",
             "tabular-tree-grid",
@@ -3768,7 +3761,9 @@
             "virtual-api",
             "virtual-grid",
             "virtual-masonry",
-            "virtual-spatial"
+            "virtual-spatial",
+            "overlay-profiles",
+            "overlay-popup"
           ]
         },
         "reference": {
@@ -3783,7 +3778,6 @@
             "form-parts",
             "foundation",
             "overlays",
-            "presence",
             "reference",
             "tabular-table",
             "tabular-grid",
@@ -3796,6 +3790,37 @@
             "virtual-masonry",
             "virtual-spatial"
           ]
+        },
+        "overlay-popup": {
+          "reason": "Shared popup context, DOM connection and component factory below the family adapters.",
+          "allows": [
+            "foundation",
+            "presence-core"
+          ]
+        },
+        "overlay-profiles": {
+          "reason": "Five independently selected popup family adapters compose the lower popup factory.",
+          "allows": [
+            "overlay-popup"
+          ]
+        },
+        "presence-core": {
+          "reason": "One DOM presence connection and Vue watcher lifetime without upper host components.",
+          "allows": []
+        },
+        "presence-conditional": {
+          "reason": "Conditional and keyed retained-presence scopes compose the lower presence bridge.",
+          "allows": [
+            "presence-core"
+          ]
+        },
+        "input-style": {
+          "reason": "Single frozen native-input styling projection without component or lifecycle ownership.",
+          "allows": []
+        },
+        "input-decimal": {
+          "reason": "Finite numeric input normalization without controller or component dependencies.",
+          "allows": []
         }
       },
       "modules": {
@@ -3803,8 +3828,8 @@
           "role": "controls",
           "kind": "owner"
         },
-        "src/alert-dialog.ts": {
-          "role": "overlays",
+        "src/overlay/alert-dialog.ts": {
+          "role": "overlay-profiles",
           "kind": "owner"
         },
         "src/temporal/calendar.ts": {
@@ -3871,16 +3896,16 @@
           "role": "temporal-profiles",
           "kind": "owner"
         },
-        "src/dialog.ts": {
-          "role": "overlays",
+        "src/overlay/dialog.ts": {
+          "role": "overlay-profiles",
           "kind": "owner"
         },
         "src/disclosure.ts": {
           "role": "controls",
           "kind": "owner"
         },
-        "src/drawer.ts": {
-          "role": "overlays",
+        "src/overlay/drawer.ts": {
+          "role": "overlay-profiles",
           "kind": "owner"
         },
         "src/editable.ts": {
@@ -3919,8 +3944,8 @@
           "role": "foundation",
           "kind": "owner"
         },
-        "src/internal/conditional-presence.ts": {
-          "role": "presence",
+        "src/presence/conditional-presence.ts": {
+          "role": "presence-conditional",
           "kind": "owner"
         },
         "src/internal/controlled-state.ts": {
@@ -3947,8 +3972,8 @@
           "role": "temporal-capabilities",
           "kind": "owner"
         },
-        "src/internal/decimal-input.ts": {
-          "role": "foundation",
+        "src/input/decimal-input.ts": {
+          "role": "input-decimal",
           "kind": "owner"
         },
         "src/form/context.ts": {
@@ -3975,12 +4000,12 @@
           "role": "temporal-capabilities",
           "kind": "owner"
         },
-        "src/internal/native-field.ts": {
+        "src/input/native-field.ts": {
           "role": "native-field",
           "kind": "owner"
         },
-        "src/internal/native-input.ts": {
-          "role": "foundation",
+        "src/input/native-input.ts": {
+          "role": "input-style",
           "kind": "owner"
         },
         "src/internal/part-contract.ts": {
@@ -3991,12 +4016,12 @@
           "role": "temporal-capability",
           "kind": "owner"
         },
-        "src/internal/popup.ts": {
-          "role": "overlays",
+        "src/overlay/popup.ts": {
+          "role": "overlay-popup",
           "kind": "owner"
         },
-        "src/internal/presence.ts": {
-          "role": "presence",
+        "src/presence/presence.ts": {
+          "role": "presence-core",
           "kind": "owner"
         },
         "src/temporal/capabilities/range-calendar.ts": {
@@ -4083,8 +4108,8 @@
           "role": "controls",
           "kind": "owner"
         },
-        "src/popover.ts": {
-          "role": "overlays",
+        "src/overlay/popover.ts": {
+          "role": "overlay-profiles",
           "kind": "owner"
         },
         "src/primitive.ts": {
@@ -4179,8 +4204,8 @@
           "role": "controls",
           "kind": "owner"
         },
-        "src/tooltip.ts": {
-          "role": "overlays",
+        "src/overlay/tooltip.ts": {
+          "role": "overlay-profiles",
           "kind": "owner"
         },
         "src/tree-grid.ts": {

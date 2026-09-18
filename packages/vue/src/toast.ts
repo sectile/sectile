@@ -7,7 +7,7 @@ import { createToast, createToastState, type ToastConnection, type ToastInput, t
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostPortalTarget } from './host-provider.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
-import { usePresence } from './internal/presence.js';
+import { usePresence } from './presence/presence.js';
 
 export interface ToastProviderProps {
   readonly toasts?: readonly ToastInput<string>[];

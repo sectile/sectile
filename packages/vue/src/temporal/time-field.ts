@@ -5,7 +5,7 @@ import {
   type TimeFieldConnection,
   type TimeFieldOptions,
 } from '@sectile/dom/temporal/time-field';
-import { createNativeFieldComponent, type NativeFieldFactoryOptions } from '../internal/native-field.js';
+import { createNativeFieldComponent, type NativeFieldFactoryOptions } from '../input/native-field.js';
 
 export type TimeValue = NonNullable<TimeFieldOptions['value']>;
 export interface TimeFieldProps {

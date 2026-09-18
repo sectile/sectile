@@ -16,7 +16,7 @@ Object.assign(globalThis, {
 
 const { createApp, h } = await import('vue');
 const { HostProvider } = await import('../.verification-dist/host-provider.js');
-const { DialogContent, DialogPortal, DialogRoot } = await import('../.verification-dist/dialog.js');
+const { DialogContent, DialogPortal, DialogRoot } = await import('../.verification-dist/overlay/dialog.js');
 
 test('HostProvider supplies the default portal target and local targets override it', () => {
   const host = document.createElement('div');

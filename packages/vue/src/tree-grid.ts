@@ -16,7 +16,7 @@ import {
   conditionalPresenceProps,
   useConditionalPresence,
   type ConditionalPresenceProps,
-} from './internal/conditional-presence.js';
+} from './presence/conditional-presence.js';
 
 export interface TreeGridRootProps {
   readonly rows: readonly TreeGridRowInput<string, string>[];

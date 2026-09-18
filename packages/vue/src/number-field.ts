@@ -4,7 +4,7 @@ import {
   type NumberFieldConnection,
   type NumberFieldOptions,
 } from '@sectile/dom/number-field';
-import { createNativeFieldComponent, type NativeFieldFactoryOptions } from './internal/native-field.js';
+import { createNativeFieldComponent, type NativeFieldFactoryOptions } from './input/native-field.js';
 
 export interface NumberFieldProps {
   readonly modelValue?: string | null;

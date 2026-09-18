@@ -24,7 +24,7 @@ import {
 } from '@sectile/dom/listbox';
 import { stableIDElementToken } from '@sectile/dom/identity';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './form/control.js';
 import { useHostDirection, useHostId, type HostDirection } from './host-provider.js';
 import {
@@ -39,7 +39,7 @@ import {
   useConditionalPresenceRegistry,
   type ConditionalPresenceProps,
   type ConditionalPresenceRegistry,
-} from './internal/conditional-presence.js';
+} from './presence/conditional-presence.js';
 
 export type ListboxSelectionMode = 'single' | 'multiple';
 export type ListboxValue = string | readonly string[];

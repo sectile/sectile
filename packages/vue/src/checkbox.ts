@@ -20,7 +20,7 @@ import {
   type CheckboxValue as DOMCheckboxValue,
 } from '@sectile/dom/checkbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { usePartContract, type PartContract } from './internal/part-contract.js';
 import {
   hiddenInputSubmissionCapabilities,
@@ -31,7 +31,7 @@ import {
   conditionalPresenceProps,
   useConditionalPresence,
   type ConditionalPresenceProps,
-} from './internal/conditional-presence.js';
+} from './presence/conditional-presence.js';
 
 export type CheckboxValue = boolean | 'indeterminate';
 

@@ -8,7 +8,7 @@ import {
   DialogRoot,
   DialogTitle,
   DialogTrigger,
-} from '../.verification-dist/dialog.js';
+} from '../.verification-dist/overlay/dialog.js';
 
 test('HostProvider supplies deterministic IDs and reading direction', async () => {
   const html = await renderToString(createSSRApp({

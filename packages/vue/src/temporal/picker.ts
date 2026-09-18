@@ -20,7 +20,7 @@ import {
 } from '../form/control.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
-import { usePresence } from '../internal/presence.js';
+import { usePresence } from '../presence/presence.js';
 import { useHostPortalTarget } from '../host-provider.js';
 import { useTemporalReferenceDate } from './temporal-provider.js';
 import type { PickerCapabilityConnection, PickerFamilyCapability } from './capability.js';

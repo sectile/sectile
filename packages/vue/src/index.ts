@@ -51,7 +51,7 @@ export {
   type AlertDialogInteractOutsideHandler,
   type AlertDialogRootProps,
   type AlertDialogRootSlotProps,
-} from './alert-dialog.js';
+} from './overlay/alert-dialog.js';
 export {
   CheckboxIndicator,
   CheckboxRoot,
@@ -84,7 +84,7 @@ export {
   type DialogPortalProps,
   type DialogRootProps,
   type DialogRootSlotProps,
-} from './dialog.js';
+} from './overlay/dialog.js';
 export {
   DrawerClose,
   DrawerContent,
@@ -101,7 +101,7 @@ export {
   type DrawerRootProps,
   type DrawerRootSlotProps,
   type DrawerSide,
-} from './drawer.js';
+} from './overlay/drawer.js';
 export {
   PopoverAnchor,
   PopoverArrow,
@@ -117,8 +117,8 @@ export {
   type PopoverPortalProps,
   type PopoverRootProps,
   type PopoverRootSlotProps,
-} from './popover.js';
-export type { InteractOutsideEvent, InteractOutsideHandler } from './internal/popup.js';
+} from './overlay/popover.js';
+export type { InteractOutsideEvent, InteractOutsideHandler } from './overlay/popup.js';
 export { NumberField, type NumberFieldProps } from './number-field.js';
 export {
   SwitchRoot,
@@ -149,7 +149,7 @@ export {
   type TooltipPortalProps,
   type TooltipRootProps,
   type TooltipRootSlotProps,
-} from './tooltip.js';
+} from './overlay/tooltip.js';
 export {
   TextField,
   type TextFieldModelModifiers,
@@ -637,16 +637,16 @@ export type {
 } from './window-splitter.js';
 export type {
   DialogOpenChangeHandler,
-} from './dialog.js';
+} from './overlay/dialog.js';
 export type {
   PopoverOpenChangeHandler,
-} from './popover.js';
+} from './overlay/popover.js';
 export type {
   AlertDialogOpenChangeHandler,
-} from './alert-dialog.js';
+} from './overlay/alert-dialog.js';
 export type {
   TooltipOpenChangeHandler,
-} from './tooltip.js';
+} from './overlay/tooltip.js';
 export type {
   MenuButtonInvokeHandler,
   MenuButtonOpenChangeHandler,

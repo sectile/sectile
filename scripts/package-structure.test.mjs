@@ -10,6 +10,46 @@ import { loadPublishedPackageGraph } from './lib/workspace-graph.mjs';
 import { root } from './lib/repository.mjs';
 import { buildGraphPackages } from './check-package-structure.mjs';
 
+test('Vue popup, presence and input owners retain lower dependency closures', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const dependencies = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
+  const profiles = ['alert-dialog', 'dialog', 'drawer', 'popover', 'tooltip'].map((name) => `overlay/${name}.ts`);
+  const popupRoles = ['overlay-popup', 'foundation', 'presence-core'];
+  const entries = [
+    ['presence/presence.ts', ['presence-core']],
+    ['presence/conditional-presence.ts', ['presence-conditional', 'presence-core']],
+    ['input/native-input.ts', ['input-style']],
+    ['input/decimal-input.ts', ['input-decimal']],
+    ['input/native-field.ts', ['native-field', 'foundation', 'form-control']],
+    ['overlay/popup.ts', popupRoles],
+    ...profiles.map((path) => [path, ['overlay-profiles', ...popupRoles]]),
+  ];
+  for (const [entry, allowed] of entries) {
+    const source = `packages/vue/src/${entry}`;
+    const pending = [source], visited = new Set();
+    while (pending.length > 0) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      const owner = classes.get(path);
+      if (owner.package === 'vue') assert.ok(allowed.includes(owner.role), path);
+      pending.push(...dependencies.get(path));
+    }
+    for (const target of [...profiles, 'index.ts', 'form/root.ts', 'temporal/picker.ts']) {
+      if (target === entry) continue;
+      for (const phase of ['type', 'value']) {
+        const reverse = { source, target: `packages/vue/src/${target}`, targetPackage: '@sectile/vue', phase, kind: 'import' };
+        assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+      }
+    }
+  }
+});
+
 test('Vue Virtual connection and collection owners stay below layout profiles', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);
@@ -131,8 +171,8 @@ test('Vue Form contracts and participation stay below mounted components', async
   for (const [entry, allowed] of [
     ['control', ['form-control']],
     ['control-inventory', ['form-control']],
-    ['contracts', ['form-contracts', 'foundation', 'presence']],
-    ['context', ['form-context', 'form-contracts', 'form-control', 'foundation', 'presence']],
+    ['contracts', ['form-contracts', 'foundation', 'presence-conditional', 'presence-core']],
+    ['context', ['form-context', 'form-contracts', 'form-control', 'foundation', 'presence-conditional', 'presence-core']],
     ['native', ['form-native', 'form-control']],
   ]) {
     const source = `packages/vue/src/form/${entry}.ts`;

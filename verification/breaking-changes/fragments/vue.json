@@ -235,6 +235,14 @@
       "symbols": ["TreeViewGroup.forcePresent"],
       "replacement": { "package": "@sectile/vue", "subpath": "./tree-view" },
       "removalReason": "TreeViewGroup adds forcePresent while collapsed groups are quarantined immediately from interaction and accessibility semantics."
+    },
+    {
+      "id": "WI-010:vue-number-field-native-owner",
+      "change": "signature-changed",
+      "before": { "subpath": "./number-field" },
+      "symbols": ["NumberField native-field declaration closure"],
+      "replacement": { "package": "@sectile/vue", "subpath": "./number-field", "exportName": "NumberField" },
+      "removalReason": "NumberField retains its public props and runtime binding. Its declaration references the native field owner at input/native-field instead of internal/native-field."
     }
   ]
 }

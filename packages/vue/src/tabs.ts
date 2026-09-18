@@ -25,7 +25,7 @@ import {
   conditionalPresenceProps,
   useConditionalPresence,
   type ConditionalPresenceProps,
-} from './internal/conditional-presence.js';
+} from './presence/conditional-presence.js';
 
 export type TabsActivationMode = 'automatic' | 'manual';
 export interface TabsRootProps {

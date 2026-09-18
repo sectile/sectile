@@ -15,7 +15,7 @@ import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
 } from './form/control.js';
-import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { usePartContract, type PartContract } from './internal/part-contract.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 

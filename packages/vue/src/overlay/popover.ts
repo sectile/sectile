@@ -6,7 +6,7 @@ import {
   type PopupPortalProps,
   type PopupRootProps,
   type PopupRootSlotProps,
-} from './internal/popup.js';
+} from './popup.js';
 
 const parts = createPopupComponents({
   scope: 'popover', role: 'dialog', modal: false, triggerMode: 'click', closeOnInteractOutside: true, positioned: true,

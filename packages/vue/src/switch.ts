@@ -18,7 +18,7 @@ import {
   getSwitchInputAttributes,
   type SwitchController,
 } from '@sectile/dom/switch';
-import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import {
   hiddenInputSubmissionCapabilities,

@@ -14,8 +14,8 @@ Object.assign(globalThis, {
 
 const { Teleport, createApp, createSSRApp, defineComponent, h, nextTick, ref, shallowRef } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } = await import('../.verification-dist/dialog.js');
-const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import('../.verification-dist/alert-dialog.js');
+const { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } = await import('../.verification-dist/overlay/dialog.js');
+const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import('../.verification-dist/overlay/alert-dialog.js');
 const { SelectContent, SelectItem, SelectItemIndicator, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectViewport } = await import('../.verification-dist/select.js');
 const { ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxRoot } = await import('../.verification-dist/combobox.js');
 const { CascadeSelectContent, CascadeSelectItem, CascadeSelectItemIndicator, CascadeSelectRoot, CascadeSelectTrigger } = await import('../.verification-dist/cascade-select.js');
@@ -23,8 +23,8 @@ const { CascadeListItem, CascadeListItemIndicator, CascadeListRoot } = await imp
 const { ListboxItem, ListboxItemIndicator, ListboxRoot } = await import('../.verification-dist/listbox.js');
 const { DatePickerContent, DatePickerGrid, DatePickerRoot, DatePickerTrigger } = await import('../.verification-dist/temporal/date-picker.js');
 const { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem, MenuSubContent } = await import('../.verification-dist/menu.js');
-const { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } = await import('../.verification-dist/popover.js');
-const { TooltipContent, TooltipPortal, TooltipRoot, TooltipTrigger } = await import('../.verification-dist/tooltip.js');
+const { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } = await import('../.verification-dist/overlay/popover.js');
+const { TooltipContent, TooltipPortal, TooltipRoot, TooltipTrigger } = await import('../.verification-dist/overlay/tooltip.js');
 const { ToastClose, ToastPortal, ToastProvider, ToastRoot, ToastTitle, ToastViewport } = await import('../.verification-dist/toast.js');
 const { CheckboxIndicator, CheckboxRoot } = await import('../.verification-dist/checkbox.js');
 const { RadioGroupIndicator, RadioGroupItem, RadioGroupRoot } = await import('../.verification-dist/radio-group.js');

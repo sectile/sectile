@@ -21,14 +21,14 @@ import {
   type CascadeListPolicies,
 } from '@sectile/dom/cascade-list';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { provideFormControlOwner } from './form/control.js';
 import {
   hiddenSelectSubmissionCapabilities,
   useCompositeFormControl,
 } from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
-import { useConditionalPresenceRegistry } from './internal/conditional-presence.js';
+import { useConditionalPresenceRegistry } from './presence/conditional-presence.js';
 import {
   cascadeBranchItems,
   cascadeChoicePartProps,

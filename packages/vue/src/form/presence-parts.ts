@@ -13,7 +13,7 @@ import { Primitive, type PrimitiveAs } from '../primitive.js';
 import {
   conditionalPresenceProps,
   useConditionalPresence,
-} from '../internal/conditional-presence.js';
+} from '../presence/conditional-presence.js';
 import {
   useFormContext,
   useFormFieldContext,

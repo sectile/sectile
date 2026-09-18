@@ -32,9 +32,9 @@
       "default": "./dist/accordion.js"
     },
     "./alert-dialog": {
-      "types": "./dist/alert-dialog.d.ts",
-      "import": "./dist/alert-dialog.js",
-      "default": "./dist/alert-dialog.js"
+      "types": "./dist/overlay/alert-dialog.d.ts",
+      "import": "./dist/overlay/alert-dialog.js",
+      "default": "./dist/overlay/alert-dialog.js"
     },
     "./checkbox": {
       "types": "./dist/checkbox.d.ts",
@@ -47,19 +47,19 @@
       "default": "./dist/disclosure.js"
     },
     "./dialog": {
-      "types": "./dist/dialog.d.ts",
-      "import": "./dist/dialog.js",
-      "default": "./dist/dialog.js"
+      "types": "./dist/overlay/dialog.d.ts",
+      "import": "./dist/overlay/dialog.js",
+      "default": "./dist/overlay/dialog.js"
     },
     "./drawer": {
-      "types": "./dist/drawer.d.ts",
-      "import": "./dist/drawer.js",
-      "default": "./dist/drawer.js"
+      "types": "./dist/overlay/drawer.d.ts",
+      "import": "./dist/overlay/drawer.js",
+      "default": "./dist/overlay/drawer.js"
     },
     "./popover": {
-      "types": "./dist/popover.d.ts",
-      "import": "./dist/popover.js",
-      "default": "./dist/popover.js"
+      "types": "./dist/overlay/popover.d.ts",
+      "import": "./dist/overlay/popover.js",
+      "default": "./dist/overlay/popover.js"
     },
     "./toast": {
       "types": "./dist/toast.d.ts",
@@ -122,9 +122,9 @@
       "default": "./dist/toggle-group.js"
     },
     "./tooltip": {
-      "types": "./dist/tooltip.d.ts",
-      "import": "./dist/tooltip.js",
-      "default": "./dist/tooltip.js"
+      "types": "./dist/overlay/tooltip.d.ts",
+      "import": "./dist/overlay/tooltip.js",
+      "default": "./dist/overlay/tooltip.js"
     },
     "./text": {
       "types": "./dist/text.d.ts",

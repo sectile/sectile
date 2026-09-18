@@ -28,8 +28,8 @@ import type {
 import type { InteractOutsideEvent, InteractOutsideHandler } from '@sectile/dom';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useHostDirection, useHostId, useHostPortalTarget } from '../host-provider.js';
-import { usePresence } from './presence.js';
-import { useControlledStateInvariant } from './controlled-state.js';
+import { usePresence } from '../presence/presence.js';
+import { useControlledStateInvariant } from '../internal/controlled-state.js';
 
 export interface PopupConnection {
   getSnapshot(): { readonly revision: number };

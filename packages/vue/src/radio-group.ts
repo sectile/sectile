@@ -9,7 +9,7 @@ import {
 } from '@sectile/dom/radio-group';
 import { createListboxControllerFromItems, type ListboxController } from '@sectile/dom/listbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { usePartContract, type PartContract } from './internal/part-contract.js';
 import { provideFormControlOwner } from './form/control.js';
 import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './form/control.js';
@@ -20,7 +20,7 @@ import {
   conditionalPresenceProps,
   useConditionalPresence,
   type ConditionalPresenceProps,
-} from './internal/conditional-presence.js';
+} from './presence/conditional-presence.js';
 
 export interface RadioGroupRootProps {
   readonly items: readonly string[];

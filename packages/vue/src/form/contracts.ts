@@ -19,7 +19,7 @@ import type {
   ShallowRef,
 } from 'vue';
 import type { PrimitiveAs } from '../primitive.js';
-import type { ConditionalPresenceProps } from '../internal/conditional-presence.js';
+import type { ConditionalPresenceProps } from '../presence/conditional-presence.js';
 
 export interface FormState extends DomainFormState<string> {}
 

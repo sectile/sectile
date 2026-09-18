@@ -22,7 +22,7 @@ Object.assign(globalThis, {
 const { createSSRApp, h, nextTick } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
 const { DisclosureContent, DisclosureRoot, DisclosureTrigger } = await import('../.verification-dist/disclosure.js');
-const { DialogContent, DialogRoot, DialogTrigger } = await import('../.verification-dist/dialog.js');
+const { DialogContent, DialogRoot, DialogTrigger } = await import('../.verification-dist/overlay/dialog.js');
 const { PinInputInput, PinInputRoot } = await import('../.verification-dist/pin-input.js');
 const { FormField, FormFieldSelector, FormRoot, FormSelector } = await import('../.verification-dist/form.js');
 const { TextField } = await import('../.verification-dist/text.js');

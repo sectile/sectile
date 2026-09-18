@@ -975,6 +975,39 @@ retained to limit declaration and package-delivery churn while grouping the
 implementation by responsibility. The ordinary package build and pack pipeline
 remain unchanged.
 
+## Vue overlay, presence and input ownership
+
+The shared popup generator and its five public profiles live under
+`packages/vue/src/overlay/`. Dialog, AlertDialog, Drawer, Popover and Tooltip
+retain their public subpaths, root exports and existing DOM adapters. Each
+profile imports the lower popup generator, which uses host foundations and
+presence without depending on another profile.
+
+```text
+overlay/  popup.ts, dialog.ts, alert-dialog.ts, drawer.ts, popover.ts, tooltip.ts
+presence/ presence.ts, conditional-presence.ts
+input/    native-field.ts, native-input.ts, decimal-input.ts
+```
+
+Presence is shared by overlays, ordinary controls and Form/Temporal components.
+The lower bridge owns one DOM presence connection and its reactive lifecycle;
+conditional presence owns its existing keyed element and exit-retention scope.
+The native field factory keeps Form participation and controlled-value handling
+under one owner. Input style and decimal normalization remain independent,
+stateless lower helpers. The dependency gate distinguishes these responsibilities
+and rejects imports from lower owners back into public component composition.
+
+The move preserves popup context identity, focus lifecycle, coalesced connection
+scheduling, transition retention, cancellation, native pending-value identity
+and unmount cleanup. No resource or state authority is duplicated. Existing
+module basenames and complete implementation bodies are retained.
+
+`primitive.ts` and `host-provider.ts` remain public foundational owners. Compact
+private scheduling, controlled-state, collection and part-contract helpers keep
+their existing scopes; family-specific contexts and cascade composition remain
+with their current consumers. Directory depth follows ownership rather than a
+uniform template for every component.
+
 ## Moving or extracting an implementation
 
 Before editing, identify the owner, direct callers, public surfaces and any

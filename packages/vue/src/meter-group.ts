@@ -17,7 +17,7 @@ import {
   getMeterGroupTrackAttributes,
 } from '@sectile/dom/meter-group';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { normalizeDecimalInput } from './internal/decimal-input.js';
+import { normalizeDecimalInput } from './input/decimal-input.js';
 
 export interface MeterGroupEntry {
   readonly id: string;
