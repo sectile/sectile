@@ -56,18 +56,48 @@ cycle wholly inside one owner may describe valid recursive contracts; a
 cross-role cycle needs explicit remediation. Runtime cycles are governed by exact
 component edge sets, even if every individual edge has an allowed role direction.
 
+## Package ownership map
+
+The policy records the structural decision for each package. `keep` preserves
+an established layout, `regroup` colocates existing owners, and `extract`
+separates responsibilities previously combined in one implementation. These
+values describe the migration strategy rather than a pending-work status.
+
+| Package | Strategy | Primary owners |
+|---|---|---|
+| Core | keep | Existing foundation, kernel, structures, state, editing and runtime layers; focused public owners |
+| Form | extract | Path/value construction, state contracts, private storage, queries, projections and transitions |
+| Chart | extract | Model/storage, definition, layout, projection/query and interaction |
+| Virtual | regroup | Indexes, shared track contracts, layout families and collection projection |
+| Tabular | regroup | Model slices, source/query generations and table/grid profiles; optional Virtual composition |
+| Temporal | regroup | Date/time values, field editing, calendar and picker composition |
+| DOM | extract | Browser connections, measurement, event translation and resource ownership within named families |
+| Terminal | regroup | Input translation, cell rendering, Temporal adapters and shared control support |
+| Vue | extract | Form, Temporal, Tabular, Virtual, overlay, presence and native-input composition |
+
+Core retains its existing verified layers and public foundational modules.
+The separate Core DAG gate continues to enforce their directions. Compact
+single-feature owners and established public facades remain where they provide
+an actual responsibility or public-export boundary; directory depth is not a
+package-wide quota.
+
 ## Migration debt
 
 The migration baseline is `dc6a84e58aeaed00b8af89e971723ecb20157b15`.
-Remaining back-references have exact edge or component records with an owner,
-reason and remediation Work Item. The remaining records cover Vue Form
-contracts. They are not blanket package exemptions.
+The selected migrations have removed the recorded exceptions, including the
+Vue Form back-references. The current policy has an empty exception list, and
+the completed migration checks report no source or emitted-runtime cycles
+across the nine packages.
 
-A successful check with such records says `passed-with-recorded-debt`, not that
-the package structure is finished. A new edge, a larger cyclic component, or a
-stale exception after its edge disappears fails. There is no automatic
-learn/update-exceptions mode. Fixing an owner removes its matching record in the
-same coherent change.
+Any future debt record must identify the exact edge or component, its owner,
+reason and remediation Work Item. A successful check with such records reports
+`passed-with-recorded-debt`. New edges, enlarged cyclic components and stale
+exceptions fail validation. There is no automatic learn/update-exceptions mode;
+fixing an owner removes its matching record in the same coherent change.
+
+A structural graph pass establishes dependency properties. Runtime, public
+consumer, lifecycle and package-delivery acceptance remain separate checks.
+Local validation does not imply main integration or a published release.
 
 ## DOM Chart ownership
 
