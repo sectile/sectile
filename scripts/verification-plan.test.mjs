@@ -7,7 +7,36 @@ import {
   deriveAffectedWorkspaceGates,
 } from './lib/verification-plan.mjs';
 
+import { loadPublishedPackageGraph } from './lib/workspace-graph.mjs';
+
 const graph = fixtureGraph();
+
+test('public source targets and extracted private owners retain public and delivery gates', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const sources = new Set([
+    'packages/chart/src/internal/definition/contracts.ts',
+    'packages/form/src/internal/state/transitions.ts',
+    'packages/vue/src/form/contracts.ts',
+  ]);
+  for (const entry of packages) {
+    for (const target of Object.values(entry.manifest.exports)) {
+      const path = typeof target === 'string' ? target : target.types ?? target.import ?? target.default;
+      if (path === './package.json') continue;
+      assert.match(path, /^\.\/dist\/.+\.(?:d\.ts|js)$/u);
+      sources.add(`packages/${entry.directory}/${path.replace(/^\.\/dist\//u, 'src/').replace(/(?:\.d\.ts|\.js)$/u, '.ts')}`);
+    }
+  }
+  for (const path of sources) {
+    const gates = deriveAffectedWorkspaceGates([path], new Set());
+    for (const gate of ['entrypoint-migrations', 'public-signatures', 'consumer-bundles']) {
+      assert.ok(gates.includes(gate), `${path}: missing ${gate}`);
+    }
+  }
+  const testOnly = deriveAffectedWorkspaceGates(['packages/vue/tests/popup.test.mjs'], new Set(['@sectile/vue']));
+  for (const gate of ['entrypoint-migrations', 'public-signatures', 'consumer-bundles']) {
+    assert.equal(testOnly.includes(gate), false, `test-only changes selected ${gate}`);
+  }
+});
 
 test('package-only test changes stay inside that package', () => {
   const selection = deriveAffectedSelection(graph, ['packages/chart/tests/model/model.test.mjs']);

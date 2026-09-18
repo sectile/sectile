@@ -48,9 +48,9 @@ export function deriveAffectedWorkspaceGates(changedFiles, selectedPackages, opt
     || path.startsWith('tools/')
     || path.startsWith('verification/performance/')
   ));
-  const publicSurfaceChanged = changedFiles.some((path) => (
+  // Public declarations and bundles also depend on nested and private source owners.
+  const publicSurfaceChanged = sourceChanged || changedFiles.some((path) => (
     /^packages\/[^/]+\/package\.json$/u.test(path)
-    || /^packages\/[^/]+\/src\/(?!internal\/)[^/]+\.ts$/u.test(path)
   ));
 
   if (toolingChanged) gates.add('tooling');
