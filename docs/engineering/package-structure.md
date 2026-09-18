@@ -262,6 +262,34 @@ retains its generation guard and one active motion cleanup. The move does not
 change portable layer, popup, menu or anchored-layout semantics; those remain in
 Core and the existing domain owners.
 
+## DOM identity, choice, and composite ownership
+
+Shared DOM identity and composite-control support is grouped by browser role while
+the existing public control entrypoints remain unchanged:
+
+```text
+identity/
+  token.ts             # StableID token decoding below delegated lookup
+  delegated-event.ts   # delegated dataset traversal and StableID decoding
+choice/
+  disabled-items.ts    # disabled identity-set construction
+  cascade-binding.ts   # shared Cascade List/Select projection and listeners
+composite/
+  focus-entry.ts       # retained roving-focus registrations and fallback
+```
+
+Stable identity encoding remains owned by the existing public `identity.ts`
+foundation. Controls and Chart use that owner directly; only delegated decoding
+uses the lower token parser. The disabled-set helper continues to delegate domain
+validation to Core rather than maintaining a DOM-owned membership authority.
+
+`DOMCompositeFocusEntry` retains one forward binding map and one reverse weak
+owner map. It repairs a fallback only when the retained fallback becomes
+ineligible, and disconnect clears its retained bindings. The cascade binding keeps
+one keydown listener, one click listener, its active guard, and the same queued
+focus scan over the rendered surface. Moving these helpers does not introduce
+another focus registry, disabled set, identity cache, or event delegation layer.
+
 ## DOM text/input ownership
 
 The public `@sectile/dom/text` entrypoint remains at `src/text.ts`. Shared text

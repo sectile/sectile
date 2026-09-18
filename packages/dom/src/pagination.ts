@@ -19,7 +19,7 @@ import {
 } from '@sectile/core/pagination';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 export type { PaginationControl, PaginationItem, PaginationItemRange } from '@sectile/core/pagination';
-import { findDelegatedID } from './internal/delegated-event.js';
+import { findDelegatedID } from './identity/delegated-event.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 

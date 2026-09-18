@@ -21,11 +21,11 @@ import {
   getRadioGroupRootAttributes,
   type RadioGroupOptions,
 } from './radio-group.js';
-import { createDisabledItems } from './internal/disabled-items.js';
-import { findDelegatedStableID } from './internal/delegated-event.js';
-import { stableIDToken } from './internal/stable-id-token.js';
+import { createDisabledItems } from './choice/disabled-items.js';
+import { findDelegatedStableID } from './identity/delegated-event.js';
+import { stableIDToken } from './identity.js';
 import { horizontalArrow } from './internal/direction.js';
-import { DOMCompositeFocusEntry } from './internal/composite-focus-entry.js';
+import { DOMCompositeFocusEntry } from './composite/focus-entry.js';
 
 export type RatingOptions<ID extends StableID = StableID> = Omit<
   RadioGroupOptions<ID>,

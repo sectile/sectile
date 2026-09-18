@@ -22,8 +22,8 @@ import { toTextEvent, type TextInput } from './text.js';
 import type { TextElement } from './text.js';
 import { DOMTextElementBinding } from './text/element-binding.js';
 import { setInteractionAttributes } from './internal/interaction.js';
-import { findDelegatedStableID } from './internal/delegated-event.js';
-import { stableIDElementToken, stableIDToken } from './internal/stable-id-token.js';
+import { findDelegatedStableID } from './identity/delegated-event.js';
+import { stableIDElementToken, stableIDToken } from './identity.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './overlay/layer/binding.js';
 import {
   createPosition,

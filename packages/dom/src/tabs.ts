@@ -11,12 +11,12 @@ import {
   type TabsPolicies,
   type TabsState,
 } from '@sectile/core/tabs';
-import { findDelegatedStableID } from './internal/delegated-event.js';
-import { stableIDToken } from './internal/stable-id-token.js';
-import { createDisabledItems } from './internal/disabled-items.js';
+import { findDelegatedStableID } from './identity/delegated-event.js';
+import { stableIDToken } from './identity.js';
+import { createDisabledItems } from './choice/disabled-items.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
-import { DOMCompositeFocusEntry } from './internal/composite-focus-entry.js';
+import { DOMCompositeFocusEntry } from './composite/focus-entry.js';
 
 export interface KeyboardInput {
   readonly key: string;

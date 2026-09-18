@@ -13,7 +13,7 @@ import { createMenuButton } from '../.verification-dist/menu-button.js';
 import { createMenubar } from '../.verification-dist/menubar.js';
 import { createNavigationMenu } from '../.verification-dist/navigation-menu.js';
 import { createListbox } from '../.verification-dist/listbox.js';
-import { DOMCompositeFocusEntry } from '../.verification-dist/internal/composite-focus-entry.js';
+import { DOMCompositeFocusEntry } from '../.verification-dist/composite/focus-entry.js';
 
 function installDOM() {
   const window = new Window({ url: 'https://sectile.dev/focus-entry' });

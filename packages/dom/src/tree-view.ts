@@ -13,10 +13,10 @@ import {
   type TreeViewSelectionMode,
   type TreeViewState,
 } from '@sectile/core/tree-view';
-import { findDelegatedStableID } from './internal/delegated-event.js';
-import { stableIDToken } from './internal/stable-id-token.js';
+import { findDelegatedStableID } from './identity/delegated-event.js';
+import { stableIDToken } from './identity.js';
 import { setInteractionAttributes } from './internal/interaction.js';
-import { DOMCompositeFocusEntry } from './internal/composite-focus-entry.js';
+import { DOMCompositeFocusEntry } from './composite/focus-entry.js';
 
 export type { TreeNodeInput } from '@sectile/core/tree';
 export type { TreeViewPolicies } from '@sectile/core/tree-view';

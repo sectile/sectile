@@ -1,5 +1,5 @@
 import type { StableID } from '@sectile/core';
-import { stableIDFromToken } from './stable-id-token.js';
+import { stableIDFromToken } from './token.js';
 
 export function findDelegatedID(
   target: EventTarget | null,

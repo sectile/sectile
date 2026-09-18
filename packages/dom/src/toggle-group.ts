@@ -5,7 +5,7 @@ import type { ToggleGroupEvent, ToggleGroupState } from '@sectile/core/toggle-gr
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { tryCreateListbox, type ListboxConnection, type ListboxOptions } from './listbox.js';
 import type { ReadingDirection } from './internal/direction.js';
-import { stableIDToken } from './internal/stable-id-token.js';
+import { stableIDToken } from './identity.js';
 
 export type ToggleGroupOptions<ID extends StableID = StableID> =
   Omit<ListboxOptions<ID>, 'selectionMode' | 'activationMode' | 'clearOnEscape'>

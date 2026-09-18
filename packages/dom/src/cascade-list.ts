@@ -16,7 +16,7 @@ import { tryCreateTree, type Tree, type TreeNodeInput } from '@sectile/core/tree
 import {
   createDOMCascadeChoiceBinding,
   type DOMCascadeChoiceBinding,
-} from './internal/cascade-choice-binding.js';
+} from './choice/cascade-binding.js';
 
 export type { TreeNodeInput as CascadeListItemDefinition } from '@sectile/core/tree';
 export type { CascadeListPolicies } from '@sectile/core/cascade-list';

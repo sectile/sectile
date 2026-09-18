@@ -1729,6 +1729,17 @@
       "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
     },
     {
+      "detector": "linear-membership",
+      "category": "raw-full-domain-scan",
+      "path": "packages/dom/src/choice/cascade-binding.ts",
+      "line": 106,
+      "evidence": ".includes(",
+      "rule": "dom-host-authority",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
+    },
+    {
       "detector": "geometry-measurement",
       "category": "measurement-authority",
       "path": "packages/dom/src/color-picker.ts",
@@ -1832,17 +1843,6 @@
       "category": "raw-full-domain-scan",
       "path": "packages/dom/src/interact-outside.ts",
       "line": 31,
-      "evidence": ".includes(",
-      "rule": "dom-host-authority",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
-    },
-    {
-      "detector": "linear-membership",
-      "category": "raw-full-domain-scan",
-      "path": "packages/dom/src/internal/cascade-choice-binding.ts",
-      "line": 106,
       "evidence": ".includes(",
       "rule": "dom-host-authority",
       "classification": "reuse",

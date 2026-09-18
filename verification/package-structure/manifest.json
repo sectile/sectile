@@ -1896,6 +1896,40 @@
             "foundation"
           ]
         },
+        "identity-token": {
+          "reason": "StableID token parsing and delegation to the public foundational DOM identity encoding.",
+          "allows": [
+            "foundation",
+            "identity-token"
+          ]
+        },
+        "identity-delegated": {
+          "reason": "Delegated DOM dataset lookup and StableID token decoding below control owners.",
+          "allows": [
+            "identity-token",
+            "identity-delegated"
+          ]
+        },
+        "choice-disabled": {
+          "reason": "Disabled identity-set construction delegated to the canonical Core adapter helper.",
+          "allows": [
+            "choice-disabled"
+          ]
+        },
+        "choice-cascade": {
+          "reason": "Shared cascade-list/select DOM projection and event binding over lower identity helpers.",
+          "allows": [
+            "foundation",
+            "identity-delegated",
+            "choice-cascade"
+          ]
+        },
+        "composite-focus": {
+          "reason": "Retained roving-focus entry bindings and fallback ownership for composite controls.",
+          "allows": [
+            "composite-focus"
+          ]
+        },
         "positioning": {
           "reason": "Public PositionOptions and related host vocabulary; lower positioning runtime owners depend on this contract, not the reverse.",
           "allows": [
@@ -1972,6 +2006,7 @@
             "positioning",
             "overlay-layer-binding",
             "overlay-position-connection",
+            "composite-focus",
             "overlay-menu"
           ]
         },
@@ -1997,6 +2032,10 @@
             "positioning",
             "overlay-layer-binding",
             "overlay-position-connection",
+            "identity-delegated",
+            "choice-disabled",
+            "choice-cascade",
+            "composite-focus",
             "text",
             "text-binding",
             "text-controlled"
@@ -2414,8 +2453,8 @@
           "role": "overlay-interact",
           "kind": "owner"
         },
-        "src/internal/cascade-choice-binding.ts": {
-          "role": "controls",
+        "src/choice/cascade-binding.ts": {
+          "role": "choice-cascade",
           "kind": "owner"
         },
         "src/internal/chart/connection.ts": {
@@ -2458,24 +2497,24 @@
           "role": "controls",
           "kind": "owner"
         },
-        "src/internal/composite-focus-entry.ts": {
-          "role": "foundation",
+        "src/composite/focus-entry.ts": {
+          "role": "composite-focus",
           "kind": "owner"
         },
         "src/text/controlled-input.ts": {
           "role": "text-controlled",
           "kind": "owner"
         },
-        "src/internal/delegated-event.ts": {
-          "role": "foundation",
+        "src/identity/delegated-event.ts": {
+          "role": "identity-delegated",
           "kind": "owner"
         },
         "src/internal/direction.ts": {
           "role": "foundation",
           "kind": "owner"
         },
-        "src/internal/disabled-items.ts": {
-          "role": "foundation",
+        "src/choice/disabled-items.ts": {
+          "role": "choice-disabled",
           "kind": "owner"
         },
         "src/internal/exact-percentage.ts": {
@@ -2526,8 +2565,8 @@
           "role": "overlay-presence-motion",
           "kind": "owner"
         },
-        "src/internal/stable-id-token.ts": {
-          "role": "foundation",
+        "src/identity/token.ts": {
+          "role": "identity-token",
           "kind": "owner"
         },
         "src/text/contracts.ts": {

@@ -16,7 +16,7 @@ import type {
 } from './contracts.js';
 import { ChartNavigationAdapter } from './navigation.js';
 import { ChartOverlay } from './overlay.js';
-import { stableIDElementToken } from '../stable-id-token.js';
+import { stableIDElementToken } from '../../identity.js';
 
 let connectionID = 0;
 

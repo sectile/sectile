@@ -11,9 +11,9 @@ import {
   type AccordionPolicies,
   type AccordionState,
 } from '@sectile/core/accordion';
-import { findDelegatedStableID } from './internal/delegated-event.js';
-import { stableIDToken } from './internal/stable-id-token.js';
-import { createDisabledItems } from './internal/disabled-items.js';
+import { findDelegatedStableID } from './identity/delegated-event.js';
+import { stableIDToken } from './identity.js';
+import { createDisabledItems } from './choice/disabled-items.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
 import type { KeyboardInput } from './tabs.js';

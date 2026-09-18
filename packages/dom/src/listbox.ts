@@ -16,9 +16,9 @@ import {
 } from '@sectile/core/listbox';
 import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import { rejectRevisionInput, type RevisionResult, type RevisionSnapshot } from '@sectile/core/revision';
-import { findDelegatedStableID } from './internal/delegated-event.js';
-import { stableIDElementToken, stableIDToken } from './internal/stable-id-token.js';
-import { createDisabledItems } from './internal/disabled-items.js';
+import { findDelegatedStableID } from './identity/delegated-event.js';
+import { stableIDElementToken, stableIDToken } from './identity.js';
+import { createDisabledItems } from './choice/disabled-items.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
 

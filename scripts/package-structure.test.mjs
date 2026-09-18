@@ -451,6 +451,42 @@ test('DOM text helpers stay below the public Text host and field adapters', asyn
   }
 });
 
+test('DOM identity, choice, and composite helpers stay below control owners', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const dependencies = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
+
+  for (const [entry, allowed] of [
+    ['identity/token', ['foundation', 'identity-token']],
+    ['identity/delegated-event', ['foundation', 'identity-token', 'identity-delegated']],
+    ['choice/disabled-items', ['choice-disabled']],
+    ['choice/cascade-binding', ['foundation', 'identity-token', 'identity-delegated', 'choice-cascade']],
+    ['composite/focus-entry', ['composite-focus']],
+  ]) {
+    const source = `packages/dom/src/${entry}.ts`;
+    const visited = new Set();
+    const pending = [source];
+    while (pending.length > 0) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      const owner = classes.get(path);
+      if (owner.package === 'dom') assert.ok(allowed.includes(owner.role), path);
+      pending.push(...dependencies.get(path));
+    }
+    for (const target of ['accordion.ts', 'cascade-list.ts', 'radio-group.ts', 'overlay/menu/control.ts']) {
+      for (const phase of ['type', 'value']) {
+        const reverse = { source, target: `packages/dom/src/${target}`, targetPackage: '@sectile/dom', phase, kind: 'import' };
+        assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+      }
+    }
+  }
+});
+
 test('DOM overlay infrastructure keeps lower resource owners below public profiles', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);

@@ -13,7 +13,7 @@ import { createDOMLayerBinding, type DOMLayerBinding } from './overlay/layer/bin
 import {
   createDOMCascadeChoiceBinding,
   type DOMCascadeChoiceBinding,
-} from './internal/cascade-choice-binding.js';
+} from './choice/cascade-binding.js';
 import {
   createPosition,
   manualPositionConnection,
