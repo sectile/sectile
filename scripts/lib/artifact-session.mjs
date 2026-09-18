@@ -11,6 +11,7 @@ const lockScope = process.env.SECTILE_ARTIFACT_LOCK_SCOPE ?? 'workspace';
 const lockIdentity = createHash('sha256').update(`${root}\0${lockScope}`).digest();
 const metadataPath = join(root, '.tmp', `artifact-session-${lockIdentity.toString('hex').slice(0, 12)}.json`);
 const lockPort = 33_000 + lockIdentity.readUInt16BE(0) % 10_000;
+export { lockPort as artifactSessionPort };
 const pollIntervalMilliseconds = 250;
 
 export async function withArtifactSession(label, action) {
