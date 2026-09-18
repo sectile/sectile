@@ -1,6 +1,6 @@
 import { masonryRectAt } from '@sectile/virtual/masonry-layout';
 import { createApp, h, nextTick, ref } from 'vue';
-import { VirtualMasonry } from '../../.verification-dist/virtual-masonry.js';
+import { VirtualMasonry } from '../../.verification-dist/virtual/virtual-masonry.js';
 
 export async function runHighLevelDocumentVirtualScenarios() {
   const previousBehavior = document.documentElement.style.scrollBehavior;

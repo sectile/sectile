@@ -3682,13 +3682,59 @@
             "tabular-tree-grid"
           ]
         },
-        "virtual": {
-          "reason": "vue virtual owns its named contracts and implementation; permitted imports are explicit.",
+        "virtualizer": {
+          "reason": "Single Virtual DOM connection, registration lifetime and root/surface context authority.",
           "allows": [
-            "controls",
-            "foundation",
-            "presence",
-            "virtual"
+            "virtualizer",
+            "foundation"
+          ]
+        },
+        "virtual-collection": {
+          "reason": "Prepared domain delegation and mounted projection/ref cleanup over the virtualizer.",
+          "allows": [
+            "virtual-collection",
+            "virtualizer"
+          ]
+        },
+        "virtual-list-runtime": {
+          "reason": "Linear layout and measurement/bootstrap component composition over lower collection and virtualizer owners.",
+          "allows": [
+            "virtual-list-runtime",
+            "virtualizer",
+            "virtual-collection"
+          ]
+        },
+        "virtual-grid": {
+          "reason": "Track-grid projection and bootstrap lifetime without peer layout imports.",
+          "allows": [
+            "virtual-grid",
+            "virtualizer",
+            "virtual-collection"
+          ]
+        },
+        "virtual-masonry": {
+          "reason": "Masonry projection and bootstrap lifetime without peer layout imports.",
+          "allows": [
+            "virtual-masonry",
+            "virtualizer",
+            "virtual-collection"
+          ]
+        },
+        "virtual-spatial": {
+          "reason": "Spatial projection and declared/mounted size composition without peer layout imports.",
+          "allows": [
+            "virtual-spatial",
+            "virtualizer",
+            "virtual-collection"
+          ]
+        },
+        "virtual-api": {
+          "reason": "Existing precise public core/list export lists without exposing private helpers.",
+          "allows": [
+            "virtual-api",
+            "virtualizer",
+            "virtual-list-runtime",
+            "virtual-collection"
           ]
         },
         "chart": {
@@ -3719,7 +3765,10 @@
             "temporal-profiles",
             "temporal-fields",
             "temporal-provider",
-            "virtual"
+            "virtual-api",
+            "virtual-grid",
+            "virtual-masonry",
+            "virtual-spatial"
           ]
         },
         "reference": {
@@ -3742,7 +3791,10 @@
             "temporal-profiles",
             "temporal-fields",
             "temporal-provider",
-            "virtual"
+            "virtual-api",
+            "virtual-grid",
+            "virtual-masonry",
+            "virtual-spatial"
           ]
         }
       },
@@ -3959,16 +4011,16 @@
           "role": "controls",
           "kind": "owner"
         },
-        "src/internal/virtual-collection.ts": {
-          "role": "virtual",
+        "src/virtual/virtual-collection.ts": {
+          "role": "virtual-collection",
           "kind": "owner"
         },
-        "src/internal/virtual-core.ts": {
-          "role": "virtual",
+        "src/virtual/virtual-core.ts": {
+          "role": "virtualizer",
           "kind": "owner"
         },
-        "src/internal/virtual-list.ts": {
-          "role": "virtual",
+        "src/virtual/virtual-list.ts": {
+          "role": "virtual-list-runtime",
           "kind": "owner"
         },
         "src/temporal/capabilities/year-picker.ts": {
@@ -4140,23 +4192,23 @@
           "kind": "owner"
         },
         "src/virtual-core.ts": {
-          "role": "virtual",
-          "kind": "owner"
+          "role": "virtual-api",
+          "kind": "facade"
         },
-        "src/virtual-grid.ts": {
-          "role": "virtual",
+        "src/virtual/virtual-grid.ts": {
+          "role": "virtual-grid",
           "kind": "owner"
         },
         "src/virtual-list.ts": {
-          "role": "virtual",
+          "role": "virtual-api",
+          "kind": "facade"
+        },
+        "src/virtual/virtual-masonry.ts": {
+          "role": "virtual-masonry",
           "kind": "owner"
         },
-        "src/virtual-masonry.ts": {
-          "role": "virtual",
-          "kind": "owner"
-        },
-        "src/virtual-spatial.ts": {
-          "role": "virtual",
+        "src/virtual/virtual-spatial.ts": {
+          "role": "virtual-spatial",
           "kind": "owner"
         },
         "src/window-splitter.ts": {

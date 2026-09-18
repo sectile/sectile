@@ -66,7 +66,6 @@ Findings: 449; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/grid.ts:178` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/native-field.ts:125` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/popup.ts:307` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/internal/virtual-core.ts:300` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:315` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/menu.ts:278` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/multi-thumb-slider.ts:153` | controller-rebuild |
@@ -89,3 +88,4 @@ Findings: 449; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/toolbar.ts:62` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tree-grid.ts:184` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tree-view.ts:164` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/virtual/virtual-core.ts:300` | controller-rebuild |

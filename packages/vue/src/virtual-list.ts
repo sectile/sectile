@@ -1,2 +1,2 @@
-export { VirtualList, type VirtualListComponent, type VirtualListExpose, type VirtualListIDResolver, type VirtualListItemAttributes, type VirtualListProps, type VirtualListPublicProps, type VirtualListSlotProps } from './internal/virtual-list.js';
-export type { VirtualCollectionExpose, VirtualCollectionItemSlotProps, VirtualCollectionLanePolicyProps, VirtualCollectionPhase, VirtualCollectionSizePolicyProps, VirtualCollectionSlots } from './internal/virtual-collection.js';
+export { VirtualList, type VirtualListComponent, type VirtualListExpose, type VirtualListIDResolver, type VirtualListItemAttributes, type VirtualListProps, type VirtualListPublicProps, type VirtualListSlotProps } from './virtual/virtual-list.js';
+export type { VirtualCollectionExpose, VirtualCollectionItemSlotProps, VirtualCollectionLanePolicyProps, VirtualCollectionPhase, VirtualCollectionSizePolicyProps, VirtualCollectionSlots } from './virtual/virtual-collection.js';

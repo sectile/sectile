@@ -10,6 +10,49 @@ import { loadPublishedPackageGraph } from './lib/workspace-graph.mjs';
 import { root } from './lib/repository.mjs';
 import { buildGraphPackages } from './check-package-structure.mjs';
 
+test('Vue Virtual connection and collection owners stay below layout profiles', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const dependencies = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
+  const sourcePaths = {
+    virtualizer: 'virtual/virtual-core.ts',
+    collection: 'virtual/virtual-collection.ts',
+    'list-runtime': 'virtual/virtual-list.ts',
+    grid: 'virtual/virtual-grid.ts',
+    masonry: 'virtual/virtual-masonry.ts',
+    spatial: 'virtual/virtual-spatial.ts',
+    core: 'virtual-core.ts',
+    list: 'virtual-list.ts',
+  };
+  const layoutOwners = ['list-runtime', 'grid', 'masonry', 'spatial'];
+  for (const [entry, allowed, forbidden] of [
+    ['virtualizer', ['virtualizer', 'foundation'], ['collection', ...layoutOwners]],
+    ['collection', ['virtual-collection', 'virtualizer', 'foundation'], layoutOwners],
+    ...layoutOwners.map((entry) => [entry, [`virtual-${entry}`, 'virtual-collection', 'virtualizer', 'foundation'], layoutOwners.filter((other) => other !== entry)]),
+  ]) {
+    const source = `packages/vue/src/${sourcePaths[entry]}`;
+    const pending = [source], visited = new Set();
+    while (pending.length > 0) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      const owner = classes.get(path);
+      if (owner.package === 'vue') assert.ok(allowed.includes(owner.role), path);
+      pending.push(...dependencies.get(path));
+    }
+    for (const target of [...forbidden, 'core', 'list']) {
+      for (const phase of ['type', 'value']) {
+        const reverse = { source, target: `packages/vue/src/${sourcePaths[target]}`, targetPackage: '@sectile/vue', phase, kind: 'import' };
+        assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+      }
+    }
+  }
+});
+
 test('Vue Tabular lower owners and schema stay below public profiles', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);

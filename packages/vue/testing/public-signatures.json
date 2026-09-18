@@ -296,7 +296,7 @@
     },
     {
       "subpath": "./virtual/grid",
-      "types": "dist/virtual-grid.d.ts"
+      "types": "dist/virtual/virtual-grid.d.ts"
     },
     {
       "subpath": "./virtual/list",
@@ -304,18 +304,18 @@
     },
     {
       "subpath": "./virtual/masonry",
-      "types": "dist/virtual-masonry.d.ts"
+      "types": "dist/virtual/virtual-masonry.d.ts"
     },
     {
       "subpath": "./virtual/spatial",
-      "types": "dist/virtual-spatial.d.ts"
+      "types": "dist/virtual/virtual-spatial.d.ts"
     },
     {
       "subpath": "./window-splitter",
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "c8846041f41ae2079a627cee8e692d8daf782112dddae53e8dc4db96f992076f",
+  "fingerprint": "6044f0379a0ad006199c174fcfc2c1b449737390893d6e68cc13a0514c871ea1",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -436,18 +436,6 @@
     {
       "path": "dist/internal/popup.d.ts",
       "sha256": "6db183a718b72f0a2c06c7b7b571f628cd53eefc41dfc759d9942c13746176b8"
-    },
-    {
-      "path": "dist/internal/virtual-collection.d.ts",
-      "sha256": "9130a2d20ed2637ec91431ba3c8eb8f52b6c249c4597ea1a4a0394789a15e40c"
-    },
-    {
-      "path": "dist/internal/virtual-core.d.ts",
-      "sha256": "7a3abd5565abec2ad26dfbfc4a1d709a105ea220a5b93062f2ed717b67f47f44"
-    },
-    {
-      "path": "dist/internal/virtual-list.d.ts",
-      "sha256": "f65fd349507baa394c983af12563bb1d362cad3b0c5083eced75276a1b2379a2"
     },
     {
       "path": "dist/listbox.d.ts",
@@ -695,23 +683,35 @@
     },
     {
       "path": "dist/virtual-core.d.ts",
-      "sha256": "07c48e0a5a90e12d18e2beccb22a90c682996f8c84647769754d3776ee8abac3"
-    },
-    {
-      "path": "dist/virtual-grid.d.ts",
-      "sha256": "36e24b33944faf8f34a03fe3c15a5e8496126aac9656892dfa959007bfacde7f"
+      "sha256": "8689169734f441c0f9c55c6d051777c92688b46d05444679b67da2e94a83141c"
     },
     {
       "path": "dist/virtual-list.d.ts",
-      "sha256": "4b0bdfbb18f382ee4a66db459993f0b798563fcbe5d9f851b95106d155d8f3fc"
+      "sha256": "7b1d5f76f4448abb67672705abdfcbe377c4b060eecab2469e843e1ccf39b763"
     },
     {
-      "path": "dist/virtual-masonry.d.ts",
-      "sha256": "36c5207482e2bc56b05e000fb65473ba3d6a7bf9a634d851bb81d7b65571025d"
+      "path": "dist/virtual/virtual-collection.d.ts",
+      "sha256": "9130a2d20ed2637ec91431ba3c8eb8f52b6c249c4597ea1a4a0394789a15e40c"
     },
     {
-      "path": "dist/virtual-spatial.d.ts",
-      "sha256": "38683666f2c87ec12f7d58fd6d22e0598fcd87f971da86b40d3242b0aaa4a984"
+      "path": "dist/virtual/virtual-core.d.ts",
+      "sha256": "7a3abd5565abec2ad26dfbfc4a1d709a105ea220a5b93062f2ed717b67f47f44"
+    },
+    {
+      "path": "dist/virtual/virtual-grid.d.ts",
+      "sha256": "5f65b205a111ec6bc6a408ba05647ef2830f8c8b04972ac11ba3e512e1d358d8"
+    },
+    {
+      "path": "dist/virtual/virtual-list.d.ts",
+      "sha256": "f65fd349507baa394c983af12563bb1d362cad3b0c5083eced75276a1b2379a2"
+    },
+    {
+      "path": "dist/virtual/virtual-masonry.d.ts",
+      "sha256": "1d566b2ae3962cf37246998beee2b3afec250d57ecbfe84dcbbda476b0a822e5"
+    },
+    {
+      "path": "dist/virtual/virtual-spatial.d.ts",
+      "sha256": "d930cd99b203e9e5a7a22df301febb0851da0a10069220db470872e83aa39008"
     },
     {
       "path": "dist/window-splitter.d.ts",

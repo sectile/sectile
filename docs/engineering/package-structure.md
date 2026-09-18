@@ -943,6 +943,38 @@ controllers continue to own portable transitions. Base Tabular profiles remain
 independent of the optional Virtual runtime. Role checks enforce lower-owner
 dependencies for type and value imports; public import paths stay unchanged.
 
+## Vue Virtual ownership
+
+The existing `@sectile/vue/virtual/core`, `list`, `grid`, `masonry` and
+`spatial` subpaths preserve their public export lists. Implementation owners
+are colocated under `packages/vue/src/virtual/`:
+
+```text
+virtual-core.ts                # existing public virtualizer export facade
+virtual-list.ts                # existing public list/type export facade
+virtual/
+  virtual-core.ts              # connection, registration and context lifetimes
+  virtual-collection.ts        # prepared domain and mounted projection
+  virtual-list.ts              # linear list and bootstrap measurement
+  virtual-grid.ts              # track-grid and measurement projection
+  virtual-masonry.ts           # masonry and bootstrap projection
+  virtual-spatial.ts           # spatial and declared/mounted size projection
+```
+
+The two public facades filter existing exports; internal collection and layout
+components import their lower implementation owners directly. The virtualizer
+depends on host foundations, collection projection on the virtualizer, and
+individual layouts on both lower owners. Role checks cover type and runtime
+imports, including prohibited upward and peer-layout dependencies.
+
+The migration preserves context keys, desired/active item and frame registries,
+token guards, shallow state, watcher timing, bootstrap scheduling and cleanup.
+Virtual and DOM retain semantic, layout, viewport and measurement authority.
+Module bodies and purity annotations remain unchanged. Existing basenames are
+retained to limit declaration and package-delivery churn while grouping the
+implementation by responsibility. The ordinary package build and pack pipeline
+remain unchanged.
+
 ## Moving or extracting an implementation
 
 Before editing, identify the owner, direct callers, public surfaces and any

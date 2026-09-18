@@ -14,8 +14,8 @@ import {
 import { createExtentIndex, createUniformExtentIndex } from '@sectile/virtual/extent-index';
 import { createMasonryLayout, masonryLayoutStrategy, type MasonryLayoutState, type MasonryMeasurement, type MasonryMutation, type MasonryPlacement, type MasonryPlacementPolicy } from '@sectile/virtual/masonry-layout';
 import { createAxisMeasurementResolver, type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
-import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './internal/virtual-core.js';
-import { constrainPreparedVirtualCollection, createVirtualCollectionExpose, nearlyEqual, prepareVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, updatePreparedVirtualCollection, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './internal/virtual-collection.js';
+import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
+import { constrainPreparedVirtualCollection, createVirtualCollectionExpose, nearlyEqual, prepareVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, updatePreparedVirtualCollection, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
 
 export interface VirtualMasonryProps<Value = unknown, ID extends StableID = StableID>
   extends VirtualCollectionBaseProps<Value, ID> {

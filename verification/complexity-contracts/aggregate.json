@@ -33411,7 +33411,7 @@
       "package": "vue",
       "surface": "hot",
       "id": "virtual.grid-reconfigure",
-      "source": "packages/vue/src/virtual-grid.ts",
+      "source": "packages/vue/src/virtual/virtual-grid.ts",
       "benchmarkIDs": [
         "VAL-007:grid-geometry-repair"
       ],
@@ -33484,7 +33484,7 @@
       "package": "vue",
       "surface": "hot",
       "id": "virtual.item-projection",
-      "source": "packages/vue/src/internal/virtual-collection.ts",
+      "source": "packages/vue/src/virtual/virtual-collection.ts",
       "benchmarkIDs": [
         "vue:mounted-virtual-projection"
       ],
@@ -33552,7 +33552,7 @@
       "package": "vue",
       "surface": "hot",
       "id": "virtual.masonry-reconfigure",
-      "source": "packages/vue/src/virtual-masonry.ts",
+      "source": "packages/vue/src/virtual/virtual-masonry.ts",
       "benchmarkIDs": [
         "VAL-007:masonry-geometry-repair"
       ],
@@ -33626,7 +33626,7 @@
       "package": "vue",
       "surface": "hot",
       "id": "virtual.spatial-host-update",
-      "source": "packages/vue/src/virtual-spatial.ts",
+      "source": "packages/vue/src/virtual/virtual-spatial.ts",
       "benchmarkIDs": [
         "VAL-007:spatial-size-ownership"
       ],

@@ -38,10 +38,10 @@ Object.assign(globalThis, {
 });
 
 const { createApp, effectScope, h, nextTick, ref, shallowRef } = await import('vue');
-const { VirtualGrid } = await import('../.verification-dist/virtual-grid.js');
+const { VirtualGrid } = await import('../.verification-dist/virtual/virtual-grid.js');
 const { VirtualList } = await import('../.verification-dist/virtual-list.js');
-const { VirtualMasonry } = await import('../.verification-dist/virtual-masonry.js');
-const { VirtualSpatial } = await import('../.verification-dist/virtual-spatial.js');
+const { VirtualMasonry } = await import('../.verification-dist/virtual/virtual-masonry.js');
+const { VirtualSpatial } = await import('../.verification-dist/virtual/virtual-spatial.js');
 const { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, useVirtualizer } = await import('../.verification-dist/virtual-core.js');
 
 test('high-level projection mounts one shared projector and no per-placement VirtualizerItem instances', async () => {

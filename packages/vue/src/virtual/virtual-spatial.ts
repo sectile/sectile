@@ -2,8 +2,8 @@ import { defineComponent, h, shallowRef, watch, type AllowedComponentProps, type
 import type { StableID } from '@sectile/core';
 import { createSpatialLayout, spatialLayoutStrategy, type SpatialItem, type SpatialLayoutState, type SpatialMeasurement, type SpatialMutation, type SpatialPlacement } from '@sectile/virtual/spatial-layout';
 import { type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
-import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './internal/virtual-core.js';
-import { createVirtualCollectionExpose, prepareVirtualCollection, renderHighLevelItems, updatePreparedVirtualCollection, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './internal/virtual-collection.js';
+import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
+import { createVirtualCollectionExpose, prepareVirtualCollection, renderHighLevelItems, updatePreparedVirtualCollection, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
 
 export type VirtualSpatialRectResolver<Value> = {
   bivarianceHack(value: Value, index: number): VirtualRect;

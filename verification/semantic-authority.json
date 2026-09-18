@@ -92,6 +92,11 @@
       "root": "packages/vue/src/tabular",
       "classification": "platform-only",
       "semanticPaths": []
+    },
+    {
+      "root": "packages/vue/src/virtual",
+      "classification": "platform-only",
+      "semanticPaths": []
     }
   ],
   "dependencyGraph": [

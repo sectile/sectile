@@ -317,19 +317,19 @@
       "default": "./dist/virtual-list.js"
     },
     "./virtual/grid": {
-      "types": "./dist/virtual-grid.d.ts",
-      "import": "./dist/virtual-grid.js",
-      "default": "./dist/virtual-grid.js"
+      "types": "./dist/virtual/virtual-grid.d.ts",
+      "import": "./dist/virtual/virtual-grid.js",
+      "default": "./dist/virtual/virtual-grid.js"
     },
     "./virtual/masonry": {
-      "types": "./dist/virtual-masonry.d.ts",
-      "import": "./dist/virtual-masonry.js",
-      "default": "./dist/virtual-masonry.js"
+      "types": "./dist/virtual/virtual-masonry.d.ts",
+      "import": "./dist/virtual/virtual-masonry.js",
+      "default": "./dist/virtual/virtual-masonry.js"
     },
     "./virtual/spatial": {
-      "types": "./dist/virtual-spatial.d.ts",
-      "import": "./dist/virtual-spatial.js",
-      "default": "./dist/virtual-spatial.js"
+      "types": "./dist/virtual/virtual-spatial.d.ts",
+      "import": "./dist/virtual/virtual-spatial.js",
+      "default": "./dist/virtual/virtual-spatial.js"
     },
     "./temporal/calendar": {
       "types": "./dist/temporal/calendar.d.ts",
