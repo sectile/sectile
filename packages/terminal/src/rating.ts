@@ -18,7 +18,7 @@ import {
 import { tryCreateRadioGroupState } from '@sectile/core/radio-group';
 import type { RadioGroupOptions } from './radio-group.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
-import { createDisabledItems } from './internal/disabled-items.js';
+import { createDisabledItems } from './choice/disabled-items.js';
 
 export type RatingOptions<ID extends StableID = StableID> = Omit<
   RadioGroupOptions<ID>,

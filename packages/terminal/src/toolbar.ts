@@ -13,7 +13,7 @@ import {
 } from '@sectile/core/toolbar';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { createDisabledItems } from './internal/disabled-items.js';
+import { createDisabledItems } from './choice/disabled-items.js';
 
 export type ToolbarEffect<ID extends StableID = StableID> =
   | { readonly type: 'move-control-highlight'; readonly id: ID }

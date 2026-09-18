@@ -6,7 +6,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { applyAccordionEvent, tryCreateAccordionState, type AccordionCommand, type AccordionEvent, type AccordionPolicies, type AccordionState } from '@sectile/core/accordion';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { createDisabledItems } from './internal/disabled-items.js';
+import { createDisabledItems } from './choice/disabled-items.js';
 
 export interface AccordionOptions<ID extends StableID = StableID> {
   readonly items: readonly ID[]; readonly policies?: AccordionPolicies<ID>; readonly disabledItems?: readonly ID[];

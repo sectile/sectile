@@ -14,7 +14,7 @@ import {
   toTerminalCascadeChoiceEvent,
   tryCreateTerminalCascadeChoiceDomain,
   withDisabledCascadeChoicePolicies,
-} from './internal/cascade-choice.js';
+} from './choice/cascade.js';
 
 export interface CascadeSelectOptions<ID extends StableID = StableID> {
   readonly nodes: readonly TreeNodeInput<ID>[];

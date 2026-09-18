@@ -9,7 +9,7 @@ import {
 } from '@sectile/core/drawer';
 import { unwrap } from '@sectile/core/result';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { createTerminalPopup, type TerminalPopupConnection } from './internal/popup-control.js';
+import { createTerminalPopup, type TerminalPopupConnection } from './overlay/popup-control.js';
 
 export type { DrawerSide } from '@sectile/core/drawer';
 

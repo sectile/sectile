@@ -814,6 +814,34 @@ callback order. Date capture, domain parsing/navigation/grid construction and
 text segmentation keep their existing ownership and bounds. Module relocation
 adds no controller wrapper, runtime module, cache, timer or stream resource.
 
+## Terminal control support
+
+Shared control support is grouped by its host responsibility:
+
+```text
+overlay/
+  popup-control.ts   # controlled open state and revision publication
+  menu-control.ts    # menu controller, typeahead and keyboard translation
+choice/
+  cascade.ts        # cascade input and Core tree/disabled projection
+  disabled-items.ts # Core-backed disabled identity construction
+scalar/
+  checked-control.ts # checked/pressed state and revision publication
+```
+
+Public component modules retain their existing paths and compose these lower
+owners directly. Each helper keeps its original controller, callback order and
+resource lifetime. Menu typeahead retains its sibling scan, query buffer and
+consumer normalization policy; cascade and disabled identity construction
+continue to delegate to Core. Popup and checked controls retain their reentrant
+publication and callback-error handling within their connection owners.
+
+Role rules keep each support family below public controls and separate from
+unrelated helper families. The semantic-authority inventory covers the overlay,
+choice, scalar, text and Temporal support roots. The regrouping changes private
+import paths while preserving public exports, algorithms and distribution
+budgets.
+
 ## Moving or extracting an implementation
 
 Before editing, identify the owner, direct callers, public surfaces and any

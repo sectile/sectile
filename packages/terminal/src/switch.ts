@@ -1,6 +1,6 @@
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core'; import { applySwitchEvent, tryCreateSwitchState, type SwitchCommand, type SwitchEvent, type SwitchState } from '@sectile/core/switch'; import { createTerminalCheckedControl, type TerminalCheckedControl } from './internal/checked-control.js';
+import type { Result } from '@sectile/core'; import { applySwitchEvent, tryCreateSwitchState, type SwitchCommand, type SwitchEvent, type SwitchState } from '@sectile/core/switch'; import { createTerminalCheckedControl, type TerminalCheckedControl } from './scalar/checked-control.js';
 export interface SwitchOptions { readonly checked?: boolean; readonly defaultChecked?: boolean; readonly disabled?: boolean; readonly onCheckedChange?: (checked: boolean) => void; readonly onUpdate?: () => void }
 
 export type SwitchCheckedChangeHandler = NonNullable<SwitchOptions['onCheckedChange']>;

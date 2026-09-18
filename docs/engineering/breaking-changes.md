@@ -124,6 +124,10 @@
 | WI-009 | @sectile/terminal | `./date-time-field` | `DateTimeField declaration owner` | @sectile/terminal/date-time-field |
 | WI-009 | @sectile/terminal | `./date-time-picker` | `DateTimePicker declaration owner` | @sectile/terminal/date-time-picker |
 | WI-009 | @sectile/terminal | `./date-time-range-picker` | `DateTimeRangePicker declaration owner` | @sectile/terminal/date-time-range-picker |
+| WI-009 | @sectile/terminal | `./menu-button` | `MenuControl declaration owner` | @sectile/terminal/menu-button |
+| WI-009 | @sectile/terminal | `./menu` | `MenuControl declaration owner` | @sectile/terminal/menu |
+| WI-009 | @sectile/terminal | `./menubar` | `MenuControl declaration owner` | @sectile/terminal/menubar |
+| WI-009 | @sectile/terminal | `./navigation-menu` | `MenuControl declaration owner` | @sectile/terminal/navigation-menu |
 | WI-009 | @sectile/terminal | `./range-calendar` | `RangeCalendar declaration owner` | @sectile/terminal/range-calendar |
 | WI-009 | @sectile/terminal | `./text` | `TextInput declaration owner`, `toTextEvent declaration owner` | @sectile/terminal/text |
 | WI-009 | @sectile/terminal | `./time-field` | `TimeField declaration owner` | @sectile/terminal/time-field |

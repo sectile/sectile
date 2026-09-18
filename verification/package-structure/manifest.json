@@ -2957,7 +2957,12 @@
             "controls",
             "foundation",
             "text-input",
-            "text-grapheme"
+            "text-grapheme",
+            "overlay-popup",
+            "overlay-menu",
+            "scalar-checked",
+            "choice-cascade",
+            "choice-disabled"
           ]
         },
         "temporal-result": {
@@ -3040,6 +3045,40 @@
             "temporal-calendar",
             "temporal-pickers",
             "text"
+          ]
+        },
+        "overlay-popup": {
+          "reason": "Shared Terminal popup connection and publication owner.",
+          "allows": [
+            "foundation",
+            "overlay-popup"
+          ]
+        },
+        "overlay-menu": {
+          "reason": "Shared Terminal menu controller, typeahead state and keyboard translation.",
+          "allows": [
+            "foundation",
+            "overlay-menu"
+          ]
+        },
+        "scalar-checked": {
+          "reason": "Shared Terminal checked control and reentrant publication owner.",
+          "allows": [
+            "foundation",
+            "scalar-checked"
+          ]
+        },
+        "choice-cascade": {
+          "reason": "Terminal cascade input and Core-owned tree/disabled projection.",
+          "allows": [
+            "foundation",
+            "choice-cascade"
+          ]
+        },
+        "choice-disabled": {
+          "reason": "Terminal disabled identity construction delegated to Core.",
+          "allows": [
+            "choice-disabled"
           ]
         }
       },
@@ -3144,32 +3183,32 @@
           "role": "exports",
           "kind": "facade"
         },
-        "src/internal/cascade-choice.ts": {
-          "role": "controls",
+        "src/choice/cascade.ts": {
+          "role": "choice-cascade",
           "kind": "owner"
         },
-        "src/internal/checked-control.ts": {
-          "role": "controls",
+        "src/scalar/checked-control.ts": {
+          "role": "scalar-checked",
           "kind": "owner"
         },
-        "src/internal/disabled-items.ts": {
-          "role": "foundation",
+        "src/choice/disabled-items.ts": {
+          "role": "choice-disabled",
           "kind": "owner"
         },
         "src/text/grapheme.ts": {
           "role": "text-grapheme",
           "kind": "owner"
         },
-        "src/internal/menu-control.ts": {
-          "role": "controls",
+        "src/overlay/menu-control.ts": {
+          "role": "overlay-menu",
           "kind": "owner"
         },
         "src/temporal/internal/input.ts": {
           "role": "temporal-input",
           "kind": "owner"
         },
-        "src/internal/popup-control.ts": {
-          "role": "controls",
+        "src/overlay/popup-control.ts": {
+          "role": "overlay-popup",
           "kind": "owner"
         },
         "src/temporal/internal/reference-date.ts": {

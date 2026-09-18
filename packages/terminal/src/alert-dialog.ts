@@ -2,7 +2,7 @@ import { createFacadeConnection, type FacadeConnection } from '@sectile/core/ada
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { applyAlertDialogEvent, tryCreateAlertDialogState, type AlertDialogCommand, type AlertDialogEvent, type AlertDialogState } from '@sectile/core/alert-dialog';
-import { createTerminalPopup, type TerminalPopupConnection } from './internal/popup-control.js';
+import { createTerminalPopup, type TerminalPopupConnection } from './overlay/popup-control.js';
 export interface AlertDialogOptions { readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly onOpenChange?: (open: boolean) => void; readonly onInitialFocus?: () => void; readonly onFocusRestore?: () => void; readonly onAnnounce?: () => void; readonly onUpdate?: () => void }
 
 export type AlertDialogOpenChangeHandler = NonNullable<AlertDialogOptions['onOpenChange']>;

@@ -16,7 +16,7 @@ import {
 } from '@sectile/core/listbox';
 import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import { rejectRevisionInput, type RevisionResult, type RevisionSnapshot } from '@sectile/core/revision';
-import { createDisabledItems } from './internal/disabled-items.js';
+import { createDisabledItems } from './choice/disabled-items.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export type KeyboardInput = TerminalKeyboardInput;

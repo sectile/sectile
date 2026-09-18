@@ -49,7 +49,27 @@
       "semanticPaths": []
     },
     {
-      "root": "packages/terminal/src/internal",
+      "root": "packages/terminal/src/overlay",
+      "classification": "platform-only",
+      "semanticPaths": []
+    },
+    {
+      "root": "packages/terminal/src/choice",
+      "classification": "platform-only",
+      "semanticPaths": []
+    },
+    {
+      "root": "packages/terminal/src/scalar",
+      "classification": "platform-only",
+      "semanticPaths": []
+    },
+    {
+      "root": "packages/terminal/src/text",
+      "classification": "platform-only",
+      "semanticPaths": []
+    },
+    {
+      "root": "packages/terminal/src/temporal/internal",
       "classification": "platform-only",
       "semanticPaths": []
     },

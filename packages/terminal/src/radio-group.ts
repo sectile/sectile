@@ -13,7 +13,7 @@ import {
 } from '@sectile/core/radio-group';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { createDisabledItems } from './internal/disabled-items.js';
+import { createDisabledItems } from './choice/disabled-items.js';
 
 export type RadioGroupEffect<ID extends StableID = StableID> =
   { readonly type: 'move-radio-highlight'; readonly id: ID };

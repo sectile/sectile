@@ -2,7 +2,7 @@ import { createFacadeConnection, type FacadeConnection } from '@sectile/core/ada
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { applyDialogEvent, tryCreateDialogState, type DialogCommand, type DialogEvent, type DialogState } from '@sectile/core/dialog';
-import { createTerminalPopup, type TerminalPopupConnection } from './internal/popup-control.js';
+import { createTerminalPopup, type TerminalPopupConnection } from './overlay/popup-control.js';
 export interface DialogOptions { readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly onOpenChange?: (open: boolean) => void; readonly onInitialFocus?: () => void; readonly onFocusRestore?: () => void; readonly onUpdate?: () => void }
 
 export type DialogOpenChangeHandler = NonNullable<DialogOptions['onOpenChange']>;

@@ -2,7 +2,7 @@ import { createFacadeConnection, type FacadeConnection } from '@sectile/core/ada
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { applyTooltipEvent, tryCreateTooltipState, type TooltipCommand, type TooltipEvent, type TooltipState } from '@sectile/core/tooltip';
-import { createTerminalPopup, type TerminalPopupConnection } from './internal/popup-control.js';
+import { createTerminalPopup, type TerminalPopupConnection } from './overlay/popup-control.js';
 export interface TooltipOptions { readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void }
 
 export type TooltipOpenChangeHandler = NonNullable<TooltipOptions['onOpenChange']>;
