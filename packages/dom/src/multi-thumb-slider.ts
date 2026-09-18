@@ -7,7 +7,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { applyMultiThumbSliderEvent, tryCreateMultiThumbSliderState, type MultiThumbSliderCommand, type MultiThumbSliderEvent, type MultiThumbSliderPolicies, type MultiThumbSliderState } from '@sectile/core/multi-thumb-slider';
 export type { MultiThumbSliderPolicies } from '@sectile/core/multi-thumb-slider';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 
 export interface MultiThumbSliderOptions<ID extends StableID = StableID> extends BoundedRangeInput {
   readonly root: HTMLElement;

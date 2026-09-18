@@ -464,7 +464,7 @@ test('DOM identity, choice, and composite helpers stay below control owners', as
     ['identity/token', ['foundation', 'identity-token']],
     ['identity/delegated-event', ['foundation', 'identity-token', 'identity-delegated']],
     ['choice/disabled-items', ['choice-disabled']],
-    ['choice/cascade-binding', ['foundation', 'identity-token', 'identity-delegated', 'choice-cascade']],
+    ['choice/cascade-binding', ['foundation', 'interaction-attributes', 'identity-token', 'identity-delegated', 'choice-cascade']],
     ['composite/focus-entry', ['composite-focus']],
   ]) {
     const source = `packages/dom/src/${entry}.ts`;
@@ -484,6 +484,47 @@ test('DOM identity, choice, and composite helpers stay below control owners', as
         assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
       }
     }
+  }
+});
+
+test('DOM scalar and interaction support remain below public control profiles', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const dependencies = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
+
+  for (const [entry, role] of [
+    ['interaction/keyboard', 'interaction-keyboard'],
+    ['interaction/attributes', 'interaction-attributes'],
+    ['interaction/visibility', 'interaction-visibility'],
+    ['scalar/checked-control', 'scalar-checked'],
+    ['scalar/percentage', 'scalar-percentage'],
+  ]) {
+    const source = `packages/dom/src/${entry}.ts`;
+    const visited = new Set();
+    const pending = [source];
+    while (pending.length > 0) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      const owner = classes.get(path);
+      if (owner.package === 'dom') assert.equal(owner.role, role, path);
+      pending.push(...dependencies.get(path));
+    }
+    for (const target of ['checkbox.ts', 'tabs.ts', 'meter.ts', 'overlay/popup/connection.ts', 'index.ts']) {
+      for (const phase of ['type', 'value']) {
+        const reverse = { source, target: `packages/dom/src/${target}`, targetPackage: '@sectile/dom', phase, kind: 'import' };
+        assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|facade|cycle/u);
+      }
+    }
+  }
+  for (const name of ['accordion', 'radio-group', 'toolbar']) {
+    const source = `packages/dom/src/${name}.ts`;
+    assert.ok(graph.edges.some((edge) => edge.source === source && edge.target === 'packages/dom/src/interaction/keyboard.ts' && edge.phase === 'type'), source);
+    assert.ok(!graph.edges.some((edge) => edge.source === source && edge.target === 'packages/dom/src/tabs.ts'), source);
   }
 });
 

@@ -15,15 +15,10 @@ import { findDelegatedStableID } from './identity/delegated-event.js';
 import { stableIDToken } from './identity.js';
 import { createDisabledItems } from './choice/disabled-items.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
+import { horizontalArrow, type ReadingDirection, type KeyboardInput } from './interaction/keyboard.js';
 import { DOMCompositeFocusEntry } from './composite/focus-entry.js';
 
-export interface KeyboardInput {
-  readonly key: string;
-  readonly altKey?: boolean;
-  readonly ctrlKey?: boolean;
-  readonly metaKey?: boolean;
-}
+export type { KeyboardInput } from './interaction/keyboard.js';
 
 export type TabsEffect<ID extends StableID = StableID> =
   | { readonly type: 'focus-tab'; readonly id: ID }

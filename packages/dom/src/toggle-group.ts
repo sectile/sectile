@@ -4,7 +4,7 @@ import type { Result, StableID } from '@sectile/core';
 import type { ToggleGroupEvent, ToggleGroupState } from '@sectile/core/toggle-group';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { tryCreateListbox, type ListboxConnection, type ListboxOptions } from './listbox.js';
-import type { ReadingDirection } from './internal/direction.js';
+import type { ReadingDirection } from './interaction/keyboard.js';
 import { stableIDToken } from './identity.js';
 
 export type ToggleGroupOptions<ID extends StableID = StableID> =

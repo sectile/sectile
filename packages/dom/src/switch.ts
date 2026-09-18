@@ -8,7 +8,7 @@ import {
   type CheckedControlAttributes,
   type CheckedControlController,
   type DOMCheckedControl,
-} from './internal/checked-control.js';
+} from './scalar/checked-control.js';
 import { getCheckboxInputAttributes, type CheckboxInputAttributes, type CheckboxInputOptions } from './checkbox.js';
 export interface SwitchOptions { readonly element: HTMLElement; readonly checked?: boolean; readonly defaultChecked?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onCheckedChange?: (checked: boolean) => void; readonly onUpdate?: () => void }
 

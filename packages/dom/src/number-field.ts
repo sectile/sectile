@@ -12,7 +12,7 @@ import {
   type NumberFieldState,
 } from '@sectile/core/number-field';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 import { DOMTextElementBinding } from './text/element-binding.js';
 import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from './text/controlled-input.js';
 import { toTextEvent, type TextInput } from './text.js';

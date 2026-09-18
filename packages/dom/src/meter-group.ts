@@ -6,7 +6,7 @@ import {
 } from '@sectile/core/meter-group';
 import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
-import { formatExactPercentage } from './internal/exact-percentage.js';
+import { formatExactPercentage } from './scalar/percentage.js';
 
 export type MeterGroupAttributeRecord = Readonly<Record<string, string | number | undefined>>;
 export type MeterGroupValueFormatter<ID extends StableID = StableID> = (value: string, id: ID) => string;

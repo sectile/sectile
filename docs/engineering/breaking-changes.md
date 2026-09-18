@@ -90,6 +90,15 @@
 | WI-005 | @sectile/vue | `./tree-view` | `TreeViewGroup.forcePresent` | @sectile/vue/tree-view |
 | WI-007 | @sectile/vue | `./tree-grid` | `TreeGridEditor.forcePresent` | @sectile/vue/tree-grid |
 | WI-008 | @sectile/terminal | `./combobox` | `Combobox controller declaration closure` | @sectile/terminal/combobox |
+| WI-008 | @sectile/dom | `./accordion` | `DOM keyboard declaration closure` | @sectile/dom/accordion |
+| WI-008 | @sectile/dom | `./checkbox-group` | `DOM keyboard declaration closure` | @sectile/dom/checkbox-group |
+| WI-008 | @sectile/dom | `./listbox` | `DOM keyboard declaration closure` | @sectile/dom/listbox |
+| WI-008 | @sectile/dom | `./radio-group` | `DOM keyboard declaration closure` | @sectile/dom/radio-group |
+| WI-008 | @sectile/dom | `./stepper` | `DOM keyboard declaration closure` | @sectile/dom/stepper |
+| WI-008 | @sectile/dom | `./tabs` | `DOM keyboard declaration closure` | @sectile/dom/tabs |
+| WI-008 | @sectile/dom | `./tags-input` | `DOM keyboard declaration closure` | @sectile/dom/tags-input |
+| WI-008 | @sectile/dom | `./toggle-group` | `DOM keyboard declaration closure` | @sectile/dom/toggle-group |
+| WI-008 | @sectile/dom | `./toolbar` | `DOM keyboard declaration closure` | @sectile/dom/toolbar |
 | WI-008 | @sectile/dom | `./menu` | `MenuControl declaration closure` | @sectile/dom/menu |
 | WI-008 | @sectile/dom | `./menubar` | `MenuControl declaration closure` | @sectile/dom/menubar |
 | WI-008 | @sectile/dom | `./navigation-menu` | `MenuControl declaration closure` | @sectile/dom/navigation-menu |

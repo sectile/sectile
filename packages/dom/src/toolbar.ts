@@ -16,9 +16,9 @@ import { findDelegatedStableID } from './identity/delegated-event.js';
 import { stableIDToken } from './identity.js';
 import { createDisabledItems } from './choice/disabled-items.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './internal/interaction.js';
-import type { KeyboardInput } from './tabs.js';
-import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
+import type { KeyboardInput } from './interaction/keyboard.js';
+import { horizontalArrow, type ReadingDirection } from './interaction/keyboard.js';
 import { DOMCompositeFocusEntry } from './composite/focus-entry.js';
 
 export type ToolbarEffect<ID extends StableID = StableID> =

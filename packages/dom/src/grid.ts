@@ -5,7 +5,7 @@ import { tryCreateGrid, type Grid, type GridOptions as StructureGridOptions } fr
 import { applyGridEvent, tryCreateGridState, type GridCommand, type GridEditMode, type GridEvent, type GridPolicies, type GridState } from '@sectile/core/grid-control';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 import { DOMCompositeFocusEntry } from './composite/focus-entry.js';
 
 export type { GridEditMode, GridPolicies } from '@sectile/core/grid-control';

@@ -2,7 +2,7 @@ import type { Result } from '@sectile/core';
 import { tryCreateProgressState, type ProgressInput, type ProgressState } from '@sectile/core/progress';
 import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
-import { formatExactPercentage } from './internal/exact-percentage.js';
+import { formatExactPercentage } from './scalar/percentage.js';
 
 export type ProgressAttributeRecord = Readonly<Record<string, string | number | undefined>>;
 export type ProgressValueFormatter = (value: string) => string;

@@ -4,7 +4,7 @@ import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { applyEditableEvent, tryCreateEditableState, type EditableCommand, type EditableEvent, type EditablePolicies, type EditableState } from '@sectile/core/editable';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 
 export interface EditableOptions {
   readonly root: HTMLElement; readonly preview: HTMLElement; readonly input: HTMLInputElement | HTMLTextAreaElement;

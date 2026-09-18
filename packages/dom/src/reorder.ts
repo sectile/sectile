@@ -14,7 +14,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TreeNodeInput } from '@sectile/core/tree';
 import { unwrap } from '@sectile/core/result';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 import { stableIDToken } from './identity.js';
 
 export type ReorderOrientation = 'horizontal' | 'vertical';

@@ -5,7 +5,7 @@ import type { TextEditingState } from '@sectile/core/text';
 import { formatTimeValue } from '@sectile/temporal/time-field';
 import { applyTimeRangeFieldEvent, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldCommand, type TimeRangeFieldEndpoint, type TimeRangeFieldEvent, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/temporal/time-range-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { setFieldValidity, setInteractionAttributes } from '../internal/interaction.js';
+import { setFieldValidity, setInteractionAttributes } from '../interaction/attributes.js';
 import { DOMTextElementBinding } from '../text/element-binding.js';
 import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
 import { toTextEvent, type TextInput } from '../text.js';

@@ -7,12 +7,12 @@ import {
   tryCreateDisabledIdentitySet,
   type ControlledComponentController,
 } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from '../../internal/interaction.js';
-import { horizontalArrow, type ReadingDirection } from '../../internal/direction.js';
+import { setInteractionAttributes } from '../../interaction/attributes.js';
+import { horizontalArrow, type ReadingDirection } from '../../interaction/keyboard.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from '../layer/binding.js';
 import type { PositionOptions } from '../../position.js';
 import { createPosition, manualPositionConnection, type PositionConnection } from '../position/connection.js';
-import { createHiddenBinding, type HiddenBinding } from '../../internal/hidden-binding.js';
+import { createHiddenBinding, type HiddenBinding } from '../../interaction/visibility.js';
 import { DOMCompositeFocusEntry } from '../../composite/focus-entry.js';
 
 export type MenuKind = 'menu' | 'menubar' | 'navigation-menu' | 'menu-button';

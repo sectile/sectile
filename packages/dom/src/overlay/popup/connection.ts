@@ -5,14 +5,14 @@ import {
   createControlledComponentController,
   type ControlledComponentController,
 } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from '../../internal/interaction.js';
+import { setInteractionAttributes } from '../../interaction/attributes.js';
 import {
   createDOMLayerID,
   getDOMLayerManager,
   type DOMLayerManager,
 } from '../layer/manager.js';
 import { acquireModalEffects, type ModalEffects } from '../modal/effects.js';
-import { createHiddenBinding, type HiddenBinding } from '../../internal/hidden-binding.js';
+import { createHiddenBinding, type HiddenBinding } from '../../interaction/visibility.js';
 import {
   createInteractOutsideEvent,
   isEventInside,

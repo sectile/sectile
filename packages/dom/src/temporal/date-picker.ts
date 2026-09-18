@@ -8,7 +8,7 @@ export { calendarID, createCalendarMonth, createCalendarWeek, createCalendarYear
 export type { CalendarMonthValue, CalendarViewMode } from '@sectile/temporal/calendar';
 export type { DatePickerPolicies } from '@sectile/temporal/date-picker';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from '../internal/interaction.js';
+import { setInteractionAttributes } from '../interaction/attributes.js';
 import {
   focusDatePickerEntry,
   setDatePickerCellAvailability,
@@ -20,7 +20,7 @@ import { createDOMLayerBinding, type DOMLayerBinding } from '../overlay/layer/bi
 import { currentReferenceDate } from './internal/reference-date.js';
 import { createPickerPosition, type PickerPositionOptions } from '../overlay/position/picker.js';
 import type { PositionConnection } from '../overlay/position/connection.js';
-import { createHiddenBinding, type HiddenBinding } from '../internal/hidden-binding.js';
+import { createHiddenBinding, type HiddenBinding } from '../interaction/visibility.js';
 import type { PeriodPickerHost, PeriodPickerEvent } from './internal/period-picker.js';
 
 export type { PickerPositionOptions } from '../overlay/position/picker.js';

@@ -7,7 +7,7 @@ import {
   type DisclosureCommand, type DisclosureEvent, type DisclosureState,
 } from '@sectile/core/disclosure';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 
 export interface DisclosureOptions {
   readonly trigger: HTMLElement;

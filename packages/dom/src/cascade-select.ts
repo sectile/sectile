@@ -20,7 +20,7 @@ import {
   type PositionConnection,
 } from './overlay/position/connection.js';
 import type { PositionOptions } from './position.js';
-import { createHiddenBinding, type HiddenBinding } from './internal/hidden-binding.js';
+import { createHiddenBinding, type HiddenBinding } from './interaction/visibility.js';
 
 export type { TreeNodeInput as CascadeSelectItemDefinition } from '@sectile/core/tree';
 export type { CascadeSelectPolicies } from '@sectile/core/cascade-select';

@@ -1891,10 +1891,30 @@
       ],
       "roles": {
         "foundation": {
-          "reason": "dom foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Public DOM identity encoding is a genuine foundational owner, independent of control implementations.",
           "allows": [
             "foundation"
           ]
+        },
+        "interaction-keyboard": {
+          "reason": "Shared native keyboard contracts and direction translation below public control profiles.",
+          "allows": ["interaction-keyboard"]
+        },
+        "interaction-attributes": {
+          "reason": "Disabled, read-only and native validation attribute projection without control state.",
+          "allows": ["interaction-attributes"]
+        },
+        "interaction-visibility": {
+          "reason": "Element-local hidden attribute ownership and compare-before-restore cleanup.",
+          "allows": ["interaction-visibility"]
+        },
+        "scalar-checked": {
+          "reason": "Shared checked/pressed host controller and single-connection publication lifecycle.",
+          "allows": ["scalar-checked"]
+        },
+        "scalar-percentage": {
+          "reason": "DOM percentage formatting delegated to canonical exact ratio semantics in Core.",
+          "allows": ["scalar-percentage"]
         },
         "identity-token": {
           "reason": "StableID token parsing and delegation to the public foundational DOM identity encoding.",
@@ -1920,6 +1940,7 @@
           "reason": "Shared cascade-list/select DOM projection and event binding over lower identity helpers.",
           "allows": [
             "foundation",
+            "interaction-attributes",
             "identity-delegated",
             "choice-cascade"
           ]
@@ -1986,7 +2007,8 @@
         "overlay-popup": {
           "reason": "Shared popup connection coordinating focus, layer, modal, visibility and outside-interaction resources.",
           "allows": [
-            "foundation",
+            "interaction-attributes",
+            "interaction-visibility",
             "overlay-layer-manager",
             "overlay-modal",
             "overlay-interact",
@@ -2002,7 +2024,9 @@
         "overlay-menu": {
           "reason": "Shared menu host connection owning item/submenu registration, layer, focus and positioning resources.",
           "allows": [
-            "foundation",
+            "interaction-attributes",
+            "interaction-keyboard",
+            "interaction-visibility",
             "positioning",
             "overlay-layer-binding",
             "overlay-position-connection",
@@ -2024,10 +2048,15 @@
           ]
         },
         "controls": {
-          "reason": "dom controls owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Compact public DOM control profiles own their named contracts and compose explicitly classified lower host support.",
           "allows": [
             "controls",
             "foundation",
+            "interaction-attributes",
+            "interaction-keyboard",
+            "interaction-visibility",
+            "scalar-checked",
+            "scalar-percentage",
             "overlays",
             "positioning",
             "overlay-layer-binding",
@@ -2063,7 +2092,7 @@
         "text": {
           "reason": "Public Text controller and connection owner over lower DOM text contracts and native binding.",
           "allows": [
-            "foundation",
+            "interaction-attributes",
             "text-contracts",
             "text-binding",
             "text"
@@ -2225,6 +2254,7 @@
             "controls",
             "exports",
             "foundation",
+            "interaction-keyboard",
             "overlays",
             "overlay-interact",
             "positioning",
@@ -2274,7 +2304,7 @@
           "reason": "DOM field input translation and projection over Temporal field state.",
           "allows": [
             "controls",
-            "foundation",
+            "interaction-attributes",
             "temporal-field",
             "temporal-support",
             "text",
@@ -2285,7 +2315,7 @@
         "temporal-calendar": {
           "reason": "DOM calendar keyboard/click translation and calendar-cell projection.",
           "allows": [
-            "foundation",
+            "interaction-attributes",
             "temporal-calendar",
             "temporal-support"
           ]
@@ -2293,7 +2323,8 @@
         "temporal-picker": {
           "reason": "DOM date/date-time picker connections composing lower field, layer and positioning owners.",
           "allows": [
-            "foundation",
+            "interaction-attributes",
+            "interaction-visibility",
             "overlay-layer-binding",
             "overlay-position-connection",
             "overlay-position-picker",
@@ -2493,8 +2524,8 @@
           "role": "chart-options",
           "kind": "owner"
         },
-        "src/internal/checked-control.ts": {
-          "role": "controls",
+        "src/scalar/checked-control.ts": {
+          "role": "scalar-checked",
           "kind": "owner"
         },
         "src/composite/focus-entry.ts": {
@@ -2509,24 +2540,24 @@
           "role": "identity-delegated",
           "kind": "owner"
         },
-        "src/internal/direction.ts": {
-          "role": "foundation",
+        "src/interaction/keyboard.ts": {
+          "role": "interaction-keyboard",
           "kind": "owner"
         },
         "src/choice/disabled-items.ts": {
           "role": "choice-disabled",
           "kind": "owner"
         },
-        "src/internal/exact-percentage.ts": {
-          "role": "foundation",
+        "src/scalar/percentage.ts": {
+          "role": "scalar-percentage",
           "kind": "owner"
         },
-        "src/internal/hidden-binding.ts": {
-          "role": "foundation",
+        "src/interaction/visibility.ts": {
+          "role": "interaction-visibility",
           "kind": "owner"
         },
-        "src/internal/interaction.ts": {
-          "role": "foundation",
+        "src/interaction/attributes.ts": {
+          "role": "interaction-attributes",
           "kind": "owner"
         },
         "src/overlay/layer/binding.ts": {

@@ -24,7 +24,7 @@ import {
 import { createDisabledItems } from './choice/disabled-items.js';
 import { findDelegatedStableID } from './identity/delegated-event.js';
 import { stableIDToken } from './identity.js';
-import { horizontalArrow } from './internal/direction.js';
+import { horizontalArrow } from './interaction/keyboard.js';
 import { DOMCompositeFocusEntry } from './composite/focus-entry.js';
 
 export type RatingOptions<ID extends StableID = StableID> = Omit<

@@ -2,7 +2,7 @@ import type { Result } from '@sectile/core';
 import { tryCreateMeterState, type MeterInput, type MeterState } from '@sectile/core/meter';
 import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
-import { formatExactPercentage } from './internal/exact-percentage.js';
+import { formatExactPercentage } from './scalar/percentage.js';
 
 export type MeterAttributeRecord = Readonly<Record<string, string | number | undefined>>;
 export type MeterValueFormatter = (value: string) => string;

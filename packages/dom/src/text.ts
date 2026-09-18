@@ -16,7 +16,7 @@ import {
 } from '@sectile/core/text';
 import type { TextElement, TextInput } from './text/contracts.js';
 import { DOMTextElementBinding } from './text/element-binding.js';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 
 export type { TextElement, TextInput } from './text/contracts.js';
 

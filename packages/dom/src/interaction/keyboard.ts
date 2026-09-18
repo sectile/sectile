@@ -1,5 +1,12 @@
 export type ReadingDirection = 'ltr' | 'rtl';
 
+export interface KeyboardInput {
+  readonly key: string;
+  readonly altKey?: boolean;
+  readonly ctrlKey?: boolean;
+  readonly metaKey?: boolean;
+}
+
 export function horizontalArrow(
   key: string,
   direction: ReadingDirection = 'ltr',

@@ -2,7 +2,7 @@ import type { StableID } from '@sectile/core';
 import type { Tree } from '@sectile/core/tree';
 import { findDelegatedStableID } from '../identity/delegated-event.js';
 import { stableIDToken } from '../identity.js';
-import { setInteractionAttributes } from '../internal/interaction.js';
+import { setInteractionAttributes } from '../interaction/attributes.js';
 
 export type DOMCascadeChoiceEvent<ID extends StableID = StableID> =
   | 'next' | 'previous' | 'first' | 'last'

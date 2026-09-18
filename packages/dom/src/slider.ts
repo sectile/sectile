@@ -14,7 +14,7 @@ import {
   type SliderState,
 } from '@sectile/core/slider';
 import type { RevisionResult, RevisionSnapshot } from '@sectile/core/revision';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 
 export interface KeyboardInput {
   readonly key: string;

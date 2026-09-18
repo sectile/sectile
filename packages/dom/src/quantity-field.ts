@@ -14,7 +14,7 @@ export type { QuantityFieldPolicies, QuantityValue } from '@sectile/core/quantit
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 import { DOMTextElementBinding } from './text/element-binding.js';
 import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from './text/controlled-input.js';
 import { toTextEvent, type TextInput } from './text.js';

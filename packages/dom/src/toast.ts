@@ -4,7 +4,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { createHiddenBinding, type HiddenBinding } from './internal/hidden-binding.js';
+import { createHiddenBinding, type HiddenBinding } from './interaction/visibility.js';
 export type { ToastInput, ToastItem, ToastKind } from '@sectile/core/toast';
 export { createToastState } from '@sectile/core/toast';
 

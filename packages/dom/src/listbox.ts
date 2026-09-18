@@ -19,8 +19,8 @@ import { rejectRevisionInput, type RevisionResult, type RevisionSnapshot } from 
 import { findDelegatedStableID } from './identity/delegated-event.js';
 import { stableIDElementToken, stableIDToken } from './identity.js';
 import { createDisabledItems } from './choice/disabled-items.js';
-import { setInteractionAttributes } from './internal/interaction.js';
-import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
+import { horizontalArrow, type ReadingDirection } from './interaction/keyboard.js';
 
 export { DEFAULT_LISTBOX_SELECTION_MODE } from '@sectile/core/listbox';
 

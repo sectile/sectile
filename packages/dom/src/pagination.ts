@@ -20,7 +20,7 @@ import {
 import type { RevisionSnapshot } from '@sectile/core/revision';
 export type { PaginationControl, PaginationItem, PaginationItemRange } from '@sectile/core/pagination';
 import { findDelegatedID } from './identity/delegated-event.js';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 
 export interface PaginationOptions extends Omit<PaginationModelOptions, 'itemsPerPage'> {

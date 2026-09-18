@@ -3,6 +3,78 @@
   "package": "@sectile/dom",
   "entries": [
     {
+      "id": "WI-008:dom-accordion-keyboard-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./accordion" },
+      "symbols": ["DOM keyboard declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./accordion" },
+      "removalReason": "Shared keyboard contracts now resolve to the lower interaction owner instead of Tabs. Public names and shapes remain unchanged; no consumer migration is required."
+    },
+    {
+      "id": "WI-008:dom-checkbox-group-keyboard-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./checkbox-group" },
+      "symbols": ["DOM keyboard declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./checkbox-group" },
+      "removalReason": "The reachable keyboard declaration file moved to its lower interaction owner. Public names and shapes remain unchanged; no consumer migration is required."
+    },
+    {
+      "id": "WI-008:dom-listbox-keyboard-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./listbox" },
+      "symbols": ["DOM keyboard declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./listbox" },
+      "removalReason": "The reachable keyboard declaration file moved to its lower interaction owner. Public names and shapes remain unchanged; no consumer migration is required."
+    },
+    {
+      "id": "WI-008:dom-radio-group-keyboard-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./radio-group" },
+      "symbols": ["DOM keyboard declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./radio-group" },
+      "removalReason": "Shared keyboard contracts now resolve to the lower interaction owner instead of Tabs. Public names and shapes remain unchanged; no consumer migration is required."
+    },
+    {
+      "id": "WI-008:dom-stepper-keyboard-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./stepper" },
+      "symbols": ["DOM keyboard declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./stepper" },
+      "removalReason": "The reachable keyboard declaration file moved to its lower interaction owner. Public names and shapes remain unchanged; no consumer migration is required."
+    },
+    {
+      "id": "WI-008:dom-tabs-keyboard-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./tabs" },
+      "symbols": ["DOM keyboard declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./tabs" },
+      "removalReason": "Tabs still exports KeyboardInput, now re-exported from its shared lower interaction owner. Its public name and shape remain unchanged; no consumer migration is required."
+    },
+    {
+      "id": "WI-008:dom-tags-input-keyboard-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./tags-input" },
+      "symbols": ["DOM keyboard declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./tags-input" },
+      "removalReason": "The reachable keyboard declaration file moved to its lower interaction owner. Public names and shapes remain unchanged; no consumer migration is required."
+    },
+    {
+      "id": "WI-008:dom-toggle-group-keyboard-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./toggle-group" },
+      "symbols": ["DOM keyboard declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./toggle-group" },
+      "removalReason": "The reachable keyboard declaration file moved to its lower interaction owner. Public names and shapes remain unchanged; no consumer migration is required."
+    },
+    {
+      "id": "WI-008:dom-toolbar-keyboard-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./toolbar" },
+      "symbols": ["DOM keyboard declaration closure"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./toolbar" },
+      "removalReason": "Shared keyboard contracts now resolve to the lower interaction owner instead of Tabs. Public names and shapes remain unchanged; no consumer migration is required."
+    },
+    {
       "id": "WI-025:temporal-aggregate-removal",
       "change": "removed",
       "before": { "subpath": "./temporal" },

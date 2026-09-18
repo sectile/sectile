@@ -1,5 +1,5 @@
 export type { FacadeConnection } from '@sectile/core/adapter-runtime';
-export type { ReadingDirection } from './internal/direction.js';
+export type { ReadingDirection } from './interaction/keyboard.js';
 export type { InteractOutsideEvent, InteractOutsideHandler } from './interact-outside.js';
 export type {
   PositionAlign,

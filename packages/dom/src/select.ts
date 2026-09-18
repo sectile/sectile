@@ -8,7 +8,7 @@ export type { SelectPolicies } from '@sectile/core/select';
 import { findDelegatedStableID } from './identity/delegated-event.js';
 import { stableIDToken } from './identity.js';
 import { createDisabledItems } from './choice/disabled-items.js';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { createDOMLayerBinding, type DOMLayerBinding } from './overlay/layer/binding.js';
 import {
@@ -17,7 +17,7 @@ import {
   type PositionConnection,
 } from './overlay/position/connection.js';
 import type { PositionOptions } from './position.js';
-import { createHiddenBinding, type HiddenBinding } from './internal/hidden-binding.js';
+import { createHiddenBinding, type HiddenBinding } from './interaction/visibility.js';
 
 export interface SelectOptions<ID extends StableID = StableID> extends PositionOptions { readonly root: HTMLElement; readonly trigger: HTMLButtonElement; readonly popup: HTMLElement; readonly items: readonly ID[]; readonly disabledItems?: readonly ID[]; readonly policies?: SelectPolicies<ID>; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: ID | null; readonly defaultValue?: ID | null; readonly highlightedValue?: ID | null; readonly defaultHighlightedValue?: ID | null; readonly open?: boolean; readonly defaultOpen?: boolean; readonly label?: string; readonly textValue?: (id: ID) => string; readonly typeaheadTimeoutMs?: number; readonly position?: boolean; readonly manageVisibility?: boolean; readonly onValueChange?: (value: ID | null) => void; readonly onHighlightedValueChange?: (value: ID | null) => void; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void }
 

@@ -15,8 +15,8 @@ import {
 } from '@sectile/core/carousel';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './internal/interaction.js';
-import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
+import { horizontalArrow, type ReadingDirection } from './interaction/keyboard.js';
 
 export type { CarouselPolicies, CarouselPosition } from '@sectile/core/carousel';
 

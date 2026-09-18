@@ -8,7 +8,7 @@ import {
   type CheckedControlAttributes,
   type CheckedControlController,
   type DOMCheckedControl,
-} from './internal/checked-control.js';
+} from './scalar/checked-control.js';
 export interface ToggleButtonOptions { readonly element: HTMLElement; readonly pressed?: boolean; readonly defaultPressed?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onPressedChange?: (pressed: boolean) => void; readonly onUpdate?: () => void }
 
 export type ToggleButtonPressedChangeHandler = NonNullable<ToggleButtonOptions['onPressedChange']>;

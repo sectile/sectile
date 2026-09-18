@@ -15,7 +15,7 @@ import {
 export type { DateTimeRangePickerPolicies } from '@sectile/temporal/date-time-range-picker';
 import { type TimeValue } from '@sectile/temporal/time-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from '../internal/interaction.js';
+import { setInteractionAttributes } from '../interaction/attributes.js';
 import {
   focusDatePickerEntry,
   setDatePickerCellAvailability,
@@ -28,7 +28,7 @@ import { createTimeField, type TimeFieldConnection } from './time-field.js';
 import { currentReferenceDate } from './internal/reference-date.js';
 import { createPickerPosition, type PickerPositionOptions } from '../overlay/position/picker.js';
 import type { PositionConnection } from '../overlay/position/connection.js';
-import { createHiddenBinding, type HiddenBinding } from '../internal/hidden-binding.js';
+import { createHiddenBinding, type HiddenBinding } from '../interaction/visibility.js';
 
 export interface DateTimeRangePickerOptions extends PickerPositionOptions {
   readonly root: HTMLElement;

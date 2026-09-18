@@ -262,6 +262,44 @@ retains its generation guard and one active motion cleanup. The move does not
 change portable layer, popup, menu or anchored-layout semantics; those remain in
 Core and the existing domain owners.
 
+## DOM scalar and interaction ownership
+
+The remaining shared control support is grouped below the public profiles:
+
+```text
+interaction/
+  keyboard.ts       # shared keyboard input contracts and direction translation
+  attributes.ts     # disabled/read-only/native validity projection
+  visibility.ts     # element-local hidden attribute ownership and restoration
+scalar/
+  checked-control.ts # checked/pressed controller and publication lifecycle
+  percentage.ts      # exact ratio display delegated to Core
+```
+
+`KeyboardInput` is no longer owned by Tabs. Accordion, Radio Group and Toolbar
+use the lower keyboard contract directly; the existing Tabs export remains a
+re-export of that same shape. `ReadingDirection` has the same lower owner. Other
+controls' distinct keyboard input contracts are not merged merely because their
+names are alike.
+
+Checked controls retain one semantic controller, one click handler and the
+existing publication revision. Reentrant notification and first-error propagation
+remain one transaction rather than being split into additional wrappers or
+owners. Visibility retains its previous/applied/active state and compare-before-
+restore cleanup, without adding listeners or observers. Percentage formatting
+continues to delegate to Core's exact ratio API.
+
+Public single-feature entrypoints remain named owners where they already have a
+coherent contract and lifetime. They are not turned into extra facades solely to
+place every file at the same directory depth. The root keeps the same public
+names and optional-family isolation. Lower scalar and interaction roles reject
+imports of those public profile owners, including type-only back-references.
+
+The protected signature records also track reachable declaration filenames.
+Keyboard declaration relocation is therefore recorded for the affected public
+surfaces even though their names and type shapes are preserved. These records do
+not require a consumer import or behavior migration.
+
 ## DOM identity, choice, and composite ownership
 
 Shared DOM identity and composite-control support is grouped by browser role while

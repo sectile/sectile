@@ -9,7 +9,7 @@ import {
   type CheckedControlAttributes,
   type CheckedControlController,
   type DOMCheckedControl,
-} from './internal/checked-control.js';
+} from './scalar/checked-control.js';
 export type { CheckboxPolicies, CheckboxState, CheckboxValue } from '@sectile/core/checkbox';
 export interface CheckboxOptions { readonly element: HTMLElement; readonly value?: CheckboxValue; readonly defaultValue?: CheckboxValue; readonly policies?: CheckboxPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onValueChange?: (value: CheckboxValue) => void; readonly onUpdate?: () => void }
 

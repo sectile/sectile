@@ -15,8 +15,8 @@ import { findDelegatedStableID } from './identity/delegated-event.js';
 import { stableIDToken } from './identity.js';
 import { createDisabledItems } from './choice/disabled-items.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from './internal/interaction.js';
-import type { KeyboardInput } from './tabs.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
+import type { KeyboardInput } from './interaction/keyboard.js';
 
 export type AccordionEffect<ID extends StableID = StableID> = AccordionCommand<ID>;
 

@@ -15,7 +15,7 @@ import {
 } from '@sectile/core/tree-view';
 import { findDelegatedStableID } from './identity/delegated-event.js';
 import { stableIDToken } from './identity.js';
-import { setInteractionAttributes } from './internal/interaction.js';
+import { setInteractionAttributes } from './interaction/attributes.js';
 import { DOMCompositeFocusEntry } from './composite/focus-entry.js';
 
 export type { TreeNodeInput } from '@sectile/core/tree';
