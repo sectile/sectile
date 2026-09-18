@@ -12,8 +12,8 @@ import {
   type DateTimeValue,
 } from '@sectile/temporal/date-time-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { toTerminalTextInput, toTextEvent } from './text/input.js';
-import type { TerminalKeyboardInput } from './keyboard.js';
+import { toTerminalTextInput, toTextEvent } from '../text/input.js';
+import type { TerminalKeyboardInput } from '../keyboard.js';
 
 export interface DateTimeFieldOptions {
   readonly policies?: DateTimeFieldPolicies;

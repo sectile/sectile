@@ -9,9 +9,9 @@ import { applyMonthRangePickerEvent, tryCreateMonthRangePickerState } from '@sec
 import { applyYearRangePickerEvent, tryCreateYearRangePickerState } from '@sectile/temporal/year-range-picker';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { currentReferenceDate } from './internal/reference-date.js';
-import type { TerminalKeyboardInput } from './keyboard.js';
-import { toDatePickerEvent } from './date-picker.js';
-import { toPeriodPickerEvent } from './internal/period-picker.js';
+import type { TerminalKeyboardInput } from '../keyboard.js';
+import { toDatePickerEvent } from './internal/input.js';
+import { toPeriodPickerEvent } from './internal/input.js';
 
 type DateRangePickerValueGranularity = 'date' | 'month' | 'year';
 interface InternalDateRangePickerOptions extends DateRangePickerOptions { readonly valueGranularity?: DateRangePickerValueGranularity }

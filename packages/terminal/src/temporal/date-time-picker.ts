@@ -2,26 +2,26 @@ import { unwrap } from '@sectile/core/result';
 import { createTerminalTemporalController, createTerminalTemporalFacadeConnection, type TerminalTemporalController, type TerminalTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
-import { formatDateTimeRange, type DateTimeRange } from '@sectile/temporal/date-time-field';
+import { compareDateTimeValues, type DateTimeValue } from '@sectile/temporal/date-time-field';
 import { createCalendarMonth } from '@sectile/temporal/calendar';
 import { addTimeMilliseconds } from '@sectile/temporal/time-field';
 import {
-  applyDateTimeRangePickerEvent,
-  tryCreateDateTimeRangePickerState,
-  type DateTimeRangePickerCommand,
-  type DateTimeRangePickerEvent,
-  type DateTimeRangePickerPolicies,
-  type DateTimeRangePickerState,
-} from '@sectile/temporal/date-time-range-picker';
+  applyDateTimePickerEvent,
+  tryCreateDateTimePickerState,
+  type DateTimePickerCommand,
+  type DateTimePickerEvent,
+  type DateTimePickerPolicies,
+  type DateTimePickerState,
+} from '@sectile/temporal/date-time-picker';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import type { TerminalKeyboardInput } from './keyboard.js';
+import type { TerminalKeyboardInput } from '../keyboard.js';
 import { currentReferenceDate } from './internal/reference-date.js';
-import { toDatePickerEvent } from './date-picker.js';
+import { toDatePickerEvent } from './internal/input.js';
 
-export interface DateTimeRangePickerOptions {
-  readonly policies?: DateTimeRangePickerPolicies;
-  readonly value?: DateTimeRange | null;
-  readonly defaultValue?: DateTimeRange | null;
+export interface DateTimePickerOptions {
+  readonly policies?: DateTimePickerPolicies;
+  readonly value?: DateTimeValue | null;
+  readonly defaultValue?: DateTimeValue | null;
   readonly highlightedValue?: DateValue;
   readonly defaultHighlightedValue?: DateValue;
   readonly referenceDate?: DateValue;
@@ -30,44 +30,44 @@ export interface DateTimeRangePickerOptions {
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
   readonly required?: boolean;
-  readonly onValueChange?: (value: DateTimeRange | null) => void;
+  readonly onValueChange?: (value: DateTimeValue | null) => void;
   readonly onHighlightedValueChange?: (value: DateValue) => void;
   readonly onOpenChange?: (open: boolean) => void;
   readonly onUpdate?: () => void;
 }
 
-export type DateTimeRangePickerValueChangeHandler = NonNullable<DateTimeRangePickerOptions['onValueChange']>;
-export type DateTimeRangePickerHighlightedValueChangeHandler = NonNullable<DateTimeRangePickerOptions['onHighlightedValueChange']>;
-export type DateTimeRangePickerOpenChangeHandler = NonNullable<DateTimeRangePickerOptions['onOpenChange']>;
-export type DateTimeRangePickerUpdateHandler = NonNullable<DateTimeRangePickerOptions['onUpdate']>;
+export type DateTimePickerValueChangeHandler = NonNullable<DateTimePickerOptions['onValueChange']>;
+export type DateTimePickerHighlightedValueChangeHandler = NonNullable<DateTimePickerOptions['onHighlightedValueChange']>;
+export type DateTimePickerOpenChangeHandler = NonNullable<DateTimePickerOptions['onOpenChange']>;
+export type DateTimePickerUpdateHandler = NonNullable<DateTimePickerOptions['onUpdate']>;
 
-export interface DateTimeRangePickerControlledValues {
-  readonly value?: DateTimeRange | null;
+export interface DateTimePickerControlledValues {
+  readonly value?: DateTimeValue | null;
   readonly highlightedValue?: DateValue;
   readonly open?: boolean;
 }
 
-export interface DateTimeRangePickerConnection {
-  getSnapshot(): RevisionSnapshot<DateTimeRangePickerState>;
+export interface DateTimePickerConnection {
+  getSnapshot(): RevisionSnapshot<DateTimePickerState>;
   getMonth(): readonly (readonly DateValue[])[];
-  syncControlledValues(values: DateTimeRangePickerControlledValues): TerminalTemporalResult<RevisionSnapshot<DateTimeRangePickerState>>;
-  handleEvent(event: DateTimeRangePickerEvent): boolean;
+  syncControlledValues(values: DateTimePickerControlledValues): TerminalTemporalResult<RevisionSnapshot<DateTimePickerState>>;
+  handleEvent(event: DateTimePickerEvent): boolean;
   handleKeyboardInput(input: TerminalKeyboardInput): boolean;
 }
 
-export function createDateTimeRangePicker(
-  options: DateTimeRangePickerOptions = {},
-): FacadeConnection<DateTimeRangePickerConnection> {
-  return unwrap(tryCreateDateTimeRangePicker(options));
+export function createDateTimePicker(
+  options: DateTimePickerOptions = {},
+): FacadeConnection<DateTimePickerConnection> {
+  return unwrap(tryCreateDateTimePicker(options));
 }
 
-export function tryCreateDateTimeRangePicker(
-  options: DateTimeRangePickerOptions = {},
-): TerminalTemporalResult<FacadeConnection<DateTimeRangePickerConnection>> {
+export function tryCreateDateTimePicker(
+  options: DateTimePickerOptions = {},
+): TerminalTemporalResult<FacadeConnection<DateTimePickerConnection>> {
   return createTerminalTemporalFacadeConnection(options, construct);
 }
 
-function construct(options: DateTimeRangePickerOptions): TerminalTemporalResult<DateTimeRangePickerConnection> {
+function construct(options: DateTimePickerOptions): TerminalTemporalResult<DateTimePickerConnection> {
   const controls = {
     value: options.value !== undefined,
     highlighted: options.highlightedValue !== undefined,
@@ -83,25 +83,26 @@ function construct(options: DateTimeRangePickerOptions): TerminalTemporalResult<
     ...(options.required === undefined ? {} : { required: options.required }),
   });
   const runtime = createTerminalTemporalController<
-    DateTimeRangePickerState,
-    DateTimeRangePickerEvent,
-    DateTimeRangePickerCommand,
-    DateTimeRangePickerCommand
+    DateTimePickerState,
+    DateTimePickerEvent,
+    DateTimePickerCommand,
+    DateTimePickerCommand
   >({
-    initial: tryCreateDateTimeRangePickerState({
+    initial: tryCreateDateTimePickerState({
       referenceDate: options.referenceDate ?? currentReferenceDate(),
       ...(requestedValue === undefined ? {} : { value: requestedValue }),
+      ...(requestedValue == null && options.policies?.defaultTime !== undefined
+        ? { time: options.policies.defaultTime }
+        : {}),
       calendar: {
         ...(requestedHighlight === undefined ? {} : { highlighted: requestedHighlight }),
         ...(requestedOpen === undefined ? {} : { open: requestedOpen }),
       },
     }),
-    reducer: (state, event) => applyDateTimeRangePickerEvent(state, event, policies),
-    reconcile: (previous, proposed) => tryCreateDateTimeRangePickerState({
+    reducer: (state, event) => applyDateTimePickerEvent(state, event, policies),
+    reconcile: (previous, proposed) => tryCreateDateTimePickerState({
       value: controls.value ? previous.value : proposed.value,
-      anchor: proposed.anchor,
-      startTime: controls.value ? previous.startTime : proposed.startTime,
-      endTime: controls.value ? previous.endTime : proposed.endTime,
+      time: controls.value ? previous.time : proposed.time,
       calendar: {
         ...proposed.calendar,
         highlighted: controls.highlighted
@@ -113,7 +114,7 @@ function construct(options: DateTimeRangePickerOptions): TerminalTemporalResult<
     }),
     notify: [
       (previous, proposed) => {
-        if (rangeKey(previous.value) !== rangeKey(proposed.value)) options.onValueChange?.(proposed.value);
+        if (compareNullable(previous.value, proposed.value) !== 0) options.onValueChange?.(proposed.value);
       },
       (previous, proposed) => {
         if (compareDateValues(previous.calendar.highlighted, proposed.calendar.highlighted) !== 0) {
@@ -128,18 +129,18 @@ function construct(options: DateTimeRangePickerOptions): TerminalTemporalResult<
     interaction: options,
   });
   return runtime.ok
-    ? { ok: true, value: new TerminalDateTimeRangePicker(options, runtime.value, controls) }
+    ? { ok: true, value: new TerminalDateTimePicker(options, runtime.value, controls) }
     : runtime;
 }
 
-class TerminalDateTimeRangePicker implements DateTimeRangePickerConnection {
-  readonly options: DateTimeRangePickerOptions;
-  readonly runtime: TerminalTemporalController<DateTimeRangePickerState, DateTimeRangePickerEvent, DateTimeRangePickerCommand>;
+class TerminalDateTimePicker implements DateTimePickerConnection {
+  readonly options: DateTimePickerOptions;
+  readonly runtime: TerminalTemporalController<DateTimePickerState, DateTimePickerEvent, DateTimePickerCommand>;
   readonly controls: { value: boolean; highlighted: boolean; open: boolean };
 
   public constructor(
-    options: DateTimeRangePickerOptions,
-    runtime: TerminalTemporalController<DateTimeRangePickerState, DateTimeRangePickerEvent, DateTimeRangePickerCommand>,
+    options: DateTimePickerOptions,
+    runtime: TerminalTemporalController<DateTimePickerState, DateTimePickerEvent, DateTimePickerCommand>,
     controls: { value: boolean; highlighted: boolean; open: boolean },
   ) {
     this.options = options;
@@ -147,7 +148,7 @@ class TerminalDateTimeRangePicker implements DateTimeRangePickerConnection {
     this.controls = controls;
   }
 
-  public getSnapshot(): RevisionSnapshot<DateTimeRangePickerState> { return this.runtime.getSnapshot(); }
+  public getSnapshot(): RevisionSnapshot<DateTimePickerState> { return this.runtime.getSnapshot(); }
 
   public getMonth(): readonly (readonly DateValue[])[] {
     const state = this.getSnapshot().state.calendar;
@@ -155,24 +156,22 @@ class TerminalDateTimeRangePicker implements DateTimeRangePickerConnection {
   }
 
   public syncControlledValues(
-    values: DateTimeRangePickerControlledValues,
-  ): TerminalTemporalResult<RevisionSnapshot<DateTimeRangePickerState>> {
+    values: DateTimePickerControlledValues,
+  ): TerminalTemporalResult<RevisionSnapshot<DateTimePickerState>> {
     if (
       this.controls.value !== (values.value !== undefined)
       || this.controls.highlighted !== (values.highlightedValue !== undefined)
       || this.controls.open !== (values.open !== undefined)
     ) {
-      return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date-time range picker values must preserve their construction-time shape.' } };
+      return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date-time picker values must preserve their construction-time shape.' } };
     }
     const state = this.getSnapshot().state;
     const highlighted = this.controls.highlighted
       ? values.highlightedValue as DateValue
       : state.calendar.highlighted;
-    const result = this.runtime.replace(tryCreateDateTimeRangePickerState({
-      value: this.controls.value ? values.value as DateTimeRange | null : state.value,
-      anchor: state.anchor,
-      startTime: state.startTime,
-      endTime: state.endTime,
+    const result = this.runtime.replace(tryCreateDateTimePickerState({
+      value: this.controls.value ? values.value as DateTimeValue | null : state.value,
+      time: state.time,
       calendar: {
         highlighted,
         view: { year: highlighted.year, month: highlighted.month },
@@ -184,7 +183,7 @@ class TerminalDateTimeRangePicker implements DateTimeRangePickerConnection {
     return result;
   }
 
-  public handleEvent(event: DateTimeRangePickerEvent): boolean {
+  public handleEvent(event: DateTimePickerEvent): boolean {
     const result = this.runtime.handle(event);
     if (result.ok) this.options.onUpdate?.();
     return result.ok;
@@ -192,26 +191,18 @@ class TerminalDateTimeRangePicker implements DateTimeRangePickerConnection {
 
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean {
     if (input.altKey === true && (input.key === 'up' || input.key === 'down')) {
-      const endpoint = input.shiftKey === true ? 'end' : 'start';
-      const state = this.getSnapshot().state;
-      const policies = endpoint === 'start'
-        ? this.options.policies?.startTime
-        : this.options.policies?.endTime;
-      const minutes = policies?.step?.minute ?? 1;
+      const minutes = this.options.policies?.time?.step?.minute ?? 1;
       const adjusted = addTimeMilliseconds(
-        endpoint === 'start' ? state.startTime : state.endTime,
+        this.getSnapshot().state.time,
         minutes * 60_000 * (input.key === 'up' ? 1 : -1),
       );
-      return adjusted.ok && this.handleEvent({
-        type: endpoint === 'start' ? 'set-start-time' : 'set-end-time',
-        value: adjusted.value,
-      });
+      return adjusted.ok && this.handleEvent({ type: 'set-time', value: adjusted.value });
     }
     const event = toDatePickerEvent(input);
     return event !== null && typeof event === 'string' && this.handleEvent(event);
   }
 }
 
-function rangeKey(value: DateTimeRange | null): string {
-  return value === null ? '' : formatDateTimeRange(value);
+function compareNullable(left: DateTimeValue | null, right: DateTimeValue | null): number {
+  return left === null ? right === null ? 0 : -1 : right === null ? 1 : compareDateTimeValues(left, right);
 }

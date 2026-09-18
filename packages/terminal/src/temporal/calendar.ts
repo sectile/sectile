@@ -15,7 +15,7 @@ import {
   type CalendarState,
 } from '@sectile/temporal/calendar';
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
-import type { TerminalKeyboardInput } from './keyboard.js';
+import type { TerminalKeyboardInput } from '../keyboard.js';
 import { currentReferenceDate } from './internal/reference-date.js';
 
 export type {

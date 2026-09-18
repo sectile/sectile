@@ -116,7 +116,7 @@ export {
   type CalendarOptions,
   type CalendarPolicies,
   type DateValue as CalendarValue,
-} from './calendar.js';
+} from './temporal/calendar.js';
 export {
   connectCombobox,
   createCombobox, tryCreateCombobox,
@@ -213,25 +213,25 @@ export {
 } from './text.js';
 export { createEditable, tryCreateEditable, type EditableConnection, type EditableOptions } from './editable.js';
 export type { TerminalKeyboardInput } from './keyboard.js';
-export { createDateField, tryCreateDateField, type DateFieldConnection, type DateFieldControlledValues, type DateFieldOptions } from './date-field.js';
-export { createDateRangeField, tryCreateDateRangeField, type DateRangeFieldConnection, type DateRangeFieldControlledValues, type DateRangeFieldOptions } from './date-range-field.js';
-export { createDateTimeField, tryCreateDateTimeField, type DateTimeFieldConnection, type DateTimeFieldControlledValues, type DateTimeFieldOptions } from './date-time-field.js';
-export { createTimeField, tryCreateTimeField, type TimeFieldConnection, type TimeFieldControlledValues, type TimeFieldOptions } from './time-field.js';
-export { createTimeRangeField, tryCreateTimeRangeField, type TimeRangeFieldConnection, type TimeRangeFieldControlledValues, type TimeRangeFieldOptions } from './time-range-field.js';
+export { createDateField, tryCreateDateField, type DateFieldConnection, type DateFieldControlledValues, type DateFieldOptions } from './temporal/date-field.js';
+export { createDateRangeField, tryCreateDateRangeField, type DateRangeFieldConnection, type DateRangeFieldControlledValues, type DateRangeFieldOptions } from './temporal/date-range-field.js';
+export { createDateTimeField, tryCreateDateTimeField, type DateTimeFieldConnection, type DateTimeFieldControlledValues, type DateTimeFieldOptions } from './temporal/date-time-field.js';
+export { createTimeField, tryCreateTimeField, type TimeFieldConnection, type TimeFieldControlledValues, type TimeFieldOptions } from './temporal/time-field.js';
+export { createTimeRangeField, tryCreateTimeRangeField, type TimeRangeFieldConnection, type TimeRangeFieldControlledValues, type TimeRangeFieldOptions } from './temporal/time-range-field.js';
 export { createToast, tryCreateToast, type ToastConnection, type ToastOptions } from './toast.js';
 export { createTimer, tryCreateTimer, type TimerConnection, type TimerOptions } from './timer.js';
 export { createCascadeList, tryCreateCascadeList, type CascadeListConnection, type CascadeListControlledValues, type CascadeListOptions } from './cascade-list.js';
 export { createCascadeSelect, tryCreateCascadeSelect, type CascadeSelectConnection, type CascadeSelectOptions } from './cascade-select.js';
 export { createColorPicker, tryCreateColorPicker, type ColorPickerConnection, type ColorPickerOptions } from './color-picker.js';
-export { createDatePicker, tryCreateDatePicker, toDatePickerEvent, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions } from './date-picker.js';
-export { createDateRangePicker, tryCreateDateRangePicker, type DateRangePickerConnection, type DateRangePickerControlledValues, type DateRangePickerOptions } from './date-range-picker.js';
-export { createRangeCalendar, tryCreateRangeCalendar, type RangeCalendarConnection, type RangeCalendarControlledValues, type RangeCalendarOptions } from './range-calendar.js';
-export { createMonthPicker, tryCreateMonthPicker, toMonthPickerEvent, type MonthPickerConnection, type MonthPickerControlledValues, type MonthPickerOptions } from './month-picker.js';
-export { createMonthRangePicker, tryCreateMonthRangePicker, type MonthRangePickerConnection, type MonthRangePickerControlledValues, type MonthRangePickerOptions } from './month-range-picker.js';
-export { createYearPicker, tryCreateYearPicker, toYearPickerEvent, type YearPickerConnection, type YearPickerControlledValues, type YearPickerOptions } from './year-picker.js';
-export { createYearRangePicker, tryCreateYearRangePicker, type YearRangePickerConnection, type YearRangePickerControlledValues, type YearRangePickerOptions } from './year-range-picker.js';
-export { createDateTimePicker, tryCreateDateTimePicker, type DateTimePickerConnection, type DateTimePickerControlledValues, type DateTimePickerOptions } from './date-time-picker.js';
-export { createDateTimeRangePicker, tryCreateDateTimeRangePicker, type DateTimeRangePickerConnection, type DateTimeRangePickerControlledValues, type DateTimeRangePickerOptions } from './date-time-range-picker.js';
+export { createDatePicker, tryCreateDatePicker, toDatePickerEvent, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions } from './temporal/date-picker.js';
+export { createDateRangePicker, tryCreateDateRangePicker, type DateRangePickerConnection, type DateRangePickerControlledValues, type DateRangePickerOptions } from './temporal/date-range-picker.js';
+export { createRangeCalendar, tryCreateRangeCalendar, type RangeCalendarConnection, type RangeCalendarControlledValues, type RangeCalendarOptions } from './temporal/range-calendar.js';
+export { createMonthPicker, tryCreateMonthPicker, toMonthPickerEvent, type MonthPickerConnection, type MonthPickerControlledValues, type MonthPickerOptions } from './temporal/month-picker.js';
+export { createMonthRangePicker, tryCreateMonthRangePicker, type MonthRangePickerConnection, type MonthRangePickerControlledValues, type MonthRangePickerOptions } from './temporal/month-range-picker.js';
+export { createYearPicker, tryCreateYearPicker, toYearPickerEvent, type YearPickerConnection, type YearPickerControlledValues, type YearPickerOptions } from './temporal/year-picker.js';
+export { createYearRangePicker, tryCreateYearRangePicker, type YearRangePickerConnection, type YearRangePickerControlledValues, type YearRangePickerOptions } from './temporal/year-range-picker.js';
+export { createDateTimePicker, tryCreateDateTimePicker, type DateTimePickerConnection, type DateTimePickerControlledValues, type DateTimePickerOptions } from './temporal/date-time-picker.js';
+export { createDateTimeRangePicker, tryCreateDateTimeRangePicker, type DateTimeRangePickerConnection, type DateTimeRangePickerControlledValues, type DateTimeRangePickerOptions } from './temporal/date-time-range-picker.js';
 
 export type {
   AccordionHighlightedValueChangeHandler,
@@ -249,7 +249,7 @@ export type {
   CalendarHighlightedValueChangeHandler,
   CalendarUpdateHandler,
   CalendarValueChangeHandler,
-} from './calendar.js';
+} from './temporal/calendar.js';
 export type {
   CarouselAnnounceHandler,
   CarouselPausedChangeHandler,
@@ -290,42 +290,42 @@ export type {
   DateFieldInputStateChangeHandler,
   DateFieldUpdateHandler,
   DateFieldValueChangeHandler,
-} from './date-field.js';
+} from './temporal/date-field.js';
 export type {
   DatePickerHighlightedValueChangeHandler,
   DatePickerOpenChangeHandler,
   DatePickerUpdateHandler,
   DatePickerValueChangeHandler,
-} from './date-picker.js';
+} from './temporal/date-picker.js';
 export type {
   DateRangeFieldEndInputStateChangeHandler,
   DateRangeFieldStartInputStateChangeHandler,
   DateRangeFieldUpdateHandler,
   DateRangeFieldValueChangeHandler,
-} from './date-range-field.js';
+} from './temporal/date-range-field.js';
 export type {
   DateRangePickerHighlightedValueChangeHandler,
   DateRangePickerOpenChangeHandler,
   DateRangePickerUpdateHandler,
   DateRangePickerValueChangeHandler,
-} from './date-range-picker.js';
+} from './temporal/date-range-picker.js';
 export type {
   DateTimeFieldInputStateChangeHandler,
   DateTimeFieldUpdateHandler,
   DateTimeFieldValueChangeHandler,
-} from './date-time-field.js';
+} from './temporal/date-time-field.js';
 export type {
   DateTimePickerHighlightedValueChangeHandler,
   DateTimePickerOpenChangeHandler,
   DateTimePickerUpdateHandler,
   DateTimePickerValueChangeHandler,
-} from './date-time-picker.js';
+} from './temporal/date-time-picker.js';
 export type {
   DateTimeRangePickerHighlightedValueChangeHandler,
   DateTimeRangePickerOpenChangeHandler,
   DateTimeRangePickerUpdateHandler,
   DateTimeRangePickerValueChangeHandler,
-} from './date-time-range-picker.js';
+} from './temporal/date-time-range-picker.js';
 export type {
   DialogFocusRestoreHandler,
   DialogInitialFocusHandler,
@@ -450,13 +450,13 @@ export type {
   TimeFieldInputStateChangeHandler,
   TimeFieldUpdateHandler,
   TimeFieldValueChangeHandler,
-} from './time-field.js';
+} from './temporal/time-field.js';
 export type {
   TimeRangeFieldEndInputStateChangeHandler,
   TimeRangeFieldStartInputStateChangeHandler,
   TimeRangeFieldUpdateHandler,
   TimeRangeFieldValueChangeHandler,
-} from './time-range-field.js';
+} from './temporal/time-range-field.js';
 export type {
   TimerCompleteHandler,
   TimerTickHandler,

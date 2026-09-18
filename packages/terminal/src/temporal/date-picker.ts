@@ -8,8 +8,9 @@ import { applyMonthPickerEvent, tryCreateMonthPickerState } from '@sectile/tempo
 import { applyYearPickerEvent, tryCreateYearPickerState } from '@sectile/temporal/year-picker';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { currentReferenceDate } from './internal/reference-date.js';
-import type { TerminalKeyboardInput } from './keyboard.js';
-import { toPeriodPickerEvent } from './internal/period-picker.js';
+import type { TerminalKeyboardInput } from '../keyboard.js';
+import { keyEvent, toPeriodPickerEvent } from './internal/input.js';
+export { toDatePickerEvent } from './internal/input.js';
 
 type DatePickerValueGranularity = 'date' | 'month' | 'year';
 interface InternalDatePickerOptions extends DatePickerOptions { readonly valueGranularity?: DatePickerValueGranularity }
@@ -49,6 +50,4 @@ class TerminalDatePicker implements DatePickerConnection {
 }
 function tryCreateGranularPickerState(input: DatePickerStateInput, granularity: DatePickerValueGranularity): ReturnType<typeof tryCreateDatePickerState> { return granularity === 'month' ? tryCreateMonthPickerState(input) : granularity === 'year' ? tryCreateYearPickerState(input) : tryCreateDatePickerState(input); }
 function applyGranularPickerEvent(state: DatePickerState, event: DatePickerEvent, policies: DatePickerPolicies, granularity: DatePickerValueGranularity): ReturnType<typeof applyDatePickerEvent> { return granularity === 'month' ? applyMonthPickerEvent(state, event, policies) : granularity === 'year' ? applyYearPickerEvent(state, event, policies) : applyDatePickerEvent(state, event, policies); }
-export function toDatePickerEvent(input: TerminalKeyboardInput): DatePickerEvent | null { return keyEvent(input); }
-function keyEvent(input: TerminalKeyboardInput): DatePickerEvent | null { if (input.ctrlKey || input.altKey) return null; if (input.key === 'left') return 'previous-day'; if (input.key === 'right') return 'next-day'; if (input.key === 'up') return 'previous-week'; if (input.key === 'down') return 'next-week'; if (input.key === 'home') return 'start-of-week'; if (input.key === 'end') return 'end-of-week'; if (input.key === 'page-up') return input.shiftKey ? 'previous-year' : 'previous-month'; if (input.key === 'page-down') return input.shiftKey ? 'next-year' : 'next-month'; if (input.key === 'enter' || input.key === 'space') return 'select-highlighted'; if (input.key === 'escape') return 'close'; return null; }
 function compareNullable(left: DateValue | null, right: DateValue | null): number { return left === null ? right === null ? 0 : -1 : right === null ? 1 : compareDateValues(left, right); }

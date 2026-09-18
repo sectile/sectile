@@ -440,12 +440,59 @@ test('Terminal text translation and grapheme owners stay below controllers and r
       if (owner.package === 'terminal') assert.ok(allowed.includes(owner.role), path);
       pending.push(...dependencies.get(path));
     }
-    for (const target of ['text.ts', 'combobox.ts', 'date-field.ts', 'screen.ts']) {
+    for (const target of ['text.ts', 'combobox.ts', 'temporal/date-field.ts', 'screen.ts']) {
       for (const phase of ['type', 'value']) {
         const reverse = { source, target: `packages/terminal/src/${target}`, targetPackage: '@sectile/terminal', phase, kind: 'import' };
         assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
       }
     }
+  }
+});
+
+test('Terminal Temporal support stays below field, calendar and picker controllers', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const dependencies = new Map(graph.modules.map(({ path }) => [path, []]));
+  for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
+  const closure = (entry) => {
+    const pending = [entry];
+    const visited = new Set();
+    while (pending.length > 0) {
+      const path = pending.pop();
+      if (visited.has(path)) continue;
+      visited.add(path);
+      pending.push(...dependencies.get(path));
+    }
+    return visited;
+  };
+  for (const [entry, allowed] of [
+    ['result', ['temporal-result']],
+    ['reference-date', ['temporal-reference']],
+    ['input', ['temporal-input', 'foundation', 'text-grapheme']],
+  ]) {
+    const source = `packages/terminal/src/temporal/internal/${entry}.ts`;
+    for (const path of closure(source)) {
+      const owner = classes.get(path);
+      if (owner.package === 'terminal') assert.ok(allowed.includes(owner.role), path);
+    }
+    for (const target of ['date-field', 'calendar', 'date-picker']) {
+      for (const phase of ['type', 'value']) {
+        const reverse = { source, target: `packages/terminal/src/temporal/${target}.ts`, targetPackage: '@sectile/terminal', phase, kind: 'import' };
+        assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+      }
+    }
+  }
+  for (const entry of ['date-range-picker', 'date-time-picker', 'date-time-range-picker']) {
+    const reachable = closure(`packages/terminal/src/temporal/${entry}.ts`);
+    assert.ok(reachable.has('packages/terminal/src/temporal/internal/input.ts'), entry);
+    assert.ok(!reachable.has('packages/terminal/src/temporal/date-picker.ts'), entry);
+  }
+  for (const phase of ['type', 'value']) {
+    const reverse = { source: 'packages/terminal/src/temporal/date-field.ts', target: 'packages/terminal/src/temporal/date-picker.ts', targetPackage: '@sectile/terminal', phase, kind: 'import' };
+    assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
   }
 });
 

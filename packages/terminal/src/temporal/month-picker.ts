@@ -1,6 +1,6 @@
 import { createDatePicker, tryCreateDatePicker, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions } from './date-picker.js';
-import type { TerminalKeyboardInput } from './keyboard.js';
-import { toPeriodPickerEvent } from './internal/period-picker.js';
+import type { TerminalKeyboardInput } from '../keyboard.js';
+import { toPeriodPickerEvent } from './internal/input.js';
 import type { FacadeConnection } from '@sectile/core/adapter-runtime';
 import type { TerminalTemporalResult } from './internal/result.js';
 import type { MonthPickerEvent } from '@sectile/temporal/month-picker';

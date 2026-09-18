@@ -780,6 +780,40 @@ are unchanged. Keyboard, layout and screen share this owner without constructing
 another segmenter or cache. No listener, stream, raw-mode state, scheduled work
 or frame registry changes owner in this migration.
 
+## Terminal Temporal ownership
+
+The fifteen existing Terminal calendar, field and picker subpaths keep their
+public keys and exported names. Their implementations live under
+`packages/terminal/src/temporal/`, with the same feature basenames and direct
+package export targets. The shared support has three lower owners:
+
+```text
+temporal/
+  calendar.ts
+  *-field.ts
+  *-picker.ts
+  range-calendar.ts
+  internal/
+    result.ts          # Core controller/facade adaptation for Temporal errors
+    reference-date.ts  # construction-time platform date capture
+    input.ts           # date and period keyboard event translation
+```
+
+Field controllers consume the shared Terminal text-input owner. Calendar and
+picker controllers use the existing Temporal domain state and lower result,
+reference-date and keyboard support. Date-range and date-time pickers import
+keyboard translation directly from `internal/input.ts`. The public DatePicker
+entrypoint re-exports the same `toDatePickerEvent`; its controller keeps the
+existing direct `keyEvent` call. Month/year profiles retain their granular
+controller composition, and RangeCalendar retains its DateRangePicker alias.
+
+Role rules distinguish fields, calendar and pickers from the three lower
+support owners. Lower support cannot import a controller through either a type
+or runtime edge. Each controller retains its state, controlled-shape checks and
+callback order. Date capture, domain parsing/navigation/grid construction and
+text segmentation keep their existing ownership and bounds. Module relocation
+adds no controller wrapper, runtime module, cache, timer or stream resource.
+
 ## Moving or extracting an implementation
 
 Before editing, identify the owner, direct callers, public surfaces and any

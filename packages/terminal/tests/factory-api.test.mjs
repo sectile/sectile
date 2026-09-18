@@ -13,14 +13,17 @@ const excludedSubpaths = new Set([
 
 test('every public terminal component exposes direct and fallible factories', async () => {
   const rootModule = await import('../.verification-dist/index.js');
-  for (const subpath of Object.keys(packageManifest.exports)) {
+  for (const [subpath, target] of Object.entries(packageManifest.exports)) {
     if (!subpath.startsWith('./') || excludedSubpaths.has(subpath)) continue;
     const component = subpath.slice(2);
     const name = component === 'grid' ? 'GridControl' : component
       .split('-')
       .map((part) => `${part[0].toUpperCase()}${part.slice(1)}`)
       .join('');
-    const module = await import(`../.verification-dist/${component}.js`);
+    const runtimeTarget = typeof target === 'string' ? target : target.import ?? target.default;
+    assert.equal(typeof runtimeTarget, 'string', `${subpath} runtime export`);
+    assert.match(runtimeTarget, /^\.\/dist\//u, `${subpath} production output`);
+    const module = await import(runtimeTarget.replace(/^\.\/dist\//u, '../.verification-dist/'));
     assert.equal(typeof module[`create${name}`], 'function', `${subpath} create factory`);
     assert.equal(typeof module[`tryCreate${name}`], 'function', `${subpath} tryCreate factory`);
     assert.equal(typeof rootModule[`create${name}`], 'function', `root create${name} export`);

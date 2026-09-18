@@ -116,7 +116,18 @@
 | WI-009 | @sectile/core | `./adapter-runtime` | `tryReconcileCollectionIdentities` | @sectile/core/adapter-runtime |
 | WI-009 | @sectile/form | `./error` | `FormErrorCode form-event-invalid`, `Core Result declaration closure` | @sectile/form/error |
 | WI-009 | @sectile/form | `.` | `FormErrorCode form-event-invalid`, `typed field-state commands`, `local StandardSchema declaration closure` | @sectile/form |
+| WI-009 | @sectile/terminal | `./calendar` | `Calendar declaration owner` | @sectile/terminal/calendar |
+| WI-009 | @sectile/terminal | `./date-field` | `DateField declaration owner` | @sectile/terminal/date-field |
+| WI-009 | @sectile/terminal | `./date-picker` | `DatePicker declaration owner`, `toDatePickerEvent declaration owner` | @sectile/terminal/date-picker |
+| WI-009 | @sectile/terminal | `./date-range-field` | `DateRangeField declaration owner` | @sectile/terminal/date-range-field |
+| WI-009 | @sectile/terminal | `./date-range-picker` | `DateRangePicker declaration owner` | @sectile/terminal/date-range-picker |
+| WI-009 | @sectile/terminal | `./date-time-field` | `DateTimeField declaration owner` | @sectile/terminal/date-time-field |
+| WI-009 | @sectile/terminal | `./date-time-picker` | `DateTimePicker declaration owner` | @sectile/terminal/date-time-picker |
+| WI-009 | @sectile/terminal | `./date-time-range-picker` | `DateTimeRangePicker declaration owner` | @sectile/terminal/date-time-range-picker |
+| WI-009 | @sectile/terminal | `./range-calendar` | `RangeCalendar declaration owner` | @sectile/terminal/range-calendar |
 | WI-009 | @sectile/terminal | `./text` | `TextInput declaration owner`, `toTextEvent declaration owner` | @sectile/terminal/text |
+| WI-009 | @sectile/terminal | `./time-field` | `TimeField declaration owner` | @sectile/terminal/time-field |
+| WI-009 | @sectile/terminal | `./time-range-field` | `TimeRangeField declaration owner` | @sectile/terminal/time-range-field |
 | WI-010 | @sectile/tabular | `./virtual` | `TabularVirtualErrorCode.extent-policy-failed`, `TabularRowSelection declaration closure`, `DataTableVirtualAdapterOptions.crossExtent`, `DataTable linear row crossExtent placeholder`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/virtual |
 | WI-013 | @sectile/terminal | `./checkbox` | `Checkbox controller declaration closure` | @sectile/terminal/checkbox |
 | WI-013 | @sectile/dom | `./rating` | `Rating controller declaration closure` | @sectile/dom/rating |
