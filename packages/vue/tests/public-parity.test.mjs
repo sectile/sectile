@@ -102,9 +102,9 @@ test('temporal controls are exposed only through their optional subpath', async 
   assert.equal(rootModule.TemporalProvider, undefined);
 
   assert.equal(vuePackage.exports['./temporal'], undefined);
-  assert.equal(typeof (await import('../.verification-dist/date-field.js')).DateField, 'object');
-  assert.equal(typeof (await import('../.verification-dist/calendar.js')).CalendarRoot, 'object');
-  assert.equal(typeof (await import('../.verification-dist/temporal-provider.js')).TemporalProvider, 'object');
+  assert.equal(typeof (await import('../.verification-dist/temporal/date-field.js')).DateField, 'object');
+  assert.equal(typeof (await import('../.verification-dist/temporal/calendar.js')).CalendarRoot, 'object');
+  assert.equal(typeof (await import('../.verification-dist/temporal/temporal-provider.js')).TemporalProvider, 'object');
 });
 
 test('base Tabular profiles are complete and remain Virtual-free', async () => {

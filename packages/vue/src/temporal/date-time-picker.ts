@@ -4,8 +4,8 @@ import type { DateTimeValue } from '@sectile/dom/temporal/date-time-field';
 import {
   PickerAnchor, PickerCell, PickerContent, PickerGrid, PickerMonthCell, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerViewTrigger, specializePickerRootPart,
   createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
-} from './internal/date-picker.js';
-import { dateTimePickerCapability } from './internal/date-time-picker-capability.js';
+} from './picker.js';
+import { dateTimePickerCapability } from './capabilities/date-time-picker.js';
 
 export interface DateTimePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateTimeValue | null; readonly defaultValue?: DateTimeValue | null;

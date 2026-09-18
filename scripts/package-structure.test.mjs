@@ -10,6 +10,32 @@ import { loadPublishedPackageGraph } from './lib/workspace-graph.mjs';
 import { root } from './lib/repository.mjs';
 import { buildGraphPackages } from './check-package-structure.mjs';
 
+test('Vue Temporal capability adapters and provider remain below picker profiles', async () => {
+  const { packages } = await loadPublishedPackageGraph();
+  const graph = await collectPackageGraph(root, packages);
+  const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
+  const classes = validateStructureManifest(policy, packages, graph);
+  assertStructure(inspectStructure(graph, policy, classes));
+  const lower = graph.modules.filter(({ path }) => path.startsWith('packages/vue/src/temporal/')
+    && ['temporal-capability', 'temporal-capabilities', 'temporal-provider'].includes(classes.get(path).role));
+  for (const { path: source } of lower) {
+    const role = classes.get(source).role;
+    for (const edge of graph.edges.filter((edge) => edge.source === source && edge.target !== null)) {
+      const target = classes.get(edge.target);
+      if (target.package === 'vue') assert.equal(target.role, 'temporal-capability');
+    }
+    const forbidden = ['temporal/picker.ts', 'temporal/date-picker.ts', 'temporal/date-field.ts', 'form/root.ts'];
+    const peer = source.endsWith('/date-picker.ts') ? 'temporal/capabilities/year-picker.ts' : 'temporal/capabilities/date-picker.ts';
+    if (role !== 'temporal-provider') forbidden.push(peer);
+    for (const target of forbidden) {
+      for (const phase of ['type', 'value']) {
+        const reverse = { source, target: `packages/vue/src/${target}`, targetPackage: '@sectile/vue', phase, kind: 'import' };
+        assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, reverse] }, policy, classes)), /direction|cycle/u);
+      }
+    }
+  }
+});
+
 test('Vue Form contracts and participation stay below mounted components', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);

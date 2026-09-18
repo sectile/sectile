@@ -1,10 +1,10 @@
 import { computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide, shallowRef, watch, type ComputedRef, type PropType, type ShallowRef, type SlotsType, type VNodeChild } from 'vue';
 import { createTimeRangeField, tryCreateTimeRangeFieldState, type TimeRangeFieldConnection, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/dom/temporal/time-range-field';
 import type { TimeRange } from '@sectile/temporal/time-range-field';
-import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './form/control.js';
-import { Primitive, type PrimitiveAs } from './primitive.js';
-import { useControlledStateInvariant } from './internal/controlled-state.js';
-import { useNextTickTask } from './internal/scheduled-task.js';
+import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from '../form/control.js';
+import { Primitive, type PrimitiveAs } from '../primitive.js';
+import { useControlledStateInvariant } from '../internal/controlled-state.js';
+import { useNextTickTask } from '../internal/scheduled-task.js';
 
 export interface TimeRangeFieldRootProps { readonly modelValue?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly policies?: TimeRangeFieldPolicies; readonly disabled?: boolean; readonly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TimeRangeFieldRootSlotProps { readonly value: TimeRange | null; readonly startText: string; readonly endText: string; readonly active: 'start' | 'end'; readonly disabled: boolean; readonly: boolean }

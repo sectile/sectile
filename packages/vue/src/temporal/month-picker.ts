@@ -3,8 +3,8 @@ import type { DateValue } from '@sectile/dom/temporal/date-field';
 import {
   PickerAnchor, PickerContent, PickerGrid, PickerPortal, PickerTrigger, createPickerInput, createPickerMonthCell, createPickerMove, specializePickerRootPart,
   createPickerRoot, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
-} from './internal/date-picker.js';
-import { monthPickerCapability } from './internal/month-picker-capability.js';
+} from './picker.js';
+import { monthPickerCapability } from './capabilities/month-picker.js';
 
 export interface MonthPickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateValue | null;

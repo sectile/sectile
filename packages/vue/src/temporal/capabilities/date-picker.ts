@@ -1,6 +1,6 @@
 import { createDatePicker } from '@sectile/dom/temporal/date-picker';
 import { formatDateValue, type DateValue } from '@sectile/dom/temporal/date-field';
-import { definePickerFamilyCapability, type PickerCapabilityGranularity } from './picker-capability.js';
+import { definePickerFamilyCapability, type PickerCapabilityGranularity } from '../capability.js';
 
 export const datePickerCapability = definePickerFamilyCapability({
   kind: 'date' as const,

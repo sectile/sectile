@@ -4303,50 +4303,6 @@
       "rationale": "Remaining Vue occurrences project canonical snapshots or manage framework lifecycle rather than own domain algorithms."
     },
     {
-      "detector": "raw-identity-lookup",
-      "category": "raw-full-domain-scan",
-      "path": "packages/vue/src/internal/date-picker.ts",
-      "line": 262,
-      "evidence": ".some(",
-      "rule": "vue-host-residual-reviewed",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "Remaining Vue occurrences project canonical snapshots or manage framework lifecycle rather than own domain algorithms."
-    },
-    {
-      "detector": "controller-rebuild",
-      "category": "controller-connection-rebuild",
-      "path": "packages/vue/src/internal/date-picker.ts",
-      "line": 439,
-      "evidence": "watch([ () => runtimeProps.disabled, () => runtimeProps.readonly, () => runtimeProps.required, () => runtimeProps.label, () => runtimeProps.policies, () => runt",
-      "rule": "vue-controller-reconfiguration",
-      "classification": "migration-required",
-      "owner": "WI-040",
-      "rationale": "Equal canonical owners and normalized options must retain controllers and connections."
-    },
-    {
-      "detector": "linear-membership",
-      "category": "raw-full-domain-scan",
-      "path": "packages/vue/src/internal/date-picker.ts",
-      "line": 738,
-      "evidence": ".includes(",
-      "rule": "vue-host-residual-reviewed",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "Remaining Vue occurrences project canonical snapshots or manage framework lifecycle rather than own domain algorithms."
-    },
-    {
-      "detector": "linear-membership",
-      "category": "raw-full-domain-scan",
-      "path": "packages/vue/src/internal/date-time-range-picker-capability.ts",
-      "line": 13,
-      "evidence": ".includes(",
-      "rule": "vue-host-residual-reviewed",
-      "classification": "reuse",
-      "owner": null,
-      "rationale": "Remaining Vue occurrences project canonical snapshots or manage framework lifecycle rather than own domain algorithms."
-    },
-    {
       "detector": "controller-rebuild",
       "category": "controller-connection-rebuild",
       "path": "packages/vue/src/internal/native-field.ts",
@@ -4752,6 +4708,50 @@
       "classification": "migration-required",
       "owner": "WI-040",
       "rationale": "Equal canonical owners and normalized options must retain controllers and connections."
+    },
+    {
+      "detector": "linear-membership",
+      "category": "raw-full-domain-scan",
+      "path": "packages/vue/src/temporal/capabilities/date-time-range-picker.ts",
+      "line": 13,
+      "evidence": ".includes(",
+      "rule": "vue-host-residual-reviewed",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Remaining Vue occurrences project canonical snapshots or manage framework lifecycle rather than own domain algorithms."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/vue/src/temporal/picker.ts",
+      "line": 262,
+      "evidence": ".some(",
+      "rule": "vue-host-residual-reviewed",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Remaining Vue occurrences project canonical snapshots or manage framework lifecycle rather than own domain algorithms."
+    },
+    {
+      "detector": "controller-rebuild",
+      "category": "controller-connection-rebuild",
+      "path": "packages/vue/src/temporal/picker.ts",
+      "line": 439,
+      "evidence": "watch([ () => runtimeProps.disabled, () => runtimeProps.readonly, () => runtimeProps.required, () => runtimeProps.label, () => runtimeProps.policies, () => runt",
+      "rule": "vue-controller-reconfiguration",
+      "classification": "migration-required",
+      "owner": "WI-040",
+      "rationale": "Equal canonical owners and normalized options must retain controllers and connections."
+    },
+    {
+      "detector": "linear-membership",
+      "category": "raw-full-domain-scan",
+      "path": "packages/vue/src/temporal/picker.ts",
+      "line": 738,
+      "evidence": ".includes(",
+      "rule": "vue-host-residual-reviewed",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Remaining Vue occurrences project canonical snapshots or manage framework lifecycle rather than own domain algorithms."
     },
     {
       "detector": "derived-index-construction",

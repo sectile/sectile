@@ -2,7 +2,7 @@ import { createDateTimeRangePicker } from '@sectile/dom/temporal/date-time-range
 import { formatDateValue } from '@sectile/dom/temporal/date-field';
 import { formatDateTimeValue, type DateTimeRange } from '@sectile/dom/temporal/date-time-field';
 import { formatTimeValue } from '@sectile/dom/temporal/time-field';
-import { definePickerFamilyCapability } from './picker-capability.js';
+import { definePickerFamilyCapability } from '../capability.js';
 
 export const dateTimeRangePickerCapability = definePickerFamilyCapability({
   kind: 'date-time-range' as const,

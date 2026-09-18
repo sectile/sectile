@@ -192,67 +192,67 @@
     },
     {
       "subpath": "./temporal/calendar",
-      "types": "dist/calendar.d.ts"
+      "types": "dist/temporal/calendar.d.ts"
     },
     {
       "subpath": "./temporal/date-field",
-      "types": "dist/date-field.d.ts"
+      "types": "dist/temporal/date-field.d.ts"
     },
     {
       "subpath": "./temporal/date-picker",
-      "types": "dist/date-picker.d.ts"
+      "types": "dist/temporal/date-picker.d.ts"
     },
     {
       "subpath": "./temporal/date-range-field",
-      "types": "dist/date-range-field.d.ts"
+      "types": "dist/temporal/date-range-field.d.ts"
     },
     {
       "subpath": "./temporal/date-range-picker",
-      "types": "dist/date-range-picker.d.ts"
+      "types": "dist/temporal/date-range-picker.d.ts"
     },
     {
       "subpath": "./temporal/date-time-field",
-      "types": "dist/date-time-field.d.ts"
+      "types": "dist/temporal/date-time-field.d.ts"
     },
     {
       "subpath": "./temporal/date-time-picker",
-      "types": "dist/date-time-picker.d.ts"
+      "types": "dist/temporal/date-time-picker.d.ts"
     },
     {
       "subpath": "./temporal/date-time-range-picker",
-      "types": "dist/date-time-range-picker.d.ts"
+      "types": "dist/temporal/date-time-range-picker.d.ts"
     },
     {
       "subpath": "./temporal/month-picker",
-      "types": "dist/month-picker.d.ts"
+      "types": "dist/temporal/month-picker.d.ts"
     },
     {
       "subpath": "./temporal/month-range-picker",
-      "types": "dist/month-range-picker.d.ts"
+      "types": "dist/temporal/month-range-picker.d.ts"
     },
     {
       "subpath": "./temporal/range-calendar",
-      "types": "dist/range-calendar.d.ts"
+      "types": "dist/temporal/range-calendar.d.ts"
     },
     {
       "subpath": "./temporal/temporal-provider",
-      "types": "dist/temporal-provider.d.ts"
+      "types": "dist/temporal/temporal-provider.d.ts"
     },
     {
       "subpath": "./temporal/time-field",
-      "types": "dist/time-field.d.ts"
+      "types": "dist/temporal/time-field.d.ts"
     },
     {
       "subpath": "./temporal/time-range-field",
-      "types": "dist/time-range-field.d.ts"
+      "types": "dist/temporal/time-range-field.d.ts"
     },
     {
       "subpath": "./temporal/year-picker",
-      "types": "dist/year-picker.d.ts"
+      "types": "dist/temporal/year-picker.d.ts"
     },
     {
       "subpath": "./temporal/year-range-picker",
-      "types": "dist/year-range-picker.d.ts"
+      "types": "dist/temporal/year-range-picker.d.ts"
     },
     {
       "subpath": "./text",
@@ -315,7 +315,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "820b1f13c38313138b6fb2b3e1be857d0d504d865f074165e5041f05bdce95db",
+  "fingerprint": "f826140132bf9584481ad7adc9cdd8e5320bdb78d408fbb89e5c2f33554b12ac",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -324,10 +324,6 @@
     {
       "path": "dist/alert-dialog.d.ts",
       "sha256": "4d421e6e0200df7845f4659f48926fcb003585b012e7c10012c3b94f6264b440"
-    },
-    {
-      "path": "dist/calendar.d.ts",
-      "sha256": "6e720737a2385936171faf40a521162b4bcebe55bf6c29a609b643091f937df7"
     },
     {
       "path": "dist/carousel.d.ts",
@@ -372,34 +368,6 @@
     {
       "path": "dist/data-tree-grid.d.ts",
       "sha256": "8316a447c57e23e8eb51e619f366bb86d8200c8cc38dae21e929f22df336dd93"
-    },
-    {
-      "path": "dist/date-field.d.ts",
-      "sha256": "e6d1f80eeded8fb6dd0cde5fad5cc0b0fe21d1319fec0355691d2be4720436f2"
-    },
-    {
-      "path": "dist/date-picker.d.ts",
-      "sha256": "a6b312f2fc6dbf5d48cb1cc14e934218cbd921057a1326c3a559bcd53960c1e5"
-    },
-    {
-      "path": "dist/date-range-field.d.ts",
-      "sha256": "b86d63d3ffea18aca7e94ebc0f4940762ab2a0b3efbb48abeba29e2e512cd213"
-    },
-    {
-      "path": "dist/date-range-picker.d.ts",
-      "sha256": "a742e4dc2effebb16cd067fa7a9ba8e90bd317bf696bec5e2dde6f13afc1decd"
-    },
-    {
-      "path": "dist/date-time-field.d.ts",
-      "sha256": "58fd022d5693c03a5af6aa1e60d5b0150c566f5f9abf8d3a3051c4e0c01f314e"
-    },
-    {
-      "path": "dist/date-time-picker.d.ts",
-      "sha256": "35bbfa9f67ce9ce04fcb8207bb279c18fbd3e7167749f988683d6ec889dfd081"
-    },
-    {
-      "path": "dist/date-time-range-picker.d.ts",
-      "sha256": "0f2e2b73ba7e7bb868e4238174224958e2a0b7e9471bec6765dd0725f11876e3"
     },
     {
       "path": "dist/dialog.d.ts",
@@ -474,16 +442,8 @@
       "sha256": "7c20637d17b87e46f7d90b35b872e5b1109b7c1d8ca445457d779e12036507e5"
     },
     {
-      "path": "dist/internal/date-picker.d.ts",
-      "sha256": "de4dbfc6142d203f375389eb0658f9395b027561f693c4a508b7731f75ab5d90"
-    },
-    {
       "path": "dist/internal/native-field.d.ts",
       "sha256": "41155d817552cc7de7a3063a91df5c10bb25f4dffe4c1d40678ee0e639a81d73"
-    },
-    {
-      "path": "dist/internal/picker-capability.d.ts",
-      "sha256": "9c61927b0a7f3569395e0eb3c2e6cdab5847f659af4fe8b53b2bfe0dc82ab950"
     },
     {
       "path": "dist/internal/popup.d.ts",
@@ -538,14 +498,6 @@
       "sha256": "e45b0c21d32b9f0d3b3910916b5eade630358d78d7ed496b4da1af0d937c455d"
     },
     {
-      "path": "dist/month-picker.d.ts",
-      "sha256": "62ae4dc1607b164e8b1a6fdafcc4df0b0e4eb838d1b3d207cfac7ab2e9e5b06a"
-    },
-    {
-      "path": "dist/month-range-picker.d.ts",
-      "sha256": "714198f7e5eff0af431416632611ac176db1f47dc7e70f681319e893cbb87f59"
-    },
-    {
       "path": "dist/multi-thumb-slider.d.ts",
       "sha256": "1e277dd27ce7b8e99d3cd2c71bdcde52e60175212079025889dd8dd18ebc1c46"
     },
@@ -586,10 +538,6 @@
       "sha256": "86811eaa1e8ed0c5d5b94ff6f89ae194801dbbbb31d96b3367a2d3a8a9bc5b45"
     },
     {
-      "path": "dist/range-calendar.d.ts",
-      "sha256": "08c5da092cc12382aa889116d9f10c3d52b59fc151b12224847e34cc662886be"
-    },
-    {
       "path": "dist/rating.d.ts",
       "sha256": "c7116dd7b2e0d956ab79817539f5254c7678b134616ef0f36991ae90e86ac3ec"
     },
@@ -626,20 +574,80 @@
       "sha256": "cc7053632cb40649b490ddbb9ea25ea3d61537047d7ad474ae169b5dde476e11"
     },
     {
-      "path": "dist/temporal-provider.d.ts",
+      "path": "dist/temporal/calendar.d.ts",
+      "sha256": "faa2de9894ff8331c93af4cb4b76e8c8a954d620bc07383f036e76b2a00ca8e1"
+    },
+    {
+      "path": "dist/temporal/capability.d.ts",
+      "sha256": "9c61927b0a7f3569395e0eb3c2e6cdab5847f659af4fe8b53b2bfe0dc82ab950"
+    },
+    {
+      "path": "dist/temporal/date-field.d.ts",
+      "sha256": "2d154b5455f7f76b39d6941b22701df1261a1353505d04d4ae79a31376c26ad1"
+    },
+    {
+      "path": "dist/temporal/date-picker.d.ts",
+      "sha256": "21b40f5b2a3f0c45b97cce8fe673e0753dbf487f827205d4e2ebdb38ff89d076"
+    },
+    {
+      "path": "dist/temporal/date-range-field.d.ts",
+      "sha256": "b88172f22aee4a75e37f3bfc66a63fc16e3d7b1818fae0b32c3c53d0f060a535"
+    },
+    {
+      "path": "dist/temporal/date-range-picker.d.ts",
+      "sha256": "cfc58603cc879c1483e3e340f992dcf62d2e2e7713ab092c50f7c11b74fef1da"
+    },
+    {
+      "path": "dist/temporal/date-time-field.d.ts",
+      "sha256": "b657c5a6b88d6dd953432e59d69ad8f3a2fb7a0b47aaf41c2864945f89720bb7"
+    },
+    {
+      "path": "dist/temporal/date-time-picker.d.ts",
+      "sha256": "fc30ceb33eb7b4c24a00924c104e472907c09d40e325c51813128dd22c8dd70d"
+    },
+    {
+      "path": "dist/temporal/date-time-range-picker.d.ts",
+      "sha256": "d18bae45f4b47ea93d4ea51607894306dae980b63b48af981bec836ea3b893e2"
+    },
+    {
+      "path": "dist/temporal/month-picker.d.ts",
+      "sha256": "b4034dac84fc7b51742beb3365731ef55875b5bb83eea4fa079f3c426711b8fb"
+    },
+    {
+      "path": "dist/temporal/month-range-picker.d.ts",
+      "sha256": "e12d7aa1581533afd3bc139eebed8c0df164bf689679023c3c2be8d477dcd74f"
+    },
+    {
+      "path": "dist/temporal/picker.d.ts",
+      "sha256": "0c3ad1d45a3234500d59d12329f20809b0df0d7243dc779da85c9243dad1b236"
+    },
+    {
+      "path": "dist/temporal/range-calendar.d.ts",
+      "sha256": "5ffd13d1539c521ab25e285d4960b1a8146c1c071ae20085bedfe1a9365dd8c9"
+    },
+    {
+      "path": "dist/temporal/temporal-provider.d.ts",
       "sha256": "b52b6f798ad615569894a9e40a1c7bca26a834157cfb1ea708dfb645fce012e7"
+    },
+    {
+      "path": "dist/temporal/time-field.d.ts",
+      "sha256": "321bc47073870c889bf313afe0bbfcd67f489c25c4adade342e8ec4c59b58d2d"
+    },
+    {
+      "path": "dist/temporal/time-range-field.d.ts",
+      "sha256": "73bd362cb6f5c1d940efb016e11628a46228e2596fec3c391956d1a2d6c6fe1b"
+    },
+    {
+      "path": "dist/temporal/year-picker.d.ts",
+      "sha256": "a23d2ce20c42214cf86797ca6b6c92cbfa8c499fc9508895097a2cfc5e1d3349"
+    },
+    {
+      "path": "dist/temporal/year-range-picker.d.ts",
+      "sha256": "94d3a65af6ecf7848b26be49b70f7f6420d1001ddf73e8c9d74223841273a959"
     },
     {
       "path": "dist/text.d.ts",
       "sha256": "fd275e5fd0fc8434e5e81e5621e9c0ba71b9bd817314e75b87df5210530ad1e3"
-    },
-    {
-      "path": "dist/time-field.d.ts",
-      "sha256": "420806c5d307a5ff17179495186f3bcfc580f18703115cd2ec30a335c5825b19"
-    },
-    {
-      "path": "dist/time-range-field.d.ts",
-      "sha256": "79adc9a8b447da8bcb5bb9a3eafff1c3be979c5317435706287b521b6276712c"
     },
     {
       "path": "dist/timer.d.ts",
@@ -696,14 +704,6 @@
     {
       "path": "dist/window-splitter.d.ts",
       "sha256": "a8b1d01d75b8c56365a2f87296d4e92f1a7db0293b14bdaffd9942fb2b9a720f"
-    },
-    {
-      "path": "dist/year-picker.d.ts",
-      "sha256": "da291a3be6dc5e95a582000b68fbcf2e3ddf8ecfe561bf2e8c3b0d607f42de45"
-    },
-    {
-      "path": "dist/year-range-picker.d.ts",
-      "sha256": "49dcaed4c683c3f7b41d723dad13358db5a526eb8ae3c338f9a58e914b009a1d"
     }
   ]
 }

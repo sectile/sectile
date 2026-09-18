@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import packageManifest from '../package.json' with { type: 'json' };
 import { createTestWindow } from './happy-dom.mjs';
 
 const browserWindow = createTestWindow({ url: 'http://localhost/' });
@@ -19,7 +20,7 @@ Object.assign(globalThis, {
 
 const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { CalendarCell, CalendarContent, CalendarGrid, CalendarNextMonth, CalendarRoot } = await import('../.verification-dist/calendar.js');
+const { CalendarCell, CalendarContent, CalendarGrid, CalendarNextMonth, CalendarRoot } = await import('../.verification-dist/temporal/calendar.js');
 const {
   DatePickerCell,
   DatePickerContent,
@@ -27,7 +28,7 @@ const {
   DatePickerInput,
   DatePickerRoot,
   DatePickerTrigger,
-} = await import('../.verification-dist/date-picker.js');
+} = await import('../.verification-dist/temporal/date-picker.js');
 const {
   DateRangePickerCell,
   DateRangePickerContent,
@@ -36,7 +37,7 @@ const {
   DateRangePickerRoot,
   DateRangePickerStartInput,
   DateRangePickerTrigger,
-} = await import('../.verification-dist/date-range-picker.js');
+} = await import('../.verification-dist/temporal/date-range-picker.js');
 const {
   DateTimePickerCell,
   DateTimePickerContent,
@@ -46,7 +47,7 @@ const {
   DateTimePickerRoot,
   DateTimePickerTimeInput,
   DateTimePickerTrigger,
-} = await import('../.verification-dist/date-time-picker.js');
+} = await import('../.verification-dist/temporal/date-time-picker.js');
 const {
   DateTimeRangePickerCell,
   DateTimeRangePickerContent,
@@ -60,7 +61,7 @@ const {
   DateTimeRangePickerStartDateTimeInput,
   DateTimeRangePickerStartTimeInput,
   DateTimeRangePickerTrigger,
-} = await import('../.verification-dist/date-time-range-picker.js');
+} = await import('../.verification-dist/temporal/date-time-range-picker.js');
 const {
   MonthPickerCell,
   MonthPickerContent,
@@ -68,7 +69,7 @@ const {
   MonthPickerInput,
   MonthPickerRoot,
   MonthPickerTrigger,
-} = await import('../.verification-dist/month-picker.js');
+} = await import('../.verification-dist/temporal/month-picker.js');
 const {
   YearPickerCell,
   YearPickerContent,
@@ -76,7 +77,7 @@ const {
   YearPickerInput,
   YearPickerRoot,
   YearPickerTrigger,
-} = await import('../.verification-dist/year-picker.js');
+} = await import('../.verification-dist/temporal/year-picker.js');
 
 const start = Object.freeze({
   date: Object.freeze({ year: 2026, month: 8, day: 18 }),
@@ -327,7 +328,7 @@ test('Vue period cells expose the availability of their canonical scalar and ran
     ['month-range-picker', 'MonthRangePicker', 'month', true],
     ['year-range-picker', 'YearRangePicker', 'year', true],
   ]) {
-    const family = await import(`../.verification-dist/${path}.js`);
+    const family = await import(packageManifest.exports[`./temporal/${path}`].import.replace('./dist/', '../.verification-dist/'));
     const cellValue = unit === 'month' ? { year: 2026, month: 9 } : { year: 2026 };
     const canonical = { year: 2026, month: unit === 'month' ? 9 : 1, day: 1 };
     const midpoint = { year: 2026, month: unit === 'month' ? 9 : 7, day: 15 };
@@ -380,7 +381,7 @@ test('Vue period paging controls match canonical navigation and publish one high
     ['month-range-picker', 'MonthRangePicker', 'month', true],
     ['year-range-picker', 'YearRangePicker', 'year', true],
   ]) {
-    const family = await import(`../.verification-dist/${path}.js`);
+    const family = await import(packageManifest.exports[`./temporal/${path}`].import.replace('./dist/', '../.verification-dist/'));
     const temporal = await import(`@sectile/temporal/${path}`);
     for (const direction of [-1, 1]) {
       const reference = { year: 2026, month: 8, day: 15 };
@@ -471,7 +472,7 @@ test('Vue period paging controls match canonical navigation and publish one high
 });
 
 test('Vue day picker year controls preserve date-based movement', async () => {
-  const family = await import('../.verification-dist/date-picker.js');
+  const family = await import('../.verification-dist/temporal/date-picker.js');
   for (const direction of [-1, 1]) {
     const host = document.createElement('div');
     document.body.append(host);

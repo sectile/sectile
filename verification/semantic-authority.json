@@ -82,6 +82,11 @@
       "root": "packages/vue/src/form",
       "classification": "platform-only",
       "semanticPaths": []
+    },
+    {
+      "root": "packages/vue/src/temporal",
+      "classification": "platform-only",
+      "semanticPaths": []
     }
   ],
   "dependencyGraph": [

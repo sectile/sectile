@@ -26,8 +26,8 @@ import {
   type PickerMonthCellSlotProps,
   type PickerPartProps,
   type PickerRootSlotProps,
-} from './internal/date-picker.js';
-import { calendarCapability } from './internal/calendar-capability.js';
+} from './picker.js';
+import { calendarCapability } from './capabilities/calendar.js';
 
 export interface CalendarRootProps {
   readonly modelValue?: DateValue | null;

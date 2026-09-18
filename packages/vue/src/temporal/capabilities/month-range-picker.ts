@@ -1,6 +1,6 @@
 import { createMonthRangePicker } from '@sectile/dom/temporal/month-range-picker';
 import { formatDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
-import { definePickerFamilyCapability, type PickerCapabilityGranularity } from './picker-capability.js';
+import { definePickerFamilyCapability, type PickerCapabilityGranularity } from '../capability.js';
 
 export const monthRangePickerCapability = definePickerFamilyCapability({
   kind: 'date-range' as const,

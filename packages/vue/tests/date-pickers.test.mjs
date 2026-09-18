@@ -2,16 +2,16 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { CalendarCell, CalendarContent, CalendarGrid, CalendarRoot } from '../.verification-dist/calendar.js';
-import { DatePickerCell, DatePickerContent, DatePickerGrid, DatePickerInput, DatePickerMonthCell, DatePickerRoot, DatePickerTrigger, DatePickerYearViewTrigger } from '../.verification-dist/date-picker.js';
-import { DateRangePickerCell, DateRangePickerContent, DateRangePickerEndInput, DateRangePickerGrid, DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerTrigger } from '../.verification-dist/date-range-picker.js';
-import { DateTimePickerCell, DateTimePickerContent, DateTimePickerDateInput, DateTimePickerDateTimeInput, DateTimePickerGrid, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger } from '../.verification-dist/date-time-picker.js';
-import { DateTimeRangePickerCell, DateTimeRangePickerContent, DateTimeRangePickerEndDateInput, DateTimeRangePickerEndDateTimeInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerGrid, DateTimeRangePickerRoot, DateTimeRangePickerStartDateInput, DateTimeRangePickerStartDateTimeInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerTrigger } from '../.verification-dist/date-time-range-picker.js';
-import { RangeCalendarCell, RangeCalendarContent, RangeCalendarGrid, RangeCalendarRoot } from '../.verification-dist/range-calendar.js';
-import { MonthPickerCell, MonthPickerContent, MonthPickerGrid, MonthPickerInput, MonthPickerRoot, MonthPickerTrigger } from '../.verification-dist/month-picker.js';
-import { MonthRangePickerCell, MonthRangePickerContent, MonthRangePickerEndInput, MonthRangePickerGrid, MonthRangePickerRoot, MonthRangePickerStartInput, MonthRangePickerTrigger } from '../.verification-dist/month-range-picker.js';
-import { YearPickerCell, YearPickerContent, YearPickerGrid, YearPickerInput, YearPickerNextPage, YearPickerPreviousPage, YearPickerRoot, YearPickerTrigger } from '../.verification-dist/year-picker.js';
-import { YearRangePickerCell, YearRangePickerContent, YearRangePickerEndInput, YearRangePickerGrid, YearRangePickerRoot, YearRangePickerStartInput, YearRangePickerTrigger } from '../.verification-dist/year-range-picker.js';
+import { CalendarCell, CalendarContent, CalendarGrid, CalendarRoot } from '../.verification-dist/temporal/calendar.js';
+import { DatePickerCell, DatePickerContent, DatePickerGrid, DatePickerInput, DatePickerMonthCell, DatePickerRoot, DatePickerTrigger, DatePickerYearViewTrigger } from '../.verification-dist/temporal/date-picker.js';
+import { DateRangePickerCell, DateRangePickerContent, DateRangePickerEndInput, DateRangePickerGrid, DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerTrigger } from '../.verification-dist/temporal/date-range-picker.js';
+import { DateTimePickerCell, DateTimePickerContent, DateTimePickerDateInput, DateTimePickerDateTimeInput, DateTimePickerGrid, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger } from '../.verification-dist/temporal/date-time-picker.js';
+import { DateTimeRangePickerCell, DateTimeRangePickerContent, DateTimeRangePickerEndDateInput, DateTimeRangePickerEndDateTimeInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerGrid, DateTimeRangePickerRoot, DateTimeRangePickerStartDateInput, DateTimeRangePickerStartDateTimeInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerTrigger } from '../.verification-dist/temporal/date-time-range-picker.js';
+import { RangeCalendarCell, RangeCalendarContent, RangeCalendarGrid, RangeCalendarRoot } from '../.verification-dist/temporal/range-calendar.js';
+import { MonthPickerCell, MonthPickerContent, MonthPickerGrid, MonthPickerInput, MonthPickerRoot, MonthPickerTrigger } from '../.verification-dist/temporal/month-picker.js';
+import { MonthRangePickerCell, MonthRangePickerContent, MonthRangePickerEndInput, MonthRangePickerGrid, MonthRangePickerRoot, MonthRangePickerStartInput, MonthRangePickerTrigger } from '../.verification-dist/temporal/month-range-picker.js';
+import { YearPickerCell, YearPickerContent, YearPickerGrid, YearPickerInput, YearPickerNextPage, YearPickerPreviousPage, YearPickerRoot, YearPickerTrigger } from '../.verification-dist/temporal/year-picker.js';
+import { YearRangePickerCell, YearRangePickerContent, YearRangePickerEndInput, YearRangePickerGrid, YearRangePickerRoot, YearRangePickerStartInput, YearRangePickerTrigger } from '../.verification-dist/temporal/year-range-picker.js';
 
 async function render(component) { return renderToString(createSSRApp({ render: component })); }
 const date = Object.freeze({ year: 2026, month: 8, day: 22 });

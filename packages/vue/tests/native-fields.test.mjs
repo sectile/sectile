@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { DateField } from '../.verification-dist/date-field.js';
-import { DateTimeField } from '../.verification-dist/date-time-field.js';
+import { DateField } from '../.verification-dist/temporal/date-field.js';
+import { DateTimeField } from '../.verification-dist/temporal/date-time-field.js';
 import { NumberField } from '../.verification-dist/number-field.js';
-import { TimeField } from '../.verification-dist/time-field.js';
+import { TimeField } from '../.verification-dist/temporal/time-field.js';
 
 async function render(component, props) {
   return renderToString(createSSRApp({ render: () => h(component, props) }));

@@ -1,6 +1,6 @@
 import { createYearRangePicker } from '@sectile/dom/temporal/year-range-picker';
 import { formatDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
-import { definePickerFamilyCapability, type PickerCapabilityGranularity } from './picker-capability.js';
+import { definePickerFamilyCapability, type PickerCapabilityGranularity } from '../capability.js';
 
 export const yearRangePickerCapability = definePickerFamilyCapability({
   kind: 'date-range' as const,

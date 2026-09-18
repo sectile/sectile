@@ -19,11 +19,11 @@ import {
   useCompositeFormControl,
 } from '../form/control.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
-import { useControlledStateInvariant } from './controlled-state.js';
-import { usePresence } from './presence.js';
+import { useControlledStateInvariant } from '../internal/controlled-state.js';
+import { usePresence } from '../internal/presence.js';
 import { useHostPortalTarget } from '../host-provider.js';
-import { useTemporalReferenceDate } from '../temporal-provider.js';
-import type { PickerCapabilityConnection, PickerFamilyCapability } from './picker-capability.js';
+import { useTemporalReferenceDate } from './temporal-provider.js';
+import type { PickerCapabilityConnection, PickerFamilyCapability } from './capability.js';
 
 export type PickerKind = 'calendar' | 'date' | 'date-range' | 'date-time' | 'date-time-range';
 export type PickerValue = DateValue | DateRange | DateTimeValue | DateTimeRange | null;

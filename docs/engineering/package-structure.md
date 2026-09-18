@@ -875,6 +875,44 @@ the same scope boundary. Portable state, paths, validation and submission behavi
 remain with Form and DOM. The extraction preserves component setup and helper
 bodies, including notification order and native fallback behavior.
 
+## Vue Temporal ownership
+
+The sixteen existing `@sectile/vue/temporal/*` subpaths point directly to their
+named modules under `packages/vue/src/temporal/`. Public names and optional
+Temporal dependency boundaries remain unchanged.
+
+```text
+temporal/
+  calendar.ts, range-calendar.ts
+  date-field.ts, date-range-field.ts, date-time-field.ts
+  time-field.ts, time-range-field.ts
+  date-picker.ts, date-range-picker.ts
+  date-time-picker.ts, date-time-range-picker.ts
+  month-picker.ts, month-range-picker.ts
+  year-picker.ts, year-range-picker.ts
+  temporal-provider.ts
+  picker.ts
+  capability.ts
+  capabilities/
+    calendar.ts, range-calendar.ts
+    date-picker.ts, date-range-picker.ts
+    date-time-picker.ts, date-time-range-picker.ts
+    month-picker.ts, month-range-picker.ts
+    year-picker.ts, year-range-picker.ts
+```
+
+The lower capability contract defines the existing connection and formatting
+interface. Each concrete capability connects one DOM family, with no imports
+from peer capabilities or Vue picker components. Public profiles compose their
+selected capability with the shared picker runtime. The reference-date provider
+remains below that runtime and retains its single context key.
+
+Shared native-field, scheduling, presence, host-provider and Form participation
+support stays outside the Temporal family. The migration preserves the existing
+picker context, mounted element map, pending value token, connection lifecycle,
+field refs and provider capture. Module bodies and purity annotations are
+unchanged; only local module references and physical export targets move.
+
 ## Moving or extracting an implementation
 
 Before editing, identify the owner, direct callers, public surfaces and any

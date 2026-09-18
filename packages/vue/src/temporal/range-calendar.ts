@@ -3,8 +3,8 @@ import type { DateRange, DateValue } from '@sectile/dom/temporal/date-field';
 import {
   PickerCell, PickerContent, PickerGrid, createPickerMove, createPickerRoot, specializePickerRootPart,
   type PickerCellSlotProps, type PickerPartProps, type PickerRootSlotProps,
-} from './internal/date-picker.js';
-import { rangeCalendarCapability } from './internal/range-calendar-capability.js';
+} from './picker.js';
+import { rangeCalendarCapability } from './capabilities/range-calendar.js';
 
 export interface RangeCalendarRootProps extends PickerPartProps {
   readonly modelValue?: DateRange | null;

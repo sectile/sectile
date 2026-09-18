@@ -45,16 +45,16 @@ const {
 } = await import('../.verification-dist/form.js');
 const { CheckboxRoot } = await import('../.verification-dist/checkbox.js');
 const { CheckboxGroupRoot } = await import('../.verification-dist/checkbox-group.js');
-const { CalendarContent, CalendarGrid, CalendarInput, CalendarRoot } = await import('../.verification-dist/calendar.js');
+const { CalendarContent, CalendarGrid, CalendarInput, CalendarRoot } = await import('../.verification-dist/temporal/calendar.js');
 const { ColorPickerRoot } = await import('../.verification-dist/color-picker.js');
-const { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } = await import('../.verification-dist/date-range-field.js');
+const { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } = await import('../.verification-dist/temporal/date-range-field.js');
 const {
   DateRangePickerContent,
   DateRangePickerEndInput,
   DateRangePickerRoot,
   DateRangePickerStartInput,
   DateRangePickerTrigger,
-} = await import('../.verification-dist/date-range-picker.js');
+} = await import('../.verification-dist/temporal/date-range-picker.js');
 const { EditableInput, EditablePreview, EditableRoot } = await import('../.verification-dist/editable.js');
 const { ListboxRoot } = await import('../.verification-dist/listbox.js');
 const { MultiThumbSliderRoot } = await import('../.verification-dist/multi-thumb-slider.js');
@@ -72,7 +72,7 @@ const { SpinButtonInput, SpinButtonRoot } = await import('../.verification-dist/
 const { SwitchRoot } = await import('../.verification-dist/switch.js');
 const { TagsInputInput, TagsInputRoot } = await import('../.verification-dist/tags-input.js');
 const { TextField } = await import('../.verification-dist/text.js');
-const { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } = await import('../.verification-dist/time-range-field.js');
+const { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } = await import('../.verification-dist/temporal/time-range-field.js');
 const { ToggleGroupRoot } = await import('../.verification-dist/toggle-group.js');
 const { formValueControlInventory } = await import('../.verification-dist/form/control-inventory.js');
 

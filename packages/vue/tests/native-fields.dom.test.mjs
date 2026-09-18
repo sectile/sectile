@@ -18,12 +18,12 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref } = await import('vue');
-const { DateField } = await import('../.verification-dist/date-field.js');
-const { DateTimeField } = await import('../.verification-dist/date-time-field.js');
+const { DateField } = await import('../.verification-dist/temporal/date-field.js');
+const { DateTimeField } = await import('../.verification-dist/temporal/date-time-field.js');
 const { NumberField } = await import('../.verification-dist/number-field.js');
-const { TimeField } = await import('../.verification-dist/time-field.js');
-const { DateRangeFieldRoot, DateRangeFieldStartInput, DateRangeFieldEndInput } = await import('../.verification-dist/date-range-field.js');
-const { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } = await import('../.verification-dist/time-range-field.js');
+const { TimeField } = await import('../.verification-dist/temporal/time-field.js');
+const { DateRangeFieldRoot, DateRangeFieldStartInput, DateRangeFieldEndInput } = await import('../.verification-dist/temporal/date-range-field.js');
+const { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } = await import('../.verification-dist/temporal/time-range-field.js');
 
 test('native date-time field mounts and commits without text selection APIs', async () => {
   const host = document.createElement('div');
