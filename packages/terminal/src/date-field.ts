@@ -4,9 +4,8 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState, type TextEvent, type TextSelectionInput } from '@sectile/core/text';
 import { applyDateFieldEvent, tryCreateDateFieldState, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/temporal/date-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { toTerminalTextInput } from './internal/text-input.js';
+import { toTerminalTextInput, toTextEvent } from './text/input.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
-import { toTextEvent } from './text.js';
 
 export interface DateFieldOptions { readonly policies?: DateFieldPolicies; readonly value?: DateValue | null; readonly defaultValue?: DateValue | null; readonly inputState?: TextEditingState; readonly defaultInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly onValueChange?: (value: DateValue | null) => void; readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void; readonly onUpdate?: () => void; }
 

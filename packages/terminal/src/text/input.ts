@@ -1,7 +1,34 @@
-import type { TextEditingState, TextSelectionInput } from '@sectile/core/text';
+import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/core/text';
 import type { TerminalKeyboardInput } from '../keyboard.js';
-import type { TextInput } from '../text.js';
 import { nextGraphemeOffset, previousGraphemeOffset } from './grapheme.js';
+
+export type TextInput =
+  | {
+      readonly type: 'insert' | 'replace';
+      readonly text: string;
+      readonly startCodeUnitOffset: number;
+      readonly endCodeUnitOffset: number;
+      readonly selection: TextSelectionInput;
+    }
+  | {
+      readonly type: 'delete';
+      readonly startCodeUnitOffset: number;
+      readonly endCodeUnitOffset: number;
+      readonly selection: TextSelectionInput;
+    };
+
+export function toTextEvent(input: TextInput): TextEvent | null {
+  if (typeof input !== 'object' || input === null) return null;
+  if (input.type !== 'insert' && input.type !== 'replace' && input.type !== 'delete') return null;
+  if (input.type !== 'delete' && typeof input.text !== 'string') return null;
+  return Object.freeze({
+    type: 'replace',
+    startCodeUnitOffset: input.startCodeUnitOffset,
+    endCodeUnitOffset: input.endCodeUnitOffset,
+    text: input.type === 'delete' ? '' : input.text,
+    selection: input.selection,
+  });
+}
 
 export function toTerminalTextInput(
   state: TextEditingState,

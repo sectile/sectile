@@ -116,6 +116,7 @@
 | WI-009 | @sectile/core | `./adapter-runtime` | `tryReconcileCollectionIdentities` | @sectile/core/adapter-runtime |
 | WI-009 | @sectile/form | `./error` | `FormErrorCode form-event-invalid`, `Core Result declaration closure` | @sectile/form/error |
 | WI-009 | @sectile/form | `.` | `FormErrorCode form-event-invalid`, `typed field-state commands`, `local StandardSchema declaration closure` | @sectile/form |
+| WI-009 | @sectile/terminal | `./text` | `TextInput declaration owner`, `toTextEvent declaration owner` | @sectile/terminal/text |
 | WI-010 | @sectile/tabular | `./virtual` | `TabularVirtualErrorCode.extent-policy-failed`, `TabularRowSelection declaration closure`, `DataTableVirtualAdapterOptions.crossExtent`, `DataTable linear row crossExtent placeholder`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/virtual |
 | WI-013 | @sectile/terminal | `./checkbox` | `Checkbox controller declaration closure` | @sectile/terminal/checkbox |
 | WI-013 | @sectile/dom | `./rating` | `Rating controller declaration closure` | @sectile/dom/rating |

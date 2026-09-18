@@ -14,9 +14,8 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState, type TextEvent, type TextSelectionInput } from '@sectile/core/text';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { toTerminalTextInput } from './internal/text-input.js';
-import { nextGraphemeOffset, previousGraphemeOffset } from './internal/grapheme.js';
-import { toTextEvent } from './text.js';
+import { toTerminalTextInput, toTextEvent } from './text/input.js';
+import { nextGraphemeOffset, previousGraphemeOffset } from './text/grapheme.js';
 
 export interface QuantityFieldValueChangeDetails {
   readonly value: QuantityValue | null;

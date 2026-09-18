@@ -2,7 +2,7 @@ import {
   graphemeSegments,
   terminalGraphemeWidth,
   terminalStringWidth,
-} from './internal/grapheme.js';
+} from './text/grapheme.js';
 
 export function fitTerminalText(value: string, width: number): string {
   if (!Number.isSafeInteger(width) || width < 0) {

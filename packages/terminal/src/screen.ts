@@ -7,7 +7,7 @@ import {
   graphemeSegments,
   terminalGraphemeWidth,
   terminalStringWidth,
-} from './internal/grapheme.js';
+} from './text/grapheme.js';
 
 export type TerminalDimension = number | 'auto' | 'fill';
 export type TerminalAlignment = 'start' | 'center' | 'end' | 'stretch';

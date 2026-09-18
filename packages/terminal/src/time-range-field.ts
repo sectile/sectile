@@ -4,8 +4,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/core/text';
 import { applyTimeRangeFieldEvent, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldCommand, type TimeRangeFieldEndpoint, type TimeRangeFieldEvent, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/temporal/time-range-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { toTerminalTextInput } from './internal/text-input.js';
-import { toTextEvent } from './text.js';
+import { toTerminalTextInput, toTextEvent } from './text/input.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export interface TimeRangeFieldOptions { readonly value?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly startInputState?: TextEditingState; readonly defaultStartInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly defaultEndInputState?: TextEditingState; readonly policies?: TimeRangeFieldPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly onValueChange?: (value: TimeRange | null) => void; readonly onStartInputStateChange?: (value: TextEditingState) => void; readonly onEndInputStateChange?: (value: TextEditingState) => void; readonly onUpdate?: () => void }

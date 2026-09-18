@@ -4,7 +4,7 @@ import { openSync } from 'node:fs';
 import { emitKeypressEvents } from 'node:readline';
 import { ReadStream } from 'node:tty';
 import test from 'node:test';
-import { terminalStringWidth } from '../.verification-dist/internal/grapheme.js';
+import { terminalStringWidth } from '../.verification-dist/text/grapheme.js';
 import {
   applyTerminalTextInput,
   removeLastGrapheme,

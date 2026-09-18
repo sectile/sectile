@@ -13,9 +13,8 @@ import {
 } from '@sectile/core/number-field';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { toTerminalTextInput } from './internal/text-input.js';
-import { nextGraphemeOffset, previousGraphemeOffset } from './internal/grapheme.js';
-import { toTextEvent } from './text.js';
+import { toTerminalTextInput, toTextEvent } from './text/input.js';
+import { nextGraphemeOffset, previousGraphemeOffset } from './text/grapheme.js';
 
 export interface NumberFieldValueChangeDetails {
   readonly value: string | null;

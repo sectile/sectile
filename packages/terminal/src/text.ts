@@ -13,25 +13,11 @@ import {
   tryCreateTextEditingState,
   type TextEditingState,
   type TextEvent,
-  type TextSelectionInput,
 } from '@sectile/core/text';
 import type { TerminalKeyboardInput } from './keyboard.js';
-import { toTerminalTextInput } from './internal/text-input.js';
+import { toTerminalTextInput, toTextEvent, type TextInput } from './text/input.js';
 
-export type TextInput =
-  | {
-      readonly type: 'insert' | 'replace';
-      readonly text: string;
-      readonly startCodeUnitOffset: number;
-      readonly endCodeUnitOffset: number;
-      readonly selection: TextSelectionInput;
-    }
-  | {
-      readonly type: 'delete';
-      readonly startCodeUnitOffset: number;
-      readonly endCodeUnitOffset: number;
-      readonly selection: TextSelectionInput;
-    };
+export { toTextEvent, type TextInput } from './text/input.js';
 
 export interface TextValueChangeDetails {
   readonly value: TextEditingState;
@@ -131,19 +117,6 @@ function tryCreateTextConnection(options: TextOptions = {}): Result<TextConnecti
 
 export function connectText(options: TextConnectionOptions): TextConnection {
   return new TerminalTextConnection(options);
-}
-
-export function toTextEvent(input: TextInput): TextEvent | null {
-  if (typeof input !== 'object' || input === null) return null;
-  if (input.type !== 'insert' && input.type !== 'replace' && input.type !== 'delete') return null;
-  if (input.type !== 'delete' && typeof input.text !== 'string') return null;
-  return Object.freeze({
-    type: 'replace',
-    startCodeUnitOffset: input.startCodeUnitOffset,
-    endCodeUnitOffset: input.endCodeUnitOffset,
-    text: input.type === 'delete' ? '' : input.text,
-    selection: input.selection,
-  });
 }
 
 class TerminalTextConnection implements TextConnection {

@@ -17,9 +17,8 @@ import {
   tryCreateTextEditingState,
   type TextEditingState,
 } from '@sectile/core/text';
-import { toTextEvent, type TextInput } from './text.js';
+import { toTerminalTextInput, toTextEvent, type TextInput } from './text/input.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
-import { toTerminalTextInput } from './internal/text-input.js';
 
 export type KeyboardInput = TerminalKeyboardInput;
 

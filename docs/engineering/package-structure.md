@@ -755,6 +755,31 @@ civil-year, draft-length, output-cell and caller-supplied scan limits are
 unchanged. Physical artifact and consumer costs are checked independently from
 source organization; this migration does not authorize broader size ceilings.
 
+## Terminal text input ownership
+
+The supported `@sectile/terminal/text`, `/keyboard`, `/layout`, and `/screen`
+entrypoints keep their existing paths. Shared terminal text support lives below
+those public owners:
+
+```text
+text/
+  input.ts      # TextInput and keyboard/text-to-Core event translation
+  grapheme.ts   # single segmenter, text boundaries and terminal cell widths
+```
+
+The public Text module retains its controller and connection. It re-exports the
+same `TextInput` and `toTextEvent` from the lower input owner. Number, quantity,
+Temporal fields and Combobox use that translation owner directly; translating a
+key or text edit does not import the Text controller. Input translation depends
+on the keyboard contract and grapheme support, never the higher field or screen
+owners. Core continues to own semantic text transitions.
+
+Grapheme support retains one `Intl.Segmenter`, the same width tables and regular
+expressions, and its original license notice. Boundary scans and cell-width work
+are unchanged. Keyboard, layout and screen share this owner without constructing
+another segmenter or cache. No listener, stream, raw-mode state, scheduled work
+or frame registry changes owner in this migration.
+
 ## Moving or extracting an implementation
 
 Before editing, identify the owner, direct callers, public surfaces and any

@@ -2923,41 +2923,58 @@
       ],
       "roles": {
         "foundation": {
-          "reason": "terminal foundation owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Terminal platform foundations use lower grapheme support without importing Text controllers.",
           "allows": [
-            "foundation"
+            "foundation",
+            "text-grapheme"
+          ]
+        },
+        "text-grapheme": {
+          "reason": "Single Terminal grapheme segmenter, cell-width tables and text-boundary owner.",
+          "allows": [
+            "text-grapheme"
+          ]
+        },
+        "text-input": {
+          "reason": "Terminal keyboard-to-text and text-to-Core event translation below controllers and field adapters.",
+          "allows": [
+            "foundation",
+            "text-grapheme",
+            "text-input"
           ]
         },
         "text": {
-          "reason": "terminal text owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Public Terminal Text controller and connection over lower input translation.",
           "allows": [
             "foundation",
+            "text-input",
             "text"
           ]
         },
         "controls": {
-          "reason": "terminal controls owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Terminal controls compose lower input and grapheme owners without importing the Text controller.",
           "allows": [
             "controls",
             "foundation",
-            "text"
+            "text-input",
+            "text-grapheme"
           ]
         },
         "temporal": {
-          "reason": "terminal temporal owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Terminal Temporal adapters use domain state and lower input translation.",
           "allows": [
             "controls",
             "foundation",
             "temporal",
-            "text"
+            "text-input"
           ]
         },
         "rendering": {
-          "reason": "terminal rendering owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Terminal screen and stream rendering use lower cell-width support without Text controllers.",
           "allows": [
             "foundation",
             "rendering",
-            "text"
+            "text-grapheme"
           ]
         },
         "exports": {
@@ -3097,8 +3114,8 @@
           "role": "foundation",
           "kind": "owner"
         },
-        "src/internal/grapheme.ts": {
-          "role": "foundation",
+        "src/text/grapheme.ts": {
+          "role": "text-grapheme",
           "kind": "owner"
         },
         "src/internal/menu-control.ts": {
@@ -3121,8 +3138,8 @@
           "role": "foundation",
           "kind": "owner"
         },
-        "src/internal/text-input.ts": {
-          "role": "text",
+        "src/text/input.ts": {
+          "role": "text-input",
           "kind": "owner"
         },
         "src/keyboard.ts": {

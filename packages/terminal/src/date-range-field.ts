@@ -5,8 +5,7 @@ import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/c
 import type { DateRange } from '@sectile/temporal/date-field';
 import { applyDateRangeFieldEvent, tryCreateDateRangeFieldState, type DateRangeFieldCommand, type DateRangeFieldEndpoint, type DateRangeFieldEvent, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/temporal/date-range-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { toTerminalTextInput } from './internal/text-input.js';
-import { toTextEvent } from './text.js';
+import { toTerminalTextInput, toTextEvent } from './text/input.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export interface DateRangeFieldOptions { readonly value?: DateRange | null; readonly defaultValue?: DateRange | null; readonly startInputState?: TextEditingState; readonly defaultStartInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly defaultEndInputState?: TextEditingState; readonly policies?: DateRangeFieldPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly onValueChange?: (value: DateRange | null) => void; readonly onStartInputStateChange?: (value: TextEditingState) => void; readonly onEndInputStateChange?: (value: TextEditingState) => void; readonly onUpdate?: () => void }

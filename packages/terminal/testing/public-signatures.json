@@ -287,7 +287,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "873c3225d009dbba22a0470f496b789732afb126d9426fd07c26404f94095a77",
+  "fingerprint": "2fb038e03aef34728af8eff59b0e1d07ba71fc03dacc2bcd224e33d71a22b6fe",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -331,7 +331,7 @@
     },
     {
       "path": "dist/combobox.d.ts",
-      "sha256": "03d0dc845f32049e91a1e7288c38ddb95e3d1a31c7be6d6ad616b729ac47e9d0"
+      "sha256": "0bb7bb17e63f385e262cca3b2c8d0f63106ca250d6fa8e12ad7cf59cd1d49bcc"
     },
     {
       "path": "dist/date-field.d.ts",
@@ -539,7 +539,11 @@
     },
     {
       "path": "dist/text.d.ts",
-      "sha256": "9d6fe165ebf1d74142d15e19c7ffc358240adc464ee8ca7c0e904019ae013285"
+      "sha256": "81d9ca48ef8dc01e08eee84a30cc13cd6ab036f7bef9b74d96b404a66098f17d"
+    },
+    {
+      "path": "dist/text/input.d.ts",
+      "sha256": "717e387722ab1468dd978d840988af154751166da56c49fa03708fa592758e08"
     },
     {
       "path": "dist/time-field.d.ts",

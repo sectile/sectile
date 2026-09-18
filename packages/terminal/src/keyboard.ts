@@ -1,4 +1,4 @@
-import { previousGraphemeOffset } from './internal/grapheme.js';
+import { previousGraphemeOffset } from './text/grapheme.js';
 
 export interface TerminalKeyboardInput {
   readonly key: string;

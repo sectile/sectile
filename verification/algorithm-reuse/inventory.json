@@ -3602,7 +3602,7 @@
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
       "path": "packages/terminal/src/combobox.ts",
-      "line": 200,
+      "line": 199,
       "evidence": "new Map(options.items.map(",
       "rule": "terminal-platform-policy",
       "classification": "result-proportional",

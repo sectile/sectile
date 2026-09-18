@@ -2,6 +2,14 @@
   "schemaVersion": 1,
   "package": "@sectile/terminal",
   "entries": [
+    {
+      "id": "WI-009:terminal-text-input-ownership",
+      "change": "signature-changed",
+      "before": { "subpath": "./text" },
+      "symbols": ["TextInput declaration owner", "toTextEvent declaration owner"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./text" },
+      "removalReason": "TextInput and toTextEvent now share the lower text input translation owner. The existing public Text exports and types are preserved; consumers do not need to change imports or behavior."
+    },
     { "id": "WI-001:terminal-month-navigation", "change": "signature-changed", "before": { "subpath": "./month-picker" }, "symbols": ["toMonthPickerEvent", "MonthPickerConnection"], "replacement": { "package": "@sectile/terminal", "subpath": "./month-picker" }, "removalReason": "Keyboard input maps to Temporal-owned three-column month navigation and canonical month selection." },
     { "id": "WI-001:terminal-month-range-navigation", "change": "signature-changed", "before": { "subpath": "./month-range-picker" }, "symbols": ["MonthRangePickerConnection"], "replacement": { "package": "@sectile/terminal", "subpath": "./month-range-picker" } },
     { "id": "WI-001:terminal-year-navigation", "change": "signature-changed", "before": { "subpath": "./year-picker" }, "symbols": ["toYearPickerEvent", "YearPickerConnection"], "replacement": { "package": "@sectile/terminal", "subpath": "./year-picker" }, "removalReason": "Keyboard input maps to four-column year navigation. The optional referenceYear anchors the twelve-cell page for standalone input translation." },
