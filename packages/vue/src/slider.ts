@@ -14,7 +14,7 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
-} from './internal/form-control.js';
+} from './form/control.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { usePartContract, type PartContract } from './internal/part-contract.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';

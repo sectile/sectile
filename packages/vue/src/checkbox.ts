@@ -25,7 +25,7 @@ import { usePartContract, type PartContract } from './internal/part-contract.js'
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
-} from './internal/form-control.js';
+} from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import {
   conditionalPresenceProps,

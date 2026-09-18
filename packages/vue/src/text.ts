@@ -18,7 +18,7 @@ import {
   type TextController,
   type TextState,
 } from '@sectile/dom/text';
-import { useNativeInputFormControl } from './internal/form-control.js';
+import { useNativeInputFormControl } from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface TextFieldProps {

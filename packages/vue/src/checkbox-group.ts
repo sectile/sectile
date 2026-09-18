@@ -9,12 +9,12 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import { CheckboxIndicator, CheckboxRoot, type CheckboxValue } from './checkbox.js';
 import { providePartContract } from './internal/part-contract.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
-import { provideFormControlOwner } from './internal/form-control.js';
+import { provideFormControlOwner } from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,
-} from './internal/form-control.js';
+} from './form/control.js';
 
 export interface CheckboxGroupRootProps {
   readonly items: readonly string[];

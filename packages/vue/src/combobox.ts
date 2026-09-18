@@ -14,7 +14,7 @@ import type {
 } from '@sectile/dom/position';
 import { createTextState, type TextState } from '@sectile/dom/text';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { useNativeInputFormControl } from './internal/form-control.js';
+import { useNativeInputFormControl } from './form/control.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { usePresence } from './internal/presence.js';

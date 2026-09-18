@@ -21,7 +21,7 @@ import {
   type SpinButtonOptions,
 } from '@sectile/dom/spin-button';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { useNativeInputFormControl } from './internal/form-control.js';
+import { useNativeInputFormControl } from './form/control.js';
 
 export interface SpinButtonRootProps {
   readonly min: number | string;

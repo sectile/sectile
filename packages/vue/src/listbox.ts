@@ -25,7 +25,7 @@ import {
 import { stableIDElementToken } from '@sectile/dom/identity';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
-import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
+import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './form/control.js';
 import { useHostDirection, useHostId, type HostDirection } from './host-provider.js';
 import {
   invalidateItemProjection,

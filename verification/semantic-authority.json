@@ -77,6 +77,11 @@
       "root": "packages/vue/src/internal",
       "classification": "platform-only",
       "semanticPaths": []
+    },
+    {
+      "root": "packages/vue/src/form",
+      "classification": "platform-only",
+      "semanticPaths": []
     }
   ],
   "dependencyGraph": [

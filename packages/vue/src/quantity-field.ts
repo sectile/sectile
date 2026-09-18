@@ -6,7 +6,7 @@ import {
   createQuantityField, type QuantityFieldConnection, type QuantityFieldPolicies, type QuantityValue,
 } from '@sectile/dom/quantity-field';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { useNativeInputFormControl } from './internal/form-control.js';
+import { useNativeInputFormControl } from './form/control.js';
 
 export {
   createStandardQuantityPolicies,

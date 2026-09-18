@@ -11,8 +11,8 @@ import { createListboxControllerFromItems, type ListboxController } from '@secti
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { usePartContract, type PartContract } from './internal/part-contract.js';
-import { provideFormControlOwner } from './internal/form-control.js';
-import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
+import { provideFormControlOwner } from './form/control.js';
+import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './form/control.js';
 import { useHostDirection } from './host-provider.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';

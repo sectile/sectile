@@ -23,7 +23,7 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
-} from './internal/form-control.js';
+} from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface SwitchRootProps {

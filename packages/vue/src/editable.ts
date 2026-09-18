@@ -23,7 +23,7 @@ import {
   type EditableState,
 } from '@sectile/dom/editable';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { useNativeInputFormControl } from './internal/form-control.js';
+import { useNativeInputFormControl } from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { useNextTickTask } from './internal/scheduled-task.js';
 

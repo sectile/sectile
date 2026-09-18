@@ -20,7 +20,7 @@ import type { DateRange } from '@sectile/dom/temporal/date-field';
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
-} from './internal/form-control.js';
+} from './form/control.js';
 import { useNextTickTask } from './internal/scheduled-task.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';

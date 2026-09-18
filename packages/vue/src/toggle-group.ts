@@ -6,11 +6,11 @@ import { getToggleGroupItemAttributes, getToggleGroupRootAttributes } from '@sec
 import { createListboxControllerFromItems, type ListboxController } from '@sectile/dom/listbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
-import { provideFormControlOwner } from './internal/form-control.js';
+import { provideFormControlOwner } from './form/control.js';
 import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,
-} from './internal/form-control.js';
+} from './form/control.js';
 import { useHostDirection } from './host-provider.js';
 import { reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';

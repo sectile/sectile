@@ -22,11 +22,11 @@ import {
 } from '@sectile/dom/cascade-list';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
-import { provideFormControlOwner } from './internal/form-control.js';
+import { provideFormControlOwner } from './form/control.js';
 import {
   hiddenSelectSubmissionCapabilities,
   useCompositeFormControl,
-} from './internal/form-control.js';
+} from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { useConditionalPresenceRegistry } from './internal/conditional-presence.js';
 import {

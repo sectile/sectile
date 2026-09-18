@@ -842,6 +842,39 @@ choice, scalar, text and Temporal support roots. The regrouping changes private
 import paths while preserving public exports, algorithms and distribution
 budgets.
 
+## Vue Form ownership
+
+The existing `@sectile/vue/form` entrypoint remains an explicit public facade.
+Its implementation is grouped under `packages/vue/src/form/`:
+
+```text
+form/
+  contracts.ts          # public types and submission definitions
+  control.ts            # optional control participation and capability constants
+  control-inventory.ts  # declared value-control participation inventory
+  context.ts            # context keys and shallow subscription lifetimes
+  root.ts               # one DOM Form connection and submission lifecycle
+  field.ts              # one field observer, participant and attribute lifetime
+  native.ts             # native target, submission and metadata projection
+  selectors.ts          # public selectors and field actions
+  part.ts               # shared props and field-part rendering
+  parts.ts              # label, description, reset and submit components
+  presence-parts.ts     # message and summary visibility
+```
+
+Context and display parts consume lower public contracts directly. Ordinary value
+controls import the independent participation module; participating in a Form
+does not require the FormRoot or FormField implementation. Context keys and
+participation keys retain a single owner, and the public facade re-exports the
+same component, composable and type bindings.
+
+FormRoot retains its participant and diagnostic maps, DOM connection and existing
+scheduled work. FormField retains its observer, registrations, attribute restoration
+and cleanup. Selector watchers remain shallow and dispose their subscriptions at
+the same scope boundary. Portable state, paths, validation and submission behavior
+remain with Form and DOM. The extraction preserves component setup and helper
+bodies, including notification order and native fallback behavior.
+
 ## Moving or extracting an implementation
 
 Before editing, identify the owner, direct callers, public surfaces and any

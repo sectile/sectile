@@ -13,7 +13,7 @@ import type {
 } from '@sectile/dom/position';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
-import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
+import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './form/control.js';
 import { useHostId, useHostPortalTarget } from './host-provider.js';
 import { usePresence } from './internal/presence.js';
 import {

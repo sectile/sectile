@@ -3445,39 +3445,92 @@
           ]
         },
         "form-contracts": {
-          "reason": "vue form-contracts owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Public Form types and submission definition below contexts and components.",
           "allows": [
             "form-contracts",
-            "foundation"
+            "foundation",
+            "presence"
           ]
         },
         "form-control": {
-          "reason": "vue form-control owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Optional Form participation, capability constants and its single provide/inject authority; independent of Form state and root.",
           "allows": [
+            "form-control"
+          ]
+        },
+        "form-context": {
+          "reason": "Single Form/field context keys, empty state and shallow subscription/disposal owners below components.",
+          "allows": [
+            "form-context",
             "form-contracts",
-            "form-control",
+            "form-control"
+          ]
+        },
+        "form-native": {
+          "reason": "Stateless field target, native fallback, path and attribute projection over canonical Form/DOM contracts.",
+          "allows": [
+            "form-native",
+            "form-control"
+          ]
+        },
+        "form-part": {
+          "reason": "Shared field part props and rendering projection without mounted state.",
+          "allows": [
+            "form-part",
+            "form-contracts",
             "foundation"
           ]
         },
-        "form-parts": {
-          "reason": "vue form-parts owns its named contracts and implementation; permitted imports are explicit.",
+        "form-root": {
+          "reason": "Single FormRoot DOM connection, participant/diagnostic registries and submit lifecycle.",
           "allows": [
+            "form-root",
+            "form-context",
+            "form-contracts",
+            "foundation"
+          ]
+        },
+        "form-field": {
+          "reason": "Single FormField observer, participant and applied-attribute ownership with lower native projection.",
+          "allows": [
+            "form-field",
+            "form-context",
             "form-contracts",
             "form-control",
+            "form-native",
+            "form-part",
+            "foundation"
+          ]
+        },
+        "form-selectors": {
+          "reason": "Public selectors and field actions composed from lower context subscription owners.",
+          "allows": [
+            "form-selectors",
+            "form-context",
+            "form-contracts"
+          ]
+        },
+        "form-parts": {
+          "reason": "Label, description, reset, submit, message and summary views over lower contexts and existing presence.",
+          "allows": [
             "form-parts",
+            "form-context",
+            "form-contracts",
+            "form-part",
             "foundation",
             "presence"
           ]
         },
         "form-api": {
-          "reason": "vue form-api owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Existing public Form facade retains names and canonical bindings.",
           "allows": [
             "form-api",
             "form-contracts",
             "form-control",
-            "form-parts",
-            "foundation",
-            "presence"
+            "form-root",
+            "form-field",
+            "form-selectors",
+            "form-parts"
           ]
         },
         "controls": {
@@ -3678,7 +3731,7 @@
         },
         "src/form.ts": {
           "role": "form-api",
-          "kind": "owner"
+          "kind": "facade"
         },
         "src/grid.ts": {
           "role": "controls",
@@ -3736,19 +3789,19 @@
           "role": "foundation",
           "kind": "owner"
         },
-        "src/internal/form-context.ts": {
-          "role": "form-contracts",
+        "src/form/context.ts": {
+          "role": "form-context",
           "kind": "owner"
         },
-        "src/internal/form-control-inventory.ts": {
+        "src/form/control-inventory.ts": {
           "role": "form-control",
           "kind": "owner"
         },
-        "src/internal/form-control.ts": {
+        "src/form/control.ts": {
           "role": "form-control",
           "kind": "owner"
         },
-        "src/internal/form-presence-parts.ts": {
+        "src/form/presence-parts.ts": {
           "role": "form-parts",
           "kind": "owner"
         },
@@ -4019,82 +4072,37 @@
         "src/year-range-picker.ts": {
           "role": "temporal",
           "kind": "owner"
+        },
+        "src/form/contracts.ts": {
+          "role": "form-contracts",
+          "kind": "owner"
+        },
+        "src/form/root.ts": {
+          "role": "form-root",
+          "kind": "owner"
+        },
+        "src/form/field.ts": {
+          "role": "form-field",
+          "kind": "owner"
+        },
+        "src/form/native.ts": {
+          "role": "form-native",
+          "kind": "owner"
+        },
+        "src/form/selectors.ts": {
+          "role": "form-selectors",
+          "kind": "owner"
+        },
+        "src/form/part.ts": {
+          "role": "form-part",
+          "kind": "owner"
+        },
+        "src/form/parts.ts": {
+          "role": "form-parts",
+          "kind": "owner"
         }
       }
     }
   },
-  "exceptions": [
-    {
-      "id": "vue-source-19",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/vue/src/internal/form-context.ts",
-          "packages/vue/src/form.ts"
-        ]
-      ],
-      "owner": "vue",
-      "workItem": "WI-010A",
-      "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
-    },
-    {
-      "id": "vue-source-20",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/vue/src/internal/form-context.ts",
-          "packages/vue/src/internal/form-control.ts"
-        ]
-      ],
-      "owner": "vue",
-      "workItem": "WI-010A",
-      "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
-    },
-    {
-      "id": "vue-source-21",
-      "graph": "source",
-      "rule": "direction",
-      "edges": [
-        [
-          "packages/vue/src/internal/form-presence-parts.ts",
-          "packages/vue/src/form.ts"
-        ]
-      ],
-      "owner": "vue",
-      "workItem": "WI-010A",
-      "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
-    },
-    {
-      "id": "vue-source-26",
-      "graph": "source",
-      "rule": "cycle",
-      "edges": [
-        [
-          "packages/vue/src/form.ts",
-          "packages/vue/src/internal/form-context.ts"
-        ],
-        [
-          "packages/vue/src/form.ts",
-          "packages/vue/src/internal/form-presence-parts.ts"
-        ],
-        [
-          "packages/vue/src/internal/form-context.ts",
-          "packages/vue/src/form.ts"
-        ],
-        [
-          "packages/vue/src/internal/form-presence-parts.ts",
-          "packages/vue/src/form.ts"
-        ],
-        [
-          "packages/vue/src/internal/form-presence-parts.ts",
-          "packages/vue/src/internal/form-context.ts"
-        ]
-      ],
-      "owner": "vue",
-      "workItem": "WI-010A",
-      "reason": "Form contexts and presence parts import upper Form/control contracts; colocate lower contracts in WI-010A."
-    }
-  ]
+  "exceptions": []
 }

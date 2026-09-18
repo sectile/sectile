@@ -315,7 +315,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "1706a2fd22c686df58fe9dd4e2e839da7c2935c229568be7a9b26bab61940413",
+  "fingerprint": "820b1f13c38313138b6fb2b3e1be857d0d504d865f074165e5041f05bdce95db",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -423,7 +423,35 @@
     },
     {
       "path": "dist/form.d.ts",
-      "sha256": "28dbd7774c516232680f1fbf3571ebd76e432ee24dacfb97c268cca32af32e0e"
+      "sha256": "5fd6367cac864802c515b871a15f0dc936d7d749bfb5e868165b418084dffad3"
+    },
+    {
+      "path": "dist/form/contracts.d.ts",
+      "sha256": "d60c7bf4efc625fdac0b50ba3ee81058c671d9ad122caa9f5b296eb298522430"
+    },
+    {
+      "path": "dist/form/control.d.ts",
+      "sha256": "d32781c2df833310dce1485481680bccc7e25255f5288fea1e3d8498b53d692c"
+    },
+    {
+      "path": "dist/form/field.d.ts",
+      "sha256": "7d8884af76403f62f4ace77602c329d4b9b3b07017ef9b87193f33d8516fb79e"
+    },
+    {
+      "path": "dist/form/parts.d.ts",
+      "sha256": "8d2cf1be6c94cf7ea5ac2d744501d700dec614b5f297c303f2b50f2a56d1512c"
+    },
+    {
+      "path": "dist/form/presence-parts.d.ts",
+      "sha256": "5f282543d7f61aacfc06200b4d9bfe8d08d5c04ddebf271137c115b9b7dafe68"
+    },
+    {
+      "path": "dist/form/root.d.ts",
+      "sha256": "87efa3954d6fa783208938adb49eb5afb3dff2a7e5ea4054d358431baea36b89"
+    },
+    {
+      "path": "dist/form/selectors.d.ts",
+      "sha256": "a9fb9882796ae53c97a5b5f787fd12e983783f9f7556b1c66c0e7a988620d8e2"
     },
     {
       "path": "dist/grid.d.ts",
@@ -448,14 +476,6 @@
     {
       "path": "dist/internal/date-picker.d.ts",
       "sha256": "de4dbfc6142d203f375389eb0658f9395b027561f693c4a508b7731f75ab5d90"
-    },
-    {
-      "path": "dist/internal/form-control.d.ts",
-      "sha256": "d32781c2df833310dce1485481680bccc7e25255f5288fea1e3d8498b53d692c"
-    },
-    {
-      "path": "dist/internal/form-presence-parts.d.ts",
-      "sha256": "64b227ac44637c2483b7bbf0ba622757f5476697f3842c5291c9dcd04af8f7bf"
     },
     {
       "path": "dist/internal/native-field.d.ts",

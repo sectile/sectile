@@ -8,17 +8,17 @@ import {
   type VNodeChild,
 } from 'vue';
 import { getFormIssuesBySource } from '@sectile/form/state';
-import type { FormFieldSlotProps, FormSummarySlotProps } from '../form.js';
+import type { FormFieldSlotProps, FormSummarySlotProps } from './contracts.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import {
   conditionalPresenceProps,
   useConditionalPresence,
-} from './conditional-presence.js';
+} from '../internal/conditional-presence.js';
 import {
   useFormContext,
   useFormFieldContext,
   useFormSelectorFromContext,
-} from './form-context.js';
+} from './context.js';
 
 const partProps = {
   as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },

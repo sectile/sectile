@@ -8,16 +8,17 @@ import {
 } from 'vue';
 import type { FormConnection, FormParticipant } from '@sectile/dom/form';
 import type {
+  FormFieldSelectorFunction,
   FormFieldSlotProps,
   FormIssue,
   FormSelectorFunction,
   FormState,
   FormSubscribeOptions,
-} from '../form.js';
+} from './contracts.js';
 import type {
   FormControlRegistration,
   FormLabelMode,
-} from './form-control.js';
+} from './control.js';
 
 export interface FormContext {
   readonly summary: ShallowRef<HTMLElement | null>;
@@ -81,6 +82,39 @@ export function useFormSelectorFromContext<Selected>(
       if (!equals(selected.value, next)) selected.value = next;
       if (target !== null) {
         unsubscribe = target.subscribeForm(selector, (value) => {
+          selected.value = value;
+        }, { equals });
+      }
+    },
+    { immediate: true, flush: 'sync' },
+  );
+  onScopeDispose(() => {
+    unsubscribe?.();
+    stop();
+  });
+  return selected;
+}
+
+export function useFormFieldSelectorFromContext<Selected>(
+  context: FormContext,
+  idSource: () => string,
+  selectorSource: () => FormFieldSelectorFunction<Selected>,
+  equalsSource: () => NonNullable<FormSubscribeOptions<Selected>['equals']> = () => Object.is,
+): Readonly<ShallowRef<Selected>> {
+  const initialSelector = selectorSource();
+  const selected = shallowRef(initialSelector(
+    context.connection.value?.getField(idSource()) ?? null,
+  )) as ShallowRef<Selected>;
+  let unsubscribe: (() => void) | undefined;
+  const stop = watch(
+    [context.connection, idSource, selectorSource, equalsSource],
+    ([target, id, selector, equals]) => {
+      unsubscribe?.();
+      unsubscribe = undefined;
+      const next = selector(target?.getField(id) ?? null);
+      if (!equals(selected.value, next)) selected.value = next;
+      if (target !== null) {
+        unsubscribe = target.subscribeField(id, selector, (value) => {
           selected.value = value;
         }, { equals });
       }

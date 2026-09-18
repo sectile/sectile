@@ -198,7 +198,7 @@
     {
       "id": "form.selector-bridge",
       "inherits": "lifecycle-v1",
-      "source": "packages/vue/src/form.ts",
+      "source": "packages/vue/src/form/context.ts",
       "benchmarkIDs": [
         "VAL-033:vue-form-granular-reactivity"
       ],

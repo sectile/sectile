@@ -74,7 +74,7 @@ const { TagsInputInput, TagsInputRoot } = await import('../.verification-dist/ta
 const { TextField } = await import('../.verification-dist/text.js');
 const { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } = await import('../.verification-dist/time-range-field.js');
 const { ToggleGroupRoot } = await import('../.verification-dist/toggle-group.js');
-const { formValueControlInventory } = await import('../.verification-dist/internal/form-control-inventory.js');
+const { formValueControlInventory } = await import('../.verification-dist/form/control-inventory.js');
 
 test('nested Form controls mount without a reactive render loop', () => {
   const fixture = fileURLToPath(new URL('./fixtures/form-nested-mount.mjs', import.meta.url));

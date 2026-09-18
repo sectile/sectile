@@ -13,11 +13,11 @@ import { formatDateValue, parseDateValue, type DateRange, type DateValue } from 
 import type { DateTimeRange, DateTimeValue } from '@sectile/dom/temporal/date-time-field';
 import { createCalendarMonth, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
 import { createDateValue, tryCreateDateValue } from '@sectile/temporal/date-field';
-import type { FormSubmissionRegistration } from './form-control.js';
+import type { FormSubmissionRegistration } from '../form/control.js';
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
-} from './form-control.js';
+} from '../form/control.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from './controlled-state.js';
 import { usePresence } from './presence.js';

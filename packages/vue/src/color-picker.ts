@@ -3,7 +3,7 @@ import { createColorPicker, formatColorValue, parseColorValue, type ColorAreaVal
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
-} from './internal/form-control.js';
+} from './form/control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
 export interface ColorPickerRootProps extends ColorPickerPolicies {

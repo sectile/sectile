@@ -83,7 +83,7 @@
       "packages/dom/src/form/connection.ts", "packages/dom/tests/form.test.mjs"
     ],
     "WI-029": [
-      "packages/vue/src/form.ts", "packages/vue/tests/form.test.mjs"
+      "packages/vue/src/form.ts", "packages/vue/src/form/", "packages/vue/tests/form.test.mjs"
     ],
     "WI-040": [
       "packages/vue/src/virtual-core.ts", "packages/vue/src/virtual-list.ts",

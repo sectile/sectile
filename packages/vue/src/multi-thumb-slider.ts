@@ -6,11 +6,11 @@ import {
   createMultiThumbSlider, type MultiThumbSliderConnection, type MultiThumbSliderPolicies,
 } from '@sectile/dom/multi-thumb-slider';
 import { createSliderControllerFromRange } from '@sectile/dom/slider';
-import type { FormSubmissionRegistration } from './internal/form-control.js';
+import type { FormSubmissionRegistration } from './form/control.js';
 import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,
-} from './internal/form-control.js';
+} from './form/control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
