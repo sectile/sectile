@@ -58,10 +58,10 @@ export function validateCurrentResults(fixtures, results) {
 export function validateGranularClosures(results) {
   const virtualStrategies = Object.freeze({
     core: null,
-    grid: 'track-grid-layout',
-    list: 'linear-layout',
-    masonry: 'masonry-layout',
-    spatial: 'spatial-layout',
+    grid: 'layout/grid/layout',
+    list: 'layout/linear',
+    masonry: 'layout/masonry/layout',
+    spatial: 'layout/spatial',
   });
   for (const result of results.filter(({ mode }) => mode === 'named')) {
     if (/^(?:dom:\.\/temporal\/(?:date|date-range)-picker|temporal:\.\/calendar):named$/u.test(result.id)) {
@@ -83,13 +83,13 @@ export function validateGranularClosures(results) {
       const selected = virtualStrategies[virtual[1]];
       for (const strategy of Object.values(virtualStrategies).filter((value) => value !== null && value !== selected)) {
         assert.ok(
-          !result.modules.some((path) => path.endsWith(`/dist/${strategy}.js`)),
+          !result.modules.some((path) => path.endsWith(`@sectile/virtual/dist/${strategy}.js`)),
           `${result.bundler}:${result.id}: retained sibling ${strategy}`,
         );
       }
     }
     if (result.id === 'vue:./temporal/calendar:named') {
-      const unrelated = /@sectile\/(?:dom\/dist\/temporal|vue\/dist)\/(?:date-field|time-field|date-time-field|date-picker|date-range-picker|date-time-picker|date-time-range-picker|month-picker|month-range-picker|year-picker|year-range-picker|range-calendar)\.js$/u;
+      const unrelated = /@sectile\/(?:dom|vue)\/dist\/temporal\/(?:date-field|time-field|date-time-field|date-picker|date-range-picker|date-time-picker|date-time-range-picker|month-picker|month-range-picker|year-picker|year-range-picker|range-calendar)\.js$/u;
       assert.deepEqual(
         result.modules.filter((path) => unrelated.test(path)),
         [],
@@ -105,7 +105,7 @@ export function validateGranularClosures(results) {
       const siblingDOM = ['date-picker', 'month-picker', 'year-picker', 'date-range-picker', 'month-range-picker', 'year-range-picker', 'date-time-picker', 'date-time-range-picker']
         .filter((family) => !allowedDOM.has(family));
       for (const family of siblingVue) {
-        assert.ok(!result.modules.some((path) => path.endsWith(`@sectile/vue/dist/${family}.js`)),
+        assert.ok(!result.modules.some((path) => path.endsWith(`@sectile/vue/dist/temporal/${family}.js`)),
           `${result.bundler}:${result.id}: retained sibling Vue ${family}`);
       }
       for (const family of siblingDOM) {

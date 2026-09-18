@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { bundleFixture, deriveFixtures } from './consumer-bundles/bundle.mjs';
 import {
@@ -118,19 +119,46 @@ test('sharded baseline validation requires the exact deterministic fixture shard
   );
 });
 
-test('intentional temporal and virtual sibling closures fail', () => {
-  assert.throws(() => validateGranularClosures([
-    fixtureResult('vue:./virtual/list:named', 'named', ['@sectile/virtual/dist/masonry-layout.js'], 1),
-  ]), /retained sibling/u);
-  assert.throws(() => validateGranularClosures([
-    fixtureResult('vue:./temporal/calendar:named', 'named', ['@sectile/vue/dist/date-picker.js'], 1),
-  ]), /retained unrelated temporal/u);
-  assert.throws(() => validateGranularClosures([
-    fixtureResult('vue:./temporal/month-picker:named', 'named', ['@sectile/vue/dist/year-picker.js'], 1),
-  ]), /retained sibling Vue/u);
-  assert.throws(() => validateGranularClosures([
-    fixtureResult('vue:./temporal/year-picker:named', 'named', ['@sectile/dom/dist/temporal/date-time-picker.js'], 1),
-  ]), /retained sibling DOM/u);
+test('current public targets enforce temporal and virtual sibling isolation', async () => {
+  const manifests = new Map(await Promise.all(['virtual', 'vue', 'dom'].map(async (name) => [
+    name, JSON.parse(await readFile(resolve('packages', name, 'package.json'), 'utf8')),
+  ])));
+  const moduleFor = (name, subpath) => {
+    const manifest = manifests.get(name);
+    const target = manifest.exports[subpath]?.import;
+    assert.equal(typeof target, 'string', `${name}/${subpath}: runtime target required`);
+    return `${manifest.name}/${target.slice(2)}`;
+  };
+  const check = (id, modules) => validateGranularClosures([fixtureResult(id, 'named', modules, 1)]);
+  const strategies = { core: null, grid: 'track-grid-layout', list: 'linear-layout', masonry: 'masonry-layout', spatial: 'spatial-layout' };
+  for (const [layout, selected] of Object.entries(strategies)) {
+    const id = `vue:./virtual/${layout}:named`;
+    assert.doesNotThrow(() => check(id, selected === null ? [] : [moduleFor('virtual', `./${selected}`)]));
+    for (const sibling of Object.values(strategies).filter((value) => value !== null && value !== selected)) {
+      assert.throws(() => check(id, [moduleFor('virtual', `./${sibling}`)]), /retained sibling/u);
+    }
+  }
+  const pickerFamilies = ['date-picker', 'month-picker', 'year-picker', 'date-range-picker', 'month-range-picker', 'year-range-picker', 'date-time-picker', 'date-time-range-picker'];
+  const calendar = 'vue:./temporal/calendar:named';
+  assert.doesNotThrow(() => check(calendar, [moduleFor('vue', './temporal/calendar')]));
+  for (const name of ['vue', 'dom']) {
+    for (const family of [...pickerFamilies, 'date-field', 'time-field', 'date-time-field', 'range-calendar']) {
+      assert.throws(() => check(calendar, [moduleFor(name, `./temporal/${family}`)]), /retained unrelated temporal/u);
+    }
+  }
+  for (const selected of ['date-picker', 'month-picker', 'year-picker']) {
+    const id = `vue:./temporal/${selected}:named`;
+    assert.doesNotThrow(() => check(id, [moduleFor('vue', `./temporal/${selected}`)]));
+    for (const family of pickerFamilies.filter((value) => value !== selected)) {
+      assert.throws(() => check(id, [moduleFor('vue', `./temporal/${family}`)]), /retained sibling Vue/u);
+    }
+    const allowedDOM = new Set([selected, ...(selected === 'date-picker' ? [] : ['date-picker'])]);
+    for (const family of pickerFamilies) {
+      const modules = [moduleFor('dom', `./temporal/${family}`)];
+      if (allowedDOM.has(family)) assert.doesNotThrow(() => check(id, modules));
+      else assert.throws(() => check(id, modules), /retained sibling DOM/u);
+    }
+  }
 });
 
 test('base date picker factories tree-shake period capabilities in both bundlers', async () => {
