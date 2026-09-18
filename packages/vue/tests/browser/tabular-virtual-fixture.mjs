@@ -1,7 +1,7 @@
 import { createApp, h, nextTick, ref, shallowRef } from 'vue';
 import { createDataGridVirtualAdapter, createDataTableVirtualAdapter, reconcileDataGridVirtualAdapter } from '@sectile/tabular/virtual';
-import { useDataGrid, createDataGridComponents } from '../../.verification-dist/data-grid.js';
-import { useDataTable, createDataTableComponents } from '../../.verification-dist/data-table.js';
+import { useDataGrid, createDataGridComponents } from '../../.verification-dist/tabular/data-grid.js';
+import { useDataTable, createDataTableComponents } from '../../.verification-dist/tabular/data-table.js';
 import { VirtualList } from '../../.verification-dist/virtual-list.js';
 import { VirtualizerFooter, VirtualizerHeader, VirtualizerItem, VirtualizerRoot, VirtualizerSurface } from '../../.verification-dist/virtual-core.js';
 

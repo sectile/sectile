@@ -913,6 +913,36 @@ picker context, mounted element map, pending value token, connection lifecycle,
 field refs and provider capture. Module bodies and purity annotations are
 unchanged; only local module references and physical export targets move.
 
+## Vue Tabular ownership
+
+The three public `@sectile/vue/data-table`, `/data-grid`, and `/data-tree-grid`
+entrypoints resolve directly to their profiles under `src/tabular/`:
+
+```text
+tabular/
+  controller.ts      # shallow snapshots and semantic/refresher WeakMaps
+  context.ts         # provide/inject scopes and connection refs
+  source.ts          # request executor, cancellation and unmount lifecycle
+  schema.ts          # shared path, column, source-inference and ref types
+  components.ts      # controller-bound component-suite projection
+  parts.ts           # shared provider, root, row and bound-part scopes
+  data-table.ts
+  data-grid.ts
+  data-tree-grid.ts
+```
+
+Each profile keeps its public types, nominal schema symbol, host options,
+connection registry and component-suite cache. DataGrid and DataTreeGrid consume
+shared schema contracts directly. DataTable re-exports those contracts under
+their existing public names. Type-level path expansion retains its depth bound.
+
+The controller, injection and request owners preserve their existing function
+bodies and resource scopes. One source owns its executor, active abortable
+request and queued request. Mounted parts retain their disposers, while domain
+controllers continue to own portable transitions. Base Tabular profiles remain
+independent of the optional Virtual runtime. Role checks enforce lower-owner
+dependencies for type and value imports; public import paths stay unchanged.
+
 ## Moving or extracting an implementation
 
 Before editing, identify the owner, direct callers, public surfaces and any

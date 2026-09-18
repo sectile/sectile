@@ -3548,7 +3548,11 @@
         },
         "native-field": {
           "reason": "Shared native field lifecycle and Form participation below number and Temporal field profiles.",
-          "allows": ["native-field", "foundation", "form-control"]
+          "allows": [
+            "native-field",
+            "foundation",
+            "form-control"
+          ]
         },
         "temporal-capability": {
           "reason": "Lower typed DOM connection and family capability definition without Vue component ownership.",
@@ -3596,14 +3600,86 @@
             "form-control"
           ]
         },
-        "tabular": {
-          "reason": "vue tabular owns its named contracts and implementation; permitted imports are explicit.",
+        "tabular-controller": {
+          "reason": "One Vue snapshot bridge and semantic/refresher identity registry.",
           "allows": [
-            "controls",
+            "tabular-controller"
+          ]
+        },
+        "tabular-context": {
+          "reason": "Injection scopes and connection refs over the lower controller contract.",
+          "allows": [
+            "tabular-controller",
+            "tabular-context"
+          ]
+        },
+        "tabular-source": {
+          "reason": "One request executor, queued request and AbortController lifetime per source.",
+          "allows": [
+            "tabular-controller",
+            "tabular-source"
+          ]
+        },
+        "tabular-schema": {
+          "reason": "Shared compile-time path, column and source inference contracts below public profiles.",
+          "allows": [
+            "tabular-schema",
+            "tabular-source"
+          ]
+        },
+        "tabular-components": {
+          "reason": "Controller-bound component-suite projection and caller-owned weak cache.",
+          "allows": [
+            "tabular-components",
+            "tabular-controller"
+          ]
+        },
+        "tabular-parts": {
+          "reason": "Shared provider, connection and mounted-part disposal scope.",
+          "allows": [
             "foundation",
-            "presence",
-            "tabular",
-            "virtual"
+            "tabular-controller",
+            "tabular-context",
+            "tabular-parts"
+          ]
+        },
+        "tabular-table": {
+          "reason": "data-table composes lower Tabular owners without another public profile.",
+          "allows": [
+            "foundation",
+            "tabular-schema",
+            "tabular-controller",
+            "tabular-context",
+            "tabular-source",
+            "tabular-components",
+            "tabular-parts",
+            "tabular-table"
+          ]
+        },
+        "tabular-grid": {
+          "reason": "data-grid composes lower Tabular owners without another public profile.",
+          "allows": [
+            "foundation",
+            "tabular-schema",
+            "tabular-controller",
+            "tabular-context",
+            "tabular-source",
+            "tabular-components",
+            "tabular-parts",
+            "tabular-grid"
+          ]
+        },
+        "tabular-tree-grid": {
+          "reason": "data-tree-grid composes lower Tabular owners without another public profile.",
+          "allows": [
+            "foundation",
+            "tabular-schema",
+            "tabular-controller",
+            "tabular-context",
+            "tabular-source",
+            "tabular-components",
+            "tabular-parts",
+            "tabular-tree-grid"
           ]
         },
         "virtual": {
@@ -3637,7 +3713,9 @@
             "foundation",
             "overlays",
             "presence",
-            "tabular",
+            "tabular-table",
+            "tabular-grid",
+            "tabular-tree-grid",
             "temporal-profiles",
             "temporal-fields",
             "temporal-provider",
@@ -3658,7 +3736,9 @@
             "overlays",
             "presence",
             "reference",
-            "tabular",
+            "tabular-table",
+            "tabular-grid",
+            "tabular-tree-grid",
             "temporal-profiles",
             "temporal-fields",
             "temporal-provider",
@@ -3709,18 +3789,6 @@
         },
         "src/combobox.ts": {
           "role": "controls",
-          "kind": "owner"
-        },
-        "src/data-grid.ts": {
-          "role": "tabular",
-          "kind": "owner"
-        },
-        "src/data-table.ts": {
-          "role": "tabular",
-          "kind": "owner"
-        },
-        "src/data-tree-grid.ts": {
-          "role": "tabular",
           "kind": "owner"
         },
         "src/temporal/date-field.ts": {
@@ -3889,18 +3957,6 @@
         },
         "src/internal/tabs-context.ts": {
           "role": "controls",
-          "kind": "owner"
-        },
-        "src/internal/tabular-components.ts": {
-          "role": "tabular",
-          "kind": "owner"
-        },
-        "src/internal/tabular-parts.ts": {
-          "role": "tabular",
-          "kind": "owner"
-        },
-        "src/internal/tabular-profile.ts": {
-          "role": "tabular",
           "kind": "owner"
         },
         "src/internal/virtual-collection.ts": {
@@ -4141,6 +4197,42 @@
         },
         "src/form/parts.ts": {
           "role": "form-parts",
+          "kind": "owner"
+        },
+        "src/tabular/controller.ts": {
+          "role": "tabular-controller",
+          "kind": "owner"
+        },
+        "src/tabular/context.ts": {
+          "role": "tabular-context",
+          "kind": "owner"
+        },
+        "src/tabular/source.ts": {
+          "role": "tabular-source",
+          "kind": "owner"
+        },
+        "src/tabular/schema.ts": {
+          "role": "tabular-schema",
+          "kind": "owner"
+        },
+        "src/tabular/data-table.ts": {
+          "role": "tabular-table",
+          "kind": "owner"
+        },
+        "src/tabular/data-grid.ts": {
+          "role": "tabular-grid",
+          "kind": "owner"
+        },
+        "src/tabular/data-tree-grid.ts": {
+          "role": "tabular-tree-grid",
+          "kind": "owner"
+        },
+        "src/tabular/parts.ts": {
+          "role": "tabular-parts",
+          "kind": "owner"
+        },
+        "src/tabular/components.ts": {
+          "role": "tabular-components",
           "kind": "owner"
         }
       }

@@ -202,19 +202,19 @@
       "default": "./dist/grid.js"
     },
     "./data-table": {
-      "types": "./dist/data-table.d.ts",
-      "import": "./dist/data-table.js",
-      "default": "./dist/data-table.js"
+      "types": "./dist/tabular/data-table.d.ts",
+      "import": "./dist/tabular/data-table.js",
+      "default": "./dist/tabular/data-table.js"
     },
     "./data-grid": {
-      "types": "./dist/data-grid.d.ts",
-      "import": "./dist/data-grid.js",
-      "default": "./dist/data-grid.js"
+      "types": "./dist/tabular/data-grid.d.ts",
+      "import": "./dist/tabular/data-grid.js",
+      "default": "./dist/tabular/data-grid.js"
     },
     "./data-tree-grid": {
-      "types": "./dist/data-tree-grid.d.ts",
-      "import": "./dist/data-tree-grid.js",
-      "default": "./dist/data-tree-grid.js"
+      "types": "./dist/tabular/data-tree-grid.d.ts",
+      "import": "./dist/tabular/data-tree-grid.js",
+      "default": "./dist/tabular/data-tree-grid.js"
     },
     "./tree-grid": {
       "types": "./dist/tree-grid.d.ts",

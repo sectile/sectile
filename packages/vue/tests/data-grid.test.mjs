@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
-import { useDataGrid, createDataGridComponents } from '../.verification-dist/data-grid.js';
+import { useDataGrid, createDataGridComponents } from '../.verification-dist/tabular/data-grid.js';
 
 const columns = [{ id: 'name', capabilities: ['edit'] }];
 const source = async (request) => ({ ...request, viewRevision: 1, matchingLeafCount: { kind: 'known', value: 0 }, visibleRowCount: { kind: 'known', value: 0 }, rows: [], columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [] });

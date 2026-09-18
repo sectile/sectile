@@ -70,9 +70,9 @@ test('Tabular is exposed only through its optional subpath', async () => {
   assert.equal(rootModule.useDataTreeGrid, undefined);
 
   assert.equal(vuePackage.exports['./tabular'], undefined);
-  assert.equal(typeof (await import('../.verification-dist/data-table.js')).useDataTable, 'function');
-  assert.equal(typeof (await import('../.verification-dist/data-grid.js')).useDataGrid, 'function');
-  assert.equal(typeof (await import('../.verification-dist/data-tree-grid.js')).useDataTreeGrid, 'function');
+  assert.equal(typeof (await import('../.verification-dist/tabular/data-table.js')).useDataTable, 'function');
+  assert.equal(typeof (await import('../.verification-dist/tabular/data-grid.js')).useDataGrid, 'function');
+  assert.equal(typeof (await import('../.verification-dist/tabular/data-tree-grid.js')).useDataTreeGrid, 'function');
 });
 
 test('virtualization is exposed only through its optional subpath', async () => {
@@ -108,10 +108,12 @@ test('temporal controls are exposed only through their optional subpath', async 
 });
 
 test('base Tabular profiles are complete and remain Virtual-free', async () => {
+  const vuePackage = await readPackage('../package.json');
   for (const profile of ['data-table', 'data-grid', 'data-tree-grid']) {
-    const source = await readFile(new URL(`../.verification-dist/${profile}.js`, import.meta.url), 'utf8');
+    const target = vuePackage.exports[`./${profile}`].import.replace('./dist/', '../.verification-dist/');
+    const source = await readFile(new URL(target, import.meta.url), 'utf8');
     assert.doesNotMatch(source, /@sectile\/virtual|\.\/virtual\.js/);
-    const module = await import(`../.verification-dist/${profile}.js`);
+    const module = await import(target);
     assert.equal(module[`${profile === 'data-table' ? 'DataTable' : profile === 'data-grid' ? 'DataGrid' : 'DataTreeGrid'}Loading`], undefined);
     assert.equal(module[profile === 'data-table' ? 'useDataTableSource' : profile === 'data-grid' ? 'useDataGridSource' : 'useDataTreeGridSource'], undefined);
   }

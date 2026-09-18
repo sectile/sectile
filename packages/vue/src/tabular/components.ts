@@ -7,7 +7,7 @@ import {
   type VNodeChild,
   type VNodeProps,
 } from 'vue';
-import type { VueProfileController } from './tabular-profile.js';
+import type { VueProfileController } from './controller.js';
 
 export type TabularPublicProps<Props> = Props & VNodeProps & AllowedComponentProps & ComponentCustomProps;
 

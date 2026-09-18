@@ -1,3 +1,5 @@
+import type { DataTableColumnID, DataTableGroupCellsFromSource, DataTableLeafCellsFromSource, DataTableReactiveInput, DataTableWritableRef, DataTableSourceResponse } from './schema.js';
+export type { DataTableFieldPath, DataTableColumnID, DataTableCellValue, DataTableReactiveInput, DataTableWritableRef, DataTableLeafCellsFromSource, DataTableGroupCellsFromSource } from './schema.js';
 import {
   getCurrentScope,
   onScopeDispose,
@@ -6,7 +8,6 @@ import {
   type Component,
   type ComputedRef,
   type InjectionKey,
-  type Ref,
 } from 'vue';
 import {
   connectDataTable,
@@ -44,66 +45,18 @@ import type {
   TabularViewResponse,
   TabularWireValue,
 } from '@sectile/tabular';
-import type { PrimitiveAs } from './primitive.js';
-import { createTabularParts, type HostConnection } from './internal/tabular-parts.js';
+import type { PrimitiveAs } from '../primitive.js';
+import { createTabularParts, type HostConnection } from './parts.js';
 import {
   createTabularComponentSuite,
   type TabularBodyComponent,
   type TabularComponent,
-} from './internal/tabular-components.js';
-import {
-  controlledValues,
-  aliasVueProfileController,
-  createVueProfileController,
-  semanticController,
-  useProfile,
-  useProfileSource,
-  type ProfileContext,
-  type SourceResolver,
-  type SourceReturn,
-  type SourceStatus,
-  type VueProfileController,
-} from './internal/tabular-profile.js';
+} from './components.js';
+import { controlledValues, aliasVueProfileController, createVueProfileController, semanticController, type VueProfileController } from './controller.js';
+import { useProfile, type ProfileContext } from './context.js';
+import { useProfileSource, type SourceResolver, type SourceReturn, type SourceStatus } from './source.js';
 
-type DataTablePathDepth = readonly unknown[];
-type DataTableNextDepth<Depth extends DataTablePathDepth> = readonly [...Depth, unknown];
-type DataTableNestedPath<Value, Depth extends DataTablePathDepth> =
-  Value extends readonly unknown[] ? DataTableArrayPath<Value, Depth>
-    : Value extends object ? `.${DataTableObjectPath<Value, Depth>}`
-      : never;
-type DataTableTupleIndexes<Value extends readonly unknown[]> = Exclude<keyof Value, keyof readonly unknown[]> & `${number}`;
-type DataTableArrayPath<Value extends readonly unknown[], Depth extends DataTablePathDepth> =
-  Depth['length'] extends 8 ? never
-    : number extends Value['length']
-      ? `[${number}]` | `[${number}]${DataTableNestedPath<Value[number], DataTableNextDepth<Depth>>}`
-      : { [Index in DataTableTupleIndexes<Value>]: `[${Index}]` | `[${Index}]${DataTableNestedPath<Value[Index & keyof Value], DataTableNextDepth<Depth>>}` }[DataTableTupleIndexes<Value>];
-type DataTableObjectPath<Value extends object, Depth extends DataTablePathDepth> =
-  Depth['length'] extends 8 ? never
-    : string extends keyof Value ? string
-      : { [Key in Extract<keyof Value, string>]: Key | `${Key}${DataTableNestedPath<Value[Key], DataTableNextDepth<Depth>>}` }[Extract<keyof Value, string>];
-type DataTableResolveArrayRest<Value, Rest extends string> =
-  Rest extends `[${number}]${infer Tail}`
-    ? Value extends readonly (infer Item)[]
-      ? Tail extends '' ? Item : DataTableResolveArrayRest<Item, Tail>
-      : never
-    : never;
-type DataTableResolveSegment<Value, Segment extends string> =
-  Segment extends `${infer Key}[${infer Index}]${infer Rest}`
-    ? Key extends keyof Value
-      ? Index extends `${number}` ? DataTableResolveArrayRest<Value[Key], `[${Index}]${Rest}`> : never
-      : never
-    : Segment extends keyof Value ? Value[Segment] : never;
-type DataTableResolvePath<Value, Path extends string> =
-  Path extends keyof Value ? Value[Path]
-    : Path extends `${infer Segment}.${infer Rest}`
-      ? DataTableResolvePath<DataTableResolveSegment<Value, Segment>, Rest>
-      : DataTableResolveSegment<Value, Path>;
 
-export type DataTableFieldPath<Cells extends object> = DataTableObjectPath<Cells, readonly []>;
-export type DataTableColumnID<LeafCells extends object, GroupCells extends object = LeafCells> = DataTableFieldPath<LeafCells> | DataTableFieldPath<GroupCells>;
-export type DataTableCellValue<Cells extends object, Column extends string> = Extract<DataTableResolvePath<Cells, Column>, TabularWireValue> extends never ? TabularWireValue : Extract<DataTableResolvePath<Cells, Column>, TabularWireValue>;
-export type DataTableReactiveInput<T> = T | Ref<T> | (() => T);
-export interface DataTableWritableRef<T> { value: T }
 export type DataTableQuery = TabularQuery;
 export type DataTableViewRow<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = TabularRow<LeafCells, GroupCells>;
 export type DataTableView<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = TabularView<DataTableViewRow<LeafCells, GroupCells>>;
@@ -132,13 +85,6 @@ export type DataTableExpansionChangeHandler = (expansion: readonly DataTableGrou
 export type DataTableColumnSizeChangeHandler = (state: DataTableColumnSizeState) => void;
 
 export type DataTableSourceResolver<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = (request: TabularRequest, context: { readonly signal: AbortSignal }) => DataTableViewResponse<LeafCells, GroupCells> | Promise<DataTableViewResponse<LeafCells, GroupCells>>;
-type DataTableSourceResponse<Source extends SourceResolver> = Awaited<ReturnType<Source>>;
-type DataTableSourceRows<Source extends SourceResolver> = DataTableSourceResponse<Source> extends { readonly rows: readonly (infer Row)[] } ? Row : never;
-type DataTableSourceCells<Source extends SourceResolver, Kind extends 'leaf' | 'group'> = Extract<DataTableSourceRows<Source>, { readonly kind: Kind }> extends infer Row
-  ? Row extends { readonly cells: infer Cells extends object } ? Cells : never
-  : never;
-export type DataTableLeafCellsFromSource<Source extends SourceResolver> = [DataTableSourceCells<Source, 'leaf'>] extends [never] ? TabularCellRecord : DataTableSourceCells<Source, 'leaf'>;
-export type DataTableGroupCellsFromSource<Source extends SourceResolver> = [DataTableSourceCells<Source, 'group'>] extends [never] ? DataTableLeafCellsFromSource<Source> : DataTableSourceCells<Source, 'group'>;
 
 export interface UseDataTableOptions<Source extends SourceResolver = DataTableSourceResolver> {
   readonly source: Source;

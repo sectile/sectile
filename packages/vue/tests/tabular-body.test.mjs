@@ -8,7 +8,7 @@ const { createApp, h, nextTick } = await import('vue');
 const {
   useDataTable,
   createDataTableComponents,
-} = await import('../.verification-dist/data-table.js');
+} = await import('../.verification-dist/tabular/data-table.js');
 const { CheckboxIndicator, CheckboxRoot } = await import('../.verification-dist/checkbox.js');
 
 const columns = [{ id: 'name' }, { id: 'role' }];

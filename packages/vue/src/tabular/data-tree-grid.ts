@@ -15,11 +15,13 @@ import {
   type DataTreeGridUpdate,
 } from '@sectile/tabular/data-tree-grid';
 import type { TabularAcceptedViewState, TabularAccessState, TabularCellRecord, TabularColumnState, TabularError, TabularGroupID, TabularHeaderNodeID, TabularLimits, TabularQuery, TabularRequest, TabularRequestState, TabularResult, TabularRow, TabularRowID, TabularRowSelection, TabularView, TabularViewResponse, TabularWireValue } from '@sectile/tabular';
-import type { PrimitiveAs } from './primitive.js';
-import type { DataTableColumnID, DataTableGroupCellsFromSource, DataTableLeafCellsFromSource, DataTableReactiveInput, DataTableWritableRef } from './data-table.js';
-import { createTabularComponentSuite, type TabularBodyComponent, type TabularComponent } from './internal/tabular-components.js';
-import { createTabularParts, type HostConnection } from './internal/tabular-parts.js';
-import { aliasVueProfileController, controlledValues, createVueProfileController, useProfile, useProfileSource, type ProfileContext, type SourceResolver, type SourceReturn, type SourceStatus, type VueProfileController } from './internal/tabular-profile.js';
+import type { PrimitiveAs } from '../primitive.js';
+import type { DataTableColumnID, DataTableGroupCellsFromSource, DataTableLeafCellsFromSource, DataTableReactiveInput, DataTableWritableRef } from './schema.js';
+import { createTabularComponentSuite, type TabularBodyComponent, type TabularComponent } from './components.js';
+import { createTabularParts, type HostConnection } from './parts.js';
+import { aliasVueProfileController, controlledValues, createVueProfileController, type VueProfileController } from './controller.js';
+import { useProfile, type ProfileContext } from './context.js';
+import { useProfileSource, type SourceResolver, type SourceReturn, type SourceStatus } from './source.js';
 
 export type DataTreeGridQuery = TabularQuery; export type DataTreeGridViewRow<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = TabularRow<LeafCells, GroupCells>; export type DataTreeGridView<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = TabularView<DataTreeGridViewRow<LeafCells, GroupCells>>; export type DataTreeGridViewResponse<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = TabularViewResponse<DataTreeGridViewRow<LeafCells, GroupCells>>;
 export type DataTreeGridRowSelection = TabularRowSelection; export type DataTreeGridGroupID = TabularGroupID; export type DataTreeGridRowID = TabularRowID;

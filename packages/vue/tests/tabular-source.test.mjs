@@ -5,7 +5,7 @@ import { createTestWindow } from './happy-dom.mjs';
 const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, { window: browserWindow, document: browserWindow.document, Node: browserWindow.Node, Element: browserWindow.Element, HTMLElement: browserWindow.HTMLElement, HTMLTableElement: browserWindow.HTMLTableElement, HTMLTableCellElement: browserWindow.HTMLTableCellElement, HTMLInputElement: browserWindow.HTMLInputElement, HTMLSelectElement: browserWindow.HTMLSelectElement, HTMLTextAreaElement: browserWindow.HTMLTextAreaElement, SVGElement: browserWindow.SVGElement, Event: browserWindow.Event, MouseEvent: browserWindow.MouseEvent, KeyboardEvent: browserWindow.KeyboardEvent, AbortController: browserWindow.AbortController, MutationObserver: browserWindow.MutationObserver, ResizeObserver: browserWindow.ResizeObserver });
 const { createApp, h, nextTick } = await import('vue');
-const { useDataTable, createDataTableComponents } = await import('../.verification-dist/data-table.js');
+const { useDataTable, createDataTableComponents } = await import('../.verification-dist/tabular/data-table.js');
 
 const columns = [{ id: 'name', capabilities: ['edit'] }];
 const response = (request, name = 'Ada') => ({ protocolVersion: 1, requestID: request.requestID, sourceGeneration: request.sourceGeneration, queryRevision: request.queryRevision, expansionRevision: request.expansionRevision, viewRevision: 1, access: request.access, matchingLeafCount: { kind: 'known', value: 1 }, visibleRowCount: { kind: 'known', value: 1 }, rows: [{ kind: 'leaf', id: 'r1', cells: { name } }], columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [] });

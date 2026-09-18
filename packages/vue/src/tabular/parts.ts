@@ -16,14 +16,8 @@ import {
 } from 'vue';
 import type { TabularCellAddress, TabularColumnID, TabularGroupID, TabularHeaderNodeID, TabularRow, TabularRowID } from '@sectile/tabular';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
-import {
-  provideProfile,
-  refreshVueProfileController,
-  stateOf,
-  useProfile,
-  type ProfileContext,
-  type VueProfileController,
-} from './tabular-profile.js';
+import { provideProfile, useProfile, type ProfileContext } from './context.js';
+import { refreshVueProfileController, stateOf, type VueProfileController } from './controller.js';
 
 export interface HostConnection {
   disconnect(): void;

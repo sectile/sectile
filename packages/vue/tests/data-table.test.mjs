@@ -6,7 +6,7 @@ import {
   useDataTable,
   createDataTableComponents,
   useDataTableContext,
-} from '../.verification-dist/data-table.js';
+} from '../.verification-dist/tabular/data-table.js';
 
 const columns = [{ id: 'name', label: 'Name', capabilities: ['sort', 'edit'] }];
 const source = async (request) => ({ ...request, viewRevision: 1, matchingLeafCount: { kind: 'known', value: 0 }, visibleRowCount: { kind: 'known', value: 0 }, rows: [], columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [] });

@@ -75,7 +75,7 @@ for (const [profile, profileContract] of Object.entries(manifest.profiles ?? {})
       ? './dist/tabular'
       : packageName === 'tabular'
         ? `./dist/profiles/${profile === 'data-table' ? 'table' : profile}`
-        : `./dist/${profile}`;
+        : `./dist/tabular/${profile}`;
     assert.deepEqual(target, { types: `${expectedBase}.d.ts`, import: `${expectedBase}.js`, default: `${expectedBase}.js` });
     const [module, rootModule, declaration, rootDeclaration] = await Promise.all([
       import(pathToFileURL(resolve(packageRoot, target.import)).href),
