@@ -263,7 +263,7 @@ function applySetMark(
       Object.freeze({
         type: 'text',
         text: node.text,
-        marks: applyMark(node.marks, operation.mark, operation.enabled),
+        marks: applyTextMark(node.marks, operation.mark, operation.enabled),
       }),
     );
   }
@@ -724,7 +724,7 @@ function canonicalizeInline(
   return output;
 }
 
-function applyMark(
+export function applyTextMark(
   marks: readonly TextMark[],
   mark: TextMark,
   enabled: boolean,

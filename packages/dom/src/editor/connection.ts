@@ -333,6 +333,14 @@ class DOMEditorConnection implements EditorConnection {
         return;
       }
 
+      if (event.kind === 'typing-marks') {
+        const rendered = this.#authoringSurfaces === null
+          ? this.refresh()
+          : this.#renderSnapshot(event.current, this.#authoringSurfaces);
+        if (!rendered.ok) this.#report(rendered.error);
+        return;
+      }
+
       if (event.selectionChanged) {
         this.setSelection(event.current.selection);
       }

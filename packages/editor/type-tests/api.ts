@@ -20,7 +20,7 @@ import {
   baseRef,
   compileContentSchema,
 } from '@sectile/content/schema';
-import type { PortableContentDocument } from '@sectile/content';
+import type { PortableContentDocument, TextMark } from '@sectile/content';
 
 const compiled = compileContentSchema({
   id: 'types/editor',
@@ -40,6 +40,7 @@ const append = defineEditorAction({
   id: 'types/append',
   historyIntent: 'typing',
   run(context, args: { readonly id: string; readonly text: string }) {
+    context.view.typingMarks satisfies readonly TextMark[];
     context.apply({
       type: 'replace-inline',
       surface: { type: 'node', id: args.id },
@@ -102,7 +103,13 @@ if (!query.ok) throw new Error(query.error.message);
 query.value satisfies number;
 
 const selection: EditorSelection | null = session.getSnapshot().selection;
+const typingMarks: readonly TextMark[] = session.getSnapshot().typingMarks;
 void selection;
+void typingMarks;
+
+session.setTypingMark('strong', true);
+session.setTypingMark('emphasis', false);
+session.setTypingMark('code', true);
 
 const definitions: readonly ComponentAuthoringDefinition[] = [];
 const authoring = compileAuthoringRegistry(compiled.value, definitions);

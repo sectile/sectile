@@ -183,6 +183,62 @@ test('Vue Editor is SSR-safe, hydrates stable anatomy, and projects Editor updat
   }
 });
 
+
+
+test('Vue Editor slot snapshot updates when collapsed typing marks change', async () => {
+  const fixture = createFixture('hello', 5);
+  const component = defineComponent({
+    setup: () => () => h(
+      EditorRoot,
+      {
+        editor: fixture.editor,
+        authoring: fixture.authoring,
+      },
+      {
+        default: ({ snapshot }) => [
+          h(
+            EditorInlineSurface,
+            {
+              as: 'p',
+              surface: { type: 'node', id: 'p1' },
+            },
+            { default: () => 'hello' },
+          ),
+          h(
+            'output',
+            { id: 'typing-marks' },
+            snapshot.typingMarks.map((mark) => mark.type).join(','),
+          ),
+        ],
+      },
+    ),
+  });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp(component);
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+    assert.equal(host.querySelector('#typing-marks')?.textContent, '');
+
+    const enabled = fixture.editor.setTypingMark('strong', true);
+    assert.equal(enabled.ok, true);
+    await nextTick();
+    await nextTick();
+    assert.equal(host.querySelector('#typing-marks')?.textContent, 'strong');
+
+    const disabled = fixture.editor.setTypingMark('strong', false);
+    assert.equal(disabled.ok, true);
+    await nextTick();
+    await nextTick();
+    assert.equal(host.querySelector('#typing-marks')?.textContent, '');
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
 test('Vue Editor reconnects when the Editor session prop changes and retires the old connection', async () => {
   const first = createFixture('first');
   const second = createFixture('second');

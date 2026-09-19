@@ -15,6 +15,7 @@ import {
   type DocumentIndex,
 } from '@sectile/content/query';
 import {
+  applyTextMark,
   transformDocument,
   type ContentOperation,
 } from '@sectile/content/transform';
@@ -84,4 +85,6 @@ prepared.value satisfies PreparedContentState;
 declare const fragment: PortableContentFragment;
 void fragment;
 declare const mark: TextMark;
+const marked = applyTextMark([], mark, true);
+marked satisfies readonly TextMark[];
 void mark;

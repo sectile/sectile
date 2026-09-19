@@ -1,5 +1,5 @@
 import { failResult, okResult, type Result } from '@sectile/core/result';
-import type { NodeID, PortableContentDocument } from '@sectile/content/document';
+import type { NodeID, PortableContentDocument, TextMark } from '@sectile/content/document';
 import type { ContentLimits } from '@sectile/content/limits';
 import type { CompiledContentSchema } from '@sectile/content/schema';
 import type { ContentOperation } from '@sectile/content/transform';
@@ -14,6 +14,7 @@ export interface EditorActionSessionView {
   readonly schema: CompiledContentSchema;
   readonly contentLimits: ContentLimits;
   readonly selection: EditorSelection | null;
+  readonly typingMarks: readonly TextMark[];
   readonly revision: number;
   readonly configEpoch: number;
   readonly disabled: boolean;

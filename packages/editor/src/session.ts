@@ -15,6 +15,7 @@ import type {
   InlineContentFragment,
   NodeID,
   PortableContentDocument,
+  TextMark,
 } from '@sectile/content/document';
 import type { ContentErrorCode } from '@sectile/content/error';
 import {
@@ -36,6 +37,7 @@ import type { InlineSurface } from '@sectile/content/position';
 import type { DocumentIndex } from '@sectile/content/query';
 import type { CompiledContentSchema } from '@sectile/content/schema';
 import {
+  applyTextMark,
   transformDocument,
   type ContentOperation,
 } from '@sectile/content/transform';
@@ -60,6 +62,7 @@ import {
   type EditorHistoryState,
 } from './history.js';
 import {
+  isCollapsedSelection,
   mapEditorSelection,
   resolveEditorTypingMarks,
   sameEditorSelection,
@@ -98,12 +101,15 @@ export interface EditorApplicationPolicy {
   allows(request: EditorMutationGuardRequest): boolean;
 }
 
+export type EditorTypingMarkType = 'strong' | 'emphasis' | 'code';
+
 export interface EditorSessionSnapshot {
   readonly document: PortableContentDocument;
   readonly schema: CompiledContentSchema;
   readonly contentLimits: ContentLimits;
   readonly index: DocumentIndex;
   readonly selection: EditorSelection | null;
+  readonly typingMarks: readonly TextMark[];
   readonly revision: number;
   readonly configEpoch: number;
   readonly interaction: InteractionState;
@@ -117,6 +123,7 @@ export type EditorSessionEventKind =
   | 'transaction'
   | 'text-edit'
   | 'selection'
+  | 'typing-marks'
   | 'undo'
   | 'redo'
   | 'replace-document'
@@ -142,6 +149,10 @@ export interface EditorSessionUpdate {
 export interface EditorExpectedState {
   readonly expectedRevision?: number;
   readonly expectedConfigEpoch?: number;
+}
+
+export interface EditorTypingMarkOptions extends EditorExpectedState {
+  readonly origin?: EditorOrigin;
 }
 
 export interface EditorTransactionRequest extends EditorExpectedState {
@@ -224,6 +235,11 @@ export interface EditorSession {
   setSelection(
     selection: EditorSelection | null,
     options?: EditorExpectedState & { readonly origin?: EditorOrigin },
+  ): Result<EditorSessionUpdate, EditorSessionErrorCode>;
+  setTypingMark(
+    type: EditorTypingMarkType,
+    enabled: boolean,
+    options?: EditorTypingMarkOptions,
   ): Result<EditorSessionUpdate, EditorSessionErrorCode>;
   transact(
     request: EditorTransactionRequest,
@@ -318,10 +334,16 @@ export function createEditorSession(
     preparedResult.value.index,
   );
   if (!initialSelection.ok) return initialSelection;
+  const initialTypingMarks = resolveSessionTypingMarks(
+    preparedResult.value.index,
+    initialSelection.value,
+  );
+  if (!initialTypingMarks.ok) return initialTypingMarks;
 
   let schema = options.schema;
   let prepared = preparedResult.value;
   let selection = initialSelection.value;
+  let typingMarks = initialTypingMarks.value;
   let interaction = interactionResult.value;
   let history = historyResult.value;
   let profile = options.profile ?? null;
@@ -340,6 +362,7 @@ export function createEditorSession(
     contentLimits,
     index: prepared.index,
     selection,
+    typingMarks,
     revision,
     configEpoch,
     interaction,
@@ -559,6 +582,7 @@ export function createEditorSession(
     origin: EditorOrigin,
     documentChanged: boolean,
     selectionChanged: boolean,
+    restoredTypingMarks?: readonly TextMark[],
   ): Result<EditorSessionUpdate, EditorSessionErrorCode> => {
     if (!documentChanged && !selectionChanged) {
       return okResult(Object.freeze({
@@ -569,12 +593,18 @@ export function createEditorSession(
       }));
     }
 
+    const nextTypingMarks = restoredTypingMarks === undefined
+      ? resolveSessionTypingMarks(nextPrepared.index, nextSelection)
+      : okResult(restoredTypingMarks);
+    if (!nextTypingMarks.ok) return nextTypingMarks;
+
     const advanced = nextRevision();
     if (!advanced.ok) return advanced;
     const previous = getSnapshot();
 
     prepared = nextPrepared;
     selection = nextSelection;
+    typingMarks = nextTypingMarks.value;
     history = nextHistory;
     revision = advanced.value;
 
@@ -618,6 +648,68 @@ export function createEditorSession(
       false,
       selectionChanged,
     );
+  };
+
+  const setTypingMark = (
+    type: EditorTypingMarkType,
+    enabled: boolean,
+    options: EditorTypingMarkOptions = {},
+  ): Result<EditorSessionUpdate, EditorSessionErrorCode> => {
+    const lifecycle = checkMutationLifecycle();
+    if (!lifecycle.ok) return lifecycle;
+    const state = checkExpected(options);
+    if (!state.ok) return state;
+    const permitted = requireInteraction(interaction, 'mutate');
+    if (!permitted.ok) return permitted;
+    if (!isEditorTypingMarkType(type) || typeof enabled !== 'boolean') {
+      return failResult(
+        'transition-rejection',
+        'editor-typing-mark-invalid',
+        'Typing marks must use a supported mark type and boolean enabled state.',
+        { type, enabled },
+      );
+    }
+    if (
+      selection === null
+      || !isCollapsedSelection(selection)
+      || selection.anchor.type !== 'inline'
+    ) {
+      return failResult(
+        'transition-rejection',
+        'editor-selection-invalid',
+        'Typing marks require a collapsed inline Editor selection.',
+      );
+    }
+
+    const nextTypingMarks = applyTextMark(
+      typingMarks,
+      Object.freeze({ type }),
+      enabled,
+    );
+    if (sameTextMarks(typingMarks, nextTypingMarks)) {
+      return okResult(Object.freeze({
+        snapshot: getSnapshot(),
+        documentChanged: false,
+        selectionChanged: false,
+        observerErrors: Object.freeze([]),
+      }));
+    }
+
+    const advanced = nextRevision();
+    if (!advanced.ok) return advanced;
+    const previous = getSnapshot();
+
+    typingMarks = nextTypingMarks;
+    history = breakEditorHistoryCoalescing(history);
+    revision = advanced.value;
+
+    return okResult(publish(
+      previous,
+      'typing-marks',
+      options.origin ?? 'human',
+      false,
+      false,
+    ));
   };
 
   const transactInternal = (
@@ -673,6 +765,11 @@ export function createEditorSession(
       nextPrepared.index,
     );
     if (!validSelection.ok) return validSelection;
+    const nextTypingMarks = resolveSessionTypingMarks(
+      nextPrepared.index,
+      validSelection.value,
+    );
+    if (!nextTypingMarks.ok) return nextTypingMarks;
 
     const origin = request.origin ?? 'human';
     const intent = request.historyIntent ?? 'command';
@@ -701,6 +798,8 @@ export function createEditorSession(
         afterDocument: nextPrepared.document,
         beforeSelection: selection,
         afterSelection: validSelection.value,
+        beforeTypingMarks: typingMarks,
+        afterTypingMarks: nextTypingMarks.value,
         intent,
         coalesceKey,
       }));
@@ -716,6 +815,7 @@ export function createEditorSession(
       origin,
       documentChanged,
       selectionChanged,
+      nextTypingMarks.value,
     );
   };
 
@@ -752,6 +852,11 @@ export function createEditorSession(
       edited.value.state.index,
     );
     if (!validSelection.ok) return validSelection;
+    const nextTypingMarks = resolveSessionTypingMarks(
+      edited.value.state.index,
+      validSelection.value,
+    );
+    if (!nextTypingMarks.ok) return nextTypingMarks;
 
     const origin = request.origin ?? 'human';
     const intent = request.historyIntent ?? 'typing';
@@ -818,6 +923,8 @@ export function createEditorSession(
         afterDocument: edited.value.state.document,
         beforeSelection: selection,
         afterSelection: validSelection.value,
+        beforeTypingMarks: typingMarks,
+        afterTypingMarks: nextTypingMarks.value,
         intent,
         coalesceKey,
       }));
@@ -833,12 +940,23 @@ export function createEditorSession(
       origin,
       documentChanged,
       selectionChanged,
+      nextTypingMarks.value,
     );
   };
 
   const replaceInlineText = (
     request: EditorInlineTextEditRequest,
   ): Result<EditorSessionUpdate, EditorSessionErrorCode> => {
+    const marks = request.text.length === 0
+      ? okResult(Object.freeze([]))
+      : typingMarksForInlineEdit(
+          prepared.index,
+          selection,
+          typingMarks,
+          request,
+        );
+    if (!marks.ok) return marks;
+
     if (request.surface.type === 'node') {
       const source = prepared.index.getNode(request.surface.id);
       if (
@@ -851,40 +969,35 @@ export function createEditorSession(
           )
         )
       ) {
-        return replaceText({
-          id: request.surface.id,
-          from: request.from,
-          to: request.to,
-          text: request.text,
-          ...(Object.hasOwn(request, 'selection')
-            ? { selection: request.selection ?? null }
-            : {}),
-          ...(request.origin === undefined ? {} : { origin: request.origin }),
-          ...(request.historyIntent === undefined
-            ? {}
-            : { historyIntent: request.historyIntent }),
-          ...(request.expectedRevision === undefined
-            ? {}
-            : { expectedRevision: request.expectedRevision }),
-          ...(request.expectedConfigEpoch === undefined
-            ? {}
-            : { expectedConfigEpoch: request.expectedConfigEpoch }),
-        });
+        const sourceMarks = source.children[0]?.type === 'text'
+          ? source.children[0].marks
+          : Object.freeze([]);
+        if (
+          request.text.length === 0
+          || sameTextMarks(sourceMarks, marks.value)
+        ) {
+          return replaceText({
+            id: request.surface.id,
+            from: request.from,
+            to: request.to,
+            text: request.text,
+            ...(Object.hasOwn(request, 'selection')
+              ? { selection: request.selection ?? null }
+              : {}),
+            ...(request.origin === undefined ? {} : { origin: request.origin }),
+            ...(request.historyIntent === undefined
+              ? {}
+              : { historyIntent: request.historyIntent }),
+            ...(request.expectedRevision === undefined
+              ? {}
+              : { expectedRevision: request.expectedRevision }),
+            ...(request.expectedConfigEpoch === undefined
+              ? {}
+              : { expectedConfigEpoch: request.expectedConfigEpoch }),
+          });
+        }
       }
     }
-
-    const marks = request.text.length === 0
-      ? okResult(Object.freeze([]))
-      : resolveEditorTypingMarks(
-          prepared.index,
-          Object.freeze({
-            type: 'inline',
-            surface: request.surface,
-            offset: request.from,
-            affinity: request.affinity ?? 'after',
-          }),
-        );
-    if (!marks.ok) return marks;
 
     const operation: ContentOperation = Object.freeze({
       type: 'replace-inline',
@@ -1030,6 +1143,7 @@ export function createEditorSession(
       origin,
       !isEqual(prepared.document, nextPrepared.document),
       !sameEditorSelection(selection, validSelection.value),
+      restored.value.typingMarks,
     );
   };
 
@@ -1062,6 +1176,11 @@ export function createEditorSession(
       nextPrepared.index,
     );
     if (!validSelection.ok) return validSelection;
+    const nextTypingMarks = resolveSessionTypingMarks(
+      nextPrepared.index,
+      validSelection.value,
+    );
+    if (!nextTypingMarks.ok) return nextTypingMarks;
 
     const epoch = nextConfigEpoch();
     if (!epoch.ok) return epoch;
@@ -1079,6 +1198,7 @@ export function createEditorSession(
 
     prepared = nextPrepared;
     selection = validSelection.value;
+    typingMarks = nextTypingMarks.value;
     history = clearEditorHistory(history);
     configEpoch = epoch.value;
     revision = advanced.value;
@@ -1128,6 +1248,11 @@ export function createEditorSession(
       nextPrepared.index,
     );
     if (!validSelection.ok) return validSelection;
+    const nextTypingMarks = resolveSessionTypingMarks(
+      nextPrepared.index,
+      validSelection.value,
+    );
+    if (!nextTypingMarks.ok) return nextTypingMarks;
 
     const advanced = nextRevision();
     if (!advanced.ok) return advanced;
@@ -1144,6 +1269,7 @@ export function createEditorSession(
     schema = nextSchema;
     prepared = nextPrepared;
     selection = validSelection.value;
+    typingMarks = nextTypingMarks.value;
     history = clearEditorHistory(history);
     configEpoch = epoch.value;
     revision = advanced.value;
@@ -1417,6 +1543,7 @@ export function createEditorSession(
       };
     },
     setSelection,
+    setTypingMark,
     transact,
     replaceText,
     replaceInlineText,
@@ -1446,6 +1573,7 @@ function createActionView(
     schema: snapshot.schema,
     contentLimits: snapshot.contentLimits,
     selection: snapshot.selection,
+    typingMarks: snapshot.typingMarks,
     revision: snapshot.revision,
     configEpoch: snapshot.configEpoch,
     disabled: snapshot.interaction.disabled,
@@ -1468,6 +1596,74 @@ function snapshotContent(
   return transformed.ok
     ? okResult(transformed.value.document)
     : transformed;
+}
+
+function resolveSessionTypingMarks(
+  index: DocumentIndex,
+  selection: EditorSelection | null,
+): Result<readonly TextMark[], EditorErrorCode> {
+  if (
+    selection === null
+    || !isCollapsedSelection(selection)
+    || selection.anchor.type !== 'inline'
+  ) {
+    return okResult(Object.freeze([]));
+  }
+  return resolveEditorTypingMarks(index, selection.anchor);
+}
+
+function typingMarksForInlineEdit(
+  index: DocumentIndex,
+  selection: EditorSelection | null,
+  currentTypingMarks: readonly TextMark[],
+  request: EditorInlineTextEditRequest,
+): Result<readonly TextMark[], EditorErrorCode> {
+  if (
+    selection !== null
+    && isCollapsedSelection(selection)
+    && selection.anchor.type === 'inline'
+    && request.from === request.to
+    && request.from === selection.anchor.offset
+    && sameInlineSurface(selection.anchor.surface, request.surface)
+  ) {
+    return okResult(currentTypingMarks);
+  }
+  return resolveEditorTypingMarks(
+    index,
+    Object.freeze({
+      type: 'inline',
+      surface: request.surface,
+      offset: request.from,
+      affinity: request.affinity ?? 'after',
+    }),
+  );
+}
+
+function sameTextMarks(
+  left: readonly TextMark[],
+  right: readonly TextMark[],
+): boolean {
+  if (left === right) return true;
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index += 1) {
+    const a = left[index];
+    const b = right[index];
+    if (a === undefined || b === undefined || a.type !== b.type) return false;
+    if (
+      a.type === 'link'
+      && b.type === 'link'
+      && (a.href !== b.href || a.title !== b.title)
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isEditorTypingMarkType(
+  value: unknown,
+): value is EditorTypingMarkType {
+  return value === 'strong' || value === 'emphasis' || value === 'code';
 }
 
 function inlineTextHistoryCoalesceKey(

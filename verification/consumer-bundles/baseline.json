@@ -269,7 +269,7 @@
       "package": "content",
       "subpath": "./transform",
       "source": "@sectile/content/transform",
-      "exportName": "measureInlineContent",
+      "exportName": "applyTextMark",
       "mode": "named",
       "platform": "browser",
       "pair": null
@@ -5200,11 +5200,11 @@
       "bundler": "esbuild",
       "mode": "named",
       "source": "@sectile/content/transform",
-      "exportName": "measureInlineContent",
+      "exportName": "applyTextMark",
       "platform": "browser",
-      "raw": 114,
-      "gzip": 121,
-      "brotli": 99,
+      "raw": 231,
+      "gzip": 192,
+      "brotli": 163,
       "modules": [
         "@sectile/content/dist/transform.js",
         "fixture"
@@ -5216,11 +5216,11 @@
       "bundler": "vite",
       "mode": "named",
       "source": "@sectile/content/transform",
-      "exportName": "measureInlineContent",
+      "exportName": "applyTextMark",
       "platform": "browser",
-      "raw": 116,
-      "gzip": 123,
-      "brotli": 99,
+      "raw": 233,
+      "gzip": 193,
+      "brotli": 165,
       "modules": [
         "@sectile/content/dist/transform.js",
         "fixture"

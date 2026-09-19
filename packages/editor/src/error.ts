@@ -25,4 +25,5 @@ export type EditorErrorCode =
   | 'editor-revision-ceiling-reached'
   | 'editor-selection-invalid'
   | 'editor-stale-config'
-  | 'editor-stale-revision';
+  | 'editor-stale-revision'
+  | 'editor-typing-mark-invalid';

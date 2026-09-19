@@ -44,14 +44,14 @@
       "sourceMapFiles": 7,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 39288,
-        "declarations": 17758,
-        "sourceMaps": 27677,
-        "total": 84723
+        "javascript": 43293,
+        "declarations": 18411,
+        "sourceMaps": 30334,
+        "total": 92038
       },
       "packed": {
-        "tarballBytes": 20320,
-        "unpackedBytes": 89223,
+        "tarballBytes": 21587,
+        "unpackedBytes": 96526,
         "files": 24
       }
     },

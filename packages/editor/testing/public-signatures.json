@@ -31,11 +31,11 @@
       "types": "dist/session.d.ts"
     }
   ],
-  "fingerprint": "7c8d9c5e5378ff73cbe70f1f20ec0cbecc16f4a3824366b9f2fc8ee11488aa4a",
+  "fingerprint": "680d68e80fcdc56be5fbb4c517b692e0b8416ec31900ba2f69e7318d3425b117",
   "files": [
     {
       "path": "dist/action.d.ts",
-      "sha256": "7cd7bbb68a34db518b93ee2373cf407882fb3546d3c423d81770b0db7987908d"
+      "sha256": "cd2de4a17bd164d95f8c74747af8bd4f1e1e547a72268ce28c736e83aae9231c"
     },
     {
       "path": "dist/authoring.d.ts",
@@ -43,11 +43,11 @@
     },
     {
       "path": "dist/error.d.ts",
-      "sha256": "fcd391c2a266e4affb3ae5902a790d00c3fedbbf6c00f3f2c83504b6bc785981"
+      "sha256": "1f45dbbba973b9610c849a51ba11176a3ebd251ae828d5f517f7f4db42d45475"
     },
     {
       "path": "dist/history.d.ts",
-      "sha256": "b303b17532cc11bcb3aa668a3400d41b12b2fcdb006902b36e484af8e5263152"
+      "sha256": "e55f403a511732fb9fd71f87550112203dbe35daae8cfb5929e3e095c1e8a80b"
     },
     {
       "path": "dist/index.d.ts",
@@ -59,7 +59,7 @@
     },
     {
       "path": "dist/session.d.ts",
-      "sha256": "681247351dbaabc4c50ba0da9713662c06a5e88ec636c85e47edd743cad951a6"
+      "sha256": "b5040a2ae3bc5cf3dca24681d91bbf8016e68be680ebadb875dc8eaa1822c15e"
     }
   ]
 }

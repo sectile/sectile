@@ -3929,6 +3929,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "content:./transform:applyTextMark",
+      "package": "content",
+      "subpath": "./transform",
+      "exportName": "applyTextMark",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "content:./transform:measureInlineContent",
       "package": "content",
       "subpath": "./transform",

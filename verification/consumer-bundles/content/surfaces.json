@@ -170,6 +170,7 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
+        "applyTextMark",
         "measureInlineContent",
         "transformDocument"
       ],

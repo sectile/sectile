@@ -301,6 +301,92 @@ test('typing affinity chooses the adjacent mark context at a rich boundary', () 
   ]);
 });
 
+test('collapsed typing marks control subsequent input and restore through history', () => {
+  const editor = session();
+  const surface = { type: 'node', id: 'rich' };
+  assert.deepEqual(editor.getSnapshot().typingMarks, [strong]);
+
+  const moved = editor.setSelection(collapsed(surface, 3));
+  assert.equal(moved.ok, true);
+  assert.deepEqual(moved.value.snapshot.typingMarks, []);
+
+  const beforeToggle = editor.getSnapshot();
+  const enabled = editor.setTypingMark('strong', true);
+  assert.equal(enabled.ok, true);
+  assert.equal(enabled.value.documentChanged, false);
+  assert.equal(enabled.value.selectionChanged, false);
+  assert.equal(enabled.value.snapshot.document, beforeToggle.document);
+  assert.equal(enabled.value.snapshot.canUndo, false);
+  assert.deepEqual(enabled.value.snapshot.typingMarks, [strong]);
+
+  const boldTyped = editor.replaceInlineText({
+    surface,
+    from: 3,
+    to: 3,
+    text: 'X',
+    selection: collapsed(surface, 4),
+  });
+  assert.equal(boldTyped.ok, true);
+  assert.deepEqual(node(editor, 'rich').children, [
+    text('bo', [strong]),
+    text('l'),
+    text('X', [strong]),
+    text('d'),
+  ]);
+  assert.deepEqual(editor.getSnapshot().typingMarks, [strong]);
+
+  const disabled = editor.setTypingMark('strong', false);
+  assert.equal(disabled.ok, true);
+  assert.deepEqual(disabled.value.snapshot.typingMarks, []);
+
+  const plainTyped = editor.replaceInlineText({
+    surface,
+    from: 4,
+    to: 4,
+    text: 'Y',
+    selection: collapsed(surface, 5),
+  });
+  assert.equal(plainTyped.ok, true);
+  assert.deepEqual(node(editor, 'rich').children, [
+    text('bo', [strong]),
+    text('l'),
+    text('X', [strong]),
+    text('Yd'),
+  ]);
+
+  const undoPlain = editor.undo();
+  assert.equal(undoPlain.ok, true);
+  assert.deepEqual(node(editor, 'rich').children, [
+    text('bo', [strong]),
+    text('l'),
+    text('X', [strong]),
+    text('d'),
+  ]);
+  assert.deepEqual(undoPlain.value.snapshot.typingMarks, []);
+
+  const undoBold = editor.undo();
+  assert.equal(undoBold.ok, true);
+  assert.deepEqual(node(editor, 'rich').children, [
+    text('bo', [strong]),
+    text('ld'),
+  ]);
+  assert.deepEqual(undoBold.value.snapshot.typingMarks, [strong]);
+});
+
+test('moving a collapsed caret recomputes typing marks from content context', () => {
+  const editor = session();
+  const surface = { type: 'node', id: 'rich' };
+
+  assert.equal(editor.setSelection(collapsed(surface, 3)).ok, true);
+  assert.deepEqual(editor.getSnapshot().typingMarks, []);
+  assert.equal(editor.setTypingMark('code', true).ok, true);
+  assert.deepEqual(editor.getSnapshot().typingMarks, [{ type: 'code' }]);
+
+  const moved = editor.setSelection(collapsed(surface, 1));
+  assert.equal(moved.ok, true);
+  assert.deepEqual(moved.value.snapshot.typingMarks, [strong]);
+});
+
 test('rich and slot typing share one coalescing history policy', () => {
   const editor = session();
 

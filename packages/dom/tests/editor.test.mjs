@@ -451,6 +451,61 @@ test('beforeinput insertText uses the prepared Editor text path and rerenders', 
   connection.disconnect();
 });
 
+test('collapsed typing marks drive subsequent beforeinput text formatting', () => {
+  const { window, root, session, connection, errors } = setup();
+  const selection = collapsed('p1', 5);
+  assert.equal(session.setSelection(selection).ok, true);
+  assert.equal(connection.setSelection(selection), true);
+
+  const enabled = session.setTypingMark('strong', true);
+  assert.equal(enabled.ok, true);
+  assert.deepEqual(enabled.value.snapshot.typingMarks, [{ type: 'strong' }]);
+
+  let surface = root.querySelector('[data-sectile-editor-surface-id="p1"]');
+  assert.ok(surface);
+  surface.dispatchEvent(new window.InputEvent('beforeinput', {
+    inputType: 'insertText',
+    data: 'X',
+    bubbles: true,
+    cancelable: true,
+  }));
+
+  let node = session.getSnapshot().index.getNode('p1');
+  assert.equal(node?.type, 'paragraph');
+  assert.deepEqual(node.children, [
+    text('hello'),
+    text('X', [{ type: 'strong' }]),
+  ]);
+  assert.deepEqual(session.getSnapshot().typingMarks, [{ type: 'strong' }]);
+
+  const disabled = session.setTypingMark('strong', false);
+  assert.equal(disabled.ok, true);
+  assert.deepEqual(disabled.value.snapshot.typingMarks, []);
+
+  surface = root.querySelector('[data-sectile-editor-surface-id="p1"]');
+  assert.ok(surface);
+  surface.dispatchEvent(new window.InputEvent('beforeinput', {
+    inputType: 'insertText',
+    data: 'Y',
+    bubbles: true,
+    cancelable: true,
+  }));
+
+  node = session.getSnapshot().index.getNode('p1');
+  assert.equal(node?.type, 'paragraph');
+  assert.deepEqual(node.children, [
+    text('hello'),
+    text('X', [{ type: 'strong' }]),
+    text('Y'),
+  ]);
+  assert.deepEqual(errors, []);
+
+  const undone = session.undo();
+  assert.equal(undone.ok, true);
+  assert.deepEqual(undone.value.snapshot.typingMarks, []);
+  connection.disconnect();
+});
+
 test('simple inline component slots use semantic Editor transactions', () => {
   const { window, root, session, connection, errors } = setup();
   const selection = slotCollapsed('card-1', 'title', 5);

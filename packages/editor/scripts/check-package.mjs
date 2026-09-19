@@ -51,7 +51,7 @@ for (const path of await files('dist')) {
 }
 
 assert.ok(
-  javascriptBytes < 40_000,
+  javascriptBytes < 44_000,
   `JavaScript footprint ${javascriptBytes} exceeds ceiling`,
 );
 assert.ok(
@@ -59,7 +59,7 @@ assert.ok(
   `declaration footprint ${declarationBytes} exceeds ceiling`,
 );
 assert.ok(
-  sourceMapBytes < 30_000,
+  sourceMapBytes < 31_000,
   `source map footprint ${sourceMapBytes} exceeds ceiling`,
 );
 

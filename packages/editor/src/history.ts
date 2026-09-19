@@ -1,5 +1,5 @@
 import { failResult, okResult, type Result } from '@sectile/core/result';
-import type { PortableContentDocument } from '@sectile/content/document';
+import type { PortableContentDocument, TextMark } from '@sectile/content/document';
 import type { EditorErrorCode } from './error.js';
 import type { EditorSelection } from './selection.js';
 
@@ -22,6 +22,8 @@ export interface EditorHistoryEntry {
   readonly afterDocument: PortableContentDocument;
   readonly beforeSelection: EditorSelection | null;
   readonly afterSelection: EditorSelection | null;
+  readonly beforeTypingMarks: readonly TextMark[];
+  readonly afterTypingMarks: readonly TextMark[];
   readonly intent: EditorHistoryIntent;
   readonly coalesceKey: string | null;
 }
@@ -37,6 +39,7 @@ export interface EditorHistoryRestore {
   readonly history: EditorHistoryState;
   readonly document: PortableContentDocument;
   readonly selection: EditorSelection | null;
+  readonly typingMarks: readonly TextMark[];
   readonly entry: EditorHistoryEntry;
 }
 
@@ -98,6 +101,8 @@ export function recordEditorHistory(
         afterDocument: entry.afterDocument,
         beforeSelection: previous.beforeSelection,
         afterSelection: entry.afterSelection,
+        beforeTypingMarks: previous.beforeTypingMarks,
+        afterTypingMarks: entry.afterTypingMarks,
         intent: entry.intent,
         coalesceKey: entry.coalesceKey,
       });
@@ -172,6 +177,7 @@ export function undoEditorHistory(
     history,
     document: entry.beforeDocument,
     selection: entry.beforeSelection,
+    typingMarks: entry.beforeTypingMarks,
     entry,
   }));
 }
@@ -201,6 +207,7 @@ export function redoEditorHistory(
     history,
     document: entry.afterDocument,
     selection: entry.afterSelection,
+    typingMarks: entry.afterTypingMarks,
     entry,
   }));
 }

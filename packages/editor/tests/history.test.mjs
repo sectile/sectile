@@ -34,6 +34,8 @@ function entry(before, after, key = null) {
     afterDocument: document(after),
     beforeSelection: null,
     afterSelection: null,
+    beforeTypingMarks: [],
+    afterTypingMarks: [],
     intent: 'command',
     coalesceKey: key,
   });
