@@ -99,6 +99,7 @@ function optionalPeer(packageName, subpath) {
   }
   const optional = new Map([
     ['dom:./chart', '@sectile/chart'],
+    ['dom:./editor', '@sectile/editor'],
     ['dom:./form', '@sectile/form'],
     ['dom:./tabular', '@sectile/tabular'],
     ['dom:./virtual', '@sectile/virtual'],
@@ -121,6 +122,7 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'core:./geometry',
     'core:./anchored-layout',
     'core:./color',
+    'content:./fragment',
     'content:./helpers',
     'content:./schema',
     'content:./transform',

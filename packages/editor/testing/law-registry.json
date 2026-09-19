@@ -45,6 +45,16 @@
       "id": "EDT-09",
       "theory": "editor-resources",
       "statement": "Editor prepared and semantic mutation paths preserve configured Portable Content resource ceilings"
+    },
+    {
+      "id": "EDT-10",
+      "theory": "editor-inline-authoring",
+      "statement": "rich inline and slot text edits derive mark context from logical Content positions and share one typing history policy"
+    },
+    {
+      "id": "EDT-11",
+      "theory": "editor-fragment-authoring",
+      "statement": "inline fragment insertion allocates fresh node IDs in Editor, delegates remapping to Content, and commits atomically as one history unit"
     }
   ]
 }

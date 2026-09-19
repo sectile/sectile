@@ -12,10 +12,15 @@ import {
   type Result,
 } from '@sectile/core/result';
 import type {
+  InlineContentFragment,
   NodeID,
   PortableContentDocument,
 } from '@sectile/content/document';
 import type { ContentErrorCode } from '@sectile/content/error';
+import {
+  inlineFragmentNodeIDs,
+  prepareInlineFragment,
+} from '@sectile/content/fragment';
 import { isEqual } from '@sectile/content/helpers';
 import {
   contentCeilingExceeded,
@@ -27,6 +32,7 @@ import {
   replacePreparedText,
   type PreparedContentState,
 } from '@sectile/content/prepared';
+import type { InlineSurface } from '@sectile/content/position';
 import type { DocumentIndex } from '@sectile/content/query';
 import type { CompiledContentSchema } from '@sectile/content/schema';
 import {
@@ -55,6 +61,7 @@ import {
 } from './history.js';
 import {
   mapEditorSelection,
+  resolveEditorTypingMarks,
   sameEditorSelection,
   validateEditorSelection,
   type EditorSelection,
@@ -157,6 +164,30 @@ export interface EditorTextEditRequest extends EditorExpectedState {
   >;
 }
 
+export interface EditorInlineTextEditRequest extends EditorExpectedState {
+  readonly surface: InlineSurface;
+  readonly from: number;
+  readonly to: number;
+  readonly text: string;
+  readonly affinity?: 'before' | 'after';
+  readonly selection?: EditorSelection | null;
+  readonly origin?: EditorOrigin;
+  readonly historyIntent?: Extract<
+    EditorHistoryIntent,
+    'typing' | 'composition' | 'delete-backward' | 'delete-forward' | 'paste'
+  >;
+}
+
+export interface EditorInlineFragmentInsertRequest extends EditorExpectedState {
+  readonly surface: InlineSurface;
+  readonly from: number;
+  readonly to: number;
+  readonly fragment: InlineContentFragment;
+  readonly selection?: EditorSelection | null;
+  readonly origin?: EditorOrigin;
+  readonly historyIntent?: Extract<EditorHistoryIntent, 'paste' | 'command'>;
+}
+
 export interface EditorReplaceDocumentOptions extends EditorExpectedState {
   readonly selection?: EditorSelection | null;
   readonly origin?: EditorOrigin;
@@ -199,6 +230,12 @@ export interface EditorSession {
   ): Result<EditorSessionUpdate, EditorSessionErrorCode>;
   replaceText(
     request: EditorTextEditRequest,
+  ): Result<EditorSessionUpdate, EditorSessionErrorCode>;
+  replaceInlineText(
+    request: EditorInlineTextEditRequest,
+  ): Result<EditorSessionUpdate, EditorSessionErrorCode>;
+  insertInlineFragment(
+    request: EditorInlineFragmentInsertRequest,
   ): Result<EditorSessionUpdate, EditorSessionErrorCode>;
   undo(
     options?: EditorExpectedState & { readonly origin?: EditorOrigin },
@@ -583,8 +620,9 @@ export function createEditorSession(
     );
   };
 
-  const transact = (
+  const transactInternal = (
     request: EditorTransactionRequest,
+    coalesceKey: string | null,
   ): Result<EditorSessionUpdate, EditorSessionErrorCode> => {
     const lifecycle = checkMutationLifecycle();
     if (!lifecycle.ok) return lifecycle;
@@ -664,7 +702,7 @@ export function createEditorSession(
         beforeSelection: selection,
         afterSelection: validSelection.value,
         intent,
-        coalesceKey: null,
+        coalesceKey,
       }));
     } else if (selectionChanged) {
       nextHistory = breakEditorHistoryCoalescing(history);
@@ -680,6 +718,11 @@ export function createEditorSession(
       selectionChanged,
     );
   };
+
+  const transact = (
+    request: EditorTransactionRequest,
+  ): Result<EditorSessionUpdate, EditorSessionErrorCode> =>
+    transactInternal(request, null);
 
   const replaceText = (
     request: EditorTextEditRequest,
@@ -760,9 +803,12 @@ export function createEditorSession(
 
     let nextHistory = history;
     if (documentChanged) {
-      const coalesceKey = textHistoryCoalesceKey(
+      const coalesceKey = inlineTextHistoryCoalesceKey(
         intent,
-        request.id,
+        Object.freeze({
+          type: 'node',
+          id: request.id,
+        }),
         request.from,
         request.to,
         selection,
@@ -788,6 +834,150 @@ export function createEditorSession(
       documentChanged,
       selectionChanged,
     );
+  };
+
+  const replaceInlineText = (
+    request: EditorInlineTextEditRequest,
+  ): Result<EditorSessionUpdate, EditorSessionErrorCode> => {
+    if (request.surface.type === 'node') {
+      const source = prepared.index.getNode(request.surface.id);
+      if (
+        (source?.type === 'paragraph' || source?.type === 'heading')
+        && (
+          source.children.length === 0
+          || (
+            source.children.length === 1
+            && source.children[0]?.type === 'text'
+          )
+        )
+      ) {
+        return replaceText({
+          id: request.surface.id,
+          from: request.from,
+          to: request.to,
+          text: request.text,
+          ...(Object.hasOwn(request, 'selection')
+            ? { selection: request.selection ?? null }
+            : {}),
+          ...(request.origin === undefined ? {} : { origin: request.origin }),
+          ...(request.historyIntent === undefined
+            ? {}
+            : { historyIntent: request.historyIntent }),
+          ...(request.expectedRevision === undefined
+            ? {}
+            : { expectedRevision: request.expectedRevision }),
+          ...(request.expectedConfigEpoch === undefined
+            ? {}
+            : { expectedConfigEpoch: request.expectedConfigEpoch }),
+        });
+      }
+    }
+
+    const marks = request.text.length === 0
+      ? okResult(Object.freeze([]))
+      : resolveEditorTypingMarks(
+          prepared.index,
+          Object.freeze({
+            type: 'inline',
+            surface: request.surface,
+            offset: request.from,
+            affinity: request.affinity ?? 'after',
+          }),
+        );
+    if (!marks.ok) return marks;
+
+    const operation: ContentOperation = Object.freeze({
+      type: 'replace-inline',
+      surface: request.surface,
+      from: request.from,
+      to: request.to,
+      replacement: request.text.length === 0
+        ? Object.freeze([])
+        : Object.freeze([
+            Object.freeze({
+              type: 'text',
+              text: request.text,
+              marks: marks.value,
+            }),
+          ]),
+    });
+
+    const intent = request.historyIntent ?? 'typing';
+    const coalesceKey = inlineTextHistoryCoalesceKey(
+      intent,
+      request.surface,
+      request.from,
+      request.to,
+      selection,
+    );
+    return transactInternal({
+      operations: Object.freeze([operation]),
+      ...(Object.hasOwn(request, 'selection')
+        ? { selection: request.selection ?? null }
+        : {}),
+      ...(request.origin === undefined ? {} : { origin: request.origin }),
+      historyIntent: intent,
+      ...(request.expectedRevision === undefined
+        ? {}
+        : { expectedRevision: request.expectedRevision }),
+      ...(request.expectedConfigEpoch === undefined
+        ? {}
+        : { expectedConfigEpoch: request.expectedConfigEpoch }),
+    }, coalesceKey);
+  };
+
+  const insertInlineFragment = (
+    request: EditorInlineFragmentInsertRequest,
+  ): Result<EditorSessionUpdate, EditorSessionErrorCode> => {
+    const lifecycle = checkMutationLifecycle();
+    if (!lifecycle.ok) return lifecycle;
+    const state = checkExpected(request);
+    if (!state.ok) return state;
+    const permitted = requireInteraction(interaction, 'mutate');
+    if (!permitted.ok) return permitted;
+
+    const sourceIDs = inlineFragmentNodeIDs(request.fragment, {
+      limits: contentLimits,
+    });
+    if (!sourceIDs.ok) return sourceIDs;
+
+    const allocated = new Set<NodeID>();
+    const idMap = new Map<NodeID, NodeID>();
+    for (const sourceID of sourceIDs.value) {
+      const nextID = allocateNodeID(allocated);
+      if (!nextID.ok) return nextID;
+      idMap.set(sourceID, nextID.value);
+    }
+
+    const fragment = prepareInlineFragment(request.fragment, {
+      schema,
+      idMap,
+      limits: contentLimits,
+    });
+    if (!fragment.ok) return fragment;
+
+    const operation: ContentOperation = Object.freeze({
+      type: 'replace-inline',
+      surface: request.surface,
+      from: request.from,
+      to: request.to,
+      replacement: fragment.value.content,
+    });
+
+    return transactInternal({
+      operations: Object.freeze([operation]),
+      ...(Object.hasOwn(request, 'selection')
+        ? { selection: request.selection ?? null }
+        : {}),
+      ...(request.origin === undefined ? {} : { origin: request.origin }),
+      historyIntent: request.historyIntent ?? 'paste',
+      ...(request.expectedRevision === undefined
+        ? {}
+        : { expectedRevision: request.expectedRevision }),
+      ...(request.expectedConfigEpoch === undefined
+        ? {}
+        : { expectedConfigEpoch: request.expectedConfigEpoch }),
+    }, null);
   };
 
   const restoreHistory = (
@@ -1229,6 +1419,8 @@ export function createEditorSession(
     setSelection,
     transact,
     replaceText,
+    replaceInlineText,
+    insertInlineFragment,
     undo: (expected = {}) => restoreHistory('undo', expected),
     redo: (expected = {}) => restoreHistory('redo', expected),
     replaceDocument,
@@ -1278,9 +1470,9 @@ function snapshotContent(
     : transformed;
 }
 
-function textHistoryCoalesceKey(
+function inlineTextHistoryCoalesceKey(
   intent: EditorHistoryIntent,
-  id: NodeID,
+  surface: InlineSurface,
   from: number,
   to: number,
   selection: EditorSelection | null,
@@ -1299,10 +1491,8 @@ function textHistoryCoalesceKey(
   if (
     anchor.type !== 'inline'
     || focus.type !== 'inline'
-    || anchor.surface.type !== 'node'
-    || focus.surface.type !== 'node'
-    || anchor.surface.id !== id
-    || focus.surface.id !== id
+    || !sameInlineSurface(anchor.surface, surface)
+    || !sameInlineSurface(focus.surface, surface)
   ) {
     return null;
   }
@@ -1317,8 +1507,31 @@ function textHistoryCoalesceKey(
   );
 
   return rangeMatches || caretMatches
-    ? `${intent}:${id}`
+    ? `${intent}:${inlineSurfaceKey(surface)}`
     : null;
+}
+
+function sameInlineSurface(
+  left: InlineSurface,
+  right: InlineSurface,
+): boolean {
+  return (
+    left.type === right.type
+    && left.id === right.id
+    && (
+      left.type === 'node'
+      || (
+        right.type === 'slot'
+        && left.slot === right.slot
+      )
+    )
+  );
+}
+
+function inlineSurfaceKey(surface: InlineSurface): string {
+  return surface.type === 'node'
+    ? `node:${surface.id}`
+    : `slot:${surface.id}:${surface.slot}`;
 }
 
 function isPromiseLike(

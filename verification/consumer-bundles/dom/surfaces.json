@@ -426,6 +426,32 @@
       ]
     },
     {
+      "subpath": "./editor",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "EDITOR_FRAGMENT_MIME",
+        "createEditor",
+        "domBoundaryToPoint",
+        "logicalPointToDOM",
+        "markEditorAuthoringMount",
+        "markEditorHardBreak",
+        "markEditorInlineAtom",
+        "markEditorInlineSurface",
+        "markEditorIsolatedFrame",
+        "readEditorDOMSelection",
+        "setEditorDOMSelection",
+        "tryCreateEditor"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/editor",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./feed",
       "classification": "named-subpath",
       "platform": "browser",

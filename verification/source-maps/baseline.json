@@ -26,14 +26,14 @@
       "sourceMapFiles": 12,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 69540,
-        "declarations": 19915,
-        "sourceMaps": 54430,
-        "total": 143885
+        "javascript": 79264,
+        "declarations": 21118,
+        "sourceMaps": 61513,
+        "total": 161895
       },
       "packed": {
-        "tarballBytes": 33748,
-        "unpackedBytes": 149332,
+        "tarballBytes": 37196,
+        "unpackedBytes": 167342,
         "files": 39
       }
     },
@@ -44,14 +44,14 @@
       "sourceMapFiles": 7,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 34840,
-        "declarations": 16429,
-        "sourceMaps": 24186,
-        "total": 75455
+        "javascript": 39288,
+        "declarations": 17758,
+        "sourceMaps": 27677,
+        "total": 84723
       },
       "packed": {
-        "tarballBytes": 18797,
-        "unpackedBytes": 79955,
+        "tarballBytes": 20320,
+        "unpackedBytes": 89223,
         "files": 24
       }
     },
@@ -147,20 +147,20 @@
     },
     {
       "package": "dom",
-      "javascriptFiles": 106,
-      "declarationFiles": 106,
-      "sourceMapFiles": 106,
+      "javascriptFiles": 136,
+      "declarationFiles": 136,
+      "sourceMapFiles": 136,
       "declarationMapFiles": 0,
       "bytes": {
-        "javascript": 653148,
-        "declarations": 267161,
-        "sourceMaps": 476789,
-        "total": 1397098
+        "javascript": 701950,
+        "declarations": 282637,
+        "sourceMaps": 512185,
+        "total": 1496772
       },
       "packed": {
-        "tarballBytes": 301048,
-        "unpackedBytes": 1412905,
-        "files": 321
+        "tarballBytes": 314057,
+        "unpackedBytes": 1513705,
+        "files": 411
       }
     },
     {

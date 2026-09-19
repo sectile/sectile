@@ -301,6 +301,11 @@
       "import": "./dist/editable.js",
       "default": "./dist/editable.js"
     },
+    "./editor": {
+      "types": "./dist/editor.d.ts",
+      "import": "./dist/editor.js",
+      "default": "./dist/editor.js"
+    },
     "./virtual": {
       "types": "./dist/virtual.d.ts",
       "import": "./dist/virtual.js",
@@ -398,6 +403,8 @@
   },
   "peerDependencies": {
     "@sectile/chart": "workspace:^",
+    "@sectile/content": "workspace:^",
+    "@sectile/editor": "workspace:^",
     "@sectile/form": "workspace:^",
     "@sectile/tabular": "workspace:^",
     "@sectile/temporal": "workspace:^",
@@ -405,6 +412,12 @@
   },
   "peerDependenciesMeta": {
     "@sectile/chart": {
+      "optional": true
+    },
+    "@sectile/content": {
+      "optional": true
+    },
+    "@sectile/editor": {
       "optional": true
     },
     "@sectile/form": {
@@ -423,6 +436,8 @@
   "devDependencies": {
     "@sectile/tooling": "workspace:*",
     "@sectile/chart": "workspace:*",
+    "@sectile/content": "workspace:*",
+    "@sectile/editor": "workspace:*",
     "@sectile/form": "workspace:*",
     "@sectile/tabular": "workspace:*",
     "@sectile/temporal": "workspace:*",

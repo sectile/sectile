@@ -9,6 +9,8 @@
     "EDT-06": "tests/authoring.test.mjs",
     "EDT-07": "tests/session.test.mjs",
     "EDT-08": "tests/session.test.mjs",
-    "EDT-09": "tests/session.test.mjs"
+    "EDT-09": "tests/session.test.mjs",
+    "EDT-10": "tests/inline-authoring.test.mjs",
+    "EDT-11": "tests/inline-authoring.test.mjs"
   }
 }

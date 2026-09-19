@@ -3740,6 +3740,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "content:./fragment:inlineFragmentNodeIDs",
+      "package": "content",
+      "subpath": "./fragment",
+      "exportName": "inlineFragmentNodeIDs",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "content:./fragment:inlineFragmentText",
       "package": "content",
       "subpath": "./fragment",
@@ -3753,6 +3762,15 @@
       "package": "content",
       "subpath": "./fragment",
       "exportName": "inlineSurfaceLength",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "content:./fragment:prepareInlineFragment",
+      "package": "content",
+      "subpath": "./fragment",
+      "exportName": "prepareInlineFragment",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -4077,6 +4095,15 @@
       "package": "editor",
       "subpath": "./selection",
       "exportName": "mapEditorSelection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./selection:resolveEditorTypingMarks",
+      "package": "editor",
+      "subpath": "./selection",
+      "exportName": "resolveEditorTypingMarks",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -5337,6 +5364,114 @@
       "package": "dom",
       "subpath": "./editable",
       "exportName": "tryCreateEditable",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:EDITOR_FRAGMENT_MIME",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "EDITOR_FRAGMENT_MIME",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "dom:./editor:createEditor",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "createEditor",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:domBoundaryToPoint",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "domBoundaryToPoint",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:logicalPointToDOM",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "logicalPointToDOM",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:markEditorAuthoringMount",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "markEditorAuthoringMount",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:markEditorHardBreak",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "markEditorHardBreak",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:markEditorInlineAtom",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "markEditorInlineAtom",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:markEditorInlineSurface",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "markEditorInlineSurface",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:markEditorIsolatedFrame",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "markEditorIsolatedFrame",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:readEditorDOMSelection",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "readEditorDOMSelection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:setEditorDOMSelection",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "setEditorDOMSelection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:tryCreateEditor",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "tryCreateEditor",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"

@@ -4,7 +4,7 @@ import { readFile, stat } from 'node:fs/promises';
 const registry = JSON.parse(await readFile('testing/law-registry.json', 'utf8'));
 const evidence = JSON.parse(await readFile('testing/law-evidence.json', 'utf8'));
 const expected = Array.from(
-  { length: 9 },
+  { length: 11 },
   (_, index) => `EDT-${String(index + 1).padStart(2, '0')}`,
 );
 const ids = registry.laws.map((law) => law.id);

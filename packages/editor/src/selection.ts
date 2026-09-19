@@ -2,11 +2,13 @@ import { failResult, okResult, type Result } from '@sectile/core/result';
 import type {
   IDBearingNode,
   PortableContentDocument,
+  TextMark,
 } from '@sectile/content/document';
 import type { ContentErrorCode } from '@sectile/content/error';
 import {
   isInlineContentBoundary,
   type ContentChangeMap,
+  type InlinePoint,
   type LogicalPoint,
 } from '@sectile/content/position';
 import {
@@ -66,6 +68,45 @@ export function mapEditorSelection(
     focus: focus.point,
     direction: selection.direction,
   });
+}
+
+export function resolveEditorTypingMarks(
+  index: DocumentIndex,
+  point: InlinePoint,
+): Result<readonly TextMark[], EditorErrorCode> {
+  const node = index.getNode(point.surface.id);
+  if (node === null) {
+    return selectionFailure('Typing mark surface does not exist.');
+  }
+  const inline = inlineChildren(node, point);
+  if (inline === null || !isInlineContentBoundary(inline, point.offset)) {
+    return selectionFailure('Typing mark point is not a valid inline boundary.');
+  }
+
+  let cursor = 0;
+  let left: readonly TextMark[] | null = null;
+  let right: readonly TextMark[] | null = null;
+
+  for (const child of inline) {
+    const length = child.type === 'text' ? child.text.length : 1;
+    const end = cursor + length;
+
+    if (child.type === 'text') {
+      if (point.offset > cursor && point.offset < end) {
+        return okResult(child.marks);
+      }
+      if (point.offset === cursor) right = child.marks;
+      if (point.offset === end) left = child.marks;
+    }
+
+    if (point.offset < end) break;
+    cursor = end;
+  }
+
+  const selected = point.affinity === 'before'
+    ? right ?? left
+    : left ?? right;
+  return okResult(selected ?? Object.freeze([]));
 }
 
 export function validateEditorSelection(

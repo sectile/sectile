@@ -108,3 +108,27 @@ const definitions: readonly ComponentAuthoringDefinition[] = [];
 const authoring = compileAuthoringRegistry(compiled.value, definitions);
 if (!authoring.ok) throw new Error(authoring.error.message);
 authoring.value.all();
+
+
+session.replaceInlineText({
+  surface: { type: 'node', id: 'p1' },
+  from: 0,
+  to: 0,
+  text: 'x',
+});
+
+session.insertInlineFragment({
+  surface: { type: 'node', id: 'p1' },
+  from: 0,
+  to: 0,
+  fragment: {
+    formatVersion: 1,
+    schema: document.schema,
+    kind: 'inline',
+    content: [{
+      type: 'text',
+      text: 'copied',
+      marks: [],
+    }],
+  },
+});

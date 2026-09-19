@@ -63,6 +63,10 @@
       "types": "dist/editable.d.ts"
     },
     {
+      "subpath": "./editor",
+      "types": "dist/editor.d.ts"
+    },
+    {
       "subpath": "./feed",
       "types": "dist/feed.d.ts"
     },
@@ -291,7 +295,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "17ee61250aededd087f0125b61c04989ac6acf0438455a1ad3a19f55031bc727",
+  "fingerprint": "fc8337fcc53cc192f2b9df0efecf6b1f91cb8c5a552c7028bb73e39bb064c162",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -348,6 +352,26 @@
     {
       "path": "dist/editable.d.ts",
       "sha256": "bbaca2becd7926ff6525b741adaf88b72dba3abb490b2ff00f2e713eb5531dc3"
+    },
+    {
+      "path": "dist/editor.d.ts",
+      "sha256": "05efed2490c448bbb7a9903dab3d3fa0630e8fe750a42d3315c981bf07e76b56"
+    },
+    {
+      "path": "dist/editor/connection.d.ts",
+      "sha256": "43ef724f824bec6ecbe9a21b4a0ce167e1cf78f122fd4f810af973aba226dc5f"
+    },
+    {
+      "path": "dist/editor/contracts.d.ts",
+      "sha256": "6cbfe3a59b75743cc1e065fb7300c095dc39f5cc364ca8c5df8c30b0cf4b8330"
+    },
+    {
+      "path": "dist/editor/markers.d.ts",
+      "sha256": "8352a5785345d835d040cf899e526a32f172c154fddccda2c26ef4d83e7f5a2d"
+    },
+    {
+      "path": "dist/editor/selection.d.ts",
+      "sha256": "e00fea546dc7bf1eb51812e3afcc0cdd6031d0a6051d5c8a3ea96c8141a05f8e"
     },
     {
       "path": "dist/feed.d.ts",

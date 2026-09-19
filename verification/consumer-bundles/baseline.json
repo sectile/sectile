@@ -155,6 +155,16 @@
       "pair": null
     },
     {
+      "id": "content:./fragment:named",
+      "package": "content",
+      "subpath": "./fragment",
+      "source": "@sectile/content/fragment",
+      "exportName": "createInlineFragment",
+      "mode": "named",
+      "platform": "browser",
+      "pair": null
+    },
+    {
       "id": "content:./fragment:side-effect",
       "package": "content",
       "subpath": "./fragment",
@@ -1249,6 +1259,26 @@
       "package": "dom",
       "subpath": "./editable",
       "source": "@sectile/dom/editable",
+      "exportName": null,
+      "mode": "side-effect",
+      "platform": "browser",
+      "pair": null
+    },
+    {
+      "id": "dom:./editor:named",
+      "package": "dom",
+      "subpath": "./editor",
+      "source": "@sectile/dom/editor",
+      "exportName": "EDITOR_FRAGMENT_MIME",
+      "mode": "named",
+      "platform": "browser",
+      "pair": null
+    },
+    {
+      "id": "dom:./editor:side-effect",
+      "package": "dom",
+      "subpath": "./editor",
+      "source": "@sectile/dom/editor",
       "exportName": null,
       "mode": "side-effect",
       "platform": "browser",
@@ -4797,6 +4827,56 @@
       "dependencies": []
     },
     {
+      "id": "content:./fragment:named",
+      "bundler": "esbuild",
+      "mode": "named",
+      "source": "@sectile/content/fragment",
+      "exportName": "createInlineFragment",
+      "platform": "browser",
+      "raw": 13217,
+      "gzip": 4581,
+      "brotli": 4118,
+      "modules": [
+        "@sectile/content/dist/document.js",
+        "@sectile/content/dist/fragment.js",
+        "@sectile/content/dist/limits.js",
+        "@sectile/content/dist/query.js",
+        "@sectile/content/dist/schema.js",
+        "@sectile/core/dist/internal/editing/text.js",
+        "@sectile/core/dist/internal/kernel/foundation.js",
+        "@sectile/core/dist/internal/kernel/indexed-sequence.js",
+        "@sectile/core/dist/result.js",
+        "@sectile/core/dist/structures/tree.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "content:./fragment:named",
+      "bundler": "vite",
+      "mode": "named",
+      "source": "@sectile/content/fragment",
+      "exportName": "createInlineFragment",
+      "platform": "browser",
+      "raw": 13092,
+      "gzip": 4490,
+      "brotli": 4040,
+      "modules": [
+        "@sectile/content/dist/document.js",
+        "@sectile/content/dist/fragment.js",
+        "@sectile/content/dist/limits.js",
+        "@sectile/content/dist/query.js",
+        "@sectile/core/dist/internal/editing/text.js",
+        "@sectile/core/dist/internal/kernel/foundation.js",
+        "@sectile/core/dist/internal/kernel/indexed-sequence.js",
+        "@sectile/core/dist/result.js",
+        "@sectile/core/dist/shared.js",
+        "@sectile/core/dist/structures/tree.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
       "id": "content:./fragment:side-effect",
       "bundler": "esbuild",
       "mode": "side-effect",
@@ -8104,6 +8184,64 @@
       "dependencies": []
     },
     {
+      "id": "dom:./editor:named",
+      "bundler": "esbuild",
+      "mode": "named",
+      "source": "@sectile/dom/editor",
+      "exportName": "EDITOR_FRAGMENT_MIME",
+      "platform": "browser",
+      "raw": 76,
+      "gzip": 91,
+      "brotli": 76,
+      "modules": [
+        "@sectile/dom/dist/editor/connection.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "dom:./editor:named",
+      "bundler": "vite",
+      "mode": "named",
+      "source": "@sectile/dom/editor",
+      "exportName": "EDITOR_FRAGMENT_MIME",
+      "platform": "browser",
+      "raw": 78,
+      "gzip": 93,
+      "brotli": 66,
+      "modules": [
+        "@sectile/dom/dist/editor/connection.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "dom:./editor:side-effect",
+      "bundler": "esbuild",
+      "mode": "side-effect",
+      "source": "@sectile/dom/editor",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
+      "id": "dom:./editor:side-effect",
+      "bundler": "vite",
+      "mode": "side-effect",
+      "source": "@sectile/dom/editor",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
       "id": "dom:./feed:side-effect",
       "bundler": "esbuild",
       "mode": "side-effect",
@@ -11399,11 +11537,12 @@
       "source": "@sectile/editor/session",
       "exportName": "createEditorSession",
       "platform": "browser",
-      "raw": 58043,
-      "gzip": 15934,
-      "brotli": 14191,
+      "raw": 66357,
+      "gzip": 17549,
+      "brotli": 15592,
       "modules": [
         "@sectile/content/dist/document.js",
+        "@sectile/content/dist/fragment.js",
         "@sectile/content/dist/helpers.js",
         "@sectile/content/dist/limits.js",
         "@sectile/content/dist/position.js",
@@ -11433,11 +11572,12 @@
       "source": "@sectile/editor/session",
       "exportName": "createEditorSession",
       "platform": "browser",
-      "raw": 58766,
-      "gzip": 15996,
-      "brotli": 14248,
+      "raw": 67197,
+      "gzip": 17629,
+      "brotli": 15633,
       "modules": [
         "@sectile/content/dist/document.js",
+        "@sectile/content/dist/fragment.js",
         "@sectile/content/dist/helpers.js",
         "@sectile/content/dist/limits.js",
         "@sectile/content/dist/position.js",

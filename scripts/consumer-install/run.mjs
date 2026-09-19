@@ -120,6 +120,16 @@ async function inspectVueInstall(root, packageManager, tarballs) {
   ].join(' ')], directory);
   const optionalDomains = [
     {
+      packageName: 'content',
+      imports: [],
+      removed: [],
+    },
+    {
+      packageName: 'editor',
+      imports: ['@sectile/dom/editor'],
+      removed: [],
+    },
+    {
       packageName: 'chart',
       imports: ['@sectile/chart/projection', '@sectile/dom/chart', '@sectile/vue/chart'],
       removed: [],
@@ -156,8 +166,22 @@ async function inspectVueInstall(root, packageManager, tarballs) {
   collectNormalizedNames(dependencyTree, dependencyNames);
   for (const { packageName, imports, removed } of optionalDomains) {
     const specifier = `file:${tarballs[packageName]}`;
-    if (packageManager === 'npm') await run('npm', ['install', specifier, '--no-save', '--ignore-scripts', '--no-audit', '--no-fund', '--omit=optional', '--cache', join(root, 'npm-cache')], directory);
-    else await run('pnpm', ['--store-dir', resolve(repoRoot, '.pnpm-store'), 'add', specifier, '--ignore-scripts', '--config.optional=false', '--config.auto-install-peers=false'], directory);
+    if (packageManager === 'npm') {
+      await run('npm', ['install', specifier, '--no-save', '--ignore-scripts', '--no-audit', '--no-fund', '--omit=optional', '--cache', join(root, 'npm-cache')], directory);
+    } else {
+      if (packageName === 'content') {
+        await writeFile(join(directory, 'pnpm-workspace.yaml'), [
+          "packages: ['.']",
+          'autoInstallPeers: false',
+          'overrides:',
+          `  '@sectile/core': ${JSON.stringify(`file:${tarballs.core}`)}`,
+          `  '@sectile/content': ${JSON.stringify(`file:${tarballs.content}`)}`,
+          `  '@sectile/dom': ${JSON.stringify(`file:${tarballs.dom}`)}`,
+          '',
+        ].join('\n'));
+      }
+      await run('pnpm', ['--store-dir', resolve(repoRoot, '.pnpm-store'), 'add', specifier, '--ignore-scripts', '--config.optional=false', '--config.auto-install-peers=false'], directory);
+    }
     for (const specifier of imports) {
       await run(process.execPath, ['--input-type=module', '-e', `await import('${specifier}');`], directory);
     }

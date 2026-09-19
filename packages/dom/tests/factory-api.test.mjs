@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import packageManifest from '../package.json' with { type: 'json' };
 
-const excludedSubpaths = new Set(['./package.json', './chart', './form', './identity', './position', './presence', './tabular', './virtual']);
+const excludedSubpaths = new Set(['./package.json', './chart', './editor', './form', './identity', './position', './presence', './tabular', './virtual']);
 
 test('every public DOM component exposes direct and fallible factories', async () => {
   const rootModule = await import('../.verification-dist/index.js');
@@ -40,6 +40,30 @@ test('identity encoding is exposed only through its focused utility subpath', as
   const identityModule = await import('../.verification-dist/identity.js');
   assert.equal(typeof identityModule.stableIDToken, 'function');
   assert.equal(typeof identityModule.stableIDElementToken, 'function');
+});
+
+test('Editor is exposed only through its optional subpath', async () => {
+  assert.equal(packageManifest.dependencies?.['@sectile/content'], undefined);
+  assert.equal(packageManifest.dependencies?.['@sectile/editor'], undefined);
+  assert.equal(packageManifest.peerDependencies?.['@sectile/content'], 'workspace:^');
+  assert.equal(packageManifest.peerDependencies?.['@sectile/editor'], 'workspace:^');
+  assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/content']?.optional, true);
+  assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/editor']?.optional, true);
+
+  const rootModule = await import('../.verification-dist/index.js');
+  assert.equal(rootModule.createEditor, undefined);
+  assert.equal(rootModule.tryCreateEditor, undefined);
+
+  const editorModule = await import('../.verification-dist/editor.js');
+  assert.equal(typeof editorModule.createEditor, 'function');
+  assert.equal(typeof editorModule.tryCreateEditor, 'function');
+
+  const editorSource = await readFile(
+    new URL('../.verification-dist/editor/connection.js', import.meta.url),
+    'utf8',
+  );
+  assert.match(editorSource, /@sectile\/content/);
+  assert.match(editorSource, /@sectile\/editor/);
 });
 
 test('Form is exposed only through its optional subpath', async () => {

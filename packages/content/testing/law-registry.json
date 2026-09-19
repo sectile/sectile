@@ -50,6 +50,11 @@
       "id": "CNT-10",
       "theory": "portable-content",
       "statement": "prepared local text edits preserve the resource ceilings validated at preparation time"
+    },
+    {
+      "id": "CNT-11",
+      "theory": "portable-content",
+      "statement": "inline fragment preparation remaps copied IDs and declared internal node references from an explicit ID map while leaving external references for destination validation"
     }
   ]
 }

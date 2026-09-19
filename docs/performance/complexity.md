@@ -9,10 +9,10 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
 | core | 380 | 26 | 61 |
-| content | 26 | 0 | 4 |
-| editor | 19 | 0 | 2 |
+| content | 28 | 0 | 4 |
+| editor | 20 | 0 | 2 |
 | chart | 80 | 0 | 15 |
-| dom | 425 | 171 | 35 |
+| dom | 437 | 171 | 35 |
 | form | 21 | 0 | 9 |
 | tabular | 33 | 0 | 11 |
 | temporal | 104 | 12 | 4 |

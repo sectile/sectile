@@ -94,6 +94,7 @@
         "createCollapsedSelection",
         "isCollapsedSelection",
         "mapEditorSelection",
+        "resolveEditorTypingMarks",
         "sameEditorSelection",
         "validateEditorSelection"
       ],

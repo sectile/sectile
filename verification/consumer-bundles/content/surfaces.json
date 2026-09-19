@@ -46,14 +46,17 @@
       "platform": "browser",
       "runtimeExports": [
         "createInlineFragment",
+        "inlineFragmentNodeIDs",
         "inlineFragmentText",
-        "inlineSurfaceLength"
+        "inlineSurfaceLength",
+        "prepareInlineFragment"
       ],
       "typeBearing": true,
       "optionalPeer": null,
       "rootEquivalentExport": null,
       "fixtureModes": [
-        "side-effect"
+        "side-effect",
+        "named"
       ]
     },
     {

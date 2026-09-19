@@ -31,7 +31,7 @@
       "types": "dist/session.d.ts"
     }
   ],
-  "fingerprint": "d6d5e1e7efa54d4b65423fac8873638261da09e5f3ed511ae7befc2bd8f555d4",
+  "fingerprint": "7c8d9c5e5378ff73cbe70f1f20ec0cbecc16f4a3824366b9f2fc8ee11488aa4a",
   "files": [
     {
       "path": "dist/action.d.ts",
@@ -55,11 +55,11 @@
     },
     {
       "path": "dist/selection.d.ts",
-      "sha256": "6a9c0c370a05100193b69aa5177ee4ff423def244104ac62bf40ce55d64d0873"
+      "sha256": "960c4647781bf76175cce84a275cd62983e26dda0506e5792b30413c641aae18"
     },
     {
       "path": "dist/session.d.ts",
-      "sha256": "7a4596c78c2da810e42d833a38817d0f76ef4bc088928798cd07f464954da6f3"
+      "sha256": "681247351dbaabc4c50ba0da9713662c06a5e88ec636c85e47edd743cad951a6"
     }
   ]
 }

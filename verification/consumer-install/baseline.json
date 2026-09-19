@@ -25,21 +25,21 @@
       }
     },
     "content": {
-      "tarballBytes": 33311,
-      "unpackedBytes": 144914,
+      "tarballBytes": 37637,
+      "unpackedBytes": 167331,
       "unpackedFiles": 39,
       "categories": {
         "runtimeJS": {
           "files": 12,
-          "bytes": 67218
+          "bytes": 79264
         },
         "declarations": {
           "files": 12,
-          "bytes": 19743
+          "bytes": 21118
         },
         "sourceMaps": {
           "files": 12,
-          "bytes": 52517
+          "bytes": 61513
         },
         "other": {
           "files": 3,
@@ -48,21 +48,21 @@
       }
     },
     "editor": {
-      "tarballBytes": 18928,
-      "unpackedBytes": 79947,
+      "tarballBytes": 20472,
+      "unpackedBytes": 89215,
       "unpackedFiles": 24,
       "categories": {
         "runtimeJS": {
           "files": 7,
-          "bytes": 34840
+          "bytes": 39288
         },
         "declarations": {
           "files": 7,
-          "bytes": 16429
+          "bytes": 17758
         },
         "sourceMaps": {
           "files": 7,
-          "bytes": 24186
+          "bytes": 27677
         },
         "other": {
           "files": 3,
@@ -186,25 +186,25 @@
       }
     },
     "dom": {
-      "tarballBytes": 304465,
-      "unpackedBytes": 1412849,
-      "unpackedFiles": 321,
+      "tarballBytes": 317798,
+      "unpackedBytes": 1513627,
+      "unpackedFiles": 411,
       "categories": {
         "runtimeJS": {
-          "files": 106,
-          "bytes": 653148
+          "files": 136,
+          "bytes": 701950
         },
         "declarations": {
-          "files": 106,
-          "bytes": 267161
+          "files": 136,
+          "bytes": 282637
         },
         "sourceMaps": {
-          "files": 106,
-          "bytes": 476789
+          "files": 136,
+          "bytes": 512185
         },
         "other": {
           "files": 3,
-          "bytes": 15751
+          "bytes": 16855
         }
       }
     },
@@ -267,8 +267,10 @@
         "@babel/types",
         "@jridgewell/sourcemap-codec",
         "@sectile/chart",
+        "@sectile/content",
         "@sectile/core",
         "@sectile/dom",
+        "@sectile/editor",
         "@sectile/form",
         "@sectile/tabular",
         "@sectile/temporal",
@@ -310,8 +312,18 @@
               "dependencies": []
             },
             {
+              "name": "@sectile/content",
+              "version": null,
+              "dependencies": []
+            },
+            {
               "name": "@sectile/core",
               "version": "0.12.0",
+              "dependencies": []
+            },
+            {
+              "name": "@sectile/editor",
+              "version": null,
               "dependencies": []
             },
             {

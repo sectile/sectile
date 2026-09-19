@@ -946,9 +946,10 @@
           ]
         },
         "fragment": {
-          "reason": "Portable fragments project document ranges using logical positions and indexes.",
+          "reason": "Portable fragments project document ranges using logical positions and indexes and validate/remap registered inline component data against compiled schema contracts.",
           "allows": [
             "foundation",
+            "schema",
             "query",
             "position",
             "fragment"
@@ -2124,6 +2125,8 @@
       "reason": "Group DOM host implementations by browser responsibility; Chart is complete and WI-008A establishes the Temporal host family.",
       "dependencies": [
         "core",
+        "content",
+        "editor",
         "form",
         "temporal",
         "virtual",
@@ -2482,6 +2485,46 @@
             "foundation"
           ]
         },
+        "editor-contracts": {
+          "reason": "DOM Editor public host contracts depend on portable Editor/Content types without browser resource ownership.",
+          "allows": [
+            "editor-contracts"
+          ]
+        },
+        "editor-markers": {
+          "reason": "DOM Editor marker projection owns data attributes and isolated/atomic contenteditable boundaries.",
+          "allows": [
+            "editor-markers"
+          ]
+        },
+        "editor-selection": {
+          "reason": "DOM Selection translation maps host boundaries to logical Editor positions over marker-owned surfaces and returns public DOM Editor selection result contracts.",
+          "allows": [
+            "editor-contracts",
+            "editor-markers",
+            "editor-selection"
+          ]
+        },
+        "editor-connection": {
+          "reason": "DOM Editor connection owns beforeinput, IME, clipboard, selection listeners, projection refresh and cleanup while delegating semantics to Editor/Content.",
+          "allows": [
+            "interaction-attributes",
+            "editor-contracts",
+            "editor-markers",
+            "editor-selection",
+            "editor-connection"
+          ]
+        },
+        "editor-api": {
+          "reason": "Focused optional Editor facade exposes host connection, marker and selection APIs without entering the DOM root closure.",
+          "allows": [
+            "editor-contracts",
+            "editor-markers",
+            "editor-selection",
+            "editor-connection",
+            "editor-api"
+          ]
+        },
         "exports": {
           "reason": "dom exports owns its named contracts and implementation; permitted imports are explicit.",
           "allows": [
@@ -2683,6 +2726,26 @@
         },
         "src/editable.ts": {
           "role": "controls",
+          "kind": "owner"
+        },
+        "src/editor.ts": {
+          "role": "editor-api",
+          "kind": "facade"
+        },
+        "src/editor/connection.ts": {
+          "role": "editor-connection",
+          "kind": "owner"
+        },
+        "src/editor/contracts.ts": {
+          "role": "editor-contracts",
+          "kind": "owner"
+        },
+        "src/editor/markers.ts": {
+          "role": "editor-markers",
+          "kind": "owner"
+        },
+        "src/editor/selection.ts": {
+          "role": "editor-selection",
           "kind": "owner"
         },
         "src/feed.ts": {
