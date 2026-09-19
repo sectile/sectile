@@ -61,9 +61,6 @@ test('Editor is a first-class documented area with runnable Vue and DOM examples
   const app = await read('src/App.vue');
   assert.match(app, /docs-area-principles/u);
   assert.match(app, /Ownership model/u);
-  assert.match(app, /docs-home-feature/u);
-  assert.match(app, /areaPath\(host\.id, 'editor'\)/u);
-  assert.match(app, /\{\{ host\.label \}\} Editor examples/u);
 });
 
 test('the design shell keeps fixed navigation geometry in tokens', async () => {

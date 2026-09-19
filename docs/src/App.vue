@@ -19,7 +19,6 @@ import {
 const hostRoutes = routes.filter((route) => route.kind === 'host');
 const activeHost = computed(() => hosts.find((host) => host.id === currentRoute.value?.host));
 const activeArea = computed(() => areas.find((area) => area.id === currentRoute.value?.area));
-const editorArea = computed(() => areas.find((area) => area.id === 'editor'));
 const activeExample = computed(() => currentRoute.value?.exampleId === undefined
   ? undefined
   : findExample(currentRoute.value.exampleId));
@@ -115,23 +114,6 @@ watchEffect(() => {
                   <span>{{ hosts.find((host) => host.id === route.host)?.description }}</span>
                 </a>
               </div>
-
-              <section v-if="editorArea" class="docs-home-feature" aria-labelledby="editor-feature-title">
-                <p class="docs-page__eyebrow">Structured authoring</p>
-                <h2 id="editor-feature-title">Portable Content + Editor</h2>
-                <p>{{ editorArea.description }}</p>
-                <div class="docs-home-feature__links">
-                  <a
-                    v-for="host in hosts"
-                    :key="host.id"
-                    class="docs-text-link"
-                    :href="routeHref(areaPath(host.id, 'editor'))"
-                    @click="handleRouteClick($event, areaPath(host.id, 'editor'))"
-                  >
-                    {{ host.label }} Editor examples
-                  </a>
-                </div>
-              </section>
             </template>
 
             <template v-else-if="currentRoute?.kind === 'host' && activeHost">
