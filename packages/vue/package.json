@@ -191,6 +191,11 @@
       "import": "./dist/form.js",
       "default": "./dist/form.js"
     },
+    "./editor": {
+      "types": "./dist/editor.d.ts",
+      "import": "./dist/editor.js",
+      "default": "./dist/editor.js"
+    },
     "./reorder": {
       "types": "./dist/reorder.d.ts",
       "import": "./dist/reorder.js",
@@ -433,6 +438,8 @@
   },
   "peerDependencies": {
     "@sectile/chart": "workspace:^",
+    "@sectile/content": "workspace:^",
+    "@sectile/editor": "workspace:^",
     "@sectile/form": "workspace:^",
     "@sectile/tabular": "workspace:^",
     "@sectile/virtual": "workspace:^",
@@ -441,6 +448,12 @@
   },
   "peerDependenciesMeta": {
     "@sectile/chart": {
+      "optional": true
+    },
+    "@sectile/content": {
+      "optional": true
+    },
+    "@sectile/editor": {
       "optional": true
     },
     "@sectile/form": {
@@ -459,6 +472,8 @@
   "devDependencies": {
     "@sectile/tooling": "workspace:*",
     "@sectile/chart": "workspace:*",
+    "@sectile/content": "workspace:*",
+    "@sectile/editor": "workspace:*",
     "@sectile/form": "workspace:*",
     "@sectile/tabular": "workspace:*",
     "@sectile/virtual": "workspace:*",

@@ -31,7 +31,6 @@ import {
 import type {
   EditorSessionSnapshot,
 } from '@sectile/editor/session';
-import { setInteractionAttributes } from '../interaction/attributes.js';
 import type {
   DOMEditorErrorCode,
   DOMEditorFailureCode,
@@ -46,6 +45,7 @@ import {
   editorHardBreakSelector,
   editorInlineAtomSelector,
   editorInlineSurfaceSelector,
+  editorRootAttributes,
   readEditorInlineSurface,
 } from './markers.js';
 
@@ -363,7 +363,9 @@ class DOMEditorConnection implements EditorConnection {
       );
     }
 
-    this.setSelection(snapshot.selection);
+    if (this.#options.selectionRestoration !== 'deferred') {
+      this.setSelection(snapshot.selection);
+    }
     return okResult(snapshot);
   }
 
@@ -419,40 +421,33 @@ class DOMEditorConnection implements EditorConnection {
   }
 
   #syncRootState(snapshot: EditorSessionSnapshot): void {
-    setOwnedAttribute(this.#root, this.#attributes, 'data-scope', 'editor');
-    setOwnedAttribute(this.#root, this.#attributes, 'data-part', 'root');
-    setOwnedAttribute(
-      this.#root,
-      this.#attributes,
+    const attributes = editorRootAttributes(snapshot, {
+      ...(this.#options.spellcheck === undefined
+        ? {}
+        : { spellcheck: this.#options.spellcheck }),
+    });
+    for (const name of [
+      'data-scope',
+      'data-part',
       'contenteditable',
-      snapshot.interaction.disabled || snapshot.interaction.readOnly
-        ? 'false'
-        : 'true',
-    );
+      'aria-disabled',
+      'aria-readonly',
+    ]) {
+      setOwnedAttribute(
+        this.#root,
+        this.#attributes,
+        name,
+        attributes[name] ?? null,
+      );
+    }
     if (this.#options.spellcheck !== undefined) {
       setOwnedAttribute(
         this.#root,
         this.#attributes,
         'spellcheck',
-        String(this.#options.spellcheck),
+        attributes['spellcheck'] ?? null,
       );
     }
-
-    setInteractionAttributes(
-      this.#root,
-      snapshot.interaction,
-      { readOnly: true },
-    );
-    rememberOwnedAttribute(
-      this.#root,
-      this.#attributes,
-      'aria-disabled',
-    );
-    rememberOwnedAttribute(
-      this.#root,
-      this.#attributes,
-      'aria-readonly',
-    );
   }
 
   #syncSelection(): EditorSelection | null {
@@ -1030,15 +1025,6 @@ function setOwnedAttribute(
   if (value === null) element.removeAttribute(name);
   else element.setAttribute(name, value);
   entry.owned = value;
-}
-
-function rememberOwnedAttribute(
-  element: HTMLElement,
-  baselines: readonly AttributeBaseline[],
-  name: string,
-): void {
-  const entry = baselines.find((candidate) => candidate.name === name);
-  if (entry !== undefined) entry.owned = element.getAttribute(name);
 }
 
 function restoreOwnedAttribute(

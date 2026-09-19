@@ -75,6 +75,10 @@
       "types": "dist/editable.d.ts"
     },
     {
+      "subpath": "./editor",
+      "types": "dist/editor.d.ts"
+    },
+    {
       "subpath": "./feed",
       "types": "dist/feed.d.ts"
     },
@@ -315,7 +319,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "c0dd2201d0d872854bba027d91b8887b146a41a4f28ab9ff360a33ad58afca35",
+  "fingerprint": "c5cd639283f81f7b12710eefc20f644403e9f82d2528fdfa35be997aa0a7bdad",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -360,6 +364,10 @@
     {
       "path": "dist/editable.d.ts",
       "sha256": "8a6997c13b7bff5f02fae51f8bcea4a2fb0d22bc541652ed607fd4e2d1f4f838"
+    },
+    {
+      "path": "dist/editor.d.ts",
+      "sha256": "4c55d272152366271065ef43b00cfef5b672659adea4b828a41683ed59705204"
     },
     {
       "path": "dist/feed.d.ts",

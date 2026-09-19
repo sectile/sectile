@@ -323,6 +323,12 @@ importers:
       '@sectile/chart':
         specifier: workspace:*
         version: link:../chart
+      '@sectile/content':
+        specifier: workspace:*
+        version: link:../content
+      '@sectile/editor':
+        specifier: workspace:*
+        version: link:../editor
       '@sectile/form':
         specifier: workspace:*
         version: link:../form

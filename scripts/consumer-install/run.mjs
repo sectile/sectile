@@ -126,7 +126,7 @@ async function inspectVueInstall(root, packageManager, tarballs) {
     },
     {
       packageName: 'editor',
-      imports: ['@sectile/dom/editor'],
+      imports: ['@sectile/dom/editor', '@sectile/vue/editor'],
       removed: [],
     },
     {

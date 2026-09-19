@@ -18,3 +18,10 @@ and `VirtualizerFooter` headless parts. `VirtualizerItem` supports `asChild`, so
 existing collection items keep their semantic element while receiving virtual
 placement and measurement refs. Install `@sectile/virtual` separately when using
 this subpath; the rest of `@sectile/vue` does not require it.
+
+`@sectile/vue/editor` composes renderer-neutral `@sectile/editor` sessions with
+the browser behavior in `@sectile/dom/editor`. It provides Vue render parts for
+the editor root, inline surfaces, inline atoms, hard breaks, isolated frames, and
+authoring mounts while keeping document transforms and selection semantics in
+their existing owners. Install `@sectile/content` and `@sectile/editor` when
+using this optional subpath.

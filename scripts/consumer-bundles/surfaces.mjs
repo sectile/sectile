@@ -106,6 +106,7 @@ function optionalPeer(packageName, subpath) {
     ['tabular:./virtual', '@sectile/virtual'],
     ['vue:./form', '@sectile/form'],
     ['vue:./chart', '@sectile/chart'],
+    ['vue:./editor', '@sectile/editor'],
   ]);
   return optional.get(`${packageName}:${subpath}`) ?? null;
 }

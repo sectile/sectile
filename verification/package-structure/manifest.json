@@ -3719,6 +3719,8 @@
       "dependencies": [
         "core",
         "dom",
+        "content",
+        "editor",
         "form",
         "temporal",
         "virtual",
@@ -4044,6 +4046,13 @@
             "foundation"
           ]
         },
+        "editor": {
+          "reason": "Vue Editor owns only rendering, refs, scheduled selection restoration, and connection lifecycle over the canonical Editor and DOM Editor owners.",
+          "allows": [
+            "editor",
+            "foundation"
+          ]
+        },
         "exports": {
           "reason": "vue exports owns its named contracts and implementation; permitted imports are explicit.",
           "allows": [
@@ -4214,6 +4223,10 @@
         },
         "src/editable.ts": {
           "role": "controls",
+          "kind": "owner"
+        },
+        "src/editor.ts": {
+          "role": "editor",
           "kind": "owner"
         },
         "src/feed.ts": {

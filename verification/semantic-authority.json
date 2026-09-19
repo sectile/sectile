@@ -127,7 +127,7 @@
     { "name": "@sectile/tabular", "manifest": "packages/tabular/package.json", "semanticDependencies": ["@sectile/core", "@sectile/virtual"] },
     { "name": "@sectile/dom", "manifest": "packages/dom/package.json", "semanticDependencies": ["@sectile/chart", "@sectile/content", "@sectile/core", "@sectile/editor", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] },
     { "name": "@sectile/terminal", "manifest": "packages/terminal/package.json", "semanticDependencies": ["@sectile/core", "@sectile/temporal"] },
-    { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "semanticDependencies": ["@sectile/chart", "@sectile/core", "@sectile/dom", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] }
+    { "name": "@sectile/vue", "manifest": "packages/vue/package.json", "semanticDependencies": ["@sectile/chart", "@sectile/content", "@sectile/core", "@sectile/dom", "@sectile/editor", "@sectile/form", "@sectile/tabular", "@sectile/temporal", "@sectile/virtual"] }
   ],
   "migrationExceptions": []
 }

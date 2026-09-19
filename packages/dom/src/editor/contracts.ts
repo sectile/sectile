@@ -32,12 +32,17 @@ export interface EditorRenderContext {
   readonly authoringSurfaces: readonly ComponentAuthoringSurface[];
 }
 
+export type EditorSelectionRestoration =
+  | 'synchronous'
+  | 'deferred';
+
 export interface EditorOptions {
   readonly root: HTMLElement;
   readonly editor: EditorSession;
   readonly authoring: CompiledAuthoringRegistry;
   readonly render: (context: EditorRenderContext) => void;
   readonly spellcheck?: boolean;
+  readonly selectionRestoration?: EditorSelectionRestoration;
   readonly onError?: (error: SectileError<DOMEditorFailureCode>) => void;
 }
 

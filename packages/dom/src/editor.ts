@@ -4,6 +4,12 @@ export {
   EDITOR_FRAGMENT_MIME,
 } from './editor/connection.js';
 export {
+  editorAuthoringMountAttributes,
+  editorHardBreakAttributes,
+  editorInlineAtomAttributes,
+  editorInlineSurfaceAttributes,
+  editorIsolatedFrameAttributes,
+  editorRootAttributes,
   markEditorAuthoringMount,
   markEditorHardBreak,
   markEditorInlineAtom,
@@ -23,4 +29,9 @@ export type {
   EditorDOMSelectionResult,
   EditorOptions,
   EditorRenderContext,
+  EditorSelectionRestoration,
 } from './editor/contracts.js';
+export type {
+  EditorDOMAttributes,
+  EditorRootAttributeOptions,
+} from './editor/markers.js';

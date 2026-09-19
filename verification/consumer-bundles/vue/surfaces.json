@@ -618,6 +618,26 @@
       ]
     },
     {
+      "subpath": "./editor",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "EditorAuthoringMount",
+        "EditorHardBreak",
+        "EditorInlineAtom",
+        "EditorInlineSurface",
+        "EditorIsolatedFrame",
+        "EditorRoot"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/editor",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./feed",
       "classification": "named-subpath",
       "platform": "browser",

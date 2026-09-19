@@ -232,7 +232,7 @@
       }
     },
     "vue": {
-      "tarballBytes": 279252,
+      "tarballBytes": 293617,
       "unpackedBytes": 1742407,
       "unpackedFiles": 330,
       "categories": {
@@ -250,7 +250,7 @@
         },
         "other": {
           "files": 3,
-          "bytes": 16736
+          "bytes": 18236
         }
       }
     }

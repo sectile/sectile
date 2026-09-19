@@ -37,6 +37,30 @@ test('Form is exposed only through its optional subpath', async () => {
   assert.equal(typeof formModule.useFormControl, 'function');
 });
 
+test('Editor is exposed only through its optional subpath', async () => {
+  const vuePackage = await readPackage('../package.json');
+  for (const peer of ['@sectile/content', '@sectile/editor']) {
+    assert.equal(vuePackage.dependencies?.[peer], undefined);
+    assert.equal(vuePackage.peerDependencies?.[peer], 'workspace:^');
+    assert.equal(vuePackage.peerDependenciesMeta?.[peer]?.optional, true);
+  }
+
+  const rootModule = await import('../.verification-dist/index.js');
+  assert.equal(rootModule.EditorRoot, undefined);
+  assert.equal(rootModule.EditorInlineSurface, undefined);
+
+  const editorModule = await import('../.verification-dist/editor.js');
+  assert.equal(typeof editorModule.EditorRoot, 'object');
+  assert.equal(typeof editorModule.EditorInlineSurface, 'object');
+  assert.equal(typeof editorModule.EditorAuthoringMount, 'object');
+  const editorSource = await readFile(
+    new URL('../.verification-dist/editor.js', import.meta.url),
+    'utf8',
+  );
+  assert.match(editorSource, /@sectile\/editor/);
+  assert.match(editorSource, /@sectile\/dom\/editor/);
+});
+
 test('Chart is exposed only through its optional subpath', async () => {
   const vuePackage = await readPackage('../package.json');
   assert.equal(vuePackage.dependencies?.['@sectile/chart'], undefined);
