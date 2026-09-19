@@ -5396,6 +5396,60 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "dom:./editor:editorAuthoringMountAttributes",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "editorAuthoringMountAttributes",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:editorHardBreakAttributes",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "editorHardBreakAttributes",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:editorInlineAtomAttributes",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "editorInlineAtomAttributes",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:editorInlineSurfaceAttributes",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "editorInlineSurfaceAttributes",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:editorIsolatedFrameAttributes",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "editorIsolatedFrameAttributes",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "dom:./editor:editorRootAttributes",
+      "package": "dom",
+      "subpath": "./editor",
+      "exportName": "editorRootAttributes",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "dom:./editor:logicalPointToDOM",
       "package": "dom",
       "subpath": "./editor",
@@ -15534,6 +15588,60 @@
       "package": "vue",
       "subpath": "./editable",
       "exportName": "EditableSubmitTrigger",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./editor:EditorAuthoringMount",
+      "package": "vue",
+      "subpath": "./editor",
+      "exportName": "EditorAuthoringMount",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./editor:EditorHardBreak",
+      "package": "vue",
+      "subpath": "./editor",
+      "exportName": "EditorHardBreak",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./editor:EditorInlineAtom",
+      "package": "vue",
+      "subpath": "./editor",
+      "exportName": "EditorInlineAtom",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./editor:EditorInlineSurface",
+      "package": "vue",
+      "subpath": "./editor",
+      "exportName": "EditorInlineSurface",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./editor:EditorIsolatedFrame",
+      "package": "vue",
+      "subpath": "./editor",
+      "exportName": "EditorIsolatedFrame",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./editor:EditorRoot",
+      "package": "vue",
+      "subpath": "./editor",
+      "exportName": "EditorRoot",
       "kind": "object",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -27095,6 +27203,68 @@
         "fullScan": {
           "allowed": true,
           "rationale": "A new immutable geometry or color owner may require one equality-range scan before selecting full versus partial upload; compatible views retain source identity and inspect neither geometry values nor color bytes."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
+      "id": "editor.text-edit-authoring-projection",
+      "source": "packages/dom/src/editor/connection.ts",
+      "benchmarkIDs": [
+        "dom:editor-text-edit-authoring-reuse"
+      ],
+      "specificationCeiling": "O(1)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "k",
+            "meaning": "component authoring surfaces retained from the latest full Editor refresh",
+            "ceiling": "Portable Content node and component ceilings"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(k)"
+        },
+        "resources": {
+          "allocations": "0 authoring projection allocations on text-edit",
+          "cacheEntries": "O(k)",
+          "listeners": "0 new listeners",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0 new subscriptions"
+        },
+        "assumptions": [
+          "Editor text-edit events are produced only by the prepared simple paragraph or heading text path and cannot change component authoring topology.",
+          "The renderer callback and DOM selection projection retain their own independent costs."
+        ],
+        "ceilings": [
+          "The retained authoring projection contains at most the component surfaces accepted by the active Content limits."
+        ],
+        "benchmarkIDs": [
+          "VAL-017:constant-work"
+        ],
+        "deterministicWork": [
+          "A prepared text edit performs zero authoring registry definition lookups after the initial full refresh.",
+          "General transactions, undo/redo, document replacement and schema replacement continue through full authoring collection."
+        ],
+        "resourceRationale": "The connection retains one immutable authoring-surface array for its current fully refreshed document generation and replaces that single reference on the next full refresh.",
+        "proof": "The Editor subscription branches on event.kind === text-edit and passes the retained authoringSurfaces reference directly to renderSnapshot; no collection or document traversal occurs in that branch.",
+        "adversarialWitness": "A one-character edit in a 50,000-paragraph document with a live DOM Editor connection performs the same zero authoring registry lookups as the 10,000-paragraph case.",
+        "evidence": [
+          "packages/dom/tests/editor.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Prepared text edits cannot change component authoring topology, so a full document authoring scan is unrelated work."
         }
       }
     },

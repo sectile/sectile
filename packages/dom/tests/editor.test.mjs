@@ -361,6 +361,62 @@ function slotText(session, id, slotName) {
   return slot.content.map((child) => child.type === 'text' ? child.text : '').join('');
 }
 
+test('prepared text edits reuse the current authoring surface projection', () => {
+  const window = new Window();
+  const document = window.document;
+  const root = document.createElement('div');
+  document.body.append(root);
+  const compiled = schema();
+  const baseAuthoring = compileAuthoringRegistry(compiled);
+  assert.equal(baseAuthoring.ok, true);
+  let definitionCalls = 0;
+  const authoring = Object.freeze({
+    definition: (component) => {
+      definitionCalls += 1;
+      return baseAuthoring.value.definition(component);
+    },
+    all: () => baseAuthoring.value.all(),
+  });
+  const session = createEditorSession({
+    document: documentFixture(),
+    schema: compiled,
+    historyLimit: 20,
+  });
+  assert.equal(session.ok, true);
+  const connection = createEditor({
+    root,
+    editor: session.value,
+    authoring,
+    render: renderFixture,
+  });
+  const initialDefinitionCalls = definitionCalls;
+  assert.ok(initialDefinitionCalls > 0);
+
+  const edited = session.value.replaceInlineText({
+    surface: { type: 'node', id: 'p1' },
+    from: 5,
+    to: 5,
+    text: '!',
+  });
+  assert.equal(edited.ok, true);
+  assert.equal(root.textContent.includes('hello!'), true);
+  assert.equal(definitionCalls, initialDefinitionCalls);
+
+  const transacted = session.value.transact({
+    operations: [{
+      type: 'replace-inline',
+      surface: { type: 'node', id: 'p1' },
+      from: 6,
+      to: 6,
+      replacement: [text('?')],
+    }],
+    historyIntent: 'command',
+  });
+  assert.equal(transacted.ok, true);
+  assert.ok(definitionCalls > initialDefinitionCalls);
+  connection.disconnect();
+});
+
 test('nested mark wrappers round-trip logical selection without renderer coupling', () => {
   const { connection, session } = setup();
   const selection = collapsed('rich', 1);

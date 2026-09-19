@@ -330,6 +330,61 @@
       }
     },
     {
+      "id": "editor.text-edit-authoring-projection",
+      "inherits": "constant-v1",
+      "source": "packages/dom/src/editor/connection.ts",
+      "benchmarkIDs": ["dom:editor-text-edit-authoring-reuse"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "variables": [
+          {
+            "name": "k",
+            "meaning": "component authoring surfaces retained from the latest full Editor refresh",
+            "ceiling": "Portable Content node and component ceilings"
+          }
+        ],
+        "time": {
+          "bound": "O(1)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(k)"
+        },
+        "resources": {
+          "allocations": "0 authoring projection allocations on text-edit",
+          "cacheEntries": "O(k)",
+          "listeners": "0 new listeners",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0 new subscriptions"
+        },
+        "assumptions": [
+          "Editor text-edit events are produced only by the prepared simple paragraph or heading text path and cannot change component authoring topology.",
+          "The renderer callback and DOM selection projection retain their own independent costs."
+        ],
+        "ceilings": [
+          "The retained authoring projection contains at most the component surfaces accepted by the active Content limits."
+        ],
+        "deterministicWork": [
+          "A prepared text edit performs zero authoring registry definition lookups after the initial full refresh.",
+          "General transactions, undo/redo, document replacement and schema replacement continue through full authoring collection."
+        ],
+        "resourceRationale": "The connection retains one immutable authoring-surface array for its current fully refreshed document generation and replaces that single reference on the next full refresh.",
+        "proof": "The Editor subscription branches on event.kind === text-edit and passes the retained authoringSurfaces reference directly to renderSnapshot; no collection or document traversal occurs in that branch.",
+        "adversarialWitness": "A one-character edit in a 50,000-paragraph document with a live DOM Editor connection performs the same zero authoring registry lookups as the 10,000-paragraph case.",
+        "evidence": [
+          "packages/dom/tests/editor.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Prepared text edits cannot change component authoring topology, so a full document authoring scan is unrelated work."
+        }
+      }
+    },
+    {
       "id": "form.initial-participants",
       "inherits": "linear-v1",
       "source": "packages/dom/src/form/connection.ts",

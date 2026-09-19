@@ -23,6 +23,7 @@ import {
 } from '@sectile/content/transform';
 import {
   collectAuthoringSurfaces,
+  type ComponentAuthoringSurface,
 } from '@sectile/editor/authoring';
 import {
   sameEditorSelection,
@@ -88,6 +89,7 @@ class DOMEditorConnection implements EditorConnection {
   #programmaticSelection = false;
   #composition: ActiveComposition | null = null;
   #unsubscribe: (() => void) | null = null;
+  #authoringSurfaces: readonly ComponentAuthoringSurface[] | null = null;
 
   readonly #beforeInput = (nativeEvent: Event): void => {
     if (!this.#active || this.#composition !== null) return;
@@ -321,7 +323,12 @@ class DOMEditorConnection implements EditorConnection {
         || event.kind === 'replace-schema'
         || event.kind === 'reconfigure'
       ) {
-        const refreshed = this.refresh();
+        const refreshed = (
+          event.kind === 'text-edit'
+          && this.#authoringSurfaces !== null
+        )
+          ? this.#renderSnapshot(event.current, this.#authoringSurfaces)
+          : this.refresh();
         if (!refreshed.ok) this.#report(refreshed.error);
         return;
       }
@@ -348,25 +355,8 @@ class DOMEditorConnection implements EditorConnection {
       limits: snapshot.contentLimits,
     });
     if (!authoring.ok) return authoring;
-
-    try {
-      this.#options.render(Object.freeze({
-        root: this.#root,
-        snapshot,
-        authoringSurfaces: authoring.value,
-      }));
-    } catch {
-      return failResult(
-        'transition-rejection',
-        'dom-editor-render-fault',
-        'The DOM Editor render callback failed.',
-      );
-    }
-
-    if (this.#options.selectionRestoration !== 'deferred') {
-      this.setSelection(snapshot.selection);
-    }
-    return okResult(snapshot);
+    this.#authoringSurfaces = authoring.value;
+    return this.#renderSnapshot(snapshot, authoring.value);
   }
 
   public readSelection() {
@@ -387,6 +377,7 @@ class DOMEditorConnection implements EditorConnection {
     if (!this.#active) return;
     this.#active = false;
     this.#composition = null;
+    this.#authoringSurfaces = null;
     this.#unsubscribe?.();
     this.#unsubscribe = null;
 
@@ -418,6 +409,30 @@ class DOMEditorConnection implements EditorConnection {
     for (const attribute of this.#attributes) {
       restoreOwnedAttribute(this.#root, attribute);
     }
+  }
+
+  #renderSnapshot(
+    snapshot: EditorSessionSnapshot,
+    authoringSurfaces: readonly ComponentAuthoringSurface[],
+  ): Result<EditorSessionSnapshot, DOMEditorFailureCode> {
+    try {
+      this.#options.render(Object.freeze({
+        root: this.#root,
+        snapshot,
+        authoringSurfaces,
+      }));
+    } catch {
+      return failResult(
+        'transition-rejection',
+        'dom-editor-render-fault',
+        'The DOM Editor render callback failed.',
+      );
+    }
+
+    if (this.#options.selectionRestoration !== 'deferred') {
+      this.setSelection(snapshot.selection);
+    }
+    return okResult(snapshot);
   }
 
   #syncRootState(snapshot: EditorSessionSnapshot): void {
