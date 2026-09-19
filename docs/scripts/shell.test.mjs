@@ -74,6 +74,8 @@ test('Editor is a first-class documented area with runnable Vue and DOM examples
   assert.match(vueArticle, /componentRef\('docs\/callout'\)/u);
   assert.match(vueArticle, /EditorAuthoringMount/u);
   assert.match(vueArticle, /selectedInlineRange/u);
+  assert.match(vueArticle, /setTypingMark/u);
+  assert.match(vueArticle, /typingMarks/u);
   assert.match(vueArticle, /toggleMark\('strong'\)/u);
   assert.match(vueArticle, /toggleMark\('emphasis'\)/u);
   assert.match(vueArticle, /toggleMark\('code'\)/u);
@@ -94,6 +96,8 @@ test('Editor is a first-class documented area with runnable Vue and DOM examples
   const domArticle = await read('src/examples/dom/editor/application-owned/example.ts');
   assert.match(domArticle, /markEditorAuthoringMount/u);
   assert.match(domArticle, /selectedInlineRange/u);
+  assert.match(domArticle, /setTypingMark/u);
+  assert.match(domArticle, /typingMarks/u);
   assert.match(domArticle, /markButtons\.emphasis/u);
   assert.match(domArticle, /markButtons\.code/u);
   assert.match(domArticle, /preventToolbarFocus/u);

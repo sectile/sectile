@@ -427,17 +427,41 @@ function sameSurface(left: InlineSurface, right: InlineSurface): boolean {
     );
 }
 
-function canFormat(value: EditorSessionSnapshot): boolean {
+function hasInlineFormattingTarget(value: EditorSessionSnapshot): boolean {
+  const selection = value.selection;
   return !value.interaction.disabled
     && !value.interaction.readOnly
-    && selectedInlineRange(value) !== null;
+    && selection !== null
+    && selection.anchor.type === 'inline'
+    && selection.focus.type === 'inline'
+    && sameSurface(selection.anchor.surface, selection.focus.surface);
+}
+
+function canFormat(value: EditorSessionSnapshot): boolean {
+  return hasInlineFormattingTarget(value);
+}
+
+function hasCollapsedInlineCaret(value: EditorSessionSnapshot): boolean {
+  const selection = value.selection;
+  return hasInlineFormattingTarget(value)
+    && selection !== null
+    && selection.anchor.type === 'inline'
+    && selection.focus.type === 'inline'
+    && selection.anchor.offset === selection.focus.offset;
 }
 
 function selectionLabel(value: EditorSessionSnapshot): string {
   const range = selectedInlineRange(value);
-  return range === null
-    ? 'Select text to format'
-    : `${range.to - range.from} characters selected`;
+  if (range !== null) return `${range.to - range.from} characters selected`;
+  if (hasCollapsedInlineCaret(value)) {
+    const active = value.typingMarks
+      .filter((mark) => mark.type !== 'link')
+      .map((mark) => mark.type);
+    return active.length === 0
+      ? 'Caret · plain text'
+      : `Caret · ${active.join(' + ')}`;
+  }
+  return 'Place the caret or select text';
 }
 
 function selectedRangeHasMark(
@@ -467,10 +491,30 @@ function selectedRangeHasMark(
   return foundText;
 }
 
+function formatMarkIsActive(
+  value: EditorSessionSnapshot,
+  type: FormatMark,
+): boolean {
+  const range = selectedInlineRange(value);
+  return range === null
+    ? hasCollapsedInlineCaret(value)
+      && value.typingMarks.some((mark) => mark.type === type)
+    : selectedRangeHasMark(value, type);
+}
+
 function toggleMark(type: FormatMark): void {
   const current = snapshot.value;
+  if (!canFormat(current) || current.selection === null) return;
   const range = selectedInlineRange(current);
-  if (range === null || current.selection === null) return;
+
+  if (range === null) {
+    const result = editor.setTypingMark(
+      type,
+      !formatMarkIsActive(current, type),
+    );
+    error.value = result.ok ? null : result.error.message;
+    return;
+  }
 
   const result = editor.transact({
     operations: [{
@@ -489,8 +533,21 @@ function toggleMark(type: FormatMark): void {
 
 function clearFormatting(): void {
   const current = snapshot.value;
+  if (!canFormat(current) || current.selection === null) return;
   const range = selectedInlineRange(current);
-  if (range === null || current.selection === null) return;
+
+  if (range === null) {
+    for (const type of ['strong', 'emphasis', 'code'] as const) {
+      if (!current.typingMarks.some((mark) => mark.type === type)) continue;
+      const result = editor.setTypingMark(type, false);
+      if (!result.ok) {
+        error.value = result.error.message;
+        return;
+      }
+    }
+    error.value = null;
+    return;
+  }
 
   const result = editor.transact({
     operations: [
@@ -590,7 +647,7 @@ function redo(): void {
           aria-label="Bold"
           title="Bold"
           :disabled="!canFormat(snapshot)"
-          :aria-pressed="selectedRangeHasMark(snapshot, 'strong')"
+          :aria-pressed="formatMarkIsActive(snapshot, 'strong')"
           @mousedown.prevent
           @click="toggleMark('strong')"
         >
@@ -601,7 +658,7 @@ function redo(): void {
           aria-label="Italic"
           title="Italic"
           :disabled="!canFormat(snapshot)"
-          :aria-pressed="selectedRangeHasMark(snapshot, 'emphasis')"
+          :aria-pressed="formatMarkIsActive(snapshot, 'emphasis')"
           @mousedown.prevent
           @click="toggleMark('emphasis')"
         >
@@ -612,7 +669,7 @@ function redo(): void {
           aria-label="Code"
           title="Inline code"
           :disabled="!canFormat(snapshot)"
-          :aria-pressed="selectedRangeHasMark(snapshot, 'code')"
+          :aria-pressed="formatMarkIsActive(snapshot, 'code')"
           @mousedown.prevent
           @click="toggleMark('code')"
         >
