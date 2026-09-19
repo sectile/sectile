@@ -19,7 +19,7 @@ Library authors and application engineers who need predictable interaction behav
 
 - Semantic domains: `@sectile/core`, `@sectile/content`, `@sectile/editor`, `@sectile/chart`, `@sectile/form`, `@sectile/temporal`, `@sectile/tabular`, and `@sectile/virtual`.
 - Host adapters: `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue`.
-- Core and Temporal support DOM, Terminal, and Vue projections. Chart, Form, Tabular, and Virtual support DOM and Vue projections and intentionally have no Terminal projection. Vue uses the corresponding DOM projection.
+- Content is renderer-independent and does not require a host projection. Core and Temporal support DOM, Terminal, and Vue projections. Editor, Chart, Form, Tabular, and Virtual support DOM and Vue projections and intentionally have no Terminal projection. Vue uses the corresponding DOM projection.
 - Playgrounds: development witnesses, not end-user documentation.
 - Documentation: end-user learning and API reference surface.
 

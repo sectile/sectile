@@ -20,7 +20,7 @@ Sectile separates interaction rules from presentation. `@sectile/core` defines d
 | `@sectile/terminal` | Terminal input, Unicode layout, and TTY integration |
 | `@sectile/vue` | Headless Vue compound components backed by DOM projections |
 
-Host coverage is explicit rather than universal. Core and Temporal have DOM, Terminal, and Vue projections. Chart, Form, Tabular, and Virtual have DOM and Vue projections; they do not expose Terminal adapters. Vue builds on the corresponding DOM projection, while renderer-neutral domain packages remain usable without a host adapter.
+Host coverage is explicit rather than universal. Content is renderer-independent and does not require a host projection. Core and Temporal have DOM, Terminal, and Vue projections. Editor, Chart, Form, Tabular, and Virtual have DOM and Vue projections; they do not expose Terminal adapters. Vue builds on the corresponding DOM projection, while renderer-neutral domain packages remain usable without a host adapter.
 
 ## Principles
 

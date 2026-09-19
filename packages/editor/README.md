@@ -16,7 +16,7 @@ import { createEditorSession } from '@sectile/editor/session'
 ```
 
 Use `@sectile/content` directly for portable document validation,
-serialization, migrations and lower-level schema-valid transforms that do not
-need authoring policy/history parity.
+serialization and lower-level schema-valid transforms that do not need
+authoring policy/history parity.
 
 The root export is type-focused. Runtime APIs live on focused subpaths.
