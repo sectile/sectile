@@ -19,6 +19,7 @@ import {
 const hostRoutes = routes.filter((route) => route.kind === 'host');
 const activeHost = computed(() => hosts.find((host) => host.id === currentRoute.value?.host));
 const activeArea = computed(() => areas.find((area) => area.id === currentRoute.value?.area));
+const editorArea = computed(() => areas.find((area) => area.id === 'editor'));
 const activeExample = computed(() => currentRoute.value?.exampleId === undefined
   ? undefined
   : findExample(currentRoute.value.exampleId));
@@ -114,6 +115,23 @@ watchEffect(() => {
                   <span>{{ hosts.find((host) => host.id === route.host)?.description }}</span>
                 </a>
               </div>
+
+              <section v-if="editorArea" class="docs-home-feature" aria-labelledby="editor-feature-title">
+                <p class="docs-page__eyebrow">Structured authoring</p>
+                <h2 id="editor-feature-title">Portable Content + Editor</h2>
+                <p>{{ editorArea.description }}</p>
+                <div class="docs-home-feature__links">
+                  <a
+                    v-for="host in hosts"
+                    :key="host.id"
+                    class="docs-text-link"
+                    :href="routeHref(areaPath(host.id, 'editor'))"
+                    @click="handleRouteClick($event, areaPath(host.id, 'editor'))"
+                  >
+                    {{ host.label }} Editor examples
+                  </a>
+                </div>
+              </section>
             </template>
 
             <template v-else-if="currentRoute?.kind === 'host' && activeHost">
@@ -139,6 +157,19 @@ watchEffect(() => {
               <p class="docs-page__eyebrow">{{ activeHost.label }} · {{ activeArea.label }}</p>
               <h1>{{ activeArea.label }}</h1>
               <p class="docs-page__lede">{{ activeArea.description }}</p>
+
+              <section
+                v-if="activeArea.principles.length > 0"
+                class="docs-area-principles"
+                aria-labelledby="area-principles-title"
+              >
+                <h2 id="area-principles-title">Ownership model</h2>
+                <ul>
+                  <li v-for="principle in activeArea.principles" :key="principle">
+                    {{ principle }}
+                  </li>
+                </ul>
+              </section>
 
               <div v-if="areaExamples.length > 0" class="docs-example-grid">
                 <a

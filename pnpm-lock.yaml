@@ -117,9 +117,15 @@ importers:
 
   docs:
     dependencies:
+      '@sectile/content':
+        specifier: workspace:*
+        version: link:../packages/content
       '@sectile/dom':
         specifier: workspace:*
         version: link:../packages/dom
+      '@sectile/editor':
+        specifier: workspace:*
+        version: link:../packages/editor
       '@sectile/vue':
         specifier: workspace:*
         version: link:../packages/vue

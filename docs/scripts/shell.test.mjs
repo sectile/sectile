@@ -40,6 +40,32 @@ test('the shell derives separate Vue and DOM package and example routes', () => 
   assert.ok(!paths.includes('/packages'));
 });
 
+test('Editor is a first-class documented area with runnable Vue and DOM examples', async () => {
+  const editorArea = areas.find((area) => area.id === 'editor');
+  assert.ok(editorArea);
+  assert.equal(editorArea.principles.length, 3);
+
+  const vueEditorExamples = examples.filter(
+    (example) => example.host === 'vue' && example.area === 'editor',
+  );
+  const domEditorExamples = examples.filter(
+    (example) => example.host === 'dom' && example.area === 'editor',
+  );
+  assert.equal(vueEditorExamples.length, 2);
+  assert.equal(domEditorExamples.length, 2);
+
+  const packageJSON = JSON.parse(await read('package.json'));
+  assert.equal(packageJSON.dependencies['@sectile/content'], 'workspace:*');
+  assert.equal(packageJSON.dependencies['@sectile/editor'], 'workspace:*');
+
+  const app = await read('src/App.vue');
+  assert.match(app, /docs-area-principles/u);
+  assert.match(app, /Ownership model/u);
+  assert.match(app, /docs-home-feature/u);
+  assert.match(app, /areaPath\(host\.id, 'editor'\)/u);
+  assert.match(app, /\{\{ host\.label \}\} Editor examples/u);
+});
+
 test('the design shell keeps fixed navigation geometry in tokens', async () => {
   const tokens = await read('src/styles/tokens.css');
   const shell = await read('src/styles/shell.css');

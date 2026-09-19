@@ -5,18 +5,43 @@ export const hosts = [
 
 export type ExampleHost = (typeof hosts)[number]['id'];
 
-export const areas = [
-  { id: 'components', label: 'Components', description: 'Focused interaction patterns such as checkboxes, dialogs, selects, menus, and overlays.' },
-  { id: 'form', label: 'Form', description: 'Validation, submission, field coordination, reset, and server-driven form workflows.' },
-  { id: 'temporal', label: 'Temporal', description: 'Dates, time, ranges, calendars, constraints, and scheduling workflows.' },
-  { id: 'virtual', label: 'Virtual', description: 'Large collections, measurement, anchoring, scrollports, grids, masonry, and spatial layouts.' },
-  { id: 'tabular', label: 'Tabular', description: 'Tables, grids, trees, data sources, selection, editing, and virtualization.' },
-  { id: 'chart', label: 'Chart', description: 'Chart data, scales, interaction, visible ranges, rendering, and large-data policies.' },
-] as const;
+export type ExampleArea =
+  | 'editor'
+  | 'components'
+  | 'form'
+  | 'temporal'
+  | 'virtual'
+  | 'tabular'
+  | 'chart';
 
-export type ExampleArea = (typeof areas)[number]['id'];
+export interface ExampleAreaDefinition {
+  readonly id: ExampleArea;
+  readonly label: string;
+  readonly description: string;
+  readonly principles: readonly string[];
+}
+
+export const areas: readonly ExampleAreaDefinition[] = [
+  {
+    id: 'editor',
+    label: 'Editor',
+    description: 'Portable structured content authoring across renderer-neutral Editor sessions and DOM/Vue host projections.',
+    principles: [
+      'Portable Content owns persisted document, schema, validation, fragments, and pure transforms.',
+      'Editor owns authoring sessions, logical selection, transactions, actions, policy, and local undo/redo.',
+      'DOM and Vue own browser input, rendering projection, accessibility, refs, and connection lifecycle.',
+    ],
+  },
+  { id: 'components', label: 'Components', description: 'Focused interaction patterns such as checkboxes, dialogs, selects, menus, and overlays.', principles: [] },
+  { id: 'form', label: 'Form', description: 'Validation, submission, field coordination, reset, and server-driven form workflows.', principles: [] },
+  { id: 'temporal', label: 'Temporal', description: 'Dates, time, ranges, calendars, constraints, and scheduling workflows.', principles: [] },
+  { id: 'virtual', label: 'Virtual', description: 'Large collections, measurement, anchoring, scrollports, grids, masonry, and spatial layouts.', principles: [] },
+  { id: 'tabular', label: 'Tabular', description: 'Tables, grids, trees, data sources, selection, editing, and virtualization.', principles: [] },
+  { id: 'chart', label: 'Chart', description: 'Chart data, scales, interaction, visible ranges, rendering, and large-data policies.', principles: [] },
+];
+
 export type ExampleKind = 'behavior' | 'styling';
-export type PreviewFixture = 'control' | 'form' | 'surface' | 'viewport' | 'table' | 'chart';
+export type PreviewFixture = 'control' | 'editor' | 'form' | 'surface' | 'viewport' | 'table' | 'chart';
 
 export interface ExampleDefinition {
   readonly id: string;
@@ -41,6 +66,74 @@ export interface ExampleDefinition {
 }
 
 export const examples: readonly ExampleDefinition[] = [
+  {
+    id: 'vue-editor-basic-authoring',
+    host: 'vue',
+    area: 'editor',
+    subject: 'Editor',
+    slug: 'basic-authoring',
+    title: 'Structured authoring with local history',
+    description: 'Render a Portable Content document through Vue Editor parts while the renderer-neutral Editor session owns updates and undo/redo.',
+    focus: 'Editor session + Vue projection',
+    kind: 'behavior',
+    fixture: 'editor',
+    tags: ['EditorRoot', 'EditorInlineSurface', 'undo', 'redo'],
+    sourceOwner: 'vue',
+    previewPath: './vue/editor/basic-authoring/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/editor/basic-authoring/Preview.vue' }],
+    related: ['vue-editor-read-only'],
+  },
+  {
+    id: 'vue-editor-read-only',
+    host: 'vue',
+    area: 'editor',
+    subject: 'Editor',
+    slug: 'read-only',
+    title: 'Reconfigure one session as read-only',
+    description: 'Change authoring interaction policy without replacing the Portable Content document or moving editing semantics into Vue.',
+    focus: 'Interaction reconfiguration',
+    kind: 'behavior',
+    fixture: 'editor',
+    tags: ['reconfigure', 'readOnly', 'contenteditable'],
+    sourceOwner: 'vue',
+    previewPath: './vue/editor/read-only/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/editor/read-only/Preview.vue' }],
+    related: ['vue-editor-basic-authoring'],
+  },
+  {
+    id: 'dom-editor-application-owned',
+    host: 'dom',
+    area: 'editor',
+    subject: 'Editor',
+    slug: 'application-owned-host',
+    title: 'Connect application-owned markup',
+    description: 'Create a DOM Editor connection around markup owned by the application and dispose every host resource explicitly.',
+    focus: 'DOM connection lifecycle',
+    kind: 'behavior',
+    fixture: 'editor',
+    tags: ['createEditor', 'markEditorInlineSurface', 'disconnect'],
+    sourceOwner: 'dom',
+    previewPath: './dom/editor/application-owned/Preview.vue',
+    code: [{ label: 'TypeScript', language: 'ts', path: './dom/editor/application-owned/example.ts' }],
+    related: ['dom-editor-session-history'],
+  },
+  {
+    id: 'dom-editor-session-history',
+    host: 'dom',
+    area: 'editor',
+    subject: 'Editor',
+    slug: 'session-history',
+    title: 'Project Editor history into a DOM host',
+    description: 'Keep local undo/redo in the renderer-neutral Editor session while the DOM host only projects the current snapshot.',
+    focus: 'History ownership',
+    kind: 'behavior',
+    fixture: 'editor',
+    tags: ['replaceText', 'undo', 'redo', 'render'],
+    sourceOwner: 'dom',
+    previewPath: './dom/editor/session-history/Preview.vue',
+    code: [{ label: 'TypeScript', language: 'ts', path: './dom/editor/session-history/example.ts' }],
+    related: ['dom-editor-application-owned'],
+  },
   {
     id: 'vue-components-checkbox-controlled-state',
     host: 'vue',

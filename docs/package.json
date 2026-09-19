@@ -10,7 +10,9 @@
     "typecheck": "sectile-typecheck-sfc --noEmit"
   },
   "dependencies": {
+    "@sectile/content": "workspace:*",
     "@sectile/dom": "workspace:*",
+    "@sectile/editor": "workspace:*",
     "@sectile/vue": "workspace:*",
     "vue": "^3.5.22"
   },
