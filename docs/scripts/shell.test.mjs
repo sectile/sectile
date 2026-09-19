@@ -44,6 +44,7 @@ test('Editor is a first-class documented area with runnable Vue and DOM examples
   const editorArea = areas.find((area) => area.id === 'editor');
   assert.ok(editorArea);
   assert.equal(editorArea.principles.length, 3);
+  assert.equal(areas.at(-1)?.id, 'editor');
 
   const vueEditorExamples = examples.filter(
     (example) => example.host === 'vue' && example.area === 'editor',
@@ -61,6 +62,25 @@ test('Editor is a first-class documented area with runnable Vue and DOM examples
   const app = await read('src/App.vue');
   assert.match(app, /docs-area-principles/u);
   assert.match(app, /Ownership model/u);
+  assert.doesNotMatch(app, /docs-example-card__thumbnail/u);
+  assert.doesNotMatch(app, /<p>\{\{ example\.subject \}\}<\/p>/u);
+
+  const vueArticle = await read('src/examples/vue/editor/basic-authoring/Preview.vue');
+  assert.match(vueArticle, /componentRef\('docs\/callout'\)/u);
+  assert.match(vueArticle, /EditorAuthoringMount/u);
+  assert.match(vueArticle, /type: 'set-mark'/u);
+
+  const vueReview = await read('src/examples/vue/editor/read-only/Preview.vue');
+  assert.match(vueReview, /EditorIsolatedFrame/u);
+  assert.match(vueReview, /component: 'docs\/comparison'/u);
+
+  const domArticle = await read('src/examples/dom/editor/application-owned/example.ts');
+  assert.match(domArticle, /markEditorAuthoringMount/u);
+  assert.match(domArticle, /type: 'set-mark'/u);
+
+  const domHistory = await read('src/examples/dom/editor/session-history/example.ts');
+  assert.match(domHistory, /Run transaction/u);
+  assert.match(domHistory, /operations: \[/u);
 });
 
 test('the design shell keeps fixed navigation geometry in tokens', async () => {
@@ -71,6 +91,7 @@ test('the design shell keeps fixed navigation geometry in tokens', async () => {
   assert.match(tokens, /--docs-sidebar-width: 256px/u);
   assert.match(tokens, /--docs-content-width: 1040px/u);
   assert.match(shell, /grid-template-columns: var\(--docs-sidebar-width\) minmax\(0, 1fr\)/u);
+  assert.doesNotMatch(shell, /docs-example-card__thumbnail/u);
   assert.doesNotMatch(shell, /--vp-/u);
 });
 

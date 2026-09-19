@@ -161,12 +161,7 @@ watchEffect(() => {
                   :href="routeHref(`/${example.host}/${example.area}/${example.slug}`)"
                   @click="handleRouteClick($event, `/${example.host}/${example.area}/${example.slug}`)"
                 >
-                  <div class="docs-example-card__thumbnail" aria-hidden="true">
-                    <span>{{ example.subject }}</span>
-                    <strong>{{ example.focus }}</strong>
-                  </div>
                   <div class="docs-example-card__body">
-                    <p>{{ example.subject }}</p>
                     <h2>{{ example.title }}</h2>
                     <span>{{ example.description }}</span>
                     <ul class="docs-tag-list" aria-label="Example topics">

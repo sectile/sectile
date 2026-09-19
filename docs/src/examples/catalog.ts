@@ -6,13 +6,13 @@ export const hosts = [
 export type ExampleHost = (typeof hosts)[number]['id'];
 
 export type ExampleArea =
-  | 'editor'
   | 'components'
   | 'form'
   | 'temporal'
   | 'virtual'
   | 'tabular'
-  | 'chart';
+  | 'chart'
+  | 'editor';
 
 export interface ExampleAreaDefinition {
   readonly id: ExampleArea;
@@ -22,6 +22,12 @@ export interface ExampleAreaDefinition {
 }
 
 export const areas: readonly ExampleAreaDefinition[] = [
+  { id: 'components', label: 'Components', description: 'Focused interaction patterns such as checkboxes, dialogs, selects, menus, and overlays.', principles: [] },
+  { id: 'form', label: 'Form', description: 'Validation, submission, field coordination, reset, and server-driven form workflows.', principles: [] },
+  { id: 'temporal', label: 'Temporal', description: 'Dates, time, ranges, calendars, constraints, and scheduling workflows.', principles: [] },
+  { id: 'virtual', label: 'Virtual', description: 'Large collections, measurement, anchoring, scrollports, grids, masonry, and spatial layouts.', principles: [] },
+  { id: 'tabular', label: 'Tabular', description: 'Tables, grids, trees, data sources, selection, editing, and virtualization.', principles: [] },
+  { id: 'chart', label: 'Chart', description: 'Chart data, scales, interaction, visible ranges, rendering, and large-data policies.', principles: [] },
   {
     id: 'editor',
     label: 'Editor',
@@ -32,12 +38,6 @@ export const areas: readonly ExampleAreaDefinition[] = [
       'DOM and Vue own browser input, rendering projection, accessibility, refs, and connection lifecycle.',
     ],
   },
-  { id: 'components', label: 'Components', description: 'Focused interaction patterns such as checkboxes, dialogs, selects, menus, and overlays.', principles: [] },
-  { id: 'form', label: 'Form', description: 'Validation, submission, field coordination, reset, and server-driven form workflows.', principles: [] },
-  { id: 'temporal', label: 'Temporal', description: 'Dates, time, ranges, calendars, constraints, and scheduling workflows.', principles: [] },
-  { id: 'virtual', label: 'Virtual', description: 'Large collections, measurement, anchoring, scrollports, grids, masonry, and spatial layouts.', principles: [] },
-  { id: 'tabular', label: 'Tabular', description: 'Tables, grids, trees, data sources, selection, editing, and virtualization.', principles: [] },
-  { id: 'chart', label: 'Chart', description: 'Chart data, scales, interaction, visible ranges, rendering, and large-data policies.', principles: [] },
 ];
 
 export type ExampleKind = 'behavior' | 'styling';
@@ -72,12 +72,12 @@ export const examples: readonly ExampleDefinition[] = [
     area: 'editor',
     subject: 'Editor',
     slug: 'basic-authoring',
-    title: 'Structured authoring with local history',
-    description: 'Render a Portable Content document through Vue Editor parts while the renderer-neutral Editor session owns updates and undo/redo.',
-    focus: 'Editor session + Vue projection',
+    title: 'Article editing with formatting and a component slot',
+    description: 'Edit a heading, rich paragraph, and registered callout slot in one renderer-neutral Editor session with local undo/redo.',
+    focus: 'Structured article + component slot',
     kind: 'behavior',
     fixture: 'editor',
-    tags: ['EditorRoot', 'EditorInlineSurface', 'undo', 'redo'],
+    tags: ['EditorRoot', 'set-mark', 'EditorAuthoringMount', 'undo'],
     sourceOwner: 'vue',
     previewPath: './vue/editor/basic-authoring/Preview.vue',
     code: [{ label: 'Vue', language: 'vue', path: './vue/editor/basic-authoring/Preview.vue' }],
@@ -89,12 +89,12 @@ export const examples: readonly ExampleDefinition[] = [
     area: 'editor',
     subject: 'Editor',
     slug: 'read-only',
-    title: 'Reconfigure one session as read-only',
-    description: 'Change authoring interaction policy without replacing the Portable Content document or moving editing semantics into Vue.',
-    focus: 'Interaction reconfiguration',
+    title: 'Review mode across isolated component slots',
+    description: 'Render a two-slot comparison component, preserve independent editing boundaries, and switch the same session into read-only review mode.',
+    focus: 'Isolated slots + review mode',
     kind: 'behavior',
     fixture: 'editor',
-    tags: ['reconfigure', 'readOnly', 'contenteditable'],
+    tags: ['EditorIsolatedFrame', 'EditorAuthoringMount', 'reconfigure'],
     sourceOwner: 'vue',
     previewPath: './vue/editor/read-only/Preview.vue',
     code: [{ label: 'Vue', language: 'vue', path: './vue/editor/read-only/Preview.vue' }],
@@ -106,12 +106,12 @@ export const examples: readonly ExampleDefinition[] = [
     area: 'editor',
     subject: 'Editor',
     slug: 'application-owned-host',
-    title: 'Connect application-owned markup',
-    description: 'Create a DOM Editor connection around markup owned by the application and dispose every host resource explicitly.',
-    focus: 'DOM connection lifecycle',
+    title: 'Render structured content in application-owned DOM',
+    description: 'Project a heading, rich paragraph, and registered callout slot into markup created entirely by the application.',
+    focus: 'Custom DOM projection + component mount',
     kind: 'behavior',
     fixture: 'editor',
-    tags: ['createEditor', 'markEditorInlineSurface', 'disconnect'],
+    tags: ['createEditor', 'markEditorAuthoringMount', 'set-mark'],
     sourceOwner: 'dom',
     previewPath: './dom/editor/application-owned/Preview.vue',
     code: [{ label: 'TypeScript', language: 'ts', path: './dom/editor/application-owned/example.ts' }],
@@ -123,12 +123,12 @@ export const examples: readonly ExampleDefinition[] = [
     area: 'editor',
     subject: 'Editor',
     slug: 'session-history',
-    title: 'Project Editor history into a DOM host',
-    description: 'Keep local undo/redo in the renderer-neutral Editor session while the DOM host only projects the current snapshot.',
-    focus: 'History ownership',
+    title: 'Commit two blocks as one history entry',
+    description: 'Apply a multi-operation Editor transaction to two separate blocks, then undo and redo the entire change atomically.',
+    focus: 'Atomic transaction history',
     kind: 'behavior',
     fixture: 'editor',
-    tags: ['replaceText', 'undo', 'redo', 'render'],
+    tags: ['transact', 'undo', 'redo', 'render'],
     sourceOwner: 'dom',
     previewPath: './dom/editor/session-history/Preview.vue',
     code: [{ label: 'TypeScript', language: 'ts', path: './dom/editor/session-history/example.ts' }],

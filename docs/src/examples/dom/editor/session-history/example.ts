@@ -13,11 +13,11 @@ export function mountExample(root: HTMLElement): () => void {
     groups: [],
     blockContent: {
       kind: 'block',
-      allowed: [baseRef('paragraph')],
+      allowed: [baseRef('heading'), baseRef('paragraph')],
     },
     rootContent: {
       kind: 'block',
-      allowed: [baseRef('paragraph')],
+      allowed: [baseRef('heading'), baseRef('paragraph')],
     },
     inlineContent: {
       kind: 'inline',
@@ -38,15 +38,36 @@ export function mountExample(root: HTMLElement): () => void {
       schema: { id: 'docs/dom-editor-history', version: 1 },
       root: {
         type: 'document',
-        children: [{
-          id: 'note',
-          type: 'paragraph',
-          children: [{
-            type: 'text',
-            text: 'History belongs to the Editor session.',
-            marks: [],
-          }],
-        }],
+        children: [
+          {
+            id: 'history-title',
+            type: 'heading',
+            level: 2,
+            children: [{
+              type: 'text',
+              text: 'Atomic multi-block transaction',
+              marks: [],
+            }],
+          },
+          {
+            id: 'summary',
+            type: 'paragraph',
+            children: [{
+              type: 'text',
+              text: 'Summary: draft copy',
+              marks: [],
+            }],
+          },
+          {
+            id: 'details',
+            type: 'paragraph',
+            children: [{
+              type: 'text',
+              text: 'Details: draft copy',
+              marks: [],
+            }],
+          },
+        ],
       },
     },
   });
@@ -55,7 +76,7 @@ export function mountExample(root: HTMLElement): () => void {
   const editor = editorResult.value;
   const editorElement = document.createElement('div');
   const toolbar = document.createElement('div');
-  const append = document.createElement('button');
+  const transact = document.createElement('button');
   const undo = document.createElement('button');
   const redo = document.createElement('button');
   const status = document.createElement('p');
@@ -63,62 +84,123 @@ export function mountExample(root: HTMLElement): () => void {
   root.dataset['exampleEditor'] = '';
   toolbar.dataset['exampleEditorToolbar'] = '';
   status.dataset['exampleEditorStatus'] = '';
-  editorElement.setAttribute('aria-label', 'Editor history example');
+  editorElement.setAttribute('aria-label', 'Atomic Editor transaction example');
 
-  append.type = undo.type = redo.type = 'button';
-  append.textContent = 'Append word';
-  undo.textContent = 'Undo';
-  redo.textContent = 'Redo';
-  toolbar.append(append, undo, redo);
+  transact.type = undo.type = redo.type = 'button';
+  transact.textContent = 'Run transaction';
+  undo.textContent = 'Undo transaction';
+  redo.textContent = 'Redo transaction';
+  toolbar.append(transact, undo, redo);
 
   const connection = createEditor({
     root: editorElement,
     editor,
     authoring: authoringResult.value,
     render({ snapshot }) {
-      const node = snapshot.index.getNode('note');
-      if (node?.type !== 'paragraph') return;
+      const title = snapshot.index.getNode('history-title');
+      const summary = snapshot.index.getNode('summary');
+      const details = snapshot.index.getNode('details');
+      if (
+        title?.type !== 'heading'
+        || summary?.type !== 'paragraph'
+        || details?.type !== 'paragraph'
+      ) {
+        return;
+      }
 
-      const paragraph = document.createElement('p');
-      markEditorInlineSurface(paragraph, { type: 'node', id: 'note' });
-      paragraph.textContent = node.children
-        .map((child) => child.type === 'text' ? child.text : '')
-        .join('');
-      editorElement.replaceChildren(paragraph);
+      const article = document.createElement('article');
+      article.dataset['exampleEditorDocument'] = '';
+
+      const heading = document.createElement('h2');
+      markEditorInlineSurface(heading, { type: 'node', id: 'history-title' });
+      heading.textContent = textOf(title.children);
+
+      const transactionGrid = document.createElement('div');
+      transactionGrid.dataset['exampleEditorTransaction'] = '';
+
+      const summaryCard = document.createElement('section');
+      const summaryLabel = document.createElement('span');
+      summaryLabel.dataset['exampleEditorSlotLabel'] = '';
+      summaryLabel.textContent = 'Summary block';
+      const summaryParagraph = document.createElement('p');
+      markEditorInlineSurface(summaryParagraph, { type: 'node', id: 'summary' });
+      summaryParagraph.textContent = textOf(summary.children);
+      summaryCard.append(summaryLabel, summaryParagraph);
+
+      const detailCard = document.createElement('section');
+      const detailLabel = document.createElement('span');
+      detailLabel.dataset['exampleEditorSlotLabel'] = '';
+      detailLabel.textContent = 'Details block';
+      const detailParagraph = document.createElement('p');
+      markEditorInlineSurface(detailParagraph, { type: 'node', id: 'details' });
+      detailParagraph.textContent = textOf(details.children);
+      detailCard.append(detailLabel, detailParagraph);
+
+      transactionGrid.append(summaryCard, detailCard);
+      article.append(heading, transactionGrid);
+      editorElement.replaceChildren(article);
 
       undo.disabled = !snapshot.canUndo;
       redo.disabled = !snapshot.canRedo;
-      status.textContent = `Revision ${snapshot.revision} · ${snapshot.canUndo ? 'undo available' : 'history empty'}`;
+      status.textContent = `2 blocks · one transaction · revision ${snapshot.revision}`;
     },
   });
 
-  const appendWord = (): void => {
-    const node = editor.getSnapshot().index.getNode('note');
-    if (node?.type !== 'paragraph') return;
-    const text = node.children[0];
-    const length = text?.type === 'text' ? text.text.length : 0;
-    editor.replaceText({
-      id: 'note',
-      from: length,
-      to: length,
-      text: ' edited',
-      historyIntent: 'typing',
+  const runTransaction = (): void => {
+    const current = editor.getSnapshot();
+    const summary = current.index.getNode('summary');
+    const details = current.index.getNode('details');
+    if (summary?.type !== 'paragraph' || details?.type !== 'paragraph') return;
+
+    const summaryLength = textOf(summary.children).length;
+    const detailsLength = textOf(details.children).length;
+    const result = editor.transact({
+      operations: [
+        {
+          type: 'replace-inline',
+          surface: { type: 'node', id: 'summary' },
+          from: summaryLength,
+          to: summaryLength,
+          replacement: [{
+            type: 'text',
+            text: ' — approved',
+            marks: [{ type: 'strong' }],
+          }],
+        },
+        {
+          type: 'replace-inline',
+          surface: { type: 'node', id: 'details' },
+          from: detailsLength,
+          to: detailsLength,
+          replacement: [{
+            type: 'text',
+            text: ' — ready to publish',
+            marks: [],
+          }],
+        },
+      ],
+      historyIntent: 'command',
     });
-  };
-  const undoHistory = (): void => {
-    editor.undo();
-  };
-  const redoHistory = (): void => {
-    editor.redo();
+    if (!result.ok) status.textContent = result.error.message;
   };
 
-  append.addEventListener('click', appendWord);
+  const undoHistory = (): void => {
+    const result = editor.undo();
+    if (!result.ok) status.textContent = result.error.message;
+  };
+
+  const redoHistory = (): void => {
+    const result = editor.redo();
+    if (!result.ok) status.textContent = result.error.message;
+  };
+
+  transact.addEventListener('click', runTransaction);
   undo.addEventListener('click', undoHistory);
   redo.addEventListener('click', redoHistory);
   root.replaceChildren(toolbar, editorElement, status);
 
   return () => {
-    append.removeEventListener('click', appendWord);
+    transact.removeEventListener('click', runTransaction);
     undo.removeEventListener('click', undoHistory);
     redo.removeEventListener('click', redoHistory);
     connection.disconnect();
@@ -126,4 +208,10 @@ export function mountExample(root: HTMLElement): () => void {
     root.replaceChildren();
     delete root.dataset['exampleEditor'];
   };
+}
+
+function textOf(
+  children: readonly { readonly type: string; readonly text?: string }[],
+): string {
+  return children.map((child) => child.type === 'text' ? child.text ?? '' : '').join('');
 }
