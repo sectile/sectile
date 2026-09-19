@@ -3802,6 +3802,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "content:./position:isInlineContentBoundary",
+      "package": "content",
+      "subpath": "./position",
+      "exportName": "isInlineContentBoundary",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "content:./prepared:prepareContent",
       "package": "content",
       "subpath": "./prepared",

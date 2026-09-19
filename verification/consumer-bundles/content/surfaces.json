@@ -98,13 +98,17 @@
     },
     {
       "subpath": "./position",
-      "classification": "type-only",
+      "classification": "named-subpath",
       "platform": "browser",
-      "runtimeExports": [],
+      "runtimeExports": [
+        "isInlineContentBoundary"
+      ],
       "typeBearing": true,
       "optionalPeer": null,
       "rootEquivalentExport": null,
-      "fixtureModes": []
+      "fixtureModes": [
+        "side-effect"
+      ]
     },
     {
       "subpath": "./prepared",

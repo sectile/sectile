@@ -6,6 +6,7 @@ import {
   compileContentSchema,
   componentRef,
 } from '../.verification-dist/schema.js';
+import { isInlineContentBoundary } from '../.verification-dist/position.js';
 import { transformDocument } from '../.verification-dist/transform.js';
 import { validateDocument } from '../.verification-dist/validate.js';
 
@@ -569,4 +570,39 @@ test('later operation failure rolls back earlier candidate work', () => {
   assert.equal(result.ok, false);
   assert.equal(result.error.code, 'content-operation-invalid');
   assert.deepEqual(document, before);
+});
+
+
+test('inline logical boundaries reject surrogate interiors and preserve atom boundaries', () => {
+  const inline = [
+    {
+      type: 'text',
+      text: 'A😀',
+      marks: [],
+    },
+    {
+      id: 'badge-boundary',
+      type: 'component',
+      kind: 'inline',
+      component: 'proof/badge',
+      componentVersion: 1,
+      data: { label: 'x' },
+      slots: [],
+    },
+    {
+      type: 'text',
+      text: 'B',
+      marks: [],
+    },
+  ];
+
+  assert.equal(isInlineContentBoundary(inline, 0), true);
+  assert.equal(isInlineContentBoundary(inline, 1), true);
+  assert.equal(isInlineContentBoundary(inline, 2), false);
+  assert.equal(isInlineContentBoundary(inline, 3), true);
+  assert.equal(isInlineContentBoundary(inline, 4), true);
+  assert.equal(isInlineContentBoundary(inline, 5), true);
+  assert.equal(isInlineContentBoundary(inline, 6), false);
+  assert.equal(isInlineContentBoundary(inline, -1), false);
+  assert.equal(isInlineContentBoundary(inline, 1.5), false);
 });

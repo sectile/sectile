@@ -194,6 +194,16 @@
       "pair": null
     },
     {
+      "id": "content:./position:side-effect",
+      "package": "content",
+      "subpath": "./position",
+      "source": "@sectile/content/position",
+      "exportName": null,
+      "mode": "side-effect",
+      "platform": "browser",
+      "pair": null
+    },
+    {
       "id": "content:./prepared:named",
       "package": "content",
       "subpath": "./prepared",
@@ -4806,15 +4816,41 @@
       "dependencies": []
     },
     {
+      "id": "content:./position:side-effect",
+      "bundler": "esbuild",
+      "mode": "side-effect",
+      "source": "@sectile/content/position",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
+      "id": "content:./position:side-effect",
+      "bundler": "vite",
+      "mode": "side-effect",
+      "source": "@sectile/content/position",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
       "id": "content:./prepared:named",
       "bundler": "esbuild",
       "mode": "named",
       "source": "@sectile/content/prepared",
       "exportName": "prepareContent",
       "platform": "browser",
-      "raw": 22205,
-      "gzip": 6829,
-      "brotli": 6092,
+      "raw": 22236,
+      "gzip": 6841,
+      "brotli": 6105,
       "modules": [
         "@sectile/content/dist/document.js",
         "@sectile/content/dist/limits.js",
@@ -4838,9 +4874,9 @@
       "source": "@sectile/content/prepared",
       "exportName": "prepareContent",
       "platform": "browser",
-      "raw": 22269,
-      "gzip": 6778,
-      "brotli": 6066,
+      "raw": 22300,
+      "gzip": 6792,
+      "brotli": 6072,
       "modules": [
         "@sectile/content/dist/document.js",
         "@sectile/content/dist/limits.js",
