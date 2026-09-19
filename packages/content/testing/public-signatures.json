@@ -51,7 +51,7 @@
       "types": "dist/validate.d.ts"
     }
   ],
-  "fingerprint": "9cb9e9a126f4239b088b9a22a869bfbb95703b7dbc971ede67f42e062642009b",
+  "fingerprint": "02d37167c6c13103ffc80a077383c23be39592a2c8ff49f44a5933bd26015074",
   "files": [
     {
       "path": "dist/document.d.ts",
@@ -59,7 +59,7 @@
     },
     {
       "path": "dist/error.d.ts",
-      "sha256": "8beb82cac804c6bd7664e6ec89c33f54c3a0654fe827924d142be2d543083d30"
+      "sha256": "71a15b161ef1301913ca79e32268c883d8b0073cb008f2c71f3de2e004db0330"
     },
     {
       "path": "dist/fragment.d.ts",
@@ -75,7 +75,7 @@
     },
     {
       "path": "dist/limits.d.ts",
-      "sha256": "d63d4e6f8872467e57385e873b4697d1a40a3d363338d9dfcfc946cf54f61caa"
+      "sha256": "e2e435cddfbb59a3a71b8e10c6fb209109c6bebb8fae2119d82b9b0a0cf32e67"
     },
     {
       "path": "dist/position.d.ts",
@@ -95,7 +95,7 @@
     },
     {
       "path": "dist/transform.d.ts",
-      "sha256": "c43d785bad6bcba76360ee6be6b048291b8f54b5c7d723d56fcd1dc3ba854a90"
+      "sha256": "5dc9236abef064a4404de5489e9329f878b4bfc133d66670300552a35d498db5"
     },
     {
       "path": "dist/validate.d.ts",

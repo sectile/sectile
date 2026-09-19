@@ -339,3 +339,38 @@ test('semantic transforms preserve caller-supplied Content limits', () => {
     'content-string-code-unit-ceiling-exceeded',
   );
 });
+
+
+test('semantic transforms reject operation batches above their configured ceiling', () => {
+  const schema = simpleSchema();
+  const document = documentWith([paragraph('p1', 'abcd')]);
+
+  const result = transformDocument(document, {
+    schema,
+    limits: {
+      maxOperationsPerTransform: 1,
+    },
+    operations: [
+      {
+        type: 'replace-inline',
+        surface: { type: 'node', id: 'p1' },
+        from: 4,
+        to: 4,
+        replacement: [text('!')],
+      },
+      {
+        type: 'replace-inline',
+        surface: { type: 'node', id: 'p1' },
+        from: 4,
+        to: 4,
+        replacement: [text('?')],
+      },
+    ],
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(
+    result.error.code,
+    'content-operation-ceiling-exceeded',
+  );
+});

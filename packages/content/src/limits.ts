@@ -13,6 +13,7 @@ export interface ContentLimits {
   readonly maxSlotsPerComponent: number;
   readonly maxComponents: number;
   readonly maxGroups: number;
+  readonly maxOperationsPerTransform: number;
 }
 
 export const DEFAULT_CONTENT_LIMITS: ContentLimits = Object.freeze({
@@ -26,6 +27,7 @@ export const DEFAULT_CONTENT_LIMITS: ContentLimits = Object.freeze({
   maxSlotsPerComponent: 64,
   maxComponents: 10_000,
   maxGroups: 10_000,
+  maxOperationsPerTransform: 4_096,
 });
 
 export function normalizeContentLimits(

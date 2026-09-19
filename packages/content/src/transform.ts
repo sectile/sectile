@@ -11,7 +11,11 @@ import type {
   TextNode,
 } from './document.js';
 import type { ContentErrorCode } from './error.js';
-import type { ContentLimits } from './limits.js';
+import {
+  contentCeilingExceeded,
+  normalizeContentLimits,
+  type ContentLimits,
+} from './limits.js';
 import type {
   ContentChangeMap,
   InlinePoint,
@@ -114,9 +118,17 @@ export function transformDocument(
     readonly limits?: Partial<ContentLimits>;
   },
 ): Result<ContentTransformResult, ContentErrorCode> {
-  const validationOptions = options.limits === undefined
-    ? {}
-    : { limits: options.limits };
+  const normalizedLimits = normalizeContentLimits(options.limits);
+  if (!normalizedLimits.ok) return normalizedLimits;
+  const limits = normalizedLimits.value;
+  if (options.operations.length > limits.maxOperationsPerTransform) {
+    return contentCeilingExceeded(
+      'content-operation-ceiling-exceeded',
+      options.operations.length,
+      limits.maxOperationsPerTransform,
+    );
+  }
+  const validationOptions = { limits };
   const starting = validateDocument(
     document,
     options.schema,

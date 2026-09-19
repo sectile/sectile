@@ -39,4 +39,5 @@ export type ContentErrorCode =
   | 'content-mark-ceiling-exceeded'
   | 'content-slot-ceiling-exceeded'
   | 'content-component-ceiling-exceeded'
-  | 'content-group-ceiling-exceeded';
+  | 'content-group-ceiling-exceeded'
+  | 'content-operation-ceiling-exceeded';
