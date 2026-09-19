@@ -128,7 +128,7 @@
       ],
       "classification": "reuse",
       "owner": null,
-      "rationale": "Content derives one DocumentIndex per validated generation and prepared editing reuses that retained index while overlaying only changed node identities."
+      "rationale": "Content derives bounded prepared indexes and resource metrics once per validated generation; local prepared editing reuses those retained owners while overlaying only changed node identities."
     },
     {
       "id": "content-bounded-domain-work",

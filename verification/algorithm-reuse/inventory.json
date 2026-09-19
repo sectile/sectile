@@ -292,12 +292,12 @@
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
       "path": "packages/content/src/prepared.ts",
-      "line": 321,
+      "line": 457,
       "evidence": ".findIndex(",
       "rule": "content-retained-index-reuse",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Content derives one DocumentIndex per validated generation and prepared editing reuses that retained index while overlaying only changed node identities."
+      "rationale": "Content derives bounded prepared indexes and resource metrics once per validated generation; local prepared editing reuses those retained owners while overlaying only changed node identities."
     },
     {
       "detector": "linear-membership",
@@ -308,7 +308,7 @@
       "rule": "content-retained-index-reuse",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Content derives one DocumentIndex per validated generation and prepared editing reuses that retained index while overlaying only changed node identities."
+      "rationale": "Content derives bounded prepared indexes and resource metrics once per validated generation; local prepared editing reuses those retained owners while overlaying only changed node identities."
     },
     {
       "detector": "raw-identity-lookup",
@@ -319,7 +319,7 @@
       "rule": "content-retained-index-reuse",
       "classification": "reuse",
       "owner": null,
-      "rationale": "Content derives one DocumentIndex per validated generation and prepared editing reuses that retained index while overlaying only changed node identities."
+      "rationale": "Content derives bounded prepared indexes and resource metrics once per validated generation; local prepared editing reuses those retained owners while overlaying only changed node identities."
     },
     {
       "detector": "derived-index-construction",

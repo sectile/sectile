@@ -45,6 +45,11 @@
       "id": "CNT-09",
       "theory": "portable-content",
       "statement": "isEqual and isEmpty share exact schema-independent Portable Content helper semantics"
+    },
+    {
+      "id": "CNT-10",
+      "theory": "portable-content",
+      "statement": "prepared local text edits preserve the resource ceilings validated at preparation time"
     }
   ]
 }

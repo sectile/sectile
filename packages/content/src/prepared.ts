@@ -5,12 +5,19 @@ import {
 } from '@sectile/core/text';
 import type {
   BlockNode,
+  ContentNode,
   IDBearingNode,
+  JSONValue,
   NodeID,
   PortableContentDocument,
   TextNode,
 } from './document.js';
 import type { ContentErrorCode } from './error.js';
+import {
+  contentCeilingExceeded,
+  normalizeContentLimits,
+  type ContentLimits,
+} from './limits.js';
 import type {
   ContentChangeMap,
   InlinePoint,
@@ -39,9 +46,15 @@ export interface PreparedContentResult {
   readonly change: ContentChangeMap;
 }
 
+export interface PrepareContentOptions {
+  readonly limits?: Partial<ContentLimits>;
+}
+
 interface PreparedOwner {
   readonly base: DocumentIndex;
   readonly overrides: ReadonlyMap<NodeID, IDBearingNode>;
+  readonly limits: ContentLimits;
+  readonly totalStringCodeUnits: number;
 }
 
 const owners = new WeakMap<PreparedContentState, PreparedOwner>();
@@ -49,11 +62,16 @@ const owners = new WeakMap<PreparedContentState, PreparedOwner>();
 export function prepareContent(
   document: PortableContentDocument,
   schema: CompiledContentSchema,
+  options: PrepareContentOptions = {},
 ): Result<PreparedContentState, ContentErrorCode> {
-  const valid = validateDocument(document, schema);
+  const normalized = normalizeContentLimits(options.limits);
+  if (!normalized.ok) return normalized;
+  const limits = normalized.value;
+
+  const valid = validateDocument(document, schema, { limits });
   if (!valid.ok) return valid;
 
-  const base = createDocumentIndex(document);
+  const base = createDocumentIndex(document, { limits });
   if (!base.ok) return base;
 
   return okResult(createPreparedState(
@@ -61,6 +79,8 @@ export function prepareContent(
     schema,
     base.value,
     new Map(),
+    limits,
+    measureAuthoredStringCodeUnits(document),
   ));
 }
 
@@ -121,6 +141,30 @@ export function replacePreparedText(
     + options.text
     + source.slice(options.to);
 
+  const owner = owners.get(state);
+  if (owner === undefined) {
+    return operationFailure('Prepared state owner is unavailable.');
+  }
+  if (nextText.length > owner.limits.maxStringCodeUnits) {
+    return contentCeilingExceeded(
+      'content-string-code-unit-ceiling-exceeded',
+      nextText.length,
+      owner.limits.maxStringCodeUnits,
+    );
+  }
+  const nextTotalStringCodeUnits =
+    owner.totalStringCodeUnits - source.length + nextText.length;
+  if (
+    nextTotalStringCodeUnits
+    > owner.limits.maxTotalStringCodeUnits
+  ) {
+    return contentCeilingExceeded(
+      'content-total-string-code-unit-ceiling-exceeded',
+      nextTotalStringCodeUnits,
+      owner.limits.maxTotalStringCodeUnits,
+    );
+  }
+
   const marks = only?.marks ?? Object.freeze([]);
   const nextChildren: readonly TextNode[] = nextText.length === 0
     ? Object.freeze([])
@@ -157,11 +201,6 @@ export function replacePreparedText(
   );
   if (!replaced.ok) return replaced;
 
-  const owner = owners.get(state);
-  if (owner === undefined) {
-    return operationFailure('Prepared state owner is unavailable.');
-  }
-
   const overrides = new Map(owner.overrides);
   for (const changed of replaced.value.changed) {
     overrides.set(changed.id, changed);
@@ -172,6 +211,8 @@ export function replacePreparedText(
     state.schema,
     owner.base,
     overrides,
+    owner.limits,
+    nextTotalStringCodeUnits,
   );
 
   return okResult(
@@ -192,6 +233,8 @@ function createPreparedState(
   schema: CompiledContentSchema,
   base: DocumentIndex,
   overrides: ReadonlyMap<NodeID, IDBearingNode>,
+  limits: ContentLimits,
+  totalStringCodeUnits: number,
 ): PreparedContentState {
   const index: DocumentIndex = Object.freeze({
     size: base.size,
@@ -210,9 +253,102 @@ function createPreparedState(
   owners.set(state, Object.freeze({
     base,
     overrides,
+    limits,
+    totalStringCodeUnits,
   }));
   return state;
 }
+
+function measureAuthoredStringCodeUnits(
+  document: PortableContentDocument,
+): number {
+  let total = 0;
+  const stack: StringMetricFrame[] = document.root.children
+    .map((node) => ({ kind: 'node' as const, value: node }))
+    .reverse();
+
+  while (stack.length > 0) {
+    const frame = stack.pop();
+    if (frame === undefined) break;
+
+    if (frame.kind === 'data') {
+      const value = frame.value;
+      if (typeof value === 'string') {
+        total += value.length;
+        continue;
+      }
+      if (value === null || typeof value !== 'object') continue;
+
+      if (Array.isArray(value)) {
+        for (let index = value.length - 1; index >= 0; index -= 1) {
+          const item = value[index];
+          if (item !== undefined) {
+            stack.push({ kind: 'data', value: item });
+          }
+        }
+        continue;
+      }
+
+      for (const [key, nested] of Object.entries(value)) {
+        total += key.length;
+        stack.push({ kind: 'data', value: nested });
+      }
+      continue;
+    }
+
+    const node = frame.value;
+    if (node.type === 'text') {
+      total += node.text.length;
+      for (const mark of node.marks) {
+        if (mark.type !== 'link') continue;
+        total += mark.href.length;
+        if (mark.title !== undefined) total += mark.title.length;
+      }
+      continue;
+    }
+
+    if (node.type === 'hard-break') continue;
+
+    if (node.type === 'code-block') {
+      total += node.text.length;
+      continue;
+    }
+
+    if (node.type === 'component') {
+      stack.push({ kind: 'data', value: node.data });
+      for (let slotIndex = node.slots.length - 1; slotIndex >= 0; slotIndex -= 1) {
+        const slot = node.slots[slotIndex];
+        if (slot === undefined) continue;
+        for (let childIndex = slot.content.length - 1; childIndex >= 0; childIndex -= 1) {
+          const child = slot.content[childIndex];
+          if (child !== undefined) {
+            stack.push({ kind: 'node', value: child });
+          }
+        }
+      }
+      continue;
+    }
+
+    for (let index = node.children.length - 1; index >= 0; index -= 1) {
+      const child = node.children[index];
+      if (child !== undefined) {
+        stack.push({ kind: 'node', value: child });
+      }
+    }
+  }
+
+  return total;
+}
+
+type StringMetricFrame =
+  | {
+      readonly kind: 'node';
+      readonly value: ContentNode;
+    }
+  | {
+      readonly kind: 'data';
+      readonly value: JSONValue;
+    };
 
 function replaceNodeAndAncestors(
   document: PortableContentDocument,

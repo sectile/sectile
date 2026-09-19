@@ -1,4 +1,4 @@
-// CNT-06
+// CNT-06 CNT-10
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
@@ -44,7 +44,12 @@ function compileSchema() {
         componentVersion: 1,
         data: {
           type: 'object',
-          properties: {},
+          properties: {
+            label: {
+              schema: { type: 'string' },
+              optional: true,
+            },
+          },
         },
         slots: [
           {
@@ -315,5 +320,99 @@ test('prepared state composes edits across distinct nodes without mutating earli
   assert.equal(
     second.value.state.index.getNode('p2'),
     second.value.state.document.root.children[1],
+  );
+});
+
+
+test('prepared text edits preserve the configured per-string ceiling', () => {
+  const schema = compileSchema();
+  const document = {
+    formatVersion: 1,
+    schema: {
+      id: 'proof/prepared',
+      version: 1,
+    },
+    root: {
+      type: 'document',
+      children: [paragraph('p1', 'hello')],
+    },
+  };
+
+  const prepared = prepareContent(document, schema, {
+    limits: {
+      maxStringCodeUnits: 5,
+    },
+  });
+  assert.equal(prepared.ok, true);
+
+  const result = replacePreparedText(prepared.value, {
+    id: 'p1',
+    from: 5,
+    to: 5,
+    text: '!',
+  });
+  assert.equal(result.ok, false);
+  assert.equal(
+    result.error.code,
+    'content-string-code-unit-ceiling-exceeded',
+  );
+});
+
+test('prepared text edits preserve the aggregate authored-string ceiling', () => {
+  const schema = compileSchema();
+  const document = {
+    formatVersion: 1,
+    schema: {
+      id: 'proof/prepared',
+      version: 1,
+    },
+    root: {
+      type: 'document',
+      children: [
+        paragraph('p1', 'x'),
+        {
+          id: 'section-1',
+          type: 'component',
+          kind: 'block',
+          component: 'proof/section',
+          componentVersion: 1,
+          data: {
+            label: 'abc',
+          },
+          slots: [{
+            name: 'body',
+            kind: 'block',
+            content: [],
+          }],
+        },
+      ],
+    },
+  };
+
+  const prepared = prepareContent(document, schema, {
+    limits: {
+      maxTotalStringCodeUnits: 10,
+    },
+  });
+  assert.equal(prepared.ok, true);
+
+  const allowed = replacePreparedText(prepared.value, {
+    id: 'p1',
+    from: 1,
+    to: 1,
+    text: '!',
+  });
+  assert.equal(allowed.ok, true);
+
+  const rejected = replacePreparedText(allowed.value.state, {
+    id: 'p1',
+    from: 2,
+    to: 2,
+    text: '!',
+  });
+  assert.equal(rejected.ok, false);
+  assert.equal(
+    rejected.error.code,
+    'content-total-string-code-unit-ceiling-exceeded',
   );
 });
