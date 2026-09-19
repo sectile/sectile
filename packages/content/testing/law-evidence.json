@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "evidence": {
+    "CNT-01": "tests/standalone-consumer.test.mjs",
+    "CNT-02": "tests/grammar.test.mjs",
+    "CNT-03": "tests/grammar.test.mjs",
+    "CNT-04": "tests/position.test.mjs",
+    "CNT-05": "tests/position.test.mjs",
+    "CNT-06": "tests/prepared.test.mjs",
+    "CNT-07": "tests/standalone-consumer.test.mjs",
+    "CNT-08": "tests/resources.test.mjs"
+  }
+}

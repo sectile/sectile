@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "packages": [
     "core",
+    "content",
     "chart",
     "form",
     "tabular",
@@ -275,6 +276,138 @@
       "classification": "result-proportional",
       "owner": null,
       "rationale": "Remaining Chart scans validate explicitly bounded model input or materialize requested projection, interaction, and query results under declared ceilings."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/content/src/fragment.ts",
+      "line": 87,
+      "evidence": ".find(",
+      "rule": "content-bounded-domain-work",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Content scans validate or project explicit Portable Content input/results under maxNodes, maxDepth, maxValues, maxSlotsPerComponent, string and mark ceilings."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/content/src/prepared.ts",
+      "line": 321,
+      "evidence": ".findIndex(",
+      "rule": "content-retained-index-reuse",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Content derives one DocumentIndex per validated generation and prepared editing reuses that retained index while overlaying only changed node identities."
+    },
+    {
+      "detector": "linear-membership",
+      "category": "raw-full-domain-scan",
+      "path": "packages/content/src/query.ts",
+      "line": 184,
+      "evidence": ".includes(",
+      "rule": "content-retained-index-reuse",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Content derives one DocumentIndex per validated generation and prepared editing reuses that retained index while overlaying only changed node identities."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/content/src/query.ts",
+      "line": 288,
+      "evidence": ".find(",
+      "rule": "content-retained-index-reuse",
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Content derives one DocumentIndex per validated generation and prepared editing reuses that retained index while overlaying only changed node identities."
+    },
+    {
+      "detector": "derived-index-construction",
+      "category": "discarded-canonical-index",
+      "path": "packages/content/src/schema.ts",
+      "line": 297,
+      "evidence": "new Set(frozenAllowed.map(",
+      "rule": "content-bounded-domain-work",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Content scans validate or project explicit Portable Content input/results under maxNodes, maxDepth, maxValues, maxSlotsPerComponent, string and mark ceilings."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/content/src/transform.ts",
+      "line": 496,
+      "evidence": ".find(",
+      "rule": "content-bounded-domain-work",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Content scans validate or project explicit Portable Content input/results under maxNodes, maxDepth, maxValues, maxSlotsPerComponent, string and mark ceilings."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/content/src/transform.ts",
+      "line": 542,
+      "evidence": ".find(",
+      "rule": "content-bounded-domain-work",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Content scans validate or project explicit Portable Content input/results under maxNodes, maxDepth, maxValues, maxSlotsPerComponent, string and mark ceilings."
+    },
+    {
+      "detector": "serialization-signature",
+      "category": "private-algorithm-bypass",
+      "path": "packages/content/src/transform.ts",
+      "line": 1087,
+      "evidence": "JSON.stringify(",
+      "rule": "content-bounded-domain-work",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Content scans validate or project explicit Portable Content input/results under maxNodes, maxDepth, maxValues, maxSlotsPerComponent, string and mark ceilings."
+    },
+    {
+      "detector": "linear-membership",
+      "category": "raw-full-domain-scan",
+      "path": "packages/content/src/validate.ts",
+      "line": 157,
+      "evidence": ".includes(",
+      "rule": "content-bounded-domain-work",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Content scans validate or project explicit Portable Content input/results under maxNodes, maxDepth, maxValues, maxSlotsPerComponent, string and mark ceilings."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/content/src/validate.ts",
+      "line": 374,
+      "evidence": ".some(",
+      "rule": "content-bounded-domain-work",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Content scans validate or project explicit Portable Content input/results under maxNodes, maxDepth, maxValues, maxSlotsPerComponent, string and mark ceilings."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/content/src/validate.ts",
+      "line": 452,
+      "evidence": ".some(",
+      "rule": "content-bounded-domain-work",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Content scans validate or project explicit Portable Content input/results under maxNodes, maxDepth, maxValues, maxSlotsPerComponent, string and mark ceilings."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/content/src/validate.ts",
+      "line": 678,
+      "evidence": ".some(",
+      "rule": "content-bounded-domain-work",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Content scans validate or project explicit Portable Content input/results under maxNodes, maxDepth, maxValues, maxSlotsPerComponent, string and mark ceilings."
     },
     {
       "detector": "raw-identity-lookup",

@@ -26,6 +26,7 @@
     ]
   },
   "domainAuthority": [
+    { "name": "@sectile/content", "manifest": "packages/content/package.json", "classification": "canonical" },
     { "name": "@sectile/chart", "manifest": "packages/chart/package.json", "classification": "canonical" },
     { "name": "@sectile/form", "manifest": "packages/form/package.json", "classification": "canonical" },
     { "name": "@sectile/temporal", "manifest": "packages/temporal/package.json", "classification": "canonical" },
@@ -116,6 +117,7 @@
   ],
   "dependencyGraph": [
     { "name": "@sectile/core", "manifest": "packages/core/package.json", "semanticDependencies": [] },
+    { "name": "@sectile/content", "manifest": "packages/content/package.json", "semanticDependencies": ["@sectile/core"] },
     { "name": "@sectile/chart", "manifest": "packages/chart/package.json", "semanticDependencies": ["@sectile/core"] },
     { "name": "@sectile/form", "manifest": "packages/form/package.json", "semanticDependencies": ["@sectile/core"] },
     { "name": "@sectile/temporal", "manifest": "packages/temporal/package.json", "semanticDependencies": ["@sectile/core"] },

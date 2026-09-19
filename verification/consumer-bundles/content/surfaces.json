@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "package": "content",
+  "surfaces": [
+    {
+      "subpath": ".",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "namespace"
+      ]
+    },
+    {
+      "subpath": "./document",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "isIDBearingNode",
+        "roleOfNode",
+        "typeKeyOfNode"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./error",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./fragment",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createInlineFragment",
+        "inlineFragmentText",
+        "inlineSurfaceLength"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./limits",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_CONTENT_LIMITS",
+        "contentCeilingExceeded",
+        "normalizeContentLimits"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./package.json",
+      "classification": "metadata",
+      "platform": "universal",
+      "runtimeExports": [],
+      "typeBearing": false,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./position",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./prepared",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "prepareContent",
+        "replacePreparedText"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./query",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "allowedChildren",
+        "canInsert",
+        "canMove",
+        "createDocumentIndex"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./schema",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "baseRef",
+        "compileContentSchema",
+        "componentRef",
+        "roleOfBaseKind",
+        "typeKey"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./transform",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "measureInlineContent",
+        "transformDocument"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./validate",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "validateDocument"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import { extname, isAbsolute, normalize, resolve } from 'node:path';
 export const COMPLEXITY_SCHEMA_VERSION = 1;
 export const PACKAGE_NAMES = Object.freeze([
   'core',
+  'content',
   'chart',
   'dom',
   'form',

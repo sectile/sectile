@@ -120,6 +120,25 @@
       "rationale": "Remaining Core scans construct, validate, or return the explicit immutable result and are covered by complexity contracts."
     },
     {
+      "id": "content-retained-index-reuse",
+      "detectors": ["*"],
+      "paths": [
+        "packages/content/src/query.ts",
+        "packages/content/src/prepared.ts"
+      ],
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Content derives one DocumentIndex per validated generation and prepared editing reuses that retained index while overlaying only changed node identities."
+    },
+    {
+      "id": "content-bounded-domain-work",
+      "detectors": ["*"],
+      "prefixes": ["packages/content/src/"],
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Content scans validate or project explicit Portable Content input/results under maxNodes, maxDepth, maxValues, maxSlotsPerComponent, string and mark ceilings."
+    },
+    {
       "id": "chart-query-index-reuse",
       "detectors": ["*"],
       "prefixes": ["packages/chart/src/internal/projection/query-index.ts"],

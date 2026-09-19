@@ -19,7 +19,7 @@ test('full deterministic verification retains every public-change gate independe
   }
   const bundleUnits = plan.units.filter(({ id }) => id.startsWith('consumer-bundles:'));
   const bundlePackages = new Set(bundleUnits.map(({ id }) => id.split(':')[1]));
-  assert.deepEqual(bundlePackages, new Set(['core', 'chart', 'form', 'temporal', 'virtual', 'terminal', 'tabular', 'dom', 'vue']));
+  assert.deepEqual(bundlePackages, new Set(['core', 'content', 'chart', 'form', 'temporal', 'virtual', 'terminal', 'tabular', 'dom', 'vue']));
   assert.ok(bundleUnits.some(({ id }) => id === 'consumer-bundles:vue:1-of-4'));
   assert.ok(bundleUnits.some(({ id }) => id === 'consumer-bundles:virtual'));
   assert.ok(plan.stages.includes('consumer verification'));

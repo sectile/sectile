@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 3,
+  "package": "@sectile/content",
+  "exports": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts"
+    },
+    {
+      "subpath": "./document",
+      "types": "dist/document.d.ts"
+    },
+    {
+      "subpath": "./error",
+      "types": "dist/error.d.ts"
+    },
+    {
+      "subpath": "./fragment",
+      "types": "dist/fragment.d.ts"
+    },
+    {
+      "subpath": "./limits",
+      "types": "dist/limits.d.ts"
+    },
+    {
+      "subpath": "./position",
+      "types": "dist/position.d.ts"
+    },
+    {
+      "subpath": "./prepared",
+      "types": "dist/prepared.d.ts"
+    },
+    {
+      "subpath": "./query",
+      "types": "dist/query.d.ts"
+    },
+    {
+      "subpath": "./schema",
+      "types": "dist/schema.d.ts"
+    },
+    {
+      "subpath": "./transform",
+      "types": "dist/transform.d.ts"
+    },
+    {
+      "subpath": "./validate",
+      "types": "dist/validate.d.ts"
+    }
+  ],
+  "fingerprint": "679aaa069e8899ff5928dad2f70ed4f3f58e88dd6a2dbaaa8042f1a7a21c8213",
+  "files": [
+    {
+      "path": "dist/document.d.ts",
+      "sha256": "56bbe84b41341c14c21d8345a12b4669c656f844d56a0e7749d53a3823569aef"
+    },
+    {
+      "path": "dist/error.d.ts",
+      "sha256": "8beb82cac804c6bd7664e6ec89c33f54c3a0654fe827924d142be2d543083d30"
+    },
+    {
+      "path": "dist/fragment.d.ts",
+      "sha256": "138bc317f0cde7697f63d35c4cef0c55a0e6990fda4204197d2df7cf0deb5fc5"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "8cf43855529819ee3ff71f2c69cb708dd39a1d02dba45b28ed92dbcdb7c4cc00"
+    },
+    {
+      "path": "dist/limits.d.ts",
+      "sha256": "d63d4e6f8872467e57385e873b4697d1a40a3d363338d9dfcfc946cf54f61caa"
+    },
+    {
+      "path": "dist/position.d.ts",
+      "sha256": "3997a2371166a72ca06581b433db9feebf54ee4001efb06b44caa34758b7c879"
+    },
+    {
+      "path": "dist/prepared.d.ts",
+      "sha256": "bcca2c704ace9ecdd82963d77745796c1be6f5819683fbfeb66193bfe0bb270a"
+    },
+    {
+      "path": "dist/query.d.ts",
+      "sha256": "a3cc3b737104a4e79624aca595ef8e54ed8e834d05c37b7cfab94debafd4d0df"
+    },
+    {
+      "path": "dist/schema.d.ts",
+      "sha256": "e41b5739e67a8731d0923f93a8bda9361f14051a89cecdac65b26542d9dc24b8"
+    },
+    {
+      "path": "dist/transform.d.ts",
+      "sha256": "f138bbda00456db767b4f9157416bc7498c1f66069e277d697ae064a5fd624fa"
+    },
+    {
+      "path": "dist/validate.d.ts",
+      "sha256": "58624968a31d3eac99743973b55543671d82be25bbaeec968060bc1ded319d4b"
+    }
+  ]
+}

@@ -20,6 +20,24 @@
       }
     },
     {
+      "package": "content",
+      "javascriptFiles": 11,
+      "declarationFiles": 11,
+      "sourceMapFiles": 11,
+      "declarationMapFiles": 0,
+      "bytes": {
+        "javascript": 65230,
+        "declarations": 18957,
+        "sourceMaps": 50578,
+        "total": 134765
+      },
+      "packed": {
+        "tarballBytes": 31589,
+        "unpackedBytes": 140074,
+        "files": 36
+      }
+    },
+    {
       "package": "chart",
       "javascriptFiles": 28,
       "declarationFiles": 28,

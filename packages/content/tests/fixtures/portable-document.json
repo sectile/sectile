@@ -1,0 +1,97 @@
+{
+  "formatVersion": 1,
+  "schema": {
+    "id": "demo/portable",
+    "version": 1
+  },
+  "root": {
+    "type": "document",
+    "children": [
+      {
+        "id": "h1",
+        "type": "heading",
+        "level": 1,
+        "children": [
+          {
+            "type": "text",
+            "text": "Portable ",
+            "marks": []
+          },
+          {
+            "type": "text",
+            "text": "Content",
+            "marks": [
+              {
+                "type": "link",
+                "href": "/content",
+                "title": "Content docs"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "p1",
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Renderer independent.",
+            "marks": []
+          },
+          {
+            "id": "badge-1",
+            "type": "component",
+            "kind": "inline",
+            "component": "demo/badge",
+            "componentVersion": 1,
+            "data": {
+              "label": "NEW"
+            },
+            "slots": []
+          }
+        ]
+      },
+      {
+        "id": "card-1",
+        "type": "component",
+        "kind": "block",
+        "component": "demo/card",
+        "componentVersion": 1,
+        "data": {
+          "tone": "info"
+        },
+        "slots": [
+          {
+            "name": "title",
+            "kind": "inline",
+            "content": [
+              {
+                "type": "text",
+                "text": "Card title",
+                "marks": []
+              }
+            ]
+          },
+          {
+            "name": "body",
+            "kind": "block",
+            "content": [
+              {
+                "id": "p2",
+                "type": "paragraph",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Card body",
+                    "marks": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "package": "content",
+  "surface": "hot",
+  "kind": "internal-operations",
+  "operations": [
+    {
+      "id": "index.construct",
+      "inherits": "linear-v1",
+      "source": "packages/content/src/query.ts",
+      "benchmarkIDs": [
+        "content:index-construct"
+      ],
+      "specificationCeiling": "O(nNode + kID)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nNode",
+            "meaning": "portable content nodes visited while constructing one document index",
+            "ceiling": "maxNodes"
+          },
+          {
+            "name": "kID",
+            "meaning": "ID-bearing content nodes retained by the index",
+            "ceiling": "kID <= nNode"
+          },
+          {
+            "name": "dDepth",
+            "meaning": "maximum document nesting depth represented by the explicit traversal stack",
+            "ceiling": "maxDepth"
+          }
+        ],
+        "time": {
+          "bound": "O(nNode + kID)",
+          "kind": "expected",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(dDepth + kID)",
+          "output": "O(kID)",
+          "retained": "O(kID)"
+        },
+        "resources": {
+          "allocations": "O(dDepth + kID)",
+          "cacheEntries": "O(kID)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Map lookup/insertion is expected O(1)",
+          "Core Tree construction is linear in retained ID-bearing nodes"
+        ],
+        "ceilings": [
+          "all document traversal obeys Content maxNodes/maxDepth/maxIDCodeUnits/maxSlotsPerComponent"
+        ],
+        "evidence": [
+          "packages/content/tests/resources.test.mjs",
+          "packages/content/benchmarks/resource-proof.mjs"
+        ],
+        "benchmarkIDs": [
+          "content:index-construct"
+        ],
+        "deterministicWork": [
+          "each accepted content node is pushed/visited at most once by the explicit stack",
+          "each ID-bearing node contributes one node/location/tree-input entry"
+        ],
+        "resourceRationale": "DocumentIndex retains one node and location entry per ID-bearing node plus the Core Tree view; anonymous text and hard-break nodes are visited but not retained.",
+        "proof": "The iterative traversal consumes each bounded child sequence once, records each ID-bearing node once, and passes exactly those retained IDs to Core Tree construction.",
+        "adversarialWitness": "The 50k-root-paragraph resource proof and resource-ceiling tests exercise broad and deep documents without recursive Content traversal.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Explicit index construction must observe the full accepted document once."
+        }
+      }
+    },
+    {
+      "id": "prepared.replace-text",
+      "inherits": "linear-v1",
+      "source": "packages/content/src/prepared.ts",
+      "benchmarkIDs": [
+        "content:prepared-local-edit"
+      ],
+      "specificationCeiling": "O(lText + wPath + tOverride)",
+      "contract": {
+        "variables": [
+          {
+            "name": "lText",
+            "meaning": "code units copied for the edited canonical text surface and replacement",
+            "ceiling": "maxStringCodeUnits"
+          },
+          {
+            "name": "wPath",
+            "meaning": "sum of changed ancestor child-array widths copied while rebuilding the persistent document path",
+            "ceiling": "bounded by accepted document/container cardinality"
+          },
+          {
+            "name": "tOverride",
+            "meaning": "prior changed ID-bearing node overrides copied into the next prepared state",
+            "ceiling": "tOverride <= kID"
+          },
+          {
+            "name": "kID",
+            "meaning": "ID-bearing nodes retained by the prepared base index",
+            "ceiling": "kID <= maxNodes"
+          },
+          {
+            "name": "dAncestor",
+            "meaning": "changed node ancestor depth",
+            "ceiling": "maxDepth"
+          }
+        ],
+        "time": {
+          "bound": "O(lText + wPath + tOverride)",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(lText + wPath + tOverride)",
+          "output": "O(lText + wPath)",
+          "retained": "O(kID + tOverride + dAncestor)"
+        },
+        "resources": {
+          "allocations": "O(lText + wPath + tOverride + dAncestor)",
+          "cacheEntries": "O(kID + tOverride + dAncestor)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "prepared state was validated and indexed before the local edit",
+          "Map lookup/insertion is expected O(1)",
+          "this fast path accepts only an empty surface or one canonical text run"
+        ],
+        "ceilings": [
+          "text and ancestor work remain within Content resource ceilings",
+          "unsupported inline structure is rejected instead of falling back to hidden global work"
+        ],
+        "evidence": [
+          "packages/content/tests/prepared.test.mjs",
+          "packages/content/benchmarks/prepared-state-proof.mjs"
+        ],
+        "benchmarkIDs": [
+          "content:prepared-local-edit"
+        ],
+        "deterministicWork": [
+          "target lookup reuses retained DocumentIndex state",
+          "only the changed node and its ancestor path are rebuilt",
+          "the proof performs no whole-document validation/index reconstruction after preparation"
+        ],
+        "resourceRationale": "The prepared state retains one base index plus changed-node overrides; each edit shares unchanged nodes and rebuilds only the changed structural path, while current array-backed containers copy their changed child array.",
+        "proof": "replacePreparedText resolves the target from the retained index, copies text once, reconstructs the indexed ancestor path, overlays changed node identities, and returns the next prepared state without calling full validation or createDocumentIndex.",
+        "adversarialWitness": "At 50k root paragraphs the prepared proof measures about 0.16–0.20 ms for one local edit after preparation and about 0.18 ms/edit across 1,000 distinct edited nodes, while the semantic whole-clone proof is about 190–220 ms for one local edit.",
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Prepared local edits must not scan or rebuild the full validated document; copying the explicitly changed container array is a documented width cost."
+        }
+      }
+    }
+  ]
+}

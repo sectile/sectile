@@ -9,6 +9,7 @@ Sectile separates interaction rules from presentation. `@sectile/core` defines d
 | Package | Responsibility |
 | --- | --- |
 | `@sectile/core` | Pure structures, interaction state, transitions, and validation |
+| `@sectile/content` | Portable structured content documents, durable schemas, validation, transforms, and prepared indexes |
 | `@sectile/chart` | Immutable chart models, scales, packed projections, queries, and interaction |
 | `@sectile/form` | Field composition, validation, errors, submission, and reset |
 | `@sectile/temporal` | Civil dates, wall-clock time, calendars, and picker rules |

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "laws": [
+    {
+      "id": "CNT-01",
+      "theory": "portable-content",
+      "statement": "portable documents round-trip as plain JSON-compatible data without runtime-only state"
+    },
+    {
+      "id": "CNT-02",
+      "theory": "portable-content",
+      "statement": "one compiled grammar owns validation and authoring capability queries"
+    },
+    {
+      "id": "CNT-03",
+      "theory": "portable-content",
+      "statement": "ordered slots, component versions, cardinality and node references are validated by the durable schema"
+    },
+    {
+      "id": "CNT-04",
+      "theory": "portable-content",
+      "statement": "logical positions remain independent of anonymous text-run identity and map explicitly through edits"
+    },
+    {
+      "id": "CNT-05",
+      "theory": "portable-content",
+      "statement": "operation batches reject atomically and never publish partial document changes"
+    },
+    {
+      "id": "CNT-06",
+      "theory": "portable-content",
+      "statement": "prepared validated state shares unchanged structure while retaining correct indexed node views"
+    },
+    {
+      "id": "CNT-07",
+      "theory": "portable-content",
+      "statement": "an independent non-Sectile consumer can interpret stored documents from public data contracts"
+    },
+    {
+      "id": "CNT-08",
+      "theory": "portable-content",
+      "statement": "configured resource ceilings bound document, schema, string, mark, slot and component-data work before publication"
+    }
+  ]
+}

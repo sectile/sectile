@@ -1,0 +1,77 @@
+{
+  "id": "demo/portable",
+  "version": 1,
+  "components": [
+    {
+      "id": "demo/card",
+      "kind": "block",
+      "componentVersion": 1,
+      "data": {
+        "type": "object",
+        "properties": {
+          "tone": {
+            "schema": {
+              "type": "enum",
+              "values": [
+                "info",
+                "warning"
+              ]
+            },
+            "optional": true
+          }
+        }
+      },
+      "slots": [
+        {
+          "name": "title",
+          "kind": "inline",
+          "allowed": [
+            {
+              "type": "base",
+              "kind": "text"
+            },
+            {
+              "type": "base",
+              "kind": "hard-break"
+            },
+            {
+              "type": "component",
+              "id": "demo/badge"
+            }
+          ],
+          "min": 1
+        },
+        {
+          "name": "body",
+          "kind": "block",
+          "allowed": [
+            {
+              "type": "base",
+              "kind": "paragraph"
+            },
+            {
+              "type": "base",
+              "kind": "heading"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "demo/badge",
+      "kind": "inline",
+      "componentVersion": 1,
+      "data": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "slots": []
+    }
+  ]
+}

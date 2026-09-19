@@ -84,6 +84,7 @@
   "devDependencies": {
     "@babel/parser": "7.29.8",
     "@sectile/chart": "workspace:*",
+    "@sectile/content": "workspace:*",
     "@sectile/core": "workspace:*",
     "@sectile/dom": "workspace:*",
     "@sectile/form": "workspace:*",

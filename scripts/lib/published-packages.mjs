@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 export const publishedPackageDirectories = Object.freeze([
   'core',
+  'content',
   'chart',
   'form',
   'tabular',

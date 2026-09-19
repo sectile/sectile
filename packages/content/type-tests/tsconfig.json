@@ -1,0 +1,9 @@
+{
+  "extends": "@sectile/tooling/tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "isolatedDeclarations": false,
+    "noEmit": true
+  },
+  "include": ["**/*.ts"]
+}
