@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "laws": [
+    {
+      "id": "EDT-01",
+      "theory": "editor-session",
+      "statement": "session revision and configuration epochs reject stale work and explicit external replacement invalidates pending state"
+    },
+    {
+      "id": "EDT-02",
+      "theory": "editor-history",
+      "statement": "one committed persistent Editor transaction is one bounded local history unit"
+    },
+    {
+      "id": "EDT-03",
+      "theory": "editor-history",
+      "statement": "selection-only state creates no history and explicit selection changes terminate text coalescing"
+    },
+    {
+      "id": "EDT-04",
+      "theory": "editor-selection",
+      "statement": "logical selection is validated and mapped through Content change maps without DOM identity"
+    },
+    {
+      "id": "EDT-05",
+      "theory": "editor-action",
+      "statement": "registered synchronous actions and queries share one revision-checked session authority and actions publish atomically"
+    },
+    {
+      "id": "EDT-06",
+      "theory": "editor-authoring",
+      "statement": "component authoring metadata derives atom flow and isolated-slot host mount contracts without changing Portable Content"
+    },
+    {
+      "id": "EDT-07",
+      "theory": "editor-policy",
+      "statement": "interaction state authoring profiles and application policy gate authoring while external application replacement remains explicit authority"
+    },
+    {
+      "id": "EDT-08",
+      "theory": "editor-publication",
+      "statement": "observer failure cannot roll back a committed Editor change and observer/action reentrant mutation is rejected"
+    },
+    {
+      "id": "EDT-09",
+      "theory": "editor-resources",
+      "statement": "Editor prepared and semantic mutation paths preserve configured Portable Content resource ceilings"
+    }
+  ]
+}

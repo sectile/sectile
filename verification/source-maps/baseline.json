@@ -38,6 +38,24 @@
       }
     },
     {
+      "package": "editor",
+      "javascriptFiles": 7,
+      "declarationFiles": 7,
+      "sourceMapFiles": 7,
+      "declarationMapFiles": 0,
+      "bytes": {
+        "javascript": 34840,
+        "declarations": 16429,
+        "sourceMaps": 24186,
+        "total": 75455
+      },
+      "packed": {
+        "tarballBytes": 18797,
+        "unpackedBytes": 79955,
+        "files": 24
+      }
+    },
+    {
       "package": "chart",
       "javascriptFiles": 28,
       "declarationFiles": 28,

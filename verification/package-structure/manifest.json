@@ -1042,6 +1042,105 @@
         }
       }
     },
+    "editor": {
+      "disposition": "extract",
+      "reason": "Own renderer-neutral authoring session, selection, action/query, local history, and component authoring metadata over Portable Content.",
+      "dependencies": [
+        "core",
+        "content"
+      ],
+      "roles": {
+        "foundation": {
+          "reason": "Editor error contracts are dependency-free within the Editor package.",
+          "allows": [
+            "foundation"
+          ]
+        },
+        "selection": {
+          "reason": "Logical Editor selection consumes Content positions, indexes, and grammar queries.",
+          "allows": [
+            "foundation",
+            "selection"
+          ]
+        },
+        "history": {
+          "reason": "Local history stores document and selection restore metadata without session or host ownership.",
+          "allows": [
+            "foundation",
+            "selection",
+            "history"
+          ]
+        },
+        "action": {
+          "reason": "Action/query contracts describe transaction-scoped authoring over session views and history intent.",
+          "allows": [
+            "foundation",
+            "selection",
+            "history",
+            "action"
+          ]
+        },
+        "authoring": {
+          "reason": "Component authoring metadata and mount descriptions depend on Portable Content, not Editor session or hosts.",
+          "allows": [
+            "foundation",
+            "authoring"
+          ]
+        },
+        "session": {
+          "reason": "Editor session composes actions, selection, history, Content transforms/prepared state, and Core interaction policy.",
+          "allows": [
+            "foundation",
+            "selection",
+            "history",
+            "action",
+            "session"
+          ]
+        },
+        "exports": {
+          "reason": "Public root facade exposes focused Editor owners without becoming a semantic owner.",
+          "allows": [
+            "foundation",
+            "selection",
+            "history",
+            "action",
+            "authoring",
+            "session",
+            "exports"
+          ]
+        }
+      },
+      "modules": {
+        "src/action.ts": {
+          "role": "action",
+          "kind": "owner"
+        },
+        "src/authoring.ts": {
+          "role": "authoring",
+          "kind": "owner"
+        },
+        "src/error.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/history.ts": {
+          "role": "history",
+          "kind": "owner"
+        },
+        "src/index.ts": {
+          "role": "exports",
+          "kind": "facade"
+        },
+        "src/selection.ts": {
+          "role": "selection",
+          "kind": "owner"
+        },
+        "src/session.ts": {
+          "role": "session",
+          "kind": "owner"
+        }
+      }
+    },
     "form": {
       "disposition": "extract",
       "reason": "Extract path/value and state ownership in WI-003A/B without replacing private stores.",

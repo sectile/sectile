@@ -23,6 +23,9 @@ importers:
       '@sectile/dom':
         specifier: workspace:*
         version: link:packages/dom
+      '@sectile/editor':
+        specifier: workspace:*
+        version: link:packages/editor
       '@sectile/form':
         specifier: workspace:*
         version: link:packages/form
@@ -205,6 +208,22 @@ importers:
       happy-dom:
         specifier: ^20.11.6
         version: 20.11.6
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/editor:
+    dependencies:
+      '@sectile/content':
+        specifier: workspace:^
+        version: link:../content
+      '@sectile/core':
+        specifier: workspace:^
+        version: link:../core
+    devDependencies:
+      '@sectile/tooling':
+        specifier: workspace:*
+        version: link:../../tools/tooling
       typescript:
         specifier: 7.0.2
         version: 7.0.2

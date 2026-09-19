@@ -1,8 +1,8 @@
 # Algorithm reuse inventory
 
-> Generated from `verification/algorithm-reuse/manifest.json` and all 10 package source trees.
+> Generated from `verification/algorithm-reuse/manifest.json` and all 11 package source trees.
 
-Findings: 461; migration owners: WI-020, WI-027, WI-040.
+Findings: 462; migration owners: WI-020, WI-027, WI-040.
 
 ## Classifications
 
@@ -10,7 +10,7 @@ Findings: 461; migration owners: WI-020, WI-027, WI-040.
 |---|---:|
 | bounded-small | 14 |
 | migration-required | 60 |
-| result-proportional | 186 |
+| result-proportional | 187 |
 | reuse | 201 |
 
 ## Categories
@@ -21,7 +21,7 @@ Findings: 461; migration owners: WI-020, WI-027, WI-040.
 | discarded-canonical-index | 65 |
 | measurement-authority | 32 |
 | private-algorithm-bypass | 3 |
-| raw-full-domain-scan | 277 |
+| raw-full-domain-scan | 278 |
 | repeated-immutable-view | 13 |
 | whole-domain-validation | 35 |
 

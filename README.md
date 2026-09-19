@@ -10,6 +10,7 @@ Sectile separates interaction rules from presentation. `@sectile/core` defines d
 | --- | --- |
 | `@sectile/core` | Pure structures, interaction state, transitions, and validation |
 | `@sectile/content` | Portable structured content documents, durable schemas, validation, transforms, and prepared indexes |
+| `@sectile/editor` | Renderer-neutral authoring sessions, actions, selection, transactions, and local history over Portable Content |
 | `@sectile/chart` | Immutable chart models, scales, packed projections, queries, and interaction |
 | `@sectile/form` | Field composition, validation, errors, submission, and reset |
 | `@sectile/temporal` | Civil dates, wall-clock time, calendars, and picker rules |

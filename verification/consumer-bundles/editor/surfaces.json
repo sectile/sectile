@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "package": "editor",
+  "surfaces": [
+    {
+      "subpath": ".",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "namespace"
+      ]
+    },
+    {
+      "subpath": "./action",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createEditorActionRegistry",
+        "defineEditorAction",
+        "defineEditorQuery"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./authoring",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "collectAuthoringSurfaces",
+        "compileAuthoringRegistry"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./error",
+      "classification": "type-only",
+      "platform": "browser",
+      "runtimeExports": [],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./history",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "DEFAULT_EDITOR_HISTORY_LIMIT",
+        "MAX_EDITOR_HISTORY_LIMIT",
+        "breakEditorHistoryCoalescing",
+        "clearEditorHistory",
+        "recordEditorHistory",
+        "redoEditorHistory",
+        "tryCreateEditorHistory",
+        "undoEditorHistory"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./package.json",
+      "classification": "metadata",
+      "platform": "universal",
+      "runtimeExports": [],
+      "typeBearing": false,
+      "fixtureModes": []
+    },
+    {
+      "subpath": "./selection",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createCollapsedSelection",
+        "isCollapsedSelection",
+        "mapEditorSelection",
+        "sameEditorSelection",
+        "validateEditorSelection"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./session",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createEditorSession"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const PACKAGE_NAMES = Object.freeze([
-  'core', 'content', 'chart', 'dom', 'form', 'tabular', 'temporal', 'terminal', 'virtual', 'vue',
+  'core', 'content', 'editor', 'chart', 'dom', 'form', 'tabular', 'temporal', 'terminal', 'virtual', 'vue',
 ]);
 
 export async function deriveSurfaceFragment(repoRoot, packageName) {
@@ -125,6 +125,9 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'content:./schema',
     'content:./transform',
     'content:./prepared',
+    'editor:./session',
+    'editor:./authoring',
+    'editor:./action',
     'core:./color-text',
     'chart:./projection',
     'dom:./identity',

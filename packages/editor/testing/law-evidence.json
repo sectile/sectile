@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "evidence": {
+    "EDT-01": "tests/session.test.mjs",
+    "EDT-02": "tests/session.test.mjs",
+    "EDT-03": "tests/history.test.mjs",
+    "EDT-04": "tests/selection.test.mjs",
+    "EDT-05": "tests/action.test.mjs",
+    "EDT-06": "tests/authoring.test.mjs",
+    "EDT-07": "tests/session.test.mjs",
+    "EDT-08": "tests/session.test.mjs",
+    "EDT-09": "tests/session.test.mjs"
+  }
+}

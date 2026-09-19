@@ -10,6 +10,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 |---|---:|---:|---:|
 | core | 380 | 26 | 61 |
 | content | 26 | 0 | 4 |
+| editor | 19 | 0 | 2 |
 | chart | 80 | 0 | 15 |
 | dom | 425 | 171 | 35 |
 | form | 21 | 0 | 9 |
@@ -96,6 +97,8 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | content:helpers.equal | external | `O(nValue)` worst-case | `O(nValue)` | `O(1)` | `O(1)` | allowed | packages/content/tests/helpers.test.mjs |
 | content:index.construct | external | `O(nNode + kID)` expected | `O(dDepth + kID)` | `O(kID)` | `O(kID)` | allowed | packages/content/tests/resources.test.mjs, packages/content/benchmarks/resource-proof.mjs |
 | content:prepared.replace-text | trusted | `O(lText + wPath + tOverride)` expected | `O(lText + wPath + tOverride)` | `O(lText + wPath)` | `O(kID + tOverride + dAncestor)` | forbidden | packages/content/tests/prepared.test.mjs, packages/content/benchmarks/prepared-state-proof.mjs |
+| editor:session.replace-text | trusted | `O(lText + wPath + tOverride + sSelection + hHistory + cPolicy + qListener*cListener)` expected | `O(lText + wPath + tOverride + hHistory + qListener)` | `O(lText + wPath)` | `O(kID + tOverride + hHistory*wPath)` | forbidden | packages/editor/tests/session.test.mjs, packages/editor/benchmarks/session-proof.mjs |
+| editor:session.transact | trusted | `O(oOp*nNode + nNode + nValue + sSelection + hHistory + cPolicy + qListener*cListener)` expected | `O(nNode + nValue + hHistory + qListener)` | `O(nNode + nValue)` | `O(hHistory*nNode + kID)` | allowed | packages/editor/tests/session.test.mjs, packages/editor/benchmarks/session-proof.mjs, packages/content/benchmarks/resource-proof.mjs |
 | chart:controller.project.cached | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(kRepresentative)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | chart:controller.publish | mounted | `O(q*(sSnapshot + cCommand*sCommand))` worst-case | `O(q*(sSnapshot + sCommand + cCommand))` | `O(q)` | `O(q*(sSnapshot + sCommand + cCommand))` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | chart:definition.preflight | external | `O(nLayer)` worst-case | `O(nLayer)` | `O(nLayer)` | `O(nLayer)` | allowed | packages/chart/tests/model/definition.test.mjs |

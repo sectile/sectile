@@ -3,6 +3,7 @@
   "packages": [
     "core",
     "content",
+    "editor",
     "chart",
     "form",
     "tabular",
@@ -336,7 +337,7 @@
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
       "path": "packages/content/src/transform.ts",
-      "line": 496,
+      "line": 521,
       "evidence": ".find(",
       "rule": "content-bounded-domain-work",
       "classification": "result-proportional",
@@ -347,7 +348,7 @@
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
       "path": "packages/content/src/transform.ts",
-      "line": 542,
+      "line": 567,
       "evidence": ".find(",
       "rule": "content-bounded-domain-work",
       "classification": "result-proportional",
@@ -358,7 +359,7 @@
       "detector": "serialization-signature",
       "category": "private-algorithm-bypass",
       "path": "packages/content/src/transform.ts",
-      "line": 1087,
+      "line": 1112,
       "evidence": "JSON.stringify(",
       "rule": "content-bounded-domain-work",
       "classification": "result-proportional",
@@ -3015,6 +3016,17 @@
       "classification": "reuse",
       "owner": null,
       "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
+    },
+    {
+      "detector": "raw-identity-lookup",
+      "category": "raw-full-domain-scan",
+      "path": "packages/editor/src/selection.ts",
+      "line": 164,
+      "evidence": ".find(",
+      "rule": "editor-bounded-authoring-work",
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Editor linear work is limited to Content-bounded selection/authoring projection, configured bounded history, or explicit synchronous subscriber/action collections; document mutation/index semantics are delegated to Content owners."
     },
     {
       "detector": "linear-membership",

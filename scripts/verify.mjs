@@ -131,6 +131,10 @@ const packagePipelines = Object.freeze({
     'test', 'build', 'typecheck:public:prepared', 'check:laws', 'check:package',
     'check:public-api',
   ],
+  '@sectile/editor': [
+    'test', 'build', 'typecheck:public:prepared', 'check:laws', 'check:package',
+    'check:public-api',
+  ],
   '@sectile/chart': ['test', 'build', 'typecheck:public:prepared', 'check:laws', 'check:package'],
   '@sectile/form': [
     'test', 'build', 'check:laws', 'check:package', 'check:public-api',

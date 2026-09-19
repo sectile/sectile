@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 3,
+  "package": "@sectile/editor",
+  "exports": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts"
+    },
+    {
+      "subpath": "./action",
+      "types": "dist/action.d.ts"
+    },
+    {
+      "subpath": "./authoring",
+      "types": "dist/authoring.d.ts"
+    },
+    {
+      "subpath": "./error",
+      "types": "dist/error.d.ts"
+    },
+    {
+      "subpath": "./history",
+      "types": "dist/history.d.ts"
+    },
+    {
+      "subpath": "./selection",
+      "types": "dist/selection.d.ts"
+    },
+    {
+      "subpath": "./session",
+      "types": "dist/session.d.ts"
+    }
+  ],
+  "fingerprint": "d6d5e1e7efa54d4b65423fac8873638261da09e5f3ed511ae7befc2bd8f555d4",
+  "files": [
+    {
+      "path": "dist/action.d.ts",
+      "sha256": "7cd7bbb68a34db518b93ee2373cf407882fb3546d3c423d81770b0db7987908d"
+    },
+    {
+      "path": "dist/authoring.d.ts",
+      "sha256": "a9774893daf5ded38583f347127f5c2f15df35ea4f327d83c8a29aae25cb48f3"
+    },
+    {
+      "path": "dist/error.d.ts",
+      "sha256": "fcd391c2a266e4affb3ae5902a790d00c3fedbbf6c00f3f2c83504b6bc785981"
+    },
+    {
+      "path": "dist/history.d.ts",
+      "sha256": "b303b17532cc11bcb3aa668a3400d41b12b2fcdb006902b36e484af8e5263152"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "d06a4c60757b34219c9c94f713476c6940a0164be39fa5d04e04e510c876bc44"
+    },
+    {
+      "path": "dist/selection.d.ts",
+      "sha256": "6a9c0c370a05100193b69aa5177ee4ff423def244104ac62bf40ce55d64d0873"
+    },
+    {
+      "path": "dist/session.d.ts",
+      "sha256": "7a4596c78c2da810e42d833a38817d0f76ef4bc088928798cd07f464954da6f3"
+    }
+  ]
+}

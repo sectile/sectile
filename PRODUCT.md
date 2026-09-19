@@ -2,7 +2,7 @@
 
 ## Product
 
-Sectile is a renderer-neutral interaction system. `@sectile/core`, `@sectile/content`, `@sectile/chart`, `@sectile/form`, `@sectile/temporal`, `@sectile/tabular`, and `@sectile/virtual` own semantic domains. `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue` project supported domain behavior into their platforms.
+Sectile is a renderer-neutral interaction system. `@sectile/core`, `@sectile/content`, `@sectile/editor`, `@sectile/chart`, `@sectile/form`, `@sectile/temporal`, `@sectile/tabular`, and `@sectile/virtual` own semantic domains. `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue` project supported domain behavior into their platforms.
 
 ## Users
 
@@ -17,7 +17,7 @@ Library authors and application engineers who need predictable interaction behav
 
 ## Package status
 
-- Semantic domains: `@sectile/core`, `@sectile/content`, `@sectile/chart`, `@sectile/form`, `@sectile/temporal`, `@sectile/tabular`, and `@sectile/virtual`.
+- Semantic domains: `@sectile/core`, `@sectile/content`, `@sectile/editor`, `@sectile/chart`, `@sectile/form`, `@sectile/temporal`, `@sectile/tabular`, and `@sectile/virtual`.
 - Host adapters: `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue`.
 - Core and Temporal support DOM, Terminal, and Vue projections. Chart, Form, Tabular, and Virtual support DOM and Vue projections and intentionally have no Terminal projection. Vue uses the corresponding DOM projection.
 - Playgrounds: development witnesses, not end-user documentation.

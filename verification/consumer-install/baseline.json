@@ -47,6 +47,29 @@
         }
       }
     },
+    "editor": {
+      "tarballBytes": 18928,
+      "unpackedBytes": 79947,
+      "unpackedFiles": 24,
+      "categories": {
+        "runtimeJS": {
+          "files": 7,
+          "bytes": 34840
+        },
+        "declarations": {
+          "files": 7,
+          "bytes": 16429
+        },
+        "sourceMaps": {
+          "files": 7,
+          "bytes": 24186
+        },
+        "other": {
+          "files": 3,
+          "bytes": 4492
+        }
+      }
+    },
     "chart": {
       "tarballBytes": 98738,
       "unpackedBytes": 458579,

@@ -137,7 +137,7 @@ test('verification CLI separates affected, full deterministic, and release certi
   assert.deepEqual(full.stages.slice(0, 5), [
     'verify package wave 1: @sectile/core',
     'verify package wave 2: @sectile/content, @sectile/chart, @sectile/form, @sectile/temporal, @sectile/virtual',
-    'verify package wave 3: @sectile/terminal, @sectile/tabular',
+    'verify package wave 3: @sectile/editor, @sectile/terminal, @sectile/tabular',
     'verify package wave 4: @sectile/dom',
     'verify package wave 5: @sectile/vue',
   ]);

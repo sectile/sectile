@@ -120,6 +120,14 @@
       "rationale": "Remaining Core scans construct, validate, or return the explicit immutable result and are covered by complexity contracts."
     },
     {
+      "id": "editor-bounded-authoring-work",
+      "detectors": ["*"],
+      "prefixes": ["packages/editor/src/"],
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Editor linear work is limited to Content-bounded selection/authoring projection, configured bounded history, or explicit synchronous subscriber/action collections; document mutation/index semantics are delegated to Content owners."
+    },
+    {
       "id": "content-retained-index-reuse",
       "detectors": ["*"],
       "paths": [

@@ -6,6 +6,7 @@ export const COMPLEXITY_SCHEMA_VERSION = 1;
 export const PACKAGE_NAMES = Object.freeze([
   'core',
   'content',
+  'editor',
   'chart',
   'dom',
   'form',

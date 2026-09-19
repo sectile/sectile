@@ -4,6 +4,7 @@
   "packages": [
     "core",
     "content",
+    "editor",
     "chart",
     "dom",
     "form",
@@ -3932,6 +3933,177 @@
       "package": "content",
       "subpath": "./validate",
       "exportName": "validateDocument",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./action:createEditorActionRegistry",
+      "package": "editor",
+      "subpath": "./action",
+      "exportName": "createEditorActionRegistry",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./action:defineEditorAction",
+      "package": "editor",
+      "subpath": "./action",
+      "exportName": "defineEditorAction",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./action:defineEditorQuery",
+      "package": "editor",
+      "subpath": "./action",
+      "exportName": "defineEditorQuery",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./authoring:collectAuthoringSurfaces",
+      "package": "editor",
+      "subpath": "./authoring",
+      "exportName": "collectAuthoringSurfaces",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./authoring:compileAuthoringRegistry",
+      "package": "editor",
+      "subpath": "./authoring",
+      "exportName": "compileAuthoringRegistry",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./history:DEFAULT_EDITOR_HISTORY_LIMIT",
+      "package": "editor",
+      "subpath": "./history",
+      "exportName": "DEFAULT_EDITOR_HISTORY_LIMIT",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "editor:./history:MAX_EDITOR_HISTORY_LIMIT",
+      "package": "editor",
+      "subpath": "./history",
+      "exportName": "MAX_EDITOR_HISTORY_LIMIT",
+      "kind": "primitive",
+      "aliasOf": null,
+      "inherits": "public-value-v1"
+    },
+    {
+      "key": "editor:./history:breakEditorHistoryCoalescing",
+      "package": "editor",
+      "subpath": "./history",
+      "exportName": "breakEditorHistoryCoalescing",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./history:clearEditorHistory",
+      "package": "editor",
+      "subpath": "./history",
+      "exportName": "clearEditorHistory",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./history:recordEditorHistory",
+      "package": "editor",
+      "subpath": "./history",
+      "exportName": "recordEditorHistory",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./history:redoEditorHistory",
+      "package": "editor",
+      "subpath": "./history",
+      "exportName": "redoEditorHistory",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./history:tryCreateEditorHistory",
+      "package": "editor",
+      "subpath": "./history",
+      "exportName": "tryCreateEditorHistory",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./history:undoEditorHistory",
+      "package": "editor",
+      "subpath": "./history",
+      "exportName": "undoEditorHistory",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./selection:createCollapsedSelection",
+      "package": "editor",
+      "subpath": "./selection",
+      "exportName": "createCollapsedSelection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./selection:isCollapsedSelection",
+      "package": "editor",
+      "subpath": "./selection",
+      "exportName": "isCollapsedSelection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./selection:mapEditorSelection",
+      "package": "editor",
+      "subpath": "./selection",
+      "exportName": "mapEditorSelection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./selection:sameEditorSelection",
+      "package": "editor",
+      "subpath": "./selection",
+      "exportName": "sameEditorSelection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./selection:validateEditorSelection",
+      "package": "editor",
+      "subpath": "./selection",
+      "exportName": "validateEditorSelection",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "editor:./session:createEditorSession",
+      "package": "editor",
+      "subpath": "./session",
+      "exportName": "createEditorSession",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -25049,6 +25221,218 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Prepared local edits must not scan or rebuild the full validated document; copying the explicitly changed container array is a documented width cost."
+        }
+      }
+    },
+    {
+      "package": "editor",
+      "surface": "hot",
+      "id": "session.replace-text",
+      "source": "packages/editor/src/session.ts",
+      "benchmarkIDs": [
+        "editor:session-replace-text"
+      ],
+      "specificationCeiling": "O(lText + wPath + tOverride + sSelection + hHistory + cPolicy + qListener*cListener)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "lText",
+            "meaning": "code units copied by the prepared Content text edit",
+            "ceiling": "Content maxStringCodeUnits"
+          },
+          {
+            "name": "wPath",
+            "meaning": "changed ancestor child-array widths copied by prepared structural sharing",
+            "ceiling": "accepted Content container cardinality"
+          },
+          {
+            "name": "tOverride",
+            "meaning": "prepared changed-node overrides retained before the edit",
+            "ceiling": "Content maxNodes"
+          },
+          {
+            "name": "kID",
+            "meaning": "ID-bearing nodes retained by the prepared Content index",
+            "ceiling": "Content maxNodes"
+          },
+          {
+            "name": "sSelection",
+            "meaning": "result selection validation work",
+            "ceiling": "Content maxNodes/maxDepth"
+          },
+          {
+            "name": "hHistory",
+            "meaning": "bounded local history entries copied/retained",
+            "ceiling": "MAX_EDITOR_HISTORY_LIMIT"
+          },
+          {
+            "name": "cPolicy",
+            "meaning": "profile/policy callback work",
+            "ceiling": "application-owned"
+          },
+          {
+            "name": "qListener",
+            "meaning": "session observers",
+            "ceiling": "application-owned"
+          },
+          {
+            "name": "cListener",
+            "meaning": "maximum synchronous observer callback work",
+            "ceiling": "application-owned"
+          }
+        ],
+        "time": {
+          "bound": "O(lText + wPath + tOverride + sSelection + hHistory + cPolicy + qListener*cListener)",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(lText + wPath + tOverride + hHistory + qListener)",
+          "output": "O(lText + wPath)",
+          "retained": "O(kID + tOverride + hHistory*wPath)"
+        },
+        "resources": {
+          "allocations": "O(lText + wPath + tOverride + hHistory)",
+          "cacheEntries": "O(kID + tOverride)",
+          "listeners": "O(qListener)",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(qListener)"
+        },
+        "assumptions": [
+          "the session was prepared and validated before the edit",
+          "the fast path accepts an empty inline surface or one canonical text run",
+          "application profile/policy and observer callback bodies are synchronous external work"
+        ],
+        "ceilings": [
+          "Content resource ceilings bound document and operation work",
+          "Editor history is bounded by MAX_EDITOR_HISTORY_LIMIT"
+        ],
+        "benchmarkIDs": [
+          "editor:session-replace-text"
+        ],
+        "deterministicWork": [
+          "replaceText delegates document mutation to replacePreparedText",
+          "documentChanged is derived from the replaced source slice without whole-document equality",
+          "selection/history/publication remain Editor-owned bounded follow-up work"
+        ],
+        "resourceRationale": "Prepared text editing reuses Content retained indexes and structurally shared documents. Local history stores immutable document references; repeated edits may retain copied changed-container arrays up to the configured history bound.",
+        "proof": "The session performs one prepared Content edit, maps and validates selection, runs synchronous guards, updates bounded local history, and publishes once without semantic transformDocument or whole-document equality.",
+        "adversarialWitness": "The Editor session benchmark measures about 0.19 ms for one prepared replaceText at 50k root paragraphs after preparation.",
+        "evidence": [
+          "packages/editor/tests/session.test.mjs",
+          "packages/editor/benchmarks/session-proof.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Prepared text edits must not scan or compare the full document after preparation."
+        }
+      }
+    },
+    {
+      "package": "editor",
+      "surface": "hot",
+      "id": "session.transact",
+      "source": "packages/editor/src/session.ts",
+      "benchmarkIDs": [
+        "editor:session-transact"
+      ],
+      "specificationCeiling": "O(oOp*nNode + nNode + nValue + sSelection + hHistory + cPolicy + qListener*cListener)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "oOp",
+            "meaning": "Content operations in the transaction",
+            "ceiling": "Content maxOperationsPerTransform"
+          },
+          {
+            "name": "nNode",
+            "meaning": "Portable Content nodes in the current/candidate document",
+            "ceiling": "Content maxNodes"
+          },
+          {
+            "name": "nValue",
+            "meaning": "component-data/string validation work",
+            "ceiling": "Content maxValues/string ceilings"
+          },
+          {
+            "name": "kID",
+            "meaning": "ID-bearing nodes retained by the resulting prepared Content index",
+            "ceiling": "Content maxNodes"
+          },
+          {
+            "name": "sSelection",
+            "meaning": "result selection validation work",
+            "ceiling": "Content maxNodes/maxDepth"
+          },
+          {
+            "name": "hHistory",
+            "meaning": "bounded local history entries",
+            "ceiling": "MAX_EDITOR_HISTORY_LIMIT"
+          },
+          {
+            "name": "cPolicy",
+            "meaning": "profile/policy callback work",
+            "ceiling": "application-owned"
+          },
+          {
+            "name": "qListener",
+            "meaning": "session observers",
+            "ceiling": "application-owned"
+          },
+          {
+            "name": "cListener",
+            "meaning": "maximum synchronous observer callback work",
+            "ceiling": "application-owned"
+          }
+        ],
+        "time": {
+          "bound": "O(oOp*nNode + nNode + nValue + sSelection + hHistory + cPolicy + qListener*cListener)",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(nNode + nValue + hHistory + qListener)",
+          "output": "O(nNode + nValue)",
+          "retained": "O(hHistory*nNode + kID)"
+        },
+        "resources": {
+          "allocations": "O(nNode + nValue + hHistory)",
+          "cacheEntries": "O(kID)",
+          "listeners": "O(qListener)",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "O(qListener)"
+        },
+        "assumptions": [
+          "semantic Content transformDocument may rebuild indexes per operation",
+          "history entries retain immutable document generations up to the configured bound"
+        ],
+        "ceilings": [
+          "Content operation/node/value/depth ceilings bound semantic work",
+          "Editor history is bounded by MAX_EDITOR_HISTORY_LIMIT"
+        ],
+        "benchmarkIDs": [
+          "editor:session-transact"
+        ],
+        "deterministicWork": [
+          "one Editor transaction delegates its bounded operation batch to Content transformDocument",
+          "the accepted candidate is prepared once",
+          "selection, policy, history and publication run only after Content succeeds"
+        ],
+        "resourceRationale": "General semantic transactions prioritize atomic correctness over the prepared typing fast path. Snapshot history can retain full semantic document generations and is explicitly bounded.",
+        "proof": "The path executes one bounded Content operation batch, prepares the accepted candidate, updates Editor state and publishes at most one session generation.",
+        "adversarialWitness": "The Editor benchmark measures roughly 51 ms for one semantic transaction at 10k root paragraphs in the proof environment.",
+        "evidence": [
+          "packages/editor/tests/session.test.mjs",
+          "packages/editor/benchmarks/session-proof.mjs",
+          "packages/content/benchmarks/resource-proof.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "The general semantic transaction path may validate/materialize the full candidate; plain typing uses the prepared fast path."
         }
       }
     },
