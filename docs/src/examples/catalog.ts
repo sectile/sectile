@@ -63,6 +63,7 @@ export interface ExampleDefinition {
     readonly path: string;
   }[];
   readonly related: readonly string[];
+  readonly featured?: boolean;
 }
 
 export const examples: readonly ExampleDefinition[] = [
@@ -82,6 +83,7 @@ export const examples: readonly ExampleDefinition[] = [
     previewPath: './vue/editor/basic-authoring/Preview.vue',
     code: [{ label: 'Vue', language: 'vue', path: './vue/editor/basic-authoring/Preview.vue' }],
     related: ['vue-editor-read-only'],
+    featured: true,
   },
   {
     id: 'vue-editor-read-only',
@@ -116,6 +118,7 @@ export const examples: readonly ExampleDefinition[] = [
     previewPath: './dom/editor/application-owned/Preview.vue',
     code: [{ label: 'TypeScript', language: 'ts', path: './dom/editor/application-owned/example.ts' }],
     related: ['dom-editor-session-history'],
+    featured: true,
   },
   {
     id: 'dom-editor-session-history',
@@ -187,7 +190,14 @@ export function findExample(id: string): ExampleDefinition | undefined {
 }
 
 export interface ExampleCatalogIssue {
-  readonly code: 'duplicate-id' | 'duplicate-path' | 'empty-focus' | 'host-source-mismatch' | 'unknown-related' | 'cross-host-related';
+  readonly code:
+    | 'duplicate-id'
+    | 'duplicate-path'
+    | 'duplicate-featured'
+    | 'empty-focus'
+    | 'host-source-mismatch'
+    | 'unknown-related'
+    | 'cross-host-related';
   readonly exampleId: string;
   readonly message: string;
 }
@@ -196,6 +206,7 @@ export function validateExampleCatalog(catalog: readonly ExampleDefinition[]): r
   const issues: ExampleCatalogIssue[] = [];
   const ids = new Set<string>();
   const paths = new Set<string>();
+  const featuredAreas = new Set<string>();
   const byId = new Map(catalog.map((example) => [example.id, example]));
 
   for (const example of catalog) {
@@ -209,6 +220,18 @@ export function validateExampleCatalog(catalog: readonly ExampleDefinition[]): r
       issues.push({ code: 'duplicate-path', exampleId: example.id, message: `Duplicate example path: ${path}` });
     }
     paths.add(path);
+
+    if (example.featured) {
+      const featuredKey = `${example.host}:${example.area}`;
+      if (featuredAreas.has(featuredKey)) {
+        issues.push({
+          code: 'duplicate-featured',
+          exampleId: example.id,
+          message: `Only one featured example is allowed for ${featuredKey}.`,
+        });
+      }
+      featuredAreas.add(featuredKey);
+    }
 
     if (example.focus.trim().length === 0) {
       issues.push({ code: 'empty-focus', exampleId: example.id, message: `Example ${example.id} must have one primary focus.` });

@@ -1,5 +1,6 @@
 import type {
   InlineNode,
+  JSONValue,
   TextMark,
 } from '@sectile/content/document';
 import type { InlineSurface } from '@sectile/content/position';
@@ -37,12 +38,17 @@ export function mountExample(root: HTMLElement): () => void {
   const schemaResult = compileContentSchema({
     id: 'docs/dom-editor',
     version: 1,
+    headingLevels: [1, 2, 3],
     groups: [],
     blockContent: {
       kind: 'block',
       allowed: [
         baseRef('heading'),
         baseRef('paragraph'),
+        baseRef('blockquote'),
+        baseRef('list'),
+        baseRef('code-block'),
+        componentRef('docs/dom-media'),
         componentRef('docs/dom-callout'),
       ],
     },
@@ -51,37 +57,63 @@ export function mountExample(root: HTMLElement): () => void {
       allowed: [
         baseRef('heading'),
         baseRef('paragraph'),
+        baseRef('blockquote'),
+        baseRef('list'),
+        baseRef('code-block'),
+        componentRef('docs/dom-media'),
         componentRef('docs/dom-callout'),
       ],
     },
     inlineContent: {
       kind: 'inline',
-      allowed: [baseRef('text')],
+      allowed: [baseRef('text'), baseRef('hard-break')],
     },
-    components: [{
-      id: 'docs/dom-callout',
-      kind: 'block',
-      componentVersion: 1,
-      data: { type: 'object', properties: {} },
-      slots: [{
-        name: 'body',
+    components: [
+      {
+        id: 'docs/dom-media',
         kind: 'block',
-        allowed: [baseRef('paragraph')],
-      }],
-    }],
+        componentVersion: 1,
+        data: {
+          type: 'object',
+          properties: {
+            title: { schema: { type: 'string' } },
+            caption: { schema: { type: 'string' } },
+          },
+        },
+        slots: [],
+      },
+      {
+        id: 'docs/dom-callout',
+        kind: 'block',
+        componentVersion: 1,
+        data: { type: 'object', properties: {} },
+        slots: [{
+          name: 'body',
+          kind: 'block',
+          allowed: [baseRef('paragraph')],
+        }],
+      },
+    ],
   });
   if (!schemaResult.ok) throw new Error(schemaResult.error.message);
 
-  const authoringResult = compileAuthoringRegistry(schemaResult.value, [{
-    component: 'docs/dom-callout',
-    label: 'Callout',
-    mode: 'flow',
-  }]);
+  const authoringResult = compileAuthoringRegistry(schemaResult.value, [
+    {
+      component: 'docs/dom-media',
+      label: 'Media',
+      mode: 'atom',
+    },
+    {
+      component: 'docs/dom-callout',
+      label: 'Callout',
+      mode: 'flow',
+    },
+  ]);
   if (!authoringResult.ok) throw new Error(authoringResult.error.message);
 
   const editorResult = createEditorSession({
     schema: schemaResult.value,
-    historyLimit: 20,
+    historyLimit: 40,
     document: {
       formatVersion: 1,
       schema: { id: 'docs/dom-editor', version: 1 },
@@ -91,33 +123,138 @@ export function mountExample(root: HTMLElement): () => void {
           {
             id: 'title',
             type: 'heading',
-            level: 2,
+            level: 1,
             children: [{
               type: 'text',
-              text: 'Product launch brief',
+              text: 'Application-owned product brief',
               marks: [],
             }],
           },
           {
-            id: 'intro',
+            id: 'deck',
             type: 'paragraph',
             children: [
               {
                 type: 'text',
-                text: 'Select a range in this application-owned DOM and format ',
+                text: 'The application creates every DOM node while ',
                 marks: [],
               },
               {
                 type: 'text',
-                text: 'only that selection',
-                marks: [{ type: 'strong' }],
+                text: 'Editor',
+                marks: [{ type: 'code' }],
               },
               {
                 type: 'text',
-                text: '. The Editor keeps the logical selection and history.',
+                text: ' owns selection, transactions, and history.',
                 marks: [],
               },
             ],
+          },
+          {
+            id: 'cover',
+            type: 'component',
+            kind: 'block',
+            component: 'docs/dom-media',
+            componentVersion: 1,
+            data: {
+              title: 'Host-owned rendering',
+              caption: 'A schema-backed atom projected entirely by application code.',
+            },
+            slots: [],
+          },
+          {
+            id: 'overview-title',
+            type: 'heading',
+            level: 2,
+            children: [{
+              type: 'text',
+              text: 'Production editing without canonical DOM state',
+              marks: [],
+            }],
+          },
+          {
+            id: 'overview',
+            type: 'paragraph',
+            children: [{
+              type: 'text',
+              text: 'Select text in any editable block. The toolbar applies marks only to that logical range and the connection rerenders from the committed document snapshot.',
+              marks: [],
+            }],
+          },
+          {
+            id: 'quote',
+            type: 'blockquote',
+            children: [{
+              id: 'quote-copy',
+              type: 'paragraph',
+              children: [{
+                type: 'text',
+                text: 'The DOM can be replaced after every transaction because document identity does not live in the rendered markup.',
+                marks: [{ type: 'emphasis' }],
+              }],
+            }],
+          },
+          {
+            id: 'highlights-title',
+            type: 'heading',
+            level: 2,
+            children: [{
+              type: 'text',
+              text: 'What the host is responsible for',
+              marks: [],
+            }],
+          },
+          {
+            id: 'highlights',
+            type: 'list',
+            ordered: false,
+            children: [
+              {
+                id: 'highlight-1',
+                type: 'list-item',
+                children: [{
+                  id: 'highlight-1-copy',
+                  type: 'paragraph',
+                  children: [{
+                    type: 'text',
+                    text: 'Render the current structured snapshot into application markup.',
+                    marks: [],
+                  }],
+                }],
+              },
+              {
+                id: 'highlight-2',
+                type: 'list-item',
+                children: [{
+                  id: 'highlight-2-copy',
+                  type: 'paragraph',
+                  children: [{
+                    type: 'text',
+                    text: 'Mark editable inline surfaces and component authoring mounts.',
+                    marks: [],
+                  }],
+                }],
+              },
+              {
+                id: 'highlight-3',
+                type: 'list-item',
+                children: [{
+                  id: 'highlight-3-copy',
+                  type: 'paragraph',
+                  children: [{
+                    type: 'text',
+                    text: 'Dispose listeners and resources when the host is unmounted.',
+                    marks: [],
+                  }],
+                }],
+              },
+            ],
+          },
+          {
+            id: 'code-sample',
+            type: 'code-block',
+            text: "const connection = createEditor({\n  root, editor, authoring, render\n})",
           },
           {
             id: 'callout',
@@ -134,8 +271,8 @@ export function mountExample(root: HTMLElement): () => void {
                 type: 'paragraph',
                 children: [{
                   type: 'text',
-                  text: 'This callout remains a schema-backed component slot.',
-                  marks: [{ type: 'emphasis' }],
+                  text: 'The callout slot remains editable even though its surrounding component markup is host-defined.',
+                  marks: [{ type: 'strong' }],
                 }],
               }],
             }],
@@ -149,78 +286,140 @@ export function mountExample(root: HTMLElement): () => void {
   const editor = editorResult.value;
   const editorElement = document.createElement('div');
   const toolbar = document.createElement('div');
-  const status = document.createElement('p');
+  const historyGroup = document.createElement('div');
+  const formatGroup = document.createElement('div');
+  const status = document.createElement('span');
+  const footer = document.createElement('div');
   const markButtons: Record<FormatMark, HTMLButtonElement> = {
     strong: document.createElement('button'),
     emphasis: document.createElement('button'),
     code: document.createElement('button'),
   };
+  const clear = document.createElement('button');
   const undo = document.createElement('button');
   const redo = document.createElement('button');
   const separator = document.createElement('span');
 
   root.dataset['exampleEditor'] = '';
   toolbar.dataset['exampleEditorToolbar'] = '';
-  status.dataset['exampleEditorStatus'] = '';
+  historyGroup.dataset['exampleEditorToolbarGroup'] = '';
+  formatGroup.dataset['exampleEditorToolbarGroup'] = '';
+  status.dataset['exampleEditorToolbarState'] = '';
+  footer.dataset['exampleEditorFooter'] = '';
   separator.dataset['exampleEditorToolbarSeparator'] = '';
   separator.setAttribute('aria-hidden', 'true');
-  editorElement.setAttribute('aria-label', 'Application-owned rich text editor');
+  editorElement.setAttribute('aria-label', 'Application-owned production editor');
 
-  markButtons.strong.textContent = 'Bold';
-  markButtons.emphasis.textContent = 'Italic';
-  markButtons.code.textContent = 'Code';
-  undo.textContent = 'Undo';
-  redo.textContent = 'Redo';
+  configureToolButton(undo, '↶', 'Undo');
+  configureToolButton(redo, '↷', 'Redo');
+  configureToolButton(markButtons.strong, 'B', 'Bold');
+  configureToolButton(markButtons.emphasis, 'I', 'Italic');
+  configureToolButton(markButtons.code, '</>', 'Inline code');
+  configureToolButton(clear, 'Tx', 'Clear formatting');
 
-  const allButtons = [
+  historyGroup.append(undo, redo);
+  formatGroup.append(
     markButtons.strong,
     markButtons.emphasis,
     markButtons.code,
-    undo,
-    redo,
-  ];
-  for (const button of allButtons) button.type = 'button';
-  toolbar.append(
-    markButtons.strong,
-    markButtons.emphasis,
-    markButtons.code,
-    separator,
-    undo,
-    redo,
+    clear,
   );
+  toolbar.append(historyGroup, separator, formatGroup, status);
 
   const connection = createEditor({
     root: editorElement,
     editor,
     authoring: authoringResult.value,
     render({ snapshot, authoringSurfaces }) {
-      const title = snapshot.index.getNode('title');
-      const intro = snapshot.index.getNode('intro');
-      const calloutCopy = snapshot.index.getNode('callout-copy');
-      if (
-        title?.type !== 'heading'
-        || intro?.type !== 'paragraph'
-        || calloutCopy?.type !== 'paragraph'
-      ) {
-        return;
-      }
-
       const article = document.createElement('article');
       article.dataset['exampleEditorDocument'] = '';
 
-      const heading = document.createElement('h2');
-      markEditorInlineSurface(heading, { type: 'node', id: 'title' });
-      appendInline(heading, title.children);
+      appendInlineSurface(
+        article,
+        'h1',
+        'title',
+        inlineChildren(snapshot, 'title'),
+      );
 
-      const paragraph = document.createElement('p');
-      markEditorInlineSurface(paragraph, { type: 'node', id: 'intro' });
-      appendInline(paragraph, intro.children);
+      const deck = appendInlineSurface(
+        article,
+        'p',
+        'deck',
+        inlineChildren(snapshot, 'deck'),
+      );
+      deck.dataset['exampleEditorDeck'] = '';
+
+      const media = document.createElement('figure');
+      media.dataset['exampleEditorMedia'] = '';
+      media.contentEditable = 'false';
+      const mediaArt = document.createElement('div');
+      mediaArt.dataset['exampleEditorMediaArt'] = '';
+      const mediaKicker = document.createElement('span');
+      mediaKicker.textContent = 'Structured content';
+      const mediaTitle = document.createElement('strong');
+      mediaTitle.textContent = componentString(snapshot, 'cover', 'title');
+      mediaArt.append(mediaKicker, mediaTitle);
+      const mediaCaption = document.createElement('figcaption');
+      mediaCaption.textContent = componentString(snapshot, 'cover', 'caption');
+      media.append(mediaArt, mediaCaption);
+      article.append(media);
+
+      appendInlineSurface(
+        article,
+        'h2',
+        'overview-title',
+        inlineChildren(snapshot, 'overview-title'),
+      );
+      appendInlineSurface(
+        article,
+        'p',
+        'overview',
+        inlineChildren(snapshot, 'overview'),
+      );
+
+      const quote = document.createElement('blockquote');
+      quote.dataset['exampleEditorQuote'] = '';
+      appendInlineSurface(
+        quote,
+        'p',
+        'quote-copy',
+        inlineChildren(snapshot, 'quote-copy'),
+      );
+      article.append(quote);
+
+      appendInlineSurface(
+        article,
+        'h2',
+        'highlights-title',
+        inlineChildren(snapshot, 'highlights-title'),
+      );
+
+      const list = document.createElement('ul');
+      list.dataset['exampleEditorList'] = '';
+      for (const id of [
+        'highlight-1-copy',
+        'highlight-2-copy',
+        'highlight-3-copy',
+      ]) {
+        const item = document.createElement('li');
+        appendInlineSurface(item, 'p', id, inlineChildren(snapshot, id));
+        list.append(item);
+      }
+      article.append(list);
+
+      const pre = document.createElement('pre');
+      pre.dataset['exampleEditorCode'] = '';
+      pre.contentEditable = 'false';
+      const code = document.createElement('code');
+      code.textContent = codeBlockText(snapshot, 'code-sample');
+      pre.append(code);
+      article.append(pre);
 
       const callout = document.createElement('aside');
       callout.dataset['exampleEditorCallout'] = '';
       const label = document.createElement('span');
       label.dataset['exampleEditorCalloutLabel'] = '';
-      label.textContent = 'Callout component';
+      label.textContent = 'Component slot';
       callout.append(label);
 
       const surface = authoringSurfaces.find((candidate) => candidate.id === 'callout');
@@ -228,25 +427,36 @@ export function mountExample(root: HTMLElement): () => void {
       if (mount !== undefined) {
         const mountElement = document.createElement('div');
         markEditorAuthoringMount(mountElement, 'callout', mount);
-        const calloutParagraph = document.createElement('p');
-        markEditorInlineSurface(calloutParagraph, {
-          type: 'node',
-          id: 'callout-copy',
-        });
-        appendInline(calloutParagraph, calloutCopy.children);
-        mountElement.append(calloutParagraph);
+        appendInlineSurface(
+          mountElement,
+          'p',
+          'callout-copy',
+          inlineChildren(snapshot, 'callout-copy'),
+        );
         callout.append(mountElement);
       }
+      article.append(callout);
 
-      article.append(heading, paragraph, callout);
       editorElement.replaceChildren(article);
       updateToolbar(snapshot);
+      footer.replaceChildren(
+        textSpan(`Revision ${snapshot.revision}`),
+        textSpan(snapshot.canUndo ? 'Unsaved local history' : 'Document is current'),
+      );
     },
   });
 
   const preventToolbarFocus = (event: MouseEvent): void => {
     event.preventDefault();
   };
+  const allButtons = [
+    undo,
+    redo,
+    markButtons.strong,
+    markButtons.emphasis,
+    markButtons.code,
+    clear,
+  ];
   for (const button of allButtons) {
     button.addEventListener('mousedown', preventToolbarFocus);
   }
@@ -260,6 +470,23 @@ export function mountExample(root: HTMLElement): () => void {
     markButtons[type].addEventListener('click', markHandlers[type]);
   }
 
+  const clearFormatting = (): void => {
+    const current = editor.getSnapshot();
+    const range = selectedInlineRange(current);
+    if (range === null || current.selection === null) return;
+
+    const result = editor.transact({
+      operations: [
+        markOperation(range, markByType.strong, false),
+        markOperation(range, markByType.emphasis, false),
+        markOperation(range, markByType.code, false),
+      ],
+      selection: current.selection,
+      historyIntent: 'command',
+    });
+    if (!result.ok) status.textContent = result.error.message;
+  };
+
   const undoHistory = (): void => {
     const result = editor.undo();
     if (!result.ok) status.textContent = result.error.message;
@@ -268,14 +495,36 @@ export function mountExample(root: HTMLElement): () => void {
     const result = editor.redo();
     if (!result.ok) status.textContent = result.error.message;
   };
+  const keyboardShortcuts = (event: KeyboardEvent): void => {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+    const key = event.key.toLowerCase();
+    if (key === 'b') {
+      event.preventDefault();
+      toggleMark('strong');
+      return;
+    }
+    if (key === 'i') {
+      event.preventDefault();
+      toggleMark('emphasis');
+      return;
+    }
+    if (key === 'z') {
+      event.preventDefault();
+      if (event.shiftKey) redoHistory();
+      else undoHistory();
+    }
+  };
+
+  clear.addEventListener('click', clearFormatting);
   undo.addEventListener('click', undoHistory);
   redo.addEventListener('click', redoHistory);
+  editorElement.addEventListener('keydown', keyboardShortcuts);
 
   const unsubscribe = editor.subscribe((event) => {
     updateToolbar(event.current);
   });
 
-  root.replaceChildren(toolbar, editorElement, status);
+  root.replaceChildren(toolbar, editorElement, footer);
   updateToolbar(editor.getSnapshot());
 
   return () => {
@@ -283,8 +532,10 @@ export function mountExample(root: HTMLElement): () => void {
     for (const type of Object.keys(markHandlers) as FormatMark[]) {
       markButtons[type].removeEventListener('click', markHandlers[type]);
     }
+    clear.removeEventListener('click', clearFormatting);
     undo.removeEventListener('click', undoHistory);
     redo.removeEventListener('click', redoHistory);
+    editorElement.removeEventListener('keydown', keyboardShortcuts);
     for (const button of allButtons) {
       button.removeEventListener('mousedown', preventToolbarFocus);
     }
@@ -324,14 +575,88 @@ export function mountExample(root: HTMLElement): () => void {
         selectedRangeHasMark(value, type) ? 'true' : 'false',
       );
     }
+    clear.disabled = !formatEnabled;
     undo.disabled = !value.canUndo;
     redo.disabled = !value.canRedo;
-
-    const range = selectedInlineRange(value);
-    status.textContent = range === null
-      ? `Select text inside one block to format it · revision ${value.revision}`
-      : `${range.to - range.from} characters selected · revision ${value.revision}`;
+    status.textContent = selectionLabel(value);
   }
+}
+
+function configureToolButton(
+  button: HTMLButtonElement,
+  text: string,
+  label: string,
+): void {
+  button.type = 'button';
+  button.textContent = text;
+  button.setAttribute('aria-label', label);
+  button.title = label;
+}
+
+function textSpan(value: string): HTMLSpanElement {
+  const span = document.createElement('span');
+  span.textContent = value;
+  return span;
+}
+
+function markOperation(
+  range: InlineRange,
+  mark: TextMark,
+  enabled: boolean,
+) {
+  return {
+    type: 'set-mark' as const,
+    surface: range.surface,
+    from: range.from,
+    to: range.to,
+    mark,
+    enabled,
+  };
+}
+
+function inlineChildren(
+  value: EditorSessionSnapshot,
+  id: string,
+): readonly InlineNode[] {
+  const node = value.index.getNode(id);
+  return node?.type === 'paragraph' || node?.type === 'heading'
+    ? node.children
+    : [];
+}
+
+function codeBlockText(value: EditorSessionSnapshot, id: string): string {
+  const node = value.index.getNode(id);
+  return node?.type === 'code-block' ? node.text : '';
+}
+
+function componentString(
+  value: EditorSessionSnapshot,
+  id: string,
+  key: string,
+): string {
+  const node = value.index.getNode(id);
+  if (node?.type !== 'component') return '';
+  return stringFromData(node.data, key);
+}
+
+function stringFromData(data: JSONValue, key: string): string {
+  if (data === null || Array.isArray(data) || typeof data !== 'object') return '';
+  const record = data as Readonly<Record<string, JSONValue>>;
+  const value = record[key];
+  return typeof value === 'string' ? value : '';
+}
+
+function appendInlineSurface(
+  parent: HTMLElement,
+  tag: 'h1' | 'h2' | 'p',
+  id: string,
+  children: readonly InlineNode[],
+): HTMLElement {
+  const element = document.createElement(tag);
+  markEditorInlineSurface(element, { type: 'node', id });
+  appendInline(element, children);
+  parent.append(element);
+  return element;
 }
 
 function selectedInlineRange(value: EditorSessionSnapshot): InlineRange | null {
@@ -365,6 +690,13 @@ function canFormat(value: EditorSessionSnapshot): boolean {
   return !value.interaction.disabled
     && !value.interaction.readOnly
     && selectedInlineRange(value) !== null;
+}
+
+function selectionLabel(value: EditorSessionSnapshot): string {
+  const range = selectedInlineRange(value);
+  return range === null
+    ? 'Select text to format'
+    : `${range.to - range.from} characters selected`;
 }
 
 function selectedRangeHasMark(

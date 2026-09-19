@@ -28,6 +28,19 @@ const activeRuntime = computed(() => activeExample.value === undefined
 const areaExamples = computed(() => currentRoute.value?.host === undefined || currentRoute.value?.area === undefined
   ? []
   : examplesFor(currentRoute.value.host, currentRoute.value.area));
+const featuredAreaExample = computed(() =>
+  areaExamples.value.find((example) => example.featured),
+);
+const featuredAreaRuntime = computed(() =>
+  featuredAreaExample.value === undefined
+    ? undefined
+    : runtimeFor(featuredAreaExample.value),
+);
+const supportingAreaExamples = computed(() =>
+  featuredAreaExample.value === undefined
+    ? areaExamples.value
+    : areaExamples.value.filter((example) => !example.featured),
+);
 
 watchEffect(() => {
   document.title = currentRoute.value?.title
@@ -153,25 +166,80 @@ watchEffect(() => {
                 </ul>
               </section>
 
-              <div v-if="areaExamples.length > 0" class="docs-example-grid">
-                <a
-                  v-for="example in areaExamples"
-                  :key="example.id"
-                  class="docs-example-card"
-                  :href="routeHref(`/${example.host}/${example.area}/${example.slug}`)"
-                  @click="handleRouteClick($event, `/${example.host}/${example.area}/${example.slug}`)"
-                >
-                  <div class="docs-example-card__body">
-                    <h2>{{ example.title }}</h2>
-                    <span>{{ example.description }}</span>
-                    <ul class="docs-tag-list" aria-label="Example topics">
-                      <li v-for="tag in example.tags" :key="tag">{{ tag }}</li>
-                    </ul>
+              <section
+                v-if="featuredAreaExample && featuredAreaRuntime"
+                class="docs-featured-example"
+                :aria-labelledby="`featured-example-${featuredAreaExample.id}`"
+              >
+                <div class="docs-featured-example__intro">
+                  <div>
+                    <h2 :id="`featured-example-${featuredAreaExample.id}`">
+                      {{ featuredAreaExample.title }}
+                    </h2>
+                    <p>{{ featuredAreaExample.description }}</p>
                   </div>
-                </a>
-              </div>
+                  <a
+                    class="docs-text-link"
+                    :href="routeHref(`/${featuredAreaExample.host}/${featuredAreaExample.area}/${featuredAreaExample.slug}`)"
+                    @click="handleRouteClick($event, `/${featuredAreaExample.host}/${featuredAreaExample.area}/${featuredAreaExample.slug}`)"
+                  >
+                    Open focused example
+                  </a>
+                </div>
 
-              <div v-else class="docs-empty-state">
+                <div
+                  class="docs-preview docs-preview--featured"
+                  :class="`docs-preview--${featuredAreaExample.fixture}`"
+                >
+                  <component :is="featuredAreaRuntime.preview" />
+                </div>
+
+                <details class="docs-code-disclosure">
+                  <summary>Relevant code</summary>
+                  <div class="docs-code-stack">
+                    <section
+                      v-for="section in featuredAreaRuntime.code"
+                      :key="section.label"
+                      class="docs-code-section"
+                    >
+                      <div class="docs-code-section__header">
+                        <span>{{ section.label }}</span>
+                        <code>{{ section.language }}</code>
+                      </div>
+                      <pre><code>{{ section.source.trim() }}</code></pre>
+                    </section>
+                  </div>
+                </details>
+              </section>
+
+              <section
+                v-if="supportingAreaExamples.length > 0"
+                class="docs-supporting-examples"
+                aria-labelledby="supporting-examples-title"
+              >
+                <h2 id="supporting-examples-title">
+                  {{ featuredAreaExample ? 'More examples' : 'Examples' }}
+                </h2>
+                <div class="docs-example-grid">
+                  <a
+                    v-for="example in supportingAreaExamples"
+                    :key="example.id"
+                    class="docs-example-card"
+                    :href="routeHref(`/${example.host}/${example.area}/${example.slug}`)"
+                    @click="handleRouteClick($event, `/${example.host}/${example.area}/${example.slug}`)"
+                  >
+                    <div class="docs-example-card__body">
+                      <h2>{{ example.title }}</h2>
+                      <span>{{ example.description }}</span>
+                      <ul class="docs-tag-list" aria-label="Example topics">
+                        <li v-for="tag in example.tags" :key="tag">{{ tag }}</li>
+                      </ul>
+                    </div>
+                  </a>
+                </div>
+              </section>
+
+              <div v-else-if="featuredAreaExample === undefined" class="docs-empty-state">
                 <strong>No examples yet</strong>
                 <span>This area is ready for focused examples without changing the navigation structure.</span>
               </div>

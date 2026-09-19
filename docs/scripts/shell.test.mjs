@@ -54,6 +54,8 @@ test('Editor is a first-class documented area with runnable Vue and DOM examples
   );
   assert.equal(vueEditorExamples.length, 2);
   assert.equal(domEditorExamples.length, 2);
+  assert.equal(vueEditorExamples.filter((example) => example.featured).length, 1);
+  assert.equal(domEditorExamples.filter((example) => example.featured).length, 1);
 
   const packageJSON = JSON.parse(await read('package.json'));
   assert.equal(packageJSON.dependencies['@sectile/content'], 'workspace:*');
@@ -62,6 +64,9 @@ test('Editor is a first-class documented area with runnable Vue and DOM examples
   const app = await read('src/App.vue');
   assert.match(app, /docs-area-principles/u);
   assert.match(app, /Ownership model/u);
+  assert.match(app, /docs-featured-example/u);
+  assert.match(app, /featuredAreaRuntime/u);
+  assert.match(app, /More examples/u);
   assert.doesNotMatch(app, /docs-example-card__thumbnail/u);
   assert.doesNotMatch(app, /<p>\{\{ example\.subject \}\}<\/p>/u);
 
@@ -73,6 +78,12 @@ test('Editor is a first-class documented area with runnable Vue and DOM examples
   assert.match(vueArticle, /toggleMark\('emphasis'\)/u);
   assert.match(vueArticle, /toggleMark\('code'\)/u);
   assert.match(vueArticle, /@mousedown\.prevent/u);
+  assert.match(vueArticle, /baseRef\('blockquote'\)/u);
+  assert.match(vueArticle, /baseRef\('list'\)/u);
+  assert.match(vueArticle, /baseRef\('code-block'\)/u);
+  assert.match(vueArticle, /component: 'docs\/media'/u);
+  assert.match(vueArticle, /data-example-editor-media/u);
+  assert.match(vueArticle, /data-example-editor-code/u);
   assert.doesNotMatch(vueArticle, /Append sentence|Strong intro/u);
 
   const vueReview = await read('src/examples/vue/editor/read-only/Preview.vue');
@@ -86,6 +97,12 @@ test('Editor is a first-class documented area with runnable Vue and DOM examples
   assert.match(domArticle, /markButtons\.emphasis/u);
   assert.match(domArticle, /markButtons\.code/u);
   assert.match(domArticle, /preventToolbarFocus/u);
+  assert.match(domArticle, /baseRef\('blockquote'\)/u);
+  assert.match(domArticle, /baseRef\('list'\)/u);
+  assert.match(domArticle, /baseRef\('code-block'\)/u);
+  assert.match(domArticle, /component: 'docs\/dom-media'/u);
+  assert.match(domArticle, /exampleEditorMedia/u);
+  assert.match(domArticle, /exampleEditorCode/u);
   assert.doesNotMatch(domArticle, /Append sentence|Toggle strong/u);
 
   const domHistory = await read('src/examples/dom/editor/session-history/example.ts');
@@ -115,6 +132,19 @@ test('the example catalog rejects host mixing and duplicate focused routes', () 
 
   const duplicate = { ...vueExample, id: 'duplicate-example' };
   assert.ok(validateExampleCatalog([vueExample, duplicate]).some((issue) => issue.code === 'duplicate-path'));
+
+  const duplicateFeatured = {
+    ...vueExample,
+    id: 'duplicate-featured-example',
+    slug: 'duplicate-featured-example',
+    featured: true,
+  };
+  assert.ok(
+    validateExampleCatalog([
+      { ...vueExample, featured: true },
+      duplicateFeatured,
+    ]).some((issue) => issue.code === 'duplicate-featured'),
+  );
 
   const unfocused = { ...vueExample, id: 'unfocused-example', slug: 'checkbox/unfocused', focus: '   ' };
   assert.ok(validateExampleCatalog([unfocused]).some((issue) => issue.code === 'empty-focus'));
@@ -156,10 +186,15 @@ test('runtime modules are resolved from catalog paths instead of a second exampl
 
 test('preview is primary and relevant code stays collapsed by default', async () => {
   const app = await read('src/App.vue');
-  const previewIndex = app.indexOf('class="docs-preview"');
-  const codeIndex = app.indexOf('class="docs-code-disclosure"');
+  const featuredPreviewIndex = app.indexOf('class="docs-preview docs-preview--featured"');
+  const featuredCodeIndex = app.indexOf('class="docs-code-disclosure"', featuredPreviewIndex);
+  assert.ok(featuredPreviewIndex >= 0 && featuredCodeIndex > featuredPreviewIndex);
 
-  assert.ok(previewIndex >= 0 && codeIndex > previewIndex);
+  const detailIndex = app.indexOf('class="docs-example-detail"');
+  const detailPreviewIndex = app.indexOf('class="docs-preview"', detailIndex);
+  const detailCodeIndex = app.indexOf('class="docs-code-disclosure"', detailPreviewIndex);
+  assert.ok(detailPreviewIndex > detailIndex && detailCodeIndex > detailPreviewIndex);
+
   assert.match(app, /<details class="docs-code-disclosure">/u);
   assert.doesNotMatch(app, /<details class="docs-code-disclosure"\s+open/u);
 });

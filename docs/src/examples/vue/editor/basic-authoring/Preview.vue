@@ -9,6 +9,7 @@ import {
 } from 'vue';
 import type {
   InlineNode,
+  JSONValue,
   TextMark,
 } from '@sectile/content/document';
 import type { InlineSurface } from '@sectile/content/position';
@@ -83,12 +84,17 @@ const InlineContent = defineComponent({
 const schemaResult = compileContentSchema({
   id: 'docs/editor-basic',
   version: 1,
+  headingLevels: [1, 2, 3],
   groups: [],
   blockContent: {
     kind: 'block',
     allowed: [
       baseRef('heading'),
       baseRef('paragraph'),
+      baseRef('blockquote'),
+      baseRef('list'),
+      baseRef('code-block'),
+      componentRef('docs/media'),
       componentRef('docs/callout'),
     ],
   },
@@ -97,6 +103,10 @@ const schemaResult = compileContentSchema({
     allowed: [
       baseRef('heading'),
       baseRef('paragraph'),
+      baseRef('blockquote'),
+      baseRef('list'),
+      baseRef('code-block'),
+      componentRef('docs/media'),
       componentRef('docs/callout'),
     ],
   },
@@ -104,30 +114,52 @@ const schemaResult = compileContentSchema({
     kind: 'inline',
     allowed: [baseRef('text'), baseRef('hard-break')],
   },
-  components: [{
-    id: 'docs/callout',
-    kind: 'block',
-    componentVersion: 1,
-    data: { type: 'object', properties: {} },
-    slots: [{
-      name: 'body',
+  components: [
+    {
+      id: 'docs/media',
       kind: 'block',
-      allowed: [baseRef('paragraph')],
-    }],
-  }],
+      componentVersion: 1,
+      data: {
+        type: 'object',
+        properties: {
+          title: { schema: { type: 'string' } },
+          caption: { schema: { type: 'string' } },
+        },
+      },
+      slots: [],
+    },
+    {
+      id: 'docs/callout',
+      kind: 'block',
+      componentVersion: 1,
+      data: { type: 'object', properties: {} },
+      slots: [{
+        name: 'body',
+        kind: 'block',
+        allowed: [baseRef('paragraph')],
+      }],
+    },
+  ],
 });
 if (!schemaResult.ok) throw new Error(schemaResult.error.message);
 
-const authoringResult = compileAuthoringRegistry(schemaResult.value, [{
-  component: 'docs/callout',
-  label: 'Callout',
-  mode: 'flow',
-}]);
+const authoringResult = compileAuthoringRegistry(schemaResult.value, [
+  {
+    component: 'docs/media',
+    label: 'Media',
+    mode: 'atom',
+  },
+  {
+    component: 'docs/callout',
+    label: 'Callout',
+    mode: 'flow',
+  },
+]);
 if (!authoringResult.ok) throw new Error(authoringResult.error.message);
 
 const editorResult = createEditorSession({
   schema: schemaResult.value,
-  historyLimit: 20,
+  historyLimit: 40,
   document: {
     formatVersion: 1,
     schema: { id: 'docs/editor-basic', version: 1 },
@@ -137,20 +169,20 @@ const editorResult = createEditorSession({
         {
           id: 'title',
           type: 'heading',
-          level: 2,
+          level: 1,
           children: [{
             type: 'text',
-            text: 'Release notes',
+            text: 'Shipping a structured editor without renderer lock-in',
             marks: [],
           }],
         },
         {
-          id: 'intro',
+          id: 'deck',
           type: 'paragraph',
           children: [
             {
               type: 'text',
-              text: 'Select text in this article and format only that range. ',
+              text: 'A production-style document backed by ',
               marks: [],
             },
             {
@@ -160,7 +192,17 @@ const editorResult = createEditorSession({
             },
             {
               type: 'text',
-              text: ' remains the document model while ',
+              text: ', with ',
+              marks: [],
+            },
+            {
+              type: 'text',
+              text: 'logical selection',
+              marks: [{ type: 'emphasis' }],
+            },
+            {
+              type: 'text',
+              text: ' and transaction history owned by ',
               marks: [],
             },
             {
@@ -170,10 +212,115 @@ const editorResult = createEditorSession({
             },
             {
               type: 'text',
-              text: ' owns selection, transactions, and history.',
+              text: '.',
               marks: [],
             },
           ],
+        },
+        {
+          id: 'cover',
+          type: 'component',
+          kind: 'block',
+          component: 'docs/media',
+          componentVersion: 1,
+          data: {
+            title: 'Portable authoring',
+            caption: 'The media block is a schema-backed atom rendered by the host.',
+          },
+          slots: [],
+        },
+        {
+          id: 'overview-title',
+          type: 'heading',
+          level: 2,
+          children: [{
+            type: 'text',
+            text: 'What the document model owns',
+            marks: [],
+          }],
+        },
+        {
+          id: 'overview',
+          type: 'paragraph',
+          children: [{
+            type: 'text',
+            text: 'Select any text in the editable blocks below. Bold, Italic, and Code apply to exactly that range, while the host only projects the committed snapshot.',
+            marks: [],
+          }],
+        },
+        {
+          id: 'quote',
+          type: 'blockquote',
+          children: [{
+            id: 'quote-copy',
+            type: 'paragraph',
+            children: [{
+              type: 'text',
+              text: 'Portable semantics stay independent from the DOM or Vue renderer that happens to present them.',
+              marks: [{ type: 'emphasis' }],
+            }],
+          }],
+        },
+        {
+          id: 'highlights-title',
+          type: 'heading',
+          level: 2,
+          children: [{
+            type: 'text',
+            text: 'Editing capabilities',
+            marks: [],
+          }],
+        },
+        {
+          id: 'highlights',
+          type: 'list',
+          ordered: false,
+          children: [
+            {
+              id: 'highlight-1',
+              type: 'list-item',
+              children: [{
+                id: 'highlight-1-copy',
+                type: 'paragraph',
+                children: [{
+                  type: 'text',
+                  text: 'Native browser selection mapped to logical document positions.',
+                  marks: [],
+                }],
+              }],
+            },
+            {
+              id: 'highlight-2',
+              type: 'list-item',
+              children: [{
+                id: 'highlight-2-copy',
+                type: 'paragraph',
+                children: [{
+                  type: 'text',
+                  text: 'Inline marks, typing, clipboard, composition, and local undo/redo.',
+                  marks: [],
+                }],
+              }],
+            },
+            {
+              id: 'highlight-3',
+              type: 'list-item',
+              children: [{
+                id: 'highlight-3-copy',
+                type: 'paragraph',
+                children: [{
+                  type: 'text',
+                  text: 'Schema-backed components and isolated authoring slots.',
+                  marks: [],
+                }],
+              }],
+            },
+          ],
+        },
+        {
+          id: 'code-sample',
+          type: 'code-block',
+          text: "editor.transact({\n  operations,\n  historyIntent: 'command'\n})",
         },
         {
           id: 'callout',
@@ -190,8 +337,8 @@ const editorResult = createEditorSession({
               type: 'paragraph',
               children: [{
                 type: 'text',
-                text: 'The callout body is another editable surface backed by the same document.',
-                marks: [{ type: 'emphasis' }],
+                text: 'This callout body is another editable surface inside a registered Content component.',
+                marks: [{ type: 'strong' }],
               }],
             }],
           }],
@@ -223,6 +370,28 @@ function inlineChildren(
   return node?.type === 'paragraph' || node?.type === 'heading'
     ? node.children
     : [];
+}
+
+function codeBlockText(value: EditorSessionSnapshot, id: string): string {
+  const node = value.index.getNode(id);
+  return node?.type === 'code-block' ? node.text : '';
+}
+
+function componentString(
+  value: EditorSessionSnapshot,
+  id: string,
+  key: string,
+): string {
+  const node = value.index.getNode(id);
+  if (node?.type !== 'component') return '';
+  return stringFromData(node.data, key);
+}
+
+function stringFromData(data: JSONValue, key: string): string {
+  if (data === null || Array.isArray(data) || typeof data !== 'object') return '';
+  const record = data as Readonly<Record<string, JSONValue>>;
+  const value = record[key];
+  return typeof value === 'string' ? value : '';
 }
 
 function calloutMounts(
@@ -262,6 +431,13 @@ function canFormat(value: EditorSessionSnapshot): boolean {
   return !value.interaction.disabled
     && !value.interaction.readOnly
     && selectedInlineRange(value) !== null;
+}
+
+function selectionLabel(value: EditorSessionSnapshot): string {
+  const range = selectedInlineRange(value);
+  return range === null
+    ? 'Select text to format'
+    : `${range.to - range.from} characters selected`;
 }
 
 function selectedRangeHasMark(
@@ -311,6 +487,64 @@ function toggleMark(type: FormatMark): void {
   error.value = result.ok ? null : result.error.message;
 }
 
+function clearFormatting(): void {
+  const current = snapshot.value;
+  const range = selectedInlineRange(current);
+  if (range === null || current.selection === null) return;
+
+  const result = editor.transact({
+    operations: [
+      {
+        type: 'set-mark',
+        surface: range.surface,
+        from: range.from,
+        to: range.to,
+        mark: markByType.strong,
+        enabled: false,
+      },
+      {
+        type: 'set-mark',
+        surface: range.surface,
+        from: range.from,
+        to: range.to,
+        mark: markByType.emphasis,
+        enabled: false,
+      },
+      {
+        type: 'set-mark',
+        surface: range.surface,
+        from: range.from,
+        to: range.to,
+        mark: markByType.code,
+        enabled: false,
+      },
+    ],
+    selection: current.selection,
+    historyIntent: 'command',
+  });
+  error.value = result.ok ? null : result.error.message;
+}
+
+function handleEditorKeydown(event: KeyboardEvent): void {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+  const key = event.key.toLowerCase();
+  if (key === 'b') {
+    event.preventDefault();
+    toggleMark('strong');
+    return;
+  }
+  if (key === 'i') {
+    event.preventDefault();
+    toggleMark('emphasis');
+    return;
+  }
+  if (key === 'z') {
+    event.preventDefault();
+    if (event.shiftKey) redo();
+    else undo();
+  }
+}
+
 function undo(): void {
   const result = editor.undo();
   error.value = result.ok ? null : result.error.message;
@@ -324,63 +558,94 @@ function redo(): void {
 
 <template>
   <div data-example-editor>
-    <div data-example-editor-toolbar aria-label="Text formatting">
-      <button
-        type="button"
-        :disabled="!canFormat(snapshot)"
-        :aria-pressed="selectedRangeHasMark(snapshot, 'strong')"
-        @mousedown.prevent
-        @click="toggleMark('strong')"
-      >
-        Bold
-      </button>
-      <button
-        type="button"
-        :disabled="!canFormat(snapshot)"
-        :aria-pressed="selectedRangeHasMark(snapshot, 'emphasis')"
-        @mousedown.prevent
-        @click="toggleMark('emphasis')"
-      >
-        Italic
-      </button>
-      <button
-        type="button"
-        :disabled="!canFormat(snapshot)"
-        :aria-pressed="selectedRangeHasMark(snapshot, 'code')"
-        @mousedown.prevent
-        @click="toggleMark('code')"
-      >
-        Code
-      </button>
+    <div data-example-editor-toolbar aria-label="Editor toolbar">
+      <div data-example-editor-toolbar-group>
+        <button
+          type="button"
+          aria-label="Undo"
+          title="Undo"
+          :disabled="!snapshot.canUndo"
+          @mousedown.prevent
+          @click="undo"
+        >
+          ↶
+        </button>
+        <button
+          type="button"
+          aria-label="Redo"
+          title="Redo"
+          :disabled="!snapshot.canRedo"
+          @mousedown.prevent
+          @click="redo"
+        >
+          ↷
+        </button>
+      </div>
+
       <span data-example-editor-toolbar-separator aria-hidden="true" />
-      <button
-        type="button"
-        :disabled="!snapshot.canUndo"
-        @mousedown.prevent
-        @click="undo"
-      >
-        Undo
-      </button>
-      <button
-        type="button"
-        :disabled="!snapshot.canRedo"
-        @mousedown.prevent
-        @click="redo"
-      >
-        Redo
-      </button>
+
+      <div data-example-editor-toolbar-group>
+        <button
+          type="button"
+          aria-label="Bold"
+          title="Bold"
+          :disabled="!canFormat(snapshot)"
+          :aria-pressed="selectedRangeHasMark(snapshot, 'strong')"
+          @mousedown.prevent
+          @click="toggleMark('strong')"
+        >
+          <strong>B</strong>
+        </button>
+        <button
+          type="button"
+          aria-label="Italic"
+          title="Italic"
+          :disabled="!canFormat(snapshot)"
+          :aria-pressed="selectedRangeHasMark(snapshot, 'emphasis')"
+          @mousedown.prevent
+          @click="toggleMark('emphasis')"
+        >
+          <em>I</em>
+        </button>
+        <button
+          type="button"
+          aria-label="Code"
+          title="Inline code"
+          :disabled="!canFormat(snapshot)"
+          :aria-pressed="selectedRangeHasMark(snapshot, 'code')"
+          @mousedown.prevent
+          @click="toggleMark('code')"
+        >
+          &lt;/&gt;
+        </button>
+        <button
+          type="button"
+          aria-label="Clear formatting"
+          title="Clear formatting"
+          :disabled="!canFormat(snapshot)"
+          @mousedown.prevent
+          @click="clearFormatting"
+        >
+          Tx
+        </button>
+      </div>
+
+      <span data-example-editor-toolbar-state>
+        {{ selectionLabel(snapshot) }}
+      </span>
     </div>
 
     <EditorRoot
       :editor="editor"
       :authoring="authoring"
-      aria-label="Rich text release notes editor"
+      aria-label="Production-style structured editor"
+      @keydown="handleEditorKeydown"
       @error="error = $event.message"
     >
       <template #default="{ snapshot: current, authoringSurfaces }">
         <article data-example-editor-document>
           <EditorInlineSurface
-            as="h2"
+            as="h1"
             :surface="{ type: 'node', id: 'title' }"
           >
             <InlineContent :nodes="inlineChildren(current, 'title')" />
@@ -388,13 +653,83 @@ function redo(): void {
 
           <EditorInlineSurface
             as="p"
-            :surface="{ type: 'node', id: 'intro' }"
+            data-example-editor-deck
+            :surface="{ type: 'node', id: 'deck' }"
           >
-            <InlineContent :nodes="inlineChildren(current, 'intro')" />
+            <InlineContent :nodes="inlineChildren(current, 'deck')" />
           </EditorInlineSurface>
 
+          <figure data-example-editor-media contenteditable="false">
+            <div data-example-editor-media-art aria-hidden="true">
+              <span>Structured content</span>
+              <strong>{{ componentString(current, 'cover', 'title') }}</strong>
+            </div>
+            <figcaption>
+              {{ componentString(current, 'cover', 'caption') }}
+            </figcaption>
+          </figure>
+
+          <EditorInlineSurface
+            as="h2"
+            :surface="{ type: 'node', id: 'overview-title' }"
+          >
+            <InlineContent :nodes="inlineChildren(current, 'overview-title')" />
+          </EditorInlineSurface>
+
+          <EditorInlineSurface
+            as="p"
+            :surface="{ type: 'node', id: 'overview' }"
+          >
+            <InlineContent :nodes="inlineChildren(current, 'overview')" />
+          </EditorInlineSurface>
+
+          <blockquote data-example-editor-quote>
+            <EditorInlineSurface
+              as="p"
+              :surface="{ type: 'node', id: 'quote-copy' }"
+            >
+              <InlineContent :nodes="inlineChildren(current, 'quote-copy')" />
+            </EditorInlineSurface>
+          </blockquote>
+
+          <EditorInlineSurface
+            as="h2"
+            :surface="{ type: 'node', id: 'highlights-title' }"
+          >
+            <InlineContent :nodes="inlineChildren(current, 'highlights-title')" />
+          </EditorInlineSurface>
+
+          <ul data-example-editor-list>
+            <li>
+              <EditorInlineSurface
+                as="p"
+                :surface="{ type: 'node', id: 'highlight-1-copy' }"
+              >
+                <InlineContent :nodes="inlineChildren(current, 'highlight-1-copy')" />
+              </EditorInlineSurface>
+            </li>
+            <li>
+              <EditorInlineSurface
+                as="p"
+                :surface="{ type: 'node', id: 'highlight-2-copy' }"
+              >
+                <InlineContent :nodes="inlineChildren(current, 'highlight-2-copy')" />
+              </EditorInlineSurface>
+            </li>
+            <li>
+              <EditorInlineSurface
+                as="p"
+                :surface="{ type: 'node', id: 'highlight-3-copy' }"
+              >
+                <InlineContent :nodes="inlineChildren(current, 'highlight-3-copy')" />
+              </EditorInlineSurface>
+            </li>
+          </ul>
+
+          <pre data-example-editor-code contenteditable="false"><code>{{ codeBlockText(current, 'code-sample') }}</code></pre>
+
           <aside data-example-editor-callout>
-            <span data-example-editor-callout-label>Callout component</span>
+            <span data-example-editor-callout-label>Component slot</span>
             <EditorAuthoringMount
               v-for="mount in calloutMounts(authoringSurfaces)"
               :key="mount.name"
@@ -412,12 +747,10 @@ function redo(): void {
       </template>
     </EditorRoot>
 
-    <p data-example-editor-status>
-      {{ canFormat(snapshot)
-        ? 'Formatting applies to the current text selection.'
-        : 'Select text inside one block to format it.' }}
-      · revision {{ snapshot.revision }}
-    </p>
+    <div data-example-editor-footer>
+      <span>Revision {{ snapshot.revision }}</span>
+      <span>{{ snapshot.canUndo ? 'Unsaved local history' : 'Document is current' }}</span>
+    </div>
     <p v-if="error" role="alert">{{ error }}</p>
   </div>
 </template>
