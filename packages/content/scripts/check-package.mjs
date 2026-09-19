@@ -15,6 +15,7 @@ const runtimeSubpaths = new Set([
   './document',
   './error',
   './fragment',
+  './helpers',
   './limits',
   './schema',
   './query',

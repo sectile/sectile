@@ -19,6 +19,10 @@
       "types": "dist/fragment.d.ts"
     },
     {
+      "subpath": "./helpers",
+      "types": "dist/helpers.d.ts"
+    },
+    {
       "subpath": "./limits",
       "types": "dist/limits.d.ts"
     },
@@ -47,7 +51,7 @@
       "types": "dist/validate.d.ts"
     }
   ],
-  "fingerprint": "679aaa069e8899ff5928dad2f70ed4f3f58e88dd6a2dbaaa8042f1a7a21c8213",
+  "fingerprint": "6a8eee99688e7cc834bb1f015b18c9ff29dce8a9f19ab73ae2b7a34ba8517c05",
   "files": [
     {
       "path": "dist/document.d.ts",
@@ -62,8 +66,12 @@
       "sha256": "138bc317f0cde7697f63d35c4cef0c55a0e6990fda4204197d2df7cf0deb5fc5"
     },
     {
+      "path": "dist/helpers.d.ts",
+      "sha256": "0d2f2402f50d2fd49166122fe09443d2d3268d7a518f5fddf205ee5b5ffa7337"
+    },
+    {
       "path": "dist/index.d.ts",
-      "sha256": "8cf43855529819ee3ff71f2c69cb708dd39a1d02dba45b28ed92dbcdb7c4cc00"
+      "sha256": "02c17155e168cdc197fef6cf68e778e75c8d0206d7db6aeaf7ba6d8834299634"
     },
     {
       "path": "dist/limits.d.ts",

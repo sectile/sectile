@@ -1004,6 +1004,10 @@
           "role": "fragment",
           "kind": "owner"
         },
+        "src/helpers.ts": {
+          "role": "query",
+          "kind": "owner"
+        },
         "src/index.ts": {
           "role": "exports",
           "kind": "facade"

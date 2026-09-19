@@ -9,7 +9,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
 | core | 380 | 26 | 61 |
-| content | 23 | 0 | 2 |
+| content | 25 | 0 | 4 |
 | chart | 80 | 0 | 15 |
 | dom | 425 | 171 | 35 |
 | form | 21 | 0 | 9 |
@@ -92,6 +92,8 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:tree.subtree-interval | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(n)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:tree.views | trusted | `O(n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:tree.visible | external | `O(n + k)` expected | `O(n)` | `O(k)` | `O(k)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| content:helpers.empty | external | `O(nNode)` worst-case | `O(nNode)` | `O(1)` | `O(1)` | allowed | packages/content/tests/helpers.test.mjs |
+| content:helpers.equal | external | `O(nValue)` worst-case | `O(nValue)` | `O(1)` | `O(1)` | allowed | packages/content/tests/helpers.test.mjs |
 | content:index.construct | external | `O(nNode + kID)` expected | `O(dDepth + kID)` | `O(kID)` | `O(kID)` | allowed | packages/content/tests/resources.test.mjs, packages/content/benchmarks/resource-proof.mjs |
 | content:prepared.replace-text | trusted | `O(lText + wPath + tOverride)` expected | `O(lText + wPath + tOverride)` | `O(lText + wPath)` | `O(kID + tOverride + dAncestor)` | forbidden | packages/content/tests/prepared.test.mjs, packages/content/benchmarks/prepared-state-proof.mjs |
 | chart:controller.project.cached | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(kRepresentative)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |

@@ -5,6 +5,122 @@
   "kind": "internal-operations",
   "operations": [
     {
+      "id": "helpers.empty",
+      "inherits": "linear-v1",
+      "source": "packages/content/src/helpers.ts",
+      "benchmarkIDs": [
+        "content:helpers-empty-work"
+      ],
+      "specificationCeiling": "O(nNode)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nNode",
+            "meaning": "Portable Content nodes inspected before authored content is found or the subject is exhausted",
+            "ceiling": "maxNodes for validated documents and fragments"
+          }
+        ],
+        "time": {
+          "bound": "O(nNode)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nNode)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(nNode)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Whitespace is authored content and components or hard breaks are immediately non-empty."
+        ],
+        "ceilings": [
+          "Validated traversal remains bounded by Content resource ceilings."
+        ],
+        "evidence": [
+          "packages/content/tests/helpers.test.mjs"
+        ],
+        "benchmarkIDs": [
+          "content:helpers-empty-work"
+        ],
+        "deterministicWork": [
+          "Each traversed base child is pushed once and authored leaves return early."
+        ],
+        "resourceRationale": "The helper retains only its explicit traversal stack and no long-lived cache.",
+        "proof": "The iterative walk visits empty containers until the first authored leaf or exhaustion.",
+        "adversarialWitness": "An all-empty nested subject reaches worst-case traversal; component, hard-break, and whitespace fixtures exercise early exits.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A fully empty subject requires exhausting its reachable base content."
+        }
+      }
+    },
+    {
+      "id": "helpers.equal",
+      "inherits": "linear-v1",
+      "source": "packages/content/src/helpers.ts",
+      "benchmarkIDs": [
+        "content:helpers-equal-work"
+      ],
+      "specificationCeiling": "O(nValue)",
+      "contract": {
+        "variables": [
+          {
+            "name": "nValue",
+            "meaning": "Portable Content values compared before mismatch or completion",
+            "ceiling": "bounded by accepted Content resource ceilings"
+          }
+        ],
+        "time": {
+          "bound": "O(nValue)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nValue)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(nValue)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Inputs are canonical Portable Content documents."
+        ],
+        "ceilings": [
+          "Document values were accepted under Content resource ceilings."
+        ],
+        "evidence": [
+          "packages/content/tests/helpers.test.mjs"
+        ],
+        "benchmarkIDs": [
+          "content:helpers-equal-work"
+        ],
+        "deterministicWork": [
+          "Each compared array/object entry is pushed at most once and primitive mismatches terminate early."
+        ],
+        "resourceRationale": "Exact equality retains no cache and uses an explicit pair stack rather than recursion.",
+        "proof": "The iterative comparison descends arrays by index and objects by own-key lookup; object insertion order does not participate.",
+        "adversarialWitness": "Equal documents traverse the full value graph; helper fixtures cover identity, version, order, marks, and object-key-order semantics.",
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Exact equality must observe all values when documents are equal."
+        }
+      }
+    },
+    {
       "id": "index.construct",
       "inherits": "linear-v1",
       "source": "packages/content/src/query.ts",

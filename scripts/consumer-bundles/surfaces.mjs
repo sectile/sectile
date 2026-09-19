@@ -121,6 +121,7 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'core:./geometry',
     'core:./anchored-layout',
     'core:./color',
+    'content:./helpers',
     'content:./schema',
     'content:./transform',
     'content:./prepared',

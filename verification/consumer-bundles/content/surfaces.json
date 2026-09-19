@@ -57,6 +57,22 @@
       ]
     },
     {
+      "subpath": "./helpers",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "isEmpty",
+        "isEqual"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./limits",
       "classification": "named-subpath",
       "platform": "browser",

@@ -164,6 +164,26 @@
       "pair": null
     },
     {
+      "id": "content:./helpers:named",
+      "package": "content",
+      "subpath": "./helpers",
+      "source": "@sectile/content/helpers",
+      "exportName": "isEmpty",
+      "mode": "named",
+      "platform": "browser",
+      "pair": null
+    },
+    {
+      "id": "content:./helpers:side-effect",
+      "package": "content",
+      "subpath": "./helpers",
+      "source": "@sectile/content/helpers",
+      "exportName": null,
+      "mode": "side-effect",
+      "platform": "browser",
+      "pair": null
+    },
+    {
       "id": "content:./limits:side-effect",
       "package": "content",
       "subpath": "./limits",
@@ -4693,6 +4713,64 @@
       "bundler": "vite",
       "mode": "side-effect",
       "source": "@sectile/content/fragment",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
+      "id": "content:./helpers:named",
+      "bundler": "esbuild",
+      "mode": "named",
+      "source": "@sectile/content/helpers",
+      "exportName": "isEmpty",
+      "platform": "browser",
+      "raw": 752,
+      "gzip": 376,
+      "brotli": 310,
+      "modules": [
+        "@sectile/content/dist/helpers.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "content:./helpers:named",
+      "bundler": "vite",
+      "mode": "named",
+      "source": "@sectile/content/helpers",
+      "exportName": "isEmpty",
+      "platform": "browser",
+      "raw": 756,
+      "gzip": 378,
+      "brotli": 312,
+      "modules": [
+        "@sectile/content/dist/helpers.js",
+        "fixture"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "content:./helpers:side-effect",
+      "bundler": "esbuild",
+      "mode": "side-effect",
+      "source": "@sectile/content/helpers",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
+      "id": "content:./helpers:side-effect",
+      "bundler": "vite",
+      "mode": "side-effect",
+      "source": "@sectile/content/helpers",
       "exportName": null,
       "platform": "browser",
       "raw": 0,

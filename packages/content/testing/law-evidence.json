@@ -8,6 +8,7 @@
     "CNT-05": "tests/position.test.mjs",
     "CNT-06": "tests/prepared.test.mjs",
     "CNT-07": "tests/standalone-consumer.test.mjs",
-    "CNT-08": "tests/resources.test.mjs"
+    "CNT-08": "tests/resources.test.mjs",
+    "CNT-09": "tests/helpers.test.mjs"
   }
 }

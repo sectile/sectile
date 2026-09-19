@@ -40,6 +40,11 @@
       "id": "CNT-08",
       "theory": "portable-content",
       "statement": "configured resource ceilings bound document, schema, string, mark, slot and component-data work before publication"
+    },
+    {
+      "id": "CNT-09",
+      "theory": "portable-content",
+      "statement": "isEqual and isEmpty share exact schema-independent Portable Content helper semantics"
     }
   ]
 }

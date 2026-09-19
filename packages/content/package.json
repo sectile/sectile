@@ -41,6 +41,11 @@
       "import": "./dist/fragment.js",
       "default": "./dist/fragment.js"
     },
+    "./helpers": {
+      "types": "./dist/helpers.d.ts",
+      "import": "./dist/helpers.js",
+      "default": "./dist/helpers.js"
+    },
     "./limits": {
       "types": "./dist/limits.d.ts",
       "import": "./dist/limits.js",
