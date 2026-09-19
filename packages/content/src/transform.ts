@@ -11,6 +11,7 @@ import type {
   TextNode,
 } from './document.js';
 import type { ContentErrorCode } from './error.js';
+import type { ContentLimits } from './limits.js';
 import type {
   ContentChangeMap,
   InlinePoint,
@@ -110,9 +111,17 @@ export function transformDocument(
   options: {
     readonly schema: CompiledContentSchema;
     readonly operations: readonly ContentOperation[];
+    readonly limits?: Partial<ContentLimits>;
   },
 ): Result<ContentTransformResult, ContentErrorCode> {
-  const starting = validateDocument(document, options.schema);
+  const validationOptions = options.limits === undefined
+    ? {}
+    : { limits: options.limits };
+  const starting = validateDocument(
+    document,
+    options.schema,
+    validationOptions,
+  );
   if (!starting.ok) return starting;
 
   const candidate = materializeDocument(document);
@@ -128,7 +137,11 @@ export function transformDocument(
     if (!applied.ok) return applied;
   }
 
-  const final = validateDocument(candidate, options.schema);
+  const final = validateDocument(
+    candidate,
+    options.schema,
+    validationOptions,
+  );
   if (!final.ok) return final;
 
   deepFreeze(candidate);

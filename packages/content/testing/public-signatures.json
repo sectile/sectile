@@ -51,7 +51,7 @@
       "types": "dist/validate.d.ts"
     }
   ],
-  "fingerprint": "556f7224797aabc788ecaf88e9f99962d0565ec412c680a0e44ee4e3a12878e1",
+  "fingerprint": "9cb9e9a126f4239b088b9a22a869bfbb95703b7dbc971ede67f42e062642009b",
   "files": [
     {
       "path": "dist/document.d.ts",
@@ -95,7 +95,7 @@
     },
     {
       "path": "dist/transform.d.ts",
-      "sha256": "f138bbda00456db767b4f9157416bc7498c1f66069e277d697ae064a5fd624fa"
+      "sha256": "c43d785bad6bcba76360ee6be6b048291b8f54b5c7d723d56fcd1dc3ba854a90"
     },
     {
       "path": "dist/validate.d.ts",

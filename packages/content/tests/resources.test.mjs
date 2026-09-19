@@ -6,6 +6,7 @@ import {
   compileContentSchema,
   componentRef,
 } from '../.verification-dist/schema.js';
+import { transformDocument } from '../.verification-dist/transform.js';
 import { validateDocument } from '../.verification-dist/validate.js';
 
 function text(value, marks = []) {
@@ -311,4 +312,30 @@ test('component data value budget and cyclic data reject safely', () => {
   const cycle = validateDocument(makeDocument(cyclic), compiled.value);
   assert.equal(cycle.ok, false);
   assert.equal(cycle.error.code, 'content-component-data-invalid');
+});
+
+
+test('semantic transforms preserve caller-supplied Content limits', () => {
+  const schema = simpleSchema();
+  const document = documentWith([paragraph('p1', 'abcd')]);
+
+  const result = transformDocument(document, {
+    schema,
+    limits: {
+      maxStringCodeUnits: 4,
+    },
+    operations: [{
+      type: 'replace-inline',
+      surface: { type: 'node', id: 'p1' },
+      from: 4,
+      to: 4,
+      replacement: [text('!')],
+    }],
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(
+    result.error.code,
+    'content-string-code-unit-ceiling-exceeded',
+  );
 });
