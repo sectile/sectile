@@ -56,6 +56,7 @@ void h(EditorRoot, { ...root, onError });
 void h(EditorInlineSurface, inlineSurface);
 void h(EditorInlineAtom, inlineAtom);
 void h(EditorHardBreak);
+void h(EditorHardBreak, { asChild: true }, { default: () => h('span') });
 void h(EditorIsolatedFrame, isolatedFrame);
 void h(EditorAuthoringMount, authoringMount);
 slot.snapshot.revision satisfies number;

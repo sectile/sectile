@@ -22,6 +22,7 @@ const {
   defineComponent,
   h,
   nextTick,
+  onUpdated,
   shallowRef,
 } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
@@ -39,6 +40,7 @@ const {
   readEditorDOMSelection,
 } = await import('@sectile/dom/editor');
 const {
+  EditorHardBreak,
   EditorInlineSurface,
   EditorRoot,
 } = await import('../.verification-dist/editor.js');
@@ -104,10 +106,10 @@ function createFixture(value, selectionOffset = null) {
   };
 }
 
-function renderEditor(editor, authoring) {
+function renderEditor(editor, authoring, rootProps = {}) {
   return h(
     EditorRoot,
-    { editor, authoring },
+    { editor, authoring, ...rootProps },
     {
       default: ({ snapshot }) => {
         const paragraph = snapshot.document.root.children[0];
@@ -226,4 +228,66 @@ test('Vue Editor reconnects when the Editor session prop changes and retires the
     app.unmount();
     host.remove();
   }
+});
+
+
+test('Vue Editor retires the previous DOM connection before root replacement completes', async () => {
+  const fixture = createFixture('hello');
+  const tag = shallowRef('div');
+  const editorRoot = shallowRef(null);
+  let initialConnection = null;
+  let connectionDuringUpdate = undefined;
+  const component = defineComponent({
+    setup() {
+      onUpdated(() => {
+        if (initialConnection !== null) {
+          connectionDuringUpdate = editorRoot.value?.getConnection() ?? null;
+        }
+      });
+      return () => renderEditor(
+        fixture.editor,
+        fixture.authoring,
+        {
+          ref: editorRoot,
+          as: tag.value,
+        },
+      );
+    },
+  });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp(component);
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+    initialConnection = editorRoot.value?.getConnection() ?? null;
+    assert.notEqual(initialConnection, null);
+    assert.equal(host.querySelector('[data-scope="editor"]')?.tagName, 'DIV');
+
+    tag.value = 'section';
+    await nextTick();
+
+    assert.equal(host.querySelector('[data-scope="editor"]')?.tagName, 'SECTION');
+    assert.equal(connectionDuringUpdate, null);
+
+    await nextTick();
+    assert.notEqual(editorRoot.value?.getConnection() ?? null, initialConnection);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
+
+test('Vue EditorHardBreak supports asChild composition without losing its marker', async () => {
+  const html = await renderToString(createSSRApp({
+    render: () => h(
+      EditorHardBreak,
+      { asChild: true },
+      { default: () => h('span', { id: 'hard-break' }) },
+    ),
+  }));
+  assert.match(html, /id="hard-break"/u);
+  assert.match(html, /data-sectile-editor-hard-break/u);
 });

@@ -131,11 +131,16 @@ export const EditorRoot = defineComponent({
       if (connection === null) return;
       connection.setSelection(connection.getSnapshot().selection);
     });
+    const disconnectConnection = (): void => {
+      restoreSelection.cancel();
+      const current = connection;
+      connection = null;
+      current?.disconnect();
+    };
 
     const connect = (): void => {
       if (!mounted || root.value === null) return;
-      connection?.disconnect();
-      connection = null;
+      disconnectConnection();
 
       const created = tryCreateEditor({
         root: root.value,
@@ -164,6 +169,7 @@ export const EditorRoot = defineComponent({
     const setRoot = (element: unknown): void => {
       const next = element as HTMLElement | null;
       if (root.value === next) return;
+      if (mounted) disconnectConnection();
       root.value = next;
       if (mounted) connectTask.schedule();
     };
@@ -175,13 +181,12 @@ export const EditorRoot = defineComponent({
     onBeforeUnmount(() => {
       mounted = false;
       connectTask.cancel();
-      restoreSelection.cancel();
-      connection?.disconnect();
-      connection = null;
+      disconnectConnection();
     });
     watch(
       [() => props.editor, () => props.authoring],
       () => {
+        if (mounted) disconnectConnection();
         const next = initialRenderState(props.editor, props.authoring);
         snapshot.value = next.snapshot;
         authoringSurfaces.value = next.authoringSurfaces;
@@ -191,7 +196,9 @@ export const EditorRoot = defineComponent({
     watch(
       () => props.spellcheck,
       () => {
-        if (mounted) connectTask.schedule();
+        if (!mounted) return;
+        disconnectConnection();
+        connectTask.schedule();
       },
     );
 
@@ -305,7 +312,10 @@ export const EditorHardBreak = defineComponent({
       default: 'br',
     },
   },
-  setup(props, { attrs }) {
+  slots: Object as SlotsType<{
+    default: () => VNodeChild;
+  }>,
+  setup(props, { attrs, slots }) {
     return (): VNodeChild => h(
       Primitive,
       mergeProps(
@@ -316,6 +326,7 @@ export const EditorHardBreak = defineComponent({
           asChild: props.asChild,
         },
       ),
+      slots,
     );
   },
 });
