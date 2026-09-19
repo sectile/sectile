@@ -1,5 +1,17 @@
 <script setup lang="ts">
-import { onUnmounted, shallowRef } from 'vue';
+import {
+  defineComponent,
+  h,
+  onUnmounted,
+  shallowRef,
+  type PropType,
+  type VNodeChild,
+} from 'vue';
+import type {
+  InlineNode,
+  TextMark,
+} from '@sectile/content/document';
+import type { InlineSurface } from '@sectile/content/position';
 import {
   baseRef,
   compileContentSchema,
@@ -18,6 +30,55 @@ import {
   EditorInlineSurface,
   EditorRoot,
 } from '@sectile/vue/editor';
+
+type FormatMark = 'strong' | 'emphasis' | 'code';
+
+interface InlineRange {
+  readonly surface: InlineSurface;
+  readonly from: number;
+  readonly to: number;
+}
+
+const markByType = {
+  strong: { type: 'strong' },
+  emphasis: { type: 'emphasis' },
+  code: { type: 'code' },
+} as const satisfies Record<FormatMark, TextMark>;
+
+const InlineContent = defineComponent({
+  name: 'ExampleInlineContent',
+  props: {
+    nodes: {
+      type: Array as PropType<readonly InlineNode[]>,
+      required: true,
+    },
+  },
+  setup(props) {
+    return (): readonly VNodeChild[] => props.nodes.map((node, index) => {
+      if (node.type === 'hard-break') return h('br', { key: index });
+      if (node.type !== 'text') {
+        return h('span', { key: index }, 'Inline component');
+      }
+
+      let content: VNodeChild = node.text;
+      for (let markIndex = node.marks.length - 1; markIndex >= 0; markIndex -= 1) {
+        const mark = node.marks[markIndex];
+        if (mark === undefined) continue;
+        content = mark.type === 'strong'
+          ? h('strong', content)
+          : mark.type === 'emphasis'
+            ? h('em', content)
+            : mark.type === 'code'
+              ? h('code', content)
+              : h('a', {
+                  href: mark.href,
+                  ...(mark.title === undefined ? {} : { title: mark.title }),
+                }, content);
+      }
+      return h('span', { key: index }, [content]);
+    });
+  },
+});
 
 const schemaResult = compileContentSchema({
   id: 'docs/editor-basic',
@@ -79,18 +140,40 @@ const editorResult = createEditorSession({
           level: 2,
           children: [{
             type: 'text',
-            text: 'Portable authoring, structured by contract',
+            text: 'Release notes',
             marks: [],
           }],
         },
         {
           id: 'intro',
           type: 'paragraph',
-          children: [{
-            type: 'text',
-            text: 'The Editor session can format and update this paragraph without making Vue the document authority.',
-            marks: [],
-          }],
+          children: [
+            {
+              type: 'text',
+              text: 'Select text in this article and format only that range. ',
+              marks: [],
+            },
+            {
+              type: 'text',
+              text: 'Portable Content',
+              marks: [{ type: 'strong' }],
+            },
+            {
+              type: 'text',
+              text: ' remains the document model while ',
+              marks: [],
+            },
+            {
+              type: 'text',
+              text: 'Editor',
+              marks: [{ type: 'code' }],
+            },
+            {
+              type: 'text',
+              text: ' owns selection, transactions, and history.',
+              marks: [],
+            },
+          ],
         },
         {
           id: 'callout',
@@ -107,8 +190,8 @@ const editorResult = createEditorSession({
               type: 'paragraph',
               children: [{
                 type: 'text',
-                text: 'This callout is a registered Content component with an editor-managed slot.',
-                marks: [],
+                text: 'The callout body is another editable surface backed by the same document.',
+                marks: [{ type: 'emphasis' }],
               }],
             }],
           }],
@@ -132,20 +215,14 @@ onUnmounted(() => {
   editor.destroy();
 });
 
-function nodeText(value: EditorSessionSnapshot, id: string): string {
+function inlineChildren(
+  value: EditorSessionSnapshot,
+  id: string,
+): readonly InlineNode[] {
   const node = value.index.getNode(id);
-  if (node?.type !== 'paragraph' && node?.type !== 'heading') return '';
-  return node.children
-    .map((child) => child.type === 'text' ? child.text : '\n')
-    .join('');
-}
-
-function introIsStrong(value: EditorSessionSnapshot): boolean {
-  const node = value.index.getNode('intro');
-  if (node?.type !== 'paragraph') return false;
-  const text = node.children.find((child) => child.type === 'text');
-  return text?.type === 'text'
-    && text.marks.some((mark) => mark.type === 'strong');
+  return node?.type === 'paragraph' || node?.type === 'heading'
+    ? node.children
+    : [];
 }
 
 function calloutMounts(
@@ -154,36 +231,81 @@ function calloutMounts(
   return surfaces.find((surface) => surface.id === 'callout')?.mounts ?? [];
 }
 
-function toggleStrong(): void {
-  const value = nodeText(snapshot.value, 'intro');
+function selectedInlineRange(value: EditorSessionSnapshot): InlineRange | null {
+  const selection = value.selection;
+  if (
+    selection === null
+    || selection.anchor.type !== 'inline'
+    || selection.focus.type !== 'inline'
+    || !sameSurface(selection.anchor.surface, selection.focus.surface)
+    || selection.anchor.offset === selection.focus.offset
+  ) {
+    return null;
+  }
+  return {
+    surface: selection.anchor.surface,
+    from: Math.min(selection.anchor.offset, selection.focus.offset),
+    to: Math.max(selection.anchor.offset, selection.focus.offset),
+  };
+}
+
+function sameSurface(left: InlineSurface, right: InlineSurface): boolean {
+  return left.type === right.type
+    && left.id === right.id
+    && (
+      left.type === 'node'
+      || (right.type === 'slot' && left.slot === right.slot)
+    );
+}
+
+function canFormat(value: EditorSessionSnapshot): boolean {
+  return !value.interaction.disabled
+    && !value.interaction.readOnly
+    && selectedInlineRange(value) !== null;
+}
+
+function selectedRangeHasMark(
+  value: EditorSessionSnapshot,
+  type: FormatMark,
+): boolean {
+  const range = selectedInlineRange(value);
+  if (range === null || range.surface.type !== 'node') return false;
+  const node = value.index.getNode(range.surface.id);
+  if (node?.type !== 'paragraph' && node?.type !== 'heading') return false;
+
+  let cursor = 0;
+  let foundText = false;
+  for (const child of node.children) {
+    const length = child.type === 'text' ? child.text.length : 1;
+    const end = cursor + length;
+    if (
+      child.type === 'text'
+      && end > range.from
+      && cursor < range.to
+    ) {
+      foundText = true;
+      if (!child.marks.some((mark) => mark.type === type)) return false;
+    }
+    cursor = end;
+  }
+  return foundText;
+}
+
+function toggleMark(type: FormatMark): void {
+  const current = snapshot.value;
+  const range = selectedInlineRange(current);
+  if (range === null || current.selection === null) return;
+
   const result = editor.transact({
     operations: [{
       type: 'set-mark',
-      surface: { type: 'node', id: 'intro' },
-      from: 0,
-      to: value.length,
-      mark: { type: 'strong' },
-      enabled: !introIsStrong(snapshot.value),
+      surface: range.surface,
+      from: range.from,
+      to: range.to,
+      mark: markByType[type],
+      enabled: !selectedRangeHasMark(current, type),
     }],
-    historyIntent: 'command',
-  });
-  error.value = result.ok ? null : result.error.message;
-}
-
-function appendSentence(): void {
-  const value = nodeText(snapshot.value, 'intro');
-  const result = editor.transact({
-    operations: [{
-      type: 'replace-inline',
-      surface: { type: 'node', id: 'intro' },
-      from: value.length,
-      to: value.length,
-      replacement: [{
-        type: 'text',
-        text: ' One transaction, one history entry.',
-        marks: [],
-      }],
-    }],
+    selection: current.selection,
     historyIntent: 'command',
   });
   error.value = result.ok ? null : result.error.message;
@@ -202,19 +324,57 @@ function redo(): void {
 
 <template>
   <div data-example-editor>
-    <div data-example-editor-toolbar>
-      <button type="button" @click="toggleStrong">
-        {{ introIsStrong(snapshot) ? 'Remove strong' : 'Strong intro' }}
+    <div data-example-editor-toolbar aria-label="Text formatting">
+      <button
+        type="button"
+        :disabled="!canFormat(snapshot)"
+        :aria-pressed="selectedRangeHasMark(snapshot, 'strong')"
+        @mousedown.prevent
+        @click="toggleMark('strong')"
+      >
+        Bold
       </button>
-      <button type="button" @click="appendSentence">Append sentence</button>
-      <button type="button" :disabled="!snapshot.canUndo" @click="undo">Undo</button>
-      <button type="button" :disabled="!snapshot.canRedo" @click="redo">Redo</button>
+      <button
+        type="button"
+        :disabled="!canFormat(snapshot)"
+        :aria-pressed="selectedRangeHasMark(snapshot, 'emphasis')"
+        @mousedown.prevent
+        @click="toggleMark('emphasis')"
+      >
+        Italic
+      </button>
+      <button
+        type="button"
+        :disabled="!canFormat(snapshot)"
+        :aria-pressed="selectedRangeHasMark(snapshot, 'code')"
+        @mousedown.prevent
+        @click="toggleMark('code')"
+      >
+        Code
+      </button>
+      <span data-example-editor-toolbar-separator aria-hidden="true" />
+      <button
+        type="button"
+        :disabled="!snapshot.canUndo"
+        @mousedown.prevent
+        @click="undo"
+      >
+        Undo
+      </button>
+      <button
+        type="button"
+        :disabled="!snapshot.canRedo"
+        @mousedown.prevent
+        @click="redo"
+      >
+        Redo
+      </button>
     </div>
 
     <EditorRoot
       :editor="editor"
       :authoring="authoring"
-      aria-label="Structured Portable Content editor"
+      aria-label="Rich text release notes editor"
       @error="error = $event.message"
     >
       <template #default="{ snapshot: current, authoringSurfaces }">
@@ -223,19 +383,14 @@ function redo(): void {
             as="h2"
             :surface="{ type: 'node', id: 'title' }"
           >
-            {{ nodeText(current, 'title') }}
+            <InlineContent :nodes="inlineChildren(current, 'title')" />
           </EditorInlineSurface>
 
           <EditorInlineSurface
             as="p"
             :surface="{ type: 'node', id: 'intro' }"
           >
-            <strong v-if="introIsStrong(current)">
-              {{ nodeText(current, 'intro') }}
-            </strong>
-            <template v-else>
-              {{ nodeText(current, 'intro') }}
-            </template>
+            <InlineContent :nodes="inlineChildren(current, 'intro')" />
           </EditorInlineSurface>
 
           <aside data-example-editor-callout>
@@ -249,7 +404,7 @@ function redo(): void {
                 as="p"
                 :surface="{ type: 'node', id: 'callout-body' }"
               >
-                {{ nodeText(current, 'callout-body') }}
+                <InlineContent :nodes="inlineChildren(current, 'callout-body')" />
               </EditorInlineSurface>
             </EditorAuthoringMount>
           </aside>
@@ -258,8 +413,10 @@ function redo(): void {
     </EditorRoot>
 
     <p data-example-editor-status>
-      3 structured blocks · revision {{ snapshot.revision }} ·
-      {{ snapshot.canUndo ? 'undo available' : 'history empty' }}
+      {{ canFormat(snapshot)
+        ? 'Formatting applies to the current text selection.'
+        : 'Select text inside one block to format it.' }}
+      · revision {{ snapshot.revision }}
     </p>
     <p v-if="error" role="alert">{{ error }}</p>
   </div>

@@ -498,9 +498,30 @@
   cursor: pointer;
 }
 
+.docs-preview--editor [data-example-editor-toolbar] button[aria-pressed="true"] {
+  border-color: var(--docs-accent);
+  background: rgb(91 67 214 / 10%);
+  color: var(--docs-accent);
+}
+
 .docs-preview--editor [data-example-editor-toolbar] button:disabled {
   cursor: default;
   opacity: 0.45;
+}
+
+.docs-preview--editor [data-example-editor-toolbar-separator] {
+  align-self: stretch;
+  width: 1px;
+  margin-inline: var(--docs-space-1);
+  background: var(--docs-border);
+}
+
+.docs-preview--editor [data-scope="editor"] code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #f1f1f4;
+  font-family: var(--docs-font-mono);
+  font-size: 0.9em;
 }
 
 .docs-preview--editor [data-example-editor-status] {

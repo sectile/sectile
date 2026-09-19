@@ -68,19 +68,30 @@ test('Editor is a first-class documented area with runnable Vue and DOM examples
   const vueArticle = await read('src/examples/vue/editor/basic-authoring/Preview.vue');
   assert.match(vueArticle, /componentRef\('docs\/callout'\)/u);
   assert.match(vueArticle, /EditorAuthoringMount/u);
-  assert.match(vueArticle, /type: 'set-mark'/u);
+  assert.match(vueArticle, /selectedInlineRange/u);
+  assert.match(vueArticle, /toggleMark\('strong'\)/u);
+  assert.match(vueArticle, /toggleMark\('emphasis'\)/u);
+  assert.match(vueArticle, /toggleMark\('code'\)/u);
+  assert.match(vueArticle, /@mousedown\.prevent/u);
+  assert.doesNotMatch(vueArticle, /Append sentence|Strong intro/u);
 
   const vueReview = await read('src/examples/vue/editor/read-only/Preview.vue');
   assert.match(vueReview, /EditorIsolatedFrame/u);
   assert.match(vueReview, /component: 'docs\/comparison'/u);
+  assert.doesNotMatch(vueReview, /Add review detail/u);
 
   const domArticle = await read('src/examples/dom/editor/application-owned/example.ts');
   assert.match(domArticle, /markEditorAuthoringMount/u);
-  assert.match(domArticle, /type: 'set-mark'/u);
+  assert.match(domArticle, /selectedInlineRange/u);
+  assert.match(domArticle, /markButtons\.emphasis/u);
+  assert.match(domArticle, /markButtons\.code/u);
+  assert.match(domArticle, /preventToolbarFocus/u);
+  assert.doesNotMatch(domArticle, /Append sentence|Toggle strong/u);
 
   const domHistory = await read('src/examples/dom/editor/session-history/example.ts');
-  assert.match(domHistory, /Run transaction/u);
+  assert.match(domHistory, /Approve release/u);
   assert.match(domHistory, /operations: \[/u);
+  assert.doesNotMatch(domHistory, /Run transaction/u);
 });
 
 test('the design shell keeps fixed navigation geometry in tokens', async () => {

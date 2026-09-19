@@ -163,25 +163,6 @@ function slotNodeID(name: string): string {
   return name === 'before' ? 'before-copy' : 'after-copy';
 }
 
-function addDetail(): void {
-  const value = nodeText(snapshot.value, 'after-copy');
-  const result = editor.transact({
-    operations: [{
-      type: 'replace-inline',
-      surface: { type: 'node', id: 'after-copy' },
-      from: value.length,
-      to: value.length,
-      replacement: [{
-        type: 'text',
-        text: ' Review mode can be switched without changing the document.',
-        marks: [],
-      }],
-    }],
-    historyIntent: 'command',
-  });
-  error.value = result.ok ? null : result.error.message;
-}
-
 function toggleReadOnly(): void {
   const result = editor.reconfigure({
     interaction: {
@@ -195,13 +176,6 @@ function toggleReadOnly(): void {
 <template>
   <div data-example-editor>
     <div data-example-editor-toolbar>
-      <button
-        type="button"
-        :disabled="snapshot.interaction.readOnly"
-        @click="addDetail"
-      >
-        Add review detail
-      </button>
       <button type="button" @click="toggleReadOnly">
         {{ snapshot.interaction.readOnly ? 'Enable editing' : 'Enter review mode' }}
       </button>

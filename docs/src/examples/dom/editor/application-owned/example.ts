@@ -1,16 +1,37 @@
-import type { InlineNode } from '@sectile/content/document';
+import type {
+  InlineNode,
+  TextMark,
+} from '@sectile/content/document';
+import type { InlineSurface } from '@sectile/content/position';
 import {
   baseRef,
   compileContentSchema,
   componentRef,
 } from '@sectile/content/schema';
 import { compileAuthoringRegistry } from '@sectile/editor/authoring';
-import { createEditorSession } from '@sectile/editor/session';
+import {
+  createEditorSession,
+  type EditorSessionSnapshot,
+} from '@sectile/editor/session';
 import {
   createEditor,
   markEditorAuthoringMount,
   markEditorInlineSurface,
 } from '@sectile/dom/editor';
+
+type FormatMark = 'strong' | 'emphasis' | 'code';
+
+interface InlineRange {
+  readonly surface: InlineSurface;
+  readonly from: number;
+  readonly to: number;
+}
+
+const markByType = {
+  strong: { type: 'strong' },
+  emphasis: { type: 'emphasis' },
+  code: { type: 'code' },
+} as const satisfies Record<FormatMark, TextMark>;
 
 export function mountExample(root: HTMLElement): () => void {
   const schemaResult = compileContentSchema({
@@ -73,18 +94,30 @@ export function mountExample(root: HTMLElement): () => void {
             level: 2,
             children: [{
               type: 'text',
-              text: 'Application-owned structured editor',
+              text: 'Product launch brief',
               marks: [],
             }],
           },
           {
             id: 'intro',
             type: 'paragraph',
-            children: [{
-              type: 'text',
-              text: 'The DOM host owns these elements while the Editor owns document transitions.',
-              marks: [],
-            }],
+            children: [
+              {
+                type: 'text',
+                text: 'Select a range in this application-owned DOM and format ',
+                marks: [],
+              },
+              {
+                type: 'text',
+                text: 'only that selection',
+                marks: [{ type: 'strong' }],
+              },
+              {
+                type: 'text',
+                text: '. The Editor keeps the logical selection and history.',
+                marks: [],
+              },
+            ],
           },
           {
             id: 'callout',
@@ -101,8 +134,8 @@ export function mountExample(root: HTMLElement): () => void {
                 type: 'paragraph',
                 children: [{
                   type: 'text',
-                  text: 'Component slots stay addressable without turning the DOM into canonical state.',
-                  marks: [],
+                  text: 'This callout remains a schema-backed component slot.',
+                  marks: [{ type: 'emphasis' }],
                 }],
               }],
             }],
@@ -116,18 +149,45 @@ export function mountExample(root: HTMLElement): () => void {
   const editor = editorResult.value;
   const editorElement = document.createElement('div');
   const toolbar = document.createElement('div');
-  const toggleStrong = document.createElement('button');
-  const append = document.createElement('button');
   const status = document.createElement('p');
+  const markButtons: Record<FormatMark, HTMLButtonElement> = {
+    strong: document.createElement('button'),
+    emphasis: document.createElement('button'),
+    code: document.createElement('button'),
+  };
+  const undo = document.createElement('button');
+  const redo = document.createElement('button');
+  const separator = document.createElement('span');
 
   root.dataset['exampleEditor'] = '';
   toolbar.dataset['exampleEditorToolbar'] = '';
   status.dataset['exampleEditorStatus'] = '';
-  editorElement.setAttribute('aria-label', 'Application-owned structured editor');
-  toggleStrong.type = append.type = 'button';
-  toggleStrong.textContent = 'Toggle strong';
-  append.textContent = 'Append sentence';
-  toolbar.append(toggleStrong, append);
+  separator.dataset['exampleEditorToolbarSeparator'] = '';
+  separator.setAttribute('aria-hidden', 'true');
+  editorElement.setAttribute('aria-label', 'Application-owned rich text editor');
+
+  markButtons.strong.textContent = 'Bold';
+  markButtons.emphasis.textContent = 'Italic';
+  markButtons.code.textContent = 'Code';
+  undo.textContent = 'Undo';
+  redo.textContent = 'Redo';
+
+  const allButtons = [
+    markButtons.strong,
+    markButtons.emphasis,
+    markButtons.code,
+    undo,
+    redo,
+  ];
+  for (const button of allButtons) button.type = 'button';
+  toolbar.append(
+    markButtons.strong,
+    markButtons.emphasis,
+    markButtons.code,
+    separator,
+    undo,
+    redo,
+  );
 
   const connection = createEditor({
     root: editorElement,
@@ -180,69 +240,158 @@ export function mountExample(root: HTMLElement): () => void {
 
       article.append(heading, paragraph, callout);
       editorElement.replaceChildren(article);
-      status.textContent = `3 structured blocks · revision ${snapshot.revision}`;
+      updateToolbar(snapshot);
     },
   });
 
-  const toggleStrongMark = (): void => {
-    const node = editor.getSnapshot().index.getNode('intro');
-    if (node?.type !== 'paragraph') return;
-    const text = node.children.find((child) => child.type === 'text');
-    const length = text?.type === 'text' ? text.text.length : 0;
-    const enabled = !(
-      text?.type === 'text'
-      && text.marks.some((mark) => mark.type === 'strong')
-    );
-    const result = editor.transact({
-      operations: [{
-        type: 'set-mark',
-        surface: { type: 'node', id: 'intro' },
-        from: 0,
-        to: length,
-        mark: { type: 'strong' },
-        enabled,
-      }],
-      historyIntent: 'command',
-    });
+  const preventToolbarFocus = (event: MouseEvent): void => {
+    event.preventDefault();
+  };
+  for (const button of allButtons) {
+    button.addEventListener('mousedown', preventToolbarFocus);
+  }
+
+  const markHandlers: Record<FormatMark, () => void> = {
+    strong: () => toggleMark('strong'),
+    emphasis: () => toggleMark('emphasis'),
+    code: () => toggleMark('code'),
+  };
+  for (const type of Object.keys(markHandlers) as FormatMark[]) {
+    markButtons[type].addEventListener('click', markHandlers[type]);
+  }
+
+  const undoHistory = (): void => {
+    const result = editor.undo();
     if (!result.ok) status.textContent = result.error.message;
   };
-
-  const appendSentence = (): void => {
-    const node = editor.getSnapshot().index.getNode('intro');
-    if (node?.type !== 'paragraph') return;
-    const length = node.children.reduce(
-      (total, child) => total + (child.type === 'text' ? child.text.length : 1),
-      0,
-    );
-    const result = editor.transact({
-      operations: [{
-        type: 'replace-inline',
-        surface: { type: 'node', id: 'intro' },
-        from: length,
-        to: length,
-        replacement: [{
-          type: 'text',
-          text: ' The connection re-renders from the committed snapshot.',
-          marks: [],
-        }],
-      }],
-      historyIntent: 'command',
-    });
+  const redoHistory = (): void => {
+    const result = editor.redo();
     if (!result.ok) status.textContent = result.error.message;
   };
+  undo.addEventListener('click', undoHistory);
+  redo.addEventListener('click', redoHistory);
 
-  toggleStrong.addEventListener('click', toggleStrongMark);
-  append.addEventListener('click', appendSentence);
+  const unsubscribe = editor.subscribe((event) => {
+    updateToolbar(event.current);
+  });
+
   root.replaceChildren(toolbar, editorElement, status);
+  updateToolbar(editor.getSnapshot());
 
   return () => {
-    toggleStrong.removeEventListener('click', toggleStrongMark);
-    append.removeEventListener('click', appendSentence);
+    unsubscribe();
+    for (const type of Object.keys(markHandlers) as FormatMark[]) {
+      markButtons[type].removeEventListener('click', markHandlers[type]);
+    }
+    undo.removeEventListener('click', undoHistory);
+    redo.removeEventListener('click', redoHistory);
+    for (const button of allButtons) {
+      button.removeEventListener('mousedown', preventToolbarFocus);
+    }
     connection.disconnect();
     editor.destroy();
     root.replaceChildren();
     delete root.dataset['exampleEditor'];
   };
+
+  function toggleMark(type: FormatMark): void {
+    const current = editor.getSnapshot();
+    const range = selectedInlineRange(current);
+    if (range === null || current.selection === null) return;
+
+    const result = editor.transact({
+      operations: [{
+        type: 'set-mark',
+        surface: range.surface,
+        from: range.from,
+        to: range.to,
+        mark: markByType[type],
+        enabled: !selectedRangeHasMark(current, type),
+      }],
+      selection: current.selection,
+      historyIntent: 'command',
+    });
+    if (!result.ok) status.textContent = result.error.message;
+  }
+
+  function updateToolbar(value: EditorSessionSnapshot): void {
+    const formatEnabled = canFormat(value);
+    for (const type of Object.keys(markButtons) as FormatMark[]) {
+      const button = markButtons[type];
+      button.disabled = !formatEnabled;
+      button.setAttribute(
+        'aria-pressed',
+        selectedRangeHasMark(value, type) ? 'true' : 'false',
+      );
+    }
+    undo.disabled = !value.canUndo;
+    redo.disabled = !value.canRedo;
+
+    const range = selectedInlineRange(value);
+    status.textContent = range === null
+      ? `Select text inside one block to format it · revision ${value.revision}`
+      : `${range.to - range.from} characters selected · revision ${value.revision}`;
+  }
+}
+
+function selectedInlineRange(value: EditorSessionSnapshot): InlineRange | null {
+  const selection = value.selection;
+  if (
+    selection === null
+    || selection.anchor.type !== 'inline'
+    || selection.focus.type !== 'inline'
+    || !sameSurface(selection.anchor.surface, selection.focus.surface)
+    || selection.anchor.offset === selection.focus.offset
+  ) {
+    return null;
+  }
+  return {
+    surface: selection.anchor.surface,
+    from: Math.min(selection.anchor.offset, selection.focus.offset),
+    to: Math.max(selection.anchor.offset, selection.focus.offset),
+  };
+}
+
+function sameSurface(left: InlineSurface, right: InlineSurface): boolean {
+  return left.type === right.type
+    && left.id === right.id
+    && (
+      left.type === 'node'
+      || (right.type === 'slot' && left.slot === right.slot)
+    );
+}
+
+function canFormat(value: EditorSessionSnapshot): boolean {
+  return !value.interaction.disabled
+    && !value.interaction.readOnly
+    && selectedInlineRange(value) !== null;
+}
+
+function selectedRangeHasMark(
+  value: EditorSessionSnapshot,
+  type: FormatMark,
+): boolean {
+  const range = selectedInlineRange(value);
+  if (range === null || range.surface.type !== 'node') return false;
+  const node = value.index.getNode(range.surface.id);
+  if (node?.type !== 'paragraph' && node?.type !== 'heading') return false;
+
+  let cursor = 0;
+  let foundText = false;
+  for (const child of node.children) {
+    const length = child.type === 'text' ? child.text.length : 1;
+    const end = cursor + length;
+    if (
+      child.type === 'text'
+      && end > range.from
+      && cursor < range.to
+    ) {
+      foundText = true;
+      if (!child.marks.some((mark) => mark.type === type)) return false;
+    }
+    cursor = end;
+  }
+  return foundText;
 }
 
 function appendInline(

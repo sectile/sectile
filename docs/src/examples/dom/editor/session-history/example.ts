@@ -45,7 +45,7 @@ export function mountExample(root: HTMLElement): () => void {
             level: 2,
             children: [{
               type: 'text',
-              text: 'Atomic multi-block transaction',
+              text: 'Release approval',
               marks: [],
             }],
           },
@@ -54,7 +54,7 @@ export function mountExample(root: HTMLElement): () => void {
             type: 'paragraph',
             children: [{
               type: 'text',
-              text: 'Summary: draft copy',
+              text: 'Status: pending review',
               marks: [],
             }],
           },
@@ -63,7 +63,7 @@ export function mountExample(root: HTMLElement): () => void {
             type: 'paragraph',
             children: [{
               type: 'text',
-              text: 'Details: draft copy',
+              text: 'Release notes are waiting for approval.',
               marks: [],
             }],
           },
@@ -84,12 +84,12 @@ export function mountExample(root: HTMLElement): () => void {
   root.dataset['exampleEditor'] = '';
   toolbar.dataset['exampleEditorToolbar'] = '';
   status.dataset['exampleEditorStatus'] = '';
-  editorElement.setAttribute('aria-label', 'Atomic Editor transaction example');
+  editorElement.setAttribute('aria-label', 'Release approval editor');
 
   transact.type = undo.type = redo.type = 'button';
-  transact.textContent = 'Run transaction';
-  undo.textContent = 'Undo transaction';
-  redo.textContent = 'Redo transaction';
+  transact.textContent = 'Approve release';
+  undo.textContent = 'Undo approval';
+  redo.textContent = 'Redo approval';
   toolbar.append(transact, undo, redo);
 
   const connection = createEditor({
@@ -121,7 +121,7 @@ export function mountExample(root: HTMLElement): () => void {
       const summaryCard = document.createElement('section');
       const summaryLabel = document.createElement('span');
       summaryLabel.dataset['exampleEditorSlotLabel'] = '';
-      summaryLabel.textContent = 'Summary block';
+      summaryLabel.textContent = 'Status';
       const summaryParagraph = document.createElement('p');
       markEditorInlineSurface(summaryParagraph, { type: 'node', id: 'summary' });
       summaryParagraph.textContent = textOf(summary.children);
@@ -130,7 +130,7 @@ export function mountExample(root: HTMLElement): () => void {
       const detailCard = document.createElement('section');
       const detailLabel = document.createElement('span');
       detailLabel.dataset['exampleEditorSlotLabel'] = '';
-      detailLabel.textContent = 'Details block';
+      detailLabel.textContent = 'Release notes';
       const detailParagraph = document.createElement('p');
       markEditorInlineSurface(detailParagraph, { type: 'node', id: 'details' });
       detailParagraph.textContent = textOf(details.children);
@@ -140,9 +140,10 @@ export function mountExample(root: HTMLElement): () => void {
       article.append(heading, transactionGrid);
       editorElement.replaceChildren(article);
 
+      transact.disabled = textOf(summary.children) === 'Status: approved';
       undo.disabled = !snapshot.canUndo;
       redo.disabled = !snapshot.canRedo;
-      status.textContent = `2 blocks · one transaction · revision ${snapshot.revision}`;
+      status.textContent = `Approval updates both blocks as one history entry · revision ${snapshot.revision}`;
     },
   });
 
@@ -159,22 +160,22 @@ export function mountExample(root: HTMLElement): () => void {
         {
           type: 'replace-inline',
           surface: { type: 'node', id: 'summary' },
-          from: summaryLength,
+          from: 0,
           to: summaryLength,
           replacement: [{
             type: 'text',
-            text: ' — approved',
-            marks: [{ type: 'strong' }],
+            text: 'Status: approved',
+            marks: [],
           }],
         },
         {
           type: 'replace-inline',
           surface: { type: 'node', id: 'details' },
-          from: detailsLength,
+          from: 0,
           to: detailsLength,
           replacement: [{
             type: 'text',
-            text: ' — ready to publish',
+            text: 'Release notes approved for publication.',
             marks: [],
           }],
         },
