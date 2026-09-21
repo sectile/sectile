@@ -1,4 +1,5 @@
-import { createSSRApp, nextTick } from 'vue';
+import { createApp, createSSRApp, h, nextTick, ref } from 'vue';
+import { ComboboxInput, ComboboxRoot } from '../../.verification-dist/combobox.js';
 import { createHydrationFixture } from './hydration-fixture.mjs';
 import { runConditionalPresenceScenarios } from './conditional-presence-fixture.mjs?wi=118';
 import { runTreeGridEditorPresenceScenario } from './tree-grid-editor-presence-fixture.mjs?wi=118';
@@ -45,6 +46,76 @@ if (!(emailInput instanceof HTMLInputElement)) {
   await nextTick();
   if (emailInput.value !== 'other@example.co') failures.push('email native deletion reconciliation');
 }
+
+let comboboxNativeEditing = Object.freeze({ ok: false, reason: 'not-run' });
+{
+  const host = document.createElement('div');
+  document.body.append(host);
+  const inputValue = ref('');
+  const items = ref([
+    { id: 'hangul', label: '한글' },
+    { id: 'fresh', label: '후레쉬' },
+  ]);
+  const comboboxApp = createApp({
+    render: () => h(ComboboxRoot, {
+      items: items.value,
+      inputValue: inputValue.value,
+      policies: {
+        matches: (label, query) => query.length === 0 || label.includes(query),
+      },
+      'onUpdate:inputValue': (value) => { inputValue.value = value; },
+    }, { default: () => h(ComboboxInput) }),
+  });
+  comboboxApp.mount(host);
+  try {
+    await nextTick();
+    const input = host.querySelector('input');
+    if (!(input instanceof HTMLInputElement)) {
+      comboboxNativeEditing = Object.freeze({ ok: false, reason: 'missing input' });
+    } else {
+      input.value = 'abc';
+      input.setSelectionRange(3, 3);
+      input.dispatchEvent(new InputEvent('input', {
+        bubbles: true,
+        inputType: 'insertText',
+        data: 'abc',
+      }));
+      await nextTick();
+      const inserted = input.value === 'abc' && inputValue.value === 'abc';
+
+      items.value = [...items.value, { id: 'result', label: 'abc 결과' }];
+      await nextTick();
+      await nextTick();
+      const survivedItemsRefresh = input.value === 'abc' && inputValue.value === 'abc';
+
+      input.value = 'ab';
+      input.setSelectionRange(2, 2);
+      input.dispatchEvent(new InputEvent('input', {
+        bubbles: true,
+        inputType: 'deleteContentBackward',
+      }));
+      await nextTick();
+      const deleted = input.value === 'ab' && inputValue.value === 'ab';
+
+      comboboxNativeEditing = Object.freeze({
+        ok: inserted && survivedItemsRefresh && deleted,
+        inserted,
+        survivedItemsRefresh,
+        deleted,
+      });
+    }
+  } catch (error) {
+    comboboxNativeEditing = Object.freeze({
+      ok: false,
+      reason: error instanceof Error ? error.message : String(error),
+    });
+  } finally {
+    comboboxApp.unmount();
+    host.remove();
+  }
+  if (!comboboxNativeEditing.ok) failures.push('controlled combobox native editing');
+}
+
 const trigger = document.querySelector('[data-scope="disclosure"][data-part="trigger"]');
 const content = document.querySelector('[data-scope="disclosure"][data-part="content"]');
 if (trigger?.getAttribute('aria-controls') !== content?.id) failures.push('generated ID relationship');
@@ -215,6 +286,7 @@ const result = Object.freeze({
     emailBeforeInputCanceled,
     emailValue: emailInput instanceof HTMLInputElement ? emailInput.value : null,
   }),
+  comboboxNativeEditing,
   conditionalPresence,
   popupPresenceFocus,
   documentVirtual,

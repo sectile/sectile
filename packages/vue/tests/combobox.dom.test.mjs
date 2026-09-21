@@ -169,6 +169,126 @@ test('controlled Vue combobox chains rapid native insertions and deletions befor
   host.remove();
 });
 
+test('controlled Vue combobox preserves native edits across render-only policy identity churn', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const inputValue = ref('');
+  const items = ref([
+    { id: 'hangul', label: '한글' },
+    { id: 'fresh', label: '후레쉬' },
+  ]);
+  const app = createApp({
+    render: () => h(ComboboxRoot, {
+      items: items.value,
+      inputValue: inputValue.value,
+      policies: {
+        matches: (label, query) => query.length === 0 || label.includes(query),
+      },
+      'onUpdate:inputValue': (value) => { inputValue.value = value; },
+    }, { default: () => h(ComboboxInput) }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const input = host.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+  const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  assert.equal(typeof valueDescriptor?.set, 'function');
+  const addEventListener = input.addEventListener.bind(input);
+  const removeEventListener = input.removeEventListener.bind(input);
+  let nativeListenerAdds = 0;
+  let nativeListenerRemoves = 0;
+  input.addEventListener = (type, listener, options) => {
+    if (type === 'input' || type === 'search' || type === 'compositionstart' || type === 'compositionend') {
+      nativeListenerAdds += 1;
+    }
+    return addEventListener(type, listener, options);
+  };
+  input.removeEventListener = (type, listener, options) => {
+    if (type === 'input' || type === 'search' || type === 'compositionstart' || type === 'compositionend') {
+      nativeListenerRemoves += 1;
+    }
+    return removeEventListener(type, listener, options);
+  };
+
+  valueDescriptor.set.call(input, 'abc');
+  input.setSelectionRange(3, 3);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: 'abc' }));
+  await nextTick();
+  assert.equal(inputValue.value, 'abc');
+  assert.equal(input.value, 'abc');
+  assert.equal(nativeListenerAdds, 0);
+  assert.equal(nativeListenerRemoves, 0);
+
+  items.value = [...items.value, { id: 'result', label: 'abc 결과' }];
+  await nextTick();
+  await nextTick();
+  assert.equal(inputValue.value, 'abc');
+  assert.equal(input.value, 'abc');
+
+  valueDescriptor.set.call(input, 'ab');
+  input.setSelectionRange(2, 2);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' }));
+  await nextTick();
+  assert.equal(inputValue.value, 'ab');
+  assert.equal(input.value, 'ab');
+
+  app.unmount();
+  host.remove();
+});
+
+test('Vue combobox applies policy changes through the existing native text connection', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const inputValue = ref('');
+  const matchMode = ref('prefix');
+  const items = [
+    { id: 'alpha', label: 'Alpha' },
+    { id: 'beta', label: 'Beta' },
+  ];
+  const app = createApp({
+    render: () => h(ComboboxRoot, {
+      items,
+      inputValue: inputValue.value,
+      policies: {
+        matches: matchMode.value === 'prefix'
+          ? (label, query) => label.toLowerCase().startsWith(query.toLowerCase())
+          : (label, query) => label.toLowerCase().includes(query.toLowerCase()),
+      },
+      'onUpdate:inputValue': (value) => { inputValue.value = value; },
+    }, {
+      default: (state) => [
+        h(ComboboxInput),
+        h('output', { id: 'combobox-highlight' }, state.highlightedValue ?? ''),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const input = host.querySelector('input');
+  const highlight = host.querySelector('#combobox-highlight');
+  assert.ok(input instanceof HTMLInputElement);
+  assert.ok(highlight instanceof HTMLElement);
+  const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  assert.equal(typeof valueDescriptor?.set, 'function');
+
+  valueDescriptor.set.call(input, 'ta');
+  input.setSelectionRange(2, 2);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: 'ta' }));
+  await nextTick();
+  assert.equal(highlight.textContent, '');
+
+  matchMode.value = 'contains';
+  await nextTick();
+  input.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { bubbles: true, key: 'ArrowDown' }));
+  await nextTick();
+  assert.equal(highlight.textContent, 'beta');
+
+  app.unmount();
+  host.remove();
+});
+
 test('Vue combobox keeps live Hangul composition under native input ownership', async () => {
   const host = document.createElement('div');
   document.body.append(host);

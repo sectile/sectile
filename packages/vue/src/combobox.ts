@@ -91,10 +91,16 @@ export const ComboboxRoot = defineComponent({
   setup(props, { attrs, emit, slots }) {
     const input = shallowRef<HTMLInputElement>(); const popup = shallowRef<HTMLElement>();
     const connection = shallowRef<ComboboxConnection<string>>();
+    const matchingText = shallowRef<TextState>();
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localInput = shallowRef(props.inputValue ?? props.defaultInputValue); const localOpen = shallowRef(props.open ?? props.defaultOpen);
     const highlighted = shallowRef<string | null>(null);
     let proposedInputState: TextState | null = null;
+    const livePolicies = {} as ComboboxPolicies<string>;
+    Object.defineProperties(livePolicies, {
+      matches: { get: () => props.policies?.matches },
+      boundary: { get: () => props.policies?.boundary },
+    });
     const controlled = {
       value: useControlledStateInvariant('ComboboxRoot', 'modelValue', () => props.modelValue),
       input: useControlledStateInvariant('ComboboxRoot', 'inputValue', () => props.inputValue),
@@ -107,10 +113,9 @@ export const ComboboxRoot = defineComponent({
     }));
     const itemLabels = computed(() => new Map(props.items.map((item) => [item.id, item.label] as const)));
     const matchingQuery = computed(() => {
-      const fallback = state.value.inputValue;
-      const text = connection.value?.getSnapshot().state.text;
+      const text = matchingText.value;
       return text === undefined
-        ? fallback
+        ? state.value.inputValue
         : text.composition === null
           ? text.snapshot.text
           : text.composition.baseline.text;
@@ -129,6 +134,7 @@ export const ComboboxRoot = defineComponent({
     };
     const refresh = (): void => {
       const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return;
+      matchingText.value = snapshot.text;
       localValue.value = snapshot.selection.selected[0] ?? null; localInput.value = snapshot.text.snapshot.text;
       localOpen.value = snapshot.popupOpen; highlighted.value = snapshot.cursor.current; refreshItems();
     };
@@ -169,7 +175,7 @@ export const ComboboxRoot = defineComponent({
       connection.value = createCombobox({
         input: input.value, ...(popup.value === undefined ? {} : { popup: popup.value }), items: props.items,
         manageVisibility: false,
-        ...(props.policies === undefined ? {} : { policies: props.policies }),
+        policies: livePolicies,
         ...(controlled.value ? { value } : { defaultValue: value }),
         defaultHighlightedValue: reconciled.current,
         ...(controlled.input ? { inputState } : { defaultInputState: inputState }),
@@ -183,6 +189,7 @@ export const ComboboxRoot = defineComponent({
         onValueChange: ({ value }) => { localValue.value = value; emit('update:modelValue', value); },
         onInputStateChange: ({ value }) => {
           proposedInputState = value;
+          matchingText.value = value;
           localInput.value = value.snapshot.text;
           emit('update:inputValue', value.snapshot.text);
           if (!controlled.input || value.composition !== null) return;
@@ -247,7 +254,7 @@ export const ComboboxRoot = defineComponent({
     watch(() => props.items, (items, previousItems) => {
       if (!sameComboboxItems(items, previousItems)) requestConnect();
     });
-    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies], requestConnect);
+    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking], requestConnect);
     watch([() => props.modelValue, () => props.inputValue, () => props.open], () => {
       const inputState = controlled.input
         && proposedInputState !== null
