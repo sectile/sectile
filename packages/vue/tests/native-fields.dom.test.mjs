@@ -21,9 +21,20 @@ const { createApp, h, nextTick, ref } = await import('vue');
 const { DateField } = await import('../.verification-dist/temporal/date-field.js');
 const { DateTimeField } = await import('../.verification-dist/temporal/date-time-field.js');
 const { NumberField } = await import('../.verification-dist/number-field.js');
+const {
+  createStandardQuantityPolicies,
+  QuantityFieldInput,
+  QuantityFieldRoot,
+} = await import('../.verification-dist/quantity-field.js');
 const { TimeField } = await import('../.verification-dist/temporal/time-field.js');
 const { DateRangeFieldRoot, DateRangeFieldStartInput, DateRangeFieldEndInput } = await import('../.verification-dist/temporal/date-range-field.js');
 const { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } = await import('../.verification-dist/temporal/time-range-field.js');
+
+function compositionEvent(type, data = '') {
+  const event = new Event(type, { bubbles: true });
+  Object.defineProperty(event, 'data', { value: data });
+  return event;
+}
 
 test('native date-time field mounts and commits without text selection APIs', async () => {
   const host = document.createElement('div');
@@ -55,6 +66,97 @@ test('native date-time field mounts and commits without text selection APIs', as
     date: { year: 2026, month: 8, day: 23 },
     time: { hour: 10, minute: 45, second: 0, millisecond: 0 },
   });
+
+  app.unmount();
+  host.remove();
+});
+
+test('uncontrolled date field preserves accepted values and partial drafts across reconfiguration', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const label = ref('Date');
+  const app = createApp({
+    render: () => h(DateField, {
+      defaultValue: { year: 2026, month: 9, day: 13 },
+      label: label.value,
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const input = host.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+
+  input.value = '2026-10-14';
+  input.setSelectionRange(10, 10);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertReplacementText' }));
+  input.dispatchEvent(new Event('blur'));
+  await nextTick();
+
+  label.value = 'Updated date';
+  await nextTick();
+  assert.equal(input.value, '2026-10-14');
+
+  input.value = '2026-11-';
+  input.setSelectionRange(8, 8);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertReplacementText' }));
+  await nextTick();
+
+  label.value = 'Draft date';
+  await nextTick();
+  assert.equal(input.value, '2026-11-');
+  assert.deepEqual([input.selectionStart, input.selectionEnd], [8, 8]);
+
+  app.unmount();
+  host.remove();
+});
+
+test('quantity field keeps live composition across reactive reconfiguration', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const label = ref('Quantity');
+  const policies = createStandardQuantityPolicies('metre');
+  const app = createApp({
+    render: () => h(QuantityFieldRoot, {
+      policies,
+      label: label.value,
+    }, {
+      default: () => h(QuantityFieldInput),
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const input = host.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+
+  input.dispatchEvent(compositionEvent('compositionstart'));
+  input.value = '12 c';
+  input.setSelectionRange(4, 4);
+  input.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    inputType: 'insertCompositionText',
+    data: 'c',
+  }));
+
+  label.value = 'Updated quantity';
+  await nextTick();
+  assert.equal(input.value, '12 c');
+  assert.deepEqual([input.selectionStart, input.selectionEnd], [4, 4]);
+
+  input.value = '12 cm';
+  input.setSelectionRange(5, 5);
+  input.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    inputType: 'insertCompositionText',
+    data: 'cm',
+  }));
+  input.dispatchEvent(compositionEvent('compositionend', 'cm'));
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await nextTick();
+
+  assert.equal(input.value, '12 cm');
 
   app.unmount();
   host.remove();

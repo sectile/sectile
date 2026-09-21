@@ -52,12 +52,12 @@ interface Context {
   registerCell(element: HTMLElement, id: string, columnIndex: number): void;
   registerDisclosure(element: HTMLElement, id: string): void;
   registerEditor(element: HTMLInputElement, id: string, label: string | undefined): void;
+  setEditorFocused(focused: boolean): void;
+  setEditorComposing(composing: boolean): void;
   handleEditorKeydown(event: KeyboardEvent): void;
 }
 interface TreeGridConnectionOwner {
   readonly rows: readonly TreeGridRowInput<string, string>[];
-  readonly getCellValue: TreeGridCellValueResolver;
-  readonly setCellValue: TreeGridCellValueSetter;
   readonly disabled: boolean;
   readonly readonly: boolean;
   readonly eligible: TreeGridPolicies<string>['eligible'];
@@ -158,7 +158,10 @@ export const TreeGridRoot = defineComponent({
       if (controlled.highlighted && requestedHighlight !== reconciled.current) emit('update:highlightedValue', reconciled.current);
       if (controlled.editMode && props.editMode !== editMode) emit('update:editMode', editMode);
       connection.value = createTreeGrid({
-        root: element.value, rows: nextOwner.rows, getCellValue: nextOwner.getCellValue, setCellValue: nextOwner.setCellValue,
+        root: element.value,
+        rows: nextOwner.rows,
+        getCellValue: (id) => props.getCellValue(id),
+        setCellValue: (id, value) => props.setCellValue(id, value),
         ...(controlled.value ? { value } : { defaultValue: value }),
         ...(controlled.expanded ? { expandedValue: expanded } : { defaultExpandedValue: expanded }),
         ...(controlled.highlighted ? { highlightedValue: reconciled.current } : { defaultHighlightedValue: reconciled.current }),
@@ -170,18 +173,62 @@ export const TreeGridRoot = defineComponent({
       connectionOwner = nextOwner;
       refreshParts(); refresh();
     };
+    let mounted = false;
+    let editorFocused = false;
+    let editorComposing = false;
+    let reconnectPending = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    const editorActive = (): boolean => editorFocused || editorComposing;
+    const requestConnect = (): void => {
+      if (editorActive()) {
+        reconnectPending = true;
+        return;
+      }
+      connect();
+    };
+    const schedulePendingConnect = (): void => {
+      if (editorActive() || !reconnectPending || reconnectTimer !== null) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (!mounted || editorActive()) return;
+        reconnectPending = false;
+        connect();
+      }, 0);
+    };
+    const setEditorFocused = (focused: boolean): void => {
+      editorFocused = focused;
+      schedulePendingConnect();
+    };
+    const setEditorComposing = (composing: boolean): void => {
+      editorComposing = composing;
+      schedulePendingConnect();
+    };
     provide<Context>(key, {
       state, expandedRows, registerRow: (node, rowIndex, level, expanded) => connection.value?.setRowAttributes(node, { rowIndex, level, ...(expanded === undefined ? {} : { expanded }) }),
       registerCell: (node, id, columnIndex) => connection.value?.setCellAttributes(node, { id, columnIndex }), registerDisclosure: (node, id) => connection.value?.setDisclosureAttributes(node, id),
       registerEditor: (node, id, label) => connection.value?.bindEditor(node, { id, ...(label === undefined ? {} : { label }) }),
+      setEditorFocused,
+      setEditorComposing,
       handleEditorKeydown: (event) => {
         if (connection.value?.handleKeyboardEvent(event) !== true) return;
         event.preventDefault();
         event.stopPropagation();
       },
     });
-    onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-    watch([() => props.rows, () => props.getCellValue, () => props.setCellValue, () => props.disabled, () => props.readonly, () => props.policies], connect);
+    onMounted(() => {
+      mounted = true;
+      connect();
+    });
+    onBeforeUnmount(() => {
+      mounted = false;
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      reconnectPending = false;
+      editorFocused = false;
+      editorComposing = false;
+      connection.value?.disconnect();
+    });
+    watch([() => props.rows, () => props.getCellValue, () => props.setCellValue, () => props.disabled, () => props.readonly, () => props.policies], requestConnect);
     watch([() => props.modelValue, () => props.expandedValue, () => props.highlightedValue, () => props.editMode], () => {
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({ ...(controlled.value ? { value: props.modelValue } : {}), ...(controlled.expanded ? { expandedValue: props.expandedValue } : {}), ...(controlled.highlighted ? { highlightedValue: props.highlightedValue } : {}), ...(controlled.editMode ? { editMode: props.editMode } : {}) });
@@ -238,6 +285,10 @@ export const TreeGridEditor = defineComponent({
         hidden: presence.hidden.value,
         tabindex: inactivePresent ? -1 : undefined,
         onKeydown: root.handleEditorKeydown,
+        onFocus: () => root.setEditorFocused(true),
+        onBlur: () => root.setEditorFocused(false),
+        onCompositionstart: () => root.setEditorComposing(true),
+        onCompositionend: () => root.setEditorComposing(false),
         ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
         disabled: root.state.value.disabled,
         readonly: root.state.value.readonly,
@@ -277,8 +328,6 @@ function snapshotTreeGridConnectionOwner(
       parentID: row.parentID,
       cells: Object.freeze([...row.cells]),
     }))),
-    getCellValue: props.getCellValue,
-    setCellValue: props.setCellValue,
     disabled: props.disabled,
     readonly: props.readonly,
     eligible: props.policies?.eligible,
@@ -293,8 +342,6 @@ function sameTreeGridConnectionOwner(
 ): boolean {
   if (
     left.rows.length !== right.rows.length
-    || left.getCellValue !== right.getCellValue
-    || left.setCellValue !== right.setCellValue
     || left.disabled !== right.disabled
     || left.readonly !== right.readonly
     || left.eligible !== right.eligible

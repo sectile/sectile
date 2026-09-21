@@ -1,5 +1,5 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
+  computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
   shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createTagsInput, type TagsInputConnection, type TagsInputPolicies } from '@sectile/dom/tags-input';
@@ -38,6 +38,7 @@ interface RootContext {
   registerRoot(element?: HTMLElement): void;
   registerInput(element?: HTMLInputElement): void;
   registerDelete(element: HTMLElement, index: number): void;
+  setInputComposing(composing: boolean): void;
   clear(): void;
 }
 interface ItemContext { readonly state: ComputedRef<TagsInputItemSlotProps> }
@@ -90,6 +91,10 @@ export const TagsInputRoot = defineComponent({
     const localTags = shallowRef<readonly string[]>(props.modelValue ?? initialTags);
     const localInput = shallowRef(props.inputValue ?? props.defaultInputValue);
     const valueControlled = props.modelValue !== undefined; const inputControlled = props.inputValue !== undefined;
+    let proposedInputValue: string | null = null;
+    let inputComposing = false;
+    let reconnectPending = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let mounted = false;
     const state = computed<TagsInputRootSlotProps>(() => Object.freeze({
       value: props.modelValue ?? localTags.value, inputValue: props.inputValue ?? localInput.value,
@@ -107,6 +112,15 @@ export const TagsInputRoot = defineComponent({
         connection.value?.setTagAttributes(element, Number(element.dataset['sectileTagsDelete']));
       });
     };
+    const syncControlledValues = (): void => {
+      if (connection.value === undefined) return;
+      const result = connection.value.syncControlledValues({
+        ...(valueControlled ? { value: props.modelValue as readonly string[] } : {}),
+        ...(inputControlled ? { inputValue: props.inputValue as string } : {}),
+      });
+      if (!result.ok) throw new TypeError(result.error.message);
+      refresh();
+    };
     const connect = (): void => {
       connection.value?.disconnect();
       connection.value = undefined;
@@ -115,31 +129,65 @@ export const TagsInputRoot = defineComponent({
         root: root.value, input: input.value, direction: direction.value,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(valueControlled ? { value: props.modelValue as readonly string[] } : { defaultValue: localTags.value }),
-        ...(inputControlled ? { inputValue: props.inputValue as string } : { defaultInputValue: localInput.value }),
+        ...(inputControlled
+          ? { inputValue: proposedInputValue ?? props.inputValue as string }
+          : { defaultInputValue: localInput.value }),
         disabled: props.disabled, readOnly: props.readonly, label: props.label,
         onValueChange: (next) => { localTags.value = next; emit('update:modelValue', next); },
-        onInputValueChange: (next) => { localInput.value = next; emit('update:inputValue', next); },
+        onInputValueChange: (next) => {
+          localInput.value = next;
+          emit('update:inputValue', next);
+          if (!inputControlled) return;
+          proposedInputValue = next;
+          const proposal = next;
+          void nextTick(() => {
+            if (connection.value === undefined || proposedInputValue !== proposal) return;
+            proposedInputValue = null;
+            syncControlledValues();
+          });
+        },
         onUpdate: refresh,
       });
       refresh();
+    };
+    const requestConnect = (): void => {
+      if (inputComposing || reconnectPending) {
+        reconnectPending = true;
+        return;
+      }
+      connect();
+    };
+    const setInputComposing = (composing: boolean): void => {
+      inputComposing = composing;
+      if (composing || !reconnectPending || reconnectTimer !== null) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (!mounted || inputComposing) return;
+        reconnectPending = false;
+        connect();
+      }, 0);
     };
     provide<RootContext>(rootKey, {
       state, label: computed(() => props.label),
       registerRoot: (element) => { root.value = element ?? null; }, registerInput: (element) => { input.value = element ?? null; },
       registerDelete: (element, index) => connection.value?.setTagAttributes(element, index),
+      setInputComposing,
       clear: () => { for (let index = state.value.value.length - 1; index >= 0; index -= 1) connection.value?.handleEvent({ type: 'remove', index }); },
     });
     onMounted(() => { mounted = true; connect(); });
-    onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); connection.value = undefined; });
-    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.policies, direction], connect);
+    onBeforeUnmount(() => {
+      mounted = false;
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      reconnectPending = false;
+      proposedInputValue = null;
+      connection.value?.disconnect();
+      connection.value = undefined;
+    });
+    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.policies, direction], requestConnect);
     watch([() => props.modelValue, () => props.inputValue], () => {
-      if (connection.value === undefined) return;
-      const result = connection.value.syncControlledValues({
-        ...(valueControlled ? { value: props.modelValue as readonly string[] } : {}),
-        ...(inputControlled ? { inputValue: props.inputValue as string } : {}),
-      });
-      if (!result.ok) throw new TypeError(result.error.message);
-      refresh();
+      proposedInputValue = null;
+      syncControlledValues();
     });
     return (): VNodeChild => {
       const visual = h(Primitive, mergeProps(attrs, {
@@ -210,11 +258,16 @@ export const TagsInputInput = defineComponent({
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
   setup(props, { attrs }) {
     const root = useRoot('TagsInputInput');
+    const renderServerValue = typeof window === 'undefined';
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
       elementRef: (node: unknown) => root.registerInput(node instanceof HTMLInputElement ? node : undefined),
-      type: 'text', value: root.state.value.inputValue, disabled: root.state.value.disabled,
+      type: 'text',
+      ...(renderServerValue ? { value: root.state.value.inputValue } : {}),
+      disabled: root.state.value.disabled,
       readonly: root.state.value.readonly, 'aria-label': root.label.value,
+      onCompositionstart: () => root.setInputComposing(true),
+      onCompositionend: () => root.setInputComposing(false),
       'data-scope': 'tags-input', 'data-part': 'input',
     }));
   },

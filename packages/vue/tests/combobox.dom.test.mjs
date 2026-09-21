@@ -185,6 +185,109 @@ test('Vue combobox keeps live Hangul composition under native input ownership', 
   host.remove();
 });
 
+test('Vue combobox preserves an active composition while its item domain changes', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const items = ref([{ id: 'fresh', label: '후레쉬' }]);
+  const app = createApp({
+    render: () => h(ComboboxRoot, {
+      items: items.value,
+    }, { default: () => h(ComboboxInput) }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const input = host.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+  const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  assert.equal(typeof valueDescriptor?.get, 'function');
+  assert.equal(typeof valueDescriptor?.set, 'function');
+  const frameworkWrites = [];
+  Object.defineProperty(input, 'value', {
+    configurable: true,
+    get: () => valueDescriptor.get.call(input),
+    set: (value) => {
+      frameworkWrites.push(value);
+      valueDescriptor.set.call(input, value);
+    },
+  });
+
+  input.dispatchEvent(compositionEvent('compositionstart', ''));
+  valueDescriptor.set.call(input, 'ㅎ');
+  input.setSelectionRange(1, 1);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await nextTick();
+
+  items.value = [
+    { id: 'fresh', label: '후레쉬' },
+    { id: 'other', label: '기타' },
+  ];
+  await nextTick();
+  assert.equal(input.value, 'ㅎ');
+  assert.deepEqual(frameworkWrites, []);
+
+  valueDescriptor.set.call(input, '후');
+  input.setSelectionRange(1, 1);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  input.dispatchEvent(compositionEvent('compositionend', '후'));
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await Promise.resolve();
+  await nextTick();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await nextTick();
+
+  assert.equal(input.value, '후');
+  assert.deepEqual(frameworkWrites, []);
+
+  app.unmount();
+  host.remove();
+});
+
+test('controlled Vue combobox restores a rejected native proposal after owner settlement', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const updates = [];
+  const items = ref([{ id: 'alpha', label: 'Alpha' }]);
+  const app = createApp({
+    render: () => h(ComboboxRoot, {
+      items: items.value,
+      inputValue: 'a',
+      'onUpdate:inputValue': (value) => updates.push(value),
+    }, { default: () => h(ComboboxInput) }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const input = host.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+  const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  assert.equal(typeof valueDescriptor?.get, 'function');
+  assert.equal(typeof valueDescriptor?.set, 'function');
+  const frameworkWrites = [];
+  Object.defineProperty(input, 'value', {
+    configurable: true,
+    get: () => valueDescriptor.get.call(input),
+    set: (value) => {
+      frameworkWrites.push(value);
+      valueDescriptor.set.call(input, value);
+    },
+  });
+
+  valueDescriptor.set.call(input, 'ab');
+  input.setSelectionRange(2, 2);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+  items.value = [{ id: 'alpha', label: 'Alpha' }, { id: 'beta', label: 'Beta' }];
+  await nextTick();
+  await nextTick();
+
+  assert.deepEqual(updates, ['ab']);
+  assert.equal(input.value, 'a');
+  assert.deepEqual(frameworkWrites, ['a']);
+
+  app.unmount();
+  host.remove();
+});
+
 test('controlled Vue combobox preserves Hangul composition metadata through owner updates', async () => {
   const host = document.createElement('div');
   document.body.append(host);

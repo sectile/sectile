@@ -5,10 +5,11 @@ import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from '../f
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
 import { useNextTickTask } from '../internal/scheduled-task.js';
+import { captureNativeTextState } from '../input/native-text-state.js';
 
 export interface TimeRangeFieldRootProps { readonly modelValue?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly policies?: TimeRangeFieldPolicies; readonly disabled?: boolean; readonly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TimeRangeFieldRootSlotProps { readonly value: TimeRange | null; readonly startText: string; readonly endText: string; readonly active: 'start' | 'end'; readonly disabled: boolean; readonly: boolean }
-interface Context { readonly slotProps: ComputedRef<TimeRangeFieldRootSlotProps>; readonly startInput: ShallowRef<HTMLInputElement | null>; readonly endInput: ShallowRef<HTMLInputElement | null> }
+interface Context { readonly slotProps: ComputedRef<TimeRangeFieldRootSlotProps>; readonly startInput: ShallowRef<HTMLInputElement | null>; readonly endInput: ShallowRef<HTMLInputElement | null>; setInputComposing(endpoint: 'start' | 'end', composing: boolean): void }
 const contextKey = Symbol('SectileTimeRangeField');
 
 export const TimeRangeFieldRoot = defineComponent({
@@ -23,12 +24,72 @@ export const TimeRangeFieldRoot = defineComponent({
       { element: endInput, relativeName: 'end', capabilities: hiddenInputSubmissionCapabilities },
     ] });
     const refresh = (): void => { if (connection !== null) snapshot.value = connection.getSnapshot().state; };
-    const mount = (): void => { if (startInput.value === null || endInput.value === null) return; connection?.disconnect(); connection = createTimeRangeField({ startInput: startInput.value, endInput: endInput.value, ...(controlled ? { value: props.modelValue as TimeRange | null } : { defaultValue: snapshot.value.value }), ...(props.policies === undefined ? {} : { policies: props.policies }), disabled: props.disabled, readOnly: props.readonly, required: props.required, ...(props.startLabel === undefined ? {} : { startLabel: props.startLabel }), ...(props.endLabel === undefined ? {} : { endLabel: props.endLabel }), onValueChange: (value) => emit('update:modelValue', value), onUpdate: refresh }); refresh(); };
-    const mountTask = useNextTickTask(mount);
-    onMounted(mount); onBeforeUnmount(() => { mountTask.cancel(); connection?.disconnect(); connection = null; });
+    const mount = (preserveNative = false): void => {
+      if (startInput.value === null || endInput.value === null) return;
+      const startState = preserveNative && connection !== null
+        ? captureNativeTextState(startInput.value, snapshot.value.start.inputState.snapshot.text)
+        : undefined;
+      const endState = preserveNative && connection !== null
+        ? captureNativeTextState(endInput.value, snapshot.value.end.inputState.snapshot.text)
+        : undefined;
+      connection?.disconnect();
+      connection = createTimeRangeField({
+        startInput: startInput.value,
+        endInput: endInput.value,
+        ...(controlled ? { value: props.modelValue as TimeRange | null } : { defaultValue: snapshot.value.value }),
+        ...(startState === undefined ? {} : { defaultStartInputState: startState }),
+        ...(endState === undefined ? {} : { defaultEndInputState: endState }),
+        ...(props.policies === undefined ? {} : { policies: props.policies }),
+        disabled: props.disabled,
+        readOnly: props.readonly,
+        required: props.required,
+        ...(props.startLabel === undefined ? {} : { startLabel: props.startLabel }),
+        ...(props.endLabel === undefined ? {} : { endLabel: props.endLabel }),
+        onValueChange: (value) => emit('update:modelValue', value),
+        onUpdate: refresh,
+      });
+      refresh();
+    };
+    const mountTask = useNextTickTask(() => mount(true));
+    const composingInputs = new Set<'start' | 'end'>();
+    let mounted = false;
+    let reconnectPending = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    const requestMount = (): void => {
+      if (composingInputs.size > 0) {
+        reconnectPending = true;
+        return;
+      }
+      mountTask.schedule();
+    };
+    const setInputComposing = (endpoint: 'start' | 'end', composing: boolean): void => {
+      if (composing) composingInputs.add(endpoint);
+      else composingInputs.delete(endpoint);
+      if (composingInputs.size > 0 || !reconnectPending || reconnectTimer !== null) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (!mounted || composingInputs.size > 0) return;
+        reconnectPending = false;
+        mountTask.schedule();
+      }, 0);
+    };
+    onMounted(() => {
+      mounted = true;
+      mount();
+    });
+    onBeforeUnmount(() => {
+      mounted = false;
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      reconnectPending = false;
+      composingInputs.clear();
+      mountTask.cancel();
+      connection?.disconnect();
+      connection = null;
+    });
     watch(() => props.modelValue, (value) => { if (!controlled || value === undefined || connection === null) return; const result = connection.syncControlledValues({ value }); if (!result.ok) throw new TypeError(result.error.message); snapshot.value = result.value.state; });
-    watch([() => props.policies, () => props.disabled, () => props.readonly, () => props.required, () => props.startLabel, () => props.endLabel], mountTask.schedule);
-    const slotProps = computed<TimeRangeFieldRootSlotProps>(() => Object.freeze({ value: snapshot.value.value, startText: snapshot.value.start.inputState.snapshot.text, endText: snapshot.value.end.inputState.snapshot.text, active: snapshot.value.active, disabled: props.disabled, readonly: props.readonly })); provide<Context>(contextKey, { slotProps, startInput, endInput });
+    watch([() => props.policies, () => props.disabled, () => props.readonly, () => props.required, () => props.startLabel, () => props.endLabel], requestMount);
+    const slotProps = computed<TimeRangeFieldRootSlotProps>(() => Object.freeze({ value: snapshot.value.value, startText: snapshot.value.start.inputState.snapshot.text, endText: snapshot.value.end.inputState.snapshot.text, active: snapshot.value.active, disabled: props.disabled, readonly: props.readonly })); provide<Context>(contextKey, { slotProps, startInput, endInput, setInputComposing });
     return (): VNodeChild => h(Primitive, mergeProps(participation.controlProps.value, attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => { root.value = element as HTMLElement | null; }, role: 'group', 'data-scope': 'time-range-field', 'data-part': 'root', 'data-disabled': props.disabled ? '' : undefined, 'data-readonly': props.readonly ? '' : undefined }), { default: () => slots['default']?.(slotProps.value) });
   },
 });
@@ -36,6 +97,6 @@ export const TimeRangeFieldRoot = defineComponent({
 export type TimeRangeFieldValueChangeHandler = (value: TimeRange | null) => void;
 export const TimeRangeFieldStartInput = createEndpointInput('start', 'SectileTimeRangeFieldStartInput');
 export const TimeRangeFieldEndInput = createEndpointInput('end', 'SectileTimeRangeFieldEndInput');
-function createEndpointInput(endpoint: 'start' | 'end', name: string) { return defineComponent({ name, inheritAttrs: false, setup(_props, { attrs }) { const context = useContext(name); return (): VNodeChild => h('input', mergeProps(attrs, { ref: (element: unknown) => { context[endpoint === 'start' ? 'startInput' : 'endInput'].value = element as HTMLInputElement | null; }, type: 'text', inputmode: 'numeric', placeholder: 'HH:mm', value: endpoint === 'start' ? context.slotProps.value.startText : context.slotProps.value.endText, disabled: context.slotProps.value.disabled, readonly: context.slotProps.value.readonly, 'aria-disabled': String(context.slotProps.value.disabled), 'aria-readonly': String(context.slotProps.value.readonly), 'data-scope': 'time-range-field', 'data-part': `${endpoint}-input`, 'data-active': context.slotProps.value.active === endpoint ? '' : undefined })); } }); }
+function createEndpointInput(endpoint: 'start' | 'end', name: string) { return defineComponent({ name, inheritAttrs: false, setup(_props, { attrs }) { const context = useContext(name); return (): VNodeChild => h('input', mergeProps(attrs, { ref: (element: unknown) => { context[endpoint === 'start' ? 'startInput' : 'endInput'].value = element as HTMLInputElement | null; }, type: 'text', inputmode: 'numeric', placeholder: 'HH:mm', value: endpoint === 'start' ? context.slotProps.value.startText : context.slotProps.value.endText, disabled: context.slotProps.value.disabled, readonly: context.slotProps.value.readonly, onCompositionstart: () => context.setInputComposing(endpoint, true), onCompositionend: () => context.setInputComposing(endpoint, false), 'aria-disabled': String(context.slotProps.value.disabled), 'aria-readonly': String(context.slotProps.value.readonly), 'data-scope': 'time-range-field', 'data-part': `${endpoint}-input`, 'data-active': context.slotProps.value.active === endpoint ? '' : undefined })); } }); }
 function useContext(part: string): Context { const context = inject<Context>(contextKey); if (context === undefined) throw new TypeError(`${part} must be used inside TimeRangeFieldRoot.`); return context; }
 export type { TimeRange };

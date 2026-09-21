@@ -164,6 +164,8 @@ interface Context {
   readonly strategy: ComputedRef<NonNullable<PickerPositionOptions['strategy']>>;
   readonly state: ComputedRef<PickerRootSlotProps>;
   register(part: PickerInputPart | 'anchor' | 'content' | 'grid' | 'trigger', element?: HTMLElement): void;
+  setInputFocused(part: PickerInputPart, focused: boolean): void;
+  setInputComposing(part: PickerInputPart, composing: boolean): void;
   refresh(): void;
   registerCell(element: HTMLElement, value: DateValue): void;
   move(unit: PickerNavigationUnit, direction: -1 | 1): void;
@@ -329,12 +331,43 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       };
       let mounted = false;
       let connectQueued = false;
+      const focusedInputs = new Set<PickerInputPart>();
+      const composingInputs = new Set<PickerInputPart>();
+      let reconnectPending = false;
+      let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+      const hasActiveInput = (): boolean => focusedInputs.size > 0 || composingInputs.size > 0;
+      const requestConnect = (): void => {
+        if (hasActiveInput()) {
+          reconnectPending = true;
+          return;
+        }
+        connect();
+      };
+      const schedulePendingConnect = (): void => {
+        if (hasActiveInput() || !reconnectPending || reconnectTimer !== null) return;
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          if (!mounted || hasActiveInput()) return;
+          reconnectPending = false;
+          connect();
+        }, 0);
+      };
+      const setInputFocused = (part: PickerInputPart, focused: boolean): void => {
+        if (focused) focusedInputs.add(part);
+        else focusedInputs.delete(part);
+        schedulePendingConnect();
+      };
+      const setInputComposing = (part: PickerInputPart, composing: boolean): void => {
+        if (composing) composingInputs.add(part);
+        else composingInputs.delete(part);
+        schedulePendingConnect();
+      };
       const scheduleConnect = (): void => {
         if (!mounted || connectQueued) return;
         connectQueued = true;
         void nextTick(() => {
           connectQueued = false;
-          if (mounted) connect();
+          if (mounted) requestConnect();
         });
       };
       const moveBy = (unit: PickerNavigationUnit, delta: number): void => {
@@ -369,6 +402,8 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           if (element === undefined) elements.delete(part); else elements.set(part, element);
           scheduleConnect();
         },
+        setInputFocused,
+        setInputComposing,
         refresh: () => connection.value?.refresh(),
         registerCell: (element, value) => connection.value?.setCellAttributes(element, value),
         move: (unit, direction) => {
@@ -433,6 +468,11 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       onBeforeUnmount(() => {
         mounted = false;
         connectQueued = false;
+        if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+        reconnectPending = false;
+        focusedInputs.clear();
+        composingInputs.clear();
         connection.value?.disconnect();
         connection.value = undefined;
       });
@@ -441,14 +481,14 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset,
         () => runtimeProps.collisionPadding, () => runtimeProps.collisionBoundary, () => runtimeProps.avoidCollisions,
         () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.tracking,
-      ], connect);
+      ], requestConnect);
       watch(referenceDate, (value) => {
         if (
           runtimeProps.highlightedValue === undefined
           && runtimeProps.defaultHighlightedValue === undefined
           && dateOf(runtimeProps.modelValue ?? runtimeProps.defaultValue) === null
         ) localHighlight.value = value;
-        connect();
+        requestConnect();
       });
       watch([() => runtimeProps.modelValue, () => runtimeProps.open, () => runtimeProps.highlightedValue], (values, previousValues) => {
         if (connection.value === undefined) return;
@@ -616,15 +656,36 @@ export function createPickerInput(part: PickerInputPart, name: string, type: 'te
   return defineComponent({
     name, inheritAttrs: false,
     props: { name: { type: String, default: undefined }, form: { type: String, default: undefined }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
-    setup(props, { attrs }) { const root = useRoot(name); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-      as: props.as, asChild: props.asChild,
-      elementRef: (node: unknown) => root.register(part, node instanceof HTMLInputElement ? node : undefined),
-      type, name: props.name, form: props.form, disabled: root.state.value.disabled,
-      readOnly: root.granularity !== 'day' || root.state.value.readonly || part === 'start-input' || part === 'end-input' || part === 'start-date-time-input' || part === 'end-date-time-input',
-      required: false, value: root.state.value.value === null ? '' : root.formatInput(root.granularity, part, root.state.value.value),
-      'data-scope': root.scope, 'data-part': part,
-    })); },
+    setup(props, { attrs }) {
+      const root = useRoot(name);
+      const renderServerValue = typeof window === 'undefined';
+      const browserOwned = type === 'text'
+        && root.granularity === 'day'
+        && !isPickerDisplayInput(part);
+      return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+        as: props.as, asChild: props.asChild,
+        elementRef: (node: unknown) => root.register(part, node instanceof HTMLInputElement ? node : undefined),
+        type, name: props.name, form: props.form, disabled: root.state.value.disabled,
+        readOnly: root.granularity !== 'day' || root.state.value.readonly || isPickerDisplayInput(part),
+        required: false,
+        ...(renderServerValue || !browserOwned
+          ? { value: root.state.value.value === null ? '' : root.formatInput(root.granularity, part, root.state.value.value) }
+          : {}),
+        onFocus: browserOwned ? () => root.setInputFocused(part, true) : undefined,
+        onBlur: browserOwned ? () => root.setInputFocused(part, false) : undefined,
+        onCompositionstart: browserOwned ? () => root.setInputComposing(part, true) : undefined,
+        onCompositionend: browserOwned ? () => root.setInputComposing(part, false) : undefined,
+        'data-scope': root.scope, 'data-part': part,
+      }));
+    },
   });
+}
+
+function isPickerDisplayInput(part: PickerInputPart): boolean {
+  return part === 'start-input'
+    || part === 'end-input'
+    || part === 'start-date-time-input'
+    || part === 'end-date-time-input';
 }
 
 export function createPickerMove(unit: PickerNavigationUnit, direction: -1 | 1, name: string, part?: string) {

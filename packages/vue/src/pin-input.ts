@@ -1,5 +1,5 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
+  computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
   shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createPinInput, type PinInputConnection, type PinInputPolicies } from '@sectile/dom/pin-input';
@@ -39,6 +39,7 @@ interface Context {
   readonly otp: ComputedRef<boolean>;
   readonly label: ComputedRef<string>;
   register(index: number, element?: HTMLInputElement): void;
+  setInputComposing(composing: boolean): void;
 }
 const key = Symbol('SectilePinInputRoot');
 
@@ -72,6 +73,10 @@ export const PinInputRoot = defineComponent({
     const connection = shallowRef<PinInputConnection>();
     const value = shallowRef(props.modelValue ?? props.defaultValue);
     const controlled = useControlledStateInvariant('PinInputRoot', 'modelValue', () => props.modelValue);
+    let proposedValue: string | null = null;
+    let inputComposing = false;
+    let reconnectPending = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     const state = computed<PinInputRootSlotProps>(() => Object.freeze({
       value: props.modelValue ?? value.value, complete: (props.modelValue ?? value.value).length === props.length,
       disabled: props.disabled, readonly: props.readonly,
@@ -82,12 +87,42 @@ export const PinInputRoot = defineComponent({
       if (root.value === null || nodes.length !== props.length) return;
       connection.value = createPinInput({
         root: root.value, inputs: nodes, ...(props.policies === undefined ? {} : { policies: props.policies }),
-        ...(controlled ? { value: props.modelValue as string } : { defaultValue: value.value }),
+        ...(controlled ? { value: proposedValue ?? props.modelValue as string } : { defaultValue: value.value }),
         disabled: props.disabled, readOnly: props.readonly, label: props.label,
-        onValueChange: (next) => { value.value = next; emit('update:modelValue', next); },
+        onValueChange: (next) => {
+          value.value = next;
+          emit('update:modelValue', next);
+          if (!controlled) return;
+          proposedValue = next;
+          const proposal = next;
+          void nextTick(() => {
+            if (connection.value === undefined || proposedValue !== proposal) return;
+            proposedValue = null;
+            const result = connection.value.syncControlledValue(props.modelValue as string);
+            if (!result.ok) throw new TypeError(result.error.message);
+            refresh();
+          });
+        },
         onComplete: (next) => emit('complete', next), onUpdate: refresh,
       });
       refresh();
+    };
+    const requestConnect = (): void => {
+      if (inputComposing) {
+        reconnectPending = true;
+        return;
+      }
+      connect();
+    };
+    const setInputComposing = (composing: boolean): void => {
+      inputComposing = composing;
+      if (composing || !reconnectPending || reconnectTimer !== null) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (inputComposing) return;
+        reconnectPending = false;
+        connect();
+      }, 0);
     };
     const refresh = (): void => { if (connection.value !== undefined) value.value = connection.value.getSnapshot().state.values.join(''); };
     const register = (index: number, element?: HTMLInputElement): void => {
@@ -96,14 +131,23 @@ export const PinInputRoot = defineComponent({
     };
     provide<Context>(key, {
       state, length: computed(() => props.length), mask: computed(() => props.mask), otp: computed(() => props.otp),
-      label: computed(() => props.label), register,
+      label: computed(() => props.label), register, setInputComposing,
     });
-    onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
+    onMounted(connect);
+    onBeforeUnmount(() => {
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      reconnectPending = false;
+      proposedValue = null;
+      connection.value?.disconnect();
+    });
     watch([() => props.length, () => props.disabled, () => props.readonly, () => props.label, () => props.policies], () => {
-      inputs.value = Array.from({ length: props.length }, (_, index) => inputs.value[index]); connect();
+      inputs.value = Array.from({ length: props.length }, (_, index) => inputs.value[index]);
+      requestConnect();
     });
     watch(() => props.modelValue, (next) => {
       if (!controlled || next === undefined || connection.value === undefined) return;
+      proposedValue = null;
       const result = connection.value.syncControlledValue(next);
       if (!result.ok) throw new TypeError(result.error.message);
       value.value = next;
@@ -145,6 +189,8 @@ export const PinInputInput = defineComponent({
       type: root.mask.value ? 'password' : 'text', inputmode: 'numeric', maxlength: 1,
       autocomplete: root.otp.value && props.index === 0 ? 'one-time-code' : undefined,
       disabled: root.state.value.disabled, readonly: root.state.value.readonly,
+      onCompositionstart: () => root.setInputComposing(true),
+      onCompositionend: () => root.setInputComposing(false),
       'aria-label': `${root.label.value} digit ${props.index + 1} of ${root.length.value}`,
       'data-scope': 'pin-input', 'data-part': 'input', 'data-index': props.index,
     }), slots['default'] === undefined

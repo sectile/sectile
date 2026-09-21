@@ -13,6 +13,7 @@ Object.assign(globalThis, {
   HTMLInputElement: browserWindow.HTMLInputElement,
   SVGElement: browserWindow.SVGElement,
   Event: browserWindow.Event,
+  InputEvent: browserWindow.InputEvent,
   KeyboardEvent: browserWindow.KeyboardEvent,
   MouseEvent: browserWindow.MouseEvent,
   MutationObserver: browserWindow.MutationObserver,
@@ -200,6 +201,65 @@ test('ISSUE-139: mounted day-cell slot and native availability stay synchronized
   assert.equal(cell()?.textContent, 'slot-enabled');
   assert.equal(cell()?.disabled, false);
   assert.equal(cell()?.getAttribute('aria-disabled'), 'false');
+
+  app.unmount();
+  host.remove();
+});
+
+test('Vue date picker defers reactive reconfiguration until native editing settles', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const label = ref('Pick a date');
+  const value = Object.freeze({ year: 2026, month: 9, day: 13 });
+  const app = createApp({
+    render: () => h(DatePickerRoot, {
+      defaultValue: value,
+      defaultOpen: true,
+      position: false,
+      label: label.value,
+    }, {
+      default: () => [
+        h(DatePickerInput),
+        h(DatePickerTrigger),
+        h(DatePickerContent, null, {
+          default: () => h(DatePickerGrid),
+        }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await settle();
+  const input = host.querySelector('[data-scope="date"][data-part="input"]');
+  assert.ok(input instanceof HTMLInputElement);
+  assert.equal(input.value, '2026-09-13');
+
+  input.dispatchEvent(new Event('focus'));
+  input.setSelectionRange(0, input.value.length);
+  input.dispatchEvent(new Event('compositionstart'));
+  input.value = '2026-09-1';
+  input.setSelectionRange(9, 9);
+  input.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    inputType: 'insertCompositionText',
+    data: '1',
+  }));
+
+  label.value = 'Updated picker';
+  await settle();
+  assert.equal(input.value, '2026-09-1');
+  assert.deepEqual([input.selectionStart, input.selectionEnd], [9, 9]);
+
+  input.dispatchEvent(new Event('compositionend'));
+  await settle();
+  assert.equal(input.value, '2026-09-1');
+
+  input.dispatchEvent(new Event('blur'));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await settle();
+
+  assert.equal(input.value, '2026-09-13');
+  assert.equal(input.getAttribute('aria-label'), 'Updated picker');
 
   app.unmount();
   host.remove();
@@ -687,6 +747,58 @@ test('Vue controlled picker retains a pending field proposal until delayed owner
   await settle();
   assert.equal(input.value, '2026-09-18');
   assert.deepEqual([input.selectionStart, input.selectionEnd], [5, 7]);
+  app.unmount();
+  host.remove();
+});
+
+test('Vue picker keeps an editable field session stable across reactive reconfiguration', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const label = ref('Appointment');
+  const app = createApp({
+    render: () => h(DateTimePickerRoot, {
+      defaultValue: {
+        date: { year: 2026, month: 8, day: 18 },
+        time: { hour: 9, minute: 30, second: 0, millisecond: 0 },
+      },
+      defaultOpen: true,
+      position: false,
+      label: label.value,
+    }, { default: () => [
+      h(DateTimePickerDateInput),
+      h(DateTimePickerTrigger),
+      h(DateTimePickerContent, null, { default: () => h(DateTimePickerGrid) }),
+    ] }),
+  });
+
+  app.mount(host);
+  await settle();
+  const input = host.querySelector('[data-part="date-input"]');
+  assert.ok(input instanceof HTMLInputElement);
+  input.focus();
+  input.dispatchEvent(new Event('compositionstart', { bubbles: true }));
+  input.value = '2026-09-';
+  input.setSelectionRange(8, 8);
+  input.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    inputType: 'insertCompositionText',
+    data: '2026-09-',
+  }));
+
+  label.value = 'Updated appointment';
+  await settle();
+
+  assert.equal(input.value, '2026-09-');
+  assert.deepEqual([input.selectionStart, input.selectionEnd], [8, 8]);
+  assert.equal(document.activeElement, input);
+
+  input.dispatchEvent(new Event('compositionend', { bubbles: true }));
+  await settle();
+
+  assert.equal(input.value, '2026-09-');
+  assert.deepEqual([input.selectionStart, input.selectionEnd], [8, 8]);
+  assert.equal(document.activeElement, input);
+
   app.unmount();
   host.remove();
 });

@@ -4,6 +4,7 @@ import {
   h,
   inject,
   mergeProps,
+  nextTick,
   onBeforeUnmount,
   onMounted,
   provide,
@@ -64,6 +65,7 @@ interface SpinButtonContext {
   connect(input: HTMLInputElement): void;
   disconnect(): void;
   reset(): void;
+  setInputComposing(composing: boolean): void;
   step(event: 'increment' | 'decrement'): void;
 }
 
@@ -107,6 +109,11 @@ export const SpinButtonRoot = defineComponent({
     const value = shallowRef(String(props.modelValue ?? initialValue));
     const draft = shallowRef<string | null>(props.draft !== undefined ? props.draft : initialDraft);
     const revision = shallowRef(0);
+    const noDraftProposal = Symbol('no-draft-proposal');
+    let proposedDraft: string | null | typeof noDraftProposal = noDraftProposal;
+    let inputComposing = false;
+    let reconnectPending = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     const state = computed<SpinButtonSlotProps>(() => ({
       value: value.value,
       draft: draft.value,
@@ -125,12 +132,19 @@ export const SpinButtonRoot = defineComponent({
       draft.value = snapshot.state.draft;
     };
     const disconnect = (): void => {
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      reconnectPending = false;
+      inputComposing = false;
+      proposedDraft = noDraftProposal;
       connection.value?.disconnect();
       connection.value = undefined;
       inputElement.value = undefined;
     };
     const connect = (input: HTMLInputElement): void => {
+      const pendingDraft = proposedDraft;
       disconnect();
+      proposedDraft = pendingDraft;
       inputElement.value = input;
       connection.value = createSpinButton({
         input,
@@ -139,12 +153,24 @@ export const SpinButtonRoot = defineComponent({
         step: String(props.step),
         policies: { ...props.policies, page: props.pageStep },
         ...(valueControlled ? { value: String(props.modelValue) } : { defaultValue: value.value }),
-        ...(draftControlled ? { draft: props.draft as string | null } : { defaultDraft: draft.value }),
+        ...(draftControlled
+          ? { draft: pendingDraft === noDraftProposal ? props.draft as string | null : pendingDraft }
+          : { defaultDraft: draft.value }),
         disabled: props.disabled,
         readOnly: props.readonly,
         ...(props.label === undefined ? {} : { label: props.label }),
         onValueChange: (next) => emit('update:modelValue', next),
-        onDraftChange: (next) => emit('update:draft', next),
+        onDraftChange: (next) => {
+          emit('update:draft', next);
+          if (!draftControlled) return;
+          proposedDraft = next;
+          const proposal = next;
+          void nextTick(() => {
+            if (connection.value === undefined || proposedDraft !== proposal) return;
+            proposedDraft = noDraftProposal;
+            sync();
+          });
+        },
         onUpdate: update,
       });
       update();
@@ -153,6 +179,7 @@ export const SpinButtonRoot = defineComponent({
       queueMicrotask(() => {
         value.value = valueControlled ? String(props.modelValue) : initialValue;
         draft.value = draftControlled ? props.draft as string | null : initialDraft;
+        proposedDraft = noDraftProposal;
         if (inputElement.value !== undefined) connect(inputElement.value);
       });
     };
@@ -166,12 +193,30 @@ export const SpinButtonRoot = defineComponent({
       if (!result.ok) throw new TypeError('Controlled spin button state could not be synchronized.');
       update();
     };
-    watch([() => props.modelValue, () => props.draft], sync);
-    watch([() => props.disabled, () => props.readonly], () => {
+    const requestReconnect = (): void => {
+      if (inputComposing) {
+        reconnectPending = true;
+        return;
+      }
       if (inputElement.value !== undefined) connect(inputElement.value);
+    };
+    const setInputComposing = (composing: boolean): void => {
+      inputComposing = composing;
+      if (composing || !reconnectPending || reconnectTimer !== null) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (inputComposing || inputElement.value === undefined) return;
+        reconnectPending = false;
+        connect(inputElement.value);
+      }, 0);
+    };
+    watch([() => props.modelValue, () => props.draft], () => {
+      proposedDraft = noDraftProposal;
+      sync();
     });
+    watch([() => props.disabled, () => props.readonly], requestReconnect);
     provide<SpinButtonContext>(spinButtonKey, {
-      state, min, max, label, connection, connect, disconnect, reset,
+      state, min, max, label, connection, connect, disconnect, reset, setInputComposing,
       step: (event) => {
         if (connection.value?.handleEvent(event)) update();
       },
@@ -206,6 +251,7 @@ export const SpinButtonInput = defineComponent({
     const root = useSpinButton('SpinButtonInput');
     const input = shallowRef<HTMLInputElement | null>(null);
     const participation = useNativeInputFormControl(input, { reset: root.reset });
+    const renderServerValue = typeof window === 'undefined';
     onMounted(() => {
       if (input.value === null) throw new TypeError('SpinButtonInput must render an input element.');
       root.connect(input.value);
@@ -221,9 +267,11 @@ export const SpinButtonInput = defineComponent({
       form: props.form,
       required: props.required,
       inputmode: 'decimal',
-      value: root.state.value.text,
+      ...(renderServerValue ? { value: root.state.value.text } : {}),
       disabled: root.state.value.disabled,
       readonly: root.state.value.readonly,
+      onCompositionstart: () => root.setInputComposing(true),
+      onCompositionend: () => root.setInputComposing(false),
       'aria-label': root.label.value,
       'aria-valuemin': root.min.value,
       'aria-valuemax': root.max.value,

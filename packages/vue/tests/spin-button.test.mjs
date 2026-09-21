@@ -76,7 +76,13 @@ test('Vue spin button forwards its host input before connecting the DOM adapter'
     assert.ok(input instanceof TestHTMLInputElement);
     assert.equal(input.props['aria-valuenow'], '3');
     assert.equal(input.props['aria-label'], 'Quantity');
-    assert.deepEqual([...input.listeners.keys()].sort(), ['blur', 'input', 'keydown']);
+    assert.deepEqual([...input.listeners.keys()].sort(), [
+      'blur',
+      'compositionend',
+      'compositionstart',
+      'input',
+      'keydown',
+    ]);
   } finally {
     if (previousHTMLInputElement === undefined) delete globalThis.HTMLInputElement;
     else globalThis.HTMLInputElement = previousHTMLInputElement;
@@ -116,7 +122,7 @@ test('Vue spin button reconfigures interaction when readonly changes', async () 
     const increment = root.children[2];
 
     input.value = '4';
-    input.listeners.get('input')();
+    input.listeners.get('input')({ inputType: 'insertText', isComposing: false });
     input.listeners.get('blur')();
     assert.deepEqual(updates, []);
 
@@ -124,7 +130,7 @@ test('Vue spin button reconfigures interaction when readonly changes', async () 
     await nextTick();
 
     input.value = '4';
-    input.listeners.get('input')();
+    input.listeners.get('input')({ inputType: 'insertText', isComposing: false });
     input.listeners.get('blur')();
     assert.deepEqual(updates, ['4']);
 

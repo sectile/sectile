@@ -73,6 +73,9 @@ export const TextField = defineComponent({
     let controller: TextController | null = null;
     let connection: TextConnection | null = null;
     let proposedState: TextState | null = null;
+    let inputComposing = false;
+    let reconnectPending = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let mounted = false;
 
     const createController = (state: TextState): TextController => {
@@ -116,6 +119,26 @@ export const TextField = defineComponent({
       });
       connection.render();
     };
+    const requestReconnect = (): void => {
+      if (inputComposing) {
+        reconnectPending = true;
+        return;
+      }
+      const state = proposedState
+        ?? controller?.getSnapshot().state
+        ?? createTextState(String(controlled ? props.modelValue : props.defaultValue));
+      mountConnection(state);
+    };
+    const setInputComposing = (composing: boolean): void => {
+      inputComposing = composing;
+      if (composing || !reconnectPending || reconnectTimer !== null) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (!mounted || inputComposing) return;
+        reconnectPending = false;
+        requestReconnect();
+      }, 0);
+    };
     function settleControlledProposal(proposal: TextState): void {
       if (!controlled) return;
       void nextTick(() => {
@@ -145,6 +168,9 @@ export const TextField = defineComponent({
     });
     onBeforeUnmount(() => {
       mounted = false;
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      reconnectPending = false;
       connection?.disconnect();
       connection = null;
       controller = null;
@@ -164,11 +190,7 @@ export const TextField = defineComponent({
       const result = connection.syncControlledValues({ value: state });
       if (!result.ok) throw new TypeError(result.error.message);
     });
-    watch([() => props.disabled, () => props.readonly], () => {
-      const state = controller?.getSnapshot().state
-        ?? createTextState(String(controlled ? props.modelValue : props.defaultValue));
-      mountConnection(state);
-    });
+    watch([() => props.disabled, () => props.readonly], requestReconnect);
 
     const commitLazyValue = (): void => {
       if (!props.modelModifiers.lazy || controller === null) return;
@@ -188,6 +210,8 @@ export const TextField = defineComponent({
         form: props.form,
         placeholder: props.placeholder,
         autocomplete: props.autocomplete,
+        onCompositionstart: () => setInputComposing(true),
+        onCompositionend: () => setInputComposing(false),
         onChange: commitLazyValue,
         'data-scope': 'text',
         'data-part': 'input',

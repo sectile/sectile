@@ -62,6 +62,7 @@ interface EditableContext {
   readonly submitTrigger: ShallowRef<HTMLElement | null>;
   readonly cancelTrigger: ShallowRef<HTMLElement | null>;
   readonly multiline: ReturnType<typeof ref<boolean>>;
+  setInputComposing(composing: boolean): void;
   reset(): void;
 }
 
@@ -138,6 +139,26 @@ export const EditableRoot = defineComponent({
       });
     };
     const mountTask = useNextTickTask(mount);
+    let inputComposing = false;
+    let reconnectPending = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    const requestMount = (): void => {
+      if (inputComposing) {
+        reconnectPending = true;
+        return;
+      }
+      mountTask.schedule();
+    };
+    const setInputComposing = (composing: boolean): void => {
+      inputComposing = composing;
+      if (composing || !reconnectPending || reconnectTimer !== null) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (!mounted || inputComposing) return;
+        reconnectPending = false;
+        mountTask.schedule();
+      }, 0);
+    };
 
     onMounted(() => {
       mounted = true;
@@ -145,6 +166,9 @@ export const EditableRoot = defineComponent({
     });
     onBeforeUnmount(() => {
       mounted = false;
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      reconnectPending = false;
       mountTask.cancel();
       connection?.disconnect();
       connection = null;
@@ -157,7 +181,7 @@ export const EditableRoot = defineComponent({
     });
     watch(
       [() => props.disabled, () => props.readonly, () => props.submitOnBlur, () => props.policies],
-      mountTask.schedule,
+      requestMount,
     );
 
     const slotProps = computed<EditableRootSlotProps>(() => Object.freeze({
@@ -167,6 +191,7 @@ export const EditableRoot = defineComponent({
     }));
     provide<EditableContext>(editableContextKey, {
       slotProps, root, preview, input, editTrigger, submitTrigger, cancelTrigger, multiline,
+      setInputComposing,
       reset,
     });
 
@@ -220,6 +245,7 @@ export const EditableInput = defineComponent({
   setup(props, { attrs }) {
     const context = useEditableContext('EditableInput');
     const participation = useNativeInputFormControl(context.input, { reset: context.reset });
+    const renderServerValue = typeof window === 'undefined';
     context.multiline.value = props.multiline;
     return (): VNodeChild => h(props.multiline ? 'textarea' : 'input', mergeProps(attrs, {
       ref: (element: unknown) => { context.input.value = element as HTMLInputElement | HTMLTextAreaElement | null; },
@@ -227,10 +253,12 @@ export const EditableInput = defineComponent({
       name: props.name,
       form: props.form,
       required: props.required,
-      value: context.slotProps.value.draft,
+      ...(renderServerValue ? { value: context.slotProps.value.draft } : {}),
       hidden: !context.slotProps.value.editing,
       disabled: context.slotProps.value.disabled,
       readonly: context.slotProps.value.readonly,
+      onCompositionstart: () => context.setInputComposing(true),
+      onCompositionend: () => context.setInputComposing(false),
       'data-scope': 'editable', 'data-part': 'input',
     }, participation.controlProps.value));
   },

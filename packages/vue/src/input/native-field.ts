@@ -10,10 +10,10 @@ import {
   type PropType,
   type VNodeChild,
 } from 'vue';
+import type { TextEditingState } from '@sectile/core/text';
 import { useNativeInputFormControl } from '../form/control.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
-
-const noPendingNativeFieldValue = Symbol('no-pending-native-field-value');
+import { captureNativeTextState } from './native-text-state.js';
 
 export interface NativeFieldConnection<Value> {
   getSnapshot(): { readonly revision: number };
@@ -86,46 +86,104 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
       const acceptedValue = shallowRef<Value | null | undefined>(
         controlled ? props.modelValue as Value | null : undefined,
       );
-      const pendingValue = shallowRef<Value | null | typeof noPendingNativeFieldValue>(noPendingNativeFieldValue);
+      const initialProjectedValue = controlled ? props.modelValue : props.defaultValue;
+      const projectedText = shallowRef(
+        initialProjectedValue === null || initialProjectedValue === undefined
+          ? ''
+          : config.formatValue(initialProjectedValue as Value),
+      );
+      const projectedNative = shallowRef(props.native);
+      const projectedDisabled = shallowRef(props.disabled);
+      const projectedReadonly = shallowRef(props.readonly);
+      const projectedRequired = shallowRef(props.required);
+      let inputComposing = false;
+      let reconnectPending = false;
+      let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-      const connect = (preserved?: Value | null): void => {
-        if (input.value === undefined) return;
+      const capture = (): PreservedNativeField<Value> | undefined => {
+        const target = connection.value;
+        const element = input.value;
+        if (target === undefined || element === undefined) return undefined;
+        return Object.freeze({
+          value: target.getValue(),
+          inputState: captureNativeTextState(element, target.getText()),
+        });
+      };
+      const connect = (preserved?: PreservedNativeField<Value>): void => {
+        const element = input.value;
+        if (element === undefined) return;
         connection.value?.disconnect();
-        const fieldOptions: NativeFieldFactoryOptions<Value, Policies> = {
-          input: input.value,
+        projectedNative.value = props.native;
+        projectedDisabled.value = props.disabled;
+        projectedReadonly.value = props.readonly;
+        projectedRequired.value = props.required;
+        const fieldOptions: NativeFieldFactoryOptions<Value, Policies> & {
+          readonly defaultInputState?: TextEditingState;
+        } = {
+          input: element,
           ...(props.policies === undefined ? {} : { policies: props.policies as Policies }),
           ...(controlled
             ? { value: acceptedValue.value as Value | null }
-            : { defaultValue: (preserved === undefined ? props.defaultValue : preserved) as Value | null }),
+            : {
+                defaultValue: (preserved === undefined
+                  ? props.defaultValue
+                  : preserved.value) as Value | null,
+              }),
+          ...(preserved === undefined ? {} : { defaultInputState: preserved.inputState }),
           disabled: props.disabled,
           readOnly: props.readonly,
           required: props.required,
           ...(props.label === undefined ? {} : { label: props.label }),
           native: props.native,
           onValueChange: (value) => {
-            if (controlled) pendingValue.value = value;
             emit('update:modelValue', value);
           },
           onUpdate: () => {
-            if (connection.value !== undefined) void connection.value.getSnapshot().revision;
+            const target = connection.value;
+            if (target === undefined) return;
+            void target.getSnapshot().revision;
+            projectedText.value = target.getText();
           },
         };
         connection.value = config.create(fieldOptions);
+        projectedText.value = connection.value.getText();
+      };
+      const requestConnect = (): void => {
+        if (inputComposing) {
+          reconnectPending = true;
+          return;
+        }
+        connect(capture());
+      };
+      const setInputComposing = (composing: boolean): void => {
+        inputComposing = composing;
+        if (composing || !reconnectPending || reconnectTimer !== null) return;
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          if (inputComposing) return;
+          reconnectPending = false;
+          connect(capture());
+        }, 0);
       };
 
       onMounted(() => connect());
-      onBeforeUnmount(() => connection.value?.disconnect());
+      onBeforeUnmount(() => {
+        if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+        reconnectPending = false;
+        connection.value?.disconnect();
+      });
       watch(() => props.modelValue, (value) => {
         if (!controlled || value === undefined || connection.value === undefined) return;
         const result = connection.value.syncControlledValues({ value: value as Value | null });
         if (!result.ok) throw new TypeError('Controlled native field synchronization failed.');
         acceptedValue.value = value as Value | null;
-        pendingValue.value = noPendingNativeFieldValue;
+        projectedText.value = connection.value.getText();
       });
       watch(
         [() => props.policies, () => props.disabled, () => props.readonly,
           () => props.required, () => props.label, () => props.native],
-        () => connect(connection.value?.getValue()),
+        requestConnect,
       );
 
       return (): VNodeChild => h('input', mergeProps(attrs, {
@@ -134,23 +192,27 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
         },
         'data-scope': config.scope,
         'data-part': 'input',
-        type: props.native && config.nativeInputType !== undefined ? config.nativeInputType : 'text',
-        inputmode: props.native ? undefined : config.inputMode,
-        placeholder: props.native ? undefined : config.placeholder,
-        disabled: props.disabled,
-        readonly: props.readonly,
-        required: props.required,
-        'aria-disabled': String(props.disabled),
-        'aria-readonly': String(props.readonly),
+        type: projectedNative.value && config.nativeInputType !== undefined
+          ? config.nativeInputType
+          : 'text',
+        inputmode: projectedNative.value ? undefined : config.inputMode,
+        placeholder: projectedNative.value ? undefined : config.placeholder,
+        disabled: projectedDisabled.value,
+        readonly: projectedReadonly.value,
+        required: projectedRequired.value,
+        'aria-disabled': String(projectedDisabled.value),
+        'aria-readonly': String(projectedReadonly.value),
         'aria-label': props.label,
-        value: (() => {
-          const value = controlled && pendingValue.value !== noPendingNativeFieldValue
-            ? pendingValue.value
-            : controlled ? acceptedValue.value : props.defaultValue;
-          return value === null || value === undefined ? '' : config.formatValue(value as Value);
-        })(),
+        onCompositionstart: () => setInputComposing(true),
+        onCompositionend: () => setInputComposing(false),
+        value: projectedText.value,
       }, participation.controlProps.value));
     },
   });
   return component as unknown as DefineComponent<NativeFieldPublicProps<Value, Policies>>;
+}
+
+interface PreservedNativeField<Value> {
+  readonly value: Value | null;
+  readonly inputState: TextEditingState;
 }

@@ -22,6 +22,7 @@ import {
   useCompositeFormControl,
 } from '../form/control.js';
 import { useNextTickTask } from '../internal/scheduled-task.js';
+import { captureNativeTextState } from '../input/native-text-state.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
 
@@ -51,6 +52,7 @@ interface DateRangeFieldContext {
   readonly slotProps: ComputedRef<DateRangeFieldRootSlotProps>;
   readonly startInput: ShallowRef<HTMLInputElement | null>;
   readonly endInput: ShallowRef<HTMLInputElement | null>;
+  setInputComposing(endpoint: 'start' | 'end', composing: boolean): void;
 }
 
 const contextKey = Symbol('SectileDateRangeField');
@@ -106,13 +108,21 @@ export const DateRangeFieldRoot = defineComponent({
     let connection: DateRangeFieldConnection | null = null;
 
     const refresh = (): void => { if (connection !== null) snapshot.value = connection.getSnapshot().state; };
-    const mount = (): void => {
+    const mount = (preserveNative = false): void => {
       if (!mounted || startInput.value === null || endInput.value === null) return;
+      const startState = preserveNative && connection !== null
+        ? captureNativeTextState(startInput.value, snapshot.value.start.inputState.snapshot.text)
+        : undefined;
+      const endState = preserveNative && connection !== null
+        ? captureNativeTextState(endInput.value, snapshot.value.end.inputState.snapshot.text)
+        : undefined;
       connection?.disconnect();
       connection = createDateRangeField({
         startInput: startInput.value,
         endInput: endInput.value,
         ...(controlled ? { value: props.modelValue as DateRange | null } : { defaultValue: snapshot.value.value }),
+        ...(startState === undefined ? {} : { defaultStartInputState: startState }),
+        ...(endState === undefined ? {} : { defaultEndInputState: endState }),
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         disabled: props.disabled,
         readOnly: props.readonly,
@@ -124,7 +134,28 @@ export const DateRangeFieldRoot = defineComponent({
       });
       refresh();
     };
-    const mountTask = useNextTickTask(mount);
+    const mountTask = useNextTickTask(() => mount(true));
+    const composingInputs = new Set<'start' | 'end'>();
+    let reconnectPending = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    const requestMount = (): void => {
+      if (composingInputs.size > 0) {
+        reconnectPending = true;
+        return;
+      }
+      mountTask.schedule();
+    };
+    const setInputComposing = (endpoint: 'start' | 'end', composing: boolean): void => {
+      if (composing) composingInputs.add(endpoint);
+      else composingInputs.delete(endpoint);
+      if (composingInputs.size > 0 || !reconnectPending || reconnectTimer !== null) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (!mounted || composingInputs.size > 0) return;
+        reconnectPending = false;
+        mountTask.schedule();
+      }, 0);
+    };
 
     onMounted(() => {
       mounted = true;
@@ -132,6 +163,10 @@ export const DateRangeFieldRoot = defineComponent({
     });
     onBeforeUnmount(() => {
       mounted = false;
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      reconnectPending = false;
+      composingInputs.clear();
       mountTask.cancel();
       connection?.disconnect();
       connection = null;
@@ -145,7 +180,7 @@ export const DateRangeFieldRoot = defineComponent({
     watch(
       [() => props.policies, () => props.disabled, () => props.readonly, () => props.required,
         () => props.startLabel, () => props.endLabel],
-      mountTask.schedule,
+      requestMount,
     );
 
     const slotProps = computed<DateRangeFieldRootSlotProps>(() => Object.freeze({
@@ -156,7 +191,7 @@ export const DateRangeFieldRoot = defineComponent({
       disabled: props.disabled,
       readonly: props.readonly,
     }));
-    provide<DateRangeFieldContext>(contextKey, { slotProps, startInput, endInput });
+    provide<DateRangeFieldContext>(contextKey, { slotProps, startInput, endInput, setInputComposing });
 
     return (): VNodeChild => h(Primitive, mergeProps(participation.controlProps.value, attrs, {
       as: props.as,
@@ -190,6 +225,8 @@ function createEndpointInput(endpoint: 'start' | 'end', name: string) {
         value: endpoint === 'start' ? context.slotProps.value.startText : context.slotProps.value.endText,
         disabled: context.slotProps.value.disabled,
         readonly: context.slotProps.value.readonly,
+        onCompositionstart: () => context.setInputComposing(endpoint, true),
+        onCompositionend: () => context.setInputComposing(endpoint, false),
         'aria-disabled': String(context.slotProps.value.disabled),
         'aria-readonly': String(context.slotProps.value.readonly),
         'data-scope': 'date-range-field',

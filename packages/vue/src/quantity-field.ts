@@ -7,6 +7,7 @@ import {
 } from '@sectile/dom/quantity-field';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useNativeInputFormControl } from './form/control.js';
+import { captureNativeTextState } from './input/native-text-state.js';
 
 export {
   createStandardQuantityPolicies,
@@ -34,6 +35,7 @@ interface Context {
   readonly label: ComputedRef<string | undefined>;
   registerInput(element?: HTMLInputElement): void;
   registerUnitSelect(element?: HTMLSelectElement): void;
+  setInputComposing(composing: boolean): void;
 }
 const key = Symbol('SectileQuantityFieldRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } };
@@ -71,25 +73,63 @@ export const QuantityFieldRoot = defineComponent({
       value.value = connection.value.getQuantity(); unit.value = connection.value.getDisplayUnit();
       text.value = connection.value.getText(); invalid.value = input.value?.getAttribute('aria-invalid') === 'true';
     };
-    const connect = (): void => {
+    const connect = (preserveNative = false): void => {
+      const element = input.value;
+      if (element === undefined) return;
+      const inputState = preserveNative && connection.value !== undefined
+        ? captureNativeTextState(element, connection.value.getText())
+        : undefined;
       connection.value?.disconnect();
-      if (input.value === undefined) return;
       connection.value = createQuantityField({
-        input: input.value, ...(select.value === undefined ? {} : { unitSelect: select.value }), policies: props.policies,
+        input: element, ...(select.value === undefined ? {} : { unitSelect: select.value }), policies: props.policies,
         ...(valueControlled ? { quantity: props.modelValue as QuantityValue | null } : { defaultQuantity: value.value }),
         ...(unitControlled ? { displayUnit: props.displayUnit as string } : { defaultDisplayUnit: unit.value }),
+        ...(inputState === undefined ? {} : { defaultInputState: inputState }),
         disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }),
         onQuantityChange: (details) => { value.value = details.value; emit('update:modelValue', details.value); emit('commit', details); },
         onDisplayUnitChange: (next) => { unit.value = next; emit('update:displayUnit', next); }, onUpdate: refresh,
       });
       refresh();
     };
+    let mounted = false;
+    let inputComposing = false;
+    let reconnectPending = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    const requestConnect = (): void => {
+      if (inputComposing) {
+        reconnectPending = true;
+        return;
+      }
+      connect(true);
+    };
+    const setInputComposing = (composing: boolean): void => {
+      inputComposing = composing;
+      if (composing || !reconnectPending || reconnectTimer !== null) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (!mounted || inputComposing) return;
+        reconnectPending = false;
+        connect(true);
+      }, 0);
+    };
     provide<Context>(key, {
       state, label: computed(() => props.label),
       registerInput: (element) => { input.value = element; }, registerUnitSelect: (element) => { select.value = element; },
+      setInputComposing,
     });
-    onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-    watch([() => props.policies, () => props.disabled, () => props.readonly, () => props.label], connect);
+    onMounted(() => {
+      mounted = true;
+      connect();
+    });
+    onBeforeUnmount(() => {
+      mounted = false;
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      reconnectPending = false;
+      connection.value?.disconnect();
+      connection.value = undefined;
+    });
+    watch([() => props.policies, () => props.disabled, () => props.readonly, () => props.label], requestConnect);
     watch([() => props.modelValue, () => props.displayUnit], () => {
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({
@@ -127,6 +167,8 @@ export const QuantityFieldInput = defineComponent({
       },
       type: 'text', name: props.name, form: props.form, required: props.required,
       disabled: root.state.value.disabled, readonly: root.state.value.readonly,
+      onCompositionstart: () => root.setInputComposing(true),
+      onCompositionend: () => root.setInputComposing(false),
       'aria-label': root.label.value, 'data-scope': 'quantity-field', 'data-part': 'input',
     }, participation.controlProps.value));
   },
