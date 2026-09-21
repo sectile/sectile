@@ -60,6 +60,81 @@ test('DOM text facade separates semantic edits from native IME ownership', async
   assert.equal(element.listeners.get('input')?.size ?? 0, 0);
 });
 
+test('DOM text flushes a committed Hangul syllable before a same-task next composition', async () => {
+  const element = new FakeTextElement();
+  const transitions = [];
+  const connection = createText({
+    element,
+    onTransition: ({ input }) => transitions.push(input.type),
+  });
+
+  element.emit('compositionstart', { data: '' });
+  element.value = '한';
+  element.selectionStart = 1;
+  element.selectionEnd = 1;
+  element.emit('input', { inputType: 'insertCompositionText' });
+  element.emit('compositionend', { data: '한' });
+
+  element.emit('compositionstart', { data: '' });
+
+  assert.deepEqual(transitions, [
+    'composition-start',
+    'composition-update',
+    'composition-commit',
+    'composition-start',
+  ]);
+  assert.equal(connection.getValue(), '한');
+  assert.notEqual(connection.getSnapshot().state.composition, null);
+
+  await Promise.resolve();
+
+  element.value = '한글';
+  element.selectionStart = 2;
+  element.selectionEnd = 2;
+  element.emit('input', { inputType: 'insertCompositionText' });
+  element.emit('compositionend', { data: '글' });
+  await Promise.resolve();
+
+  assert.equal(connection.getValue(), '한글');
+  assert.equal(connection.getSnapshot().state.composition, null);
+  connection.disconnect();
+});
+
+test('controlled DOM text uses live committed browser text as the next composition baseline', async () => {
+  const element = new FakeTextElement();
+  const changes = [];
+  const connection = createText({
+    element,
+    value: createTextEditingState('', selection(0)),
+    onValueChange: ({ value }) => changes.push(value),
+  });
+
+  element.emit('compositionstart', { data: '' });
+  element.value = '한';
+  element.selectionStart = 1;
+  element.selectionEnd = 1;
+  element.emit('input', { inputType: 'insertCompositionText' });
+  element.emit('compositionend', { data: '한' });
+  element.emit('compositionstart', { data: '' });
+
+  assert.equal(changes.at(-1).snapshot.text, '한');
+  assert.notEqual(changes.at(-1).composition, null);
+  assert.equal(element.value, '한');
+
+  element.value = '한글';
+  element.selectionStart = 2;
+  element.selectionEnd = 2;
+  element.emit('input', { inputType: 'insertCompositionText' });
+  element.emit('compositionend', { data: '글' });
+  await Promise.resolve();
+
+  assert.equal(changes.at(-1).snapshot.text, '한글');
+  assert.equal(changes.at(-1).composition, null);
+  assert.equal(element.value, '한글');
+  assert.equal(connection.getValue(), '');
+  connection.disconnect();
+});
+
 test('selectionless email input adopts autocomplete and native deletion results', () => {
   const initial = 'saved@example.com';
   const element = new FakeSelectionlessTextElement();
@@ -276,6 +351,34 @@ test('controlled DOM text leaves accepted native edits under browser ownership u
   assert.equal(element.selectionWrites, initialSelectionWrites);
 });
 
+test('same-task composition handoff stops if commit synchronously disconnects the binding', () => {
+  const element = new FakeTextElement();
+  const transitions = [];
+  let connection;
+  connection = createText({
+    element,
+    onTransition: ({ input }) => {
+      transitions.push(input.type);
+      if (input.type === 'composition-commit') connection.disconnect();
+    },
+  });
+
+  element.emit('compositionstart', { data: '' });
+  element.value = '한';
+  element.selectionStart = 1;
+  element.selectionEnd = 1;
+  element.emit('input', { inputType: 'insertCompositionText' });
+  element.emit('compositionend', { data: '한' });
+  element.emit('compositionstart', { data: '' });
+
+  assert.deepEqual(transitions, [
+    'composition-start',
+    'composition-update',
+    'composition-commit',
+  ]);
+  assert.equal(element.listeners.get('compositionstart')?.size ?? 0, 0);
+});
+
 test('disconnect invalidates a pending IME commit and releases native listeners', async () => {
   const element = new FakeTextElement();
   const transitions = [];
@@ -430,6 +533,46 @@ test('controlled DOM text carries one IME proposal across synchronous compositio
   assert.equal(changes.at(-1).composition, null);
   assert.equal(controller.getSnapshot().state.snapshot.text, '');
   assert.equal(unwrap(controller.syncControlledValues({ value: changes.at(-1) })).state.snapshot.text, '한');
+});
+
+test('controlled DOM text chains a committed Hangul proposal into the next composition before owner sync', () => {
+  const changes = [];
+  const controller = unwrap(createTextController({
+    value: createTextEditingState('', selection(0)),
+    onValueChange: ({ value }) => changes.push(value),
+  }));
+
+  assert.equal(controller.handleTextInput({
+    type: 'composition-start',
+    text: '',
+    startCodeUnitOffset: 0,
+    endCodeUnitOffset: 0,
+    selection: selection(0),
+  }).ok, true);
+  assert.equal(controller.handleTextInput({
+    type: 'composition-update',
+    text: '한',
+    selection: selection(1),
+  }).ok, true);
+  assert.equal(controller.handleTextInput({ type: 'composition-commit' }).ok, true);
+  assert.equal(changes.at(-1).snapshot.text, '한');
+  assert.equal(changes.at(-1).composition, null);
+
+  assert.equal(controller.handleTextInput({
+    type: 'composition-start',
+    text: '',
+    startCodeUnitOffset: 1,
+    endCodeUnitOffset: 1,
+    selection: selection(1),
+  }).ok, true);
+  assert.equal(controller.handleTextInput({
+    type: 'composition-update',
+    text: '글',
+    selection: selection(2),
+  }).ok, true);
+  assert.equal(controller.handleTextInput({ type: 'composition-commit' }).ok, true);
+  assert.equal(changes.at(-1).snapshot.text, '한글');
+  assert.equal(changes.at(-1).composition, null);
 });
 
 test('DOM text rejects unsupported input and malformed external state atomically', () => {

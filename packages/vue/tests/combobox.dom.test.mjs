@@ -185,6 +185,81 @@ test('Vue combobox keeps live Hangul composition under native input ownership', 
   host.remove();
 });
 
+test('Vue combobox preserves the first committed Hangul syllable when items change between compositions', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const items = ref([{ id: 'hangul', label: '한글' }]);
+  const inputValue = ref('');
+  const app = createApp({
+    render: () => h(ComboboxRoot, {
+      items: items.value,
+      inputValue: inputValue.value,
+      'onUpdate:inputValue': (value) => { inputValue.value = value; },
+    }, { default: () => h(ComboboxInput) }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const input = host.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+  const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  assert.equal(typeof valueDescriptor?.get, 'function');
+  assert.equal(typeof valueDescriptor?.set, 'function');
+  const frameworkWrites = [];
+  Object.defineProperty(input, 'value', {
+    configurable: true,
+    get: () => valueDescriptor.get.call(input),
+    set: (value) => {
+      frameworkWrites.push(value);
+      valueDescriptor.set.call(input, value);
+    },
+  });
+
+  input.dispatchEvent(compositionEvent('compositionstart', ''));
+  valueDescriptor.set.call(input, 'ㅎ');
+  input.setSelectionRange(1, 1);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  valueDescriptor.set.call(input, '한');
+  input.setSelectionRange(1, 1);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  input.dispatchEvent(compositionEvent('compositionend', '한'));
+
+  items.value = [
+    { id: 'hangul', label: '한글' },
+    { id: 'other', label: '기타' },
+  ];
+
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  input.dispatchEvent(compositionEvent('compositionstart', ''));
+  await Promise.resolve();
+  await nextTick();
+
+  assert.equal(inputValue.value, '한');
+  assert.equal(input.value, '한');
+  assert.equal(frameworkWrites.includes(''), false);
+
+  valueDescriptor.set.call(input, '한ㄱ');
+  input.setSelectionRange(2, 2);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  valueDescriptor.set.call(input, '한글');
+  input.setSelectionRange(2, 2);
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  input.dispatchEvent(compositionEvent('compositionend', '글'));
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+
+  await Promise.resolve();
+  await nextTick();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await nextTick();
+
+  assert.equal(inputValue.value, '한글');
+  assert.equal(input.value, '한글');
+  assert.equal(frameworkWrites.includes(''), false);
+
+  app.unmount();
+  host.remove();
+});
+
 test('Vue combobox preserves an active composition while its item domain changes', async () => {
   const host = document.createElement('div');
   document.body.append(host);

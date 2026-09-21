@@ -118,23 +118,30 @@ export class DOMTextElementBinding {
   }
 
   #startComposition(): void {
-    if (this.isComposing) return;
+    if (this.#compositionEnding) {
+      this.#compositionGeneration += 1;
+      this.#commitComposition();
+      if (!this.#active) return;
+    }
+    if (this.#composing) return;
     const snapshot = this.#getState().snapshot;
-    const selection = selectionFromElement(this.#element) ?? snapshot.selection;
+    const baseText = this.#element.value;
+    const selection = selectionFromElement(this.#element)
+      ?? (snapshot.text === baseText ? snapshot.selection : collapsedSelection(baseText.length));
     const start = selectionStart(selection);
     const end = selectionEnd(selection);
     this.#composing = true;
     this.#composition = {
-      baseText: snapshot.text,
+      baseText,
       startCodeUnitOffset: start,
       endCodeUnitOffset: end,
       coreActive: false,
-      lastText: snapshot.text.slice(start, end),
+      lastText: baseText.slice(start, end),
       lastSelection: selection,
     };
     this.#composition.coreActive = this.#dispatch({
       type: 'composition-start',
-      text: snapshot.text.slice(start, end),
+      text: baseText.slice(start, end),
       startCodeUnitOffset: start,
       endCodeUnitOffset: end,
       selection,
@@ -191,13 +198,17 @@ export class DOMTextElementBinding {
     const generation = ++this.#compositionGeneration;
     queueMicrotask(() => {
       if (!this.#active || generation !== this.#compositionGeneration) return;
-      const composition = this.#composition;
-      const accepted = composition?.coreActive === true
-        && this.#dispatch({ type: 'composition-commit' });
-      this.#composition = null;
-      this.#compositionEnding = false;
-      if (!accepted) this.render();
+      this.#commitComposition();
     });
+  }
+
+  #commitComposition(): void {
+    const composition = this.#composition;
+    const accepted = composition?.coreActive === true
+      && this.#dispatch({ type: 'composition-commit' });
+    this.#composition = null;
+    this.#compositionEnding = false;
+    if (!accepted) this.render();
   }
 }
 

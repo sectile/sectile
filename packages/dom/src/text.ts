@@ -248,7 +248,7 @@ class DOMTextController implements TextController {
   readonly #controlled: boolean;
   readonly #onValueChange: ((change: TextValueChangeDetails) => void) | undefined;
   readonly #runtime: SemanticController<TextEditingState, TextEvent, never>;
-  #pendingComposition: TextEditingState | null = null;
+  #pendingInputState: TextEditingState | null = null;
 
   public constructor(
     options: TextControllerOptions,
@@ -270,7 +270,7 @@ class DOMTextController implements TextController {
     if (error !== null) return { ok: false, error };
     const snapshot = this.#runtime.replace(normalizeTextEditingState(values.value));
     if (!snapshot.ok) return snapshot;
-    this.#pendingComposition = snapshot.value.state.composition === null
+    this.#pendingInputState = snapshot.value.state.composition === null
       ? null
       : snapshot.value.state;
     return snapshot;
@@ -288,11 +288,11 @@ class DOMTextController implements TextController {
   }
 
   public reduce(state: TextEditingState, event: TextEvent) {
-    return applyTextEvent(this.#controlled && this.#pendingComposition !== null ? this.#pendingComposition : state, event);
+    return applyTextEvent(this.#controlled && this.#pendingInputState !== null ? this.#pendingInputState : state, event);
   }
 
   public reconcile(previous: TextEditingState, proposed: TextEditingState): Result<TextEditingState> {
-    if (this.#controlled) this.#pendingComposition = proposed.composition === null ? null : proposed;
+    if (this.#controlled) this.#pendingInputState = proposed;
     return normalizeTextEditingState(this.#controlled ? previous : proposed);
   }
 

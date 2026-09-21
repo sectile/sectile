@@ -577,7 +577,7 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
 
   public reconcile(previous: ComboboxState<ID>, proposed: ComboboxState<ID>): Result<ComboboxState<ID>> {
     if (this.#inputStateControlled && this.#handlingTextEvent) {
-      this.#pendingInputState = proposed.text.composition === null ? null : proposed.text;
+      this.#pendingInputState = proposed.text;
     }
     return controlledState(
       this.#domain,

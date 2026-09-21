@@ -156,6 +156,42 @@ test('DOM combobox commits consecutive native IME results once each', async () =
   assert.equal(input.value, '한글');
 });
 
+test('controlled DOM combobox connection preserves same-task Hangul composition handoff', async () => {
+  const input = new FakeTextElement();
+  const changes = [];
+  const connection = createCombobox({
+    items: [{ id: 'hangul', label: '한글' }],
+    input,
+    inputState: createTextEditingState('', selection(0)),
+    onInputStateChange: ({ value }) => changes.push(value),
+  });
+
+  input.emit('compositionstart', { data: '' });
+  input.value = '한';
+  input.selectionStart = 1;
+  input.selectionEnd = 1;
+  input.emit('input', { inputType: 'insertCompositionText' });
+  input.emit('compositionend', { data: '한' });
+  input.emit('compositionstart', { data: '' });
+
+  assert.equal(changes.at(-1).snapshot.text, '한');
+  assert.notEqual(changes.at(-1).composition, null);
+  assert.equal(input.value, '한');
+
+  input.value = '한글';
+  input.selectionStart = 2;
+  input.selectionEnd = 2;
+  input.emit('input', { inputType: 'insertCompositionText' });
+  input.emit('compositionend', { data: '글' });
+  await Promise.resolve();
+
+  assert.equal(changes.at(-1).snapshot.text, '한글');
+  assert.equal(changes.at(-1).composition, null);
+  assert.equal(input.value, '한글');
+  assert.equal(connection.getSnapshot().state.text.snapshot.text, '');
+  connection.disconnect();
+});
+
 test('DOM combobox leaves live native IME text under browser ownership', async () => {
   const input = new TrackingTextElement();
   let connection;
@@ -208,6 +244,50 @@ test('controlled DOM combobox carries IME proposals across synchronous compositi
   assert.equal(controller.getSnapshot().state.text.snapshot.text, '');
   const synchronized = unwrap(controller.syncControlledValues({ inputState: changes.at(-1) }));
   assert.equal(synchronized.state.text.snapshot.text, '한');
+});
+
+test('controlled DOM combobox chains a committed Hangul proposal into the next composition before owner sync', () => {
+  const changes = [];
+  const controller = unwrap(createComboboxController({
+    domain: createSequence(['hangul']),
+    labels: new Map([['hangul', '한글']]),
+    inputState: createTextEditingState('', selection(0)),
+    onInputStateChange: ({ value }) => changes.push(value),
+  }));
+
+  assert.equal(controller.handleTextInput({
+    type: 'composition-start',
+    text: '',
+    startCodeUnitOffset: 0,
+    endCodeUnitOffset: 0,
+    selection: selection(0),
+  }).ok, true);
+  assert.equal(controller.handleTextInput({
+    type: 'composition-update',
+    text: '한',
+    selection: selection(1),
+  }).ok, true);
+  assert.equal(controller.handleTextInput({ type: 'composition-commit' }).ok, true);
+  assert.equal(changes.at(-1).snapshot.text, '한');
+  assert.equal(changes.at(-1).composition, null);
+
+  const nextStart = controller.handleTextInput({
+    type: 'composition-start',
+    text: '',
+    startCodeUnitOffset: 1,
+    endCodeUnitOffset: 1,
+    selection: selection(1),
+  });
+  assert.equal(nextStart.ok, true);
+
+  assert.equal(controller.handleTextInput({
+    type: 'composition-update',
+    text: '글',
+    selection: selection(2),
+  }).ok, true);
+  assert.equal(controller.handleTextInput({ type: 'composition-commit' }).ok, true);
+  assert.equal(changes.at(-1).snapshot.text, '한글');
+  assert.equal(changes.at(-1).composition, null);
 });
 
 test('DOM combobox adopts native word deletion through the shared text binding', () => {
