@@ -200,7 +200,10 @@ export function createComboboxController<ID extends StableID>(
     initial,
     reducer: (state, event) => controller.reduce(state, event),
     reconcile: (previous, proposed) => controller.reconcile(previous, proposed),
-    notify: comboboxNotifiers(options),
+    notify: [
+      (previous, proposed) => controller.notifyInput(previous, proposed),
+      ...comboboxNotifiers(options),
+    ],
     toEffect: toComboboxEffect,
     interaction: options,
     interactionIntent: comboboxIntent,
@@ -475,6 +478,7 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
   readonly #options: ComboboxControllerOptions<ID>;
   readonly #runtime: SemanticController<ComboboxState<ID>, ComboboxEvent<ID>, ComboboxEffect<ID>>;
   #pendingInputState: TextEditingState | null = null;
+  #inputNotificationBase: TextEditingState | null = null;
   #handlingTextEvent = false;
 
   public constructor(
@@ -527,6 +531,7 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
     });
     const snapshot = this.#runtime.replace(state);
     if (!snapshot.ok) return snapshot;
+    this.#inputNotificationBase = null;
     if (this.#inputStateControlled) {
       const inputState = values.inputState as TextEditingState;
       this.#pendingInputState = inputState.composition === null ? null : inputState;
@@ -577,6 +582,7 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
 
   public reconcile(previous: ComboboxState<ID>, proposed: ComboboxState<ID>): Result<ComboboxState<ID>> {
     if (this.#inputStateControlled && this.#handlingTextEvent) {
+      this.#inputNotificationBase = this.#pendingInputState ?? previous.text;
       this.#pendingInputState = proposed.text;
     }
     return controlledState(
@@ -590,6 +596,18 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
     );
   }
 
+  public notifyInput(previous: ComboboxState<ID>, proposed: ComboboxState<ID>): void {
+    const previousValue = this.#inputStateControlled && this.#handlingTextEvent
+      ? this.#inputNotificationBase ?? previous.text
+      : previous.text;
+    this.#inputNotificationBase = null;
+    if (!sameTextEditingState(previousValue, proposed.text)) {
+      this.#options.onInputStateChange?.(Object.freeze({
+        value: proposed.text,
+        previousValue,
+      }));
+    }
+  }
 }
 
 function comboboxNotifiers<ID extends StableID>(
@@ -600,14 +618,6 @@ function comboboxNotifiers<ID extends StableID>(
       const previousValue = selectedValue(previous);
       const value = selectedValue(proposed);
       if (previousValue !== value) options.onValueChange?.(Object.freeze({ value, previousValue }));
-    },
-    (previous, proposed) => {
-      if (!sameTextEditingState(previous.text, proposed.text)) {
-        options.onInputStateChange?.(Object.freeze({
-          value: proposed.text,
-          previousValue: previous.text,
-        }));
-      }
     },
     (previous, proposed) => {
       if (previous.popupOpen !== proposed.popupOpen) {

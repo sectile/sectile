@@ -36,6 +36,7 @@ export class DOMTextElementBinding {
   #compositionEnding = false;
   #composition: ActiveComposition | null = null;
   #compositionGeneration = 0;
+  #lastObservedText = '';
 
   public constructor(options: DOMTextElementBindingOptions) {
     this.#element = options.element;
@@ -79,6 +80,7 @@ export class DOMTextElementBinding {
     if (!this.#active || this.isComposing) return;
     const snapshot = this.#getState().snapshot;
     if (this.#element.value !== snapshot.text) this.#element.value = snapshot.text;
+    this.#lastObservedText = this.#element.value;
     if (supportsSelection(this.#element)) {
       const selection = selectionFromElement(this.#element);
       if (selection !== null && sameSelection(selection, snapshot.selection)) return;
@@ -101,11 +103,11 @@ export class DOMTextElementBinding {
   }
 
   #reconcileNativeInput(inputType: string): void {
-    const snapshot = this.#getState().snapshot;
-    if (this.#element.value === snapshot.text) return;
-    const replacement = deriveNativeReplacement(snapshot.text, this.#element.value);
+    const currentText = this.#element.value;
+    if (currentText === this.#lastObservedText) return;
+    const replacement = deriveNativeReplacement(this.#lastObservedText, currentText);
     const selection = selectionFromElement(this.#element)
-      ?? collapsedSelection(nativeSelectionFallback(inputType, replacement, this.#element.value.length));
+      ?? collapsedSelection(nativeSelectionFallback(inputType, replacement, currentText.length));
     const accepted = this.#dispatch({
       type: 'input',
       inputType,
@@ -114,7 +116,8 @@ export class DOMTextElementBinding {
       endCodeUnitOffset: replacement.endCodeUnitOffset,
       selection,
     });
-    if (!accepted) this.render();
+    if (accepted) this.#lastObservedText = this.#element.value;
+    else this.render();
   }
 
   #startComposition(): void {
@@ -126,6 +129,7 @@ export class DOMTextElementBinding {
     if (this.#composing) return;
     const snapshot = this.#getState().snapshot;
     const baseText = this.#element.value;
+    this.#lastObservedText = baseText;
     const selection = selectionFromElement(this.#element)
       ?? (snapshot.text === baseText ? snapshot.selection : collapsedSelection(baseText.length));
     const start = selectionStart(selection);
@@ -208,7 +212,8 @@ export class DOMTextElementBinding {
       && this.#dispatch({ type: 'composition-commit' });
     this.#composition = null;
     this.#compositionEnding = false;
-    if (!accepted) this.render();
+    if (accepted) this.#lastObservedText = this.#element.value;
+    else this.render();
   }
 }
 

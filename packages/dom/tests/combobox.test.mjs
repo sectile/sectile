@@ -192,6 +192,58 @@ test('controlled DOM combobox connection preserves same-task Hangul composition 
   connection.disconnect();
 });
 
+test('controlled DOM combobox chains native insertions before owner synchronization', () => {
+  const input = new FakeTextElement();
+  const proposals = [];
+  const connection = createCombobox({
+    items: [{ id: 'value', label: 'abc' }],
+    input,
+    inputState: createTextEditingState('', selection(0)),
+    onInputStateChange: ({ value }) => proposals.push(value),
+  });
+
+  for (const [value, offset] of [['a', 1], ['ab', 2], ['abc', 3]]) {
+    input.value = value;
+    input.selectionStart = offset;
+    input.selectionEnd = offset;
+    input.emit('input', { inputType: 'insertText' });
+    assert.equal(input.value, value);
+    assert.equal(proposals.at(-1).snapshot.text, value);
+  }
+
+  assert.equal(connection.getSnapshot().state.text.snapshot.text, '');
+  const synchronized = connection.syncControlledValues({ inputState: proposals.at(-1) });
+  assert.equal(synchronized.ok, true);
+  assert.equal(input.value, 'abc');
+  connection.disconnect();
+});
+
+test('controlled DOM combobox chains native deletions before owner synchronization', () => {
+  const input = new FakeTextElement();
+  const proposals = [];
+  const connection = createCombobox({
+    items: [{ id: 'value', label: 'abc' }],
+    input,
+    inputState: createTextEditingState('abc', selection(3)),
+    onInputStateChange: ({ value }) => proposals.push(value),
+  });
+
+  for (const [value, offset] of [['ab', 2], ['a', 1], ['', 0]]) {
+    input.value = value;
+    input.selectionStart = offset;
+    input.selectionEnd = offset;
+    input.emit('input', { inputType: 'deleteContentBackward' });
+    assert.equal(input.value, value);
+    assert.equal(proposals.at(-1).snapshot.text, value);
+  }
+
+  assert.equal(connection.getSnapshot().state.text.snapshot.text, 'abc');
+  const synchronized = connection.syncControlledValues({ inputState: proposals.at(-1) });
+  assert.equal(synchronized.ok, true);
+  assert.equal(input.value, '');
+  connection.disconnect();
+});
+
 test('DOM combobox leaves live native IME text under browser ownership', async () => {
   const input = new TrackingTextElement();
   let connection;

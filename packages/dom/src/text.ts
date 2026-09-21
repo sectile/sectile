@@ -249,6 +249,7 @@ class DOMTextController implements TextController {
   readonly #onValueChange: ((change: TextValueChangeDetails) => void) | undefined;
   readonly #runtime: SemanticController<TextEditingState, TextEvent, never>;
   #pendingInputState: TextEditingState | null = null;
+  #notificationBase: TextEditingState | null = null;
 
   public constructor(
     options: TextControllerOptions,
@@ -270,6 +271,7 @@ class DOMTextController implements TextController {
     if (error !== null) return { ok: false, error };
     const snapshot = this.#runtime.replace(normalizeTextEditingState(values.value));
     if (!snapshot.ok) return snapshot;
+    this.#notificationBase = null;
     this.#pendingInputState = snapshot.value.state.composition === null
       ? null
       : snapshot.value.state;
@@ -292,13 +294,20 @@ class DOMTextController implements TextController {
   }
 
   public reconcile(previous: TextEditingState, proposed: TextEditingState): Result<TextEditingState> {
-    if (this.#controlled) this.#pendingInputState = proposed;
+    if (this.#controlled) {
+      this.#notificationBase = this.#pendingInputState ?? previous;
+      this.#pendingInputState = proposed;
+    }
     return normalizeTextEditingState(this.#controlled ? previous : proposed);
   }
 
   public notify(previous: TextEditingState, proposed: TextEditingState): void {
-    if (!sameTextEditingState(previous, proposed)) {
-      this.#onValueChange?.(Object.freeze({ value: proposed, previousValue: previous }));
+    const previousValue = this.#controlled
+      ? this.#notificationBase ?? previous
+      : previous;
+    this.#notificationBase = null;
+    if (!sameTextEditingState(previousValue, proposed)) {
+      this.#onValueChange?.(Object.freeze({ value: proposed, previousValue }));
     }
   }
 }

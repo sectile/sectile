@@ -351,6 +351,82 @@ test('controlled DOM text leaves accepted native edits under browser ownership u
   assert.equal(element.selectionWrites, initialSelectionWrites);
 });
 
+test('controlled DOM text chains native insertions before owner synchronization', () => {
+  const element = new FakeTextElement();
+  const proposals = [];
+  const connection = createText({
+    element,
+    value: createTextEditingState('', selection(0)),
+    onValueChange: ({ value }) => { proposals.push(value); },
+  });
+
+  for (const [value, offset] of [['a', 1], ['ab', 2], ['abc', 3]]) {
+    element.value = value;
+    element.selectionStart = offset;
+    element.selectionEnd = offset;
+    element.emit('input', { inputType: 'insertText' });
+    assert.equal(element.value, value);
+    assert.equal(proposals.at(-1).snapshot.text, value);
+  }
+
+  assert.equal(connection.getValue(), '');
+  const synchronized = connection.syncControlledValues({ value: proposals.at(-1) });
+  assert.equal(synchronized.ok, true);
+  assert.equal(connection.getValue(), 'abc');
+  assert.equal(element.value, 'abc');
+});
+
+test('controlled DOM text publishes a native edit that returns to the accepted owner value', () => {
+  const element = new FakeTextElement();
+  const proposals = [];
+  createText({
+    element,
+    value: createTextEditingState('', selection(0)),
+    onValueChange: ({ value }) => { proposals.push(value.snapshot.text); },
+  });
+
+  for (const [value, inputType] of [
+    ['a', 'insertText'],
+    ['ab', 'insertText'],
+    ['abc', 'insertText'],
+    ['ab', 'deleteContentBackward'],
+    ['a', 'deleteContentBackward'],
+    ['', 'deleteContentBackward'],
+  ]) {
+    element.value = value;
+    element.selectionStart = value.length;
+    element.selectionEnd = value.length;
+    element.emit('input', { inputType });
+  }
+
+  assert.deepEqual(proposals, ['a', 'ab', 'abc', 'ab', 'a', '']);
+});
+
+test('controlled DOM text chains native deletions before owner synchronization', () => {
+  const element = new FakeTextElement();
+  const proposals = [];
+  const connection = createText({
+    element,
+    value: createTextEditingState('abc', selection(3)),
+    onValueChange: ({ value }) => { proposals.push(value); },
+  });
+
+  for (const [value, offset] of [['ab', 2], ['a', 1], ['', 0]]) {
+    element.value = value;
+    element.selectionStart = offset;
+    element.selectionEnd = offset;
+    element.emit('input', { inputType: 'deleteContentBackward' });
+    assert.equal(element.value, value);
+    assert.equal(proposals.at(-1).snapshot.text, value);
+  }
+
+  assert.equal(connection.getValue(), 'abc');
+  const synchronized = connection.syncControlledValues({ value: proposals.at(-1) });
+  assert.equal(synchronized.ok, true);
+  assert.equal(connection.getValue(), '');
+  assert.equal(element.value, '');
+});
+
 test('same-task composition handoff stops if commit synchronously disconnects the binding', () => {
   const element = new FakeTextElement();
   const transitions = [];

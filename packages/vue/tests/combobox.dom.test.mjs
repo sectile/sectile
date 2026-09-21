@@ -127,6 +127,48 @@ test('Vue combobox clears a controlled value removed from its item domain', asyn
   host.remove();
 });
 
+test('controlled Vue combobox chains rapid native insertions and deletions before render', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const inputValue = ref('');
+  const app = createApp({
+    render: () => h(ComboboxRoot, {
+      items: [{ id: 'value', label: 'abc' }],
+      inputValue: inputValue.value,
+      'onUpdate:inputValue': (value) => { inputValue.value = value; },
+    }, { default: () => h(ComboboxInput) }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const input = host.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+  const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  assert.equal(typeof valueDescriptor?.set, 'function');
+
+  for (const [value, inputType] of [
+    ['a', 'insertText'],
+    ['ab', 'insertText'],
+    ['abc', 'insertText'],
+    ['ab', 'deleteContentBackward'],
+    ['a', 'deleteContentBackward'],
+    ['', 'deleteContentBackward'],
+  ]) {
+    valueDescriptor.set.call(input, value);
+    input.setSelectionRange(value.length, value.length);
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType }));
+    assert.equal(input.value, value);
+    assert.equal(inputValue.value, value);
+  }
+
+  await nextTick();
+  assert.equal(input.value, '');
+  assert.equal(inputValue.value, '');
+
+  app.unmount();
+  host.remove();
+});
+
 test('Vue combobox keeps live Hangul composition under native input ownership', async () => {
   const host = document.createElement('div');
   document.body.append(host);
