@@ -1,5 +1,20 @@
 # @sectile/vue
 
+## 0.18.2
+
+### Changes
+
+- fix(vue): preserve combobox native editing across policy updates (b6898658)
+- fix(dom): chain controlled native text edits (9701ce2f)
+- fix(dom): preserve consecutive IME composition handoff (06da090f)
+- fix(vue): preserve native editing sessions (31dabe51)
+- refactor(vue): group overlay presence and input owners (3f128c9f)
+- refactor(vue): group Virtual host responsibilities (9ad8ed5d)
+- refactor(vue): separate Tabular host responsibilities (c116f615)
+- refactor(vue): group Temporal host responsibilities (34f4de9a)
+- refactor(vue): separate Form host responsibilities (e2490f57)
+- refactor(temporal): separate values fields and pickers (0917e5f6)
+
 ## 0.18.1
 
 ### Changes

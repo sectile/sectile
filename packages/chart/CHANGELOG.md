@@ -1,5 +1,11 @@
 # @sectile/chart
 
+## 0.15.6
+
+### Changes
+
+- refactor(chart): group domain modules by responsibility (00b46a94)
+
 ## 0.15.5
 
 ### Changes

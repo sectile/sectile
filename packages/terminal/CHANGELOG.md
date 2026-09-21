@@ -1,5 +1,13 @@
 # @sectile/terminal
 
+## 0.14.9
+
+### Changes
+
+- refactor(terminal): group overlay choice and scalar support (e7b00a69)
+- refactor(terminal): group Temporal host responsibilities (6382c766)
+- refactor(terminal): separate text input foundations (8d94a581)
+
 ## 0.14.8
 
 ### Changes

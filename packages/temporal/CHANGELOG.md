@@ -1,5 +1,11 @@
 # @sectile/temporal
 
+## 0.14.9
+
+### Changes
+
+- refactor(temporal): separate values fields and pickers (0917e5f6)
+
 ## 0.14.8
 
 ### Changes

@@ -1,5 +1,22 @@
 # @sectile/dom
 
+## 0.18.2
+
+### Changes
+
+- fix(dom): chain controlled native text edits (9701ce2f)
+- fix(dom): preserve consecutive IME composition handoff (06da090f)
+- fix(dom): preserve native text editing ownership (c23c892f)
+- refactor(dom): group scalar and interaction support (1342af07)
+- refactor(dom): group identity choice and focus helpers (0a5eb9eb)
+- refactor(dom): separate text input foundations (243ca87e)
+- refactor(dom): group overlay infrastructure by responsibility (f847030e)
+- refactor(dom): separate Virtual host responsibilities (1e0b0dc5)
+- refactor(dom): group Tabular host responsibilities (906549b9)
+- refactor(dom): split Form host responsibilities (1d6f7630)
+- refactor(dom): group Temporal adapters by responsibility (6a90a2fe)
+- refactor(dom): group Chart implementation by responsibility (49cbf994)
+
 ## 0.18.1
 
 ### Changes

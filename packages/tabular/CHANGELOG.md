@@ -1,5 +1,11 @@
 # @sectile/tabular
 
+## 0.16.2
+
+### Changes
+
+- refactor(tabular): group model source and profile ownership (f515bd87)
+
 ## 0.16.1
 
 ### Changes

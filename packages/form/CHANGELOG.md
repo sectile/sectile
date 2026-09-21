@@ -1,5 +1,13 @@
 # @sectile/form
 
+## 0.14.9
+
+### Changes
+
+- refactor(form): separate state storage and transitions (636dc2e4)
+- refactor(form): separate lower state contracts (e84209e1)
+- refactor(form): isolate path and value construction (ad65b05f)
+
 ## 0.14.8
 
 ### Changes

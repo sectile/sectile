@@ -1,5 +1,11 @@
 # @sectile/virtual
 
+## 0.15.5
+
+### Changes
+
+- refactor(virtual): group layout and index ownership (ba5c495b)
+
 ## 0.15.4
 
 ### Changes
