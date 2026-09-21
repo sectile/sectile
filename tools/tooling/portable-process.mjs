@@ -19,24 +19,30 @@ const packageManagerCLIPaths = Object.freeze({
 
 export function resolvePortableCommand(command, args = [], options = {}) {
   const platform = options.platform ?? process.platform;
-  if (platform !== 'win32' || packageManagerCLIPaths[command] === undefined) {
+  const cliPaths = packageManagerCLIPaths[command];
+  if (cliPaths === undefined) {
     return Object.freeze({ command, args: Object.freeze([...args]) });
   }
 
   const environment = options.env ?? process.env;
   const node = environment.npm_node_execpath ?? options.nodePath ?? process.execPath;
   const activeManager = environment.npm_config_user_agent?.split('/')[0];
-  let cli = activeManager === command ? environment.npm_execpath : undefined;
-  if (cli === undefined) {
-    const exists = options.exists ?? existsSync;
-    const searchRoots = [
-      win32.dirname(node),
-      ...(environment.Path ?? environment.PATH ?? '').split(win32.delimiter).filter(Boolean),
-    ];
-    cli = [...new Set(searchRoots)]
-      .flatMap((root) => packageManagerCLIPaths[command].map((path) => win32.join(root, path)))
-      .find((path) => exists(path));
+  const activeCLI = activeManager === command ? environment.npm_execpath : undefined;
+  if (activeCLI !== undefined) {
+    return Object.freeze({ command: node, args: Object.freeze([activeCLI, ...args]) });
   }
+  if (platform !== 'win32') {
+    return Object.freeze({ command, args: Object.freeze([...args]) });
+  }
+
+  const exists = options.exists ?? existsSync;
+  const searchRoots = [
+    win32.dirname(node),
+    ...(environment.Path ?? environment.PATH ?? '').split(win32.delimiter).filter(Boolean),
+  ];
+  const cli = [...new Set(searchRoots)]
+    .flatMap((root) => cliPaths.map((path) => win32.join(root, path)))
+    .find((path) => exists(path));
   if (cli === undefined) {
     throw new Error(
       `Cannot locate the ${command} JavaScript CLI for Windows. Run this script through ${command} or expose its installation directory on PATH.`,

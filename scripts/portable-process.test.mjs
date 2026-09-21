@@ -27,7 +27,25 @@ test('Windows package-manager shims resolve to JavaScript CLIs', () => {
   assert.deepEqual(npm, { command: node, args: [npmCLI, 'pack'] });
 });
 
-test('native commands remain direct on macOS and Windows', () => {
+test('active package-manager CLIs are reused without relying on PATH', () => {
+  const node = '/runtime/node';
+  const cli = '/runtime/pnpm.cjs';
+  for (const platform of ['linux', 'darwin']) {
+    assert.deepEqual(resolvePortableCommand('pnpm', ['verify'], {
+      env: {
+        npm_config_user_agent: 'pnpm/11.24.0 npm/? node/v24.21.0 linux x64',
+        npm_execpath: cli,
+        npm_node_execpath: node,
+      },
+      platform,
+    }), {
+      command: node,
+      args: [cli, 'verify'],
+    });
+  }
+});
+
+test('commands without an active package-manager CLI remain direct', () => {
   assert.deepEqual(resolvePortableCommand('pnpm', ['verify'], { platform: 'darwin' }), {
     command: 'pnpm',
     args: ['verify'],
