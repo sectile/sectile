@@ -44,7 +44,53 @@ test('DOM spin button steps from the accepted value instead of an invalid draft'
   assert.notEqual(input.value, 'NaN');
 });
 
-function keyboard(key) { return { key, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} }; }
+test('controlled DOM spin button leaves native draft text until owner settlement', () => {
+  const input = new FakeInput();
+  const proposals = [];
+  const spin = createSpinButton({
+    input,
+    min: '0',
+    max: '10',
+    step: '1',
+    value: '0',
+    draft: null,
+    onDraftChange: (draft) => proposals.push(draft),
+  });
+
+  input.value = '1';
+  input.emit('input', { inputType: 'insertText', isComposing: false });
+
+  assert.deepEqual(proposals, ['1']);
+  assert.equal(spin.getSnapshot().state.draft, null);
+  assert.equal(input.value, '1');
+
+  assert.equal(spin.syncControlledValues({ value: '0', draft: null }).ok, true);
+  assert.equal(input.value, '0');
+});
+
+test('DOM spin button does not intercept composition commit keys', () => {
+  const input = new FakeInput();
+  const spin = createSpinButton({ input, min: '0', max: '10', step: '1', defaultValue: '0' });
+  let prevented = false;
+
+  input.emit('compositionstart', {});
+  input.value = '1';
+  input.emit('input', { inputType: 'insertCompositionText', isComposing: true });
+  input.emit('keydown', keyboard('Enter', {
+    isComposing: true,
+    preventDefault() { prevented = true; },
+  }));
+
+  assert.equal(prevented, false);
+  assert.equal(spin.getSnapshot().state.draft, null);
+  assert.equal(input.value, '1');
+
+  input.emit('compositionend', {});
+  assert.equal(spin.getSnapshot().state.draft, '1');
+  assert.equal(input.value, '1');
+});
+
+function keyboard(key, overrides = {}) { return { key, altKey: false, ctrlKey: false, metaKey: false, isComposing: false, preventDefault() {}, ...overrides }; }
 class FakeInput {
   attributes = new Map(); listeners = new Map(); value = ''; disabled = false; readOnly = false;
   addEventListener(type, listener) { const listeners = this.listeners.get(type) ?? new Set(); listeners.add(listener); this.listeners.set(type, listeners); }

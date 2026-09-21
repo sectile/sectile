@@ -19,6 +19,54 @@ test('DOM color picker preserves invalid drafts and controlled values', () => {
   picker.syncControlledValues({ value: '#ff0000' }); assert.equal(picker.getCSSColor(), 'rgb(255, 0, 0)'); picker.disconnect();
 });
 
+test('controlled DOM color text keeps native draft until owner settlement', () => {
+  const root = new FakeElement();
+  const input = new FakeInput();
+  const proposals = [];
+  const picker = createColorPicker({
+    root,
+    value: '#000000',
+    draft: null,
+    onDraftChange: (draft) => proposals.push(draft),
+  });
+  picker.setTextInputAttributes(input);
+
+  input.value = '#ff0000';
+  input.dispatch('input', { isComposing: false });
+
+  assert.deepEqual(proposals, ['#ff0000']);
+  assert.equal(picker.getSnapshot().state.draft, null);
+  assert.equal(input.value, '#ff0000');
+
+  assert.equal(picker.syncControlledValues({ value: '#000000', draft: null }).ok, true);
+  assert.equal(input.value, '#000000');
+  picker.disconnect();
+});
+
+test('DOM color text defers commit shortcuts until composition ends', () => {
+  const root = new FakeElement();
+  const input = new FakeInput();
+  const picker = createColorPicker({ root, defaultValue: '#000000' });
+  picker.setTextInputAttributes(input);
+  let prevented = false;
+
+  input.dispatch('compositionstart');
+  input.value = '#ff0000';
+  input.dispatch('input', { isComposing: true });
+  input.dispatch('keydown', {
+    key: 'Enter',
+    isComposing: true,
+    preventDefault() { prevented = true; },
+  });
+
+  assert.equal(prevented, false);
+  assert.equal(input.value, '#ff0000');
+
+  input.dispatch('compositionend');
+  assert.equal(input.value, '#ff0000');
+  picker.disconnect();
+});
+
 test('DOM color picker projects OKLCH without changing its stored RGBA value', () => {
   const root = new FakeElement(); const picker = createColorPicker({ root, defaultValue: '#33669980' });
   const before = picker.getSnapshot().state.value;

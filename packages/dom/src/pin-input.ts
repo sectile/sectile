@@ -42,6 +42,7 @@ class DOMPinInputConnection implements PinInputConnection {
   readonly #options: PinInputOptions;
   readonly #runtime: SemanticController<PinInputState, PinInputEvent, PinInputEffect>;
   readonly #controlled: boolean;
+  readonly #composing = new Set<HTMLInputElement>();
   #active = true;
   constructor(options: PinInputOptions, runtime: SemanticController<PinInputState, PinInputEvent, PinInputEffect>, controlled: boolean) {
     this.#options = options; this.#runtime = runtime; this.#controlled = controlled;
@@ -50,19 +51,90 @@ class DOMPinInputConnection implements PinInputConnection {
     options.inputs.forEach((input, index) => {
       input.maxLength = 1; input.inputMode = 'numeric'; input.disabled = options.disabled === true; input.readOnly = options.readOnly === true;
       input.setAttribute('aria-label', `${options.label ?? 'PIN'} digit ${index + 1} of ${options.inputs.length}`);
+      let ignoreNextCompositionInput = false;
+      const commitNativeValue = (): void => {
+        const character = Array.from(input.value).at(-1);
+        if (character !== undefined) this.#handleNativeInput(input, { type: 'input', value: character });
+      };
       const focus = (): void => { this.handleEvent({ type: 'focus', index }); };
-      const keydown = (event: KeyboardEvent): void => { const semantic = event.key === 'ArrowLeft' ? 'previous' : event.key === 'ArrowRight' ? 'next' : event.key === 'Backspace' ? 'backspace' : event.key === 'Delete' ? 'delete' : null; if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
-      const changed = (): void => { const character = Array.from(input.value).at(-1); if (character !== undefined) this.handleEvent({ type: 'input', value: character }); };
-      input.addEventListener('focus', focus); input.addEventListener('keydown', keydown); input.addEventListener('input', changed);
-      this.#listeners.push(() => { input.removeEventListener('focus', focus); input.removeEventListener('keydown', keydown); input.removeEventListener('input', changed); });
+      const keydown = (event: KeyboardEvent): void => {
+        if (this.#composing.has(input) || event.isComposing) return;
+        const semantic = event.key === 'ArrowLeft'
+          ? 'previous'
+          : event.key === 'ArrowRight'
+            ? 'next'
+            : event.key === 'Backspace'
+              ? 'backspace'
+              : event.key === 'Delete'
+                ? 'delete'
+                : null;
+        if (semantic !== null) {
+          event.preventDefault();
+          this.handleEvent(semantic);
+        }
+      };
+      const changed = (event: Event): void => {
+        const inputEvent = event as InputEvent;
+        if (this.#composing.has(input) || inputEvent.isComposing) return;
+        const ignoreCompositionTail = ignoreNextCompositionInput
+          && (inputEvent.inputType === 'insertCompositionText' || inputEvent.inputType === undefined);
+        ignoreNextCompositionInput = false;
+        if (!ignoreCompositionTail) commitNativeValue();
+      };
+      const compositionStart = (): void => {
+        this.#composing.add(input);
+        ignoreNextCompositionInput = false;
+      };
+      const compositionEnd = (): void => {
+        if (!this.#composing.delete(input)) return;
+        ignoreNextCompositionInput = true;
+        commitNativeValue();
+      };
+      input.addEventListener('focus', focus);
+      input.addEventListener('keydown', keydown);
+      input.addEventListener('input', changed);
+      input.addEventListener('compositionstart', compositionStart);
+      input.addEventListener('compositionend', compositionEnd);
+      this.#listeners.push(() => {
+        this.#composing.delete(input);
+        input.removeEventListener('focus', focus);
+        input.removeEventListener('keydown', keydown);
+        input.removeEventListener('input', changed);
+        input.removeEventListener('compositionstart', compositionStart);
+        input.removeEventListener('compositionend', compositionEnd);
+      });
     });
     this.#render();
   }
   getSnapshot(): RevisionSnapshot<PinInputState> { return this.#runtime.getSnapshot(); }
   syncControlledValue(value: string): Result<RevisionSnapshot<PinInputState>> { if (!this.#controlled) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Only a controlled pin input accepts external values.' } }; const result = this.#runtime.replace(pinInputStateAtCurrent(this.#options.inputs.length, value, this.#runtime.getSnapshot().state.current)); if (result.ok) { this.#render(); this.#options.onUpdate?.(); } return result; }
-  handleEvent(event: PinInputEvent): boolean { const result = this.#runtime.handle(event); if (!result.ok) return false; this.#render(); for (const effect of result.commands) { if (effect.type === 'focus-cell') queueMicrotask(() => { if (this.#active) this.#options.inputs[effect.index]?.focus(); }); else this.#options.onComplete?.(effect.value); } this.#options.onUpdate?.(); return true; }
+  handleEvent(event: PinInputEvent): boolean {
+    const result = this.#runtime.handle(event);
+    if (!result.ok) return false;
+    this.#render();
+    this.#applyEffects(result.commands);
+    this.#options.onUpdate?.();
+    return true;
+  }
   disconnect(): void { this.#active = false; for (const remove of this.#listeners) remove(); this.#listeners.length = 0; }
-  #render(): void { const state = this.#runtime.getSnapshot().state; this.#options.inputs.forEach((input, index) => { input.value = state.values[index] ?? ''; input.tabIndex = state.current === index ? 0 : -1; }); }
+  #handleNativeInput(input: HTMLInputElement, event: PinInputEvent): boolean {
+    const result = this.#runtime.handle(event);
+    if (!result.ok) {
+      this.#render();
+      return false;
+    }
+    this.#render(input);
+    this.#applyEffects(result.commands);
+    this.#options.onUpdate?.();
+    return true;
+  }
+  #applyEffects(effects: readonly PinInputEffect[]): void {
+    for (const effect of effects) {
+      if (effect.type === 'focus-cell') queueMicrotask(() => { if (this.#active) this.#options.inputs[effect.index]?.focus(); });
+      else this.#options.onComplete?.(effect.value);
+    }
+  }
+  #render(preserveInput?: HTMLInputElement): void { const state = this.#runtime.getSnapshot().state; this.#options.inputs.forEach((input, index) => { const value = state.values[index] ?? ''; if (input !== preserveInput && !this.#composing.has(input) && input.value !== value) input.value = value; input.tabIndex = state.current === index ? 0 : -1; }); }
 }
 
 function pinInputStateAtCurrent(length: number, value: string | readonly string[], current: number): Result<PinInputState> {

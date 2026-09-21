@@ -37,21 +37,132 @@ function tryCreateEditableConnection(options: EditableOptions): Result<EditableC
 }
 
 class DOMEditable implements EditableConnection {
-  readonly #options: EditableOptions; readonly #runtime: SemanticController<EditableState, EditableEvent, EditableCommand>; readonly #controlled: boolean;
-  readonly #start = (): void => { this.handleEvent('start-edit'); }; readonly #input = (): void => { this.handleEvent({ type: 'input', text: this.#options.input.value }); };
-  readonly #submit = (): void => { this.handleEvent('commit'); }; readonly #cancel = (): void => { this.handleEvent('cancel'); };
-  readonly #keydown = (nativeEvent: Event): void => { const event = nativeEvent as KeyboardEvent; if (event.key === 'Escape') { event.preventDefault(); this.handleEvent('cancel'); } else if (event.key === 'Enter' && this.#options.input.tagName !== 'TEXTAREA') { event.preventDefault(); this.handleEvent('commit'); } };
-  readonly #blur = (): void => { if (this.#options.submitOnBlur === true) this.handleEvent('commit'); };
-  public constructor(options: EditableOptions, runtime: SemanticController<EditableState, EditableEvent, EditableCommand>, controlled: boolean) {
-    this.#options = options; this.#runtime = runtime; this.#controlled = controlled;
-    options.preview.addEventListener('click', this.#start); options.editTrigger?.addEventListener('click', this.#start); options.input.addEventListener('input', this.#input); options.input.addEventListener('keydown', this.#keydown); options.input.addEventListener('blur', this.#blur); options.submitTrigger?.addEventListener('click', this.#submit); options.cancelTrigger?.addEventListener('click', this.#cancel);
-    setInteractionAttributes(options.preview, options); setInteractionAttributes(options.input, options, { native: true }); if (options.editTrigger !== undefined) setInteractionAttributes(options.editTrigger, options, { native: true }); if (options.submitTrigger !== undefined) setInteractionAttributes(options.submitTrigger, options, { native: true }); if (options.cancelTrigger !== undefined) setInteractionAttributes(options.cancelTrigger, options, { native: true }); this.refresh();
+  readonly #options: EditableOptions;
+  readonly #runtime: SemanticController<EditableState, EditableEvent, EditableCommand>;
+  readonly #controlled: boolean;
+  #composing = false;
+  readonly #start = (): void => { this.handleEvent('start-edit'); };
+  readonly #input = (): void => { this.#handleNativeInput(); };
+  readonly #compositionStart = (): void => { this.#composing = true; };
+  readonly #compositionEnd = (): void => { this.#composing = false; };
+  readonly #submit = (): void => { this.handleEvent('commit'); };
+  readonly #cancel = (): void => { this.handleEvent('cancel'); };
+  readonly #keydown = (nativeEvent: Event): void => {
+    const event = nativeEvent as KeyboardEvent;
+    if (this.#composing || event.isComposing) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.handleEvent('cancel');
+    } else if (event.key === 'Enter' && this.#options.input.tagName !== 'TEXTAREA') {
+      event.preventDefault();
+      this.handleEvent('commit');
+    }
+  };
+  readonly #blur = (): void => {
+    if (!this.#composing && this.#options.submitOnBlur === true) this.handleEvent('commit');
+  };
+
+  public constructor(
+    options: EditableOptions,
+    runtime: SemanticController<EditableState, EditableEvent, EditableCommand>,
+    controlled: boolean,
+  ) {
+    this.#options = options;
+    this.#runtime = runtime;
+    this.#controlled = controlled;
+    options.preview.addEventListener('click', this.#start);
+    options.editTrigger?.addEventListener('click', this.#start);
+    options.input.addEventListener('input', this.#input);
+    options.input.addEventListener('compositionstart', this.#compositionStart);
+    options.input.addEventListener('compositionend', this.#compositionEnd);
+    options.input.addEventListener('keydown', this.#keydown);
+    options.input.addEventListener('blur', this.#blur);
+    options.submitTrigger?.addEventListener('click', this.#submit);
+    options.cancelTrigger?.addEventListener('click', this.#cancel);
+    setInteractionAttributes(options.preview, options);
+    setInteractionAttributes(options.input, options, { native: true });
+    if (options.editTrigger !== undefined) setInteractionAttributes(options.editTrigger, options, { native: true });
+    if (options.submitTrigger !== undefined) setInteractionAttributes(options.submitTrigger, options, { native: true });
+    if (options.cancelTrigger !== undefined) setInteractionAttributes(options.cancelTrigger, options, { native: true });
+    this.refresh();
   }
+
   public getSnapshot(): RevisionSnapshot<EditableState> { return this.#runtime.getSnapshot(); }
-  public syncControlledValue(value: string): Result<RevisionSnapshot<EditableState>> { if (!this.#controlled) return { ok: false, error: { class: 'construction', code: 'uncontrolled-controller-sync', message: 'An uncontrolled editable cannot be synchronized externally.' } }; const state = this.getSnapshot().state; const result = this.#runtime.replace(tryCreateEditableState(value, state.editing ? state.draft : value, state.editing)); if (result.ok) { this.refresh(); this.#options.onUpdate?.(); } return result; }
-  public handleEvent(event: EditableEvent): boolean { const result = this.#runtime.handle(event); this.#options.input.setAttribute('aria-invalid', String(!result.ok && event === 'commit')); this.refresh(); if (result.ok) { for (const command of result.commands) { if (command.type === 'focus-input') this.#options.input.focus(); if (command.type === 'focus-preview') this.#options.preview.focus(); } this.#options.onUpdate?.(); } return result.ok; }
-  public refresh(): void { const state = this.getSnapshot().state; this.#options.root.dataset['scope'] = 'editable'; this.#options.root.dataset['state'] = state.editing ? 'editing' : 'idle'; this.#options.preview.hidden = state.editing; this.#options.preview.tabIndex = this.#options.disabled === true ? -1 : 0; this.#options.input.hidden = !state.editing; this.#options.input.value = state.draft; this.#options.input.disabled = this.#options.disabled ?? false; this.#options.input.readOnly = this.#options.readOnly ?? false; if (this.#options.label !== undefined) this.#options.input.setAttribute('aria-label', this.#options.label); if (this.#options.name !== undefined) this.#options.input.name = this.#options.name; if (this.#options.editTrigger !== undefined) this.#options.editTrigger.hidden = state.editing; if (this.#options.submitTrigger !== undefined) this.#options.submitTrigger.hidden = !state.editing; if (this.#options.cancelTrigger !== undefined) this.#options.cancelTrigger.hidden = !state.editing; }
-  public disconnect(): void { this.#options.preview.removeEventListener('click', this.#start); this.#options.editTrigger?.removeEventListener('click', this.#start); this.#options.input.removeEventListener('input', this.#input); this.#options.input.removeEventListener('keydown', this.#keydown); this.#options.input.removeEventListener('blur', this.#blur); this.#options.submitTrigger?.removeEventListener('click', this.#submit); this.#options.cancelTrigger?.removeEventListener('click', this.#cancel); }
+
+  public syncControlledValue(value: string): Result<RevisionSnapshot<EditableState>> {
+    if (!this.#controlled) return { ok: false, error: { class: 'construction', code: 'uncontrolled-controller-sync', message: 'An uncontrolled editable cannot be synchronized externally.' } };
+    const state = this.getSnapshot().state;
+    const result = this.#runtime.replace(tryCreateEditableState(
+      value,
+      state.editing ? state.draft : value,
+      state.editing,
+    ));
+    if (result.ok) {
+      this.refresh();
+      this.#options.onUpdate?.();
+    }
+    return result;
+  }
+
+  public handleEvent(event: EditableEvent): boolean {
+    const result = this.#runtime.handle(event);
+    this.#options.input.setAttribute('aria-invalid', String(!result.ok && event === 'commit'));
+    this.refresh();
+    if (result.ok) {
+      for (const command of result.commands) {
+        if (command.type === 'focus-input') this.#options.input.focus();
+        if (command.type === 'focus-preview') this.#options.preview.focus();
+      }
+      this.#options.onUpdate?.();
+    }
+    return result.ok;
+  }
+
+  public refresh(): void {
+    this.#refresh(true);
+  }
+
+  public disconnect(): void {
+    this.#options.preview.removeEventListener('click', this.#start);
+    this.#options.editTrigger?.removeEventListener('click', this.#start);
+    this.#options.input.removeEventListener('input', this.#input);
+    this.#options.input.removeEventListener('compositionstart', this.#compositionStart);
+    this.#options.input.removeEventListener('compositionend', this.#compositionEnd);
+    this.#options.input.removeEventListener('keydown', this.#keydown);
+    this.#options.input.removeEventListener('blur', this.#blur);
+    this.#options.submitTrigger?.removeEventListener('click', this.#submit);
+    this.#options.cancelTrigger?.removeEventListener('click', this.#cancel);
+  }
+
+  #handleNativeInput(): boolean {
+    const result = this.#runtime.handle({ type: 'input', text: this.#options.input.value });
+    if (!result.ok) {
+      this.#refresh(true);
+      return false;
+    }
+    this.#refresh(false);
+    this.#options.onUpdate?.();
+    return true;
+  }
+
+  #refresh(writeText: boolean): void {
+    const state = this.getSnapshot().state;
+    this.#options.root.dataset['scope'] = 'editable';
+    this.#options.root.dataset['state'] = state.editing ? 'editing' : 'idle';
+    this.#options.preview.hidden = state.editing;
+    this.#options.preview.tabIndex = this.#options.disabled === true ? -1 : 0;
+    this.#options.input.hidden = !state.editing;
+    if (writeText && !this.#composing && this.#options.input.value !== state.draft) {
+      this.#options.input.value = state.draft;
+    }
+    this.#options.input.disabled = this.#options.disabled ?? false;
+    this.#options.input.readOnly = this.#options.readOnly ?? false;
+    if (this.#options.label !== undefined) this.#options.input.setAttribute('aria-label', this.#options.label);
+    if (this.#options.name !== undefined) this.#options.input.name = this.#options.name;
+    if (this.#options.editTrigger !== undefined) this.#options.editTrigger.hidden = state.editing;
+    if (this.#options.submitTrigger !== undefined) this.#options.submitTrigger.hidden = !state.editing;
+    if (this.#options.cancelTrigger !== undefined) this.#options.cancelTrigger.hidden = !state.editing;
+  }
 }
 
 export type { EditablePolicies, EditableState } from '@sectile/core/editable';

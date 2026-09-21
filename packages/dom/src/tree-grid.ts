@@ -326,6 +326,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
   readonly #handleClick: (event: MouseEvent) => void;
   readonly #handleDoubleClick: (event: MouseEvent) => void;
   readonly #editors = new Map<HTMLInputElement, {
+    readonly id: CellID;
     readonly input: () => void;
     readonly compositionStart: () => void;
     readonly compositionEnd: () => void;
@@ -443,17 +444,25 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
 
   public bindEditor(element: HTMLInputElement, options: TreeGridEditorOptions<CellID>): void {
     const previous = this.#editors.get(element);
+    setInteractionAttributes(element, {
+      disabled: this.#disabled,
+      readOnly: this.#readOnly,
+    }, { readOnly: true, native: true });
+    element.setAttribute('aria-label', options.label ?? `Edit ${String(options.id)}`);
+    if (previous?.id === options.id) {
+      if (!this.#composing && (typeof document === 'undefined' || document.activeElement !== element)) {
+        const value = this.#getCellValue(options.id);
+        if (element.value !== value) element.value = value;
+      }
+      return;
+    }
     if (previous !== undefined) {
       element.removeEventListener('input', previous.input);
       element.removeEventListener('compositionstart', previous.compositionStart);
       element.removeEventListener('compositionend', previous.compositionEnd);
     }
-    setInteractionAttributes(element, {
-      disabled: this.#disabled,
-      readOnly: this.#readOnly,
-    }, { readOnly: true, native: true });
-    element.value = this.#getCellValue(options.id);
-    element.setAttribute('aria-label', options.label ?? `Edit ${String(options.id)}`);
+    const value = this.#getCellValue(options.id);
+    if (element.value !== value) element.value = value;
     const input = (): void => {
       this.#setCellValue(options.id, element.value);
     };
@@ -476,7 +485,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     element.addEventListener('input', input);
     element.addEventListener('compositionstart', compositionStart);
     element.addEventListener('compositionend', compositionEnd);
-    this.#editors.set(element, { input, compositionStart, compositionEnd });
+    this.#editors.set(element, { id: options.id, input, compositionStart, compositionEnd });
   }
 
   public handleKeyboardEvent(event: KeyboardEvent): boolean {

@@ -80,6 +80,8 @@ export class DOMTextElementBinding {
     const snapshot = this.#getState().snapshot;
     if (this.#element.value !== snapshot.text) this.#element.value = snapshot.text;
     if (supportsSelection(this.#element)) {
+      const selection = selectionFromElement(this.#element);
+      if (selection !== null && sameSelection(selection, snapshot.selection)) return;
       this.#element.setSelectionRange(
         snapshot.selection.startCodeUnitOffset,
         snapshot.selection.endCodeUnitOffset,
@@ -104,7 +106,7 @@ export class DOMTextElementBinding {
     const replacement = deriveNativeReplacement(snapshot.text, this.#element.value);
     const selection = selectionFromElement(this.#element)
       ?? collapsedSelection(nativeSelectionFallback(inputType, replacement, this.#element.value.length));
-    this.#dispatch({
+    const accepted = this.#dispatch({
       type: 'input',
       inputType,
       text: replacement.text,
@@ -112,7 +114,7 @@ export class DOMTextElementBinding {
       endCodeUnitOffset: replacement.endCodeUnitOffset,
       selection,
     });
-    this.render();
+    if (!accepted) this.render();
   }
 
   #startComposition(): void {
@@ -190,10 +192,11 @@ export class DOMTextElementBinding {
     queueMicrotask(() => {
       if (!this.#active || generation !== this.#compositionGeneration) return;
       const composition = this.#composition;
-      if (composition?.coreActive === true) this.#dispatch({ type: 'composition-commit' });
+      const accepted = composition?.coreActive === true
+        && this.#dispatch({ type: 'composition-commit' });
       this.#composition = null;
       this.#compositionEnding = false;
-      this.render();
+      if (!accepted) this.render();
     });
   }
 }

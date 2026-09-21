@@ -95,12 +95,33 @@ class DOMSpinButton implements SpinButtonConnection {
   readonly #runtime: SemanticController<SpinButtonState, SpinButtonEvent, SpinButtonCommand>;
   readonly #valueControlled: boolean;
   readonly #draftControlled: boolean;
-  readonly #input = (): void => { this.handleEvent({ type: 'input', text: this.#options.input.value }); };
+  #composing = false;
+  #ignoreNextCompositionInput = false;
+  readonly #input = (event: Event): void => {
+    const inputEvent = event as InputEvent;
+    if (this.#composing || inputEvent.isComposing) return;
+    const ignoreCompositionTail = this.#ignoreNextCompositionInput
+      && (inputEvent.inputType === 'insertCompositionText' || inputEvent.inputType === undefined);
+    this.#ignoreNextCompositionInput = false;
+    if (!ignoreCompositionTail) this.#handleNativeInput();
+  };
+  readonly #compositionStart = (): void => {
+    this.#composing = true;
+    this.#ignoreNextCompositionInput = false;
+  };
+  readonly #compositionEnd = (): void => {
+    if (!this.#composing) return;
+    this.#composing = false;
+    this.#ignoreNextCompositionInput = true;
+    this.#handleNativeInput();
+  };
   readonly #key = (event: KeyboardEvent): void => {
+    if (this.#composing || event.isComposing) return;
     const semantic = toSpinButtonEvent(event);
     if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); }
   };
   readonly #blur = (): void => {
+    if (this.#composing) return;
     if (!this.handleEvent('commit')) this.handleEvent('cancel');
   };
 
@@ -111,6 +132,8 @@ class DOMSpinButton implements SpinButtonConnection {
     this.#valueControlled = valueControlled;
     this.#draftControlled = draftControlled;
     options.input.addEventListener('input', this.#input);
+    options.input.addEventListener('compositionstart', this.#compositionStart);
+    options.input.addEventListener('compositionend', this.#compositionEnd);
     options.input.addEventListener('keydown', this.#key);
     options.input.addEventListener('blur', this.#blur);
     options.input.disabled = options.disabled ?? false;
@@ -138,6 +161,19 @@ class DOMSpinButton implements SpinButtonConnection {
     return result.ok;
   }
   public refresh(): void {
+    this.#refresh(true);
+  }
+  #handleNativeInput(): boolean {
+    const result = this.#runtime.handle({ type: 'input', text: this.#options.input.value });
+    if (!result.ok) {
+      this.#refresh(true);
+      return false;
+    }
+    this.#refresh(false);
+    this.#options.onUpdate?.();
+    return true;
+  }
+  #refresh(writeText: boolean): void {
     const state = this.getSnapshot().state;
     this.#options.input.setAttribute('role', 'spinbutton');
     this.#options.input.setAttribute('aria-valuemin', this.range.lower);
@@ -146,10 +182,12 @@ class DOMSpinButton implements SpinButtonConnection {
     this.#options.input.setAttribute('aria-valuetext', state.value);
     if (this.#options.label !== undefined) this.#options.input.setAttribute('aria-label', this.#options.label);
     const text = this.getText();
-    if (this.#options.input.value !== text) this.#options.input.value = text;
+    if (writeText && !this.#composing && this.#options.input.value !== text) this.#options.input.value = text;
   }
   public disconnect(): void {
     this.#options.input.removeEventListener('input', this.#input);
+    this.#options.input.removeEventListener('compositionstart', this.#compositionStart);
+    this.#options.input.removeEventListener('compositionend', this.#compositionEnd);
     this.#options.input.removeEventListener('keydown', this.#key);
     this.#options.input.removeEventListener('blur', this.#blur);
   }

@@ -32,6 +32,7 @@ test('DOM text facade separates semantic edits from native IME ownership', async
   assert.equal(connection.getValue(), 'a한');
   assert.equal(element.value, 'a한');
   assert.deepEqual(element.selection, [2, 2]);
+  const selectionWritesBeforeComposition = element.selectionWrites;
 
   element.emit('compositionstart', { data: '' });
   element.value = 'a한ㄱ';
@@ -47,6 +48,7 @@ test('DOM text facade separates semantic edits from native IME ownership', async
   await Promise.resolve();
   assert.equal(connection.getValue(), 'a한글');
   assert.equal(connection.getSnapshot().state.composition, null);
+  assert.equal(element.selectionWrites, selectionWritesBeforeComposition);
   assert.deepEqual(transitions, [
     'beforeinput',
     'composition-start',
@@ -248,7 +250,7 @@ test('DOM text adopts the native search clear action and removes its listener', 
   assert.equal(element.listeners.get('search')?.size ?? 0, 0);
 });
 
-test('controlled DOM text proposes native edits and restores until synchronized', () => {
+test('controlled DOM text leaves accepted native edits under browser ownership until synchronized', () => {
   const initial = createTextEditingState('alpha beta', selection(10));
   const element = new FakeTextElement();
   let proposed = null;
@@ -257,6 +259,7 @@ test('controlled DOM text proposes native edits and restores until synchronized'
     value: initial,
     onValueChange: ({ value }) => { proposed = value; },
   });
+  const initialSelectionWrites = element.selectionWrites;
 
   element.value = 'alpha ';
   element.selectionStart = 6;
@@ -264,11 +267,13 @@ test('controlled DOM text proposes native edits and restores until synchronized'
   element.emit('input', { inputType: 'deleteWordBackward' });
   assert.equal(proposed.snapshot.text, 'alpha ');
   assert.equal(connection.getValue(), 'alpha beta');
-  assert.equal(element.value, 'alpha beta');
+  assert.equal(element.value, 'alpha ');
+  assert.equal(element.selectionWrites, initialSelectionWrites);
 
   connection.syncControlledValues({ value: proposed });
   assert.equal(connection.getValue(), 'alpha ');
   assert.equal(element.value, 'alpha ');
+  assert.equal(element.selectionWrites, initialSelectionWrites);
 });
 
 test('disconnect invalidates a pending IME commit and releases native listeners', async () => {
@@ -450,6 +455,7 @@ class FakeTextElement {
   selectionEnd = 0;
   selectionDirection = 'none';
   selection = [0, 0];
+  selectionWrites = 0;
   listeners = new Map();
 
   addEventListener(type, listener) {
@@ -467,6 +473,7 @@ class FakeTextElement {
   }
 
   setSelectionRange(start, end, direction = 'none') {
+    this.selectionWrites += 1;
     this.selectionStart = start > end ? end : start;
     this.selectionEnd = end;
     this.selectionDirection = direction;

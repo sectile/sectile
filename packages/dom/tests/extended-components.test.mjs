@@ -311,6 +311,41 @@ test('DOM editable owns native edit, commit, cancel, and focus handoff', () => {
   editable.disconnect();
 });
 
+test('DOM editable keeps native composition text and commit keys under browser ownership', () => {
+  const root = new FakeElement();
+  const preview = new FakeElement();
+  const input = new FakeElement();
+  const editable = createEditable({ root, preview, input, defaultValue: 'Alpha' });
+  preview.emit('click', {});
+
+  input.emit('compositionstart', {});
+  input.value = '한';
+  input.emit('input', { isComposing: true });
+  let prevented = false;
+  input.emit('keydown', {
+    key: 'Enter',
+    isComposing: true,
+    preventDefault() { prevented = true; },
+  });
+
+  assert.equal(prevented, false);
+  assert.equal(editable.getSnapshot().state.editing, true);
+  assert.equal(editable.getSnapshot().state.draft, '한');
+  assert.equal(input.value, '한');
+
+  input.value = '한글';
+  input.emit('input', { isComposing: true });
+  input.emit('compositionend', {});
+  input.emit('keydown', { key: 'Enter', isComposing: false, preventDefault() {} });
+
+  assert.deepEqual(editable.getSnapshot().state, {
+    value: '한글',
+    draft: '한글',
+    editing: false,
+  });
+  editable.disconnect();
+});
+
 test('DOM tags input leaves live native IME text under browser ownership', () => {
   const root = new FakeElement();
   const input = new FakeElement();

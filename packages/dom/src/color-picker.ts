@@ -93,7 +93,8 @@ class DOMColorPicker implements ColorPickerConnection {
   readonly #runtime: SemanticController<ColorPickerState, ColorPickerEvent, ColorPickerCommand>;
   readonly #controlled: readonly [boolean, boolean, boolean];
   readonly #native = new Map<HTMLInputElement, readonly [() => void, () => void]>();
-  readonly #text = new Map<HTMLInputElement, readonly [() => void, (event: KeyboardEvent) => void, () => void]>();
+  readonly #text = new Map<HTMLInputElement, readonly [() => void, (event: KeyboardEvent) => void, () => void, () => void, () => void]>();
+  readonly #composingText = new Set<HTMLInputElement>();
   readonly #channels = new Map<HTMLInputElement, readonly [ColorChannel, () => void, () => void]>();
   readonly #coordinates = new Map<HTMLInputElement, readonly [ColorModel, ColorCoordinate, 'number' | 'range', () => void]>();
   readonly #areas = new Map<HTMLElement, readonly [(event: PointerEvent) => void, (event: PointerEvent) => void, () => void, () => void, (event: KeyboardEvent) => void]>();
@@ -129,11 +130,38 @@ class DOMColorPicker implements ColorPickerConnection {
     element.addEventListener('input', input); element.addEventListener('focus', focus); this.#native.set(element, [input, focus]); this.refresh();
   }
   public setTextInputAttributes(element: HTMLInputElement): void {
+    if (this.#text.has(element)) {
+      this.refresh();
+      return;
+    }
     this.#removeText(element);
-    const input = (): void => { this.handleEvent({ type: 'input', text: element.value }); };
-    const key = (event: KeyboardEvent): void => { if (event.key === 'Enter') { event.preventDefault(); this.handleEvent('commit'); } else if (event.key === 'Escape') { event.preventDefault(); this.handleEvent('cancel'); } };
-    const blur = (): void => { if (!this.handleEvent('commit')) this.handleEvent('cancel'); };
-    element.addEventListener('input', input); element.addEventListener('keydown', key); element.addEventListener('blur', blur); this.#text.set(element, [input, key, blur]); this.refresh();
+    const input = (): void => { this.#handleNativeTextInput(element); };
+    const key = (event: KeyboardEvent): void => {
+      if (this.#composingText.has(element) || event.isComposing) return;
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        this.handleEvent('commit');
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        this.handleEvent('cancel');
+      }
+    };
+    const blur = (): void => {
+      if (this.#composingText.has(element)) return;
+      if (!this.handleEvent('commit')) this.handleEvent('cancel');
+    };
+    const compositionStart = (): void => { this.#composingText.add(element); };
+    const compositionEnd = (): void => {
+      if (!this.#composingText.delete(element)) return;
+      this.#handleNativeTextInput(element);
+    };
+    element.addEventListener('input', input);
+    element.addEventListener('keydown', key);
+    element.addEventListener('blur', blur);
+    element.addEventListener('compositionstart', compositionStart);
+    element.addEventListener('compositionend', compositionEnd);
+    this.#text.set(element, [input, key, blur, compositionStart, compositionEnd]);
+    this.refresh();
   }
   public setChannelInputAttributes(element: HTMLInputElement, channel: ColorChannel): void {
     this.#removeChannel(element);
@@ -178,11 +206,24 @@ class DOMColorPicker implements ColorPickerConnection {
   public setAlphaInputAttributes(element: HTMLInputElement): void { this.#removeAlpha(element); const input = (): void => { this.handleEvent({ type: 'set-alpha', value: Number(element.value) / 100 }); }; element.addEventListener('input', input); this.#alphas.set(element, input); this.refresh(); }
   public setSwatchAttributes(element: HTMLElement): void { this.#swatches.add(element); this.refresh(); }
   public refresh(): void {
+    this.#refresh();
+  }
+  #handleNativeTextInput(element: HTMLInputElement): boolean {
+    const result = this.#runtime.handle({ type: 'input', text: element.value });
+    if (!result.ok) {
+      this.#refresh();
+      return false;
+    }
+    this.#refresh(element);
+    this.#options.onUpdate?.();
+    return true;
+  }
+  #refresh(preserveText?: HTMLInputElement): void {
     const state = this.getSnapshot().state; const opaqueHex = unwrap(formatColorValue({ ...state.value, alpha: 255 }, 'hex'));
     this.#options.root.dataset['color'] = this.getCSSColor(); this.#options.root.dataset['format'] = state.format; this.#options.root.dataset['channel'] = state.channel;
     this.#options.root.setAttribute('aria-disabled', String(this.#options.disabled ?? false)); this.#options.root.setAttribute('aria-readonly', String(this.#options.readOnly ?? false));
     for (const element of this.#native.keys()) { element.type = 'color'; element.value = opaqueHex; element.disabled = this.#options.disabled ?? false; element.setAttribute('aria-readonly', String(this.#options.readOnly ?? false)); }
-    for (const element of this.#text.keys()) { element.type = 'text'; element.inputMode = 'text'; if (element.value !== this.getText()) element.value = this.getText(); element.disabled = this.#options.disabled ?? false; element.readOnly = this.#options.readOnly ?? false; element.setAttribute('aria-invalid', String(state.draft !== null && !isValidDraft(state.draft, this.#policies))); }
+    for (const element of this.#text.keys()) { element.type = 'text'; element.inputMode = 'text'; if (element !== preserveText && !this.#composingText.has(element) && element.value !== this.getText()) element.value = this.getText(); element.disabled = this.#options.disabled ?? false; element.readOnly = this.#options.readOnly ?? false; element.setAttribute('aria-invalid', String(state.draft !== null && !isValidDraft(state.draft, this.#policies))); }
     for (const [element, [channel]] of this.#channels) { element.type = 'range'; element.min = '0'; element.max = '255'; element.step = '1'; element.value = String(state.value[channel]); element.disabled = (this.#options.disabled ?? false) || (channel === 'alpha' && this.#policies.allowAlpha === false); element.setAttribute('aria-label', `${channel} channel`); element.setAttribute('aria-valuetext', String(state.value[channel])); }
     for (const [element, [format, coordinate, kind]] of this.#coordinates) { const entry = unwrap(getColorCoordinates(state.value, format)).find((item) => item.coordinate === coordinate); if (entry === undefined) continue; element.type = kind; element.min = String(entry.min); element.max = String(entry.max); element.step = String(entry.step); if (kind === 'range' || typeof document === 'undefined' || document.activeElement !== element) element.value = String(entry.value); element.disabled = (this.#options.disabled ?? false) || (coordinate === 'alpha' && this.#policies.allowAlpha === false); element.readOnly = kind === 'number' && (this.#options.readOnly ?? false); element.setAttribute('aria-readonly', String(this.#options.readOnly ?? false)); element.setAttribute('aria-label', entry.label); element.setAttribute('aria-valuetext', `${entry.value}${entry.unit}`); element.dataset['coordinate'] = coordinate; element.dataset['format'] = format; element.style.setProperty('--sectile-color-coordinate-color', this.getCSSColor()); }
     const area = this.getAreaValue();
@@ -194,7 +235,7 @@ class DOMColorPicker implements ColorPickerConnection {
   }
   public disconnect(): void { for (const element of [...this.#native.keys()]) this.#removeNative(element); for (const element of [...this.#text.keys()]) this.#removeText(element); for (const element of [...this.#channels.keys()]) this.#removeChannel(element); for (const element of [...this.#coordinates.keys()]) this.#removeCoordinate(element); for (const element of [...this.#areas.keys()]) this.#removeArea(element); for (const element of [...this.#hues.keys()]) this.#removeHue(element); for (const element of [...this.#alphas.keys()]) this.#removeAlpha(element); this.#areaThumbs.clear(); this.#swatches.clear(); }
   #removeNative(element: HTMLInputElement): void { const current = this.#native.get(element); if (current !== undefined) { element.removeEventListener('input', current[0]); element.removeEventListener('focus', current[1]); this.#native.delete(element); } }
-  #removeText(element: HTMLInputElement): void { const current = this.#text.get(element); if (current !== undefined) { element.removeEventListener('input', current[0]); element.removeEventListener('keydown', current[1]); element.removeEventListener('blur', current[2]); this.#text.delete(element); } }
+  #removeText(element: HTMLInputElement): void { const current = this.#text.get(element); if (current !== undefined) { element.removeEventListener('input', current[0]); element.removeEventListener('keydown', current[1]); element.removeEventListener('blur', current[2]); element.removeEventListener('compositionstart', current[3]); element.removeEventListener('compositionend', current[4]); this.#composingText.delete(element); this.#text.delete(element); } }
   #removeChannel(element: HTMLInputElement): void { const current = this.#channels.get(element); if (current !== undefined) { element.removeEventListener('input', current[1]); element.removeEventListener('focus', current[2]); this.#channels.delete(element); } }
   #removeCoordinate(element: HTMLInputElement): void { const current = this.#coordinates.get(element); if (current !== undefined) { element.removeEventListener('input', current[3]); this.#coordinates.delete(element); } }
   #removeArea(element: HTMLElement): void { const current = this.#areas.get(element); if (current !== undefined) { element.removeEventListener('pointerdown', current[0]); element.removeEventListener('pointermove', current[1]); element.removeEventListener('pointerup', current[2]); element.removeEventListener('pointercancel', current[3]); element.removeEventListener('keydown', current[4]); this.#areas.delete(element); } }

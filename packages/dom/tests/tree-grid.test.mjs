@@ -45,6 +45,12 @@ test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', 
   assert.equal(input.listeners.get('compositionstart')?.size, 1);
   assert.equal(input.listeners.get('compositionend')?.size, 1);
   input.emit('compositionstart');
+  input.value = '한';
+  connection.bindEditor(input, { id: 'root-name' });
+  assert.equal(input.value, '한');
+  assert.equal(input.listeners.get('input')?.size, 1);
+  assert.equal(input.listeners.get('compositionstart')?.size, 1);
+  assert.equal(input.listeners.get('compositionend')?.size, 1);
   input.value = '한글';
   input.emit('input');
   assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter', { isComposing: true })), false);
