@@ -4004,6 +4004,10 @@
           "role": "native-field",
           "kind": "owner"
         },
+        "src/input/native-text-state.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
         "src/input/native-input.ts": {
           "role": "input-style",
           "kind": "owner"

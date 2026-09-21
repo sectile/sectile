@@ -10,7 +10,7 @@
     { "id": "full-materialization", "category": "private-algorithm-bypass", "pattern": "\\bflatCells\\s*\\(" },
     { "id": "serialization-signature", "category": "private-algorithm-bypass", "pattern": "JSON\\.stringify\\s*\\(" },
     { "id": "linear-membership", "category": "raw-full-domain-scan", "pattern": "\\.includes\\s*\\(" },
-    { "id": "controller-rebuild", "category": "controller-connection-rebuild", "pattern": "watch\\s*\\([^;]{0,1200}?\\b(?:connect|rebuild)\\b" },
+    { "id": "controller-rebuild", "category": "controller-connection-rebuild", "pattern": "watch\\s*\\([^;]{0,1200}?\\b(?:connect|rebuild|requestConnect|requestMount|requestReconnect)\\b" },
     { "id": "full-index-rebuild", "category": "discarded-canonical-index", "pattern": "\\b(?:buildPackedTree|buildRegionTree)\\s*\\(" }
   ],
   "rules": [
