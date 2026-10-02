@@ -57,6 +57,8 @@ test('the design shell keeps fixed navigation geometry in tokens', async () => {
   assert.match(tokens, /--docs-reading-width: 760px/u);
   assert.match(shell, /grid-template-columns: var\(--docs-sidebar-width\) minmax\(0, 1fr\)/u);
   assert.doesNotMatch(shell, /--vp-/u);
+  assert.match(shell, /\[data-highlighted\]/u);
+  assert.doesNotMatch(shell, /\[data-highlighted="true"\]/u, 'highlight is a presence attribute, not a string boolean');
 });
 
 test('documentation palette maintains readable text and identifiable control edges', async () => {
@@ -209,6 +211,11 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-temporal-date-field-bounded-date': [/Date: 2026-10-03/u, /Delivery date/u],
+          'vue-temporal-time-field-native-time': [/Time: 09:30/u, /Collection time/u],
+          'vue-temporal-date-time-field-local-date-time': [/Appointment: 2026-10-03T09:30/u],
+          'vue-temporal-date-range-field-travel-dates': [/Stay: 2026-10-03 – 2026-10-07/u, /Arrival/u, /Departure/u],
+          'vue-temporal-time-range-field-collection-window': [/Window: 09:00 – 12:00/u],
           'vue-components-select-disabled-options': [/Delivery: Standard/u, /aria-disabled="true"/u],
           'vue-components-combobox-search-results': [/role="combobox"/u, /Member: none/u],
           'vue-components-listbox-multiple-selection': [/aria-multiselectable="true"/u, /Destinations: Email/u],
@@ -256,6 +263,10 @@ test('every shipped route renders and all internal page links resolve', async ()
         for (const example of subjectExamples) assert.ok(html.includes(`id="${example.id}-preview"`));
         const ids = [...html.matchAll(/\sid="([^"]+)"/gu)].map(([, id]) => id);
         assert.equal(new Set(ids).size, ids.length, `${route.path}: unique element IDs`);
+      } else if (route.kind === 'area' && route.host === 'vue' && route.area !== 'components') {
+        const domainExamples = examples.filter((example) => example.host === 'vue' && example.area === route.area);
+        assert.equal([...html.matchAll(/class="[^"]*\bdocs-preview(?:\s|")/gu)].length, domainExamples.length, route.path);
+        assert.equal([...html.matchAll(/>Reset example<\/button>/gu)].length, domainExamples.length, route.path);
       } else {
         assert.doesNotMatch(html, /class="docs-preview/u, 'Galleries do not mount live previews');
         if (route.path === '/vue/components') {

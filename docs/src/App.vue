@@ -128,7 +128,11 @@ function closeMenu(event: KeyboardEvent): void {
             <template v-else-if="currentRoute?.kind === 'area' && activeArea">
               <h1>{{ activeArea.label }}</h1><p class="docs-page__lede">{{ activeArea.description }}</p>
               <template v-if="activeArea.id !== 'components' && activeHost.id === 'vue'"><p class="docs-install-note">This integration also needs its domain package.</p><CodeBlock label="Terminal · pnpm" :source="`pnpm add @sectile/vue @sectile/${activeArea.id}`" /></template>
-              <ExampleGallery v-if="areaExamples.length" :examples="areaExamples" :component-index="activeHost.id === 'vue' && activeArea.id === 'components'" />
+              <template v-if="areaExamples.length && activeHost.id === 'vue' && activeArea.id !== 'components'">
+                <nav v-if="areaExamples.length > 1" class="docs-example-jumps" aria-label="Examples on this page"><a v-for="example in areaExamples" :key="example.id" :href="`#${example.id}-title`">{{ example.title }}</a></nav>
+                <div class="docs-inline-examples"><section v-for="example in areaExamples" :key="example.id" :aria-labelledby="`${example.id}-title`"><ExamplePage :example="example" embedded /></section></div>
+              </template>
+              <ExampleGallery v-else-if="areaExamples.length" :examples="areaExamples" :component-index="activeHost.id === 'vue' && activeArea.id === 'components'" />
               <div v-else class="docs-empty-state"><h2>Examples are not documented yet</h2><p>This package area has no runnable {{ activeHost.label }} examples on this site yet. This is a documentation gap, not a statement about package availability.</p><a :href="routeHref(areaPath(activeHost.id, 'components'))" @click="handleRouteClick($event, areaPath(activeHost.id, 'components'))">Browse available component examples</a></div>
             </template>
             <ExamplePage v-else-if="currentRoute?.kind === 'example' && activeExample" :example="activeExample" />

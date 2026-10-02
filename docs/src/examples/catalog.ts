@@ -376,6 +376,136 @@ export interface ExampleDefinition {
 
 export const examples: readonly ExampleDefinition[] = [
   {
+    "id": "vue-temporal-date-field-bounded-date",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "DateField",
+    "slug": "date-field/bounded-date",
+    "title": "A bounded date field",
+    "description": "Edit a date restricted to October 2026 with a string draft and a structured committed value.",
+    "focus": "A bounded date field",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "DateField",
+      "structured value"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/date-field/bounded-date/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/date-field/bounded-date/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-time-field-native-time",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "TimeField",
+    "slug": "time-field/native-time",
+    "title": "A native time input",
+    "description": "Edit a time of day using the browser’s native input and inspect the structured application value.",
+    "focus": "A native time input",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "TimeField",
+      "structured value"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/time-field/native-time/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/time-field/native-time/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-date-time-field-local-date-time",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "DateTimeField",
+    "slug": "date-time-field/local-date-time",
+    "title": "A local appointment",
+    "description": "Combine a date and time without implying a time zone or an absolute instant.",
+    "focus": "A local appointment",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "DateTimeField",
+      "structured value"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/date-time-field/local-date-time/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/date-time-field/local-date-time/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-date-range-field-travel-dates",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "DateRangeField",
+    "slug": "date-range-field/travel-dates",
+    "title": "Coordinated arrival and departure",
+    "description": "Edit two endpoints as a single ordered date range.",
+    "focus": "Coordinated arrival and departure",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "DateRangeField",
+      "structured value"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/date-range-field/travel-dates/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/date-range-field/travel-dates/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-time-range-field-collection-window",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "TimeRangeField",
+    "slug": "time-range-field/collection-window",
+    "title": "A collection time window",
+    "description": "Edit the beginning and end of a same-day collection window.",
+    "focus": "A collection time window",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "TimeRangeField",
+      "structured value"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/time-range-field/collection-window/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/time-range-field/collection-window/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
     "id": "vue-components-select-disabled-options",
     "host": "vue",
     "area": "components",
