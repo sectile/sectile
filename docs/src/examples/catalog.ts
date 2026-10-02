@@ -30,6 +30,27 @@ export interface ComponentDefinition {
 
 export const components: readonly ComponentDefinition[] = [
   {
+    subject: 'MeterGroup', slug: 'meter-group', module: '@sectile/vue/meter-group',
+    description: 'Show a shared storage budget as labeled segments.',
+    parts: ['MeterGroupRoot', 'MeterGroupTrack', 'MeterGroupSegment', 'MeterGroupIndicator', 'MeterGroupList', 'MeterGroupItem'],
+    composition: ['Supply stable segment IDs, labels and values. Each segment and legend item references the same ID. A single max defines the shared budget.'],
+    interaction: ['This is a read-only measurement, not a slider. Updating the application-owned items recomputes the total, remaining budget and segment percentages.'],
+  },
+  {
+    subject: 'QuantityField', slug: 'quantity-field', module: '@sectile/vue/quantity-field',
+    description: 'Edit a length while keeping canonical and display units separate.',
+    parts: ['QuantityFieldRoot', 'QuantityFieldInput', 'QuantityFieldUnitSelect'],
+    composition: ['Create compatible unit policies once. Bind the canonical quantity and displayUnit separately; compose the native input and unit select inside the root.'],
+    interaction: ['Commit a compatible expression or change its display unit. Invalid expressions retain an invalid state instead of silently changing dimension.'],
+  },
+  {
+    subject: 'WindowSplitter', slug: 'window-splitter', module: '@sectile/vue/window-splitter',
+    description: 'Resize two adjacent panels within explicit percentage bounds.',
+    parts: ['WindowSplitterRoot', 'WindowSplitterPane', 'WindowSplitterHandle'],
+    composition: ['Render before and after panes around the handle. The root supplies percentage geometry; application CSS owns pane presentation.'],
+    interaction: ['Drag or use keyboard navigation on the separator. min and max constrain the first pane; the second receives the remaining percentage.'],
+  },
+  {
     "subject": "Grid",
     "slug": "grid",
     "module": "@sectile/vue/grid",
@@ -691,6 +712,27 @@ export interface ExampleDefinition {
 }
 
 export const examples: readonly ExampleDefinition[] = [
+  {
+    id: 'vue-components-meter-group-storage-budget', host: 'vue', area: 'components', subject: 'MeterGroup', slug: 'meter-group/storage-budget',
+    title: 'Shared storage budget', description: 'Update two labeled segments within one measurement budget.', focus: 'Segment totals and remaining budget',
+    kind: 'behavior', fixture: 'surface', tags: ['measurement', 'segments'], sourceOwner: 'vue',
+    previewPath: './vue/components/meter-group/storage-budget/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/meter-group/storage-budget/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-quantity-field-unit-conversion', host: 'vue', area: 'components', subject: 'QuantityField', slug: 'quantity-field/unit-conversion',
+    title: 'Canonical and display units', description: 'Edit a metric length without changing its canonical unit.', focus: 'Unit conversion and invalid expressions',
+    kind: 'behavior', fixture: 'control', tags: ['units', 'canonical value'], sourceOwner: 'vue',
+    previewPath: './vue/components/quantity-field/unit-conversion/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/quantity-field/unit-conversion/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-window-splitter-bounded-panes', host: 'vue', area: 'components', subject: 'WindowSplitter', slug: 'window-splitter/bounded-panes',
+    title: 'Bounded resizable panels', description: 'Keep both panes usable with 25–75% bounds.', focus: 'Pointer and keyboard resizing',
+    kind: 'behavior', fixture: 'surface', tags: ['separator', 'bounds'], sourceOwner: 'vue',
+    previewPath: './vue/components/window-splitter/bounded-panes/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/window-splitter/bounded-panes/Preview.vue' }], related: [],
+  },
   {
     "id": "vue-virtual-measured-list",
     "host": "vue",

@@ -211,6 +211,9 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-components-meter-group-storage-budget': [/60 \/ 100/u, /40 units remaining/u, /Documents/u, /Media/u],
+          'vue-components-quantity-field-unit-conversion': [/Canonical value: 1\.5 metre/u, /Display unit/u],
+          'vue-components-window-splitter-bounded-panes': [/First pane: 50%/u, /Resize delivery panels/u],
           'vue-virtual-measured-list': [/Delivery 1/u, /Mounted content establishes/u],
           'vue-virtual-responsive-grid': [/Parcel 1/u, /64px tall/u],
           'vue-virtual-masonry-notes': [/Delivery 1/u, /120px estimate/u],
