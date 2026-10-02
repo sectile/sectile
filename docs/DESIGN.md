@@ -264,6 +264,8 @@ Component pages display their focused examples inline with matching headings,
 live previews and collapsed source. A reset control restores each example by
 remounting only that preview; its dedicated route remains available for sharing.
 Readers can compare behaviors without returning through a gallery.
+The Vue Components index groups focused variants into one entry per component.
+Local example links jump to the selected behavior without navigating away.
 
 ### Preview and source
 
@@ -297,6 +299,10 @@ their controls at the center. Pressed choices and active tabs use violet wash;
 disabled controls are subdued. Tabs keep explanatory panel text in the sans-serif
 voice. Popover content uses the surface radius and equal padding; positioning is
 owned by the interaction rather than a fixed documentation offset.
+
+Text inputs and textareas use the same 44px minimum height, 1px control border,
+7px corner and 8px/12px padding as form inputs. Accordion headings use the shared
+button geometry and open spacing between panels, without an extra outer card.
 
 ## Do's and Don'ts
 

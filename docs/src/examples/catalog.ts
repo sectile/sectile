@@ -30,6 +30,20 @@ export interface ComponentDefinition {
 
 export const components: readonly ComponentDefinition[] = [
   {
+    subject: 'Accordion', slug: 'accordion', module: '@sectile/vue/accordion',
+    description: 'Organize related sections into expandable panels with one or several panels open at a time.',
+    parts: ['AccordionRoot', 'AccordionItem', 'AccordionHeader', 'AccordionTrigger', 'AccordionContent'],
+    composition: ['Provide panel values in the root items array. Each item wraps its heading, trigger, and content.', 'Single mode uses a string value; multiple mode uses an array. Set collapsible to false when the selected panel should remain open.'],
+    interaction: ['Activate a heading button to toggle its panel. Arrow keys move between heading buttons; Home and End move to the first and last available heading.'],
+  },
+  {
+    subject: 'Text', slug: 'text', module: '@sectile/vue/text',
+    description: 'Connect application text to a native input or textarea while retaining native editing and composition.',
+    parts: ['TextField'],
+    composition: ['Wrap TextField in a visible label, or associate it with a label using an id. Bind v-model to your application value.', 'multiline renders a textarea. v-model.lazy commits on the native change event rather than on each edit.'],
+    interaction: ['Native selection, clipboard editing, and text composition remain available. readonly permits reading and selection without editing; disabled prevents interaction.'],
+  },
+  {
     subject: 'Switch', slug: 'switch', module: '@sectile/vue/switch',
     description: 'A boolean setting with a persistent thumb. Application state can own the checked value.',
     parts: ['SwitchRoot', 'SwitchThumb'],
@@ -123,6 +137,86 @@ export interface ExampleDefinition {
 }
 
 export const examples: readonly ExampleDefinition[] = [
+  {
+    id: 'vue-components-checkbox-default-state', host: 'vue', area: 'components',
+    subject: 'Checkbox', slug: 'checkbox/default-state', title: 'Component-owned state',
+    description: 'Start checked with defaultValue. The component owns later updates, and its slot exposes the current value without an application ref.', focus: 'Default value and state slot',
+    kind: 'behavior', fixture: 'control', tags: ['defaultValue', 'slot'], sourceOwner: 'vue',
+    previewPath: './vue/components/checkbox/default-state/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/checkbox/default-state/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-checkbox-indeterminate-state', host: 'vue', area: 'components',
+    subject: 'Checkbox', slug: 'checkbox/indeterminate-state', title: 'Indeterminate state',
+    description: 'Begin with a mixed value and a dash indicator. Activate the checkbox to change its value, or restore the mixed state from application data.', focus: 'Mixed value and indicator slot',
+    kind: 'behavior', fixture: 'control', tags: ['indeterminate', 'slot', 'v-model'], sourceOwner: 'vue',
+    previewPath: './vue/components/checkbox/indeterminate-state/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/checkbox/indeterminate-state/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-checkbox-readonly-disabled', host: 'vue', area: 'components',
+    subject: 'Checkbox', slug: 'checkbox/readonly-disabled', title: 'Read-only and disabled',
+    description: 'Compare two checked controls. Both keep their values fixed, but the read-only control remains focusable while the disabled control is unavailable.', focus: 'Fixed value with different focus behavior',
+    kind: 'behavior', fixture: 'control', tags: ['readonly', 'disabled', 'focus'], sourceOwner: 'vue',
+    previewPath: './vue/components/checkbox/readonly-disabled/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/checkbox/readonly-disabled/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-switch-readonly-disabled', host: 'vue', area: 'components',
+    subject: 'Switch', slug: 'switch/readonly-disabled', title: 'Read-only and disabled',
+    description: 'Compare enabled settings that cannot be changed. Tab can reach the read-only setting, while the disabled setting is unavailable.', focus: 'Read-only versus disabled settings',
+    kind: 'behavior', fixture: 'control', tags: ['readonly', 'disabled', 'focus'], sourceOwner: 'vue',
+    previewPath: './vue/components/switch/readonly-disabled/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/switch/readonly-disabled/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-toggle-group-single-selection', host: 'vue', area: 'components',
+    subject: 'ToggleGroup', slug: 'toggle-group/single-selection', title: 'One persistent choice',
+    description: 'Choose one text alignment. With deselectable set to false, activating the selected choice keeps it selected.', focus: 'Single selection without deselection',
+    kind: 'behavior', fixture: 'control', tags: ['single', 'deselectable', 'v-model'], sourceOwner: 'vue',
+    previewPath: './vue/components/toggle-group/single-selection/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/toggle-group/single-selection/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-tabs-automatic-activation', host: 'vue', area: 'components',
+    subject: 'Tabs', slug: 'tabs/automatic-activation', title: 'Automatic keyboard activation',
+    description: 'Move between tabs with arrow keys. Selection follows focus, so the matching panel changes without a separate Enter or Space activation.', focus: 'Selection follows keyboard focus',
+    kind: 'behavior', fixture: 'surface', tags: ['activationMode', 'keyboard', 'v-model'], sourceOwner: 'vue',
+    previewPath: './vue/components/tabs/automatic-activation/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/tabs/automatic-activation/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-accordion-single-panel', host: 'vue', area: 'components',
+    subject: 'Accordion', slug: 'accordion/single-panel', title: 'One panel stays open',
+    description: 'Open one section at a time. With collapsible set to false, activating the open heading keeps its panel visible.', focus: 'Single non-collapsible selection',
+    kind: 'behavior', fixture: 'surface', tags: ['single', 'collapsible', 'v-model'], sourceOwner: 'vue',
+    previewPath: './vue/components/accordion/single-panel/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/accordion/single-panel/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-accordion-multiple-panels', host: 'vue', area: 'components',
+    subject: 'Accordion', slug: 'accordion/multiple-panels', title: 'Several panels open',
+    description: 'Open Delivery and Returns independently. The application receives an array of the currently open panel values.', focus: 'Independent panels and array state',
+    kind: 'behavior', fixture: 'surface', tags: ['multiple', 'v-model'], sourceOwner: 'vue',
+    previewPath: './vue/components/accordion/multiple-panels/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/accordion/multiple-panels/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-text-multiline-value', host: 'vue', area: 'components',
+    subject: 'Text', slug: 'text/multiline-value', title: 'Multiline editing',
+    description: 'Edit delivery notes in a native textarea. Application state reflects the committed text while native selection and editing remain available.', focus: 'Native textarea with application-owned text',
+    kind: 'behavior', fixture: 'control', tags: ['multiline', 'v-model', 'native editing'], sourceOwner: 'vue',
+    previewPath: './vue/components/text/multiline-value/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/text/multiline-value/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-text-lazy-value', host: 'vue', area: 'components',
+    subject: 'Text', slug: 'text/lazy-value', title: 'Commit on change',
+    description: 'Edit the display name, then leave the field to commit the changed value. The output stays unchanged while you type.', focus: 'Lazy model commits on native change',
+    kind: 'behavior', fixture: 'control', tags: ['v-model.lazy', 'change'], sourceOwner: 'vue',
+    previewPath: './vue/components/text/lazy-value/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/text/lazy-value/Preview.vue' }], related: [],
+  },
   {
     id: 'vue-components-switch-controlled-state', host: 'vue', area: 'components',
     subject: 'Switch', slug: 'switch/controlled-state', title: 'Controlled setting',

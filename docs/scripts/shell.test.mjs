@@ -175,6 +175,10 @@ test('every shipped route renders and all internal page links resolve', async ()
       const html = await renderToString(createSSRApp(App));
       assert.match(html, /<h1(?:\s[^>]*)?>[^<]/u, route.path);
       assert.ok(!html.includes('Page not found'), route.path);
+      const pageIDs = new Set([...html.matchAll(/\sid="([^"]+)"/gu)].map(([, id]) => id));
+      for (const [, target] of html.matchAll(/href="#([^"]+)"/gu)) {
+        assert.ok(pageIDs.has(target), `${route.path}: unresolved section ${target}`);
+      }
       for (const [, href] of html.matchAll(/href="([^"#]+)"/gu)) {
         assert.ok(href.startsWith('/sectile/'), `${route.path}: ${href}`);
         const path = href.slice('/sectile'.length).replace(/\/$/u, '') || '/';
@@ -185,6 +189,16 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-components-checkbox-default-state': [/aria-checked="true"/u, /Weekly summary · enabled/u],
+          'vue-components-checkbox-indeterminate-state': [/aria-checked="mixed"/u, /Value: indeterminate/u],
+          'vue-components-checkbox-readonly-disabled': [/aria-readonly="true"/u, /<button[^>]*\sdisabled(?:=""|\s|>)/u, /Read-only notifications/u, /Disabled notifications/u],
+          'vue-components-switch-readonly-disabled': [/aria-readonly="true"/u, /<button[^>]*\sdisabled(?:=""|\s|>)/u, /Read-only delivery/u, /Disabled delivery/u],
+          'vue-components-toggle-group-single-selection': [/aria-pressed="true"/u, /Alignment: Left/u],
+          'vue-components-tabs-automatic-activation': [/role="tablist"/u, /aria-selected="true"/u, /Selected: Overview/u],
+          'vue-components-accordion-single-panel': [/aria-expanded="true"/u, /Open panel: Delivery/u],
+          'vue-components-accordion-multiple-panels': [/aria-expanded="true"/u, /Open panels: Delivery/u],
+          'vue-components-text-multiline-value': [/<textarea/u, /Delivery notes/u, /Value: Leave the parcel at reception./u],
+          'vue-components-text-lazy-value': [/<input/u, /Display name/u, /Committed name: Ada/u],
           'vue-components-switch-controlled-state': [/role="switch"/u, /aria-checked="false"/u, /Enabled: false/u],
           'vue-components-toggle-button-pressed-state': [/aria-pressed="false"/u, /Pinned: false/u],
           'vue-components-toggle-group-multiple-selection': [/aria-pressed="true"/u, /Selected: bold/u, /aria-disabled="true"/u],
@@ -207,6 +221,10 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.equal(new Set(ids).size, ids.length, `${route.path}: unique element IDs`);
       } else {
         assert.doesNotMatch(html, /class="docs-preview/u, 'Galleries do not mount live previews');
+        if (route.path === '/vue/components') {
+          assert.equal([...html.matchAll(/class="docs-example-card"/gu)].length, components.length);
+          for (const component of components) assert.ok(html.includes(`href="/sectile${componentPath(component.subject)}/"`));
+        }
       }
       if (route.host === 'dom') assert.doesNotMatch(html, /Vue documentation/u);
     }

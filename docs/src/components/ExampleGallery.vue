@@ -1,14 +1,23 @@
 <script setup lang="ts">
-import { examplePath, type ExampleDefinition } from '../examples/catalog.js';
+import { computed } from 'vue';
+import { components, componentPath, examplePath, type ExampleDefinition } from '../examples/catalog.js';
 import { handleRouteClick, routeHref } from '../router.js';
-defineProps<{ examples: readonly ExampleDefinition[] }>();
+const props = defineProps<{ examples: readonly ExampleDefinition[]; componentIndex?: boolean }>();
+const entries = computed(() => props.componentIndex
+  ? props.examples.filter((example, index, all) => all.findIndex((entry) => entry.subject === example.subject) === index)
+  : props.examples);
+const destination = (example: ExampleDefinition) => props.componentIndex ? componentPath(example.subject) : examplePath(example);
+const description = (example: ExampleDefinition) => props.componentIndex ? components.find((entry) => entry.subject === example.subject)?.description : example.description;
+const count = (example: ExampleDefinition) => props.examples.filter((entry) => entry.subject === example.subject).length;
 </script>
 
 <template>
   <div class="docs-example-grid">
-    <a v-for="example in examples" :key="example.id" class="docs-example-card" :href="routeHref(examplePath(example))" @click="handleRouteClick($event, examplePath(example))">
+    <a v-for="example in entries" :key="example.id" class="docs-example-card" :href="routeHref(destination(example))" @click="handleRouteClick($event, destination(example))">
       <div class="docs-example-card__thumbnail" aria-hidden="true">
-        <div v-if="example.subject === 'Switch'" class="docs-thumbnail-switch-label"><span class="docs-thumbnail-switch"><i /></span>Email notifications</div>
+        <div v-if="example.subject === 'Accordion'" class="docs-thumbnail-dialog"><strong>Delivery</strong><span>Standard delivery takes three working days.</span><i>Returns</i></div>
+        <div v-else-if="example.subject === 'Text'" class="docs-thumbnail-form"><span>Display name</span><i>Ada</i></div>
+        <div v-else-if="example.subject === 'Switch'" class="docs-thumbnail-switch-label"><span class="docs-thumbnail-switch"><i /></span>Email notifications</div>
         <div v-else-if="example.subject === 'ToggleButton' || example.subject === 'ToggleGroup'" class="docs-thumbnail-choice-row"><span class="is-selected">{{ example.subject === 'ToggleButton' ? 'Pin conversation' : 'bold' }}</span><span v-if="example.subject === 'ToggleGroup'">italic</span></div>
         <div v-else-if="example.subject === 'RadioGroup'" class="docs-thumbnail-radio"><span />Standard delivery</div>
         <div v-else-if="example.subject === 'Tabs'" class="docs-thumbnail-tabs"><div><strong>Overview</strong><span>Activity</span></div><p>Project settings</p></div>
@@ -18,7 +27,7 @@ defineProps<{ examples: readonly ExampleDefinition[] }>();
         <div v-else-if="example.subject === 'Disclosure'" class="docs-thumbnail-dialog"><strong>Delivery preferences</strong><span>Present → exiting → hidden</span><i>Hide details</i></div>
         <div v-else class="docs-thumbnail-form"><span>Email address</span><i>you@example.com</i><strong>Save preferences</strong></div>
       </div>
-      <div class="docs-example-card__body"><h3>{{ example.title }}</h3><p>{{ example.description }}</p><span class="docs-example-card__type">{{ example.kind === 'styling' ? 'Styling example' : 'Behavior example' }}</span></div>
+      <div class="docs-example-card__body"><h3>{{ componentIndex ? example.subject : example.title }}</h3><p>{{ description(example) }}</p><span class="docs-example-card__type">{{ componentIndex ? `${count(example)} ${count(example) === 1 ? 'example' : 'examples'}` : example.kind === 'styling' ? 'Styling example' : 'Behavior example' }}</span></div>
     </a>
   </div>
 </template>

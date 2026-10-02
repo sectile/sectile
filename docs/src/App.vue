@@ -109,6 +109,9 @@ function closeMenu(event: KeyboardEvent): void {
             </template>
             <template v-else-if="currentRoute?.kind === 'component' && currentRoute.subject">
               <h1>{{ currentRoute.subject }}</h1><p class="docs-page__lede">{{ activeComponent?.description }}</p>
+              <nav v-if="subjectExamples.length > 1" class="docs-example-jumps" aria-label="Examples on this page">
+                <a v-for="example in subjectExamples" :key="example.id" :href="`#${example.id}-title`">{{ example.title }}</a>
+              </nav>
               <div class="docs-inline-examples">
                 <section v-for="example in subjectExamples" :key="example.id" :aria-labelledby="`${example.id}-title`">
                   <ExamplePage :example="example" embedded />
@@ -125,7 +128,7 @@ function closeMenu(event: KeyboardEvent): void {
             <template v-else-if="currentRoute?.kind === 'area' && activeArea">
               <h1>{{ activeArea.label }}</h1><p class="docs-page__lede">{{ activeArea.description }}</p>
               <template v-if="activeArea.id === 'form' && activeHost.id === 'vue'"><p class="docs-install-note">Form integration also needs its domain package.</p><CodeBlock label="Terminal · pnpm" source="pnpm add @sectile/vue @sectile/form" /></template>
-              <ExampleGallery v-if="areaExamples.length" :examples="areaExamples" />
+              <ExampleGallery v-if="areaExamples.length" :examples="areaExamples" :component-index="activeHost.id === 'vue' && activeArea.id === 'components'" />
               <div v-else class="docs-empty-state"><h2>Examples are not documented yet</h2><p>This package area has no runnable {{ activeHost.label }} examples on this site yet. This is a documentation gap, not a statement about package availability.</p><a :href="routeHref(areaPath(activeHost.id, 'components'))" @click="handleRouteClick($event, areaPath(activeHost.id, 'components'))">Browse available component examples</a></div>
             </template>
             <ExamplePage v-else-if="currentRoute?.kind === 'example' && activeExample" :example="activeExample" />
