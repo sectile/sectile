@@ -1,5 +1,6 @@
 import { createApp, createSSRApp, h, nextTick, ref } from 'vue';
 import { ComboboxInput, ComboboxRoot } from '../../.verification-dist/combobox.js';
+import { TextField } from '../../.verification-dist/text.js';
 import { createHydrationFixture } from './hydration-fixture.mjs';
 import { runConditionalPresenceScenarios } from './conditional-presence-fixture.mjs?wi=118';
 import { runTreeGridEditorPresenceScenario } from './tree-grid-editor-presence-fixture.mjs?wi=118';
@@ -305,3 +306,97 @@ for (const [scenario, evidence] of Object.entries(popupPresenceFocus)) {
 }
 document.documentElement.dataset.sectileVerification = result.ok ? 'passed' : 'failed';
 document.querySelector('#result').textContent = JSON.stringify(result);
+
+// Manual OS-IME/history checks must use trusted browser input, not dispatched events.
+const manualHost = document.createElement('section');
+manualHost.id = 'manual-ime';
+document.body.append(manualHost);
+const manualTrace = [];
+const manualValues = ref({ text: '', multiline: '', combobox: '' });
+const manualItems = ref([{ id: 'hangul', label: '한글 입력 확인' }]);
+const manualCopyStatus = ref('');
+const manualCopying = ref(false);
+let manualGeneration = 0;
+function showManualEvidence() {
+  const payload = { userAgent: navigator.userAgent, values: manualValues.value,
+    itemGeneration: manualGeneration, browserResult: result, events: manualTrace };
+  const text = JSON.stringify(payload, null, 2);
+  document.querySelector('#ime-evidence').textContent = text;
+  return text;
+}
+async function copyManualEvidence() {
+  if (manualCopying.value) return;
+  const text = showManualEvidence();
+  manualCopying.value = true;
+  manualCopyStatus.value = '';
+  try {
+    await navigator.clipboard.writeText(text);
+    manualCopyStatus.value = '검증 로그를 복사했어요. 채팅에 붙여 넣어 주세요.';
+  } catch {
+    const range = document.createRange();
+    range.selectNodeContents(document.querySelector('#ime-evidence'));
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    manualCopyStatus.value = '자동 복사가 허용되지 않았어요. 선택된 로그를 Ctrl+C로 복사해 주세요.';
+  } finally {
+    manualCopying.value = false;
+  }
+}
+const manualApp = createApp({
+  render: () => h('div', { style: 'padding:24px;display:grid;gap:12px;max-width:760px' }, [
+    h('h2', '실제 한글 입력기 · 네이티브 실행 취소 검증 (#227)'),
+    h('p', '각 칸에 한글을 직접 입력하고, 같은 순서로 실행 취소/다시 실행과 선택 영역 교체를 확인하세요. Combobox는 조합 시작 시 항목만 자동 갱신합니다.'),
+    h('label', ['기준 HTML input ', h('input', { id: 'ime-native' })]),
+    h('label', ['Uncontrolled TextField ', h(TextField, { id: 'ime-uncontrolled' })]),
+    h('label', ['Controlled TextField ', h(TextField, {
+      id: 'ime-controlled', modelValue: manualValues.value.text,
+      'onUpdate:modelValue': (text) => { manualValues.value = { ...manualValues.value, text }; },
+    })]),
+    h('label', ['Controlled textarea ', h(TextField, {
+      id: 'ime-multiline', multiline: true, modelValue: manualValues.value.multiline,
+      'onUpdate:modelValue': (multiline) => { manualValues.value = { ...manualValues.value, multiline }; },
+    })]),
+    h('label', ['Controlled Combobox ', h(ComboboxRoot, {
+      items: manualItems.value, inputValue: manualValues.value.combobox,
+      'onUpdate:inputValue': (combobox) => { manualValues.value = { ...manualValues.value, combobox }; },
+    }, { default: () => h(ComboboxInput, { id: 'ime-combobox' }) })]),
+    h('p', `Accepted owners: ${JSON.stringify(manualValues.value)}`),
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px' }, [
+      h('button', { id: 'ime-copy', type: 'button', disabled: manualCopying.value,
+        onClick: copyManualEvidence }, manualCopying.value ? '복사 중…' : '검증 로그 복사'),
+      h('button', { type: 'button', onClick: showManualEvidence }, '현재 검증 로그 표시'),
+    ]),
+    h('p', { role: 'status', 'aria-live': 'polite' }, manualCopyStatus.value),
+    h('pre', { id: 'ime-evidence', style: 'white-space:pre-wrap;overflow-wrap:anywhere' }),
+  ]),
+});
+manualApp.mount(manualHost);
+await nextTick();
+for (const element of manualHost.querySelectorAll('input,textarea')) {
+  const descriptor = Object.getOwnPropertyDescriptor(
+    element instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, 'value',
+  );
+  Object.defineProperty(element, 'value', {
+    configurable: true,
+    get() { return descriptor.get.call(this); },
+    set(value) {
+      manualTrace.push({ id: this.id, type: 'script-value-write', before: descriptor.get.call(this), value });
+      descriptor.set.call(this, value);
+    },
+  });
+  for (const type of ['beforeinput', 'input', 'compositionstart', 'compositionupdate', 'compositionend']) {
+    element.addEventListener(type, (event) => {
+      manualTrace.push({ id: element.id, type, trusted: event.isTrusted,
+        inputType: event.inputType ?? null, data: event.data ?? null,
+        value: element.value, selection: [element.selectionStart, element.selectionEnd] });
+      if (element.id === 'ime-combobox' && type === 'compositionstart') {
+        queueMicrotask(() => {
+          manualGeneration += 1;
+          manualItems.value = [{ id: 'hangul', label: `한글 입력 확인 ${manualGeneration}` }];
+          manualTrace.push({ id: element.id, type: 'items-only-refresh', generation: manualGeneration });
+        });
+      }
+    });
+  }
+}
