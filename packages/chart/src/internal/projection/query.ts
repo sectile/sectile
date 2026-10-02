@@ -91,16 +91,27 @@ function tryHitTestChartProjectionWithDiagnostics<ID extends StableID>(
   input: ChartHitTestInput,
   diagnostics: MutableDiagnostics | null,
 ): ChartResult<readonly ChartHit<ID>[]> {
-  if (input === null || typeof input !== 'object' || !finite(input.x) || !finite(input.y)) return invalidQuery('Chart hit coordinates must be finite.');
-  const radius = input.radius ?? DEFAULT_CHART_NEAREST_RADIUS;
-  const maximumHits = input.maximumHits ?? 1;
+  if (input === null || typeof input !== 'object') return invalidQuery('Chart hit coordinates must be finite.');
+  let x: number;
+  let y: number;
+  let radius: number;
+  let maximumHits: number;
+  try {
+    x = input.x;
+    y = input.y;
+    radius = input.radius ?? DEFAULT_CHART_NEAREST_RADIUS;
+    maximumHits = input.maximumHits ?? 1;
+  } catch {
+    return invalidQuery('Chart hit coordinates must be readable.');
+  }
+  if (!finite(x) || !finite(y)) return invalidQuery('Chart hit coordinates must be finite.');
   if (!finite(radius) || radius < 0 || !Number.isSafeInteger(maximumHits)
     || maximumHits < 0 || maximumHits > MAXIMUM_CHART_HITS) {
     return invalidQuery('Chart hit radius or maximum hit count is invalid.');
   }
   if (maximumHits === 0) return chartOK(Object.freeze([]));
   const index = projectionQueryIndex(projection);
-  return chartOK(automaticHits(projection, index, input.x, input.y, radius, maximumHits, diagnostics));
+  return chartOK(automaticHits(projection, index, x, y, radius, maximumHits, diagnostics));
 }
 
 type MutableHit<ID extends StableID> = ChartHit<ID>;

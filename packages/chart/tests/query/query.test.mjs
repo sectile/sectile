@@ -18,6 +18,24 @@ function projectDefinition(coordinate, layers, viewport = { width: 240, height: 
   return createChartProjection(createChartDefinition({ coordinate, layers }), { viewport });
 }
 
+test('hit coordinates are captured once and unreadable coordinates return typed errors', () => {
+  const projection = project([{ id: 'p', profile: 'point', data: [
+    { id: 'origin', x: 0, y: 0 }, { id: 'far', x: 10, y: 10 },
+  ] }]);
+  let xReads = 0;
+  let yReads = 0;
+  const result = tryHitTestChartProjection(projection, {
+    get x() { xReads += 1; return xReads === 1 ? 0 : 100; },
+    get y() { yReads += 1; return yReads === 1 ? 100 : 0; },
+    radius: 1,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.value[0].id, 'origin');
+  assert.equal(xReads, 1);
+  assert.equal(yReads, 1);
+  assert.equal(tryHitTestChartProjection(projection, { get x() { throw new Error('unreadable'); }, y: 0 }).ok, false);
+});
+
 test('packed query index resolves points, line segments, rectangles, cells, and arcs', () => {
   const cases = [
     [project([{ id: 'p', profile: 'point', data: [{ id: 1, x: 0, y: 0 }, { id: 2, x: 10, y: 10 }] }]), { x: 1, y: 99 }, 1],
