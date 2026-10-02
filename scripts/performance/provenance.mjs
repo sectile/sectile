@@ -17,6 +17,14 @@ const BASE_FINGERPRINT_INPUTS = Object.freeze([
   'scripts/performance',
 ]);
 
+export function collectWorkloadFingerprint(repoRoot) {
+  return fingerprintPaths(repoRoot, [
+    'scripts/performance/schema.mjs',
+    'scripts/performance/workloads.mjs',
+    'scripts/performance/workloads',
+  ]);
+}
+
 export async function collectProvenance(repoRoot, workloadFingerprint, options = {}) {
   const cpu = cpus()[0];
   const workerRuntime = normalizeWorkerRuntime(options.workerRuntime);

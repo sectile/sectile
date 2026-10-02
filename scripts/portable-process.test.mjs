@@ -46,11 +46,11 @@ test('active package-manager CLIs are reused without relying on PATH', () => {
 });
 
 test('commands without an active package-manager CLI remain direct', () => {
-  assert.deepEqual(resolvePortableCommand('pnpm', ['verify'], { platform: 'darwin' }), {
+  assert.deepEqual(resolvePortableCommand('pnpm', ['verify'], { platform: 'darwin', env: {} }), {
     command: 'pnpm',
     args: ['verify'],
   });
-  assert.deepEqual(resolvePortableCommand('git', ['status'], { platform: 'win32' }), {
+  assert.deepEqual(resolvePortableCommand('git', ['status'], { platform: 'win32', env: {} }), {
     command: 'git',
     args: ['status'],
   });

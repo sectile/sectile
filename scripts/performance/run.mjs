@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -18,7 +17,7 @@ import {
 } from './config.mjs';
 import { performanceBaselinePath, selectPerformanceBaseline } from './baselines.mjs';
 import { compareReports, validateRunnerReport } from './check.mjs';
-import { collectProvenance } from './provenance.mjs';
+import { collectProvenance, collectWorkloadFingerprint } from './provenance.mjs';
 import { commonWorkerRuntime } from './runtime.mjs';
 import {
   appendPerformanceProcess,
@@ -87,6 +86,7 @@ async function main() {
   });
   try {
     const workerPath = resolve(repoRoot, 'scripts/performance/worker.mjs');
+    const workloadFingerprint = await collectWorkloadFingerprint(repoRoot);
     const processReports = [];
     for (let processIndex = 0; processIndex < options.processCount; processIndex += 1) {
       const { stdout } = await execFile(process.execPath, ['--expose-gc', workerPath], {
@@ -111,7 +111,7 @@ async function main() {
     }
 
     const workerRuntime = commonWorkerRuntime(processReports);
-    const workloadFingerprint = createHash('sha256').update(JSON.stringify(WORKLOAD_SCHEMA)).digest('hex');
+    assert.equal(await collectWorkloadFingerprint(repoRoot), workloadFingerprint, 'Performance workload definitions changed during execution.');
     const report = Object.freeze({
       schemaVersion: PERFORMANCE_SCHEMA_VERSION,
       createdAt: new Date().toISOString(),

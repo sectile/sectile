@@ -9,7 +9,7 @@ import {
   selectPerformanceBaseline,
 } from './performance/baselines.mjs';
 import { assertComparable, compareReports, validateRunnerReport } from './performance/check.mjs';
-import { collectProvenance } from './performance/provenance.mjs';
+import { collectProvenance, collectWorkloadFingerprint } from './performance/provenance.mjs';
 import {
   appendPerformanceProcess,
   createPerformanceSession,
@@ -49,6 +49,30 @@ import {
   performanceSelectionID,
 } from './performance/schema.mjs';
 import { createWorkloadGroups, createWorkloads } from './performance/workloads.mjs';
+
+test('ISSUE-126: workload identity covers catalog additions and same-ID semantics independently of product builds', async (context) => {
+  const root = await mkdtemp(join(tmpdir(), 'sectile-workload-identity-'));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const performance = join(root, 'scripts', 'performance');
+  await mkdir(join(performance, 'workloads'), { recursive: true });
+  await writeFile(join(performance, 'schema.mjs'), 'export const schema = { version: 20 };\n');
+  await writeFile(join(performance, 'workloads.mjs'), 'export const owners = ["core"];\n');
+  const catalog = join(performance, 'workloads', 'core.mjs');
+  await writeFile(catalog, 'export const workload = { id: "core:query", operation: "nearest" };\n');
+  const original = await collectWorkloadFingerprint(root);
+  await writeFile(join(root, 'product.ts'), 'export const changedProduct = true;\n');
+  assert.equal(await collectWorkloadFingerprint(root), original);
+  await writeFile(catalog, 'export const workload = { id: "core:query", operation: "radius" };\n');
+  const changed = await collectWorkloadFingerprint(root);
+  assert.notEqual(changed, original);
+  const baseline = fixture();
+  const current = fixture();
+  baseline.provenance.workloadFingerprint = original;
+  current.provenance.workloadFingerprint = changed;
+  assert.throws(() => assertComparable(baseline, current), /mismatched workload, runtime, hardware, flags, or protocol/u);
+  await writeFile(join(performance, 'workloads', 'added.mjs'), 'export const id = "core:added";\n');
+  assert.notEqual(await collectWorkloadFingerprint(root), changed);
+});
 
 test('performance statistics report stable median, p95, and relative MAD', () => {
   assert.equal(median([5, 1, 3, 2, 4]), 3);
