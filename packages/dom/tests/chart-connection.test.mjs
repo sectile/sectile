@@ -864,7 +864,7 @@ test('opt-in axis navigation derives touch action, conditionally cancels wheel, 
     },
   });
   assert.equal(value.canvas.style.touchAction, 'pan-y');
-  assert.equal(connection.getLifecycleDiagnostics().listeners, 9);
+  assert.equal(connection.getLifecycleDiagnostics().listeners, 10);
 
   const wheel = new value.window.WheelEvent('wheel', { clientX: 50, clientY: 50, deltaY: -100, cancelable: true });
   Object.defineProperties(wheel, {
@@ -953,6 +953,48 @@ test('controlled view settlement is announced only after owner synchronization',
   assert.equal(accepted.ok, true);
   assert.equal(status.textContent, 'Timeline range 35 to 65');
   connection.disconnect();
+});
+
+test('ISSUE-181: pinch retains its pair through extra pointers and capture failures', () => {
+  for (const drag of ['none', 'pan']) {
+    const value = navigableFixture();
+    const captures = new Set();
+    value.canvas.setPointerCapture = (id) => {
+      if (id === 9) throw new Error('capture failed');
+      captures.add(id);
+    };
+    value.canvas.releasePointerCapture = (id) => {
+      captures.delete(id);
+      if (id === 2) throw new Error('capture already lost');
+    };
+    const connection = createDOMChart({
+      root: value.root, canvas: value.canvas, controller: value.controller, renderer: value.renderer,
+      navigation: { axes: ['x'], drag, pinch: true, controlAlternative: 'external' },
+    });
+    const pointer = (type, id, x) => value.canvas.dispatchEvent(new value.window.PointerEvent(type, {
+      pointerId: id, button: 0, clientX: x, clientY: 50,
+    }));
+    pointer('pointerdown', 9, 10);
+    assert.equal(captures.size, 0);
+    pointer('pointerdown', 1, 40);
+    pointer('pointerdown', 2, 60);
+    pointer('pointerdown', 3, 90);
+    assert.deepEqual([...captures], [1, 2]);
+    const before = value.controller.getSnapshot().state.view;
+    pointer('pointermove', 3, 99);
+    pointer('pointerup', 3, 99);
+    assert.equal(value.controller.getSnapshot().state.view, before);
+    assert.deepEqual([...captures], [1, 2]);
+    pointer('pointermove', 2, 80);
+    const zoomed = value.controller.getSnapshot().state.view.axes[0].visible;
+    assert.equal(zoomed.maximum - zoomed.minimum, 30);
+    pointer('pointerup', 2, 80);
+    assert.equal(captures.size, 0);
+    pointer('pointermove', 1, 0);
+    assert.equal(value.controller.getSnapshot().state.view.axes[0].visible, zoomed);
+    connection.disconnect();
+    assert.equal(connection.getLifecycleDiagnostics().listeners, 0);
+  }
 });
 
 test('pan and emulated pinch own one pointer mode, capture pointers, and release at settlement', () => {

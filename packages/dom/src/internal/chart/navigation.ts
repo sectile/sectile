@@ -20,6 +20,7 @@ interface PointerPosition {
 
 interface ActiveGesture<ID extends StableID> {
   readonly mode: GestureMode;
+  readonly pointerIDs: readonly [number, number?];
   readonly axes: readonly ChartAxisLayout<ID>[];
   readonly start: PointerPosition;
   last: PointerPosition;
@@ -137,6 +138,7 @@ export class ChartNavigationAdapter<ID extends StableID> {
         this.#listeners += 1; this.#canvas.addEventListener('pointermove', this.#onPointerMove);
         this.#listeners += 1; this.#canvas.addEventListener('pointerup', this.#onPointerUp);
         this.#listeners += 1; this.#canvas.addEventListener('pointercancel', this.#onPointerCancel);
+        this.#listeners += 1; this.#canvas.addEventListener('lostpointercapture', this.#onPointerCancel);
       }
       if (this.#navigation.wheel !== 'native') {
         this.#listeners += 1;
@@ -154,6 +156,7 @@ export class ChartNavigationAdapter<ID extends StableID> {
       this.#canvas.removeEventListener('pointermove', this.#onPointerMove);
       this.#canvas.removeEventListener('pointerup', this.#onPointerUp);
       this.#canvas.removeEventListener('pointercancel', this.#onPointerCancel);
+      this.#canvas.removeEventListener('lostpointercapture', this.#onPointerCancel);
       this.#canvas.removeEventListener('wheel', this.#onWheel);
     }
     this.#listeners = 0;
@@ -164,20 +167,22 @@ export class ChartNavigationAdapter<ID extends StableID> {
 
   readonly #onPointerDown = (event: PointerEvent): void => {
     if (!this.#active || event.button !== 0) return;
+    if (this.#pointers.has(event.pointerId) || this.#pointers.size >= (this.#navigation.pinch ? 2 : 1)) return;
     const point = this.#position(event);
-    this.#pointers.set(event.pointerId, point);
     const axes = this.#axes(this.#getProjection());
     if (axes.length === 0) return;
-    this.#canvas.setPointerCapture?.(event.pointerId);
+    try { this.#canvas.setPointerCapture?.(event.pointerId); } catch { return; }
+    this.#pointers.set(event.pointerId, point);
     if (this.#navigation.pinch && this.#pointers.size === 2) {
-      const pair = [...this.#pointers.values()];
-      const midpoint = middle(pair[0] as PointerPosition, pair[1] as PointerPosition);
-      this.#gesture = { mode: 'pinch', axes, start: midpoint, last: midpoint, distance: distance(pair[0] as PointerPosition, pair[1] as PointerPosition) };
+      const firstID = this.#pointers.keys().next().value as number;
+      const first = this.#pointers.get(firstID) as PointerPosition;
+      const midpoint = middle(first, point);
+      this.#gesture = { mode: 'pinch', pointerIDs: [firstID, event.pointerId], axes, start: midpoint, last: midpoint, distance: distance(first, point) };
       this.#zoomAxes(axes, 1, midpoint, 'start');
       return;
     }
     if (this.#navigation.drag === 'none') return;
-    this.#gesture = { mode: this.#navigation.drag, axes, start: point, last: point, distance: 0 };
+    this.#gesture = { mode: this.#navigation.drag, pointerIDs: [event.pointerId], axes, start: point, last: point, distance: 0 };
     this.#phase(axes, 'start');
   };
 
@@ -187,11 +192,12 @@ export class ChartNavigationAdapter<ID extends StableID> {
     this.#pointers.set(event.pointerId, point);
     const gesture = this.#gesture;
     if (gesture.mode === 'pinch') {
-      if (this.#pointers.size < 2) return;
-      const pair = [...this.#pointers.values()];
-      const nextDistance = distance(pair[0] as PointerPosition, pair[1] as PointerPosition);
+      const first = this.#pointers.get(gesture.pointerIDs[0]);
+      const second = gesture.pointerIDs[1] === undefined ? undefined : this.#pointers.get(gesture.pointerIDs[1]);
+      if (first === undefined || second === undefined) return;
+      const nextDistance = distance(first, second);
       if (!(gesture.distance > 0) || !(nextDistance > 0)) return;
-      const midpoint = middle(pair[0] as PointerPosition, pair[1] as PointerPosition);
+      const midpoint = middle(first, second);
       const changed = this.#zoomAxes(gesture.axes, nextDistance / gesture.distance, midpoint, 'update');
       gesture.distance = nextDistance;
       gesture.last = midpoint;
@@ -215,14 +221,15 @@ export class ChartNavigationAdapter<ID extends StableID> {
     this.#pointers.set(event.pointerId, point);
     const gesture = this.#gesture;
     if (gesture !== null && gesture.mode !== 'pan' && gesture.mode !== 'pinch') this.#commitRegion(gesture, point);
-    this.#canvas.releasePointerCapture?.(event.pointerId);
     this.#pointers.delete(event.pointerId);
-    if (gesture !== null && (gesture.mode !== 'pinch' || this.#pointers.size < 2)) this.#endGesture(true);
+    this.#releasePointer(event.pointerId);
+    if (gesture !== null) this.#endGesture(true);
   };
 
   readonly #onPointerCancel = (event: PointerEvent): void => {
-    this.#canvas.releasePointerCapture?.(event.pointerId);
+    if (!this.#pointers.has(event.pointerId)) return;
     this.#pointers.delete(event.pointerId);
+    this.#releasePointer(event.pointerId);
     this.#endGesture(true);
   };
 
@@ -305,15 +312,18 @@ export class ChartNavigationAdapter<ID extends StableID> {
   #endGesture(settled: boolean): void {
     const gesture = this.#gesture;
     this.#gesture = null;
-    for (const pointerID of this.#pointers.keys()) {
-      if (this.#canvas.hasPointerCapture?.(pointerID)) this.#canvas.releasePointerCapture(pointerID);
-    }
+    const pointerIDs = Array.from(this.#pointers.keys());
     this.#pointers.clear();
+    for (const pointerID of pointerIDs) this.#releasePointer(pointerID);
     if (gesture !== null && settled) this.#phase(gesture.axes, 'settled');
     if (this.#pendingTouchAction !== null) {
       this.#canvas.style.touchAction = this.#pendingTouchAction;
       this.#pendingTouchAction = null;
     }
+  }
+
+  #releasePointer(pointerID: number): void {
+    try { this.#canvas.releasePointerCapture?.(pointerID); } catch { /* capture may already be lost */ }
   }
 
   #phase(axes: readonly ChartAxisLayout<ID>[], phase: 'start' | 'end' | 'settled'): boolean {
