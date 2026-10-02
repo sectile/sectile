@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-02T19:56:42Z",
+  "title": "Design System: Sectile Documentation",
+  "extensions": {
+    "colorMeta": {
+      "accent": { "role": "primary", "displayName": "Sectile Violet" },
+      "accent-hover": { "role": "primary", "displayName": "Deep Action Violet" },
+      "accent-soft": { "role": "primary", "displayName": "Violet Wash" },
+      "paper": { "role": "neutral", "displayName": "Paper" },
+      "paper-muted": { "role": "neutral", "displayName": "Muted Paper" },
+      "ink": { "role": "neutral", "displayName": "Ink" },
+      "ink-muted": { "role": "neutral", "displayName": "Muted Ink" },
+      "code-background": { "role": "neutral", "displayName": "Code Background" },
+      "error": { "role": "feedback", "displayName": "Validation Error" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Overview Title", "purpose": "Overview heading, with a smaller mobile variant." },
+      "headline": { "displayName": "Page Title", "purpose": "Guide, component, and example headings." },
+      "code": { "displayName": "Source", "purpose": "Scrollable source text; mobile size is 12px." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "source-reveal", "value": "160ms cubic-bezier(.16,1,.3,1)", "purpose": "Disclosure content clips from inset(0 0 12%) to inset(0), only with prefers-reduced-motion: no-preference." }
+    ],
+    "breakpoints": [
+      { "name": "compact-desktop", "value": "1000px" },
+      { "name": "mobile-navigation", "value": "760px" },
+      { "name": "single-column-gallery", "value": "520px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Reading Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The overview's getting-started link.",
+      "html": "<a class=\"ds-action\" href=\"#getting-started\">Get started with Vue</a>",
+      "css": ".ds-action{display:inline-flex;min-height:46px;align-items:center;justify-content:center;padding:9px 18px;border-radius:var(--docs-control-radius);background:var(--docs-accent);color:var(--docs-bg);font-family:var(--docs-font-sans);font-size:14px;font-weight:600;text-decoration:none}.ds-action:hover{background:#3c4db8}.ds-action:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}"
+    },
+    {
+      "name": "Secondary Preview Control",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Paper control used by the dialog trigger and secondary form actions.",
+      "html": "<button class=\"ds-secondary\" type=\"button\">Open settings</button>",
+      "css": ".ds-secondary{min-height:44px;padding:8px 16px;border:1px solid var(--docs-control-border);border-radius:var(--docs-control-radius);background:var(--docs-bg);color:var(--docs-text);font-family:var(--docs-font-sans);font-size:16px;line-height:1.65;cursor:pointer}.ds-secondary:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}"
+    },
+    {
+      "name": "Current Sidebar Link",
+      "kind": "nav",
+      "refersTo": "navigation-link-current",
+      "description": "Violet wash indicates the current documentation page.",
+      "html": "<nav aria-label=\"Documentation\"><a class=\"ds-nav\" href=\"#overview\" aria-current=\"page\">Overview</a></nav>",
+      "css": ".ds-nav{display:flex;min-height:36px;align-items:center;padding:6px 12px;border-radius:6px;color:var(--docs-text-muted);font-family:var(--docs-font-sans);font-size:14px;line-height:1.65;text-decoration:none}.ds-nav:hover{background:var(--docs-bg-muted);color:var(--docs-text)}.ds-nav[aria-current=page]{background:var(--docs-accent-soft);color:var(--docs-accent);font-weight:600}.ds-nav:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}@media(max-width:760px){.ds-nav{min-height:44px}}"
+    },
+    {
+      "name": "Example Card",
+      "kind": "card",
+      "refersTo": "example-card",
+      "description": "Static gallery link with a representative thumbnail.",
+      "html": "<a class=\"ds-card\" href=\"#checkbox\"><div class=\"ds-thumbnail\"><span class=\"ds-check\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"m3 8 3 3 7-7\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span>Notifications</div><div class=\"ds-card-body\"><h3>Controlled state</h3><p>Connect checked state to your application.</p><span>Behavior example</span></div></a>",
+      "css": ".ds-card{display:block;overflow:hidden;border:1px solid var(--docs-border);border-radius:var(--docs-radius);color:var(--docs-text);font-family:var(--docs-font-sans);line-height:1.65;text-decoration:none}.ds-card:hover{border-color:var(--docs-control-border)}.ds-card:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}.ds-thumbnail{display:flex;min-height:168px;align-items:center;justify-content:center;gap:10px;padding:24px;border-bottom:1px solid var(--docs-border);background:var(--docs-bg-muted);font-size:12px}.ds-check{display:grid;width:20px;height:20px;place-items:center;border-radius:5px;background:var(--docs-accent);color:var(--docs-bg)}.ds-card-body{padding:20px}.ds-card-body h3{margin:0 0 8px;font-size:17px;font-weight:650;letter-spacing:-.015em;line-height:1.4}.ds-card-body p{margin:0 0 18px;color:var(--docs-text-muted);font-size:14px;line-height:1.6}.ds-card-body>span{color:var(--docs-text-muted);font-size:12px}"
+    },
+    {
+      "name": "Example Form Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Native field styled by the documentation preview.",
+      "html": "<label class=\"ds-field\">Email address<input type=\"email\" placeholder=\"you@example.com\" /></label>",
+      "css": ".ds-field{display:grid;gap:8px;color:var(--docs-text);font-family:var(--docs-font-sans);font-size:14px;font-weight:600;line-height:1.65}.ds-field input{width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--docs-control-border);border-radius:var(--docs-control-radius);background:var(--docs-bg);color:var(--docs-text);font-family:var(--docs-font-sans);font-size:16px;line-height:1.65;caret-color:var(--docs-accent)}.ds-field input:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}"
+    },
+    {
+      "name": "Source Block",
+      "kind": "custom",
+      "refersTo": "code-block",
+      "description": "Dark source surface with visible copy control; this panel specimen is visual only.",
+      "html": "<div class=\"ds-source\"><div class=\"ds-source-header\"><span>Install in your Vue application</span><button type=\"button\">Copy code</button></div><pre tabindex=\"0\" aria-label=\"Installation command\"><code>pnpm add @sectile/vue</code></pre></div>",
+      "css": ".ds-source{min-width:0;overflow:hidden;border-radius:var(--docs-radius);background:var(--docs-code-bg);color:var(--docs-code-text);font-family:var(--docs-font-sans);line-height:1.65}.ds-source-header{display:flex;min-height:44px;align-items:center;justify-content:space-between;gap:12px;padding:4px 16px;border-bottom:1px solid #293852;color:var(--docs-code-muted);font-size:12px}.ds-source-header button{min-height:36px;padding:4px 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--docs-code-text);font-family:var(--docs-font-sans);font-size:12px;line-height:1.65;cursor:pointer}.ds-source-header button:hover{border-color:#52617a}.ds-source-header button:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}.ds-source pre{max-height:560px;margin:0;overflow:auto;padding:20px;font-family:var(--docs-font-mono);font-size:13px;line-height:1.75;tab-size:2;scrollbar-color:#52617a transparent}.ds-source pre:focus-visible{outline:2px solid var(--docs-focus);outline-offset:-3px}.ds-source code{font:inherit}@media(max-width:760px){.ds-source pre{padding:16px;font-size:12px}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Inspectable Workbench",
+    "overview": "This is the documentation's reading expression of Sectile's established white, ink, and violet world. Open paper carries explanations; ruled links, static example galleries, runnable previews, and source blocks make behavior inspectable. The mood is a clean Read surface.\n\nThis contract belongs to the private Vue/Vite documentation package. Its reading shell, geometry, preview styling, and source components extend the root design system locally. The library's headless components leave application presentation with the consumer. Root `DESIGN.md` remains the authority for the broader brand and landing surface.",
+    "keyCharacteristics": [
+      "White reading canvas with ink copy and quiet rules.",
+      "Restrained violet for actions, navigation selection, and focus.",
+      "Sans-serif explanation with monospace code and live values.",
+      "Flat previews and source blocks with perimeter-defined geometry.",
+      "Distinct Vue and DOM navigation contexts."
+    ],
+    "rules": [
+      { "name": "The Violet Means Action Rule", "body": "Use violet for links, actions, selected navigation, checked state, and visible keyboard focus.", "section": "colors" },
+      { "name": "The Code Is Mono Rule", "body": "Keep code and emitted values in monospace, and explanatory copy in the sans-serif reading voice.", "section": "typography" },
+      { "name": "The Paper Before Panels Rule", "body": "Use open paper and ruled rows for guidance; bounded containers hold examples and source.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep this contract scoped to the documentation reading shell and examples.",
+      "Do preserve paper, ink, restrained violet, and explicit keyboard focus.",
+      "Do use ruled links for guidance and bounded previews for runnable behavior.",
+      "Do identify whether preview styling is supplied by the docs or shown source."
+    ],
+    "donts": [
+      "Don't prescribe application styling through the headless library's public contract."
+    ]
+  }
+}
