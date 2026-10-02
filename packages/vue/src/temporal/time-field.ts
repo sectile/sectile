@@ -2,10 +2,9 @@ import { type PropType } from 'vue';
 import {
   createTimeField,
   formatTimeValue,
-  type TimeFieldConnection,
   type TimeFieldOptions,
 } from '@sectile/dom/temporal/time-field';
-import { createNativeFieldComponent, type NativeFieldFactoryOptions } from '../input/native-field.js';
+import { createNativeFieldComponent } from '../input/native-field.js';
 
 export type TimeValue = NonNullable<TimeFieldOptions['value']>;
 export interface TimeFieldProps {
@@ -29,11 +28,6 @@ export const TimeField = createNativeFieldComponent<TimeValue, TimeFieldPolicies
   placeholder: 'HH:mm',
   formatValue: formatTimeValue,
   valueType: Object as PropType<TimeValue | null>,
-  create: (options: NativeFieldFactoryOptions<TimeValue, TimeFieldPolicies>): TimeFieldConnection => createTimeField({
-    ...options,
-    ...(options.policies === undefined
-      ? {}
-      : { policies: options.policies }),
-  }),
+  create: createTimeField,
 });
 export type TimeFieldValueChangeHandler = (value: TimeValue | null) => void;

@@ -2,10 +2,9 @@ import { type PropType } from 'vue';
 import {
   createDateTimeField,
   formatDateTimeValue,
-  type DateTimeFieldConnection,
   type DateTimeFieldOptions,
 } from '@sectile/dom/temporal/date-time-field';
-import { createNativeFieldComponent, type NativeFieldFactoryOptions } from '../input/native-field.js';
+import { createNativeFieldComponent } from '../input/native-field.js';
 
 export type DateTimeValue = NonNullable<DateTimeFieldOptions['value']>;
 export interface DateTimeFieldProps {
@@ -29,11 +28,6 @@ export const DateTimeField = createNativeFieldComponent<DateTimeValue, DateTimeF
   placeholder: 'YYYY-MM-DDTHH:mm',
   formatValue: formatDateTimeValue,
   valueType: Object as PropType<DateTimeValue | null>,
-  create: (options: NativeFieldFactoryOptions<DateTimeValue, DateTimeFieldPolicies>): DateTimeFieldConnection => createDateTimeField({
-    ...options,
-    ...(options.policies === undefined
-      ? {}
-      : { policies: options.policies }),
-  }),
+  create: createDateTimeField,
 });
 export type DateTimeFieldValueChangeHandler = (value: DateTimeValue | null) => void;

@@ -4012,6 +4012,10 @@
           "role": "native-field",
           "kind": "owner"
         },
+        "src/input/native-range-field.ts": {
+          "role": "native-field",
+          "kind": "owner"
+        },
         "src/input/native-text-state.ts": {
           "role": "foundation",
           "kind": "owner"

@@ -62,7 +62,7 @@ export interface NativeFieldPublicProps<Value, Policies = Readonly<Record<string
 export function createNativeFieldComponent<Value, Policies = Readonly<Record<string, unknown>>>(
   config: NativeFieldComponentConfig<Value, Policies>,
 ) {
-  const component = defineComponent({
+  return defineComponent({
     name: config.name,
     inheritAttrs: false,
     props: {
@@ -81,72 +81,60 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
     setup(props, { attrs, emit }) {
       const input = shallowRef<HTMLInputElement>();
       const participation = useNativeInputFormControl(input);
-      const connection = shallowRef<NativeFieldConnection<Value>>();
+      let connection: NativeFieldConnection<Value> | undefined;
       const controlled = useControlledStateInvariant(config.name, 'modelValue', () => props.modelValue);
-      const acceptedValue = shallowRef<Value | null | undefined>(
-        controlled ? props.modelValue as Value | null : undefined,
-      );
+      let acceptedValue = controlled ? props.modelValue as Value | null : undefined;
       const initialProjectedValue = controlled ? props.modelValue : props.defaultValue;
       const projectedText = shallowRef(
         initialProjectedValue === null || initialProjectedValue === undefined
           ? ''
           : config.formatValue(initialProjectedValue as Value),
       );
-      const projectedNative = shallowRef(props.native);
-      const projectedDisabled = shallowRef(props.disabled);
-      const projectedReadonly = shallowRef(props.readonly);
-      const projectedRequired = shallowRef(props.required);
+      const projectOptions = () => ({ native: props.native, disabled: props.disabled,
+        readonly: props.readonly, required: props.required });
+      const projected = shallowRef(projectOptions());
       let inputComposing = false;
       let reconnectPending = false;
       let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
       const capture = (): PreservedNativeField<Value> | undefined => {
-        const target = connection.value;
+        const target = connection;
         const element = input.value;
         if (target === undefined || element === undefined) return undefined;
-        return Object.freeze({
+        return {
           value: target.getValue(),
           inputState: captureNativeTextState(element, target.getText()),
-        });
+        };
       };
       const connect = (preserved?: PreservedNativeField<Value>): void => {
         const element = input.value;
         if (element === undefined) return;
-        connection.value?.disconnect();
-        projectedNative.value = props.native;
-        projectedDisabled.value = props.disabled;
-        projectedReadonly.value = props.readonly;
-        projectedRequired.value = props.required;
-        const fieldOptions: NativeFieldFactoryOptions<Value, Policies> & {
-          readonly defaultInputState?: TextEditingState;
-        } = {
+        connection?.disconnect();
+        projected.value = projectOptions();
+        const fieldOptions: {
+          -readonly [Key in keyof NativeFieldFactoryOptions<Value, Policies>]: NativeFieldFactoryOptions<Value, Policies>[Key];
+        } & { defaultInputState?: TextEditingState } = {
           input: element,
-          ...(props.policies === undefined ? {} : { policies: props.policies as Policies }),
-          ...(controlled
-            ? { value: acceptedValue.value as Value | null }
-            : {
-                defaultValue: (preserved === undefined
-                  ? props.defaultValue
-                  : preserved.value) as Value | null,
-              }),
-          ...(preserved === undefined ? {} : { defaultInputState: preserved.inputState }),
           disabled: props.disabled,
           readOnly: props.readonly,
           required: props.required,
-          ...(props.label === undefined ? {} : { label: props.label }),
           native: props.native,
           onValueChange: (value) => {
             emit('update:modelValue', value);
           },
           onUpdate: () => {
-            const target = connection.value;
+            const target = connection;
             if (target === undefined) return;
-            void target.getSnapshot().revision;
             projectedText.value = target.getText();
           },
         };
-        connection.value = config.create(fieldOptions);
-        projectedText.value = connection.value.getText();
+        if (props.policies !== undefined) fieldOptions.policies = props.policies as Policies;
+        if (controlled) fieldOptions.value = acceptedValue as Value | null;
+        else fieldOptions.defaultValue = (preserved === undefined ? props.defaultValue : preserved.value) as Value | null;
+        if (preserved !== undefined) fieldOptions.defaultInputState = preserved.inputState;
+        if (props.label !== undefined) fieldOptions.label = props.label;
+        connection = config.create(fieldOptions);
+        projectedText.value = connection.getText();
       };
       const requestConnect = (): void => {
         if (inputComposing) {
@@ -171,14 +159,14 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
         if (reconnectTimer !== null) clearTimeout(reconnectTimer);
         reconnectTimer = null;
         reconnectPending = false;
-        connection.value?.disconnect();
+        connection?.disconnect();
       });
       watch(() => props.modelValue, (value) => {
-        if (!controlled || value === undefined || connection.value === undefined) return;
-        const result = connection.value.syncControlledValues({ value: value as Value | null });
+        if (!controlled || value === undefined || connection === undefined) return;
+        const result = connection.syncControlledValues({ value: value as Value | null });
         if (!result.ok) throw new TypeError('Controlled native field synchronization failed.');
-        acceptedValue.value = value as Value | null;
-        projectedText.value = connection.value.getText();
+        acceptedValue = value as Value | null;
+        projectedText.value = connection.getText();
       });
       watch(
         [() => props.policies, () => props.disabled, () => props.readonly,
@@ -186,30 +174,31 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
         requestConnect,
       );
 
+      const setInput = (element: unknown): void => {
+        input.value = element instanceof HTMLInputElement ? element : undefined;
+      };
+
       return (): VNodeChild => h('input', mergeProps(attrs, {
-        ref: (element: unknown) => {
-          input.value = element instanceof HTMLInputElement ? element : undefined;
-        },
+        ref: setInput,
         'data-scope': config.scope,
         'data-part': 'input',
-        type: projectedNative.value && config.nativeInputType !== undefined
+        type: projected.value.native && config.nativeInputType !== undefined
           ? config.nativeInputType
           : 'text',
-        inputmode: projectedNative.value ? undefined : config.inputMode,
-        placeholder: projectedNative.value ? undefined : config.placeholder,
-        disabled: projectedDisabled.value,
-        readonly: projectedReadonly.value,
-        required: projectedRequired.value,
-        'aria-disabled': String(projectedDisabled.value),
-        'aria-readonly': String(projectedReadonly.value),
+        inputmode: projected.value.native ? undefined : config.inputMode,
+        placeholder: projected.value.native ? undefined : config.placeholder,
+        disabled: projected.value.disabled,
+        readonly: projected.value.readonly,
+        required: projected.value.required,
+        'aria-disabled': String(projected.value.disabled),
+        'aria-readonly': String(projected.value.readonly),
         'aria-label': props.label,
         onCompositionstart: () => setInputComposing(true),
         onCompositionend: () => setInputComposing(false),
         value: projectedText.value,
       }, participation.controlProps.value));
     },
-  });
-  return component as unknown as DefineComponent<NativeFieldPublicProps<Value, Policies>>;
+  }) as unknown as DefineComponent<NativeFieldPublicProps<Value, Policies>>;
 }
 
 interface PreservedNativeField<Value> {

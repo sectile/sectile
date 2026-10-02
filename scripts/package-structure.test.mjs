@@ -27,6 +27,7 @@ test('Vue popup, presence and input owners retain lower dependency closures', as
     ['input/decimal-input.ts', ['input-decimal']],
     ['input/native-text-state.ts', ['foundation']],
     ['input/native-field.ts', ['native-field', 'foundation', 'form-control']],
+    ['input/native-range-field.ts', ['native-field', 'foundation', 'form-control']],
     ['overlay/popup.ts', popupRoles],
     ...profiles.map((path) => [path, ['overlay-profiles', ...popupRoles]]),
   ];

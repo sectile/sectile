@@ -326,3 +326,52 @@ test('controlled Vue range fields update both endpoints without losing either se
   app.unmount();
   host.remove();
 });
+
+for (const [name, Root, Start, End, defaultValue] of [
+  ['date', DateRangeFieldRoot, DateRangeFieldStartInput, DateRangeFieldEndInput,
+    { start: { year: 2026, month: 8, day: 18 }, end: { year: 2026, month: 8, day: 21 } }],
+  ['time', TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput,
+    { start: { hour: 9, minute: 30, second: 0, millisecond: 0 }, end: { hour: 17, minute: 45, second: 0, millisecond: 0 } }],
+]) {
+  test(`${name} range defers reconfiguration until both compositions end and cancels unmounted work`, async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const label = ref('initial');
+    const app = createApp({
+      render: () => h(Root, { defaultValue, startLabel: label.value }, {
+        default: () => [h(Start), h(End)],
+      }),
+    });
+    app.mount(host);
+    await nextTick();
+    const [start, end] = host.querySelectorAll('input');
+    const texts = [start.value, end.value];
+    start.dispatchEvent(compositionEvent('compositionstart'));
+    end.dispatchEvent(compositionEvent('compositionstart'));
+    label.value = 'reconfigured';
+    await nextTick();
+    assert.equal(start.getAttribute('aria-label'), 'initial');
+    start.dispatchEvent(compositionEvent('compositionend'));
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await nextTick();
+    assert.equal(start.getAttribute('aria-label'), 'initial');
+    end.dispatchEvent(compositionEvent('compositionend'));
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await nextTick();
+    assert.equal(start.getAttribute('aria-label'), 'reconfigured');
+    assert.deepEqual([start.value, end.value], texts);
+
+    let newListeners = 0;
+    const add = start.addEventListener.bind(start);
+    start.addEventListener = (...arguments_) => { newListeners += 1; return add(...arguments_); };
+    start.dispatchEvent(compositionEvent('compositionstart'));
+    label.value = 'after-unmount';
+    await nextTick();
+    start.dispatchEvent(compositionEvent('compositionend'));
+    app.unmount();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await nextTick();
+    assert.equal(newListeners, 0);
+    host.remove();
+  });
+}
