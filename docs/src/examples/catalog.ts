@@ -30,6 +30,96 @@ export interface ComponentDefinition {
 
 export const components: readonly ComponentDefinition[] = [
   {
+    "subject": "CascadeList",
+    "slug": "cascade-list",
+    "module": "@sectile/vue/cascade-list",
+    "description": "Choose a leaf from visible country and city columns.",
+    "parts": [
+      "CascadeListRoot",
+      "CascadeListColumn",
+      "CascadeListItem"
+    ],
+    "composition": [
+      "Declare flat nodes with stable IDs and parentID. Render one column per root slot columns entry, then its matching item IDs."
+    ],
+    "interaction": [
+      "Branches open another column; leaf selection commits the city. Disabled items remain unavailable to pointer and keyboard input."
+    ]
+  },
+  {
+    "subject": "CascadeSelect",
+    "slug": "cascade-select",
+    "module": "@sectile/vue/cascade-select",
+    "description": "Choose a hierarchical leaf from a trigger-controlled panel.",
+    "parts": [
+      "CascadeSelectRoot",
+      "CascadeSelectTrigger",
+      "CascadeSelectContent",
+      "CascadeSelectColumn",
+      "CascadeSelectItem",
+      "CascadeSelectValue"
+    ],
+    "composition": [
+      "Declare nodes and render columns inside Content. Value formats the selected path with textValue; the trigger controls panel visibility."
+    ],
+    "interaction": [
+      "Open the panel, navigate country and city columns, then choose a leaf. This in-flow example disables floating positioning explicitly."
+    ]
+  },
+  {
+    "subject": "ColorPicker",
+    "slug": "color-picker",
+    "module": "@sectile/vue/color-picker",
+    "description": "Edit one committed color through native and text inputs.",
+    "parts": [
+      "ColorPickerRoot",
+      "ColorPickerNativeInput",
+      "ColorPickerTextInput",
+      "ColorPickerValueText"
+    ],
+    "composition": [
+      "Bind the committed CSS color string. Compose the native and text inputs inside one root; draft text and formatting are distinct optional controls."
+    ],
+    "interaction": [
+      "Commit a valid color through either editor. This example disables alpha and leaves the native picker appearance to the operating system."
+    ]
+  },
+  {
+    "subject": "Reorder",
+    "slug": "reorder",
+    "module": "@sectile/vue/reorder",
+    "description": "Reorder a bounded sequence with pointer or keyboard input.",
+    "parts": [
+      "SequenceReorderRoot",
+      "SequenceReorderItem"
+    ],
+    "composition": [
+      "Bind items as stable IDs and render the root slot sequence, keyed by ID. Labels are application-owned and separate from identity."
+    ],
+    "interaction": [
+      "Drag an item or use Alt+ArrowUp/Down, Alt+Home and Alt+End while it is focused. The root emits a new order; the application retains it."
+    ]
+  },
+  {
+    "subject": "TreeGrid",
+    "slug": "tree-grid",
+    "module": "@sectile/vue/tree-grid",
+    "description": "Expand a row group and edit its cells.",
+    "parts": [
+      "TreeGridRoot",
+      "TreeGridRow",
+      "TreeGridCell",
+      "TreeGridDisclosure",
+      "TreeGridEditor"
+    ],
+    "composition": [
+      "Supply rows with ID, parentID and stable cell IDs. Keep expansion and selected cell separate. Provide getCellValue/setCellValue; render row visibility from expanded IDs."
+    ],
+    "interaction": [
+      "Arrow keys navigate cells; Enter edits or commits and Escape cancels. Expansion controls visible descendants independently of cell selection."
+    ]
+  },
+  {
     subject: 'MeterGroup', slug: 'meter-group', module: '@sectile/vue/meter-group',
     description: 'Show a shared storage budget as labeled segments.',
     parts: ['MeterGroupRoot', 'MeterGroupTrack', 'MeterGroupSegment', 'MeterGroupIndicator', 'MeterGroupList', 'MeterGroupItem'],
@@ -712,6 +802,131 @@ export interface ExampleDefinition {
 }
 
 export const examples: readonly ExampleDefinition[] = [
+  {
+    "id": "vue-components-cascade-list-visible-columns",
+    "host": "vue",
+    "area": "components",
+    "subject": "CascadeList",
+    "slug": "cascade-list/visible-columns",
+    "title": "Hierarchical delivery cities",
+    "description": "Choose a leaf from visible country and city columns.",
+    "focus": "Hierarchical delivery cities",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "CascadeList"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/cascade-list/visible-columns/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/cascade-list/visible-columns/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-cascade-select-hierarchical-choice",
+    "host": "vue",
+    "area": "components",
+    "subject": "CascadeSelect",
+    "slug": "cascade-select/hierarchical-choice",
+    "title": "Collapsible city selection",
+    "description": "Choose a hierarchical leaf from a trigger-controlled panel.",
+    "focus": "Collapsible city selection",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "CascadeSelect"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/cascade-select/hierarchical-choice/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/cascade-select/hierarchical-choice/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-color-picker-native-and-text",
+    "host": "vue",
+    "area": "components",
+    "subject": "ColorPicker",
+    "slug": "color-picker/native-and-text",
+    "title": "Native and text color input",
+    "description": "Edit one committed color through native and text inputs.",
+    "focus": "Native and text color input",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "ColorPicker"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/color-picker/native-and-text/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/color-picker/native-and-text/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-reorder-delivery-sequence",
+    "host": "vue",
+    "area": "components",
+    "subject": "Reorder",
+    "slug": "reorder/delivery-sequence",
+    "title": "Delivery stop order",
+    "description": "Reorder a bounded sequence with pointer or keyboard input.",
+    "focus": "Delivery stop order",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "Reorder"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/reorder/delivery-sequence/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/reorder/delivery-sequence/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-tree-grid-editable-parcels",
+    "host": "vue",
+    "area": "components",
+    "subject": "TreeGrid",
+    "slug": "tree-grid/editable-parcels",
+    "title": "Editable parcel hierarchy",
+    "description": "Expand a row group and edit its cells.",
+    "focus": "Editable parcel hierarchy",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "TreeGrid"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/tree-grid/editable-parcels/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/tree-grid/editable-parcels/Preview.vue"
+      }
+    ],
+    "related": []
+  },
   {
     "id": "vue-temporal-date-popover",
     "host": "vue",

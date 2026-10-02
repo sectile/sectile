@@ -220,6 +220,11 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-components-cascade-list-visible-columns': [/Delivery city: Seoul/u, /Country/u, /Busan/u],
+          'vue-components-cascade-select-hierarchical-choice': [/Delivery city: Seoul/u, /Korea \/ Seoul/u],
+          'vue-components-color-picker-native-and-text': [/Committed color: #4659d4/u, /native-input/u],
+          'vue-components-reorder-delivery-sequence': [/Order: Reception → Warehouse → Office/u, /Alt\+ArrowUp/u],
+          'vue-components-tree-grid-editable-parcels': [/Selected cell: a-name/u, /Parcel A/u, /data-expanded/u],
           'vue-temporal-date-popover': [/Selected: 2026-10-03/u, /Choose date/u],
           'vue-temporal-date-range-popover': [/Selected: 2026-10-03 → 2026-10-08/u, /Range start/u, /Range end/u],
           'vue-temporal-inline-range-calendar': [/Selected: 2026-10-03 → 2026-10-08/u, /data-in-range/u],
