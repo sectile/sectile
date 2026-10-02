@@ -3,5 +3,6 @@ packages:
   - benchmarks/*
   - docs
   - tools/*
+packGzipLevel: 9
 allowBuilds:
   esbuild: true
