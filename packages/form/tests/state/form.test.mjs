@@ -27,6 +27,52 @@ import {
   tryCreateFormValues,
 } from '../../.verification-dist/values.js';
 
+// FRM-05
+test('array-backed paths use bounded slots without invoking custom iterators', () => {
+  const path = ['root', 'leaf'];
+  let iterations = 0;
+  path[Symbol.iterator] = function* () {
+    iterations += 1;
+    throw new Error('caller iterator must not run');
+  };
+  for (const construct of [tryCreateFormFieldPath, tryCreateFormRelativePath]) {
+    assert.deepEqual(construct(path, { maxPathSegments: 2 }).value, ['root', 'leaf']);
+    assert.equal(construct(path, { maxPathSegments: 1 }).ok, false);
+  }
+  assert.equal(tryCreateFormValues([{ path, value: 42 }], { maxPathSegments: 2 }).value.root.leaf, 42);
+  assert.equal(iterations, 0);
+  for (const length of [-1, 1.5]) {
+    const invalid = new Proxy(path, { get(target, key, receiver) {
+      return key === 'length' ? length : Reflect.get(target, key, receiver);
+    } });
+    assert.equal(tryCreateFormFieldPath(invalid).error.code, 'form-path-segment-ceiling-exceeded');
+  }
+});
+
+// FRM-04
+test('failure messages are captured once within construction and transition Results', () => {
+  for (const mode of ['construction', 'transition']) {
+    let reads = 0;
+    const failure = { get message() { reads += 1; return reads === 1 ? ' first ' : null; } };
+    const options = {
+      validation: { generation: 1, status: 'valid', trigger: 'submit', intent: 'submission' },
+      submission: { generation: 1, status: 'submitting', count: 1, failure: null },
+    };
+    const result = mode === 'construction'
+      ? tryCreateFormState({ ...options, submission: { ...options.submission, status: 'failed', failure } })
+      : applyFormEvent(createFormState(options), { type: 'submit-failed', generation: 1, failure, issues: [] });
+    assert.equal(result.ok, true);
+    const state = mode === 'construction' ? result.value : result.value.state;
+    assert.deepEqual(state.submission.failure, { message: 'first' });
+    assert.equal(reads, 1);
+    const invalid = tryCreateFormState({ ...options, submission: {
+      ...options.submission, status: 'failed', failure: { get message() { throw new Error('unreadable'); } },
+    } });
+    assert.equal(invalid.ok, false);
+    assert.equal(invalid.error.code, 'form-submission-failure-invalid');
+  }
+});
+
 // FRM-10
 test('form field paths normalize dot, bracket, and explicit segment syntax', () => {
   assert.deepEqual(createFormFieldPath('profile.name'), ['profile', 'name']);

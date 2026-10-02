@@ -34,10 +34,15 @@ export function normalizeSubmissionFailure(
   input: SubmissionFailure | null,
 ): Result<SubmissionFailure | null> {
   if (input === null) return ok(null);
+  let message: unknown;
+  try {
+    message = typeof input === 'object' ? input.message : undefined;
+  } catch {
+    message = undefined;
+  }
   if (
-    typeof input !== 'object'
-    || typeof input.message !== 'string'
-    || input.message.trim().length === 0
+    typeof message !== 'string'
+    || message.trim().length === 0
   ) {
     return fail(
       'construction',
@@ -45,7 +50,7 @@ export function normalizeSubmissionFailure(
       'A Form submission failure message must not be empty.',
     );
   }
-  return ok(Object.freeze({ message: input.message.trim() }));
+  return ok(Object.freeze({ message: message.trim() }));
 }
 
 export function isValidationStatus(value: string): value is ValidationStatus {

@@ -51,9 +51,6 @@ function validateSegments(
   stringRoot: boolean,
   limits: Limits,
 ): Result<readonly Segment[]> {
-  if (segments.length > limits.maxPathSegments) {
-    return exceeded('form-path-segment-ceiling-exceeded', segments.length, limits.maxPathSegments);
-  }
   if (segments.length === 0 || (stringRoot && typeof segments[0] !== 'string')) {
     return fail(
       'construction',
@@ -92,7 +89,7 @@ function validateSegments(
   if (codeUnits > limits.maxPathCodeUnits) {
     return exceeded('form-path-code-unit-ceiling-exceeded', codeUnits, limits.maxPathCodeUnits);
   }
-  return ok(Object.freeze([...segments]));
+  return ok(Object.freeze(segments));
 }
 
 function preflight(
@@ -101,9 +98,6 @@ function preflight(
 ): Result<never> | null {
   if (typeof path === 'string' && path.length > limits.maxPathCodeUnits) {
     return exceeded('form-path-code-unit-ceiling-exceeded', path.length, limits.maxPathCodeUnits);
-  }
-  if (Array.isArray(path) && path.length > limits.maxPathSegments) {
-    return exceeded('form-path-segment-ceiling-exceeded', path.length, limits.maxPathSegments);
   }
   if (typeof path === 'number' && Number.isSafeInteger(path) && path > limits.maxArrayIndex) {
     return exceeded('form-array-index-ceiling-exceeded', path, limits.maxArrayIndex);
@@ -213,9 +207,18 @@ function normalizePath(
   );
   const ceiling = preflight(path, limits.value);
   if (ceiling !== null) return ceiling;
-  const segments = typeof path === 'string'
-    ? parsePath(path, limits.value)
-    : ok(typeof path === 'number' ? [path] : [...path]);
+  let segments: Result<readonly Segment[]>;
+  if (typeof path === 'string') segments = parsePath(path, limits.value);
+  else if (typeof path === 'number') segments = ok([path]);
+  else {
+    const count = path.length;
+    if (!Number.isSafeInteger(count) || count < 0 || count > limits.value.maxPathSegments) return exceeded(
+      'form-path-segment-ceiling-exceeded', count, limits.value.maxPathSegments,
+    );
+    const captured: Segment[] = new Array(count);
+    for (let index = 0; index < count; index += 1) captured[index] = path[index]!;
+    segments = ok(captured);
+  }
   if (!segments.ok) return segments;
   return validateSegments(segments.value, stringRoot, limits.value);
 }
