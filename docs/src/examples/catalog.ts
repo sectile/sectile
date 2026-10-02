@@ -30,6 +30,130 @@ export interface ComponentDefinition {
 
 export const components: readonly ComponentDefinition[] = [
   {
+    "subject": "NumberField",
+    "slug": "number-field",
+    "module": "@sectile/vue/number-field",
+    "description": "Enter a parcel weight while keeping its committed decimal value as a string.",
+    "parts": [
+      "NumberField"
+    ],
+    "composition": [
+      "Bind v-model to a string or null and provide a visible label. A draft can differ from the committed value while the user is editing."
+    ],
+    "interaction": [
+      "Native editing and composition are retained. A null value represents an empty field."
+    ]
+  },
+  {
+    "subject": "SpinButton",
+    "slug": "spin-button",
+    "module": "@sectile/vue/spin-button",
+    "description": "Edit a parcel quantity directly or advance through an exact range with increment and decrement controls.",
+    "parts": [
+      "SpinButtonRoot",
+      "SpinButtonInput",
+      "SpinButtonIncrement",
+      "SpinButtonDecrement"
+    ],
+    "composition": [
+      "Provide min and max on the root. Place the input and stepping triggers under that root; v-model receives decimal strings."
+    ],
+    "interaction": [
+      "Arrow keys and the step controls change the quantity. Text editing and committed values are coordinated by the input."
+    ]
+  },
+  {
+    "subject": "Slider",
+    "slug": "slider",
+    "module": "@sectile/vue/slider",
+    "description": "Choose notification volume from an exact range with pointer and keyboard input.",
+    "parts": [
+      "SliderRoot",
+      "SliderTrack",
+      "SliderRange",
+      "SliderThumb",
+      "SliderInput"
+    ],
+    "composition": [
+      "Place the range and thumb inside the track. Bind v-model to a value that lies exactly on the configured step."
+    ],
+    "interaction": [
+      "Arrow keys advance one step. Home and End move to the range endpoints. Supply an accessible label for the thumb."
+    ]
+  },
+  {
+    "subject": "Progress",
+    "slug": "progress",
+    "module": "@sectile/vue/progress",
+    "description": "Report completed work against a maximum without making the indicator itself editable.",
+    "parts": [
+      "ProgressRoot",
+      "ProgressTrack",
+      "ProgressIndicator",
+      "ProgressValueText"
+    ],
+    "composition": [
+      "Supply value and max on the root. A null value represents indeterminate progress; known progress exposes its percentage as a CSS variable."
+    ],
+    "interaction": [
+      "Progress communicates status rather than accepting input. This example uses separate application buttons to advance its simulated upload."
+    ]
+  },
+  {
+    "subject": "Meter",
+    "slug": "meter",
+    "module": "@sectile/vue/meter",
+    "description": "Describe a measured value within a range and show whether its configured thresholds are preferable.",
+    "parts": [
+      "MeterRoot",
+      "MeterTrack",
+      "MeterIndicator",
+      "MeterValueText"
+    ],
+    "composition": [
+      "Provide value, min and max. low, high and optimum describe the preferred part of the range. Keep a visible explanation of the measurement."
+    ],
+    "interaction": [
+      "A meter reports a measurement, not task completion. The slot exposes zone so the application can show equivalent text alongside color."
+    ]
+  },
+  {
+    "subject": "Rating",
+    "slug": "rating",
+    "module": "@sectile/vue/rating",
+    "description": "Select a delivery score or leave the question unanswered by clearing the selection.",
+    "parts": [
+      "RatingRoot",
+      "RatingItem",
+      "RatingIndicator",
+      "RatingClear"
+    ],
+    "composition": [
+      "Provide ordered string values and matching RatingItem values. Bind v-model to the selected string; an empty string represents no answer."
+    ],
+    "interaction": [
+      "Arrow keys move through available scores. clearable permits RatingClear to remove the selected score."
+    ]
+  },
+  {
+    "subject": "Timer",
+    "slug": "timer",
+    "module": "@sectile/vue/timer",
+    "description": "Start, pause, resume and reset a ten-second countdown without starting it on page load.",
+    "parts": [
+      "TimerRoot",
+      "TimerControl",
+      "TimerItem",
+      "TimerActionTrigger"
+    ],
+    "composition": [
+      "Configure startMs, targetMs and countdown on the root. TimerItem renders a named time part; action triggers control the same timer."
+    ],
+    "interaction": [
+      "The timer starts only when requested here. It owns its scheduled updates and disconnects when the root unmounts."
+    ]
+  },
+  {
     subject: 'Accordion', slug: 'accordion', module: '@sectile/vue/accordion',
     description: 'Organize related sections into expandable panels with one or several panels open at a time.',
     parts: ['AccordionRoot', 'AccordionItem', 'AccordionHeader', 'AccordionTrigger', 'AccordionContent'],
@@ -137,6 +261,188 @@ export interface ExampleDefinition {
 }
 
 export const examples: readonly ExampleDefinition[] = [
+  {
+    "id": "vue-components-number-field-decimal-value",
+    "host": "vue",
+    "area": "components",
+    "subject": "NumberField",
+    "slug": "number-field/decimal-value",
+    "title": "Exact decimal input",
+    "description": "Enter a parcel weight while keeping its committed decimal value as a string.",
+    "focus": "Exact decimal input",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "NumberField",
+      "v-model"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/number-field/decimal-value/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/number-field/decimal-value/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-spin-button-bounded-quantity",
+    "host": "vue",
+    "area": "components",
+    "subject": "SpinButton",
+    "slug": "spin-button/bounded-quantity",
+    "title": "A bounded quantity",
+    "description": "Edit a parcel quantity directly or advance through an exact range with increment and decrement controls.",
+    "focus": "A bounded quantity",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "SpinButton",
+      "v-model"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/spin-button/bounded-quantity/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/spin-button/bounded-quantity/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-slider-stepped-value",
+    "host": "vue",
+    "area": "components",
+    "subject": "Slider",
+    "slug": "slider/stepped-value",
+    "title": "A stepped slider",
+    "description": "Choose notification volume from an exact range with pointer and keyboard input.",
+    "focus": "A stepped slider",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Slider",
+      "v-model"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/slider/stepped-value/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/slider/stepped-value/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-progress-determinate-value",
+    "host": "vue",
+    "area": "components",
+    "subject": "Progress",
+    "slug": "progress/determinate-value",
+    "title": "Determinate upload progress",
+    "description": "Report completed work against a maximum without making the indicator itself editable.",
+    "focus": "Determinate upload progress",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Progress",
+      "v-model"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/progress/determinate-value/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/progress/determinate-value/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-meter-threshold-zones",
+    "host": "vue",
+    "area": "components",
+    "subject": "Meter",
+    "slug": "meter/threshold-zones",
+    "title": "Storage threshold zones",
+    "description": "Describe a measured value within a range and show whether its configured thresholds are preferable.",
+    "focus": "Storage threshold zones",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Meter",
+      "v-model"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/meter/threshold-zones/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/meter/threshold-zones/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-rating-clearable-score",
+    "host": "vue",
+    "area": "components",
+    "subject": "Rating",
+    "slug": "rating/clearable-score",
+    "title": "A clearable rating",
+    "description": "Select a delivery score or leave the question unanswered by clearing the selection.",
+    "focus": "A clearable rating",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Rating",
+      "v-model"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/rating/clearable-score/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/rating/clearable-score/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-timer-countdown-controls",
+    "host": "vue",
+    "area": "components",
+    "subject": "Timer",
+    "slug": "timer/countdown-controls",
+    "title": "A controlled countdown",
+    "description": "Start, pause, resume and reset a ten-second countdown without starting it on page load.",
+    "focus": "A controlled countdown",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Timer",
+      "v-model"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/timer/countdown-controls/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/timer/countdown-controls/Preview.vue"
+      }
+    ],
+    "related": []
+  },
   {
     id: 'vue-temporal-calendar-selection', host: 'vue', area: 'temporal', subject: 'Calendar',
     slug: 'calendar-selection', title: 'Selecting a calendar date',

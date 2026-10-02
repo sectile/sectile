@@ -209,6 +209,13 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-components-number-field-decimal-value': [/value="12.5"/u, /Committed weight: 12.5/u],
+          'vue-components-spin-button-bounded-quantity': [/role="spinbutton"/u, /Quantity: 3/u],
+          'vue-components-slider-stepped-value': [/role="slider"/u, /aria-valuenow="40"/u, /--sectile-slider-percentage:40%/u],
+          'vue-components-progress-determinate-value': [/role="progressbar"/u, /aria-valuenow="25"/u, /--sectile-progress-percentage:\s*25%/u],
+          'vue-components-meter-threshold-zones': [/role="meter"/u, /data-zone="optimum"/u, /Storage: 40%/u],
+          'vue-components-rating-clearable-score': [/role="radiogroup"/u, /aria-checked="true"/u, /Rating: 3/u],
+          'vue-components-timer-countdown-controls': [/Paused/u, /Start/u, /Reset/u],
           'vue-temporal-calendar-selection': [/role="grid"/u, /aria-selected="true"/u, /Selected date: 2026-10-03/u],
           'vue-virtual-fixed-list': [/Delivery 1/u, /500 items/u],
           'vue-tabular-local-source': [/<table/u, /Project members/u, /Status: idle/u],
