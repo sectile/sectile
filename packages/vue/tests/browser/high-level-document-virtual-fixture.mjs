@@ -6,6 +6,7 @@ export async function runHighLevelDocumentVirtualScenarios() {
   const previousBehavior = document.documentElement.style.scrollBehavior;
   const nativeScrollTo = window.scrollTo.bind(window);
   const writes = [];
+  const frameTrace = [];
   const host = document.createElement('div');
   const before = document.createElement('div');
   const mount = document.createElement('div');
@@ -37,6 +38,10 @@ export async function runHighLevelDocumentVirtualScenarios() {
       viewportInsets: { top: 48 },
       initialViewport: { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight },
       itemAttributes: (value) => ({ 'data-browser-masonry-item': String(value.id) }),
+      onPlanChange: (plan) => {
+        frameTrace.push({ generation: plan.generation, viewportY: plan.viewport.y,
+          writes: writes.length, scrollY: window.scrollY });
+      },
     }, {
       item: ({ id }) => h('article', {
         style: {
@@ -52,14 +57,16 @@ export async function runHighLevelDocumentVirtualScenarios() {
     const options = typeof optionsOrX === 'number'
       ? { left: optionsOrX, top: y ?? window.scrollY }
       : optionsOrX;
-    writes.push(Object.freeze({
+    const write = {
       left: options.left ?? window.scrollX,
       top: options.top ?? window.scrollY,
       behavior: options.behavior ?? 'auto',
-    }));
-    return typeof optionsOrX === 'number'
+    };
+    const returned = typeof optionsOrX === 'number'
       ? nativeScrollTo(optionsOrX, y ?? window.scrollY)
       : nativeScrollTo(optionsOrX);
+    writes.push(Object.freeze({ ...write, settledLeft: window.scrollX, settledTop: window.scrollY }));
+    return returned;
   };
   document.documentElement.style.scrollBehavior = 'smooth';
 
@@ -128,6 +135,7 @@ export async function runHighLevelDocumentVirtualScenarios() {
       const beforeStateRect = masonryRectAt(masonry.value.state, anchorID);
       const growthScrollBefore = window.scrollY;
       writes.length = 0;
+      frameTrace.length = 0;
       const grown = [...heights.value];
       grown[above.id] += 48;
       heights.value = grown;
@@ -147,6 +155,8 @@ export async function runHighLevelDocumentVirtualScenarios() {
         && writes.every(({ behavior }) => behavior === 'instant');
       const growthWrites = writes.length;
       const growthWrite = writes[0] ?? null;
+      const growthFrames = Object.freeze([...frameTrace]);
+      const growthWriteTrace = Object.freeze([...writes]);
       const growthScrollAfter = window.scrollY;
       await settleVueAndFrames(2);
       const growthNoFeedback = writes.length === growthWrites;
@@ -166,9 +176,12 @@ export async function runHighLevelDocumentVirtualScenarios() {
       let shrinkBeforeOffset = null;
       let afterShrinkOffset = null;
       let shrinkWrites = 0;
+      let shrinkFrames = [];
+      let shrinkWriteTrace = [];
       if (shrinkAnchor !== null && shrinkAnchorPlacement !== undefined && shrinkAbove !== undefined) {
         shrinkBeforeOffset = shrinkAnchorPlacement.rect.y - masonry.value.plan.viewport.y;
         writes.length = 0;
+        frameTrace.length = 0;
         const shrunk = [...heights.value];
         shrunk[shrinkAbove.id] = Math.max(24, shrunk[shrinkAbove.id] - 32);
         heights.value = shrunk;
@@ -183,6 +196,8 @@ export async function runHighLevelDocumentVirtualScenarios() {
           && writes.length <= 1
           && writes.every(({ behavior }) => behavior === 'instant');
         shrinkWrites = writes.length;
+        shrinkFrames = Object.freeze([...frameTrace]);
+        shrinkWriteTrace = Object.freeze([...writes]);
         await settleVueAndFrames(2);
         shrinkNoFeedback = writes.length === shrinkWrites;
       }
@@ -198,11 +213,15 @@ export async function runHighLevelDocumentVirtualScenarios() {
         growthScrollAfter,
         growthWrite,
         growthWrites,
+        growthFrames,
+        growthWriteTrace,
         shrinkAnchorID: shrinkAnchor?.id ?? null,
         shrinkAboveID: shrinkAbove?.id ?? null,
         shrinkBeforeOffset,
         afterShrinkOffset,
         shrinkWrites,
+        shrinkFrames,
+        shrinkWriteTrace,
       };
     }
 
@@ -269,6 +288,7 @@ export async function runHighLevelDocumentVirtualScenarios() {
       targetSettledY,
       finalScrollY: window.scrollY,
       finalMaximum: physicalMaximum,
+      devicePixelRatio: window.devicePixelRatio,
     });
   } finally {
     app.unmount();

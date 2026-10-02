@@ -175,7 +175,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
         if (sizeOwnershipWarningShown || value === sizeOwnership) return;
         sizeOwnershipWarningShown = true;
         console.warn(
-          '[Sectile] VirtualSpatial sizeOwnership is a construction-time option. Remount the spatial collection to change it.',
+          '[Sectile] Remount VirtualSpatial to change sizeOwnership.',
         );
       },
       { flush: 'sync' },

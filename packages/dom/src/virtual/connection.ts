@@ -525,7 +525,7 @@ class DOMVirtualizer<
     return this.#tryVirtual(() => {
       const frameDirty = (this.#dirty & 2) !== 0;
       const nextFrame = frameDirty
-        ? readHostSurfaceFrame(this.#host, viewportInsets)
+        ? readHostSurfaceFrame(this.#host, viewportInsets, this.#surfaceFrame)
         : sameInsets(this.#viewportInsets, viewportInsets)
           ? this.#surfaceFrame
           : createVirtualSurfaceFrame({

@@ -30,14 +30,16 @@ export async function runDocumentVirtualScenarios() {
     const options = typeof optionsOrX === 'number'
       ? { left: optionsOrX, top: y ?? window.scrollY }
       : optionsOrX;
-    writes.push({
+    const write = {
       left: options.left ?? window.scrollX,
       top: options.top ?? window.scrollY,
       behavior: options.behavior ?? 'auto',
-    });
-    return typeof optionsOrX === 'number'
+    };
+    const returned = typeof optionsOrX === 'number'
       ? nativeScrollTo(optionsOrX, y ?? window.scrollY)
       : nativeScrollTo(optionsOrX);
+    writes.push({ ...write, settledLeft: window.scrollX, settledTop: window.scrollY });
+    return returned;
   };
   document.documentElement.style.scrollBehavior = 'smooth';
 
@@ -115,12 +117,15 @@ export async function runDocumentVirtualScenarios() {
     writes.length = 0;
     const anchorMeasure = connection.measure([24]);
     const afterAnchorOffset = connection.getPlan().anchor?.viewportOffset.y ?? null;
+    const anchorWrites = Object.freeze([...writes]);
+    const anchorWrite = anchorWrites[0];
     const nativeAnchorInteraction = anchorMeasure.ok
       && beforeAnchorOffset !== null
       && afterAnchorOffset !== null
-      && closeTo(afterAnchorOffset, beforeAnchorOffset)
-      && writes.length === 1
-      && writes[0]?.behavior === 'instant';
+      && anchorWrites.length === 1
+      && anchorWrite?.behavior === 'instant'
+      && closeTo(anchorWrite.top, beforeNativeAnchorScroll + nativeAnchorDelta + 24)
+      && preservesSettledAnchor(beforeAnchorOffset, afterAnchorOffset, anchorWrite);
     const writesAfterAnchorCorrection = writes.length;
     await nextFrame();
     await nextFrame();
@@ -179,7 +184,7 @@ export async function runDocumentVirtualScenarios() {
       beforeAnchorOffset,
       afterAnchorOffset,
       anchorMeasureOK: anchorMeasure.ok,
-      anchorWrites: Object.freeze([...writes]),
+      anchorWrites,
       immediateSettlement,
       clampedByBrowser,
       noFeedbackWrite,
@@ -193,6 +198,13 @@ export async function runDocumentVirtualScenarios() {
     host.remove();
     nativeScrollTo({ left: 0, top: 0, behavior: 'instant' });
   }
+}
+
+export function preservesSettledAnchor(before, after, write) {
+  // Keep the mathematical anchor proof exact: its residual must be explained
+  // by native scroll settlement, not an unrelated position-tolerance increase.
+  return Number.isFinite(write.top) && Number.isFinite(write.settledTop)
+    && closeTo(after - before, write.top - write.settledTop);
 }
 
 function browserPlan(state, viewport, placementY) {

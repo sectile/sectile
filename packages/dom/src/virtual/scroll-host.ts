@@ -39,24 +39,38 @@ export function createScrollHost(
 export function readHostSurfaceFrame(
   host: VirtualScrollHost,
   viewportInsets: VirtualInsets,
+  previous?: VirtualSurfaceFrame,
 ): VirtualSurfaceFrame {
   const scroll = host[4];
   const surfaceRect = host[6].getBoundingClientRect();
   const geometry = host[2];
   const scrollportRect = geometry?.getBoundingClientRect();
+  const scrollX = finiteOrZero(scroll.scrollLeft);
+  const scrollY = finiteOrZero(scroll.scrollTop);
+  let x = surfaceRect.left
+    - (scrollportRect?.left ?? 0)
+    - Math.max(0, finiteOrZero(geometry?.clientLeft))
+    + scrollX;
+  let y = surfaceRect.top
+    - (scrollportRect?.top ?? 0)
+    - Math.max(0, finiteOrZero(geometry?.clientTop))
+    + scrollY;
+  if (geometry === null && previous !== undefined) {
+    x = stableDocumentOrigin(x, previous.origin.x, surfaceRect.left, scrollX);
+    y = stableDocumentOrigin(y, previous.origin.y, surfaceRect.top, scrollY);
+  }
   return createVirtualSurfaceFrame({
-    origin: {
-      x: surfaceRect.left
-        - (scrollportRect?.left ?? 0)
-        - Math.max(0, finiteOrZero(geometry?.clientLeft))
-        + finiteOrZero(scroll.scrollLeft),
-      y: surfaceRect.top
-        - (scrollportRect?.top ?? 0)
-        - Math.max(0, finiteOrZero(geometry?.clientTop))
-        + finiteOrZero(scroll.scrollTop),
-    },
+    origin: { x, y },
     viewportInsets,
   });
+}
+
+function stableDocumentOrigin(value: number, previous: number, rect: number, scroll: number): number {
+  // Native rectangle/scroll arithmetic can introduce float32 roundoff after a
+  // scroll. Cap its uncertainty so large page coordinates cannot hide flow shifts.
+  const uncertainty = Math.min(1 / 64,
+    (Math.abs(rect) + Math.abs(scroll) + Math.abs(previous)) * 2 ** -23);
+  return Math.abs(value - previous) <= uncertainty ? previous : value;
 }
 
 export function clampHostScroll(
@@ -86,14 +100,12 @@ export function requireOwned(element: HTMLElement, ownerDocument: Document): voi
   }
 }
 
-function finiteNonNegative(value: unknown): value is number {
-  return typeof value === 'number'
-    && Number.isFinite(value)
-    && value >= 0;
+function finiteNonNegative(value: number): boolean {
+  return Number.isFinite(value) && value >= 0;
 }
 
-function finiteOrZero(value: unknown): number {
-  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+function finiteOrZero(value: number | undefined): number {
+  return Number.isFinite(value) ? value! : 0;
 }
 
 export function browserEnvironment(ownerDocument: Document): VirtualizerEnvironment {

@@ -1646,7 +1646,7 @@ test('Vue virtualizer owns frame-local state and keeps construction options fixe
     strategy.value = createStrategy(100);
     await settle();
     assert.equal(warnings.length, 1);
-    assert.match(warnings[0], /construction-time options/);
+    assert.match(warnings[0], /Remount to change strategy\/measure\/initialViewport/);
 
     root.value.mutate(3);
     await settle();
@@ -1657,6 +1657,18 @@ test('Vue virtualizer owns frame-local state and keeps construction options fixe
     app.unmount();
     host.remove();
   }
+});
+
+test('browser anchor verification attributes only native settlement residual to rounding', async () => {
+  const { preservesSettledAnchor } = await import('./browser/document-virtual-fixture.mjs');
+  const before = 75.65145874023438;
+  const after = 75.80526733398438;
+  const write = { top: 24, settledTop: 23.84619140625 };
+  assert.equal(preservesSettledAnchor(before, after, write), true);
+  assert.equal(preservesSettledAnchor(before, before, { top: 24, settledTop: 24 }), true);
+  assert.equal(preservesSettledAnchor(before, after + 0.25, write), false,
+    'unexplained anchor movement remains a failure');
+  assert.equal(preservesSettledAnchor(before, before, { top: NaN, settledTop: 24 }), false);
 });
 
 async function settle() {

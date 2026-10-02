@@ -273,6 +273,75 @@ test('document refresh remeasures external page-flow movement without scroll pol
   connection.disconnect();
 });
 
+test('document measurement settles once when native rectangle precision changes the reconstructed origin', () => {
+  let placementY = 1320;
+  const fixture = createDocumentFixture({
+    pageY: 1115.0361022949219,
+    surfaceY: 1115.0361022949219,
+    maximumY: 5000,
+    tryQuery: (state, input) => {
+      const queried = plan(state, input.viewport);
+      return success(Object.freeze({
+        ...queried,
+        anchor: Object.freeze({ id: 'item', viewportOffset: Object.freeze({
+          x: 0, y: placementY - input.viewport.y,
+        }) }),
+      }));
+    },
+    tryMeasure: (state, batch) => {
+      const delta = batch.measurements[0];
+      placementY += delta;
+      return mutation(Object.freeze({ generation: state.generation + 1 }), { x: 0, y: delta });
+    },
+  });
+  const nativeRect = fixture.surface.getBoundingClientRect.bind(fixture.surface);
+  fixture.surface.getBoundingClientRect = () => {
+    const rect = nativeRect();
+    return { ...rect, left: Math.fround(rect.left), top: Math.fround(rect.top) };
+  };
+  const nativeScroll = fixture.view.scrollTo.bind(fixture.view);
+  fixture.view.scrollTo = (options) => {
+    nativeScroll(options);
+    fixture.view.scrollY = Math.fround(Math.floor(fixture.view.scrollY * 1.3) / 1.3);
+    fixture.scrollingElement.scrollTop = fixture.view.scrollY;
+  };
+  const connection = createVirtualizer(fixture.options);
+  fixture.setPageScroll(0, 2386.923095703125);
+  fixture.document.dispatch('scroll');
+  fixture.runFrame();
+  fixture.resetEvidence();
+  const measured = connection.measure([47.9927978515625]);
+  assert.equal(measured.ok, true);
+  assert.equal(fixture.view.writes.length, 1);
+  const settledY = fixture.view.scrollY;
+  fixture.geometryObserver().emit([{ target: fixture.surface }]);
+  fixture.runFrame();
+  assert.equal(fixture.view.scrollY, settledY);
+  assert.equal(fixture.view.writes.length, 1, 'geometry rounding does not issue another native scroll');
+
+  // Actual page-flow movement still translates the same entered anchor.
+  fixture.surface.pageY += 0.25;
+  fixture.geometryObserver().emit([{ target: fixture.surface }]);
+  fixture.runFrame();
+  assert.equal(fixture.view.writes.length, 2);
+  assert.ok(Math.abs(fixture.view.writes[1].top - (settledY + 0.25)) < 0.001);
+  connection.disconnect();
+});
+
+test('document origin stability keeps real flow shifts at large page coordinates', () => {
+  const fixture = createDocumentFixture({ pageY: 1_000_000_000,
+    surfaceY: 1_000_000_000, maximumY: 2_000_000_000 });
+  const connection = createVirtualizer(fixture.options);
+  fixture.resetEvidence();
+  fixture.surface.pageY += 0.25;
+  fixture.geometryObserver().emit([{ target: fixture.surface }]);
+  fixture.runFrame();
+  assert.deepEqual(fixture.view.writes, [
+    { left: 0, top: 1_000_000_000.25, behavior: 'instant' },
+  ]);
+  connection.disconnect();
+});
+
 test('document host rejects unusable and cross-document owners before retaining resources', () => {
   const missingView = createDocumentFixture();
   missingView.document.defaultView = null;

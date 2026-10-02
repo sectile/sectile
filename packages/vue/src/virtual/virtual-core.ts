@@ -11,7 +11,6 @@ import {
   shallowRef,
   toValue,
   watch,
-  type ComputedRef,
   type MaybeRefOrGetter,
   type PropType,
   type Ref,
@@ -170,7 +169,7 @@ interface DesiredItem<ID extends StableID> {
 }
 
 interface VirtualizerContext {
-  readonly plan: ComputedRef<VirtualLayoutPlan<StableID> | null>;
+  readonly plan: Readonly<ShallowRef<VirtualLayoutPlan<StableID> | null>>;
   readonly surface: ShallowRef<HTMLElement | null | undefined>;
   registerFrame(element: HTMLElement): () => void;
   registerItem(element: HTMLElement, id: StableID): () => void;
@@ -328,13 +327,6 @@ export function useVirtualizer<State, ID extends StableID, Measurement, Mutation
     items.clear();
   });
 
-  const currentConnection = (): VirtualizerConnection<
-    State,
-    ID,
-    Measurement,
-    Mutation
-  > | undefined => connection.value;
-
   return Object.freeze({
     scrollport,
     surface,
@@ -379,36 +371,24 @@ export function useVirtualizer<State, ID extends StableID, Measurement, Mutation
     measure: (
       measurements: readonly Measurement[],
     ): VirtualizerOperationResult<VirtualLayoutMutation<State>> => {
-      const active = currentConnection();
-      return active === undefined
-        ? virtualizerNotConnected()
-        : active.measure(measurements);
+      return connection.value?.measure(measurements) ?? virtualizerNotConnected();
     },
     mutate: (
       mutation: Mutation,
     ): VirtualizerOperationResult<VirtualLayoutMutation<State>> => {
-      const active = currentConnection();
-      return active === undefined
-        ? virtualizerNotConnected()
-        : active.mutate(mutation);
+      return connection.value?.mutate(mutation) ?? virtualizerNotConnected();
     },
     scrollTo: (
       id: ID,
       alignment?: VirtualScrollAlignment,
     ): VirtualizerOperationResult<VirtualPoint> => {
-      const active = currentConnection();
-      return active === undefined
-        ? virtualizerNotConnected()
-        : active.scrollTo(id, alignment);
+      return connection.value?.scrollTo(id, alignment) ?? virtualizerNotConnected();
     },
     refresh: (): void => {
       connection.value?.refresh();
     },
     flush: (): VirtualizerOperationResult<VirtualLayoutPlan<ID>> => {
-      const active = currentConnection();
-      return active === undefined
-        ? virtualizerNotConnected()
-        : active.flush();
+      return connection.value?.flush() ?? virtualizerNotConnected();
     },
   });
 }
@@ -489,6 +469,10 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
           ? rootElement?.ownerDocument ?? null
           : target;
     };
+    const setRootElement = (element: unknown): void => {
+      rootElement = asHTMLElement(element);
+      resolveScrollport(props.scrollport);
+    };
     watch(() => props.scrollport, resolveScrollport, { flush: 'sync' });
     watch(
       () => props.defaultState,
@@ -503,11 +487,11 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
       (value, previous) => {
         if (
           constructionWarningShown
-          || value.every((item, index) => Object.is(item, previous[index]))
+          || (value[0] === previous[0] && value[1] === previous[1] && value[2] === previous[2])
         ) return;
         constructionWarningShown = true;
         console.warn(
-          '[Sectile] VirtualizerRoot strategy, measure, and initialViewport are construction-time options. Remount the root to change them.',
+          '[Sectile] Remount to change strategy/measure/initialViewport.',
         );
       },
       { flush: 'sync' },
@@ -525,7 +509,7 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
       }),
     );
     provide<VirtualizerContext>(virtualizerContextKey, {
-      plan: computed(() => virtualizer.plan.value),
+      plan: virtualizer.plan,
       surface: virtualizer.surface,
       registerFrame: virtualizer.registerFrame,
       registerItem: virtualizer.registerItem,
@@ -560,10 +544,7 @@ export const VirtualizerRoot = /* @__PURE__ */ defineComponent({
         mergeProps(attrs, {
           as: props.as,
           asChild: props.asChild,
-          elementRef: (element: unknown) => {
-            rootElement = asHTMLElement(element);
-            resolveScrollport(props.scrollport);
-          },
+          elementRef: setRootElement,
           'data-scope': 'virtualizer',
           'data-part': 'root',
         }),
