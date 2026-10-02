@@ -15,7 +15,11 @@
       "ink": { "role": "neutral", "displayName": "Ink" },
       "ink-muted": { "role": "neutral", "displayName": "Muted Ink" },
       "code-background": { "role": "neutral", "displayName": "Code Background" },
-      "error": { "role": "feedback", "displayName": "Validation Error" }
+      "error": { "role": "feedback", "displayName": "Validation Error" },
+      "success": { "role": "feedback", "displayName": "Completed Action" },
+      "warning": { "role": "feedback", "displayName": "Attention Required" },
+      "disabled-text": { "role": "neutral", "displayName": "Unavailable Text" },
+      "disabled-background": { "role": "neutral", "displayName": "Unavailable Surface" }
     },
     "typographyMeta": {
       "display": {

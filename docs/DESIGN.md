@@ -18,6 +18,13 @@ colors:
   code-rule: "#293852"
   code-control-border: "#52617a"
   error: "#b42332"
+  error-soft: "#fff0f1"
+  success: "#157347"
+  success-soft: "#edf8f1"
+  warning: "#795500"
+  warning-soft: "#fff7df"
+  disabled-text: "#67676c"
+  disabled-background: "#eeeeef"
 typography:
   display:
     fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
@@ -167,6 +174,12 @@ decorative accent.
 **The Violet Means Action Rule.** Use violet for links, actions, selected navigation,
 checked state, and visible keyboard focus.
 
+Feedback has explicit foreground/surface pairs: error #b42332/#fff0f1,
+success #157347/#edf8f1, warning #795500/#fff7df. These are reserved for feedback,
+not arbitrary category decoration. Disabled foreground and border use #67676c
+on #eeeeef; controls retain readable labels instead of fading the whole element.
+Selected text uses violet on violet wash. On-accent text uses white.
+
 ## Typography
 
 **Display and Body Font:** The declared Inter stack, with system sans-serif fallbacks.
@@ -183,6 +196,11 @@ Navigation and explanation use the sans-serif stack. Paragraphs are limited to
 
 **The Code Is Mono Rule.** Keep code and emitted values in monospace, and explanatory
 copy in the sans-serif reading voice.
+
+Repeated caption/code/label/body/section sizes are 12/13/14/16/23px tokens.
+Body leading is 1.65. Focus has shared 2px width and 3px offset tokens. The
+Documentation styles guide renders the live semantic colors and the same token
+source used by the site, with its nested-radius specimen.
 
 ## Layout
 

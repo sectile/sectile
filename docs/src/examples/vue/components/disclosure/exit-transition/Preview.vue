@@ -36,31 +36,31 @@ onBeforeUnmount(() => { observer?.disconnect(); observer = undefined; });
 </template>
 
 <style scoped>
-.presence-demo { width: min(100%, 360px); color: #3c3c43; }
+.presence-demo { width: min(100%, 360px); color: var(--docs-text, #3c3c43); }
 .presence-demo__trigger {
-  min-height: 44px;
+  min-height: var(--docs-control-height, 44px);
   padding: 8px 16px;
-  border: 1px solid #8b8b90;
-  border-radius: 7px;
-  background: white;
+  border: 1px solid var(--docs-control-border, #8b8b90);
+  border-radius: var(--docs-control-radius, 7px);
+  background: var(--docs-bg, white);
   color: inherit;
   font: inherit;
   cursor: pointer;
 }
-.presence-demo__trigger:focus-visible { outline: 2px solid #4659d4; outline-offset: 3px; }
+.presence-demo__trigger:focus-visible { outline: 2px solid var(--docs-accent, #4659d4); outline-offset: 3px; }
 .presence-demo__stage { min-height: 176px; padding-top: 16px; }
 .presence-demo__panel {
   padding: 24px;
-  border-radius: 7px;
-  background: white;
+  border-radius: var(--docs-control-radius, 7px);
+  background: var(--docs-bg, white);
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 600ms ease-out, transform 600ms ease-out;
+  transition: opacity var(--docs-motion-presence, 600ms) ease-out, transform var(--docs-motion-presence, 600ms) ease-out;
 }
 .presence-demo__panel[data-state="closed"] { opacity: 0; transform: translateY(-8px); }
 .presence-demo__panel p {
   margin: 8px 0 0;
-  color: #67676c;
+  color: var(--docs-text-muted, #67676c);
   font-family: inherit;
   font-size: 14px;
   line-height: 1.65;
@@ -68,7 +68,7 @@ onBeforeUnmount(() => { observer?.disconnect(); observer = undefined; });
 .presence-demo__status {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 13px;
-  color: #67676c;
+  color: var(--docs-text-muted, #67676c);
 }
 @media (prefers-reduced-motion: reduce) {
   .presence-demo__panel { transition: none; }

@@ -1,8 +1,26 @@
 <script setup lang="ts">
 import CodeBlock from './CodeBlock.vue';
 import { handleRouteClick, routeHref } from '../router.js';
+import tokens from '../styles/tokens.css?raw';
 
-defineProps<{ guide: 'getting-started' | 'styling' | 'state' }>();
+defineProps<{ guide: 'getting-started' | 'styling' | 'state' | 'design-system' }>();
+
+const colorRoles = [
+  ['bg', 'Reading surface', 'Page and control backgrounds'],
+  ['bg-muted', 'Preview surface', 'Examples and secondary surfaces'],
+  ['text', 'Primary text', 'Headings, labels, and explanations'],
+  ['text-muted', 'Supporting text', 'Descriptions and metadata'],
+  ['accent', 'Action and selection', 'Links and selected controls'],
+  ['accent-soft', 'Selected surface', 'Pressed choices and current navigation'],
+  ['focus', 'Keyboard focus', 'Visible focus outlines'],
+  ['control-border', 'Control boundary', 'Interactive edges, not decoration'],
+  ['border', 'Structural boundary', 'Quiet shell and container edges'],
+  ['disabled-text', 'Unavailable text', 'Disabled labels without fading the whole control'],
+  ['disabled-bg', 'Unavailable surface', 'Disabled button surfaces'],
+  ['error', 'Error', 'Validation failure'],
+  ['success', 'Success', 'Completed actions'],
+  ['warning', 'Warning', 'Actions requiring attention'],
+] as const;
 
 const installation = 'pnpm add @sectile/vue';
 const checkboxImport = `import { CheckboxRoot, CheckboxIndicator } from '@sectile/vue/checkbox';`;
@@ -56,6 +74,34 @@ const uncontrolled = `<CheckboxRoot :default-value="false">\n  <CheckboxIndicato
       <h2>Style portaled content</h2>
       <p>A dialog portal moves content outside the trigger's DOM ancestry. Apply a class directly to <code>DialogOverlay</code> and <code>DialogContent</code>; a selector that depends on the trigger's parent will not reach them.</p>
       <p>The documentation's neutral preview styles are not part of the published package. Your application owns colors, spacing, layout, and motion.</p>
+    </section>
+  </template>
+  <template v-else-if="guide === 'design-system'">
+    <h1>Documentation styles</h1>
+    <p class="docs-page__lede">These tokens define the documentation's previews and reading surface. They are not a Sectile theme: your application owns its own visual system.</p>
+    <section class="docs-prose-section">
+      <h2>Color follows meaning</h2>
+      <p>White and muted paper separate reading from examples. Ink carries text; violet identifies actions, selection, and keyboard focus. Error, success, and warning colors are reserved for feedback.</p>
+      <dl class="docs-color-roles">
+        <div v-for="[token, name, purpose] in colorRoles" :key="token">
+          <dt><span class="docs-color-swatch" :style="{ background: `var(--docs-${token})` }" aria-hidden="true" />{{ name }}</dt>
+          <dd><code>--docs-{{ token }}</code><span>{{ purpose }}</span></dd>
+        </div>
+      </dl>
+      <p>Supporting text keeps readable contrast. Disabled controls use explicit text, surface, and edge colors instead of reducing the opacity of the entire control.</p>
+    </section>
+    <section class="docs-prose-section">
+      <h2>Spacing and nested corners</h2>
+      <p>The spacing scale is 4, 8, 12, 16, 24, 32, 48, and 64 pixels. Use small gaps within a control, larger gaps between controls, and the largest gaps between reading sections.</p>
+      <p>For an inset surface, the inner radius is the outer radius minus the border and inset: <code>16 − 1 − 8 = 7px</code>. This applies to concentric surfaces, not unrelated controls somewhere inside a panel.</p>
+      <div class="docs-radius-specimen" aria-label="16 pixel outer radius, 1 pixel border, 8 pixel inset, 7 pixel inner radius"><div>16 − 1 − 8 = 7px</div></div>
+      <p>Controls have a 44px minimum height. Checkbox squares are 20px with a 1px border and 14px icon. Switch tracks are 44 × 28px, with a 20px thumb, 3px equal inset, and 16px travel.</p>
+    </section>
+    <section class="docs-prose-section">
+      <h2>Type and motion</h2>
+      <p>Explanations and labels use the sans-serif stack. Source, API identifiers, and emitted values use monospace. A CSS transition can demonstrate retained Presence without a timer in application state; reduced motion disables that transition.</p>
+      <p>The source below is the token stylesheet used by this site. It can serve as a starting point for an application-owned palette and geometry, not as a required library stylesheet.</p>
+      <details class="docs-code-disclosure"><summary>Token stylesheet</summary><CodeBlock label="CSS · documentation tokens" :source="tokens" /></details>
     </section>
   </template>
   <template v-else>

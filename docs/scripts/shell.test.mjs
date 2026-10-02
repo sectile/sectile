@@ -73,6 +73,10 @@ test('documentation palette maintains readable text and identifiable control edg
     ['code-text', 'code-bg', 4.5], ['code-muted', 'code-bg', 4.5],
     ['control-border', 'bg', 3], ['control-border', 'bg-muted', 3],
     ['checkbox-border', 'bg', 3], ['error', 'bg', 4.5],
+    ['accent', 'accent-soft', 4.5], ['focus', 'bg-muted', 3],
+    ['disabled-text', 'disabled-bg', 4.5], ['disabled-border', 'disabled-bg', 3],
+    ['error', 'error-soft', 4.5], ['success', 'success-soft', 4.5],
+    ['warning', 'warning-soft', 4.5], ['on-accent', 'accent', 4.5],
   ]) {
     const levels = [luminance(palette[foreground]), luminance(palette[background])].sort((a, b) => b - a);
     const ratio = (levels[0] + 0.05) / (levels[1] + 0.05);

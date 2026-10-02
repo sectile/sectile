@@ -26,6 +26,17 @@
   --docs-switch-inset: calc((var(--docs-switch-height) - 2 * var(--docs-border-width) - var(--docs-switch-thumb)) / 2);
   --docs-switch-travel: calc(var(--docs-switch-width) - 2 * var(--docs-border-width) - 2 * var(--docs-switch-inset) - var(--docs-switch-thumb));
   --docs-reading-width: 760px;
+  --docs-font-size-caption: 12px;
+  --docs-font-size-code: 13px;
+  --docs-font-size-label: 14px;
+  --docs-font-size-body: 16px;
+  --docs-font-size-section: 23px;
+  --docs-leading-body: 1.65;
+  --docs-focus-width: 2px;
+  --docs-focus-offset: 3px;
+  --docs-motion-reveal: 160ms;
+  --docs-motion-presence: 600ms;
+  --docs-ease-out: cubic-bezier(.16, 1, .3, 1);
   --docs-border: #e2e2e3;
   --docs-control-border: #8b8b90;
   --docs-checkbox-border: #67676c;
@@ -43,6 +54,16 @@
   --docs-code-border: #293852;
   --docs-code-control-border: #52617a;
   --docs-error: #b42332;
+  --docs-error-soft: #fff0f1;
+  --docs-success: #157347;
+  --docs-success-soft: #edf8f1;
+  --docs-warning: #795500;
+  --docs-warning-soft: #fff7df;
+  --docs-on-accent: #ffffff;
+  --docs-disabled-text: #67676c;
+  --docs-disabled-bg: #eeeeef;
+  --docs-disabled-border: #67676c;
+  --docs-overlay: rgb(16 24 39 / 42%);
 
   --docs-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --docs-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
