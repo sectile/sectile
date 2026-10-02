@@ -53,14 +53,10 @@ try {
     const root = await import('@sectile/dom');
     if (typeof root.createCheckbox !== 'function') process.exit(2);
   `);
-  await runtime(dom, `
-    const virtual = await import('@sectile/dom/virtual');
-    if (typeof virtual.createVirtualizer !== 'function') process.exit(2);
-  `);
+  await missingPeer(dom, '@sectile/dom/virtual', '@sectile/virtual');
   await missingPeer(dom, '@sectile/dom/temporal/calendar', '@sectile/temporal');
   await missingPeer(dom, '@sectile/dom/tabular', '@sectile/tabular');
   await missingEntrypoint(dom, '@sectile/dom/temporal');
-  scenarios.push({ id: 'dom-runtime-virtual-without-type-peer', status: 'passed' });
   scenarios.push({ id: 'dom-base-without-optional-peers', status: 'passed' });
 
   const vue = await fixture('vue-base', [

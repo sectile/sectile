@@ -11,36 +11,32 @@
   ],
   "packedFootprint": {
     "@sectile/core": {
-      "bytes": 162397
+      "bytes": 183280
     },
     "@sectile/tabular": {
-      "bytes": 55011
+      "bytes": 70728
     },
     "@sectile/temporal": {
-      "bytes": 35331
+      "bytes": 37631
     },
     "@sectile/virtual": {
-      "bytes": 48777
+      "bytes": 70384
     },
     "@sectile/dom": {
-      "bytes": 253245
+      "bytes": 308239
     },
     "@sectile/vue": {
-      "bytes": 265995
+      "bytes": 297874
     }
   },
   "declarationClosure": {
     "status": "passed",
-    "files": 321,
-    "imports": 496
+    "files": 410,
+    "imports": 632
   },
   "scenarios": [
     {
       "id": "tabular-base-without-virtual",
-      "status": "passed"
-    },
-    {
-      "id": "dom-runtime-virtual-without-type-peer",
       "status": "passed"
     },
     {
@@ -61,6 +57,10 @@
     },
     {
       "id": "tabular-virtual-explicit-opt-in",
+      "status": "passed"
+    },
+    {
+      "id": "virtual-foundation-subpaths",
       "status": "passed"
     },
     {
