@@ -211,6 +211,12 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-components-toolbar-action-navigation': [/role="toolbar"/u, /Last action: none/u],
+          'vue-components-pagination-page-selection': [/Page 1 of 6/u, /Previous/u, /Next/u],
+          'vue-components-stepper-manual-steps': [/Step: Address/u, /Confirm your delivery address./u],
+          'vue-components-checkbox-group-selected-values': [/Channels: Email/u, /aria-checked="true"/u],
+          'vue-components-multi-thumb-slider-interval-selection': [/Interval: 20 – 80/u, /--sectile-thumb-percentage:20%/u],
+          'vue-components-carousel-presence-crossfade': [/Active service: Standard/u, /data-state="active"/u],
           'vue-temporal-date-field-bounded-date': [/Date: 2026-10-03/u, /Delivery date/u],
           'vue-temporal-time-field-native-time': [/Time: 09:30/u, /Collection time/u],
           'vue-temporal-date-time-field-local-date-time': [/Appointment: 2026-10-03T09:30/u],

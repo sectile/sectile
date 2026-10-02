@@ -30,7 +30,8 @@ const count = (example: ExampleDefinition) => props.examples.filter((entry) => e
         <div v-else-if="example.subject === 'Checkbox'" class="docs-thumbnail-checkbox"><span><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="m3 8 3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span>Notifications</div>
         <div v-else-if="example.subject === 'Dialog'" class="docs-thumbnail-dialog"><strong>Notification settings</strong><span>Manage delivery preferences.</span><i>Close</i></div>
         <div v-else-if="example.subject === 'Disclosure'" class="docs-thumbnail-dialog"><strong>Delivery preferences</strong><span>Present → exiting → hidden</span><i>Hide details</i></div>
-        <div v-else class="docs-thumbnail-form"><span>Email address</span><i>you@example.com</i><strong>Save preferences</strong></div>
+        <div v-else-if="example.area === 'form'" class="docs-thumbnail-form"><span>Email address</span><i>you@example.com</i><strong>Save preferences</strong></div>
+        <div v-else class="docs-thumbnail-dialog"><strong>{{ example.subject }}</strong><span>{{ example.title }}</span></div>
       </div>
       <div class="docs-example-card__body"><h3>{{ componentIndex ? example.subject : example.title }}</h3><p>{{ description(example) }}</p><span class="docs-example-card__type">{{ componentIndex ? `${count(example)} ${count(example) === 1 ? 'example' : 'examples'}` : example.kind === 'styling' ? 'Styling example' : 'Behavior example' }}</span></div>
     </a>

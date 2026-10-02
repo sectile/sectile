@@ -30,6 +30,117 @@ export interface ComponentDefinition {
 
 export const components: readonly ComponentDefinition[] = [
   {
+    "subject": "Toolbar",
+    "slug": "toolbar",
+    "module": "@sectile/vue/toolbar",
+    "description": "Coordinate keyboard focus among message actions without treating them as selected values.",
+    "parts": [
+      "ToolbarRoot",
+      "ToolbarItem"
+    ],
+    "composition": [
+      "Provide item values and matching action buttons. The invoke event identifies the action; v-model represents the highlighted item rather than a pressed selection."
+    ],
+    "interaction": [
+      "Arrow keys move between enabled actions. Enter or Space invokes the focused action."
+    ]
+  },
+  {
+    "subject": "Pagination",
+    "slug": "pagination",
+    "module": "@sectile/vue/pagination",
+    "description": "Navigate six delivery pages while the application owns both the page number and page size.",
+    "parts": [
+      "PaginationRoot",
+      "PaginationItem",
+      "PaginationPrevious",
+      "PaginationNext"
+    ],
+    "composition": [
+      "Bind page and itemsPerPage together when using controlled state. Render page items from the root slot and leave fetching to the application."
+    ],
+    "interaction": [
+      "Controls and page buttons update the selected page. The slot exposes page count and the current item range."
+    ]
+  },
+  {
+    "subject": "Stepper",
+    "slug": "stepper",
+    "module": "@sectile/vue/stepper",
+    "description": "Navigate a three-step workflow without advancing merely because focus changes.",
+    "parts": [
+      "StepperRoot",
+      "StepperList",
+      "StepperStep",
+      "StepperContent",
+      "StepperPrevious",
+      "StepperNext"
+    ],
+    "composition": [
+      "Supply ordered step values and matching content. Bind v-model to the current step."
+    ],
+    "interaction": [
+      "Steps use manual activation. Previous and Next choose an available adjacent step; workflow validation remains application-owned."
+    ]
+  },
+  {
+    "subject": "CheckboxGroup",
+    "slug": "checkbox-group",
+    "module": "@sectile/vue/checkbox-group",
+    "description": "Coordinate several independently checked notification channels in one application array.",
+    "parts": [
+      "CheckboxGroupRoot",
+      "CheckboxGroupItem",
+      "CheckboxGroupIndicator"
+    ],
+    "composition": [
+      "Provide ordered items and matching values. Keep each checkbox outline outside its conditional indicator."
+    ],
+    "interaction": [
+      "Activate each checkbox to add or remove its value. The root emits the selected string collection."
+    ]
+  },
+  {
+    "subject": "MultiThumbSlider",
+    "slug": "multi-thumb-slider",
+    "module": "@sectile/vue/multi-thumb-slider",
+    "description": "Choose a price interval with two separately named and focusable thumbs.",
+    "parts": [
+      "MultiThumbSliderRoot",
+      "MultiThumbSliderTrack",
+      "MultiThumbSliderRange",
+      "MultiThumbSliderThumb"
+    ],
+    "composition": [
+      "Supply stable thumb IDs and values in the same order. Each value must lie on the configured exact step."
+    ],
+    "interaction": [
+      "Pointer or keyboard input moves the active thumb. Supply a distinct accessible label for each endpoint."
+    ]
+  },
+  {
+    "subject": "Carousel",
+    "slug": "carousel",
+    "module": "@sectile/vue/carousel",
+    "description": "Switch delivery services while the outgoing slide remains present for its exit transition.",
+    "parts": [
+      "CarouselRoot",
+      "CarouselViewport",
+      "CarouselTrack",
+      "CarouselSlide",
+      "CarouselIndicatorGroup",
+      "CarouselIndicator",
+      "CarouselPrevious",
+      "CarouselNext"
+    ],
+    "composition": [
+      "Supply slide IDs and matching slide values. Place overlapping slides in one grid cell and style active/inactive data-state attributes."
+    ],
+    "interaction": [
+      "The outgoing slide becomes inert while its transition finishes. Reduced motion removes the transition; autoplay is disabled in this example."
+    ]
+  },
+  {
     "subject": "Select",
     "slug": "select",
     "module": "@sectile/vue/select",
@@ -375,6 +486,156 @@ export interface ExampleDefinition {
 }
 
 export const examples: readonly ExampleDefinition[] = [
+  {
+    "id": "vue-components-toolbar-action-navigation",
+    "host": "vue",
+    "area": "components",
+    "subject": "Toolbar",
+    "slug": "toolbar/action-navigation",
+    "title": "Keyboard action navigation",
+    "description": "Coordinate keyboard focus among message actions without treating them as selected values.",
+    "focus": "Keyboard action navigation",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Toolbar"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/toolbar/action-navigation/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/toolbar/action-navigation/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-pagination-page-selection",
+    "host": "vue",
+    "area": "components",
+    "subject": "Pagination",
+    "slug": "pagination/page-selection",
+    "title": "Application-owned pagination",
+    "description": "Navigate six delivery pages while the application owns both the page number and page size.",
+    "focus": "Application-owned pagination",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Pagination"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/pagination/page-selection/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/pagination/page-selection/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-stepper-manual-steps",
+    "host": "vue",
+    "area": "components",
+    "subject": "Stepper",
+    "slug": "stepper/manual-steps",
+    "title": "Manual workflow steps",
+    "description": "Navigate a three-step workflow without advancing merely because focus changes.",
+    "focus": "Manual workflow steps",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Stepper"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/stepper/manual-steps/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/stepper/manual-steps/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-checkbox-group-selected-values",
+    "host": "vue",
+    "area": "components",
+    "subject": "CheckboxGroup",
+    "slug": "checkbox-group/selected-values",
+    "title": "A selected-value collection",
+    "description": "Coordinate several independently checked notification channels in one application array.",
+    "focus": "A selected-value collection",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "CheckboxGroup"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/checkbox-group/selected-values/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/checkbox-group/selected-values/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-multi-thumb-slider-interval-selection",
+    "host": "vue",
+    "area": "components",
+    "subject": "MultiThumbSlider",
+    "slug": "multi-thumb-slider/interval-selection",
+    "title": "An interval with two thumbs",
+    "description": "Choose a price interval with two separately named and focusable thumbs.",
+    "focus": "An interval with two thumbs",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "MultiThumbSlider"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/multi-thumb-slider/interval-selection/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/multi-thumb-slider/interval-selection/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-carousel-presence-crossfade",
+    "host": "vue",
+    "area": "components",
+    "subject": "Carousel",
+    "slug": "carousel/presence-crossfade",
+    "title": "Crossfading with retained Presence",
+    "description": "Switch delivery services while the outgoing slide remains present for its exit transition.",
+    "focus": "Crossfading with retained Presence",
+    "kind": "styling",
+    "fixture": "control",
+    "tags": [
+      "Carousel"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/carousel/presence-crossfade/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/carousel/presence-crossfade/Preview.vue"
+      }
+    ],
+    "related": []
+  },
   {
     "id": "vue-temporal-date-field-bounded-date",
     "host": "vue",

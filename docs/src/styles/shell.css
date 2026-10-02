@@ -570,6 +570,19 @@
 }
 
 .docs-preview [data-example-control-row] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--docs-space-2); }
+.docs-preview :is([data-scope="toolbar"], [data-scope="pagination"], [data-scope="stepper"]) button { min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); }
+.docs-preview :is([data-scope="pagination"][data-selected], [data-scope="stepper"][aria-selected="true"]) { border-color: var(--docs-accent); background: var(--docs-accent-soft); color: var(--docs-accent); }
+.docs-preview :is([data-scope="pagination"], [data-scope="stepper"])[data-part="root"] { display: grid; justify-items: center; gap: var(--docs-space-4); width: min(100%, 440px); }
+.docs-preview [data-scope="stepper"][data-part="content"] { width: 100%; padding: var(--docs-space-5); border-radius: var(--docs-control-radius); background: var(--docs-bg); text-align: center; }
+.docs-preview [data-scope="checkbox-group"][data-part="root"] { display: grid; gap: var(--docs-space-1); }
+.docs-preview [data-scope="checkbox-group"][data-part="item"] { display: inline-flex; align-items: center; gap: var(--docs-space-3); min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: 0; border-radius: var(--docs-control-radius); background: transparent; color: var(--docs-text); }
+.docs-preview [data-scope="checkbox-group"][data-state="checked"] [data-example-checkbox-box] { border-color: var(--docs-accent); background: var(--docs-accent); color: var(--docs-on-accent); }
+.docs-preview [data-scope="checkbox-group"][data-part="indicator"] { display: grid; place-items: center; line-height: 1; }
+.docs-preview [data-scope="checkbox-group"][data-part="indicator"] svg { display: block; }
+.docs-preview [data-scope="multi-thumb-slider"][data-part="root"] { display: flex; width: 100%; min-height: var(--docs-control-height); align-items: center; }
+.docs-preview [data-scope="multi-thumb-slider"][data-part="track"] { position: relative; display: block; width: 100%; height: var(--docs-range-height); border-radius: var(--docs-small-radius); background: var(--docs-control-border); }
+.docs-preview [data-scope="multi-thumb-slider"][data-part="range"] { position: absolute; left: var(--sectile-range-start); width: calc(var(--sectile-range-end) - var(--sectile-range-start)); height: 100%; border-radius: inherit; background: var(--docs-accent); }
+.docs-preview [data-scope="multi-thumb-slider"][data-part="thumb"] { position: absolute; left: var(--sectile-thumb-percentage); top: 50%; display: block; width: var(--docs-slider-thumb); height: var(--docs-slider-thumb); transform: translate(-50%, -50%); border: var(--docs-border-width) solid var(--docs-accent); border-radius: 50%; background: var(--docs-bg); }
 .docs-preview [data-example-temporal-field] { width: min(100%, 400px); }
 .docs-preview [data-example-temporal-field] label { display: grid; min-width: 0; gap: var(--docs-space-2); font-size: var(--docs-font-size-label); }
 .docs-preview [data-example-temporal-field] input { width: 100%; min-width: 0; min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); }
@@ -676,7 +689,14 @@
   accent-color: var(--docs-accent);
 }
 
-.docs-preview--control p, .docs-preview--surface p, .docs-preview output {
+.docs-preview--control p, .docs-preview--surface p {
+  margin: 0;
+  color: var(--docs-text-muted);
+  font-family: var(--docs-font-sans);
+  font-size: var(--docs-font-size-label);
+}
+
+.docs-preview output {
   margin: 0;
   color: var(--docs-text-muted);
   font-family: var(--docs-font-mono);
@@ -760,6 +780,12 @@
   color: var(--docs-disabled-text);
   cursor: not-allowed;
 }
+
+.docs-preview :is(button:disabled, button[aria-disabled="true"]):not([data-scope="checkbox"]):not([data-scope="checkbox-group"]):not([data-scope="switch"]) {
+  border-color: var(--docs-disabled-border);
+  background: var(--docs-disabled-bg);
+}
+.docs-preview :is(input:disabled, textarea:disabled, select:disabled) { border-color: var(--docs-disabled-border); background: var(--docs-disabled-bg); color: var(--docs-disabled-text); }
 
 .docs-preview :is(button:disabled, button[aria-disabled="true"]):is([data-scope="toggle-group"], [data-scope="tabs"], [data-scope="toggle-button"]) {
   border-color: var(--docs-disabled-border);
